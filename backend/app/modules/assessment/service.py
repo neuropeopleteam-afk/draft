@@ -70,7 +70,7 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
                              previous_subpools=prev)
     else:
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
-    # Адаптивный тест банка: до 90 минут (лимит CATConfig) + запас на дотестирование у порога; заглушка — 30 минут
+    # Адаптивный тест банка: до 60 минут (лимит CATConfig) + запас на дотестирование у порога; заглушка — 30 минут
     minutes = get_settings().assessment_max_minutes + 30 if engine.name.startswith("bank") else 30
     ts = TestSession(
         user_id=user_id, survey_id=survey.id, direction_id=survey.direction_id, claimed_grade_id=claimed_grade,

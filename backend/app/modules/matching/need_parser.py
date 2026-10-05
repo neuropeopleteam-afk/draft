@@ -119,6 +119,9 @@ def _section_kind(text: str) -> list[tuple[int, int, str]]:
     current = "neutral"
     for start, end, sent in _sentences(text):
         low = sent.lower()
+        if any(c in low for c in DESIRED_CUES) and any(c in low for c in REQUIRED_CUES):
+            zones.extend(_mixed_zones(start, sent, current))  # «Python, FastAPI обязательно, Kafka будет плюсом»
+            continue
         if any(c in low for c in DESIRED_CUES):
             kind = "desired"
             current = "desired" if low.strip().endswith(":") else current
@@ -129,6 +132,38 @@ def _section_kind(text: str) -> list[tuple[int, int, str]]:
             kind = current
         zones.append((start, end, kind))
     return zones
+
+
+def _cue(clause: str) -> tuple[str | None, bool]:
+    """Маркер в части предложения: вид и стоит ли он перед технологиями (префикс) или после них (постфикс)."""
+    low = clause.lower()
+    for kind, cues in (("desired", DESIRED_CUES), ("required", REQUIRED_CUES)):
+        pos = [low.find(c) for c in cues if c in low]
+        if pos:
+            return kind, not find_stack(clause[:min(pos)])
+    return None, False
+
+
+def _mixed_zones(start: int, sent: str, default: str) -> list[tuple[int, int, str]]:
+    """Предложение с обоими маркерами делим по запятым. Часть без маркера наследует вид от ближайшего маркера-префикса
+    слева («обязательно Python, FastAPI») или маркера-постфикса справа («Python, FastAPI обязательно»)."""
+    parts, pos = [], 0
+    for chunk in re.split(r"(?i)(?<!хорошо,)(?<=,)", sent):  # «хорошо, если» — один маркер
+        parts.append((start + pos, start + pos + len(chunk), chunk, *_cue(chunk)))
+        pos += len(chunk)
+    out = []
+    for i, (s, e, _c, kind, _prefix) in enumerate(parts):
+        if kind is None:
+            left = next((p for p in reversed(parts[:i]) if p[3]), None)
+            right = next((p for p in parts[i + 1:] if p[3]), None)
+            if left and left[4]:
+                kind = left[3]
+            elif right and not right[4]:
+                kind = right[3]
+            else:
+                kind = default
+        out.append((s, e, kind))
+    return out
 
 
 def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | None = None) -> dict:

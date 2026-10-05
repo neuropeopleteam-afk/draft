@@ -53,6 +53,12 @@ function messageFrom(status: number, body: any): { code: string; message: string
   return { code: "http_" + status, message: status >= 500 ? "Сервис временно недоступен" : "Ошибка запроса" };
 }
 
+// Абсолютный адрес API от origin: если стенд открыт как https://логин:пароль@хост/ (базовая авторизация),
+// относительный fetch унаследовал бы учётные данные из адреса страницы и браузер отклонил бы запрос.
+export function apiUrl(path: string): string {
+  return `${window.location.origin}/api${path}`;
+}
+
 async function fetchRetry(url: string, init: RequestInit, tries = 3, timeoutMs = 15000): Promise<Response> {
   for (let i = 0; ; i++) {
     const ctl = new AbortController();
@@ -76,7 +82,7 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
   const method = opts.method ?? (opts.body !== undefined ? "POST" : "GET");
   const init: RequestInit = { method, headers, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined };
   // GET идемпотентен: при обрыве или зависании соединения повторяем (до 2 раз, таймаут 15 с).
-  const res = method === "GET" ? await fetchRetry(`/api${path}`, init) : await fetch(`/api${path}`, init);
+  const res = method === "GET" ? await fetchRetry(apiUrl(path), init) : await fetch(apiUrl(path), init);
   const body = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
     const { code, message } = messageFrom(res.status, body);
@@ -92,7 +98,7 @@ export async function apiUpload<T>(path: string, file: File, field = "file"): Pr
   const headers: Record<string, string> = { Accept: "application/json" };
   const token = tokenStore.get();
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`/api${path}`, { method: "POST", headers, body: fd });
+  const res = await fetch(apiUrl(path), { method: "POST", headers, body: fd });
   const body = await res.json().catch(() => null);
   if (!res.ok) {
     const { code, message } = messageFrom(res.status, body);
@@ -104,7 +110,7 @@ export async function apiUpload<T>(path: string, file: File, field = "file"): Pr
 /** Скачать файл с авторизацией (PDF-профиль). */
 export async function apiDownload(path: string, filename: string): Promise<void> {
   const token = tokenStore.get();
-  const res = await fetch(`/api${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  const res = await fetch(apiUrl(path), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
   if (!res.ok) throw new ApiError(res.status, "download_failed", "Не удалось скачать файл");
   const url = URL.createObjectURL(await res.blob());
   const a = document.createElement("a");

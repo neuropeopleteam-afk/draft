@@ -24,6 +24,7 @@ export function JuryGuide() {
   useEffect(() => {
     const i = STEPS.findIndex((s) => s.match.test(loc.pathname));
     if (i >= 0 && i !== step) { setStep(i); guide.setStep(i); }
+    else if (i < 0 && guide.step() !== step) setStep(guide.step());  // шаг выставлен входом в один клик
   }, [loc.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!active || loc.pathname === "/" && !guide.on()) return null;
