@@ -118,9 +118,11 @@ def _p_correct(it: dict, theta: float, part: int) -> float:
     return float(1 / (1 + np.exp(-1.7 * a[k] * (theta - b[k]))))
 
 
-def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, pending_left: int = 0) -> dict:
+def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, pending_left: int = 0,
+                  away_items: tuple[int, ...] = ()) -> dict:
     """Проходит тест движком банка за «демо-респондента»: ответы по модели 2PL на уровне theta, время —
-    обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений. Возвращает итог finish_session."""
+    обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений, кроме away_items — позиций, где
+    «кандидат» уходил со вкладки (для демонстрации «достоверности результата»). Возвращает итог finish_session."""
     rng = np.random.default_rng(seed)
     eng = DemoRespondentEngine(rng, theta, pending_left)
     ts = assessment.start_session(db, user_id, claimed, engine_name="bank")
@@ -131,10 +133,12 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
             break
         it = eng._current(st)
         it["issued_at"] = time.time() - float(rng.uniform(0.4, 0.9)) * it["time_limit_s"]
+        away = it["position"] in away_items
         for step in range(1, it["parts"] + 1):
             ok = rng.random() < _p_correct(it, theta, step - 1)
             eng.answer(st, it["token"], _answer_for(it, step, ok, rng), None, step=step,
-                       signals={"focus_lost": 0, "hidden_ms": 0, "paste": 0, "paste_chars": 0})
+                       signals={"focus_lost": 1 if away and step == 1 else 0, "hidden_ms": 25_000 if away and step == 1 else 0,
+                                "paste": 0, "paste_chars": 0})
     assessment._drain_outbox(db, ts)
     from sqlalchemy.orm.attributes import flag_modified
 
@@ -151,7 +155,8 @@ def _user(db: Session, persona: str, role: UserRole) -> User:
     return demo_user(db, EMAILS[persona], role, hash_password(secrets.token_urlsafe(24)))
 
 
-def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int):
+def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int,
+               away_items: tuple[int, ...] = ()):
     u = _user(db, persona, UserRole.candidate)
     p = CandidateProfile(user_id=u.id, full_name=name, phone="+7 900 000-00-00", telegram=f"@jury_{persona}",
                          city="Москва", work_format=WorkFormat.remote, relocation=False, experience_years=3.5,
@@ -184,7 +189,7 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
     db.commit()
     res = {}
     for attempt in range(6):  # демо-респондент случаен: нужен подтверждённый грейд — иначе следующий seed
-        res = run_demo_test(db, u.id, "middle", theta, seed + attempt, pending_left)
+        res = run_demo_test(db, u.id, "middle", theta, seed + attempt, pending_left, away_items)
         if res.get("confirmed") or res.get("category_id"):
             break
     refresh_rating(db, u.id)
@@ -204,7 +209,8 @@ def delete_jury(db: Session) -> int:
 def create_jury(db: Session) -> dict:
     t0 = time.time()
     _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0)
-    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1)
+    # у Ильи — два ухода со вкладки во время теста: достоверность «средняя» (видно работодателю с причиной)
+    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8))
     eu = _user(db, "employer", UserRole.employer)
     c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург", website="https://example.invalid",
                 description="Платёжный сервис для малого бизнеса. Демо-компания для экспертов жюри.",

@@ -230,6 +230,13 @@ def test_jury_login_reset_and_expert(client, monkeypatch):
     monkeypatch.setitem(jr._state, "last_reset", 0.0)
     r = client.post("/api/jury/reset")
     assert r.status_code == 200 and r.json()["deleted_users"] == 4
+    with SessionLocal() as db:  # у кандидата без ФСП два ухода со вкладки → достоверность средняя
+        from app.modules.jury.seed import EMAILS
+        from app.modules.auth.models import User
+
+        u = db.scalar(select(User).where(User.email == EMAILS["candidate_nofsp"]))
+        t = db.scalars(select(TestSession).where(TestSession.user_id == u.id)).all()
+        assert t[0].result["engine_result"]["details"]["integrity"]["level"] == "medium"
     assert client.post("/api/jury/reset").status_code == 429
     assert client.get("/api/me", headers=H(tok)).status_code == 401  # старый токен удалённой учётки
     assert get_settings().jury_mode_available
