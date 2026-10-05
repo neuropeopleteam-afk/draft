@@ -1,0 +1,28 @@
+family_id: common.alg.merge_intervals_ob3
+title: Слияние интервалов (открытая книга, три шага)
+direction: common
+skills: [algorithms, sorting, intervals, testing]
+target_grades: [middle, senior]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [11, 11]
+  operations: [6, 6]
+  defect_type: interval_merge_logic
+  n_options: 4
+  extra:
+    step3_conditions: [stream, timezones, indices, gap]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.5
+  a: 1.0
+  sigma_variant: 0.4
+  step_offsets: [-0.6, -0.1, 0.8]
+  basis: "11 строк, 6 операций; три подтипа дефекта (нет сортировки, перезапись конца, условие касания) → σ выше; шаг 3 — перенос на новое условие, самый трудный"
+generator: assessment_bank.families.common.alg_merge_intervals_ob3
+version: 1
+description: >
+  Функция слияния полуоткрытых интервалов с одним дефектом. Шаг 1 — найти вход, на котором
+  дефект проявляется; шаг 2 — выбрать исправление; шаг 3 — объяснить, что сломается при
+  новом условии (поток, часовые пояса, индексы блоков, обязательная пауза).

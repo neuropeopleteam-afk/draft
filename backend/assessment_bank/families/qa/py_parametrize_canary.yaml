@@ -1,0 +1,26 @@
+family_id: qa.pytest.parametrize_canary
+title: Сколько тестов pytest пройдёт (parametrize, канарейка)
+direction: qa
+skills: [pytest, parametrize, python]
+target_grades: [junior]
+format: predict_output
+language: python
+invariants:
+  code_lines: [15, 18]
+  operations: [3, 5]
+  extra:
+    cases_first_test: [4, 5]
+    cases_second_test: [4, 6]
+time_limit_s: 180
+canary: true
+canary_pool_size: 24
+prior_difficulty:
+  b: -0.6
+  a: 1.0
+  sigma_variant: 0.3
+  basis: "15–18 строк; функция из 2–4 строк, 8–11 параметризованных случаев, два декоратора parametrize дают произведение; нужно прогнать каждый случай в уме и посчитать (Junior)"
+generator: assessment_bank.families.qa.py_parametrize_canary
+version: 1
+description: >
+  Канареечное семейство: seed 1..24 опубликованы, в грейд не входят, служат детектору
+  предзнания (время + правильность). Предсказать число пройденных и упавших тестов pytest.

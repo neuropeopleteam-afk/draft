@@ -1,0 +1,26 @@
+family_id: common.alg.complexity_mcq
+title: Асимптотическая сложность функции — скрытая стоимость операций
+direction: common
+skills: [algorithms, complexity, python, data_structures]
+target_grades: [junior]
+format: mcq_concept
+language: python
+invariants:
+  code_lines: [5, 13]
+  operations: [4, 12]
+  n_options: 4
+  extra:
+    templates: [pairs, two_pointers, set_dedupe, insert_front, pop_front, sort_scan, binary_search, fixed_inner, doubling_inner, index_lookup]
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.6
+  a: 1.1
+  sigma_variant: 0.45
+  basis: "5–13 строк, 4 класса сложности; десять шаблонов: явные вложенные циклы проще, ловушки (insert(0), pop(0), index внутри цикла, удваивающийся шаг, фиксированный внутренний цикл) труднее → σ высокая; грейд Junior"
+generator: assessment_bank.families.common.alg_complexity_mcq
+version: 1
+description: >
+  Короткая функция над списком; выбрать временную сложность. Ключ проверяется исполнением:
+  показанный код запускается на входах размера 100 и 400, строки считаются через
+  sys.settrace, скрытая стоимость list.insert/pop/index и сортировки — через sys.setprofile.

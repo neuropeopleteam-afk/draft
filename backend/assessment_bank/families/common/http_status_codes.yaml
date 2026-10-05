@@ -1,0 +1,23 @@
+family_id: common.http.status_codes
+title: Коды ответа HTTP по семантике RFC 9110
+direction: common
+skills: [http, rest_api]
+target_grades: [junior, middle]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    scenarios: 12
+time_limit_s: 90
+canary: false
+prior_difficulty:
+  b: -0.7
+  a: 1.0
+  sigma_variant: 0.5
+  basis: "Короткий сценарий без кода, 4 варианта; 12 сценариев разной трудности (401/201 проще, 406/412/504 труднее) — σ высокая, семейство кандидат на разделение после калибровки"
+generator: assessment_bank.families.common.http_status_codes
+version: 1
+description: >
+  Сценарий запроса к API; выбрать код ответа по RFC 9110/RFC 6585. Ключ сверяется со
+  справочной таблицей (исполнение невозможно), коды вариантов проверяются по http.HTTPStatus.

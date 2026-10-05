@@ -1,0 +1,27 @@
+family_id: qa.pytest.fixture_order
+title: Порядок подготовки и завершения фикстур pytest
+direction: qa
+skills: [pytest, fixtures, test_architecture, python]
+target_grades: [middle, senior]
+format: predict_output
+language: python
+invariants:
+  code_lines: [18, 32]
+  operations: [9, 18]
+  extra:
+    fixtures: [3, 5]
+    tests: [2, 3]
+    scopes: [function, module, session]
+time_limit_s: 480
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.1
+  sigma_variant: 0.45
+  basis: "3–4 фикстуры (+ autouse в трети вариантов), области function/module/session, yield и return, зависимости; 2–3 теста; нужно держать в голове кэш фикстур с широкой областью и LIFO-завершение; длина вывода 8–16 строк сильно варьирует трудность — σ 0,45"
+generator: assessment_bank.families.qa.py_fixture_order
+version: 1
+description: >
+  Предсказать вывод `pytest -s` для набора фикстур с разными областями видимости и
+  зависимостями. Ключ — независимая модель правил pytest, сверка исполнением; обвязка
+  сверена с настоящим pytest 8.3.3 на всех 200 вариантах.

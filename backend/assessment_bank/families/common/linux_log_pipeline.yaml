@@ -1,0 +1,25 @@
+family_id: common.linux.log_pipeline
+title: Конвейер командной строки над журналом доступа
+direction: common
+skills: [linux, shell, text_processing]
+target_grades: [junior, middle]
+format: predict_output
+language: bash
+invariants:
+  code_lines: [1, 1]
+  operations: [1, 6]
+  extra:
+    log_lines: [9, 13]
+    pipelines: [top_err_ips, err_paths, post_stats, slow_count, top_status, grep_count, not_ok, slowest_path]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.3
+  a: 1.0
+  sigma_variant: 0.45
+  basis: "одна команда из 1–6 звеньев над журналом 9–13 строк; восемь типов конвейеров разной трудности (uniq -c без sort, grep -c по префиксу) → σ высокая"
+generator: assessment_bank.families.common.linux_log_pipeline
+version: 1
+description: >
+  Небольшой access.log и конвейер grep/cut/sort/uniq/awk/wc; кандидат предсказывает вывод.
+  Ключ — по независимой модели и исполнением в bash-песочнице (LC_ALL=C.UTF-8).

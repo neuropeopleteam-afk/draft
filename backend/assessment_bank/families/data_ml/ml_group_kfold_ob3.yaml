@@ -1,0 +1,31 @@
+family_id: data_ml.ml.group_kfold_ob3
+title: Групповая кросс-валидация — строки объекта в разных фолдах (открытая книга)
+direction: data_ml
+skills: [python, cross_validation, data_leakage, group_kfold, model_evaluation]
+target_grades: [middle, senior]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [8, 8]
+  operations: [7, 7]
+  defect_type: group_leakage
+  n_options: 4
+  extra:
+    k: [3, 4, 5]
+    step2_distractors: [rowmod, ord_sum, first_index, rotate]
+    step3_conditions: [time, imbalance, tuning, target_encoding]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.7
+  a: 1.0
+  sigma_variant: 0.35
+  step_offsets: [-0.3, -0.1, 0.8]
+  basis: "8 строк; дефект проявляется, только если между строками объекта появилось число новых объектов, не кратное k (повтор подряд и через k новых — правдоподобные «ловушки» шага 1); шаг 2 — четыре реализации, две из которых сохраняют группы, но нарушают равномерность; шаг 3 — время, дисбаланс, подбор гиперпараметров или target encoding (Middle/Senior)"
+generator: assessment_bank.families.data_ml.ml_group_kfold_ob3
+version: 1
+description: >
+  Функция групповой раскладки по фолдам кладёт строку по текущему числу объектов, а не по
+  сохранённому фолду объекта. Шаг 1 — набор строк, на котором строки одного объекта
+  расходятся по фолдам; шаг 2 — правильная реализация (группы целы, объекты равномерно,
+  покрытие строк); шаг 3 — перенос на реальные условия валидации.

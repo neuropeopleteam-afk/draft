@@ -1,0 +1,24 @@
+============================== security.sql.parameter_fix:1 | context: учебный сервис бронирований
+Учебный сервис бронирований: поиск должен точно сохранять название, в том числе пробелы и апострофы. В записи id=259 название `Набор 'Практика'`. Таблица `records` выбирается из констант приложения, пользователь передаёт только `name`. Найдите безопасное исправление для sqlite3: значения нельзя соединять с текстом SQL или изменять.
+--- code ---
+  1| def lookup(db, name):
+  2|     sql = "SELECT id FROM records WHERE label = '" + name + "'"
+  3|     return db.execute(sql).fetchall()
+  [A] Заменить функцию целиком:
+      def lookup(db, name):
+    sql = "SELECT id FROM records WHERE label = ?"
+    return db.execute(sql, (name.strip(),)).fetchall()
+  [B] Заменить функцию целиком:
+      def lookup(db, name):
+    sql = "SELECT id FROM records WHERE label = ?"
+    return db.execute(sql, (name.replace("'", ""),)).fetchall()
+  [C] Заменить функцию целиком:
+      def lookup(db, name):
+    sql = "SELECT id FROM records WHERE label = ?"
+    return db.execute(sql, (name,)).fetchall()
+  [D] Заменить функцию целиком:
+      def lookup(db, name):
+    sql = "SELECT id FROM records WHERE label = '?'"
+    return db.execute(sql).fetchall()
+KEY: C | Плейсхолдер ? и отдельный одноэлементный кортеж передают значение как данные. Удаление апострофов или пробелов и кавычки вокруг ? нарушают точное совпадение.
+STATUS PASS uniq 1.0 keys 4 jacc 0.1692 ctx 8 lines [3, 3] ops [2, 2] checks 1200 failed 0 pos {'A': 49, 'B': 51, 'C': 53, 'D': 47} 1.12s

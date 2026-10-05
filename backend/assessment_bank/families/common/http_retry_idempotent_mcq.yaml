@@ -1,0 +1,25 @@
+family_id: common.http.retry_idempotent_mcq
+title: Повтор запроса после таймаута — идемпотентность методов REST
+direction: common
+skills: [http, rest_api, idempotency, reliability]
+target_grades: [junior]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    kinds: [put_set, delete, patch_set, get, post_key, post_append, patch_incr, post_action, post_newkey]
+    polarity: [safe, unsafe]
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -0.5
+  a: 1.1
+  sigma_variant: 0.4
+  basis: "Короткий сценарий без кода, 4 конкретных запроса; две полярности вопроса; простые случаи (GET, POST в коллекцию) и ловушки (PATCH с присваиванием идемпотентен, PATCH «прибавить» — нет, новый Idempotency-Key на каждую попытку) → σ повышена; Junior"
+generator: assessment_bank.families.common.http_retry_idempotent_mcq
+version: 1
+description: >
+  Клиент повторяет запрос после таймаута; выбрать запрос, который безопасно (или нельзя)
+  повторять. Ключ проверяется исполнением модели сервера: состояние после одного и двух
+  применений запроса сравнивается и сверяется с ручной разметкой.

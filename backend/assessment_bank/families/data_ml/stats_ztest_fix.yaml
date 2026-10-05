@@ -1,0 +1,27 @@
+family_id: data_ml.stats.ztest_fix
+title: P-value двустороннего z-теста долей в A/B-тесте — выбрать исправление
+direction: data_ml
+skills: [statistics, ab_testing, hypothesis_testing, p_value, python]
+target_grades: [middle, senior]
+format: choose_fix
+language: python
+invariants:
+  code_lines: [7, 7]
+  operations: [5, 5]
+  defect_type: one_sided_pvalue
+  n_options: 4
+  extra:
+    distractors: [no_abs, no_sqrt2, doubled, se_total]
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 0.6
+  a: 1.0
+  sigma_variant: 0.35
+  basis: "7 строк исходного кода и 4 функции по 6 строк, различие — одна деталь формулы; нужно знать связь erfc и Φ, двусторонность через |z| и стандартную ошибку разности долей; дистрактор с удвоением и с √2 труднее остальных (Middle/Senior)"
+generator: assessment_bank.families.data_ml.stats_ztest_fix
+version: 1
+description: >
+  Функция p-value z-теста долей возвращает одностороннюю вероятность. Ровно одна из
+  четырёх функций даёт двусторонний p-value; проверка — на пяти наборах (оба знака
+  эффекта, нулевой эффект, разные n) против расчёта через statistics.NormalDist.

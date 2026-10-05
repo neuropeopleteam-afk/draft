@@ -1,0 +1,27 @@
+family_id: data_ml.llm.chunking_fix
+title: Нарезка документов с перекрытием для RAG — выбрать исправление
+direction: data_ml
+skills: [python, llm, rag, chunking, off_by_one]
+target_grades: [junior, middle]
+format: choose_fix
+language: python
+invariants:
+  code_lines: [5, 5]
+  operations: [4, 4]
+  defect_type: lost_tail_chunk
+  n_options: 4
+  extra:
+    distractors: [no_break, strict_stop, no_overlap, minus_overlap, step_len]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.0
+  sigma_variant: 0.4
+  basis: "5 строк исходного кода и 4 функции по 7–9 строк; граничные условия цикла с шагом size − overlap; дистракторы «строгое сравнение при точном попадании» и «range до len − overlap» требуют проверки краевых случаев и заметно труднее остальных → σ повышена (Junior/Middle)"
+generator: assessment_bank.families.data_ml.llm_chunking_fix
+version: 1
+description: >
+  Нарезка документа на фрагменты для поиска в RAG теряет конец документа. Ровно одна из
+  четырёх реализаций выполняет все требования (покрытие, перекрытие, без вложенных
+  фрагментов, пустой документ); проверка на семи краевых случаях.

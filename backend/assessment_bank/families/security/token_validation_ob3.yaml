@@ -1,0 +1,26 @@
+family_id: security.auth.token_validation_ob3
+title: Подпись и срок учебного токена — открытая книга
+direction: security
+skills: [secure_code_review, hmac, token_validation, session_lifecycle, testing]
+target_grades: [middle]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [16, 16]
+  operations: [10, 10]
+  defect_type: token_expiry_boundary
+  n_options: 4
+  extra:
+    token_format: teaching_hmac_not_jwt
+    step3_conditions: [revocation, rotation]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.5
+  a: 1.1
+  sigma_variant: 0.25
+  step_offsets: [-0.4, 0.0, 1.0]
+  basis: "16 строк; различение now<exp и now<=exp, полноценная подпись и iss/aud, затем отзыв доступа или ротация доверенного набора ключей."
+generator: assessment_bank.families.security.token_validation_ob3
+version: 1
+description: "HMAC выполняется стандартной библиотекой; примеры не содержат готовых токенов и не отправляют запросы."

@@ -1,0 +1,23 @@
+family_id: backend.py.canary_comprehension
+title: Группировка и сортировка словаря (канарейка)
+direction: backend
+skills: [python, dict, sorting]
+target_grades: [junior]
+format: predict_output
+language: python
+invariants:
+  code_lines: [13, 15]
+  operations: [7, 7]
+time_limit_s: 150
+canary: true
+canary_pool_size: 24
+prior_difficulty:
+  b: -0.6
+  a: 1.0
+  sigma_variant: 0.25
+  basis: "13–15 строк, 5–7 записей, фильтр + группировка + агрегат + сортировка"
+generator: assessment_bank.families.backend.py_canary_comprehension
+version: 1
+description: >
+  Канареечное семейство: seed 1..24 опубликованы. Показываются только они; служат детектору
+  предзнания (время + правильность), в грейд не входят.

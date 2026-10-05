@@ -1,0 +1,26 @@
+family_id: data_ml.py.missing_mean_bug
+title: Среднее по группам с пропусками в CSV
+direction: data_ml
+skills: [python, csv, missing_values, aggregation, data_cleaning]
+target_grades: [junior]
+format: find_bug
+language: python
+invariants:
+  code_lines: [16, 17]
+  operations: [12, 13]
+  defect_type: missing_values_handling
+  extra:
+    subtypes: [count_before_skip, none_check, na_marker]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.8
+  a: 1.0
+  sigma_variant: 0.35
+  basis: "16–17 строк, стандартная библиотека (csv, io); симптом указан в условии (заниженные средние или падение); подтип «is None вместо пустой строки» требует знания поведения csv.DictReader и труднее двух других (Junior)"
+generator: assessment_bank.families.data_ml.py_missing_mean_bug
+version: 1
+description: >
+  Среднее показателя по группам из CSV с пропусками. Дефекты: пропуски попадают в
+  знаменатель, проверка пропуска через is None (DictReader отдаёт пустую строку) или
+  неучтённый маркер NA. Рядом вспомогательная функция, положение строки с дефектом меняется.

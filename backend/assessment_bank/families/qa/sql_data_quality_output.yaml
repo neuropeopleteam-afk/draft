@@ -1,0 +1,25 @@
+family_id: qa.sql.data_quality_output
+title: Результат SQL-проверки качества данных (ловушки NULL)
+direction: qa
+skills: [sql, data_quality, null_semantics, data_testing]
+target_grades: [middle]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [3, 5]
+  operations: [2, 5]
+  extra:
+    kinds: [not_in_null, left_join_orphans, count_nulls, dup_groups, between_null, sum_null]
+    rows: [6, 14]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.2
+  a: 1.0
+  sigma_variant: 0.45
+  basis: "запрос 3–5 строк над 6–14 строками данных; шесть видов проверок, в каждой ловушка трёхзначной логики NULL; NOT IN с NULL и группа NULL в GROUP BY заметно труднее COUNT(col) — σ 0,45"
+generator: assessment_bank.families.qa.sql_data_quality_output
+version: 1
+description: >
+  SQL-проверки качества данных после миграции (сироты, дубликаты, пропуски, диапазоны);
+  предсказать результат запроса. Ключ — независимая модель, сверка исполнением в SQLite.

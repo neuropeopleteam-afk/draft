@@ -1,0 +1,28 @@
+family_id: common.sql.revenue_report_ob3
+title: Завышенные суммы в отчёте — размножение строк при JOIN (открытая книга)
+direction: common
+skills: [sql, joins, aggregation, data_quality, testing]
+target_grades: [middle, senior]
+format: open_book_3step
+language: sql
+invariants:
+  code_lines: [6, 6]
+  operations: [6, 6]
+  defect_type: join_fanout
+  n_options: 4
+  extra:
+    step3_conditions: [refunds, by_month, big_data, currency]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.7
+  a: 1.0
+  sigma_variant: 0.3
+  step_offsets: [-0.5, 0.0, 0.8]
+  basis: "6 строк, 6 предложений, один тип дефекта (fan-out); шаг 1 требует понять механизм размножения, шаг 3 — перенос на новые условия (Middle/Senior)"
+generator: assessment_bank.families.common.sql_revenue_report_ob3
+version: 1
+description: >
+  Отчёт «сумма документов и сумма поступлений» завышен, когда у документа несколько
+  поступлений. Шаг 1 — набор данных, воспроизводящий дефект; шаг 2 — правильный запрос
+  (предагрегация); шаг 3 — возвраты, помесячный отчёт, большие объёмы или валюты.

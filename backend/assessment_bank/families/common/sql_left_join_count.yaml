@@ -1,0 +1,27 @@
+family_id: common.sql.left_join_count
+title: LEFT JOIN и агрегаты — что вернёт запрос
+direction: common
+skills: [sql, joins, aggregation, null_semantics]
+target_grades: [junior, middle]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [5, 6]
+  operations: [5, 6]
+  extra:
+    parents: [3, 5]
+    children: [4, 7]
+    traps: [count_col_on, count_star_on, count_where, sum_on, coalesce_sum_on]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.2
+  sigma_variant: 0.45
+  basis: "5–6 строк SQL, 5–6 предложений, 3–5 строк результата; пять ловушек разной трудности (COUNT(*) и WHERE после LEFT JOIN труднее) → σ повышена"
+generator: assessment_bank.families.common.sql_left_join_count
+version: 1
+description: >
+  Две небольшие таблицы и запрос с LEFT JOIN и агрегатом; кандидат записывает результат.
+  Ловушки: COUNT(*) против COUNT(столбца), условие в ON против WHERE, SUM по NULL.
+  Сортировка — по id, чтобы ответ не зависел от правил сравнения строк в СУБД.

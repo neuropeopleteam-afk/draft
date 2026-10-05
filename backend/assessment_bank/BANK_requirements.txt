@@ -1,0 +1,6 @@
+# Зафиксированные версии (лицензии: numpy/scipy — BSD-3-Clause, pydantic/PyYAML/pytest — MIT)
+numpy==2.1.3
+scipy==1.14.1
+pydantic==2.9.2
+PyYAML==6.0.2
+pytest==8.3.3

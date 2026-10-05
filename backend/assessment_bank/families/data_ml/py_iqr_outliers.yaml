@@ -1,0 +1,26 @@
+family_id: data_ml.py.iqr_outliers
+title: Выбросы по правилу IQR — что напечатает программа
+direction: data_ml
+skills: [python, outliers, quartiles, descriptive_statistics, data_cleaning]
+target_grades: [junior]
+format: predict_output
+language: python
+invariants:
+  code_lines: [10, 10]
+  operations: [9, 9]
+  extra:
+    n_values: [10, 11, 14, 15]
+    k: [1.5, 2, 3]
+    boundary_value_share: 0.4
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.6
+  a: 1.0
+  sigma_variant: 0.3
+  basis: "10 строк, 10–15 значений; квартили — медианы половин нечётной длины (элементы данных), ручная сортировка и сравнение с границами; в 40 % вариантов есть значение ровно на границе (строгое сравнение) — немного труднее (Junior)"
+generator: assessment_bank.families.data_ml.py_iqr_outliers
+version: 1
+description: >
+  Поиск выбросов по правилу IQR с явным расчётом квартилей через медианы половин.
+  Кандидат записывает Q1, Q3, IQR и список выбросов в исходном порядке.

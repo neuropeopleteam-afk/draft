@@ -1,0 +1,27 @@
+family_id: common.sql.aggregate_filter_fix
+title: Агрегат в WHERE — выбрать правильное исправление
+direction: common
+skills: [sql, aggregation, having, date_ranges]
+target_grades: [middle]
+format: choose_fix
+language: sql
+invariants:
+  code_lines: [7, 7]
+  operations: [5, 5]
+  defect_type: aggregate_in_where
+  n_options: 4
+  extra:
+    distractors: [no_status, between_dates, strict_gt, count_bool]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.2
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "7 строк, 5 предложений; правильный вариант отличается от дистракторов одной деталью (фильтр статуса, граница даты, >=, COUNT(условие)); набор из трёх дистракторов из четырёх меняет трудность"
+generator: assessment_bank.families.common.sql_aggregate_filter_fix
+version: 1
+description: >
+  Запрос с агрегатом в WHERE падает; из четырёх исправлений ровно одно корректно на любых
+  данных. Каждый вариант проверяется исполнением на данных, где все дистракторы дают другой
+  результат.

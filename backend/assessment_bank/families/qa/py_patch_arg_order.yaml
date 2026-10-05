@@ -1,0 +1,27 @@
+family_id: qa.pytest.patch_arg_order
+title: Порядок моков при нескольких декораторах @patch
+direction: qa
+skills: [pytest, python, unittest_mock, test_review]
+target_grades: [middle]
+format: find_bug
+language: python
+invariants:
+  code_lines: [8, 11]
+  operations: [3, 4]
+  defect_type: patch_arg_order
+  extra:
+    patches: [2, 3]
+    contexts: 4
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.1
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "8–11 строк, 2–3 декоратора @patch; нужно знать, что декораторы применяются снизу вверх; дефект в строке def, а не в местах, где тест падает; с тремя моками средний совпадает в обоих порядках — чуть труднее"
+generator: assessment_bank.families.qa.py_patch_arg_order
+version: 1
+description: >
+  Тест с несколькими @patch, где имена аргументов перечислены сверху вниз, хотя первым
+  приходит мок нижнего декоратора. Тест красный на правильном коде; исправление — одна
+  строка def. Проверка исполнением с настоящим unittest.mock.

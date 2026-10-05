@@ -1,0 +1,26 @@
+family_id: common.alg.heap_trace
+title: Очередь с приоритетом на heapq (канарейка)
+direction: common
+skills: [algorithms, heap, python]
+target_grades: [junior, middle]
+format: predict_output
+language: python
+invariants:
+  code_lines: [12, 14]
+  operations: [11, 13]
+  extra:
+    pushes: [5, 6]
+    pops: [3, 4]
+time_limit_s: 150
+canary: true
+canary_pool_size: 24
+prior_difficulty:
+  b: -0.5
+  a: 1.0
+  sigma_variant: 0.3
+  basis: "12–14 строк, 5–6 вставок и 3–4 извлечения, ничья по приоритету в каждом варианте; 30 % вариантов — максимальная куча через отрицание (труднее)"
+generator: assessment_bank.families.common.alg_heap_trace
+version: 1
+description: >
+  Канареечное семейство: варианты seed 1..24 намеренно опубликованы. Кандидату показываются
+  только они; в грейд не входят, служат детектору предзнания (время + правильность).

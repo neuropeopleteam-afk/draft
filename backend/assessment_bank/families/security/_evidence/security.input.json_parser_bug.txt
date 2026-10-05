@@ -1,0 +1,20 @@
+============================== security.input.json_parser_bug:1 | context: учебный архив документов
+Учебный архив документов: публичная форма отправляет UTF-8 JSON с полями `label` и `count`. Ограничения размера и схемы уже предусмотрены. Ревьюер просит не использовать форматы, восстанавливающие произвольные Python-объекты из внешних байтов. Укажите строку, которую нужно заменить; пример законной записи: `{'label': 'Черновик 309', 'count': 40}`.
+--- code ---
+  1| import json
+  2| import pickle
+  3| MAX_BYTES = 4096
+  4| 
+  5| def parse_record(raw):
+  6|     if len(raw) > MAX_BYTES:
+  7|         raise ValueError('size')
+  8|     data = pickle.loads(raw)
+  9|     if not isinstance(data, dict) or set(data) != {'label', 'count'}:
+ 10|         raise ValueError('fields')
+ 11|     if not isinstance(data['label'], str) or type(data['count']) is not int:
+ 12|         raise ValueError('types')
+ 13|     if not 0 <= data['count'] <= 100:
+ 14|         raise ValueError('count')
+ 15|     return data
+KEY: 8 | Строка 8. Для внешнего JSON нужен json.loads, а не pickle.loads. Проверка типа после небезопасного разбора не исправляет выбор десериализатора. После JSON остаются необходимыми лимит размера и проверка схемы.
+STATUS PASS uniq 1.0 keys 1 jacc 0.1377 ctx 8 lines [14, 14] ops [11, 11] checks 400 failed 0 pos {} 1.48s
