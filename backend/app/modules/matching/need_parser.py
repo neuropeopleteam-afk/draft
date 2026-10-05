@@ -48,28 +48,55 @@ def _money(num: str, suffix: str | None) -> int:
     return v
 
 
-_ONE_SIDE_RE = re.compile(
-    r"(от|до)\s*(\d{2,3}(?:[\s\u00a0]?\d{3})?)\s*(?:(к|k|тыс\.?)\s*(?:₽|руб\w*|р\.)?|(?:₽|руб\w*|р\.))",
-    re.IGNORECASE,
-)
+_NUM = r"(\d{2,3}(?:[\s\u00a0]\d{3})+|\d{2,7})"
+_SUF = r"(?:(к|k|тыс\.?|тысяч\w*)(?![а-яёa-z]))"
+_CUR = r"(?:₽|руб\w*|р\.|rub)"
+_ONE_SIDE_RE = re.compile(rf"(от|до)\s*{_NUM}\s*(?:{_SUF}\s*{_CUR}?|{_CUR})", re.IGNORECASE)
+# «Зарплата 260 000 ₽ на руки», «260 тыс. рублей», «180к»: одно значение с валютой или «к/тыс.»
+_SINGLE_RE = re.compile(rf"(?<![\d.,–—-]){_NUM}\s*(?:{_SUF}\s*{_CUR}?|{_CUR})", re.IGNORECASE)
+# «Зарплата: 250000», «оклад 180 000» — число без валюты, но сразу после слова о деньгах
+_KEYWORD_RE = re.compile(rf"(?:зарплат\w*|оклад\w*|зп|з/п|доход\w*|вилк\w*|компенсац\w*)\s*[:—–-]?\s*(?:от\s*)?"
+                         rf"(\d{{2,3}}(?:[\s\u00a0]\d{{3}})+|\d{{5,7}})(?!\s*(?:лет|год|%))", re.IGNORECASE)
+_KEYWORD_RANGE_RE = re.compile(rf"(?:зарплат\w*|оклад\w*|зп|з/п|доход\w*|вилк\w*|компенсац\w*)\s*[:—–-]?\s*(?:от\s*)?"
+                               rf"{_NUM}\s*{_SUF}?\s*(?:—|–|-|до)\s*{_NUM}\s*{_SUF}?", re.IGNORECASE)
+_NET_RE = re.compile(r"на\s+руки|после\s+вычета|чистыми|\bnet\b", re.IGNORECASE)
+
+
+def _ok(v: int) -> bool:
+    return 10_000 <= v <= 5_000_000
 
 
 def parse_salary(text: str) -> tuple[int | None, int | None]:
+    """Вилка из текста: «220–300 тыс.», «от 200 до 250 тыс.», «до 300 000 рублей», «от 150к»,
+    одно значение «Зарплата 260 000 ₽ на руки» / «260 тыс. рублей» / «180к» → (260000, 260000)."""
     m = _SALARY_RE.search(text)
-    if not m:
-        one = _ONE_SIDE_RE.search(text)
-        if not one:
-            return None, None
+    if m:
+        lo, hi = _money(m.group(1), m.group(2) or m.group(4)), _money(m.group(3), m.group(4))
+        if lo > hi:
+            lo, hi = hi, lo
+        if _ok(lo) and _ok(hi):
+            return lo, hi
+    kr = _KEYWORD_RANGE_RE.search(text)
+    if kr:
+        lo, hi = _money(kr.group(1), kr.group(2) or kr.group(4)), _money(kr.group(3), kr.group(4))
+        lo, hi = min(lo, hi), max(lo, hi)
+        if _ok(lo) and _ok(hi):
+            return lo, hi
+    one = _ONE_SIDE_RE.search(text)
+    if one:
         v = _money(one.group(2), one.group(3))
-        if v < 10_000 or v > 5_000_000:
-            return None, None
-        return (v, None) if one.group(1).lower() == "от" else (None, v)
-    lo, hi = _money(m.group(1), m.group(2) or m.group(4)), _money(m.group(3), m.group(4))
-    if lo > hi:
-        lo, hi = hi, lo
-    if lo < 10_000 or hi > 5_000_000:
-        return None, None
-    return lo, hi
+        if _ok(v):
+            return (v, None) if one.group(1).lower() == "от" else (None, v)
+    for rx in (_SINGLE_RE, _KEYWORD_RE):
+        for s in rx.finditer(text):
+            v = _money(s.group(1), s.group(2) if rx is _SINGLE_RE else None)
+            if _ok(v):
+                return v, v
+    return None, None
+
+
+def salary_is_net(text: str) -> bool:
+    return bool(_NET_RE.search(text))
 
 
 def parse_experience(text: str) -> float | None:
@@ -164,6 +191,7 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
         "work_format": max(wf, key=wf.get) if wf else None,
         "salary_from": salary_from,
         "salary_to": salary_to,
+        "salary_net": salary_is_net(text) if (salary_from or salary_to) else None,
     }, method="rules")
 
 
@@ -191,8 +219,10 @@ def normalize(req: dict, method: str) -> dict:
     desired = clean(req.get("stack_desired"), 0.3)
     wf = req.get("work_format") if req.get("work_format") in ("office", "hybrid", "remote") else None
     sf, st = req.get("salary_from"), req.get("salary_to")
-    if not (isinstance(sf, int) and isinstance(st, int) and 0 < sf <= st):
-        sf = st = None
+    sf = sf if isinstance(sf, int) and sf > 0 else None
+    st = st if isinstance(st, int) and st > 0 else None
+    if sf and st and sf > st:  # одна сторона вилки допустима («от 200 тыс.», «до 300 000 ₽»)
+        sf, st = st, sf
     exp = req.get("experience_years_min")
     return {
         "direction": d,
@@ -203,6 +233,7 @@ def normalize(req: dict, method: str) -> dict:
         "work_format": wf,
         "salary_from": sf,
         "salary_to": st,
+        "salary_net": bool(req.get("salary_net")) if (sf or st) else None,
         "method": method,
     }
 

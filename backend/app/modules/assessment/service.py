@@ -61,7 +61,15 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str) -> TestSe
     engine = get_engine()
     seed = secrets.randbelow(2**31)
     stack = list((survey.answers or {}).get("stack", {}).keys())
-    state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
+    if engine.name.startswith("bank"):
+        # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма)
+        prev = [sp for sp in (((t.result or {}).get("state") or {}).get("subpool") for t in db.scalars(
+            select(TestSession).where(TestSession.user_id == user_id, TestSession.status == TestSessionStatus.finished)
+            .order_by(TestSession.created_at.desc()).limit(5))) if sp is not None]
+        state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
+                             previous_subpools=prev)
+    else:
+        state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
     # Адаптивный тест банка: до 90 минут (лимит CATConfig) + запас на дотестирование у порога; заглушка — 30 минут
     minutes = get_settings().assessment_max_minutes + 30 if engine.name.startswith("bank") else 30
     ts = TestSession(
@@ -152,6 +160,15 @@ def _drain_outbox(db: Session, ts: TestSession) -> None:
             db.add(row)
             db.flush()
             it["row_id"] = str(row.id)
+        elif ev["type"] == "review" and it.get("row_id"):
+            row = db.scalar(select(TestAnswer).where(TestAnswer.item_id == uuid.UUID(it["row_id"])))
+            if row is not None:
+                xs = [v for v in it["x"] if v is not None]
+                row.score = sum(xs) / len(xs) if xs else None
+                row.is_correct = all(v == 1.0 for v in it["x"]) if len(xs) == len(it["x"]) else None
+                row.grading = {**(row.grading or {}), "x": it["x"], "parts": it["grading"],
+                               "expert_reviews": it.get("expert_reviews")}
+                flag_modified(row, "grading")
         elif ev["type"] == "answer" and it.get("row_id"):
             xs = [v for v in it["x"] if v is not None]
             db.add(TestAnswer(
@@ -172,7 +189,7 @@ def _engine_key(ts: TestSession) -> str:
 
 
 def submit_answer(db: Session, ts: TestSession, item_id: str, answer, time_spent_ms: int | None,
-                  step: int | None = None):
+                  step: int | None = None, signals: dict | None = None):
     if ts.status != TestSessionStatus.in_progress:
         raise api_error(409, "session_closed", "Сессия теста уже завершена")
     if ts.deadline_at and utcnow() > as_aware(ts.deadline_at):
@@ -180,7 +197,11 @@ def submit_answer(db: Session, ts: TestSession, item_id: str, answer, time_spent
         db.commit()
         raise api_error(409, "session_expired", "Время на тест истекло — начните заново")
     state = ts.result["state"]
-    fb = get_engine(_engine_key(ts)).answer(state, item_id, answer, time_spent_ms, step=step)
+    eng = get_engine(_engine_key(ts))
+    if _engine_key(ts) == "bank":
+        fb = eng.answer(state, item_id, answer, time_spent_ms, step=step, signals=signals)
+    else:
+        fb = eng.answer(state, item_id, answer, time_spent_ms, step=step)
     if not fb.accepted:
         raise api_error(422, "answer_rejected", "Ответ не принят: задание уже отвечено, шаг не текущий "
                                                 "или ответ не подходит к формату задания")
@@ -191,7 +212,7 @@ def submit_answer(db: Session, ts: TestSession, item_id: str, answer, time_spent
     return fb
 
 
-def finish_session(db: Session, ts: TestSession) -> dict:
+def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
     if ts.status == TestSessionStatus.finished:
         return ts.result.get("outcome", {})
     if ts.status != TestSessionStatus.in_progress:
@@ -200,7 +221,7 @@ def finish_session(db: Session, ts: TestSession) -> dict:
         # Досрочное завершение запрещено: иначе можно ответить на 2–3 удачных задания и подтвердить грейд
         raise api_error(409, "test_not_complete", "Тест ещё не закончен: ответьте на текущее задание")
     profile = db.get(CandidateProfile, ts.user_id)
-    res = get_engine(_engine_key(ts)).finish(ts.result["state"])
+    res = (engine or get_engine(_engine_key(ts))).finish(ts.result["state"])
     now = utcnow()
     sandbox = is_sandbox(profile)
     # Тест в другом направлении: подтверждённый грейд считается «нет» для правил (категория — пара направление·грейд)
@@ -253,7 +274,8 @@ def _write_t1_facts(db: Session, ts: TestSession, res) -> None:
         value={"theta": res.theta, "se": res.se, "grade": ts.claimed_grade_id, "confirmed": res.confirmed,
                "correct": res.correct, "answered": res.answered, "engine": res.engine, "session_id": str(ts.id),
                "pending_review": d.get("pending_review"), "extension": bool(d.get("extension")),
-               "preknowledge_flagged": (d.get("preknowledge") or {}).get("flagged")},
+               "preknowledge_flagged": (d.get("preknowledge") or {}).get("flagged"),
+               "integrity": d.get("integrity")},
         evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=f"test_session:{ts.id}",
     ))
     for tag, s in res.skills.items():

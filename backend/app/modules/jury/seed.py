@@ -1,0 +1,270 @@
+"""Демо-учётки для экспертов жюри: вход в один клик, исходное состояние, сброс.
+
+Персоны (почты на зарезервированном домене jury.demo.invalid — письма туда не уходят):
+* candidate — Мария Королёва, Backend · Middle: тест пройден НАСТОЯЩИМ движком банка заданий (адаптивная
+  сессия, канарейки, детектор, сигналы интерфейса — как у живого кандидата; отвечает «демо-респондент» с
+  заданным уровнем), паспорт ФСП из демо-реестра (T2); демо-режим жюри включён — правило 90 дней снято;
+* candidate_nofsp — Илья Сергеев, Backend · Middle, тот же путь, но без истории ФСП (нейтральное состояние);
+  один развёрнутый ответ оставлен «на проверке» — для экрана эксперта; есть входящее приглашение с вилкой;
+* employer — HR компании «Демо жюри: Северный платёж»: профиль, две потребности текстом, подборки с версиями;
+* expert — эксперт (роль admin): очередь развёрнутых ответов, оценка по рубрике.
+
+Сброс (POST /api/jury/reset) удаляет только эти учётки и компанию (каскадом — их сессии, подборки,
+зонды, приглашения) и создаёт заново. Остальные демо-данные и учётки живых пользователей не затрагиваются.
+"""
+from __future__ import annotations
+
+from datetime import date
+import logging
+import time
+
+import numpy as np
+from sqlalchemy import delete, select, text
+from sqlalchemy.orm import Session
+
+from app.core.db import utcnow
+from app.core.enums import FactSource, FspEventLevel, FspLinkSource, NeedStatus, UserRole, WorkFormat
+from app.modules.assessment import service as assessment
+from app.modules.assessment.bank_engine import BankEngine
+from app.modules.assessment.models import SurveyResponse, SurveyStackTag
+from app.modules.auth.models import User
+from app.modules.fsp.models import FspAchievement, FspPassport
+from app.modules.matching import ranking
+from app.modules.matching.models import EmployerNeed, SelectionVersion
+from app.modules.matching.need_parser import parse_need
+from app.modules.profiles.facts import refresh_rating, set_t0_facts
+from app.modules.profiles.models import CandidateProfile, Company, EmployerProfile
+from app.modules.profiles.refs import new_public_ref
+
+log = logging.getLogger("jury")
+DOMAIN = "jury.demo.invalid"
+EMAILS = {"candidate": f"candidate@{DOMAIN}", "candidate_nofsp": f"candidate-nofsp@{DOMAIN}",
+          "employer": f"employer@{DOMAIN}", "expert": f"expert@{DOMAIN}"}
+COMPANY = "Демо жюри: Северный платёж"
+PERSONAS = [
+    {"id": "candidate", "role": "candidate", "title": "Кандидат с паспортом ФСП",
+     "description": "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП (T2), есть место в рейтинге."},
+    {"id": "candidate_nofsp", "role": "candidate", "title": "Кандидат без ФСП",
+     "description": "Илья Сергеев · Backend · Middle. Истории ФСП нет — нейтрально. Ждёт входящее приглашение."},
+    {"id": "employer", "role": "employer", "title": "Работодатель",
+     "description": "«Северный платёж»: профиль компании, две потребности и подборки с объяснениями."},
+    {"id": "expert", "role": "admin", "title": "Эксперт",
+     "description": "Проверка развёрнутых ответов по рубрике: очередь «на проверке» и выборочная проверка LLM."},
+]
+NEEDS = [
+    "Backend-разработчик middle в команду платежей: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. "
+    "Будет плюсом Kafka и Docker. Удалённо. Зарплата 260 000 ₽ на руки.",
+    "Frontend-разработчик middle для личного кабинета: React, TypeScript, HTML/CSS обязательно; "
+    "желательно тестирование фронтенда. Гибрид, Санкт-Петербург, от 200 до 250 тыс.",
+]
+STACK = ["python", "fastapi", "postgresql", "redis", "docker", "sql", "git", "linux"]
+
+
+class DemoRespondentEngine(BankEngine):
+    """Движок банка, у которого развёрнутые ответы оценивает «демо-эксперт» (без LLM), а не модель.
+
+    pending_left — сколько развёрнутых ответов оставить «на проверке» (для экрана эксперта).
+    """
+
+    def __init__(self, rng: np.random.Generator, theta: float, pending_left: int = 0):
+        super().__init__()
+        self.rng, self.theta, self.pending_left = rng, theta, pending_left
+        self._pending_tokens: set[str] = set()
+
+    def _grade_text(self, it: dict, part: int, text_: str, step_prompt: str | None) -> None:
+        if it["token"] in self._pending_tokens or self.pending_left > 0:
+            if it["token"] not in self._pending_tokens:
+                self.pending_left -= 1
+                self._pending_tokens.add(it["token"])
+            it["grading"][part] = {"status": "pending", "method": "none", "error": "демо: оставлено эксперту"}
+            it["x"][part] = None
+            return
+        b = float(np.mean(it["pool"]["b"]))
+        score = float(np.clip(0.55 + 0.35 * (self.theta - b) + self.rng.normal(0, 0.1), 0.2, 1.0))
+        it["grading"][part] = {"status": "scored", "method": "demo_expert", "score": round(score, 2),
+                               "comment": "демо: оценка по эталонам рубрики"}
+        it["x"][part] = round(score, 2)
+
+
+def _answer_for(it: dict, step: int, correct: bool, rng: np.random.Generator):
+    key = it["key"]
+    fmt = it["format"]
+    if fmt == "open_book_3step":
+        if step == 3:
+            rub = it.get("rubric") or {}
+            return rub.get("strong" if correct else "medium") or "Объяснение причины дефекта и последствий изменения."
+        right = (key.get("value") or {}).get(str(step))
+        opts = [o["id"] for o in it["public"]["options"] or [] if o.get("step") == step]
+    elif fmt in ("choose_fix", "mcq_concept"):
+        right, opts = key["value"], [o["id"] for o in it["public"]["options"] or []]
+    elif fmt == "find_bug":
+        right, opts = int(key["value"]), list(range(1, max(2, it["public"]["code_lines"]) + 1))
+    elif fmt == "predict_output":
+        return str(key["value"]) if correct else "не знаю"
+    else:  # open_answer
+        rub = it.get("rubric") or {}
+        return rub.get("strong" if correct else "medium") or "Развёрнутый ответ по существу вопроса."
+    if correct or len(opts) < 2:
+        return right
+    wrong = [o for o in opts if o != right]
+    return wrong[int(rng.integers(len(wrong)))]
+
+
+def _p_correct(it: dict, theta: float, part: int) -> float:
+    a = np.asarray(it["pool"]["a"], dtype=float)
+    b = np.asarray(it["pool"]["b"], dtype=float)
+    k = min(part, len(b) - 1)
+    return float(1 / (1 + np.exp(-1.7 * a[k] * (theta - b[k]))))
+
+
+def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, pending_left: int = 0) -> dict:
+    """Проходит тест движком банка за «демо-респондента»: ответы по модели 2PL на уровне theta, время —
+    обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений. Возвращает итог finish_session."""
+    rng = np.random.default_rng(seed)
+    eng = DemoRespondentEngine(rng, theta, pending_left)
+    ts = assessment.start_session(db, user_id, claimed)
+    st = ts.result["state"]
+    for _ in range(60):
+        item = eng.next_item(st)
+        if item is None:
+            break
+        it = eng._current(st)
+        it["issued_at"] = time.time() - float(rng.uniform(0.4, 0.9)) * it["time_limit_s"]
+        for step in range(1, it["parts"] + 1):
+            ok = rng.random() < _p_correct(it, theta, step - 1)
+            eng.answer(st, it["token"], _answer_for(it, step, ok, rng), None, step=step,
+                       signals={"focus_lost": 0, "hidden_ms": 0, "paste": 0, "paste_chars": 0})
+    assessment._drain_outbox(db, ts)
+    from sqlalchemy.orm.attributes import flag_modified
+
+    flag_modified(ts, "result")
+    db.commit()
+    return assessment.finish_session(db, ts, engine=eng)
+
+
+def _user(db: Session, persona: str, role: UserRole) -> User:
+    from app.modules.demo.seed import _user as demo_user
+    from app.core.security import hash_password
+    import secrets
+
+    return demo_user(db, EMAILS[persona], role, hash_password(secrets.token_urlsafe(24)))
+
+
+def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int):
+    u = _user(db, persona, UserRole.candidate)
+    p = CandidateProfile(user_id=u.id, full_name=name, phone="+7 900 000-00-00", telegram=f"@jury_{persona}",
+                         city="Москва", work_format=WorkFormat.remote, relocation=False, experience_years=3.5,
+                         salary_min_hidden=200_000, privacy={}, visible_to_employers=True,
+                         public_ref=new_public_ref(db), onboarding_completed_at=utcnow(),
+                         roles=["developer"], headline="backend · middle (демо жюри)", jury_mode=True)
+    db.add(p)
+    db.flush()
+    sv = SurveyResponse(user_id=u.id, direction_id="backend", claimed_grade_id="middle", experience_years=3.5,
+                        answers={"stack": {t: 3 for t in STACK}, "roles": ["developer"], "demo": True, "jury": True})
+    db.add(sv)
+    db.flush()
+    for t in STACK:
+        db.add(SurveyStackTag(survey_id=sv.id, stack_tag_id=t, self_level=3))
+    set_t0_facts(db, u.id, FactSource.self_report, stack=STACK, roles=["developer"],
+                 soft_skills=["communication", "teamwork"], experience_years=3.5)
+    if with_fsp:
+        pp = FspPassport(user_id=u.id, link_source=FspLinkSource.demo, synced_at=utcnow(), sport_rank="КМС",
+                         raw={"demo": True, "jury": True, "note": "демо-реестр хакатона"})
+        db.add(pp)
+        db.flush()
+        db.add(FspAchievement(passport_id=pp.id, discipline="product", event_level=FspEventLevel.national,
+                              event_name="Чемпионат России по продуктовому программированию", event_date=date(2025, 11, 20),
+                              place=2, result_title="призёр", team_name="Команда «Северный ветер» (демо)",
+                              role_in_team="backend", verified=True, source_ref="demo-registry"))
+        db.add(FspAchievement(passport_id=pp.id, discipline="algorithmic", event_level=FspEventLevel.interregional,
+                              event_name="Кубок России по спортивному программированию", event_date=date(2026, 4, 12),
+                              place=7, result_title="финалист", team_name="Команда «Северный ветер» (демо)",
+                              verified=True, source_ref="demo-registry"))
+    db.commit()
+    res = {}
+    for attempt in range(6):  # демо-респондент случаен: нужен подтверждённый грейд — иначе следующий seed
+        res = run_demo_test(db, u.id, "middle", theta, seed + attempt, pending_left)
+        if res.get("confirmed") or res.get("category_id"):
+            break
+    refresh_rating(db, u.id)
+    db.commit()
+    return u, p, res
+
+
+def delete_jury(db: Session) -> int:
+    ids = db.scalars(select(User.id).where(User.email.in_(list(EMAILS.values())))).all()
+    db.execute(delete(Company).where(Company.name == COMPANY, Company.is_demo.is_(True)))
+    if ids:
+        db.execute(delete(User).where(User.id.in_(ids)))
+    db.commit()
+    return len(ids)
+
+
+def create_jury(db: Session) -> dict:
+    t0 = time.time()
+    _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0)
+    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1)
+    eu = _user(db, "employer", UserRole.employer)
+    c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург", website="https://example.invalid",
+                description="Платёжный сервис для малого бизнеса. Демо-компания для экспертов жюри.",
+                contact_email=f"hr@{DOMAIN}", created_by=eu.id, is_demo=True)
+    db.add(c)
+    db.flush()
+    db.add(EmployerProfile(user_id=eu.id, company_id=c.id, full_name="Ольга Миронова", position="HR-партнёр (демо)"))
+    db.commit()
+    needs = []
+    for text_ in NEEDS:
+        req = parse_need(text_, use_llm=False)
+        n = EmployerNeed(company_id=c.id, created_by=eu.id, title=text_.split(":")[0][:200], raw_text=text_,
+                         requirements=req, direction_id=req.get("direction"), grade_id=req.get("grade"),
+                         salary_from=req.get("salary_from"), salary_to=req.get("salary_to"), status=NeedStatus.active)
+        db.add(n)
+        db.flush()
+        sel = ranking.build_selection(db, req, {})
+        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={}, requirements=req,
+                                results=sel["results"], algorithm_version=sel["algorithm"], created_by=eu.id))
+        needs.append(n)
+    db.commit()
+    from app.modules.invitations.service import create_invitation
+
+    create_invitation(db, eu, c, p2, position_title="Backend-разработчик (платежи)",
+                      offer_description="Команда платежей: FastAPI, PostgreSQL, Redis. Удалённо, гибкий график.",
+                      salary_from=240_000, salary_to=270_000, contact_method="Почта HR и звонок 20 минут",
+                      need_id=needs[0].id, probe_id=None)
+    ex = _user(db, "expert", UserRole.admin)
+    db.commit()
+    return {"candidate": {"ref": p1.public_ref, "confirmed": r1.get("confirmed"), "theta": r1.get("theta")},
+            "candidate_nofsp": {"ref": p2.public_ref, "confirmed": r2.get("confirmed"), "theta": r2.get("theta"),
+                                "pending": (r2.get("details") or {}).get("pending_review")},
+            "employer": {"company": c.name, "needs": len(needs)}, "expert": {"email": ex.email},
+            "seconds": round(time.time() - t0, 1)}
+
+
+def _lock(db: Session) -> None:
+    if db.get_bind().dialect.name == "postgresql":  # два воркера uvicorn: сброс и создание — по очереди
+        db.execute(text("SELECT pg_advisory_xact_lock(20261006)"))
+
+
+def reset(db: Session) -> dict:
+    _lock(db)
+    n = delete_jury(db)
+    _lock(db)
+    out = create_jury(db)
+    out["deleted_users"] = n
+    log.info("Демо жюри пересоздано: %s", out)
+    return out
+
+
+def ensure(db: Session) -> bool:
+    """Создаёт учётки жюри, если их нет (первый вход после выкладки). True — созданы сейчас."""
+    have = set(db.scalars(select(User.email).where(User.email.in_(list(EMAILS.values())))).all())
+    if have == set(EMAILS.values()):
+        return False
+    _lock(db)
+    have = set(db.scalars(select(User.email).where(User.email.in_(list(EMAILS.values())))).all())
+    if have == set(EMAILS.values()):
+        db.commit()
+        return False
+    delete_jury(db)
+    create_jury(db)
+    return True

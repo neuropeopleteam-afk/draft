@@ -17,15 +17,18 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.legal import OPERATOR
+from app.modules.assessment.expert_router import router as expert_router
 from app.modules.assessment.router import router as assessment_router
 from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import router as catalog_router
 from app.modules.invitations.router import candidate_router as candidate_contact_router
 from app.modules.invitations.router import employer_router as employer_contact_router
+from app.modules.jury.router import router as jury_router
 from app.modules.matching.router import router as employer_router
 from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
+from app.modules.validation.router import router as validation_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -68,7 +71,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
     for r in (auth_router, profiles_router, candidate_router, legal_router, assessment_router,
-              candidate_contact_router, employer_router, employer_contact_router, catalog_router):
+              candidate_contact_router, employer_router, employer_contact_router, catalog_router,
+              expert_router, jury_router, validation_router):
         app.include_router(r)
     app.mount("/api/static", StaticFiles(directory=STATIC_DIR), name="static")
 

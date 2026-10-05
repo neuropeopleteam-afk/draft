@@ -180,6 +180,17 @@ def fmt_count(v) -> str:
     return str(int(x)) if x.is_integer() else f"{x:.1f}".replace(".", ",")
 
 
+def integrity_summary(integ: dict | None) -> dict | None:
+    """Достоверность результата теста для работодателя (assessment/integrity.py): уровень и причины."""
+    from app.modules.assessment.integrity import summary_for_employer
+
+    return summary_for_employer(integ)
+
+
+def verified_achievements(b: "Bundle") -> list:
+    return [a for a in b.achievements if a.verified]
+
+
 def skill_confirmed(f: CandidateFact | None) -> bool:
     return bool(f and f.value.get("score", 0) >= 0.5)
 
@@ -215,6 +226,7 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
         "test": {
             "level": "T1", "theta": t.get("theta"), "se": t.get("se"), "correct": t.get("correct"),
             "answered": t.get("answered"), "engine": t.get("engine"), "date": b.test.created_at.date().isoformat(),
+            "integrity": integrity_summary(t.get("integrity")),
         } if t else None,
         "skills_confirmed": [
             {"tag": k, "title": STACK.get(k, (k,))[0], "score": f.value.get("score"), "level": "T1"}
@@ -223,11 +235,12 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
         "probes": [{"title": f.title, "score": f.value.get("score"), "verdict": f.value.get("verdict"), "level": "T1"}
                    for f in b.probes_t1],
         "fsp": ({
-            "linked": b.passport is not None, "level": "T2" if b.achievements else None,
+            "linked": b.passport is not None, "level": "T2" if verified_achievements(b) else None,
             "source": b.passport.link_source.value if b.passport else None,
             "strength": b.fsp,
             "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified}
-                             for a in b.achievements[:5]],
+                             for a in verified_achievements(b)[:5]],
+            "unverified_count": sum(1 for a in b.achievements if not a.verified),
         } if show("show_fsp") else {"linked": None, "hidden": True}),
         "stack_declared": [{"tag": f.key, "title": f.title, "level": "T0", "source": f.source.value}
                            for f in _uniq(b.t0.get("stack", []))] if show("show_stack") else None,

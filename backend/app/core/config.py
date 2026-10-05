@@ -69,15 +69,24 @@ class Settings(BaseSettings):
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"
-    # Параметры адаптивного теста (по умолчанию — как в assessment_bank.psychometrics.CATConfig)
+    # Параметры адаптивного теста. Длина: 8–16 оцениваемых заданий (+3 канарейки, +до 3 дотестирования),
+    # не дольше 60 минут; open_book_3step — не больше 2, open_answer — не больше 1 (см. exposure.py)
     assessment_min_items: int = 8
-    assessment_max_items: int = 20
+    assessment_max_items: int = 16
     assessment_se_target: float = 0.35
-    assessment_max_minutes: int = 90
-    # Дотестирование у порога грейда: |θ − порог| < SE → ещё до 4 заданий (минимум 3), выбор по информации в пороге
-    assessment_extension_items: int = 4
-    # Ротация субпулов банка (1 — без ротации: банк пока мал, см. отчёт симуляции банка)
-    assessment_subpools: int = 1
+    assessment_max_minutes: int = 60
+    # Дотестирование у порога грейда: |θ − порог| < SE → ещё до 3 заданий (минимум 3), выбор по информации в пороге
+    assessment_extension_items: int = 3
+    assessment_max_open_book: int = 2
+    assessment_max_open_answer: int = 1
+    # Ротация субпулов банка: 2 параллельные формы; повторная попытка получает другой субпул.
+    # Утёкший субпул — в карантин: ASSESSMENT_SUBPOOL_QUARANTINE=0 (номера через запятую)
+    assessment_subpools: int = 2
+    assessment_subpool_quarantine: str = ""
+    # Контроль частоты показа: sympson_hetter (K_f из assessment/exposure_k.json) | none
+    assessment_exposure: str = "sympson_hetter"
+    # Демо-учётки жюри: вход в один клик, сброс в исходное состояние (не чаще раза в N секунд)
+    jury_reset_cooldown_s: int = 20
 
     # Резюме: максимальный размер PDF
     resume_max_bytes: int = 5 * 1024 * 1024

@@ -74,6 +74,10 @@ class AnswerIn(BaseModel):
     answer: Any = Field(description="option — id варианта (A–F); line — номер строки (с 1); text — строка ответа")
     step: int | None = Field(None, ge=1, le=3, description="Шаг open_book_3step (защита от двойной отправки)")
     time_spent_ms: int | None = Field(None, ge=0, le=7_200_000, description="Время по часам клиента (справочно)")
+    signals: dict[str, int] | None = Field(
+        None, description="Сигналы интерфейса теста за время задания (античит): focus_lost — потерь фокуса / "
+                          "переключений вкладки, hidden_ms — время вне вкладки, paste — вставок текста, "
+                          "paste_chars — вставлено символов. Влияют только на «достоверность результата»")
 
 
 def _session_out(db, ts) -> SessionOut:
@@ -123,7 +127,7 @@ def get_session(session_id: uuid.UUID, user: User = Depends(candidate), db: Sess
 def answer(session_id: uuid.UUID, data: AnswerIn, user: User = Depends(candidate),
            db: Session = Depends(get_db)) -> SessionOut:
     ts = service.get_own_session(db, user.id, session_id, lock=True)
-    service.submit_answer(db, ts, data.item_id, data.answer, data.time_spent_ms, data.step)
+    service.submit_answer(db, ts, data.item_id, data.answer, data.time_spent_ms, data.step, data.signals)
     return _session_out(db, ts)
 
 
