@@ -1,5 +1,9 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
+import { errText } from "../components/ui";
+import { useAuth } from "../lib/auth";
+import { guide, juryLogin, juryReset, type Persona } from "../lib/jury";
 
 const candidateSteps = [
   ["Регистрация", "Почта с подтверждением и согласие на обработку данных — без резюме на первом шаге."],
@@ -65,6 +69,8 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <JuryBlock />
 
       <section id="how" className="mx-auto max-w-content px-6 py-20">
         <h2 className="text-3xl font-extrabold tracking-tight text-brand-night">Как это работает</h2>
@@ -137,5 +143,70 @@ function Rule({ title, text }: { title: string; text: string }) {
       <p className="font-bold text-brand-night">{title}</p>
       <p className="mt-2 text-sm leading-relaxed text-brand-ink/70">{text}</p>
     </div>
+  );
+}
+
+const JURY: { id: Persona; title: string; text: string }[] = [
+  { id: "candidate", title: "Кандидат с паспортом ФСП", text: "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП из реестра (T2), место в рейтинге." },
+  { id: "candidate_nofsp", title: "Кандидат без ФСП", text: "Илья Сергеев · Backend · Middle. Нет истории ФСП — нейтрально. Ждёт приглашение с вилкой." },
+  { id: "employer", title: "Работодатель", text: "«Северный платёж»: две потребности текстом, подборки с объяснением, поиск по категориям." },
+  { id: "expert", title: "Эксперт", text: "Проверка развёрнутых ответов по рубрике: «на проверке» и выборочно за LLM." },
+];
+
+function JuryBlock() {
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function enter(p: Persona) {
+    setBusy(p); setMsg(null);
+    try { navigate(await juryLogin(p, signIn)); }
+    catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
+  }
+  async function reset() {
+    setBusy("reset"); setMsg(null);
+    try { const r = await juryReset(); setMsg(`Демо жюри пересоздано в исходное состояние за ${r.seconds} с.`); }
+    catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
+  }
+  return (
+    <section id="jury" className="border-b border-brand-night/10 bg-[#F3F2FB]" aria-labelledby="jury-title">
+      <div className="mx-auto max-w-content px-6 py-12">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
+            <h2 id="jury-title" className="mt-2 text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Вход в один клик и проводник по сценарию</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-ink/75">
+              Готовые демо-учётки: регистрация, опрос и тест уже пройдены, правило 90 дней для них снято.
+              Проводник ведёт по сквозному сценарию: регистрация → опрос и тест → категория → поиск работодателем → контакт.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/validation" className="btn-ghost">Как мы проверяем себя</Link>
+            <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
+          </div>
+        </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {JURY.map((p) => (
+            <button key={p.id} onClick={() => enter(p.id)} disabled={!!busy}
+              className="card flex flex-col items-start border-transparent p-5 text-left transition-shadow hover:shadow-md hover:ring-2 hover:ring-brand/40 focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-60">
+              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Войти как</span>
+              <span className="mt-1 text-lg font-bold text-brand-night">{p.title}</span>
+              <span className="mt-1.5 text-sm leading-relaxed text-brand-ink/70">{p.text}</span>
+              <span className="mt-4 text-sm font-semibold text-brand">{busy === p.id ? "Входим…" : "Войти →"}</span>
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
+          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { guide.enable(); guide.setStep(0); navigate("/register?role=candidate"); }}>
+            Начать проводник с регистрации
+          </button>
+          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline disabled:opacity-50" disabled={!!busy} onClick={reset}>
+            {busy === "reset" ? "Сбрасываем…" : "Сбросить демо в исходное состояние"}
+          </button>
+          {msg && <span className="text-brand-ink/75" role="status">{msg}</span>}
+        </div>
+      </div>
+    </section>
   );
 }

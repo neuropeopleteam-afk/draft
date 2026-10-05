@@ -10,8 +10,8 @@
   покрыто меньше половины обязательных → не выше 1;
 * формат работы несовместим (офис ↔ удалённо) → −1 (не ниже 0).
 
-Релевантен — метка ≥ 2. Метрики: precision@5, nDCG@5, nDCG@10 (gain = 2^rel − 1). Сравнение: ранжирование
-платформы, «ключевые слова» (число совпавших тегов в заявленном стеке — как у поиска по резюме), случайный
+Релевантен — метка ≥ 2. Метрики: precision@5, nDCG@5, nDCG@10 (gain = 2^rel − 1). Сравнение: подборка
+платформы (как в продукте: фильтр по категории потребности, внутри — скор по T1/T2), «ключевые слова» (число совпавших тегов в заявленном стеке — как у поиска по резюме), случайный
 порядок (среднее по 200 перестановкам). Ограничение (честно): разметка автоматическая, на синтетических
 данных и использует те же поля потребности, что и разбор; экспертная разметка — следующий шаг.
 """
@@ -71,6 +71,15 @@ def precision(rels: list[int], k: int) -> float:
     return sum(1 for r in rels[:k] if r >= 2) / k
 
 
+def selection_categories(req: dict) -> set[str] | None:
+    d, g = req.get("direction"), req.get("grade")
+    if not d:
+        return None
+    from app.modules.catalog.seed_data import GRADES
+
+    return {f"{d}.{x}" for x in GRADES} if not g else {f"{d}.{g}"}
+
+
 def pick_set(bundles: list[Bundle], req: dict, rnd: random.Random) -> list[Bundle]:
     d, g = req.get("direction"), req.get("grade")
     same = [b for b in bundles if b.profile.current_direction_id == d]
@@ -79,7 +88,7 @@ def pick_set(bundles: list[Bundle], req: dict, rnd: random.Random) -> list[Bundl
     far = [b for b in same if b not in exact and b not in near]
     other = [b for b in bundles if b.profile.current_direction_id != d]
     for lst in (exact, near, far, other):
-        lst.sort(key=lambda b: b.profile.public_ref or "")
+        lst.sort(key=lambda b: (b.profile.telegram or "", b.profile.public_ref or ""))
         rnd.shuffle(lst)
     out = exact[:8] + near[:6]
     out += far[:max(0, 14 - len(out))]
@@ -90,15 +99,21 @@ def pick_set(bundles: list[Bundle], req: dict, rnd: random.Random) -> list[Bundl
 def evaluate(db: Session, needs: list[str], seed: int = 20261006) -> dict:
     rnd = random.Random(seed)
     profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.current_category_id.is_not(None))).all()
-    bundles = sorted(load_bundles(db, [p.user_id for p in profiles]).values(), key=lambda b: b.profile.public_ref or "")
+    bundles = sorted(load_bundles(db, [p.user_id for p in profiles]).values(),
+                     key=lambda b: (b.profile.telegram or "", b.profile.public_ref or ""))  # детерминированно
     rows, pairs = [], []
     agg = {m: {"platform": [], "keywords": [], "random": []} for m in ("p@5", "ndcg@5", "ndcg@10")}
+    within = {"platform": [], "keywords": [], "random": []}
     for qi, text in enumerate(needs):
         req = parse_need(text, use_llm=False)
         cand = pick_set(bundles, req, rnd)
         labels = {b.profile.user_id: label(b, req) for b in cand}
         all_rels = list(labels.values())
-        ours = sorted(cand, key=lambda b: (-score_candidate(b, req)[0], -(b.profile.rating_score or 0),
+        # Как в продукте (ranking.build_selection): сначала фильтр по рекомендованным категориям потребности,
+        # внутри — скор; кандидаты вне категорий в подборку не попадают (здесь — в конец списка)
+        cats_ok = selection_categories(req)
+        ours = sorted(cand, key=lambda b: (0 if (cats_ok is None or b.profile.current_category_id in cats_ok) else 1,
+                                           -score_candidate(b, req)[0], -(b.profile.rating_score or 0),
                                            b.profile.public_ref or ""))
         kw_rng = random.Random(seed + qi)
         kw = sorted(cand, key=lambda b: (-keyword_score(b, req), kw_rng.random()))
@@ -119,6 +134,18 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006) -> dict:
         for m in agg:
             for k in agg[m]:
                 agg[m][k].append(res[k][m])
+        # Внутри категории потребности (фильтр одинаков для всех способов): nDCG@3 — порядок по силе доказательств
+        inc = [b for b in cand if cats_ok is None or b.profile.current_category_id in cats_ok]
+        if len(inc) >= 4 and len({labels[b.profile.user_id] for b in inc}) > 1:
+            rel_in = [labels[b.profile.user_id] for b in inc]
+            within["platform"].append(ndcg([labels[b.profile.user_id] for b in ours if b in inc], rel_in, 3))
+            within["keywords"].append(ndcg([labels[b.profile.user_id] for b in kw if b in inc], rel_in, 3))
+            acc = 0.0
+            for _ in range(200):
+                perm = rel_in[:]
+                rnd.shuffle(perm)
+                acc += ndcg(perm, rel_in, 3) / 200
+            within["random"].append(acc)
         rows.append({"need": text, "direction": req.get("direction"), "grade": req.get("grade"),
                      "relevant": sum(1 for r in all_rels if r >= 2), "labels": {str(r): all_rels.count(r) for r in range(4)},
                      **{k: {m: round(v, 3) for m, v in res[k].items()} for k in res}})
@@ -127,8 +154,13 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006) -> dict:
                           "label": labels[b.profile.user_id], "rank_platform": ours.index(b) + 1,
                           "rank_keywords": kw.index(b) + 1})
     summary = {m: {k: round(sum(v) / len(v), 3) for k, v in agg[m].items()} for m in agg}
+    summary["within_category_ndcg@3"] = {k: round(sum(v) / len(v), 3) if v else None for k, v in within.items()}
+    summary["within_category_needs"] = len(within["platform"])
     return {"n_needs": len(needs), "set_size": K_SET, "n_pairs": len(pairs),
             "relevant_share": round(sum(1 for p in pairs if p["label"] >= 2) / max(len(pairs), 1), 3),
             "summary": summary, "per_need": rows, "pairs": pairs,
+            "caveat": "Фильтр по категории в подборке и грейд в разметке совпадают по смыслу, поэтому общий p@5 "
+                      "завышает преимущество платформы над поиском по ключевым словам; честнее сравнение внутри "
+                      "категории (within_category_ndcg@3).",
             "method": "Разметка по правилам требований (направление, грейд, обязательные навыки, формат); "
                       "релевантен — метка ≥ 2 из 3. Синтетические демо-данные; экспертная разметка — следующий шаг."}

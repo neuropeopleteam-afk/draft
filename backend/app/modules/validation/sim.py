@@ -58,8 +58,8 @@ def make_pool(n_subpools: int, params: dict | None = None):
 
 def run_session(pool, direction, responder, cfg: AppConfig, exposure: ExposureControl | None, claimed: str,
                 subpool: int | None, rng: np.random.Generator) -> tuple[AppCATSession, object]:
-    sess = AppCATSession(pool, direction, cfg.cat(), exposure if cfg.exposure else None, claimed, subpool, rng,
-                         max_per_format=cfg.max_per_format)
+    # ExposureControl передаётся всегда (счётчик частоты показа); отбор Sympson — Hetter включает cfg.cat().exposure
+    sess = AppCATSession(pool, direction, cfg.cat(), exposure, claimed, subpool, rng, max_per_format=cfg.max_per_format)
     while True:
         item = sess.next_item()
         if item is None:

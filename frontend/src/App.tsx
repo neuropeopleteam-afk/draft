@@ -1,5 +1,8 @@
 import { Link, Route, Routes } from "react-router-dom";
 import { CabinetLayout, SectionPlaceholder } from "./components/CabinetLayout";
+import { JuryGuide } from "./components/JuryGuide";
+import Expert from "./pages/Expert";
+import Validation from "./pages/Validation";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -21,8 +24,13 @@ const placeholder = (sections: typeof candidateSections, path: string) => <Secti
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/validation" element={<Validation />} />
+      <Route path="/expert" element={<CabinetLayout role="admin" title="Кабинет эксперта" sections={[]} />}>
+        <Route index element={<Expert />} />
+      </Route>
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/login" element={<Login />} />
@@ -52,6 +60,8 @@ export default function App() {
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <JuryGuide />
+    </>
   );
 }
 

@@ -38,7 +38,10 @@ test-pg: ## Те же тесты на PostgreSQL (отдельная база fs
 test-local: ## Тесты backend без Docker (нужен Python 3.12+ и зависимости из requirements*.txt)
 	cd backend && python -m pytest
 
-validate: ## Процедура валидации (заготовка; отчёт в reports/validation.json)
+validate: ## Пересчёт метрик /validation: банк, симуляция теста, повтор, утечка, подбор (≈ 2 мин)
+	cd backend && python ../tools/calibrate_exposure.py && python -m app.modules.validation
+
+validate-docker: ## То же в контейнере api (без пересчёта K Sympson — Hetter)
 	$(COMPOSE) run --rm --no-deps api python -m app.modules.validation
 
 dev-backend: ## Локальный backend с автоперезагрузкой (SQLite)
@@ -48,4 +51,4 @@ dev-backend: ## Локальный backend с автоперезагрузкой
 dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
-.PHONY: help env up down ps logs migrate test test-pg test-local validate dev-backend dev-frontend
+.PHONY: help env up down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend

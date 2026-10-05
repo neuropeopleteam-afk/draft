@@ -1,0 +1,56 @@
+import { api, type TokenOut } from "./api";
+
+export type Persona = "candidate" | "candidate_nofsp" | "employer" | "expert";
+export const JURY_DOMAIN = "@jury.example.com";
+export const isJury = (email?: string | null) => !!email && email.endsWith(JURY_DOMAIN);
+
+const KEY_ON = "jury_guide";
+const KEY_HIDDEN = "jury_guide_hidden";
+const KEY_STEP = "jury_guide_step";
+export const guide = {
+  on: () => localStorage.getItem(KEY_ON) === "1",
+  enable: () => { localStorage.setItem(KEY_ON, "1"); localStorage.removeItem(KEY_HIDDEN); },
+  disable: () => { localStorage.removeItem(KEY_ON); },
+  hidden: () => localStorage.getItem(KEY_HIDDEN) === "1",
+  hide: () => localStorage.setItem(KEY_HIDDEN, "1"),
+  show: () => localStorage.removeItem(KEY_HIDDEN),
+  step: () => Number(localStorage.getItem(KEY_STEP) ?? "0") || 0,
+  setStep: (n: number) => localStorage.setItem(KEY_STEP, String(n)),
+};
+
+export async function juryLogin(persona: Persona, signIn: (t: string) => Promise<unknown>): Promise<string> {
+  const r = await api<TokenOut & { landing: string }>("/jury/login", { method: "POST", body: { persona }, auth: false });
+  await signIn(r.access_token);
+  guide.enable();
+  return r.landing;
+}
+
+export async function juryReset(): Promise<{ seconds: number }> {
+  return api("/jury/reset", { method: "POST", auth: false });
+}
+
+export interface GuideStep {
+  title: string; text: string; path: string; persona: Persona | null; match: RegExp; cta: string;
+}
+
+/** Сквозной сценарий из п. 3.3 ТЗ + механики тестирования и подбора. */
+export const STEPS: GuideStep[] = [
+  { title: "Регистрация соискателя", persona: null, path: "/register?role=candidate", match: /^\/(register|verify)/, cta: "Открыть регистрацию",
+    text: "Почта с кодом подтверждения и согласие на обработку данных. Чтобы не ждать письма, следующий шаг откроет готового демо-кандидата — регистрация у него уже пройдена." },
+  { title: "Опрос и тест", persona: "candidate", path: "/candidate/assessment", match: /^\/candidate\/assessment/, cta: "Войти как кандидат",
+    text: "Опрос пройден, тест сдан настоящим адаптивным движком: 8–16 заданий из банка 128 семейств, у каждого свой вариант, 3 контрольных задания-«канарейки». Для жюри снято правило 90 дней: тест можно пройти заново и посмотреть, как интерфейс фиксирует уход со вкладки и вставку текста." },
+  { title: "Присвоение категории", persona: "candidate", path: "/candidate/category", match: /^\/candidate\/category/, cta: "Открыть категорию",
+    text: "Категория «Backend · Middle» и место в рейтинге. Рейтинг строится только на подтверждённом: тест (T1) и достижения ФСП из реестра (T2). Нет истории ФСП — нейтрально, без штрафа." },
+  { title: "Работодатель: потребность", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs/, cta: "Войти как работодатель",
+    text: "Потребность пишется своими словами — система выделяет направление, грейд, стек и зарплату («260 000 ₽ на руки», «от 200 до 250 тыс.»). Подборка объясняет каждого кандидата по каждому требованию." },
+  { title: "Поиск по категории", persona: "employer", path: "/employer/search", match: /^\/employer\/(search|candidates)/, cta: "Открыть поиск",
+    text: "Поиск по категории «направление · грейд». В карточке — уровни доказанности T0/T1/T2 и «достоверность результата» теста с причинами. ФИО и контакты скрыты до согласия кандидата." },
+  { title: "Выход на контакт", persona: "employer", path: "/employer/invitations", match: /^\/employer\/(invitations|probes)/, cta: "Приглашения работодателя",
+    text: "Приглашение-оффер с обязательной вилкой «от–до» в рублях. Пригласите Марию Королёву (кандидат с ФСП) из подборки или поиска; Илье Сергееву приглашение уже отправлено." },
+  { title: "Ответ кандидата", persona: "candidate_nofsp", path: "/candidate/invitations", match: /^\/candidate\/invitations/, cta: "Войти как кандидат без ФСП",
+    text: "Кандидат видит компанию, вилку и доказательства, по которым его выбрали. После «Принять» работодатель получает контакты — и только тогда." },
+  { title: "Эксперт: проверка ответов", persona: "expert", path: "/expert", match: /^\/expert/, cta: "Войти как эксперт",
+    text: "Развёрнутые ответы, которые не смог оценить LLM, ждут эксперта: критерии рубрики с весами, эталоны сильного и слабого ответа. Оценка сразу пересчитывает результат теста." },
+  { title: "Как мы проверяем себя", persona: null, path: "/validation", match: /^\/validation/, cta: "Открыть /validation",
+    text: "Метрики теста и подбора, как они получились, и «Красная кнопка»: атаки, которые вы запускаете сами — раздуть резюме, сменить имя, добавить фальшивый значок ФСП, «слить» часть банка." },
+];

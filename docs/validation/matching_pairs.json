@@ -1,0 +1,2422 @@
+{
+ "needs": [
+  "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс.",
+  "Нужен senior Java-разработчик для платёжного ядра: Java, PostgreSQL, Kafka, gRPC обязательно. Гибрид, Санкт-Петербург.",
+  "Data Scientist middle: Python, pandas, scikit-learn, статистика, SQL. Желательно Airflow и ClickHouse. 200–280 тыс. ₽",
+  "Junior аналитик данных/ML: Python, pandas, SQL; будет плюсом опыт с numpy. Офис в Москве или гибрид.",
+  "Специалист по ИБ middle: OWASP, Burp Suite, пентест веб-приложений, сетевая безопасность. Желательно CTF.",
+  "Senior SOC-аналитик: SIEM/SOC, форензика, сетевая безопасность, Linux. Удалённо.",
+  "Frontend-разработчик middle: React, TypeScript, HTML/CSS обязательно; Next.js будет плюсом. 180–250 тыс.",
+  "Бэкенд junior: Python, Django, SQL, Git. Обучим остальному. Казань или удалённо.",
+  "QA-инженер middle: тест-дизайн, API-тестирование, pytest; желательно Playwright и Allure.",
+  "Senior Go-разработчик для маршрутизации: Go, PostgreSQL, Kafka, Docker. От 5 лет опыта.",
+  "Junior frontend: JavaScript, HTML/CSS, React. Желательно TypeScript. Томск, офис или гибрид.",
+  "ML-инженер senior: PyTorch, компьютерное зрение (CV), MLOps, Python. Желательно Spark.",
+  "Senior frontend: TypeScript, React, state management, доступность (a11y), тестирование фронтенда.",
+  "Junior QA: ручное тестирование, тест-дизайн, SQL, основы API-тестирования. Самара, офис.",
+  "Автоматизатор тестирования senior: Python, pytest, Selenium или Playwright, CI/CD, нагрузочное тестирование."
+ ],
+ "pairs": [
+  {
+   "need_index": 0,
+   "candidate_ref": "C-ZNCNM5",
+   "category": "backend.middle",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-W5EBEZ",
+   "category": "backend.middle",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-J46NWS",
+   "category": "backend.middle",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-ZDSQTR",
+   "category": "backend.middle",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-54GLG5",
+   "category": "backend.middle",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-DEAHM4",
+   "category": "backend.middle",
+   "label": 3,
+   "rank_platform": 7,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-7S7ELK",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 4,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-SA252J",
+   "category": "backend.middle",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-BNUVG5",
+   "category": "backend.senior",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-PBMZFX",
+   "category": "backend.senior",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-UMD2ZP",
+   "category": "backend.senior",
+   "label": 0,
+   "rank_platform": 11,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-JAL8HQ",
+   "category": "backend.senior",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-HJNGLJ",
+   "category": "backend.junior",
+   "label": 1,
+   "rank_platform": 16,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-A4YQYQ",
+   "category": "backend.junior",
+   "label": 1,
+   "rank_platform": 19,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-CDMS77",
+   "category": "security.senior",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-D25GYD",
+   "category": "security.middle",
+   "label": 0,
+   "rank_platform": 17,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-UMM82F",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-JYSSBN",
+   "category": "security.junior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-YQJQEU",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 0,
+   "candidate_ref": "C-8GD4DY",
+   "category": "qa.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-QQ2CFT",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-7APX7E",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-JAL8HQ",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-XPSSZ7",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-PBMZFX",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-GKLF83",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-BNUVG5",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-RM28FM",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-SA252J",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 19,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-38HJJH",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 18,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-7S7ELK",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-ZDSQTR",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 14,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-54GLG5",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 17,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-ZNCNM5",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-7NCZDD",
+   "category": "security.middle",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-9QHLXH",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-LBGZFP",
+   "category": "qa.middle",
+   "label": 0,
+   "rank_platform": 16,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-6XDFZ5",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-QUMVWU",
+   "category": "qa.middle",
+   "label": 0,
+   "rank_platform": 11,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 1,
+   "candidate_ref": "C-KMVJKU",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 12,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-WSYK2J",
+   "category": "data_ml.middle",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-LJTJ64",
+   "category": "data_ml.middle",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-P5U8B5",
+   "category": "data_ml.middle",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-AVVBE8",
+   "category": "data_ml.middle",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-WL7B6Q",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 4,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-UUDPJ6",
+   "category": "data_ml.middle",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-VJH3J7",
+   "category": "data_ml.middle",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-2BUCRY",
+   "category": "data_ml.middle",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-RSWRHG",
+   "category": "data_ml.junior",
+   "label": 1,
+   "rank_platform": 16,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-RCJ6RR",
+   "category": "data_ml.junior",
+   "label": 1,
+   "rank_platform": 18,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-46BEJC",
+   "category": "data_ml.senior",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-LTRZQG",
+   "category": "data_ml.senior",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-3ZU3L5",
+   "category": "data_ml.junior",
+   "label": 1,
+   "rank_platform": 20,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-D8XUBL",
+   "category": "data_ml.senior",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-HJNGLJ",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 17,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-U433KR",
+   "category": "qa.senior",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-362Z29",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-46GJRN",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-GTVC4H",
+   "category": "security.middle",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 2,
+   "candidate_ref": "C-XPSSZ7",
+   "category": "backend.senior",
+   "label": 0,
+   "rank_platform": 11,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-JQLVSY",
+   "category": "data_ml.junior",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-RSWRHG",
+   "category": "data_ml.junior",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-3ZU3L5",
+   "category": "data_ml.junior",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-9D5RN2",
+   "category": "data_ml.junior",
+   "label": 3,
+   "rank_platform": 4,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-2TGHL6",
+   "category": "data_ml.junior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-4R68J9",
+   "category": "data_ml.junior",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-HM5VGA",
+   "category": "data_ml.junior",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-JXUEG5",
+   "category": "data_ml.junior",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-WL7B6Q",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-86MSYG",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 11,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-WSYK2J",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-2BUCRY",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-AVVBE8",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 15,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-P5U8B5",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 13,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-49UPE7",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-UA8TBL",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 17,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-PYPCY4",
+   "category": "security.senior",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-TX3TQW",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-UBNLG8",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 16,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 3,
+   "candidate_ref": "C-KAQXYV",
+   "category": "security.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-KW8HNM",
+   "category": "security.middle",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-J94J3H",
+   "category": "security.middle",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-GTVC4H",
+   "category": "security.middle",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-9SFXU8",
+   "category": "security.middle",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-9U4T9G",
+   "category": "security.middle",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-D25GYD",
+   "category": "security.middle",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-NKRQHY",
+   "category": "security.middle",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-AQQ5S7",
+   "category": "security.middle",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-3PVAKR",
+   "category": "security.senior",
+   "label": 1,
+   "rank_platform": 11,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-JYSSBN",
+   "category": "security.junior",
+   "label": 1,
+   "rank_platform": 16,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-726XRS",
+   "category": "security.senior",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-PYA8UT",
+   "category": "security.senior",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-LPPEVP",
+   "category": "security.junior",
+   "label": 1,
+   "rank_platform": 20,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-S8AFR9",
+   "category": "security.senior",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-HJNGLJ",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-674W2G",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 17,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-362Z29",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-QVS98E",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-JQLVSY",
+   "category": "data_ml.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 4,
+   "candidate_ref": "C-56RAGP",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-PYPCY4",
+   "category": "security.senior",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-8CANWC",
+   "category": "security.senior",
+   "label": 3,
+   "rank_platform": 1,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-FBP25W",
+   "category": "security.senior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-CDMS77",
+   "category": "security.senior",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-S8AFR9",
+   "category": "security.senior",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-PYA8UT",
+   "category": "security.senior",
+   "label": 1,
+   "rank_platform": 7,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-7VAJ5D",
+   "category": "security.senior",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-726XRS",
+   "category": "security.senior",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-NKRQHY",
+   "category": "security.middle",
+   "label": 1,
+   "rank_platform": 13,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-9U4T9G",
+   "category": "security.middle",
+   "label": 1,
+   "rank_platform": 11,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-9SFXU8",
+   "category": "security.middle",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-KW8HNM",
+   "category": "security.middle",
+   "label": 1,
+   "rank_platform": 15,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-AQNJ4A",
+   "category": "security.middle",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-J94J3H",
+   "category": "security.middle",
+   "label": 1,
+   "rank_platform": 14,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-D832FF",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-JQLVSY",
+   "category": "data_ml.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-W5EBEZ",
+   "category": "backend.middle",
+   "label": 0,
+   "rank_platform": 16,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-TX3TQW",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-49UPE7",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 17,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 5,
+   "candidate_ref": "C-46BEJC",
+   "category": "data_ml.senior",
+   "label": 0,
+   "rank_platform": 12,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-TBHGPJ",
+   "category": "frontend.middle",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-9QHLXH",
+   "category": "frontend.middle",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-VWM96G",
+   "category": "frontend.middle",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-674W2G",
+   "category": "frontend.middle",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-4AAF7F",
+   "category": "frontend.middle",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-UMM82F",
+   "category": "frontend.middle",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-2BMEQ2",
+   "category": "frontend.middle",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-QVS98E",
+   "category": "frontend.middle",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-D832FF",
+   "category": "frontend.junior",
+   "label": 1,
+   "rank_platform": 15,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-7LP7VW",
+   "category": "frontend.senior",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-DGUCB3",
+   "category": "frontend.junior",
+   "label": 1,
+   "rank_platform": 18,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-362Z29",
+   "category": "frontend.senior",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-KMVJKU",
+   "category": "frontend.senior",
+   "label": 1,
+   "rank_platform": 11,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-WNCTNG",
+   "category": "frontend.junior",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-8GD4DY",
+   "category": "qa.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-2BUCRY",
+   "category": "data_ml.middle",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-NAUHQJ",
+   "category": "data_ml.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-SA252J",
+   "category": "backend.middle",
+   "label": 0,
+   "rank_platform": 17,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-D25GYD",
+   "category": "security.middle",
+   "label": 0,
+   "rank_platform": 16,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 6,
+   "candidate_ref": "C-DKSMAU",
+   "category": "data_ml.senior",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-K8HPYJ",
+   "category": "backend.junior",
+   "label": 1,
+   "rank_platform": 8,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-Z9ZB6D",
+   "category": "backend.junior",
+   "label": 1,
+   "rank_platform": 5,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-77CWF6",
+   "category": "backend.junior",
+   "label": 1,
+   "rank_platform": 7,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-46GJRN",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 6,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-UA8TBL",
+   "category": "backend.junior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-HJNGLJ",
+   "category": "backend.junior",
+   "label": 1,
+   "rank_platform": 3,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-WUJUJG",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 4,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-QQVPZ5",
+   "category": "backend.junior",
+   "label": 1,
+   "rank_platform": 1,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-ZNCNM5",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-38HJJH",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 13,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-54GLG5",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 11,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-ZDSQTR",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 16,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-7S7ELK",
+   "category": "backend.middle",
+   "label": 0,
+   "rank_platform": 12,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-DEAHM4",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 17,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-Q6G3SB",
+   "category": "security.junior",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-9M8NY6",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-JYSSBN",
+   "category": "security.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-JQLVSY",
+   "category": "data_ml.junior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-UBNLG8",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 7,
+   "candidate_ref": "C-39AW3Z",
+   "category": "data_ml.senior",
+   "label": 0,
+   "rank_platform": 10,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-QVXW9H",
+   "category": "qa.middle",
+   "label": 3,
+   "rank_platform": 4,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-5G6J4E",
+   "category": "qa.middle",
+   "label": 3,
+   "rank_platform": 7,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-QUMVWU",
+   "category": "qa.middle",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-LBGZFP",
+   "category": "qa.middle",
+   "label": 3,
+   "rank_platform": 3,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-8G4LKX",
+   "category": "qa.middle",
+   "label": 3,
+   "rank_platform": 5,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-9KQT58",
+   "category": "qa.middle",
+   "label": 3,
+   "rank_platform": 8,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-3G5R9Z",
+   "category": "qa.middle",
+   "label": 3,
+   "rank_platform": 2,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-NEPYWZ",
+   "category": "qa.middle",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-8GD4DY",
+   "category": "qa.junior",
+   "label": 1,
+   "rank_platform": 17,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-TGP97G",
+   "category": "qa.senior",
+   "label": 1,
+   "rank_platform": 11,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-W5JS9D",
+   "category": "qa.senior",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-JQQT8Z",
+   "category": "qa.senior",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-HU4H9Q",
+   "category": "qa.senior",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-6E8UFB",
+   "category": "qa.junior",
+   "label": 1,
+   "rank_platform": 19,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-4YXXK4",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-WSYK2J",
+   "category": "data_ml.middle",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-5FP4QG",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-7S7ELK",
+   "category": "backend.middle",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-UMD2ZP",
+   "category": "backend.senior",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 8,
+   "candidate_ref": "C-QVS98E",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 16,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-BNUVG5",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-GKLF83",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-UMD2ZP",
+   "category": "backend.senior",
+   "label": 1,
+   "rank_platform": 8,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-JAL8HQ",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-QQ2CFT",
+   "category": "backend.senior",
+   "label": 1,
+   "rank_platform": 7,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-XPSSZ7",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-PBMZFX",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-7APX7E",
+   "category": "backend.senior",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-R52AGM",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 15,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-W5EBEZ",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 16,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-ZNCNM5",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-7S7ELK",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 13,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-ZDSQTR",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 14,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-54GLG5",
+   "category": "backend.middle",
+   "label": 1,
+   "rank_platform": 17,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-GSQ2EM",
+   "category": "data_ml.senior",
+   "label": 0,
+   "rank_platform": 12,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-VQ5WLX",
+   "category": "qa.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-RPXVWD",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 11,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-5QWSUX",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 9,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-Q9L8YH",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 9,
+   "candidate_ref": "C-8G4LKX",
+   "category": "qa.middle",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-6XDFZ5",
+   "category": "frontend.junior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-WNCTNG",
+   "category": "frontend.junior",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-49UPE7",
+   "category": "frontend.junior",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-TX3TQW",
+   "category": "frontend.junior",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-5FP4QG",
+   "category": "frontend.junior",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-DGUCB3",
+   "category": "frontend.junior",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-TAUTAC",
+   "category": "frontend.junior",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-8N9FHU",
+   "category": "frontend.junior",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-UBNLG8",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-4AAF7F",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-VWM96G",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 14,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-QVS98E",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 13,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-UMM82F",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-9QHLXH",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 11,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-K5UVBV",
+   "category": "data_ml.senior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-GSQ2EM",
+   "category": "data_ml.senior",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-4R68J9",
+   "category": "data_ml.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-LBGZFP",
+   "category": "qa.middle",
+   "label": 0,
+   "rank_platform": 16,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-CDMS77",
+   "category": "security.senior",
+   "label": 0,
+   "rank_platform": 17,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 10,
+   "candidate_ref": "C-QQ2CFT",
+   "category": "backend.senior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-DZPRGM",
+   "category": "data_ml.senior",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-2CSK2H",
+   "category": "data_ml.senior",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-FGRY7A",
+   "category": "data_ml.senior",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-39AW3Z",
+   "category": "data_ml.senior",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-46BEJC",
+   "category": "data_ml.senior",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-DKSMAU",
+   "category": "data_ml.senior",
+   "label": 1,
+   "rank_platform": 8,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-LTRZQG",
+   "category": "data_ml.senior",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-GSQ2EM",
+   "category": "data_ml.senior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-UUDPJ6",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 18,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-LR6KV4",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 16,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-LJTJ64",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-P5U8B5",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 15,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-86MSYG",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 17,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-WSYK2J",
+   "category": "data_ml.middle",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-3PVAKR",
+   "category": "security.senior",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-DAW6RJ",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-Z9ZB6D",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-RPXVWD",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 12,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-KRENJD",
+   "category": "qa.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 11,
+   "candidate_ref": "C-W5JS9D",
+   "category": "qa.senior",
+   "label": 0,
+   "rank_platform": 11,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-56RAGP",
+   "category": "frontend.senior",
+   "label": 3,
+   "rank_platform": 4,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-RNGCEG",
+   "category": "frontend.senior",
+   "label": 3,
+   "rank_platform": 5,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-DAW6RJ",
+   "category": "frontend.senior",
+   "label": 3,
+   "rank_platform": 1,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-7LP7VW",
+   "category": "frontend.senior",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-362Z29",
+   "category": "frontend.senior",
+   "label": 3,
+   "rank_platform": 6,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-KMVJKU",
+   "category": "frontend.senior",
+   "label": 3,
+   "rank_platform": 8,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-5QWSUX",
+   "category": "frontend.senior",
+   "label": 3,
+   "rank_platform": 3,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-YQJQEU",
+   "category": "frontend.senior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-674W2G",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 17,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-UMM82F",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 13,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-2BMEQ2",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-9QHLXH",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-4AAF7F",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-Q9L8YH",
+   "category": "frontend.middle",
+   "label": 1,
+   "rank_platform": 19,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-M3NRP8",
+   "category": "qa.senior",
+   "label": 0,
+   "rank_platform": 11,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-RM28FM",
+   "category": "backend.senior",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-P5U8B5",
+   "category": "data_ml.middle",
+   "label": 0,
+   "rank_platform": 16,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-46GJRN",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-9U4T9G",
+   "category": "security.middle",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 12,
+   "candidate_ref": "C-J94J3H",
+   "category": "security.middle",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-KRENJD",
+   "category": "qa.junior",
+   "label": 1,
+   "rank_platform": 5,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-YMUL6R",
+   "category": "qa.junior",
+   "label": 1,
+   "rank_platform": 8,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-6E8UFB",
+   "category": "qa.junior",
+   "label": 2,
+   "rank_platform": 7,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-PV2T2X",
+   "category": "qa.junior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-8FW4AH",
+   "category": "qa.junior",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-GC94ED",
+   "category": "qa.junior",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-8GD4DY",
+   "category": "qa.junior",
+   "label": 1,
+   "rank_platform": 6,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-WANG57",
+   "category": "qa.junior",
+   "label": 2,
+   "rank_platform": 3,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-9KQT58",
+   "category": "qa.middle",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-HDP67J",
+   "category": "qa.middle",
+   "label": 0,
+   "rank_platform": 11,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-LBGZFP",
+   "category": "qa.middle",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-3G5R9Z",
+   "category": "qa.middle",
+   "label": 0,
+   "rank_platform": 9,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-5G6J4E",
+   "category": "qa.middle",
+   "label": 0,
+   "rank_platform": 15,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-L5Q39C",
+   "category": "qa.middle",
+   "label": 1,
+   "rank_platform": 10,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-RPXVWD",
+   "category": "frontend.senior",
+   "label": 0,
+   "rank_platform": 14,
+   "rank_keywords": 19
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-Q9L8YH",
+   "category": "frontend.middle",
+   "label": 0,
+   "rank_platform": 17,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-52X94U",
+   "category": "security.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-AVVBE8",
+   "category": "data_ml.middle",
+   "label": 0,
+   "rank_platform": 16,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-TX3TQW",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 13,
+   "candidate_ref": "C-A4YQYQ",
+   "category": "backend.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-SBXBEH",
+   "category": "qa.senior",
+   "label": 2,
+   "rank_platform": 8,
+   "rank_keywords": 8
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-W5JS9D",
+   "category": "qa.senior",
+   "label": 1,
+   "rank_platform": 3,
+   "rank_keywords": 13
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-TGP97G",
+   "category": "qa.senior",
+   "label": 2,
+   "rank_platform": 5,
+   "rank_keywords": 9
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-M3NRP8",
+   "category": "qa.senior",
+   "label": 2,
+   "rank_platform": 1,
+   "rank_keywords": 3
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-U433KR",
+   "category": "qa.senior",
+   "label": 1,
+   "rank_platform": 7,
+   "rank_keywords": 11
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-A288EN",
+   "category": "qa.senior",
+   "label": 2,
+   "rank_platform": 4,
+   "rank_keywords": 10
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-HU4H9Q",
+   "category": "qa.senior",
+   "label": 2,
+   "rank_platform": 2,
+   "rank_keywords": 6
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-JQQT8Z",
+   "category": "qa.senior",
+   "label": 2,
+   "rank_platform": 6,
+   "rank_keywords": 1
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-L5Q39C",
+   "category": "qa.middle",
+   "label": 1,
+   "rank_platform": 9,
+   "rank_keywords": 5
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-8G4LKX",
+   "category": "qa.middle",
+   "label": 1,
+   "rank_platform": 14,
+   "rank_keywords": 2
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-LBGZFP",
+   "category": "qa.middle",
+   "label": 1,
+   "rank_platform": 12,
+   "rank_keywords": 4
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-5G6J4E",
+   "category": "qa.middle",
+   "label": 1,
+   "rank_platform": 16,
+   "rank_keywords": 12
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-NEPYWZ",
+   "category": "qa.middle",
+   "label": 1,
+   "rank_platform": 17,
+   "rank_keywords": 18
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-9KQT58",
+   "category": "qa.middle",
+   "label": 1,
+   "rank_platform": 15,
+   "rank_keywords": 7
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-NKRQHY",
+   "category": "security.middle",
+   "label": 0,
+   "rank_platform": 13,
+   "rank_keywords": 17
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-2BUCRY",
+   "category": "data_ml.middle",
+   "label": 0,
+   "rank_platform": 10,
+   "rank_keywords": 14
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-JXUEG5",
+   "category": "data_ml.junior",
+   "label": 0,
+   "rank_platform": 20,
+   "rank_keywords": 15
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-WSYK2J",
+   "category": "data_ml.middle",
+   "label": 0,
+   "rank_platform": 11,
+   "rank_keywords": 16
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-5FP4QG",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 19,
+   "rank_keywords": 20
+  },
+  {
+   "need_index": 14,
+   "candidate_ref": "C-WNCTNG",
+   "category": "frontend.junior",
+   "label": 0,
+   "rank_platform": 18,
+   "rank_keywords": 19
+  }
+ ],
+ "method": "Разметка по правилам требований (направление, грейд, обязательные навыки, формат); релевантен — метка ≥ 2 из 3. Синтетические демо-данные; экспертная разметка — следующий шаг."
+}

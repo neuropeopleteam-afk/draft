@@ -42,7 +42,7 @@ def active_session(db: Session, user_id: uuid.UUID) -> TestSession | None:
     ).order_by(TestSession.created_at.desc()).limit(1))
 
 
-def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str) -> TestSession:
+def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_name: str | None = None) -> TestSession:
     profile = db.get(CandidateProfile, user_id)
     survey = latest_survey(db, user_id)
     if profile is None or survey is None or profile.onboarding_completed_at is None:
@@ -58,7 +58,7 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str) -> TestSe
             return old
         old.status = TestSessionStatus.aborted
         old.finished_at = now
-    engine = get_engine()
+    engine = get_engine(engine_name)
     seed = secrets.randbelow(2**31)
     stack = list((survey.answers or {}).get("stack", {}).keys())
     if engine.name.startswith("bank"):
