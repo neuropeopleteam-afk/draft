@@ -8,6 +8,8 @@
 «Встречный» — рабочее название, меняется в `frontend/src/components/Logo.tsx`.
 
 - Развёрнутый прототип: https://fsp.neuropeople.pro
+- Доступ к стенду: demo / Hakaton (базовая авторизация nginx; без неё открыты только `/api/*`, `/robots.txt`, манифест PWA, `sw.js`, иконки)
+- Для жюри: блок «Для экспертов жюри» на главной — вход в один клик за кандидата (с паспортом ФСП и без), работодателя и эксперта, проводник по сценарию, сброс демо; метрики — страница `/validation`
 - Документация API (OpenAPI/Swagger): https://fsp.neuropeople.pro/api/docs
 - Архитектура и модель данных: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Интеграции: [антифрод и индекс доверия](docs/ANTIFRAUD.md), [ФСП ID](docs/FSP_INTEGRATION.md), [ATS](docs/ATS.md), [нагрузочный тест](docs/LOAD_TEST.md)
@@ -116,7 +118,8 @@ git clone <репозиторий> /opt/spectrek_fsp/app && cd /opt/spectrek_fsp
 make env && make up          # порты публикуются только на 127.0.0.1 (WEB_PORT=8140, API_PORT=8141)
 ```
 
-Внешний nginx проксирует домен на `127.0.0.1:8140` (пример — раздел «Развёртывание» в docs/ARCHITECTURE.md),
+Внешний nginx проксирует домен на `127.0.0.1:8140` (рабочий пример без секретов —
+[infra/nginx/fsp.neuropeople.pro.conf.example](infra/nginx/fsp.neuropeople.pro.conf.example), описание — раздел «Развёртывание» в docs/ARCHITECTURE.md),
 сертификат — `certbot certonly --webroot`. Обновление: `git pull && docker compose up -d --build`
 (миграции применяются при старте контейнера api).
 

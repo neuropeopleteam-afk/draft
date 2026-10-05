@@ -180,6 +180,7 @@ function JuryBlock() {
               Готовые демо-учётки: регистрация, опрос и тест уже пройдены, правило 90 дней для них снято.
               Проводник ведёт по сквозному сценарию: регистрация → опрос и тест → категория → поиск работодателем → контакт.
             </p>
+            <p className="mt-2 text-sm font-semibold text-brand-night">Доступ к стенду: demo / Hakaton</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link to="/validation" className="btn-ghost">Как мы проверяем себя</Link>
