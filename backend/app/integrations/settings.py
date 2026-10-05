@@ -31,7 +31,7 @@ class IntegrationSettings(BaseSettings):
     fsp_oidc_internal_base: str | None = None
     fsp_oidc_client_id: str = "spectrek-platform"
     fsp_oidc_client_secret: str | None = None
-    fsp_oidc_scopes: str = "openid email profile fsp_passport"
+    fsp_oidc_scopes: str = "openid email profile"  # claims fsp_* — мапперы клиента
     # Демо-учётки ФСП ID показываются на странице входа (только демо-realm, без реальных данных)
     fsp_demo_accounts: str = "fsp-champion,fsp-prizer,fsp-newcomer"
     fsp_demo_password: str | None = None

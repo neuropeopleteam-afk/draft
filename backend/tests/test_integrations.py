@@ -149,7 +149,7 @@ def _login_via_fsp(client, fsp, intent="login", token=None):
     url = urlparse(r.json()["authorize_url"])
     q = parse_qs(url.query)
     assert url.path.endswith("/protocol/openid-connect/auth") and q["code_challenge_method"] == ["S256"]
-    assert q["redirect_uri"][0].endswith("/api/fsp-id/callback") and "fsp_passport" in q["scope"][0]
+    assert q["redirect_uri"][0].endswith("/api/fsp-id/callback") and q["scope"] == ["openid email profile"]
     cb = client.get("/api/fsp-id/callback", params={"state": q["state"][0], "code": "abc"}, follow_redirects=False)
     assert cb.status_code == 303
     loc = parse_qs(urlparse(cb.headers["location"]).query)

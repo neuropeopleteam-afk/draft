@@ -1,6 +1,6 @@
 """Маппинг claims ФСП ID → паспорт ФСП платформы (факты уровня T2).
 
-Claims (client scope ``fsp_passport`` в realm fsp, см. docs/FSP_INTEGRATION.md):
+Claims (мапперы атрибутов клиента spectrek-platform в realm fsp, см. docs/FSP_INTEGRATION.md):
 
 | claim | тип | пример | куда |
 |---|---|---|---|

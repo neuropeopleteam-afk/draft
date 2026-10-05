@@ -5,6 +5,9 @@ import App from "./App";
 import { AuthProvider } from "./lib/auth";
 import { MetaProvider } from "./lib/meta";
 import "./index.css";
+import { registerPwa } from "./integrations/pwa";
+
+registerPwa();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

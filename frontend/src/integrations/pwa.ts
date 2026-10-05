@@ -1,0 +1,77 @@
+// PWA: регистрация service worker, установка на главный экран, подписка на Web Push (VAPID).
+import { api } from "../lib/api";
+
+type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> };
+let deferred: InstallEvent | null = null;
+const listeners = new Set<() => void>();
+
+export function registerPwa() {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined);
+  });
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferred = e as InstallEvent;
+    listeners.forEach((f) => f());
+  });
+  window.addEventListener("appinstalled", () => { deferred = null; listeners.forEach((f) => f()); });
+}
+
+export const onInstallChange = (f: () => void) => { listeners.add(f); return () => { listeners.delete(f); }; };
+export const canPromptInstall = () => !!deferred;
+export const isStandalone = () =>
+  window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
+export const platform = (): "ios" | "android" | "desktop" => {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && "ontouchend" in document)) return "ios";
+  if (/Android/i.test(ua)) return "android";
+  return "desktop";
+};
+
+export async function promptInstall(): Promise<string> {
+  if (!deferred) return "unavailable";
+  await deferred.prompt();
+  const r = await deferred.userChoice;
+  deferred = null;
+  listeners.forEach((f) => f());
+  return r.outcome;
+}
+
+export const pushSupported = () =>
+  "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+
+function keyBytes(b64: string): Uint8Array {
+  const pad = "=".repeat((4 - (b64.length % 4)) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+}
+
+export async function currentSubscription(): Promise<PushSubscription | null> {
+  if (!pushSupported()) return null;
+  const reg = await navigator.serviceWorker.getRegistration("/");
+  return reg ? reg.pushManager.getSubscription() : null;
+}
+
+/** Разрешение → подписка в push-сервисе браузера → сохранение на сервере. */
+export async function subscribePush(): Promise<{ ok: boolean; reason?: string }> {
+  if (!pushSupported()) return { ok: false, reason: "Браузер не поддерживает Web Push. На iPhone уведомления работают только в установленном приложении (iOS 16.4+)." };
+  const cfg = await api<{ enabled: boolean; vapid_public_key: string | null }>("/push/config", { auth: false });
+  if (!cfg.enabled || !cfg.vapid_public_key) return { ok: false, reason: "Web Push на сервере не настроен" };
+  const perm = await Notification.requestPermission();
+  if (perm !== "granted") return { ok: false, reason: "Уведомления запрещены в настройках браузера" };
+  const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  await navigator.serviceWorker.ready;
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(cfg.vapid_public_key) as BufferSource });
+  const j = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
+  await api("/push/subscribe", { body: { endpoint: j.endpoint, keys: j.keys } });
+  return { ok: true };
+}
+
+export async function unsubscribePush() {
+  const sub = await currentSubscription();
+  if (!sub) return;
+  await api("/push/unsubscribe", { body: { endpoint: sub.endpoint } }).catch(() => undefined);
+  await sub.unsubscribe();
+}
