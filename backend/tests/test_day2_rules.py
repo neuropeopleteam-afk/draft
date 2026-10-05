@@ -269,7 +269,8 @@ def test_t0_does_not_affect_score():
     from app.modules.matching.ranking import score_candidate
     from app.modules.profiles.facts import Bundle
 
-    prof = NS(current_direction_id="backend", current_grade_id="middle", work_format=WorkFormat.any, privacy={},
+    prof = NS(current_direction_id="backend", current_grade_id="middle", current_category_id="backend.middle",
+              work_format=WorkFormat.any, privacy={},
               rating_score=0.5)
     req = {"direction": "backend", "grade": "middle", "stack_required": [{"tag": "kafka", "weight": 1.0}],
            "stack_desired": []}
