@@ -24,24 +24,26 @@ from app.core.errors import api_error
 from app.modules.assessment import service
 from app.modules.assessment.engine import get_engine
 from app.modules.assessment.models import GradeHistory, TestSession
+from app.modules.auth.models import User
 from app.modules.assessment.rules import apply_result
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateProfile
 
 
-def _bank_sessions(db: Session, limit: int = 400) -> list[TestSession]:
-    rows = db.scalars(select(TestSession).where(TestSession.status.in_(
-        [TestSessionStatus.finished, TestSessionStatus.in_progress])).order_by(TestSession.created_at.desc())
-        .limit(limit)).all()
+def _bank_sessions(db: Session, limit: int = 400, demo_only: bool = False) -> list[TestSession]:
+    q = select(TestSession).where(TestSession.status.in_([TestSessionStatus.finished, TestSessionStatus.in_progress]))
+    if demo_only:  # демо-эксперт жюри видит только демо-кандидатов
+        q = q.join(User, User.id == TestSession.user_id).where(User.is_demo.is_(True))
+    rows = db.scalars(q.order_by(TestSession.created_at.desc()).limit(limit)).all()
     return [t for t in rows if str((t.result or {}).get("engine", "")).startswith("bank")]
 
 
-def queue(db: Session, mode: str = "pending") -> dict:
+def queue(db: Session, mode: str = "pending", demo_only: bool = False) -> dict:
     """mode: pending — ждут оценки; llm — оценены LLM (выборочная проверка вслепую); reviewed — проверены экспертом."""
     eng = get_engine("bank")
     items = []
     counts = {"pending": 0, "llm": 0, "reviewed": 0}
-    for ts in _bank_sessions(db):
+    for ts in _bank_sessions(db, demo_only=demo_only):
         prof = db.get(CandidateProfile, ts.user_id)
         for r in eng.review_items(ts.result.get("state", {})):
             if r["expert"]:
@@ -70,10 +72,14 @@ def queue(db: Session, mode: str = "pending") -> dict:
 
 
 def submit(db: Session, session_id: uuid.UUID, token: str, part: int, criteria: dict[str, float],
-           comment: str | None, reviewer: str) -> dict:
+           comment: str | None, reviewer: str, demo_only: bool = False) -> dict:
     ts = db.get(TestSession, session_id, with_for_update=True)
     if ts is None or not str((ts.result or {}).get("engine", "")).startswith("bank"):
         raise api_error(404, "session_not_found", "Сессия теста не найдена")
+    if demo_only:
+        owner = db.get(User, ts.user_id)
+        if owner is None or not owner.is_demo:  # сессии реальных пользователей демо-эксперту недоступны
+            raise api_error(404, "session_not_found", "Сессия теста не найдена")
     state = ts.result["state"]
     eng = get_engine("bank")
     rec = eng.apply_review(state, token, part, criteria, comment, reviewer)

@@ -32,7 +32,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/validation" element={<Validation />} />
-      <Route path="/expert" element={<CabinetLayout role="admin" title="Кабинет эксперта" sections={[]} />}>
+      <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={[]} />}>
         <Route index element={<Expert />} />
       </Route>
       <Route path="/register" element={<Register />} />

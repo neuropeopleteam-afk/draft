@@ -41,4 +41,4 @@ export function useAuth() {
   return v;
 }
 
-export const cabinetPath = (role: string) => (role === "employer" ? "/employer" : role === "admin" ? "/expert" : "/candidate");
+export const cabinetPath = (role: string) => (role === "employer" ? "/employer" : role === "admin" || role === "expert" ? "/expert" : "/candidate");

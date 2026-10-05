@@ -6,6 +6,7 @@ class UserRole(StrEnum):
     candidate = "candidate"
     employer = "employer"
     admin = "admin"
+    expert = "expert"  # проверка развёрнутых ответов по рубрике (/api/expert/*); не admin
 
 
 class VerificationPurpose(StrEnum):
