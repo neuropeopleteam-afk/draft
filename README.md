@@ -59,6 +59,21 @@ make test-pg     # те же тесты на PostgreSQL (база fsp_test в к
 make validate    # процедура валидации (пока заготовка, печатает план проверок)
 ```
 
+Ключевые правила покрыты тестами `backend/tests/test_day2_rules.py` (видимость и обезличивание, лимит приглашений
+30 дней, правило 90 дней и демо-режим жюри, обязательная вилка, вырезание ПДн, разбор без LLM) и
+`backend/tests/test_ui_contract.py` (сквозной путь кандидат → работодатель → приглашение → контакты).
+
+## Демо-данные
+
+```bash
+docker compose exec -T api python -m app.modules.demo.seed           # 150 кандидатов, 10 работодателей, 15 потребностей
+docker compose exec -T api python -m app.modules.demo.seed --reset   # пересоздать
+docker compose exec -T api python -m app.modules.demo.seed --delete  # удалить только демо-записи
+```
+
+Демо-записи помечены `is_demo` (адреса `*@demo.invalid`, компании «Демо: …», паспорта ФСП из демо-реестра);
+письма им не отправляются.
+
 Без Docker:
 
 ```bash
@@ -80,7 +95,13 @@ make dev-frontend
 ## Переменные окружения
 
 Полный список с пояснениями — в [.env.example](.env.example). Секреты (`POSTGRES_PASSWORD`, `JWT_SECRET`,
-ключи Postbox, `OPENROUTER_API_KEY`) в репозиторий не попадают.
+ключи Postbox, ключ LLM) в репозиторий не попадают.
+
+LLM: Yandex AI Studio (OpenAI-совместимый API, модели в РФ — данные не покидают РФ). Переменные `LLM_PROVIDER`,
+`LLM_BASE_URL`, `LLM_API_KEY`, `LLM_FOLDER_ID`, `LLM_MODEL` задаются в файле `LLM_ENV_FILE`
+(на сервере `/opt/spectrek_fsp/secrets/llm.env`). Без них всё работает на словарях и правилах.
+Движок теста — `ASSESSMENT_ENGINE` (`stub` сейчас, `bank` после подключения банка заданий).
+Название продукта — одна настройка `PRODUCT_NAME` (по умолчанию «Встречный»).
 
 ## Развёртывание на сервере
 
