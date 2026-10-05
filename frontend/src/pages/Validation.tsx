@@ -3,7 +3,7 @@ import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
 
-const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d)} %`);
+const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")} %`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
 const sgn = (v?: number | null) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2).replace(".", ",")}`);
 
@@ -55,7 +55,7 @@ function Report({ r }: { r: any }) {
         </div>
         <p className="mt-3 text-sm text-brand-ink/70">{r.bank?.note}</p>
         <div className="mt-4"><Alert kind="info">
-          <b>Калибровка на панели ответов: </b>
+          <b>Калибровка: </b>
           {r.calibration?.status === "ready" ? `готова (${r.calibration.panel}, семейств: ${r.calibration.n_families}).` : r.calibration?.note}
         </Alert></div>
       </Section>
