@@ -4,10 +4,11 @@
 ответ → завершить (θ, SE, грейд). Состояние сессии — JSON-словарь, который бэкенд хранит в
 ``test_sessions.result["state"]`` (движок без БД и без глобального состояния, легко подменяется).
 
-Сейчас подключена временная заглушка ``StubEngine`` (6 фиксированных вопросов, оценка θ по модели Раша
-методом EAP). Пакет банка заданий (assessment_bank: семейства, адаптивный выбор, грейдирование)
-подключается отдельно: реализуйте ``BankEngine`` с тем же протоколом и выберите его переменной
-окружения ``ASSESSMENT_ENGINE=bank`` — остальной код (API, правила 90 дней, категории, факты T1) не меняется.
+Движки:
+* ``bank`` (по умолчанию, ``ASSESSMENT_ENGINE=bank``) — ``bank_engine.BankEngine`` поверх пакета
+  ``assessment_bank``: семейства изоморфных заданий, адаптивный выбор, θ/SE, грейды, детектор предзнания;
+* ``stub`` — прежняя заглушка из 6 фиксированных вопросов (для быстрых тестов правил и как запасной путь,
+  если пакет банка не импортируется).
 """
 from __future__ import annotations
 
@@ -24,18 +25,35 @@ UPGRADE_LEVEL = 0.8  # P(θ ≥ порог следующего грейда) д
 
 @dataclass
 class ItemPublic:
-    """Задание в виде, безопасном для отдачи кандидату: без ключа ответа и рубрики."""
+    """Задание в виде, безопасном для отдачи кандидату: без ключа ответа, рубрики, семейства и seed.
+
+    item_id — непрозрачный токен сессии (не variant_id: по family_id и seed открытый генератор восстановил бы
+    ключ). options — [{id, text, code?}]. answer_kind: option — id варианта; line — номер строки кода;
+    text — текст (вывод программы или развёрнутый ответ). Для open_book_3step задание показывается по шагам:
+    step/steps_total/step_prompt, options — только для текущего шага.
+    """
 
     item_id: str
     position: int
     total: int
     format: str
     stem: str
-    options: list[str] | None = None
+    options: list[dict] | None = None
     code: str | None = None
     code_language: str | None = None
     time_limit_s: int = 120
     skills: list[str] = field(default_factory=list)
+    answer_kind: str = "option"
+    step: int | None = None
+    steps_total: int | None = None
+    step_prompt: str | None = None
+    elapsed_s: int = 0
+    block: str = "direction"
+    adaptive: bool = False
+    min_items: int | None = None
+    max_items: int | None = None
+    answered: int = 0
+    extension: bool = False
 
 
 @dataclass
@@ -61,6 +79,7 @@ class EngineResult:
     correct: int
     skills: dict[str, dict]  # стек-тег → {"correct": k, "total": n, "score": k/n}
     explanation: str
+    details: dict = field(default_factory=dict)  # стоп-критерий, дотестирование, предзнание, ответы «на проверке»
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -73,7 +92,8 @@ class AssessmentEngine(Protocol):
 
     def next_item(self, state: dict) -> ItemPublic | None: ...
 
-    def answer(self, state: dict, item_id: str, answer: Any, time_spent_ms: int | None = None) -> AnswerFeedback: ...
+    def answer(self, state: dict, item_id: str, answer: Any, time_spent_ms: int | None = None,
+               step: int | None = None) -> AnswerFeedback: ...
 
     def finish(self, state: dict) -> EngineResult: ...
 
@@ -234,11 +254,14 @@ class StubEngine:
             if it["id"] not in state["answers"]:
                 order = state["option_order"][pos]
                 return ItemPublic(item_id=it["id"], position=pos + 1, total=len(items), format="mcq",
-                                  stem=it["stem"], options=[it["options"][j] for j in order], code=it["code"],
-                                  code_language=it["lang"], time_limit_s=120, skills=it["skills"])
+                                  stem=it["stem"], options=[{"id": str(k), "text": it["options"][j]}
+                                                            for k, j in enumerate(order)],
+                                  code=it["code"], code_language=it["lang"], time_limit_s=120, skills=it["skills"],
+                                  answered=len(state["answers"]))
         return None
 
-    def answer(self, state: dict, item_id: str, answer: Any, time_spent_ms: int | None = None) -> AnswerFeedback:
+    def answer(self, state: dict, item_id: str, answer: Any, time_spent_ms: int | None = None,
+               step: int | None = None) -> AnswerFeedback:
         items = self._items(state)
         ids = [it["id"] for it in items]
         if item_id not in ids or item_id in state["answers"]:
@@ -290,18 +313,26 @@ def _explain(dec: dict, theta: float, se: float, claimed: str) -> str:
 
 
 _ENGINES: dict[str, AssessmentEngine] = {"stub": StubEngine()}
+_BANK_ERROR: str | None = None
 
 
 def get_engine(name: str | None = None) -> AssessmentEngine:
+    """Движок по имени (или из ASSESSMENT_ENGINE). Если пакет банка не загрузился — заглушка и запись в лог."""
+    global _BANK_ERROR
     from app.core.config import get_settings
 
     key = name or get_settings().assessment_engine
     if key == "bank" and "bank" not in _ENGINES:
-        # Подключение пакета банка: модуль app.modules.assessment.bank_engine (появится при интеграции)
+        if _BANK_ERROR is not None:
+            return _ENGINES["stub"]
         try:
-            from app.modules.assessment.bank_engine import BankEngine  # type: ignore[import-not-found]
+            from app.modules.assessment.bank_engine import BankEngine
 
             _ENGINES["bank"] = BankEngine()
-        except ImportError:
+        except Exception as e:  # noqa: BLE001 — пакет банка или его реестр не загрузились
+            import logging
+
+            _BANK_ERROR = f"{type(e).__name__}: {e}"
+            logging.getLogger("assessment").error("Банк заданий не загрузился, работает заглушка: %s", _BANK_ERROR)
             return _ENGINES["stub"]
     return _ENGINES.get(key, _ENGINES["stub"])

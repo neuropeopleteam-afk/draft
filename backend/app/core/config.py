@@ -62,9 +62,22 @@ class Settings(BaseSettings):
     llm_model: str | None = None
     llm_timeout_s: float = 25.0
     llm_disabled: bool = False
+    # Модель для оценки открытых ответов теста по рубрике (короткое имя или gpt://…); пусто — LLM_MODEL.
+    # Окончательный выбор — по согласию с экспертами на проверочном наборе (docs/ARCHITECTURE.md, раздел 8).
+    llm_grading_model: str | None = None
+    llm_grading_timeout_s: float = 40.0
 
-    # Движок тестирования: stub — временная заглушка; bank — пакет assessment_bank (подключается отдельно).
-    assessment_engine: str = "stub"
+    # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
+    assessment_engine: str = "bank"
+    # Параметры адаптивного теста (по умолчанию — как в assessment_bank.psychometrics.CATConfig)
+    assessment_min_items: int = 8
+    assessment_max_items: int = 20
+    assessment_se_target: float = 0.35
+    assessment_max_minutes: int = 90
+    # Дотестирование у порога грейда: |θ − порог| < SE → ещё до 4 заданий (минимум 3), выбор по информации в пороге
+    assessment_extension_items: int = 4
+    # Ротация субпулов банка (1 — без ротации: банк пока мал, см. отчёт симуляции банка)
+    assessment_subpools: int = 1
 
     # Резюме: максимальный размер PDF
     resume_max_bytes: int = 5 * 1024 * 1024

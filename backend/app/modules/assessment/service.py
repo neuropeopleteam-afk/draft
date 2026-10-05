@@ -17,7 +17,8 @@ from app.core.db import as_aware, utcnow
 from app.core.enums import EvidenceLevel, FactSource, GradeChangeReason, TestSessionStatus
 from app.core.errors import api_error
 from app.modules.assessment.engine import get_engine
-from app.modules.assessment.models import GradeHistory, SurveyResponse, TestSession
+from app.modules.assessment.models import (GradeHistory, SurveyResponse, TaskFamily, TaskVariant, TestAnswer,
+                                           TestSession, TestSessionItem)
 from app.modules.assessment.rules import apply_result, check_can_start
 from app.modules.catalog.seed_data import STACK
 from app.modules.profiles.facts import refresh_rating
@@ -61,34 +62,117 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str) -> TestSe
     seed = secrets.randbelow(2**31)
     stack = list((survey.answers or {}).get("stack", {}).keys())
     state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
+    # Адаптивный тест банка: до 90 минут (лимит CATConfig) + запас на дотестирование у порога; заглушка — 30 минут
+    minutes = get_settings().assessment_max_minutes + 30 if engine.name.startswith("bank") else 30
     ts = TestSession(
         user_id=user_id, survey_id=survey.id, direction_id=survey.direction_id, claimed_grade_id=claimed_grade,
         status=TestSessionStatus.in_progress, form_seed=seed, is_sandbox=is_sandbox(profile), started_at=now,
-        deadline_at=now + timedelta(minutes=30), result={"engine": engine.name, "state": state},
+        deadline_at=now + timedelta(minutes=minutes), result={"engine": engine.name, "state": state},
     )
     db.add(ts)
     db.commit()
     return ts
 
 
-def get_own_session(db: Session, user_id: uuid.UUID, session_id: uuid.UUID) -> TestSession:
-    ts = db.get(TestSession, session_id)
+def get_own_session(db: Session, user_id: uuid.UUID, session_id: uuid.UUID, lock: bool = False) -> TestSession:
+    # lock: строка сессии блокируется до конца транзакции (два параллельных запроса не выдадут два задания)
+    ts = db.get(TestSession, session_id, with_for_update=lock)
     if ts is None or ts.user_id != user_id:
         raise api_error(404, "session_not_found", "Сессия теста не найдена")
     return ts
 
 
-def next_item(ts: TestSession):
+def next_item(db: Session, ts: TestSession):
+    """Текущее или следующее задание. Движок банка при выдаче меняет состояние — сохраняем его сразу."""
     if ts.status != TestSessionStatus.in_progress:
         return None
-    return get_engine(_engine_key(ts)).next_item(ts.result["state"])
+    item = get_engine(_engine_key(ts)).next_item(ts.result["state"])
+    if _engine_key(ts) == "bank":
+        _drain_outbox(db, ts)
+        flag_modified(ts, "result")
+        db.commit()
+    return item
+
+
+def progress(ts: TestSession) -> tuple[int, int, bool]:
+    """(отвечено заданий, ориентир общего числа, можно завершать)."""
+    st = ts.result.get("state", {})
+    if _engine_key(ts) == "bank":
+        done = sum(1 for i in st.get("items", []) if i.get("done"))
+        cfg = st.get("cfg", {})
+        ext = st.get("ext") or {}
+        return done, int(cfg.get("max_items", 20)) + 3 + int(ext.get("n", 0)), bool(st.get("done"))
+    total = len(st.get("item_ids", []))
+    answered = len(st.get("answers", {}))
+    return answered, total, answered >= total > 0
+
+
+def _drain_outbox(db: Session, ts: TestSession) -> None:
+    """Выданные задания и ответы — в таблицы task_families/task_variants/test_session_items/test_answers.
+
+    Это нормализованная копия для калибровки банка (матрица «кандидат × задание», время ответов) и аудита;
+    сам движок работает по состоянию сессии. Ключи и рубрики хранятся только в БД, кандидату не отдаются.
+    """
+    st = ts.result.get("state", {})
+    box = st.get("outbox") or []
+    if not box:
+        return
+    from assessment_bank import get_spec
+
+    by_token = {i["token"]: i for i in st.get("items", [])}
+    for ev in box:
+        it = by_token.get(ev.get("token"))
+        if it is None:
+            continue
+        if ev["type"] == "issue":
+            fam = db.get(TaskFamily, it["family_id"])
+            if fam is None:
+                spec = get_spec(it["family_id"])
+                fam = TaskFamily(id=spec.family_id, direction=spec.direction, skills=spec.skills,
+                                 target_grades=list(spec.target_grades), format=spec.format,
+                                 invariants=spec.invariants.model_dump(mode="json"), time_limit_s=spec.time_limit_s,
+                                 canary=spec.canary, prior_difficulty=spec.prior_difficulty.b, version=spec.version,
+                                 exposure_count=0)
+                db.add(fam)
+                db.flush()
+            fam.exposure_count = (fam.exposure_count or 0) + 1
+            var = db.get(TaskVariant, it["variant_id"])
+            if var is None:
+                pub = it["public"]
+                var = TaskVariant(id=it["variant_id"], family_id=it["family_id"], seed=it["seed"], stem=pub["stem"],
+                                  code=pub["code"], code_language=it.get("language"), options=pub["options"],
+                                  answer_key=it["key"], rubric=it["rubric"],
+                                  meta={"steps": pub.get("steps"), "format": it["format"], "bank": st.get("engine")},
+                                  exposure_count=0)
+                db.add(var)
+                db.flush()
+            var.exposure_count = (var.exposure_count or 0) + 1
+            row = TestSessionItem(session_id=ts.id, variant_id=it["variant_id"], position=it["position"],
+                                  shown_at=utcnow())
+            db.add(row)
+            db.flush()
+            it["row_id"] = str(row.id)
+        elif ev["type"] == "answer" and it.get("row_id"):
+            xs = [v for v in it["x"] if v is not None]
+            db.add(TestAnswer(
+                session_id=ts.id, item_id=uuid.UUID(it["row_id"]),
+                answer={k: {"value": a["value"], "client_ms": a.get("client_ms"), "server_ms": a.get("server_ms")}
+                        for k, a in it["answers"].items()},
+                is_correct=(all(v == 1.0 for v in it["x"]) if len(xs) == len(it["x"]) else None),
+                score=(sum(xs) / len(xs) if xs else None),
+                grading={"x": it["x"], "parts": it["grading"], "canary": it["canary"], "log_t": it.get("log_t"),
+                         "overtime": it.get("overtime")},
+                time_spent_ms=int(it.get("time_s", 0) * 1000),
+            ))
+    st["outbox"] = []
 
 
 def _engine_key(ts: TestSession) -> str:
     return "bank" if str(ts.result.get("engine", "")).startswith("bank") else "stub"
 
 
-def submit_answer(db: Session, ts: TestSession, item_id: str, answer, time_spent_ms: int | None):
+def submit_answer(db: Session, ts: TestSession, item_id: str, answer, time_spent_ms: int | None,
+                  step: int | None = None):
     if ts.status != TestSessionStatus.in_progress:
         raise api_error(409, "session_closed", "Сессия теста уже завершена")
     if ts.deadline_at and utcnow() > as_aware(ts.deadline_at):
@@ -96,9 +180,12 @@ def submit_answer(db: Session, ts: TestSession, item_id: str, answer, time_spent
         db.commit()
         raise api_error(409, "session_expired", "Время на тест истекло — начните заново")
     state = ts.result["state"]
-    fb = get_engine(_engine_key(ts)).answer(state, item_id, answer, time_spent_ms)
+    fb = get_engine(_engine_key(ts)).answer(state, item_id, answer, time_spent_ms, step=step)
     if not fb.accepted:
-        raise api_error(422, "answer_rejected", "Ответ не принят: задание уже отвечено или вариант не существует")
+        raise api_error(422, "answer_rejected", "Ответ не принят: задание уже отвечено, шаг не текущий "
+                                                "или ответ не подходит к формату задания")
+    if _engine_key(ts) == "bank":
+        _drain_outbox(db, ts)
     flag_modified(ts, "result")
     db.commit()
     return fb
@@ -109,6 +196,9 @@ def finish_session(db: Session, ts: TestSession) -> dict:
         return ts.result.get("outcome", {})
     if ts.status != TestSessionStatus.in_progress:
         raise api_error(409, "session_closed", "Сессия теста уже закрыта")
+    if _engine_key(ts) == "bank" and not ts.result["state"].get("done"):
+        # Досрочное завершение запрещено: иначе можно ответить на 2–3 удачных задания и подтвердить грейд
+        raise api_error(409, "test_not_complete", "Тест ещё не закончен: ответьте на текущее задание")
     profile = db.get(CandidateProfile, ts.user_id)
     res = get_engine(_engine_key(ts)).finish(ts.result["state"])
     now = utcnow()
@@ -124,6 +214,7 @@ def finish_session(db: Session, ts: TestSession) -> dict:
     ts.result_grade_id = ts.claimed_grade_id if res.confirmed else None
     ts.result = {**ts.result, "engine_result": res.to_dict(),
                  "outcome": {"changed": outcome.changed, "grade": outcome.new_grade, "message": outcome.message}}
+    flag_modified(ts, "result")
 
     if outcome.changed or (res.confirmed and outcome.new_grade == ts.claimed_grade_id):
         if outcome.changed:
@@ -146,17 +237,23 @@ def finish_session(db: Session, ts: TestSession) -> dict:
         "current_grade": profile.current_grade_id, "category_id": profile.current_category_id,
         "message": outcome.message, "engine": res.engine,
         "locked_until": as_aware(profile.grade_locked_until).isoformat() if profile.grade_locked_until else None,
+        # Кандидату — только ход теста; показатели детектора утечек видны в данных сессии, не в ответе
+        "details": {k: res.details.get(k) for k in ("stop_reason", "n_scored", "n_canaries", "time_used_s",
+                                                     "extension", "pending_review", "n_families_in_bank")},
     }
 
 
 def _write_t1_facts(db: Session, ts: TestSession, res) -> None:
     """Результат теста и навыки, проверенные заданиями, — факты T1 (заменяют прежние факты теста)."""
     db.execute(delete(CandidateFact).where(CandidateFact.user_id == ts.user_id, CandidateFact.source == FactSource.test))
+    d = res.details or {}
     db.add(CandidateFact(
         user_id=ts.user_id, kind="test_result", key=f"{ts.direction_id}.{ts.claimed_grade_id}",
         title=f"Тест {ts.direction_id} · {ts.claimed_grade_id}",
         value={"theta": res.theta, "se": res.se, "grade": ts.claimed_grade_id, "confirmed": res.confirmed,
-               "correct": res.correct, "answered": res.answered, "engine": res.engine, "session_id": str(ts.id)},
+               "correct": res.correct, "answered": res.answered, "engine": res.engine, "session_id": str(ts.id),
+               "pending_review": d.get("pending_review"), "extension": bool(d.get("extension")),
+               "preknowledge_flagged": (d.get("preknowledge") or {}).get("flagged")},
         evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=f"test_session:{ts.id}",
     ))
     for tag, s in res.skills.items():

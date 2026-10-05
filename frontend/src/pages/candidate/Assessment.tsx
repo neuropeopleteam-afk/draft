@@ -239,9 +239,10 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
         ))}
       </div>
       <div className="card mt-6 space-y-3 text-sm text-brand-ink/75">
-        <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления. Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет.</p>
+        <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам, обычно 8–20 заданий, до 90 минут. Если результат у самого порога грейда, будет ещё 3–4 задания.</p>
+        <p>Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои; время ответов учитывается для защиты от утечек.</p>
         <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней.</p>
-        {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий). Полный банк заданий подключается отдельно.</p>}
+        {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
       {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда — с {dt(status.locked_until)}. Для показа жюри можно включить демо-режим в разделе «Категория и грейд».</Alert></div>}
       <div className="mt-4"><Alert>{error}</Alert></div>
@@ -253,28 +254,47 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
   );
 }
 
-/** Прохождение теста: одно задание на экране. */
+/** Прохождение теста: одно задание на экране (адаптивный банк заданий или заглушка). */
+interface Opt { id: string; text: string; code?: string | null }
+
+function fmtTime(sec: number) {
+  const m = Math.floor(Math.abs(sec) / 60), s = Math.abs(sec) % 60;
+  return `${sec < 0 ? "−" : ""}${m}:${String(s).padStart(2, "0")}`;
+}
+
 export function TestRun() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { refresh } = useAuth();
   const [s, setS] = useState<any>(null);
-  const [choice, setChoice] = useState<number | null>(null);
+  const [value, setValue] = useState<string | number | null>(null);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [shownAt, setShownAt] = useState(Date.now());
+  const [now, setNow] = useState(Date.now());
 
-  useEffect(() => { api<any>(`/assessment/sessions/${id}`).then((x) => { setS(x); setShownAt(Date.now()); }).catch((e) => setError(errText(e))); }, [id]);
+  function show(x: any) { setS(x); setValue(null); setShownAt(Date.now() - (x?.item?.elapsed_s ?? 0) * 1000); }
+  useEffect(() => { api<any>(`/assessment/sessions/${id}`).then(show).catch((e) => setError(errText(e))); }, [id]);
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+
+  async function finish() {
+    setBusy(true); setError(null);
+    try { setResult(await api<any>(`/assessment/sessions/${id}/finish`, { method: "POST" })); await refresh(); }
+    catch (e) { setError(errText(e)); } finally { setBusy(false); }
+  }
 
   async function answer() {
-    if (choice === null || !s?.item) return;
+    const it = s?.item;
+    if (!it || value === null || (it.answer_kind === "text" && String(value).trim() === "" && it.format === "predict_output")) return;
     setBusy(true); setError(null);
     try {
-      const n = await api<any>(`/assessment/sessions/${id}/answers`, { body: { item_id: s.item.item_id, answer: choice, time_spent_ms: Date.now() - shownAt } });
-      setChoice(null); setShownAt(Date.now());
-      if (!n.item) { setResult(await api<any>(`/assessment/sessions/${id}/finish`, { method: "POST" })); await refresh(); }
-      else setS(n);
+      const n = await api<any>(`/assessment/sessions/${id}/answers`, {
+        body: { item_id: it.item_id, answer: value, step: it.step ?? null, time_spent_ms: Math.max(0, Date.now() - shownAt) },
+      });
+      if (!n.item) { setS(n); setBusy(false); await finish(); return; }
+      show(n);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   }
 
@@ -282,35 +302,81 @@ export function TestRun() {
   if (!s) return <Loading />;
   if (result) return <TestResult r={result} onCategory={() => navigate("/candidate/category")} />;
   if (!s.item) return (
-    <div className="max-w-2xl"><Alert kind="info">Все задания отвечены.</Alert>
-      <button className="btn-primary mt-4" onClick={async () => { setResult(await api<any>(`/assessment/sessions/${id}/finish`, { method: "POST" })); await refresh(); }}>Завершить тест</button></div>
+    <div className="max-w-2xl"><Alert kind="info">{s.status === "in_progress" ? "Тест окончен: движок набрал достаточно ответов." : "Сессия теста закрыта."}</Alert>
+      <div className="mt-4"><Alert>{error}</Alert></div>
+      {s.status === "in_progress" && <button className="btn-primary mt-4" disabled={busy} onClick={finish}>{busy ? "Считаем результат…" : "Показать результат"}</button>}</div>
   );
   const it = s.item;
+  const left = it.time_limit_s - Math.floor((now - shownAt) / 1000);
+  const lines: string[] = it.code ? it.code.split("\n") : [];
+  const isLine = it.answer_kind === "line";
+  const isText = it.answer_kind === "text";
+  const ready = value !== null && !(isText && String(value).trim().length === 0);
   return (
-    <div className="max-w-2xl">
-      <div className="flex items-center justify-between text-sm text-brand-ink/60">
+    <div className="max-w-3xl">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-ink/60">
         <span>Тест · {DIRECTIONS[s.direction]} · {GRADES[s.claimed_grade]}</span>
-        <span>Задание {it.position} из {it.total}</span>
+        <span>{it.adaptive ? `Задание ${it.position} · отвечено ${it.answered}` : `Задание ${it.position} из ${it.total}`}</span>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-blush/60"><div className="h-full bg-brand transition-all" style={{ width: `${((it.position - 1) / it.total) * 100}%` }} /></div>
-      <div className="card mt-6">
-        <p className="text-base font-semibold leading-relaxed text-brand-night">{it.stem}</p>
-        {it.code && <pre className="mt-4 overflow-x-auto rounded-xl bg-brand-ink p-4 text-sm leading-relaxed text-[#FFD6E4]"><code>{it.code}</code></pre>}
-        <fieldset className="mt-5 space-y-2">
-          <legend className="sr-only">Варианты ответа</legend>
-          {it.options.map((o: string, i: number) => (
-            <label key={i} className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${choice === i ? "border-brand bg-brand-blush/30" : "border-brand-night/10 hover:border-brand/40"}`}>
-              <input type="radio" name="opt" className="mt-0.5 accent-brand" checked={choice === i} onChange={() => setChoice(i)} />
-              <span className="font-mono text-[13px]">{o}</span>
-            </label>
-          ))}
-        </fieldset>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-blush/60">
+        <div className="h-full bg-brand transition-all" style={{ width: `${Math.min(100, (it.adaptive ? it.answered / (it.max_items || 20) : (it.position - 1) / it.total) * 100)}%` }} />
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+        {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTIONS[s.direction]}»`}</span>}
+        {it.extension && <span className="chip">Дотестирование у порога грейда</span>}
+        {it.steps_total && <span className="chip">Шаг {it.step} из {it.steps_total}</span>}
+        <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/60"}`} aria-live="off">
+          {left >= 0 ? `Рекомендуемое время: ${fmtTime(left)}` : `Сверх рекомендуемого: ${fmtTime(-left)}`}
+        </span>
+      </div>
+      <div className="card mt-4">
+        <p className="whitespace-pre-line text-base font-semibold leading-relaxed text-brand-night">{it.stem}</p>
+        {it.code && (
+          <div className="mt-4 overflow-x-auto rounded-xl bg-brand-ink py-3 text-sm leading-relaxed text-[#FFD6E4]" role={isLine ? "listbox" : undefined} aria-label={isLine ? "Строки кода: выберите строку с дефектом" : undefined}>
+            {lines.map((ln, i) => {
+              const n = i + 1;
+              const sel = isLine && value === n;
+              const cls = `flex w-full items-start gap-3 px-4 text-left font-mono text-[13px] ${sel ? "bg-brand/40" : isLine ? "hover:bg-white/10" : ""}`;
+              const body = (<><span className="w-7 shrink-0 select-none text-right text-[#FFD6E4]/45">{n}</span><span className="whitespace-pre">{ln || " "}</span></>);
+              return isLine
+                ? <button key={i} type="button" role="option" aria-selected={sel} className={cls} onClick={() => setValue(n)}>{body}</button>
+                : <div key={i} className={cls}>{body}</div>;
+            })}
+          </div>
+        )}
+        {it.step_prompt && <p className="mt-5 whitespace-pre-line rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night">{it.step_prompt}</p>}
+        {isLine && <p className="mt-3 text-sm text-brand-ink/70">{value ? `Выбрана строка ${value}.` : "Нажмите на строку, в которой дефект."}</p>}
+        {it.answer_kind === "option" && it.options && (
+          <fieldset className="mt-5 space-y-2">
+            <legend className="sr-only">Варианты ответа</legend>
+            {it.options.map((o: Opt) => (
+              <label key={o.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${value === o.id ? "border-brand bg-brand-blush/30" : "border-brand-night/10 hover:border-brand/40"}`}>
+                <input type="radio" name="opt" className="mt-0.5 accent-brand" checked={value === o.id} onChange={() => setValue(o.id)} />
+                <span className="min-w-0 flex-1">
+                  {it.adaptive && <b className="mr-2 text-brand-lavender">{o.id}</b>}
+                  <span className={o.code ? "" : "font-mono text-[13px]"}>{o.text}</span>
+                  {o.code && <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{o.code}</code></pre>}
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
+        {isText && (
+          <div className="mt-5"><Field label={it.format === "predict_output" ? "Вывод программы" : "Ваш ответ"} htmlFor="ans"
+            hint={it.format === "predict_output" ? "Ровно то, что напечатает программа; пробелы в конце строк и пустые строки по краям не важны." : "Ответ оценивается по рубрике (критерии с весами). Не указывайте ФИО и контакты — они вырезаются перед оценкой."}>
+            <textarea id="ans" className={`input min-h-[8rem] ${it.format === "predict_output" ? "font-mono text-[13px]" : ""}`} rows={it.format === "predict_output" ? 5 : 9}
+              value={(value as string) ?? ""} onChange={(e) => setValue(e.target.value)} spellCheck={it.format !== "predict_output"} />
+          </Field></div>
+        )}
         <div className="mt-4"><Alert>{error}</Alert></div>
         <div className="mt-5 flex justify-end">
-          <button className="btn-primary" disabled={choice === null || busy} onClick={answer}>{it.position === it.total ? "Ответить и завершить" : "Ответить"}</button>
+          <button className="btn-primary" disabled={!ready || busy} onClick={answer}>{busy ? "Отправляем…" : it.steps_total && it.step < it.steps_total ? "Ответить и к следующему шагу" : "Ответить"}</button>
         </div>
       </div>
-      <p className="mt-4 text-xs text-brand-ink/50">Код кандидатов на сервере не выполняется. Задания и ключи не покидают сервер.</p>
+      <p className="mt-4 text-xs text-brand-ink/50">
+        {it.adaptive ? `Адаптивный тест: следующее задание подбирается по вашим ответам, обычно ${it.min_items}–${it.max_items} заданий. ` : ""}
+        Вернуться к прошлому заданию нельзя. Время ответа фиксирует сервер. Код кандидатов не выполняется; ключи не покидают сервер.
+      </p>
     </div>
   );
 }
@@ -324,7 +390,15 @@ function TestResult({ r, onCategory }: { r: any; onCategory: () => void }) {
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
-      <div className="card mt-4 text-sm text-brand-ink/75">{r.explanation}{r.upgrade_available && " Можно попробовать грейд выше."}{r.retake_lower && " Рекомендуем пройти тест на грейд ниже."}</div>
+      <div className="card mt-4 text-sm text-brand-ink/75">{r.explanation}</div>
+      {r.details?.n_scored != null && (
+        <p className="mt-3 text-xs text-brand-ink/55">
+          Оценено заданий: {r.details.n_scored}{r.details.n_canaries ? ` (+ ${r.details.n_canaries} контрольных, в оценку не входят)` : ""}
+          {r.details.extension ? ` · дотестирование: ${r.details.extension.items}` : ""}
+          {r.details.time_used_s ? ` · время: ${Math.round(r.details.time_used_s / 60)} мин` : ""}
+        </p>
+      )}
+      {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.</Alert></div>}
       <button className="btn-primary mt-6" onClick={onCategory}>Перейти к категории</button>
     </div>
   );
