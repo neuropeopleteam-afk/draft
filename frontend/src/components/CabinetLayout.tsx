@@ -5,12 +5,12 @@ import { Logo } from "./Logo";
 
 export interface Section { path: string; title: string; description: string; day?: string }
 
-export function CabinetLayout({ role, sections, title }: { role: Role; sections: Section[]; title: string }) {
+export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role: Role; sections: Section[]; title: string; alsoRoles?: Role[] }) {
   const { me, loading, signOut } = useAuth();
   const navigate = useNavigate();
   if (loading) return <div className="flex min-h-screen items-center justify-center text-brand-ink/60">Загрузка…</div>;
   if (!me) return <Navigate to="/login" replace />;
-  if (me.role !== role) return <Navigate to={cabinetPath(me.role)} replace />;
+  if (me.role !== role && !alsoRoles.includes(me.role)) return <Navigate to={cabinetPath(me.role)} replace />;
   const base = cabinetPath(role);
 
   return (

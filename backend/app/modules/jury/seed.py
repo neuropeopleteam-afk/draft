@@ -49,7 +49,7 @@ PERSONAS = [
      "description": "Илья Сергеев · Backend · Middle. Истории ФСП нет — нейтрально. Ждёт входящее приглашение."},
     {"id": "employer", "role": "employer", "title": "Работодатель",
      "description": "«Северный платёж»: профиль компании, две потребности и подборки с объяснениями."},
-    {"id": "expert", "role": "admin", "title": "Эксперт",
+    {"id": "expert", "role": "expert", "title": "Эксперт",
      "description": "Проверка развёрнутых ответов по рубрике: очередь «на проверке» и выборочная проверка LLM."},
 ]
 NEEDS = [
@@ -238,7 +238,7 @@ def create_jury(db: Session) -> dict:
                       offer_description="Команда платежей: FastAPI, PostgreSQL, Redis. Удалённо, гибкий график.",
                       salary_from=240_000, salary_to=270_000, contact_method="Почта HR и звонок 20 минут",
                       need_id=needs[0].id, probe_id=None)
-    ex = _user(db, "expert", UserRole.admin)
+    ex = _user(db, "expert", UserRole.expert)  # не admin: только /api/expert/*, только демо-кандидаты
     db.commit()
     return {"candidate": {"ref": p1.public_ref, "confirmed": r1.get("confirmed"), "theta": r1.get("theta")},
             "candidate_nofsp": {"ref": p2.public_ref, "confirmed": r2.get("confirmed"), "theta": r2.get("theta"),

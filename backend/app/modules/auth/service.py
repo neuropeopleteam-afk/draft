@@ -1,5 +1,7 @@
 """Бизнес-логика регистрации, подтверждения почты и входа."""
 from datetime import timedelta
+import threading
+import time
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -26,6 +28,15 @@ from app.modules.profiles.refs import new_public_ref
 
 # Фиктивный хеш для выравнивания времени ответа, когда пользователя нет (защита от перебора почт).
 _DUMMY_HASH = hash_password("timing-equalizer-0")
+
+# Лимит перебора пароля (В1): 10 неудач на адрес за 15 минут → 429. Счётчик в памяти процесса (без миграции);
+# при 2 воркерах uvicorn фактический предел — до 20 попыток за окно. Неудачные попытки ввода кода почты
+# переносятся на новый код в течение часа.
+LOGIN_MAX_FAILS = 10
+LOGIN_WINDOW_S = 15 * 60
+CODE_ATTEMPTS_WINDOW_MIN = 60
+_LOGIN_FAILS: dict[str, list[float]] = {}
+_LOGIN_LOCK = threading.Lock()
 
 
 def normalize_email(email: str) -> str:
@@ -58,12 +69,17 @@ def register_user(db: Session, data: RegisterIn) -> tuple[User, str]:
 
 def _issue_code(db: Session, user: User) -> str:
     s = get_settings()
-    # Прежние неиспользованные коды гасим — действует только последний.
+    # Прежние неиспользованные коды гасим — действует только последний. Неудачные попытки переносятся на новый
+    # код (окно — час): повторная отправка не обнуляет лимит ввода.
+    inherited = 0
+    window_start = utcnow() - timedelta(minutes=CODE_ATTEMPTS_WINDOW_MIN)
     for v in db.scalars(
         select(EmailVerification).where(
             EmailVerification.user_id == user.id, EmailVerification.consumed_at.is_(None)
         )
     ):
+        if as_aware(v.created_at) >= window_start:
+            inherited = max(inherited, v.attempts or 0)
         v.consumed_at = utcnow()
     code = generate_code()
     db.add(
@@ -72,6 +88,7 @@ def _issue_code(db: Session, user: User) -> str:
             purpose=VerificationPurpose.email_confirm,
             code_hash=hash_code(code),
             expires_at=utcnow() + timedelta(minutes=s.email_code_ttl_minutes),
+            attempts=inherited,
         )
     )
     return code
@@ -102,7 +119,9 @@ def verify_email(db: Session, email: str, code: str) -> User:
     if user is None:
         raise api_error(400, "invalid_code", "Неверный или просроченный код")
     if user.is_email_verified:
-        return user
+        # Токен — только за верный код. Для уже подтверждённой почты кода нет: та же ошибка, что и для неверного
+        # (не раскрываем, что адрес подтверждён), вход — по паролю.
+        raise api_error(400, "invalid_code", "Неверный или просроченный код. Если почта уже подтверждена — войдите по паролю")
     v = db.scalar(
         select(EmailVerification)
         .where(EmailVerification.user_id == user.id, EmailVerification.consumed_at.is_(None))
@@ -112,7 +131,8 @@ def verify_email(db: Session, email: str, code: str) -> User:
     if v is None or as_aware(v.expires_at) < utcnow():
         raise api_error(400, "invalid_code", "Неверный или просроченный код")
     if v.attempts >= s.email_code_max_attempts:
-        raise api_error(429, "too_many_attempts", "Слишком много попыток. Запросите новый код")
+        raise api_error(429, "too_many_attempts",
+                        "Слишком много попыток ввода кода. Попробуйте через час: новый код лимит не сбрасывает")
     if not codes_equal(v.code_hash, code):
         v.attempts += 1
         db.commit()
@@ -124,13 +144,38 @@ def verify_email(db: Session, email: str, code: str) -> User:
     return user
 
 
+def _login_blocked(email: str) -> bool:
+    now = time.monotonic()
+    with _LOGIN_LOCK:
+        fails = [t for t in _LOGIN_FAILS.get(email, []) if now - t < LOGIN_WINDOW_S]
+        if fails:
+            _LOGIN_FAILS[email] = fails
+        else:
+            _LOGIN_FAILS.pop(email, None)
+        return len(fails) >= LOGIN_MAX_FAILS
+
+
+def _login_failed(email: str) -> None:
+    with _LOGIN_LOCK:
+        if len(_LOGIN_FAILS) > 50_000:  # защита памяти: старые записи отбрасываем
+            _LOGIN_FAILS.clear()
+        _LOGIN_FAILS.setdefault(email, []).append(time.monotonic())
+
+
 def authenticate(db: Session, email: str, password: str) -> User:
-    user = db.scalar(select(User).where(User.email == normalize_email(email)))
+    key = normalize_email(email)
+    if _login_blocked(key):
+        raise api_error(429, "too_many_attempts", "Слишком много неудачных попыток входа. Попробуйте через 15 минут")
+    user = db.scalar(select(User).where(User.email == key))
     if user is None:
         verify_password(_DUMMY_HASH, password)
+        _login_failed(key)
         raise api_error(401, "invalid_credentials", "Неверная почта или пароль")
     if not verify_password(user.password_hash, password):
+        _login_failed(key)
         raise api_error(401, "invalid_credentials", "Неверная почта или пароль")
+    with _LOGIN_LOCK:
+        _LOGIN_FAILS.pop(key, None)
     if not user.is_active:
         raise api_error(403, "user_blocked", "Учётная запись заблокирована")
     if not user.is_email_verified:
