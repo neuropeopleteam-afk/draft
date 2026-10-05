@@ -10,7 +10,12 @@ export default function Register() {
   const [consent, setConsent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [legal, setLegal] = useState<{ title: string; text: string } | null>(null);
   const navigate = useNavigate();
+  async function toggleLegal() {
+    if (legal) { setLegal(null); return; }
+    try { setLegal(await api<{ title: string; text: string }>("/legal/consents/processing", { auth: false })); } catch { setLegal(null); }
+  }
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [k]: e.target.value });
 
@@ -69,8 +74,9 @@ export default function Register() {
         </div>
         <label className="flex items-start gap-3 text-sm text-brand-ink/75">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 rounded accent-brand" />
-          <span>Согласен на обработку персональных данных в соответствии с 152-ФЗ. Контакты работодатель увидит только после того, как я приму приглашение.</span>
+          <span>Согласен на обработку персональных данных в соответствии с 152-ФЗ (<button type="button" className="font-semibold text-brand hover:underline" onClick={toggleLegal}>текст согласия</button>). Контакты работодатель увидит только после того, как я приму приглашение.</span>
         </label>
+        {legal && <div className="max-h-56 overflow-y-auto rounded-xl bg-[#F3F2FB] p-4 text-xs leading-relaxed text-brand-ink/80"><p className="mb-2 font-semibold">{legal.title}</p><p className="whitespace-pre-line">{legal.text}</p></div>}
         <FormError message={error} />
         <button type="submit" className="btn-primary w-full" disabled={busy}>{busy ? "Отправляем…" : "Зарегистрироваться"}</button>
       </form>

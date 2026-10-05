@@ -5,10 +5,17 @@ export interface UserOut { id: string; email: string; role: Role; is_email_verif
 export interface TokenOut { access_token: string; token_type: string; expires_in: number; user: UserOut }
 export interface RegisterOut { user_id: string; email: string; role: Role; email_verification_required: boolean; dev_verification_code: string | null }
 export interface CandidateProfile {
-  full_name: string | null; city: string | null; current_category_id: string | null; current_grade_id: string | null;
-  current_direction_id: string | null; rating_score: number | null; visible_to_employers: boolean;
+  full_name: string | null; phone: string | null; telegram: string | null; city: string | null;
+  work_format: string; relocation: boolean; experience_years: number | string | null; salary_min_hidden: number | null;
+  current_category_id: string | null; current_grade_id: string | null; current_direction_id: string | null;
+  rating_score: number | null; grade_locked_until: string | null; visible_to_employers: boolean;
+  privacy: Record<string, boolean>; public_ref: string | null; onboarding_completed_at: string | null;
+  roles: string[]; fsp_id_claimed: string | null; jury_mode: boolean;
 }
-export interface Company { id: string; name: string; industry: string | null; description: string | null; contact_email: string | null }
+export interface Company {
+  id: string; name: string; inn: string | null; industry: string | null; description: string | null;
+  website: string | null; city: string | null; contact_email: string | null; contact_phone: string | null;
+}
 export interface MeOut {
   id: string; email: string; role: Role; is_email_verified: boolean; created_at: string;
   candidate: CandidateProfile | null;
@@ -62,4 +69,31 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
     throw new ApiError(res.status, code, message);
   }
   return body as T;
+}
+
+/** Загрузка файла (multipart). */
+export async function apiUpload<T>(path: string, file: File, field = "file"): Promise<T> {
+  const fd = new FormData();
+  fd.append(field, file);
+  const headers: Record<string, string> = { Accept: "application/json" };
+  const token = tokenStore.get();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`/api${path}`, { method: "POST", headers, body: fd });
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    const { code, message } = messageFrom(res.status, body);
+    throw new ApiError(res.status, code, message);
+  }
+  return body as T;
+}
+
+/** Скачать файл с авторизацией (PDF-профиль). */
+export async function apiDownload(path: string, filename: string): Promise<void> {
+  const token = tokenStore.get();
+  const res = await fetch(`/api${path}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+  if (!res.ok) throw new ApiError(res.status, "download_failed", "Не удалось скачать файл");
+  const url = URL.createObjectURL(await res.blob());
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
