@@ -70,9 +70,21 @@ function Report({ r }: { r: any }) {
       </Section>
 
       <Section id="retest" title="Стабильность грейда при повторе"
-        lead="Тот же кандидат проходит тест дважды: на другом субпуле банка и с другими вариантами заданий (параллельная форма).">
-        <Table head={["Направление", "r(θ₁, θ₂)", "Грейд совпал", "±1 ступень", "κ (квадр.)", "Решение совпало"]}
-          rows={dirs.map((d) => { const t = sim.directions[d].retest; return [DIRECTIONS[d], num(t.r_theta), pct(t.grade_exact_agreement), pct(t.grade_within_1), num(t.grade_kappa_quadratic), pct(t.decision_agreement)]; })} />
+        lead="Тот же кандидат проходит тест дважды: на другом субпуле банка и с другими вариантами заданий (параллельная форма). Текущий банк — 128 семейств, ротация субпулов и контроль частоты включены.">
+        <Table head={["Направление", "r(θ₁, θ₂)", "Грейд совпал", "±1 ступень", "κ (квадр.)", "κ без ошибки параметров", "Решение совпало"]}
+          rows={dirs.map((d) => { const t = sim.directions[d].retest; return [DIRECTIONS[d], num(t.r_theta), pct(t.grade_exact_agreement), pct(t.grade_within_1), num(t.grade_kappa_quadratic), num(t.ideal_params?.grade_kappa_quadratic), pct(t.decision_agreement)]; })} />
+        {(() => {
+          const d0 = dirs[0]; const lt = sim.directions?.[d0]?.retest?.long_test; const t0 = sim.directions?.[d0]?.retest;
+          return (
+            <p className="mt-2 text-sm text-brand-ink/70">
+              Честно: κ ниже желаемых 0,8. Причина — точность одной короткой сессии: 8–16 заданий дают SE ≈ 0,4, а три грейда лежат в пределах ±1 по шкале, поэтому кандидат у порога при повторе часто попадает в соседний грейд (±1 ступень — почти всегда). Ошибка предкалибровки не главное: с параметрами без ошибки эксперта κ почти тот же.
+              {lt ? (lt.grade_kappa_quadratic > (t0?.grade_kappa_quadratic ?? 0) + 0.03
+                ? <> Тест длиннее (SE ≤ 0,25, до 30 заданий) на направлении {DIRECTIONS[d0]}: κ = {num(lt.grade_kappa_quadratic)} вместо {num(t0?.grade_kappa_quadratic)}, в среднем {num(lt.mean_items, 1)} задания.</>
+                : <> Просто удлинить тест не получается: при SE ≤ 0,25 и лимите 30 заданий ({DIRECTIONS[d0]}) сессия упирается в размер субпула — в среднем {num(lt.mean_items, 1)} задания, κ = {num(lt.grade_kappa_quadratic)} (не лучше {num(t0?.grade_kappa_quadratic)}). Предел сейчас — около 20 семейств направления в субпуле.</>) : null}
+              {" "}Что поможет: больше семейств в банке (≈ 200 — длиннее сессия без повторов при той же ротации), задания с высокой информативностью у порогов грейдов, остановка по классификации у порога вместо SE, дотестирование у порога (в продукте есть, в симуляции не моделируется), затем калибровка на панели ответов.
+            </p>
+          );
+        })()}
       </Section>
 
       <Section id="exposure" title="Частота показа заданий"
@@ -87,13 +99,18 @@ function Report({ r }: { r: any }) {
         <Table head={["Направление", "Без утечки: завышение θ", "Утечка, без детектора", "С детектором", "Детектор + карантин", "Поймано списывающих", "Ложные срабатывания"]}
           rows={dirs.map((d) => { const l = sim.directions[d].leak; return [DIRECTIONS[d], sgn(l.no_leak.cheaters_bias_theta), sgn(l.leak_no_detector.cheaters_bias_theta), sgn(l.leak_detector.cheaters_bias_theta), sgn(l.leak_detector_rotation.cheaters_bias_theta), pct(l.leak_detector.detector_tpr), pct(l.leak_detector.detector_fpr, 1)]; })} />
         <p className="mt-2 text-xs text-brand-ink/55">Завышение θ — средняя разница «оценка − истинный уровень» у списывающих, в единицах шкалы (1 ≈ одна ступень грейда).</p>
+        <h3 className="mt-6 text-base font-bold text-brand-night">Доля успешной атаки слитыми ответами</h3>
+        <p className="mt-1 text-sm text-brand-ink/70">Успех атаки — списывающий без нужного уровня получил подтверждение заявленного грейда. Фиксированная форма — одни и те же задания всем кандидатам грейда (без адаптивности, ротации, канареек и детектора); после утечки она остаётся той же, поэтому показан и случай «утекла целиком».</p>
+        <Table head={["Направление", "Фикс. форма: без утечки", "Фикс. форма: утечка 30 %", "Фикс. форма: утекла целиком", "Наш тест: утечка 30 %", "+ детектор", "+ детектор и карантин", "Списывающих без уровня"]}
+          rows={dirs.map((d) => { const l = sim.directions[d].leak; const a = l.attack_success_rate ?? {}; return [DIRECTIONS[d], pct(a.fixed_no_leak), pct(a.fixed_leak), pct(a.fixed_full_leak), pct(a.leak_no_detector), pct(a.leak_detector), pct(a.leak_detector_rotation), l.n_unqualified_cheaters ?? "—"]; })} />
+        <p className="mt-2 text-xs text-brand-ink/55">Базовая доля «без утечки» — ошибка теста, а не атака. Выборка списывающих без уровня — десятки человек на направление, поэтому разброс ±10 п. п.</p>
       </Section>
 
       <Section id="matching" title="Качество подбора" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>
         <Table head={["Способ", "precision@5", "nDCG@5", "nDCG@10", "Внутри категории: nDCG@3"]}
-          rows={[["Подборка платформы", "platform"], ["Поиск по ключевым словам", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
+          rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["BM25 по тексту резюме и потребности", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
             [t, num(m.summary?.["p@5"]?.[k]), num(m.summary?.["ndcg@5"]?.[k]), num(m.summary?.["ndcg@10"]?.[k]), num(m.summary?.["within_category_ndcg@3"]?.[k])])} />
-        <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Внутри категории разметка различает кандидатов только по заявленным навыкам — а их платформа намеренно не учитывает (см. атаку «раздуть резюме»), поэтому здесь поиск по ключевым словам выигрывает. Экспертная разметка пар — следующий шаг.</p>
+        <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Бонус ФСП на общую точность не влияет, внутри категории немного помогает. Экспертная разметка пар — следующий шаг.</p>
         <p className="mt-1 text-xs text-brand-ink/55">Пары и метки: docs/validation/matching_pairs.json</p>
       </Section>
 

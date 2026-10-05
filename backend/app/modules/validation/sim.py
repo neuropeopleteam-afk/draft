@@ -94,6 +94,52 @@ def run_population(pool, truth, people: list[Person], direction: str, cfg: AppCo
     return out
 
 
+class FixedFormSession(AppCATSession):
+    """Фиксированная форма: одни и те же задания (и варианты) всем кандидатам заявленного грейда, без адаптивного
+    отбора, контроля частоты, ротации и канареек; θ оценивается так же (EAP)."""
+
+    def __init__(self, pool, direction, cfg: CATConfig, form: list, claimed: str, rng):
+        super().__init__(pool, direction, cfg, None, claimed, None, rng, max_per_format={})
+        self.form = list(form)
+
+    def next_item(self):
+        free = [i for i in self.form if i.family_id not in self.used]
+        if not free:
+            self.stop_reason = "fixed_form"
+            return None
+        return free[0]
+
+
+def fixed_forms(pool, truth, direction: str, cfg: AppConfig, rng) -> dict[str, list]:
+    """Форма для каждого заявленного грейда — задания, которые адаптивный тест (без контроля частоты и ротации)
+    выдал бы кандидату ровно на старте грейда; дальше она не меняется."""
+    forms = {}
+    base = AppConfig(min_items=cfg.max_items, max_items=cfg.max_items, se_target=0.0, max_minutes=cfg.max_minutes,
+                     subpools=1, exposure=False, max_per_format=cfg.max_per_format)
+    for g in ("junior", "middle", "senior"):
+        theta = base.cat().start_theta.get(g, 0.0)
+        p = Person(theta=theta, tau=0.0, claimed=g)
+        sess, _ = run_session(pool, direction, make_responder(p, truth), base, None, g, None, rng)
+        items = {i.family_id: i for i in sess.scored_pool}
+        forms[g] = [items[a.family_id] for a in sess.administered if not a.canary and a.family_id in items]
+    return forms
+
+
+def run_fixed_population(pool, truth, people: list[Person], direction: str, forms: dict, cfg: AppConfig, rng,
+                         leak: LeakModel | None = None) -> list[dict]:
+    out = []
+    for p in people:
+        sess = FixedFormSession(pool, direction, cfg.cat(), forms[p.claimed], p.claimed, rng)
+        responder = make_responder(p, truth, leak)
+        while (item := sess.next_item()) is not None:
+            x, log_t = responder(item, rng)
+            sess.record(item, x, log_t, time_s=float(np.exp(log_t)) if log_t is not None else None)
+        res = sess.result()
+        d = decide(res.theta, res.se, p.claimed)
+        out.append({"theta": res.theta, "se": res.se, "n_items": res.n_items, "confirmed": d.confirmed})
+    return out
+
+
 def calibrate_k(pool, direction: str, cfg: AppConfig, r_max: float = 0.3, n_sessions: int = 300,
                 iterations: int = 6, seed: int = 0) -> tuple[dict, list[float]]:
     """Итеративная калибровка K_f (Sympson & Hetter, 1985) для конфигурации платформы.
@@ -191,4 +237,20 @@ def leak_experiment(pool, truth, direction: str, cfg: AppConfig, rng, k, n: int 
                                                                detector=det))
     res["leak_detector_rotation"] = leak_summary(people, run_population(
         pool, truth, people, direction, cfg, rng, k=k, leak=LeakModel(p_hit_scored=0.0), detector=det))
+    # Фиксированная форма (одни задания всем): та же доля утечки и форма, утёкшая целиком (её задания не меняются)
+    pool1 = make_pool(1)
+    forms = fixed_forms(pool1, truth, direction, cfg, rng)
+    res["fixed_form_items"] = {g: len(f) for g, f in forms.items()}
+    res["fixed_no_leak"] = leak_summary(people, run_fixed_population(pool1, truth, people, direction, forms, cfg, rng))
+    res["fixed_leak"] = leak_summary(people, run_fixed_population(pool1, truth, people, direction, forms, cfg, rng, leak))
+    res["fixed_full_leak"] = leak_summary(people, run_fixed_population(pool1, truth, people, direction, forms, cfg, rng,
+                                                                       LeakModel(p_hit_scored=1.0)))
+    # Доля успешной атаки (ASR): списывающий без нужного уровня получил подтверждение заявленного грейда
+    from assessment_bank.psychometrics import GradeScale
+
+    cuts = GradeScale().cuts
+    res["n_unqualified_cheaters"] = int(sum(1 for p in people if p.cheater and p.theta < cuts[p.claimed]))
+    res["attack_success_rate"] = {k: res[k]["cheaters_false_confirm"] for k in (
+        "no_leak", "leak_no_detector", "leak_detector", "leak_detector_rotation",
+        "fixed_no_leak", "fixed_leak", "fixed_full_leak")}
     return res
