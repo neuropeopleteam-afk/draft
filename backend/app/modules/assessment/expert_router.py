@@ -15,7 +15,8 @@ from app.modules.assessment import review
 from app.modules.auth.models import User
 
 router = APIRouter(prefix="/api/expert", tags=["expert"])
-expert = require_role(UserRole.admin)
+# Отдельная роль эксперта (и администратор). Демо-эксперт жюри (is_demo) работает только с демо-кандидатами.
+expert = require_role(UserRole.expert, UserRole.admin)
 
 
 class ReviewIn(BaseModel):
@@ -29,12 +30,13 @@ class ReviewIn(BaseModel):
 @router.get("/queue", summary="Очередь развёрнутых ответов")
 def get_queue(mode: Literal["pending", "llm", "reviewed"] = Query("pending"), db: Session = Depends(get_db),
               user: User = Depends(expert)):
-    return review.queue(db, mode)
+    return review.queue(db, mode, demo_only=user.is_demo)
 
 
 @router.post("/review", summary="Оценка ответа по рубрике")
 def post_review(data: ReviewIn, db: Session = Depends(get_db), user: User = Depends(expert)):
-    return review.submit(db, data.session_id, data.token, data.part, data.criteria, data.comment, user.email)
+    return review.submit(db, data.session_id, data.token, data.part, data.criteria, data.comment, user.email,
+                         demo_only=user.is_demo)
 
 
 @router.get("/agreement", summary="Согласие LLM и экспертов")
