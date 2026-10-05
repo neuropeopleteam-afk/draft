@@ -17,3 +17,6 @@ httpx==0.28.1
 pypdf==6.19.0
 reportlab==5.0.1
 natasha==1.6.0
+# День 2: движок теста — пакет банка заданий assessment_bank (копия в backend/assessment_bank, tools/sync_bank.py)
+numpy==2.1.3
+scipy==1.14.1

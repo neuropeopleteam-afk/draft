@@ -71,17 +71,30 @@ def _extract_json(text: str) -> dict | list | None:
     return None
 
 
+def resolve_model(name: str | None) -> str | None:
+    """Имя модели: полное (gpt://…) или короткое (gpt-oss-120b/latest) — для Yandex AI Studio дополняется каталогом."""
+    s = get_settings()
+    if not name:
+        return s.llm_model
+    if s.llm_provider == "yandex_ai_studio" and s.llm_folder_id and not name.startswith("gpt://"):
+        return f"gpt://{s.llm_folder_id}/{name}"
+    return name
+
+
 def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 1200, want_json: bool = False,
-         client: httpx.Client | None = None) -> LLMResult:
-    """Один запрос к LLM. Никогда не бросает исключений: при ошибке ok=False и вызывающий идёт по правилам."""
+         client: httpx.Client | None = None, model: str | None = None, timeout_s: float | None = None) -> LLMResult:
+    """Один запрос к LLM. Никогда не бросает исключений: при ошибке ok=False и вызывающий идёт по правилам.
+
+    model — другая модель того же провайдера (например, для оценки открытых ответов), по умолчанию LLM_MODEL.
+    """
     s = get_settings()
     if not s.llm_configured:
         return LLMResult(ok=False, error="not_configured")
     url = s.llm_base_url.rstrip("/") + "/chat/completions"
-    body = {"model": s.llm_model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
+    body = {"model": resolve_model(model), "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
     t0 = time.monotonic()
     try:
-        c = client or httpx.Client(timeout=httpx.Timeout(s.llm_timeout_s, connect=5.0))
+        c = client or httpx.Client(timeout=httpx.Timeout(timeout_s or s.llm_timeout_s, connect=5.0))
         try:
             r = c.post(url, headers=_headers(s), json=body)
         finally:
