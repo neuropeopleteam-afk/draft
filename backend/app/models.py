@@ -1,0 +1,20 @@
+"""Импорт всех моделей — единая metadata для Alembic."""
+from app.core.db import Base
+from app.modules.assessment.models import (  # noqa: F401
+    GradeHistory,
+    SurveyResponse,
+    SurveyStackTag,
+    TaskFamily,
+    TaskVariant,
+    TestAnswer,
+    TestSession,
+    TestSessionItem,
+)
+from app.modules.auth.models import Consent, EmailVerification, User  # noqa: F401
+from app.modules.catalog.models import Category, Direction, Grade, StackTag  # noqa: F401
+from app.modules.fsp.models import FspAchievement, FspPassport  # noqa: F401
+from app.modules.invitations.models import Invitation, InvitationEvent, Probe  # noqa: F401
+from app.modules.matching.models import EmployerNeed, SelectionVersion  # noqa: F401
+from app.modules.profiles.models import CandidateFact, CandidateProfile, Company, EmployerProfile  # noqa: F401
+
+metadata = Base.metadata

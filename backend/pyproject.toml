@@ -1,0 +1,15 @@
+[project]
+name = "spectrek-fsp-backend"
+version = "0.1.0"
+description = "Платформа подбора ИТ-специалистов с обратной механикой (спецтрек ФСП, ЛЦТ 2026)"
+requires-python = ">=3.12"
+license = "MIT"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
