@@ -1,4 +1,6 @@
 """Модуль catalog: справочник направлений, грейдов, категорий и стек-тегов."""
+from datetime import date
+
 import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -37,8 +39,12 @@ class Category(Base):
     direction_id: Mapped[str] = mapped_column(sa.ForeignKey("directions.id"))
     grade_id: Mapped[str] = mapped_column(sa.ForeignKey("grades.id"))
     title: Mapped[str] = mapped_column(sa.String(100))
-    market_salary_from: Mapped[int]  # ₽/мес, ориентир
-    market_salary_to: Mapped[int]
+    market_salary_from: Mapped[int]  # ₽/мес, 25-й перцентиль (см. docs/SALARY_SOURCES.md)
+    market_salary_to: Mapped[int]  # ₽/мес, 75-й перцентиль
+    market_salary_median: Mapped[int | None]
+    market_sample_size: Mapped[int | None]
+    market_source: Mapped[str | None] = mapped_column(sa.String(255))
+    market_as_of: Mapped[date | None]
 
 
 class StackTag(Base):

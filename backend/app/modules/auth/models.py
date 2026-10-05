@@ -23,6 +23,8 @@ class User(UUIDPk, Timestamps, Base):
     last_login_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     # Внешний идентификатор ФСП ID (sub из Keycloak) — заполняется при связке аккаунтов.
     fsp_subject: Mapped[str | None] = mapped_column(sa.String(255), unique=True)
+    # Синтетическая демо-запись (скрипт сидирования). Письма демо-пользователям не отправляются.
+    is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
 
 
 class EmailVerification(UUIDPk, Base):

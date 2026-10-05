@@ -31,8 +31,13 @@ class Probe(UUIDPk, Timestamps, Base):
     salary_to: Mapped[int]
     time_limit_s: Mapped[int] = mapped_column(default=900)
     status: Mapped[ProbeStatus] = mapped_column(str_enum(ProbeStatus, "probe_status"), default=ProbeStatus.sent)
+    # solution — прислать решение; approach — описать подход; any — на выбор кандидата
+    answer_mode: Mapped[str] = mapped_column(sa.String(16), default="any", server_default="any")
     answer: Mapped[dict | None]
     score: Mapped[float | None]
+    review: Mapped[dict | None]
+    # История статусов: [{status, at, actor}] — видна обеим сторонам
+    events: Mapped[list] = mapped_column(default=list)
     viewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     started_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     submitted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
@@ -65,6 +70,7 @@ class Invitation(UUIDPk, Timestamps, Base):
     viewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     responded_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     contacts_revealed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    decline_reason: Mapped[str | None] = mapped_column(sa.Text)
     expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
 
