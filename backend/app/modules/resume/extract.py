@@ -84,8 +84,11 @@ def extract_rules(text: str) -> dict:
             votes[d] = votes.get(d, 0) + 1
     gk = find_keys(text, GRADE_KEYWORDS)
     exp = experience_years(text)
-    grade_hint = max(gk, key=gk.get) if gk else (
-        None if exp is None else "junior" if exp < 1.5 else "middle" if exp < 4.5 else "senior")
+    # Стаж надёжнее ключевых слов («наставник стажёров» ≠ junior); слова — только если стаж не найден
+    if exp is not None:
+        grade_hint = "junior" if exp < 1.5 else "middle" if exp < 4.5 else "senior"
+    else:
+        grade_hint = max(gk, key=gk.get) if gk else None
     return {
         "stack": stack,
         "roles": roles,
