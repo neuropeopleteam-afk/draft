@@ -2,9 +2,10 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthShell } from "../components/AuthShell";
-import { Alert, Level, Loading, Toggle, dt, errText, useApi } from "../components/ui";
+import { Alert, Level, Loading, Toggle, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { cabinetPath, useAuth } from "../lib/auth";
+import { dateOnly } from "./Trust";
 
 interface FspConfig { enabled: boolean; title: string; demo_accounts: { username: string; title: string }[]; demo_password: string | null; note: string }
 
@@ -115,7 +116,7 @@ export function FspIdDone() {
               <ul className="mt-2 space-y-1.5">
                 {p.sport_rank && <li className="flex items-center gap-2"><Level level="T2" /> Спортивный разряд: {p.sport_rank}</li>}
                 {p.achievements.map((a, i) => (
-                  <li key={i} className="flex items-start gap-2"><Level level="T2" /><span>{a.event} — {a.result ?? (a.place ? `${a.place} место` : "участие")}, {LEVEL_RU[a.level] ?? a.level} уровень{a.date ? `, ${dt(a.date)}` : ""}</span></li>
+                  <li key={i} className="flex items-start gap-2"><Level level="T2" /><span>{a.event} — {a.result ?? (a.place ? `${a.place} место` : "участие")}, {LEVEL_RU[a.level] ?? a.level} уровень{a.date ? `, ${dateOnly(a.date)}` : ""}</span></li>
                 ))}
               </ul>
             ) : <p className="mt-1 text-brand-ink/65">Истории соревнований ФСП нет — это нейтрально: без бонуса и без штрафа в рейтинге.</p>}

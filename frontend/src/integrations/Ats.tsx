@@ -116,7 +116,7 @@ export function EmployerAts() {
                     <p className="font-semibold text-brand-night">{r.kind === "huntflow_applicant" ? `Хантфлоу: кандидат #${r.external_id}` : r.kind === "huntflow_vacancy" ? `Хантфлоу: кандидат #${r.external_id} → вакансия ${r.payload.vacancy}, этап «${r.payload.status_name}»` : `Вебхук ${r.payload.event}`}</p>
                     <span className="text-xs text-brand-ink/50">{dtt(r.created_at)}{r.kind === "webhook" ? (r.signature_valid ? " · подпись верна" : " · подпись НЕ верна") : ""}</span>
                   </div>
-                  {r.kind === "huntflow_applicant" && <p className="mt-1 text-brand-ink/70">{r.payload.last_name} {r.payload.first_name} · {r.payload.email} · {r.payload.phone} · {r.payload.money}</p>}
+                  {r.kind === "huntflow_applicant" && <p className="mt-1 text-brand-ink/70">{[`${r.payload.last_name ?? ""} ${r.payload.first_name ?? ""}`.trim(), r.payload.email, r.payload.phone, r.payload.money].filter(Boolean).join(" · ")}</p>}
                   <details className="mt-2"><summary className="cursor-pointer text-xs font-semibold text-brand-plum">JSON</summary><pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-brand-ink p-3 text-[11px] leading-relaxed text-white/90">{JSON.stringify(r.payload, null, 2)}</pre></details>
                 </li>
               ))}
@@ -134,7 +134,7 @@ export function AtsInvitationActions({ invitationId, status, candidateRef }: { i
   if (status !== "accepted") return null;
   async function push() {
     setMsg(null);
-    try { const r = await api<any[]>("/employer/ats/push", { body: { invitation_id: invitationId } }); setMsg({ k: "ok", t: r.map((d) => `${d.target === "huntflow" ? "Хантфлоу" : "Вебхук"}: ${d.status === "ok" ? "передано" : d.error}`).join("; ") }); }
+    try { const r = await api<any[]>("/employer/ats/push", { body: { invitation_id: invitationId } }); setMsg({ k: "ok", t: r.map((d) => `${d.target === "huntflow" ? "Хантфлоу" : "Вебхук"}: ${d.already_sent ? "уже передано ранее" : d.status === "ok" ? "передано" : d.error}`).join("; ") }); }
     catch (e) { setMsg({ k: "error", t: errText(e) }); }
   }
   return (

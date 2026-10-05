@@ -171,6 +171,18 @@ class PushIn(BaseModel):
     invitation_id: uuid.UUID | None = None
     application_id: uuid.UUID | None = None
     target: str | None = Field(None, pattern="^(huntflow|webhook)$")
+    force: bool = Field(False, description="Передать повторно, даже если уже передано (иначе дубликат в Хантфлоу не создаётся)")
+
+
+def _already_sent(db: Session, company_id, data: PushIn, targets: set[str]) -> list[AtsDelivery] | None:
+    """Успешные передачи этого кандидата по всем нужным адресатам — тогда повтор не нужен."""
+    q = select(AtsDelivery).where(AtsDelivery.company_id == company_id, AtsDelivery.status == "ok")
+    q = q.where(AtsDelivery.invitation_id == data.invitation_id) if data.invitation_id \
+        else q.where(AtsDelivery.application_id == data.application_id)
+    latest: dict[str, AtsDelivery] = {}
+    for d in db.scalars(q.order_by(AtsDelivery.created_at.desc())):
+        latest.setdefault(d.target, d)
+    return [latest[t] for t in sorted(targets)] if targets and targets <= set(latest) else None
 
 
 def _own_invitation(db: Session, company_id, inv_id) -> Invitation:
@@ -199,6 +211,15 @@ def push(data: PushIn, user: User = Depends(employer), db: Session = Depends(get
     st = svc.company_settings(db, c.id)
     if not (st.huntflow_enabled or st.webhook_enabled):
         raise api_error(409, "ats_not_configured", "Включите Хантфлоу или вебхук в настройках ATS")
+    want = {data.target} if data.target else {t for t, on in (("huntflow", st.huntflow_enabled), ("webhook", st.webhook_enabled)) if on}
+    if (data.invitation_id or data.application_id) and not data.force:
+        if data.invitation_id:
+            _own_invitation(db, c.id, data.invitation_id)
+        else:
+            _own_application(db, c.id, data.application_id)
+        done = _already_sent(db, c.id, data, want)
+        if done:
+            return [{**svc.delivery_out(db, d), "already_sent": True} for d in done]
     if data.invitation_id:
         _own_invitation(db, c.id, data.invitation_id)
         rows = svc.deliver(db, c.id, invitation_id=data.invitation_id, trigger="manual", only=data.target)

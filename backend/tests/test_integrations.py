@@ -275,6 +275,12 @@ def test_ats_stub_huntflow_and_webhook_on_accept(client, ats_http):
     ex = client.get(f"/api/employer/invitations/{inv['id']}/export.json", headers=H(te))
     assert ex.status_code == 200 and ex.json()["schema"] == "vstrechny.candidate.v1"
     assert ex.json()["candidate"]["contacts"]["phone"] == "+7 900 111-22-33"
+    # повторная ручная передача не создаёт дубликат в Хантфлоу; force=true — передаёт заново
+    again = client.post("/api/employer/ats/push", json={"invitation_id": inv["id"]}, headers=H(te)).json()
+    assert all(d.get("already_sent") for d in again) and len(again) == 2
+    assert len([r for r in client.get("/api/employer/ats/stub/records", headers=H(te)).json() if r["kind"] == "huntflow_applicant"]) == 1
+    forced = client.post("/api/employer/ats/push", json={"invitation_id": inv["id"], "force": True}, headers=H(te)).json()
+    assert {d["status"] for d in forced} == {"ok"} and not any(d.get("already_sent") for d in forced)
 
 
 def test_webhook_signature_and_ssrf_guard(client):

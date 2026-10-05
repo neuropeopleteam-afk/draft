@@ -211,7 +211,7 @@ def salary_factor(db: Session, company: Company, cats: dict[str, Category]) -> t
     pts = 15 * share_ok
     if not bad:
         return _factor("salary", "Реалистичность вилок", "ok", pts, 15,
-                       f"все {len(known)} вилок в пределах рынка категорий"), checks
+                       (f"все вилки ({len(known)}) в пределах рынка категорий" if len(known) > 1 else "вилка в пределах рынка категории")), checks
     return _factor("salary", "Реалистичность вилок", "warn", pts, 15,
                    f"{len(bad)} из {len(known)} вилок вне рынка: {bad[0]['text']}"), checks
 
