@@ -26,6 +26,13 @@ FAST_MIN_S = 5.0
 MAX_SIGNAL = 10_000
 
 
+
+def _n(k: int, one: str, few: str, many: str) -> str:
+    """Число со словом в нужной форме: 1 задание, 2 задания, 5 заданий."""
+    m10, m100 = k % 10, k % 100
+    w = one if m10 == 1 and m100 != 11 else few if 2 <= m10 <= 4 and not 12 <= m100 <= 14 else many
+    return f"{k} {w}"
+
 def clean_signals(raw: Any) -> dict | None:
     """Сигналы клиента → безопасный словарь целых чисел (мусор и отрицательные значения отбрасываются)."""
     if not isinstance(raw, dict):
@@ -91,18 +98,19 @@ def assess(items: list[dict], preknowledge: dict | None = None) -> dict:
     hidden_s = sum((i["signals"].get("hidden_ms") or 0) for i in with_sig) / 1000.0
     focus_total = sum((i["signals"].get("focus_lost") or 0) for i in with_sig)
     if len(focus_items) >= 5 or hidden_s >= 180:
-        reasons.append((2, f"Уход со вкладки теста: в {len(focus_items)} заданиях, {focus_total} раз, "
-                           f"вне вкладки {hidden_s / 60:.1f} мин"))
+        reasons.append((2, f"Уход со вкладки теста: {_n(len(focus_items), 'задание', 'задания', 'заданий')}, "
+                           f"{_n(focus_total, 'раз', 'раза', 'раз')}, вне вкладки {hidden_s / 60:.1f} мин"))
     elif len(focus_items) >= 2 or hidden_s >= 30:
-        reasons.append((1, f"Уход со вкладки теста: в {len(focus_items)} заданиях, {focus_total} раз, "
-                           f"вне вкладки {hidden_s:.0f} с"))
+        reasons.append((1, f"Уход со вкладки теста: {_n(len(focus_items), 'задание', 'задания', 'заданий')}, "
+                           f"{_n(focus_total, 'раз', 'раза', 'раз')}, вне вкладки {hidden_s:.0f} с"))
     paste_items = [i for i in with_sig if (i["signals"].get("paste") or 0) > 0
                    and (i["signals"].get("paste_chars") or 0) >= 30]
     paste_chars = sum((i["signals"].get("paste_chars") or 0) for i in paste_items)
     if len(paste_items) >= 2:
-        reasons.append((2, f"Вставка готового текста в ответ: {len(paste_items)} задания, {paste_chars} символов"))
+        reasons.append((2, f"Вставка готового текста в ответ: {_n(len(paste_items), 'задание', 'задания', 'заданий')}, "
+                           f"{_n(paste_chars, 'символ', 'символа', 'символов')}"))
     elif paste_items:
-        reasons.append((1, f"Вставка готового текста в ответ: 1 задание, {paste_chars} символов"))
+        reasons.append((1, f"Вставка готового текста в ответ: 1 задание, {_n(paste_chars, 'символ', 'символа', 'символов')}"))
     if done and len(with_sig) < 0.5 * len(done):
         reasons.append((1, "Интерфейс теста не прислал сигналы по большинству заданий — ответы отправлены "
                            "в обход интерфейса (через API)"))

@@ -168,6 +168,16 @@ def test_parse_salary(text, expected):
     assert parse_salary(text) == expected
 
 
+@pytest.mark.parametrize("text,req,des", [
+    ("Python, FastAPI, PostgreSQL обязательно, Kafka будет плюсом.", ["python", "fastapi", "postgresql"], ["kafka"]),
+    ("Обязательно Python, FastAPI, желательно Kafka, Redis.", ["python", "fastapi"], ["kafka", "redis"]),
+    ("Опыт работы с Go и Kafka, хорошо, если знаете Redis.", ["go", "kafka"], ["redis"]),
+])
+def test_need_mixed_required_desired(text, req, des):
+    r = parse_need(text, use_llm=False)
+    assert [x["tag"] for x in r["stack_required"]] == req and [x["tag"] for x in r["stack_desired"]] == des
+
+
 def test_need_salary_net_and_one_sided():
     r = parse_need("Backend middle: Python, FastAPI. Зарплата 260 000 ₽ на руки.", use_llm=False)
     assert (r["salary_from"], r["salary_to"], r["salary_net"]) == (260000, 260000, True)

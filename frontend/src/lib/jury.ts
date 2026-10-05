@@ -22,6 +22,11 @@ export async function juryLogin(persona: Persona, signIn: (t: string) => Promise
   const r = await api<TokenOut & { landing: string }>("/jury/login", { method: "POST", body: { persona }, auth: false });
   await signIn(r.access_token);
   guide.enable();
+  // проводник переходит к первому шагу этой роли, если текущий шаг — за другую
+  if (STEPS[guide.step()]?.persona !== persona) {
+    const i = STEPS.findIndex((s) => s.persona === persona);
+    if (i >= 0) guide.setStep(i);
+  }
   return r.landing;
 }
 

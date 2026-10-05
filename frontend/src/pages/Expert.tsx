@@ -91,7 +91,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
       </fieldset>
       {err && <div className="mt-3"><Alert>{err}</Alert></div>}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-brand-ink/75">{score != null ? <>Итог по рубрике: <b className="text-brand-night">{score.toFixed(2)}</b></> : "Оцените все критерии"}</p>
+        <p className="text-sm text-brand-ink/75">{score != null ? <>Итог по рубрике: <b className="text-brand-night">{score.toFixed(2).replace(".", ",")}</b></> : "Оцените все критерии"}</p>
         {!done && <button className="btn-primary" disabled={score == null || busy} onClick={submit}>{busy ? "Сохраняем…" : "Сохранить оценку"}</button>}
       </div>
       {(res || mode === "reviewed") && (

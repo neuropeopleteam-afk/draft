@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from datetime import date
 import random
+import re
 import time
 import uuid
 
@@ -94,6 +95,8 @@ def run(db: Session, attack_id: str, need_id: uuid.UUID | None = None, params: d
             out["need"] = text
     finally:
         db.rollback()  # ничего из атаки не записывается
+    if isinstance(out.get("fact"), str):  # десятичная запятая и «30 %» — как в остальном интерфейсе
+        out["fact"] = re.sub(r"(\d)%", r"\1 %", re.sub(r"(?<=\d)\.(?=\d)", ",", out["fact"]))
     return {**meta, **out, "seconds": round(time.time() - t0, 2)}
 
 
