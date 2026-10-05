@@ -22,7 +22,7 @@ from app.modules.auth.models import User
 from app.modules.catalog.seed_data import STACK, category_title
 from app.modules.invitations.models import Invitation, InvitationEvent, Probe
 from app.modules.matching.models import EmployerNeed
-from app.modules.profiles.facts import achievement_text, load_bundles, refresh_rating, skill_confirmed
+from app.modules.profiles.facts import achievement_text, fmt_count, load_bundles, refresh_rating, skill_confirmed
 from app.modules.profiles.models import CandidateFact, CandidateProfile, Company
 
 INVITATION_COOLDOWN_DAYS = 30
@@ -81,7 +81,7 @@ def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, 
     for tag, f in b.skills_t1.items():
         if skill_confirmed(f) and (not wanted or tag in wanted):
             ev.append({"level": "T1", "kind": "skill",
-                       "text": f"{STACK.get(tag, (tag,))[0]}: подтверждено заданиями ({f.value.get('correct')} из {f.value.get('total')})"})
+                       "text": f"{STACK.get(tag, (tag,))[0]}: подтверждено заданиями ({fmt_count(f.value.get('correct'))} из {fmt_count(f.value.get('total'))})"})
     for a in b.achievements[:3]:
         if a.verified:
             ev.append({"level": "T2", "kind": "fsp", "text": achievement_text(a)})

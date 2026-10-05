@@ -171,6 +171,15 @@ def refresh_rating(db: Session, user_id: uuid.UUID) -> float | None:
     return b.profile.rating_score
 
 
+def fmt_count(v) -> str:
+    """Баллы по навыку: целое — без дробной части; частичный зачёт (шаги, рубрика) — один знак, запятая."""
+    try:
+        x = float(v)
+    except (TypeError, ValueError):
+        return "—"
+    return str(int(x)) if x.is_integer() else f"{x:.1f}".replace(".", ",")
+
+
 def skill_confirmed(f: CandidateFact | None) -> bool:
     return bool(f and f.value.get("score", 0) >= 0.5)
 
