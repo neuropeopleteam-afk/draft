@@ -14,6 +14,7 @@
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 from datetime import date
 import logging
 import time
@@ -240,16 +241,33 @@ def create_jury(db: Session) -> dict:
             "seconds": round(time.time() - t0, 1)}
 
 
-def _lock(db: Session) -> None:
-    if db.get_bind().dialect.name == "postgresql":  # два воркера uvicorn: сброс и создание — по очереди
-        db.execute(text("SELECT pg_advisory_xact_lock(20261006)"))
+@contextmanager
+def _lock(db: Session):
+    """Сброс и создание демо жюри — по очереди между воркерами uvicorn (advisory lock PostgreSQL на отдельном
+    соединении: сессия внутри несколько раз фиксирует транзакции и может сменить соединение)."""
+    bind = db.get_bind()
+    if bind.dialect.name != "postgresql":
+        yield
+        return
+    with bind.connect() as conn:
+        conn.execute(text("SELECT pg_advisory_lock(20261006)"))
+        try:
+            yield
+        finally:
+            conn.execute(text("SELECT pg_advisory_unlock(20261006)"))
+            conn.commit()
+
+
+def _complete(db: Session) -> bool:
+    have = set(db.scalars(select(User.email).where(User.email.in_(list(EMAILS.values())))).all())
+    db.commit()
+    return have == set(EMAILS.values())
 
 
 def reset(db: Session) -> dict:
-    _lock(db)
-    n = delete_jury(db)
-    _lock(db)
-    out = create_jury(db)
+    with _lock(db):
+        n = delete_jury(db)
+        out = create_jury(db)
     out["deleted_users"] = n
     log.info("Демо жюри пересоздано: %s", out)
     return out
@@ -257,14 +275,11 @@ def reset(db: Session) -> dict:
 
 def ensure(db: Session) -> bool:
     """Создаёт учётки жюри, если их нет (первый вход после выкладки). True — созданы сейчас."""
-    have = set(db.scalars(select(User.email).where(User.email.in_(list(EMAILS.values())))).all())
-    if have == set(EMAILS.values()):
+    if _complete(db):
         return False
-    _lock(db)
-    have = set(db.scalars(select(User.email).where(User.email.in_(list(EMAILS.values())))).all())
-    if have == set(EMAILS.values()):
-        db.commit()
-        return False
-    delete_jury(db)
-    create_jury(db)
+    with _lock(db):
+        if _complete(db):  # другой воркер уже создал, пока мы ждали
+            return False
+        delete_jury(db)
+        create_jury(db)
     return True
