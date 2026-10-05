@@ -12,3 +12,8 @@ python-multipart==0.0.32
 psycopg[binary]==3.3.6
 PyYAML==6.0.3
 boto3==1.43.108
+# День 2: HTTP-клиент LLM, PDF (чтение резюме и генерация профиля), локальное вырезание ФИО (NER)
+httpx==0.28.1
+pypdf==6.19.0
+reportlab==5.0.1
+natasha==1.6.0
