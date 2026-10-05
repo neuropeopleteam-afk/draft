@@ -48,10 +48,22 @@ def _money(num: str, suffix: str | None) -> int:
     return v
 
 
+_ONE_SIDE_RE = re.compile(
+    r"(от|до)\s*(\d{2,3}(?:[\s\u00a0]?\d{3})?)\s*(?:(к|k|тыс\.?)\s*(?:₽|руб\w*|р\.)?|(?:₽|руб\w*|р\.))",
+    re.IGNORECASE,
+)
+
+
 def parse_salary(text: str) -> tuple[int | None, int | None]:
     m = _SALARY_RE.search(text)
     if not m:
-        return None, None
+        one = _ONE_SIDE_RE.search(text)
+        if not one:
+            return None, None
+        v = _money(one.group(2), one.group(3))
+        if v < 10_000 or v > 5_000_000:
+            return None, None
+        return (v, None) if one.group(1).lower() == "от" else (None, v)
     lo, hi = _money(m.group(1), m.group(2) or m.group(4)), _money(m.group(3), m.group(4))
     if lo > hi:
         lo, hi = hi, lo
