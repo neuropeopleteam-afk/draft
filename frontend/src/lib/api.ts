@@ -1,0 +1,65 @@
+// Тонкий клиент к backend. Все запросы идут на тот же origin (/api), в dev — через прокси Vite.
+export type Role = "candidate" | "employer";
+
+export interface UserOut { id: string; email: string; role: Role; is_email_verified: boolean; created_at: string }
+export interface TokenOut { access_token: string; token_type: string; expires_in: number; user: UserOut }
+export interface RegisterOut { user_id: string; email: string; role: Role; email_verification_required: boolean; dev_verification_code: string | null }
+export interface CandidateProfile {
+  full_name: string | null; city: string | null; current_category_id: string | null; current_grade_id: string | null;
+  current_direction_id: string | null; rating_score: number | null; visible_to_employers: boolean;
+}
+export interface Company { id: string; name: string; industry: string | null; description: string | null; contact_email: string | null }
+export interface MeOut {
+  id: string; email: string; role: Role; is_email_verified: boolean; created_at: string;
+  candidate: CandidateProfile | null;
+  employer: { full_name: string | null; position: string | null; company: Company | null } | null;
+  fsp: { linked: boolean; link_source: string | null; achievements_count: number } | null;
+}
+export interface Catalog {
+  directions: { id: string; title: string; description: string }[];
+  grades: { id: string; title: string; level: number; description: string }[];
+  categories: { id: string; title: string; direction_id: string; grade_id: string; market_salary_from: number; market_salary_to: number }[];
+  stack_tags: { id: string; title: string; kind: string; direction_id: string | null }[];
+}
+
+export class ApiError extends Error {
+  constructor(public status: number, public code: string, message: string) { super(message); }
+}
+
+const TOKEN_KEY = "fsp_token";
+export const tokenStore = {
+  get: () => localStorage.getItem(TOKEN_KEY),
+  set: (t: string) => localStorage.setItem(TOKEN_KEY, t),
+  clear: () => localStorage.removeItem(TOKEN_KEY),
+};
+
+function messageFrom(status: number, body: any): { code: string; message: string } {
+  const d = body?.detail;
+  if (d && typeof d === "object" && !Array.isArray(d) && d.message) return { code: d.code, message: d.message };
+  if (Array.isArray(d)) {
+    const first = d[0];
+    const field = first?.loc?.slice(-1)[0];
+    const raw = String(first?.msg ?? "Проверьте поля формы").replace(/^Value error, /, "");
+    const fieldRu: Record<string, string> = { email: "Почта", password: "Пароль", code: "Код" };
+    return { code: "validation_error", message: field && fieldRu[field] ? `${fieldRu[field]}: ${raw}` : raw };
+  }
+  return { code: "http_" + status, message: status >= 500 ? "Сервис временно недоступен" : "Ошибка запроса" };
+}
+
+export async function api<T>(path: string, opts: { method?: string; body?: unknown; auth?: boolean } = {}): Promise<T> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (opts.body !== undefined) headers["Content-Type"] = "application/json";
+  const token = tokenStore.get();
+  if (opts.auth !== false && token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`/api${path}`, {
+    method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
+    headers,
+    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+  });
+  const body = res.status === 204 ? null : await res.json().catch(() => null);
+  if (!res.ok) {
+    const { code, message } = messageFrom(res.status, body);
+    throw new ApiError(res.status, code, message);
+  }
+  return body as T;
+}
