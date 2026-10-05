@@ -20,3 +20,6 @@ natasha==1.6.0
 # День 2: движок теста — пакет банка заданий assessment_bank (копия в backend/assessment_bank, tools/sync_bank.py)
 numpy==2.1.3
 scipy==1.14.1
+# День 3Б: интеграции — подпись id_token ФСП ID (RS256, JWKS), шифрование токенов ATS (Fernet), Web Push (VAPID)
+cryptography==50.0.2
+pywebpush==2.5.0

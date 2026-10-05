@@ -23,4 +23,6 @@ from app.modules.profiles.models import (  # noqa: F401
     EmployerProfile,
 )
 
+import app.integrations.models  # noqa: E402,F401 — модели интеграций (день 3Б)
+
 metadata = Base.metadata

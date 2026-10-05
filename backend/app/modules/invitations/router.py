@@ -17,6 +17,7 @@ from app.core.db import get_db
 from app.core.deps import require_role
 from app.core.enums import InvitationStatus, ProbeStatus, UserRole
 from app.core.errors import api_error, err
+from app.integrations import events as integration_events
 from app.modules.auth.models import User
 from app.modules.invitations import service as svc
 from app.modules.invitations.models import Invitation, Probe
@@ -190,6 +191,7 @@ def send_invitation(data: InvitationIn, bg: BackgroundTasks, user: User = Depend
                  f"Вилка зарплаты: {_rub(data.salary_from)} – {_rub(data.salary_to)}.",
                  "Ваши контакты работодатель увидит, только если вы примете приглашение."],
                 is_demo=cu.is_demo, link_path="/candidate/invitations")
+    bg.add_task(integration_events.invitation_sent, inv.id)
     return _inv_out(db, inv, "employer")
 
 
@@ -251,6 +253,7 @@ def accept(inv_id: uuid.UUID, bg: BackgroundTasks, user: User = Depends(candidat
     _notify_employer(bg, db, i.employer_user_id, f"Кандидат {ref} принял приглашение",
                      [f"Кандидат {ref} принял приглашение на позицию «{i.position_title}».",
                       "Контакты кандидата доступны в карточке приглашения."], "/employer/invitations")
+    bg.add_task(integration_events.invitation_answered, i.id, True)
     return _inv_out(db, i, "candidate")
 
 
@@ -264,6 +267,7 @@ def decline(inv_id: uuid.UUID, data: DeclineIn, bg: BackgroundTasks, user: User 
     _notify_employer(bg, db, i.employer_user_id, f"Кандидат {ref} отклонил приглашение",
                      [f"Кандидат {ref} отклонил приглашение на позицию «{i.position_title}»."]
                      + ([f"Причина: {i.decline_reason}"] if i.decline_reason else []), "/employer/invitations")
+    bg.add_task(integration_events.invitation_answered, i.id, False)
     return _inv_out(db, i, "candidate")
 
 
