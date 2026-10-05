@@ -1,0 +1,23 @@
+family_id: frontend.arch.client_app_open
+title: Архитектура клиентского приложения — состояние, модули, микрофронтенды, ошибки, realtime
+direction: frontend
+skills: [frontend_architecture, state_management, react, monorepo]
+target_grades: [senior]
+format: open_answer
+language: text
+invariants:
+  extra:
+    topics: [state, structure, microfrontends, errors, realtime]
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 1.3
+  a: 0.9
+  sigma_variant: 0.3
+  basis: "Проектное решение для реального приложения с числовыми ограничениями; рубрика из 3 критериев (решение, издержки и надёжность, внедрение); Senior"
+generator: assessment_bank.families.frontend.arch_client_app_open
+version: 1
+description: >
+  Открытые вопросы об архитектуре клиентского приложения: виды состояния, модульная
+  структура и границы команд, микрофронтенды, обработка ошибок, доставка обновлений в
+  реальном времени. Оценка по рубрике с эталонами.

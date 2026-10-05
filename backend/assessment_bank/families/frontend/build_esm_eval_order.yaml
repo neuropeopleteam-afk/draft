@@ -1,0 +1,26 @@
+family_id: frontend.build.esm_eval_order
+title: Порядок выполнения ES-модулей — всплытие import и однократное выполнение
+direction: frontend
+skills: [javascript, es_modules, bundlers, build]
+target_grades: [middle, senior]
+format: predict_output
+language: javascript
+invariants:
+  code_lines: [11, 20]
+  operations: [11, 20]
+  extra:
+    modules: [4, 5]
+    acyclic: true
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.5
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "4–5 модулей, 6–10 строк вывода; нужно учесть всплытие import (вывод выше import выполняется после зависимостей), обход в глубину и однократное выполнение повторно импортированного модуля; Middle/Senior"
+generator: assessment_bank.families.frontend.build_esm_eval_order
+version: 1
+description: >
+  Несколько ES-модулей с выводом на верхнем уровне; предсказать порядок вывода. Ключ —
+  модель семантики ESM в генераторе, сверяется с исполнением эквивалентной программы в
+  Node.js (модули как функции с загрузчиком и кэшем).

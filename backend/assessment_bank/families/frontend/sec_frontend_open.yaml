@@ -1,0 +1,22 @@
+family_id: frontend.sec.frontend_open
+title: Безопасность фронтенда — токены, CSP, пользовательский HTML, OAuth, postMessage
+direction: frontend
+skills: [web_security, xss, csp, oauth, auth_tokens]
+target_grades: [middle, senior]
+format: open_answer
+language: text
+invariants:
+  extra:
+    topics: [tokens, csp, user_html, oauth, postmessage]
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 0.9
+  sigma_variant: 0.35
+  basis: "Развёрнутый ответ по прикладной ситуации; рубрика из 3 критериев (риск, схема защиты, сопутствующие меры); средний ответ доступен Middle, сильный — Senior"
+generator: assessment_bank.families.frontend.sec_frontend_open
+version: 1
+description: >
+  Открытые вопросы о безопасности клиентского приложения: хранение токенов, внедрение CSP,
+  пользовательский HTML, OAuth в SPA, postMessage. Оценка по рубрике с эталонами.

@@ -129,8 +129,8 @@ def generate(seed: int):
         out.append(Check(name=f"opt:{o.id}", runner="git", program=prog, embeds_display_code=False,
                          expect="stdout_equals" if o.id == key else "stdout_differs",
                          expected_stdout=exp))
-    repo = rng.choice(["shop-api", "crm-web", "billing-core", "hr-portal", "media-cdn",
-                       "pay-gateway", "geo-service", "docs-site"])
+    repo = rng.choice(["shop-api", "crm-web", "partner-portal", "admin-panel", "core-service",
+                       "b2b-platform", "mobile-bff", "client-app"])
     stem = f"Репозиторий `{repo}` (модуль «{ctx}»). {ask}"
     ak = AnswerKey(kind="option", value=key,
                    explanation=f"Верно: {why}. Остальные: "

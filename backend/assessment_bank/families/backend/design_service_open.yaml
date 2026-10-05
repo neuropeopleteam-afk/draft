@@ -1,0 +1,23 @@
+family_id: backend.design.service_open
+title: Проектирование сервисов и наблюдаемость — p99, уведомления, партнёрский API, монолит, схемы событий
+direction: backend
+skills: [system_design, observability, reliability, messaging, architecture]
+target_grades: [senior]
+format: open_answer
+language: text
+invariants:
+  extra:
+    topics: [p99_regression, notifications, partner_api, extract_module, event_schema]
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 1.2
+  a: 0.9
+  sigma_variant: 0.3
+  basis: "Развёрнутый ответ по производственной ситуации с числами; рубрика из 3 критериев с эталонами сильного/среднего/слабого ответа; темы не пересекаются с backend.py.design_open и common.http_api_design_open; Senior"
+generator: assessment_bank.families.backend.design_service_open
+version: 1
+description: >
+  Открытые вопросы Senior-уровня: поиск причины роста p99 и наблюдаемость (метрики, трассы,
+  логи, SLO), сервис уведомлений, защита от медленного партнёрского API, выделение модуля
+  из монолита, эволюция схемы событий. Оценка по рубрике.
