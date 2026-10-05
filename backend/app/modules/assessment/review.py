@@ -44,7 +44,14 @@ def queue(db: Session, mode: str = "pending") -> dict:
     for ts in _bank_sessions(db):
         prof = db.get(CandidateProfile, ts.user_id)
         for r in eng.review_items(ts.result.get("state", {})):
-            kind = "reviewed" if r["expert"] else ("pending" if r["status"] == "pending" else "llm")
+            if r["expert"]:
+                kind = "reviewed"
+            elif r["status"] == "pending":
+                kind = "pending"
+            elif r["method"] == "llm":
+                kind = "llm"
+            else:  # оценено правилом (пустой/короткий ответ) или демо-экспертом — не для выборочной проверки LLM
+                continue
             counts[kind] += 1
             if kind != mode:
                 continue
