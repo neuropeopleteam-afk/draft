@@ -281,7 +281,7 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
   }
   async function toAts(a: any) {
     setMsg(null);
-    try { const r = await api<any[]>("/employer/ats/push", { body: { application_id: a.id } }); setMsg({ k: "ok", t: r.map((d) => `${d.target === "huntflow" ? "Хантфлоу" : "Вебхук"}: ${d.status === "ok" ? "передано" : d.error}`).join("; ") || "Нет включённых ATS" }); }
+    try { const r = await api<any[]>("/employer/ats/push", { body: { application_id: a.id } }); setMsg({ k: "ok", t: r.map((d) => `${d.target === "huntflow" ? "Хантфлоу" : "Вебхук"}: ${d.already_sent ? "уже передано ранее" : d.status === "ok" ? "передано" : d.error}`).join("; ") || "Нет включённых ATS" }); }
     catch (e) { setMsg({ k: "error", t: errText(e) }); }
   }
   return (
