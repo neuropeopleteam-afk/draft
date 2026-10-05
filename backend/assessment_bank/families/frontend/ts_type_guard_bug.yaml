@@ -1,0 +1,26 @@
+family_id: frontend.ts.type_guard_bug
+title: TypeScript — некорректный type guard для данных из API
+direction: frontend
+skills: [typescript, type_narrowing, type_guards, api_validation]
+target_grades: [middle]
+format: find_bug
+language: typescript
+invariants:
+  code_lines: [17, 17]
+  operations: [10, 10]
+  defect_type: unsound_type_guard
+  extra:
+    subtypes: [null_check, array_check, id_check, enum_check]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 0.3
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "17 строк TypeScript, одна дефектная проверка в type guard; симптом в условии; подтипы — typeof null, typeof массива, in без проверки типа, строка вместо перечисления; нужно понимать, что компилятор не проверяет тело guard; Middle"
+generator: assessment_bank.families.frontend.ts_type_guard_bug
+version: 1
+description: >
+  Type guard для разбора ответа API с одной неверной проверкой. Ключ: JS-версия кода
+  (аннотации удалены построчно) с дефектом пропускает «грязные» записи или падает,
+  исправленная — оставляет ровно корректные.

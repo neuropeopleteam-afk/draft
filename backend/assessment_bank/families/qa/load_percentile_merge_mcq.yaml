@@ -1,0 +1,26 @@
+family_id: qa.load.percentile_merge_mcq
+title: Перцентиль времени ответа по сервису из гистограмм узлов
+direction: qa
+skills: [performance_testing, percentiles, histograms, monitoring, metrics_aggregation]
+target_grades: [senior]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    nodes: [3, 4]
+    percentiles: [0.95, 0.99]
+    distractors: [mean, max, weighted, median]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.0
+  sigma_variant: 0.3
+  basis: "Нужно знать, что перцентили не усредняются (даже взвешенно), сложить гистограммы узлов и интерполировать внутри интервала, как histogram_quantile; дашборд в условии подсказывает неверный метод. Расчёт на 3–4 узла по 8 интервалов (Senior)"
+generator: assessment_bank.families.qa.load_percentile_merge_mcq
+version: 1
+description: >
+  По гистограммам времени ответа нескольких узлов найти p95/p99 по всем запросам сервиса:
+  сложить гистограммы и интерполировать внутри интервала. Дистракторы — разные способы
+  усреднения перцентилей узлов. Ключ проверяется исполнением расчёта.

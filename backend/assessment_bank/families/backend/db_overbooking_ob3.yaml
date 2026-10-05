@@ -1,0 +1,31 @@
+family_id: backend.db.overbooking_ob3
+title: Перепродажа последнего места — гонка «проверка, затем запись» (открытая книга)
+direction: backend
+skills: [python, sql, concurrency, transactions, isolation, locking]
+target_grades: [middle, senior]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [8, 9]
+  operations: [6, 6]
+  defect_type: check_then_act_race
+  n_options: 4
+  extra:
+    subtypes: [count_insert, read_modify_write]
+    step3_conditions: [postgres_rc, serializable, hot_row, hold_ttl]
+time_limit_s: 1080
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.0
+  sigma_variant: 0.35
+  step_offsets: [-0.4, 0.1, 0.9]
+  basis: "8–9 строк, три запроса к БД; шаг 1 — найти чередование запросов двух экземпляров, при котором обе проверки видят старое состояние (12 из 20 порядков гоночные, «чистые» дистракторы — непоследовательные порядки); шаг 2 — отличить атомарный условный оператор от правдоподобных, но гоночных или недобронирующих решений (каждое проверено на всех 70 чередованиях); шаг 3 — изоляция в PostgreSQL, SERIALIZABLE, горячая строка, удержание брони; Middle/Senior"
+generator: assessment_bank.families.backend.db_overbooking_ob3
+version: 1
+description: >
+  Обработчик бронирования в режиме autocommit проверяет свободные места в Python и затем
+  пишет. Шаг 1 — порядок запросов двух одновременных бронирований, дающий перепродажу
+  (воспроизводится детерминированно по расписанию); шаг 2 — атомарное исправление;
+  шаг 3 — транзакции и блокировки в PostgreSQL, повторы при 40001, масштабирование
+  «горячего» события или удержание брони с истечением.

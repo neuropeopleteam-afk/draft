@@ -1,0 +1,27 @@
+family_id: common.text.utf8_truncate_fix
+title: Кодировки — обрезка строки по лимиту в байтах UTF-8
+direction: common
+skills: [python, unicode, utf8, encodings]
+target_grades: [junior, middle]
+format: choose_fix
+language: python
+invariants:
+  code_lines: [4, 4]
+  operations: [3, 3]
+  defect_type: chars_vs_bytes
+  n_options: 4
+  extra:
+    distractors: [replace, strict, latin, half, chars_loop]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 0.0
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "4 строки; нужно различать символы и байты UTF-8 (кириллица 2 байта, € 3, эмодзи 4) и поведение decode с errors='ignore'/'replace'/strict; дистракторы правдоподобны (decode без errors, деление лимита); Junior/Middle"
+generator: assessment_bank.families.common.text_utf8_truncate_fix
+version: 1
+description: >
+  Функция обрезает строку по числу символов вместо байтов. Каждое исправление
+  исполняется в песочнице Python на 9 строках (ASCII, кириллица, €, эмодзи, иероглифы)
+  с проверкой лимита и максимальности префикса.

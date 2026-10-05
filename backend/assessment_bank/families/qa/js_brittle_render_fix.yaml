@@ -1,0 +1,28 @@
+family_id: qa.js.brittle_render_fix
+title: Хрупкая проверка разметки во фронтенд-тесте (Jest)
+direction: qa
+skills: [frontend_testing, jest, brittle_tests, assertions, test_maintenance]
+target_grades: [junior, middle]
+format: choose_fix
+language: javascript
+invariants:
+  code_lines: [7, 7]
+  operations: [6, 6]
+  defect_type: brittle_assertion
+  n_options: 4
+  extra:
+    contexts: [cart, balance, price, orders]
+    distractors: [markup, label_only, exact_text, tautology]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.3
+  a: 1.0
+  sigma_variant: 0.3
+  basis: "Короткий тест Jest; нужно одновременно удержать два требования — независимость от разметки и способность ловить ошибку значения. Тавтология и проверка только метки — частые ошибки начинающих; точное равенство текста — тоньше (Junior/Middle)"
+generator: assessment_bank.families.qa.js_brittle_render_fix
+version: 1
+description: >
+  Тест сравнивает HTML виджета целиком и ломается при рефакторинге вёрстки. Нужно выбрать
+  проверку видимого текста, которая переживёт смену разметки и поймает ошибку расчёта.
+  Каждый вариант исполняется в node на текущей и новой вёрстке и на мутанте.

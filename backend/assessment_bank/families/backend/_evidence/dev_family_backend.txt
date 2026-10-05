@@ -1,0 +1,47 @@
+== backend.api.idempotency_key_fix
+STATUS PASS uniq 1.0 keys 4 jacc 0.1686 ctx 5 lines [9, 9] ops [6, 6] checks 1000 failed 0 pos {'A': 55, 'B': 42, 'C': 47, 'D': 56} 1.48s
+== backend.api.pagination_canary
+STATUS PASS uniq 0.985 keys 162 jacc 0.2261 ctx 5 lines [6, 6] ops [6, 6] checks 200 failed 0 pos {} 0.45s
+== backend.api.query_params_bug
+STATUS PASS uniq 1.0 keys 4 jacc 0.2285 ctx 6 lines [11, 11] ops [9, 9] checks 400 failed 0 pos {} 0.87s
+== backend.async.missing_await_bug
+STATUS PASS uniq 1.0 keys 5 jacc 0.532 ctx 5 lines [16, 18] ops [12, 13] checks 400 failed 0 pos {} 1.07s
+== backend.cache.invalidation_bug
+STATUS PASS uniq 1.0 keys 5 jacc 0.391 ctx 4 lines [14, 14] ops [11, 11] checks 400 failed 0 pos {} 0.96s
+== backend.db.keyset_pagination_fix
+STATUS PASS uniq 1.0 keys 4 jacc 0.1321 ctx 5 lines [9, 9] ops [6, 6] checks 1000 failed 0 pos {'A': 42, 'B': 55, 'C': 48, 'D': 55} 1.48s
+== backend.db.n_plus_one_output
+STATUS PASS uniq 1.0 keys 30 jacc 0.2937 ctx 5 lines [14, 18] ops [7, 11] checks 200 failed 0 pos {} 0.98s
+== backend.db.overbooking_ob3
+STATUS PASS uniq 1.0 keys 16 jacc 0.2529 ctx 5 lines [8, 9] ops [6, 6] checks 1600 failed 0 pos {'A': 113, 'B': 95, 'C': 104, 'D': 88} 92.67s
+== backend.db.transaction_fix
+STATUS PASS uniq 1.0 keys 4 jacc 0.1693 ctx 4 lines [11, 11] ops [9, 9] checks 1000 failed 0 pos {'A': 49, 'B': 48, 'C': 56, 'D': 47} 1.77s
+== backend.design.service_open
+STATUS WARN uniq 0.835 keys 1 jacc 0.7173 ctx 6 lines None ops None checks 0 failed 0 pos {} 0.88s
+  ! открытый формат: 167 различных формулировок на 200 seed (допустимо, минимум 40)
+== backend.migrations.order_output
+STATUS PASS uniq 1.0 keys 186 jacc 0.2726 ctx 6 lines [16, 17] ops [8, 8] checks 200 failed 0 pos {} 0.51s
+== backend.obs.contextvars_output
+STATUS PASS uniq 1.0 keys 200 jacc 0.234 ctx 5 lines [20, 24] ops [14, 18] checks 200 failed 0 pos {} 2.84s
+== backend.py.canary_comprehension
+STATUS PASS uniq 1.0 keys 116 jacc 0.3428 ctx 3 lines [13, 15] ops [7, 7] checks 200 failed 0 pos {} 0.53s
+== backend.py.concurrency_mcq
+STATUS WARN uniq 0.995 keys 4 jacc 0.8089 ctx 6 lines None ops None checks 0 failed 0 pos {'A': 59, 'B': 38, 'C': 47, 'D': 56} 0.47s
+  ! ключ сверен со справочной таблицей, исполнение невозможно
+== backend.py.design_open
+STATUS WARN uniq 0.495 keys 1 jacc 0.6847 ctx 5 lines None ops None checks 0 failed 0 pos {} 0.71s
+  ! открытый формат: 99 различных формулировок на 200 seed (допустимо, минимум 40)
+== backend.py.idempotency_ob3
+STATUS PASS uniq 1.0 keys 16 jacc 0.3504 ctx 4 lines [11, 11] ops [10, 10] checks 1600 failed 0 pos {'A': 103, 'B': 102, 'C': 108, 'D': 87} 1.58s
+== backend.py.money_rounding_fix
+STATUS PASS uniq 1.0 keys 4 jacc 0.2299 ctx 4 lines [4, 4] ops [2, 2] checks 1000 failed 0 pos {'A': 52, 'B': 51, 'C': 48, 'D': 49} 1.35s
+== backend.py.mutable_default
+STATUS PASS uniq 0.985 keys 2 jacc 0.5372 ctx 5 lines [7, 7] ops [5, 5] checks 400 failed 0 pos {} 0.83s
+== backend.py.rate_limiter_ob3
+STATUS PASS uniq 1.0 keys 16 jacc 0.2861 ctx 4 lines [17, 17] ops [12, 12] checks 1600 failed 0 pos {'A': 115, 'B': 83, 'C': 91, 'D': 111} 1.79s
+== backend.queue.redelivery_mcq
+STATUS PASS uniq 1.0 keys 4 jacc 0.6462 ctx 5 lines None ops None checks 200 failed 0 pos {'A': 47, 'B': 47, 'C': 46, 'D': 60} 0.46s
+== backend.reliability.retry_deadline_ob3
+STATUS PASS uniq 1.0 keys 16 jacc 0.2265 ctx 5 lines [17, 17] ops [11, 11] checks 1600 failed 0 pos {'A': 110, 'B': 86, 'C': 109, 'D': 95} 3.34s
+== backend.time.add_months_fix
+STATUS PASS uniq 1.0 keys 4 jacc 0.1982 ctx 5 lines [4, 4] ops [1, 1] checks 1000 failed 0 pos {'A': 52, 'B': 46, 'C': 52, 'D': 50} 0.89s

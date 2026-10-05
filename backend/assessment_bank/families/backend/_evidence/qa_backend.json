@@ -1,0 +1,655 @@
+{
+ "backend.api.idempotency_key_fix": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 4,
+  "jaccard": 0.1686,
+  "contexts": 5,
+  "lines": [
+   9,
+   9
+  ],
+  "ops": [
+   6,
+   6
+  ],
+  "checks": 1000,
+  "checks_failed": 0,
+  "positions": {
+   "A": 55,
+   "B": 42,
+   "C": 47,
+   "D": 56
+  },
+  "position_p": 0.4436,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 0.992,
+   "ratio_min": 0.975,
+   "ratio_max": 1.024,
+   "correct_longest_share": 0.225,
+   "code_line_spread": 0
+  },
+  "seconds": 1.02
+ },
+ "backend.api.pagination_canary": {
+  "status": "PASS",
+  "unique": 0.985,
+  "n_unique": 197,
+  "keys": 162,
+  "jaccard": 0.2261,
+  "contexts": 5,
+  "lines": [
+   6,
+   6
+  ],
+  "ops": [
+   6,
+   6
+  ],
+  "checks": 200,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 0.56
+ },
+ "backend.api.query_params_bug": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 4,
+  "jaccard": 0.2285,
+  "contexts": 6,
+  "lines": [
+   11,
+   11
+  ],
+  "ops": [
+   9,
+   9
+  ],
+  "checks": 400,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 0.84
+ },
+ "backend.async.missing_await_bug": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 5,
+  "jaccard": 0.532,
+  "contexts": 5,
+  "lines": [
+   16,
+   18
+  ],
+  "ops": [
+   12,
+   13
+  ],
+  "checks": 400,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 1.11
+ },
+ "backend.cache.invalidation_bug": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 5,
+  "jaccard": 0.391,
+  "contexts": 4,
+  "lines": [
+   14,
+   14
+  ],
+  "ops": [
+   11,
+   11
+  ],
+  "checks": 400,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 0.98
+ },
+ "backend.db.keyset_pagination_fix": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 4,
+  "jaccard": 0.1321,
+  "contexts": 5,
+  "lines": [
+   9,
+   9
+  ],
+  "ops": [
+   6,
+   6
+  ],
+  "checks": 1000,
+  "checks_failed": 0,
+  "positions": {
+   "A": 42,
+   "B": 55,
+   "C": 48,
+   "D": 55
+  },
+  "position_p": 0.5011,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 1.023,
+   "ratio_min": 1.012,
+   "ratio_max": 1.032,
+   "correct_longest_share": 0.0,
+   "code_line_spread": 0
+  },
+  "seconds": 1.49
+ },
+ "backend.db.n_plus_one_output": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 30,
+  "jaccard": 0.2937,
+  "contexts": 5,
+  "lines": [
+   14,
+   18
+  ],
+  "ops": [
+   7,
+   11
+  ],
+  "checks": 200,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 0.68
+ },
+ "backend.db.overbooking_ob3": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 16,
+  "jaccard": 0.2529,
+  "contexts": 5,
+  "lines": [
+   8,
+   9
+  ],
+  "ops": [
+   6,
+   6
+  ],
+  "checks": 1600,
+  "checks_failed": 0,
+  "positions": {
+   "A": 113,
+   "B": 95,
+   "C": 104,
+   "D": 88
+  },
+  "position_p": 0.3156,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 0.964,
+   "ratio_min": 0.841,
+   "ratio_max": 1.0,
+   "correct_longest_share": 0.0,
+   "code_line_spread": 4
+  },
+  "seconds": 65.62
+ },
+ "backend.db.transaction_fix": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 4,
+  "jaccard": 0.1693,
+  "contexts": 4,
+  "lines": [
+   11,
+   11
+  ],
+  "ops": [
+   9,
+   9
+  ],
+  "checks": 1000,
+  "checks_failed": 0,
+  "positions": {
+   "A": 49,
+   "B": 48,
+   "C": 56,
+   "D": 47
+  },
+  "position_p": 0.8013,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 0.996,
+   "ratio_min": 0.995,
+   "ratio_max": 0.997,
+   "correct_longest_share": 0.0,
+   "code_line_spread": 0
+  },
+  "seconds": 1.12
+ },
+ "backend.design.service_open": {
+  "status": "WARN",
+  "unique": 0.835,
+  "n_unique": 167,
+  "keys": 1,
+  "jaccard": 0.7173,
+  "contexts": 6,
+  "lines": null,
+  "ops": null,
+  "checks": 0,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [
+   "открытый формат: 167 различных формулировок на 200 seed (допустимо, минимум 40)"
+  ],
+  "options": {},
+  "seconds": 0.48
+ },
+ "backend.migrations.order_output": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 186,
+  "jaccard": 0.2726,
+  "contexts": 6,
+  "lines": [
+   16,
+   17
+  ],
+  "ops": [
+   8,
+   8
+  ],
+  "checks": 200,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 0.63
+ },
+ "backend.obs.contextvars_output": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 200,
+  "jaccard": 0.234,
+  "contexts": 5,
+  "lines": [
+   20,
+   24
+  ],
+  "ops": [
+   14,
+   18
+  ],
+  "checks": 200,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 2.19
+ },
+ "backend.py.canary_comprehension": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 116,
+  "jaccard": 0.3428,
+  "contexts": 3,
+  "lines": [
+   13,
+   15
+  ],
+  "ops": [
+   7,
+   7
+  ],
+  "checks": 200,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 2.22
+ },
+ "backend.py.concurrency_mcq": {
+  "status": "WARN",
+  "unique": 0.995,
+  "n_unique": 199,
+  "keys": 4,
+  "jaccard": 0.8089,
+  "contexts": 6,
+  "lines": null,
+  "ops": null,
+  "checks": 0,
+  "checks_failed": 0,
+  "positions": {
+   "A": 59,
+   "B": 38,
+   "C": 47,
+   "D": 56
+  },
+  "position_p": 0.1447,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [
+   "ключ сверен со справочной таблицей, исполнение невозможно"
+  ],
+  "options": {
+   "ratio_mean": 1.017,
+   "ratio_min": 0.933,
+   "ratio_max": 1.091,
+   "correct_longest_share": 0.105,
+   "code_line_spread": 0
+  },
+  "seconds": 1.34
+ },
+ "backend.py.design_open": {
+  "status": "WARN",
+  "unique": 0.495,
+  "n_unique": 99,
+  "keys": 1,
+  "jaccard": 0.6847,
+  "contexts": 5,
+  "lines": null,
+  "ops": null,
+  "checks": 0,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [
+   "открытый формат: 99 различных формулировок на 200 seed (допустимо, минимум 40)"
+  ],
+  "options": {},
+  "seconds": 1.69
+ },
+ "backend.py.idempotency_ob3": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 16,
+  "jaccard": 0.3504,
+  "contexts": 4,
+  "lines": [
+   11,
+   11
+  ],
+  "ops": [
+   10,
+   10
+  ],
+  "checks": 1600,
+  "checks_failed": 0,
+  "positions": {
+   "A": 103,
+   "B": 102,
+   "C": 108,
+   "D": 87
+  },
+  "position_p": 0.4826,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 1.071,
+   "ratio_min": 0.941,
+   "ratio_max": 1.216,
+   "correct_longest_share": 0.0,
+   "code_line_spread": 1
+  },
+  "seconds": 1.72
+ },
+ "backend.py.money_rounding_fix": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 4,
+  "jaccard": 0.2299,
+  "contexts": 4,
+  "lines": [
+   4,
+   4
+  ],
+  "ops": [
+   2,
+   2
+  ],
+  "checks": 1000,
+  "checks_failed": 0,
+  "positions": {
+   "A": 52,
+   "B": 51,
+   "C": 48,
+   "D": 49
+  },
+  "position_p": 0.9776,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 1.259,
+   "ratio_min": 1.163,
+   "ratio_max": 1.416,
+   "correct_longest_share": 0.215,
+   "code_line_spread": 3
+  },
+  "seconds": 1.29
+ },
+ "backend.py.mutable_default": {
+  "status": "PASS",
+  "unique": 0.985,
+  "n_unique": 197,
+  "keys": 2,
+  "jaccard": 0.5372,
+  "contexts": 5,
+  "lines": [
+   7,
+   7
+  ],
+  "ops": [
+   5,
+   5
+  ],
+  "checks": 400,
+  "checks_failed": 0,
+  "positions": {},
+  "position_p": null,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {},
+  "seconds": 0.78
+ },
+ "backend.py.rate_limiter_ob3": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 16,
+  "jaccard": 0.2861,
+  "contexts": 4,
+  "lines": [
+   17,
+   17
+  ],
+  "ops": [
+   12,
+   12
+  ],
+  "checks": 1600,
+  "checks_failed": 0,
+  "positions": {
+   "A": 115,
+   "B": 83,
+   "C": 91,
+   "D": 111
+  },
+  "position_p": 0.067,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 1.041,
+   "ratio_min": 0.611,
+   "ratio_max": 1.5,
+   "correct_longest_share": 0.637,
+   "code_line_spread": 0
+  },
+  "seconds": 1.32
+ },
+ "backend.queue.redelivery_mcq": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 4,
+  "jaccard": 0.6462,
+  "contexts": 5,
+  "lines": null,
+  "ops": null,
+  "checks": 200,
+  "checks_failed": 0,
+  "positions": {
+   "A": 47,
+   "B": 47,
+   "C": 46,
+   "D": 60
+  },
+  "position_p": 0.4436,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 1.006,
+   "ratio_min": 0.833,
+   "ratio_max": 1.2,
+   "correct_longest_share": 0.05,
+   "code_line_spread": 0
+  },
+  "seconds": 0.57
+ },
+ "backend.reliability.retry_deadline_ob3": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 16,
+  "jaccard": 0.2265,
+  "contexts": 5,
+  "lines": [
+   17,
+   17
+  ],
+  "ops": [
+   11,
+   11
+  ],
+  "checks": 1600,
+  "checks_failed": 0,
+  "positions": {
+   "A": 110,
+   "B": 86,
+   "C": 109,
+   "D": 95
+  },
+  "position_p": 0.2593,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 1.01,
+   "ratio_min": 0.968,
+   "ratio_max": 1.1,
+   "correct_longest_share": 0.295,
+   "code_line_spread": 2
+  },
+  "seconds": 4.1
+ },
+ "backend.time.add_months_fix": {
+  "status": "PASS",
+  "unique": 1.0,
+  "n_unique": 200,
+  "keys": 4,
+  "jaccard": 0.1982,
+  "contexts": 5,
+  "lines": [
+   4,
+   4
+  ],
+  "ops": [
+   1,
+   1
+  ],
+  "checks": 1000,
+  "checks_failed": 0,
+  "positions": {
+   "A": 52,
+   "B": 46,
+   "C": 52,
+   "D": 50
+  },
+  "position_p": 0.9233,
+  "determinism_subprocess": true,
+  "errors": [],
+  "warnings": [],
+  "options": {
+   "ratio_mean": 1.036,
+   "ratio_min": 1.001,
+   "ratio_max": 1.056,
+   "correct_longest_share": 0.26,
+   "code_line_spread": 0
+  },
+  "seconds": 1.93
+ }
+}

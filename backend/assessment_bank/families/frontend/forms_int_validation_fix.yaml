@@ -1,0 +1,27 @@
+family_id: frontend.forms.int_validation_fix
+title: Валидация формы — целое число из текстового поля
+direction: frontend
+skills: [javascript, forms, validation, type_coercion]
+target_grades: [junior]
+format: choose_fix
+language: javascript
+invariants:
+  code_lines: [7, 7]
+  operations: [6, 6]
+  defect_type: loose_number_parsing
+  n_options: 4
+  extra:
+    distractors: [number, parse_float, no_anchor, is_nan, parse_int]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.4
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "7 строк, правило проверки дано в условии вместе с примерами неверного поведения; варианты различаются способом разбора строки (Number, parseFloat, parseInt, isNaN, регулярное выражение без якорей); Junior"
+generator: assessment_bank.families.frontend.forms_int_validation_fix
+version: 1
+description: >
+  Валидатор целого числа из текстового поля формы принимает мусор и путает 0 с пустым
+  значением. Каждое исправление проверяется исполнением в Node.js на 11–12 входах
+  (пусто, пробелы, «12abc», «2.5», «1e2», «-3», границы, ведущий ноль).
