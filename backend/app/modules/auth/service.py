@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.core.db import as_aware, utcnow
 from app.core.enums import ConsentKind, UserRole, VerificationPurpose
 from app.core.errors import api_error
+from app.core.legal import CONSENT_VERSION as CONSENT_DOC_VERSION
 from app.core.security import (
     codes_equal,
     create_access_token,
@@ -21,8 +22,8 @@ from app.modules.auth.models import Consent, EmailVerification, User
 from app.modules.auth.schemas import RegisterIn, TokenOut, UserOut
 from app.modules.notifications.mailer import send_verification_code
 from app.modules.profiles.models import CandidateProfile, Company, EmployerProfile
+from app.modules.profiles.refs import new_public_ref
 
-CONSENT_DOC_VERSION = "2026-10-05"
 # Фиктивный хеш для выравнивания времени ответа, когда пользователя нет (защита от перебора почт).
 _DUMMY_HASH = hash_password("timing-equalizer-0")
 
@@ -43,7 +44,7 @@ def register_user(db: Session, data: RegisterIn) -> tuple[User, str]:
     db.flush()
     db.add(Consent(user_id=user.id, kind=ConsentKind.processing, document_version=CONSENT_DOC_VERSION))
     if data.role == UserRole.candidate:
-        db.add(CandidateProfile(user_id=user.id, full_name=data.full_name))
+        db.add(CandidateProfile(user_id=user.id, full_name=data.full_name, public_ref=new_public_ref(db)))
     else:
         company = Company(name=data.company_name or "Моя компания", created_by=user.id, contact_email=email)
         db.add(company)

@@ -1,0 +1,297 @@
+{
+ "backend": {
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=backend",
+  "groups": {
+   "All": {
+    "p25": 152416,
+    "median": 248333,
+    "p75": 364166,
+    "total": 7550,
+    "title": "Бэкенд разработчик",
+    "min": 84166,
+    "max": 483333
+   },
+   "Middle": {
+    "p25": 150000,
+    "median": 220433,
+    "p75": 291666,
+    "total": 3386,
+    "title": "Middle Бэкенд разработчик",
+    "min": 104166,
+    "max": 357583
+   },
+   "Senior": {
+    "p25": 272708,
+    "median": 341666,
+    "p75": 427666,
+    "total": 2110,
+    "title": "Senior Бэкенд разработчик",
+    "min": 208333,
+    "max": 510000
+   },
+   "Junior": {
+    "p25": 63333,
+    "median": 98333,
+    "p75": 142266,
+    "total": 906,
+    "title": "Junior Бэкенд разработчик",
+    "min": 43333,
+    "max": 190000
+   },
+   "Lead": {
+    "p25": 345333,
+    "median": 451666,
+    "p75": 550000,
+    "total": 890,
+    "title": "Lead Бэкенд разработчик",
+    "min": 246500,
+    "max": 677333
+   },
+   "Intern": {
+    "p25": 44333,
+    "median": 71671,
+    "p75": 101333,
+    "total": 258,
+    "title": "Intern Бэкенд разработчик",
+    "min": 22346,
+    "max": 161666
+   }
+  }
+ },
+ "frontend": {
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=frontend",
+  "groups": {
+   "All": {
+    "p25": 135000,
+    "median": 225000,
+    "p75": 350000,
+    "total": 2796,
+    "title": "Фронтенд разработчик",
+    "min": 78333,
+    "max": 435000
+   },
+   "Junior": {
+    "p25": 62083,
+    "median": 86500,
+    "p75": 113333,
+    "total": 297,
+    "title": "Junior Фронтенд разработчик",
+    "min": 40833,
+    "max": 170000
+   },
+   "Middle": {
+    "p25": 130433,
+    "median": 187525,
+    "p75": 257500,
+    "total": 1319,
+    "title": "Middle Фронтенд разработчик",
+    "min": 91333,
+    "max": 310166
+   },
+   "Senior": {
+    "p25": 257292,
+    "median": 333333,
+    "p75": 402500,
+    "total": 808,
+    "title": "Senior Фронтенд разработчик",
+    "min": 205333,
+    "max": 473333
+   },
+   "Lead": {
+    "p25": 327500,
+    "median": 406766,
+    "p75": 483833,
+    "total": 294,
+    "title": "Lead Фронтенд разработчик",
+    "min": 258666,
+    "max": 602500
+   },
+   "Intern": {
+    "p25": 38250,
+    "median": 63333,
+    "p75": 87500,
+    "total": 78,
+    "title": "Intern Фронтенд разработчик",
+    "min": 20833,
+    "max": 116666
+   }
+  }
+ },
+ "qa": {
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=manual_testing&spec_aliases%5B%5D=test_automation",
+  "groups": {
+   "All": {
+    "p25": 98333,
+    "median": 158666,
+    "p75": 237748,
+    "total": 2295,
+    "title": "Тестировщик",
+    "min": 62350,
+    "max": 330000
+   },
+   "Middle": {
+    "p25": 118333,
+    "median": 155000,
+    "p75": 206250,
+    "total": 1107,
+    "title": "Middle Тестировщик",
+    "min": 82500,
+    "max": 261666
+   },
+   "Junior": {
+    "p25": 62500,
+    "median": 87333,
+    "p75": 111000,
+    "total": 431,
+    "title": "Junior Тестировщик",
+    "min": 44333,
+    "max": 155833
+   },
+   "Intern": {
+    "p25": 46666,
+    "median": 63458,
+    "p75": 88333,
+    "total": 159,
+    "title": "Intern Тестировщик",
+    "min": 30833,
+    "max": 117333
+   },
+   "Senior": {
+    "p25": 211666,
+    "median": 269687,
+    "p75": 338029,
+    "total": 464,
+    "title": "Senior Тестировщик",
+    "min": 158333,
+    "max": 397500
+   },
+   "Lead": {
+    "p25": 220833,
+    "median": 338333,
+    "p75": 425250,
+    "total": 134,
+    "title": "Lead Тестировщик",
+    "min": 158333,
+    "max": 540000
+   }
+  }
+ },
+ "data_ml": {
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=data_scientist&spec_aliases%5B%5D=ml-engineer",
+  "groups": {
+   "All": {
+    "p25": 125500,
+    "median": 229166,
+    "p75": 358333,
+    "total": 1013,
+    "title": "Специалист AI",
+    "min": 74166,
+    "max": 500000
+   },
+   "Junior": {
+    "p25": 80833,
+    "median": 117200,
+    "p75": 170000,
+    "total": 196,
+    "title": "Junior Специалист AI",
+    "min": 51666,
+    "max": 223333
+   },
+   "Middle": {
+    "p25": 162875,
+    "median": 225000,
+    "p75": 300000,
+    "total": 441,
+    "title": "Middle Специалист AI",
+    "min": 104166,
+    "max": 366666
+   },
+   "Lead": {
+    "p25": 361666,
+    "median": 485000,
+    "p75": 654437,
+    "total": 109,
+    "title": "Lead Специалист AI",
+    "min": 246666,
+    "max": 819500
+   },
+   "Intern": {
+    "p25": 66250,
+    "median": 83333,
+    "p75": 100000,
+    "total": 89,
+    "title": "Intern Специалист AI",
+    "min": 31666,
+    "max": 121666
+   },
+   "Senior": {
+    "p25": 278000,
+    "median": 389416,
+    "p75": 478333,
+    "total": 178,
+    "title": "Senior Специалист AI",
+    "min": 208333,
+    "max": 570833
+   }
+  }
+ },
+ "security": {
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=infosecspec&spec_aliases%5B%5D=pentester&spec_aliases%5B%5D=appsec&spec_aliases%5B%5D=security_engineer",
+  "groups": {
+   "All": {
+    "p25": 98333,
+    "median": 170416,
+    "p75": 263666,
+    "total": 746,
+    "title": "Специалист по инфобезу",
+    "min": 63333,
+    "max": 423033
+   },
+   "Lead": {
+    "p25": 250208,
+    "median": 398000,
+    "p75": 561458,
+    "total": 89,
+    "title": "Lead Специалист по инфобезу",
+    "min": 142025,
+    "max": 766666
+   },
+   "Senior": {
+    "p25": 185833,
+    "median": 279166,
+    "p75": 374166,
+    "total": 94,
+    "title": "Senior Специалист по инфобезу",
+    "min": 108333,
+    "max": 470333
+   },
+   "Junior": {
+    "p25": 70000,
+    "median": 99500,
+    "p75": 141250,
+    "total": 157,
+    "title": "Junior Специалист по инфобезу",
+    "min": 51583,
+    "max": 187000
+   },
+   "Middle": {
+    "p25": 118333,
+    "median": 168500,
+    "p75": 233333,
+    "total": 342,
+    "title": "Middle Специалист по инфобезу",
+    "min": 79333,
+    "max": 309000
+   },
+   "Intern": {
+    "p25": 45866,
+    "median": 63333,
+    "p75": 92833,
+    "total": 64,
+    "title": "Intern Специалист по инфобезу",
+    "min": 30833,
+    "max": 126666
+   }
+  }
+ }
+}

@@ -15,6 +15,12 @@ from app.modules.catalog.models import Category, Direction, Grade, StackTag  # n
 from app.modules.fsp.models import FspAchievement, FspPassport  # noqa: F401
 from app.modules.invitations.models import Invitation, InvitationEvent, Probe  # noqa: F401
 from app.modules.matching.models import EmployerNeed, SelectionVersion  # noqa: F401
-from app.modules.profiles.models import CandidateFact, CandidateProfile, Company, EmployerProfile  # noqa: F401
+from app.modules.profiles.models import (  # noqa: F401
+    CandidateFact,
+    CandidateProfile,
+    CandidateResume,
+    Company,
+    EmployerProfile,
+)
 
 metadata = Base.metadata

@@ -36,6 +36,16 @@ class CandidateProfile(Timestamps, Base):
     # Приватность: что видно работодателю в обезличенной карточке.
     privacy: Mapped[dict] = mapped_column(default=dict)
     visible_to_employers: Mapped[bool] = mapped_column(default=False)
+    # Обезличенный идентификатор для работодателя (К-XXXXXX): по нему идут подборки, зонды, приглашения.
+    public_ref: Mapped[str | None] = mapped_column(sa.String(16), unique=True)
+    # Опрос после регистрации пройден
+    onboarding_completed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    # Роли в команде (самоописание, T0)
+    roles: Mapped[list] = mapped_column(default=list)
+    # Заявленный кандидатом ФСП ID (заглушка до подключения ФСП ID на Keycloak)
+    fsp_id_claimed: Mapped[str | None] = mapped_column(sa.String(64))
+    # Демо-режим жюри: снимает правило «смена грейда не чаще раза в 90 дней» для этой учётной записи
+    jury_mode: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
 
 
 class Company(UUIDPk, Timestamps, Base):
@@ -50,6 +60,7 @@ class Company(UUIDPk, Timestamps, Base):
     contact_email: Mapped[str | None] = mapped_column(sa.String(254))
     contact_phone: Mapped[str | None] = mapped_column(sa.String(32))
     created_by: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("users.id", ondelete="SET NULL"))
+    is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
 
 
 class EmployerProfile(Timestamps, Base):
@@ -81,3 +92,21 @@ class CandidateFact(UUIDPk, Base):
     weight: Mapped[float] = mapped_column(default=1.0)
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
     expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+
+
+class CandidateResume(UUIDPk, Base):
+    """Загруженное резюме. Исходный PDF не хранится: только текст с вырезанными ФИО и контактами
+    (вырезаются локально, до любой отправки во внешние сервисы) и извлечённые поля (все — T0)."""
+
+    __tablename__ = "candidate_resumes"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    filename: Mapped[str] = mapped_column(sa.String(255))
+    size_bytes: Mapped[int]
+    page_count: Mapped[int] = mapped_column(default=0)
+    text_redacted: Mapped[str] = mapped_column(sa.Text, default="")
+    # Сколько и каких ПДн найдено и вырезано (без самих значений)
+    pii_summary: Mapped[dict] = mapped_column(default=dict)
+    extracted: Mapped[dict] = mapped_column(default=dict)
+    method: Mapped[str] = mapped_column(sa.String(32), default="rules")  # rules | llm+rules
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
