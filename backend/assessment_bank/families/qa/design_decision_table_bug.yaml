@@ -1,0 +1,27 @@
+family_id: qa.design.decision_table_bug
+title: Таблица решений — найти ошибочную строку тестовых данных
+direction: qa
+skills: [test_design, decision_tables, pytest, parametrize, boundary_value_analysis]
+target_grades: [junior, middle]
+format: find_bug
+language: python
+invariants:
+  code_lines: [12, 14]
+  operations: [1, 1]
+  defect_type: wrong_expected_value
+  extra:
+    contexts: [delivery, credit, cashback, access]
+    rows: [6, 8]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: -0.4
+  a: 1.0
+  sigma_variant: 0.35
+  basis: "Таблица из 3–4 правил по приоритету и 6–8 строк параметризованного теста; нужно для каждой строки найти первое сработавшее правило. Ошибочная строка построена по типичной ошибке тест-дизайна (граница включительно, приоритет правил, условие «не важно»); границы и приоритет труднее (Junior/Middle)"
+generator: assessment_bank.families.qa.design_decision_table_bug
+version: 1
+description: >
+  Параметризованный тест pytest по таблице решений; в одной строке ожидаемый результат
+  противоречит таблице. Ключ проверяется исполнением: тест падает на правильной реализации,
+  после исправления строки проходит и ловит мутанта.

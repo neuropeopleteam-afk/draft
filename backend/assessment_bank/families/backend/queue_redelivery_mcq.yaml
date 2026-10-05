@@ -1,0 +1,24 @@
+family_id: backend.queue.redelivery_mcq
+title: Повторная доставка из очереди — visibility timeout, ack, DLQ
+direction: backend
+skills: [messaging, queues, at_least_once, reliability]
+target_grades: [middle]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    kinds: [visibility, crash, nested]
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: 0.2
+  a: 1.0
+  sigma_variant: 0.45
+  basis: "Сценарий с числами, 4 числовых варианта; три механизма доставки «как минимум один раз» (повтор по visibility timeout, падение до/после ack, вложенные повторы × maxReceiveCount); дистракторы — типичные ошибки на единицу и «ровно один раз»; разная трудность сценариев → σ высокая; Middle"
+generator: assessment_bank.families.backend.queue_redelivery_mcq
+version: 1
+description: >
+  Концептуальный вопрос о повторной доставке сообщений с числовым ответом. Ключ проверяется
+  исполнением пошаговой модели брокера (выдача, подтверждение, падение, перенос в DLQ),
+  которая печатает букву верного варианта.

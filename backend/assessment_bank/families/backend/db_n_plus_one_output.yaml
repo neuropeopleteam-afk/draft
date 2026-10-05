@@ -1,0 +1,25 @@
+family_id: backend.db.n_plus_one_output
+title: Проблема N+1 — сколько SQL-запросов выполнит код
+direction: backend
+skills: [python, sql, orm, n_plus_one, performance]
+target_grades: [middle]
+format: predict_output
+language: python
+invariants:
+  code_lines: [14, 18]
+  operations: [7, 11]
+  extra:
+    strategies: [naive, cache, cache_per_item, prefetch_in, join]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.1
+  a: 1.1
+  sigma_variant: 0.4
+  basis: "14–18 строк, 7–11 операций; нужно посчитать строки после фильтра и запросы при пяти стратегиях загрузки (N+1, кэш по id, кэш на каждый элемент, IN, JOIN); ловушка «кэш создаётся заново» и подсчёт различных id труднее JOIN → σ повышена; Middle"
+generator: assessment_bank.families.backend.db_n_plus_one_output
+version: 1
+description: >
+  Загрузка списка и связанных сущностей через sqlite3 с подсчётом запросов set_trace_callback.
+  Кандидат предсказывает число строк и число SQL-запросов. Ключ — независимая модель,
+  сверка исполнением показанного кода.

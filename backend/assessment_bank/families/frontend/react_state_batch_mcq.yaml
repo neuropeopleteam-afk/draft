@@ -1,0 +1,28 @@
+family_id: frontend.react.state_batch_mcq
+title: useState — значение рендера, очередь обновлений и функция-обновитель
+direction: frontend
+skills: [react, state, closures, rendering]
+target_grades: [junior, middle]
+format: mcq_concept
+language: javascript
+invariants:
+  code_lines: [10, 10]
+  operations: [8, 8]
+  n_options: 4
+  extra:
+    updates: 3
+    clicks: [1, 2]
+    distractor_models: [sync, sum, all_value, first_only, log_new]
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -0.1
+  a: 1.2
+  sigma_variant: 0.35
+  basis: "10 строк, три вызова setState обеих форм и console.log; в трети вариантов два клика (нужно учесть новое замыкание после рендера) → σ повышена; дистракторы — синхронная модель, сумма приращений, только значения, только первое обновление; Junior/Middle"
+generator: assessment_bank.families.frontend.react_state_batch_mcq
+version: 1
+description: >
+  Что выведет console.log в обработчике и что покажет кнопка после перерисовки. Ключ
+  проверяется исполнением обработчика на минимальной модели useState (очередь обновлений
+  React 18); дистракторы — результаты типичных неверных моделей.

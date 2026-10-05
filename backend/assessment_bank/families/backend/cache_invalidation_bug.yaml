@@ -1,0 +1,27 @@
+family_id: backend.cache.invalidation_bug
+title: Ключ кэша и инвалидация в схеме cache-aside
+direction: backend
+skills: [python, caching, cache_invalidation, consistency]
+target_grades: [middle]
+format: find_bug
+language: python
+invariants:
+  code_lines: [14, 14]
+  operations: [11, 11]
+  defect_type: cache_staleness
+  extra:
+    subtypes: [key_missing_param, invalidate_constant, invalidate_wrong_arg]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.0
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "14 строк, 11 операций; три функции, значение зависит от двух параметров; нужно проследить шесть вызовов и понять, какая запись кэша устарела; подтип «ключ без параметра» проявляется до обновления и легче двух подтипов инвалидации; Middle"
+generator: assessment_bank.families.backend.cache_invalidation_bug
+version: 1
+description: >
+  Кэш cache-aside для значения, зависящего от id и второго параметра (валюта, тариф, период).
+  Одна строка нарушает согласованность: ключ без параметра или неверная инвалидация.
+  Кандидат по последовательности вызовов и неверному ответу находит строку. Ответы считает
+  модель кэша; дефектный код падает на тесте, исправленный проходит.

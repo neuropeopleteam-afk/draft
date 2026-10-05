@@ -1,0 +1,26 @@
+family_id: backend.migrations.order_output
+title: Порядок применения миграций — сортировка имён и зависимости
+direction: backend
+skills: [python, migrations, sqlite, sorting]
+target_grades: [junior]
+format: predict_output
+language: python
+invariants:
+  code_lines: [16, 17]
+  operations: [8, 8]
+  extra:
+    n_migrations: [5, 6]
+    runner_sort: [string, numeric]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.4
+  a: 1.0
+  sigma_variant: 0.4
+  basis: "16–17 строк, 8 операций, 5–6 миграций двух таблиц; нужно отсортировать имена как строки (10 < 2) и отследить зависимости ALTER/INDEX от CREATE; в 30 % вариантов раннер сортирует по числу — защита от угадывания «всегда ошибка»; σ повышена из-за разной длины вывода; Junior"
+generator: assessment_bank.families.backend.migrations_order_output
+version: 1
+description: >
+  Самописный раннер миграций сортирует имена файлов; без ведущих нулей миграция «10_…»
+  выполняется раньше «2_…» и может упасть на отсутствующей таблице или столбце. Кандидат
+  предсказывает вывод раннера. Ключ — независимая модель, сверка исполнением в sqlite3.

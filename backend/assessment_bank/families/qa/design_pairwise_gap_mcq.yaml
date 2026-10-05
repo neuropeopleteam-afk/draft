@@ -1,0 +1,25 @@
+family_id: qa.design.pairwise_gap_mcq
+title: Попарное тестирование — найти непокрытую пару значений
+direction: qa
+skills: [test_design, pairwise_testing, combinatorial_testing, configuration_testing]
+target_grades: [junior, middle]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    parameters: [3, 4]
+    modes: [drop, change]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.0
+  sigma_variant: 0.3
+  basis: "Таблица из 6–12 тестов по 3–4 параметрам; нужно понимать критерий all-pairs и аккуратно проверить четыре пары. Дистракторы — пары, встречающиеся ровно один раз, поэтому быстрый просмотр не помогает; с 4 параметрами и 10+ строками труднее (Junior/Middle)"
+generator: assessment_bank.families.qa.design_pairwise_gap_mcq
+version: 1
+description: >
+  Набор тестов почти полностью покрывает все пары значений параметров; нужно найти пару,
+  которая не встречается ни в одном тесте. Ключ проверяется исполнением подсчёта покрытия
+  пар по показанной таблице.

@@ -1,0 +1,27 @@
+family_id: data_ml.metrics.roc_auc_ties_bug
+title: ROC-AUC вручную — учёт одинаковых скоров (найти ошибку)
+direction: data_ml
+skills: [python, roc_auc, classification_metrics, mann_whitney, ties]
+target_grades: [middle, senior]
+format: find_bug
+language: python
+invariants:
+  code_lines: [13, 15]
+  operations: [12, 14]
+  defect_type: tie_handling
+  extra:
+    implementations: [pairwise, rank]
+    subtypes: [pair_ge, pair_weight, rank_ordinal, rank_min]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.4
+  a: 1.1
+  sigma_variant: 0.4
+  basis: "13–15 строк; нужно знать определение ROC-AUC как вероятности упорядочивания пары с весом 0,5 для ничьей и его ранговую форму (Манн — Уитни со средними рангами); пример расхождения со sklearn дан в условии. Ранговые подтипы (порядковый/минимальный ранг) заметно труднее попарных — σ повышена (Middle/Senior)"
+generator: assessment_bank.families.data_ml.metrics_roc_auc_ties_bug
+version: 1
+description: >
+  Собственная функция ROC-AUC расходится со sklearn на данных с одинаковыми скорами.
+  Попарная реализация засчитывает ничью как победу, ранговая — присваивает в группе равных
+  скоров не средний ранг. Ключ проверяется исполнением на эталонных значениях.

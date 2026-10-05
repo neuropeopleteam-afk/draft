@@ -1,0 +1,46 @@
+{
+ "backend.api.idempotency_key_fix": {
+  "status": "FAIL",
+  "unique": 0.865,
+  "n_unique": 173,
+  "keys": 4,
+  "jaccard": 0.1161,
+  "contexts": 5,
+  "lines": [
+   9,
+   9
+  ],
+  "ops": [
+   6,
+   6
+  ],
+  "checks": 1000,
+  "checks_failed": 0,
+  "positions": {
+   "A": 46,
+   "B": 47,
+   "C": 51,
+   "D": 56
+  },
+  "position_p": 0.7434,
+  "determinism_subprocess": true,
+  "errors": [
+   "нарушены инварианты в 200 вариантах",
+   "seed 1: operations=6 вне [5, 5]",
+   "seed 2: operations=6 вне [5, 5]",
+   "seed 3: operations=6 вне [5, 5]",
+   "уникальных вариантов 86% < 90%"
+  ],
+  "warnings": [
+   "низкое поверхностное разнообразие (0.12)"
+  ],
+  "options": {
+   "ratio_mean": 0.993,
+   "ratio_min": 0.98,
+   "ratio_max": 1.023,
+   "correct_longest_share": 0.225,
+   "code_line_spread": 0
+  },
+  "seconds": 0.99
+ }
+}

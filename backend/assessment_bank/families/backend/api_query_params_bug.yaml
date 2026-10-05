@@ -1,0 +1,26 @@
+family_id: backend.api.query_params_bug
+title: Разбор параметров строки запроса — типы, пустые списки, границы
+direction: backend
+skills: [python, api, validation, http]
+target_grades: [junior]
+format: find_bug
+language: python
+invariants:
+  code_lines: [11, 11]
+  operations: [9, 9]
+  defect_type: query_param_parsing
+  extra:
+    subtypes: [bool_cast, empty_split, limit_clamp, offset_clamp]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.7
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "11 строк, 9 операций; четыре однотипные строки разбора, ровно одна нарушает требования; в сообщении тестировщика — запрос из нескольких параметров без указания поля; подтипы bool(\"false\") и \"\".split(\",\") труднее ошибки min/max → σ повышена; Junior"
+generator: assessment_bank.families.backend.api_query_params_bug
+version: 1
+description: >
+  Функция разбора параметров GET-запроса; одна строка нарушает требования (приведение строки к
+  bool, пустой список из split, ограничение min/max наоборот). Кандидат по требованиям и
+  запросу тестировщика находит строку. Дефектный код падает на тестах, исправленный проходит.

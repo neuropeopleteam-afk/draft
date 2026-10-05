@@ -1,0 +1,26 @@
+family_id: data_ml.ab.sample_size_mcq
+title: Размер выборки и длительность A/B-теста конверсии (мощность, MDE, двусторонний тест)
+direction: data_ml
+skills: [ab_testing, statistics, power_analysis, sample_size, experiment_design]
+target_grades: [middle, senior]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    asks: [n, days]
+    distractors: [one_sided, no_power, double, one_group, double_count]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 0.7
+  a: 1.0
+  sigma_variant: 0.35
+  basis: "Расчёт по формуле размера выборки для двух долей без подсказки формулы (квантили даны); нужно правильно выбрать двусторонний квантиль, учесть мощность, перевести относительный MDE в абсолютный и не перепутать размер группы с общим; вариант «дни теста» добавляет шаг с трафиком. Дистракторы отличаются не меньше чем на 12 % (Middle/Senior)"
+generator: assessment_bank.families.data_ml.ab_sample_size_mcq
+version: 1
+description: >
+  Планирование A/B-теста: размер каждой группы или число дней при заданном трафике.
+  Дистракторы — односторонний квантиль, забытая мощность, итог на обе группы, ошибки
+  деления трафика. Ключ проверяется исполнением по двум формулам (объединённая и
+  раздельная дисперсия) — обе указывают на один вариант.
