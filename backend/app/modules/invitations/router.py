@@ -142,7 +142,7 @@ def send_probes(data: ProbeIn, bg: BackgroundTasks, user: User = Depends(employe
         created.append(_probe_out(db, pr, "employer"))
         cu = _candidate_user(db, p.user_id)
         bg.add_task(notify, cu.email, f"Короткая задача от компании {c.name}",
-                    [f"Компания «{c.name}» предлагает короткую задачу «{data.title}».",
+                    [f"Компания {c.name} предлагает короткую задачу «{data.title}».",
                      f"Вилка зарплаты: {_rub(data.salary_from)} – {_rub(data.salary_to)}.",
                      "Контакты не раскрываются, пока вы сами не примете приглашение."],
                     is_demo=cu.is_demo, link_path="/candidate/probes")
@@ -186,7 +186,7 @@ def send_invitation(data: InvitationIn, bg: BackgroundTasks, user: User = Depend
                                 probe_id=data.probe_id)
     cu = _candidate_user(db, p.user_id)
     bg.add_task(notify, cu.email, f"Приглашение от компании {c.name}",
-                [f"Компания «{c.name}» приглашает вас на позицию «{data.position_title}».",
+                [f"Компания {c.name} приглашает вас на позицию «{data.position_title}».",
                  f"Вилка зарплаты: {_rub(data.salary_from)} – {_rub(data.salary_to)}.",
                  "Ваши контакты работодатель увидит, только если вы примете приглашение."],
                 is_demo=cu.is_demo, link_path="/candidate/invitations")

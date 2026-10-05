@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
+from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
     Bundle,
     achievement_text,
@@ -89,7 +90,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     reasons: list[dict] = []
     t = b.test.value if b.test else {}
     test = test_component(t.get("theta"), t.get("se"), req.get("grade") or p.current_grade_id)
-    cat_title = f"{(p.current_direction_id or '').replace('_', '/')} · {p.current_grade_id}"
+    cat_title = category_title(p.current_category_id)
     if b.test:
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "confirmed",

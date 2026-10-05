@@ -19,7 +19,7 @@ from app.core.db import as_aware, utcnow
 from app.core.enums import EvidenceLevel, FactSource, InvitationStatus, ProbeStatus
 from app.core.errors import api_error
 from app.modules.auth.models import User
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import STACK, category_title
 from app.modules.invitations.models import Invitation, InvitationEvent, Probe
 from app.modules.matching.models import EmployerNeed
 from app.modules.profiles.facts import achievement_text, load_bundles, refresh_rating, skill_confirmed
@@ -72,7 +72,7 @@ def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, 
     if b.test:
         t = b.test.value
         ev.append({"level": "T1", "kind": "test",
-                   "text": f"Категория {b.profile.current_category_id} подтверждена тестом: {t.get('correct')} из "
+                   "text": f"Категория {category_title(b.profile.current_category_id)} подтверждена тестом: {t.get('correct')} из "
                            f"{t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}"})
     wanted = []
     if need:
