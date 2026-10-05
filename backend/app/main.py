@@ -17,6 +17,8 @@ from sqlalchemy.orm import Session
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.legal import OPERATOR
+from app.integrations import TAGS as INTEGRATION_TAGS
+from app.integrations import include_routers as include_integration_routers
 from app.modules.assessment.expert_router import router as expert_router
 from app.modules.assessment.router import router as assessment_router
 from app.modules.auth.router import router as auth_router
@@ -58,7 +60,7 @@ def create_app() -> FastAPI:
             "кандидата по категории «направление · грейд» и приглашает с зарплатой.\n\n"
             "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
         ),
-        openapi_tags=TAGS,
+        openapi_tags=TAGS + INTEGRATION_TAGS,
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -74,6 +76,7 @@ def create_app() -> FastAPI:
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
               expert_router, jury_router, validation_router):
         app.include_router(r)
+    include_integration_routers(app)
     app.mount("/api/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     @app.get("/api/docs", include_in_schema=False)
