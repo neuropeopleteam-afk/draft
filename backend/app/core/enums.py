@@ -7,6 +7,7 @@ class UserRole(StrEnum):
     employer = "employer"
     admin = "admin"
     expert = "expert"  # проверка развёрнутых ответов по рубрике (/api/expert/*); не admin
+    fsp_analyst = "fsp_analyst"  # Кабинет ФСП: только обезличенная аналитика (app/fsp_cabinet)
 
 
 class VerificationPurpose(StrEnum):
@@ -112,3 +113,4 @@ class FspEventLevel(StrEnum):
     interregional = "interregional"
     national = "national"
     international = "international"
+    platform = "platform"  # мероприятие платформы: «Кубок работодателя» (app/cup), подтверждено платформой (T1)
