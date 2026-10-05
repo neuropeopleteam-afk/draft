@@ -362,6 +362,10 @@ server {
 
 Сертификат: `certbot certonly --webroot -w /opt/spectrek_fsp/acme -d fsp.neuropeople.pro --deploy-hook "systemctl reload nginx"`.
 
+Полный рабочий файл сайта (без секретов) — `infra/nginx/fsp.neuropeople.pro.conf.example`: редирект на HTTPS,
+`/robots.txt` с `Disallow: /`, `/api/` и файлы PWA без базовой авторизации, `/auth/` (Keycloak «ФСП ID») со своим входом,
+остальное — под базовой авторизацией (`auth_basic_user_file /etc/nginx/htpasswd_spectrek_fsp`). Доступ к стенду: demo / Hakaton.
+
 ## 12. LLM-слой
 
 - Провайдер: **Yandex AI Studio** (`https://llm.api.cloud.yandex.net/v1`, OpenAI-совместимый API), модель
