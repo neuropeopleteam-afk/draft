@@ -4,6 +4,13 @@ import { Link } from "react-router-dom";
 import { Alert, dt, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 
+/** Дата без времени (ГГГГ-ММ-ДД) — без сдвига часового пояса браузера. */
+export function dateOnly(v?: string | null): string {
+  const m = v ? /^(\d{4})-(\d{2})-(\d{2})/.exec(v) : null;
+  if (!m) return dt(v ?? undefined);
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+}
+
 export interface TrustShort {
   score: number; level: "high" | "medium" | "low"; level_title: string; preliminary: boolean; critical: boolean;
   summary: string; offer_salary?: { status: string; text: string } | null; company_id?: string;
@@ -74,7 +81,7 @@ export function TrustPanel({ t, title = "Индекс доверия работ�
       </ul>
       {r && r.status === "found" && (
         <p className="mt-3 border-t border-brand-night/5 pt-3 text-xs text-brand-ink/55">
-          ЕГРЮЛ (ФНС, egrul.nalog.ru): {r.name}{r.ogrn ? `, ОГРН ${r.ogrn}` : ""}{r.registered_at ? `, регистрация ${dt(r.registered_at)}` : ""}{r.director ? `, ${r.director_role?.toLowerCase() ?? "руководитель"} ${r.director}` : ""}. Проверено {dt(r.checked_at)}.
+          ЕГРЮЛ (ФНС, egrul.nalog.ru): {r.name}{r.ogrn ? `, ОГРН ${r.ogrn}` : ""}{r.registered_at ? `, регистрация ${dateOnly(r.registered_at)}` : ""}{r.director ? `, ${r.director_role?.toLowerCase() ?? "руководитель"} ${r.director}` : ""}. Проверено {dt(r.checked_at).replace(/\.$/, "")}.
         </p>
       )}
     </section>

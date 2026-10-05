@@ -23,13 +23,15 @@ export function Fsp() {
       <PageTitle title="Паспорт ФСП" subtitle="Достижения в соревнованиях по дисциплинам спортивного программирования (ЕВСК) — подтверждённые реестром факты (T2)." />
       <section className="card space-y-4">
         <div className="flex items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p></div>
-        <p className="text-sm text-brand-ink/70">{data.note}</p>
+        <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром (T2).` : data.note}</p>
         <FspIdLinkButton linkedVia={data.link_source} />
+        {data.link_source !== "keycloak" && <>
         <p className="pt-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-ink/45">Или укажите ФСП ID вручную — до подтверждения реестром</p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[16rem] flex-1"><Field label="ФСП ID" htmlFor="fid"><input id="fid" className="input" value={id} onChange={(e) => setId(e.target.value)} placeholder="FSP-123456" /></Field></div>
           <button className="btn-primary" disabled={id.trim().length < 4} onClick={link}>Сохранить</button>
         </div>
+        </>}
         {data.fsp_id_claimed && !data.linked && <p className="text-xs text-brand-plum">Указан ФСП ID {data.fsp_id_claimed} — ожидает подтверждения реестром.</p>}
         {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       </section>
