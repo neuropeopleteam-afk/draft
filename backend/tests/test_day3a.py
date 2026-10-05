@@ -271,3 +271,33 @@ def test_red_button_attacks(client):
         from app.modules.fsp.models import FspAchievement
 
         assert db.scalar(select(func.count()).select_from(FspAchievement).where(FspAchievement.verified.is_(False))) == 0
+
+
+def test_bm25_baseline():
+    from app.modules.validation.matching_eval import BM25
+
+    bm = BM25({"a": "Python FastAPI PostgreSQL разработчик", "b": "React TypeScript фронтенд", "c": "Python Django"})
+    q = "Нужен разработчик: Python, FastAPI"
+    assert bm.score("a", q) > bm.score("c", q) > bm.score("b", q) == 0.0
+
+
+def test_fixed_form_is_same_for_everyone():
+    import numpy as np
+    from assessment_bank.simulation import make_population, make_truth
+
+    from app.modules.validation import sim
+
+    rng = np.random.default_rng(1)
+    pool = sim.make_pool(1)
+    truth = make_truth(pool, rng, misspec=0.5)
+    cfg = sim.AppConfig()
+    forms = sim.fixed_forms(pool, truth, "qa", cfg, rng)
+    assert all(8 <= len(f) <= 16 for f in forms.values())
+    people = [p for p in make_population(40, rng) if p.claimed == "middle"][:2]
+    seen = []
+    for p in people:
+        s = sim.FixedFormSession(pool, "qa", cfg.cat(), forms["middle"], "middle", rng)
+        while (it := s.next_item()) is not None:
+            s.record(it, [1.0] * len(it.b), None)
+        seen.append([a.family_id for a in s.administered])
+    assert seen[0] == seen[1] == [i.family_id for i in forms["middle"]]

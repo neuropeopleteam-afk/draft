@@ -98,7 +98,14 @@ def simulation_section(n: int, quick: bool) -> dict:
         s_app, s_base = sim.summarize_safe(people, r_app), sim.summarize_safe(people, r_base)
         s_app["ob3_max"] = int(max(r["n_ob3"] for r in r_app))
         s_base["ob3_max"] = int(max(r["n_ob3"] for r in r_base))
-        rt = sim.retest(pool, truth, make_population(max(150, n // 2), rng), d, cfg, rng, k)
+        rt_people = make_population(max(150, n // 2), rng)
+        rt = sim.retest(pool, truth, rt_people, d, cfg, rng, k)
+        # те же люди, но истинные параметры = параметры банка (без ошибки эксперта) — как «чистая» синтетика
+        rt["ideal_params"] = sim.retest(pool, make_truth(pool, rng, misspec=0.0), rt_people, d, cfg, rng, k)
+        if i == 0:  # «что поможет»: длиннее тест — SE ≤ 0,25, до 30 заданий и 120 минут (одно направление, для оценки)
+            long_cfg = sim.AppConfig(min_items=cfg.min_items, max_items=30, se_target=0.25, max_minutes=120,
+                                     subpools=cfg.subpools, exposure=cfg.exposure, max_per_format=cfg.max_per_format)
+            rt["long_test"] = sim.retest(pool, truth, rt_people, d, long_cfg, rng, k)
         leak = sim.leak_experiment(pool, truth, d, cfg, rng, k, n=max(200, n // 2 if quick else n))
         out["directions"][d] = {
             "app": s_app, "baseline_day2": s_base, "retest": rt,
