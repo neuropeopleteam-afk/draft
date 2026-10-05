@@ -48,7 +48,7 @@ export default function Verify() {
       {devCode && (
         <div className="mb-6 rounded-xl border border-dashed border-brand-lavender bg-brand-lavender/10 px-4 py-3 text-sm text-brand-night">
           <p className="font-semibold">Режим разработки</p>
-          <p className="mt-1">Почтовый сервис ещё не подключён, код показан здесь: <button type="button" className="font-mono text-base font-bold tracking-widest text-brand" onClick={() => setCode(devCode)}>{devCode}</button></p>
+          <p className="mt-1">Код продублирован на экране, пока подключается почтовая рассылка: <button type="button" className="font-mono text-base font-bold tracking-widest text-brand" onClick={() => setCode(devCode)}>{devCode}</button></p>
         </div>
       )}
       <form onSubmit={submit} className="space-y-4" noValidate>

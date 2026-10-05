@@ -16,9 +16,9 @@ export function CabinetLayout({ role, sections, title }: { role: Role; sections:
   return (
     <div className="min-h-screen bg-[#FBF8FC] md:grid md:grid-cols-[17rem_1fr]">
       <aside className="border-b border-brand-night/10 bg-white md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r">
-        <div className="flex items-center justify-between px-5 py-5 md:block">
+        <div className="flex items-center justify-between gap-4 px-5 py-5 md:block">
           <NavLink to="/"><Logo /></NavLink>
-          <p className="mt-0 text-xs font-semibold uppercase tracking-[0.14em] text-brand-lavender md:mt-6">{title}</p>
+          <p className="mt-0 text-right text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-lavender md:mt-6 md:text-left md:text-xs">{title}</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:block md:space-y-0.5 md:overflow-visible" aria-label={title}>
           <NavItem to={base} end label="Обзор" />
