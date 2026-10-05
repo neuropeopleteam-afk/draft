@@ -130,14 +130,24 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     sreq = stack_part(req.get("stack_required") or [], "Обязательно")
     sdes = stack_part(req.get("stack_desired") or [], "Желательно")
     fsp = b.fsp
-    if b.achievements:
-        best = max((a for a in b.achievements if a.verified), key=lambda a: a.place or 99, default=None)
+    verified = [a for a in b.achievements if a.verified]
+    if verified:
+        best = min(verified, key=lambda a: a.place or 99)
         reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
-                        "text": (achievement_text(best) if best else "Есть паспорт ФСП")
-                        + (f" и ещё {len(b.achievements) - 1}" if len(b.achievements) > 1 else "")})
+                        "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")})
     else:
-        reasons.append({"requirement": "Достижения ФСП", "level": "none", "status": "neutral",
-                        "text": "Истории ФСП нет — нейтрально, без штрафа"})
+        # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
+        extra = len(b.achievements)
+        reasons.append({"requirement": "Достижения ФСП", "level": "T0" if extra else "none", "status": "neutral",
+                        "text": (f"Заявлено достижений ФСП без подтверждения реестром: {extra} — в ранжирование не входит"
+                                 if extra else "Истории ФСП нет — нейтрально, без штрафа")})
+    integ = (t or {}).get("integrity")
+    if integ:
+        lvl = integ.get("level")
+        reasons.append({"requirement": "Достоверность результата теста", "level": "T1",
+                        "status": {"high": "confirmed", "medium": "partial"}.get(lvl, "mismatch"),
+                        "text": f"{(integ.get('title') or '').capitalize()}: " + "; ".join((integ.get("reasons") or [])[:2]),
+                        "integrity": lvl})
     probe = max((f.value.get("score", 0) for f in b.probes_t1), default=0.0)
     if b.probes_t1:
         best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))

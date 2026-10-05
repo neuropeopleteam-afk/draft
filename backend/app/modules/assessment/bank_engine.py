@@ -41,7 +41,9 @@ from assessment_bank.psychometrics import (CanaryDetector, CATConfig, CATSession
                                            decide, pool_from_specs, prob)
 from assessment_bank.registry import canary_published_seeds
 
+from app.modules.assessment import integrity
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
+from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
 from app.modules.assessment.grader import grade_open
 from app.modules.assessment.skill_map import to_stack_tags
 
@@ -117,14 +119,18 @@ class BankEngine:
         s = self._settings()
         return {"min_items": s.assessment_min_items, "max_items": s.assessment_max_items,
                 "se_target": s.assessment_se_target, "max_time_s": s.assessment_max_minutes * 60.0,
-                "ext_items": s.assessment_extension_items, "subpools": max(1, s.assessment_subpools)}
+                "ext_items": s.assessment_extension_items, "subpools": max(1, s.assessment_subpools),
+                "exposure": s.assessment_exposure,
+                "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer}}
 
     # ------------------------------------------------------------------ протокол
-    def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int) -> dict:
+    def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
+              previous_subpools: list[int] | None = None) -> dict:
         cfg = self._base_cfg()
-        subpool = None
-        if cfg["subpools"] > 1:  # ротация субпулов по неделям: в одну неделю все получают один субпул
-            subpool = int(time.time() // (7 * 86400)) % cfg["subpools"]
+        # Ротация субпулов: первая попытка — по seed сессии, повторная — другой субпул (параллельная форма);
+        # субпулы на карантине (утечка) не выдаются. См. exposure.py.
+        subpool = choose_subpool(cfg["subpools"], seed, previous_subpools,
+                                 parse_quarantine(self._settings().assessment_subpool_quarantine))
         return {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": claimed_grade,
             "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
@@ -156,7 +162,7 @@ class BankEngine:
         return None
 
     def answer(self, state: dict, item_id: str, answer: Any, time_spent_ms: int | None = None,
-               step: int | None = None) -> AnswerFeedback:
+               step: int | None = None, signals: dict | None = None) -> AnswerFeedback:
         it = self._current(state)
         n_done = sum(1 for i in state["items"] if i["done"])
         reject = AnswerFeedback(False, n_done, self._total_est(state), False)
@@ -173,6 +179,9 @@ class BankEngine:
         prev = max([it["issued_at"]] + [a["at"] for a in it["answers"].values()])
         it["answers"][str(k)] = {"value": value, "at": now, "server_ms": int((now - prev) * 1000),
                                  "client_ms": time_spent_ms}
+        sig = integrity.clean_signals(signals)
+        if sig is not None:  # сигналы интерфейса (фокус, вставка) — копятся по шагам задания
+            it["signals"] = integrity.merge_signals(it.get("signals"), sig)
         if k < it["parts"]:
             return AnswerFeedback(True, n_done, self._total_est(state), False)
         self._score(it)
@@ -232,6 +241,11 @@ class BankEngine:
             d["score"] = round(d["correct"] / d["total"], 2) if d["total"] else 0.0
             d["correct"] = round(d["correct"], 2)
         ext = state.get("ext")
+        pk = {"flagged": det.flagged, "combined": round(det.combined, 3), "excluded_answers": excluded}
+        integ = integrity.assess([{
+            "format": i["format"], "canary": i["canary"], "time_s": i.get("time_s"), "time_limit_s": i["time_limit_s"],
+            "score": (float(np.mean([v for v in i["x"] if v is not None])) if any(v is not None for v in i["x"]) else None),
+            "signals": i.get("signals")} for i in done], pk)
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families,
             "stop_reason": state.get("stop_reason") or sess.stop_reason or "finished_early",
@@ -245,6 +259,9 @@ class BankEngine:
                              "n_canaries": det.n_canaries, "n_fast_correct": det.n_fast_correct,
                              "rescored": rescored, "excluded_answers": excluded},
             "overtime_items": sum(1 for i in done if i.get("overtime")),
+            "integrity": integ,
+            "subpool": state.get("subpool"), "exposure": state["cfg"].get("exposure"),
+            "formats": {f: sum(1 for i in scored if i["format"] == f) for f in sorted({i["format"] for i in scored})},
             "category": f"{state['direction']}.{claimed}" if dec.confirmed else None,
             "assigned_grade": dec.assigned,
             "trace": [[round(t, 3), round(s_, 3)] for t, s_ in sess.trace],
@@ -285,8 +302,11 @@ class BankEngine:
                 pool.append(_pool_from_snapshot(it["pool"]))
                 have.add(it["family_id"])
         rng = np.random.default_rng([state["seed"], len(state["items"])])
-        sess = CATSession(pool, state["direction"], self._cfg(state), None, state["claimed_grade"],
-                          state.get("subpool"), rng)
+        cfg = state["cfg"]
+        expo = exposure_control(state["direction"]) if cfg.get("exposure", "none") == "sympson_hetter" else None
+        subpool = None if state.get("ext") else state.get("subpool")
+        sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
+                             subpool, rng, max_per_format=cfg.get("max_per_format", {}))
         lookup = {p.family_id: p for p in sess.scored_pool + sess.canary_pool}
         for it in state["items"]:
             if it["done"] and it["family_id"] in lookup:
@@ -307,19 +327,23 @@ class BankEngine:
             reason = sess.stop_reason
             n_ext = int(state["cfg"].get("ext_items", 0))
             if n_ext and reason != "time" and abs(sess.theta - cut) < sess.se:
+                # Дотестирование берёт задания из всего банка направления (не только из субпула сессии):
+                # субпул после основной части часто исчерпан, а ошибка у порога дороже всего
+                p = self.scale.p_at_least(sess.theta, sess.se, claimed)
+                state["ext"] = {"start": sess.n_scored, "n": n_ext, "theta": round(sess.theta, 3),
+                                "se": round(sess.se, 3), "cut": cut, "p_claimed": round(p, 3), "reason_before": reason}
+                sess2 = self._rebuild(state)
                 left = sess.cfg.max_time_s + 1800.0 - sess.time_used
-                free = [i for i in sess.scored_pool if i.family_id not in sess.used and i.time_limit_s <= left]
+                free = [i for i in sess2._candidates() if i.time_limit_s <= left]
                 n = min(n_ext, len(free))
                 if n >= 3:
-                    p = self.scale.p_at_least(sess.theta, sess.se, claimed)
-                    state["ext"] = {"start": sess.n_scored, "n": n, "theta": round(sess.theta, 3),
-                                    "se": round(sess.se, 3), "cut": cut, "p_claimed": round(p, 3),
-                                    "reason_before": reason}
+                    state["ext"]["n"] = n
                     sess2 = self._rebuild(state)
                     sess2.theta = cut  # дотестирование: информация максимальна в пороге, а не в текущей θ
                     nxt = sess2.next_item()
                     if nxt is not None:
                         return nxt
+                state["ext"] = None
             state["stop_reason"] = reason
             return None
         if sess.n_scored >= ext["start"] + ext["n"]:
@@ -432,6 +456,69 @@ class BankEngine:
         g_d["attempts"] = int(prev.get("attempts", 0)) + 1
         it["grading"][part] = g_d
         it["x"][part] = g.score if g.status == "scored" else None
+
+    # ------------------------------------------------------------------ экспертная проверка открытых ответов
+    @staticmethod
+    def text_parts(it: dict) -> list[int]:
+        """Индексы частей задания с развёрнутым ответом (оцениваются по рубрике)."""
+        if it["format"] == "open_answer":
+            return [0]
+        if it["format"] == "open_book_3step":
+            return [2]
+        return []
+
+    def review_items(self, state: dict) -> list[dict]:
+        """Развёрнутые ответы сессии для экрана эксперта: задание, шаг, рубрика, ответ, статус и оценка LLM."""
+        out = []
+        for it in state.get("items", []):
+            if not it.get("done"):
+                continue
+            for part in self.text_parts(it):
+                ans = it["answers"].get(str(part + 1), {})
+                g = it["grading"][part] or {}
+                steps = it["public"].get("steps") or []
+                out.append({
+                    "token": it["token"], "part": part, "format": it["format"], "position": it["position"],
+                    "stem": it["public"]["stem"], "code": it["public"]["code"], "code_language": it.get("language"),
+                    "step_prompt": steps[part]["prompt"] if it["format"] == "open_book_3step" and len(steps) > part else None,
+                    "rubric": it.get("rubric"), "answer": ans.get("value"), "skills": it.get("skills", []),
+                    "status": "pending" if it["x"][part] is None else "scored",
+                    "method": g.get("method") if it["x"][part] is not None else None,
+                    "score": it["x"][part], "grading": g, "expert": g.get("expert") or it.get("expert_reviews", {}).get(str(part)),
+                })
+        return out
+
+    def apply_review(self, state: dict, token: str, part: int, criteria: dict[str, float], comment: str | None,
+                     reviewer: str) -> dict | None:
+        """Оценка эксперта по критериям рубрики → балл части. Ответ «на проверке» получает балл эксперта;
+        уже оцененный LLM — сохраняет балл LLM, а оценка эксперта пишется рядом (для расчёта согласия)."""
+        it = next((i for i in state.get("items", []) if i["token"] == token and i.get("done")), None)
+        if it is None or part not in self.text_parts(it):
+            return None
+        rub = it.get("rubric") or {}
+        crit = {c["id"]: float(c.get("weight", 0)) for c in rub.get("criteria", [])}
+        if not crit or set(criteria) != set(crit):
+            return None
+        vals = {k: min(1.0, max(0.0, float(v))) for k, v in criteria.items()}
+        total_w = sum(crit.values()) or 1.0
+        score = round(sum(crit[k] * vals[k] for k in crit) / total_w, 4)
+        rec = {"criteria": vals, "score": score, "comment": (comment or "")[:2000], "reviewer": reviewer,
+               "at": time.time()}
+        it.setdefault("expert_reviews", {})[str(part)] = rec
+        if it["x"][part] is None:  # «на проверке» → оценка эксперта входит в θ
+            it["x"][part] = score
+            prev = it["grading"][part] or {}
+            it["grading"][part] = {**prev, "status": "scored", "method": "expert", "score": score,
+                                   "criteria": vals, "comment": rec["comment"], "expert": rec}
+            rec["applied"] = True
+        else:
+            g = it["grading"][part] or {}
+            g["expert"] = rec
+            it["grading"][part] = g
+            rec["applied"] = False
+            rec["llm_score"] = it["x"][part]
+        state.setdefault("outbox", []).append({"type": "review", "token": token})
+        return rec
 
     def _total_est(self, state: dict) -> int:
         c = state["cfg"]
