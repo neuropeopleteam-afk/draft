@@ -1,0 +1,27 @@
+family_id: qa.bash.smoke_masked_failure
+title: Смоук-скрипт CI теряет код ошибки
+direction: qa
+skills: [bash, ci, smoke_testing, exit_codes, test_review]
+target_grades: [middle]
+format: find_bug
+language: bash
+invariants:
+  code_lines: [19, 20]
+  operations: [19, 21]
+  defect_type: masked_failure
+  extra:
+    subtypes: [pipe_status, local_masks, unquoted_empty]
+    stands: 4
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 0.3
+  a: 1.0
+  sigma_variant: 0.4
+  basis: "19–20 строк bash, три подтипа маскировки кода завершения (статус tee в конвейере, статус local, ошибка [ при пустой переменной); знание тонкостей оболочки уровня Middle; подтипы заметно различаются по трудности — σ 0,4"
+generator: assessment_bank.families.qa.sh_smoke_masked_failure
+version: 1
+description: >
+  Смоук-скрипт CI (19–20 строк) проверяет HTTP-коды стенда и запускает API-тесты; одна строка теряет код
+  ошибки, и сломанный стенд проходит проверку. Ключ проверяется исполнением в bash на
+  сломанном и исправном стенде.

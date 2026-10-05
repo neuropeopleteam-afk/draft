@@ -1,0 +1,22 @@
+family_id: frontend.web.perf_open
+title: Производительность веб-интерфейса — LCP, INP, бандл, CLS
+direction: frontend
+skills: [web_performance, react, core_web_vitals]
+target_grades: [senior]
+format: open_answer
+language: text
+invariants:
+  extra:
+    topics: [lcp, list, bundle, cls]
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 1.2
+  a: 0.9
+  sigma_variant: 0.3
+  basis: "Развёрнутый ответ по полевым метрикам с конкретными числами; рубрика из 3 критериев (Senior)"
+generator: assessment_bank.families.frontend.web_perf_open
+version: 1
+description: >
+  Открытые вопросы о производительности фронтенда: диагностика по полевым данным и меры.
+  Оценка по рубрике с эталонами сильного, среднего и слабого ответа.

@@ -1,0 +1,29 @@
+family_id: common.time.tz_report_ob3
+title: Границы дня и часовой пояс в отчёте (открытая книга)
+direction: common
+skills: [datetime, timezones, reporting, sql, testing]
+target_grades: [middle, senior]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [11, 11]
+  operations: [8, 8]
+  defect_type: day_window_boundary
+  n_options: 4
+  extra:
+    subtypes: [utc, incl]
+    step3_conditions: [dst, storage, user_tz, testing]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.6
+  a: 1.0
+  sigma_variant: 0.4
+  step_offsets: [-0.4, 0.0, 0.9]
+  basis: "11 строк, 8 операций; два подтипа (граница дня в UTC вместо МСК, включённая правая граница) → σ выше; шаг 1 требует перевести метки UTC в МСК, шаг 2 — отличить верное решение от наивного datetime, replace(tzinfo) и сдвига в другую сторону; шаг 3 — летнее время, SQL, пояса пользователей, тесты"
+generator: assessment_bank.families.common.time_tz_report_ob3
+version: 1
+description: >
+  Посуточный отчёт по московскому времени неправильно задаёт границы дня. Шаг 1 — заказ, на
+  котором отчёт расходится с требуемым; шаг 2 — исправленная функция; шаг 3 — летнее время,
+  перенос в SQL, разные часовые пояса пользователей или тестирование. Шаги 1–2 — исполнением.

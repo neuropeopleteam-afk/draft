@@ -1,0 +1,71 @@
+============================== security.auth.token_validation_ob3:1 | context: учебный каталог оборудования
+Учебный каталог оборудования: учебный формат подписывает канонический JSON через HMAC-SHA256 с доверенным ключом. Это не JWT и не рекомендация создавать свой формат токена. Время now=48819, issuer=`demo-identity`, audience=`demo-catalog`. Контракт: подпись верна, iss/aud совпадают, exp — целое число; доступ разрешён только при now < exp. Поля в примерах обычные, никакие запросы не отправляются.
+--- code ---
+  1| import hashlib
+  2| import hmac
+  3| import json
+  4| 
+  5| def signed_bytes(claims):
+  6|     return json.dumps(claims, sort_keys=True, separators=(',', ':')).encode()
+  7| 
+  8| def sign(claims, key):
+  9|     return hmac.new(key, signed_bytes(claims), hashlib.sha256).digest()
+ 10| 
+ 11| def valid(claims, signature, key, now, issuer, audience):
+ 12|     if not hmac.compare_digest(signature, sign(claims, key)):
+ 13|         return False
+ 14|     if claims.get('iss') != issuer or claims.get('aud') != audience:
+ 15|         return False
+ 16|     expiry = claims.get('exp')
+ 17|     if type(expiry) is not int:
+ 18|         return False
+ 19|     return now <= expiry
+--- step 1 (reproduce): Шаг 1. Какой набор корректно подписанных claims выявляет нарушение контракта?
+--- step 2 (fix): Шаг 2. Выберите полную проверку подписи, срока и области действия.
+--- step 3 (explain): Шаг 3. Подписывающий ключ планово меняется. Как провести ротацию без остановки, ограничить выбор ключа и определить поведение при неизвестном идентификаторе ключа? Ответьте в 5–10 предложениях.
+  [1A] exp=48819; iss=demo-identity; aud=demo-catalog; подпись верна.
+  [1B] exp=48807; iss=demo-identity; aud=demo-catalog; подпись верна.
+  [1C] exp=48833; iss=demo-identity; aud=demo-catalog; подпись верна.
+  [1D] exp=48849; iss=demo-identity; aud=another-demo-service; подпись верна.
+  [2A] Заменить valid:
+      def valid(claims, signature, key, now, issuer, audience):
+    if not hmac.compare_digest(signature, sign(claims, key)):
+        return False
+    if claims.get('iss') != issuer or claims.get('aud') != audience:
+        return False
+    expiry = claims.get('exp')
+    if type(expiry) is not int:
+        return False
+    return now <= expiry
+  [2B] Заменить valid:
+      def valid(claims, signature, key, now, issuer, audience):
+    if not hmac.compare_digest(signature, sign(claims, key)):
+        return False
+    if claims.get('iss') != issuer or claims.get('aud') != audience:
+        return False
+    expiry = claims.get('exp')
+    if type(expiry) is not int:
+        return False
+    return True
+  [2C] Заменить valid:
+      def valid(claims, signature, key, now, issuer, audience):
+    if not signature:
+        return False
+    if claims.get('iss') != issuer or claims.get('aud') != audience:
+        return False
+    expiry = claims.get('exp')
+    if type(expiry) is not int:
+        return False
+    return now < expiry
+  [2D] Заменить valid:
+      def valid(claims, signature, key, now, issuer, audience):
+    if not hmac.compare_digest(signature, sign(claims, key)):
+        return False
+    if claims.get('iss') != issuer or claims.get('aud') != audience:
+        return False
+    expiry = claims.get('exp')
+    if type(expiry) is not int:
+        return False
+    return now < expiry
+KEY: {'1': 'A', '2': 'D', '3': 'rubric'} | В момент exp токен уже недействителен. HMAC сравнивается через compare_digest, срок и область действия проверяются отдельно.
+STATUS PASS uniq 1.0 keys 16 jacc 0.2128 ctx 8 lines [16, 16] ops [10, 10] checks 1600 failed 0 pos {'A': 86, 'B': 94, 'C': 100, 'D': 120} 0.69s

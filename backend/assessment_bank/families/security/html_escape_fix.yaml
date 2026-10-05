@@ -1,0 +1,23 @@
+family_id: security.web.html_escape_fix
+title: Контекстное экранирование текстового узла HTML
+direction: security
+skills: [secure_code_review, javascript, output_encoding, templates]
+target_grades: [junior]
+format: choose_fix
+language: javascript
+invariants:
+  code_lines: [5, 5]
+  operations: [4, 4]
+  defect_type: unescaped_html_text
+  n_options: 4
+  extra: {output_context: html_text_node, runner: node}
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.7
+  a: 1.1
+  sigma_variant: 0.2
+  basis: "5 строк и 4 варианта одинаковой структуры; нужно сохранить специальные символы и избежать повторного экранирования сущностей, контекст явно ограничен текстовым узлом."
+generator: assessment_bank.families.security.html_escape_fix
+version: 1
+description: "Node проверяет буквальное отображение законных строк; исполняемых HTML-вставок в примерах нет."

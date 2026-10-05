@@ -1,0 +1,29 @@
+family_id: backend.py.idempotency_ob3
+title: Идемпотентная обработка вебхуков (открытая книга)
+direction: backend
+skills: [python, idempotency, webhooks, distributed_systems, payments]
+target_grades: [middle, senior]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [11, 11]
+  operations: [10, 10]
+  defect_type: idempotency_key
+  n_options: 4
+  extra:
+    subtypes: [coarse, fine]
+    step3_conditions: [concurrency, crash, memory, ordering]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.6
+  a: 1.0
+  sigma_variant: 0.35
+  step_offsets: [-0.5, 0.0, 0.9]
+  basis: "11 строк, 10 операций; два подтипа ключа дедупликации (слишком грубый/мелкий); шаг 3 — конкурентность, сбои, хранение ключей или порядок событий (Middle/Senior)"
+generator: assessment_bank.families.backend.py_idempotency_ob3
+version: 1
+description: >
+  Обработчик вебхуков с неверным ключом идемпотентности. Шаг 1 — последовательность
+  событий, воспроизводящая расхождение; шаг 2 — правильный обработчик; шаг 3 — перенос на
+  реальные условия эксплуатации.

@@ -1,0 +1,26 @@
+family_id: common.ds.stack_queue_canary
+title: Стек на list и очередь на deque (канарейка)
+direction: common
+skills: [data_structures, stack, queue, python]
+target_grades: [junior]
+format: predict_output
+language: python
+invariants:
+  code_lines: [10, 13]
+  operations: [8, 12]
+  extra:
+    items: [4, 5]
+    ops: 3
+time_limit_s: 120
+canary: true
+canary_pool_size: 24
+prior_difficulty:
+  b: -0.8
+  a: 1.0
+  sigma_variant: 0.25
+  basis: "10–13 строк, 4–5 элементов и 3 операции (pop, popleft, append, appendleft) над стеком и очередью; две строки вывода; Junior"
+generator: assessment_bank.families.common.ds_stack_queue_canary
+version: 1
+description: >
+  Канареечное семейство: варианты seed 1..24 намеренно опубликованы и выдаются только из них;
+  в грейд не входят, служат детектору предзнания (время + правильность).

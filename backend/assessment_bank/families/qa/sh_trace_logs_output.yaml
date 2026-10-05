@@ -1,0 +1,25 @@
+family_id: qa.bash.trace_logs_output
+title: Локализация дефекта по журналам шлюза и сервиса
+direction: qa
+skills: [bash, logs, defect_localization, awk, incident_analysis]
+target_grades: [middle]
+format: predict_output
+language: bash
+invariants:
+  code_lines: [1, 3]
+  operations: [4, 7]
+  extra:
+    kinds: [masked, per_version, error_rate, users]
+    gateway_lines: [8, 11]
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 0.4
+  a: 1.0
+  sigma_variant: 0.4
+  basis: "1–3 строки команд над двумя журналами по 8–12 строк, связь по идентификатору запроса; четыре вида команд (comm по двум спискам, awk с метками деплоя, доля 5xx, уникальные пользователи) разной трудности — σ 0,4"
+generator: assessment_bank.families.qa.sh_trace_logs_output
+version: 1
+description: >
+  Два журнала (шлюз и сервис) и команда разбора инцидента: замаскированные ошибки, ошибки
+  по версиям, доля 5xx, затронутые пользователи. Ключ — модель на Python, сверка в bash.

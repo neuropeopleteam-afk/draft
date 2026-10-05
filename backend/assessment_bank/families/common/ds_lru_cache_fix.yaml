@@ -1,0 +1,26 @@
+family_id: common.ds.lru_cache_fix
+title: LRU-кэш на OrderedDict — выбрать исправление
+direction: common
+skills: [data_structures, caching, python, ordered_dict]
+target_grades: [middle]
+format: choose_fix
+language: python
+invariants:
+  code_lines: [14, 14]
+  operations: [9, 9]
+  defect_type: lru_no_refresh_on_get
+  n_options: 4
+  extra:
+    distractors: [last_false, move_first, dict_get, last_true]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.1
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "14 строк, 9 операций; одно дефектное место (чтение не обновляет порядок); дистракторы — перенос в начало, move_to_end до проверки, присваивание без переноса, вытеснение с конца; три из четырёх в варианте"
+generator: assessment_bank.families.common.ds_lru_cache_fix
+version: 1
+description: >
+  LRU-кэш вытесняет ключ, который только что читали. Из четырёх вариантов класса ровно один
+  проходит тест (вытеснение давнего, сохранение свежего, промах → None); проверка исполнением.

@@ -1,0 +1,59 @@
+============================== security.files.path_containment_ob3:1 | context: учебный сервис заявок
+Учебный сервис заявок: `allowed_path` возвращает канонический путь только для файла внутри `/demo/reports_534`, включая вложенные папки; сам корень возвращает None. Это учебное неизменяемое POSIX-дерево без символьных ссылок. Никакие файлы здесь не открываются. Абсолютные имена допускаются только внутри корня. Ревью обнаружило сравнение строк вместо компонентов пути.
+--- code ---
+  1| from pathlib import Path
+  2| ROOT = Path('/demo/reports_534')
+  3| 
+  4| def allowed_path(name):
+  5|     root = ROOT.resolve()
+  6|     target = (root / name).resolve()
+  7|     if target == root:
+  8|         return None
+  9|     if str(target).startswith(str(root)):
+ 10|         return str(target)
+ 11|     return None
+--- step 1 (reproduce): Шаг 1. Какое законное имя файла обнаруживает ошибку контракта?
+--- step 2 (fix): Шаг 2. Выберите исправление, сохраняющее вложенные имена.
+--- step 3 (explain): Шаг 3. В одном корне теперь хранятся документы нескольких организаций. Достаточно ли проверки пути? Опишите привязку к организации и безопасную обработку отсутствующего файла. Ответьте в 5–10 предложениях.
+  [1A] Имя: '/demo/reports_534/./././report_208.txt'
+  [1B] Имя: '/demo/reports_534_backup/report_208.txt'
+  [1C] Имя: '/demo/reports_534/drafts/report_208.txt'
+  [1D] Имя: '/demo/reports_534/drafts//./report_208.txt'
+  [2A] Заменить allowed_path:
+      def allowed_path(name):
+    root = ROOT.resolve()
+    target = (root / name).resolve()
+    if target == root:
+        return None
+    if str(target).startswith(str(root)):
+        return str(target)
+    return None
+  [2B] Заменить allowed_path:
+      def allowed_path(name):
+    root = ROOT.resolve()
+    target = (root / Path(name).name).resolve()
+    if target == root:
+        return None
+    if root in target.parents:
+        return str(target)
+    return None
+  [2C] Заменить allowed_path:
+      def allowed_path(name):
+    root = ROOT.resolve()
+    target = (root / name).resolve()
+    if target == root:
+        return None
+    if target.parent == root:
+        return str(target)
+    return None
+  [2D] Заменить allowed_path:
+      def allowed_path(name):
+    root = ROOT.resolve()
+    target = (root / name).resolve()
+    if target == root:
+        return None
+    if root in target.parents:
+        return str(target)
+    return None
+KEY: {'1': 'B', '2': 'D', '3': 'rubric'} | Одноимённый соседний каталог не является дочерним. После resolve проверяется настоящий предок; basename теряет вложенную папку, проверка parent отвергает допустимую вложенность.
+STATUS PASS uniq 1.0 keys 16 jacc 0.2239 ctx 8 lines [10, 10] ops [8, 8] checks 1600 failed 0 pos {'A': 98, 'B': 105, 'C': 105, 'D': 92} 0.55s

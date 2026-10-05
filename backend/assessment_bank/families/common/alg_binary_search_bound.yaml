@@ -1,0 +1,24 @@
+family_id: common.alg.binary_search_bound
+title: Граница бинарного поиска
+direction: common
+skills: [algorithms, binary_search, boundary_conditions]
+target_grades: [junior, middle]
+format: find_bug
+language: python
+invariants:
+  code_lines: [9, 28]
+  operations: [7, 20]
+  defect_type: off_by_one
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.3
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "9–28 строк, 7–20 операций, одна граничная ошибка (off-by-one) в одной из двух функций; грейды Junior–Middle; разброс выше из-за двух раскладок кода (одна функция / две функции)"
+generator: assessment_bank.families.common.alg_binary_search_bound
+version: 1
+description: >
+  Функция поиска границы (lower/upper bound) в отсортированном списке содержит ровно одну
+  граничную ошибку: неверная инициализация правой границы, нестрогое сравнение вместо строгого
+  (или наоборот) либо сдвиг правой границы на mid - 1. Кандидат указывает строку с ошибкой.

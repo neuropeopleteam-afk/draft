@@ -1,0 +1,10 @@
+============================== security.web.cookie_policy_mcq:1 | context: учебная служба поддержки
+Учебная служба поддержки: браузерная сессия только для `editor.example.invalid` по HTTPS, срок 600 секунд. Соседние поддомены не должны получать cookie; JavaScript не читает сессионное значение. По утверждённому контракту используются SameSite=Lax и Path=/, а изменяющие запросы отдельно защищены CSRF-токеном. Какая конфигурация выполняет все требования?
+  [A] Secure=true; HttpOnly=false; SameSite=Lax; Domain=не задан; Path=/; Max-Age=600.
+  [B] Secure=false; HttpOnly=true; SameSite=Lax; Domain=не задан; Path=/; Max-Age=600.
+  [C] Secure=true; HttpOnly=true; SameSite=Lax; Domain=не задан; Path=/; Max-Age=600.
+  [D] Secure=true; HttpOnly=true; SameSite=Lax; Domain=.example.invalid; Path=/; Max-Age=600.
+KEY: C | Secure ограничивает передачу HTTPS, HttpOnly запрещает чтение через JavaScript, отсутствие Domain делает cookie host-only. SameSite здесь дополнительная защита, а не замена CSRF-токену.
+STATUS WARN uniq 0.975 keys 4 jacc 0.1198 ctx 8 lines None ops None checks 200 failed 0 pos {'A': 52, 'B': 46, 'C': 53, 'D': 49} 0.19s
+  ! уникальных вариантов 97.5%
+  ! низкое поверхностное разнообразие (0.12)

@@ -1,0 +1,26 @@
+family_id: data_ml.metrics.prf_bug
+title: Ошибка в расчёте precision, recall и F1
+direction: data_ml
+skills: [python, classification_metrics, precision_recall, f1, confusion_matrix]
+target_grades: [junior]
+format: find_bug
+language: python
+invariants:
+  code_lines: [13, 13]
+  operations: [12, 12]
+  defect_type: metric_formula
+  extra:
+    subtypes: [precision_den, recall_den, f1_mean, fn_branch]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.9
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "13 строк, одна функция без зависимостей; дан пример с ручным расчётом, по которому видно, какая метрика расходится; четыре подтипа: ошибки знаменателя и F1 очевиднее, ветка FN (считаются TN) требует трассировки → σ умеренная (Junior)"
+generator: assessment_bank.families.data_ml.metrics_prf_bug
+version: 1
+description: >
+  Функция отчёта бинарной классификации с одним дефектом: неверный знаменатель precision
+  или recall, F1 как среднее арифметическое либо ветка FN, считающая истинно отрицательные.
+  Кандидат видит пример с ручным расчётом и находит строку.

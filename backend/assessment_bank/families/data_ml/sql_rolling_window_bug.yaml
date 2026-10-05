@@ -1,0 +1,27 @@
+family_id: data_ml.sql.rolling_window_bug
+title: Скользящее окно в SQL — границы рамки и PARTITION BY
+direction: data_ml
+skills: [sql, window_functions, feature_engineering, time_series, data_leakage]
+target_grades: [middle]
+format: find_bug
+language: sql
+invariants:
+  code_lines: [6, 8]
+  operations: [4, 4]
+  defect_type: window_frame
+  extra:
+    subtypes: [frame_off_by_one, no_partition, future_frame]
+    window_days: [3, 4, 5, 7]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.1
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "6–8 строк SQL, именованное окно WINDOW; нужно понимать рамку ROWS BETWEEN (k−1 PRECEDING для k дней), PARTITION BY и направление рамки; ошибка на единицу в рамке — самый трудный подтип (Middle)"
+generator: assessment_bank.families.data_ml.sql_rolling_window_bug
+version: 1
+description: >
+  Признак «скользящая сумма/среднее за k дней по объекту» на оконных функциях. Дефекты:
+  рамка из k+1 строк, нет PARTITION BY или окно смотрит в будущее. Запрос исполняется в
+  sqlite3 дословно, результат сверяется с независимым расчётом.

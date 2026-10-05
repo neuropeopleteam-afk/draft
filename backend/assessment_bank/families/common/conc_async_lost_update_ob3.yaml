@@ -1,0 +1,30 @@
+family_id: common.conc.async_lost_update_ob3
+title: Потерянное обновление между await (открытая книга)
+direction: common
+skills: [concurrency, asyncio, race_conditions, databases, testing]
+target_grades: [middle, senior]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [11, 11]
+  operations: [8, 8]
+  defect_type: lost_update_across_await
+  n_options: 4
+  extra:
+    clean_scenarios: [sequential, different, single_reject, first_rejected]
+    step3_conditions: [multiprocess, threads, timeout, testing]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.6
+  a: 1.0
+  sigma_variant: 0.35
+  step_offsets: [-0.5, 0.0, 0.9]
+  basis: "11 строк, 8 операций, один дефект (чтение-проверка-await-запись); шаг 1 требует отличить вредное пересечение от безвредного (отказ до await), шаг 2 — отличить правильную блокировку/порядок от блокировки внутри функции и перечитывания; шаг 3 — процессы, потоки, медленный ввод-вывод под блокировкой, тестирование (Middle/Senior)"
+generator: assessment_bank.families.common.conc_async_lost_update_ob3
+version: 1
+description: >
+  Резервирование остатка в asyncio теряет обновления: между чтением и записью стоит await.
+  Шаг 1 — сценарий, воспроизводящий расхождение; шаг 2 — исправление (asyncio.Lock или запись до
+  await); шаг 3 — перенос на несколько процессов, потоки, медленный аудит или тестирование.
+  Шаги 1–2 проверяются исполнением (asyncio детерминирован).

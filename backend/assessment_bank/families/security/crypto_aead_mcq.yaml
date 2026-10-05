@@ -1,0 +1,20 @@
+family_id: security.crypto.aead_mcq
+title: Аутентифицированное шифрование и область уникальности nonce
+direction: security
+skills: [cryptography, aead, nonce_uniqueness, key_lifecycle, secure_randomness]
+target_grades: [senior]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra: {required_properties: [confidentiality, integrity, metadata_binding]}
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.0
+  sigma_variant: 0.2
+  basis: "Четыре библиотечных схемы одинаковой структуры; учитываются режим, AAD, проверка тега, CSPRNG и уникальность nonce по ключу среди нескольких экземпляров."
+generator: assessment_bank.families.security.crypto_aead_mcq
+version: 1
+description: "Справочный ключ по OWASP; криптография не заменяется самодельной имитацией, в stdlib нет AES-GCM."

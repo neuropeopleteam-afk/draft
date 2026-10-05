@@ -1,0 +1,175 @@
+[
+  {
+    "family_id": "security.web.cors_csrf_mcq",
+    "format": "mcq_concept",
+    "grades": [
+      "middle"
+    ],
+    "b": 0.3,
+    "canary": false,
+    "status": "WARN",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.web.cors_csrf_mcq",
+      "200"
+    ],
+    "summary": "STATUS WARN uniq 0.955 keys 4 jacc 0.0964 ctx 8 lines None ops None checks 200 failed 0 pos {'A': 42, 'B': 45, 'C': 56, 'D': 57} 0.15s",
+    "n_checks": 200,
+    "n_checks_failed": 0,
+    "warnings": [
+      "уникальных вариантов 95.5%",
+      "низкое поверхностное разнообразие (0.10)"
+    ],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "python": 200
+    },
+    "unique": 191,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.web.cors_csrf_mcq.txt"
+  },
+  {
+    "family_id": "security.monitor.log_monitor_output",
+    "format": "predict_output",
+    "grades": [
+      "middle"
+    ],
+    "b": 0.2,
+    "canary": false,
+    "status": "PASS",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.monitor.log_monitor_output",
+      "200"
+    ],
+    "summary": "STATUS PASS uniq 1.0 keys 141 jacc 0.3563 ctx 8 lines [1, 1] ops [4, 4] checks 200 failed 0 pos {} 1.2s",
+    "n_checks": 200,
+    "n_checks_failed": 0,
+    "warnings": [],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "bash": 200
+    },
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.monitor.log_monitor_output.txt"
+  },
+  {
+    "family_id": "security.access.owner_check_bug",
+    "format": "find_bug",
+    "grades": [
+      "middle"
+    ],
+    "b": 0.0,
+    "canary": false,
+    "status": "PASS",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.access.owner_check_bug",
+      "200"
+    ],
+    "summary": "STATUS PASS uniq 1.0 keys 1 jacc 0.1379 ctx 8 lines [7, 7] ops [6, 6] checks 400 failed 0 pos {} 0.21s",
+    "n_checks": 400,
+    "n_checks_failed": 0,
+    "warnings": [],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "python": 400
+    },
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.access.owner_check_bug.txt"
+  },
+  {
+    "family_id": "security.auth.password_storage_fix",
+    "format": "choose_fix",
+    "grades": [
+      "middle"
+    ],
+    "b": 0.4,
+    "canary": false,
+    "status": "WARN",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.auth.password_storage_fix",
+      "200"
+    ],
+    "summary": "STATUS WARN uniq 1.0 keys 4 jacc 0.0775 ctx 8 lines [13, 13] ops [6, 6] checks 1200 failed 0 pos {'A': 59, 'B': 51, 'C': 41, 'D': 49} 22.89s",
+    "n_checks": 1200,
+    "n_checks_failed": 0,
+    "warnings": [
+      "низкое поверхностное разнообразие (0.08)"
+    ],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "python": 1200
+    },
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.auth.password_storage_fix.txt"
+  },
+  {
+    "family_id": "security.files.path_containment_ob3",
+    "format": "open_book_3step",
+    "grades": [
+      "middle"
+    ],
+    "b": 0.4,
+    "canary": false,
+    "status": "PASS",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.files.path_containment_ob3",
+      "200"
+    ],
+    "summary": "STATUS PASS uniq 1.0 keys 16 jacc 0.2239 ctx 8 lines [10, 10] ops [8, 8] checks 1600 failed 0 pos {'A': 98, 'B': 105, 'C': 105, 'D': 92} 0.55s",
+    "n_checks": 1600,
+    "n_checks_failed": 0,
+    "warnings": [],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "python": 1600
+    },
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.files.path_containment_ob3.txt"
+  },
+  {
+    "family_id": "security.auth.token_validation_ob3",
+    "format": "open_book_3step",
+    "grades": [
+      "middle"
+    ],
+    "b": 0.5,
+    "canary": false,
+    "status": "PASS",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.auth.token_validation_ob3",
+      "200"
+    ],
+    "summary": "STATUS PASS uniq 1.0 keys 16 jacc 0.2128 ctx 8 lines [16, 16] ops [10, 10] checks 1600 failed 0 pos {'A': 86, 'B': 94, 'C': 100, 'D': 120} 0.69s",
+    "n_checks": 1600,
+    "n_checks_failed": 0,
+    "warnings": [],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "python": 1600
+    },
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.auth.token_validation_ob3.txt"
+  }
+]

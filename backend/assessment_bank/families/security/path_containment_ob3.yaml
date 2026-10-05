@@ -1,0 +1,26 @@
+family_id: security.files.path_containment_ob3
+title: Граница файлового каталога — открытая книга
+direction: security
+skills: [secure_code_review, python, path_normalization, authorization, testing]
+target_grades: [middle]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [10, 10]
+  operations: [8, 8]
+  defect_type: path_string_prefix
+  n_options: 4
+  extra:
+    filesystem: immutable_posix_without_symlinks
+    step3_conditions: [links, tenant]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.4
+  a: 1.1
+  sigma_variant: 0.25
+  step_offsets: [-0.5, 0.0, 0.9]
+  basis: "10 строк; воспроизведение ошибочного префикса, сохранение вложенности, затем переход к символьным ссылкам/гонке либо межорганизационной авторизации."
+generator: assessment_bank.families.security.path_containment_ob3
+version: 1
+description: "8 проверок Python на вариант; только вычисление путей, файловые чтения и обход реальных каталогов отсутствуют."

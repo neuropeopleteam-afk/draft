@@ -1,0 +1,34 @@
+============================== security.web.html_escape_fix:1 | context: учебный каталог оборудования
+Учебный каталог оборудования: серверный шаблон выводит пользовательское название `Каталог 879: <черновик> & "версия"` внутри текстового узла `<h2>`, не в URL, скрипте или атрибуте. Нужно отобразить исходный текст буквально, без удаления символов. Какое исправление выполняет HTML-экранирование за один проход?
+--- code ---
+  1| const ESCAPES = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"};
+  2| function render(label) {
+  3|   const text = String(label);
+  4|   return `<h2>${text}</h2>`;
+  5| }
+  [A] Заменить функцию целиком:
+      const ESCAPES = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"};
+function render(label) {
+  const text = String(label).replace(/[&<>"']/g, c => "");
+  return `<h2>${text}</h2>`;
+}
+  [B] Заменить функцию целиком:
+      const ESCAPES = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"};
+function render(label) {
+  const text = String(label).replace(/[&<>"']/g, c => ESCAPES[c]);
+  return `<h2>${text}</h2>`;
+}
+  [C] Заменить функцию целиком:
+      const ESCAPES = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"};
+function render(label) {
+  const text = String(label).replace(/[<>"']/g, c => ESCAPES[c]).replace(/&/g, "&amp;");
+  return `<h2>${text}</h2>`;
+}
+  [D] Заменить функцию целиком:
+      const ESCAPES = {"&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;"};
+function render(label) {
+  const text = String(label).replace(/[<>"']/g, c => ESCAPES[c]);
+  return `<h2>${text}</h2>`;
+}
+KEY: B | Экранирование зависит от контекста. Для данного текстового узла таблица замен за один проход сохраняет данные и не экранирует повторно созданные сущности. В рабочем шаблонизаторе предпочтительно включить встроенное автоэкранирование.
+STATUS PASS uniq 1.0 keys 4 jacc 0.1373 ctx 8 lines [5, 5] ops [4, 4] checks 1000 failed 0 pos {'A': 54, 'B': 57, 'C': 49, 'D': 40} 1.72s

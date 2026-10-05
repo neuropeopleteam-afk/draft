@@ -1,0 +1,173 @@
+[
+  {
+    "family_id": "security.crypto.aead_mcq",
+    "format": "mcq_concept",
+    "grades": [
+      "senior"
+    ],
+    "b": 0.9,
+    "canary": false,
+    "status": "WARN",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.crypto.aead_mcq",
+      "200"
+    ],
+    "summary": "STATUS WARN uniq 1.0 keys 4 jacc 0.1168 ctx 8 lines None ops None checks 0 failed 0 pos {'A': 47, 'B': 53, 'C': 50, 'D': 50} 0.04s",
+    "n_checks": 0,
+    "n_checks_failed": 0,
+    "warnings": [
+      "низкое поверхностное разнообразие (0.12)",
+      "ключ сверен со справочной таблицей, исполнение невозможно"
+    ],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {},
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.crypto.aead_mcq.txt"
+  },
+  {
+    "family_id": "security.triage.cvss_priority_output",
+    "format": "predict_output",
+    "grades": [
+      "senior"
+    ],
+    "b": 0.6,
+    "canary": false,
+    "status": "PASS",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.triage.cvss_priority_output",
+      "200"
+    ],
+    "summary": "STATUS PASS uniq 1.0 keys 200 jacc 0.1377 ctx 8 lines [14, 14] ops [13, 13] checks 200 failed 0 pos {} 1.05s",
+    "n_checks": 200,
+    "n_checks_failed": 0,
+    "warnings": [],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "python": 200
+    },
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.triage.cvss_priority_output.txt"
+  },
+  {
+    "family_id": "security.supply.dependency_patch_fix",
+    "format": "choose_fix",
+    "grades": [
+      "senior"
+    ],
+    "b": 0.7,
+    "canary": false,
+    "status": "WARN",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.supply.dependency_patch_fix",
+      "200"
+    ],
+    "summary": "STATUS WARN uniq 1.0 keys 4 jacc 0.099 ctx 8 lines [8, 8] ops [6, 6] checks 1000 failed 0 pos {'A': 44, 'B': 52, 'C': 56, 'D': 48} 1.0s",
+    "n_checks": 1000,
+    "n_checks_failed": 0,
+    "warnings": [
+      "низкое поверхностное разнообразие (0.10)"
+    ],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "python": 1000
+    },
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.supply.dependency_patch_fix.txt"
+  },
+  {
+    "family_id": "security.response.incident_plan_open",
+    "format": "open_answer",
+    "grades": [
+      "senior"
+    ],
+    "b": 1.2,
+    "canary": false,
+    "status": "WARN",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.response.incident_plan_open",
+      "200"
+    ],
+    "summary": "STATUS WARN uniq 0.96 keys 1 jacc 0.1567 ctx 8 lines None ops None checks 0 failed 0 pos {} 0.43s",
+    "n_checks": 0,
+    "n_checks_failed": 0,
+    "warnings": [
+      "открытый формат: 192 различных формулировок на 200 seed (допустимо, минимум 40)"
+    ],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {},
+    "unique": 192,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.response.incident_plan_open.txt"
+  },
+  {
+    "family_id": "security.crypto.nonce_lifecycle_bug",
+    "format": "find_bug",
+    "grades": [
+      "senior"
+    ],
+    "b": 0.6,
+    "canary": false,
+    "status": "WARN",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.crypto.nonce_lifecycle_bug",
+      "200"
+    ],
+    "summary": "STATUS WARN uniq 1.0 keys 1 jacc 0.1185 ctx 8 lines [8, 8] ops [6, 6] checks 400 failed 0 pos {} 0.97s",
+    "n_checks": 400,
+    "n_checks_failed": 0,
+    "warnings": [
+      "низкое поверхностное разнообразие (0.12)"
+    ],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {
+      "python": 400
+    },
+    "unique": 200,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.crypto.nonce_lifecycle_bug.txt"
+  },
+  {
+    "family_id": "security.design.threat_model_open",
+    "format": "open_answer",
+    "grades": [
+      "senior"
+    ],
+    "b": 1.4,
+    "canary": false,
+    "status": "PASS",
+    "dev_command": [
+      "/home/user/workspace/spectrek/bank/../.venv_bank/bin/python",
+      "tools/dev_family.py",
+      "security.design.threat_model_open",
+      "200"
+    ],
+    "summary": "STATUS PASS uniq 0.99 keys 1 jacc 0.1547 ctx 8 lines None ops None checks 0 failed 0 pos {} 0.33s",
+    "n_checks": 0,
+    "n_checks_failed": 0,
+    "warnings": [],
+    "cross_process_seeds": 200,
+    "cross_process_hashseed": "8675309",
+    "runners": {},
+    "unique": 198,
+    "public_view_and_rubrics": "PASS",
+    "log": "/home/user/workspace/spectrek/bank/assessment_bank/families/security/_evidence/security.design.threat_model_open.txt"
+  }
+]

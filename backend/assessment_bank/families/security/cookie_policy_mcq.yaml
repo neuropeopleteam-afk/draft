@@ -1,0 +1,20 @@
+family_id: security.web.cookie_policy_mcq
+title: Cookie-флаги и изоляция сессии по хосту
+direction: security
+skills: [http, cookies, secure_defaults, csrf]
+target_grades: [junior]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra: {policy: secure_httponly_host_only_lax}
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -0.8
+  a: 1.0
+  sigma_variant: 0.2
+  basis: "Четыре сопоставимые конфигурации, каждая отличается одним флагом; контракт явно задаёт host-only, HTTPS и отдельный CSRF-контроль."
+generator: assessment_bank.families.security.cookie_policy_mcq
+version: 1
+description: "Независимый исполняемый предикат проверяет конфигурацию, но не имитирует браузер."

@@ -1,0 +1,25 @@
+family_id: data_ml.py.iterator_pipeline
+title: Одноразовые итераторы в конвейере обработки данных
+direction: data_ml
+skills: [python, iterators, generators, etl, data_processing]
+target_grades: [junior, middle]
+format: predict_output
+language: python
+invariants:
+  code_lines: [6, 6]
+  operations: [6, 6]
+  extra:
+    templates: [sum_then_count, any_partial, zip_same_iter, next_header]
+    values: [6, 8]
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: 0.0
+  a: 1.0
+  sigma_variant: 0.4
+  basis: "6 строк, 6–8 значений; суть — понимание одноразовости генераторов, map и iter; any с остатком потока и общий итератор у map и rows труднее, чем повторная сумма по генератору → σ повышена (Junior/Middle)"
+generator: assessment_bank.families.data_ml.py_iterator_pipeline
+version: 1
+description: >
+  Короткие фрагменты ETL на стандартной библиотеке, где итератор читается повторно или
+  частично: генератор после sum, остаток после any, zip(it, it), map поверх итератора после next.

@@ -1,0 +1,26 @@
+family_id: common.sql.window_rank
+title: Оконные функции — ранги с ничьими, рамка по умолчанию, LAG
+direction: common
+skills: [sql, window_functions, null_semantics]
+target_grades: [senior]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [4, 9]
+  operations: [4, 8]
+  extra:
+    rows: [5, 6]
+    templates: [rank_dense, running_range, running_rows, lag_partition, top_per_group]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.0
+  sigma_variant: 0.45
+  basis: "4–9 строк SQL, 5–6 строк данных; пять шаблонов: ROW_NUMBER в CTE и LAG проще, рамка RANGE по умолчанию с «ровесниками» и RANK с пропусками труднее → σ высокая; Senior"
+generator: assessment_bank.families.common.sql_window_rank
+version: 1
+description: >
+  Таблица из 5–6 строк и запрос с оконной функцией; кандидат записывает результат. Данные
+  подбираются так, чтобы ловушка шаблона проявлялась (ничья не на последнем месте, повторяющиеся
+  значения порядка, первая строка секции). Ключ — модель и исполнение в SQLite.

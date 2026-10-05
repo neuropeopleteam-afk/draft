@@ -1,0 +1,23 @@
+family_id: frontend.js.array_sort_canary
+title: Сортировка массива чисел без компаратора (канарейка)
+direction: frontend
+skills: [javascript, arrays]
+target_grades: [junior]
+format: predict_output
+language: javascript
+invariants:
+  code_lines: [4, 4]
+  operations: [4, 4]
+time_limit_s: 120
+canary: true
+canary_pool_size: 24
+prior_difficulty:
+  b: -0.5
+  a: 1.0
+  sigma_variant: 0.25
+  basis: "4 строки; лексикографическая сортировка и сортировка на месте"
+generator: assessment_bank.families.frontend.js_array_sort_canary
+version: 1
+description: >
+  Канареечное семейство: seed 1..24 опубликованы. В грейд не входят, служат детектору
+  предзнания (время + правильность).
