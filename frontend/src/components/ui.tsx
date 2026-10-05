@@ -190,3 +190,13 @@ export function Seg<T extends string>({ value, onChange, options, label }: { val
     </div>
   );
 }
+
+/** «1 год», «3 года», «5 лет»; дробный стаж — «2,5 года». */
+export function years(v: number | string | null | undefined): string {
+  if (v == null || v === "") return "";
+  const n = Number(v);
+  if (!Number.isInteger(n)) return `${n.toLocaleString("ru-RU")} года`;
+  const d10 = n % 10, d100 = n % 100;
+  const w = d10 === 1 && d100 !== 11 ? "год" : d10 >= 2 && d10 <= 4 && (d100 < 12 || d100 > 14) ? "года" : "лет";
+  return `${n} ${w}`;
+}

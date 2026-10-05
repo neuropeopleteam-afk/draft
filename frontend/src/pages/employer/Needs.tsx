@@ -17,7 +17,10 @@ const EXAMPLE = "Ищем бэкенд-разработчика уровня mid
 
 export function useTags() {
   const [tags, setTags] = useState<Tag[]>([]);
-  useEffect(() => { api<Tag[]>("/catalog/stack-tags", { auth: false }).then(setTags).catch(() => setTags([])); }, []);
+  useEffect(() => {
+    const load = (n: number) => api<Tag[]>("/catalog/stack-tags", { auth: false }).then(setTags).catch(() => { if (n > 0) setTimeout(() => load(n - 1), 800); });
+    load(2);
+  }, []);
   return useMemo(() => Object.fromEntries(tags.map((t) => [t.id, t])), [tags]);
 }
 
@@ -40,7 +43,7 @@ export function ReqEditor({ req, onChange }: { req: Req; onChange: (r: Req) => v
           <b className="font-semibold">{tags[x.tag]?.title ?? x.tag}</b>
           <select aria-label={`Вес: ${x.tag}`} value={x.weight} className="bg-transparent text-xs focus:outline-none"
             onChange={(e) => onChange({ ...req, [key]: req[key].map((y) => (y.tag === x.tag ? { ...y, weight: Number(e.target.value) } : y)) } as Req)}>
-            {[1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2].map((w) => <option key={w} value={w}>вес {w}</option>)}
+            {[...new Set([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, x.weight])].sort((p, q) => q - p).map((w) => <option key={w} value={w}>вес {w.toLocaleString("ru-RU")}</option>)}
           </select>
           <button type="button" className="text-xs text-brand-plum hover:underline" onClick={() => move(x.tag, key === "stack_required" ? "stack_desired" : "stack_required")}>
             {key === "stack_required" ? "→ желательно" : "→ обязательно"}

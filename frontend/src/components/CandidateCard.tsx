@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Level, range } from "./ui";
+import { Level, range, years } from "./ui";
 
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
@@ -17,7 +17,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
           <p className="mt-1 text-lg font-bold text-brand-night">{c.category?.title ?? "Категория не присвоена"}</p>
           <p className="mt-0.5 text-sm text-brand-ink/60">
             {c.rank_in_category ? `Место ${c.rank_in_category} из ${c.category_size} в категории · ` : ""}
-            {c.experience_years != null ? `стаж ${c.experience_years} лет · ` : ""}
+            {c.experience_years != null ? `стаж ${years(c.experience_years)} · ` : ""}
             {c.work_format ? WF[c.work_format] : ""}{c.city ? ` · ${c.city}` : ""}{c.relocation ? " · готов к переезду" : ""}
           </p>
         </div>

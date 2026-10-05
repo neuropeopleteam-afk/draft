@@ -53,16 +53,30 @@ function messageFrom(status: number, body: any): { code: string; message: string
   return { code: "http_" + status, message: status >= 500 ? "Сервис временно недоступен" : "Ошибка запроса" };
 }
 
+async function fetchRetry(url: string, init: RequestInit, tries = 3, timeoutMs = 15000): Promise<Response> {
+  for (let i = 0; ; i++) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { ...init, signal: ctl.signal });
+      if (res.ok || res.status < 500 || i >= tries - 1) { await res.clone().arrayBuffer(); return res; }
+    } catch (e) {
+      if (i >= tries - 1) throw e;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+}
+
 export async function api<T>(path: string, opts: { method?: string; body?: unknown; auth?: boolean } = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
   const token = tokenStore.get();
   if (opts.auth !== false && token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`/api${path}`, {
-    method: opts.method ?? (opts.body !== undefined ? "POST" : "GET"),
-    headers,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-  });
+  const method = opts.method ?? (opts.body !== undefined ? "POST" : "GET");
+  const init: RequestInit = { method, headers, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined };
+  // GET идемпотентен: при обрыве или зависании соединения повторяем (до 2 раз, таймаут 15 с).
+  const res = method === "GET" ? await fetchRetry(`/api${path}`, init) : await fetch(`/api${path}`, init);
   const body = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
     const { code, message } = messageFrom(res.status, body);

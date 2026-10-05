@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { PageTitle } from "../../components/CabinetLayout";
 import { CandidateCard } from "../../components/CandidateCard";
-import { Alert, Field, Level, Loading, dtt, errText, useApi } from "../../components/ui";
+import { Alert, Field, Level, Loading, dtt, errText, useApi, years } from "../../components/ui";
 import { api, apiDownload, apiUpload } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 
@@ -90,7 +90,7 @@ export default function Profile() {
               <Extracted title="Стек" items={r.extracted?.stack?.map((s: any) => s.title)} />
               <Extracted title="Роли" items={r.extracted?.roles?.map((s: any) => s.title)} />
               <Extracted title="Софт-скиллы" items={r.extracted?.soft_skills?.map((s: any) => s.title)} />
-              <Extracted title="Стаж" items={r.extracted?.experience_years != null ? [`${r.extracted.experience_years} лет`] : []} />
+              <Extracted title="Стаж" items={r.extracted?.experience_years != null ? [years(r.extracted.experience_years)] : []} />
             </div>
             <button className="btn-ghost" onClick={() => applyResume(r.id)}>Добавить в профиль</button>
           </div>

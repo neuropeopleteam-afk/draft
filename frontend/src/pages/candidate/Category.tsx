@@ -50,7 +50,7 @@ export default function Category() {
         <div className="rounded-xl bg-brand-blush/30 p-4 text-sm">
           <p className="font-semibold text-brand-night">Правило 90 дней</p>
           {s.lock_active
-            ? <p className="mt-1 text-brand-ink/75">Смена грейда доступна с <b>{dt(s.locked_until)}</b>.{s.sandbox_active && " Сейчас ограничение снято демо-режимом."}</p>
+            ? <p className="mt-1 text-brand-ink/75">Смена грейда доступна с <b>{dt(s.locked_until).replace(/ г\.$/, "")}</b>.{s.sandbox_active && " Сейчас ограничение снято демо-режимом."}</p>
             : <p className="mt-1 text-brand-ink/75">{c.grade ? "Можно пройти тест на грейд выше или ниже." : "Ограничений нет — пройдите тест."}</p>}
           {s.jury_mode_available && (
             <div className="mt-3 border-t border-brand/10 pt-2">
