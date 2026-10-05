@@ -74,7 +74,7 @@ export function JuryGuide() {
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20 disabled:opacity-40" disabled={step === 0 || busy} onClick={() => go(step - 1)}>Назад</button>
         {!here || needLogin
-          ? <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step)}>{busy ? "Входим…" : s.cta}</button>
+          ? <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step)}>{busy ? "Входим…" : needLogin || !s.cta.startsWith("Войти") ? s.cta : "Открыть экран"}</button>
           : step < STEPS.length - 1 && <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step + 1)}>{busy ? "Входим…" : `Дальше: ${STEPS[step + 1].title}`}</button>}
         <button className="ml-auto text-xs font-semibold text-white/60 underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={reset}>Сбросить демо</button>
       </div>
