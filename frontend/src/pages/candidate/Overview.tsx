@@ -1,24 +1,29 @@
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
+import { Stat, catTitle, useApi } from "../../components/ui";
 import { useAuth } from "../../lib/auth";
 
 export default function CandidateOverview() {
   const { me } = useAuth();
-  const c = me?.candidate;
+  const c: any = me?.candidate;
   const name = c?.full_name?.split(" ")[0];
+  const inv = useApi<any[]>("/candidate/invitations");
+  const probes = useApi<any[]>("/candidate/probes");
+  const newInv = inv.data?.filter((i) => ["sent", "viewed"].includes(i.status)).length ?? 0;
+  const newProbes = probes.data?.filter((p) => ["sent", "viewed"].includes(p.status)).length ?? 0;
   const steps = [
     { done: !!me?.is_email_verified, title: "Почта подтверждена", text: "Регистрация завершена." },
-    { done: false, title: "Опрос", text: "Направление, стек и опыт — около 3 минут.", to: "assessment" },
-    { done: false, title: "Тест на грейд", text: "Задачи вашего направления и общий блок: алгоритмы, SQL, HTTP, Git, Linux.", to: "assessment" },
-    { done: !!c?.current_category_id, title: "Категория и рейтинг", text: "После теста вы попадёте в категорию, которую видят работодатели.", to: "category" },
+    { done: !!c?.onboarding_completed_at, title: "Опрос", text: "Направление, стек и опыт — около 3 минут.", to: "assessment" },
+    { done: !!c?.current_category_id, title: "Тест на грейд", text: "Общий блок и задачи вашего направления.", to: "assessment" },
+    { done: !!c?.visible_to_employers && !!c?.current_category_id, title: "Профиль виден работодателям", text: "Нужны категория и согласие на публикацию обезличенного профиля.", to: "settings" },
   ];
   return (
     <div className="max-w-4xl">
-      <PageTitle title={name ? `Здравствуйте, ${name}!` : "Кабинет кандидата"} subtitle="Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой." />
+      <PageTitle title={name ? `Здравствуйте, ${name}` : "Кабинет кандидата"} subtitle="Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой." />
       <div className="mt-8 grid gap-5 md:grid-cols-3">
-        <Stat label="Категория" value={c?.current_category_id ?? "Не присвоена"} hint="Только по результатам теста" />
-        <Stat label="Приглашения" value="0" hint="Входящие предложения" />
-        <Stat label="Паспорт ФСП" value={me?.fsp?.linked ? `${me.fsp.achievements_count} достиж.` : "Не связан"} hint="Без истории ФСП — без штрафа" />
+        <Stat label="Категория" value={catTitle(c?.current_category_id)} hint="Только по результатам теста" />
+        <Stat label="Приглашения" value={inv.data ? `${inv.data.length}${newInv ? ` · новых ${newInv}` : ""}` : "…"} hint="Контакты — только после принятия" />
+        <Stat label="Задания от работодателей" value={probes.data ? `${probes.data.length}${newProbes ? ` · ждут ответа ${newProbes}` : ""}` : "…"} hint="Короткие задачи с вилкой" />
       </div>
       <section className="card mt-8">
         <h2 className="text-lg font-bold text-brand-night">Путь к первому приглашению</h2>
@@ -35,16 +40,6 @@ export default function CandidateOverview() {
           ))}
         </ol>
       </section>
-    </div>
-  );
-}
-
-function Stat({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <div className="card">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
-      <p className="mt-2 text-xl font-bold text-brand-night">{value}</p>
-      <p className="mt-1 text-xs text-brand-ink/55">{hint}</p>
     </div>
   );
 }
