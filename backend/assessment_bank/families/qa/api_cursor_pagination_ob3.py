@@ -6,14 +6,16 @@
 
 Шаг 1 — выбрать набор данных (при заданном limit), на котором клиент, листающий все
 страницы, получит не все записи (ровно один из четырёх; в двух других наборах тоже есть
-одинаковое время, но внутри одной страницы). Шаг 2 — выбрать исправление: курсор-пара
-(время, id). Дистракторы: нестрогий фильтр ``>=`` (повторы и возможный бесконечный цикл),
-курсор только по id при сортировке по времени, сортировка по id (нарушен контракт порядка),
-запрос limit+1 без смены курсора. Скрытая проверка листает страницы на наборе данных с
-совпадающим временем, немонотонными id, пустым хранилищем и границами страниц и требует:
-все записи ровно по одному разу, порядок (время, id), страница не длиннее limit.
+одинаковое время, но внутри одной страницы). Шаг 2 — выбрать автотест для регресса,
+который падает на текущем коде и проходит после исправления (курсор-пара (время, id)):
+полная сверка списка id на данных, где группа записей с одним временем пересекает границу
+страницы. Дистракторы: проверка только первой страницы, проверка отсутствия дублей
+(дефект теряет записи, а не повторяет), полная сверка на данных без совпадений времени,
+проверка только порядка. Каждый тест исполняется на текущем и исправленном обработчике.
 Шаг 3 — объяснение при новом условии (вставки во время листания, изменяемое поле
 сортировки, курсор удалённой или поддельной записи, контрактные тесты пагинации).
+Семейство backend.db.keyset_pagination_fix проверяет выбор исправления SQL-запроса; здесь
+акцент на тест-дизайне: воспроизводящие данные и регрессионный тест.
 """
 from __future__ import annotations
 
@@ -47,27 +49,6 @@ def _handler(kind, fn, ts):
                 "    page = rows[:limit]",
                 f'    last = (page[-1]["{ts}"], page[-1]["id"]) if page else None',
                 "    next_cursor = last if len(page) == limit else None"]
-    elif kind == "ge":
-        body = [srt_t, "    if cursor is not None:",
-                f'        rows = [e for e in rows if e["{ts}"] >= cursor]',
-                "    page = rows[:limit]",
-                f'    next_cursor = page[-1]["{ts}"] if len(page) == limit else None']
-    elif kind == "id_only":
-        body = [srt_t, "    if cursor is not None:",
-                '        rows = [e for e in rows if e["id"] > cursor]',
-                "    page = rows[:limit]",
-                '    next_cursor = page[-1]["id"] if len(page) == limit else None']
-    elif kind == "sort_id":
-        body = ['    rows = sorted(store, key=lambda e: e["id"])', "    if cursor is not None:",
-                '        rows = [e for e in rows if e["id"] > cursor]',
-                "    page = rows[:limit]",
-                '    next_cursor = page[-1]["id"] if len(page) == limit else None']
-    elif kind == "overfetch":
-        body = [srt_t, "    if cursor is not None:",
-                f'        rows = [e for e in rows if e["{ts}"] > cursor]',
-                "    page = rows[:limit + 1]",
-                f'    next_cursor = page[limit - 1]["{ts}"] if len(page) > limit else None',
-                "    page = page[:limit]"]
     else:
         raise ValueError(kind)
     return "\n".join([sig] + body + ['    return {"items": page, "next_cursor": next_cursor}'])
@@ -100,6 +81,91 @@ CASES = {cases!r}
 good = all(ok([{{"id": i, "{ts}": t}} for i, t in rows], limit) for rows, limit in CASES)
 print("RESULT: PASS" if good else "RESULT: FAIL")
 '''
+
+
+HELPERS = '''
+
+def make_store(pairs):
+    return [{"id": i, "%s": t} for i, t in pairs]
+
+
+def fetch_all(store, limit):
+    out, cursor = [], None
+    for _ in range(100):
+        resp = %s(store, cursor, limit)
+        out += resp["items"]
+        cursor = resp["next_cursor"]
+        if cursor is None:
+            return out
+    raise AssertionError("пагинация не заканчивается")
+'''
+
+
+def _step2_tests(fn, ts, tie_rows, distinct_rows):
+    def lit(rows):
+        return "[" + ", ".join(f'({i}, "{t}")' for i, t in rows) + "]"
+    exp_tie = [i for t, i in sorted((t, i) for i, t in tie_rows)]
+    exp_dist = [i for t, i in sorted((t, i) for i, t in distinct_rows)]
+    return {
+        "good": "\n".join([f"def test_{fn}_pagination():",
+                            f"    store = make_store({lit(tie_rows)})",
+                            '    got = [e["id"] for e in fetch_all(store, limit=2)]',
+                            f"    assert got == {exp_tie}"]),
+        "first_page": "\n".join([f"def test_{fn}_pagination():",
+                                  f"    store = make_store({lit(tie_rows)})",
+                                  f"    page = {fn}(store, None, 2)",
+                                  '    assert len(page["items"]) == 2 and page["next_cursor"]']),
+        "no_dups": "\n".join([f"def test_{fn}_pagination():",
+                               f"    store = make_store({lit(tie_rows)})",
+                               '    got = [e["id"] for e in fetch_all(store, limit=2)]',
+                               "    assert len(got) == len(set(got))"]),
+        "distinct_times": "\n".join([f"def test_{fn}_pagination():",
+                                      f"    store = make_store({lit(distinct_rows)})",
+                                      '    got = [e["id"] for e in fetch_all(store, limit=2)]',
+                                      f"    assert got == {exp_dist}"]),
+        "order_only": "\n".join([f"def test_{fn}_pagination():",
+                                  f"    store = make_store({lit(tie_rows)})",
+                                  f'    got = [(e["{ts}"], e["id"]) for e in fetch_all(store, limit=2)]',
+                                  "    assert got == sorted(got)"]),
+    }
+
+
+STEP2_RUNNER = '''
+SOURCES = {"buggy": BUGGY, "fixed": FIXED}
+
+
+def run(version):
+    ns = {}
+    exec(SOURCES[version] + HELPERS + "\\n" + TEST, ns)
+    name = [k for k in ns if k.startswith("test_")][0]
+    try:
+        ns[name]()
+        return True
+    except AssertionError:
+        return False
+
+
+print("RESULT: PASS" if (not run("buggy")) and run("fixed") else "RESULT: FAIL")
+'''
+
+
+def _step2_program(test_code, fn, ts):
+    return (f"BUGGY = {_handler('buggy', fn, ts)!r}\nFIXED = {_handler('good', fn, ts)!r}\n"
+            f"HELPERS = {HELPERS % (ts, fn)!r}\nTEST = {test_code!r}\n" + STEP2_RUNNER)
+
+
+def _test_ok(test_code, fn, ts):
+    """Тот же критерий, что у проверки: красный на текущем коде, зелёный после исправления."""
+    def run(kind):
+        ns: dict = {}
+        exec(compile(_handler(kind, fn, ts) + HELPERS % (ts, fn) + "\n" + test_code, "<t>", "exec"), ns)
+        name = [k for k in ns if k.startswith("test_")][0]
+        try:
+            ns[name]()
+            return True
+        except AssertionError:
+            return False
+    return (not run("buggy")) and run("good")
 
 
 def _simulate(kind, fn, ts, rows, limit):
@@ -279,20 +345,23 @@ def generate(seed: int):
     opts1, key1 = balanced_options(FAMILY_ID, seed, rng, (_fmt(repro), None),
                                    [(_fmt(d), None) for d in cands], step=1)
     by_text = {_fmt(d): d for d in [repro] + cands}
-    # скрытые наборы для шага 2
-    hidden = [([(i, t) for i, t in _dataset(rng, 7, 2, {1, 3})], 2),
-              ([(105, "12:00"), (101, "12:00"), (109, "12:00"), (103, "12:00")], 2),
-              ([], 3),
-              ([(i, t) for i, t in _dataset(rng, 6, 3, {2})], 3),
-              ([(130, "08:01"), (120, "08:02"), (110, "08:03"), (100, "08:04")], 2),
-              ([(i, t) for i, t in _dataset(rng, 6, 2, set())], 2)]
-    pool = ["ge", "id_only", "sort_id", "overfetch"]
+    # шаг 2: какой автотест добавить в регресс (ловит дефект и зелёный после исправления)
+    tie_n = rng.choice([3, 4])
+    t0 = f"{rng.choice([9, 12, 15, 20]):02d}:{rng.randint(10, 40):02d}"
+    t1 = t0[:3] + f"{int(t0[3:]) + rng.randint(1, 9):02d}"
+    tie_ids = rng.sample(range(101, 140), tie_n + 2)
+    tie_rows = [(i, t0) for i in tie_ids[:tie_n]] + [(i, t1) for i in tie_ids[tie_n:]]
+    rng.shuffle(tie_rows)
+    distinct_rows = [(i, t0[:3] + f"{int(t0[3:]) + k:02d}") for k, i in enumerate(tie_ids)]
+    rng.shuffle(distinct_rows)
+    tests = _step2_tests(fn, ts, tie_rows, distinct_rows)
+    pool = ["first_page", "no_dups", "distinct_times", "order_only"]
     chosen = rng.sample(pool, 3)
     for d in chosen:
-        assert not all(_simulate(d, fn, ts, r, lim) for r, lim in hidden), d
-    assert all(_simulate("good", fn, ts, r, lim) for r, lim in hidden)
-    opts2, key2 = balanced_options(FAMILY_ID, seed, rng, ("Заменить обработчик на:", _handler("good", fn, ts)),
-                                   [("Заменить обработчик на:", _handler(d, fn, ts)) for d in chosen],
+        assert not _test_ok(tests[d], fn, ts), d
+    assert _test_ok(tests["good"], fn, ts)
+    opts2, key2 = balanced_options(FAMILY_ID, seed, rng, ("Добавить в регресс тест:", tests["good"]),
+                                   [("Добавить в регресс тест:", tests[d]) for d in chosen],
                                    step=2, salt="step2")
     checks = []
     for o in opts1:
@@ -300,7 +369,7 @@ def generate(seed: int):
         checks.append(Check(name=f"step1:{o.id}", runner="python", program=prog,
                             expect="fail" if o.id == key1 else "pass"))
     for o in opts2:
-        prog = o.code + CLIENT.format(fn=fn, ts=ts, cases=hidden)
+        prog = _step2_program(o.code, fn, ts)
         checks.append(Check(name=f"step2:{o.id}", runner="python", program=prog,
                             embeds_display_code=False,
                             expect="pass" if o.id == key2 else "fail"))
@@ -314,22 +383,26 @@ def generate(seed: int):
     steps = ob3_steps(
         f"Шаг 1. На каком наборе данных (limit={limit}, записи перечислены в порядке "
         f"сортировки) клиент, пролистав все страницы, получит не все записи?",
-        "Шаг 2. Какой обработчик выполняет контракт на любых данных?",
+        f"Шаг 2. Разработчик исправит обработчик. Какой автотест добавить в регресс, чтобы "
+        f"он падал на текущем коде и проходил после исправления? В тестовом модуле есть "
+        f"помощники: `make_store(pairs)` строит хранилище из пар (id, {ts}), `fetch_all(store, "
+        f"limit)` листает все страницы, как клиент.",
         "Шаг 3. " + cond["text"] + " Ответьте развёрнуто (5–10 предложений).")
-    why = {"ge": "нестрогий фильтр повторяет последнюю запись страницы, а если вся страница с "
-                 "одним временем — пагинация не заканчивается",
-           "id_only": "курсор по id не согласован с сортировкой по времени: при немонотонных id "
-                      "записи пропадают или повторяются",
-           "sort_id": "сортировка по id нарушает контракт порядка по времени",
-           "overfetch": "запрос limit+1 верно определяет, есть ли следующая страница, но курсор "
-                        "по-прежнему только время — пропуск остаётся"}
+    why = {"first_page": "проверка только первой страницы не видит пропуска на следующих",
+           "no_dups": "дефект теряет записи, а не повторяет их — проверка дублей зелёная",
+           "distinct_times": "без совпадающего времени на границе страниц дефект не "
+                             "проявляется",
+           "order_only": "порядок полученных записей верный, просто их меньше — проверка "
+                         "сортировки зелёная"}
     ak = AnswerKey(kind="steps", value={"1": key1, "2": key2, "3": "rubric"},
                    explanation=(f"Курсор — только `{ts}` последней записи, а фильтр строгий: если "
                                 f"следующая запись имеет то же время, она отсекается. Поэтому "
                                 f"пропуск возникает, только когда одинаковое время приходится на "
                                 f"границу страниц (позиции {limit} и {limit + 1}, {2 * limit} и "
-                                f"{2 * limit + 1} …). Исправление — курсор-пара ({ts}, id) с "
-                                f"тем же порядком, что у сортировки. Дистракторы шага 2: "
+                                f"{2 * limit + 1} …). Исправление — курсор-пара ({ts}, id). Тест "
+                                f"для регресса должен сверять полный список id с ожидаемым на "
+                                f"данных, где одно время у нескольких записей подряд и группа "
+                                f"пересекает границу страницы. Дистракторы шага 2: "
                                 + "; ".join(why[d] for d in chosen) + f". Шаг 3 — «{cond_name}»."))
     rubric = rubric_from({**cond, "notes": "Оценивается шаг 3; шаги 1–2 проверяются автоматически."})
     return build_variant(FAMILY_ID, seed, stem=stem, code=code, options=opts1 + opts2,
