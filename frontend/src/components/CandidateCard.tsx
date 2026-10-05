@@ -58,7 +58,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
       )}
 
       {reasons && reasons.length > 0 && (
-        <details className="mt-4 rounded-xl border border-brand-night/10 p-3" open={!compact}>
+        <details className="mt-4 rounded-xl border border-brand-night/10 p-3" open>
           <summary className="cursor-pointer text-sm font-semibold text-brand-night">Почему в подборке</summary>
           <ul className="mt-2 space-y-1.5">
             {reasons.map((r, i) => (

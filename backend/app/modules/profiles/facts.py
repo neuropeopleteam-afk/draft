@@ -175,6 +175,17 @@ def skill_confirmed(f: CandidateFact | None) -> bool:
     return bool(f and f.value.get("score", 0) >= 0.5)
 
 
+
+def _uniq(facts: list) -> list:
+    """Один факт на ключ: опрос и резюме могут заявить одно и то же (берём первый — из опроса)."""
+    seen: set = set()
+    out = []
+    for f in facts:
+        if f.key not in seen:
+            seen.add(f.key)
+            out.append(f)
+    return out
+
 def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None, rank_total: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
@@ -210,9 +221,9 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
                              for a in b.achievements[:5]],
         } if show("show_fsp") else {"linked": None, "hidden": True}),
         "stack_declared": [{"tag": f.key, "title": f.title, "level": "T0", "source": f.source.value}
-                           for f in b.t0.get("stack", [])] if show("show_stack") else None,
-        "roles": [f.title for f in b.t0.get("role", [])] if show("show_roles") else None,
-        "soft_skills": [f.title for f in b.t0.get("soft_skill", [])] if show("show_soft_skills") else None,
+                           for f in _uniq(b.t0.get("stack", []))] if show("show_stack") else None,
+        "roles": [f.title for f in _uniq(b.t0.get("role", []))] if show("show_roles") else None,
+        "soft_skills": [f.title for f in _uniq(b.t0.get("soft_skill", []))] if show("show_soft_skills") else None,
         "experience_years": float(p.experience_years) if (p.experience_years is not None and show("show_experience")) else None,
         "work_format": p.work_format.value if show("show_work_format") else None,
         "city": p.city if show("show_city") else None,
