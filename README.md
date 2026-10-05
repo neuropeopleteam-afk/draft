@@ -16,7 +16,7 @@
 | Каталог | Что внутри |
 |---|---|
 | `backend/` | FastAPI (Python 3.12), SQLAlchemy 2, Alembic, модульный монолит: auth, catalog, profiles, assessment, matching, invitations, fsp, validation, pdf, notifications |
-| `backend/assessment_bank/` | Контракт банка заданий (чистый Python, без БД) |
+| `backend/assessment_bank/` | Копия пакета банка заданий (чистый Python, без БД); обновляется `tools/sync_bank.py` |
 | `frontend/` | React 18 + Vite + TypeScript + Tailwind; главная, регистрация/вход/подтверждение почты, кабинеты кандидата и работодателя |
 | `docs/` | Архитектура, модель данных, схема интеграции с ФСП ID (Keycloak) |
 | `docker-compose.yml` | db (PostgreSQL 16) + api + web; Keycloak — отдельный профиль, выключен по умолчанию |
@@ -100,7 +100,10 @@ make dev-frontend
 LLM: Yandex AI Studio (OpenAI-совместимый API, модели в РФ — данные не покидают РФ). Переменные `LLM_PROVIDER`,
 `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_FOLDER_ID`, `LLM_MODEL` задаются в файле `LLM_ENV_FILE`
 (на сервере `/opt/spectrek_fsp/secrets/llm.env`). Без них всё работает на словарях и правилах.
-Движок теста — `ASSESSMENT_ENGINE` (`stub` сейчас, `bank` после подключения банка заданий).
+Движок теста — `ASSESSMENT_ENGINE` (`bank` — адаптивный тест на банке заданий; `stub` — запасная заглушка).
+Банк обновляется командой `python tools/sync_bank.py --commit` (из окружения банка: numpy, scipy, pydantic,
+PyYAML); скрипт выкладки вызывает её сам, так что новые семейства из `../bank` попадают на сервер автоматически.
+Открытые ответы теста оценивает LLM по рубрике (`LLM_GRADING_MODEL`), без LLM — статус «на проверке».
 Название продукта — одна настройка `PRODUCT_NAME` (по умолчанию «Встречный»).
 
 ## Развёртывание на сервере
