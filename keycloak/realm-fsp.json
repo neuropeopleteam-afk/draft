@@ -1,0 +1,219 @@
+{
+  "realm": "fsp",
+  "enabled": true,
+  "displayName": "ФСП ID (демо)",
+  "displayNameHtml": "<b>ФСП ID</b> · демо",
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "failureFactor": 30,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "ru",
+    "en"
+  ],
+  "defaultLocale": "ru",
+  "accessTokenLifespan": 300,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "clients": [
+    {
+      "clientId": "spectrek-platform",
+      "name": "Встречный — платформа спецтрека ФСП",
+      "description": "Демо-клиент: Authorization Code + PKCE (S256), конфиденциальный",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "${FSP_OIDC_CLIENT_SECRET}",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "consentRequired": false,
+      "frontchannelLogout": true,
+      "rootUrl": "${PLATFORM_BASE_URL}",
+      "baseUrl": "/",
+      "redirectUris": [
+        "${PLATFORM_BASE_URL}/api/fsp-id/callback"
+      ],
+      "webOrigins": [
+        "${PLATFORM_BASE_URL}"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "${PLATFORM_BASE_URL}/*",
+        "use.refresh.tokens": "false",
+        "id.token.signed.response.alg": "RS256"
+      },
+      "protocolMappers": [
+        {
+          "name": "fsp_id",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "fsp_id",
+            "claim.name": "fsp_id",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true",
+            "multivalued": "false",
+            "aggregate.attrs": "false"
+          }
+        },
+        {
+          "name": "fsp_rank",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "fsp_rank",
+            "claim.name": "fsp_rank",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true",
+            "multivalued": "false",
+            "aggregate.attrs": "false"
+          }
+        },
+        {
+          "name": "fsp_disciplines",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "fsp_disciplines",
+            "claim.name": "fsp_disciplines",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true",
+            "multivalued": "true",
+            "aggregate.attrs": "false"
+          }
+        },
+        {
+          "name": "fsp_achievements",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "fsp_achievements",
+            "claim.name": "fsp_achievements",
+            "jsonType.label": "JSON",
+            "id.token.claim": "true",
+            "access.token.claim": "false",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true",
+            "multivalued": "true",
+            "aggregate.attrs": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "fsp-champion",
+      "email": "champion@demo.fsp-id.example",
+      "firstName": "Алексей",
+      "lastName": "Демин",
+      "attributes": {
+        "fsp_id": [
+          "FSP-770012"
+        ],
+        "fsp_rank": [
+          "КМС"
+        ],
+        "fsp_disciplines": [
+          "product",
+          "algorithmic"
+        ],
+        "fsp_achievements": [
+          "{\"discipline\": \"product\", \"event\": \"Чемпионат России по продуктовому программированию\", \"level\": \"national\", \"date\": \"2025-11-22\", \"place\": 1, \"result\": \"победитель\", \"team\": \"Команда «Синтез» (демо)\", \"role\": \"тимлид, backend\"}",
+          "{\"discipline\": \"algorithmic\", \"event\": \"Кубок России по спортивному программированию\", \"level\": \"national\", \"date\": \"2025-04-12\", \"place\": 3, \"result\": \"призёр\", \"team\": \"Команда «Синтез» (демо)\"}",
+          "{\"discipline\": \"product\", \"event\": \"Всероссийский хакатон ФСП\", \"level\": \"interregional\", \"date\": \"2024-10-05\", \"place\": 2, \"result\": \"призёр\", \"team\": \"Команда «Синтез» (демо)\", \"role\": \"backend\"}"
+        ]
+      },
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${FSP_DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "fsp-prizer",
+      "email": "prizer@demo.fsp-id.example",
+      "firstName": "Мария",
+      "lastName": "Пробная",
+      "attributes": {
+        "fsp_id": [
+          "FSP-540377"
+        ],
+        "fsp_rank": [
+          "II разряд"
+        ],
+        "fsp_disciplines": [
+          "security"
+        ],
+        "fsp_achievements": [
+          "{\"discipline\": \"security\", \"event\": \"Первенство Сибирского ФО по программированию систем ИБ (CTF)\", \"level\": \"regional\", \"date\": \"2026-03-14\", \"place\": 2, \"result\": \"призёр\", \"team\": \"Команда «Шифр» (демо)\", \"role\": \"reverse, web\"}"
+        ]
+      },
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${FSP_DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    },
+    {
+      "username": "fsp-newcomer",
+      "email": "newcomer@demo.fsp-id.example",
+      "firstName": "Илья",
+      "lastName": "Новиков",
+      "attributes": {},
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "${FSP_DEMO_PASSWORD}",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "components": {
+    "org.keycloak.userprofile.UserProfileProvider": [
+      {
+        "providerId": "declarative-user-profile",
+        "subComponents": {},
+        "config": {
+          "kc.user.profile.config": [
+            "{\"attributes\": [{\"name\": \"username\", \"multivalued\": false, \"validations\": {\"length\": {\"min\": 3, \"max\": 255}, \"username-prohibited-characters\": {}, \"up-username-not-idn-homograph\": {}}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}, {\"name\": \"email\", \"multivalued\": false, \"validations\": {\"email\": {}, \"length\": {\"max\": 255}}, \"required\": {\"roles\": [\"user\"]}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}, {\"name\": \"firstName\", \"multivalued\": false, \"validations\": {\"length\": {\"max\": 255}, \"person-name-prohibited-characters\": {}}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}, {\"name\": \"lastName\", \"multivalued\": false, \"validations\": {\"length\": {\"max\": 255}, \"person-name-prohibited-characters\": {}}, \"permissions\": {\"view\": [\"admin\", \"user\"], \"edit\": [\"admin\", \"user\"]}}], \"groups\": [{\"name\": \"user-metadata\", \"displayHeader\": \"User metadata\", \"displayDescription\": \"Attributes, which refer to user metadata\"}], \"unmanagedAttributePolicy\": \"ADMIN_EDIT\"}"
+          ]
+        }
+      }
+    ]
+  }
+}

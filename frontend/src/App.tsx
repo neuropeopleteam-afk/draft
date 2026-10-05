@@ -1,5 +1,5 @@
 import { Link, Route, Routes } from "react-router-dom";
-import { CabinetLayout, SectionPlaceholder } from "./components/CabinetLayout";
+import { CabinetLayout } from "./components/CabinetLayout";
 import { JuryGuide } from "./components/JuryGuide";
 import Expert from "./pages/Expert";
 import Validation from "./pages/Validation";
@@ -19,8 +19,12 @@ import { Needs, Selection } from "./pages/employer/Needs";
 import EmployerOverview, { Company } from "./pages/employer/Overview";
 import { CandidateDetail, Search } from "./pages/employer/Search";
 import { employerSections } from "./pages/employer/sections";
-
-const placeholder = (sections: typeof candidateSections, path: string) => <SectionPlaceholder section={sections.find((s) => s.path === path)!} />;
+import { AppSection, InstallPage } from "./integrations/AppInstall";
+import { EmployerAts } from "./integrations/Ats";
+import { CompanyPublic } from "./integrations/CompanyPublic";
+import { FspIdDone } from "./integrations/FspId";
+import { AdminSus, SusPage } from "./integrations/Sus";
+import { CandidateVacancies, EmployerVacancies } from "./integrations/Vacancies";
 
 export default function App() {
   return (
@@ -34,6 +38,10 @@ export default function App() {
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/fsp-id/done" element={<FspIdDone />} />
+      <Route path="/install" element={<InstallPage />} />
+      <Route path="/sus" element={<SusPage />} />
+      <Route path="/admin/sus" element={<AdminSus />} />
       <Route path="/candidate" element={<CabinetLayout role="candidate" title="Кабинет кандидата" sections={candidateSections} />}>
         <Route index element={<CandidateOverview />} />
         <Route path="assessment" element={<Assessment />} />
@@ -44,7 +52,9 @@ export default function App() {
         <Route path="probes" element={<Probes />} />
         <Route path="fsp" element={<Fsp />} />
         <Route path="settings" element={<Settings />} />
-        <Route path="vacancies" element={placeholder(candidateSections, "vacancies")} />
+        <Route path="vacancies" element={<CandidateVacancies />} />
+        <Route path="companies/:id" element={<CompanyPublic />} />
+        <Route path="app" element={<AppSection />} />
       </Route>
       <Route path="/employer" element={<CabinetLayout role="employer" title="Кабинет работодателя" sections={employerSections} />}>
         <Route index element={<EmployerOverview />} />
@@ -56,7 +66,9 @@ export default function App() {
         <Route path="candidates/:ref" element={<CandidateDetail />} />
         <Route path="probes" element={<EmployerProbes />} />
         <Route path="invitations" element={<EmployerInvitations />} />
-        <Route path="vacancies" element={placeholder(employerSections, "vacancies")} />
+        <Route path="vacancies" element={<EmployerVacancies />} />
+        <Route path="ats" element={<EmployerAts />} />
+        <Route path="app" element={<AppSection />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

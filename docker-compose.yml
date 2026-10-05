@@ -1,6 +1,7 @@
 # Стек: db (PostgreSQL 16) + api (FastAPI) + web (nginx со сборкой React).
 # Порты публикуются только на 127.0.0.1; наружу сайт отдаёт nginx хоста.
-# Бюджет памяти стека ≤ 1,5 ГБ (db 512M + api 896M + web 96M = 1504M; NER Natasha ~100 МБ на воркер).
+# Бюджет памяти стека вместе с Keycloak ≤ 2 ГБ: db 384M + api 768M + web 64M + keycloak 640M = 1856M
+# (без профиля fsp-id — 1216M; NER Natasha ~100 МБ на воркер). Keycloak включается COMPOSE_PROFILES=fsp-id.
 name: spectrek_fsp
 
 services:
@@ -14,12 +15,14 @@ services:
     command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=50", "-c", "work_mem=8MB"]
     volumes:
       - db_data:/var/lib/postgresql/data
+      # Отдельная база keycloak для ФСП ID (только при создании тома)
+      - ./db/initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 20
-    mem_limit: 512m
+    mem_limit: 384m
 
   api:
     build: ./backend
@@ -34,14 +37,23 @@ services:
       # LLM_PROVIDER. Нет файла — всё работает на детерминированных правилах без LLM.
       - path: ${LLM_ENV_FILE:-./secrets/llm.env}
         required: false
+      # Web Push: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT. Нет файла — push выключен, остальное работает.
+      - path: ${VAPID_ENV_FILE:-./secrets/vapid.env}
+        required: false
+      # ФСП ID: FSP_OIDC_CLIENT_SECRET, FSP_DEMO_PASSWORD (тот же файл читает Keycloak при импорте realm)
+      - path: ${FSP_ID_ENV_FILE:-./secrets/fsp_id.env}
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fsp}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fsp}
+      # Пусто — кнопка «Войти через ФСП ID» скрыта. Прод: https://fsp.neuropeople.pro/auth/realms/fsp
+      FSP_OIDC_ISSUER: ${FSP_OIDC_ISSUER:-}
+      FSP_OIDC_INTERNAL_BASE: ${FSP_OIDC_INTERNAL_BASE:-http://keycloak:8080/auth/realms/fsp}
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "127.0.0.1:${API_PORT:-8141}:8000"
-    mem_limit: 896m
+    mem_limit: 768m
 
   web:
     build: ./frontend
@@ -50,20 +62,48 @@ services:
       - api
     ports:
       - "127.0.0.1:${WEB_PORT:-8140}:80"
-    mem_limit: 96m
+    mem_limit: 64m
 
-  # ФСП ID на базе Keycloak — для проверки OIDC-совместимости. Выключен по умолчанию:
-  #   docker compose --profile keycloak up -d keycloak
+  # ФСП ID (демо) — Keycloak, realm fsp (keycloak/realm-fsp.json), OIDC Authorization Code + PKCE.
+  # За nginx по пути /auth (web → keycloak:8080), консоль администратора — только 127.0.0.1:${KEYCLOAK_PORT}.
+  # Хранилище — наш PostgreSQL, отдельная база keycloak. Включение: COMPOSE_PROFILES=fsp-id в .env.
   keycloak:
-    profiles: ["keycloak"]
-    image: quay.io/keycloak/keycloak:26.0
-    command: ["start-dev", "--http-port=8080"]
+    profiles: ["fsp-id"]
+    build: ./keycloak
+    restart: unless-stopped
+    env_file:
+      # KC_BOOTSTRAP_ADMIN_USERNAME, KC_BOOTSTRAP_ADMIN_PASSWORD
+      - path: ${KEYCLOAK_ENV_FILE:-./secrets/keycloak.env}
+        required: false
+      - path: ${FSP_ID_ENV_FILE:-./secrets/fsp_id.env}
+        required: false
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:-admin}
-      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-change-me}
+      KC_DB_URL: jdbc:postgresql://db:5432/keycloak
+      KC_DB_USERNAME: ${POSTGRES_USER:-fsp}
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      KC_DB_POOL_INITIAL_SIZE: "1"
+      KC_DB_POOL_MIN_SIZE: "1"
+      KC_DB_POOL_MAX_SIZE: "6"
+      KC_HOSTNAME: ${FSP_ID_PUBLIC_URL:-http://localhost:8140/auth}
+      KC_HOSTNAME_ADMIN: http://127.0.0.1:${KEYCLOAK_PORT:-8142}/auth
+      KC_HOSTNAME_BACKCHANNEL_DYNAMIC: "true"
+      KC_HTTP_ENABLED: "true"
+      KC_PROXY_HEADERS: xforwarded
+      PLATFORM_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8140}
+      JAVA_OPTS_KC_HEAP: "-XX:MaxRAMPercentage=40 -XX:InitialRAMPercentage=8 -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20"
+      JAVA_OPTS_APPEND: "-XX:TieredStopAtLevel=1"
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "127.0.0.1:${KEYCLOAK_PORT:-8142}:8080"
-    mem_limit: 768m
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000 && printf 'GET /auth/health/ready HTTP/1.1\\r\\nHost: localhost\\r\\nConnection: close\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 90s
+    mem_limit: 640m
 
 volumes:
   db_data:
