@@ -2,6 +2,8 @@ import { useState } from "react";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, errText, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { SusPrompt } from "../../integrations/Sus";
+import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -10,6 +12,7 @@ export function Invitations() {
   const [reason, setReason] = useState("");
   const [declining, setDeclining] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const trust = useInvitationsTrust();
 
   async function view(i: any) {
     setErr(null); setDeclining(false); setReason("");
@@ -38,7 +41,7 @@ export function Invitations() {
                   <p className="text-sm text-brand-ink/65">{i.company?.name} · {range(i.salary_from, i.salary_to)} · {dt(i.created_at)}</p>
                   {i.below_my_minimum && <p className="mt-1 text-xs font-semibold text-brand-plum">Верх вилки ниже вашего минимума</p>}
                 </div>
-                <Status s={i.status} />
+                <div className="flex flex-wrap items-center gap-2"><TrustBadge t={trust[i.id]} compact /><Status s={i.status} /></div>
               </button>
             </li>
           ))}
@@ -52,6 +55,7 @@ export function Invitations() {
             {open.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Работодатель этот минимум не видит.</Alert>}
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>
             <p><b>Способ связи:</b> {open.contact_method}</p>
+            <InvitationTrust invitationId={open.id} />
             {open.evidence?.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-night">На чём основано приглашение</p>
@@ -76,6 +80,7 @@ export function Invitations() {
               )
             )}
             {open.status === "accepted" && <Alert kind="ok">Вы приняли приглашение. Работодатель видит ваши контакты и свяжется с вами.</Alert>}
+            {open.status === "accepted" && <SusPrompt context="e2e" />}
           </div>
         )}
       </Modal>

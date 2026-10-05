@@ -10,6 +10,7 @@
 - Развёрнутый прототип: https://fsp.neuropeople.pro
 - Документация API (OpenAPI/Swagger): https://fsp.neuropeople.pro/api/docs
 - Архитектура и модель данных: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Интеграции: [антифрод и индекс доверия](docs/ANTIFRAUD.md), [ФСП ID](docs/FSP_INTEGRATION.md), [ATS](docs/ATS.md), [нагрузочный тест](docs/LOAD_TEST.md)
 
 ## Состав
 
@@ -19,7 +20,8 @@
 | `backend/assessment_bank/` | Копия пакета банка заданий (чистый Python, без БД); обновляется `tools/sync_bank.py` |
 | `frontend/` | React 18 + Vite + TypeScript + Tailwind; главная, регистрация/вход/подтверждение почты, кабинеты кандидата и работодателя |
 | `docs/` | Архитектура, модель данных, схема интеграции с ФСП ID (Keycloak) |
-| `docker-compose.yml` | db (PostgreSQL 16) + api + web; Keycloak — отдельный профиль, выключен по умолчанию |
+| `keycloak/` | Демо-стенд «ФСП ID»: образ Keycloak, генератор realm `fsp` с демо-участниками |
+| `docker-compose.yml` | db (PostgreSQL 16) + api + web; Keycloak «ФСП ID (демо)» — профиль `fsp-id` |
 
 ## Быстрый старт (Docker)
 
@@ -69,6 +71,7 @@ make validate    # процедура валидации (пока загото�
 docker compose exec -T api python -m app.modules.demo.seed           # 150 кандидатов, 10 работодателей, 15 потребностей
 docker compose exec -T api python -m app.modules.demo.seed --reset   # пересоздать
 docker compose exec -T api python -m app.modules.demo.seed --delete  # удалить только демо-записи
+docker compose exec -T api python -m app.integrations.vacancies.demo  # 11 демо-вакансий (одна — «приманка»)
 ```
 
 Демо-записи помечены `is_demo` (адреса `*@demo.invalid`, компании «Демо: …», паспорта ФСП из демо-реестра);

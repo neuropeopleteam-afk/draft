@@ -208,11 +208,28 @@ sequenceDiagram
 - Без ФСП ID или без достижений — паспорт отсутствует, это нейтральное состояние (без штрафа в рейтинге).
 - На хакатоне реестр недоступен: паспорт заполняется демо-данными (`link_source=demo`, факты T1-демо помечаются явно).
 
-### 7.2. Вход через ФСП ID (после хакатона)
+### 7.2. Вход через ФСП ID — реализовано (день 3Б)
 
-Keycloak может стать основным провайдером входа: API принимает токены Keycloak (проверка по JWKS), роли
-`candidate`/`employer` — роли realm; собственный JWT остаётся для пользователей вне ФСП. Таблица `users`
-уже содержит `fsp_subject` для сопоставления. Для проверки совместимости — `docker compose --profile keycloak up -d keycloak`.
+Демо-стенд «ФСП ID» — Keycloak 26, realm `fsp`, профиль compose `fsp-id`, путь `/auth` того же домена. Вход и
+связка реализованы в `backend/app/integrations/fsp_id/` (эндпоинты `/api/fsp-id/*`, BFF: токены Keycloak в браузер
+не попадают), claims `fsp_*` → паспорт ФСП с фактами T2. Подробно — [FSP_INTEGRATION.md](FSP_INTEGRATION.md).
+
+## 7А. Интеграции (день 3Б)
+
+Пакет `backend/app/integrations/*` подключается одной функцией `include_routers(app)`; фронтенд —
+`frontend/src/integrations/*`. Модули ядра не зависят от интеграций (кроме двух фоновых хуков в `invitations`).
+
+| Модуль | Что делает | Документ |
+|---|---|---|
+| `egrul` | проверка работодателя по ИНН в ЕГРЮЛ (egrul.nalog.ru), кэш 7 дней, индекс доверия 0–100 с причинами | [ANTIFRAUD.md](ANTIFRAUD.md) |
+| `fsp_id` | вход и связка через ФСП ID (OIDC + PKCE), claims → паспорт T2 | [FSP_INTEGRATION.md](FSP_INTEGRATION.md) |
+| `ats` | Хантфлоу API v2, вебхук HMAC, экспорт JSON, тестовая ATS-заглушка | [ATS.md](ATS.md) |
+| `vacancies` | вакансии (вилка обязательна) и отклики, статусы у обеих сторон, контакты после отклика | — |
+| `push` | Web Push (VAPID): кандидату — приглашение и статус отклика, работодателю — принятие и новый отклик | — |
+| `sus` | опрос SUS (10 вопросов, балл 0–100), сводка для `/validation`: `GET /api/sus/summary` | — |
+
+PWA: `frontend/public/manifest.webmanifest`, `sw.js` (оболочка офлайн, API — только сеть, push), иконки
+`public/icons/`, страница `/install`. Нагрузочный тест — [LOAD_TEST.md](LOAD_TEST.md).
 
 ## 8. Банк заданий (формат)
 

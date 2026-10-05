@@ -108,3 +108,15 @@ export function CompanyTrustCard({ hasInn }: { hasInn: boolean }) {
     </section>
   );
 }
+
+/** Индекс доверия в карточке приглашения у кандидата (с оценкой вилки этого предложения). */
+export function InvitationTrust({ invitationId }: { invitationId: string }) {
+  const { data } = useApi<Trust>(`/candidate/invitations/${invitationId}/trust`, [invitationId]);
+  if (!data) return <div className="h-24 animate-pulse rounded-2xl bg-brand-blush/30" />;
+  return <TrustPanel t={data} companyLink />;
+}
+
+/** Краткие индексы по всем приглашениям кандидата: { [invitation_id]: TrustShort }. */
+export function useInvitationsTrust() {
+  return useApi<Record<string, TrustShort>>("/candidate/invitations-trust").data ?? {};
+}

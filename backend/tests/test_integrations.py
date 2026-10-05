@@ -431,3 +431,37 @@ def test_fsp_claims_mapping_dates():
     assert a[0]["date"] is None and a[0]["place"] == 2
     assert parse_achievements("not json") == []
     assert date.today() - timedelta(days=1) < date.today()
+
+
+
+def test_demo_vacancies_seed_and_bait_warning():
+    """Демо-вакансии создаются для демо-компаний; «приманка» с завышенной вилкой получает предупреждение."""
+    from sqlalchemy import delete, select
+
+    from app.core.db import SessionLocal, get_engine
+    from app.integrations.egrul import trust as trust_mod
+    from app.integrations.vacancies import demo
+    from app.integrations.vacancies.models import Vacancy
+    from app.modules.demo.seed import COMPANIES
+    from app.modules.profiles.models import Company
+
+    get_engine()
+    with SessionLocal() as db:
+        had_demo = db.scalar(select(Company.id).where(Company.is_demo.is_(True)).limit(1)) is not None
+        made = []
+        if not had_demo:
+            for idx in (0, 8):
+                c = Company(name=COMPANIES[idx][0], industry=COMPANIES[idx][1], city=COMPANIES[idx][2], is_demo=True)
+                db.add(c)
+                made.append(c)
+            db.commit()
+    r = demo.seed(reset=True)
+    assert r["created"] >= 3
+    with SessionLocal() as db:
+        bait = db.scalar(select(Vacancy).where(Vacancy.is_demo.is_(True), Vacancy.salary_to == 900_000))
+        t = trust_mod.compute(db, db.get(Company, bait.company_id), vacancy=bait)
+        assert t["offer_salary"]["status"] == "warn"
+        db.execute(delete(Vacancy).where(Vacancy.is_demo.is_(True)))
+        for c in made:
+            db.execute(delete(Company).where(Company.id == c.id))
+        db.commit()
