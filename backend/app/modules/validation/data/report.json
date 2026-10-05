@@ -1,0 +1,1177 @@
+{
+ "generated_at": "2026-10-05T13:17:20+00:00",
+ "n_per_direction": 400,
+ "quick": false,
+ "bank": {
+  "n_families": 128,
+  "content_hash": "2cd0b0746c9f776d",
+  "commit": "b324325",
+  "synced_at": "2026-10-05T12:35:05+00:00",
+  "by_direction": {
+   "backend": {
+    "families": 22,
+    "canary": 2,
+    "formats": {
+     "choose_fix": 5,
+     "predict_output": 5,
+     "find_bug": 4,
+     "open_book_3step": 4,
+     "open_answer": 2,
+     "mcq_concept": 2
+    }
+   },
+   "common": {
+    "families": 26,
+    "canary": 3,
+    "formats": {
+     "find_bug": 2,
+     "mcq_concept": 8,
+     "predict_output": 7,
+     "open_book_3step": 4,
+     "choose_fix": 3,
+     "open_answer": 2
+    }
+   },
+   "data_ml": {
+    "families": 20,
+    "canary": 1,
+    "formats": {
+     "mcq_concept": 2,
+     "choose_fix": 5,
+     "find_bug": 5,
+     "predict_output": 5,
+     "open_answer": 1,
+     "open_book_3step": 2
+    }
+   },
+   "frontend": {
+    "families": 23,
+    "canary": 2,
+    "formats": {
+     "mcq_concept": 4,
+     "open_book_3step": 4,
+     "open_answer": 3,
+     "predict_output": 4,
+     "choose_fix": 4,
+     "find_bug": 4
+    }
+   },
+   "qa": {
+    "families": 19,
+    "canary": 1,
+    "formats": {
+     "open_book_3step": 2,
+     "mcq_concept": 5,
+     "find_bug": 5,
+     "choose_fix": 2,
+     "predict_output": 4,
+     "open_answer": 1
+    }
+   },
+   "security": {
+    "families": 18,
+    "canary": 1,
+    "formats": {
+     "predict_output": 3,
+     "mcq_concept": 3,
+     "choose_fix": 4,
+     "open_answer": 2,
+     "find_bug": 4,
+     "open_book_3step": 2
+    }
+   }
+  },
+  "validator": {
+   "n_families": 128,
+   "n_variants_generated": 2560,
+   "n_unique_variants": 2542,
+   "n_checks": 1113,
+   "n_checks_failed": 0,
+   "status": {
+    "PASS": 113,
+    "WARN": 15
+   }
+  },
+  "note": "Валидатор банка: каждое семейство × 20 seed — генерация детерминирована, ключ проверен исполнением эталонного решения, инварианты формата соблюдены. WARN — предупреждения качества (например, похожие дистракторы), не ошибки ключа."
+ },
+ "calibration": {
+  "status": "expected",
+  "panels": [
+   "panel_20261005",
+   "panel_common.py"
+  ],
+  "note": "Калибровка на панели ответов ещё не завершена: параметры заданий — экспертная предкалибровка. Когда появится calibration/panel_*/params.json, `make validate` подхватит её автоматически."
+ },
+ "matching": {
+  "n_needs": 15,
+  "set_size": 20,
+  "n_pairs": 300,
+  "relevant_share": 0.34,
+  "summary": {
+   "p@5": {
+    "platform": 0.893,
+    "keywords": 0.56,
+    "random": 0.343
+   },
+   "ndcg@5": {
+    "platform": 0.906,
+    "keywords": 0.696,
+    "random": 0.431
+   },
+   "ndcg@10": {
+    "platform": 0.94,
+    "keywords": 0.802,
+    "random": 0.506
+   },
+   "within_category_ndcg@3": {
+    "platform": 0.86,
+    "keywords": 0.942,
+    "random": 0.782
+   },
+   "within_category_needs": 11
+  },
+  "per_need": [
+   {
+    "need": "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс.",
+    "direction": "backend",
+    "grade": "middle",
+    "relevant": 7,
+    "labels": {
+     "0": 7,
+     "1": 6,
+     "2": 6,
+     "3": 1
+    },
+    "platform": {
+     "p@5": 0.8,
+     "ndcg@5": 0.622,
+     "ndcg@10": 0.817
+    },
+    "keywords": {
+     "p@5": 0.6,
+     "ndcg@5": 0.662,
+     "ndcg@10": 0.656
+    },
+    "random": {
+     "p@5": 0.358,
+     "ndcg@5": 0.37,
+     "ndcg@10": 0.455
+    }
+   },
+   {
+    "need": "Нужен senior Java-разработчик для платёжного ядра: Java, PostgreSQL, Kafka, gRPC обязательно. Гибрид, Санкт-Петербург.",
+    "direction": "backend",
+    "grade": "senior",
+    "relevant": 8,
+    "labels": {
+     "0": 6,
+     "1": 6,
+     "2": 8,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0
+    },
+    "keywords": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.984
+    },
+    "random": {
+     "p@5": 0.389,
+     "ndcg@5": 0.499,
+     "ndcg@10": 0.548
+    }
+   },
+   {
+    "need": "Data Scientist middle: Python, pandas, scikit-learn, статистика, SQL. Желательно Airflow и ClickHouse. 200–280 тыс. ₽",
+    "direction": "data_ml",
+    "grade": "middle",
+    "relevant": 7,
+    "labels": {
+     "0": 6,
+     "1": 7,
+     "2": 7,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 0.8,
+     "ndcg@5": 0.903,
+     "ndcg@10": 0.981
+    },
+    "keywords": {
+     "p@5": 0.8,
+     "ndcg@5": 0.774,
+     "ndcg@10": 0.867
+    },
+    "random": {
+     "p@5": 0.345,
+     "ndcg@5": 0.462,
+     "ndcg@10": 0.54
+    }
+   },
+   {
+    "need": "Junior аналитик данных/ML: Python, pandas, SQL; будет плюсом опыт с numpy. Офис в Москве или гибрид.",
+    "direction": "data_ml",
+    "grade": "junior",
+    "relevant": 8,
+    "labels": {
+     "0": 6,
+     "1": 6,
+     "2": 7,
+     "3": 1
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 0.823,
+     "ndcg@10": 0.862
+    },
+    "keywords": {
+     "p@5": 0.4,
+     "ndcg@5": 0.764,
+     "ndcg@10": 0.851
+    },
+    "random": {
+     "p@5": 0.397,
+     "ndcg@5": 0.395,
+     "ndcg@10": 0.475
+    }
+   },
+   {
+    "need": "Специалист по ИБ middle: OWASP, Burp Suite, пентест веб-приложений, сетевая безопасность. Желательно CTF.",
+    "direction": "security",
+    "grade": "middle",
+    "relevant": 8,
+    "labels": {
+     "0": 6,
+     "1": 6,
+     "2": 8,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0
+    },
+    "keywords": {
+     "p@5": 0.2,
+     "ndcg@5": 0.421,
+     "ndcg@10": 0.683
+    },
+    "random": {
+     "p@5": 0.417,
+     "ndcg@5": 0.516,
+     "ndcg@10": 0.555
+    }
+   },
+   {
+    "need": "Senior SOC-аналитик: SIEM/SOC, форензика, сетевая безопасность, Linux. Удалённо.",
+    "direction": "security",
+    "grade": "senior",
+    "relevant": 7,
+    "labels": {
+     "0": 6,
+     "1": 7,
+     "2": 6,
+     "3": 1
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.998
+    },
+    "keywords": {
+     "p@5": 0.4,
+     "ndcg@5": 0.68,
+     "ndcg@10": 0.778
+    },
+    "random": {
+     "p@5": 0.34,
+     "ndcg@5": 0.373,
+     "ndcg@10": 0.466
+    }
+   },
+   {
+    "need": "Frontend-разработчик middle: React, TypeScript, HTML/CSS обязательно; Next.js будет плюсом. 180–250 тыс.",
+    "direction": "frontend",
+    "grade": "middle",
+    "relevant": 8,
+    "labels": {
+     "0": 6,
+     "1": 6,
+     "2": 8,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0
+    },
+    "keywords": {
+     "p@5": 0.6,
+     "ndcg@5": 0.677,
+     "ndcg@10": 0.759
+    },
+    "random": {
+     "p@5": 0.401,
+     "ndcg@5": 0.5,
+     "ndcg@10": 0.552
+    }
+   },
+   {
+    "need": "Бэкенд junior: Python, Django, SQL, Git. Обучим остальному. Казань или удалённо.",
+    "direction": "backend",
+    "grade": "junior",
+    "relevant": 1,
+    "labels": {
+     "0": 9,
+     "1": 10,
+     "2": 1,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 0.2,
+     "ndcg@5": 0.764,
+     "ndcg@10": 0.723
+    },
+    "keywords": {
+     "p@5": 0.0,
+     "ndcg@5": 0.509,
+     "ndcg@10": 0.596
+    },
+    "random": {
+     "p@5": 0.055,
+     "ndcg@5": 0.381,
+     "ndcg@10": 0.445
+    }
+   },
+   {
+    "need": "QA-инженер middle: тест-дизайн, API-тестирование, pytest; желательно Playwright и Allure.",
+    "direction": "qa",
+    "grade": "middle",
+    "relevant": 8,
+    "labels": {
+     "0": 6,
+     "1": 6,
+     "2": 2,
+     "3": 6
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 0.806,
+     "ndcg@10": 0.89
+    },
+    "keywords": {
+     "p@5": 0.8,
+     "ndcg@5": 0.709,
+     "ndcg@10": 0.805
+    },
+    "random": {
+     "p@5": 0.408,
+     "ndcg@5": 0.383,
+     "ndcg@10": 0.479
+    }
+   },
+   {
+    "need": "Senior Go-разработчик для маршрутизации: Go, PostgreSQL, Kafka, Docker. От 5 лет опыта.",
+    "direction": "backend",
+    "grade": "senior",
+    "relevant": 6,
+    "labels": {
+     "0": 6,
+     "1": 8,
+     "2": 6,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.973
+    },
+    "keywords": {
+     "p@5": 0.6,
+     "ndcg@5": 0.631,
+     "ndcg@10": 0.824
+    },
+    "random": {
+     "p@5": 0.307,
+     "ndcg@5": 0.443,
+     "ndcg@10": 0.537
+    }
+   },
+   {
+    "need": "Junior frontend: JavaScript, HTML/CSS, React. Желательно TypeScript. Томск, офис или гибрид.",
+    "direction": "frontend",
+    "grade": "junior",
+    "relevant": 8,
+    "labels": {
+     "0": 6,
+     "1": 6,
+     "2": 8,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0
+    },
+    "keywords": {
+     "p@5": 0.8,
+     "ndcg@5": 0.774,
+     "ndcg@10": 0.775
+    },
+    "random": {
+     "p@5": 0.408,
+     "ndcg@5": 0.508,
+     "ndcg@10": 0.548
+    }
+   },
+   {
+    "need": "ML-инженер senior: PyTorch, компьютерное зрение (CV), MLOps, Python. Желательно Spark.",
+    "direction": "data_ml",
+    "grade": "senior",
+    "relevant": 7,
+    "labels": {
+     "0": 6,
+     "1": 7,
+     "2": 7,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0
+    },
+    "keywords": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.991
+    },
+    "random": {
+     "p@5": 0.349,
+     "ndcg@5": 0.471,
+     "ndcg@10": 0.534
+    }
+   },
+   {
+    "need": "Senior frontend: TypeScript, React, state management, доступность (a11y), тестирование фронтенда.",
+    "direction": "frontend",
+    "grade": "senior",
+    "relevant": 8,
+    "labels": {
+     "0": 6,
+     "1": 6,
+     "2": 2,
+     "3": 6
+    },
+    "platform": {
+     "p@5": 1.0,
+     "ndcg@5": 0.878,
+     "ndcg@10": 0.951
+    },
+    "keywords": {
+     "p@5": 0.6,
+     "ndcg@5": 0.742,
+     "ndcg@10": 0.886
+    },
+    "random": {
+     "p@5": 0.404,
+     "ndcg@5": 0.395,
+     "ndcg@10": 0.491
+    }
+   },
+   {
+    "need": "Junior QA: ручное тестирование, тест-дизайн, SQL, основы API-тестирования. Самара, офис.",
+    "direction": "qa",
+    "grade": "junior",
+    "relevant": 5,
+    "labels": {
+     "0": 10,
+     "1": 5,
+     "2": 5,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 0.8,
+     "ndcg@5": 0.913,
+     "ndcg@10": 0.961
+    },
+    "keywords": {
+     "p@5": 0.2,
+     "ndcg@5": 0.432,
+     "ndcg@10": 0.678
+    },
+    "random": {
+     "p@5": 0.244,
+     "ndcg@5": 0.315,
+     "ndcg@10": 0.425
+    }
+   },
+   {
+    "need": "Автоматизатор тестирования senior: Python, pytest, Selenium или Playwright, CI/CD, нагрузочное тестирование.",
+    "direction": "qa",
+    "grade": "senior",
+    "relevant": 6,
+    "labels": {
+     "0": 6,
+     "1": 8,
+     "2": 6,
+     "3": 0
+    },
+    "platform": {
+     "p@5": 0.8,
+     "ndcg@5": 0.887,
+     "ndcg@10": 0.941
+    },
+    "keywords": {
+     "p@5": 0.4,
+     "ndcg@5": 0.672,
+     "ndcg@10": 0.903
+    },
+    "random": {
+     "p@5": 0.323,
+     "ndcg@5": 0.453,
+     "ndcg@10": 0.542
+    }
+   }
+  ],
+  "caveat": "Фильтр по категории в подборке и грейд в разметке совпадают по смыслу, поэтому общий p@5 завышает преимущество платформы над поиском по ключевым словам; честнее сравнение внутри категории (within_category_ndcg@3).",
+  "method": "Разметка по правилам требований (направление, грейд, обязательные навыки, формат); релевантен — метка ≥ 2 из 3. Синтетические демо-данные; экспертная разметка — следующий шаг."
+ },
+ "simulation": {
+  "config": {
+   "min_items": 8,
+   "max_items": 16,
+   "se_target": 0.35,
+   "max_minutes": 60,
+   "subpools": 2,
+   "exposure": true,
+   "max_per_format": {
+    "open_book_3step": 2,
+    "open_answer": 1
+   }
+  },
+  "baseline": {
+   "max_items": 20,
+   "max_minutes": 90,
+   "subpools": 1,
+   "exposure": false,
+   "max_per_format": {}
+  },
+  "population": "θ ~ N(0, 1), n = 400 на направление; истинные параметры = предкалибровка + ошибка эксперта σ = 0,5 (по трудности семейства); время ответа — логнормальная модель банка",
+  "directions": {
+   "backend": {
+    "app": {
+     "n": 400,
+     "r_theta": 0.887,
+     "rmse": 0.468,
+     "bias": -0.071,
+     "mean_se": 0.466,
+     "ci95_coverage": 0.945,
+     "mean_items": 14.71,
+     "grade_exact": 0.703,
+     "grade_within_1": 1.0,
+     "decision_accuracy": 0.695,
+     "false_confirm_rate": 0.038,
+     "false_reject_rate": 0.438,
+     "mean_time_min": 50.2,
+     "ob3_max": 2
+    },
+    "baseline_day2": {
+     "n": 400,
+     "r_theta": 0.918,
+     "rmse": 0.4,
+     "bias": -0.044,
+     "mean_se": 0.385,
+     "ci95_coverage": 0.948,
+     "mean_items": 16.13,
+     "grade_exact": 0.718,
+     "grade_within_1": 1.0,
+     "decision_accuracy": 0.743,
+     "false_confirm_rate": 0.03,
+     "false_reject_rate": 0.371,
+     "mean_time_min": 78.6,
+     "ob3_max": 8
+    },
+    "retest": {
+     "n": 200,
+     "r_theta": 0.823,
+     "grade_exact_agreement": 0.67,
+     "grade_within_1": 0.985,
+     "grade_kappa_quadratic": 0.768,
+     "decision_agreement": 0.73,
+     "mean_items": 14.7
+    },
+    "exposure": {
+     "app": {
+      "families": 43,
+      "max_rate": 0.505,
+      "mean_rate": 0.342,
+      "unused_share": 0.023,
+      "share_over_rmax": 0.744,
+      "r_max": 0.3
+     },
+     "baseline_day2": {
+      "families": 43,
+      "max_rate": 1.0,
+      "mean_rate": 0.375,
+      "unused_share": 0.093,
+      "share_over_rmax": 0.442,
+      "r_max": 0.3
+     }
+    },
+    "leak": {
+     "threshold": 2.534,
+     "leak_share": 0.3,
+     "cheater_share": 0.25,
+     "fpr_target": 0.01,
+     "no_leak": {
+      "n": 400,
+      "n_cheaters": 93,
+      "cheaters_bias_theta": -0.057,
+      "honest_bias_theta": -0.055,
+      "cheaters_grade_inflated": 0.108,
+      "cheaters_false_confirm": 0.094,
+      "honest_false_confirm": 0.062
+     },
+     "leak_no_detector": {
+      "n": 400,
+      "n_cheaters": 93,
+      "cheaters_bias_theta": 0.542,
+      "honest_bias_theta": -0.109,
+      "cheaters_grade_inflated": 0.484,
+      "cheaters_false_confirm": 0.5,
+      "honest_false_confirm": 0.053
+     },
+     "leak_detector": {
+      "n": 400,
+      "n_cheaters": 93,
+      "cheaters_bias_theta": 0.394,
+      "honest_bias_theta": -0.08,
+      "cheaters_grade_inflated": 0.387,
+      "cheaters_false_confirm": 0.5,
+      "honest_false_confirm": 0.044,
+      "detector_tpr": 0.677,
+      "detector_fpr": 0.01
+     },
+     "leak_detector_rotation": {
+      "n": 400,
+      "n_cheaters": 93,
+      "cheaters_bias_theta": -0.089,
+      "honest_bias_theta": -0.045,
+      "cheaters_grade_inflated": 0.118,
+      "cheaters_false_confirm": 0.062,
+      "honest_false_confirm": 0.097,
+      "detector_tpr": 0.903,
+      "detector_fpr": 0.013
+     }
+    },
+    "seconds": 19.4
+   },
+   "frontend": {
+    "app": {
+     "n": 400,
+     "r_theta": 0.871,
+     "rmse": 0.525,
+     "bias": 0.089,
+     "mean_se": 0.459,
+     "ci95_coverage": 0.917,
+     "mean_items": 14.73,
+     "grade_exact": 0.677,
+     "grade_within_1": 0.988,
+     "decision_accuracy": 0.745,
+     "false_confirm_rate": 0.155,
+     "false_reject_rate": 0.303,
+     "mean_time_min": 50.5,
+     "ob3_max": 2
+    },
+    "baseline_day2": {
+     "n": 400,
+     "r_theta": 0.923,
+     "rmse": 0.406,
+     "bias": 0.01,
+     "mean_se": 0.383,
+     "ci95_coverage": 0.938,
+     "mean_items": 15.76,
+     "grade_exact": 0.74,
+     "grade_within_1": 1.0,
+     "decision_accuracy": 0.795,
+     "false_confirm_rate": 0.07,
+     "false_reject_rate": 0.269,
+     "mean_time_min": 78.2,
+     "ob3_max": 8
+    },
+    "retest": {
+     "n": 200,
+     "r_theta": 0.754,
+     "grade_exact_agreement": 0.53,
+     "grade_within_1": 0.96,
+     "grade_kappa_quadratic": 0.626,
+     "decision_agreement": 0.695,
+     "mean_items": 14.73
+    },
+    "exposure": {
+     "app": {
+      "families": 44,
+      "max_rate": 0.495,
+      "mean_rate": 0.335,
+      "unused_share": 0.0,
+      "share_over_rmax": 0.591,
+      "r_max": 0.3
+     },
+     "baseline_day2": {
+      "families": 44,
+      "max_rate": 0.998,
+      "mean_rate": 0.358,
+      "unused_share": 0.068,
+      "share_over_rmax": 0.432,
+      "r_max": 0.3
+     }
+    },
+    "leak": {
+     "threshold": 1.898,
+     "leak_share": 0.3,
+     "cheater_share": 0.25,
+     "fpr_target": 0.01,
+     "no_leak": {
+      "n": 400,
+      "n_cheaters": 95,
+      "cheaters_bias_theta": 0.049,
+      "honest_bias_theta": 0.096,
+      "cheaters_grade_inflated": 0.179,
+      "cheaters_false_confirm": 0.24,
+      "honest_false_confirm": 0.17
+     },
+     "leak_no_detector": {
+      "n": 400,
+      "n_cheaters": 95,
+      "cheaters_bias_theta": 0.587,
+      "honest_bias_theta": 0.062,
+      "cheaters_grade_inflated": 0.484,
+      "cheaters_false_confirm": 0.64,
+      "honest_false_confirm": 0.096
+     },
+     "leak_detector": {
+      "n": 400,
+      "n_cheaters": 95,
+      "cheaters_bias_theta": 0.284,
+      "honest_bias_theta": 0.067,
+      "cheaters_grade_inflated": 0.379,
+      "cheaters_false_confirm": 0.36,
+      "honest_false_confirm": 0.064,
+      "detector_tpr": 0.705,
+      "detector_fpr": 0.013
+     },
+     "leak_detector_rotation": {
+      "n": 400,
+      "n_cheaters": 95,
+      "cheaters_bias_theta": 0.017,
+      "honest_bias_theta": 0.036,
+      "cheaters_grade_inflated": 0.242,
+      "cheaters_false_confirm": 0.24,
+      "honest_false_confirm": 0.138,
+      "detector_tpr": 0.884,
+      "detector_fpr": 0.003
+     }
+    },
+    "seconds": 19.5
+   },
+   "data_ml": {
+    "app": {
+     "n": 400,
+     "r_theta": 0.888,
+     "rmse": 0.449,
+     "bias": -0.04,
+     "mean_se": 0.461,
+     "ci95_coverage": 0.953,
+     "mean_items": 15.09,
+     "grade_exact": 0.67,
+     "grade_within_1": 0.995,
+     "decision_accuracy": 0.657,
+     "false_confirm_rate": 0.071,
+     "false_reject_rate": 0.432,
+     "mean_time_min": 49.7,
+     "ob3_max": 2
+    },
+    "baseline_day2": {
+     "n": 400,
+     "r_theta": 0.919,
+     "rmse": 0.384,
+     "bias": -0.017,
+     "mean_se": 0.381,
+     "ci95_coverage": 0.948,
+     "mean_items": 18.06,
+     "grade_exact": 0.755,
+     "grade_within_1": 1.0,
+     "decision_accuracy": 0.738,
+     "false_confirm_rate": 0.081,
+     "false_reject_rate": 0.322,
+     "mean_time_min": 77.5,
+     "ob3_max": 6
+    },
+    "retest": {
+     "n": 200,
+     "r_theta": 0.796,
+     "grade_exact_agreement": 0.535,
+     "grade_within_1": 0.975,
+     "grade_kappa_quadratic": 0.707,
+     "decision_agreement": 0.755,
+     "mean_items": 15.1
+    },
+    "exposure": {
+     "app": {
+      "families": 42,
+      "max_rate": 0.535,
+      "mean_rate": 0.359,
+      "unused_share": 0.024,
+      "share_over_rmax": 0.786,
+      "r_max": 0.3
+     },
+     "baseline_day2": {
+      "families": 42,
+      "max_rate": 1.0,
+      "mean_rate": 0.43,
+      "unused_share": 0.071,
+      "share_over_rmax": 0.571,
+      "r_max": 0.3
+     }
+    },
+    "leak": {
+     "threshold": 2.255,
+     "leak_share": 0.3,
+     "cheater_share": 0.25,
+     "fpr_target": 0.01,
+     "no_leak": {
+      "n": 400,
+      "n_cheaters": 98,
+      "cheaters_bias_theta": -0.014,
+      "honest_bias_theta": -0.049,
+      "cheaters_grade_inflated": 0.133,
+      "cheaters_false_confirm": 0.069,
+      "honest_false_confirm": 0.077
+     },
+     "leak_no_detector": {
+      "n": 400,
+      "n_cheaters": 98,
+      "cheaters_bias_theta": 0.527,
+      "honest_bias_theta": -0.042,
+      "cheaters_grade_inflated": 0.408,
+      "cheaters_false_confirm": 0.517,
+      "honest_false_confirm": 0.154
+     },
+     "leak_detector": {
+      "n": 400,
+      "n_cheaters": 98,
+      "cheaters_bias_theta": 0.313,
+      "honest_bias_theta": 0.01,
+      "cheaters_grade_inflated": 0.327,
+      "cheaters_false_confirm": 0.31,
+      "honest_false_confirm": 0.09,
+      "detector_tpr": 0.765,
+      "detector_fpr": 0.01
+     },
+     "leak_detector_rotation": {
+      "n": 400,
+      "n_cheaters": 98,
+      "cheaters_bias_theta": -0.067,
+      "honest_bias_theta": 0.016,
+      "cheaters_grade_inflated": 0.122,
+      "cheaters_false_confirm": 0.069,
+      "honest_false_confirm": 0.115,
+      "detector_tpr": 0.918,
+      "detector_fpr": 0.0
+     }
+    },
+    "seconds": 20.5
+   },
+   "qa": {
+    "app": {
+     "n": 400,
+     "r_theta": 0.892,
+     "rmse": 0.463,
+     "bias": 0.037,
+     "mean_se": 0.467,
+     "ci95_coverage": 0.958,
+     "mean_items": 14.67,
+     "grade_exact": 0.688,
+     "grade_within_1": 1.0,
+     "decision_accuracy": 0.738,
+     "false_confirm_rate": 0.098,
+     "false_reject_rate": 0.336,
+     "mean_time_min": 50.2,
+     "ob3_max": 2
+    },
+    "baseline_day2": {
+     "n": 400,
+     "r_theta": 0.925,
+     "rmse": 0.392,
+     "bias": 0.055,
+     "mean_se": 0.386,
+     "ci95_coverage": 0.963,
+     "mean_items": 17.67,
+     "grade_exact": 0.72,
+     "grade_within_1": 1.0,
+     "decision_accuracy": 0.75,
+     "false_confirm_rate": 0.146,
+     "false_reject_rate": 0.296,
+     "mean_time_min": 79.0,
+     "ob3_max": 6
+    },
+    "retest": {
+     "n": 200,
+     "r_theta": 0.81,
+     "grade_exact_agreement": 0.59,
+     "grade_within_1": 0.99,
+     "grade_kappa_quadratic": 0.722,
+     "decision_agreement": 0.735,
+     "mean_items": 14.81
+    },
+    "exposure": {
+     "app": {
+      "families": 41,
+      "max_rate": 0.49,
+      "mean_rate": 0.358,
+      "unused_share": 0.024,
+      "share_over_rmax": 0.78,
+      "r_max": 0.3
+     },
+     "baseline_day2": {
+      "families": 41,
+      "max_rate": 1.0,
+      "mean_rate": 0.431,
+      "unused_share": 0.073,
+      "share_over_rmax": 0.585,
+      "r_max": 0.3
+     }
+    },
+    "leak": {
+     "threshold": 1.584,
+     "leak_share": 0.3,
+     "cheater_share": 0.25,
+     "fpr_target": 0.01,
+     "no_leak": {
+      "n": 400,
+      "n_cheaters": 98,
+      "cheaters_bias_theta": 0.055,
+      "honest_bias_theta": 0.03,
+      "cheaters_grade_inflated": 0.163,
+      "cheaters_false_confirm": 0.069,
+      "honest_false_confirm": 0.179
+     },
+     "leak_no_detector": {
+      "n": 400,
+      "n_cheaters": 98,
+      "cheaters_bias_theta": 0.669,
+      "honest_bias_theta": 0.031,
+      "cheaters_grade_inflated": 0.551,
+      "cheaters_false_confirm": 0.552,
+      "honest_false_confirm": 0.115
+     },
+     "leak_detector": {
+      "n": 400,
+      "n_cheaters": 98,
+      "cheaters_bias_theta": 0.277,
+      "honest_bias_theta": 0.06,
+      "cheaters_grade_inflated": 0.337,
+      "cheaters_false_confirm": 0.276,
+      "honest_false_confirm": 0.103,
+      "detector_tpr": 0.714,
+      "detector_fpr": 0.003
+     },
+     "leak_detector_rotation": {
+      "n": 400,
+      "n_cheaters": 98,
+      "cheaters_bias_theta": 0.05,
+      "honest_bias_theta": 0.027,
+      "cheaters_grade_inflated": 0.173,
+      "cheaters_false_confirm": 0.138,
+      "honest_false_confirm": 0.154,
+      "detector_tpr": 0.918,
+      "detector_fpr": 0.017
+     }
+    },
+    "seconds": 19.6
+   },
+   "security": {
+    "app": {
+     "n": 400,
+     "r_theta": 0.865,
+     "rmse": 0.499,
+     "bias": -0.085,
+     "mean_se": 0.475,
+     "ci95_coverage": 0.943,
+     "mean_items": 14.7,
+     "grade_exact": 0.65,
+     "grade_within_1": 0.998,
+     "decision_accuracy": 0.64,
+     "false_confirm_rate": 0.056,
+     "false_reject_rate": 0.471,
+     "mean_time_min": 50.7,
+     "ob3_max": 2
+    },
+    "baseline_day2": {
+     "n": 400,
+     "r_theta": 0.918,
+     "rmse": 0.4,
+     "bias": -0.093,
+     "mean_se": 0.39,
+     "ci95_coverage": 0.943,
+     "mean_items": 16.8,
+     "grade_exact": 0.743,
+     "grade_within_1": 1.0,
+     "decision_accuracy": 0.735,
+     "false_confirm_rate": 0.009,
+     "false_reject_rate": 0.358,
+     "mean_time_min": 80.9,
+     "ob3_max": 6
+    },
+    "retest": {
+     "n": 200,
+     "r_theta": 0.782,
+     "grade_exact_agreement": 0.535,
+     "grade_within_1": 0.965,
+     "grade_kappa_quadratic": 0.661,
+     "decision_agreement": 0.685,
+     "mean_items": 14.6
+    },
+    "exposure": {
+     "app": {
+      "families": 40,
+      "max_rate": 0.49,
+      "mean_rate": 0.367,
+      "unused_share": 0.0,
+      "share_over_rmax": 0.725,
+      "r_max": 0.3
+     },
+     "baseline_day2": {
+      "families": 40,
+      "max_rate": 1.0,
+      "mean_rate": 0.42,
+      "unused_share": 0.075,
+      "share_over_rmax": 0.55,
+      "r_max": 0.3
+     }
+    },
+    "leak": {
+     "threshold": 1.969,
+     "leak_share": 0.3,
+     "cheater_share": 0.25,
+     "fpr_target": 0.01,
+     "no_leak": {
+      "n": 400,
+      "n_cheaters": 97,
+      "cheaters_bias_theta": -0.127,
+      "honest_bias_theta": -0.086,
+      "cheaters_grade_inflated": 0.103,
+      "cheaters_false_confirm": 0.067,
+      "honest_false_confirm": 0.069
+     },
+     "leak_no_detector": {
+      "n": 400,
+      "n_cheaters": 97,
+      "cheaters_bias_theta": 0.447,
+      "honest_bias_theta": -0.066,
+      "cheaters_grade_inflated": 0.454,
+      "cheaters_false_confirm": 0.567,
+      "honest_false_confirm": 0.0
+     },
+     "leak_detector": {
+      "n": 400,
+      "n_cheaters": 97,
+      "cheaters_bias_theta": 0.283,
+      "honest_bias_theta": -0.095,
+      "cheaters_grade_inflated": 0.34,
+      "cheaters_false_confirm": 0.2,
+      "honest_false_confirm": 0.069,
+      "detector_tpr": 0.639,
+      "detector_fpr": 0.013
+     },
+     "leak_detector_rotation": {
+      "n": 400,
+      "n_cheaters": 97,
+      "cheaters_bias_theta": -0.118,
+      "honest_bias_theta": -0.116,
+      "cheaters_grade_inflated": 0.175,
+      "cheaters_false_confirm": 0.0,
+      "honest_false_confirm": 0.046,
+      "detector_tpr": 0.825,
+      "detector_fpr": 0.007
+     }
+    },
+    "seconds": 19.4
+   }
+  },
+  "mean": {
+   "r_theta": 0.881,
+   "rmse": 0.481,
+   "mean_items": 14.78,
+   "mean_time_min": 50.26,
+   "grade_exact": 0.678,
+   "decision_accuracy": 0.695,
+   "false_confirm_rate": 0.084,
+   "false_reject_rate": 0.396
+  },
+  "mean_baseline": {
+   "r_theta": 0.921,
+   "rmse": 0.396,
+   "mean_items": 16.884,
+   "mean_time_min": 78.84,
+   "grade_exact": 0.735,
+   "decision_accuracy": 0.752,
+   "false_confirm_rate": 0.067,
+   "false_reject_rate": 0.323
+  }
+ },
+ "exposure_calibration": {
+  "method": "Sympson-Hetter (безусловный), калибровка симуляцией",
+  "r_max": 0.3,
+  "sessions_per_iteration": 300,
+  "iterations": 6,
+  "history": {
+   "backend": [
+    0.5,
+    0.497,
+    0.483,
+    0.497,
+    0.49,
+    0.493
+   ],
+   "frontend": [
+    0.5,
+    0.5,
+    0.5,
+    0.497,
+    0.497,
+    0.5
+   ],
+   "data_ml": [
+    0.5,
+    0.497,
+    0.493,
+    0.487,
+    0.497,
+    0.487
+   ],
+   "qa": [
+    0.5,
+    0.497,
+    0.49,
+    0.483,
+    0.483,
+    0.497
+   ],
+   "security": [
+    0.5,
+    0.5,
+    0.5,
+    0.497,
+    0.493,
+    0.493
+   ]
+  },
+  "generated_at": "2026-10-05T12:50:37+00:00"
+ },
+ "seconds": 102.0
+}

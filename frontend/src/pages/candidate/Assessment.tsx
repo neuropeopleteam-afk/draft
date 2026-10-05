@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, useApi } from "../../components/ui";
@@ -282,8 +282,33 @@ export function TestRun() {
   const [busy, setBusy] = useState(false);
   const [shownAt, setShownAt] = useState(Date.now());
   const [now, setNow] = useState(Date.now());
+  // Сигналы честности за текущее задание (античит): уход со вкладки/окна и вставка текста.
+  // Влияют только на «достоверность результата», которую видит работодатель; кандидат предупреждён.
+  const sig = useRef({ focus_lost: 0, hidden_ms: 0, paste: 0, paste_chars: 0, awaySince: 0 });
+  const [away, setAway] = useState({ focus: 0, paste: 0 });
 
-  function show(x: any) { setS(x); setValue(null); setShownAt(Date.now() - (x?.item?.elapsed_s ?? 0) * 1000); }
+  function show(x: any) {
+    setS(x); setValue(null); setShownAt(Date.now() - (x?.item?.elapsed_s ?? 0) * 1000);
+    sig.current = { focus_lost: 0, hidden_ms: 0, paste: 0, paste_chars: 0, awaySince: 0 };
+  }
+  useEffect(() => {
+    const leave = () => { if (!sig.current.awaySince) { sig.current.focus_lost += 1; sig.current.awaySince = Date.now(); setAway((a) => ({ ...a, focus: a.focus + 1 })); } };
+    const back = () => { if (sig.current.awaySince) { sig.current.hidden_ms += Date.now() - sig.current.awaySince; sig.current.awaySince = 0; } };
+    const vis = () => (document.visibilityState === "hidden" ? leave() : back());
+    window.addEventListener("blur", leave); window.addEventListener("focus", back);
+    document.addEventListener("visibilitychange", vis);
+    return () => { window.removeEventListener("blur", leave); window.removeEventListener("focus", back); document.removeEventListener("visibilitychange", vis); };
+  }, []);
+  function onPaste(e: ClipboardEvent) {
+    const n = e.clipboardData.getData("text").length;
+    sig.current.paste += 1; sig.current.paste_chars += n;
+    setAway((a) => ({ ...a, paste: a.paste + 1 }));
+  }
+  function signals() {
+    const c = sig.current;
+    const extra = c.awaySince ? Date.now() - c.awaySince : 0;
+    return { focus_lost: c.focus_lost, hidden_ms: c.hidden_ms + extra, paste: c.paste, paste_chars: c.paste_chars };
+  }
   useEffect(() => { api<any>(`/assessment/sessions/${id}`).then(show).catch((e) => setError(errText(e))); }, [id]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
@@ -299,7 +324,7 @@ export function TestRun() {
     setBusy(true); setError(null);
     try {
       const n = await api<any>(`/assessment/sessions/${id}/answers`, {
-        body: { item_id: it.item_id, answer: value, step: it.step ?? null, time_spent_ms: Math.max(0, Date.now() - shownAt) },
+        body: { item_id: it.item_id, answer: value, step: it.step ?? null, time_spent_ms: Math.max(0, Date.now() - shownAt), signals: signals() },
       });
       if (!n.item) { setS(n); setBusy(false); await finish(); return; }
       show(n);
@@ -374,8 +399,14 @@ export function TestRun() {
           <div className="mt-5"><Field label={it.format === "predict_output" ? "Вывод программы" : "Ваш ответ"} htmlFor="ans"
             hint={it.format === "predict_output" ? "Ровно то, что напечатает программа; пробелы в конце строк и пустые строки по краям не важны." : "Ответ оценивается по рубрике (критерии с весами). Не указывайте ФИО и контакты — они вырезаются перед оценкой."}>
             <textarea id="ans" className={`input min-h-[8rem] ${it.format === "predict_output" ? "font-mono text-[13px]" : ""}`} rows={it.format === "predict_output" ? 5 : 9}
-              value={(value as string) ?? ""} onChange={(e) => setValue(e.target.value)} spellCheck={it.format !== "predict_output"} />
+              value={(value as string) ?? ""} onChange={(e) => setValue(e.target.value)} onPaste={onPaste} spellCheck={it.format !== "predict_output"} />
           </Field></div>
+        )}
+        {(away.focus > 0 || away.paste > 0) && (
+          <div className="mt-4"><Alert kind="info">
+            Зафиксировано за тест: {away.focus > 0 ? `уход со вкладки — ${away.focus}` : ""}{away.focus > 0 && away.paste > 0 ? ", " : ""}{away.paste > 0 ? `вставка текста — ${away.paste}` : ""}.
+            Это не блокирует тест, но снижает «достоверность результата», которую видит работодатель.
+          </Alert></div>
         )}
         <div className="mt-4"><Alert>{error}</Alert></div>
         <div className="mt-5 flex justify-end">
@@ -384,7 +415,7 @@ export function TestRun() {
       </div>
       <p className="mt-4 text-xs text-brand-ink/50">
         {it.adaptive ? `Адаптивный тест: следующее задание подбирается по вашим ответам, обычно ${it.min_items}–${it.max_items} заданий. ` : ""}
-        Вернуться к прошлому заданию нельзя. Время ответа фиксирует сервер. Код кандидатов не выполняется; ключи не покидают сервер.
+        Вернуться к прошлому заданию нельзя. Время ответа фиксирует сервер. Интерфейс отмечает уход со вкладки и вставку текста — это входит в «достоверность результата». Код кандидатов не выполняется; ключи не покидают сервер.
       </p>
     </div>
   );

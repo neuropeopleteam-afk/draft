@@ -1,5 +1,5 @@
 import { NavLink, Navigate, Outlet, useNavigate } from "react-router-dom";
-import { useAuth } from "../lib/auth";
+import { cabinetPath, useAuth } from "../lib/auth";
 import type { Role } from "../lib/api";
 import { Logo } from "./Logo";
 
@@ -10,8 +10,8 @@ export function CabinetLayout({ role, sections, title }: { role: Role; sections:
   const navigate = useNavigate();
   if (loading) return <div className="flex min-h-screen items-center justify-center text-brand-ink/60">Загрузка…</div>;
   if (!me) return <Navigate to="/login" replace />;
-  if (me.role !== role) return <Navigate to={me.role === "employer" ? "/employer" : "/candidate"} replace />;
-  const base = role === "employer" ? "/employer" : "/candidate";
+  if (me.role !== role) return <Navigate to={cabinetPath(me.role)} replace />;
+  const base = cabinetPath(role);
 
   return (
     <div className="min-h-screen bg-[#FBF8FC] md:grid md:grid-cols-[17rem_1fr]">

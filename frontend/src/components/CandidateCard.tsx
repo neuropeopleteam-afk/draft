@@ -33,6 +33,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
         <div className="rounded-xl bg-brand-blush/25 p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level="T1" /> Тест</p>
           {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {t.theta >= 0 ? "+" : ""}{t.theta?.toFixed(2)} ± {t.se?.toFixed(2)}</p> : <p className="mt-1 text-brand-ink/55">нет результата</p>}
+          {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
           {c.skills_confirmed?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {c.skills_confirmed.map((s: any) => <span key={s.tag} className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-brand-night">{s.title} {Math.round(s.score * 100)}%</span>)}
@@ -46,6 +47,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
             : fsp.achievements?.length ? (
               <ul className="mt-1 space-y-1 text-brand-ink/75">{fsp.achievements.slice(0, compact ? 2 : 4).map((a: any, i: number) => <li key={i}>{a.text}</li>)}</ul>
             ) : <p className="mt-1 text-brand-ink/55">истории ФСП нет — нейтрально</p>}
+          {fsp.unverified_count > 0 && <p className="mt-1 text-xs text-brand-ink/60">Заявлено без подтверждения реестром: {fsp.unverified_count} — не учитывается</p>}
           {fsp.source === "demo" && <p className="mt-1 text-[11px] text-brand-lavender">демо-реестр</p>}
         </div>
       </div>
@@ -76,5 +78,23 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
         {actions}
       </div>
     </article>
+  );
+}
+
+const INTEGRITY: Record<string, string> = {
+  high: "bg-emerald-50 text-emerald-800 ring-emerald-200",
+  medium: "bg-amber-50 text-amber-900 ring-amber-200",
+  low: "bg-brand-blush text-brand-plum ring-brand/30",
+};
+
+/** Достоверность результата теста (античит): уровень и причины — решение остаётся за человеком. */
+export function Integrity({ v, compact = false }: { v: { level: string; title: string; reasons: string[] }; compact?: boolean }) {
+  return (
+    <div className={`mt-2 rounded-lg px-2.5 py-1.5 text-xs ring-1 ${INTEGRITY[v.level] ?? INTEGRITY.medium}`}>
+      <p className="font-semibold">Достоверность результата: {v.title}</p>
+      {!compact || v.level !== "high" ? (
+        <ul className="mt-0.5 list-disc space-y-0.5 pl-4">{v.reasons.slice(0, compact ? 1 : 3).map((r, i) => <li key={i}>{r}</li>)}</ul>
+      ) : null}
+    </div>
   );
 }

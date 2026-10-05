@@ -1,6 +1,6 @@
 """Демо-учётки для экспертов жюри: вход в один клик, исходное состояние, сброс.
 
-Персоны (почты на зарезервированном домене jury.demo.invalid — письма туда не уходят):
+Персоны (почты на зарезервированном домене example.com, RFC 2606 — письма туда не уходят; учётки is_demo):
 * candidate — Мария Королёва, Backend · Middle: тест пройден НАСТОЯЩИМ движком банка заданий (адаптивная
   сессия, канарейки, детектор, сигналы интерфейса — как у живого кандидата; отвечает «демо-респондент» с
   заданным уровнем), паспорт ФСП из демо-реестра (T2); демо-режим жюри включён — правило 90 дней снято;
@@ -37,7 +37,7 @@ from app.modules.profiles.models import CandidateProfile, Company, EmployerProfi
 from app.modules.profiles.refs import new_public_ref
 
 log = logging.getLogger("jury")
-DOMAIN = "jury.demo.invalid"
+DOMAIN = "jury.example.com"
 EMAILS = {"candidate": f"candidate@{DOMAIN}", "candidate_nofsp": f"candidate-nofsp@{DOMAIN}",
           "employer": f"employer@{DOMAIN}", "expert": f"expert@{DOMAIN}"}
 COMPANY = "Демо жюри: Северный платёж"
@@ -122,7 +122,7 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
     обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений. Возвращает итог finish_session."""
     rng = np.random.default_rng(seed)
     eng = DemoRespondentEngine(rng, theta, pending_left)
-    ts = assessment.start_session(db, user_id, claimed)
+    ts = assessment.start_session(db, user_id, claimed, engine_name="bank")
     st = ts.result["state"]
     for _ in range(60):
         item = eng.next_item(st)

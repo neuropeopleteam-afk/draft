@@ -1,5 +1,5 @@
 // Тонкий клиент к backend. Все запросы идут на тот же origin (/api), в dev — через прокси Vite.
-export type Role = "candidate" | "employer";
+export type Role = "candidate" | "employer" | "admin";
 
 export interface UserOut { id: string; email: string; role: Role; is_email_verified: boolean; created_at: string }
 export interface TokenOut { access_token: string; token_type: string; expires_in: number; user: UserOut }

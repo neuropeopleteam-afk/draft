@@ -94,7 +94,7 @@ def send_verification_code(email: str, code: str) -> None:
 
 def notify(to_email: str, subject: str, lines: list[str], *, is_demo: bool = False, link_path: str = "/") -> bool:
     """Уведомление о событии (приглашение, зонд, ответ). Демо-пользователям письма не отправляются."""
-    if is_demo or to_email.endswith(".invalid"):
+    if is_demo or to_email.endswith((".invalid", "@jury.example.com")):
         log.info("Уведомление демо-пользователю не отправляется: %r", subject)
         return False
     s = get_settings()
