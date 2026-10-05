@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, Level, Loading, Toggle, dt, errText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { FspIdLinkButton } from "../../integrations/FspId";
 import { useAuth } from "../../lib/auth";
 import { useMeta } from "../../lib/meta";
 
@@ -23,6 +24,8 @@ export function Fsp() {
       <section className="card space-y-4">
         <div className="flex items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p></div>
         <p className="text-sm text-brand-ink/70">{data.note}</p>
+        <FspIdLinkButton linkedVia={data.link_source} />
+        <p className="pt-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-ink/45">Или укажите ФСП ID вручную — до подтверждения реестром</p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[16rem] flex-1"><Field label="ФСП ID" htmlFor="fid"><input id="fid" className="input" value={id} onChange={(e) => setId(e.target.value)} placeholder="FSP-123456" /></Field></div>
           <button className="btn-primary" disabled={id.trim().length < 4} onClick={link}>Сохранить</button>

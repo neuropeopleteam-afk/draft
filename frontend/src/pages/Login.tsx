@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthShell, FormError } from "../components/AuthShell";
+import { FspIdLogin } from "../integrations/FspId";
 import { api, ApiError, type TokenOut } from "../lib/api";
 import { cabinetPath, useAuth } from "../lib/auth";
 
@@ -47,6 +48,7 @@ export default function Login() {
         )}
         <button type="submit" className="btn-primary w-full" disabled={busy || !email || !password}>{busy ? "Входим…" : "Войти"}</button>
       </form>
+      <FspIdLogin />
     </AuthShell>
   );
 }

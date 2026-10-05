@@ -248,8 +248,10 @@ def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> di
         "link_source": b.passport.link_source.value if b.passport else None,
         "achievements": c["fsp"]["achievements"],
         "keycloak_ready": bool(get_settings().fsp_oidc_issuer),
-        "note": "Связь через ФСП ID (OIDC, Keycloak) появится после подключения реестра. Без истории ФСП — "
-                "нейтральное состояние: бонуса нет, штрафа нет.",
+        "note": ("Свяжите профиль через ФСП ID (демо-стенд Keycloak, OIDC): достижения придут с уровнем T2. "
+                 if get_settings().fsp_oidc_issuer else
+                 "Связь через ФСП ID (OIDC, Keycloak) появится после подключения реестра. ")
+                + "Без истории ФСП — нейтральное состояние: бонуса нет, штрафа нет.",
     }
 
 

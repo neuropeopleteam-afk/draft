@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Seg, Status, catTitle, dt, errText, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { AtsInvitationActions } from "../../integrations/Ats";
 
 type Market = { from: number; to: number; median?: number } | null | undefined;
 
@@ -161,6 +162,7 @@ export function EmployerInvitations() {
               <p className="mt-1">{[i.contacts.full_name, i.contacts.email, i.contacts.phone, i.contacts.telegram].filter(Boolean).join(" · ")}</p>
             </div>
           ) : <p className="text-brand-ink/55">Контакты откроются после принятия приглашения.</p>}
+          <AtsInvitationActions invitationId={i.id} status={i.status} candidateRef={i.candidate_ref} />
           {i.decline_reason && <p className="text-brand-ink/70">Причина отказа: «{i.decline_reason}»</p>}
           <History items={i.history} />
           {["sent", "viewed"].includes(i.status) && <button className="text-sm font-semibold text-brand-plum hover:underline" onClick={() => withdraw(i.id)}>Отозвать</button>}

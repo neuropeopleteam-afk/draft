@@ -4,6 +4,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Field, Stat, errText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { CompanyTrustCard } from "../../integrations/Trust";
 
 export default function EmployerOverview() {
   const { me } = useAuth();
@@ -79,6 +80,7 @@ export function Company() {
         <Field label="Телефон" htmlFor="cp"><input id="cp" className="input" value={f.contact_phone} onChange={set("contact_phone")} /></Field>
         <div className="flex items-end"><button className="btn-primary" onClick={save}>Сохранить</button></div>
       </section>
+      <CompanyTrustCard key={`${c.inn ?? ""}|${c.website ?? ""}`} hasInn={!!c.inn} />
     </div>
   );
 }
