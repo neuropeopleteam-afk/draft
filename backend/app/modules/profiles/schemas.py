@@ -29,6 +29,11 @@ class CandidateProfileOut(_ORM):
     grade_locked_until: datetime | None
     visible_to_employers: bool
     privacy: dict
+    public_ref: str | None = Field(None, description="Обезличенный идентификатор для работодателей")
+    onboarding_completed_at: datetime | None = None
+    roles: list = Field(default_factory=list)
+    fsp_id_claimed: str | None = None
+    jury_mode: bool = False
 
 
 class CandidateProfileUpdate(BaseModel):
@@ -42,8 +47,8 @@ class CandidateProfileUpdate(BaseModel):
     headline: str | None = Field(None, max_length=200)
     about: str | None = Field(None, max_length=5000)
     salary_min_hidden: int | None = Field(None, gt=0, le=10_000_000)
-    visible_to_employers: bool | None = None
-    privacy: dict | None = None
+    # Видимость работодателям управляется согласием на публикацию (POST/DELETE /api/me/consents/publication),
+    # видимость отдельных полей — PUT /api/me/privacy.
 
 
 class CompanyOut(_ORM):

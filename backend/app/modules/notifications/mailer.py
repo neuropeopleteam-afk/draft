@@ -90,3 +90,25 @@ def send_verification_code(email: str, code: str) -> None:
         log.exception("Не удалось отправить письмо на %s", email)
     if s.effective_dev_mode:
         log.warning("DEV_MODE: код подтверждения для %s: %s", email, code)
+
+
+def notify(to_email: str, subject: str, lines: list[str], *, is_demo: bool = False, link_path: str = "/") -> bool:
+    """Уведомление о событии (приглашение, зонд, ответ). Демо-пользователям письма не отправляются."""
+    if is_demo or to_email.endswith(".invalid"):
+        log.info("Уведомление демо-пользователю не отправляется: %r", subject)
+        return False
+    s = get_settings()
+    url = f"{s.public_base_url.rstrip('/')}{link_path}"
+    text = "Здравствуйте!\n\n" + "\n".join(lines) + f"\n\nОткрыть в кабинете: {url}\n\n— {s.product_name}"
+    import html as _html
+
+    body = "".join(f"<p>{_html.escape(x)}</p>" for x in lines)
+    html_msg = (f"<p>Здравствуйте!</p>{body}<p><a href='{_html.escape(url)}' "
+                f"style='color:#FF0053;font-weight:600'>Открыть в кабинете</a></p>"
+                f"<p style='color:#8A83D1'>— {_html.escape(s.product_name)}</p>")
+    try:
+        get_mailer().send(Message(to=to_email, subject=subject, text=text, html=html_msg))
+        return True
+    except Exception:  # noqa: BLE001 — письмо не должно ронять действие пользователя
+        log.exception("Не удалось отправить уведомление %r", subject)
+        return False
