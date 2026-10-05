@@ -19,7 +19,7 @@ export default function CandidateOverview() {
   ];
   return (
     <div className="max-w-4xl">
-      <PageTitle title={name ? `Здравствуйте, ${name}` : "Кабинет кандидата"} subtitle="Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой." />
+      <PageTitle title={name ? `Здравствуйте, ${name}` : "Кабинет кандидата"} subtitle={c?.current_category_id ? (c?.visible_to_employers ? "Ваш профиль виден работодателям: ждите приглашений с зарплатой и коротких задач." : "Категория присвоена. Дайте согласие на публикацию профиля, чтобы работодатели могли вас найти.") : "Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой."} />
       <div className="mt-8 grid gap-5 md:grid-cols-3">
         <Stat label="Категория" value={catTitle(c?.current_category_id)} hint="Только по результатам теста" />
         <Stat label="Приглашения" value={inv.data ? `${inv.data.length}${newInv ? ` · новых ${newInv}` : ""}` : "…"} hint="Контакты — только после принятия" />

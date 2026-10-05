@@ -79,6 +79,14 @@ STACK: dict[str, tuple[str, str, str | None]] = {
 }
 
 
+def category_title(category_id: str | None) -> str:
+    """«backend.middle» → «Backend · Middle»."""
+    if not category_id or "." not in category_id:
+        return category_id or "—"
+    d, g = category_id.split(".", 1)
+    return f"{DIRECTIONS.get(d, d)} · {GRADES.get(g, g)}"
+
+
 def tag_direction(tag: str) -> str | None:
     return STACK[tag][2] if tag in STACK else None
 
