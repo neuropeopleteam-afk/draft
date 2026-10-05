@@ -1,0 +1,26 @@
+family_id: frontend.js.event_loop_canary
+title: Порядок вывода — синхронный код, промис, setTimeout (канарейка)
+direction: frontend
+skills: [javascript, event_loop, promises]
+target_grades: [junior]
+format: predict_output
+language: javascript
+invariants:
+  code_lines: [4, 5]
+  operations: [4, 5]
+  extra:
+    statements: [log, timeout, then1, qm]
+time_limit_s: 90
+canary: true
+canary_pool_size: 24
+prior_difficulty:
+  b: -0.8
+  a: 1.0
+  sigma_variant: 0.25
+  basis: "4–5 однострочных инструкций без вложенности: синхронный вывод, одна микрозадача, один-два таймера; базовое знание цикла событий (Junior)"
+generator: assessment_bank.families.frontend.js_event_loop_canary
+version: 1
+description: >
+  Канареечное семейство: seed 1..24 опубликованы намеренно. В грейд не входит, служит
+  детектору предзнания (время + правильность). Вывод считает модель цикла событий,
+  ключ сверяется с исполнением показанного кода в Node.js.

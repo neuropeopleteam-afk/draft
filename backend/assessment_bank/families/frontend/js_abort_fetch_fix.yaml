@@ -1,0 +1,27 @@
+family_id: frontend.js.abort_fetch_fix
+title: Отмена предыдущего запроса — AbortController при быстром переключении
+direction: frontend
+skills: [javascript, promises, abort_controller, async_await, race_conditions]
+target_grades: [middle]
+format: choose_fix
+language: javascript
+invariants:
+  code_lines: [11, 11]
+  operations: [8, 8]
+  defect_type: abort_previous_request
+  n_options: 4
+  extra:
+    distractors: [no_signal, inverted, swallow, shared, late_assign]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.3
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "11 строк, одна ошибка (контроллер создаётся заново в каждом вызове); варианты исправления различаются одной-двумя строками: без signal, перевёрнутое условие, проглатывание ошибок, общий контроллер, позднее сохранение; Middle"
+generator: assessment_bank.families.frontend.js_abort_fetch_fix
+version: 1
+description: >
+  Загрузчик должен отменять предыдущий запрос. Каждое исправление проверяется исполнением
+  в Node.js с поддельными fetch/AbortController и виртуальным временем: отрисован только
+  последний ответ, отмена не считается ошибкой, ошибка сервера пробрасывается.

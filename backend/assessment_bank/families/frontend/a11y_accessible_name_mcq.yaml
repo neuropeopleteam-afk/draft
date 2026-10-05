@@ -1,0 +1,26 @@
+family_id: frontend.a11y.accessible_name_mcq
+title: Доступное имя элемента — aria-labelledby, aria-label, label, содержимое, title
+direction: frontend
+skills: [accessibility, aria, html, screen_readers]
+target_grades: [junior]
+format: mcq_concept
+language: text
+invariants:
+  code_lines: [2, 8]
+  n_options: 4
+  extra:
+    rules: [aria-labelledby, aria-label, content, label_for, title]
+    traps: [empty_aria_label, missing_id, hidden_labelledby, aria_hidden_child, visually_hidden_text]
+time_limit_s: 150
+canary: false
+prior_difficulty:
+  b: -0.3
+  a: 1.0
+  sigma_variant: 0.4
+  basis: "Короткий фрагмент HTML (2–8 строк), 3–5 источников имени; ловушки разной трудности (пустой aria-label, ссылка на несуществующий id, скрытый элемент в aria-labelledby, aria-hidden и visually-hidden в содержимом) → σ повышена; Junior"
+generator: assessment_bank.families.frontend.a11y_accessible_name_mcq
+version: 1
+description: >
+  Выбрать доступное имя кнопки или поля ввода. Ключ проверяется исполнением: разбор
+  показанного HTML и вычисление имени по подмножеству W3C AccName 1.2 в песочнице Python;
+  генератор считает ключ независимо по таблице приоритетов.

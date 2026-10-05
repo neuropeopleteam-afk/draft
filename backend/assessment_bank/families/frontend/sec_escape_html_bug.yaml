@@ -1,0 +1,26 @@
+family_id: frontend.sec.escape_html_bug
+title: XSS — ошибка экранирования перед вставкой через innerHTML
+direction: frontend
+skills: [security, xss, html_escaping, javascript]
+target_grades: [junior]
+format: find_bug
+language: javascript
+invariants:
+  code_lines: [14, 16]
+  operations: [12, 13]
+  defect_type: xss_escaping
+  extra:
+    subtypes: [no_global_lt, no_global_quot, raw_field, unquoted_attr]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.1
+  sigma_variant: 0.4
+  basis: "14–16 строк, одна дефектная строка; полезная нагрузка дана в условии; четыре подтипа разной трудности (неэкранированное поле проще, replace без флага g и атрибут без кавычек труднее) → σ повышена; Junior"
+generator: assessment_bank.families.frontend.sec_escape_html_bug
+version: 1
+description: >
+  Функция экранирования и шаблон HTML для пользовательского контента. По полезной нагрузке
+  из отчёта о безопасности найти строку с ошибкой. Ключ: дефектный код даёт HTML, отличный
+  от эталона, на наборе вредоносных входов, исправление совпадает с эталоном.

@@ -1,21 +1,21 @@
 {
   "source": "/srv/work/srv/work/spectrek/bank",
   "commit": "b324325",
-  "dirty_files": 27,
-  "content_hash": "fb348770942531af",
-  "synced_at": "2026-10-05T11:44:20+00:00",
-  "n_families": 76,
+  "dirty_files": 72,
+  "content_hash": "93feef3c6fc87858",
+  "synced_at": "2026-10-05T11:59:21+00:00",
+  "n_families": 104,
   "by_direction": {
     "backend": {
-      "families": 7,
-      "canary": 1,
+      "families": 16,
+      "canary": 2,
       "formats": {
-        "predict_output": 1,
-        "mcq_concept": 1,
+        "predict_output": 4,
+        "find_bug": 4,
+        "choose_fix": 3,
+        "mcq_concept": 2,
         "open_answer": 1,
-        "open_book_3step": 2,
-        "choose_fix": 1,
-        "find_bug": 1
+        "open_book_3step": 2
       }
     },
     "common": {
@@ -31,32 +31,35 @@
       }
     },
     "data_ml": {
-      "families": 14,
+      "families": 20,
       "canary": 1,
       "formats": {
-        "choose_fix": 4,
-        "find_bug": 4,
-        "predict_output": 4,
+        "mcq_concept": 2,
+        "choose_fix": 5,
+        "find_bug": 5,
+        "predict_output": 5,
+        "open_answer": 1,
         "open_book_3step": 2
       }
     },
     "frontend": {
-      "families": 7,
-      "canary": 1,
+      "families": 17,
+      "canary": 2,
       "formats": {
-        "predict_output": 1,
-        "choose_fix": 1,
-        "find_bug": 1,
-        "open_book_3step": 2,
-        "mcq_concept": 1,
+        "mcq_concept": 4,
+        "open_book_3step": 3,
+        "choose_fix": 3,
+        "predict_output": 3,
+        "find_bug": 3,
         "open_answer": 1
       }
     },
     "qa": {
-      "families": 8,
+      "families": 11,
       "canary": 1,
       "formats": {
-        "find_bug": 4,
+        "mcq_concept": 2,
+        "find_bug": 5,
         "predict_output": 4
       }
     },
@@ -73,35 +76,43 @@
       }
     }
   },
-  "excluded": [],
+  "excluded": [
+    {
+      "path": "families/backend/api_idempotency_key_fix.yaml",
+      "family_id": "backend.api.idempotency_key_fix",
+      "stage": "validator",
+      "reason": "нарушены инварианты в 20 вариантах; seed 1: operations=6 вне [5, 5]; seed 2: operations=6 вне [5, 5]; seed 3: operations=6 вне [5, 5]"
+    }
+  ],
   "validation": {
     "summary": {
-      "n_families": 76,
-      "n_variants_generated": 1520,
-      "n_unique_variants": 1512,
-      "n_checks": 687,
+      "n_families": 105,
+      "n_variants_generated": 2100,
+      "n_unique_variants": 2090,
+      "n_checks": 891,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 66,
-        "WARN": 10
+        "FAIL": 1,
+        "PASS": 93,
+        "WARN": 11
       },
       "by_direction": {
-        "backend": 7,
+        "backend": 17,
         "common": 22,
-        "data_ml": 14,
-        "frontend": 7,
-        "qa": 8,
+        "data_ml": 20,
+        "frontend": 17,
+        "qa": 11,
         "security": 18
       },
       "by_format": {
-        "predict_output": 20,
-        "mcq_concept": 11,
-        "open_answer": 5,
-        "open_book_3step": 12,
-        "choose_fix": 12,
-        "find_bug": 16
+        "choose_fix": 18,
+        "predict_output": 26,
+        "find_bug": 23,
+        "mcq_concept": 19,
+        "open_answer": 6,
+        "open_book_3step": 13
       },
-      "seconds": 27.8
+      "seconds": 43.9
     },
     "seeds": 20,
     "verify_seeds": 3

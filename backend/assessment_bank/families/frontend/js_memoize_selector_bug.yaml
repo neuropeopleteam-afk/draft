@@ -1,0 +1,26 @@
+family_id: frontend.js.memoize_selector_bug
+title: Мемоизация селектора — memoizeOne пересчитывает лишнее или возвращает устаревшее
+direction: frontend
+skills: [javascript, memoization, performance, react]
+target_grades: [middle]
+format: find_bug
+language: javascript
+invariants:
+  code_lines: [16, 18]
+  operations: [14, 15]
+  defect_type: memo_cache_check
+  extra:
+    subtypes: [some, return_fn, length_neg, compare_first]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 0.2
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "16–18 строк, одна ошибочная строка в проверке кэша; четыре подтипа с двумя симптомами (устаревший результат или пересчёт на каждом рендере) → σ повышена; нужно связать симптом с условием попадания в кэш; Middle"
+generator: assessment_bank.families.frontend.js_memoize_selector_bug
+version: 1
+description: >
+  memoizeOne для селектора, вызываемого при каждом рендере. Кандидат по симптому находит
+  строку с ошибкой в проверке кэша. Ключ: дефектный код падает на тестах (счётчик вызовов,
+  ссылочное равенство результата), исправление проходит.

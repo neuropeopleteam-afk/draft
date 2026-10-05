@@ -1,0 +1,30 @@
+family_id: frontend.a11y.focus_trap_ob3
+title: Удержание фокуса в модальном окне (открытая книга)
+direction: frontend
+skills: [accessibility, focus_management, keyboard, aria, testing]
+target_grades: [middle, senior]
+format: open_book_3step
+language: javascript
+invariants:
+  code_lines: [8, 8]
+  operations: [7, 7]
+  defect_type: focus_trap_edge
+  n_options: 4
+  extra:
+    subtypes: [strict_first, off_by_one]
+    step2_distractors: [strict_first, off_by_one, minus_one_null, no_shift_guard, always_next, stuck_first]
+    step3_conditions: [restore, inert, dynamic, testing]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.6
+  a: 1.0
+  sigma_variant: 0.35
+  step_offsets: [-0.4, 0.0, 0.8]
+  basis: "8 строк; два подтипа краевой ошибки (строгое i === 0 при фокусе на контейнере, last = length); шаг 1 требует проследить навигацию по модели DOM, шаг 2 — отличить исправление от пяти правдоподобных ошибок; шаг 3 — возврат фокуса, inert, динамическое содержимое, тестирование (Middle/Senior)"
+generator: assessment_bank.families.frontend.a11y_focus_trap_ob3
+version: 1
+description: >
+  Ловушка фокуса в модальном окне с краевой ошибкой. Шаг 1 — сценарий нажатий, при котором
+  фокус выходит из окна; шаг 2 — исправление; шаг 3 — развёрнутый ответ при новом условии.
+  Шаги 1–2 проверяются исполнением модели навигации по Tab в Node.js.
