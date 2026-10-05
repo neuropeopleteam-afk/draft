@@ -460,13 +460,14 @@ class BankEngine:
         g = GRADE_RU[claimed]
         p = sum(v for k, v in dec.probabilities.items() if GRADES.index(claimed) <= (
             GRADES.index(k) if k in GRADES else -1))
+        ps = "более 99 %" if p > 0.99 else ("менее 1 %" if p < 0.01 else f"{p * 100:.0f} %")
         if dec.confirmed:
-            s = f"Грейд {g} подтверждён: θ = {theta:+.2f} ± {se:.2f}, вероятность уровня не ниже {g} — {p:.0%}."
+            s = f"Грейд {g} подтверждён: θ = {theta:+.2f} ± {se:.2f}, вероятность уровня не ниже {g} — {ps}."
             if dec.upgrade_available:
                 s += f" Результат уверенно выше порога — можно пройти тест на {GRADE_RU[GRADES[GRADES.index(claimed) + 1]]}."
         else:
             s = (f"Грейд {g} пока не подтверждён: θ = {theta:+.2f} ± {se:.2f}, вероятность уровня не ниже {g} — "
-                 f"{p:.0%} (нужно ≥ 80 %). Принудительного понижения нет")
+                 f"{ps} (нужно ≥ 80 %). Принудительного понижения нет")
             s += (f": можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower else
                   ": можно пройти тест на грейд ниже или повторить после подготовки.")
         if details.get("extension"):

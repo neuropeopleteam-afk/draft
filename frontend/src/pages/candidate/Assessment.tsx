@@ -257,6 +257,15 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
 /** Прохождение теста: одно задание на экране (адаптивный банк заданий или заглушка). */
 interface Opt { id: string; text: string; code?: string | null }
 
+/** Текст задания: `код` в обратных кавычках — моноширинным шрифтом (разметка банка заданий). */
+function Rich({ text }: { text: string }) {
+  const parts = text.split("`");
+  if (parts.length < 3) return <>{text}</>;
+  return <>{parts.map((p, i) => (i % 2 === 1 && i < parts.length - 1
+    ? <code key={i} className="rounded bg-brand-blush/50 px-1 font-mono text-[0.88em] font-medium">{p}</code>
+    : <span key={i}>{i % 2 === 1 ? "`" + p : p}</span>))}</>;
+}
+
 function fmtTime(sec: number) {
   const m = Math.floor(Math.abs(sec) / 60), s = Math.abs(sec) % 60;
   return `${sec < 0 ? "−" : ""}${m}:${String(s).padStart(2, "0")}`;
@@ -330,7 +339,7 @@ export function TestRun() {
         </span>
       </div>
       <div className="card mt-4">
-        <p className="whitespace-pre-line text-base font-semibold leading-relaxed text-brand-night">{it.stem}</p>
+        <p className="whitespace-pre-line text-base font-semibold leading-relaxed text-brand-night"><Rich text={it.stem} /></p>
         {it.code && (
           <div className="mt-4 overflow-x-auto rounded-xl bg-brand-ink py-3 text-sm leading-relaxed text-[#FFD6E4]" role={isLine ? "listbox" : undefined} aria-label={isLine ? "Строки кода: выберите строку с дефектом" : undefined}>
             {lines.map((ln, i) => {
@@ -344,7 +353,7 @@ export function TestRun() {
             })}
           </div>
         )}
-        {it.step_prompt && <p className="mt-5 whitespace-pre-line rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night">{it.step_prompt}</p>}
+        {it.step_prompt && <p className="mt-5 whitespace-pre-line rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night"><Rich text={it.step_prompt} /></p>}
         {isLine && <p className="mt-3 text-sm text-brand-ink/70">{value ? `Выбрана строка ${value}.` : "Нажмите на строку, в которой дефект."}</p>}
         {it.answer_kind === "option" && it.options && (
           <fieldset className="mt-5 space-y-2">
@@ -354,7 +363,7 @@ export function TestRun() {
                 <input type="radio" name="opt" className="mt-0.5 accent-brand" checked={value === o.id} onChange={() => setValue(o.id)} />
                 <span className="min-w-0 flex-1">
                   {it.adaptive && <b className="mr-2 text-brand-lavender">{o.id}</b>}
-                  <span className={o.code ? "" : "font-mono text-[13px]"}>{o.text}</span>
+                  <span className={o.code ? "" : "font-mono text-[13px]"}>{o.code ? <Rich text={o.text} /> : o.text}</span>
                   {o.code && <pre className="mt-2 overflow-x-auto rounded-lg bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{o.code}</code></pre>}
                 </span>
               </label>
