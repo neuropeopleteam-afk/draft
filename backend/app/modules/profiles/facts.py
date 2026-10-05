@@ -34,7 +34,8 @@ PRIVACY_TITLES = {
 WORK_FORMAT_TITLES = {"office": "Офис", "hybrid": "Гибрид", "remote": "Удалённо", "any": "Любой"}
 DISCIPLINE_TITLES = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
 LEVEL_TITLES = {"school": "школьные", "regional": "региональные", "interregional": "межрегиональные",
-                "national": "всероссийские", "international": "международные"}
+                "national": "всероссийские", "international": "международные",
+                "platform": "кубок работодателя на платформе"}
 LEVEL_WEIGHT = {"international": 1.0, "national": 0.85, "interregional": 0.65, "regional": 0.45, "school": 0.25}
 DISCIPLINE_RELEVANCE = {
     "algorithmic": {"backend": 0.9, "frontend": 0.6, "data_ml": 1.0, "qa": 0.6, "security": 0.6},
@@ -240,7 +241,8 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "strength": b.fsp,
             "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified}
                              for a in verified_achievements(b)[:5]],
-            "unverified_count": sum(1 for a in b.achievements if not a.verified),
+            "unverified_count": sum(1 for a in b.achievements
+                                    if not a.verified and not (a.source_ref or "").startswith("cup:")),
         } if show("show_fsp") else {"linked": None, "hidden": True}),
         "stack_declared": [{"tag": f.key, "title": f.title, "level": "T0", "source": f.source.value}
                            for f in _uniq(b.t0.get("stack", []))] if show("show_stack") else None,
