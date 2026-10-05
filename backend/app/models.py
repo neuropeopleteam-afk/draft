@@ -24,5 +24,6 @@ from app.modules.profiles.models import (  # noqa: F401
 )
 
 import app.integrations.models  # noqa: E402,F401 — модели интеграций (день 3Б)
+from app.cup.models import Cup, CupEntry  # noqa: E402,F401 — «Кубок работодателя» (идея 10)
 
 metadata = Base.metadata
