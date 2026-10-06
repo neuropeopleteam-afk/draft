@@ -116,6 +116,11 @@ def test_jury_spare_sandbox_instant_and_single_owner(client, monkeypatch):
     with SessionLocal() as db:
         assert seed.spares(db) == []
     assert _login(client, "candidate", "new")["scenario"] != spare  # следующий эксперт — другая песочница
+    # сброс выданной песочницы не делает её снова «запасной» — её не получит другой эксперт
+    r = client.post("/api/jury/reset", headers=H(r["access_token"]))
+    assert r.status_code == 200 and r.json()["scenario"] == spare
+    with SessionLocal() as db:
+        assert spare not in seed.spares(db)
 
 
 # ---------------------------------------------------------------- «Красная кнопка»

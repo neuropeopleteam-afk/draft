@@ -16,6 +16,7 @@
 """
 from __future__ import annotations
 
+import contextvars
 from contextlib import contextmanager
 from datetime import date
 import logging
@@ -154,7 +155,12 @@ def _user(db: Session, persona: str, role: UserRole, sid: str = "") -> User:
     from app.core.security import hash_password
     import secrets
 
-    return demo_user(db, scope.emails(sid)[persona], role, hash_password(secrets.token_urlsafe(24)))
+    u = demo_user(db, scope.emails(sid)[persona], role, hash_password(secrets.token_urlsafe(24)))
+    if sid and not _SPARE.get():
+        # песочница уже чья-то (вход, сброс, пересоздание): отметка входа — сразу при создании, чтобы её
+        # не выдали другому эксперту как запасную ни на миг
+        u.last_login_at = utcnow()
+    return u
 
 
 def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int,
@@ -314,6 +320,19 @@ def sandboxes(db: Session) -> dict[str, float]:
             t = max(x.timestamp() for x in (last, created) if x is not None) if (last or created) else 0.0
             out[sid] = max(out.get(sid, 0.0), t)
     return out
+
+
+_SPARE: contextvars.ContextVar[bool] = contextvars.ContextVar("jury_spare", default=False)
+
+
+@contextmanager
+def as_spare():
+    """Создаваемая песочница — запасная: ещё ничья, отметок входа нет (см. spares, claim)."""
+    tok = _SPARE.set(True)
+    try:
+        yield
+    finally:
+        _SPARE.reset(tok)
 
 
 def spares(db: Session) -> list[str]:
