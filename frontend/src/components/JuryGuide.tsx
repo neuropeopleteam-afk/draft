@@ -61,11 +61,11 @@ export function JuryGuide() {
   }
 
   return (
-    <aside className="fixed bottom-4 right-4 z-40 w-[min(24rem,calc(100vw-2rem))] rounded-2xl bg-brand-night p-4 text-white shadow-2xl ring-1 ring-white/10"
+    <aside className="fixed bottom-4 right-4 z-40 max-h-[calc(100vh-6rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-4 text-white shadow-2xl ring-1 ring-white/10"
       aria-label="Проводник для экспертов жюри">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>
-        <button className="rounded px-2 text-sm text-white/70 hover:text-white" onClick={() => { guide.hide(); setHidden(true); }} aria-label="Скрыть проводник">Скрыть</button>
+        <button className="rounded px-2 py-1 text-sm text-white/75 hover:text-white" onClick={() => { guide.hide(); setHidden(true); }} aria-label="Скрыть проводник">Скрыть</button>
       </div>
       <div className="mt-2 flex gap-1" aria-hidden>
         {STEPS.map((_, i) => <span key={i} className={`h-1 flex-1 rounded-full ${i < step ? "bg-brand-soft" : i === step ? "bg-white" : "bg-white/20"}`} />)}
@@ -79,7 +79,7 @@ export function JuryGuide() {
         {!here || needLogin
           ? <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step)}>{busy ? "Входим…" : needLogin || !s.cta.startsWith("Войти") ? s.cta : "Открыть экран"}</button>
           : step < STEPS.length - 1 && <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step + 1)}>{busy ? "Входим…" : `Дальше: ${STEPS[step + 1].title}`}</button>}
-        <button className="ml-auto text-xs font-semibold text-white/60 underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={reset}>Сбросить своё демо</button>
+        <button className="ml-auto text-xs font-semibold text-white/70 underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={reset}>Сбросить своё демо</button>
       </div>
     </aside>
   );
