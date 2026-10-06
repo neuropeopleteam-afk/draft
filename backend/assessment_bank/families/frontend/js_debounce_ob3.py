@@ -184,7 +184,9 @@ CONDITIONS = {
 
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
-    sub = rng.choice(["no_clear", "first_args"])
+    # Калибровка 05.10: подтип разводил шаг 2 (no_clear 0,51 / first_args 0,66); зафиксирован
+    # канонический дефект — таймер не сбрасывается (clearTimeout отсутствует).
+    sub = rng.choice(["no_clear"])
     delay = rng.choice([200, 300, 400])
     word = rng.choice(WORDS)
     code = _code(sub)

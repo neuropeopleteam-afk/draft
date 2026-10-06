@@ -333,8 +333,11 @@ def generate(seed: int):
     for _ in range(300):
         repro = _dataset(rng, n, limit, {rng.choice(boundary)})
         cands = [_dataset(rng, n, limit, set())]
-        for _k in range(2):
-            cands.append(_dataset(rng, n, limit, {rng.choice(inside)}))
+        # версия 2: два дистрактора с совпадающим временем — в РАЗНЫХ местах внутри страниц
+        # (в версии 1 они могли совпадать по позиции; 32B на шаге 1 был на уровне угадывания и
+        # выбирал «любой набор с одинаковым временем»), так что решает только граница страниц
+        for pos in rng.sample(inside, 2):
+            cands.append(_dataset(rng, n, limit, {pos}))
         if (not _simulate("buggy", fn, ts, repro, limit)
                 and all(_simulate("buggy", fn, ts, d, limit) for d in cands)
                 and len({_fmt(d) for d in cands + [repro]}) == 4):

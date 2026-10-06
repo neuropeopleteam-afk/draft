@@ -32,7 +32,10 @@ def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     name, descr, (a, b) = rng.choice(CONTEXTS)
     k = rng.choice([1.5, 1.5, 2, 3])
-    n = rng.choice([10, 11, 14, 15])
+    # Калибровка 05.10: «слишком трудное» (p = 0,01); для Junior основная нагрузка была в ручной
+    # сортировке 14–15 чисел, а не в правиле IQR — размер выборки 10–11 (половина нечётной
+    # длины 5, квартили остаются элементами данных)
+    n = rng.choice([10, 11])
     on_boundary = rng.random() < 0.4
     for _ in range(5000):
         vals = [rng.randint(a, b) for _ in range(n)]

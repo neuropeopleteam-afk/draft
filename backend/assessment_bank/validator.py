@@ -141,6 +141,19 @@ def _structural_errors(spec: FamilySpec, v: Variant) -> list[str]:
         elif changed_lines(v.code or "", fixed) != {v.answer_key.value}:
             errs.append(f"find_bug: исправление меняет строки {sorted(changed_lines(v.code or '', fixed))},"
                         f" а ключ {v.answer_key.value}")
+        # Вторая равноценная строка (accept) допустима, только если исправление в ней одной
+        # тоже чинит код: params.alt_fixes[строка] + проверка alt_fix:<строка> (pass).
+        alt = v.meta.params.get("alt_fixes") or {}
+        for a in v.answer_key.accept:
+            src = alt.get(str(a))
+            if not src:
+                errs.append(f"find_bug: строка {a} в accept без params.alt_fixes")
+            elif changed_lines(v.code or "", src) != {int(a)}:
+                errs.append(f"find_bug: альтернативное исправление для строки {a} меняет строки "
+                            f"{sorted(changed_lines(v.code or '', src))}")
+            c = names.get(f"alt_fix:{a}")
+            if c is None or c.expect != "pass":
+                errs.append(f"find_bug: нет проверки alt_fix:{a} (pass)")
     if fmt in ("choose_fix", "open_book_3step"):
         groups = [("option", None)] if fmt == "choose_fix" else [("step1", 1), ("step2", 2)]
         for prefix, step in groups:

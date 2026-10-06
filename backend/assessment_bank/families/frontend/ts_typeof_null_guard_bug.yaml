@@ -1,0 +1,36 @@
+family_id: frontend.ts.typeof_null_guard_bug
+title: TypeScript — type guard на typeof «object» без проверки null
+direction: frontend
+skills:
+- typescript
+- type_narrowing
+- type_guards
+- api_validation
+target_grades:
+- middle
+format: find_bug
+language: typescript
+invariants:
+  code_lines:
+  - 17
+  - 17
+  operations:
+  - 10
+  - 10
+  defect_type: unsound_type_guard
+  extra:
+    subtypes:
+    - null_check
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: 0.3
+  a: 1.1
+  sigma_variant: 0.3
+  basis: 'Выделено из frontend.ts.type_guard_bug: подтип typeof null === "object". Калибровка панелью
+    LLM 05.10: варианты неизоморфны (σ > 0,5, χ² p < 0,01), разброс объяснялся подтипом. b оставлен 0,3:
+    содержательной причины менять нет.'
+generator: assessment_bank.families.frontend.ts_typeof_null_guard_bug
+version: 1
+description: 'Выделено из frontend.ts.type_guard_bug по итогам калибровки 05.10: подтип typeof null ===
+  "object". Генератор общий с исходным семейством, подтип фиксирован.'
