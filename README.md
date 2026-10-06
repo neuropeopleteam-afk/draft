@@ -61,6 +61,7 @@ POSTBOX_SECRET_ACCESS_KEY=...
 make test        # pytest в контейнере api (SQLite, схема создаётся миграциями Alembic)
 make test-pg     # те же тесты на PostgreSQL (база fsp_test в контейнере db)
 make validate    # процедура валидации (пока заготовка, печатает план проверок)
+make bench       # бенчмарк подбора со скрытой истиной (200 × 2000), итог — docs/validation/MATCHING_BENCH.md
 ```
 
 Ключевые правила покрыты тестами `backend/tests/test_day2_rules.py` (видимость и обезличивание, лимит приглашений
