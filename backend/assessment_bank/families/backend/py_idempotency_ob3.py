@@ -167,10 +167,14 @@ CONDITIONS = {
 }
 
 
-def generate(seed: int):
-    rng = make_rng(FAMILY_ID, seed)
+# Калибровка 05.10: подтипы coarse выделены в backend.py.idempotency_coarse_ob3 (варианты были неизоморфны).
+SUBTYPES_HERE = ('fine',)
+
+
+def _generate(seed: int, family_id: str, subtypes):
+    rng = make_rng(family_id, seed)
     provider, obj, ctx = rng.choice(PROVIDERS)
-    sub = rng.choice(["coarse", "fine"])
+    sub = rng.choice(list(subtypes))
     code = _code(obj, sub)
     n = lambda: f"evt_{rng.randint(1000, 9999)}"
     p1, p2 = f"{obj[:2]}_{rng.randint(10, 99)}", f"{obj[:2]}_{rng.randint(100, 199)}"
@@ -232,7 +236,12 @@ def generate(seed: int):
                    + " Правильный ключ — id события; множество processed внутри функции "
                      "создаётся заново при каждом вызове и ничего не защищает.")
     rubric = rubric_from({**cond, "notes": "Оценивается шаг 3; шаги 1–2 проверяются автоматически."})
-    return build_variant(FAMILY_ID, seed, stem=stem, code=code, options=opts1 + opts2,
+    return build_variant(family_id, seed, stem=stem, code=code, options=opts1 + opts2,
                          answer_key=ak, rubric=rubric, context=ctx, verification="execution",
                          checks=checks, steps=steps, defect_type="idempotency_key",
                          params={"subtype": sub, "distractors": dkinds, "condition": cond_name})
+
+
+
+def generate(seed: int):
+    return _generate(seed, FAMILY_ID, SUBTYPES_HERE)

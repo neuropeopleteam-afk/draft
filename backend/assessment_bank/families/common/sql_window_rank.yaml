@@ -9,7 +9,7 @@ invariants:
   code_lines: [4, 9]
   operations: [4, 8]
   extra:
-    rows: [5, 6]
+    rows: [5, 5]
     templates: [rank_dense, running_range, running_rows, lag_partition, top_per_group]
 time_limit_s: 300
 canary: false
@@ -17,10 +17,11 @@ prior_difficulty:
   b: 0.9
   a: 1.0
   sigma_variant: 0.45
-  basis: "4–9 строк SQL, 5–6 строк данных; пять шаблонов: ROW_NUMBER в CTE и LAG проще, рамка RANGE по умолчанию с «ровесниками» и RANK с пропусками труднее → σ высокая; Senior"
+  basis: "4–9 строк SQL, 5–6 строк данных; пять шаблонов: ROW_NUMBER в CTE и LAG проще, рамка RANGE по умолчанию с «ровесниками» и RANK с пропусками труднее → σ высокая; Senior. Калибровка 05.10: трудность росла с числом строк (σ > 0,5); строк всегда 5"
 generator: assessment_bank.families.common.sql_window_rank
-version: 1
+version: 2
 description: >
   Таблица из 5–6 строк и запрос с оконной функцией; кандидат записывает результат. Данные
   подбираются так, чтобы ловушка шаблона проявлялась (ничья не на последнем месте, повторяющиеся
   значения порядка, первая строка секции). Ключ — модель и исполнение в SQLite.
+  Версия 2: всегда 5 строк данных.

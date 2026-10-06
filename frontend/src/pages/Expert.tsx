@@ -58,10 +58,12 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
         <span className="chip">{FORMAT[it.format] ?? it.format}</span>
         <span className="text-brand-ink/60">Кандидат {it.candidate_ref ?? "—"} · {DIRECTIONS[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
         {it.session_status === "finished" && it.status === "pending" && <span className="chip bg-brand-blush text-brand-plum">результат предварительный</span>}
+        {it.llm?.error === "prompt_injection_suspected" && <span className="chip bg-brand-night text-white" title={it.llm.injection_note ?? undefined}>Похоже на инструкции оценщику — LLM не вызывался</span>}
       </div>
       <p className="mt-3 whitespace-pre-line font-semibold leading-relaxed text-brand-night">{it.stem}</p>
       {it.code && <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{it.code}</code></pre>}
       {it.step_prompt && <p className="mt-3 rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night">{it.step_prompt}</p>}
+      {it.llm?.injection_note && <div className="mt-3"><Alert kind="info">{it.llm.injection_note} Оцените ответ по рубрике как обычно: попытка повлиять на оценщика уже учтена в «достоверности результата».</Alert></div>}
       <div className="mt-4">
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Ответ кандидата</p>
         <p className="mt-1 whitespace-pre-line rounded-xl border border-brand-night/10 bg-white p-3 text-sm leading-relaxed text-brand-ink">{it.answer || "— пустой ответ —"}</p>

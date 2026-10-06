@@ -112,14 +112,22 @@ def _dataset(rng, n, grid):
     raise RuntimeError("не удалось построить данные с ничьими")
 
 
-def generate(seed: int):
-    rng = make_rng(FAMILY_ID, seed)
+# Калибровка 05.10: подтипы pair_ge выделены в data_ml.metrics.auc_pairwise_ties_bug (варианты были неизоморфны).
+SUBTYPES_HERE = ('rank_ordinal', 'rank_min')
+
+
+def _generate(seed: int, family_id: str, subtypes):
+    rng = make_rng(family_id, seed)
     ctx, target = rng.choice(CONTEXTS)
-    sub = rng.choice(SUBTYPES)
+    sub = rng.choice(list(subtypes))
     fn = rng.choice(["roc_auc", "auc_score", "manual_auc"])
     y = rng.choice(["y_true", "labels", target])
     s = rng.choice(["y_score", "scores", "proba"])
     buggy, fixed = _code(sub, fn, y, s), _code(sub, fn, y, s, fixed=True)
+    # 0–2 строки нейтрального комментария сверху: номер строки дефекта не постоянен
+    hdr = rng.choice(["", "# Ручной расчёт метрики для отчёта.\n",
+                      "# Метрика качества модели без sklearn.\n# Используется в ночном отчёте.\n"])
+    buggy, fixed = hdr + buggy, hdr + fixed
     key_line = min(changed_lines(buggy, fixed))
     assert changed_lines(buggy, fixed) == {key_line}
     grid = [x / 20 for x in range(2, 19)] if rng.random() < 0.5 else [x / 10 for x in range(1, 10)]
@@ -162,6 +170,11 @@ def generate(seed: int):
     ak = AnswerKey(kind="line", value=key_line,
                    explanation=f"Строка {key_line}: {why[sub]}. На данных без одинаковых скоров "
                                "ошибка не проявляется, поэтому её легко пропустить.")
-    return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
+    return build_variant(family_id, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="tie_handling",
                          params={"fixed_code": fixed, "subtype": sub, "fn": fn})
+
+
+
+def generate(seed: int):
+    return _generate(seed, FAMILY_ID, SUBTYPES_HERE)

@@ -27,7 +27,8 @@ from app.modules.invitations.service import (
 )
 from app.modules.matching import ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
-from app.modules.matching.need_parser import normalize, parse_need
+from app.modules.matching import compare as compare_mod
+from app.modules.matching.need_parser import bias_report, normalize, parse_need
 from app.modules.profiles.facts import card, load_bundles
 from app.modules.profiles.models import Company, EmployerProfile
 
@@ -47,9 +48,25 @@ def my_company(db: Session, user: User) -> Company:
 
 # ------------------------------------------------------------------ схемы
 
+class Evidence(BaseModel):
+    """Цитата: фрагмент текста работодателя, на основании которого извлечено требование."""
+    quote: str = Field(max_length=300)
+    start: int | None = Field(None, ge=0)
+    end: int | None = Field(None, ge=0)
+    context: str | None = Field(None, max_length=300)
+    source: Literal["rules", "llm"] | None = None
+    basis: str | None = Field(None, max_length=30)
+
+
+ReviewStatus = Literal["extracted", "confirmed", "edited"]
+
+
 class StackReq(BaseModel):
     tag: str
     weight: float = Field(1.0, ge=0.05, le=1.0)
+    evidence: Evidence | None = None
+    status: Literal["extracted", "confirmed", "edited", "manual"] | None = Field(
+        None, description="extracted — извлечено, confirmed — подтверждено, edited — изменено, manual — добавлено вручную")
 
 
 class Requirements(BaseModel):
@@ -61,6 +78,8 @@ class Requirements(BaseModel):
     work_format: Literal["office", "hybrid", "remote", "any"] | None = None
     salary_from: int | None = Field(None, gt=0)
     salary_to: int | None = Field(None, gt=0)
+    evidence: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary"], Evidence | None] | None = None
+    review: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary"], ReviewStatus] | None = None
 
     @model_validator(mode="after")
     def _range(self):
@@ -106,11 +125,14 @@ class SelectionIn(BaseModel):
 
 # ------------------------------------------------------------------ помощники
 
-def _req_dict(r: Requirements | dict) -> dict:
+def _req_dict(r: Requirements | dict, text: str) -> dict:
+    """Требования от клиента → канон. Находки фильтра ст. 64 ТК РФ считаются на сервере по тексту потребности."""
     d = r.model_dump() if isinstance(r, Requirements) else dict(r)
-    return normalize({**d, "stack_required": [dict(x) for x in d.get("stack_required") or []],
-                      "stack_desired": [dict(x) for x in d.get("stack_desired") or []]},
-                     method=d.get("method", "manual"))
+    req = normalize({**d, "stack_required": [dict(x) for x in d.get("stack_required") or []],
+                     "stack_desired": [dict(x) for x in d.get("stack_desired") or []]},
+                    method=d.get("method", "manual"))
+    req["bias"], req["suggested_text"] = bias_report(text, req)
+    return req
 
 
 def _own_need(db: Session, company: Company, need_id: uuid.UUID) -> EmployerNeed:
@@ -170,7 +192,10 @@ def _need_out(db: Session, n: EmployerNeed) -> dict:
 @router.post("/needs/parse", summary="Разобрать потребность из текста (предпросмотр, без сохранения)",
              description="Детерминированный разбор по словарю стек-тегов и правилам работает всегда; при настроенном "
                          "LLM ответ модели уточняет разбор и проходит ту же нормализацию. Контакты из текста "
-                         "вырезаются до отправки в LLM.",
+                         "вырезаются до отправки в LLM. У каждого требования — цитата из текста (evidence: start, "
+                         "end, quote); требование LLM без найденной в тексте цитаты отбрасывается. bias — фрагменты, "
+                         "нарушающие ст. 64 ТК РФ (возраст, пол, семья, внешность, место жительства…), с предложением "
+                         "переписать через навыки; из них требования не извлекаются, в ранжирование они не попадают.",
              responses=AUTH)
 def parse(data: ParseIn, user: User = Depends(employer)) -> dict:
     return parse_need(data.text, data.direction, data.grade)
@@ -179,7 +204,7 @@ def parse(data: ParseIn, user: User = Depends(employer)) -> dict:
 @router.post("/needs", status_code=201, summary="Создать потребность и первую версию подборки", responses=AUTH)
 def create_need(data: NeedIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
-    req = _req_dict(data.requirements) if data.requirements else parse_need(data.text)
+    req = _req_dict(data.requirements, data.text) if data.requirements else parse_need(data.text)
     n = EmployerNeed(company_id=c.id, created_by=user.id, title=(data.title or _need_title(req))[:200],
                      raw_text=data.text, requirements=req, direction_id=req.get("direction"),
                      grade_id=req.get("grade"), salary_from=req.get("salary_from"), salary_to=req.get("salary_to"),
@@ -214,7 +239,7 @@ def patch_need(need_id: uuid.UUID, data: NeedPatch, user: User = Depends(employe
     if data.status:
         n.status = NeedStatus(data.status)
     if data.requirements:
-        req = _req_dict(data.requirements)
+        req = _req_dict(data.requirements, n.raw_text)
         n.requirements, n.direction_id, n.grade_id = req, req.get("direction"), req.get("grade")
         n.salary_from, n.salary_to = req.get("salary_from"), req.get("salary_to")
     db.commit()
@@ -230,7 +255,7 @@ def new_selection(need_id: uuid.UUID, data: SelectionIn, user: User = Depends(em
     if data.parent_version is not None and db.scalar(select(SelectionVersion.id).where(
             SelectionVersion.need_id == n.id, SelectionVersion.version == data.parent_version)) is None:
         raise api_error(404, "version_not_found", "Родительская версия подборки не найдена")
-    req = _req_dict(data.requirements) if data.requirements else None
+    req = _req_dict(data.requirements, n.raw_text) if data.requirements else None
     v = _make_version(db, n, user, data.filters.model_dump(exclude_none=True, exclude_defaults=True),
                       data.parent_version, req)
     return _version_out(db, v)
@@ -245,6 +270,27 @@ def get_selection(need_id: uuid.UUID, version: int, user: User = Depends(employe
     if v is None:
         raise api_error(404, "version_not_found", "Версия подборки не найдена")
     return _version_out(db, v)
+
+
+@router.get("/needs/{need_id}/compare", summary="Сравнение 2–3 кандидатов рядом по требованиям потребности",
+            description="Строки — требования потребности (с цитатой из текста) и подтверждающие факты: категория и "
+                        "грейд, θ ± SE с 95 % интервалом и вероятностью уровня, достоверность результата, навыки "
+                        "(T1/T0/нет данных), опыт и формат (T0), паспорт ФСП (T2), зонды (T1), рынок категории, "
+                        "итоговое соответствие. Обезличено, как в подборке. Без refs — первые три из версии.",
+            responses={**AUTH, 404: err("Потребность, версия или кандидат не найдены"),
+                       422: err("Нужно от 2 до 3 разных кандидатов")})
+def compare_candidates(need_id: uuid.UUID, refs: list[str] = Query(default_factory=list, max_length=10),
+                       version: int | None = Query(None, ge=1), user: User = Depends(employer),
+                       db: Session = Depends(get_db)) -> dict:
+    c = my_company(db, user)
+    n = _own_need(db, c, need_id)
+    if version is not None and db.scalar(select(SelectionVersion.id).where(
+            SelectionVersion.need_id == n.id, SelectionVersion.version == version)) is None:
+        raise api_error(404, "version_not_found", "Версия подборки не найдена")
+    refs = list(dict.fromkeys(r.strip() for r in refs if r and r.strip())) or compare_mod.default_refs(db, n, version)
+    if not compare_mod.MIN_REFS <= len(refs) <= compare_mod.MAX_REFS:
+        raise api_error(422, "compare_refs", "Для сравнения выберите от 2 до 3 кандидатов")
+    return compare_mod.compare(db, c, n, refs, version)
 
 
 # ------------------------------------------------------------------ поиск и карточка

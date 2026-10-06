@@ -1,4 +1,5 @@
-"""ATS: настройки компании (Хантфлоу, вебхук), журнал передач кандидатов, записи тестовой ATS-заглушки."""
+"""ATS: настройки компании (Хантфлоу, вебхук), подключения Talantix и «Поток», журнал передач кандидатов,
+связи «кандидат платформы → кандидат в ATS» (идемпотентность), записи тестовых ATS-заглушек."""
 from datetime import datetime
 import uuid
 
@@ -6,6 +7,11 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.db import Base, Timestamps, UUIDPk, utcnow
+
+# Адресаты передачи: ATS-провайдеры (общий интерфейс providers/) и универсальный вебхук
+PROVIDERS = ("huntflow", "talantix", "potok")
+TARGETS = (*PROVIDERS, "webhook")
+TARGETS_SQL = ", ".join(f"'{t}'" for t in TARGETS)
 
 
 class AtsSettings(Timestamps, Base):
@@ -32,7 +38,7 @@ class AtsSettings(Timestamps, Base):
 class AtsDelivery(UUIDPk, Timestamps, Base):
     __tablename__ = "ats_deliveries"
     __table_args__ = (
-        sa.CheckConstraint("target IN ('huntflow', 'webhook')", name="target"),
+        sa.CheckConstraint(f"target IN ({TARGETS_SQL})", name="target"),
         sa.CheckConstraint("status IN ('pending', 'ok', 'error')", name="status"),
         sa.Index("ix_ats_deliveries_company_created", "company_id", "created_at"),
     )
@@ -59,8 +65,64 @@ class AtsStubRecord(UUIDPk, Base):
     __table_args__ = (sa.Index("ix_ats_stub_records_key_created", "stub_key", "created_at"),)
 
     stub_key: Mapped[str] = mapped_column(sa.String(64))
-    kind: Mapped[str] = mapped_column(sa.String(32))  # huntflow_applicant | huntflow_vacancy | webhook
+    # huntflow_applicant | huntflow_vacancy | webhook | talantix_person | talantix_response | talantix_comment |
+    # talantix_transfer | talantix_token | potok_applicant | potok_join | potok_event
+    kind: Mapped[str] = mapped_column(sa.String(32))
     external_id: Mapped[int | None]
     payload: Mapped[dict] = mapped_column(default=dict)
     signature_valid: Mapped[bool | None]
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+
+
+class AtsConnection(Timestamps, Base):
+    """Подключение компании к ATS-провайдеру (Talantix, «Поток»): режим, токены (Fernet), выбранная вакансия.
+
+    ``mode = demo`` — наша заглушка, имитирующая API провайдера (жюри видит сценарий без реальных токенов);
+    ``mode = real`` — настоящий API (api.talantix.ru, app.potok.io) с токенами владельца аккаунта.
+    """
+
+    __tablename__ = "ats_connections"
+    __table_args__ = (sa.CheckConstraint("provider IN ('talantix', 'potok')", name="provider"),
+                      sa.CheckConstraint("mode IN ('demo', 'real')", name="mode"))
+
+    company_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("companies.id", ondelete="CASCADE"), primary_key=True)
+    provider: Mapped[str] = mapped_column(sa.String(16), primary_key=True)
+    enabled: Mapped[bool] = mapped_column(default=False)
+    mode: Mapped[str] = mapped_column(sa.String(8), default="real")
+    base_url: Mapped[str | None] = mapped_column(sa.String(255))
+    # JSON {access_token, refresh_token} (Talantix) или {token} («Поток») — зашифровано целиком
+    secrets_enc: Mapped[str | None] = mapped_column(sa.Text)
+    token_expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    refresh_expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    token_refreshed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    # Вакансия в ATS по умолчанию (для приглашений) и этап (необязательно)
+    vacancy_id: Mapped[int | None] = mapped_column(sa.BigInteger)
+    vacancy_title: Mapped[str | None] = mapped_column(sa.String(255))
+    stage_id: Mapped[int | None] = mapped_column(sa.BigInteger)
+    stage_title: Mapped[str | None] = mapped_column(sa.String(255))
+    # Сопоставление вакансий платформы с вакансиями ATS: {platform_vacancy_id: {"id": 123, "title": "…"}}
+    vacancy_map: Mapped[dict] = mapped_column(default=dict)
+    # Источник кандидата «Встречный» в справочнике ATS (Talantix personSources) — находим или создаём один раз
+    source_id: Mapped[int | None] = mapped_column(sa.BigInteger)
+    last_check_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    last_check_ok: Mapped[bool | None]
+    last_check_info: Mapped[dict] = mapped_column(default=dict)
+
+
+class AtsLink(UUIDPk, Timestamps, Base):
+    """Кандидат платформы ↔ кандидат в ATS компании. Повторная передача не создаёт дубликат: берётся external_id.
+
+    ``lock_until`` — короткая блокировка на время передачи (два воркера uvicorn, двойной клик, авто + вручную).
+    """
+
+    __tablename__ = "ats_links"
+    __table_args__ = (sa.UniqueConstraint("company_id", "provider", "candidate_user_id",
+                                          name="uq_ats_links_company_provider_candidate"),)
+
+    company_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("companies.id", ondelete="CASCADE"))
+    provider: Mapped[str] = mapped_column(sa.String(16))
+    candidate_user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id", ondelete="CASCADE"))
+    external_id: Mapped[str | None] = mapped_column(sa.String(64))
+    # Вакансии ATS, на которые кандидат уже добавлен: [{"id": 123, "join_id": 456}]
+    vacancies: Mapped[list] = mapped_column(default=list)
+    lock_until: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))

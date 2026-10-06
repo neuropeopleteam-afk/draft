@@ -1,54 +1,170 @@
 # Интеграция с ATS
 
 Когда кандидат принимает приглашение (или сам откликается на вакансию), работодателю нужен кандидат в его
-системе подбора, а не в ещё одном кабинете. Платформа передаёт карточку тремя способами: **Хантфлоу (API v2)**,
-**универсальный вебхук** с подписью HMAC и **экспорт JSON**. Для демо есть **тестовая ATS** на нашем сервере.
+системе подбора, а не в ещё одном кабинете. Платформа передаёт **верифицированный профиль** — категорию и грейд,
+подтверждённые навыки T1, паспорт ФСП T2, вилку оффера, ссылку на PDF-профиль — в:
 
-Код: `backend/app/integrations/ats/`, фронтенд `frontend/src/integrations/Ats.tsx`
-(кабинет работодателя → «Интеграция с ATS»; кнопки «В ATS» и «Экспорт JSON» у принятых приглашений и откликов).
+| Система | API | Что делает адаптер |
+|---|---|---|
+| **Talantix** (hh.ru) | GraphQL `https://api.talantix.ru/graphql`, OAuth 2.0 (access + refresh) | кандидат с резюме TMS и structuredResume, отклик на вакансию, этап, комментарий |
+| **«Поток»** (potok.io) | REST v3 `https://app.potok.io/api/v3`, токен компании | кандидат с резюме на вакансии, этап, комментарий |
+| **Хантфлоу** | REST v2 `https://api.huntflow.ru/v2`, токен | кандидат с резюме, на вакансии и этапе |
+| **Вебхук** | `POST` JSON с подписью HMAC-SHA256 | любая система, в том числе своя |
+| **Экспорт JSON** | `vstrechny.candidate.v1` | ручная загрузка |
+
+У Talantix, «Потока» и Хантфлоу два режима: **демо** (заглушка на нашем сервере повторяет API системы — жюри
+видит сценарий без реальных токенов) и **реальный** (токены владельца аккаунта). Код один и тот же, меняется
+только адрес.
+
+Код: `backend/app/integrations/ats/` — `providers/` (общий интерфейс и адаптеры), `service.py` (журнал, повторы,
+идемпотентность), `router.py` (API), `stub_providers.py` и `stub_router.py` (демо-заглушки), `profile.py`
+(профиль для ATS и подписанная ссылка на PDF), `cli.py` (импорт токенов из файла секретов).
+Фронтенд: `frontend/src/integrations/Ats.tsx` (кабинет работодателя → «Интеграция с ATS»; кнопки «В ATS» и
+«Экспорт JSON» у принятых приглашений и откликов). Схемы из документации систем: `docs/ats/`.
 
 ## 1. Правила
 
 - Контакты уходят в ATS **только когда они уже раскрыты** работодателю: приглашение принято или кандидат
   откликнулся сам. Правило ТЗ «контакты после согласия кандидата» сохраняется и за пределами платформы.
-- Автоматическая передача — при принятии приглашения, если включено «Передавать автоматически».
-  Вручную — кнопка «В ATS» (приглашение или отклик).
-- До 3 попыток с паузой 0,5 → 2 с (`ATS_MAX_ATTEMPTS`); результат, HTTP-код и текст ошибки — в журнале
-  `ats_deliveries` (без ПДн), журнал виден работодателю.
-- Токен Хантфлоу и секрет вебхука хранятся зашифрованными (Fernet, `INTEGRATIONS_SECRET_KEY`), в интерфейсе — маска.
-- Защита от SSRF: только `https://` и публичные адреса; адреса во внутренней сети отклоняются
-  (исключение — наша тестовая ATS).
+- Автоматическая передача — при принятии приглашения и при «Пригласить» по отклику, если включено
+  «Передавать автоматически». Вручную — кнопка «В ATS».
+- **Без дублей.** Таблица `ats_links`: кандидат платформы → id кандидата в ATS и вакансии, на которые он уже
+  добавлен. Id сохраняется сразу после создания, поэтому повтор после сбоя продолжает с того же места. Строка
+  связи берётся под короткую блокировку (`lock_until`, 90 с) — авто-передача и двойной клик на двух воркерах не
+  создадут двух кандидатов. В Talantix дополнительно ищем кандидата по почте (`persons`, поиск по контактам):
+  найден — отклик на вакансию вместо нового кандидата.
+- Повтор без `force` — «уже передано»; с `force` — кандидат не создаётся заново, обновляются комментарий и этап.
+- До 3 попыток с паузой 0,5 → 2 с (`ATS_MAX_ATTEMPTS`); 400/401/402/403/404/422 не повторяются. Результат,
+  шаги, HTTP-код и текст ошибки — в журнале `ats_deliveries` (без ПДн); строку с ошибкой можно «Повторить».
+- Токены хранятся зашифрованными (Fernet, `INTEGRATIONS_SECRET_KEY`), в интерфейсе — маска. Новая пара токенов
+  Talantix после обновления сохраняется сразу (refresh одноразовый).
+- Защита от SSRF: только `https://` и публичные адреса (исключение — наши заглушки).
 - Сбой ATS не влияет на принятие приглашения: передача идёт в фоне.
 
-## 2. Хантфлоу (публичный API v2)
+## 2. Профиль для ATS
 
-Работодатель в настройках компании задаёт: адрес API (`https://api.huntflow.ru/v2` — облако; для коробочной
-версии — свой), **токен** (Хантфлоу → Настройки → API), **id организации** (`account_id`), **id вакансии**
-и, при желании, id этапа. Кнопка «Проверить связь» вызывает `GET /me`, `GET /accounts` и
-`GET /accounts/{account_id}/vacancies/statuses`.
+Общая основа (`profile.build`) из карточки `vstrechny.candidate.v1`:
 
-Вызовы при передаче (заголовок `Authorization: Bearer <токен>`):
+| Что | Откуда | Уровень |
+|---|---|---|
+| Фамилия, имя, отчество | раскрытые контакты (разбор «Фамилия Имя Отчество» в любом порядке) | — |
+| Почта, телефон, Telegram | раскрытые контакты | — |
+| Категория и грейд | «Backend · Middle» | T1 |
+| Адаптивный тест | верно из N, θ ± SE, дата, достоверность результата | T1 |
+| Подтверждённые навыки | навыки, подтверждённые заданиями теста; зонды работодателя | T1 |
+| Паспорт ФСП | привязан ли, источник (реестр / ФСП ID / демо), подтверждённые достижения | T2 |
+| Заявлено кандидатом | стек, опыт, формат работы, город | T0 |
+| Почему выбран | доказательства из приглашения | T0–T2 |
+| Оффер | позиция и вилка «от–до» | — |
+| PDF-профиль | `GET /api/ats/profile/{token}.pdf` — подписанная ссылка (JWT, 180 дней) на компанию и кандидата: открывается из ATS без входа; контакты в PDF — только если раскрыты этой компании | — |
+| Карточка | ссылка на карточку кандидата в кабинете работодателя | — |
 
-1. `POST /accounts/{account_id}/applicants` — создать кандидата:
+Вилка оффера передаётся текстом (резюме, комментарий), а не в поле «желаемая зарплата» — это предложение
+работодателя, а не ожидания кандидата.
 
-   | Поле Хантфлоу | Откуда |
+## 3. Talantix
+
+Документация: https://api.talantix.ru/docs/. Интроспекция схемы (`POST /graphql/schema`) без токена недоступна
+(400), поэтому используемое подмножество схемы взято из справочника документации:
+`docs/ats/talantix-schema.subset.graphql`. Тест `test_talantix_queries_match_documented_schema` сверяет каждый
+запрос адаптера (поля, аргументы, типы переменных) с этим подмножеством, а `…inputs_match…` — входные объекты.
+
+**Авторизация.** API доступно на тарифе «Оптимальный». Пару токенов выпускает пользователь с ролью
+«Администратор» в личном кабинете; ссылка на JSON с токенами живёт 30 дней или до первого обновления.
+В настройках вставляется JSON целиком (`access_token`, `refresh_token`, `expires_in`, `refresh_token_expires_in`,
+`created_at` в мс) — или access и refresh по отдельности. Access живёт 1 день, refresh — 120 дней, одноразовый.
+
+- `GET /auth_check` → 204 — «Проверить подключение»; 401 `{"type": "invalid_token", "detail": "token_expired"}` —
+  токен истёк.
+- `POST /oauth/token` (`application/x-www-form-urlencoded`: `grant_type=refresh_token&refresh_token=…`) —
+  новая пара. Обновляем заранее (за минуту до `expires_at`) и по 401 с одной повторной попыткой; новая пара
+  сразу пишется в БД. `400 invalid_grant` — refresh истёк или уже использован: нужна новая пара.
+- Заголовки каждого запроса: `Authorization: Bearer`, `Content-Type: application/json`, обязательный
+  `User-Agent` — `Vstrechny-ATS/1.0 (<компания>; <контакт>)`, контакт — `ATS_USER_AGENT_CONTACT`.
+- Ответы GraphQL 200 / 210 (INTERNAL) / 269 (EXTERNAL_SYSTEM_ERROR); предметные ошибки — типами в `data`
+  (`PersonSaveError` с полями и нарушенными ограничениями → журнал). 403 `insufficient_permissions` — нет тарифа
+  или прав. Одно корневое поле на запрос.
+
+**Передача** (`providers/talantix.py`):
+
+1. `persons(filter: {search: <почта>, searchFrom: [CONTACTS]})` — кандидат уже в базе? Да — дубликат не создаём.
+2. `personSources(filterByName: "Встречный (ФСП)")`, при отсутствии — `createPersonSource` (один раз, id
+   кэшируется в подключении).
+3. `dictionaries { areas }` — `areaId` по городу кандидата (если нашёлся; иначе без региона).
+4. `createPerson(personCreate: PersonCreateInput)`:
+
+   | Поле Talantix | Значение |
    |---|---|
-   | `last_name`, `first_name`, `middle_name` | ФИО кандидата (разбор «Фамилия Имя Отчество» в любом порядке) |
-   | `email`, `phone` | раскрытые контакты |
-   | `position` | категория кандидата («Backend · Middle») |
-   | `money` | вилка предложения |
-   | `social` | Telegram, если указан |
-   | `externals[0].data.body` | текст резюме: категория, вилка, доказательства T1/T2 (тест, навыки, ФСП), ссылка на карточку |
+   | `firstName`, `lastName`, `middleName` | ФИО (нет ФИО — «Кандидат» + код кандидата) |
+   | `contacts` | `email`, `cell`, `telegram` |
+   | `vacancyIds` | выбранная вакансия |
+   | `sourceId` | источник «Встречный (ФСП)» |
+   | `areaId` | регион из справочника areas |
+   | `customResumes [{type: TMS, text}]` | HTML профиля: все разделы п. 2 с уровнями T0/T1/T2 и ссылками |
+   | `structuredResume.title` | «Backend · Middle — <позиция>» |
+   | `structuredResume.link` | ссылка на PDF-профиль |
+   | `structuredResume.skills` | текст профиля |
+   | `structuredResume.keySkills` | подтверждённые навыки (T1) |
 
-2. `POST /accounts/{account_id}/applicants/{applicant_id}/vacancy` — закрепить на вакансии:
-   `vacancy`, `status` (заданный этап или первый активный этап подбора), `comment` («Принял приглашение на
-   платформе „Встречный“…»).
+   Кандидат из базы или повтор на другую вакансию — `createResponses(personIds, vacancyIds)`.
+5. `transferPersonsToWorkflowStatus(personIds, workflowStatusId)` — если выбран этап (идемпотентно).
+6. `createPersonComment` на вакансии — вилка оффера, тест и навыки T1, ФСП T2, ссылка на PDF; для кандидата из
+   базы — полный профиль (резюме существующего кандидата не перезаписываем).
 
-Если вакансия не задана — кандидат только добавляется в базу.
+Вакансии для выбора — `vacancies(first: 200, filter: {vacancyStatus})`, этапы — `vacancy(id) { workflowStatuses }`.
 
-## 3. Универсальный вебхук
+## 4. «Поток»
 
-`POST <URL>` с телом JSON (схема `vstrechny.candidate.v1`, см. п. 4) и заголовками:
+Документация: https://api-doc.potok.io/ (OpenAPI 3.1: https://api-doc.potok.io/potok-api-v3.yml; подмножество,
+которое использует адаптер, — `docs/ats/potok-api-v3.subset.json`; тест сверяет с ним тела запросов).
+
+**Авторизация.** Токен компании: настройки компании в «Потоке» → «Генерация токенов». Передаётся
+`Authorization: Bearer <token>`. Частота запросов ограничена (429 при превышении). 402 — подписка просрочена.
+
+**Передача** (`providers/potok.py`):
+
+1. `POST /applicants.json` `{"applicant": {...}}`:
+
+   | Поле «Потока» | Значение |
+   |---|---|
+   | `first_name`, `last_name`, `middle_name` | ФИО |
+   | `emails`, `phones` | почта; телефон цифрами с кодом страны (`79001112233`) |
+   | `accounts [{url, icon_id: telegram}]` | Telegram |
+   | `source_type`, `source_url` | `sourced`, адрес платформы — источник из «Источники кандидатов» |
+   | `resumes[0].cv_params.title` | «Backend · Middle — <позиция>» |
+   | `…skills` | HTML профиля (все разделы п. 2) |
+   | `…about_me` | оффер и вилка |
+   | `…skill_set` | подтверждённые навыки (T1) |
+   | `…education.attestation` | адаптивный тест «Встречный» (T1) |
+   | `…awards` | достижения ФСП (T2) |
+   | `…certificate` | PDF-профиль (ссылка) |
+   | `events {body, type: Event::Comment}` | комментарий: вилка, T1/T2, ссылка на PDF |
+   | `ajs_joins [{job_id}]` | сразу на выбранную вакансию |
+
+   Согласие на обработку ПДн (`workflows.personal_data_agreement`) за кандидата не проставляем.
+2. Повтор на другую вакансию — `POST /ajs_joins.json` (`job_id`, `applicant_id`, `stage_type: sourced`);
+   422 «кандидат на вакансии уже существует» — уже добавлен, не ошибка.
+3. `POST /ajs_joins/{id}/change_stage.json` `{stage_id}` — если выбран этап.
+4. `POST /events.json` (`Event::Comment`, `job_id`) — комментарий при повторной передаче.
+
+Поиска кандидата по почте в API «Потока» нет, поэтому дубликаты исключает связь `ats_links`. Вакансии и этапы
+для выбора — `GET /jobs.json?by_scope=all` (у каждой вакансии `stages`).
+
+## 5. Хантфлоу
+
+В настройках: адрес API (`https://api.huntflow.ru/v2` — облако; для коробки — свой), **токен** (Хантфлоу →
+Настройки → API), **id организации** (`account_id`), **id вакансии**, при желании — id этапа.
+«Проверить подключение» — `GET /me`, `GET /accounts`, `GET /accounts/{id}/vacancies/statuses`; вакансии для
+выбора — `GET /accounts/{id}/vacancies`.
+
+1. `POST /accounts/{account_id}/applicants`: `last_name`, `first_name`, `middle_name`, `email`, `phone`,
+   `position` (категория), `money` (вилка), `social` (Telegram), `externals[0].data.body` — текст профиля п. 2.
+2. `POST /accounts/{account_id}/applicants/{applicant_id}/vacancy`: `vacancy`, `status` (заданный этап или
+   первый), `comment` — оффер. Повтор с `force` вызывает только этот метод (он же меняет этап).
+
+## 6. Универсальный вебхук
+
+`POST <URL>` с телом JSON (схема `vstrechny.candidate.v1`, см. п. 7) и заголовками:
 
 | Заголовок | Значение |
 |---|---|
@@ -73,7 +189,7 @@ def verify(secret: str, body: bytes, header: str, tolerance_s: int = 300) -> boo
 
 Ответ 2xx — доставлено; иначе повтор.
 
-## 4. Экспорт JSON (`vstrechny.candidate.v1`)
+## 7. Экспорт JSON (`vstrechny.candidate.v1`)
 
 `GET /api/employer/invitations/{id}/export.json`, `GET /api/employer/applications/{id}/export.json` — то же тело,
 что уходит в вебхук:
@@ -91,36 +207,85 @@ def verify(secret: str, body: bytes, header: str, tolerance_s: int = 300) -> boo
   },
   "context": {"type": "invitation", "id": "…", "status": "accepted", "position_title": "…",
               "salary_from": 200000, "salary_to": 280000, "accepted_at": "…", "evidence": […]},
+  "links": {"pdf": "https://fsp.neuropeople.pro/api/ats/profile/<token>.pdf",
+            "card": "https://fsp.neuropeople.pro/employer/candidates/C-7Q2K9M"},
   "evidence_levels": {"T0": "заявлено кандидатом", "T1": "подтверждено тестом/зондом", "T2": "подтверждено реестром ФСП"}
 }
 ```
 
 Для отклика на вакансию `context.type = "vacancy_application"`, плюс `vacancy_id`, `applied_at`, `cover_letter`.
 
-## 5. Тестовая ATS (для демо)
+## 8. Демо-режим (заглушки)
 
-Кнопка «Подключить тестовую ATS» включает обе интеграции с адресами нашей заглушки:
+Кнопка «Подключить все демо-ATS» (или «Демо» у отдельной системы) включает заглушки на нашем сервере.
+Платформа обращается к ним по настоящему HTTP через публичный адрес — тем же клиентом, что и к реальным системам.
 
-- `…/api/ats-stub/huntflow/v2/…` — те же методы, что у Хантфлоу (`/me`, `/accounts`, `/accounts/1/vacancies/statuses`,
-  `/accounts/1/applicants`, `/accounts/1/applicants/{id}/vacancy`), токен — персональный ключ компании;
-- `…/api/ats-stub/webhook/{ключ}` — приём вебхука с проверкой подписи.
+| Заглушка | Адрес | Что повторяет |
+|---|---|---|
+| Talantix | `/api/ats-stub/talantix/{auth_check, oauth/token, graphql}` | обязательный User-Agent и Bearer, 401 `token_expired`, одноразовый refresh (`invalid_grant`), access живёт 15 минут — автообновление видно в журнале; поля me, vacancies, vacancy, persons, personSources, createPersonSource, createPerson (валидация как `PersonSaveError`), createResponses, transferPersonsToWorkflowStatus, createPersonComment, dictionaries.areas |
+| «Поток» | `/api/ats-stub/potok/api/v3/…` | `jobs.json`, `jobs/{id}.json`, `applicants.json` (422 с полями), `applicants/{id}.json`, `ajs_joins.json` (422 при повторе), `change_stage.json`, `events.json`; Bearer или `?token=` |
+| Хантфлоу | `/api/ats-stub/huntflow/v2/…` | `/me`, `/accounts`, `/accounts/1/vacancies`, `/accounts/1/vacancies/statuses`, `/accounts/1/applicants`, `/accounts/1/applicants/{id}/vacancy` |
+| Вебхук | `/api/ats-stub/webhook/{ключ}` | приём с проверкой подписи |
 
-Всё пришедшее видно в блоке «Тестовая ATS: что пришло» (кандидат, вакансия и этап, подпись верна/неверна, тело
-JSON). Записи заглушки привязаны к компании и видны только её сотрудникам.
+Вакансии демо: «Backend-разработчик (платежи)», «Python-разработчик (интеграции)», «Frontend-разработчик
+(React)», «Аналитик данных» (архив), этапы «Новые → Первичный контакт → Интервью → Оффер → Вышел на работу».
+Всё пришедшее видно в блоке «Тестовая ATS: что пришло». У демо-компании жюри все четыре системы подключены
+сидом: принятие приглашения Ильёй Сергеевым сразу уходит в Talantix, «Поток», Хантфлоу и вебхук.
 
-## 6. API
+## 9. Как подключить реальные системы
+
+**Через кабинет** (рекомендуется): «Интеграция с ATS» → вкладка системы → режим «Реальный» → вставить токены →
+«Сохранить» → «Проверить подключение» → «Загрузить вакансии из ATS», выбрать вакансию и этап → «Сохранить».
+Демо и реальный режим не смешиваются: при смене режима или адреса прежние связи кандидатов сбрасываются.
+
+**Через файл секретов** (без ввода в браузере): `/opt/spectrek_fsp/secrets/ats.env` на сервере
+(подключается docker-compose как `ATS_ENV_FILE`, файл необязательный):
+
+```
+TALANTIX_TOKENS_JSON={"access_token":"…","refresh_token":"…","expires_in":86400,"refresh_token_expires_in":10368000,"created_at":…}
+TALANTIX_VACANCY_ID=…
+POTOK_TOKEN=…
+POTOK_VACANCY_ID=…
+HUNTFLOW_TOKEN=…
+HUNTFLOW_ACCOUNT_ID=…
+HUNTFLOW_VACANCY_ID=…
+ATS_USER_AGENT_CONTACT=<почта для Talantix>
+```
+
+и импорт в компанию работодателя (выводит только маски):
+
+```
+docker compose exec api python -m app.integrations.ats.cli import-env --employer-email <почта работодателя>
+docker compose exec api python -m app.integrations.ats.cli check --employer-email <почта работодателя>
+```
+
+Refresh Talantix одноразовый: после первого обновления пара из файла устаревает, актуальная живёт в БД.
+Повторный импорт Talantix без `--force` пропускается. Реальные токены не стоит класть в демо-компанию жюри:
+сброс демо-данных жюри (`POST /api/jury/reset`) удаляет компанию вместе с подключениями.
+
+## 10. API
 
 | Метод | Назначение |
 |---|---|
-| `GET/PUT /api/employer/ats/settings` | настройки (токен и секрет — только запись) |
+| `GET /api/employer/ats/providers` | все системы: режим, включено, маска токена, сроки токенов, вакансия и этап, последняя проверка |
+| `PUT /api/employer/ats/providers/{talantix\|potok}` | режим, токены (только запись), адрес, вакансия и этап, сопоставление вакансий платформы |
+| `POST /api/employer/ats/providers/{code}/demo` | демо-режим системы |
+| `POST /api/employer/ats/providers/{code}/check` | проверить подключение (Talantix — `auth_check`, `me`, вакансии) |
+| `GET /api/employer/ats/providers/{code}/vacancies` | вакансии из ATS для выбора |
+| `GET /api/employer/ats/providers/{code}/vacancies/{id}/stages` | этапы вакансии |
+| `POST /api/employer/ats/demo/connect-all` | подключить все демо-ATS |
+| `GET/PUT /api/employer/ats/settings` | Хантфлоу, вебхук, «Передавать автоматически» |
 | `GET /api/employer/ats/webhook-secret` | показать секрет вебхука работодателю |
-| `POST /api/employer/ats/huntflow/check` | проверить токен и организацию |
-| `POST /api/employer/ats/stub/connect` | подключить тестовую ATS |
-| `GET /api/employer/ats/stub/records` | что пришло в тестовую ATS |
-| `GET /api/employer/ats/deliveries` | журнал передач |
-| `POST /api/employer/ats/push` `{invitation_id | application_id, target?}` | передать вручную |
+| `POST /api/employer/ats/huntflow/check` | проверить Хантфлоу (совместимость) |
+| `POST /api/employer/ats/stub/connect` | подключить заглушки Хантфлоу и вебхука |
+| `GET /api/employer/ats/stub/records` | что пришло в заглушки |
+| `GET /api/employer/ats/deliveries` | журнал передач (шаги, id в ATS, ошибки) |
+| `POST /api/employer/ats/deliveries/{id}/retry` | повторить передачу из журнала |
+| `POST /api/employer/ats/push` `{invitation_id \| application_id, target?, ats_vacancy_id?, force?}` | передать вручную; `ats_vacancy_id` — на другую вакансию в ATS |
+| `GET /api/ats/profile/{token}.pdf` | PDF-профиль по подписанной ссылке (для ATS) |
 
-## 7. Дальше
+## 11. Дальше
 
-Другие ATS (Talantix, E-Staff, Potok) — через их API по тому же шаблону `clients.py`; встречный канал
-(статус кандидата в ATS → статус на платформе) — через вебхуки Хантфлоу (`APPLICANT` события).
+Встречный канал (статус кандидата в ATS → статус на платформе): вебхуки Хантфлоу (`APPLICANT`), в «Потоке» и
+Talantix — периодический опрос этапа по сохранённым id из `ats_links`. Другие ATS (E-Staff, Friend Work) — по
+тому же интерфейсу `providers/base.Provider`.

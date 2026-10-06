@@ -43,20 +43,32 @@ def generate(seed: int):
     buggy, fixed = "\n".join(assemble(loop_bad)), "\n".join(assemble(loop_good))
     key_line = buggy.splitlines().index(loop_bad) + 1
     assert changed_lines(buggy, fixed) == {key_line}
+    # Равноценная строка: замыкание в push можно исправить само по себе (IIFE фиксирует i).
+    # Калибровка 05.10: 89 % ответов моделей ≥ 7B — строка push; ключ — объявление цикла.
+    push_bad = f"    handlers.push(() => log({body_ref}));"
+    push_alt = f"    handlers.push(((i) => () => log({body_ref}))(i));"
+    alt_line = buggy.splitlines().index(push_bad) + 1
+    alt_fixed = "\n".join(push_alt if l == push_bad else l for l in buggy.splitlines())
+    assert changed_lines(buggy, alt_fixed) == {alt_line}
     expect = (f"{msg} {pick + 1}: {labels[pick]}" if use_index else f"{msg}: {labels[pick]}")
     test = (f"const out = [];\nconst hs = {fn}({json.dumps(labels, ensure_ascii=False)}, (m) => out.push(m));\n"
             f"hs[{pick}]();\n__assert(out[0] === {json.dumps(expect, ensure_ascii=False)}, 'got ' + out[0]);")
     wrong = (f"{msg} {len(labels) + 1}: undefined" if use_index else f"{msg}: undefined")
     checks = [Check(name="buggy_fails", runner="node", program=js_harness(buggy, test), expect="fail"),
               Check(name="fixed_passes", runner="node", program=js_harness(fixed, test),
+                    expect="pass", embeds_display_code=False),
+              Check(name=f"alt_fix:{alt_line}", runner="node", program=js_harness(alt_fixed, test),
                     expect="pass", embeds_display_code=False)]
     stem = (f"Функция `{fn}` ({ctx}) создаёт обработчики кликов для элементов `{coll}`. Вызов "
             f"`handlers[{pick}]()` должен вывести `{expect}`, но выводит `{wrong}`. Укажите номер "
-            f"строки, в которой находится причина ошибки.")
-    ak = AnswerKey(kind="line", value=key_line,
+            f"строки, которую достаточно исправить, чтобы обработчики работали верно.")
+    ak = AnswerKey(kind="line", value=key_line, accept=[str(alt_line)],
                    explanation=f"Строка {key_line}: `var` создаёт одну переменную i на всю функцию; "
                                "к моменту клика цикл завершён и i равна длине массива. `let` "
-                               "создаёт новую привязку на каждой итерации.")
+                               "создаёт новую привязку на каждой итерации. Засчитывается и строка "
+                               f"{alt_line}: замыкание можно исправить на месте, зафиксировав i "
+                               "(IIFE или bind), — это тоже однострочное исправление.")
     return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="closure_loop_var",
-                         params={"fixed_code": fixed, "use_index": use_index})
+                         params={"fixed_code": fixed, "use_index": use_index,
+                                 "alt_fixes": {str(alt_line): alt_fixed}})

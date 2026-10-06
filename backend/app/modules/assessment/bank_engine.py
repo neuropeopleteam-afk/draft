@@ -1,9 +1,13 @@
 """Движок теста на пакете банка заданий ``assessment_bank`` (протокол AssessmentEngine из engine.py).
 
 Сессия = общий блок + блок направления, адаптивный выбор семейства по максимуму информации
-(``psychometrics.CATSession``: доля общего блока ≈ 40 %, канарейки на позициях 2, 6, 10, остановка по
-SE ≤ 0,35 при 8–16 заданиях или по лимиту 60 минут). Если по итогу θ лежит у порога заявленного грейда
-(|θ − порог| < SE), сессия продлевается на 3 задания, выбранных по информации в самом пороге.
+(``psychometrics.CATSession``: доля общего блока ≈ 40 %, канарейки на позициях 2, 6, 10). Классификация по
+грейду: с 5-го задания информация считается в ближайшем неопределённом пороге грейда, основная часть (8–16
+заданий, до 60 минут) заканчивается, когда ни один порог не попадает в θ̂ ± z·SE (z = 1,28 — 90 % с одной
+стороны) или SE ≤ 0,35. Если после неё ближайший порог ещё внутри интервала — дотестирование до точности у
+этого порога: до 6 коротких заданий (≤ 5 минут каждое, всего ≤ 20 минут) — сначала из своего субпула, затем из
+остального банка направления, кроме семейств прошлой попытки и субпулов на карантине, — пока порог не выйдет
+из интервала.
 Итог: θ, SE, решение по грейду ``psychometrics.decide`` (без принудительного понижения), детектор предзнания
 по канарейкам и времени ответов (``psychometrics.CanaryDetector``) с пересчётом θ без подозрительных ответов.
 
@@ -94,6 +98,13 @@ def _finite(obj: Any) -> Any:
     return obj
 
 
+def _items_ru(n: int) -> str:
+    n = int(n)
+    word = "задание" if n % 10 == 1 and n % 100 != 11 else (
+        "задания" if 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14 else "заданий")
+    return f"{n} коротк{'ое' if word == 'задание' else 'их'} {word}"
+
+
 def _x_list(it: dict) -> list[float]:
     return [float("nan") if v is None else float(v) for v in it["x"]]
 
@@ -119,13 +130,16 @@ class BankEngine:
         s = self._settings()
         return {"min_items": s.assessment_min_items, "max_items": s.assessment_max_items,
                 "se_target": s.assessment_se_target, "max_time_s": s.assessment_max_minutes * 60.0,
-                "ext_items": s.assessment_extension_items, "subpools": max(1, s.assessment_subpools),
+                "ext_items": s.assessment_extension_items, "ext_time_s": s.assessment_extension_minutes * 60.0,
+                "stop_rule": s.assessment_stop_rule, "classify_z": s.assessment_classify_z,
+                "select_at": s.assessment_select_at, "ext_own_first": s.assessment_extension_own_first,
+                "subpools": max(1, s.assessment_subpools),
                 "exposure": s.assessment_exposure,
                 "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer}}
 
     # ------------------------------------------------------------------ протокол
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
-              previous_subpools: list[int] | None = None) -> dict:
+              previous_subpools: list[int] | None = None, previous_families: list[str] | None = None) -> dict:
         cfg = self._base_cfg()
         # Ротация субпулов: первая попытка — по seed сессии, повторная — другой субпул (параллельная форма);
         # субпулы на карантине (утечка) не выдаются. См. exposure.py.
@@ -134,6 +148,8 @@ class BankEngine:
         return {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": claimed_grade,
             "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
+            # семейства прошлой попытки не попадают в дотестирование (оно берёт задания и из другого субпула)
+            "exclude_ext": sorted(set(previous_families or [])),
             "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
             "started_at": time.time(),
         }
@@ -202,7 +218,7 @@ class BankEngine:
         sess = self._rebuild(state)
         theta, se = float(sess.theta), float(sess.se)
         done = [i for i in state["items"] if i["done"]]
-        lookup = {p.family_id: p for p in sess.scored_pool + sess.canary_pool}
+        lookup = sess.items
         clean, canary, clean_idx = [], [], []
         for k, it in enumerate(done):
             pi = lookup.get(it["family_id"])
@@ -245,14 +261,19 @@ class BankEngine:
         integ = integrity.assess([{
             "format": i["format"], "canary": i["canary"], "time_s": i.get("time_s"), "time_limit_s": i["time_limit_s"],
             "score": (float(np.mean([v for v in i["x"] if v is not None])) if any(v is not None for v in i["x"]) else None),
-            "signals": i.get("signals")} for i in done], pk)
+            "signals": i.get("signals"),
+            "injection": any((g or {}).get("error") == "prompt_injection_suspected" for g in i.get("grading") or [])}
+            for i in done], pk)
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families,
             "stop_reason": state.get("stop_reason") or sess.stop_reason or "finished_early",
             "n_scored": len(scored), "n_canaries": sum(1 for i in done if i["canary"]),
             "time_used_s": round(sum(i.get("time_s", 0) for i in done), 1),
-            "extension": ({"items": ext["n"], "theta_before": ext["theta"], "se_before": ext["se"],
-                           "cut": ext["cut"]} if ext else None),
+            "extension": ({"items": sum(1 for i in scored if i.get("ext")), "max_items": ext["n"],
+                           "theta_before": ext["theta"], "se_before": ext["se"], "cut": ext["cut"]} if ext else None),
+            "classification": {"stop_rule": state["cfg"].get("stop_rule", "se"),
+                               "z": state["cfg"].get("classify_z", 1.0),
+                               "grade_determined": not sess.uncertain_cuts(theta, se)},
             "pending_review": len(pending),
             "preknowledge": {"flagged": det.flagged, "combined": round(det.combined, 3),
                              "z_speed": round(det.z_speed, 3), "z_score": round(det.z_score, 3),
@@ -288,11 +309,14 @@ class BankEngine:
     def _cfg(self, state: dict) -> CATConfig:
         c = state["cfg"]
         ext = state.get("ext")
-        if ext:
-            return CATConfig(min_items=0, max_items=ext["start"] + ext["n"], se_target=-1.0,
-                             max_time_s=c["max_time_s"] + 1800.0)
+        # сессии, начатые до 06.10 (в cfg нет новых ключей), доигрываются по прежним правилам остановки и выбора
         return CATConfig(min_items=c["min_items"], max_items=c["max_items"], se_target=c["se_target"],
-                         max_time_s=c["max_time_s"])
+                         max_time_s=c["max_time_s"], cuts=tuple(self.scale.cuts[g] for g in GRADES),
+                         stop_rule=c.get("stop_rule", "se"), classify_z=float(c.get("classify_z", 1.0)),
+                         select_at=c.get("select_at", "theta"),
+                         ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
+                         ext_time_s=float(c.get("ext_time_s", 1800.0)),
+                         ext_own_first=bool(c.get("ext_own_first", False)))
 
     def _rebuild(self, state: dict) -> CATSession:
         pool = list(_pool(state["cfg"].get("subpools", 1)))
@@ -304,55 +328,36 @@ class BankEngine:
         rng = np.random.default_rng([state["seed"], len(state["items"])])
         cfg = state["cfg"]
         expo = exposure_control(state["direction"]) if cfg.get("exposure", "none") == "sympson_hetter" else None
-        subpool = None if state.get("ext") else state.get("subpool")
+        # карантин читается на каждом запросе: субпул, выведенный из ротации посреди сессии, не попадёт и в дотестирование
+        blocked = parse_quarantine(self._settings().assessment_subpool_quarantine)
         sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
-                             subpool, rng, max_per_format=cfg.get("max_per_format", {}))
-        lookup = {p.family_id: p for p in sess.scored_pool + sess.canary_pool}
+                             state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
+                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked)
+        lookup = sess.items
         for it in state["items"]:
             if it["done"] and it["family_id"] in lookup:
                 sess.record(lookup[it["family_id"]], _x_list(it), it["log_t"], time_s=it["time_s"])
         for it in state["items"]:
             sess.used.add(it["family_id"])
         sess.used.update(state.get("skipped", []))
+        ext = state.get("ext")
+        if ext:
+            sess.ext_start, sess.ext_cut = int(ext["start"]), ext.get("cut")
+            sess.ext_reason_before = ext.get("reason_before", "")
         return sess
 
     def _select(self, state: dict, sess: CATSession) -> PoolItem | None:
-        ext = state.get("ext")
-        claimed = state["claimed_grade"]
-        cut = self.scale.cuts[claimed]
-        if ext is None:
-            nxt = sess.next_item()
-            if nxt is not None:
-                return nxt
-            reason = sess.stop_reason
-            n_ext = int(state["cfg"].get("ext_items", 0))
-            if n_ext and reason != "time" and abs(sess.theta - cut) < sess.se:
-                # Дотестирование берёт задания из всего банка направления (не только из субпула сессии):
-                # субпул после основной части часто исчерпан, а ошибка у порога дороже всего
-                p = self.scale.p_at_least(sess.theta, sess.se, claimed)
-                state["ext"] = {"start": sess.n_scored, "n": n_ext, "theta": round(sess.theta, 3),
-                                "se": round(sess.se, 3), "cut": cut, "p_claimed": round(p, 3), "reason_before": reason}
-                sess2 = self._rebuild(state)
-                left = sess.cfg.max_time_s + 1800.0 - sess.time_used
-                free = [i for i in sess2._candidates() if i.time_limit_s <= left]
-                n = min(n_ext, len(free))
-                if n >= 3:
-                    state["ext"]["n"] = n
-                    sess2 = self._rebuild(state)
-                    sess2.theta = cut  # дотестирование: информация максимальна в пороге, а не в текущей θ
-                    nxt = sess2.next_item()
-                    if nxt is not None:
-                        return nxt
-                state["ext"] = None
-            state["stop_reason"] = reason
-            return None
-        if sess.n_scored >= ext["start"] + ext["n"]:
-            state["stop_reason"] = "extension_done"
-            return None
-        sess.theta = cut
+        """Следующее семейство: основная часть, затем (если ближайший порог не определён) дотестирование у порога.
+        Правила — в ``CATSession`` (общие с симуляцией /validation); здесь — только запись начала дотестирования."""
         nxt = sess.next_item()
+        if sess.ext_start is not None and not state.get("ext"):
+            claimed = state["claimed_grade"]
+            state["ext"] = {"start": sess.ext_start, "n": sess.cfg.ext_items, "theta": round(sess.theta, 3),
+                            "se": round(sess.se, 3), "cut": sess.ext_cut,
+                            "p_claimed": round(self.scale.p_at_least(sess.theta, sess.se, claimed), 3),
+                            "reason_before": sess.ext_reason_before}
         if nxt is None:
-            state["stop_reason"] = "extension_" + (sess.stop_reason or "stopped")
+            state["stop_reason"] = sess.stop_reason
         return nxt
 
     def _issue(self, state: dict, pi: PoolItem, sess: CATSession) -> dict:
@@ -557,8 +562,9 @@ class BankEngine:
                  f"{ps} (нужно ≥ 80 %). Принудительного понижения нет")
             s += (f": можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower else
                   ": можно пройти тест на грейд ниже или повторить после подготовки.")
-        if details.get("extension"):
-            s += f" Результат был у порога — тест продлён на {details['extension']['items']} задания."
+        ext = details.get("extension")
+        if ext and ext.get("items"):
+            s += f" Результат был у порога грейда — тест продлён на {_items_ru(ext['items'])} у этого порога."
         if details.get("pending_review"):
             s += (f" Открытых ответов на проверке: {details['pending_review']} — они пока не учтены, "
                   "результат предварительный.")

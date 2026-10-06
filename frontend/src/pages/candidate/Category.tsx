@@ -17,13 +17,8 @@ export default function Category() {
   const grades = Object.keys(GRADES);
   const idx = c.grade ? grades.indexOf(c.grade) : -1;
 
-  async function retest(g: string) {
-    setErr(null);
-    try {
-      const r = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: g } });
-      navigate(`/candidate/assessment/test/${r.session_id}`);
-    } catch (e) { setErr(errText(e)); }
-  }
+  // пересдача — через экран выбора грейда: там кандидат читает, что отслеживается во время теста
+  const retest = (g: string) => navigate(`/candidate/assessment?grade=${g}`);
   async function jury(v: boolean) {
     try { await api("/me/jury-mode", { method: "PUT", body: { enabled: v } }); await reload(); } catch (e) { setErr(errText(e)); }
   }
@@ -52,9 +47,10 @@ export default function Category() {
           {s.lock_active
             ? <p className="mt-1 text-brand-ink/75">Смена грейда доступна с <b>{dt(s.locked_until).replace(/ г\.$/, "")}</b>.{s.sandbox_active && " Сейчас ограничение снято демо-режимом."}</p>
             : <p className="mt-1 text-brand-ink/75">{c.grade ? "Можно пройти тест на грейд выше или ниже." : "Ограничений нет — пройдите тест."}</p>}
-          {s.jury_mode_available && (
+          {s.jury_mode_available && s.jury_mode_allowed && (
             <div className="mt-3 border-t border-brand/10 pt-2">
-              <Toggle checked={s.jury_mode} onChange={jury} label="Демо-режим жюри" hint="Снимает ограничение 90 дней для показа. В истории такие смены помечаются." />
+              <Toggle checked={s.jury_mode} onChange={jury} label="Демо-режим жюри" hint="Только для демо-учёток. Снимает ограничение 90 дней для показа; в истории такие смены помечаются." />
+              {s.sandbox_starts && <p className="text-xs text-brand-ink/60">Новых тестов за 24 часа осталось: {s.sandbox_starts.left} из {s.sandbox_starts.limit} — чтобы банк заданий нельзя было выкачать перезапусками.</p>}
             </div>
           )}
         </div>
@@ -65,6 +61,7 @@ export default function Category() {
         {idx >= 0 && idx < 2 && <button className="btn-primary" disabled={!s.can_retest_now} onClick={() => retest(grades[idx + 1])}>Тест на {GRADES[grades[idx + 1]]}</button>}
         {idx < 0 && <Link className="btn-primary" to="/candidate/assessment">Выбрать грейд и начать тест</Link>}
         <Link className="btn-ghost" to="/candidate/assessment">Изменить опрос</Link>
+        {s.sessions.some((t: any) => t.status === "finished") && <Link className="btn-ghost" to="/candidate/feedback">Карта навыков и маршрут роста</Link>}
       </section>
       <div className="grid gap-6 md:grid-cols-2">
         <section className="card">
@@ -92,6 +89,7 @@ export default function Category() {
                     {t.theta != null && <p className="text-brand-ink/60">θ = {t.theta.toFixed(2)} ± {t.se?.toFixed(2)} · {t.confirmed ? "подтверждён" : "не подтверждён"}</p>}
                   </div>
                   {t.status === "in_progress" && <Link className="text-sm font-semibold text-brand" to={`/candidate/assessment/test/${t.id}`}>Продолжить</Link>}
+                  {t.status === "finished" && <Link className="shrink-0 text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>}
                 </li>
               ))}
             </ul>

@@ -1,0 +1,29 @@
+family_id: common.dist.outbox_fix
+title: Двойная запись «БД + брокер» — transactional outbox при падениях процесса
+direction: common
+skills: [distributed_systems, messaging, transactions, reliability, python]
+target_grades: [senior]
+format: choose_fix
+language: python
+invariants:
+  code_lines: [6, 6]
+  operations: [3, 3]
+  n_options: 4
+  defect_type: dual_write
+  extra:
+    distractors: [publish_in_tx, mark_first, outbox_second_tx]
+    crash_points: all
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.0
+  a: 1.1
+  sigma_variant: 0.25
+  basis: "Четыре варианта одинаковой структуры (обработчик + relay, 8–11 строк); нужно перебрать точки падения и понять разницу at-least-once / потеря / «призрак»: публикация внутри транзакции, пометка до публикации и outbox второй транзакцией выглядят разумно. Состав дистракторов фиксирован, варьируются контекст, имена и данные теста; Senior"
+generator: assessment_bank.families.common.dist_outbox_fix
+version: 1
+description: >
+  Обработчик пишет запись в БД и публикует событие; исходный код теряет событие при падении
+  после коммита. Выбрать вариант с transactional outbox. Проверка исполнением: модель БД с
+  транзакциями и брокера, падение инъецируется в каждую точку, после перезапуска relay
+  проверяется инвариант «нет потерь и нет событий о незакоммиченных записях».

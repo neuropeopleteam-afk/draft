@@ -32,8 +32,9 @@ def _commit(path, content, msg):
 def _scenario(rng, name):
     feat, s1, s2, f1, f2, ctx = rng.choice(FEATURES)
     br = f"feature/{feat}"
-    app = rng.choice(["app.py", "main.py", "server.py"])
-    base = [_commit("README.md", "demo", "init"), _commit(app, "v1", "add app")]
+    app = rng.choice(["app.py", "main.py", "server.py", "service.py", "api.py"])
+    first = rng.choice(["init", "initial commit", "start project"])
+    base = [_commit("README.md", "demo", first), _commit(app, "v1", "add app")]
     if name == "move":
         n = rng.choice([2, 3])
         extra = [_commit("docs.md", "c", f"document {feat}")] if n == 3 else []
@@ -112,9 +113,13 @@ EXPECTED_NOTE = {"checkout_b": "reset выполняется на новой в�
                  "revert_range": "создаёт новые коммиты и откатывает остальные файлы"}
 
 
-def generate(seed: int):
-    rng = make_rng(FAMILY_ID, seed)
-    name = rng.choice(["move", "soft", "revert", "restore"])
+# Калибровка 05.10: подтипы move выделены в common.git.move_commits_mcq (варианты были неизоморфны).
+SUBTYPES_HERE = ('soft', 'revert', 'restore')
+
+
+def _generate(seed: int, family_id: str, subtypes):
+    rng = make_rng(family_id, seed)
+    name = rng.choice(list(subtypes))
     setup, state, good, wrong, ask, why, ctx = _scenario(rng, name)
     chosen = rng.sample(sorted(wrong), 3)
     opts, key = make_options(rng, (good, None), [(wrong[w], None) for w in chosen])
@@ -135,7 +140,7 @@ def generate(seed: int):
     ak = AnswerKey(kind="option", value=key,
                    explanation=f"Верно: {why}. Остальные: "
                                + "; ".join(EXPECTED_NOTE[w] for w in chosen) + ".")
-    return build_variant(FAMILY_ID, seed, stem=stem, options=opts, answer_key=ak, context=ctx,
+    return build_variant(family_id, seed, stem=stem, options=opts, answer_key=ak, context=ctx,
                          verification="execution", checks=out, language="text",
                          display_code_note="Каждый вариант исполняется git в одноразовом "
                                            "репозитории после команд подготовки истории.",
@@ -162,3 +167,7 @@ def _expected(name, setup, good):
     cfg = good.split()[-1]
     return (f"branch=main\nlog={','.join(reversed(subjects))},\nstaged={cfg},\nunstaged=\n"
             f"config=port: 8080\napp=v2")
+
+
+def generate(seed: int):
+    return _generate(seed, FAMILY_ID, SUBTYPES_HERE)

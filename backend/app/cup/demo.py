@@ -1,10 +1,14 @@
 """Демо-данные «Кубка работодателя» (поверх основных демо-данных app.modules.demo.seed).
 
-* 6 кубков демо-компаний: 3 завершены (места, приглашения лучшим, записи в паспорт ФСП; в «Надёжных платежах»
-  участвовала и демо-кандидат жюри Мария Королёва — её место в паспорте ФСП, приглашение ждёт ответа), 2 идут (в
-  Backend · Middle можно поучаствовать демо-кандидатом жюри), 1 скоро начнётся;
-* работодателю жюри при первом открытии раздела «Кубки» создаётся свой кубок: срок вышел, 5 решений оценены,
-  2 ждут его оценки — после оценки итоги подводятся, лучшим уходят приглашения (ensure_jury_cup).
+* 6 кубков демо-компаний «Демо: …» — общие для всей платформы: 3 завершены (места, приглашения лучшим, записи в
+  паспорт ФСП), 2 идут (в Backend · Middle может поучаствовать и демо-кандидат жюри), 1 скоро начнётся. На них
+  строится аналитика Кабинета ФСП;
+* у каждой копии демо жюри (песочницы, app.modules.jury.scope) — свои два кубка её работодателя
+  (seed_jury_cups): завершённый «Платёжный шлюз» — Мария Королёва этой песочницы на 2-м месте, запись в паспорте
+  ФСП, приглашение ждёт её ответа; «Вебхуки без дублей» — срок вышел, 3 решения оценены, 2 ждут оценки
+  работодателя, после оценки итоги подводятся сами. Кубки песочницы видны только её кандидатам (Cup.jury_scope),
+  демо-кандидаты платформы в них — «статисты»: места и приглашения есть, фактов T1 и записей паспорта нет
+  (app.cup.service.credits) — поэтому число песочниц не меняет ни их рейтинг, ни аналитику ФСП.
 
 Ответы участников генерирует «демо-респондент»: вероятность верного ответа растёт с рейтингом кандидата.
 Оценки открытых решений в демо — score_method="demo" (не LLM и не эксперт; так и показывается).
@@ -32,12 +36,11 @@ from app.modules.auth.models import User
 from app.modules.fsp.models import FspAchievement
 from app.modules.invitations import service as inv_svc
 from app.modules.invitations.models import Invitation
+from app.modules.jury import scope
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile, Company, EmployerProfile
 
-JURY_DOMAIN = "jury.example.com"
-JURY_EMPLOYER_EMAIL = f"employer@{JURY_DOMAIN}"
-JURY_CANDIDATE_EMAIL = f"candidate@{JURY_DOMAIN}"  # Мария Королёва, Backend · Middle, с паспортом ФСП
+JURY_DOMAIN = scope.DOMAIN
 # Разные тексты для одного уровня: в слепой оценке у работодателя не должно быть одинаковых решений.
 ANSWERS: dict[str, dict[str, list[str]]] = {
     "webhooks": {
@@ -125,11 +128,11 @@ SPREAD = {"webhooks": [0.85, 0.6, 0.3, 0.8, 0.55, 0.65, 0.4], "a11y": [0.85, 0.6
           "traffic": [0.8, 0.6, 0.85, 0.55, 0.35]}
 
 
-def _cands(db: Session, category: str, n: int, rnd: random.Random) -> list[CandidateProfile]:
+def _cands(db: Session, category: str, n: int, rnd: random.Random, exclude: set | None = None) -> list[CandidateProfile]:
     rows = db.scalars(select(CandidateProfile).join(User, User.id == CandidateProfile.user_id).where(
         CandidateProfile.current_category_id == category, CandidateProfile.visible_to_employers.is_(True),
         User.is_demo.is_(True), User.email.like("%@demo.invalid"))).all()
-    rows = sorted(rows, key=lambda p: str(p.user_id))
+    rows = sorted((p for p in rows if p.user_id not in (exclude or set())), key=lambda p: str(p.user_id))
     return rnd.sample(rows, min(n, len(rows)))
 
 
@@ -144,7 +147,7 @@ def _company(db: Session, name: str) -> tuple[Company, User] | None:
 
 def _cup(db: Session, c: Company, u: User, *, title: str, description: str, category: str, mode: str,
          start_days: float, end_days: float, salary: tuple[int, int], top: int, position: str,
-         task_text: str | None = None, n_tasks: int = 5, rnd: random.Random) -> Cup:
+         task_text: str | None = None, n_tasks: int = 5, rnd: random.Random, jury_scope: str | None = None) -> Cup:
     now = utcnow()
     d, g = category.split(".")
     cup = Cup(company_id=c.id, created_by=u.id, title=title, description=description, category_id=category,
@@ -156,15 +159,17 @@ def _cup(db: Session, c: Company, u: User, *, title: str, description: str, cate
               min_score=0.5, position_title=position,
               offer_description=f"{position} в компании {c.name}. Команда, задачи и условия обсудим на встрече (демо).",
               contact_method=f"{c.contact_email or 'hr@demo.invalid'} (демо)", status="active", summary={},
-              is_demo=True)
+              is_demo=True, jury_scope=jury_scope)
     db.add(cup)
     db.flush()
     return cup
 
 
 def _play(db: Session, cup: Cup, p: CandidateProfile, rnd: random.Random, alias_n: int, *, state: str,
-          text_key: str | None = None, demo_score: bool = True, skill: float | None = None) -> CupEntry:
-    """Демо-участие: state = joined | scored | submitted (ждёт оценки)."""
+          text_key: str | None = None, demo_score: bool = True, skill: float | None = None,
+          correct_n: int | None = None, spent_s: int | None = None) -> CupEntry:
+    """Демо-участие: state = joined | scored | submitted (ждёт оценки). correct_n — ровно столько верных ответов
+    в автопроверке (детерминированные места), spent_s — время решения."""
     if skill is None and text_key in SPREAD:  # открытая задача: сильные, средние и слабые решения вперемешку
         skill = SPREAD[text_key][(alias_n - 1) % len(SPREAD[text_key])]
     skill = skill if skill is not None else min(0.95, max(0.25, (p.rating_score or 0.5) + rnd.uniform(-0.15, 0.2)))
@@ -173,15 +178,15 @@ def _play(db: Session, cup: Cup, p: CandidateProfile, rnd: random.Random, alias_
     if state == "joined":
         return e
     st = cup.starts_at + timedelta(hours=rnd.uniform(1, 30))
-    spent = int(rnd.uniform(0.45, 0.95) * cup.time_limit_min * 60)
+    spent = spent_s or int(rnd.uniform(0.45, 0.95) * cup.time_limit_min * 60)
     e.started_at, e.submitted_at = st, st + timedelta(seconds=spent)
     e.deadline_at, e.time_spent_s = st + timedelta(minutes=cup.time_limit_min), spent
     if cup.mode == "auto":
         items = auto.issue(cup.task_families)
         answers = {}
-        for it in items:
+        for j, it in enumerate(items):
             k = it["key"]["value"]
-            if rnd.random() < skill:
+            if (j < correct_n) if correct_n is not None else (rnd.random() < skill):
                 answers[it["token"]] = k
             elif it["kind"] == "option":
                 answers[it["token"]] = next(o["id"] for o in it["public"]["options"] if o["id"] != k)
@@ -221,8 +226,8 @@ def _finish(db: Session, cup: Cup, statuses: list[str]) -> None:
     cup = db.get(Cup, cup.id)
     cup.ends_at = ends
     cup.finalized_at = ends + timedelta(hours=2)
-    jury = set(db.scalars(select(User.id).where(User.email.like(f"%@{JURY_DOMAIN}"))).all())
     invs = [db.get(Invitation, iid) for iid in inv_ids]
+    jury = {i.candidate_user_id for i in invs if scope.key_of(db.get(User, i.candidate_user_id).email) is not None}
     for inv in invs:
         inv.created_at = ends + timedelta(hours=3)
     # статусы — только демо-кандидатам по порядку мест; кандидат жюри отвечает сам и слот не занимает
@@ -232,12 +237,6 @@ def _finish(db: Session, cup: Cup, statuses: list[str]) -> None:
         elif st == "viewed":
             inv_svc.mark_viewed(db, inv, inv.candidate_user_id)
     db.commit()
-
-
-def _jury_candidate(db: Session, category: str) -> CandidateProfile | None:
-    u = db.scalar(select(User).where(User.email == JURY_CANDIDATE_EMAIL))
-    p = db.get(CandidateProfile, u.id) if u else None
-    return p if p and p.current_category_id == category and p.visible_to_employers else None
 
 
 def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
@@ -256,8 +255,6 @@ def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
         ps = _cands(db, "backend.middle", 8, rnd)
         for i, p in enumerate(ps, start=1):
             _play(db, cup, p, rnd, i, state="joined" if i == len(ps) else "scored")
-        if (jp := _jury_candidate(db, "backend.middle")) is not None:  # Мария: место, паспорт, приглашение ждёт ответа
-            _play(db, cup, jp, rnd, len(ps) + 1, state="scored", skill=1.0)
         db.commit()
         _finish(db, cup, ["accepted", "accepted", "viewed"])
         made.append(cup.title)
@@ -319,9 +316,9 @@ def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
 
 
 def _seeded(db: Session) -> list[Cup]:
-    """Кубки демо-компаний «Демо: …» (без кубка работодателя жюри — он живёт вместе с его компанией)."""
+    """Кубки демо-компаний «Демо: …» — общие для платформы (кубки песочниц жюри живут вместе с ними)."""
     return list(db.scalars(select(Cup).join(Company, Company.id == Cup.company_id).where(
-        Cup.is_demo.is_(True), Company.is_demo.is_(True), Company.name.like("Демо: %"))).all())
+        Cup.is_demo.is_(True), Cup.jury_scope.is_(None), Company.is_demo.is_(True), Company.name.like("Демо: %"))).all())
 
 
 def is_stale(db: Session, margin_h: float = 12) -> bool:
@@ -342,37 +339,67 @@ def is_stale(db: Session, margin_h: float = 12) -> bool:
     return False
 
 
-def ensure_jury_cup(db: Session, user: User, company: Company) -> Cup | None:
-    """Работодателю жюри — свой кубок «на оценке» (создаётся один раз; сброс жюри удаляет его вместе с компанией)."""
-    if user.email != JURY_EMPLOYER_EMAIL or not user.is_demo:
-        return None
-    if db.scalar(select(Cup.id).where(Cup.company_id == company.id).limit(1)) is not None:
-        return None
-    rnd = random.Random(7)
-    cup = _cup(db, company, user, title="Вебхуки без дублей", category="backend.middle", mode="rubric",
-               start_days=-6, end_days=-0.05, salary=(240_000, 290_000), top=3,
-               position="Backend-разработчик в команду платежей",
-               description="Платёжный провайдер присылает вебхуки повторно и не по порядку. Нужно спроектировать "
-                           "обработку без двойных списаний. Оценка по рубрике.",
-               task_text="Провайдер доставляет вебхук «платёж прошёл» как минимум один раз, иногда повторно и в другом "
-                         "порядке. Как обработать события так, чтобы не было двойных зачислений и потерь? Опишите "
-                         "хранение, транзакции, повторы и тесты.", rnd=rnd)
-    for i, p in enumerate(_cands(db, "backend.middle", 7, rnd), start=1):
-        _play(db, cup, p, rnd, i, state="submitted" if i in (2, 5) else "scored", text_key="webhooks",
+def seed_jury_cups(db: Session, key: str, employer: User, company: Company, maria: CandidateProfile | None) -> list[str]:
+    """Два кубка работодателя одной копии демо жюри (key — sid песочницы или scope.SHARED), см. docstring модуля."""
+    rnd = random.Random(31)
+    used: set = set()
+    cup = _cup(db, company, employer, title="Платёжный шлюз", category="backend.middle", mode="auto", start_days=-16,
+               end_days=-9, salary=(230_000, 290_000), top=3, position="Backend-разработчик (платёжный шлюз)",
+               description="Пять заданий из банка платформы на транзакции, идемпотентность и работу с БД. У каждого "
+                           "участника свой вариант, проверка автоматическая, 15 минут.", rnd=rnd, jury_scope=key)
+    # места детерминированы: первый — 5 из 5 быстрее Марии, Мария — 5 из 5 (2-е место), дальше — меньше верных
+    # демо-кандидатов Backend · Middle — 10: по 5 на кубок, без пересечений (см. ниже)
+    ps = _cands(db, "backend.middle", 5, rnd)
+    for i, (p, n) in enumerate(zip(ps, [5, 4, 3, 2, 1]), start=1):
+        _play(db, cup, p, rnd, i, state="scored", correct_n=n, spent_s=480 if i == 1 else None)
+        used.add(p.user_id)
+    if maria is not None and maria.current_category_id == "backend.middle" and maria.visible_to_employers:
+        _play(db, cup, maria, rnd, len(ps) + 1, state="scored", correct_n=5, spent_s=660)
+    db.commit()
+    _finish(db, cup, ["accepted", "viewed"])  # Мария отвечает сама — её приглашение ждёт в кабинете
+    cup2 = _cup(db, company, employer, title="Вебхуки без дублей", category="backend.middle", mode="rubric",
+                start_days=-6, end_days=-0.05, salary=(240_000, 290_000), top=3,
+                position="Backend-разработчик в команду платежей",
+                description="Платёжный провайдер присылает вебхуки повторно и не по порядку. Нужно спроектировать "
+                            "обработку без двойных списаний. Оценка по рубрике.",
+                task_text="Провайдер доставляет вебхук «платёж прошёл» как минимум один раз, иногда повторно и в "
+                          "другом порядке. Как обработать события так, чтобы не было двойных зачислений и потерь? "
+                          "Опишите хранение, транзакции, повторы и тесты.", rnd=rnd, jury_scope=key)
+    # другие участники, чем в «Платёжном шлюзе»: повторное приглашение той же компанией упёрлось бы в лимит 30 дней
+    for i, p in enumerate(_cands(db, "backend.middle", 5, rnd, exclude=used), start=1):
+        _play(db, cup2, p, rnd, i, state="submitted" if i in (2, 5) else "scored", text_key="webhooks",
               demo_score=i not in (2, 5))
     db.commit()
-    return cup
+    return [cup.title, cup2.title]
 
 
-def delete_cups(db: Session, seeded_only: bool = False) -> int:
+def ensure_jury_cups(db: Session, user: User, company: Company) -> bool:
+    """Работодателю демо жюри — его кубки, если их ещё нет (копия демо создана до появления кубков)."""
+    persona, sid = scope.parse(user.email)
+    if persona != "employer" or not user.is_demo:
+        return False
+    if db.scalar(select(Cup.id).where(Cup.company_id == company.id).limit(1)) is not None:
+        return False
+    mu = db.scalar(select(User).where(User.email == scope.emails(sid)["candidate"]))
+    seed_jury_cups(db, sid or scope.SHARED, user, company, db.get(CandidateProfile, mu.id) if mu else None)
+    return True
+
+
+def delete_cups(db: Session, seeded_only: bool = False, jury_scope: str | None = None) -> int:
     """Удаляет демо-кубки с участиями, фактами T1, записями паспорта и приглашениями по итогам; пересчитывает
-    рейтинг затронутых кандидатов. seeded_only — только кубки демо-компаний «Демо: …»."""
-    ids = [c.id for c in _seeded(db)] if seeded_only else list(db.scalars(select(Cup.id).where(Cup.is_demo.is_(True))).all())
+    рейтинг кандидатов, у которых были факты. seeded_only — только кубки демо-компаний «Демо: …»; jury_scope —
+    только кубки одной копии демо жюри; иначе — все демо-кубки."""
+    if jury_scope is not None:
+        ids = list(db.scalars(select(Cup.id).where(Cup.jury_scope == jury_scope)).all())
+    elif seeded_only:
+        ids = [c.id for c in _seeded(db)]
+    else:
+        ids = list(db.scalars(select(Cup.id).where(Cup.is_demo.is_(True))).all())
     if not ids:
         return 0
-    users = set(db.scalars(select(CupEntry.candidate_user_id).where(CupEntry.cup_id.in_(ids))).all())
     inv = [i for i in db.scalars(select(CupEntry.invitation_id).where(CupEntry.cup_id.in_(ids))).all() if i]
     refs = [f"cup:{i}" for i in ids]
+    users = set(db.scalars(select(CandidateFact.user_id).where(CandidateFact.source_ref.in_(refs))).all())
     db.execute(delete(CandidateFact).where(CandidateFact.source_ref.in_(refs)))
     db.execute(delete(FspAchievement).where(FspAchievement.source_ref.in_(refs)))
     db.execute(delete(CupEntry).where(CupEntry.cup_id.in_(ids)))

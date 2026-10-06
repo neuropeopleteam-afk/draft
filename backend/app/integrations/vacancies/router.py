@@ -255,7 +255,9 @@ def decide(app_id: uuid.UUID, data: DecisionIn, bg: BackgroundTasks, user: User 
                 "/candidate/vacancies", f"app-{a.id}")
     if data.status == "accepted":
         st = db.get(AtsSettings, c.id)
-        if st is not None and st.auto_push and (st.huntflow_enabled or st.webhook_enabled):
+        from app.integrations.ats.providers import enabled_targets
+
+        if st is not None and st.auto_push and enabled_targets(db, c.id, st):
             from app.integrations.ats.service import deliver_bg
 
             bg.add_task(deliver_bg, c.id, application_id=a.id, trigger="application_accepted")

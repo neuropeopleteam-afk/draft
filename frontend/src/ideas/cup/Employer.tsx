@@ -81,6 +81,7 @@ function problems(f: Draft, mode: Mode, rubric: { title: string; weight: number 
   const a = Number(f.salary_from), b = Number(f.salary_to);
   if (!(a > 0) || !(b > 0)) p.push("Вилка зарплаты «от» и «до» обязательна.");
   else if (a > b) p.push("Нижняя граница вилки больше верхней.");
+  else if (b > 1.5 * a) p.push("Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от», как в приглашениях.");
   if (f.invite_top_n < 1 || f.invite_top_n > 10) p.push("Пригласить можно от 1 до 10 лучших.");
   if (f.min_score < 0 || f.min_score > 100) p.push("Порог балла — от 0 до 100 %.");
   if (len(f.position_title) < 3) p.push("Позиция в приглашении — не короче 3 символов.");
@@ -119,7 +120,7 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
     }));
   }
   function example() {
-    const from = m?.from ? round10k(m.from) : 200_000, to = m?.to ? round10k(m.to) : 280_000;
+    const from = m?.from ? round10k(m.from) : 200_000, to = Math.min(m?.to ? round10k(m.to) : 280_000, Math.floor(1.5 * from / 10_000) * 10_000);
     setF((x) => ({
       ...x, title: x.title || `Кубок «${catTitle(cat)}»`,
       description: x.description || "Короткое соревнование для кандидатов категории: решите задания на время, лучшие получат приглашение с вилкой.",

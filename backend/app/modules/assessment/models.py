@@ -139,3 +139,17 @@ class GradeHistory(UUIDPk, Base):
     test_session_id: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("test_sessions.id", ondelete="SET NULL"))
     locked_until: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+
+
+class SandboxTestStart(UUIDPk, Base):
+    """Начало теста в демо-режиме жюри (правило 90 дней снято) — для лимита перезапусков за 24 часа.
+
+    Ключ — почта, без внешнего ключа на users: счётчик переживает сброс демо-учёток жюри (иначе сброс +
+    перезапуски позволяли бы выкачивать банк заданий).
+    """
+
+    __tablename__ = "sandbox_test_starts"
+
+    email: Mapped[str] = mapped_column(sa.String(320), index=True)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(sa.Uuid)
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow, index=True)

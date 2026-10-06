@@ -22,6 +22,7 @@ from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import category_title
 from app.modules.invitations import service as inv_svc
 from app.modules.invitations.models import Invitation
+from app.modules.jury import scope as jury_scope
 from app.modules.matching.router import my_company
 from app.modules.notifications.mailer import notify
 from app.modules.profiles.models import CandidateProfile, Company
@@ -67,6 +68,8 @@ class CupIn(BaseModel):
     def _check(self):
         if self.salary_from > self.salary_to:
             raise ValueError("Нижняя граница вилки больше верхней")
+        if self.salary_to > inv_svc.SALARY_MAX_RATIO * self.salary_from:  # то же правило, что у приглашений
+            raise ValueError("Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от»")
         if self.mode != "auto" and len((self.task_text or "").strip()) < 20:
             raise ValueError("Опишите задачу кубка (не короче 20 символов)")
         return self
@@ -126,6 +129,10 @@ def cup_out(db: Session, cup: Cup, side: str) -> dict:
 
 def leaderboard(db: Session, cup: Cup, side: str, me: uuid.UUID | None = None) -> list[dict]:
     rows = svc.entries(db, cup.id)
+    # участники из чужих песочниц жюри не видны (как в подборках: scope.visible), места считаются без них
+    emails = dict(db.execute(select(User.id, User.email).where(User.id.in_([e.candidate_user_id for e in rows])))
+                  .all()) if rows else {}
+    rows = [e for e in rows if e.candidate_user_id == me or jury_scope.visible(emails.get(e.candidate_user_id))]
     order = svc.ranked(rows)
     pos = {e.id: i for i, e in enumerate(order, start=1)}
     finished = cup.status == "finished"
@@ -249,7 +256,7 @@ def my_cups(bg: BackgroundTasks, user: User = Depends(employer), db: Session = D
     c = my_company(db, user)
     from app.cup import demo
 
-    demo.ensure_jury_cup(db, user, c)
+    demo.ensure_jury_cups(db, user, c)  # демо жюри, созданное до появления кубков: досоздать (один раз)
     rows = db.scalars(select(Cup).where(Cup.company_id == c.id).order_by(Cup.created_at.desc())).all()
     return [cup_out(db, _refresh(bg, db, cup), "employer") for cup in rows]
 
@@ -308,9 +315,14 @@ def cancel(cup_id: uuid.UUID, user: User = Depends(employer), db: Session = Depe
 
 # ------------------------------------------------------------------ кандидат
 
+def _sees(cup: Cup, user: User) -> bool:
+    """Кубок демо жюри виден только кандидатам своей песочницы; кубки платформы — всем."""
+    return cup.jury_scope is None or cup.jury_scope == jury_scope.key_of(user.email)
+
+
 def _cand_cup(db: Session, user: User, cup_id: uuid.UUID) -> Cup:
     cup = db.get(Cup, cup_id)
-    if cup is None or cup.status == "cancelled":
+    if cup is None or cup.status == "cancelled" or not _sees(cup, user):
         raise api_error(404, "cup_not_found", "Кубок не найден")
     p = db.get(CandidateProfile, user.id)
     if (p is None or p.current_category_id != cup.category_id) and svc.entry_of(db, cup.id, user.id) is None:
@@ -336,7 +348,8 @@ def cand_cups(bg: BackgroundTasks, user: User = Depends(candidate), db: Session 
     mine = set(db.scalars(select(CupEntry.cup_id).where(CupEntry.candidate_user_id == user.id)).all())
     q = select(Cup).where(Cup.status != "cancelled")
     cat = p.current_category_id if p else None
-    rows = [c for c in db.scalars(q.order_by(Cup.ends_at.desc())).all() if c.id in mine or c.category_id == cat]
+    rows = [c for c in db.scalars(q.order_by(Cup.ends_at.desc())).all()
+            if (c.id in mine or c.category_id == cat) and _sees(c, user)]
     items = []
     for cup in rows:
         cup = _refresh(bg, db, cup)

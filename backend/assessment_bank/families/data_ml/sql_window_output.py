@@ -84,7 +84,8 @@ def generate(seed: int):
         T, g, nm, val, ctx, groups, names = rng.choice(RANK_CTX)
         fn = {"row_number": "ROW_NUMBER", "rank": "RANK", "dense_rank": "DENSE_RANK"}[t]
         while True:
-            people = rng.sample(names, rng.randint(6, 7))
+            # Калибровка 05.10: трудность росла с числом строк вывода; строк 5–6 вместо 6–7
+            people = rng.sample(names, rng.randint(5, 6))
             rows, rid = [], rng.randint(1, 20)
             for p in people:
                 rid += 1

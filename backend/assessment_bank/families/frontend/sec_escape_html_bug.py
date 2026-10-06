@@ -25,11 +25,16 @@ def _esc(s: str) -> str:
     return "".join(ENT.get(ch, ch) for ch in s)
 
 
-def generate(seed: int):
-    rng = make_rng(FAMILY_ID, seed)
+# Калибровка 05.10: подтипы no_global_lt, no_global_quot выделены в frontend.sec.replace_global_bug (варианты были неизоморфны).
+SUBTYPES_HERE = ('raw_field', 'unquoted_attr')
+
+
+def _generate(seed: int, family_id: str, subtypes):
+    rng = make_rng(family_id, seed)
     fn, obj, fa, ft, css, ctx = rng.choice(CTX)
-    subtype = rng.choice(["no_global_lt", "no_global_quot", "raw_field", "unquoted_attr"])
-    esc_name = rng.choice(["escapeHtml", "htmlEscape", "escapeText", "toSafeHtml"])
+    subtype = rng.choice(list(subtypes))
+    esc_name = rng.choice(["escapeHtml", "htmlEscape", "escapeText", "toSafeHtml", "encodeHtml",
+                           "sanitizeText", "safeText", "escapeForHtml"])
     rep = {"&": "    .replace(/&/g, '&amp;')", "<": "    .replace(/</g, '&lt;')",
            ">": "    .replace(/>/g, '&gt;')", '"': "    .replace(/\"/g, '&quot;')",
            "'": "    .replace(/'/g, '&#39;');"}
@@ -95,6 +100,11 @@ def generate(seed: int):
     ak = AnswerKey(kind="line", value=key_line,
                    explanation=f"Строка {key_line}: {why[subtype]}. В реальном коде надёжнее "
                                f"textContent или шаблонизатор с автоэкранированием.")
-    return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
+    return build_variant(family_id, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="xss_escaping",
                          params={"fixed_code": fixed, "subtype": subtype})
+
+
+
+def generate(seed: int):
+    return _generate(seed, FAMILY_ID, SUBTYPES_HERE)
