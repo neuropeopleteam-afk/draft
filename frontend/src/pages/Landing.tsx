@@ -38,7 +38,7 @@ export default function Landing() {
         <div className="relative mx-auto grid max-w-content gap-12 px-6 pb-14 pt-10 md:grid-cols-[1.15fr_0.85fr] md:pb-16 md:pt-14">
           <div>
             <span className="chip bg-white/10 text-brand-blush">Спецтрек ФСП · ЛЦТ 2026</span>
-            <h1 className="mt-5 text-[2.1rem] font-extrabold leading-[1.1] tracking-tight sm:text-4xl md:text-[3.1rem]">
+            <h1 className="mt-5 text-[2.1rem] font-extrabold leading-[1.15] tracking-tight sm:text-4xl md:text-[3.1rem]">
               Работодатель находит вас сам — и сразу называет зарплату
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg">
@@ -177,17 +177,16 @@ function JuryBlock() {
   }
   return (
     <section id="jury" className="border-b border-brand-night/10 bg-[#F3F2FB]" aria-labelledby="jury-title">
-      <div className="mx-auto max-w-content px-6 py-10 md:py-12">
+      <div className="mx-auto max-w-content px-6 py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
             <h2 id="jury-title" className="mt-2 text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Вход в один клик и проводник по сценарию</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-ink/75">
-              Готовые демо-учётки: регистрация, опрос и тест уже пройдены, правило 90 дней для них снято.
-              У каждого эксперта — своя копия демо: ваши действия и сброс не видны другим.
-              Проводник ведёт по сквозному сценарию: регистрация → опрос и тест → категория → поиск работодателем → контакт.
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-brand-ink/75">
+              Выберите роль — регистрация, опрос и тест у демо-учёток уже пройдены. У каждого эксперта своя копия демо:
+              ваши действия и сброс не видны другим. Проводник ведёт по сценарию: регистрация → тест → категория → поиск работодателем → контакт.
+              <span className="font-semibold text-brand-night"> Доступ к стенду: demo / ***.</span>
             </p>
-            <p className="mt-2 text-sm font-semibold text-brand-night">Доступ к стенду: demo / ***</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link to="/validation" className="btn-ghost">Как мы проверяем себя</Link>
