@@ -17,7 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.db import SessionLocal, get_db, utcnow
+from app.core.db import SessionLocal, get_db, get_engine, utcnow
 from app.core.deps import get_current_user
 from app.core.errors import api_error, err
 from app.core.ratelimit import SlidingWindow, client_ip
@@ -84,12 +84,14 @@ def make_spare() -> str | None:
     if s.jury_spare_sandboxes <= 0 or not s.jury_mode_available or not _spare_mx.acquire(blocking=False):
         return None
     try:
+        get_engine()  # фоновый поток при старте — до первого запроса движок БД ещё не создан
         with SessionLocal() as db:
             if len(seed.spares(db)) >= s.jury_spare_sandboxes:
                 return None
             seed.evict(db, keep=max(1, s.jury_sandboxes_max) - 1)
             sid = scope.new_sid()
-            seed.ensure(db, sid)
+            with seed.as_spare():
+                seed.ensure(db, sid)
             return sid
     except Exception:  # запас — оптимизация: при ошибке песочница создастся при входе, как без запаса
         log.exception("Запасная песочница жюри не создана")
