@@ -64,7 +64,9 @@ def _rub(v) -> str:
     return f"{int(v):,}".replace(",", " ") + " ₽" if v else "—"
 
 
-def render_profile(card: dict, *, contacts: dict | None = None, audience: str = "candidate") -> bytes:
+def render_profile(card: dict, *, contacts: dict | None = None, audience: str = "candidate",
+                   growth: dict | None = None) -> bytes:
+    """growth — обратная связь после теста (assessment/feedback.py): только в версии для самого кандидата."""
     st = _styles()
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm,
@@ -107,6 +109,8 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
                 f"{_esc(s['title'])} ({int((s.get('score') or 0) * 100)} %)" for s in skills), st["p"]))
     else:
         el.append(Paragraph("Тест ещё не пройден.", st["p"]))
+    if growth and growth.get("available") and audience == "candidate":
+        el.extend(_growth_block(growth, st))
     probes = card.get("probes") or []
     if probes:
         el.append(Paragraph("Задачи от работодателей (зонды) · T1", st["h2"]))
@@ -153,6 +157,69 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
                         st["small"]))
     doc.build(el)
     return buf.getvalue()
+
+
+_STATUS = {"strong": "уверенно", "ok": "в целом освоено", "gap": "пробел", "pending": "на проверке"}
+_REL = {"above": "выше вашего уровня", "below": "ниже вашего уровня", "as_expected": "на вашем уровне"}
+_DEMAND = {"confirmed": "подтверждён (T1)", "weak": "ниже 50 % в тесте", "declared": "заявлен (T0)", "missing": "нет"}
+
+
+def _pct(v) -> str:
+    return "—" if v is None else f"{round(float(v) * 100)} %"
+
+
+def _growth_block(fb: dict, st) -> list:
+    """Карта навыков, спрос работодателей в категории и маршрут роста (видно только кандидату)."""
+    el = [Paragraph("Карта навыков и маршрут роста · только для вас", st["h2"]),
+          Paragraph("По темам заданий теста, без самих заданий и ключей. Работодатель этот раздел не видит.",
+                    st["small"]), Spacer(1, 3)]
+    topics = (fb.get("skill_map") or {}).get("topics") or []
+    if topics:
+        rows = [["Тема", "Заданий", "Результат", "Статус"]]
+        for t in topics[:14]:
+            status = _STATUS.get(t.get("status"), "—")
+            if t.get("relative") in ("above", "below"):
+                status += f", {_REL[t['relative']]}"
+            rows.append([_esc(t.get("title")), str(t.get("n") or 0), _pct(t.get("score")), status])
+        el.append(_grid(rows, st, [62 * mm, 18 * mm, 22 * mm, None]))
+    dm = fb.get("demand") or {}
+    items = dm.get("items") or []
+    if items:
+        el.append(Spacer(1, 6))
+        el.append(Paragraph(f"Что требуют работодатели — {_esc(dm.get('scope_title'))} ({dm.get('sources')} "
+                            "потребностей и вакансий)", st["p"]))
+        rows = [["Навык", "Доля", "У вас"]]
+        for d in items[:8]:
+            rows.append([_esc(d.get("title")), _pct(d.get("share")), _DEMAND.get(d.get("status"), "—")])
+        el.append(_grid(rows, st, [62 * mm, 18 * mm, None]))
+    route = fb.get("route") or []
+    if route:
+        el.append(Spacer(1, 6))
+        el.append(Paragraph("Маршрут роста", st["p"]))
+        for i, r in enumerate(route[:6], 1):
+            el.append(Paragraph(f"{i}. <b>{_esc(r.get('title'))}</b> — {_esc(r.get('text'))}", st["p"]))
+    comps = fb.get("competitions") or []
+    if comps:
+        c = comps[0]
+        el.append(Spacer(1, 4))
+        el.append(Paragraph(f"Рекомендуемая дисциплина ФСП: <b>{_esc(c.get('title'))}</b>. "
+                            + " ".join(_esc(x) for x in (c.get("reasons") or [])[:2]) + " " + _esc(c.get("next_step")),
+                            st["p"]))
+        el.append(Paragraph(f"Календарь соревнований ФСП: {_esc(fb.get('fsp_calendar_url'))}", st["small"]))
+    return el
+
+
+def _grid(rows, st, widths) -> Table:
+    data = [[Paragraph(f"<b>{c}</b>" if i == 0 else c, st["small"] if i == 0 else st["p"]) for c in r]
+            for i, r in enumerate(rows)]
+    t = Table(data, colWidths=widths, repeatRows=1)
+    t.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("LINEBELOW", (0, 0), (-1, -1), 0.4, BLUSH),
+        ("TOPPADDING", (0, 0), (-1, -1), 2), ("BOTTOMPADDING", (0, 0), (-1, -1), 2),
+        ("LEFTPADDING", (0, 0), (-1, -1), 0),
+    ]))
+    return t
 
 
 def _table(rows, st) -> Table:
