@@ -204,12 +204,31 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
 
 
 def delete_jury(db: Session) -> int:
+    from app.integrations.ats.models import AtsSettings, AtsStubRecord
+
     ids = db.scalars(select(User.id).where(User.email.in_(list(EMAILS.values())))).all()
+    keys = db.scalars(select(AtsSettings.stub_key).join(Company, Company.id == AtsSettings.company_id)
+                      .where(Company.name == COMPANY, Company.is_demo.is_(True), AtsSettings.stub_key.is_not(None))).all()
+    if keys:  # «входящие» демо-ATS прежней демо-компании
+        db.execute(delete(AtsStubRecord).where(AtsStubRecord.stub_key.in_(list(keys))))
     db.execute(delete(Company).where(Company.name == COMPANY, Company.is_demo.is_(True)))
     if ids:
         db.execute(delete(User).where(User.id.in_(ids)))
     db.commit()
     return len(ids)
+
+
+def _connect_demo_ats(db: Session, company_id) -> None:
+    """Демо-ATS у компании жюри: Хантфлоу, Talantix, «Поток» и вебхук на заглушках — принятие приглашения Ильёй
+    сразу видно в журнале передач. Сбой интеграций не должен ломать сид жюри."""
+    try:
+        from app.integrations.ats.demo import connect_demo_all
+
+        connect_demo_all(db, company_id)
+        db.commit()
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("jury: demo ATS connect failed")
 
 
 def create_jury(db: Session) -> dict:
@@ -225,6 +244,7 @@ def create_jury(db: Session) -> dict:
     db.flush()
     db.add(EmployerProfile(user_id=eu.id, company_id=c.id, full_name="Ольга Миронова", position="HR-партнёр (демо)"))
     db.commit()
+    _connect_demo_ats(db, c.id)
     needs = []
     for text_ in NEEDS:
         req = parse_need(text_, use_llm=False)

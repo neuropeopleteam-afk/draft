@@ -7,6 +7,7 @@ import { Alert, Empty, Field, Level, Loading, Modal, Seg, Toggle, catTitle, dt, 
 import { api, apiDownload, type Catalog } from "../lib/api";
 import { SusPrompt } from "./Sus";
 import { TrustBadge, TrustPanel, type Trust, type TrustShort } from "./Trust";
+import { atsPushText } from "./Ats";
 
 export interface Vacancy {
   id: string; title: string; category_id: string | null; category_title: string | null; description: string;
@@ -281,7 +282,7 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
   }
   async function toAts(a: any) {
     setMsg(null);
-    try { const r = await api<any[]>("/employer/ats/push", { body: { application_id: a.id } }); setMsg({ k: "ok", t: r.map((d) => `${d.target === "huntflow" ? "Хантфлоу" : "Вебхук"}: ${d.already_sent ? "уже передано ранее" : d.status === "ok" ? "передано" : d.error}`).join("; ") || "Нет включённых ATS" }); }
+    try { const r = await api<any[]>("/employer/ats/push", { body: { application_id: a.id } }); setMsg({ k: "ok", t: atsPushText(r) || "Нет подключённых ATS" }); }
     catch (e) { setMsg({ k: "error", t: errText(e) }); }
   }
   return (

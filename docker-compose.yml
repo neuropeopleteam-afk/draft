@@ -43,6 +43,11 @@ services:
       # ФСП ID: FSP_OIDC_CLIENT_SECRET, FSP_DEMO_PASSWORD (тот же файл читает Keycloak при импорте realm)
       - path: ${FSP_ID_ENV_FILE:-./secrets/fsp_id.env}
         required: false
+      # ATS: TALANTIX_TOKENS_JSON (или TALANTIX_ACCESS_TOKEN + TALANTIX_REFRESH_TOKEN), TALANTIX_VACANCY_ID, POTOK_TOKEN,
+      # POTOK_VACANCY_ID, HUNTFLOW_TOKEN, HUNTFLOW_ACCOUNT_ID, HUNTFLOW_VACANCY_ID, ATS_USER_AGENT_CONTACT.
+      # Импорт в компанию: python -m app.integrations.ats.cli import-env --employer-email ... (см. docs/ATS.md)
+      - path: ${ATS_ENV_FILE:-./secrets/ats.env}
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fsp}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fsp}
       # Пусто — кнопка «Войти через ФСП ID» скрыта. Прод: https://fsp.neuropeople.pro/auth/realms/fsp
