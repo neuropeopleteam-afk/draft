@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     dev_mode: bool | None = None
     # «Песочница жюри»: снимает ограничение частоты смены грейда (90 дней) для всех.
     demo_sandbox: bool = False
-    # Разрешить кандидату самому включить «демо-режим жюри» в кабинете (на время конкурса — да).
+    # Разрешить демо-учёткам (users.is_demo, вход жюри в один клик) включать «демо-режим жюри» в кабинете.
     jury_mode_available: bool = True
 
     database_url: str = "postgresql+psycopg://fsp:fsp@db:5432/fsp"
@@ -87,6 +87,9 @@ class Settings(BaseSettings):
     assessment_exposure: str = "sympson_hetter"
     # Демо-учётки жюри: вход в один клик, сброс в исходное состояние (не чаще раза в N секунд)
     jury_reset_cooldown_s: int = 20
+    # Демо-режим жюри снимает правило 90 дней; чтобы перезапусками нельзя было выкачать банк заданий —
+    # не больше N новых сессий теста за 24 часа на демо-учётку (счётчик по почте, переживает сброс жюри)
+    jury_max_test_starts_per_day: int = 5
 
     # Резюме: максимальный размер PDF
     resume_max_bytes: int = 5 * 1024 * 1024

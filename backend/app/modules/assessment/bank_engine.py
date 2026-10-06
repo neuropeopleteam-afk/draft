@@ -245,7 +245,9 @@ class BankEngine:
         integ = integrity.assess([{
             "format": i["format"], "canary": i["canary"], "time_s": i.get("time_s"), "time_limit_s": i["time_limit_s"],
             "score": (float(np.mean([v for v in i["x"] if v is not None])) if any(v is not None for v in i["x"]) else None),
-            "signals": i.get("signals")} for i in done], pk)
+            "signals": i.get("signals"),
+            "injection": any((g or {}).get("error") == "prompt_injection_suspected" for g in i.get("grading") or [])}
+            for i in done], pk)
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families,
             "stop_reason": state.get("stop_reason") or sess.stop_reason or "finished_early",

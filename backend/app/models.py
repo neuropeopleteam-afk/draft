@@ -2,6 +2,7 @@
 from app.core.db import Base
 from app.modules.assessment.models import (  # noqa: F401
     GradeHistory,
+    SandboxTestStart,
     SurveyResponse,
     SurveyStackTag,
     TaskFamily,
