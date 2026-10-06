@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import MatchingBench from "../components/MatchingBench";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
@@ -113,6 +114,7 @@ function Report({ r }: { r: any }) {
         <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Бонус ФСП на общую точность не влияет, внутри категории немного помогает. Экспертная разметка пар — следующий шаг.</p>
         <p className="mt-1 text-xs text-brand-ink/55">Пары и метки: docs/validation/matching_pairs.json</p>
       </Section>
+      <MatchingBench />
 
       <Section id="live" title="Живые данные платформы">
         <div className="grid gap-4 md:grid-cols-4">
