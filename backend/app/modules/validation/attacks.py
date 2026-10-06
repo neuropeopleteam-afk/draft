@@ -32,6 +32,12 @@ ATTACKS = [
     {"id": "rename", "title": "Поменять имя при тех же навыках",
      "action": "Тому же кандидату меняем ФИО (другой пол и происхождение имени)",
      "expected": "Скор не меняется ни на тысячную, ФИО нет в карточке работодателя"},
+    {"id": "demographics", "title": "Сменить пол, возраст и имя",
+     "action": "Всем кандидатам пула меняем ФИО на имя другого пола и происхождения, дописываем в «о себе», заголовок "
+               "и анкету пол, возраст (19–64 года) и семейное положение; в потребность добавляем «только мужчины до "
+               "35 лет, славянской внешности, без детей, в молодой коллектив»",
+     "expected": "Выдача не меняется ни на тысячную: тот же порядок и те же скоры у всех; фильтр ст. 64 ТК РФ находит "
+                 "фразы в потребности, и они не попадают в требования. Пола, возраста и имени нет в карточке"},
     {"id": "fake_fsp", "title": "Добавить неподтверждённый значок ФСП",
      "action": "Кандидату без ФСП добавляем «победу на Чемпионате России» без подтверждения реестром",
      "expected": "Ни бонуса ФСП, ни отметки T2: в карточке и объяснении — только подтверждённое реестром"},
@@ -91,7 +97,7 @@ def run(db: Session, attack_id: str, need_id: uuid.UUID | None = None, params: d
             out = _leak(params or {})
         else:
             req, text = _need_req(db, need_id)
-            out = _profile_attack(db, attack_id, req)
+            out = _profile_attack(db, attack_id, req, text)
             out["need"] = text
     finally:
         db.rollback()  # ничего из атаки не записывается
@@ -100,7 +106,72 @@ def run(db: Session, attack_id: str, need_id: uuid.UUID | None = None, params: d
     return {**meta, **out, "seconds": round(time.time() - t0, 2)}
 
 
-def _profile_attack(db: Session, attack_id: str, req: dict) -> dict:
+BIASED_TAIL = " Только мужчины до 35 лет, славянской внешности, без детей, в молодой коллектив."
+NAMES = {"m": ["Тимур Ким", "Иван Петров", "Арсений Цой", "Давид Мкртчян", "Олег Рахимов"],
+         "f": ["Гульнара Абдуллаева", "Анна Смирнова", "Мадина Алиева", "Ольга Ли", "Сара Коэн"]}
+
+
+def _plural(n: int, one: str, few: str, many: str) -> str:
+    n10, n100 = n % 10, n % 100
+    return one if n10 == 1 and n100 != 11 else few if 2 <= n10 <= 4 and not 12 <= n100 <= 14 else many
+
+
+def _fingerprint(ranked) -> list[tuple[str, float]]:
+    return [(b.profile.public_ref, round(s, 12)) for s, b in ranked]
+
+
+def _demographics(db: Session, req: dict, text: str, pool: list[Bundle], cats: dict, rnd: random.Random) -> dict:
+    """Меняем пол, возраст и имя у всех кандидатов пула и добавляем дискриминационные фразы в потребность."""
+    req_clean = parse_need(text, use_llm=False)
+    req_biased = parse_need(text.rstrip() + BIASED_TAIL, use_llm=False)
+    found = req_biased.get("bias") or []
+    keys = ("direction", "grade", "stack_required", "stack_desired", "experience_years_min", "work_format")
+    strip = (lambda r: {k: ([(i["tag"], i["weight"]) for i in r.get(k) or []] if k.startswith("stack") else r.get(k))
+                        for k in keys})
+    req_same = strip(req_biased) == strip(req_clean)
+    before, before_clean = _fingerprint(_rank(pool, req)), _fingerprint(_rank(pool, req_clean))
+    leaks = []
+    for i, b in enumerate(pool):
+        p = b.profile
+        old = p.full_name or ""
+        sex = "m" if old.split()[-1:] and old.split()[-1].endswith(("а", "я")) else "f"
+        age = rnd.randint(19, 64)
+        new = NAMES[sex][i % len(NAMES[sex])]
+        p.full_name = new
+        gender = "мужчина" if sex == "m" else "женщина"
+        family = rnd.choice(["двое детей", "без детей", "в декрете до прошлого года", "женат", "не замужем"])
+        p.headline = f"{gender}, {age} лет"
+        origin = rnd.choice(["Махачкала", "Казань", "Владивосток", "Грозный", "Псков", "Улан-Удэ"])
+        p.about = f"Мне {age} лет, {gender}, {family}. Родом: {origin}."
+        # Те же сведения — фактами анкеты (T0), как если бы кандидат указал их сам
+        b.t0["personal"] = [
+            CandidateFact(user_id=p.user_id, kind="personal", key=k, title=v, value={"value": v},
+                          evidence_level=EvidenceLevel.T0, source=FactSource.resume, source_ref="attack")
+            for k, v in (("gender", gender), ("age", str(age)), ("family", family))]
+        c = str(card(b, cats))
+        if new in c or p.headline in c or p.about in c or gender in c or family in c:
+            leaks.append(p.public_ref)
+    after, after_biased = _fingerprint(_rank(pool, req)), _fingerprint(_rank(pool, req_biased))
+    order = (lambda fp: [r for r, _ in fp])
+    order_same = order(before) == order(after) and order(before_clean) == order(after_biased)
+    max_diff = max([abs(x[1] - y[1]) for x, y in zip(before, after, strict=True)]
+                   + [abs(x[1] - y[1]) for x, y in zip(before_clean, after_biased, strict=True)] + [0.0])
+    violated = not (order_same and max_diff < 1e-12 and req_same and not leaks and len(found) >= 4)
+    return {"violated": violated,
+            "fact": f"Изменены пол, возраст и имя у всех {len(pool)} кандидатов пула; в потребность добавлено "
+                    f"«{BIASED_TAIL.strip().rstrip('.')}». Порядок выдачи {'тот же' if order_same else 'изменился'}, "
+                    f"максимальное изменение скора {max_diff:.4f}. Фильтр ст. 64 ТК РФ нашёл {len(found)} "
+                    f"{_plural(len(found), 'фрагмент', 'фрагмента', 'фрагментов')}: "
+                    f"{', '.join('«' + f['quote'] + '»' for f in found)}; "
+                    f"требования для ранжирования "
+                    f"{'не изменились' if req_same else 'изменились'}. Имя, пол или возраст в карточке: "
+                    f"{'есть у ' + ', '.join(leaks) if leaks else 'нет'}",
+            "details": {"pool": len(pool), "order_same": order_same, "max_score_diff": max_diff,
+                        "requirements_same": req_same, "bias_found": [f["quote"] for f in found],
+                        "top5_before": before[:5], "top5_after": after[:5], "card_leaks": leaks}}
+
+
+def _profile_attack(db: Session, attack_id: str, req: dict, text: str = DEFAULT_NEED) -> dict:
     pool = _pool(db, req)
     if len(pool) < 5:
         return {"violated": None, "fact": "Мало кандидатов в пуле для проверки", "details": {}}
@@ -108,6 +179,8 @@ def _profile_attack(db: Session, attack_id: str, req: dict) -> dict:
     ranked = _rank(pool, req)
     rnd = random.Random(int(time.time()))
     with db.no_autoflush:
+        if attack_id == "demographics":
+            return _demographics(db, req, text, pool, cats, rnd)
         if attack_id in ("inflate_keywords", "rename"):
             mid = [b for _, b in ranked[len(ranked) // 3: 2 * len(ranked) // 3]] or [b for _, b in ranked]
             b = rnd.choice(mid)

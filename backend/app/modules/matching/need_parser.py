@@ -4,6 +4,14 @@
 Если настроен LLM, его ответ используется как уточнение, но проходит ту же нормализацию: неизвестные
 теги отбрасываются, направление и грейд — только из справочника. Перед отправкой в LLM из текста
 вырезаются контакты (почты, телефоны, ссылки) — см. resume.pii.
+
+Цитаты. У каждого извлечённого требования есть evidence — фрагмент исходного текста (start, end, quote), на
+основании которого оно извлечено: у стек-тегов — в самом элементе, у направления, грейда, опыта, формата и
+вилки — в req["evidence"]. Требование LLM без цитаты, которую можно найти в тексте, отбрасывается.
+Работодатель подтверждает, правит или удаляет требование (status у тега, req["review"] у остальных).
+
+Дискриминация (ст. 64 ТК РФ, модуль bias): фрагменты «до 35 лет», «только мужчины» и т. п. возвращаются в
+req["bias"] с предложением переписать; перед разбором они маскируются — требований из них не извлекается.
 """
 from __future__ import annotations
 
@@ -15,11 +23,14 @@ from app.modules.catalog.dictionary import (
     GRADE_KEYWORDS,
     REQUIRED_CUES,
     WORK_FORMAT_KEYWORDS,
+    find_key_span,
     find_keys,
     find_stack,
+    find_stack_spans,
 )
 from app.modules.catalog.seed_data import STACK
 from app.modules.llm.client import chat_json
+from app.modules.matching import bias as bias_filter
 
 DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security")
 GRADES = ("junior", "middle", "senior")
@@ -69,30 +80,36 @@ def _ok(v: int) -> bool:
 def parse_salary(text: str) -> tuple[int | None, int | None]:
     """Вилка из текста: «220–300 тыс.», «от 200 до 250 тыс.», «до 300 000 рублей», «от 150к»,
     одно значение «Зарплата 260 000 ₽ на руки» / «260 тыс. рублей» / «180к» → (260000, 260000)."""
+    lo, hi, _span = parse_salary_span(text)
+    return lo, hi
+
+
+def parse_salary_span(text: str) -> tuple[int | None, int | None, tuple[int, int] | None]:
+    """То же, что parse_salary, и позиция фрагмента с вилкой в тексте (для цитаты)."""
     m = _SALARY_RE.search(text)
     if m:
         lo, hi = _money(m.group(1), m.group(2) or m.group(4)), _money(m.group(3), m.group(4))
         if lo > hi:
             lo, hi = hi, lo
         if _ok(lo) and _ok(hi):
-            return lo, hi
+            return lo, hi, m.span()
     kr = _KEYWORD_RANGE_RE.search(text)
     if kr:
         lo, hi = _money(kr.group(1), kr.group(2) or kr.group(4)), _money(kr.group(3), kr.group(4))
         lo, hi = min(lo, hi), max(lo, hi)
         if _ok(lo) and _ok(hi):
-            return lo, hi
+            return lo, hi, kr.span()
     one = _ONE_SIDE_RE.search(text)
     if one:
         v = _money(one.group(2), one.group(3))
         if _ok(v):
-            return (v, None) if one.group(1).lower() == "от" else (None, v)
+            return ((v, None) if one.group(1).lower() == "от" else (None, v)) + (one.span(),)
     for rx in (_SINGLE_RE, _KEYWORD_RE):
-        for s in rx.finditer(text):
-            v = _money(s.group(1), s.group(2) if rx is _SINGLE_RE else None)
+        for m_ in rx.finditer(text):
+            v = _money(m_.group(1), m_.group(2) if rx is _SINGLE_RE else None)
             if _ok(v):
-                return v, v
-    return None, None
+                return v, v, m_.span()
+    return None, None, None
 
 
 def salary_is_net(text: str) -> bool:
@@ -102,6 +119,27 @@ def salary_is_net(text: str) -> bool:
 def parse_experience(text: str) -> float | None:
     m = _EXP_RE.search(text)
     return float(m.group(1)) if m else None
+
+
+def _context(text: str, s: int, e: int) -> str:
+    """Предложение (часть до «;»), в котором стоит цитата."""
+    cs = max(text.rfind(c, 0, s) for c in ".!?;\n") + 1
+    ce_all = [i for i in (text.find(c, e) for c in ".!?;\n") if i >= 0]
+    ce = min(ce_all) + 1 if ce_all else len(text)
+    return text[cs:ce].strip()[:240]
+
+
+def _ev(text: str, span: tuple[int, int] | None, source: str = "rules", basis: str | None = None) -> dict | None:
+    """Цитата: фрагмент исходного текста и предложение вокруг него (для подсветки и показа работодателю)."""
+    if not span:
+        return None
+    s, e = span
+    while e > s and text[e - 1] in " ,;:":
+        e -= 1
+    out = {"start": s, "end": e, "quote": text[s:e], "context": _context(text, s, e), "source": source}
+    if basis:
+        out["basis"] = basis
+    return out
 
 
 def _sentences(text: str) -> list[tuple[int, int, str]]:
@@ -167,8 +205,11 @@ def _mixed_zones(start: int, sent: str, default: str) -> list[tuple[int, int, st
 
 
 def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | None = None) -> dict:
-    """Детерминированный разбор. Возвращает требования в каноническом виде (см. normalize)."""
-    tags = find_stack(text)
+    """Детерминированный разбор. Возвращает требования в каноническом виде (см. normalize) с цитатами.
+
+    text должен быть уже очищен от дискриминационных фрагментов (bias.mask) — позиции совпадают с исходным."""
+    spans = find_stack_spans(text)
+    tags = {t: sp[0] for t, sp in spans.items()}
     zones = _section_kind(text)
     dirs = tag_directions()
 
@@ -179,29 +220,42 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
         return "neutral"
 
     # Направление: ключевые слова (вес 3) + голоса стек-тегов (вес 1)
-    votes = {d: 3 * n for d, n in find_keys(text, DIRECTION_KEYWORDS).items()}
+    dk = find_keys(text, DIRECTION_KEYWORDS)
+    votes = {d: 3 * n for d, n in dk.items()}
     for t in tags:
         d = dirs.get(t)
         if d:
             votes[d] = votes.get(d, 0) + 1
     direction = hint_direction or (max(votes, key=votes.get) if votes else None)
+    ev: dict[str, dict | None] = {}
+    if direction and not hint_direction:
+        if direction in dk:
+            ev["direction"] = _ev(text, find_key_span(text, DIRECTION_KEYWORDS[direction]), basis="keyword")
+        else:  # направление выведено по технологиям — цитата первой из них
+            first = min((sp for t, sp in spans.items() if dirs.get(t) == direction), default=None)
+            ev["direction"] = _ev(text, first, basis="stack")
 
     # Грейд: ключевые слова, иначе по требуемому опыту
     gk = find_keys(text, GRADE_KEYWORDS)
-    exp = parse_experience(text)
+    exp_m = _EXP_RE.search(text)
+    exp = float(exp_m.group(1)) if exp_m else None
     if hint_grade:
         grade = hint_grade
     elif gk:
         grade = max(gk, key=lambda g: (gk[g], GRADES.index(g)))
+        ev["grade"] = _ev(text, find_key_span(text, GRADE_KEYWORDS[grade]), basis="keyword")
     elif exp is not None:
         grade = "junior" if exp < 1.5 else "middle" if exp < 4 else "senior"
+        ev["grade"] = _ev(text, exp_m.span(), basis="experience")
     else:
         grade = None
+    if exp_m:
+        ev["experience_years_min"] = _ev(text, exp_m.span())
 
     required, desired = [], []
     for t, pos in sorted(tags.items(), key=lambda kv: kv[1]):
         z = zone_of(pos)
-        item = {"tag": t}
+        item = {"tag": t, "evidence": _ev(text, spans[t], basis=z), "status": "extracted"}
         if z == "desired":
             desired.append(item)
         else:
@@ -216,18 +270,45 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
         it["weight"] = 0.3
 
     wf = find_keys(text, WORK_FORMAT_KEYWORDS)
-    salary_from, salary_to = parse_salary(text)
+    work_format = max(wf, key=wf.get) if wf else None
+    if work_format:
+        ev["work_format"] = _ev(text, find_key_span(text, WORK_FORMAT_KEYWORDS[work_format]))
+    salary_from, salary_to, sal_span = parse_salary_span(text)
+    if salary_from or salary_to:
+        ev["salary"] = _ev(text, sal_span)
     return normalize({
         "direction": direction,
         "grade": grade,
         "stack_required": required,
         "stack_desired": desired,
         "experience_years_min": exp,
-        "work_format": max(wf, key=wf.get) if wf else None,
+        "work_format": work_format,
         "salary_from": salary_from,
         "salary_to": salary_to,
         "salary_net": salary_is_net(text) if (salary_from or salary_to) else None,
+        "evidence": ev,
     }, method="rules")
+
+
+EVIDENCE_KEYS = ("direction", "grade", "experience_years_min", "work_format", "salary")
+ITEM_STATUSES = ("extracted", "confirmed", "edited", "manual")
+REVIEW_STATUSES = ("extracted", "confirmed", "edited")
+
+
+def clean_evidence(ev) -> dict | None:
+    """Цитата в каноническом виде: только ожидаемые поля и разумные длины (данные могут прийти от клиента)."""
+    if not isinstance(ev, dict) or not isinstance(ev.get("quote"), str) or not ev["quote"].strip():
+        return None
+    out = {"quote": ev["quote"][:300]}
+    for k in ("start", "end"):
+        if isinstance(ev.get(k), int) and not isinstance(ev.get(k), bool) and ev[k] >= 0:
+            out[k] = ev[k]
+    if isinstance(ev.get("context"), str):
+        out["context"] = ev["context"][:300]
+    out["source"] = ev.get("source") if ev.get("source") in ("rules", "llm") else "rules"
+    if isinstance(ev.get("basis"), str):
+        out["basis"] = ev["basis"][:30]
+    return out
 
 
 def normalize(req: dict, method: str) -> dict:
@@ -247,7 +328,14 @@ def normalize(req: dict, method: str) -> dict:
                     w = float(it.get("weight", default_w)) if isinstance(it, dict) else default_w
                 except (TypeError, ValueError):
                     w = default_w
-                out.append({"tag": tag, "weight": round(min(max(w, 0.1), 1.0), 2)})
+                item = {"tag": tag, "weight": round(min(max(w, 0.1), 1.0), 2)}
+                if isinstance(it, dict):
+                    ev = clean_evidence(it.get("evidence"))
+                    if ev:
+                        item["evidence"] = ev
+                    st = it.get("status")
+                    item["status"] = st if st in ITEM_STATUSES else ("extracted" if ev else "manual")
+                out.append(item)
         return out
 
     required = clean(req.get("stack_required"), 1.0)
@@ -259,6 +347,11 @@ def normalize(req: dict, method: str) -> dict:
     if sf and st and sf > st:  # одна сторона вилки допустима («от 200 тыс.», «до 300 000 ₽»)
         sf, st = st, sf
     exp = req.get("experience_years_min")
+    present = {"direction": d, "grade": g, "experience_years_min": exp, "work_format": wf, "salary": sf or st}
+    raw_ev = req.get("evidence") if isinstance(req.get("evidence"), dict) else {}
+    evidence = {k: clean_evidence(raw_ev.get(k)) for k in EVIDENCE_KEYS if present[k] is not None}
+    raw_rv = req.get("review") if isinstance(req.get("review"), dict) else {}
+    review = {k: raw_rv[k] for k in EVIDENCE_KEYS if present[k] is not None and raw_rv.get(k) in REVIEW_STATUSES}
     return {
         "direction": d,
         "grade": g,
@@ -269,6 +362,8 @@ def normalize(req: dict, method: str) -> dict:
         "salary_from": sf,
         "salary_to": st,
         "salary_net": bool(req.get("salary_net")) if (sf or st) else None,
+        "evidence": {k: v for k, v in evidence.items() if v},
+        "review": review,
         "method": method,
     }
 
@@ -277,45 +372,131 @@ LLM_SYSTEM = (
     "Ты помогаешь структурировать описание вакансии в ИТ. Верни только JSON без пояснений: "
     '{"direction": одно из ["backend","frontend","data_ml","qa","security"] или null, '
     '"grade": одно из ["junior","middle","senior"] или null, '
-    '"stack_required": [{"tag": id, "weight": 0.1..1.0}], "stack_desired": [{"tag": id, "weight": 0.1..0.5}], '
-    '"experience_years_min": число или null, "work_format": "office"|"hybrid"|"remote"|null}. '
+    '"stack_required": [{"tag": id, "weight": 0.1..1.0, "quote": "точный фрагмент текста"}], '
+    '"stack_desired": [{"tag": id, "weight": 0.1..0.5, "quote": "точный фрагмент текста"}], '
+    '"experience_years_min": число или null, "work_format": "office"|"hybrid"|"remote"|null, '
+    '"quotes": {"direction": "фрагмент", "grade": "фрагмент", "experience_years_min": "фрагмент", '
+    '"work_format": "фрагмент"}}. '
     "Используй только идентификаторы стек-тегов из списка: {tags}. Обязательные — то, без чего кандидат не подходит; "
-    "желательные — «будет плюсом». Вес отражает важность."
+    "желательные — «будет плюсом». Вес отражает важность. quote — дословный фрагмент исходного текста (2–8 слов), "
+    "на основании которого извлечено требование; без такого фрагмента требование не указывай. "
+    "Не извлекай требования к полу, возрасту, внешности, национальности, семье, религии и месту жительства."
 )
+
+
+def bias_report(text: str, req: dict) -> tuple[list[dict], str | None]:
+    """Находки фильтра ст. 64 ТК РФ с предложениями и исправленный текст (или None, если нарушений нет)."""
+    found = bias_filter.find_bias(text)
+    return bias_filter.suggestions(found, req), bias_filter.rewrite(text, found, req)
+
+
+def _locate(text: str, quote) -> tuple[int, int] | None:
+    """Позиция дословной цитаты LLM в тексте (без учёта регистра и пробелов); нет — None."""
+    if not isinstance(quote, str):
+        return None
+    words = re.findall(r"\S+", quote.strip().strip("«»\"'"))[:20]
+    if not words:
+        return None
+    m = re.search(r"\s+".join(re.escape(w) for w in words), text, re.IGNORECASE)
+    return m.span() if m else None
+
+
+def _llm_requirements(raw: dict, masked: str) -> tuple[dict, int]:
+    """Ответ LLM → требования с цитатами. Требование без цитаты, найденной в тексте, отбрасывается."""
+    dropped = 0
+    out = dict(raw)
+    for key in ("stack_required", "stack_desired"):
+        items = []
+        for it in raw.get(key) or []:
+            if not isinstance(it, dict):
+                dropped += 1
+                continue
+            span = _locate(masked, it.get("quote"))
+            if span is None:
+                dropped += 1
+                continue
+            items.append({**it, "evidence": _ev(masked, span, source="llm")})
+        out[key] = items
+    quotes = raw.get("quotes") if isinstance(raw.get("quotes"), dict) else {}
+    ev = {}
+    for key in ("direction", "grade", "experience_years_min", "work_format"):
+        if raw.get(key) is None:
+            continue
+        span = _locate(masked, quotes.get(key))
+        if span is None:
+            out[key] = None
+            dropped += 1
+        else:
+            ev[key] = _ev(masked, span, source="llm")
+    out["evidence"] = ev
+    return out, dropped
+
+
+def _with_quotes_from_original(req: dict, text: str) -> dict:
+    """Цитаты строились по маскированному тексту — позиции те же, текст цитаты и контекст берём из исходного."""
+    def fix(ev):
+        if ev and "start" in ev and "end" in ev:
+            ev["quote"] = text[ev["start"]:ev["end"]]
+            ev["context"] = _context(text, ev["start"], ev["end"])
+        return ev
+
+    for key in ("stack_required", "stack_desired"):
+        for it in req.get(key) or []:
+            fix(it.get("evidence"))
+    for ev in (req.get("evidence") or {}).values():
+        fix(ev)
+    return req
 
 
 def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | None = None,
                use_llm: bool = True) -> dict:
-    rules = parse_rules(text, hint_direction, hint_grade)
-    if not use_llm:
-        return rules
+    found = bias_filter.find_bias(text)
+    masked = bias_filter.mask(text, found)  # из дискриминационных фрагментов ничего не извлекаем
+    rules = parse_rules(masked, hint_direction, hint_grade)
+    merged = rules
+    if use_llm:
+        merged = _merge_llm(masked, rules, hint_direction, hint_grade)
+    merged = _with_quotes_from_original(merged, text)
+    merged["bias"] = bias_filter.suggestions(found, merged)
+    merged["suggested_text"] = bias_filter.rewrite(text, found, merged)
+    return merged
+
+
+def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade: str | None) -> dict:
     from app.modules.resume.pii import redact
 
-    clean_text = redact(text, use_ner=False).text  # контакты из текста вакансии тоже не уходят наружу
+    clean_text = redact(masked, use_ner=False).text  # контакты из текста вакансии тоже не уходят наружу
     res = chat_json(LLM_SYSTEM.replace("{tags}", ", ".join(sorted(tag_directions()))), clean_text[:6000])
     if not res.ok or not isinstance(res.data, dict):
         rules["llm"] = {"used": False, "reason": res.error}
         return rules
-    llm = normalize(res.data, method="llm")
+    raw, dropped = _llm_requirements(res.data, masked)
+    llm = normalize(raw, method="llm")
     merged = dict(rules)
+    ev = dict(rules.get("evidence") or {})
     # LLM уточняет направление/грейд, только если правила не справились или подсказки нет
-    merged["direction"] = hint_direction or rules["direction"] or llm["direction"]
-    merged["grade"] = hint_grade or rules["grade"] or llm["grade"]
+    for key, hint in (("direction", hint_direction), ("grade", hint_grade)):
+        merged[key] = hint or rules[key] or llm[key]
+        if not hint and not rules[key] and llm[key] and llm["evidence"].get(key):
+            ev[key] = llm["evidence"][key]
     if llm["stack_required"] or llm["stack_desired"]:
-        # Объединяем: тег из правил сохраняет зону, вес — среднее; новые теги LLM добавляются
-        by_tag = {i["tag"]: ("required", i["weight"]) for i in rules["stack_required"]}
-        by_tag.update({i["tag"]: ("desired", i["weight"]) for i in rules["stack_desired"]})
+        # Объединяем: тег из правил сохраняет зону и цитату, вес — среднее; новые теги LLM — со своей цитатой
+        by_tag = {i["tag"]: ("required", i) for i in rules["stack_required"]}
+        by_tag.update({i["tag"]: ("desired", i) for i in rules["stack_desired"]})
         for zone, items in (("required", llm["stack_required"]), ("desired", llm["stack_desired"])):
             for i in items:
                 if i["tag"] in by_tag:
-                    z, w = by_tag[i["tag"]]
-                    by_tag[i["tag"]] = (z, round((w + i["weight"]) / 2, 2))
+                    z, cur = by_tag[i["tag"]]
+                    by_tag[i["tag"]] = (z, {**cur, "weight": round((cur["weight"] + i["weight"]) / 2, 2)})
                 else:
-                    by_tag[i["tag"]] = (zone, i["weight"])
-        merged["stack_required"] = [{"tag": t, "weight": w} for t, (z, w) in by_tag.items() if z == "required"]
-        merged["stack_desired"] = [{"tag": t, "weight": w} for t, (z, w) in by_tag.items() if z == "desired"]
-    merged["experience_years_min"] = rules["experience_years_min"] or llm["experience_years_min"]
-    merged["work_format"] = rules["work_format"] or llm["work_format"]
+                    by_tag[i["tag"]] = (zone, {**i, "status": "extracted"})
+        merged["stack_required"] = [i for z, i in by_tag.values() if z == "required"]
+        merged["stack_desired"] = [i for z, i in by_tag.values() if z == "desired"]
+    for key in ("experience_years_min", "work_format"):
+        merged[key] = rules[key] or llm[key]
+        if not rules[key] and llm[key] and llm["evidence"].get(key):
+            ev[key] = llm["evidence"][key]
+    merged["evidence"] = ev
     merged["method"] = "llm+rules"
-    merged["llm"] = {"used": True, "latency_ms": res.latency_ms}
+    merged["llm"] = {"used": True, "latency_ms": res.latency_ms, "dropped_without_quote": dropped}
     return merged
