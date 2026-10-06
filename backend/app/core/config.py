@@ -69,14 +69,24 @@ class Settings(BaseSettings):
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"
-    # Параметры адаптивного теста. Длина: 8–16 оцениваемых заданий (+3 канарейки, +до 3 дотестирования),
+    # Параметры адаптивного теста. Длина: 8–16 оцениваемых заданий (+3 канарейки, +до 6 дотестирования),
     # не дольше 60 минут; open_book_3step — не больше 2, open_answer — не больше 1 (см. exposure.py)
     assessment_min_items: int = 8
     assessment_max_items: int = 16
     assessment_se_target: float = 0.35
     assessment_max_minutes: int = 60
-    # Дотестирование у порога грейда: |θ − порог| < SE → ещё до 3 заданий (минимум 3), выбор по информации в пороге
-    assessment_extension_items: int = 3
+    # Классификация по грейду: остановка, когда ни один порог грейда не попадает в θ̂ ± z·SE (classification;
+    # z = 1,28 — 90 % с одной стороны, строже правила подтверждения 80 %, чтобы досрочная остановка не завышала грейд),
+    # или только по SE (se); выбор заданий по информации в неопределённом пороге (cut) или в θ̂ (theta)
+    assessment_stop_rule: str = "classification"
+    assessment_classify_z: float = 1.28
+    assessment_select_at: str = "cut"
+    # Дотестирование у порога: ближайший порог внутри θ̂ ± z·SE → короткие задания (лимит ≤ 5 мин) по информации
+    # в пороге, пока порог не выйдет из интервала; не больше N заданий и M минут сверх основной части
+    assessment_extension_items: int = 6
+    assessment_extension_minutes: int = 20
+    # сначала свободные короткие задания своего субпула, затем остальной банк (ниже частота показа, ротация чище)
+    assessment_extension_own_first: bool = True
     assessment_max_open_book: int = 2
     assessment_max_open_answer: int = 1
     # Ротация субпулов банка: 2 параллельные формы; повторная попытка получает другой субпул.

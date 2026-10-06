@@ -3,6 +3,7 @@ import MatchingBench from "../components/MatchingBench";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
+import { CompetitorConditions, ExposureNote, LeakShareTable, RetestSection, SimConditions } from "../components/validation/StabilityBlocks";
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")} %`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -43,7 +44,7 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/55">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -67,32 +68,18 @@ function Report({ r }: { r: any }) {
           rows={[...dirs.map((d) => { const a = sim.directions[d].app; return [DIRECTIONS[d], num(a.r_theta), num(a.rmse), num(a.mean_items, 1), num(a.mean_time_min, 0), pct(a.grade_exact), pct(a.decision_accuracy), pct(a.false_confirm_rate, 1), pct(a.false_reject_rate, 1), a.ob3_max]; }),
             ["Среднее", num(sim.mean?.r_theta), num(sim.mean?.rmse), num(sim.mean?.mean_items, 1), num(sim.mean?.mean_time_min, 0), pct(sim.mean?.grade_exact), pct(sim.mean?.decision_accuracy), pct(sim.mean?.false_confirm_rate, 1), pct(sim.mean?.false_reject_rate, 1), ""],
             ["День 2, среднее", num(sim.mean_baseline?.r_theta), num(sim.mean_baseline?.rmse), num(sim.mean_baseline?.mean_items, 1), num(sim.mean_baseline?.mean_time_min, 0), pct(sim.mean_baseline?.grade_exact), pct(sim.mean_baseline?.decision_accuracy), pct(sim.mean_baseline?.false_confirm_rate, 1), pct(sim.mean_baseline?.false_reject_rate, 1), Math.max(...dirs.map((d) => sim.directions[d].baseline_day2.ob3_max))]]} />
-        <p className="mt-2 text-xs text-brand-ink/55">Дотестирование у порога (до 3 заданий) в симуляции не моделируется — в продукте решение у порога немного точнее.</p>
+        <SimConditions sim={sim} kind="test" />
       </Section>
 
-      <Section id="retest" title="Стабильность грейда при повторе"
-        lead="Тот же кандидат проходит тест дважды: на другом субпуле банка и с другими вариантами заданий (параллельная форма). Текущий банк — 128 семейств, ротация субпулов и контроль частоты включены.">
-        <Table head={["Направление", "r(θ₁, θ₂)", "Грейд совпал", "±1 ступень", "κ (квадр.)", "κ без ошибки параметров", "Решение совпало"]}
-          rows={dirs.map((d) => { const t = sim.directions[d].retest; return [DIRECTIONS[d], num(t.r_theta), pct(t.grade_exact_agreement), pct(t.grade_within_1), num(t.grade_kappa_quadratic), num(t.ideal_params?.grade_kappa_quadratic), pct(t.decision_agreement)]; })} />
-        {(() => {
-          const d0 = dirs[0]; const lt = sim.directions?.[d0]?.retest?.long_test; const t0 = sim.directions?.[d0]?.retest;
-          return (
-            <p className="mt-2 text-sm text-brand-ink/70">
-              Честно: κ ниже желаемых 0,8. Причина — точность одной короткой сессии: 8–16 заданий дают SE ≈ 0,4, а три грейда лежат в пределах ±1 по шкале, поэтому кандидат у порога при повторе часто попадает в соседний грейд (±1 ступень — почти всегда). Ошибка предкалибровки не главное: с параметрами без ошибки эксперта κ почти тот же.
-              {lt ? (lt.grade_kappa_quadratic > (t0?.grade_kappa_quadratic ?? 0) + 0.03
-                ? <> Тест длиннее (SE ≤ 0,25, до 30 заданий) на направлении {DIRECTIONS[d0]}: κ = {num(lt.grade_kappa_quadratic)} вместо {num(t0?.grade_kappa_quadratic)}, в среднем {num(lt.mean_items, 1)} задания.</>
-                : <> Просто удлинить тест не получается: при SE ≤ 0,25 и лимите 30 заданий ({DIRECTIONS[d0]}) сессия упирается в размер субпула — в среднем {num(lt.mean_items, 1)} задания, κ = {num(lt.grade_kappa_quadratic)} (не лучше {num(t0?.grade_kappa_quadratic)}). Предел сейчас — около 20 семейств направления в субпуле.</>) : null}
-              {" "}Что поможет: больше семейств в банке (≈ 200 — длиннее сессия без повторов при той же ротации), задания с высокой информативностью у порогов грейдов, остановка по классификации у порога вместо SE, дотестирование у порога (в продукте есть, в симуляции не моделируется), затем калибровка на панели ответов.
-            </p>
-          );
-        })()}
-      </Section>
+      <RetestSection sim={sim} />
+      <CompetitorConditions sim={sim} />
 
       <Section id="exposure" title="Частота показа заданий"
         lead="Доля сессий, в которых показано семейство заданий. Цель Sympson — Hetter — не выше 0,3; канарейки опубликованы намеренно и не считаются.">
         <Table head={["Направление", "Макс. частота", "Средняя", "Доля > 0,3", "Не используются", "День 2: макс.", "День 2: > 0,3", "День 2: не используются"]}
           rows={dirs.map((d) => { const e = sim.directions[d].exposure; return [DIRECTIONS[d], num(e.app.max_rate), num(e.app.mean_rate), pct(e.app.share_over_rmax), pct(e.app.unused_share), num(e.baseline_day2.max_rate), pct(e.baseline_day2.share_over_rmax), pct(e.baseline_day2.unused_share)]; })} />
-        <p className="mt-2 text-sm text-brand-ink/70">Честно: цель 0,3 не достигнута. Без контроля одно и то же семейство попадало почти в каждую сессию (максимум ≈ 1,0); теперь максимум ≈ 0,5 и показ распределён ровно — но с двумя субпулами по ~20 семейств и 16 заданиями субпул почти исчерпывается. Защита от «слива» держится не на частоте семейства, а на уникальном варианте у каждого кандидата, канарейках и карантине субпула. Чтобы опустить частоту до 0,3, нужен банк ≈ 200 семейств или 3 субпула.</p>
+        <ExposureNote sim={sim} />
+        <SimConditions sim={sim} kind="exposure" />
       </Section>
 
       <Section id="leak" title="Устойчивость к утечке части банка"
@@ -105,6 +92,8 @@ function Report({ r }: { r: any }) {
         <Table head={["Направление", "Фикс. форма: без утечки", "Фикс. форма: утечка 30 %", "Фикс. форма: утекла целиком", "Наш тест: утечка 30 %", "+ детектор", "+ детектор и карантин", "Списывающих без уровня"]}
           rows={dirs.map((d) => { const l = sim.directions[d].leak; const a = l.attack_success_rate ?? {}; return [DIRECTIONS[d], pct(a.fixed_no_leak), pct(a.fixed_leak), pct(a.fixed_full_leak), pct(a.leak_no_detector), pct(a.leak_detector), pct(a.leak_detector_rotation), l.n_unqualified_cheaters ?? "—"]; })} />
         <p className="mt-2 text-xs text-brand-ink/55">Базовая доля «без утечки» — ошибка теста, а не атака. Выборка списывающих без уровня — десятки человек на направление, поэтому разброс ±10 п. п.</p>
+        <SimConditions sim={sim} kind="leak" />
+        <LeakShareTable sim={sim} />
       </Section>
 
       <Section id="matching" title="Качество подбора" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>

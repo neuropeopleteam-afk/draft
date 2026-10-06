@@ -175,7 +175,7 @@ def run_population(pool, truth, people, direction, cfg, rng, subpools=None, expo
 
 
 def _timed(sess, res):
-    lookup = {i.family_id: i for i in sess.scored_pool + sess.canary_pool}
+    lookup = getattr(sess, "items", None) or {i.family_id: i for i in sess.scored_pool + sess.canary_pool}
     clean, canary, idx = [], [], []
     for k, adm in enumerate(res.administered):
         it = lookup[adm.family_id]
