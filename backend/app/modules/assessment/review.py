@@ -63,7 +63,10 @@ def queue(db: Session, mode: str = "pending", demo_only: bool = False) -> dict:
             else:
                 r["llm"] = {"score": g.get("score") if g.get("method") == "llm" else (g.get("expert") or {}).get("llm_score"),
                             "criteria": g.get("criteria") if g.get("method") == "llm" else None,
-                            "comment": g.get("comment") if g.get("method") == "llm" else None, "error": g.get("error")}
+                            "comment": g.get("comment") if g.get("method") == "llm" else None, "error": g.get("error"),
+                            # промпт-инъекция (grader.injection_signals): ответ в LLM не уходил, причина — эксперту
+                            "flags": g.get("flags") or [],
+                            "injection_note": g.get("comment") if g.get("error") == "prompt_injection_suspected" else None}
             items.append({**r, "session_id": str(ts.id), "session_status": ts.status.value,
                           "candidate_ref": prof.public_ref if prof else None, "direction": ts.direction_id,
                           "claimed_grade": ts.claimed_grade_id,
