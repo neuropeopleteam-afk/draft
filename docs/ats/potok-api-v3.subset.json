@@ -1,0 +1,693 @@
+{
+ "source": "https://api-doc.potok.io/potok-api-v3.yml",
+ "note": "Подмножество спецификации OpenAPI «Потока» v3 (запросы, которые использует адаптер); описания полей опущены.",
+ "servers": [
+  {
+   "url": "https://app.potok.io/api/v3",
+   "description": "Potok.io"
+  }
+ ],
+ "paths": {
+  "/applicants.json": {
+   "post": {
+    "summary": "Создание кандидата (отклика)",
+    "requestBody": {
+     "type": "object",
+     "properties": {
+      "applicant": {
+       "type": "object",
+       "properties": {
+        "first_name": {
+         "type": "string"
+        },
+        "last_name": {
+         "type": "string"
+        },
+        "middle_name": {
+         "type": "string"
+        },
+        "emails": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "phones": {
+         "type": "array",
+         "items": {
+          "type": "string"
+         }
+        },
+        "born": {
+         "type": "string"
+        },
+        "source_type": {
+         "type": "string"
+        },
+        "source_url": {
+         "type": "string"
+        },
+        "salary": {
+         "type": "integer"
+        },
+        "salary_currency": {
+         "type": "string"
+        },
+        "skype": {
+         "type": "string"
+        },
+        "gender": {
+         "type": "string"
+        },
+        "city": {
+         "type": "string"
+        },
+        "accounts": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "url": {
+            "type": "string"
+           },
+           "icon_id": {
+            "type": "string"
+           }
+          }
+         }
+        },
+        "resumes": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "title": "",
+          "properties": {
+           "cv_params": {
+            "type": "object",
+            "properties": {
+             "salary": {
+              "type": "object",
+              "properties": {
+               "amount": {
+                "type": "string"
+               },
+               "currency": {
+                "type": "string"
+               }
+              }
+             },
+             "title": {
+              "type": "string"
+             },
+             "education": {
+              "type": "object",
+              "properties": {
+               "level": {
+                "type": "object",
+                "properties": {
+                 "id": {
+                  "type": "string"
+                 },
+                 "name": {
+                  "type": "string"
+                 },
+                 "parent": {
+                  "type": "string"
+                 }
+                }
+               },
+               "primary": {
+                "type": "array",
+                "items": {
+                 "type": "object",
+                 "properties": {
+                  "name": {
+                   "type": "string"
+                  },
+                  "organization": {
+                   "type": "string"
+                  },
+                  "result": {
+                   "type": "string"
+                  },
+                  "course": {
+                   "type": "object",
+                   "properties": {
+                    "id": {
+                     "type": "string"
+                    },
+                    "value": {
+                     "type": "string"
+                    }
+                   }
+                  },
+                  "form": {
+                   "type": "object",
+                   "properties": {
+                    "id": {
+                     "type": "string"
+                    },
+                    "value": {
+                     "type": "string"
+                    }
+                   }
+                  },
+                  "year": {
+                   "type": "string"
+                  },
+                  "average_degree": {
+                   "type": "object",
+                   "properties": {
+                    "id": {
+                     "type": "string"
+                    },
+                    "value": {
+                     "type": "string"
+                    }
+                   }
+                  }
+                 }
+                }
+               },
+               "attestation": {
+                "type": "array",
+                "items": {
+                 "type": "object",
+                 "properties": {
+                  "name": {
+                   "type": "string"
+                  },
+                  "organization": {
+                   "type": "string"
+                  },
+                  "result": {
+                   "type": "string"
+                  },
+                  "year": {
+                   "type": "string"
+                  }
+                 }
+                }
+               },
+               "additional": {
+                "type": "array",
+                "items": {
+                 "type": "object",
+                 "properties": {
+                  "name": {
+                   "type": "string"
+                  },
+                  "year": {
+                   "type": "string"
+                  },
+                  "organization": {
+                   "type": "string"
+                  },
+                  "result": {
+                   "type": "string"
+                  }
+                 }
+                }
+               }
+              }
+             },
+             "skills": {
+              "type": "string"
+             },
+             "about_me": {
+              "type": "string"
+             },
+             "travel_time": {
+              "type": "object",
+              "properties": {
+               "id": {
+                "type": "string"
+               },
+               "name": {
+                "type": "string"
+               }
+              }
+             },
+             "relocation": {
+              "type": "object",
+              "properties": {
+               "area": {
+                "type": "array",
+                "items": {
+                 "type": "object",
+                 "properties": {
+                  "id": {
+                   "type": "string"
+                  },
+                  "name": {
+                   "type": "string"
+                  }
+                 }
+                }
+               },
+               "type": {
+                "type": "object",
+                "properties": {
+                 "id": {
+                  "type": "string"
+                 },
+                 "name": {
+                  "type": "string"
+                 }
+                }
+               }
+              }
+             },
+             "business_trip_readiness": {
+              "type": "object",
+              "properties": {
+               "id": {
+                "type": "string"
+               },
+               "name": {
+                "type": "string"
+               }
+              }
+             },
+             "specialization": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "id": {
+                 "type": "string"
+                },
+                "name": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "employment": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "id": {
+                 "type": "string"
+                },
+                "name": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "schedule": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "id": {
+                 "type": "string"
+                },
+                "name": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "experience": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "start": {
+                 "type": "string"
+                },
+                "end": {
+                 "type": "string"
+                },
+                "now": {
+                 "type": "boolean"
+                },
+                "company": {
+                 "type": "string"
+                },
+                "area": {
+                 "type": "object",
+                 "properties": {
+                  "id": {
+                   "type": "string"
+                  },
+                  "name": {
+                   "type": "string"
+                  }
+                 }
+                },
+                "company_url": {
+                 "type": "string"
+                },
+                "position": {
+                 "type": "string"
+                },
+                "description": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "awards": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "date": {
+                 "type": "string"
+                },
+                "name": {
+                 "type": "string"
+                },
+                "organization": {
+                 "type": "string"
+                },
+                "description": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "projects": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "start": {
+                 "type": "string"
+                },
+                "end": {
+                 "type": "string"
+                },
+                "name": {
+                 "type": "string"
+                },
+                "description": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "skill_set": {
+              "type": "array",
+              "items": {
+               "type": "string"
+              }
+             },
+             "certificate": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "title": {
+                 "type": "string"
+                },
+                "url": {
+                 "type": "string"
+                },
+                "company": {
+                 "type": "string"
+                },
+                "achieved_at": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "recommendation": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "name": {
+                 "type": "string"
+                },
+                "contact": {
+                 "type": "string"
+                },
+                "position": {
+                 "type": "string"
+                },
+                "organization": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "languages": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "id": {
+                 "type": "string"
+                },
+                "name": {
+                 "type": "string"
+                },
+                "level": {
+                 "type": "object",
+                 "properties": {
+                  "id": {
+                   "type": "string"
+                  },
+                  "name": {
+                   "type": "string"
+                  }
+                 }
+                }
+               }
+              }
+             },
+             "citizenship": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "id": {
+                 "type": "string"
+                },
+                "name": {
+                 "type": "string"
+                }
+               }
+              }
+             },
+             "work_ticket": {
+              "type": "array",
+              "items": {
+               "type": "object",
+               "properties": {
+                "id": {
+                 "type": "string"
+                },
+                "name": {
+                 "type": "string"
+                }
+               }
+              }
+             }
+            }
+           }
+          },
+          "required": [
+           "cv_params"
+          ]
+         }
+        },
+        "workflows": {
+         "type": "object",
+         "properties": {
+          "personal_data_agreement": {
+           "type": "string"
+          }
+         }
+        },
+        "events": {
+         "type": "object",
+         "properties": {
+          "body": {
+           "type": "string"
+          },
+          "type": {
+           "type": "string"
+          }
+         }
+        },
+        "ajs_joins": {
+         "type": "array",
+         "items": {
+          "type": "object",
+          "properties": {
+           "job_id": {
+            "type": "integer"
+           },
+           "employee_ext_id": {
+            "type": "integer"
+           },
+           "responsible_user_id": {
+            "type": "integer"
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    },
+    "parameters": [],
+    "responses": [
+     "200",
+     "402",
+     "422"
+    ]
+   }
+  },
+  "/applicants/{applicant_id}.json": {
+   "get": {
+    "summary": "Просмотр кандидата (отклика)",
+    "requestBody": null,
+    "parameters": [
+     "applicant_id"
+    ],
+    "responses": [
+     "200",
+     "402",
+     "404"
+    ]
+   }
+  },
+  "/ajs_joins.json": {
+   "post": {
+    "summary": "Добавление кандидата на вакансию",
+    "requestBody": {
+     "type": "object",
+     "properties": {
+      "job_id": {
+       "type": "integer"
+      },
+      "applicant_id": {
+       "type": "integer"
+      },
+      "stage_type": {
+       "type": "string",
+       "enum": [
+        "sourced",
+        "applied"
+       ]
+      }
+     },
+     "required": [
+      "job_id",
+      "applicant_id",
+      "stage_type"
+     ]
+    },
+    "parameters": [],
+    "responses": [
+     "200",
+     "422"
+    ]
+   }
+  },
+  "/ajs_joins/{ajs_join_id}/change_stage.json": {
+   "post": {
+    "summary": "Перевод кандидата на произвольный этап",
+    "requestBody": {
+     "type": "object",
+     "properties": {
+      "stage_id": {
+       "type": "integer"
+      }
+     },
+     "required": [
+      "stage_id"
+     ]
+    },
+    "parameters": [
+     "ajs_join_id"
+    ],
+    "responses": [
+     "200",
+     "404",
+     "422"
+    ]
+   }
+  },
+  "/events.json": {
+   "post": {
+    "summary": "Создание события (комментарий или email)",
+    "requestBody": {
+     "type": "object",
+     "properties": {
+      "event": {
+       "type": "object",
+       "properties": {
+        "subject": {
+         "type": "string"
+        },
+        "body": {
+         "type": "string"
+        },
+        "applicant_id": {
+         "type": "integer"
+        },
+        "job_id": {
+         "type": "integer"
+        },
+        "from": {
+         "type": "string"
+        },
+        "to": {
+         "type": "string"
+        },
+        "type": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "body",
+        "applicant_id",
+        "type"
+       ]
+      }
+     }
+    },
+    "parameters": [],
+    "responses": [
+     "200",
+     "422"
+    ]
+   }
+  },
+  "/jobs.json": {
+   "get": {
+    "summary": "Получение списка вакансий",
+    "requestBody": null,
+    "parameters": [
+     "by_scope",
+     "page",
+     "per_page"
+    ],
+    "responses": [
+     "200"
+    ]
+   }
+  },
+  "/jobs/{id}.json": {
+   "get": {
+    "summary": "Получение вакансии по ID",
+    "requestBody": null,
+    "parameters": [
+     "id"
+    ],
+    "responses": [
+     "200"
+    ]
+   }
+  }
+ }
+}
