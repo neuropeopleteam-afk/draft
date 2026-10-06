@@ -464,6 +464,8 @@ def _competitions(db: Session, direction: str, category_id: str | None, bundle, 
     best: dict[str, str] = {}
     for a in bundle.achievements:
         lvl = a.event_level.value if hasattr(a.event_level, "value") else str(a.event_level)
+        if lvl not in LEVEL_ORDER:  # кубок работодателя на платформе (platform) — не соревнование ФСП
+            continue
         if a.discipline not in best or LEVEL_ORDER.index(lvl) > LEVEL_ORDER.index(best[a.discipline]):
             best[a.discipline] = lvl
     peers: dict = {}
@@ -474,7 +476,8 @@ def _competitions(db: Session, direction: str, category_id: str | None, bundle, 
         peers = {"n": len(ids)}
         rows = db.execute(select(FspPassport.user_id, FspAchievement.discipline)
                           .join(FspAchievement, FspAchievement.passport_id == FspPassport.id)
-                          .where(FspPassport.user_id.in_(ids))).all() if ids else []
+                          .where(FspPassport.user_id.in_(ids), FspAchievement.event_level.in_(LEVEL_ORDER))
+                          ).all() if ids else []
         by: dict[str, set] = defaultdict(set)
         for uid, disc in rows:
             by[disc].add(uid)

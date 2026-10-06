@@ -5,7 +5,7 @@
   строится аналитика Кабинета ФСП;
 * у каждой копии демо жюри (песочницы, app.modules.jury.scope) — свои два кубка её работодателя
   (seed_jury_cups): завершённый «Платёжный шлюз» — Мария Королёва этой песочницы на 2-м месте, запись в паспорте
-  ФСП, приглашение ждёт её ответа; «Вебхуки без дублей» — срок вышел, 3 решения оценены, 2 ждут оценки
+  ФСП (приглашение — только победителю); «Вебхуки без дублей» — срок вышел, 3 решения оценены, 2 ждут оценки
   работодателя, после оценки итоги подводятся сами. Кубки песочницы видны только её кандидатам (Cup.jury_scope),
   демо-кандидаты платформы в них — «статисты»: места и приглашения есть, фактов T1 и записей паспорта нет
   (app.cup.service.credits) — поэтому число песочниц не меняет ни их рейтинг, ни аналитику ФСП.
@@ -344,7 +344,7 @@ def seed_jury_cups(db: Session, key: str, employer: User, company: Company, mari
     rnd = random.Random(31)
     used: set = set()
     cup = _cup(db, company, employer, title="Платёжный шлюз", category="backend.middle", mode="auto", start_days=-16,
-               end_days=-9, salary=(230_000, 290_000), top=3, position="Backend-разработчик (платёжный шлюз)",
+               end_days=-9, salary=(230_000, 290_000), top=1, position="Backend-разработчик (платёжный шлюз)",
                description="Пять заданий из банка платформы на транзакции, идемпотентность и работу с БД. У каждого "
                            "участника свой вариант, проверка автоматическая, 15 минут.", rnd=rnd, jury_scope=key)
     # места детерминированы: первый — 5 из 5 быстрее Марии, Мария — 5 из 5 (2-е место), дальше — меньше верных
@@ -356,7 +356,9 @@ def seed_jury_cups(db: Session, key: str, employer: User, company: Company, mari
     if maria is not None and maria.current_category_id == "backend.middle" and maria.visible_to_employers:
         _play(db, cup, maria, rnd, len(ps) + 1, state="scored", correct_n=5, spent_s=660)
     db.commit()
-    _finish(db, cup, ["accepted", "viewed"])  # Мария отвечает сама — её приглашение ждёт в кабинете
+    # приглашение — только победителю: Марию эта компания приглашает в основном сценарии жюри, а повторное
+    # приглашение от той же компании упёрлось бы в лимит 30 дней
+    _finish(db, cup, ["accepted"])
     cup2 = _cup(db, company, employer, title="Вебхуки без дублей", category="backend.middle", mode="rubric",
                 start_days=-6, end_days=-0.05, salary=(240_000, 290_000), top=3,
                 position="Backend-разработчик в команду платежей",
