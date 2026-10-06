@@ -1,14 +1,16 @@
 /**
  * Сценарий жюри, часть 3: «Как мы проверяем себя» (/validation) и «Красная кнопка».
  * Страница открыта без входа. Каждая атака выполняется на живых демо-данных в памяти и ничего не записывает;
- * ожидаемое свойство должно выполняться: раздувание резюме, смена имени, фальшивый и убранный значок ФСП
- * не меняют подбор сверх правил, утечка части банка ловится детектором и ротацией субпулов.
+ * ожидаемое свойство должно выполняться: раздувание резюме, смена имени, смена пола/возраста/имени у всего пула,
+ * фальшивый и убранный значок ФСП не меняют подбор сверх правил, утечка части банка ловится детектором.
+ * Блоки страницы: бенчмарк подбора со скрытой истиной, сравнение с ориентирами в их условиях, экспертная разметка.
  */
 import { expect, test } from "../lib/fixtures";
 
 const ATTACKS = [
   "Раздуть резюме ключевыми словами",
   "Поменять имя при тех же навыках",
+  "Сменить пол, возраст и имя",
   "Добавить неподтверждённый значок ФСП",
   "Убрать историю ФСП",
   "«Слить» часть банка заданий",
@@ -24,8 +26,15 @@ test("главная → «Красная кнопка» ведёт на /valida
 test("/validation: метрики теста и подбора на месте", async ({ page }) => {
   await page.goto("/validation", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible();
-  for (const id of ["bank", "test", "retest", "leak", "matching", "live", "red-button"]) {
-    await expect(page.locator(`section#${id}`), `раздел #${id}`).toBeVisible();
+  const SECTIONS: Record<string, string> = {
+    bank: "Банк заданий и калибровка", test: "Тест: точность оценки и решения по грейду (симуляция)",
+    retest: "Стабильность грейда при повторе", others: "В других условиях", exposure: "Частота показа заданий",
+    leak: "Устойчивость к утечке части банка", matching: "Качество подбора", bench: "Бенчмарк подбора со скрытой истиной",
+    experts: "Экспертная разметка: подбор, модель-оценщик, пороги грейдов", live: "Живые данные платформы",
+    "red-button": "Красная кнопка: атакуйте сами",
+  };
+  for (const [id, title] of Object.entries(SECTIONS)) {
+    await expect(page.locator(`section#${id}`).getByRole("heading", { level: 2, name: title, exact: true }), `раздел #${id}`).toBeVisible();
   }
   // цифры приходят из отчёта валидации (GET /api/validation/report), а не зашиты в вёрстку
   const report = await page.request.get("/api/validation/report");
@@ -35,11 +44,43 @@ test("/validation: метрики теста и подбора на месте",
   await expect(page.locator("section#matching")).toContainText(/nDCG|BM25/);
 });
 
-test("«Красная кнопка»: пять атак, ожидаемые свойства выполнены", async ({ page }) => {
+test("/validation: бенчмарк со скрытой истиной, другие условия, экспертная разметка", async ({ page }) => {
+  await page.goto("/validation#bench", { waitUntil: "domcontentloaded" });
+  await test.step("бенчмарк подбора: платформа против BM25 с доверительными интервалами", async () => {
+    const bench = page.locator("section#bench");
+    await expect(bench.getByText(/потребностей × [\d\s ]+ кандидатов = [\d\s ]+ пар синтетического мира/)).toBeVisible();
+    const ndcg = bench.getByText("nDCG@10 платформы", { exact: true }).locator("xpath=following-sibling::p[1]");
+    const value = Number((await ndcg.textContent())?.replace(",", "."));
+    await expect(bench.getByText(/^95 % ДИ \d,\d+–\d,\d+ · BM25 \d,\d+$/)).toBeVisible();
+    const bm25 = Number(/BM25 (\d,\d+)/.exec((await bench.getByText(/^95 % ДИ/).textContent()) ?? "")?.[1].replace(",", "."));
+    expect(value, "nDCG@10 платформы выше BM25").toBeGreaterThan(bm25);
+    await expect(bench.getByRole("heading", { level: 3, name: /^Метрики: среднее по потребностям и 95 % ДИ/ })).toBeVisible();
+    await expect(bench.getByRole("table").first().getByRole("columnheader", { name: "nDCG@10" })).toBeVisible();
+    // честность: синтетика проверяет механику, а не реальный рынок — это сказано прямо
+    await expect(bench.getByRole("status").filter({ hasText: /^Честно:/ })).toBeVisible();
+  });
+  await test.step("ориентиры: наш тест в их условиях симуляции", async () => {
+    const table = page.locator("section#others").getByRole("table");
+    for (const who of [/^Прототип А, их симуляция/, /^Наш тест в их условиях/, /^Наш тест в наших условиях/]) {
+      await expect(table.getByRole("row").filter({ has: page.getByRole("cell", { name: who }) }), String(who)).toHaveCount(1);
+    }
+    await expect(table.getByRole("columnheader", { name: "κ с истиной" })).toBeVisible();
+  });
+  await test.step("экспертная разметка: три задания и проверка расчёта", async () => {
+    const experts = page.locator("section#experts");
+    for (const part of ["A · пары «потребность — кандидат»", "B · ответы по рубрике", "C · семейства для Ангоффа"]) {
+      await expect(experts.getByText(part, { exact: true })).toBeVisible();
+    }
+    await expect(experts.getByRole("group").filter({ hasText: /^Проверка расчёта на синтетической разметке · пройдена/ })).toBeVisible();
+  });
+});
+
+test("«Красная кнопка»: шесть атак, ожидаемые свойства выполнены", async ({ page }) => {
   test.setTimeout(3 * 60_000);
   await page.goto("/validation#red-button", { waitUntil: "domcontentloaded" });
   const section = page.locator("section#red-button");
   await expect(section.getByRole("heading", { name: "Красная кнопка: атакуйте сами" })).toBeVisible();
+  await expect(section.locator("article"), "все атаки на месте").toHaveCount(ATTACKS.length);
   for (const title of ATTACKS) {
     await test.step(title, async () => {
       const card = section.locator("article").filter({ has: page.getByText(title, { exact: true }) });
