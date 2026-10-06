@@ -425,7 +425,9 @@ def test_sus_score_and_summary(client):
     client.post("/api/sus", json={"answers": [4, 2] * 5, "context": "e2e"}, headers=H(tc))
     assert client.get("/api/sus/mine", headers=H(tc)).json()["answered"]
     s = client.get("/api/sus/summary").json()
-    assert s["n"] == 2 and s["mean"] == 87.5 and set(s["by_role"]) == {"jury", "candidate"} and s["ci95"]
+    # основные цифры — только после входа, анонимный ответ — отдельно (аудит, С9)
+    assert s["n"] == 1 and s["mean"] == 75.0 and set(s["by_role"]) == {"candidate"}
+    assert s["anonymous"]["n"] == 1 and s["anonymous"]["mean"] == 100.0 and s["all"]["n"] == 2
     assert client.get("/api/admin/sus", headers=H(tc)).status_code == 403
 
 

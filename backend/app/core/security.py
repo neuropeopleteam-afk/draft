@@ -30,11 +30,13 @@ def password_needs_rehash(password_hash: str) -> bool:
     return _ph.check_needs_rehash(password_hash)
 
 
-def create_access_token(user_id: uuid.UUID, role: str, token_version: int = 0) -> tuple[str, int]:
+def create_access_token(user_id: uuid.UUID, role: str, token_version: int = 0,
+                        extra: dict | None = None) -> tuple[str, int]:
     s = get_settings()
     now = utcnow()
     ttl = timedelta(minutes=s.jwt_ttl_minutes)
     payload = {
+        **(extra or {}),  # например, jsc — песочница жюри (app/modules/jury/scope.py); стандартные поля не перекрывает
         "sub": str(user_id),
         "role": role,
         "ver": token_version,

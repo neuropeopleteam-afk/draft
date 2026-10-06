@@ -25,6 +25,7 @@ from app.modules.assessment import service
 from app.modules.assessment.engine import get_engine
 from app.modules.assessment.models import GradeHistory, TestSession
 from app.modules.auth.models import User
+from app.modules.jury import scope as jury_scope
 from app.modules.assessment.rules import apply_result
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateProfile
@@ -32,8 +33,8 @@ from app.modules.profiles.models import CandidateProfile
 
 def _bank_sessions(db: Session, limit: int = 400, demo_only: bool = False) -> list[TestSession]:
     q = select(TestSession).where(TestSession.status.in_([TestSessionStatus.finished, TestSessionStatus.in_progress]))
-    if demo_only:  # демо-эксперт жюри видит только демо-кандидатов
-        q = q.join(User, User.id == TestSession.user_id).where(User.is_demo.is_(True))
+    if demo_only:  # демо-эксперт жюри видит только демо-кандидатов, из песочниц жюри — только своей
+        q = q.join(User, User.id == TestSession.user_id).where(User.is_demo.is_(True), jury_scope.pool_clause(User.email))
     rows = db.scalars(q.order_by(TestSession.created_at.desc()).limit(limit)).all()
     return [t for t in rows if str((t.result or {}).get("engine", "")).startswith("bank")]
 
@@ -81,7 +82,8 @@ def submit(db: Session, session_id: uuid.UUID, token: str, part: int, criteria: 
         raise api_error(404, "session_not_found", "Сессия теста не найдена")
     if demo_only:
         owner = db.get(User, ts.user_id)
-        if owner is None or not owner.is_demo:  # сессии реальных пользователей демо-эксперту недоступны
+        # сессии реальных пользователей и чужих песочниц жюри демо-эксперту недоступны
+        if owner is None or not owner.is_demo or not jury_scope.visible(owner.email):
             raise api_error(404, "session_not_found", "Сессия теста не найдена")
     state = ts.result["state"]
     eng = get_engine("bank")

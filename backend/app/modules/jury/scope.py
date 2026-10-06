@@ -1,0 +1,110 @@
+"""Песочницы жюри: у каждого эксперта жюри свой «сценарий» — собственный набор демо-персон.
+
+Почты персон: общее демо — ``candidate@jury.example.com``; песочница ``sid`` — ``candidate+<sid>@jury.example.com``
+(sid — 10 символов [a-z0-9], выдаётся при первом входе в один клик и хранится в браузере эксперта).
+
+Видимость: кандидаты песочницы видны в подборках и поиске только работодателю своей песочницы, ответы «на
+проверке» — только эксперту своей песочницы. Остальные пользователи (и общее демо) песочниц не видят. Песочница
+текущего запроса берётся из подписанного поля ``jsc`` токена (ставит POST /api/jury/login) — без запроса к БД.
+"""
+from __future__ import annotations
+
+from contextlib import contextmanager
+from contextvars import ContextVar
+import re
+import secrets
+
+from sqlalchemy import or_
+
+DOMAIN = "jury.example.com"
+PERSONA_LOCAL = {"candidate": "candidate", "candidate_nofsp": "candidate-nofsp", "employer": "employer",
+                 "expert": "expert"}
+SID_RE = re.compile(r"^[a-z0-9]{10}$")
+CLAIM = "jsc"
+_scope: ContextVar[str | None] = ContextVar("jury_scope", default=None)
+
+
+def new_sid() -> str:
+    return secrets.token_hex(5)
+
+
+def emails(sid: str = "") -> dict[str, str]:
+    suffix = f"+{sid}" if sid else ""
+    return {p: f"{local}{suffix}@{DOMAIN}" for p, local in PERSONA_LOCAL.items()}
+
+
+def parse(email: str | None) -> tuple[str | None, str | None]:
+    """(персона, sid) для почты жюри; sid "" — общее демо; (None, None) — не учётка жюри."""
+    if not email or not email.endswith("@" + DOMAIN):
+        return None, None
+    base, _, sid = email[: -len(DOMAIN) - 1].partition("+")
+    persona = next((p for p, local in PERSONA_LOCAL.items() if local == base), None)
+    if persona is None or (sid and not SID_RE.match(sid)):
+        return None, None
+    return persona, sid
+
+
+def current() -> str | None:
+    """Песочница текущего запроса: None — не жюри или общее демо."""
+    return _scope.get() or None
+
+
+@contextmanager
+def use(sid: str | None):
+    tok = _scope.set(sid or None)
+    try:
+        yield
+    finally:
+        _scope.reset(tok)
+
+
+def pool_clause(email_col):
+    """SQL-условие по почте пользователя: какие учётки видны в текущем запросе."""
+    sid = current()
+    sandbox = email_col.like(f"%+%@{DOMAIN}")
+    if not sid:
+        return ~sandbox
+    return or_(~email_col.like(f"%@{DOMAIN}"), email_col.like(f"%+{sid}@{DOMAIN}"))
+
+
+def visible(email: str | None) -> bool:
+    """То же условие, что pool_clause, для одной почты."""
+    e, sid = email or "", current()
+    is_jury = e.endswith("@" + DOMAIN)
+    if not sid:
+        return not (is_jury and "+" in e)
+    return not is_jury or e.endswith(f"+{sid}@{DOMAIN}")
+
+
+def _sid_from_header(value: str) -> str | None:
+    if not value.lower().startswith("bearer "):
+        return None
+    from app.core.security import decode_access_token
+
+    try:
+        sid = decode_access_token(value[7:].strip()).get(CLAIM)
+    except Exception:  # noqa: BLE001 — недействительный токен: обычная видимость, ошибку вернёт авторизация
+        return None
+    return sid if isinstance(sid, str) and SID_RE.match(sid) else None
+
+
+class JuryScopeMiddleware:
+    """ASGI: выставляет песочницу жюри из токена на время запроса (contextvar доходит и до пула потоков)."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        sid = None
+        for k, v in scope.get("headers") or []:
+            if k == b"authorization":
+                sid = _sid_from_header(v.decode("latin-1"))
+                break
+        tok = _scope.set(sid)
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            _scope.reset(tok)
