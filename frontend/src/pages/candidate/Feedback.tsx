@@ -34,7 +34,7 @@ const DEMAND: Record<string, string> = {
 const DEMAND_LEVEL: Record<string, string> = { confirmed: "T1", weak: "T1", declared: "T0", missing: "none" };
 const REL: Record<string, string> = { above: "выше ожидаемого для вашего уровня", below: "ниже ожидаемого для вашего уровня" };
 const GRADE_RU: Record<string, string> = { junior: "Junior", middle: "Middle", senior: "Senior" };
-const pct = (v: number | null | undefined) => (v == null ? "—" : `${Math.round(v * 100)} %`);
+const pct = (v: number | null | undefined) => (v == null ? "—" : `${Math.round(v * 100)}\u00A0%`);
 const tasks = (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "задание" : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "задания" : "заданий"}`;
 
 function Chip({ s, children }: { s: string; children: ReactNode }) {

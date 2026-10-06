@@ -4,7 +4,7 @@ import { DIRECTIONS } from "../ui";
 /* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в условиях конкурентов»
    и атаку утечкой по доле слитых вариантов. Данные — simulation из validation/report.json (make validate). */
 
-const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")} %`);
+const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
 const arrow = (a?: number | null, b?: number | null, f: (v?: number | null) => string = num) => `${f(a)} → ${f(b)}`;
 

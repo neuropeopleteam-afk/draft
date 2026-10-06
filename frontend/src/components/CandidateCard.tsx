@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Level, range, years } from "./ui";
+import { Level, num, pct, range, signed, years } from "./ui";
 
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
@@ -32,11 +32,11 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
         <div className="rounded-xl bg-brand-blush/25 p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level="T1" /> Тест</p>
-          {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {t.theta >= 0 ? "+" : ""}{t.theta?.toFixed(2)} ± {t.se?.toFixed(2)}</p> : <p className="mt-1 text-brand-ink/55">нет результата</p>}
+          {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {signed(t.theta)} ± {num(t.se)}</p> : <p className="mt-1 text-brand-ink/55">нет результата</p>}
           {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
           {c.skills_confirmed?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
-              {c.skills_confirmed.map((s: any) => <span key={s.tag} className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-brand-night">{s.title} {Math.round(s.score * 100)}%</span>)}
+              {c.skills_confirmed.map((s: any) => <span key={s.tag} className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-brand-night">{s.title} {pct(s.score)}</span>)}
             </div>
           )}
           {c.probes?.length > 0 && <p className="mt-2 text-xs text-brand-ink/70">Зонды: {c.probes.map((p: any) => `${p.title} — ${p.verdict}`).join("; ")}</p>}
