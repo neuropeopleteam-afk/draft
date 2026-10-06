@@ -77,6 +77,12 @@ class DeclineIn(BaseModel):
     reason: str | None = Field(None, max_length=1000, description="Необязательно")
 
 
+class ComplaintIn(BaseModel):
+    reason: Literal["salary", "role", "spam", "other"] = Field(
+        description="salary — нереальная вилка, role — не та роль, spam — спам или массовая рассылка, other — другое")
+    comment: str | None = Field(None, max_length=1000, description="Необязательно; работодатель комментарий не видит")
+
+
 def _rub(v: int) -> str:
     return f"{v:,}".replace(",", " ") + " ₽"
 
@@ -108,6 +114,7 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
            "history": svc.events_of(db, i),
            "company": {"name": comp.name, "industry": comp.industry, "website": comp.website, "city": comp.city}
            if comp else None}
+    out["complaint"] = svc.complaint_out(svc.complaint_of(db, i), with_comment=side == "candidate")
     if side == "employer":
         out["candidate_ref"] = cand.public_ref
         out["candidate_category"] = cand.current_category_id
@@ -129,6 +136,7 @@ def _candidate_user(db: Session, uid: uuid.UUID) -> User:
 def send_probes(data: ProbeIn, bg: BackgroundTasks, user: User = Depends(employer),
                 db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
+    svc.check_salary(data.salary_from, data.salary_to)  # ширина вилки — одной ошибкой, а не пропуском каждого
     created, skipped = [], []
     for ref in dict.fromkeys(data.candidate_refs):
         p = svc.profile_by_ref(db, ref)
@@ -268,6 +276,26 @@ def decline(inv_id: uuid.UUID, data: DeclineIn, bg: BackgroundTasks, user: User 
                      [f"Кандидат {ref} отклонил приглашение на позицию «{i.position_title}»."]
                      + ([f"Причина: {i.decline_reason}"] if i.decline_reason else []), "/employer/invitations")
     bg.add_task(integration_events.invitation_answered, i.id, False)
+    return _inv_out(db, i, "candidate")
+
+
+@candidate_router.post("/invitations/{inv_id}/complaint", status_code=201,
+                       summary="Пожаловаться на приглашение: нереальная вилка, не та роль, спам",
+                       description="Неотвеченное приглашение заодно отклоняется. Жалобы снижают индекс доверия "
+                                   "работодателя, который видят все кандидаты. Одна жалоба на приглашение.",
+                       responses={**C_AUTH, 404: err("Приглашение не найдено"), 409: err("Жалоба уже отправлена")})
+def complain(inv_id: uuid.UUID, data: ComplaintIn, bg: BackgroundTasks, user: User = Depends(candidate),
+             db: Session = Depends(get_db)) -> dict:
+    i = _own(db, Invitation, inv_id, user, "invitation_not_found", "Приглашение не найдено")
+    was_open = i.status in (InvitationStatus.sent, InvitationStatus.viewed)
+    svc.complain(db, i, user.id, data.reason, data.comment)
+    ref = db.get(CandidateProfile, user.id).public_ref
+    _notify_employer(bg, db, i.employer_user_id, f"Жалоба кандидата {ref} на приглашение",
+                     [f"Кандидат {ref} пожаловался на приглашение «{i.position_title}»: "
+                      f"{svc.COMPLAINT_REASONS[data.reason].lower()}.",
+                      "Жалобы учитываются в индексе доверия компании, который видят кандидаты."], "/employer/invitations")
+    if was_open:
+        bg.add_task(integration_events.invitation_answered, i.id, False)
     return _inv_out(db, i, "candidate")
 
 
