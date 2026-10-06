@@ -74,7 +74,7 @@ export function TrustPanel({ t, title = "Индекс доверия работ�
             <li key={f.id} className="flex items-start gap-3 text-sm">
               <span className={`mt-0.5 w-4 shrink-0 text-center font-bold ${c}`} aria-label={f.status}>{ic}</span>
               <span className="flex-1"><span className="font-semibold text-brand-night">{f.title}.</span> <span className="text-brand-ink/75">{f.text}</span></span>
-              <span className="shrink-0 tabular-nums text-xs text-brand-ink/45">{Math.round(f.points)}/{f.max}</span>
+              <span className="shrink-0 tabular-nums text-xs text-brand-ink/45">{f.max ? `${Math.round(f.points)}/${f.max}` : f.points < 0 ? `−${Math.abs(Math.round(f.points))}` : "0"}</span>
             </li>
           );
         })}

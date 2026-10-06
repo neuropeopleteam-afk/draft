@@ -86,3 +86,16 @@ class InvitationEvent(UUIDPk, Base):
     actor_user_id: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("users.id", ondelete="SET NULL"))
     note: Mapped[str | None] = mapped_column(sa.Text)
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+
+
+class InvitationComplaint(UUIDPk, Base):
+    """Жалоба кандидата на приглашение: нереальная вилка, не та роль, спам. Учитывается в индексе доверия."""
+
+    __tablename__ = "invitation_complaints"
+
+    invitation_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("invitations.id", ondelete="CASCADE"), unique=True)
+    company_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("companies.id", ondelete="CASCADE"), index=True)
+    candidate_user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id", ondelete="CASCADE"))
+    reason: Mapped[str] = mapped_column(sa.String(16))
+    comment: Mapped[str | None] = mapped_column(sa.Text)
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
