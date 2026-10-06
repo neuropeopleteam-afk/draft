@@ -18,9 +18,10 @@ from sqlalchemy import or_
 
 DOMAIN = "jury.example.com"
 PERSONA_LOCAL = {"candidate": "candidate", "candidate_nofsp": "candidate-nofsp", "employer": "employer",
-                 "expert": "expert"}
+                 "expert": "expert", "fsp": "fsp-analyst"}
 SID_RE = re.compile(r"^[a-z0-9]{10}$")
 CLAIM = "jsc"
+SHARED = "shared"  # ключ общего демо (sid "") там, где нужна непустая строка
 _scope: ContextVar[str | None] = ContextVar("jury_scope", default=None)
 
 
@@ -42,6 +43,12 @@ def parse(email: str | None) -> tuple[str | None, str | None]:
     if persona is None or (sid and not SID_RE.match(sid)):
         return None, None
     return persona, sid
+
+
+def key_of(email: str | None) -> str | None:
+    """Ключ демо жюри учётки: sid песочницы, SHARED — общее демо, None — не учётка жюри (app.cup: Cup.jury_scope)."""
+    persona, sid = parse(email)
+    return None if persona is None else (sid or SHARED)
 
 
 def current() -> str | None:

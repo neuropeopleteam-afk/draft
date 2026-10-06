@@ -33,11 +33,12 @@ _mx = threading.Lock()
 # Лимит исчерпан — вход в общее демо (в один клик работает всегда).
 _new_ip = SlidingWindow(12, 3600)
 _new_all = SlidingWindow(60, 3600)
-LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "employer": "/employer", "expert": "/expert"}
+LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "employer": "/employer", "expert": "/expert",
+           "fsp": "/fsp"}
 
 
 class LoginIn(BaseModel):
-    persona: Literal["candidate", "candidate_nofsp", "employer", "expert"]
+    persona: Literal["candidate", "candidate_nofsp", "employer", "expert", "fsp"]
     scenario: str | None = Field(None, pattern=r"^(new|[a-z0-9]{10})$",
                                  description="new — создать свою песочницу; id — продолжить свою; пусто — общее демо")
 
@@ -92,6 +93,7 @@ def make_spare() -> str | None:
             sid = scope.new_sid()
             with seed.as_spare():
                 seed.ensure(db, sid)
+            seed.ensure_ideas(db)  # общее демо кубков и Кабинета ФСП — заодно, пока никто не ждёт
             return sid
     except Exception:  # запас — оптимизация: при ошибке песочница создастся при входе, как без запаса
         log.exception("Запасная песочница жюри не создана")
@@ -131,6 +133,7 @@ def login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
             created = bool(sid)
     if not sid:
         created = seed.ensure(db)
+    seed.ensure_ideas(db)  # кубки демо-компаний и история приглашений для Кабинета ФСП (одни на всех)
     return {**_token(db, sid, data.persona), "created": created}
 
 
