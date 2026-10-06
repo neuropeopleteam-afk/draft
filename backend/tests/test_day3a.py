@@ -199,7 +199,7 @@ def test_jury_login_reset_and_expert(client, monkeypatch):
     from app.modules.jury import router as jr
 
     r = client.get("/api/jury/status")
-    assert r.status_code == 200 and len(r.json()["personas"]) == 4
+    assert r.status_code == 200 and len(r.json()["personas"]) == 5
     r = client.post("/api/jury/login", json={"persona": "candidate"})
     assert r.status_code == 200, r.text
     tok = r.json()["access_token"]
@@ -239,7 +239,7 @@ def test_jury_login_reset_and_expert(client, monkeypatch):
     # сброс: пересоздаёт только учётки жюри; повтор сразу — 429
     monkeypatch.setitem(jr._state, "last_reset", 0.0)
     r = client.post("/api/jury/reset")
-    assert r.status_code == 200 and r.json()["deleted_users"] == 4
+    assert r.status_code == 200 and r.json()["deleted_users"] == 5
     with SessionLocal() as db:  # у кандидата без ФСП два ухода со вкладки → достоверность средняя
         from app.modules.jury.seed import EMAILS
         from app.modules.auth.models import User

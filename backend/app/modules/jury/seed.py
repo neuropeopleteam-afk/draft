@@ -7,10 +7,12 @@
 * candidate_nofsp — Илья Сергеев, Backend · Middle, тот же путь, но без истории ФСП (нейтральное состояние);
   один развёрнутый ответ оставлен «на проверке» — для экрана эксперта; есть входящее приглашение с вилкой;
 * employer — HR компании «Демо жюри: Северный платёж»: профиль, две потребности текстом, подборки с версиями;
-* expert — эксперт (роль admin): очередь развёрнутых ответов, оценка по рубрике.
+* expert — эксперт (роль admin): очередь развёрнутых ответов, оценка по рубрике;
+* fsp — аналитик ФСП (роль fsp_analyst): Кабинет ФСП — обезличенная аналитика платформы.
 
 Сброс (POST /api/jury/reset) удаляет только эти учётки и компанию (каскадом — их сессии, подборки,
-зонды, приглашения) и создаёт заново. Остальные демо-данные и учётки живых пользователей не затрагиваются.
+зонды, приглашения) и создаёт заново; демо-кубки и история приглашений для Кабинета ФСП пересоздаются
+(app.fsp_cabinet.demo.prepare). Остальные демо-данные и учётки живых пользователей не затрагиваются.
 """
 from __future__ import annotations
 
@@ -40,7 +42,7 @@ from app.modules.profiles.refs import new_public_ref
 log = logging.getLogger("jury")
 DOMAIN = "jury.example.com"
 EMAILS = {"candidate": f"candidate@{DOMAIN}", "candidate_nofsp": f"candidate-nofsp@{DOMAIN}",
-          "employer": f"employer@{DOMAIN}", "expert": f"expert@{DOMAIN}"}
+          "employer": f"employer@{DOMAIN}", "expert": f"expert@{DOMAIN}", "fsp": f"fsp-analyst@{DOMAIN}"}
 COMPANY = "Демо жюри: Северный платёж"
 PERSONAS = [
     {"id": "candidate", "role": "candidate", "title": "Кандидат с паспортом ФСП",
@@ -51,6 +53,8 @@ PERSONAS = [
      "description": "«Северный платёж»: профиль компании, две потребности и подборки с объяснениями."},
     {"id": "expert", "role": "expert", "title": "Эксперт",
      "description": "Проверка развёрнутых ответов по рубрике: очередь «на проверке» и выборочная проверка LLM."},
+    {"id": "fsp", "role": "fsp_analyst", "title": "Федерация (ФСП)",
+     "description": "Кабинет ФСП: спрос работодателей, эффект соревнований ФСП, зарплаты из офферов, кубки и воронки."},
 ]
 NEEDS = [
     "Backend-разработчик middle в команду платежей: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. "
@@ -239,6 +243,7 @@ def create_jury(db: Session) -> dict:
                       salary_from=240_000, salary_to=270_000, contact_method="Почта HR и звонок 20 минут",
                       need_id=needs[0].id, probe_id=None)
     ex = _user(db, "expert", UserRole.expert)  # не admin: только /api/expert/*, только демо-кандидаты
+    _user(db, "fsp", UserRole.fsp_analyst)  # только агрегаты /api/fsp-cabinet/*
     db.commit()
     return {"candidate": {"ref": p1.public_ref, "confirmed": r1.get("confirmed"), "theta": r1.get("theta")},
             "candidate_nofsp": {"ref": p2.public_ref, "confirmed": r2.get("confirmed"), "theta": r2.get("theta"),
@@ -270,10 +275,26 @@ def _complete(db: Session) -> bool:
     return have == set(EMAILS.values())
 
 
+def _ideas(db: Session, *, reset: bool) -> dict:
+    """Кубки и Кабинет ФСП (app.cup, app.fsp_cabinet): демо-кубки и история приглашений для аналитики."""
+    from app.fsp_cabinet import demo as ideas_demo
+
+    try:
+        return ideas_demo.prepare(db, reset=reset)
+    except Exception:  # noqa: BLE001 — демо кубков не должно ломать вход жюри
+        db.rollback()
+        log.exception("Демо кубков и Кабинета ФСП не подготовлено")
+        return {"error": True}
+
+
 def reset(db: Session) -> dict:
+    from app.cup.demo import delete_cups
+
     with _lock(db):
+        delete_cups(db)  # до удаления компании жюри: факты T1 и записи паспорта её кубка — у демо-кандидатов
         n = delete_jury(db)
         out = create_jury(db)
+        out["ideas"] = _ideas(db, reset=True)
     out["deleted_users"] = n
     log.info("Демо жюри пересоздано: %s", out)
     return out
@@ -282,10 +303,24 @@ def reset(db: Session) -> dict:
 def ensure(db: Session) -> bool:
     """Создаёт учётки жюри, если их нет (первый вход после выкладки). True — созданы сейчас."""
     if _complete(db):
+        _ensure_ideas(db)
         return False
     with _lock(db):
         if _complete(db):  # другой воркер уже создал, пока мы ждали
             return False
         delete_jury(db)
         create_jury(db)
+        _ideas(db, reset=True)  # Мария — участница завершённого демо-кубка
     return True
+
+
+def _ensure_ideas(db: Session) -> None:
+    """Досоздать демо кубков и Кабинета ФСП, если их нет или идущий кубок устарел (дёшево, если всё на месте)."""
+    from app.cup.demo import is_stale
+    from app.fsp_cabinet.demo import has_demo_invitations
+
+    if not is_stale(db) and has_demo_invitations(db):
+        return
+    with _lock(db):
+        if is_stale(db) or not has_demo_invitations(db):
+            _ideas(db, reset=False)

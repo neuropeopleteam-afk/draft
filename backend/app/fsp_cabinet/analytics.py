@@ -385,7 +385,7 @@ def funnel(d: Data) -> dict:
     cup_inv = [e for e in placed if e.invitation_id]
     cup_acc = [e for e in cup_inv if (inv_by_id.get(e.invitation_id) and
                                       inv_by_id[e.invitation_id].status == InvitationStatus.accepted)]
-    cups = _stages([("joined", "Записались в кубки", len(d.entries)),
+    cups = _stages([("joined", "Участия в кубках (записи)", len(d.entries)),
                     ("placed", "Решили и получили место", len(placed)),
                     ("invited", "Приглашены по итогам", len(cup_inv)),
                     ("accepted", "Приняли приглашение", len(cup_acc))])
@@ -411,8 +411,8 @@ def cups_section(d: Data, db: Session) -> list[dict]:
                inv_by_id[e.invitation_id].status == InvitationStatus.accepted]
         out.append({"id": str(cup.id), "title": cup.title, "company": comp.name if comp else None,
                     "category_id": cup.category_id, "category_title": category_title(cup.category_id),
-                    "mode": cup.mode, "phase": phase(cup), "starts_at": cup.starts_at.isoformat(),
-                    "ends_at": cup.ends_at.isoformat(), "salary_from": cup.salary_from, "salary_to": cup.salary_to,
+                    "mode": cup.mode, "phase": phase(cup), "starts_at": as_aware(cup.starts_at).isoformat(),
+                    "ends_at": as_aware(cup.ends_at).isoformat(), "salary_from": cup.salary_from, "salary_to": cup.salary_to,
                     "invite_top_n": cup.invite_top_n, "participants": kc(len(es)), "placed": kc(len(placed)),
                     "invited": kc(len(inv)), "accepted": kc(len(acc)),
                     "passport_written": kc(sum(1 for e in placed if e.passport_status == "written")),
