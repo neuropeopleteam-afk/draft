@@ -3,7 +3,9 @@
 Все секреты — только из окружения / env-файлов в /opt/spectrek_fsp/secrets (в репозиторий не попадают):
 * VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY — Web Push (secrets/vapid.env);
 * FSP_OIDC_CLIENT_SECRET, FSP_DEMO_PASSWORD — ФСП ID на Keycloak (secrets/keycloak.env);
-* INTEGRATIONS_SECRET_KEY — шифрование токенов ATS в БД (если не задан — производный от JWT_SECRET).
+* INTEGRATIONS_SECRET_KEY — шифрование токенов ATS в БД (если не задан — производный от JWT_SECRET);
+* TALANTIX_*, POTOK_*, HUNTFLOW_* — начальные токены ATS (secrets/ats.env), импорт в компанию командой
+  ``python -m app.integrations.ats.cli import-env`` (после импорта токены живут в БД зашифрованными).
 """
 from functools import lru_cache
 
@@ -42,6 +44,22 @@ class IntegrationSettings(BaseSettings):
     ats_max_attempts: int = 3
     # Адрес тестовой ATS-заглушки (по умолчанию — наш публичный адрес, запросы идут по настоящему HTTP)
     ats_stub_base_url: str | None = None
+    # User-Agent для Talantix обязателен: компания и контакт для связи при проблемах
+    ats_user_agent_company: str = "Vstrechny, FSP special track, fsp.neuropeople.pro"
+    ats_user_agent_contact: str = "noreply@neuropeople.pro"
+    talantix_base_url: str = "https://api.talantix.ru"
+    potok_base_url: str = "https://app.potok.io/api/v3"
+    # Начальные токены из secrets/ats.env (импорт командой python -m app.integrations.ats.cli import-env)
+    talantix_tokens_json: str | None = None
+    talantix_access_token: str | None = None
+    talantix_refresh_token: str | None = None
+    talantix_vacancy_id: int | None = None
+    potok_token: str | None = None
+    potok_vacancy_id: int | None = None
+    huntflow_token: str | None = None
+    huntflow_account_id: int | None = None
+    huntflow_vacancy_id: int | None = None
+    huntflow_base_url: str | None = None
 
     # --- Web Push ---
     vapid_public_key: str | None = None

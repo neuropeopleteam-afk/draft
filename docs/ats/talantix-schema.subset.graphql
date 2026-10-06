@@ -1,0 +1,542 @@
+# Talantix GraphQL API — подмножество схемы, которое использует «Встречный».
+# Источник: справочник https://api.talantix.ru/docs/api/ (собрано 06.10.2026).
+# Интроспекция /graphql/schema без токена недоступна (400 invalid_request), поэтому схема взята из документации.
+# Полная схема: POST https://api.talantix.ru/graphql/schema с запросом интроспекции и токеном администратора.
+
+# Корневые поля (из справочника https://api.talantix.ru/docs/api/queries/*, /mutations/*)
+type Query {
+  me: Me!
+  vacancies(after: String, filter: VacancyFilterInput, first: Int = 50, sortAsc: Boolean = true, sortBy: VacancySortType = NAME): Vacancies!
+  vacancy(id: Int!): Vacancy!
+  persons(after: String, filter: PersonFilterInput, first: Int = 50): Persons!
+  personSources(afterCursor: String, filterByName: String, first: Int = 50): PersonSources!
+  dictionaries: Dictionaries!
+}
+
+type Mutation {
+  createPerson(personCreate: PersonCreateInput!): PersonCreated!
+  editPerson(personEdit: PersonEditInput!): PersonCreated!
+  createPersonSource(personSourceCreate: String!): PersonSourceCreated!
+  createPersonComment(commentCreate: PersonCommentCreateInput!): PersonCommentCreated!
+  createResponses(attachSource: PersonAttachSource = DATABASE, personIds: [Int!]!, vacancyIds: [Int!]!): ResponsesCreated!
+  transferPersonsToWorkflowStatus(personIds: [Int!]!, workflowStatusId: Int!): PersonsToWorkflowStatusTransferred!
+}
+
+# Модель создания кандидата  (https://api.talantix.ru/docs/api/inputs/person-create-input)
+input PersonCreateInput {
+  areaId: String
+  birthDay: Instant
+  citizenshipIds: [String!]
+  contacts: [ContactItemInput!]
+  customResumes: [CustomResumeSaveInput!]
+  firstName: String!
+  gender: Gender
+  lastName: String
+  middleName: String
+  sourceId: Int
+  structuredResume: StructuredResumeInput
+  vacancyIds: [Int!]
+}
+
+# Модель редактирования кандидата  (https://api.talantix.ru/docs/api/inputs/person-edit-input)
+input PersonEditInput {
+  areaId: String
+  birthDay: Instant
+  citizenshipIds: [String!]
+  contacts: [ContactItemInput!]
+  customResumes: [CustomResumeSaveInput!]
+  firstName: String!
+  gender: Gender
+  id: Int!
+  lastName: String
+  middleName: String
+  sourceId: Int
+  vacancyIds: [Int!]
+}
+
+# Контактная информация кандидата  (https://api.talantix.ru/docs/api/inputs/contact-item-input)
+input ContactItemInput {
+  type: ContactType!
+  value: String!
+}
+
+# Тип контакта  (https://api.talantix.ru/docs/api/enums/contact-type)
+enum ContactType {
+  cell
+  email
+  facebook
+  freelance
+  habr
+  home
+  icq
+  linkedin
+  livejournal
+  personal
+  skype
+  telegram
+  vk
+  work
+}
+
+# Создание резюме в свободной форме  (https://api.talantix.ru/docs/api/inputs/custom-resume-save-input)
+input CustomResumeSaveInput {
+  text: CleanedInputString!
+  type: CustomResumeType!
+}
+
+# Тип резюме в свободной форме  (https://api.talantix.ru/docs/api/enums/custom-resume-type)
+enum CustomResumeType {
+  TMS
+}
+
+# Input string with possible html formatting  (https://api.talantix.ru/docs/api/scalars/cleaned-input-string)
+scalar CleanedInputString
+
+# Создание структурированного резюме  (https://api.talantix.ru/docs/api/inputs/structured-resume-input)
+input StructuredResumeInput {
+  businessTripReadiness: BusinessTripReadinessInput
+  driverLicenses: [DriverLicense]
+  education: EducationInput
+  employments: [EmploymentInput]
+  experiences: [ExperienceInput]
+  keySkills: [String]
+  languages: [LanguageWithLevelInput]
+  link: String
+  recommendations: [RecommendationInput]
+  relocation: RelocationInput
+  salary: SalaryInput
+  schedules: [ScheduleInput]
+  skills: String
+  title: String
+  travelTime: TravelTimeInput
+  workTickets: [WorkTicketInput]
+}
+
+# https://api.talantix.ru/docs/api/inputs/salary-input
+input SalaryInput {
+  amount: Int
+  currency: Currency
+}
+
+# https://api.talantix.ru/docs/api/enums/currency
+enum Currency {
+  AZN
+  BYR
+  EUR
+  GEL
+  KGS
+  KZT
+  RUR
+  UAH
+  USD
+  UZS
+}
+
+# Пол  (https://api.talantix.ru/docs/api/enums/gender)
+enum Gender {
+  female
+  male
+}
+
+# Сохраненный кандидат или ошибка сохранения  (https://api.talantix.ru/docs/api/unions/person-created)
+union PersonCreated = PersonItem | PersonSaveError
+
+# https://api.talantix.ru/docs/api/objects/person-item
+type PersonItem implements BasePerson, BasePersonPublic {
+  age: Long
+  area: Area
+  birthDay: Instant
+  citizenships: Areas
+  communications(    channels: [PersonCommunicationChannel!] = []  ): PersonCommunications!
+  contacts: Contacts
+  events(    after: String    first: Int = 50  ): PersonEvents
+  files: Files
+  firstName: String!
+  gender: Gender
+  hasVacanciesToAttach: Boolean
+  hiddenFields: [PersonHiddenField]
+  history(    after: String    first: Int = 50  ): History
+  id: Int!
+  lastName: String
+  mergePreviewPerson(    personIds: [Int]!  ): MergePreviewPerson
+  messages(    after: String    first: Int = 50  ): PersonMessages
+  metroStation: MetroStation
+  middleName: String
+  personalDataAgreement: PersonalDataAgreement
+  photos: Photos
+  responses: PersonResponses
+  resumes: Resumes!
+  score: Int
+  similarPersons: Persons
+  source: PersonSource
+  startLinkPersonStatus: StartLinkPersonStatus
+  tags: PersonTags
+  testTasks(    after: String = "0"    first: Int = 50  ): TestTasks
+  updatableWithContacts: Boolean
+  updatedAt: Instant!
+}
+
+# Ошибка сохранения кандидата  (https://api.talantix.ru/docs/api/objects/person-save-error)
+type PersonSaveError {
+  errorType: PersonSaveErrorType!
+  errors: [PersonSaveErrorField!]
+  message: String
+}
+
+# Тип ошибки сохранения кандидата  (https://api.talantix.ru/docs/api/enums/person-save-error-type)
+enum PersonSaveErrorType {
+  ACCESS_DENIED
+  VALIDATION
+}
+
+# Ошибка в поле модели сохранения кандидата  (https://api.talantix.ru/docs/api/objects/person-save-error-field)
+type PersonSaveErrorField {
+  field: String!
+  violatedConstraints: [String]!
+}
+
+# https://api.talantix.ru/docs/api/objects/contacts
+type Contacts {
+  items: [ContactItem]
+}
+
+# Контактная информация кандидата  (https://api.talantix.ru/docs/api/objects/contact-item)
+type ContactItem {
+  type: ContactType!
+  value: String!
+}
+
+# Список кандидатов  (https://api.talantix.ru/docs/api/objects/persons)
+type Persons {
+  batchLimits: BatchLimits!
+  counters: Counters
+  engine: GraphQLSearchEngine! @deprecated
+  filters: PersonFilters!
+  items: [PersonItem]!
+  pageInfo: PageInfo!
+}
+
+# Фильтры кандидатов  (https://api.talantix.ru/docs/api/inputs/person-filter-input)
+input PersonFilterInput {
+  ageFrom: Int
+  ageTo: Int
+  areaIds: [String]
+  areaSearch: AreaSearch
+  citizenshipId: String
+  creationDateEnd: Long
+  creationDateStart: Long
+  currencyCode: CurrencyCode
+  currentWfStatusNames: [String]
+  discardReasonIds: [Int]
+  discardType: DiscardType
+  driverLicenseIds: [DriverLicense]
+  editedWithin: EditedWithinPeriod
+  educationLevelId: EducationLevelEnum
+  gender: Gender
+  languageId: LanguageEnum
+  languageLevel: LanguageLevelEnum
+  personVisibilityScope: PersonVisibilityScope
+  personalData: PersonalDataStatus
+  salaryFrom: Int
+  salaryTo: Int
+  search: String
+  searchFrom: [SearchSource]
+  sourceIds: [Int]
+  tagIds: [Int]
+  vacancyIds: [Int]
+  wfStatusNames: [String]
+  workExperience: [WorkExperience]
+  workSchedule: WorkSchedule
+}
+
+# https://api.talantix.ru/docs/api/enums/search-source
+enum SearchSource {
+  COMMENTS
+  CONTACTS
+  RESUMES
+}
+
+# Объект для пагинации  (https://api.talantix.ru/docs/api/objects/page-info)
+type PageInfo {
+  endCursor: String
+  first: Int
+  hasNextPage: Boolean!
+}
+
+# https://api.talantix.ru/docs/api/objects/vacancies
+type Vacancies {
+  count: Int!
+  hasActive: Boolean!
+  items: [VacancyItem!]!
+  pageInfo: PageInfo!
+}
+
+# Вакансия  (https://api.talantix.ru/docs/api/objects/vacancy-item)
+type VacancyItem {
+  areas: Areas
+  autoFilter: VacancyAutoFilter!
+  contextPermissions: [String]!
+  createdAt: Instant!
+  department: String
+  description: String
+  externalVacancies: ExternalVacancies!
+  externalVacancy(    id: String!    type: ExternalVacancyType!  ): ExternalVacancyItem
+  hiringPositionCounters: HiringPositionCounters
+  hiringRequest: HiringRequest!
+  hiringRequests(    after: String    filter: HiringRequestFilterInput    first: Int = 50  ): HiringRequests!
+  id: Int!
+  landing: VacancyLanding!
+  proposedDateOfClose: Instant
+  resumeImportSettings: ResumeImportSettings!
+  salary: SalaryRange
+  source: VacancySource!
+  status: VacancyStatus!
+  statusUpdatedAt: Instant!
+  subscriptions: Subscriptions!
+  title: String!
+  url: String!
+  vacancyLocks: [VacancyLockType]
+  vacancyManagers(    filter: [VacancyRole] = []  ): VacancyManagers
+  workflowStatus(    id: Int  ): WorkflowStatus! @deprecated
+  workflowStatuses: WorkflowStatuses!
+}
+
+# Фильтры вакансий  (https://api.talantix.ru/docs/api/inputs/vacancy-filter-input)
+input VacancyFilterInput {
+  areaIds: [String]
+  departments: [String]
+  managerRoles: [VacancyRole]
+  vacancyIds: [Int]
+  vacancyOwners: [Int]
+  vacancyStatus: VacancyStatus
+  vacancyTitle: String
+}
+
+# Статус вакансии  (https://api.talantix.ru/docs/api/enums/vacancy-status)
+enum VacancyStatus {
+  ACTIVE
+  ARCHIVE
+}
+
+# https://api.talantix.ru/docs/api/objects/salary-range
+type SalaryRange {
+  currency: Currency!
+  from: Long
+  to: Long
+}
+
+# Вакансия или ошибка  (https://api.talantix.ru/docs/api/unions/vacancy)
+union Vacancy = VacancyError | VacancyItem | VacancyPublicItem
+
+# https://api.talantix.ru/docs/api/objects/vacancy-error
+type VacancyError {
+  errorType: VacancyErrorType!
+  message: String
+}
+
+# Этапы вакансии  (https://api.talantix.ru/docs/api/objects/workflow-statuses)
+type WorkflowStatuses {
+  first: WorkflowStatusItem!
+  items: [WorkflowStatusItem]!
+}
+
+# Этап вакансии  (https://api.talantix.ru/docs/api/objects/workflow-status-item)
+type WorkflowStatusItem {
+  autoActions: AutoActions!
+  availableForTransferWorkflowStatuses: ItemsWithId_Integer
+  id: Int!
+  importFromHhStatuses: [String]!
+  isAutoFilterSource: Boolean
+  name: String!
+  personCounters: PersonCounters
+  position: Int!
+  responses(    after: String    filter: ResponseFilterInput    first: Int = 50    sortBy: ResponsesSortType  ): Responses!
+  sla: SLA!
+  statusType: WorkflowStatusType!
+  vacancy: Vacancy
+}
+
+# https://api.talantix.ru/docs/api/objects/person-sources
+type PersonSources {
+  items: [PersonSource!]!
+  pageInfo: PageInfo!
+}
+
+# Источник кандидата  (https://api.talantix.ru/docs/api/objects/person-source)
+type PersonSource {
+  id: Int!
+  name: String!
+  type: PersonSourceType!
+}
+
+# Тип источника кандидата  (https://api.talantix.ru/docs/api/enums/person-source-type)
+enum PersonSourceType {
+  AmazingHiring
+  Artstation
+  Avito
+  AvitoResponse
+  AvitoResponseByCall
+  Facultetus
+  Farpost
+  Github
+  Habr
+  JobMo
+  LinkedIn
+  Rabota
+  SuperJob
+  Trudvsem
+  Worki
+  Zarplata
+  custom
+  e_staff
+  empty
+  file
+  hh
+  hh_favorite
+  hh_invite
+  hh_webext
+  landing
+  scoring
+  suggest
+  tms
+}
+
+# Сохраненный источник или ошибка сохранения  (https://api.talantix.ru/docs/api/unions/person-source-created)
+union PersonSourceCreated = PersonSource | PersonSourceMutationError
+
+# Ошибка сохранения источника кандидата  (https://api.talantix.ru/docs/api/objects/person-source-mutation-error)
+type PersonSourceMutationError {
+  errorType: PersonSourceMutationErrorType!
+  message: String
+}
+
+# Модель создания комментария кандидата  (https://api.talantix.ru/docs/api/inputs/person-comment-create-input)
+input PersonCommentCreateInput {
+  commentVisibility: CommentVisibilityInput!
+  personId: Int!
+  personRating: PersonRatingInput
+  text: CleanedInputString
+  vacancyId: Int
+}
+
+# Настройки видимости комментария  (https://api.talantix.ru/docs/api/inputs/comment-visibility-input)
+input CommentVisibilityInput {
+  visibleForAll: Boolean!
+  visibleForManagerIds: [Int]
+}
+
+# Результат создания комментария по кандидату  (https://api.talantix.ru/docs/api/unions/person-comment-created)
+union PersonCommentCreated = Comment | PersonCommentCreateError
+
+# Комментарий, оставленный в Talantix  (https://api.talantix.ru/docs/api/objects/comment)
+type Comment implements PersonEventItem {
+  canDelete: Boolean!
+  createdAt: Instant!
+  creatorManagerId: Int
+  editable: Boolean
+  hhCommentId: Int
+  html: String
+  id: Int!
+  manager: CompanyManager!
+  person: PersonItem
+  personRating: PersonRating
+  type: PersonEventType!
+  updatedAt: Instant!
+  vacancy: Vacancy
+  visibility: Visibility!
+}
+
+# Ошибка создания комментария по кандидату  (https://api.talantix.ru/docs/api/objects/person-comment-create-error)
+type PersonCommentCreateError {
+  errorType: PersonCommentCreateErrorType!
+  errors: [FieldErrors!]
+  message: String
+}
+
+# Результат создания откликов кандидатов на вакансиях  (https://api.talantix.ru/docs/api/unions/responses-created)
+union ResponsesCreated = ResponsesCreatedError | ResponsesCreatedSuccess
+
+# Успешное создание откликов кандидатов на вакансиях  (https://api.talantix.ru/docs/api/objects/responses-created-success)
+type ResponsesCreatedSuccess {
+  message: String
+}
+
+# Ошибка создания откликов кандидатов на вакансиях  (https://api.talantix.ru/docs/api/objects/responses-created-error)
+type ResponsesCreatedError {
+  errorType: ResponseCreateErrorType!
+  message: String
+}
+
+# Тип ошибки создания отклика кандидатов на вакансиях  (https://api.talantix.ru/docs/api/enums/response-create-error-type)
+enum ResponseCreateErrorType {
+  ACCESS_DENIED
+  NOT_FOUND
+  PERSON_SIZE_OUT_OF_BOUNDS
+  VACANCY_SIZE_OUT_OF_BOUNDS
+}
+
+# Источник прикрепления кандидата на вакансию при создании отклика  (https://api.talantix.ru/docs/api/enums/person-attach-source)
+enum PersonAttachSource {
+  DATABASE
+  RECOMMENDATION
+}
+
+# Результат перевода кандидатов на этап вакансии  (https://api.talantix.ru/docs/api/unions/persons-to-workflow-status-transferred)
+union PersonsToWorkflowStatusTransferred = PersonsToWorkflowStatusTransferError | PersonsToWorkflowStatusTransferredSuccess
+
+# Успешный перевод кандидатов на этап вакансии  (https://api.talantix.ru/docs/api/objects/persons-to-workflow-status-transferred-success)
+type PersonsToWorkflowStatusTransferredSuccess {
+  message: String
+}
+
+# Ошибка перевода кандидатов на этап вакансии  (https://api.talantix.ru/docs/api/objects/persons-to-workflow-status-transfer-error)
+type PersonsToWorkflowStatusTransferError {
+  errorType: PersonsToWorkflowStatusTransferErrorType!
+  message: String
+}
+
+# https://api.talantix.ru/docs/api/objects/me
+type Me implements BaseManager {
+  apiTokens: ApiTokens!
+  bellNotifications: ManagerBellNotifications!
+  blocked: Boolean!
+  canCreateHhVacancy: Boolean
+  email: String!
+  featureNotifications(    cursor: String    first: Int = 50  ): ManagerFeatureNotifications
+  firstName: String!
+  hhManagerId: Int!
+  hhVacancyImportSettings: ManagerHHVacancyImportSettings
+  id: Int!
+  integrations(    levels: [IntegrationLevelInput!] = []    types: [IntegrationType!] = []  ): Integrations!
+  lastName: String
+  licenseType: ManagerLicenseType!
+  managerRole: ManagerRole!
+  middleName: String
+  notificationSettings: ManagerNotificationSettings!
+}
+
+# Справочники  (https://api.talantix.ru/docs/api/objects/dictionaries)
+type Dictionaries {
+  areas(    onlyCitizenships: Boolean = false  ): Areas!
+  businessTripReadinesses: BusinessTripReadinesses!
+  educationLevels: EducationLevels!
+  employments: Employments!
+  industries: Industries!
+  languageLevels: LanguageLevels!
+  languages: Languages!
+  relocationTypes: RelocationTypes!
+  schedules: Schedules!
+  travelTimes: TravelTimes!
+}
+
+# Регионы  (https://api.talantix.ru/docs/api/objects/areas)
+type Areas {
+  items: [Area!]!
+}
+
+# Регион  (https://api.talantix.ru/docs/api/objects/area)
+type Area implements Dictionary {
+  id: String!
+  name: String!
+  parentId: String
+}
