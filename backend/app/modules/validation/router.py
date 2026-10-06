@@ -1,10 +1,14 @@
-"""Страница /validation («Как мы проверяем себя») и «Красная кнопка жюри» — публичный API."""
+"""Страница /validation («Как мы проверяем себя») и «Красная кнопка жюри».
+
+Отчёт — публичный. Атаки — только после входа (любая роль; в режиме жюри фронтенд сам входит под демо-персоной
+своей песочницы — кнопка остаётся «в один клик»), с лимитом частоты на пользователя и общим лимитом;
+need_id — только потребность своей компании; симуляция утечки — из кэша (attacks.leak_cached).
+"""
 from __future__ import annotations
 
 from functools import lru_cache
 import json
 from pathlib import Path
-import threading
 import uuid
 
 from fastapi import APIRouter, Depends
@@ -13,14 +17,21 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
-from app.core.enums import TestSessionStatus
-from app.core.errors import api_error
+from app.core.deps import get_current_user
+from app.core.enums import TestSessionStatus, UserRole
+from app.core.errors import api_error, err
+from app.core.ratelimit import SlidingWindow, hit
 from app.modules.assessment.models import TestSession
+from app.modules.auth.models import User
+from app.modules.matching.models import EmployerNeed
+from app.modules.profiles.models import EmployerProfile
 from app.modules.validation import attacks
 
 router = APIRouter(prefix="/api/validation", tags=["validation"])
 REPORT = Path(__file__).resolve().parent / "data" / "report.json"
-_leak_lock = threading.Lock()
+# Лимиты «Красной кнопки» (на воркер): 12 атак в минуту на пользователя, 90 в минуту всего
+_per_user = SlidingWindow(12, 60)
+_global = SlidingWindow(90, 60)
 
 
 @lru_cache(maxsize=1)
@@ -66,19 +77,32 @@ class AttackIn(BaseModel):
     direction: str | None = None
 
 
-@router.post("/attacks/{attack_id}", summary="Запустить атаку «Красной кнопки» (ничего не записывается)")
-def run_attack(attack_id: str, data: AttackIn | None = None, db: Session = Depends(get_db)):
+def _own_need(db: Session, user: User, need_id: uuid.UUID) -> uuid.UUID:
+    """need_id — только потребность компании текущего работодателя (иначе 404, как для несуществующей)."""
+    ep = db.get(EmployerProfile, user.id) if user.role == UserRole.employer else None
+    n = db.get(EmployerNeed, need_id)
+    if ep is None or n is None or n.company_id != ep.company_id:
+        raise api_error(404, "need_not_found", "Потребность не найдена")
+    return need_id
+
+
+@router.post("/attacks/{attack_id}", summary="Запустить атаку «Красной кнопки» (вход обязателен, ничего не записывается)",
+             responses={401: err("Не выполнен вход"), 404: err("Нет такой атаки или потребности"),
+                        429: err("Слишком частые запуски")})
+def run_attack(attack_id: str, data: AttackIn | None = None, user: User = Depends(get_current_user),
+               db: Session = Depends(get_db)):
     data = data or AttackIn()
     if attack_id not in {a["id"] for a in attacks.ATTACKS}:
         raise api_error(404, "attack_not_found", "Нет такой атаки")
+    hit(_per_user, str(user.id), "attack_rate", "Слишком часто: не больше 12 атак в минуту")
+    hit(_global, "all", "attack_rate_global", "Красную кнопку сейчас нажимают слишком часто")
     if attack_id == "leak_bank":
-        if not _leak_lock.acquire(blocking=False):  # симуляция тяжёлая: не больше одной одновременно на воркер
-            raise api_error(429, "attack_busy", "Симуляция утечки уже идёт, повторите через несколько секунд")
         try:
             return attacks.run(db, attack_id, None, {"leak_share": data.leak_share, "direction": data.direction})
-        finally:
-            _leak_lock.release()
-    return attacks.run(db, attack_id, data.need_id)
+        except attacks.AttackBusy:
+            raise api_error(429, "attack_busy", "Симуляция утечки уже идёт, повторите через несколько секунд") from None
+    need_id = _own_need(db, user, data.need_id) if data.need_id else None
+    return attacks.run(db, attack_id, need_id)
 
 
 BENCH = Path(__file__).resolve().parent / "data" / "matching_bench.json"

@@ -187,6 +187,6 @@ def authenticate(db: Session, email: str, password: str) -> User:
     return user
 
 
-def issue_token(user: User) -> TokenOut:
-    token, ttl = create_access_token(user.id, user.role.value, user.token_version)
+def issue_token(user: User, extra: dict | None = None) -> TokenOut:
+    token, ttl = create_access_token(user.id, user.role.value, user.token_version, extra)
     return TokenOut(access_token=token, expires_in=ttl, user=UserOut.model_validate(user))

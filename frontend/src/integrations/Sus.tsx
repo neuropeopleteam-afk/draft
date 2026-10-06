@@ -102,9 +102,10 @@ export function SusSummaryCard() {
   if (!data || !data.n) return null;
   return (
     <section className="card">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Итог по всем ответам</p>
-      <p className="mt-2 text-3xl font-extrabold tabular-nums text-brand-night">{data.mean}<span className="ml-2 text-base font-medium text-brand-ink/55">из 100 · n = {data.n}</span></p>
-      <p className="text-sm text-brand-ink/65">Медиана {data.median}{data.ci95 ? `, 95 % ДИ ${data.ci95[0]}–${data.ci95[1]}` : ""} · «{data.adjective}» · оценка {data.grade} · порог отрасли 68</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Итог по ответам после входа</p>
+      <p className="mt-2 text-3xl font-extrabold tabular-nums text-brand-night">{String(data.mean).replace(".", ",")}<span className="ml-2 text-base font-medium text-brand-ink/55">из 100 · n = {data.n}</span></p>
+      <p className="text-sm text-brand-ink/65">Медиана {String(data.median).replace(".", ",")}{data.ci95 ? `, 95 % ДИ ${data.ci95[0]}–${data.ci95[1]}` : ""} · «{data.adjective}» · оценка {data.grade} · порог отрасли 68</p>
+      {data.anonymous?.n ? <p className="mt-2 text-xs text-brand-ink/55">Анонимные анкеты считаются отдельно и в итог не входят: n = {data.anonymous.n}, среднее {String(data.anonymous.mean).replace(".", ",")}.</p> : null}
     </section>
   );
 }

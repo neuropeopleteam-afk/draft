@@ -304,7 +304,7 @@ PWA: `frontend/public/manifest.webmanifest`, `sw.js` (оболочка офла�
 
 | Метод | Путь | Назначение | Ошибки |
 |---|---|---|---|
-| GET | `/api/health` | состояние API и БД, режим почты | — |
+| GET | `/api/health` | состояние API и БД (`status`, `db`; версия и режимы — в `/api/meta`) | — |
 | POST | `/api/auth/register` | регистрация (candidate/employer), согласие ПДн; в DEV_MODE — код в ответе | 409, 422 |
 | POST | `/api/auth/verify-email` | подтверждение почты кодом → JWT | 400, 429 |
 | POST | `/api/auth/resend-code` | повторная отправка кода | 429 |
