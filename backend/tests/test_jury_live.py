@@ -35,19 +35,23 @@ def _room(client, token):
     return r.json()
 
 
-def _keys(code):
-    """Ключ текущего задания гостя — только из БД (в тестах), наружу он не отдаётся."""
+def _keys(code, token=None):
+    """Ключ текущего задания гостя — только из БД (в тестах), наружу он не отдаётся.
+    Гость ищется по токену текущего задания: «последний созданный» неоднозначен при одинаковом времени создания."""
     from app.jury_live import mini
     from app.jury_live.models import LiveGuest
 
     with SessionLocal() as db:
-        g = db.scalars(select(LiveGuest).order_by(LiveGuest.created_at.desc())).first()
-        it = mini.current(g.state)
-        return it["format"], it["key"]["value"], it["public"]["code_lines"]
+        guests = db.scalars(select(LiveGuest).order_by(LiveGuest.created_at.desc())).all()
+        for g in guests:
+            it = mini.current(g.state)
+            if it is not None and (token is None or it.get("token") == token):
+                return it["format"], it["key"]["value"], it["public"]["code_lines"]
+        raise AssertionError("гость с таким заданием не найден")
 
 
 def _answer(client, code, gt, item, correct=True):
-    fmt, key, lines = _keys(code)
+    fmt, key, lines = _keys(code, item.get("token"))
     if fmt == "find_bug":
         value = int(key) if correct else (1 if int(key) != 1 else 2)
     else:
