@@ -154,7 +154,7 @@ const JURY: { id: Persona; title: string; text: string }[] = [
 ];
 
 function JuryBlock() {
-  const { me, signIn } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -166,7 +166,7 @@ function JuryBlock() {
   }
   async function reset() {
     setBusy("reset"); setMsg(null);
-    try { const r = await juryReset(me?.email, signIn); setMsg(`Ваше демо пересоздано в исходное состояние за ${r.seconds} с. У других экспертов ничего не изменилось.`); }
+    try { const r = await juryReset(signIn); setMsg(`Ваше демо пересоздано в исходное состояние за ${String(r.seconds).replace(".", ",")} с. У других экспертов ничего не изменилось.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
   }
   return (
