@@ -1,26 +1,41 @@
 family_id: frontend.sec.escape_html_bug
 title: XSS — ошибка экранирования перед вставкой через innerHTML
 direction: frontend
-skills: [security, xss, html_escaping, javascript]
-target_grades: [junior]
+skills:
+- security
+- xss
+- html_escaping
+- javascript
+target_grades:
+- junior
 format: find_bug
 language: javascript
 invariants:
-  code_lines: [14, 16]
-  operations: [12, 13]
+  code_lines:
+  - 14
+  - 16
+  operations:
+  - 12
+  - 13
   defect_type: xss_escaping
   extra:
-    subtypes: [no_global_lt, no_global_quot, raw_field, unquoted_attr]
+    subtypes:
+    - raw_field
+    - unquoted_attr
 time_limit_s: 240
 canary: false
 prior_difficulty:
   b: -0.2
   a: 1.1
-  sigma_variant: 0.4
-  basis: "14–16 строк, одна дефектная строка; полезная нагрузка дана в условии; четыре подтипа разной трудности (неэкранированное поле проще, replace без флага g и атрибут без кавычек труднее) → σ повышена; Junior"
+  sigma_variant: 0.3
+  basis: '14–16 строк, одна дефектная строка; полезная нагрузка дана в условии; четыре подтипа разной
+    трудности (неэкранированное поле проще, replace без флага g и атрибут без кавычек труднее) → σ повышена;
+    Junior. Калибровка панелью LLM 05.10: варианты неизоморфны (σ > 0,5, χ² p < 0,01), разброс объяснялся
+    подтипом; оставлены подтипы «неэкранированное поле» и «атрибут без кавычек», второй подтип выделен
+    в frontend.sec.replace_global_bug; σ снижена до 0,3.'
 generator: assessment_bank.families.frontend.sec_escape_html_bug
-version: 1
-description: >
-  Функция экранирования и шаблон HTML для пользовательского контента. По полезной нагрузке
-  из отчёта о безопасности найти строку с ошибкой. Ключ: дефектный код даёт HTML, отличный
-  от эталона, на наборе вредоносных входов, исправление совпадает с эталоном.
+version: 2
+description: 'Функция экранирования и шаблон HTML для пользовательского контента. По полезной нагрузке
+  из отчёта о безопасности найти строку с ошибкой. Ключ: дефектный код даёт HTML, отличный от эталона,
+  на наборе вредоносных входов, исправление совпадает с эталоном. Версия 2: только подтипы «неэкранированное
+  поле» и «атрибут без кавычек»; подтипы «replace без /g» для < и для " — семейство frontend.sec.replace_global_bug.'

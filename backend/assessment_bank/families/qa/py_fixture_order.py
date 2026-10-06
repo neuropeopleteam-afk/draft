@@ -102,7 +102,8 @@ def generate(seed: int):
         fx = _gen_fixtures(rng, names)
         autouse = (dict(name="log_test", scope="function", deps=[], yields=True, autouse=True)
                    if rng.random() < 0.35 else None)
-        n_tests = rng.choice([2, 3])
+        # Калибровка 05.10: вывод до 17 строк — канцелярская нагрузка; тестов всегда 2
+        n_tests = 2
         tests = []
         for t in rng.sample(tnames, n_tests):
             k = rng.choice([1, 2, 2])

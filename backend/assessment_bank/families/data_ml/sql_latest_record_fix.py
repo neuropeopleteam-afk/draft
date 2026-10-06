@@ -72,7 +72,9 @@ def _ref(kind, rows):
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     T, e, v, ts, values, what, ctx = rng.choice(CONTEXTS)
-    chosen = rng.sample(DISTRACTORS, 3)
+    # Калибровка 05.10: разброс объяснялся составом дистракторов (с id_asc 0,40, без него 0,62);
+    # состав зафиксирован: «последняя по id, а не по времени» есть всегда.
+    chosen = ["id_asc"] + rng.sample([d for d in DISTRACTORS if d != "id_asc"], 2)
     month = rng.randint(1, 12)
     for _ in range(5000):
         rows, rid = [], rng.randint(1, 40)

@@ -1,0 +1,38 @@
+family_id: backend.cache.key_params_bug
+title: Ключ кэша без параметра запроса (cache-aside)
+direction: backend
+skills:
+- python
+- caching
+- cache_invalidation
+- consistency
+target_grades:
+- middle
+format: find_bug
+language: python
+invariants:
+  code_lines:
+  - 14
+  - 14
+  operations:
+  - 11
+  - 11
+  defect_type: cache_staleness
+  extra:
+    subtypes:
+    - key_missing_param
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.0
+  a: 1.1
+  sigma_variant: 0.3
+  basis: 'Выделено из backend.cache.invalidation_bug: подтип «ключ без параметра»: две разные выборки
+    попадают в одну запись кэша. Калибровка панелью LLM 05.10: варианты неизоморфны (σ > 0,5, χ² p < 0,01),
+    разброс объяснялся подтипом. b оставлен 0,0: содержательной причины менять нет (ключ без параметра
+    проявляется уже до обновления, но требует сопоставить два вызова).'
+generator: assessment_bank.families.backend.cache_key_params_bug
+version: 1
+description: 'Выделено из backend.cache.invalidation_bug по итогам калибровки 05.10: подтип «ключ без
+  параметра»: две разные выборки попадают в одну запись кэша. Генератор общий с исходным семейством, подтип
+  фиксирован.'

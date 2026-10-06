@@ -11,7 +11,7 @@ invariants:
   defect_type: debounce_logic
   n_options: 4
   extra:
-    subtypes: [no_clear, first_args]
+    subtypes: [no_clear]
     step3_conditions: [react, race, ux, testing]
 time_limit_s: 900
 canary: false
@@ -20,9 +20,10 @@ prior_difficulty:
   a: 1.0
   sigma_variant: 0.35
   step_offsets: [-0.5, 0.0, 0.8]
-  basis: "11–12 строк; два подтипа (нет clearTimeout, аргументы первого вызова); дистракторы — clearTimeout в колбэке и leading-режим; шаг 3 — React, гонки ответов, UX, тестирование"
+  basis: "11–12 строк; два подтипа (нет clearTimeout, аргументы первого вызова); дистракторы — clearTimeout в колбэке и leading-режим; шаг 3 — React, гонки ответов, UX, тестирование. Калибровка 05.10: шаг 2 неизоморфен по подтипу (no_clear 0,51 / first_args 0,66); зафиксирован канонический дефект no_clear"
 generator: assessment_bank.families.frontend.js_debounce_ob3
-version: 1
+version: 2
 description: >
   Реализация debounce с одной логической ошибкой. Ключи шагов 1–2 проверяются исполнением
   в Node.js с поддельными таймерами (виртуальное время) и сверяются с независимой моделью.
+  Версия 2: подтип зафиксирован — таймер не сбрасывается (нет clearTimeout).
