@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, Level, Loading, Modal, Status, dt, dtt, errText, range, useApi } from "../../components/ui";
@@ -65,6 +65,18 @@ export function CandidateCup() {
   const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const onEnd = useCallback(() => { void reload(); }, [reload]);
+  // черновик решения переживает обновление страницы и уход на другой экран (таймер идёт на сервере)
+  const draftKey = c?.my_entry?.status === "in_progress" ? `cup_draft_${c.my_entry.id}` : null;
+  useEffect(() => {
+    if (!draftKey) return;
+    try {
+      const d = JSON.parse(sessionStorage.getItem(draftKey) ?? "null");
+      if (d) { setAnswers(d.answers ?? {}); setText(d.text ?? ""); setLink(d.link ?? ""); }
+    } catch { /* повреждённый черновик — начинаем с пустого */ }
+  }, [draftKey]);
+  useEffect(() => {
+    if (draftKey) sessionStorage.setItem(draftKey, JSON.stringify({ answers, text, link }));
+  }, [draftKey, answers, text, link]);
 
   async function act(path: string, body: unknown = {}) {
     setErr(null); setBusy(true);
@@ -105,9 +117,9 @@ export function CandidateCup() {
       )}
       {solving && (
         <section className="space-y-4">
-          <div className="card sticky top-2 z-10 flex flex-wrap items-center justify-between gap-3 py-4">
+          <div className="card sticky top-2 z-10 flex items-center justify-between gap-3 py-4">
             <p className="text-sm text-brand-ink/70">{e.alias} · осталось</p>
-            <Countdown until={e.deadline_at} onEnd={onEnd} />
+            <Countdown until={e.deadline_at} onEnd={onEnd} endedText="Время вышло: ответ примем ещё 2 минуты" />
           </div>
           {c.mode === "auto" ? e.tasks.map((t: any) => (
             <div key={t.token} className="card">
@@ -155,18 +167,20 @@ export function CandidateCup() {
       )}
       {e && !["joined", "in_progress"].includes(e.status) && <MyResult c={c} e={e} />}
       {c.leaderboard.length > 0 && !solving && (
-        <section className="card overflow-x-auto">
+        <section className="card">
           <h2 className="text-lg font-bold text-brand-night">Таблица результатов</h2>
-          <table className="mt-4 w-full min-w-[28rem] text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-brand-ink/50"><tr><th className="py-2 pr-3">Место</th><th className="pr-3">Участник</th><th className="pr-3">Балл</th><th className="pr-3">Время</th><th>Статус</th></tr></thead>
+          <table className="mt-4 w-full text-left text-sm">
+            <thead className="text-xs uppercase tracking-wide text-brand-ink/50"><tr><th className="py-2 pr-3">Место</th><th className="pr-3">Участник</th><th className="pr-3">Балл</th><th className="hidden pr-3 sm:table-cell">Время</th><th className="hidden sm:table-cell">Статус</th></tr></thead>
             <tbody className="divide-y divide-brand-night/5">
               {c.leaderboard.map((r: any) => (
                 <tr key={r.alias} className={r.me ? "bg-brand-blush/30 font-semibold" : ""}>
                   <td className="py-2.5 pr-3">{r.position ?? "—"}</td>
-                  <td className="pr-3">{r.alias}{r.me ? " (вы)" : ""}</td>
+                  <td className="pr-3"><span className="whitespace-nowrap">{r.alias}{r.me ? " (вы)" : ""}</span>
+                    <span className="block text-xs font-normal text-brand-ink/50 sm:hidden">{r.invited ? "приглашён" : ENTRY[r.status] ?? r.status} · {mins(r.time_spent_s)}</span>
+                  </td>
                   <td className="pr-3 tabular-nums">{r.score_pct != null ? `${r.score_pct} %` : "—"}</td>
-                  <td className="pr-3 tabular-nums">{mins(r.time_spent_s)}</td>
-                  <td>{r.invited ? "приглашён" : ENTRY[r.status] ?? r.status}</td>
+                  <td className="hidden pr-3 tabular-nums sm:table-cell">{mins(r.time_spent_s)}</td>
+                  <td className="hidden sm:table-cell">{r.invited ? "приглашён" : ENTRY[r.status] ?? r.status}</td>
                 </tr>
               ))}
             </tbody>
@@ -201,9 +215,9 @@ function MyResult({ c, e }: { c: any; e: any }) {
       )}
       {e.place && !e.invitation_id && e.invite_note && <p className="text-xs text-brand-ink/55">Приглашение не отправлено: {e.invite_note}.</p>}
       {e.place && (
-        <p className="flex items-center gap-2 text-sm text-brand-ink/75"><Level level="T1" />
-          {e.passport_status === "written" ? "Место записано в паспорт ФСП как мероприятие платформы." : "Место запишется в паспорт ФСП после связки с ФСП ID."}
-          <Link className="font-semibold text-brand" to="/candidate/fsp">Паспорт ФСП</Link>
+        <p className="flex items-start gap-2 text-sm text-brand-ink/75"><Level level="T1" />
+          <span>{e.passport_status === "written" ? "Место записано в паспорт ФСП как мероприятие платформы." : "Место запишется в паспорт ФСП после связки с ФСП ID."}{" "}
+            <Link className="font-semibold text-brand hover:text-brand-soft" to="/candidate/fsp">Открыть паспорт</Link></span>
         </p>
       )}
       {c.mode === "auto" && c.phase === "finished" && e.tasks?.length > 0 && (

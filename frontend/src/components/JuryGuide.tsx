@@ -6,7 +6,7 @@ import { errText } from "./ui";
 
 const PERSONA_EMAIL: Record<Persona, string> = {
   candidate: "candidate@jury.example.com", candidate_nofsp: "candidate-nofsp@jury.example.com",
-  employer: "employer@jury.example.com", expert: "expert@jury.example.com",
+  employer: "employer@jury.example.com", expert: "expert@jury.example.com", fsp: "fsp-analyst@jury.example.com",
 };
 
 /** Пошаговый проводник для экспертов жюри по сквозному сценарию (п. 3.3 ТЗ). Можно скрыть. */
@@ -51,7 +51,7 @@ export function JuryGuide() {
     navigate(t.path);
   }
   async function reset() {
-    if (!confirm("Сбросить демо жюри в исходное состояние? Приглашения, зонды и тесты демо-учёток будут пересозданы.")) return;
+    if (!confirm("Сбросить демо жюри в исходное состояние? Приглашения, зонды, тесты демо-учёток и демо-кубки будут пересозданы.")) return;
     setBusy(true); setMsg(null);
     try { const r = await juryReset(); setMsg(`Демо пересоздано за ${r.seconds} с. Войдите заново.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(false); }

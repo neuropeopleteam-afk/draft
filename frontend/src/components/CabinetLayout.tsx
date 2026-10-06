@@ -29,7 +29,7 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
           <button onClick={() => { signOut(); navigate("/"); }} className="mt-2 text-sm font-semibold text-brand-plum hover:text-brand">Выйти</button>
         </div>
       </aside>
-      <main className="px-6 py-8 md:px-10 md:py-10">
+      <main className="px-6 pb-24 pt-8 md:px-10 md:py-10">
         <div className="mb-6 flex items-center justify-end md:hidden">
           <button onClick={() => { signOut(); navigate("/"); }} className="text-sm font-semibold text-brand-plum">Выйти</button>
         </div>
