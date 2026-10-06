@@ -2,13 +2,15 @@
 демо-режим жюри, резюме PDF и стандартизированный PDF-профиль."""
 from __future__ import annotations
 
+from datetime import timedelta
 import re
+import threading
 from typing import Literal
 
 from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -16,6 +18,7 @@ from app.core.db import get_db, utcnow
 from app.core.deps import require_role
 from app.core.enums import ConsentKind, FactSource, UserRole, WorkFormat
 from app.core.errors import api_error, err
+from app.core.ratelimit import SlidingWindow, hit
 from app.core.legal import CONSENT_VERSION, consent_text
 from app.modules.assessment.models import SurveyResponse, SurveyStackTag
 from app.modules.auth.models import Consent, User
@@ -26,6 +29,10 @@ from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, card, lo
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 
 router = APIRouter(prefix="/api/me", tags=["candidate"])
+# Резюме: попытки (в т. ч. неудачные) — не больше 10 в час на пользователя; одновременно — один разбор на воркер
+# (процесс разбора ~40 МБ, предел 256 МБ — укладывается в лимит памяти api в docker-compose.yml)
+_resume_attempts = SlidingWindow(10, 3600)
+_resume_slots = threading.BoundedSemaphore(1)
 legal_router = APIRouter(prefix="/api/legal", tags=["legal"])
 AUTH = {401: err("Не выполнен вход"), 403: err("Только для кандидата")}
 candidate = require_role(UserRole.candidate)
@@ -286,22 +293,41 @@ def link_fsp(data: FspLinkIn, user: User = Depends(candidate), db: Session = Dep
     description="ФИО и контакты вырезаются на сервере (Natasha + регулярные выражения) до любой отправки текста в "
                 "LLM. Исходный файл не сохраняется. Найденные контакты возвращаются только кандидату в этом ответе — "
                 "чтобы он мог перенести их в профиль.",
-    responses={**AUTH, 413: err("Файл больше 5 МБ"), 415: err("Нужен PDF"), 422: err("Не удалось извлечь текст")},
+    responses={**AUTH, 413: err("Файл больше 5 МБ"), 415: err("Нужен PDF"),
+               422: err("Не удалось извлечь текст, больше 20 страниц или разбор дольше 10 с"),
+               429: err("Слишком много загрузок"), 503: err("Сервер занят разбором других резюме")},
 )
-async def upload_resume(file: UploadFile = File(...), user: User = Depends(candidate),
-                        db: Session = Depends(get_db)) -> dict:
-    from app.modules.resume.extract import extract, pdf_to_text
+def upload_resume(file: UploadFile = File(...), user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    # Обычная функция (не async): FastAPI выполняет её в пуле потоков — разбор, NER и LLM не блокируют цикл событий
+    # воркера. Сам PDF разбирается в отдельном процессе с тайм-аутом и лимитом памяти (pdf_to_text_safe).
+    from app.modules.resume.extract import PdfError, extract, pdf_to_text_safe
     from app.modules.resume.pii import redact
 
-    data = await file.read(get_settings().resume_max_bytes + 1)
-    if len(data) > get_settings().resume_max_bytes:
+    s = get_settings()
+    hit(_resume_attempts, str(user.id), "resume_rate", "Слишком много попыток загрузки резюме")
+    since = utcnow() - timedelta(hours=1)
+    recent = db.scalar(select(func.count()).select_from(CandidateResume)
+                       .where(CandidateResume.user_id == user.id, CandidateResume.created_at >= since)) or 0
+    if recent >= s.resume_uploads_per_hour:
+        raise api_error(429, "resume_rate", f"Не больше {s.resume_uploads_per_hour} загрузок резюме в час. Повторите позже")
+    data = file.file.read(s.resume_max_bytes + 1)
+    if len(data) > s.resume_max_bytes:
         raise api_error(413, "file_too_large", "Файл больше 5 МБ")
     if not data.startswith(b"%PDF"):
         raise api_error(415, "not_pdf", "Нужен файл PDF")
+    if not _resume_slots.acquire(timeout=15):  # разбор длится секунды (тайм-аут 10 с) — очередь дождётся
+        raise api_error(503, "resume_busy", "Сервер разбирает другие резюме, повторите через минуту")
     try:
-        text, pages = pdf_to_text(data)
-    except Exception:  # noqa: BLE001 — повреждённый или зашифрованный PDF
+        text, pages = pdf_to_text_safe(data, s.resume_max_pages, s.resume_parse_timeout_s, s.resume_parse_memory_mb)
+    except PdfError as e:
+        if e.code == "too_many_pages":
+            raise api_error(422, "pdf_too_many_pages",
+                            f"В PDF {e.pages} страниц — резюме должно быть не длиннее {s.resume_max_pages}") from None
+        if e.code == "timeout":
+            raise api_error(422, "pdf_timeout", "PDF слишком сложный: разбор не уложился в отведённое время") from None
         raise api_error(422, "pdf_unreadable", "Не удалось прочитать PDF") from None
+    finally:
+        _resume_slots.release()
     if len(text.strip()) < 30:
         raise api_error(422, "pdf_no_text", "В PDF нет текстового слоя (скан). Заполните профиль вручную")
     red = redact(text)

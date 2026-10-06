@@ -1,30 +1,45 @@
-"""Режим жюри: вход в один клик под демо-персоной и сброс демо в исходное состояние (см. seed.py)."""
+"""Режим жюри: вход в один клик под демо-персоной и сброс демо в исходное состояние (см. seed.py, scope.py).
+
+Песочницы: вход с ``scenario: "new"`` создаёт эксперту жюри собственный набор персон, дальше браузер передаёт
+полученный ``scenario`` — переключение персон идёт внутри своей песочницы. Сброс — только по токену
+демо-персоны и только своей песочницы: другие эксперты жюри не теряют прогресс.
+"""
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from typing import Literal
 
-from fastapi import APIRouter, Depends
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, Request
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.db import get_db
-from app.core.errors import api_error
+from app.core.db import SessionLocal, get_db, get_engine, utcnow
+from app.core.deps import get_current_user
+from app.core.errors import api_error, err
+from app.core.ratelimit import SlidingWindow, client_ip
 from app.modules.auth.models import User
 from app.modules.auth.service import issue_token
-from app.modules.jury import seed
+from app.modules.jury import scope, seed
 
 router = APIRouter(prefix="/api/jury", tags=["jury"])
-_state = {"last_reset": 0.0}
+log = logging.getLogger(__name__)
+_state: dict[str, float] = {}  # sid ("" — общее демо) → время последнего сброса
 _mx = threading.Lock()
+# Создание песочницы — несколько секунд CPU: не больше 12 в час с адреса и 60 в час всего (на воркер).
+# Лимит исчерпан — вход в общее демо (в один клик работает всегда).
+_new_ip = SlidingWindow(12, 3600)
+_new_all = SlidingWindow(60, 3600)
 LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "employer": "/employer", "expert": "/expert"}
 
 
 class LoginIn(BaseModel):
     persona: Literal["candidate", "candidate_nofsp", "employer", "expert"]
+    scenario: str | None = Field(None, pattern=r"^(new|[a-z0-9]{10})$",
+                                 description="new — создать свою песочницу; id — продолжить свою; пусто — общее демо")
 
 
 def _available() -> None:
@@ -32,35 +47,114 @@ def _available() -> None:
         raise api_error(404, "jury_disabled", "Режим жюри выключен")
 
 
+def _token(db: Session, sid: str, persona: str) -> dict:
+    user = db.scalar(select(User).where(User.email == scope.emails(sid)[persona]))
+    if user is None:
+        raise api_error(503, "jury_not_ready", "Демо-учётки жюри ещё создаются, повторите через несколько секунд")
+    user.last_login_at = utcnow()
+    db.commit()
+    tok = issue_token(user, {scope.CLAIM: sid} if sid else None)
+    return {**tok.model_dump(), "persona": persona, "landing": LANDING[persona], "scenario": sid or None,
+            "shared": not sid}
+
+
+def _new_sandbox(db: Session, request: Request, sid: str | None = None) -> str | None:
+    """Выдаёт новую песочницу: запасную (мгновенно) или создаёт сейчас; sid — пересоздать удалённую по лимиту.
+    None — лимит создания исчерпан."""
+    if _new_ip.retry_after(client_ip(request)) or _new_all.retry_after("all"):
+        return None
+    if sid is None:
+        for spare in seed.spares(db):
+            if seed.claim(db, spare):
+                _refill()
+                return spare
+    sid = sid or scope.new_sid()
+    seed.evict(db, keep=max(1, get_settings().jury_sandboxes_max) - 1, protect=sid)
+    seed.ensure(db, sid)
+    _refill()
+    return sid
+
+
+_spare_mx = threading.Lock()
+
+
+def make_spare() -> str | None:
+    """Создать запасную песочницу, если запаса нет (по очереди между воркерами — advisory lock в seed)."""
+    s = get_settings()
+    if s.jury_spare_sandboxes <= 0 or not s.jury_mode_available or not _spare_mx.acquire(blocking=False):
+        return None
+    try:
+        get_engine()  # фоновый поток при старте — до первого запроса движок БД ещё не создан
+        with SessionLocal() as db:
+            if len(seed.spares(db)) >= s.jury_spare_sandboxes:
+                return None
+            seed.evict(db, keep=max(1, s.jury_sandboxes_max) - 1)
+            sid = scope.new_sid()
+            with seed.as_spare():
+                seed.ensure(db, sid)
+            return sid
+    except Exception:  # запас — оптимизация: при ошибке песочница создастся при входе, как без запаса
+        log.exception("Запасная песочница жюри не создана")
+        return None
+    finally:
+        _spare_mx.release()
+
+
+def _refill() -> None:
+    if get_settings().jury_spare_sandboxes > 0:
+        threading.Thread(target=make_spare, name="jury-spare", daemon=True).start()
+
+
 @router.get("/status", summary="Персоны режима жюри")
 def status(db: Session = Depends(get_db)):
     s = get_settings()
+    if s.jury_mode_available:
+        _refill()  # главная страница открыта — готовим песочницу заранее
     have = set(db.scalars(select(User.email).where(User.email.in_(list(seed.EMAILS.values())))).all())
     return {"available": s.jury_mode_available,
             "personas": [{**p, "email": seed.EMAILS[p["id"]], "ready": seed.EMAILS[p["id"]] in have,
                           "landing": LANDING[p["id"]]} for p in seed.PERSONAS],
-            "reset_cooldown_s": s.jury_reset_cooldown_s}
+            "reset_cooldown_s": s.jury_reset_cooldown_s, "sandboxes": True}
 
 
-@router.post("/login", summary="Вход в один клик под демо-персоной жюри")
-def login(data: LoginIn, db: Session = Depends(get_db)):
+@router.post("/login", summary="Вход в один клик под демо-персоной жюри (своя песочница: scenario=new)")
+def login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
     _available()
-    created = seed.ensure(db)
-    user = db.scalar(select(User).where(User.email == seed.EMAILS[data.persona]))
-    if user is None:
-        raise api_error(503, "jury_not_ready", "Демо-учётки жюри ещё создаются, повторите через несколько секунд")
-    tok = issue_token(user)
-    return {**tok.model_dump(), "persona": data.persona, "landing": LANDING[data.persona], "created": created}
+    created, sid = False, ""
+    if data.scenario == "new":
+        sid = _new_sandbox(db, request) or ""
+        created = bool(sid)
+    elif data.scenario:
+        sid = data.scenario
+        if not seed._complete(db, sid):  # песочница удалена по лимиту — пересоздаём с тем же id
+            sid = _new_sandbox(db, request, sid) or ""
+            created = bool(sid)
+    if not sid:
+        created = seed.ensure(db)
+    return {**_token(db, sid, data.persona), "created": created}
 
 
-@router.post("/reset", summary="Сбросить демо жюри в исходное состояние")
-def reset(db: Session = Depends(get_db)):
+@router.post("/reset", summary="Сбросить СВОЮ песочницу жюри в исходное состояние (токен демо-персоны)",
+             responses={401: err("Не выполнен вход"), 403: err("Только для демо-персон жюри"),
+                        429: err("Сброс только что был")})
+def reset(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     _available()
+    persona, sid = scope.parse(user.email)
+    if persona is None or not user.is_demo:
+        raise api_error(403, "jury_only", "Сбросить демо может только демо-персона жюри")
+    if not sid:
+        # общее демо не сбрасываем — у него могут быть другие эксперты; вместо сброса — своя чистая песочница
+        new = _new_sandbox(db, request)
+        if new is None:
+            raise api_error(429, "jury_sandbox_limit", "Слишком много новых песочниц с вашего адреса, повторите позже")
+        return {"ok": True, "deleted_users": 0, "seconds": 0.0, **_token(db, new, persona), "moved": True}
     cd = get_settings().jury_reset_cooldown_s
     with _mx:
-        left = cd - (time.time() - _state["last_reset"])
+        left = cd - (time.time() - _state.get(sid, 0.0))
         if left > 0:
             raise api_error(429, "jury_reset_cooldown", f"Демо уже сбрасывали только что, повторите через {int(left) + 1} с")
-        _state["last_reset"] = time.time()
-    out = seed.reset(db)
-    return {"ok": True, **out}
+        _state[sid] = time.time()
+        if len(_state) > 10_000:
+            _state.clear()
+    out = seed.reset(db, sid)
+    return {"ok": True, **out, **_token(db, sid, persona)}
