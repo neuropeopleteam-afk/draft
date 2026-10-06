@@ -4,21 +4,26 @@
 (Sauro & Lewis), шкала прилагательных — Bangor, Kortum, Miller (2009).
 
 Для страницы /validation (другой модуль): ``GET /api/sus/summary`` — только агрегаты, без ответов отдельных людей.
+
+Защита метрики от накрутки: после входа у пользователя одна анкета на контекст (повторная отправка заменяет
+прежнюю) и не больше 5 отправок в час; без входа — не больше 3 анкет в сутки с адреса и 30 в час всего.
+Основные цифры сводки — только ответы после входа; анонимные — отдельным блоком ``anonymous``.
 """
 from __future__ import annotations
 
 import math
 import statistics
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.db import get_db
+from app.core.db import get_db, utcnow
 from app.core.deps import oauth2_scheme, require_role
 from app.core.enums import UserRole
 from app.core.errors import err
+from app.core.ratelimit import SlidingWindow, client_ip, hit
 from app.integrations.fsp_id.router import _optional_user
 from app.integrations.sus.models import SusResponse
 from app.modules.auth.models import User
@@ -26,6 +31,9 @@ from app.modules.auth.models import User
 router = APIRouter(prefix="/api/sus", tags=["sus"])
 admin_router = APIRouter(prefix="/api/admin", tags=["sus"])
 admin = require_role(UserRole.admin)
+_anon_ip = SlidingWindow(3, 24 * 3600)
+_anon_all = SlidingWindow(30, 3600)
+_per_user = SlidingWindow(5, 3600)
 
 QUESTIONS = [
     "Думаю, что я хотел(а) бы пользоваться этой системой регулярно.",
@@ -93,16 +101,30 @@ class SusIn(BaseModel):
 
 
 @router.post("", status_code=201, summary="Сохранить анкету SUS (вход не обязателен — для жюри и гостей)",
-             responses={422: err("Нужно 10 ответов от 1 до 5")})
-def submit(data: SusIn, token: str | None = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> dict:
+             description="После входа — одна анкета на контекст (повтор заменяет прежнюю), не больше 5 отправок в час. "
+                         "Без входа — не больше 3 анкет в сутки с адреса; в сводке такие ответы идут отдельно.",
+             responses={422: err("Нужно 10 ответов от 1 до 5"), 429: err("Слишком много анкет")})
+def submit(data: SusIn, request: Request, token: str | None = Depends(oauth2_scheme),
+           db: Session = Depends(get_db)) -> dict:
     user = _optional_user(token, db)
+    if user:
+        hit(_per_user, str(user.id), "sus_rate", "Слишком много отправок анкеты")
+    else:
+        hit(_anon_ip, client_ip(request), "sus_rate", "С этого адреса уже отправлено 3 анкеты за сутки")
+        hit(_anon_all, "all", "sus_rate", "Слишком много анонимных анкет")
     role = user.role.value if user else ("jury" if data.context == "jury" else "guest")
     if user and data.context == "jury":
         role = "jury"
     score = sus_score(data.answers)
-    r = SusResponse(user_id=user.id if user else None, role=role, context=data.context, answers=data.answers,
-                    score=score, comment=(data.comment or "").strip() or None, is_demo=bool(user and user.is_demo))
-    db.add(r)
+    comment = (data.comment or "").strip() or None
+    r = db.scalar(select(SusResponse).where(SusResponse.user_id == user.id, SusResponse.context == data.context)
+                  .order_by(SusResponse.created_at.desc()).limit(1)) if user else None
+    if r is not None:  # одна анкета на пользователя и контекст: повтор заменяет прежнюю
+        r.role, r.answers, r.score, r.comment, r.created_at = role, data.answers, score, comment, utcnow()
+    else:
+        r = SusResponse(user_id=user.id if user else None, role=role, context=data.context, answers=data.answers,
+                        score=score, comment=comment, is_demo=bool(user and user.is_demo))
+        db.add(r)
     db.commit()
     return {"id": str(r.id), "score": score, "adjective": adjective(score), "grade": grade(score),
             "benchmark": 68.0, "above_benchmark": score >= 68}
@@ -140,7 +162,9 @@ def summary(include_demo: bool = Query(True), db: Session = Depends(get_db)) -> 
     stmt = select(SusResponse)
     if not include_demo:
         stmt = stmt.where(SusResponse.is_demo.is_(False))
-    rows = db.scalars(stmt).all()
+    every = db.scalars(stmt).all()
+    rows = [r for r in every if r.user_id is not None]  # основные цифры — только ответы после входа
+    anon = [r for r in every if r.user_id is None]
     scores = [r.score for r in rows]
     overall = _stats(scores)
     by = lambda attr: {k: _stats([r.score for r in rows if getattr(r, attr) == k])  # noqa: E731
@@ -154,7 +178,14 @@ def summary(include_demo: bool = Query(True), db: Session = Depends(get_db)) -> 
             "benchmark": 68.0, "by_role": by("role"), "by_context": by("context"), "items_mean": items,
             "histogram": [{"from": i * 10, "to": i * 10 + 10, "n": b} for i, b in enumerate(bins)],
             "updated_at": max((r.created_at.isoformat() for r in rows), default=None),
-            "method": "SUS (Brooke, 1996); среднее по отрасли 68 (Sauro & Lewis); прилагательные — Bangor et al. (2009)"}
+            "scope": "authenticated",
+            "anonymous": {**_stats([r.score for r in anon]),
+                          "by_context": {k: _stats([r.score for r in anon if r.context == k])
+                                         for k in sorted({r.context for r in anon})},
+                          "note": "Анкеты без входа: не больше 3 в сутки с адреса, в основные цифры не входят"},
+            "all": _stats([r.score for r in every]),
+            "method": "SUS (Brooke, 1996); среднее по отрасли 68 (Sauro & Lewis); прилагательные — Bangor et al. (2009). "
+                      "Основные цифры — ответы после входа (одна анкета на пользователя и контекст)"}
 
 
 @admin_router.get("/sus", summary="Админка: все анкеты SUS (без ПДн: роль, контекст, ответы, балл, комментарий)",
