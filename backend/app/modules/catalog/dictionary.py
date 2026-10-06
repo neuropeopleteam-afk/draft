@@ -131,7 +131,7 @@ WORK_FORMAT_KEYWORDS = {
     "office": ["в офисе", "офис", "office", "on-site"],
 }
 
-REQUIRED_CUES = ["требован", "обязательн", "необходим", "must", "нужно", "нужен", "нужна", "ожидаем", "опыт работы с",
+REQUIRED_CUES = ["требован", "обязательн", "необходим", "must", "нужно", "нужен", "нужна", "нужны", "ожидаем", "опыт работы с",
                  "уверенн", "знание", "умение", "владение"]
 DESIRED_CUES = ["будет плюсом", "плюсом", "желательн", "nice to have", "приветству", "преимуществ", "хорошо, если",
                 "было бы здорово", "дополнительно"]
@@ -151,22 +151,43 @@ _COMPILED: dict[str, list[re.Pattern]] = {
 _SHORT = {k: re.compile(rf"(?<![\w\-])(?:{rx})(?![\w\-])") for k, rx in CASE_SENSITIVE_SHORT.items()}
 
 
-def find_stack(text: str) -> dict[str, int]:
-    """Стек-теги в тексте → позиция первого упоминания (для порядка и весов)."""
-    found: dict[str, int] = {}
+def find_stack_spans(text: str) -> dict[str, tuple[int, int]]:
+    """Стек-теги в тексте → (начало, конец) первого упоминания: цитата, на основании которой тег извлечён."""
+    found: dict[str, tuple[int, int]] = {}
     for tag, pats in _COMPILED.items():
         for p in pats:
             m = p.search(text)
-            if m and (tag not in found or m.start() < found[tag]):
-                found[tag] = m.start()
+            if m and (tag not in found or m.start() < found[tag][0]):
+                found[tag] = (m.start(), m.end())
     for short, pat in _SHORT.items():
         if short == "api":
             continue  # «API» само по себе слишком общее; REST API ловится полным синонимом
         m = pat.search(text)
         tag = SHORT_TAG[short]
-        if m and (tag not in found or m.start() < found[tag]):
-            found[tag] = m.start()
+        if m and (tag not in found or m.start() < found[tag][0]):
+            found[tag] = (m.start(), m.end())
     return found
+
+
+def find_stack(text: str) -> dict[str, int]:
+    """Стек-теги в тексте → позиция первого упоминания (для порядка и весов)."""
+    return {t: s for t, (s, _e) in find_stack_spans(text).items()}
+
+
+def find_key_span(text: str, words: list[str]) -> tuple[int, int] | None:
+    """Первое вхождение любого из ключевых слов (нижний регистр) → (начало, конец) в исходном тексте."""
+    low = text.lower()
+    best = None
+    for w in words:
+        i = low.find(w)
+        if i >= 0 and (best is None or i < best[0]):
+            best = (i, i + len(w.rstrip()))
+    if best:  # основа слова («удалённ») → слово целиком («удалённо»)
+        e = best[1]
+        while e < len(text) and (text[e].isalpha()) and best[1] - best[0] >= 3:
+            e += 1
+        best = (best[0], e)
+    return best
 
 
 def find_keys(text: str, table: dict[str, list[str]]) -> dict[str, int]:

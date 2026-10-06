@@ -11,11 +11,21 @@ export function Invitations() {
   const [open, setOpen] = useState<any>(null);
   const [reason, setReason] = useState("");
   const [declining, setDeclining] = useState(false);
+  const [complaining, setComplaining] = useState(false);
+  const [cReason, setCReason] = useState<"salary" | "role" | "spam" | "other">("salary");
+  const [cComment, setCComment] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const trust = useInvitationsTrust();
 
+  async function complain() {
+    setErr(null);
+    try {
+      setOpen(await api<any>(`/candidate/invitations/${open.id}/complaint`, { body: { reason: cReason, comment: cComment || null } }));
+      setComplaining(false); void reload();
+    } catch (e) { setErr(errText(e)); }
+  }
   async function view(i: any) {
-    setErr(null); setDeclining(false); setReason("");
+    setErr(null); setDeclining(false); setComplaining(false); setReason(""); setCComment(""); setCReason("salary");
     try { setOpen(await api<any>(`/candidate/invitations/${i.id}`)); void reload(); } catch (e) { setErr(errText(e)); }
   }
   async function act(kind: "accept" | "decline") {
@@ -73,11 +83,28 @@ export function Invitations() {
                   <div className="flex gap-3"><button className="btn-primary" onClick={() => act("decline")}>Отклонить</button><button className="btn-ghost" onClick={() => setDeclining(false)}>Назад</button></div>
                 </div>
               ) : (
-                <div className="flex flex-wrap gap-3">
+                !complaining && <div className="flex flex-wrap gap-3">
                   <button className="btn-primary" onClick={() => act("accept")}>Принять и открыть контакты</button>
                   <button className="btn-ghost" onClick={() => setDeclining(true)}>Отклонить</button>
                 </div>
               )
+            )}
+            {open.complaint ? (
+              <Alert kind="info">Жалоба отправлена: {open.complaint.reason_title.toLowerCase()}. Она учтена в индексе доверия компании, который видят другие кандидаты.</Alert>
+            ) : complaining ? (
+              <div className="space-y-3 rounded-xl border border-brand-night/10 p-4">
+                <p className="font-semibold text-brand-night">Пожаловаться на приглашение</p>
+                <Seg label="Причина жалобы" value={cReason} onChange={setCReason} options={[
+                  { id: "salary", title: "Нереальная вилка" }, { id: "role", title: "Не та роль" },
+                  { id: "spam", title: "Спам" }, { id: "other", title: "Другое" }]} />
+                <Field label="Комментарий (необязательно, работодатель его не увидит)" htmlFor="ccomment">
+                  <textarea id="ccomment" className="input min-h-[70px]" value={cComment} onChange={(e) => setCComment(e.target.value)} placeholder="Например, на собеседовании назвали сумму вдвое ниже" />
+                </Field>
+                <p className="text-xs text-brand-ink/60">Жалоба снижает индекс доверия работодателя{["sent", "viewed"].includes(open.status) ? "; приглашение будет отклонено" : ""}. Одна жалоба на приглашение.</p>
+                <div className="flex gap-3"><button className="btn-primary" onClick={complain}>Отправить жалобу</button><button className="btn-ghost" onClick={() => setComplaining(false)}>Назад</button></div>
+              </div>
+            ) : !declining && (
+              <button type="button" className="text-sm font-semibold text-brand-plum hover:underline" onClick={() => setComplaining(true)}>Пожаловаться: нереальная вилка, не та роль, спам</button>
             )}
             {open.status === "accepted" && <Alert kind="ok">Вы приняли приглашение. Работодатель видит ваши контакты и свяжется с вами.</Alert>}
             {open.status === "accepted" && <SusPrompt context="e2e" />}
