@@ -16,7 +16,7 @@ export const fpct = (v: number | null | undefined, d = 0) => (v === null || v ==
 /** Коэффициент → «×1,57». */
 export const fx = (v: number | null | undefined) => (v === null || v === undefined ? "—" : `×${ru(v, 2)}`);
 /** Тысячи рублей → «215 тыс. ₽». */
-export const ftr = (v: number | null | undefined) => (v === null || v === undefined ? "—" : `${ru(Math.round(v / 1000))} тыс. ₽`);
+export const ftr = (v: number | null | undefined) => (v === null || v === undefined ? "—" : `${ru(Math.round(v / 1000))}\u00A0тыс.\u00A0₽`);
 /** Число людей по правилу K: null — «< 5». */
 export const fk = (v: number | null | undefined) => (v === null ? "< 5" : v === undefined ? "—" : ru(v));
 

@@ -16,7 +16,7 @@ const DIRS = Object.entries(DIRECTIONS).map(([id, title]) => ({ id, title: id ==
 const GRS = Object.entries(GRADES).map(([id, title]) => ({ id, title }));
 const q = (days: string) => (days === "all" ? "" : `?days=${days}`);
 /** Отклонение в процентах со знаком: «+4,2 %», «−10 %». */
-const sgn = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { maximumFractionDigits: 1 })} %`;
+const sgn = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}\u00A0%`;
 
 /** Обёртка разделов: один запрос /fsp-cabinet/report на период, общий для всех экранов кабинета. */
 export function FspReportLayout() {

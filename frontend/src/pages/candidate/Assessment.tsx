@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, num, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { FeedbackSummary } from "./Feedback";
@@ -458,7 +458,7 @@ function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; o
     <div className="max-w-2xl">
       <PageTitle title={r.confirmed ? "Грейд подтверждён" : "Грейд не подтверждён"} subtitle={r.message} />
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-xl font-bold text-brand-night">θ = {r.theta >= 0 ? "+" : ""}{r.theta.toFixed(2)}</p><p className="text-xs text-brand-ink/55">погрешность ± {r.se.toFixed(2)}</p></div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-xl font-bold text-brand-night">θ = {signed(r.theta)}</p><p className="text-xs text-brand-ink/55">погрешность ± {num(r.se)}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>

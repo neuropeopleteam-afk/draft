@@ -4,7 +4,7 @@ import { Alert, DIRECTIONS, GRADES, Loading, useApi } from "./ui";
 /** Блок /validation: бенчмарк подбора со скрытой истиной (backend: app/modules/validation/matching_bench.py, make bench). */
 
 const n2 = (v?: number | null, d = 2) => (v == null ? "—" : (Math.abs(v) < 0.5 * 10 ** -d ? 0 : v).toFixed(d).replace(".", ",").replace("-", "−"));
-const pct = (v?: number | null) => (v == null ? "—" : `${Math.round(v * 100)} %`);
+const pct = (v?: number | null) => (v == null ? "—" : `${Math.round(v * 100)}\u00A0%`);
 const sgn = (v?: number | null) => (v == null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(2).replace(".", ",")}`);
 const range = (x?: { lo: number; hi: number }) => (x ? `${n2(x.lo)}–${n2(x.hi)}` : "");
 const intRu = (v?: number | null) => (v == null ? "—" : v.toLocaleString("ru-RU"));

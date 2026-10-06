@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, range, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, range, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 
 const REASON: Record<string, string> = { initial: "Первое присвоение", retest_up: "Пересдача на грейд выше", retest_down: "Пересдача на грейд ниже", sandbox: "Демо-режим жюри", admin: "Администратор" };
@@ -86,7 +86,7 @@ export default function Category() {
                   <div>
                     <p className="font-semibold">{DIRECTIONS[t.direction]} · {GRADES[t.claimed_grade]}{t.is_sandbox ? " · демо" : ""}</p>
                     <p className="text-brand-ink/60">{SESSION[t.status] ?? t.status} · {dtt(t.finished_at ?? t.started_at)}</p>
-                    {t.theta != null && <p className="text-brand-ink/60">θ = {t.theta.toFixed(2)} ± {t.se?.toFixed(2)} · {t.confirmed ? "подтверждён" : "не подтверждён"}</p>}
+                    {t.theta != null && <p className="text-brand-ink/60">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : "не подтверждён"}</p>}
                   </div>
                   {t.status === "in_progress" && <Link className="text-sm font-semibold text-brand" to={`/candidate/assessment/test/${t.id}`}>Продолжить</Link>}
                   {t.status === "finished" && <Link className="shrink-0 text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>}
