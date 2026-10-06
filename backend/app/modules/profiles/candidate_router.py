@@ -228,14 +228,23 @@ class JuryIn(BaseModel):
 
 
 @router.put("/jury-mode", summary="Демо-режим жюри: снять правило «смена грейда не чаще раза в 90 дней»",
-            responses={**AUTH, 409: err("Демо-режим отключён на этом сервере")})
+            description="Только для демо-учёток (вход жюри в один клик, users.is_demo): у живого кандидата правило "
+                        "90 дней действует всегда. Число новых тестов в демо-режиме ограничено "
+                        "(JURY_MAX_TEST_STARTS_PER_DAY за 24 часа), чтобы перезапусками нельзя было выкачать банк.",
+            responses={**AUTH, 403: err("jury_mode_demo_only — не демо-учётка"),
+                       409: err("Демо-режим отключён на этом сервере")})
 def set_jury_mode(data: JuryIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     if not get_settings().jury_mode_available:
         raise api_error(409, "jury_mode_unavailable", "Демо-режим жюри отключён на этом сервере")
+    if not user.is_demo:
+        raise api_error(403, "jury_mode_demo_only",
+                        "Демо-режим жюри доступен только демо-учёткам: для живых кандидатов правило 90 дней действует всегда")
     p = db.get(CandidateProfile, user.id)
     p.jury_mode = data.enabled
     db.commit()
-    return {"jury_mode": p.jury_mode}
+    from app.modules.assessment.service import sandbox_quota
+
+    return {"jury_mode": p.jury_mode, "sandbox_starts": sandbox_quota(db, user.email)}
 
 
 @router.get("/fsp", summary="Паспорт ФСП: статус связи и достижения (T2)", responses=AUTH)
@@ -379,8 +388,17 @@ def my_profile_pdf(user: User = Depends(candidate), db: Session = Depends(get_db
     refresh_rating(db, user.id)
     c = candidate_card_for(db, user.id, include_hidden=True)
     p = db.get(CandidateProfile, user.id)
+    from app.modules.assessment.feedback import build as build_feedback
+
+    try:
+        growth = build_feedback(db, user.id)
+    except Exception:  # noqa: BLE001 — блок обратной связи необязателен: PDF важнее
+        import logging
+
+        logging.getLogger("pdf").exception("Обратная связь для PDF не собралась")
+        growth = None
     pdf = render_profile(c, contacts={"full_name": p.full_name, "email": user.email, "phone": p.phone,
-                                      "telegram": p.telegram})
+                                      "telegram": p.telegram}, growth=growth)
     return Response(pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="profile-{p.public_ref}.pdf"'})
 
