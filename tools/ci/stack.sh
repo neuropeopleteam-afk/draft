@@ -31,6 +31,9 @@ case "${1:-}" in
   up)
     make env
     grep -q '^EGRUL_DISABLED=' .env || echo 'EGRUL_DISABLED=true' >> .env
+    # демо-ATS (заглушки Talantix, «Поток», Хантфлоу, вебхук) api вызывает сам у себя: изнутри контейнера адрес
+    # сайта localhost:8140 недоступен, поэтому — прямой адрес api в контейнере
+    grep -q '^ATS_STUB_BASE_URL=' .env || echo 'ATS_STUB_BASE_URL=http://127.0.0.1:8000' >> .env
     t0=$(date +%s)
     dc build
     t1=$(date +%s)
@@ -41,7 +44,10 @@ case "${1:-}" in
     docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep '^spectrek_fsp' || true
     ;;
   seed)
-    dc exec -T api python -m app.modules.demo.seed
+    # --reset: при старте api сразу создаёт учётки жюри (общее демо и запасную песочницу), а они тоже демо —
+    # без --reset сид решает, что демо-данные уже есть, и 150 кандидатов не создаёт. Песочницы жюри
+    # пересоздадутся при первом входе — уже с подборками по полным демо-данным.
+    dc exec -T api python -m app.modules.demo.seed --reset
     dc exec -T api python -m app.integrations.vacancies.demo
     ;;
   smoke)
