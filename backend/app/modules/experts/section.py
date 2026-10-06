@@ -23,6 +23,14 @@ MIN_READY = {"A_needs": 10, "coders": 2}
 def load(db: Session, pack: str = P.PACK, include_demo: bool = False) -> tuple[dict, list[dict]]:
     items = {i.key: {"kind": i.kind, "grp": i.grp, "payload": i.payload, "hidden": i.hidden, "id": i.id}
              for i in db.scalars(select(ExpertItem).where(ExpertItem.pack == pack).order_by(ExpertItem.position))}
+    try:  # пороги Ангоффа — по текущим параметрам заданий (после калибровки на людях пересчитаются сами)
+        params = P._family_params()
+        for it in items.values():
+            fid = it["payload"].get("family_id")
+            if it["kind"] == "C" and fid in params:
+                it["hidden"] = {**it["hidden"], "a": params[fid]["a"], "b": params[fid]["b"]}
+    except Exception:  # noqa: BLE001 — при недоступном банке остаются параметры из пакета
+        pass
     by_id = {v["id"]: k for k, v in items.items()}
     q = (select(ExpertLabel, ExpertPanelist.code).join(ExpertPanelist, ExpertPanelist.id == ExpertLabel.panelist_id)
          .where(ExpertPanelist.pack == pack))
@@ -69,7 +77,7 @@ def _status(panel: list[dict], res: dict) -> dict:
             "title": "Разметка завершена" if ready else "Разметка идёт",
             "text": (f"Экспертов приступило: {len(started)} из {len(panel)}. Потребностей размечено полностью: "
                      f"{m.get('needs_complete', 0)} из {m.get('needs_total', len(P.A_NEEDS))}. "
-                     + ("" if ready else "Цифры ниже предварительные — обновляются по мере разметки."))}
+                     + ("" if ready else "Цифры ниже предварительные — обновляются по мере разметки.")).strip()}
 
 
 def synthetic(items: dict) -> dict | None:
