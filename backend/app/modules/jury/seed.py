@@ -8,11 +8,17 @@
   один развёрнутый ответ оставлен «на проверке» — для экрана эксперта; есть входящее приглашение с вилкой;
 * employer — HR компании «Демо жюри: Северный платёж»: профиль, три потребности текстом (третья — с
   дискриминационными фразами для показа фильтра ст. 64 ТК РФ), подборки с версиями;
-* expert — эксперт (роль admin): очередь развёрнутых ответов, оценка по рубрике.
+* expert — эксперт (роль admin): очередь развёрнутых ответов, оценка по рубрике;
+* fsp — аналитик ФСП (роль fsp_analyst): Кабинет ФСП — обезличенная аналитика платформы (общая, без копий жюри).
+
+У работодателя каждой копии — два своих кубка (app.cup.demo.seed_jury_cups): завершённый, где Мария этой копии на
+2-м месте (запись в паспорте ФСП; приглашение — только победителю, Марию работодатель приглашает в сценарии сам),
+и кубок с двумя решениями на оценке. Общее демо кубков
+и Кабинета ФСП (кубки демо-компаний, история приглашений) — одно на платформу: ensure_ideas.
 
 Песочницы (scope.py): у каждого эксперта жюри свой набор этих персон (почты ``candidate+<sid>@…``), чтобы жюри
-не мешали друг другу. Сброс (POST /api/jury/reset) удаляет только учётки и компанию СВОЕЙ песочницы (каскадом —
-их сессии, подборки, зонды, приглашения) и создаёт заново. Другие песочницы, остальные демо-данные и учётки живых
+не мешали друг другу. Сброс (POST /api/jury/reset) удаляет только учётки, компанию и кубки СВОЕЙ песочницы
+(каскадом — их сессии, подборки, зонды, приглашения) и создаёт заново. Другие песочницы, остальные демо-данные и учётки живых
 пользователей не затрагиваются.
 """
 from __future__ import annotations
@@ -56,6 +62,8 @@ PERSONAS = [
                     "сравнение кандидатов, фильтр ст. 64 ТК РФ."},
     {"id": "expert", "role": "expert", "title": "Эксперт",
      "description": "Проверка развёрнутых ответов по рубрике: очередь «на проверке» и выборочная проверка LLM."},
+    {"id": "fsp", "role": "fsp_analyst", "title": "Федерация (ФСП)",
+     "description": "Кабинет ФСП: спрос работодателей, эффект соревнований ФСП, зарплаты из офферов, кубки и воронки."},
 ]
 NEEDS = [
     "Backend-разработчик middle в команду платежей: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. "
@@ -215,7 +223,13 @@ def delete_jury(db: Session, sid: str = "") -> int:
     """Удаляет учётки и компанию одной песочницы (sid "" — общее демо). Чужие песочницы не трогает."""
     from app.integrations.ats.models import AtsSettings, AtsStubRecord
 
+    from app.cup.demo import delete_cups
+    from app.cup.models import CupEntry
+
+    delete_cups(db, jury_scope=sid or scope.SHARED)  # кубки песочницы — с приглашениями по итогам и фактами T1
     ids = db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all()
+    if ids:  # участия её кандидатов в общих кубках платформы
+        db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
     own = Company.created_by.in_(ids) if ids else Company.id.is_(None)
     # компания без автора (автор удалён раньше) — только для общего демо, как было до песочниц
     cond = and_(Company.name == COMPANY, Company.is_demo.is_(True), or_(own, and_(Company.created_by.is_(None), not sid)))
@@ -281,13 +295,46 @@ def _create_jury(db: Session, sid: str) -> dict:
                       offer_description="Команда платежей: FastAPI, PostgreSQL, Redis. Удалённо, гибкий график.",
                       salary_from=240_000, salary_to=270_000, contact_method="Почта HR и звонок 20 минут",
                       need_id=needs[0].id, probe_id=None)
+    cups = _jury_cups(db, sid, eu, c, p1)
+    _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
+    # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
     ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
     db.commit()
     return {"candidate": {"ref": p1.public_ref, "confirmed": r1.get("confirmed"), "theta": r1.get("theta")},
             "candidate_nofsp": {"ref": p2.public_ref, "confirmed": r2.get("confirmed"), "theta": r2.get("theta"),
                                 "pending": (r2.get("details") or {}).get("pending_review")},
-            "employer": {"company": c.name, "needs": len(needs)}, "expert": {"email": ex.email},
+            "employer": {"company": c.name, "needs": len(needs), "cups": cups}, "expert": {"email": ex.email},
             "scenario": sid or None, "seconds": round(time.time() - t0, 1)}
+
+
+def _jury_cups(db: Session, sid: str, eu: User, c: Company, maria: CandidateProfile) -> list[str]:
+    """Кубки работодателя песочницы (app.cup.demo.seed_jury_cups). Сбой кубков не должен ломать сид жюри: кубки
+    досоздадутся при открытии раздела «Кубки» работодателем (ensure_jury_cups)."""
+    from app.cup.demo import seed_jury_cups
+
+    try:
+        return seed_jury_cups(db, sid or scope.SHARED, eu, c, maria)
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("jury: demo cups failed")
+        return []
+
+
+def ensure_ideas(db: Session) -> None:
+    """Общее демо кубков и Кабинета ФСП (одно на платформу): кубки демо-компаний и история приглашений для
+    аналитики. Дёшево, если всё на месте; пересев — если демо нет или идущий кубок подходит к концу."""
+    from app.cup.demo import is_stale
+    from app.fsp_cabinet.demo import has_demo_invitations, prepare
+
+    try:
+        if not is_stale(db) and has_demo_invitations(db):
+            return
+        with _lock(db):
+            if is_stale(db) or not has_demo_invitations(db):  # другой воркер мог уже пересеять, пока мы ждали
+                prepare(db)
+    except Exception:  # noqa: BLE001 — демо кубков не должно ломать вход жюри
+        db.rollback()
+        log.exception("jury: ideas demo failed")
 
 
 @contextmanager

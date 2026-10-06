@@ -5,7 +5,7 @@ import { guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/ju
 import { errText } from "./ui";
 
 const PERSONA_NAME: Record<string, string> = {
-  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", employer: "демо-работодатель", expert: "демо-эксперт",
+  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
 };
 const whoAmI = (email: string) => {
   const p = personaOf(email);
@@ -54,7 +54,7 @@ export function JuryGuide() {
     navigate(t.path);
   }
   async function reset() {
-    if (!confirm("Сбросить своё демо в исходное состояние? Приглашения, зонды и тесты ваших демо-учёток будут пересозданы. У других экспертов жюри ничего не изменится.")) return;
+    if (!confirm("Сбросить своё демо в исходное состояние? Приглашения, зонды, тесты и кубки ваших демо-учёток будут пересозданы. У других экспертов жюри ничего не изменится.")) return;
     setBusy(true); setMsg(null);
     try { const r = await juryReset(signIn); setMsg(`Демо пересоздано за ${String(r.seconds).replace(".", ",")} с, вход сохранён.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(false); }
