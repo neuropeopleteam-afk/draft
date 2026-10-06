@@ -55,7 +55,7 @@ function TopicRow({ t }: { t: Topic }) {
   return (
     <li className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-semibold text-brand-night">{t.title}</p>
+        <p className="font-semibold text-brand-night">{t.title === "other" ? "Прочие темы" : t.title}</p>
         <div className="flex flex-wrap items-center gap-2 text-xs text-brand-ink/65">
           <span>{tasks(t.n)}{t.level ? ` · уровень заданий ${GRADE_RU[t.level]}` : ""}</span>
           <Chip s={STATUS[t.status]?.[1] ?? STATUS.pending[1]}>{STATUS[t.status]?.[0] ?? t.status}</Chip>
