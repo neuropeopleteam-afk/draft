@@ -4,6 +4,14 @@ import { useAuth } from "../lib/auth";
 import { guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/jury";
 import { errText } from "./ui";
 
+const PERSONA_NAME: Record<string, string> = {
+  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", employer: "демо-работодатель", expert: "демо-эксперт",
+};
+const whoAmI = (email: string) => {
+  const p = personaOf(email);
+  return p ? `${PERSONA_NAME[p]} · ${email.includes("+") ? "своя копия демо" : "общее демо"}` : email;
+};
+
 /** Пошаговый проводник для экспертов жюри по сквозному сценарию (п. 3.3 ТЗ). Можно скрыть. */
 export function JuryGuide() {
   const { me, signIn } = useAuth();
@@ -48,7 +56,7 @@ export function JuryGuide() {
   async function reset() {
     if (!confirm("Сбросить своё демо в исходное состояние? Приглашения, зонды и тесты ваших демо-учёток будут пересозданы. У других экспертов жюри ничего не изменится.")) return;
     setBusy(true); setMsg(null);
-    try { const r = await juryReset(me?.email, signIn); setMsg(`Демо пересоздано за ${r.seconds} с, вход сохранён.`); }
+    try { const r = await juryReset(signIn); setMsg(`Демо пересоздано за ${String(r.seconds).replace(".", ",")} с, вход сохранён.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(false); }
   }
 
@@ -64,14 +72,14 @@ export function JuryGuide() {
       </div>
       <p className="mt-3 text-base font-bold">{s.title}</p>
       <p className="mt-1.5 text-sm leading-relaxed text-white/80">{s.text}</p>
-      {me && <p className="mt-2 text-xs text-white/55">Вы вошли как {me.email}</p>}
+      {me && <p className="mt-2 text-xs text-white/55">Вы вошли как {whoAmI(me.email)}</p>}
       {msg && <p className="mt-2 rounded-lg bg-white/10 px-3 py-2 text-xs text-brand-blush" role="status">{msg}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20 disabled:opacity-40" disabled={step === 0 || busy} onClick={() => go(step - 1)}>Назад</button>
         {!here || needLogin
           ? <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step)}>{busy ? "Входим…" : needLogin || !s.cta.startsWith("Войти") ? s.cta : "Открыть экран"}</button>
           : step < STEPS.length - 1 && <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step + 1)}>{busy ? "Входим…" : `Дальше: ${STEPS[step + 1].title}`}</button>}
-        <button className="ml-auto text-xs font-semibold text-white/60 underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={reset}>Сбросить демо</button>
+        <button className="ml-auto text-xs font-semibold text-white/60 underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={reset}>Сбросить своё демо</button>
       </div>
     </aside>
   );

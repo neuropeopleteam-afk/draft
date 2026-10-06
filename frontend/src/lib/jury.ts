@@ -1,4 +1,4 @@
-import { api, type TokenOut } from "./api";
+import { api, ApiError, type TokenOut } from "./api";
 
 export type Persona = "candidate" | "candidate_nofsp" | "employer" | "expert";
 export const JURY_DOMAIN = "@jury.example.com";
@@ -49,10 +49,16 @@ export async function juryLogin(persona: Persona, signIn: (t: string) => Promise
   return r.landing;
 }
 
-/** Сброс своей песочницы. Нужен токен демо-персоны: если вход не выполнен — входим в свою песочницу. */
-export async function juryReset(email: string | null | undefined, signIn: (t: string) => Promise<unknown>): Promise<{ seconds: number }> {
-  if (!isJury(email)) await signIn((await juryToken("candidate")).access_token);
-  const r = await api<JuryTokenOut & { seconds: number }>("/jury/reset", { method: "POST" });
+/** Сброс своей песочницы. Нужен токен демо-персоны: если вход не выполнен (или вход не жюри) — входим в свою песочницу. */
+export async function juryReset(signIn: (t: string) => Promise<unknown>): Promise<{ seconds: number }> {
+  const reset = () => api<JuryTokenOut & { seconds: number }>("/jury/reset", { method: "POST" });
+  let r: JuryTokenOut & { seconds: number };
+  try { r = await reset(); }
+  catch (e) {
+    if (!(e instanceof ApiError) || (e.status !== 401 && e.status !== 403)) throw e;
+    await signIn((await juryToken("candidate")).access_token);
+    r = await reset();
+  }
   scenario.set(r.scenario);
   await signIn(r.access_token);  // учётки пересозданы — старый токен недействителен
   return r;
