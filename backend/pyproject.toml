@@ -13,3 +13,14 @@ filterwarnings = ["ignore::DeprecationWarning"]
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+
+# Покрытие (pytest-cov): `python -m pytest --cov=app`; в CI — тот же запуск с отчётами xml/html (docs/testing.md).
+# Порог: сборка падает, если покрытие строк пакета app ниже fail_under. Сейчас около 84 %.
+[tool.coverage.run]
+source = ["app"]
+
+[tool.coverage.report]
+fail_under = 80
+precision = 1
+skip_empty = true
+exclude_also = ["if __name__ == .__main__.:"]
