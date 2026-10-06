@@ -179,9 +179,9 @@ def test_jury_sandboxes_get_own_cups_and_shared_analytics(client, monkeypatch):
     with SessionLocal() as db:
         box_a, box_b = _box(db, sa), _box(db, sb)
         assert not _orphans(db)
-    for box in (box_a, box_b):  # Мария — 2-е место в «Платёжном шлюзе», запись в паспорте, приглашение ждёт ответа
-        assert set(box["cups"]) == {"Платёжный шлюз", "Вебхуки без дублей"}
-        assert box["maria"] == [(2, "written")] and box["maria_inv"] == ["sent"]
+    for box in (box_a, box_b):  # Мария — 2-е место в «Платёжном шлюзе», запись в паспорте, приглашения от кубка нет:
+        assert set(box["cups"]) == {"Платёжный шлюз", "Вебхуки без дублей"}  # её приглашает работодатель в сценарии
+        assert box["maria"] == [(2, "written")] and box["maria_inv"] == []
     assert not set(box_a["cups"].values()) & set(box_b["cups"].values())
     # кандидат видит кубки своей песочницы и кубки платформы, но не чужие
     items = client.get("/api/candidate/cups", headers=H(a["access_token"])).json()["items"]
@@ -192,7 +192,7 @@ def test_jury_sandboxes_get_own_cups_and_shared_analytics(client, monkeypatch):
                       headers=H(a["access_token"])).status_code == 404
     pas = client.get("/api/candidate/cups/passport", headers=H(a["access_token"])).json()
     assert [(p["title"], p["place"], p["passport_status"], p["invited"]) for p in pas] == \
-        [("Платёжный шлюз", 2, "written", True)]
+        [("Платёжный шлюз", 2, "written", False)]
     # ФСП песочницы A: та же аналитика, что без песочниц
     f = _login(client, "fsp", sa)
     assert f["landing"] == "/fsp" and f["user"]["role"] == "fsp_analyst" and f["scenario"] == sa
@@ -202,9 +202,13 @@ def test_jury_sandboxes_get_own_cups_and_shared_analytics(client, monkeypatch):
     te = _login(client, "employer", sa)["access_token"]
     cups = {c["title"]: c for c in client.get("/api/employer/cups", headers=H(te)).json()}
     assert set(cups) == {"Платёжный шлюз", "Вебхуки без дублей"}
-    assert cups["Платёжный шлюз"]["phase"] == "finished" and cups["Платёжный шлюз"]["summary"]["invited"] == 3
+    assert cups["Платёжный шлюз"]["phase"] == "finished" and cups["Платёжный шлюз"]["summary"]["invited"] == 1
     rev = cups["Вебхуки без дублей"]
     assert rev["phase"] == "judging" and rev["to_review"] == 2
+    # основной сценарий жюри не сломан: кубки не заняли приглашение Марии от этой компании (лимит 30 дней)
+    r = client.post("/api/employer/invitations", json={**INVITE, "candidate_ref": my_ref(client, a["access_token"])},
+                    headers=H(te))
+    assert r.status_code == 201, r.text
     cup = client.get(f"/api/employer/cups/{rev['id']}", headers=H(te)).json()
     for sol in [x for x in cup["solutions"] if x["status"] == "submitted"]:
         r = client.post(f"/api/employer/cups/{rev['id']}/entries/{sol['entry_id']}/score",
@@ -226,7 +230,7 @@ def test_jury_sandboxes_get_own_cups_and_shared_analytics(client, monkeypatch):
     with SessionLocal() as db:
         new_a, again_b = _box(db, sa), _box(db, sb)
         assert again_b == box_b and not set(new_a["cups"].values()) & set(box_a["cups"].values())
-        assert new_a["maria"] == [(2, "written")] and new_a["maria_inv"] == ["sent"] and not _orphans(db)
+        assert new_a["maria"] == [(2, "written")] and new_a["maria_inv"] == [] and not _orphans(db)
         assert _numbers(analytics.report(db)) == base
     te = r.json()["access_token"]
     assert {c["title"]: c["to_review"] for c in client.get("/api/employer/cups", headers=H(te)).json()} == \
