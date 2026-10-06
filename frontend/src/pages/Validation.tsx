@@ -168,6 +168,24 @@ function RedButton({ attacks }: { attacks: any[] }) {
                     {x.violated === false ? "Свойство выполнено" : x.violated ? "Свойство нарушено" : "Проверка не проведена"}
                   </p>
                   <p className="mt-2 leading-relaxed"><b>Факт:</b> {x.fact}</p>
+                  {x.details?.top5_before && x.details?.top5_after && (
+                    <table className="mt-3 w-full text-xs">
+                      <caption className="mb-1 text-left font-semibold text-brand-ink/70">Первые пять выдачи</caption>
+                      <thead><tr className="text-left text-brand-ink/55"><th className="font-medium">#</th><th className="font-medium">До</th><th className="font-medium">После</th></tr></thead>
+                      <tbody>
+                        {x.details.top5_before.map((b: [string, number], i: number) => {
+                          const a = x.details.top5_after[i] ?? ["—", 0];
+                          return (
+                            <tr key={i} className="border-t border-brand-night/10">
+                              <td className="py-1 pr-2 text-brand-ink/55">{i + 1}</td>
+                              <td className="py-1 pr-2 font-mono">{b[0]} · {(b[1] * 100).toFixed(1).replace(".", ",")}</td>
+                              <td className={`py-1 font-mono ${a[0] !== b[0] ? "text-brand" : ""}`}>{a[0]} · {(a[1] * 100).toFixed(1).replace(".", ",")}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  )}
                   <p className="mt-1 text-xs text-brand-ink/55">{x.seconds} с · ничего не записано</p>
                 </div>
               )}
