@@ -25,7 +25,7 @@ export const mins = (s?: number | null) => (s ? `${Math.floor(s / 60)} мин ${
 export const thousand = (v?: number | null) => (v ? `${Math.round(v / 1000).toLocaleString("ru-RU")} тыс.` : "—");
 
 export function Hidden({ children }: { children?: ReactNode }) {
-  return <span title="Скрыто: группа меньше 5 человек" className="cursor-help text-brand-ink/40">{children ?? "< 5"}</span>;
+  return <span title="Скрыто: группа меньше 5 человек" className="cursor-help text-brand-ink/65">{children ?? "< 5"}</span>;
 }
 
 export function Bar({ value, max, tone = "brand" }: { value: number | null | undefined; max: number; tone?: "brand" | "night" | "lavender" }) {

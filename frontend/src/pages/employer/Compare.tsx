@@ -40,14 +40,14 @@ function WhyBlock({ why }: { why: Why[] }) {
           </li>
         ))}
       </ul>
-      <p className="text-xs text-brand-ink/55">Баллы из 100 — вклад фактора в разницу скоров. Учитываются только подтверждённые факты: тест и навыки (T1), ФСП из реестра (T2), оценённые зонды (T1).</p>
+      <p className="text-xs text-brand-ink/65">Баллы из 100 — вклад фактора в разницу скоров. Учитываются только подтверждённые факты: тест и навыки (T1), ФСП из реестра (T2), оценённые зонды (T1).</p>
     </section>
   );
 }
 
 const STATUS_TEXT: Record<string, string> = {
-  confirmed: "text-brand-ink", partial: "text-brand-ink/80", declared: "text-brand-ink/60", missing: "text-brand-ink/45",
-  mismatch: "text-brand-plum", neutral: "text-brand-ink/60", info: "text-brand-ink/80",
+  confirmed: "text-brand-ink", partial: "text-brand-ink/80", declared: "text-brand-ink/65", missing: "text-brand-ink/65",
+  mismatch: "text-brand-plum", neutral: "text-brand-ink/65", info: "text-brand-ink/80",
 };
 
 /** Сравнение 2–3 кандидатов рядом по требованиям потребности; отсюда — сразу зонд или приглашение. */
@@ -92,17 +92,17 @@ export function Compare() {
       <div className="overflow-x-auto rounded-2xl border border-brand-night/10">
         <div role="table" aria-label="Сравнение кандидатов" style={{ display: "grid", gridTemplateColumns: cols, minWidth: `${14 + cs.length * 15}rem` }}>
           <div role="row" className="contents">
-            <div role="columnheader" className="sticky left-0 z-10 border-b border-brand-night/10 bg-white p-4 text-xs text-brand-ink/60">
+            <div role="columnheader" className="sticky left-0 z-10 border-b border-brand-night/10 bg-white p-4 text-xs text-brand-ink/65">
               Требование потребности и цитата из текста
             </div>
             {cs.map((c) => (
               <div key={c.ref} role="columnheader" className="space-y-2 border-b border-l border-brand-night/10 bg-[#F7F6FB] p-4">
                 <div className="flex items-baseline justify-between gap-2">
                   <p className="font-mono text-sm font-bold text-brand-night">{c.ref}</p>
-                  {c.rank_in_selection && <span className="text-xs text-brand-ink/55">место {c.rank_in_selection} из {data.selection_total}</span>}
+                  {c.rank_in_selection && <span className="text-xs text-brand-ink/65">место {c.rank_in_selection} из {data.selection_total}</span>}
                 </div>
                 <p className="text-sm text-brand-ink/75">{c.category?.title ?? "без категории"}</p>
-                <p className="text-2xl font-bold text-brand">{Math.round(c.score * 100)}<span className="text-sm font-semibold text-brand-ink/50"> из 100</span></p>
+                <p className="text-2xl font-bold text-brand">{Math.round(c.score * 100)}<span className="text-sm font-semibold text-brand-ink/65"> из 100</span></p>
                 <div className="flex flex-wrap gap-1.5">
                   <button className="btn-ghost !px-3 !py-1.5 text-xs" disabled={c.probe_active} title={c.probe_active ? "Зонд уже отправлен и ждёт ответа" : undefined} onClick={() => setProbe([c.ref])}>
                     {c.probe_active ? "Зонд отправлен" : "Зонд"}
@@ -110,7 +110,7 @@ export function Compare() {
                   <button className="btn-primary !px-3 !py-1.5 text-xs" disabled={!c.can_invite} onClick={() => setInvite(c)}>Пригласить</button>
                   <Link className="btn-ghost !px-3 !py-1.5 text-xs" to={`/employer/candidates/${c.ref}?need=${id}`}>Карточка</Link>
                 </div>
-                {!c.can_invite && <p className="text-xs text-brand-ink/55">Повторное приглашение — с {c.invite_available_at ? dt(c.invite_available_at) : "позже"}</p>}
+                {!c.can_invite && <p className="text-xs text-brand-ink/65">Повторное приглашение — с {c.invite_available_at ? dt(c.invite_available_at) : "позже"}</p>}
                 {c.last_invitation_status && <div className="text-xs"><Status s={c.last_invitation_status} /></div>}
               </div>
             ))}
@@ -118,22 +118,22 @@ export function Compare() {
           {groups.map((g) => (
             <div key={g.group} role="rowgroup" className="contents">
               <div role="row" className="contents">
-                <div className="sticky left-0 z-10 border-b border-brand-night/10 bg-white px-4 pb-1 pt-4 text-[11px] font-bold uppercase tracking-[0.12em] text-brand-lavender">{g.group}</div>
+                <div className="sticky left-0 z-10 border-b border-brand-night/10 bg-white px-4 pb-1 pt-4 text-xs font-bold uppercase tracking-[0.12em] text-brand-lavender">{g.group}</div>
                 {cs.map((c) => <div key={c.ref} className="border-b border-l border-brand-night/10 bg-white" />)}
               </div>
               {g.rows.map((r) => (
                 <div key={r.key} role="row" className="contents">
                   <div role="rowheader" className="sticky left-0 z-10 border-b border-brand-night/10 bg-white p-4 text-sm" title={r.hint}>
-                    <p className="font-semibold text-brand-night">{r.title}{r.weight != null && <span className="font-normal text-brand-ink/50"> · вес {r.weight.toLocaleString("ru-RU")}</span>}</p>
+                    <p className="font-semibold text-brand-night">{r.title}{r.weight != null && <span className="font-normal text-brand-ink/65"> · вес {r.weight.toLocaleString("ru-RU")}</span>}</p>
                     {r.requirement && <p className="text-xs text-brand-ink/70">нужно: {r.requirement}</p>}
                     {r.quote && <p className="mt-1 text-xs"><span className="rounded bg-brand-blush/60 px-1 text-brand-night">«{r.quote}»</span></p>}
-                    {r.hint && <p className="mt-1 text-[11px] leading-snug text-brand-ink/45">{r.hint}</p>}
+                    {r.hint && <p className="mt-1 text-xs leading-snug text-brand-ink/65">{r.hint}</p>}
                   </div>
                   {cs.map((c) => {
                     const cell = c.cells[r.key];
                     return (
                       <div key={c.ref} role="cell" className={`border-b border-l border-brand-night/10 p-4 text-sm ${cell?.best ? "bg-emerald-50/70" : ""}`}>
-                        {!cell ? <span className="text-brand-ink/40">—</span> : (
+                        {!cell ? <span className="text-brand-ink/65">—</span> : (
                           <div className="flex items-start gap-2">
                             {cell.level !== "market" && <Level level={cell.level} />}
                             <p className={STATUS_TEXT[cell.status] ?? ""}>{cell.text}{cell.best && <span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">лучше в строке</span>}</p>
@@ -148,7 +148,7 @@ export function Compare() {
           ))}
         </div>
       </div>
-      <p className="text-xs text-brand-ink/55">Пол, возраст, имя и фото в сравнении и в ранжировании не участвуют. Контакты откроются только после того, как кандидат примет приглашение.</p>
+      <p className="text-xs text-brand-ink/65">Пол, возраст, имя и фото в сравнении и в ранжировании не участвуют. Контакты откроются только после того, как кандидат примет приглашение.</p>
       <Modal open={!!probe} onClose={() => setProbe(null)} title={`Зонд для ${probe?.length ?? 0} канд.`}>
         {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={() => { setProbe(null); setDone("Зонд отправлен. Ответы появятся в разделе «Зонды»."); reload(); }} />}
       </Modal>

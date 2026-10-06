@@ -64,7 +64,7 @@ export function JuryGuide() {
     <aside className="fixed bottom-4 right-4 z-40 w-[min(24rem,calc(100vw-2rem))] rounded-2xl bg-brand-night p-4 text-white shadow-2xl ring-1 ring-white/10"
       aria-label="Проводник для экспертов жюри">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>
         <button className="rounded px-2 text-sm text-white/70 hover:text-white" onClick={() => { guide.hide(); setHidden(true); }} aria-label="Скрыть проводник">Скрыть</button>
       </div>
       <div className="mt-2 flex gap-1" aria-hidden>

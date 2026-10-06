@@ -60,7 +60,7 @@ export function Invitations() {
       <Modal open={!!open} onClose={() => setOpen(null)} title={open?.position_title ?? ""}>
         {open && (
           <div className="space-y-4 text-sm">
-            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><span className="text-brand-ink/60">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span></div>
+            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><span className="text-brand-ink/65">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span></div>
             <p className="text-2xl font-extrabold text-brand-night">{range(open.salary_from, open.salary_to)}</p>
             {open.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Работодатель этот минимум не видит.</Alert>}
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>
@@ -100,7 +100,7 @@ export function Invitations() {
                 <Field label="Комментарий (необязательно, работодатель его не увидит)" htmlFor="ccomment">
                   <textarea id="ccomment" className="input min-h-[70px]" value={cComment} onChange={(e) => setCComment(e.target.value)} placeholder="Например, на собеседовании назвали сумму вдвое ниже" />
                 </Field>
-                <p className="text-xs text-brand-ink/60">Жалоба снижает индекс доверия работодателя{["sent", "viewed"].includes(open.status) ? "; приглашение будет отклонено" : ""}. Одна жалоба на приглашение.</p>
+                <p className="text-xs text-brand-ink/65">Жалоба снижает индекс доверия работодателя{["sent", "viewed"].includes(open.status) ? "; приглашение будет отклонено" : ""}. Одна жалоба на приглашение.</p>
                 <div className="flex gap-3"><button className="btn-primary" onClick={complain}>Отправить жалобу</button><button className="btn-ghost" onClick={() => setComplaining(false)}>Назад</button></div>
               </div>
             ) : !declining && (
@@ -163,7 +163,7 @@ export function Probes() {
       <Modal open={!!open} onClose={() => setOpen(null)} title={open?.title ?? ""}>
         {open && (
           <div className="space-y-4 text-sm">
-            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><span className="text-brand-ink/60">{open.company?.name} · вилка {range(open.salary_from, open.salary_to)} · ~{open.time_limit_min} мин</span></div>
+            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><span className="text-brand-ink/65">{open.company?.name} · вилка {range(open.salary_from, open.salary_to)} · ~{open.time_limit_min} мин</span></div>
             <p className="whitespace-pre-line rounded-xl bg-[#F3F2FB] p-4 text-brand-ink/85">{open.task_text}</p>
             {["sent", "viewed"].includes(open.status) ? (
               <div className="space-y-3">

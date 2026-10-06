@@ -27,7 +27,7 @@ export function Fsp() {
         <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром (T2).` : data.note}</p>
         <FspIdLinkButton linkedVia={data.link_source} />
         {data.link_source !== "keycloak" && <>
-        <p className="pt-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-ink/45">Или укажите ФСП ID вручную — до подтверждения реестром</p>
+        <p className="pt-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-ink/65">Или укажите ФСП ID вручную — до подтверждения реестром</p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[16rem] flex-1"><Field label="ФСП ID" htmlFor="fid"><input id="fid" className="input" value={id} onChange={(e) => setId(e.target.value)} placeholder="FSP-123456" /></Field></div>
           <button className="btn-primary" disabled={id.trim().length < 4} onClick={link}>Сохранить</button>
@@ -88,11 +88,11 @@ export function Settings() {
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card">
         <h2 className="font-bold text-brand-night">Поля обезличенной карточки</h2>
-        <p className="mt-1 text-sm text-brand-ink/60">Имя, почта, телефон и минимум зарплаты не показываются никогда. Контакты — только после принятия приглашения.</p>
+        <p className="mt-1 text-sm text-brand-ink/65">Имя, почта, телефон и минимум зарплаты не показываются никогда. Контакты — только после принятия приглашения.</p>
         <div className="mt-3 divide-y divide-brand-night/5">
           {onb.data?.options.privacy_fields.map((f: any) => <Toggle key={f.id} label={f.title} checked={privacy[f.id] ?? true} onChange={(v) => savePrivacy({ ...privacy, [f.id]: v })} />)}
         </div>
-        <p className="mt-2 text-xs text-brand-ink/50">Профиль {me?.candidate?.visible_to_employers ? "виден" : "не виден"} работодателям.</p>
+        <p className="mt-2 text-xs text-brand-ink/65">Профиль {me?.candidate?.visible_to_employers ? "виден" : "не виден"} работодателям.</p>
       </section>
       <section className="card">
         <h2 className="font-bold text-brand-night">Скрытый минимум зарплаты</h2>
@@ -110,12 +110,12 @@ export function Settings() {
               <li key={k} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-night/10 p-4">
                 <div>
                   <p className="font-semibold">{CONSENT_TITLE[k]}</p>
-                  <p className="text-brand-ink/60">{c ? `Дано ${dt(c.granted_at)}, редакция ${c.version}` : "Не дано"} · <button className="font-semibold text-brand hover:underline" onClick={() => showText(k)}>текст</button></p>
+                  <p className="text-brand-ink/65">{c ? `Дано ${dt(c.granted_at)}, редакция ${c.version}` : "Не дано"} · <button className="font-semibold text-brand hover:underline" onClick={() => showText(k)}>текст</button></p>
                 </div>
                 {k === "publication" && (active(k)
                   ? <button className="btn-ghost" onClick={() => consent(k, false)}>Отозвать</button>
                   : <button className="btn-primary" onClick={() => consent(k, true)}>Дать согласие</button>)}
-                {k === "processing" && <span className="text-xs text-brand-ink/55">Отзыв — через обращение к оператору: {meta?.operator?.email}</span>}
+                {k === "processing" && <span className="text-xs text-brand-ink/65">Отзыв — через обращение к оператору: {meta?.operator?.email}</span>}
               </li>
             );
           })}
