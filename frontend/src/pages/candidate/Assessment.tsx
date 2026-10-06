@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, num, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { FeedbackSummary } from "./Feedback";
@@ -177,7 +177,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
                   <Toggle key={f.id} checked={privacy[f.id] ?? true} onChange={(v) => setPrivacy({ ...privacy, [f.id]: v })} label={f.title} />
                 ))}
               </div>
-              <p className="mt-2 text-xs text-brand-ink/55">Имя, почта и телефон не показываются никогда — только после того, как вы примете приглашение.</p>
+              <p className="mt-2 text-xs text-brand-ink/65">Имя, почта и телефон не показываются никогда — только после того, как вы примете приглашение.</p>
             </div>
             <Field label="ФСП ID (необязательно)" htmlFor="fsp" hint="Связь с ФСП ID пока работает как заглушка: идентификатор сохранится, достижения подтянутся после подключения реестра.">
               <input id="fsp" className="input" value={fspId} onChange={(e) => setFspId(e.target.value)} placeholder="Например, FSP-123456" />
@@ -255,7 +255,7 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
           <button key={id} type="button" onClick={() => setGrade(id)} aria-pressed={grade === id}
             className={`rounded-2xl border p-5 text-left transition-colors ${grade === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
             <p className="text-lg font-bold text-brand-night">{t}</p>
-            <p className="mt-1 text-xs text-brand-ink/60">{id === "junior" ? "до 1,5 лет опыта" : id === "middle" ? "1,5–4,5 года" : "от 4,5 лет"}</p>
+            <p className="mt-1 text-xs text-brand-ink/65">{id === "junior" ? "до 1,5 лет опыта" : id === "middle" ? "1,5–4,5 года" : "от 4,5 лет"}</p>
             {status?.claimed_grade === id && <span className="chip mt-3">Подходит по стажу</span>}
           </button>
         ))}
@@ -380,7 +380,7 @@ export function TestRun() {
   const ready = value !== null && !(isText && String(value).trim().length === 0);
   return (
     <div className="max-w-3xl">
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-ink/60">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-ink/65">
         <span>Тест · {DIRECTIONS[s.direction]} · {GRADES[s.claimed_grade]}</span>
         <span>{it.adaptive ? `Задание ${it.position} · отвечено ${it.answered}` : `Задание ${it.position} из ${it.total}`}</span>
       </div>
@@ -391,7 +391,7 @@ export function TestRun() {
         {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTIONS[s.direction]}»`}</span>}
         {it.extension && <span className="chip">Дотестирование у порога грейда</span>}
         {it.steps_total && <span className="chip">Шаг {it.step} из {it.steps_total}</span>}
-        <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/60"}`} aria-live="off">
+        <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/65"}`} aria-live="off">
           {left >= 0 ? `Рекомендуемое время: ${fmtTime(left)}` : `Сверх рекомендуемого: ${fmtTime(-left)}`}
         </span>
       </div>
@@ -445,7 +445,7 @@ export function TestRun() {
           <button className="btn-primary" disabled={!ready || busy} onClick={answer}>{busy ? "Отправляем…" : it.steps_total && it.step < it.steps_total ? "Ответить и к следующему шагу" : "Ответить"}</button>
         </div>
       </div>
-      <p className="mt-4 text-xs text-brand-ink/50">
+      <p className="mt-4 text-xs text-brand-ink/65">
         {it.adaptive ? `Адаптивный тест: следующее задание подбирается по вашим ответам, обычно ${it.min_items}–${it.max_items} заданий. ` : ""}
         Вернуться к прошлому заданию нельзя. Время ответа фиксирует сервер. Интерфейс отмечает уход со вкладки и вставку текста — это входит в «достоверность результата». Код кандидатов не выполняется; ключи не покидают сервер.
       </p>
@@ -458,13 +458,13 @@ function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; o
     <div className="max-w-2xl">
       <PageTitle title={r.confirmed ? "Грейд подтверждён" : "Грейд не подтверждён"} subtitle={r.message} />
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-xl font-bold text-brand-night">θ = {r.theta >= 0 ? "+" : ""}{r.theta.toFixed(2)}</p><p className="text-xs text-brand-ink/55">погрешность ± {r.se.toFixed(2)}</p></div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-xl font-bold text-brand-night">θ = {signed(r.theta)}</p><p className="text-xs text-brand-ink/65">погрешность ± {num(r.se)}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
       <div className="card mt-4 text-sm text-brand-ink/75">{r.explanation}</div>
       {r.details?.n_scored != null && (
-        <p className="mt-3 text-xs text-brand-ink/55">
+        <p className="mt-3 text-xs text-brand-ink/65">
           Оценено заданий: {r.details.n_scored}{r.details.n_canaries ? ` (+ ${r.details.n_canaries} контрольных, в оценку не входят)` : ""}
           {r.details.extension ? ` · дотестирование: ${r.details.extension.items}` : ""}
           {r.details.time_used_s ? ` · время: ${Math.round(r.details.time_used_s / 60)} мин` : ""}

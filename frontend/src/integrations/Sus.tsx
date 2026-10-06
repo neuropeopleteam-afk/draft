@@ -27,7 +27,7 @@ export function SusSurvey({ context = "e2e", onDone, intro }: { context?: string
   }
   if (res) return (
     <div className="rounded-2xl bg-[#F3F2FB] p-5 text-center">
-      <p className="text-sm text-brand-ink/60">Спасибо! Ваша оценка удобства</p>
+      <p className="text-sm text-brand-ink/65">Спасибо! Ваша оценка удобства</p>
       <p className="mt-1 text-4xl font-extrabold tabular-nums text-brand-night">{res.score}</p>
       <p className="text-sm text-brand-ink/70">из 100 · «{res.adjective}» · оценка {res.grade} (среднее по отрасли — 68)</p>
     </div>
@@ -48,7 +48,7 @@ export function SusSurvey({ context = "e2e", onDone, intro }: { context?: string
                 </button>
               ))}
             </div>
-            <div className="mt-1 flex justify-between text-[11px] text-brand-ink/45"><span>не согласен</span><span>согласен</span></div>
+            <div className="mt-1 flex justify-between text-xs text-brand-ink/65"><span>не согласен</span><span>согласен</span></div>
           </li>
         ))}
       </ol>
@@ -69,7 +69,7 @@ export function SusPrompt({ context = "e2e" }: { context?: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="font-bold text-brand-night">Оцените удобство платформы — 1 минута</p>
-          <p className="text-sm text-brand-ink/60">10 стандартных утверждений SUS. Результаты — на странице проверки гипотез.</p>
+          <p className="text-sm text-brand-ink/65">10 стандартных утверждений SUS. Результаты — на странице проверки гипотез.</p>
         </div>
         {!open && <button className="btn-ghost" onClick={() => setOpen(true)}>Пройти опрос</button>}
       </div>
@@ -103,9 +103,9 @@ export function SusSummaryCard() {
   return (
     <section className="card">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Итог по ответам после входа</p>
-      <p className="mt-2 text-3xl font-extrabold tabular-nums text-brand-night">{String(data.mean).replace(".", ",")}<span className="ml-2 text-base font-medium text-brand-ink/55">из 100 · n = {data.n}</span></p>
+      <p className="mt-2 text-3xl font-extrabold tabular-nums text-brand-night">{String(data.mean).replace(".", ",")}<span className="ml-2 text-base font-medium text-brand-ink/65">из 100 · n = {data.n}</span></p>
       <p className="text-sm text-brand-ink/65">Медиана {String(data.median).replace(".", ",")}{data.ci95 ? `, 95 % ДИ ${data.ci95[0]}–${data.ci95[1]}` : ""} · «{data.adjective}» · оценка {data.grade} · порог отрасли 68</p>
-      {data.anonymous?.n ? <p className="mt-2 text-xs text-brand-ink/55">Анонимные анкеты считаются отдельно и в итог не входят: n = {data.anonymous.n}, среднее {String(data.anonymous.mean).replace(".", ",")}.</p> : null}
+      {data.anonymous?.n ? <p className="mt-2 text-xs text-brand-ink/65">Анонимные анкеты считаются отдельно и в итог не входят: n = {data.anonymous.n}, среднее {String(data.anonymous.mean).replace(".", ",")}.</p> : null}
     </section>
   );
 }
@@ -132,7 +132,7 @@ export function AdminSus() {
             </div>
             <div className="card overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="text-xs uppercase tracking-wider text-brand-ink/50"><tr><th className="py-2">Когда</th><th>Роль</th><th>Контекст</th><th>Ответы</th><th>Балл</th><th>Комментарий</th></tr></thead>
+                <thead className="text-xs uppercase tracking-wider text-brand-ink/65"><tr><th className="py-2">Когда</th><th>Роль</th><th>Контекст</th><th>Ответы</th><th>Балл</th><th>Комментарий</th></tr></thead>
                 <tbody className="divide-y divide-brand-night/5">
                   {d.items.map((r: any) => (
                     <tr key={r.id}><td className="py-2 pr-3 whitespace-nowrap">{new Date(r.created_at).toLocaleString("ru-RU")}</td><td className="pr-3">{r.role}{r.is_demo ? " (демо)" : ""}</td><td className="pr-3">{r.context}</td><td className="pr-3 font-mono text-xs">{r.answers.join(" ")}</td><td className="pr-3 font-bold tabular-nums">{r.score}</td><td className="text-brand-ink/70">{r.comment}</td></tr>

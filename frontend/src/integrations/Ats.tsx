@@ -136,14 +136,14 @@ export function EmployerAts() {
         {!deliveries.data?.length ? <Empty title="Передач пока не было" text="Появятся, когда кандидат примет приглашение или вы нажмёте «В ATS» у принятого приглашения или отклика." /> : (
           <div className="card overflow-x-auto p-0">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[#FBF8FC] text-xs uppercase tracking-wider text-brand-ink/50"><tr><th className="px-4 py-2">Когда</th><th>Кандидат</th><th>Куда</th><th>Итог</th><th>Подробности</th><th className="pr-4" /></tr></thead>
+              <thead className="bg-[#FBF8FC] text-xs uppercase tracking-wider text-brand-ink/65"><tr><th className="px-4 py-2">Когда</th><th>Кандидат</th><th>Куда</th><th>Итог</th><th>Подробности</th><th className="pr-4" /></tr></thead>
               <tbody className="divide-y divide-brand-night/5">
                 {deliveries.data.map((d) => (
                   <tr key={d.id} className="align-top">
-                    <td className="whitespace-nowrap px-4 py-2">{dtt(d.created_at)}<div className="text-xs text-brand-ink/45">{d.trigger === "manual" ? "вручную" : d.trigger === "retry" ? "повтор" : "автоматически"}</div></td>
-                    <td className="py-2 pr-3">{d.candidate_ref}<div className="text-xs text-brand-ink/50">{d.position_title}</div></td>
+                    <td className="whitespace-nowrap px-4 py-2">{dtt(d.created_at)}<div className="text-xs text-brand-ink/65">{d.trigger === "manual" ? "вручную" : d.trigger === "retry" ? "повтор" : "автоматически"}</div></td>
+                    <td className="py-2 pr-3">{d.candidate_ref}<div className="text-xs text-brand-ink/65">{d.position_title}</div></td>
                     <td className="py-2 pr-3 font-medium">{d.target_title ?? TITLES[d.target]}</td>
-                    <td className="whitespace-nowrap py-2 pr-3"><span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${d.status === "ok" ? "bg-emerald-50 text-emerald-700" : d.status === "pending" ? "bg-[#F3F2FB] text-brand-ink/60" : "bg-brand-blush text-brand-plum"}`}>{d.status === "ok" ? (d.already_sent ? "уже передано" : "передано") : d.status === "pending" ? "в работе" : "ошибка"}</span> <span className="text-xs text-brand-ink/45" title="Попыток">×{d.attempts}</span></td>
+                    <td className="whitespace-nowrap py-2 pr-3"><span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${d.status === "ok" ? "bg-emerald-50 text-emerald-700" : d.status === "pending" ? "bg-[#F3F2FB] text-brand-ink/65" : "bg-brand-blush text-brand-plum"}`}>{d.status === "ok" ? (d.already_sent ? "уже передано" : "передано") : d.status === "pending" ? "в работе" : "ошибка"}</span> <span className="text-xs text-brand-ink/65" title="Попыток">×{d.attempts}</span></td>
                     <td className="py-2 pr-3 text-xs text-brand-ink/65">{resultLine(d)}
                       {d.result?.steps?.length > 0 && <details className="mt-1"><summary className="cursor-pointer font-semibold text-brand-plum">Шаги</summary><ol className="mt-1 list-decimal space-y-0.5 pl-4">{d.result.steps.map((x: string, i: number) => <li key={i}>{x}</li>)}</ol></details>}
                     </td>
@@ -165,10 +165,10 @@ export function EmployerAts() {
                 <li key={r.id} className="card text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-semibold text-brand-night"><span className="mr-2 rounded-full bg-[#F3F2FB] px-2 py-0.5 text-xs font-semibold text-brand-plum">{r.system}</span>{KIND[r.kind] ?? r.kind}{r.external_id ? ` · #${r.external_id}` : ""}</p>
-                    <span className="text-xs text-brand-ink/50">{dtt(r.created_at)}</span>
+                    <span className="text-xs text-brand-ink/65">{dtt(r.created_at)}</span>
                   </div>
                   <p className="mt-1 text-brand-ink/70">{recordLine(r)}</p>
-                  <details className="mt-2"><summary className="cursor-pointer text-xs font-semibold text-brand-plum">JSON</summary><pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-brand-ink p-3 text-[11px] leading-relaxed text-white/90">{JSON.stringify(r.payload, null, 2)}</pre></details>
+                  <details className="mt-2"><summary className="cursor-pointer text-xs font-semibold text-brand-plum">JSON</summary><pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-brand-ink p-3 text-xs leading-relaxed text-white/90">{JSON.stringify(r.payload, null, 2)}</pre></details>
                 </li>
               ))}
             </ul>
@@ -251,7 +251,7 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 text-sm text-brand-ink/70">
-        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.enabled ? "bg-emerald-50 text-emerald-700" : "bg-[#F3F2FB] text-brand-ink/60"}`}>{p.enabled ? "подключено" : "выключено"}</span>
+        <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.enabled ? "bg-emerald-50 text-emerald-700" : "bg-[#F3F2FB] text-brand-ink/65"}`}>{p.enabled ? "подключено" : "выключено"}</span>
         <span>{p.mode === "demo" ? "демо-заглушка" : "реальный API"}: <code className="text-xs">{p.base_url}</code></span>
         {p.token_set && <span>токен {p.token_masked}{tx && p.refresh_set ? " + refresh" : ""}</span>}
         {tx && p.token_expires_at && <span>access до {dtt(p.token_expires_at)}{p.token_refreshed_at ? `, обновлён ${dtt(p.token_refreshed_at)}` : ""}</span>}
@@ -293,7 +293,7 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
         <button className="btn-ghost" disabled={busy || !p.token_set || f.mode !== p.mode} onClick={check}>Проверить подключение</button>
       </div>
       <CheckResult res={res} />
-      {!res && p.last_check_at && <p className="text-xs text-brand-ink/55">Последняя проверка {dtt(p.last_check_at)}: {p.last_check_ok ? "успешно" : `ошибка — ${p.last_check_info?.error ?? ""}`}</p>}
+      {!res && p.last_check_at && <p className="text-xs text-brand-ink/65">Последняя проверка {dtt(p.last_check_at)}: {p.last_check_ok ? "успешно" : `ошибка — ${p.last_check_info?.error ?? ""}`}</p>}
     </div>
   );
 }
@@ -339,7 +339,7 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <Field label="URL (https)" htmlFor="wu"><input id="wu" className="input" value={f.webhook.url ?? ""} onChange={(e) => set("webhook", "url", e.target.value)} placeholder="https://ats.example.ru/hooks/vstrechny" /></Field>
               <Field label="Секрет подписи" htmlFor="ws" hint={f.webhook.secret_set ? `Сохранён: ${f.webhook.secret_masked}` : "Пусто — сгенерируем"}><input id="ws" type="password" autoComplete="off" className="input" value={f.webhook.secret} onChange={(e) => set("webhook", "secret", e.target.value)} /></Field>
-              <p className="text-xs text-brand-ink/55 sm:col-span-2">Заголовок <code>{s.webhook.signature_header}</code>. Проверка на стороне получателя — в docs/ATS.md.{" "}
+              <p className="text-xs text-brand-ink/65 sm:col-span-2">Заголовок <code>{s.webhook.signature_header}</code>. Проверка на стороне получателя — в docs/ATS.md.{" "}
                 {f.webhook.secret_set && <button className="font-semibold text-brand hover:underline" onClick={async () => setSecret((await api<any>("/employer/ats/webhook-secret")).secret)}>Показать секрет</button>}
                 {secret && <code className="ml-2 break-all rounded bg-[#F3F2FB] px-1.5 py-0.5">{secret}</code>}</p>
             </div>

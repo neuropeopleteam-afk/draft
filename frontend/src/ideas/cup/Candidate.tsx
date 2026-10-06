@@ -44,7 +44,7 @@ function CupGrid({ title, items }: { title: string; items: any[] }) {
             </div>
             <p className="mt-2 line-clamp-2 text-sm text-brand-ink/65">{c.description}</p>
             <p className="mt-3 text-sm font-semibold text-brand-plum">{range(c.salary_from, c.salary_to)} · приглашения топ-{c.invite_top_n}</p>
-            <p className="mt-1 text-xs text-brand-ink/55">до {dt(c.ends_at)} · {c.time_limit_min} мин на решение · {c.participants} участников</p>
+            <p className="mt-1 text-xs text-brand-ink/65">до {dt(c.ends_at)} · {c.time_limit_min} мин на решение · {c.participants} участников</p>
             {c.my_status && <p className="mt-3 text-sm font-semibold text-brand-night">Моё участие: {ENTRY[c.my_status]}{c.my_place ? ` · ${c.my_place} место` : ""}</p>}
             {c.below_my_minimum && <p className="mt-1 text-xs text-brand-plum">Верх вилки ниже вашего скрытого минимума</p>}
           </Link>
@@ -97,14 +97,14 @@ export function CandidateCup() {
         <section className="card space-y-3">
           <p className="text-sm leading-relaxed text-brand-ink/80">{c.description}</p>
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
-            <div><dt className="text-brand-ink/55">Срок</dt><dd className="font-semibold">{dt(c.starts_at)} — {dt(c.ends_at)}</dd></div>
-            <div><dt className="text-brand-ink/55">Время на решение</dt><dd className="font-semibold">{c.time_limit_min} мин с момента старта{c.mode === "auto" ? `, ${c.n_tasks} заданий` : ""}</dd></div>
-            <div><dt className="text-brand-ink/55">Приглашение лучшим</dt><dd className="font-semibold">топ-{c.invite_top_n} с баллом от {c.min_score_pct} %: «{c.position_title}», {range(c.salary_from, c.salary_to)}</dd></div>
-            <div><dt className="text-brand-ink/55">Участники</dt><dd className="font-semibold">{c.participants}</dd></div>
+            <div><dt className="text-brand-ink/65">Срок</dt><dd className="font-semibold">{dt(c.starts_at)} — {dt(c.ends_at)}</dd></div>
+            <div><dt className="text-brand-ink/65">Время на решение</dt><dd className="font-semibold">{c.time_limit_min} мин с момента старта{c.mode === "auto" ? `, ${c.n_tasks} заданий` : ""}</dd></div>
+            <div><dt className="text-brand-ink/65">Приглашение лучшим</dt><dd className="font-semibold">топ-{c.invite_top_n} с баллом от {c.min_score_pct} %: «{c.position_title}», {range(c.salary_from, c.salary_to)}</dd></div>
+            <div><dt className="text-brand-ink/65">Участники</dt><dd className="font-semibold">{c.participants}</dd></div>
           </dl>
-          {c.rubric && <p className="text-xs text-brand-ink/60">Критерии: {c.rubric.map((r: any) => `${r.title} (${Math.round(r.weight * 100)} %)`).join("; ")}</p>}
+          {c.rubric && <p className="text-xs text-brand-ink/65">Критерии: {c.rubric.map((r: any) => `${r.title} (${Math.round(r.weight * 100)} %)`).join("; ")}</p>}
           {c.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Участвовать можно — решение за вами.</Alert>}
-          <p className="text-xs text-brand-ink/55">В таблице результатов вы — под псевдонимом. Работодатель узнает обезличенный номер, только если пригласит вас, а имя и контакты — если вы примете приглашение. Место запишется в паспорт ФСП как мероприятие платформы.</p>
+          <p className="text-xs text-brand-ink/65">В таблице результатов вы — под псевдонимом. Работодатель узнает обезличенный номер, только если пригласит вас, а имя и контакты — если вы примете приглашение. Место запишется в паспорт ФСП как мероприятие платформы.</p>
           {err && <Alert>{err}</Alert>}
           <div className="flex flex-wrap gap-2 pt-1">
             {c.can_join && <button className="btn-ghost" disabled={busy || !c.profile_visible} onClick={() => act("join")}>Записаться</button>}
@@ -170,13 +170,13 @@ export function CandidateCup() {
         <section className="card">
           <h2 className="text-lg font-bold text-brand-night">Таблица результатов</h2>
           <table className="mt-4 w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-brand-ink/50"><tr><th className="py-2 pr-3">Место</th><th className="pr-3">Участник</th><th className="pr-3">Балл</th><th className="hidden pr-3 sm:table-cell">Время</th><th className="hidden sm:table-cell">Статус</th></tr></thead>
+            <thead className="text-xs uppercase tracking-wide text-brand-ink/65"><tr><th className="py-2 pr-3">Место</th><th className="pr-3">Участник</th><th className="pr-3">Балл</th><th className="hidden pr-3 sm:table-cell">Время</th><th className="hidden sm:table-cell">Статус</th></tr></thead>
             <tbody className="divide-y divide-brand-night/5">
               {c.leaderboard.map((r: any) => (
                 <tr key={r.alias} className={r.me ? "bg-brand-blush/30 font-semibold" : ""}>
                   <td className="py-2.5 pr-3">{r.position ?? "—"}</td>
                   <td className="pr-3"><span className="whitespace-nowrap">{r.alias}{r.me ? " (вы)" : ""}</span>
-                    <span className="block text-xs font-normal text-brand-ink/50 sm:hidden">{r.invited ? "приглашён" : ENTRY[r.status] ?? r.status} · {mins(r.time_spent_s)}</span>
+                    <span className="block text-xs font-normal text-brand-ink/65 sm:hidden">{r.invited ? "приглашён" : ENTRY[r.status] ?? r.status} · {mins(r.time_spent_s)}</span>
                   </td>
                   <td className="pr-3 tabular-nums">{r.score_pct != null ? `${r.score_pct} %` : "—"}</td>
                   <td className="hidden pr-3 tabular-nums sm:table-cell">{mins(r.time_spent_s)}</td>
@@ -203,7 +203,7 @@ function MyResult({ c, e }: { c: any; e: any }) {
     <section className="card space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-bold text-brand-night">Мой результат</h2>
-        <span className="text-sm text-brand-ink/60">{e.alias} · отправлено {dtt(e.submitted_at)}</span>
+        <span className="text-sm text-brand-ink/65">{e.alias} · отправлено {dtt(e.submitted_at)}</span>
       </div>
       {e.status === "expired" && <Alert kind="info">Время на решение вышло — ответ не принят, место не присуждается.</Alert>}
       {e.status === "submitted" && <p className="text-sm text-brand-ink/75">Решение на оценке у работодателя (вслепую). Итоги — после окончания кубка.</p>}
@@ -213,7 +213,7 @@ function MyResult({ c, e }: { c: any; e: any }) {
       {e.invitation_id && (
         <Alert kind="ok">Вы в числе лучших — компания отправила приглашение с вилкой {range(c.salary_from, c.salary_to)}. <Link className="font-semibold underline" to="/candidate/invitations">Открыть приглашения</Link>{e.invitation_status ? <span className="ml-2"><Status s={e.invitation_status} /></span> : null}</Alert>
       )}
-      {e.place && !e.invitation_id && e.invite_note && <p className="text-xs text-brand-ink/55">Приглашение не отправлено: {e.invite_note}.</p>}
+      {e.place && !e.invitation_id && e.invite_note && <p className="text-xs text-brand-ink/65">Приглашение не отправлено: {e.invite_note}.</p>}
       {e.place && (
         <p className="flex items-start gap-2 text-sm text-brand-ink/75"><Level level="T1" />
           <span>{e.passport_status === "written" ? "Место записано в паспорт ФСП как мероприятие платформы." : "Место запишется в паспорт ФСП после связки с ФСП ID."}{" "}
@@ -236,7 +236,7 @@ export function CupPassportEvents() {
   return (
     <section className="card">
       <h2 className="font-bold text-brand-night">Кубки работодателей — мероприятия платформы</h2>
-      <p className="mt-1 text-xs text-brand-ink/55">Подтверждено платформой (T1), не реестром ФСП. В рейтинге учитывается как зонд, без штрафа.</p>
+      <p className="mt-1 text-xs text-brand-ink/65">Подтверждено платформой (T1), не реестром ФСП. В рейтинге учитывается как зонд, без штрафа.</p>
       <ul className="mt-3 space-y-2 text-sm">
         {data.map((x) => (
           <li key={x.cup_id} className="flex items-start gap-2"><Level level="T1" />

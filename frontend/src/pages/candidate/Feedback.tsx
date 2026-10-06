@@ -34,11 +34,11 @@ const DEMAND: Record<string, string> = {
 const DEMAND_LEVEL: Record<string, string> = { confirmed: "T1", weak: "T1", declared: "T0", missing: "none" };
 const REL: Record<string, string> = { above: "выше ожидаемого для вашего уровня", below: "ниже ожидаемого для вашего уровня" };
 const GRADE_RU: Record<string, string> = { junior: "Junior", middle: "Middle", senior: "Senior" };
-const pct = (v: number | null | undefined) => (v == null ? "—" : `${Math.round(v * 100)} %`);
+const pct = (v: number | null | undefined) => (v == null ? "—" : `${Math.round(v * 100)}\u00A0%`);
 const tasks = (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "задание" : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "задания" : "заданий"}`;
 
 function Chip({ s, children }: { s: string; children: ReactNode }) {
-  return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold ring-1 ${s}`}>{children}</span>;
+  return <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ${s}`}>{children}</span>;
 }
 
 /** Полоса: доля верного; черта — ожидаемая доля для общего уровня θ. */
@@ -55,8 +55,8 @@ function TopicRow({ t }: { t: Topic }) {
   return (
     <li className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-semibold text-brand-night">{t.title}</p>
-        <div className="flex flex-wrap items-center gap-2 text-xs text-brand-ink/60">
+        <p className="font-semibold text-brand-night">{t.title === "other" ? "Прочие темы" : t.title}</p>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-brand-ink/65">
           <span>{tasks(t.n)}{t.level ? ` · уровень заданий ${GRADE_RU[t.level]}` : ""}</span>
           <Chip s={STATUS[t.status]?.[1] ?? STATUS.pending[1]}>{STATUS[t.status]?.[0] ?? t.status}</Chip>
         </div>
@@ -65,7 +65,7 @@ function TopicRow({ t }: { t: Topic }) {
         <div className="flex-1"><Bar score={t.score} expected={t.expected} status={t.status} /></div>
         <span className="w-12 text-right text-sm font-bold text-brand-night">{pct(t.score)}</span>
       </div>
-      <p className="mt-1 text-xs text-brand-ink/60">
+      <p className="mt-1 text-xs text-brand-ink/65">
         {t.expected != null ? `Ожидаемо для вашего уровня — ${pct(t.expected)}` : "Результат по фактам теста"}
         {t.relative && REL[t.relative] ? ` · ${REL[t.relative]}` : ""}
         {t.pending ? ` · на проверке у эксперта: ${t.pending}` : ""}
@@ -75,7 +75,7 @@ function TopicRow({ t }: { t: Topic }) {
         <div className="mt-2 flex flex-wrap gap-1.5">
           {t.aspects.map((a) => (
             <span key={a.title} title={a.score != null ? `${pct(a.score)}` : "на проверке"}
-              className={`rounded-md px-1.5 py-0.5 text-[11px] ring-1 ${STATUS[a.status]?.[1] ?? STATUS.pending[1]}`}>{a.title}</span>
+              className={`rounded-md px-1.5 py-0.5 text-xs ring-1 ${STATUS[a.status]?.[1] ?? STATUS.pending[1]}`}>{a.title}</span>
           ))}
         </div>
       )}
@@ -90,7 +90,7 @@ function SkillMap({ fb }: { fb: FeedbackData }) {
     <section className="card">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="font-bold text-brand-night">Карта навыков по темам</h2>
-        <p className="text-xs text-brand-ink/60">Полоса — доля баллов, черта — ожидаемая доля для вашего общего уровня</p>
+        <p className="text-xs text-brand-ink/65">Полоса — доля баллов, черта — ожидаемая доля для вашего общего уровня</p>
       </div>
       {groups.map(([b, title]) => {
         const list = topics.filter((t) => t.block === b);
@@ -102,7 +102,7 @@ function SkillMap({ fb }: { fb: FeedbackData }) {
           </div>
         );
       })}
-      <p className="mt-3 text-xs text-brand-ink/55">{fb.skill_map?.note}</p>
+      <p className="mt-3 text-xs text-brand-ink/65">{fb.skill_map?.note}</p>
     </section>
   );
 }
@@ -123,7 +123,7 @@ function Demand({ d }: { d: NonNullable<FeedbackData["demand"]> }) {
         {d.items.map((x) => (
           <li key={x.tag} className="grid grid-cols-[1fr_auto] items-center gap-x-3 gap-y-1 py-2 sm:grid-cols-[minmax(0,1fr)_15rem_auto]">
             <span className="font-medium text-brand-night">{x.title}</span>
-            <span className="order-3 col-span-2 flex items-center gap-2 whitespace-nowrap text-xs text-brand-ink/60 sm:order-none sm:col-span-1">
+            <span className="order-3 col-span-2 flex items-center gap-2 whitespace-nowrap text-xs text-brand-ink/65 sm:order-none sm:col-span-1">
               <span className="h-1.5 w-16 shrink-0 rounded-full bg-brand-night/5"><span className="block h-1.5 rounded-full bg-brand-lavender" style={{ width: `${x.share * 100}%` }} /></span>
               {x.required + x.desired} из {d.sources}{x.required ? ` · обязательно в ${x.required}` : " · желательно"}
             </span>
@@ -131,7 +131,7 @@ function Demand({ d }: { d: NonNullable<FeedbackData["demand"]> }) {
           </li>
         ))}
       </ul>
-      <p className="mt-3 text-xs text-brand-ink/55">{d.note}</p>
+      <p className="mt-3 text-xs text-brand-ink/65">{d.note}</p>
     </section>
   );
 }
@@ -166,11 +166,11 @@ function Competitions({ list, url }: { list: Comp[]; url?: string }) {
             <p className="mt-1 font-bold text-brand-night">{c.title}</p>
             <ul className="mt-2 list-disc space-y-1 pl-4 text-sm text-brand-ink/75">{c.reasons.map((r, k) => <li key={k}>{r}</li>)}</ul>
             <p className="mt-2 text-sm text-brand-ink/75">{c.your_level_title ? <>Ваш лучший уровень: <b>{c.your_level_title}</b>. </> : null}{c.next_step}</p>
-            {c.peers && c.peers.category_size > 0 && <p className="mt-1 text-xs text-brand-ink/55">В вашей категории достижения в этой дисциплине у {c.peers.with_discipline} из {c.peers.category_size} кандидатов.</p>}
+            {c.peers && c.peers.category_size > 0 && <p className="mt-1 text-xs text-brand-ink/65">В вашей категории достижения в этой дисциплине у {c.peers.with_discipline} из {c.peers.category_size} кандидатов.</p>}
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-brand-ink/55">Достижения ФСП из реестра — уровень T2: они дают бонус к месту в рейтинге категории и видны работодателю. Подтвердить их можно в разделе <Link className="underline" to="/candidate/fsp">«Паспорт ФСП»</Link>.</p>
+      <p className="mt-3 text-xs text-brand-ink/65">Достижения ФСП из реестра — уровень T2: они дают бонус к месту в рейтинге категории и видны работодателю. Подтвердить их можно в разделе <Link className="underline" to="/candidate/fsp">«Паспорт ФСП»</Link>.</p>
     </section>
   );
 }
@@ -213,10 +213,10 @@ export default function Feedback() {
       <PageTitle title="Карта навыков и рост"
         subtitle={`Тест ${s.direction_title} · ${s.grade_title}${s.finished_at ? ` от ${dt(s.finished_at)}` : ""}. Только темы — без самих заданий и ключей. Работодатель этот разбор не видит.`} />
       <section className="grid gap-4 sm:grid-cols-4">
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(s.category_id)}</p>{s.confirmed != null && <p className="text-xs text-brand-ink/55">{s.confirmed ? "грейд подтверждён" : "грейд не подтверждён"}</p>}</div>
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Уверенно</p><p className="mt-2 text-xl font-bold text-brand-night">{sum.strong} из {sum.topics}</p><p className="text-xs text-brand-ink/55">тем теста</p></div>
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Пробелы</p><p className="mt-2 text-xl font-bold text-brand-night">{sum.gap}</p><p className="text-xs text-brand-ink/55">{sum.weakest.length ? sum.weakest.join(", ") : "нет"}</p></div>
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Достоверность</p><p className="mt-2 text-lg font-bold text-brand-night">{s.integrity?.title ?? "—"}</p><p className="text-xs text-brand-ink/55">так её видит работодатель</p></div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(s.category_id)}</p>{s.confirmed != null && <p className="text-xs text-brand-ink/65">{s.confirmed ? "грейд подтверждён" : "грейд не подтверждён"}</p>}</div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Уверенно</p><p className="mt-2 text-xl font-bold text-brand-night">{sum.strong} из {sum.topics}</p><p className="text-xs text-brand-ink/65">тем теста</p></div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Пробелы</p><p className="mt-2 text-xl font-bold text-brand-night">{sum.gap}</p><p className="text-xs text-brand-ink/65">{sum.weakest.length ? sum.weakest.join(", ") : "нет"}</p></div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Достоверность</p><p className="mt-2 text-lg font-bold text-brand-night">{s.integrity?.title ?? "—"}</p><p className="text-xs text-brand-ink/65">так её видит работодатель</p></div>
       </section>
       {s.integrity && s.integrity.level !== "high" && (
         <Alert kind="info">Причины, по которым снижена достоверность результата: {s.integrity.reasons.join("; ")}. Оценку уровня и грейд это не меняет.</Alert>
@@ -226,7 +226,7 @@ export default function Feedback() {
       {fb.demand && <Demand d={fb.demand} />}
       {fb.route && fb.route.length > 0 && <Route steps={fb.route} />}
       {fb.competitions && fb.competitions.length > 0 && <Competitions list={fb.competitions} url={fb.fsp_calendar_url} />}
-      <p className="text-xs text-brand-ink/55">Этот разбор входит и в ваш PDF-профиль (раздел <Link className="underline" to="/candidate/profile">«Профиль и резюме»</Link>). В версии профиля для работодателя его нет.</p>
+      <p className="text-xs text-brand-ink/65">Этот разбор входит и в ваш PDF-профиль (раздел <Link className="underline" to="/candidate/profile">«Профиль и резюме»</Link>). В версии профиля для работодателя его нет.</p>
     </div>
   );
 }

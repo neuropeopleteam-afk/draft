@@ -22,7 +22,7 @@ function InstallGuide() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-bold text-brand-night">Установить на главный экран</h2>
-          <p className="text-sm text-brand-ink/60">Приложение открывается без адресной строки и присылает уведомления. Магазин приложений не нужен.</p>
+          <p className="text-sm text-brand-ink/65">Приложение открывается без адресной строки и присылает уведомления. Магазин приложений не нужен.</p>
         </div>
         {installed ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Установлено</span>
           : canPromptInstall() ? <button className="btn-primary" onClick={() => promptInstall()}>Установить</button> : null}
@@ -37,7 +37,7 @@ function InstallGuide() {
           <Steps items={["Откройте fsp.neuropeople.pro.", "Нажмите «Установить» на этой странице или в меню ⋮ → «Установить приложение» / «Добавить на главный экран».", "Подтвердите установку — значок появится среди приложений.", "Разрешите уведомления кнопкой ниже."]} />
         </div>
       </div>
-      <p className="text-xs text-brand-ink/50">На компьютере (Chrome, Edge, Яндекс Браузер) — значок установки в адресной строке или кнопка «Установить» выше.</p>
+      <p className="text-xs text-brand-ink/65">На компьютере (Chrome, Edge, Яндекс Браузер) — значок установки в адресной строке или кнопка «Установить» выше.</p>
     </section>
   );
 }
@@ -62,7 +62,7 @@ function PushCard() {
   return (
     <section className="card space-y-3">
       <h2 className="font-bold text-brand-night">Уведомления</h2>
-      <p className="text-sm text-brand-ink/60">{role === "candidate" ? "Новое приглашение с вилкой зарплаты и изменения статуса ваших откликов." : "Кандидат принял приглашение, новый отклик на вакансию."}</p>
+      <p className="text-sm text-brand-ink/65">{role === "candidate" ? "Новое приглашение с вилкой зарплаты и изменения статуса ваших откликов." : "Кандидат принял приглашение, новый отклик на вакансию."}</p>
       {!pushSupported() && <Alert kind="info">Этот браузер не поддерживает Web Push. На iPhone сначала установите приложение на главный экран.</Alert>}
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <div className="flex flex-wrap gap-3">

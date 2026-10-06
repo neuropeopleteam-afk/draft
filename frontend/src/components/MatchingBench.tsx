@@ -4,7 +4,7 @@ import { Alert, DIRECTIONS, GRADES, Loading, useApi } from "./ui";
 /** Блок /validation: бенчмарк подбора со скрытой истиной (backend: app/modules/validation/matching_bench.py, make bench). */
 
 const n2 = (v?: number | null, d = 2) => (v == null ? "—" : (Math.abs(v) < 0.5 * 10 ** -d ? 0 : v).toFixed(d).replace(".", ",").replace("-", "−"));
-const pct = (v?: number | null) => (v == null ? "—" : `${Math.round(v * 100)} %`);
+const pct = (v?: number | null) => (v == null ? "—" : `${Math.round(v * 100)}\u00A0%`);
 const sgn = (v?: number | null) => (v == null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(2).replace(".", ",")}`);
 const range = (x?: { lo: number; hi: number }) => (x ? `${n2(x.lo)}–${n2(x.hi)}` : "");
 const intRu = (v?: number | null) => (v == null ? "—" : v.toLocaleString("ru-RU"));
@@ -62,7 +62,7 @@ function Body({ r }: { r: any }) {
           <span title={meta.text}>{meta.title}</span>, KIND[meta.kind] ?? meta.kind,
           ...METRICS.map(([id]) => <Cell x={m[k]?.[id]} />),
         ])} />
-      <p className="mt-2 text-xs text-brand-ink/55">Релевантен — истинная метка не ниже 2 из 3; nDCG — с выигрышем 2^метка − 1 и идеальным порядком по всем {intRu(w.n_candidates)} кандидатам. Наведите на название метода, чтобы увидеть, как он устроен.</p>
+      <p className="mt-2 text-xs text-brand-ink/65">Релевантен — истинная метка не ниже 2 из 3; nDCG — с выигрышем 2^метка − 1 и идеальным порядком по всем {intRu(w.n_candidates)} кандидатам. Наведите на название метода, чтобы увидеть, как он устроен.</p>
 
       <h3 className="mt-8 text-base font-bold text-brand-night">Что видно</h3>
       <ul className="mt-2 max-w-4xl list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-brand-ink/80">
@@ -119,7 +119,7 @@ function Cell({ x, signed = false }: { x?: { mean: number; lo: number; hi: numbe
   return (
     <span className="whitespace-nowrap">
       <span className="font-semibold text-brand-night">{signed ? sgn(x.mean) : n2(x.mean)}</span>
-      <span className="ml-1 text-xs text-brand-ink/50">{range(x)}</span>
+      <span className="ml-1 text-xs text-brand-ink/65">{range(x)}</span>
     </span>
   );
 }
@@ -129,7 +129,7 @@ function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: s
     <div className="card">
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-lavender">{label}</p>
       <p className="mt-2 text-2xl font-extrabold text-brand-night">{value ?? "—"}</p>
-      {hint && <p className="mt-1 text-xs text-brand-ink/60">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-brand-ink/65">{hint}</p>}
     </div>
   );
 }
