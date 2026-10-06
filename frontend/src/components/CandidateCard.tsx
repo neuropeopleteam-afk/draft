@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Level, num, pct, range, signed, years } from "./ui";
+import { Level, num, pct, range, ruText, signed, years } from "./ui";
 
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
@@ -66,7 +66,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
             {reasons.map((r, i) => (
               <li key={i} className="flex items-start gap-2 text-sm">
                 <Level level={r.level} />
-                <span><b className="font-semibold">{r.requirement}.</b> <span className="text-brand-ink/70">{r.text}</span></span>
+                <span><b className="font-semibold">{r.requirement}.</b> <span className="text-brand-ink/70">{ruText(r.text)}</span></span>
               </li>
             ))}
           </ul>
