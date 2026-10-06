@@ -127,6 +127,10 @@ def result(st: dict) -> dict:
     done = [i for i in st["items"] if i["done"]]
     theta, se = float(st["theta"]), float(st["se"])
     g = GradeScale().point(theta)
+    # Без единого верного ответа категории нет: при 3 заданиях θ (EAP) с априорным N(0; 1) у самых лёгких заданий
+    # может остаться у порога Junior, но доказательства уровня нет
+    if not any(float(i["x"][0]) > 0 for i in done):
+        g = "none"
     grade = None if g == "none" else g
     skills: dict[str, list[float]] = {}
     for i in done:
