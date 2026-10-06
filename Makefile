@@ -52,3 +52,28 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
+
+# --- Проверки CI на своей машине: те же команды, что в .github/workflows (docs/testing.md) ---
+PY ?= python
+
+coverage: ## Тесты backend с покрытием и порогом (как в CI) + значки docs/badges
+	cd backend && $(PY) -m pytest -p no:cacheprovider --cov=app --cov-report=term:skip-covered \
+	  --cov-report=xml:coverage.xml --cov-report=html:htmlcov --junitxml=junit.xml
+	$(PY) tools/ci/coverage_report.py --coverage backend/coverage.xml --junit backend/junit.xml \
+	  --badge docs/badges/coverage.svg --tests-badge docs/badges/tests.svg
+
+test-bank: ## Валидатор банка заданий, как в CI (≈ 2 мин; нужны node, bash, git)
+	cd backend && $(PY) ../tools/ci/check_bank.py --seeds 20 --verify-seeds 3 --out /tmp/bank_report
+
+stack-ci: ## Стек для e2e: сборка образов, запуск, демо-данные, дымовая проверка
+	tools/ci/stack.sh up && tools/ci/stack.sh seed && tools/ci/stack.sh smoke
+
+e2e: ## Сквозные сценарии жюри против локального стека (сначала make stack-ci)
+	cd e2e && npm ci --no-audit --no-fund && npx playwright install chromium && \
+	  E2E_BASE_URL=http://127.0.0.1:$${WEB_PORT:-8140} npx playwright test
+
+e2e-stand: ## Те же сценарии против стенда (E2E_BASIC_PASSWORD — пароль из раздела «Доступ к стенду»)
+	cd e2e && E2E_BASE_URL=$${E2E_BASE_URL:-https://fsp.neuropeople.pro} E2E_BASIC_USER=$${E2E_BASIC_USER:-demo} \
+	  npx playwright test
+
+.PHONY: coverage test-bank stack-ci e2e e2e-stand
