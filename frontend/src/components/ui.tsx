@@ -11,6 +11,12 @@ export const num = (v?: number | null, d = 2) => (v == null || Number.isNaN(Numb
   : Number(v).toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−"));
 /** Со знаком: «+1,76», «−0,10». */
 export const signed = (v?: number | null, d = 2) => (v == null ? "—" : `${v > 0 ? "+" : ""}${num(v, d)}`);
+/** Текст объяснений с сервера: «θ = 1.27 ± 0.49» → «θ = 1,27 ± 0,49», «260 000 ₽» — с неразрывными пробелами.
+ *  Даты «06.10» и версии вида «v1.2» не трогает. */
+export const ruText = (s?: string | null) => (s ?? "")
+  .replace(/(^|[\s(=±+−-])(0|[1-9]\d{0,2})\.(\d+)(?![.\d])/g, "$1$2,$3")
+  .replace(/(\d) (?=\d{3}(?!\d))/g, `$1${NB}`)
+  .replace(/(\d) (₽|%|тыс\.)/g, `$1${NB}$2`);
 /** Доля → проценты: 0.953 → «95 %». */
 export const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${num(v * 100, d)}${NB}%`);
 export const dt = (s?: string | null) => (s ? new Date(s).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "—");
