@@ -25,6 +25,10 @@ import { CompanyPublic } from "./integrations/CompanyPublic";
 import { FspIdDone } from "./integrations/FspId";
 import { AdminSus, SusPage } from "./integrations/Sus";
 import { CandidateVacancies, EmployerVacancies } from "./integrations/Vacancies";
+import { CandidateCup, CandidateCups } from "./ideas/cup/Candidate";
+import { EmployerCup, EmployerCups } from "./ideas/cup/Employer";
+import { FspCups, FspDemand, FspEffect, FspFunnel, FspMethod, FspOverview, FspReportLayout, FspSalaries } from "./ideas/fsp/Cabinet";
+import { fspSections } from "./ideas/fsp/sections";
 
 export default function App() {
   return (
@@ -55,6 +59,8 @@ export default function App() {
         <Route path="vacancies" element={<CandidateVacancies />} />
         <Route path="companies/:id" element={<CompanyPublic />} />
         <Route path="app" element={<AppSection />} />
+        <Route path="cups" element={<CandidateCups />} />
+        <Route path="cups/:id" element={<CandidateCup />} />
       </Route>
       <Route path="/employer" element={<CabinetLayout role="employer" title="Кабинет работодателя" sections={employerSections} />}>
         <Route index element={<EmployerOverview />} />
@@ -69,6 +75,19 @@ export default function App() {
         <Route path="vacancies" element={<EmployerVacancies />} />
         <Route path="ats" element={<EmployerAts />} />
         <Route path="app" element={<AppSection />} />
+        <Route path="cups" element={<EmployerCups />} />
+        <Route path="cups/:id" element={<EmployerCup />} />
+      </Route>
+      <Route path="/fsp" element={<CabinetLayout role="fsp_analyst" alsoRoles={["admin"]} title="Кабинет ФСП" sections={fspSections} />}>
+        <Route element={<FspReportLayout />}>
+          <Route index element={<FspOverview />} />
+          <Route path="demand" element={<FspDemand />} />
+          <Route path="effect" element={<FspEffect />} />
+          <Route path="salaries" element={<FspSalaries />} />
+          <Route path="funnel" element={<FspFunnel />} />
+          <Route path="cups" element={<FspCups />} />
+          <Route path="method" element={<FspMethod />} />
+        </Route>
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

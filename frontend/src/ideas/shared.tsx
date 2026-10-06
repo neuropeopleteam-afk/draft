@@ -39,15 +39,18 @@ export function Bar({ value, max, tone = "brand" }: { value: number | null | und
   );
 }
 
-export function Countdown({ until, onEnd }: { until: string; onEnd?: () => void }) {
+export function Countdown({ until, onEnd, endedText }: { until: string; onEnd?: () => void; endedText?: string }) {
   const [now, setNow] = useState(Date.now());
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   const left = Math.max(0, Math.floor((new Date(until).getTime() - now) / 1000));
   useEffect(() => { if (left === 0) onEnd?.(); }, [left, onEnd]);
   const m = Math.floor(left / 60), s = left % 60;
   return (
-    <span className={`font-mono text-lg font-bold tabular-nums ${left < 120 ? "text-brand" : "text-brand-night"}`} aria-live="polite">
-      {String(m).padStart(2, "0")}:{String(s).padStart(2, "0")}
+    <span className="inline-flex flex-col items-end">
+      <span role="timer" aria-label={`Осталось ${m} мин ${s} с`} className={`font-mono text-lg font-bold tabular-nums ${left < 120 ? "text-brand" : "text-brand-night"}`}>
+        {String(m).padStart(2, "0")}:{String(s).padStart(2, "0")}
+      </span>
+      {left === 0 && endedText && <span className="text-xs font-semibold text-brand" role="status">{endedText}</span>}
     </span>
   );
 }
