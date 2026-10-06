@@ -38,7 +38,7 @@ test-pg: ## Те же тесты на PostgreSQL (отдельная база fs
 test-local: ## Тесты backend без Docker (нужен Python 3.12+ и зависимости из requirements*.txt)
 	cd backend && python -m pytest
 
-validate: ## Пересчёт метрик /validation: банк, симуляция теста, повтор, утечка, подбор (≈ 2 мин)
+validate: ## Пересчёт метрик /validation: K Sympson — Hetter, банк, симуляция теста (до/после), повтор, утечка, подбор (≈ 15–20 мин)
 	cd backend && python ../tools/calibrate_exposure.py && python -m app.modules.validation
 
 validate-docker: ## То же в контейнере api (без пересчёта K Sympson — Hetter)
