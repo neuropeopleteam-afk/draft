@@ -106,6 +106,13 @@ class Settings(BaseSettings):
     jury_sandboxes_max: int = 30
     # Запас готовых песочниц (создаются в фоне): первый вход эксперта — мгновенно, а не ~4 с создания
     jury_spare_sandboxes: int = 1
+    # Живая демонстрация (QR → мини-тест на телефоне → автоприглашение, app/jury_live): пауза перед появлением в
+    # подборке и перед приглашением (с; в тестах 0) и лимиты мини-тестов (гостей) в час — с адреса, на зал, всего
+    jury_live_select_delay_s: float = 1.5
+    jury_live_invite_delay_s: float = 4.0
+    jury_live_guests_per_ip_hour: int = 20
+    jury_live_guests_per_room_hour: int = 60
+    jury_live_guests_total_hour: int = 200
 
     # Резюме: максимальный размер PDF, разбор — в отдельном процессе с тайм-аутом и лимитом памяти
     resume_max_bytes: int = 5 * 1024 * 1024

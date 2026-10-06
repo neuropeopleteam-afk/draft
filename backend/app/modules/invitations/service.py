@@ -80,8 +80,9 @@ def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, 
     ev = []
     if b.test:
         t = b.test.value
+        what = ("Экспресс-категория {} по мини-тесту" if t.get("mini") else "Категория {} подтверждена тестом")
         ev.append({"level": "T1", "kind": "test",
-                   "text": f"Категория {category_title(b.profile.current_category_id)} подтверждена тестом: {t.get('correct')} из "
+                   "text": f"{what.format(category_title(b.profile.current_category_id))}: {t.get('correct')} из "
                            f"{t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}"})
     wanted = []
     if need:
