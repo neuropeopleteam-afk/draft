@@ -110,7 +110,7 @@ export function Settings() {
               <li key={k} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-night/10 p-4">
                 <div>
                   <p className="font-semibold">{CONSENT_TITLE[k]}</p>
-                  <p className="text-brand-ink/65">{c ? `Дано ${dt(c.granted_at)}, редакция ${c.version}` : "Не дано"} · <button className="font-semibold text-brand hover:underline" onClick={() => showText(k)}>текст</button></p>
+                  <p className="text-brand-ink/65">{c ? `Дано ${dt(c.granted_at)}, редакция ${/^\d{4}-\d{2}-\d{2}$/.test(c.version) ? dt(c.version) : c.version}` : "Не дано"} · <button className="font-semibold text-brand hover:underline" onClick={() => showText(k)}>текст</button></p>
                 </div>
                 {k === "publication" && (active(k)
                   ? <button className="btn-ghost" onClick={() => consent(k, false)}>Отозвать</button>

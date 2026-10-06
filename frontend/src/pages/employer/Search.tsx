@@ -57,7 +57,7 @@ export function Search() {
           </div>
           <Toggle checked={fsp} onChange={(v) => { setFsp(v); setPage(0); }} label="Есть паспорт ФСП" />
           {cats.data && (
-            <div className="border-t border-brand-night/10 pt-3 text-xs text-brand-ink/65">
+            <div className="hidden border-t border-brand-night/10 pt-3 text-xs text-brand-ink/65 lg:block">
               <p className="mb-1 font-semibold text-brand-night">Кандидатов по категориям</p>
               <ul className="grid grid-cols-1 gap-0.5">{cats.data.filter((c) => !direction || c.direction === direction).map((c) => <li key={c.id} className="flex justify-between"><span>{c.title}</span><span>{c.count}</span></li>)}</ul>
             </div>
