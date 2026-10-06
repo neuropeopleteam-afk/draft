@@ -15,7 +15,16 @@
   не входят.
 
 Остановка: SE(θ) ≤ se_target при n ≥ min_items, либо n = max_items, либо кончился пул
-или время.
+или время. Классификационное правило (``stop_rule="classification"``): сессия заканчивается
+и тогда, когда грейд уже определён — ни один порог грейда не попадает в θ̂ ± z·SE
+(доверительный интервал у порога, Kingsbury & Weiss, 1983; Eggen & Straetmans, 2000).
+
+Дотестирование у порога (``ext_items > 0``): если после основной части ближайший к θ̂ порог
+грейда лежит внутри θ̂ ± z·SE, тест продолжается короткими заданиями, выбранными по информации
+в этом пороге (а не в θ̂), пока порог не окажется вне интервала, не наберётся ext_items заданий
+или не кончится запас времени ext_time_s. Задания дотестирования берутся из всего банка
+направления (субпул после основной части почти исчерпан), кроме семейств прошлой попытки
+(``exclude_ext``) и субпулов на карантине (``blocked_subpools``).
 """
 from __future__ import annotations
 
@@ -96,6 +105,17 @@ class CATConfig:
         "junior": -0.5, "middle": 0.5, "senior": 1.3})
     estimator: str = "eap"
     prior_sd: float = 1.0
+    # --- классификация по грейду (по умолчанию выключена: прежнее поведение)
+    cuts: tuple[float, ...] = (-1.0, 0.0, 1.0)   # пороги грейдов на шкале θ (как GradeScale)
+    stop_rule: str = "se"                 # se | classification
+    classify_z: float = 1.0               # порог «определён», если |θ̂ − порог| ≥ z·SE
+    select_at: str = "theta"              # theta | cut — информация в θ̂ или в неопределённом пороге
+    cut_after: int = 4                    # select_at="cut": первые cut_after заданий — по θ̂
+    time_weight: float = 0.0              # 0 — информация; 1 — информация на единицу ожидаемого времени
+    ext_items: int = 0                    # дотестирование у порога: до ext_items заданий сверх основной части
+    ext_time_s: float = 1200.0            # запас времени на дотестирование сверх max_time_s
+    ext_item_time_s: float = 300.0        # в дотестировании — только задания с лимитом не больше этого
+    ext_own_first: bool = False           # дотестирование: сначала свободные задания своего субпула (частота показа)
 
 
 class ExposureControl:
@@ -151,16 +171,29 @@ class CATResult:
 class CATSession:
     def __init__(self, pool: list[PoolItem], direction: str, config: CATConfig | None = None,
                  exposure: ExposureControl | None = None, claimed_grade: str = "middle",
-                 subpool: int | None = None, rng: np.random.Generator | None = None):
+                 subpool: int | None = None, rng: np.random.Generator | None = None, *,
+                 exclude_ext: Iterable[str] = (), blocked_subpools: Iterable[int] = (),
+                 exclude: Iterable[str] = ()):
         self.cfg = config or CATConfig()
         self.exposure = exposure
         self.rng = rng or np.random.default_rng()
         self.direction = direction
-        eligible = [i for i in pool if i.block in ("common", direction)]
+        self.claimed_grade = claimed_grade
+        self.subpool = subpool
+        everything = [i for i in pool if i.block in ("common", direction)]
+        blocked, excl_main = set(blocked_subpools), set(exclude)
+        eligible = everything
         if subpool is not None:
-            eligible = [i for i in eligible if i.canary or i.subpool == subpool]
-        self.scored_pool = [i for i in eligible if not i.canary]
+            eligible = [i for i in everything if i.canary or i.subpool == subpool]
+        elif blocked:
+            eligible = [i for i in everything if i.canary or i.subpool not in blocked]
+        self.scored_pool = [i for i in eligible if not i.canary and i.family_id not in excl_main]
         self.canary_pool = [i for i in eligible if i.canary]
+        excl = set(exclude_ext) | excl_main
+        # пул дотестирования: весь банк направления, кроме семейств прошлой попытки и субпулов на карантине
+        self.ext_pool = [i for i in everything if not i.canary and i.family_id not in excl
+                         and (subpool is None or i.subpool == subpool or i.subpool not in blocked)]
+        self.items: dict[str, PoolItem] = {i.family_id: i for i in everything}
         self.administered: list[Administered] = []
         self.used: set[str] = set()
         self.theta = self.cfg.start_theta.get(claimed_grade, 0.0)
@@ -168,6 +201,10 @@ class CATSession:
         self.time_used = 0.0
         self.trace: list[tuple[float, float]] = []
         self.stop_reason = ""
+        # дотестирование: номер оцениваемого задания, с которого оно началось, порог и причина остановки основной части
+        self.ext_start: int | None = None
+        self.ext_cut: float | None = None
+        self.ext_reason_before = ""
         if exposure is not None:
             exposure.n_sessions += 1
 
@@ -176,10 +213,26 @@ class CATSession:
     def n_scored(self) -> int:
         return sum(1 for a in self.administered if not a.canary)
 
+    @property
+    def n_ext(self) -> int:
+        return 0 if self.ext_start is None else self.n_scored - self.ext_start
+
     def _position(self) -> int:
         return len(self.administered) + 1
 
+    # -- классификация относительно порогов грейда
+    def uncertain_cuts(self, theta: float | None = None, se: float | None = None) -> list[float]:
+        """Пороги внутри θ̂ ± z·SE (по ним грейд ещё не определён), от ближайшего к дальнему."""
+        th = self.theta if theta is None else theta
+        s = self.se if se is None else se
+        z = self.cfg.classify_z
+        return sorted((c for c in self.cfg.cuts if abs(th - c) < z * s), key=lambda c: abs(th - c))
+
+    def grade_determined(self) -> bool:
+        return not self.uncertain_cuts()
+
     def is_finished(self) -> bool:
+        """Остановка основной части теста."""
         c = self.cfg
         n = self.n_scored
         if n >= c.max_items:
@@ -187,6 +240,9 @@ class CATSession:
             return True
         if n >= c.min_items and self.se <= c.se_target:
             self.stop_reason = "se_target"
+            return True
+        if n >= c.min_items and c.stop_rule == "classification" and self.grade_determined():
+            self.stop_reason = "classified"
             return True
         if self.time_used >= c.max_time_s:
             self.stop_reason = "time"
@@ -201,10 +257,46 @@ class CATSession:
         return [i for i in self.scored_pool if i.family_id not in self.used
                 and i.time_limit_s <= left]
 
+    def _ext_candidates(self) -> list[PoolItem]:
+        left = self.cfg.max_time_s + self.cfg.ext_time_s - self.time_used
+        lim = min(left, self.cfg.ext_item_time_s)
+        return [i for i in self.ext_pool if i.family_id not in self.used and i.time_limit_s <= lim]
+
     # -- выбор
+    def _target(self) -> float:
+        """Точка, в которой максимизируется информация задания в основной части."""
+        if self.cfg.select_at == "cut" and self.n_scored >= self.cfg.cut_after:
+            unc = self.uncertain_cuts()
+            if unc:
+                return unc[0]
+        return self.theta
+
+    def _score(self, item: PoolItem, target: float) -> float:
+        info = item.information(target)
+        w = self.cfg.time_weight
+        if w:
+            info /= (np.exp(item.beta_time) / 120.0) ** w  # ожидаемое время ответа ∝ exp(β)
+        return info
+
+    def _pick(self, cands: list[PoolItem], target: float) -> PoolItem:
+        cands = sorted(cands, key=lambda i: -self._score(i, target))
+        if self.exposure is None or self.cfg.exposure == "none":
+            return cands[0]
+        for item in cands[:-1]:
+            if self.exposure.accept(item.family_id, self.rng):
+                return item
+        self.exposure.accept(cands[-1].family_id, self.rng)
+        return cands[-1]
+
     def next_item(self) -> PoolItem | None:
-        if self.is_finished():
-            return None
+        if self.ext_start is None:
+            if not self.is_finished():
+                return self._next_main()
+            if not self._start_extension():
+                return None
+        return self._next_extension()
+
+    def _next_main(self) -> PoolItem:
         pos = self._position()
         if pos in self.cfg.canary_positions:
             free = [c for c in self.canary_pool if c.family_id not in self.used]
@@ -218,24 +310,42 @@ class CATSession:
                        self._block(a.family_id) == "common")
         want_common = n_common < self.cfg.common_share * (self.n_scored + 1)
         blk = [i for i in cands if (i.block == "common") == want_common] or cands
-        blk.sort(key=lambda i: -i.information(self.theta))
-        if self.exposure is None or self.cfg.exposure == "none":
-            return blk[0]
-        for item in blk[:-1]:
-            if self.exposure.accept(item.family_id, self.rng):
-                return item
-        self.exposure.accept(blk[-1].family_id, self.rng)
-        return blk[-1]
+        return self._pick(blk, self._target())
+
+    def _start_extension(self) -> bool:
+        """Начать дотестирование, если ближайший порог не определён и есть короткие задания."""
+        if self.cfg.ext_items <= 0:
+            return False
+        unc = self.uncertain_cuts()
+        if not unc or not self._ext_candidates():
+            return False
+        self.ext_start, self.ext_cut, self.ext_reason_before = self.n_scored, unc[0], self.stop_reason
+        return True
+
+    def _next_extension(self) -> PoolItem | None:
+        if self.n_ext >= self.cfg.ext_items:
+            self.stop_reason = "extension_done"
+            return None
+        unc = self.uncertain_cuts()
+        if not unc:
+            self.stop_reason = "extension_classified"
+            return None
+        cands = self._ext_candidates()
+        if not cands:
+            self.stop_reason = "extension_pool_exhausted"
+            return None
+        if self.cfg.ext_own_first and self.subpool is not None:
+            cands = [i for i in cands if i.subpool == self.subpool] or cands
+        return self._pick(cands, unc[0])
 
     def _block(self, fid: str) -> str:
-        for i in self.scored_pool:
-            if i.family_id == fid:
-                return i.block
-        return "common"
+        it = self.items.get(fid)
+        return it.block if it is not None else "common"
 
     def record(self, item: PoolItem, x: Iterable[float], log_t: float | None = None,
                time_s: float | None = None) -> None:
         x = np.asarray(list(x), dtype=float)
+        self.items.setdefault(item.family_id, item)
         self.administered.append(Administered(item.family_id, x, log_t, item.canary, self.theta))
         self.used.add(item.family_id)
         self.time_used += time_s if time_s is not None else item.time_limit_s
@@ -247,18 +357,15 @@ class CATSession:
 
     def _scored_arrays(self, exclude: set[int] | None = None):
         xs, aa, bb = [], [], []
-        idx = 0
-        lookup = {i.family_id: i for i in self.scored_pool}
         for k, adm in enumerate(self.administered):
             if adm.canary:
                 continue
             if exclude and k in exclude:
                 continue
-            it = lookup[adm.family_id]
+            it = self.items[adm.family_id]
             xs.append(adm.x)
             aa.append(it.a_eff)
             bb.append(it.b)
-            idx += 1
         if not xs:
             return np.array([]), np.array([]), np.array([])
         return np.concatenate(xs), np.concatenate(aa), np.concatenate(bb)
