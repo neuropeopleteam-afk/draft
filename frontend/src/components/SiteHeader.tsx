@@ -7,7 +7,7 @@ export function SiteHeader({ dark = false }: { dark?: boolean }) {
   const link = dark ? "text-white/80 hover:text-white" : "text-brand-ink/70 hover:text-brand-night";
   return (
     <header className={dark ? "bg-brand-night" : "border-b border-brand-night/10 bg-white"}>
-      <div className="mx-auto flex max-w-content items-center justify-between gap-6 px-6 py-4">
+      <div className="mx-auto flex max-w-content items-center justify-between gap-3 px-4 py-4 sm:gap-6 sm:px-6">
         <Link to="/" aria-label="На главную"><Logo light={dark} /></Link>
         <nav className="hidden items-center gap-6 text-sm font-medium lg:flex" aria-label="Основная навигация">
           <a href="/#jury" className={link}>Демо для жюри</a>
@@ -18,11 +18,11 @@ export function SiteHeader({ dark = false }: { dark?: boolean }) {
         </nav>
         <div className="flex items-center gap-2 sm:gap-3">
           {me ? (
-            <Link to={cabinetPath(me.role)} className={dark ? "btn-light" : "btn-primary"}>Личный кабинет</Link>
+            <Link to={cabinetPath(me.role)} className={`${dark ? "btn-light" : "btn-primary"} px-4 sm:px-5`}>Личный кабинет</Link>
           ) : (
             <>
               <Link to="/login" className={`rounded-lg px-2 py-2 text-sm font-semibold ${link}`}>Войти</Link>
-              <Link to="/register" className={dark ? "btn-light" : "btn-primary"}>Регистрация</Link>
+              <Link to="/register" className={`${dark ? "btn-light" : "btn-primary"} px-4 sm:px-5`}>Регистрация</Link>
             </>
           )}
         </div>
