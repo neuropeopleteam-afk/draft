@@ -93,7 +93,14 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     t = b.test.value if b.test else {}
     test = test_component(t.get("theta"), t.get("se"), req.get("grade") or p.current_grade_id)
     cat_title = category_title(p.current_category_id)
-    if b.test:
+    if b.test and t.get("mini"):  # экспресс-категория по мини-тесту живой демонстрации (app.jury_live)
+        reasons.append({
+            "requirement": "Специализация и грейд", "level": "T1", "status": "partial",
+            "text": f"Экспресс-категория {cat_title} по мини-тесту {b.test.created_at:%d.%m.%Y}: "
+                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}"
+                    " — предварительно, полный тест уточнит грейд",
+        })
+    elif b.test:
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "confirmed",
             "text": f"Категория {cat_title} подтверждена тестом {b.test.created_at:%d.%m.%Y}: "
