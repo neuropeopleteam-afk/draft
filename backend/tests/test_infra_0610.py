@@ -207,7 +207,7 @@ def test_attack_never_writes(client, monkeypatch):
     from app.modules.profiles.models import Company
     from app.modules.validation import attacks
 
-    def evil(db, attack_id, req):
+    def evil(db, attack_id, req, text=None):
         db.add(Company(name="атака записала", is_demo=True))
         db.flush()
         return {"violated": False, "fact": "", "details": {}}
