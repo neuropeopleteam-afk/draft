@@ -91,11 +91,85 @@ def _stack_cell(b, tag: str) -> tuple[dict, float | None]:
     return {"level": "none", "status": "missing", "text": "Нет данных"}, None
 
 
+def _pts(x: float) -> str:
+    """Баллы из 100 с десятичной запятой: 3,1."""
+    return f"{abs(x):.1f}".replace(".", ",")
+
+
+def _balls(x: float) -> str:
+    v = round(abs(x), 1)
+    return "балл" if v == 1 else "балла" if v != int(v) or 2 <= v % 10 <= 4 and not 12 <= v % 100 <= 14 else "баллов"
+
+
+def why_pairs(items: list[dict], req: dict) -> list[dict]:
+    """«Почему A выше B»: вклад каждого подтверждённого фактора в разницу скоров (в баллах из 100).
+
+    items: [{ref, score, comps, tags{tag: доля подтверждения или 0}, theta, se, fsp, probe}] — в порядке выдачи.
+    Разница раскладывается точно: Σ вкладов = разница скоров (с точностью до округления).
+    """
+    w = dict(ranking.WEIGHTS)
+    if not req.get("stack_required"):
+        w["test"], w["stack_required"] = w["test"] + w["stack_required"], 0.0
+    zones = {z: req.get(z) or [] for z in ("stack_required", "stack_desired")}
+    order = sorted(items, key=lambda x: -x["score"])
+    out = []
+    for a, b in zip(order, order[1:]):
+        diff = (a["score"] - b["score"]) * 100
+        factors: list[dict] = []
+        dt = w["test"] * (a["comps"]["test"] - b["comps"]["test"]) * 100
+        if abs(dt) >= 0.05:
+            th = (lambda x: f"θ {_n(x['theta'], sign=True)} ± {_n(x['se'])}" if x.get("theta") is not None
+                  else "нет теста")
+            factors.append({"level": "T1", "points": dt, "label": "тест", "a": th(a), "b": th(b)})
+        for zone, label in (("stack_required", "обязательно"), ("stack_desired", "желательно")):
+            total = sum(i["weight"] for i in zones[zone]) or 1.0
+            for it in zones[zone]:
+                ta, tb = a["tags"].get(it["tag"], 0.0), b["tags"].get(it["tag"], 0.0)
+                d = w[zone] * it["weight"] / total * (ta - tb) * 100
+                if abs(d) >= 0.05:
+                    pc = (lambda v: f"{v * 100:.0f} %" if v else "не подтверждено")
+                    factors.append({"level": "T1", "points": d, "a": pc(ta), "b": pc(tb),
+                                    "label": f"{label} {STACK.get(it['tag'], (it['tag'],))[0]}"})
+        df = w["fsp"] * (a["comps"]["fsp"] - b["comps"]["fsp"]) * 100
+        if abs(df) >= 0.05:
+            fs = (lambda x: f"сила паспорта {_n(x['comps']['fsp'])}" if x["comps"]["fsp"] else "нет подтверждённых")
+            factors.append({"level": "T2", "points": df, "label": "ФСП", "a": fs(a), "b": fs(b)})
+        dp = w["probe"] * (a["comps"]["probe"] - b["comps"]["probe"]) * 100
+        if abs(dp) >= 0.05:
+            pr = (lambda x: f"оценка {x['comps']['probe'] * 100:.0f} %" if x["comps"]["probe"] else "нет")
+            factors.append({"level": "T1", "points": dp, "label": "зонд", "a": pr(a), "b": pr(b)})
+        factors.sort(key=lambda f: -f["points"])
+        pro = [f for f in factors if f["points"] > 0][:3]
+        con = [f for f in factors if f["points"] < 0][-1:]  # главный фактор в пользу второго
+        if diff < 0.5:
+            summary = (f"{a['ref']} и {b['ref']} почти равны: разница {_pts(diff)} {_balls(diff)} из 100 — "
+                       f"решит зонд")
+        else:
+            summary = f"{a['ref']} выше {b['ref']} на {_pts(diff)} {_balls(diff)} из 100"
+        for f in factors:
+            f["text"] = f"{f['label']}: {f['a']} против {f['b']}" if f["points"] > 0 else \
+                f"{f['label']}: {f['b']} против {f['a']}"
+        text = summary + (": " + "; ".join(f"{f['text']} (+{_pts(f['points'])})" for f in pro) if pro else "")
+        if con:
+            text += f". В пользу {b['ref']}: {con[0]['text']} (+{_pts(con[0]['points'])} ему)"
+        out.append({"higher": a["ref"], "lower": b["ref"], "diff": round(diff, 2), "summary": summary, "text": text,
+                    "pro": [{**f, "points": round(f["points"], 2)} for f in pro],
+                    "con": [{**f, "points": round(f["points"], 2)} for f in con],
+                    "factors": [{**f, "points": round(f["points"], 2)} for f in factors]})
+    return out
+
+
 def default_refs(db: Session, need: EmployerNeed, version: int | None) -> list[str]:
     q = select(SelectionVersion).where(SelectionVersion.need_id == need.id)
     q = q.where(SelectionVersion.version == version) if version else q.order_by(SelectionVersion.version.desc())
     v = db.scalars(q.limit(1)).first()
     return [r["ref"] for r in (v.results if v else [])[:MAX_REFS]]
+
+
+def _salary_req(lo: int | None, hi: int | None) -> str | None:
+    if lo and hi:
+        return _rub(lo) if lo == hi else f"{_rub(lo)} – {_rub(hi)}"
+    return f"от {_rub(lo)}" if lo else f"до {_rub(hi)}" if hi else None
 
 
 def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], version: int | None = None) -> dict:
@@ -142,18 +216,25 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
          "hint": "Только подтверждённые реестром (T2); нет истории — нейтрально, без штрафа"},
         {"key": "probe", "group": "Зонды", "title": "Зонды"},
         {"key": "market", "group": "Рынок", "title": "Ожидания по рынку категории",
-         "requirement": (f"{_rub(req.get('salary_from'))} – {_rub(req.get('salary_to'))}"
-                         if (req.get("salary_from") or req.get("salary_to")) else None),
+         "requirement": _salary_req(req.get("salary_from"), req.get("salary_to")),
          "quote": ((req.get("evidence") or {}).get("salary") or {}).get("quote"),
          "hint": "Рыночный диапазон категории кандидата; его скрытый минимум не показывается никогда"},
     ]
 
     out_c: list[dict] = []
+    why_items: list[dict] = []
     values: dict[str, dict[str, float]] = {}
     for p in profiles:
         b = bundles[p.user_id]
         c = card(b, cats)
         s, comps, reasons = ranking.score_candidate(b, req)
+        t0 = b.test.value if b.test else {}
+        why_items.append({
+            "ref": p.public_ref, "score": s, "comps": comps,
+            "theta": t0.get("theta"), "se": t0.get("se"),
+            "tags": {it["tag"]: (float(b.skills_t1[it["tag"]].value.get("score", 0))
+                                 if skill_confirmed(b.skills_t1.get(it["tag"])) else 0.0)
+                     for z in ("stack_required", "stack_desired") for it in req.get(z) or []}})
         cells: dict[str, dict] = {}
         cells["score"] = {"level": "T1", "status": "confirmed", "text": f"{round(s * 100)} из 100",
                           "value": s, "components": comps}
@@ -264,4 +345,5 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                  "version": sel.version if sel else None},
         "rows": rows, "candidates": out_c, "levels": ranking.LEVELS, "weights": ranking.WEIGHTS,
         "selection_total": len(in_sel),
+        "why": why_pairs(why_items, req),
     }

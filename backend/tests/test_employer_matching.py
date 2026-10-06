@@ -326,3 +326,114 @@ def test_demographics_attack_detects_violation(monkeypatch):
         db.commit()
         out = attacks.run(db, "demographics")
     assert out["violated"] is True
+
+
+# ---------------------------------------------------------------- «почему A выше B»
+def test_compare_why_pairs(client):
+    te = employer(client)
+    need = _seeded_need(client, te)
+    c = client.get(f"/api/employer/needs/{need['id']}/compare", headers=H(te)).json()
+    by = {x["ref"]: x for x in c["candidates"]}
+    assert len(c["why"]) == len(c["candidates"]) - 1
+    for w in c["why"]:
+        a, b = by[w["higher"]], by[w["lower"]]
+        assert a["score"] >= b["score"] and abs(w["diff"] - (a["score"] - b["score"]) * 100) < 0.01
+        # разложение точное: сумма вкладов = разница скоров (до округления компонент)
+        assert abs(sum(f["points"] for f in w["factors"]) - w["diff"]) < 0.3, w
+        assert all(f["level"] in ("T1", "T2") for f in w["factors"])  # только подтверждённое
+        assert all(f["points"] > 0 for f in w["pro"]) and all(f["points"] < 0 for f in w["con"])
+        assert w["text"].startswith(f"{a['ref']} ") and "против" in w["text"]
+        assert "мужчин" not in w["text"] and "лет" not in w["text"].replace("лет опыта", "")
+
+
+def test_why_pairs_unit():
+    from app.modules.matching.compare import why_pairs
+
+    req = {"stack_required": [{"tag": "python", "weight": 1.0}, {"tag": "kafka", "weight": 1.0}], "stack_desired": []}
+    base = {"theta": 1.0, "se": 0.3, "comps": {"test": 0.8, "stack_required": 0.0, "stack_desired": 0.0, "fsp": 0.0,
+                                                "probe": 0.0}}
+    a = {**base, "ref": "C-A", "tags": {"python": 1.0, "kafka": 0.0}}
+    b = {**base, "ref": "C-B", "tags": {"python": 0.0, "kafka": 0.0}, "comps": {**base["comps"], "fsp": 0.5}}
+    a["comps"] = {**base["comps"], "stack_required": 0.5}
+    a["score"] = 0.45 * 0.8 + 0.35 * 0.5
+    b["score"] = 0.45 * 0.8 + 0.10 * 0.5
+    [w] = why_pairs([b, a], req)
+    assert w["higher"] == "C-A" and w["diff"] == pytest.approx(12.5)
+    assert w["pro"][0]["text"] == "обязательно Python: 100 % против не подтверждено" and w["pro"][0]["points"] == 17.5
+    assert w["con"][0]["level"] == "T2" and w["con"][0]["points"] == -5.0
+    assert w["con"][0]["text"] == "ФСП: сила паспорта 0,50 против нет подтверждённых"
+    assert w["summary"] == "C-A выше C-B на 12,5 балла из 100"
+
+
+# ---------------------------------------------------------------- ширина вилки
+def test_salary_range_width_limit(client):
+    tc = candidate_with_category(client)
+    te = employer(client)
+    ref = client.get("/api/me", headers=H(tc)).json()["candidate"]["public_ref"]
+    base = {"candidate_ref": ref, "position_title": "Python-разработчик", "contact_method": "Telegram @hr_corp",
+            "offer_description": "Разработка API платёжного сервиса, команда 6 человек."}
+    r = client.post("/api/employer/invitations", headers=H(te), json={**base, "salary_from": 100000, "salary_to": 300000})
+    assert r.status_code == 422 and r.json()["detail"]["code"] == "salary_range_too_wide"
+    assert "1,5 раза" in r.json()["detail"]["message"] and "150\u00a0000" in r.json()["detail"]["message"]
+    probe = {"candidate_refs": [ref], "title": "Медленный запрос", "salary_from": 100000, "salary_to": 200000,
+             "task_text": "Запрос с JOIN выполняется 8 секунд. Опишите план диагностики."}
+    r = client.post("/api/employer/probes", headers=H(te), json=probe)
+    assert r.status_code == 422 and r.json()["detail"]["code"] == "salary_range_too_wide"
+    assert client.post("/api/employer/probes", headers=H(te), json={**probe, "salary_to": 150000}).status_code == 201
+    ok = client.post("/api/employer/invitations", headers=H(te), json={**base, "salary_from": 200000, "salary_to": 300000})
+    assert ok.status_code == 201, ok.text
+
+
+# ---------------------------------------------------------------- жалоба на приглашение и индекс доверия
+def _invite(client, te, ref, **kw):
+    body = {"candidate_ref": ref, "position_title": "Python-разработчик", "contact_method": "Telegram @hr_corp",
+            "offer_description": "Разработка API платёжного сервиса, команда 6 человек.", "salary_from": 220000,
+            "salary_to": 300000, **kw}
+    r = client.post("/api/employer/invitations", headers=H(te), json=body)
+    assert r.status_code == 201, r.text
+    return r.json()["id"]
+
+
+def test_invitation_complaint_lowers_trust(client):
+    te = employer(client)
+    t0 = client.get("/api/employer/company/trust", headers=H(te)).json()
+    f0 = {f["id"]: f for f in t0["factors"]}
+    assert f0["complaints"]["status"] == "ok" and f0["complaints"]["points"] == 0 and f0["complaints"]["max"] == 0
+    cands = [candidate_with_category(client, email=f"c{i}@example.com") for i in range(3)]
+    refs = [client.get("/api/me", headers=H(t)).json()["candidate"]["public_ref"] for t in cands]
+    invs = [_invite(client, te, r) for r in refs]
+    tc = cands[0]
+    # чужое приглашение — 404; неизвестная причина — 422
+    assert client.post(f"/api/candidate/invitations/{invs[1]}/complaint", json={"reason": "spam"},
+                       headers=H(tc)).status_code == 404
+    assert client.post(f"/api/candidate/invitations/{invs[0]}/complaint", json={"reason": "rude"},
+                       headers=H(tc)).status_code == 422
+    r = client.post(f"/api/candidate/invitations/{invs[0]}/complaint",
+                    json={"reason": "salary", "comment": "Назвали сумму вдвое ниже"}, headers=H(tc))
+    assert r.status_code == 201, r.text
+    out = r.json()
+    assert out["status"] == "declined" and out["complaint"]["reason_title"] == "Нереальная вилка"
+    assert out["complaint"]["comment"] == "Назвали сумму вдвое ниже"
+    assert client.post(f"/api/candidate/invitations/{invs[0]}/complaint", json={"reason": "spam"},
+                       headers=H(tc)).status_code == 409
+    emp = {i["id"]: i for i in client.get("/api/employer/invitations", headers=H(te)).json()}
+    assert emp[invs[0]]["complaint"]["reason"] == "salary" and "comment" not in emp[invs[0]]["complaint"]
+    t1 = client.get("/api/employer/company/trust", headers=H(te)).json()
+    f1 = {f["id"]: f for f in t1["factors"]}
+    assert f1["complaints"]["status"] == "warn" and f1["complaints"]["points"] == -5
+    assert "нереальная вилка — 1" in f1["complaints"]["text"]
+    assert t1["score"] == max(0, round(sum(f["points"] for f in t1["factors"])))  # штраф входит в индекс
+    # ещё две жалобы от разных кандидатов (в т. ч. на принятое приглашение) — «плохо», штраф 15
+    assert client.post(f"/api/candidate/invitations/{invs[1]}/accept", headers=H(cands[1])).status_code == 200
+    for t, i, why in ((cands[1], invs[1], "role"), (cands[2], invs[2], "spam")):
+        assert client.post(f"/api/candidate/invitations/{i}/complaint", json={"reason": why}, headers=H(t)).status_code == 201
+    accepted = client.get(f"/api/candidate/invitations/{invs[1]}", headers=H(cands[1])).json()
+    assert accepted["status"] == "accepted" and accepted["complaint"]["reason"] == "role"  # статус не меняется
+    t3 = client.get("/api/employer/company/trust", headers=H(te)).json()
+    f3 = {f["id"]: f for f in t3["factors"]}
+    assert f3["complaints"]["status"] == "bad" and f3["complaints"]["points"] == -15
+    without = round(sum(f["points"] for f in t3["factors"] if f["id"] != "complaints"))
+    assert t3["score"] == max(0, without - 15) and t3["summary"]
+    # кандидат видит тот же пониженный индекс в своём приглашении
+    tr = client.get("/api/candidate/invitations-trust", headers=H(cands[2])).json()
+    assert tr[invs[2]]["score"] == t3["score"]
