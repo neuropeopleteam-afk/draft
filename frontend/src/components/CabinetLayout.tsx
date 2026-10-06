@@ -6,6 +6,9 @@ import { Logo } from "./Logo";
 
 export interface Section { path: string; title: string; description: string; day?: string }
 
+/** Короткая подпись роли для шапки на телефоне: «Кабинет работодателя» не помещается рядом с логотипом. */
+const SHORT: Partial<Record<Role, string>> = { candidate: "Кандидат", employer: "Работодатель", expert: "Эксперт", fsp_analyst: "ФСП", admin: "Администратор" };
+
 export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role: Role; sections: Section[]; title: string; alsoRoles?: Role[] }) {
   const { me, loading, signOut } = useAuth();
   const navigate = useNavigate();
@@ -15,11 +18,14 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
   // Телефон: меню — горизонтальная лента. Активный пункт прокручиваем в видимую часть ленты (по центру),
   // страницу по вертикали не двигаем.
   useEffect(() => {
-    const nav = navRef.current;
-    const a = nav?.querySelector<HTMLElement>('[aria-current="page"]');
-    if (!nav || !a || nav.scrollWidth <= nav.clientWidth) return;
-    const left = a.offsetLeft - (nav.clientWidth - a.offsetWidth) / 2;
-    nav.scrollTo({ left: Math.max(0, left), behavior: "auto" });
+    const center = () => {
+      const nav = navRef.current;
+      const a = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+      if (!nav || !a || nav.scrollWidth <= nav.clientWidth) return;
+      nav.scrollTo({ left: Math.max(0, a.offsetLeft - (nav.clientWidth - a.offsetWidth) / 2), behavior: "auto" });
+    };
+    center();
+    void document.fonts?.ready.then(center);  // после загрузки Montserrat ширина пунктов меняется
   }, [loc.pathname, me]);
 
   if (loading) return <div className="flex min-h-screen items-center justify-center text-brand-ink/70" aria-busy="true">Загрузка…</div>;
@@ -37,7 +43,9 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
       <aside className="sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none">
         <div className="flex h-14 items-center justify-between gap-3 px-4 md:block md:h-auto md:px-5 md:py-5">
           <NavLink to="/" aria-label="На главную"><Logo /></NavLink>
-          <p className="ml-auto min-w-0 truncate text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-6 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">{title}</p>
+          <p className="ml-auto min-w-0 truncate text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-6 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">
+            <span className="md:hidden">{SHORT[role] ?? title}</span><span className="hidden md:inline">{title}</span>
+          </p>
           <button onClick={exit} className="shrink-0 rounded-lg px-2 py-1.5 text-sm font-semibold text-brand-plum hover:bg-brand-blush/50 hover:text-brand md:hidden">Выйти</button>
         </div>
         <nav ref={navRef} className="nav-strip flex gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
