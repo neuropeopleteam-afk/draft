@@ -9,7 +9,8 @@
   seed сессии (равномерно), повторная — другой субпул, чем в прошлой попытке (параллельная форма).
   Субпул, который утёк, выводится из ротации настройкой ASSESSMENT_SUBPOOL_QUARANTINE (номера через запятую).
 * **Состав сессии.** Не больше ``max_per_format`` заданий формата: open_book_3step — 2 (три шага, ~15 мин,
-  адаптивный выбор иначе тянет их из-за большой информации), open_answer — 1 (~20 мин).
+  адаптивный выбор иначе тянет их из-за большой информации), open_answer — 1 (~20 мин). Лимит действует и в
+  дотестировании у порога (там и так только короткие задания, см. ``CATConfig.ext_item_time_s``).
 """
 from __future__ import annotations
 
@@ -29,22 +30,27 @@ class AppCATSession(CATSession):
     def __init__(self, *args, max_per_format: dict[str, int] | None = None, **kwargs):
         self.max_per_format = dict(DEFAULT_FORMAT_LIMITS if max_per_format is None else max_per_format)
         super().__init__(*args, **kwargs)
-        self._fmt = {i.family_id: i.format for i in self.scored_pool + self.canary_pool}
+        self._fmt = {fid: i.format for fid, i in self.items.items()}
 
     def format_counts(self) -> dict[str, int]:
         out: dict[str, int] = {}
         for a in self.administered:
             if not a.canary:
-                f = self._fmt.get(a.family_id, "")
+                f = self._fmt.get(a.family_id) or getattr(self.items.get(a.family_id), "format", "")
                 out[f] = out.get(f, 0) + 1
         return out
 
-    def _candidates(self) -> list[PoolItem]:
-        cands = super()._candidates()
+    def _limit(self, cands: list[PoolItem]) -> list[PoolItem]:
         if not self.max_per_format:
             return cands
         cnt = self.format_counts()
         return [i for i in cands if cnt.get(i.format, 0) < self.max_per_format.get(i.format, 10**6)]
+
+    def _candidates(self) -> list[PoolItem]:
+        return self._limit(super()._candidates())
+
+    def _ext_candidates(self) -> list[PoolItem]:
+        return self._limit(super()._ext_candidates())
 
 
 @lru_cache(maxsize=1)

@@ -62,16 +62,22 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     seed = secrets.randbelow(2**31)
     stack = list((survey.answers or {}).get("stack", {}).keys())
     if engine.name.startswith("bank"):
-        # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма)
-        prev = [sp for sp in (((t.result or {}).get("state") or {}).get("subpool") for t in db.scalars(
+        # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма);
+        # семейства последней попытки не попадают в дотестирование у порога (оно берёт задания и из другого субпула)
+        past = [((t.result or {}).get("state") or {}) for t in db.scalars(
             select(TestSession).where(TestSession.user_id == user_id, TestSession.status == TestSessionStatus.finished)
-            .order_by(TestSession.created_at.desc()).limit(5))) if sp is not None]
+            .order_by(TestSession.created_at.desc()).limit(5))]
+        prev = [st.get("subpool") for st in past if st.get("subpool") is not None]
+        last_families = [i.get("family_id") for i in (past[0].get("items") or []) if i.get("family_id")] if past else []
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
-                             previous_subpools=prev)
+                             previous_subpools=prev, previous_families=last_families)
     else:
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
-    # Адаптивный тест банка: до 60 минут (лимит CATConfig) + запас на дотестирование у порога; заглушка — 30 минут
-    minutes = get_settings().assessment_max_minutes + 30 if engine.name.startswith("bank") else 30
+    # Адаптивный тест банка: до 60 минут (лимит CATConfig) + запас на дотестирование у порога (не меньше 30 минут,
+    # как раньше); заглушка — 30 минут
+    st_ = get_settings()
+    minutes = (st_.assessment_max_minutes + max(30, st_.assessment_extension_minutes + 10)
+               if engine.name.startswith("bank") else 30)
     ts = TestSession(
         user_id=user_id, survey_id=survey.id, direction_id=survey.direction_id, claimed_grade_id=claimed_grade,
         status=TestSessionStatus.in_progress, form_seed=seed, is_sandbox=is_sandbox(profile), started_at=now,
