@@ -42,7 +42,7 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/55">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -110,9 +110,11 @@ function Report({ r }: { r: any }) {
         <Table head={["Способ", "precision@5", "nDCG@5", "nDCG@10", "Внутри категории: nDCG@3"]}
           rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["BM25 по тексту резюме и потребности", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
             [t, num(m.summary?.["p@5"]?.[k]), num(m.summary?.["ndcg@5"]?.[k]), num(m.summary?.["ndcg@10"]?.[k]), num(m.summary?.["within_category_ndcg@3"]?.[k])])} />
-        <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Бонус ФСП на общую точность не влияет, внутри категории немного помогает. Экспертная разметка пар — следующий шаг.</p>
+        <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Бонус ФСП на общую точность не влияет, внутри категории немного помогает. Пересчёт по оценкам экспертов-тимлидов — в разделе <a href="#experts" className="font-semibold text-brand-plum underline">«Экспертная разметка»</a>.</p>
         <p className="mt-1 text-xs text-brand-ink/55">Пары и метки: docs/validation/matching_pairs.json</p>
       </Section>
+
+      {r.experts && <ExpertsSection ex={r.experts} />}
 
       <Section id="live" title="Живые данные платформы">
         <div className="grid gap-4 md:grid-cols-4">
@@ -194,6 +196,118 @@ function RedButton({ attacks }: { attacks: any[] }) {
         })}
       </div>
     </section>
+  );
+}
+
+/* ------------------------------------------------------------------ экспертная разметка */
+const ci = (x?: any, d = 2) => (x?.mean == null ? "—" : `${num(x.mean, d)} [${num(x.lo, d)}; ${num(x.hi, d)}]`);
+const pv = (p?: number | null) => (p == null ? "—" : p < 0.001 ? "< 0,001" : num(p, 3));
+const STATE: Record<string, string> = { waiting: "bg-[#F3F2FB] text-brand-night", partial: "bg-brand-blush text-brand-plum", ready: "bg-emerald-100 text-emerald-800" };
+const TASK_T: Record<string, string> = { A: "A · пары, общая оценка 0–3", B: "B · ответы, общая оценка 0–3", B_weighted: "B · ответы, сумма критериев", C: "C · Ангофф, доли решивших" };
+
+function ExpertsSection({ ex }: { ex: any }) {
+  const st = ex.status ?? {};
+  const pk = ex.pack;
+  return (
+    <Section id="experts" title="Экспертная разметка: подбор, модель-оценщик, пороги грейдов"
+      lead="Тимлиды и сеньоры размечают вслепую в кабинете эксперта (вход по персональной ссылке): соответствие пар «потребность — кандидат» 0–3, ответы на открытые задания по рубрике, пороги грейдов методом Ангоффа. Ранги, баллы и пометки системы скрыты, порядок перемешан. Здесь те же метрики пересчитываются по их оценкам. Оценки демо-эксперта жюри в расчёт не входят.">
+      <div className="card flex flex-wrap items-start gap-4">
+        <span className={`rounded-full px-3 py-1 text-sm font-bold ${STATE[st.state] ?? STATE.waiting}`}>{st.title ?? "Ожидает экспертов"}</span>
+        <p className="min-w-[16rem] flex-1 text-sm leading-relaxed text-brand-ink/80">{st.text}</p>
+      </div>
+      {pk && (
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <Kpi label="A · пары «потребность — кандидат»" value={pk.A_pairs} hint={`${pk.A_needs} потребностей · ${pk.plan?.A}`} />
+          <Kpi label="B · ответы по рубрике" value={pk.B_answers} hint={`${pk.plan?.B}`} />
+          <Kpi label="C · семейства для Ангоффа" value={pk.C_families} hint={pk.plan?.C} />
+        </div>
+      )}
+      {ex.panel?.length > 0 && (
+        <div className="mt-4">
+          <Table head={["Эксперт", "A · пары", "B · ответы", "C · Ангофф", "Последняя активность", "Проверка"]}
+            rows={ex.panel.map((p: any) => [p.code, ...["A", "B", "C"].map((k) => `${p.progress[k].done} из ${p.progress[k].total}`), dtt(p.last_seen_at),
+              p.uniform?.length ? `одинаковые оценки во всём блоке ${p.uniform.join(", ")} — уточнить у эксперта` : "замечаний нет"])} />
+        </div>
+      )}
+      {ex.labels > 0 ? <ExpertResults res={ex} /> : (
+        <p className="mt-4 text-sm text-brand-ink/70">Пока оценок нет, ниже — проверка расчёта на синтетической разметке: те же формулы, заложенная истина, сверка.</p>
+      )}
+      {!ex.llm && ex.llm_without_experts && <div className="mt-4"><LlmTable llm={ex.llm_without_experts} note="Оценки моделей получены, согласие появится после разметки ответов экспертами." /></div>}
+      {ex.synthetic_check && (
+        <details className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10">
+          <summary className="cursor-pointer font-semibold text-brand-night">Проверка расчёта на синтетической разметке {ex.synthetic_check.ok ? "· пройдена" : "· не пройдена"}</summary>
+          <p className="mt-2 text-sm text-brand-ink/70">Синтетика — не результат. Три «эксперта» с назначениями E1–E3: пары = разметка по правилам + шум, ответы — по замыслу автора + шум, доли Ангоффа — из заложенных порогов θ 0,2 и 1,15 (нарочно не равны текущим), две синтетические модели-оценщика — точная и поддающаяся инструкции в ответе.</p>
+          <ul className="mt-3 space-y-1 text-sm">
+            {ex.synthetic_check.checks.map((c: any) => (
+              <li key={c.what} className="flex flex-wrap gap-2"><span className={`rounded px-1.5 text-xs font-bold ${c.ok ? "bg-emerald-100 text-emerald-800" : "bg-brand text-white"}`}>{c.ok ? "сходится" : "не сходится"}</span>{c.what}: заложено {String(c.planted).replace(".", ",")}, получено {String(c.got ?? "—").replace(".", ",")}</li>
+            ))}
+          </ul>
+          <ExpertResults res={ex.synthetic_check} />
+        </details>
+      )}
+    </Section>
+  );
+}
+
+function ExpertResults({ res }: { res: any }) {
+  const m = res.matching;
+  const s = m?.summary;
+  const ag = res.agreement ?? {};
+  return (
+    <div className="mt-6 space-y-6">
+      {m && (
+        <div>
+          <h3 className="text-base font-bold text-brand-night">Качество подбора по оценкам экспертов</h3>
+          <p className="mt-1 text-sm text-brand-ink/70">Размечено пар {m.pairs_labeled} из {m.pairs_total}, полностью — {m.needs_complete} из {m.needs_total} потребностей{m.ratings_per_pair ? `, в среднем ${num(m.ratings_per_pair, 1)} оценки на пару` : ""}. Релевантна пара с медианной оценкой от 2. В скобках — 95 % ДИ (бутстреп по потребностям).</p>
+          {s ? (
+            <>
+              <div className="mt-3"><Table head={["Способ", "precision@5", "nDCG@5"]}
+                rows={[["Подборка платформы", "platform"], ["BM25 по тексту резюме и потребности", "bm25"], ["Случайный порядок по всей базе", "random"], ["Для сравнения: платформа по разметке по правилам", "rules_platform"], ["Для сравнения: BM25 по разметке по правилам", "rules_bm25"]]
+                  .map(([t, k]) => [t, ci(s["p@5"][k]), ci(s["ndcg@5"][k])])} /></div>
+              <p className="mt-2 text-sm text-brand-ink/75">Платформа − BM25: precision@5 {ci(s["p@5"].diff_platform_bm25)}, p = {pv(s["p@5"].diff_platform_bm25.wilcoxon_p)}; nDCG@5 {ci(s["ndcg@5"].diff_platform_bm25)}, p = {pv(s["ndcg@5"].diff_platform_bm25.wilcoxon_p)} (знаковый критерий Уилкоксона по потребностям).
+                {m.vs_rules && ` Совпадение эталона экспертов с разметкой по правилам: κ = ${num(m.vs_rules.kappa)} (${m.vs_rules.level}), одинаково «релевантна / нет» — ${pct(m.vs_rules.relevant_agree)}.`}</p>
+              <p className="mt-1 text-xs text-brand-ink/55">Топ-5 платформы и BM25 размечены полностью; идеальный DCG — по всем размеченным кандидатам пула (топы обоих способов и случайные), поэтому nDCG сопоставим между способами. Случайный порядок — оценка по всей базе: объединение топов размечено целиком, остальное — по случайной выборке.</p>
+            </>
+          ) : <div className="mt-3"><Alert kind="info">Ни одна потребность ещё не размечена полностью — метрики появятся, когда все пары хотя бы одной потребности получат оценки.</Alert></div>}
+        </div>
+      )}
+      {(ag.A || ag.B) && (
+        <div>
+          <h3 className="text-base font-bold text-brand-night">Межэкспертное согласие</h3>
+          <div className="mt-3"><Table head={["Задание", "Экспертов", "Объектов с 2+ оценками", "κ попарно, среднее", "α Криппендорфа [95 % ДИ]", "Вывод"]}
+            rows={["A", "B", "B_weighted", "C"].filter((k) => ag[k]?.coders).map((k) => {
+              const a = ag[k];
+              return [TASK_T[k], a.coders, a.units_multi, a.kappa_mean == null ? "—" : `${num(a.kappa_mean)} (${a.kappa_level})`, a.alpha == null ? "—" : `${num(a.alpha)} [${num(a.alpha_ci?.lo)}; ${num(a.alpha_ci?.hi)}]`, a.alpha_verdict ?? "—"];
+            })} /></div>
+          <p className="mt-2 text-xs text-brand-ink/55">κ — квадратично взвешенная каппа Коэна на общих объектах (≥ 0,61 — существенное согласие по Ландису — Коху), α — порядковая для оценок 0–3 и интервальная для долей (≥ 0,80 — надёжно, 0,667–0,80 — только предварительные выводы). Контрольные ответы в согласие не входят{ag.B_controls?.injection ? `; инструкцию проверяющему отметили ${ag.B_controls.injection.flagged} из ${ag.B_controls.injection.n} оценок, копию эталона — ${ag.B_controls.copy?.flagged ?? 0} из ${ag.B_controls.copy?.n ?? 0}` : ""}.</p>
+        </div>
+      )}
+      <div>
+        <h3 className="text-base font-bold text-brand-night">Модель-оценщик открытых ответов против экспертов</h3>
+        {res.llm ? <div className="mt-3"><LlmTable llm={res.llm} /></div>
+          : <div className="mt-3"><Alert kind="info">Оценки моделей на ответах пакета ещё не получены (команда <code>python -m app.modules.experts llm-grade</code>, нужен LLM). Без LLM ответы оценивает эксперт — запасной путь.</Alert></div>}
+      </div>
+      {res.angoff && (
+        <div>
+          <h3 className="text-base font-bold text-brand-night">Пороги грейдов: Ангофф против текущих</h3>
+          <p className="mt-1 text-sm text-brand-ink/70">Для каждого эксперта и границы — θ, при котором ожидаемая доля решивших по модели теста (2PL, параметры заданий) совпадает с его оценками; порог — среднее по экспертам. Оценок: {res.angoff.judgements}, экспертов: {res.angoff.coders}.</p>
+          <div className="mt-3"><Table head={["Граница", "Сейчас θ", "Ангофф θ ± SE", "Разница", "По экспертам", "Разброс по семействам", "Сдвиг доли кандидатов", "Вывод"]}
+            rows={res.angoff.boundaries.map((b: any) => [b.title, num(b.current), `${num(b.angoff)}${b.se != null ? ` ± ${num(b.se)}` : ""}`, sgn(b.delta), (b.per_expert ?? []).map((x: number) => num(x)).join(" · "), num(b.family_sd), pct(b.population_shift, 1),
+              b.replace_suggested == null ? "нужно 2+ эксперта" : b.replace_suggested ? "предложить новый порог" : "оставить текущий"])} /></div>
+          <p className="mt-2 text-xs text-brand-ink/55">«Предложить новый порог» — когда разница больше стандартной ошибки среднего по экспертам. Сдвиг доли — сколько кандидатов при стандартном нормальном распределении уровня сменили бы грейд. Порог меняет владелец после разбора, автоматически не меняется.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LlmTable({ llm, note }: { llm: any; note?: string }) {
+  return (
+    <>
+      <Table head={["Модель", "Прогонов", "κ с консенсусом экспертов", "κ с экспертами, среднее", "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
+        rows={llm.models.map((x: any) => [x.model, x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), x.injection_ok == null ? "—" : x.injection_ok ? "не повлияла" : "подняла балл", x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
+      <p className="mt-2 text-xs text-brand-ink/55">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). Допустима, если согласие с экспертами не хуже межэкспертного минус 0,1, разброс между прогонами не больше 0,5 балла и инструкция в контрольном ответе не подняла балл. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
+    </>
   );
 }
 

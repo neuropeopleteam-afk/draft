@@ -23,6 +23,7 @@ from app.modules.assessment.expert_router import router as expert_router
 from app.modules.assessment.router import router as assessment_router
 from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import router as catalog_router
+from app.modules.experts.router import router as expert_panel_router
 from app.modules.invitations.router import candidate_router as candidate_contact_router
 from app.modules.invitations.router import employer_router as employer_contact_router
 from app.modules.jury.router import router as jury_router
@@ -46,6 +47,7 @@ TAGS = [
     {"name": "employer-contact", "description": "Работодатель: зонды и приглашения-офферы (вилка обязательна, лимит 30 дней)"},
     {"name": "catalog", "description": "Справочник направлений, грейдов, категорий и стек-тегов"},
     {"name": "legal", "description": "Тексты согласий и реквизиты оператора персональных данных"},
+    {"name": "expert-panel", "description": "Экспертная разметка: вход по ссылке, пары, ответы, Ангофф"},
     {"name": "system", "description": "Служебные методы"},
 ]
 
@@ -74,7 +76,7 @@ def create_app() -> FastAPI:
     )
     for r in (auth_router, profiles_router, candidate_router, legal_router, assessment_router,
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
-              expert_router, jury_router, validation_router):
+              expert_router, expert_panel_router, jury_router, validation_router):
         app.include_router(r)
     include_integration_routers(app)
     app.mount("/api/static", StaticFiles(directory=STATIC_DIR), name="static")
