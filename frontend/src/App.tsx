@@ -2,6 +2,7 @@ import { Link, Route, Routes } from "react-router-dom";
 import { CabinetLayout } from "./components/CabinetLayout";
 import { JuryGuide } from "./components/JuryGuide";
 import Expert from "./pages/Expert";
+import { ExpertAngoff, ExpertAnswers, ExpertHome, ExpertInvite, ExpertPairs, panelSections } from "./pages/expert/Panel";
 import Validation from "./pages/Validation";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -32,9 +33,14 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/validation" element={<Validation />} />
-      <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={[]} />}>
-        <Route index element={<Expert />} />
+      <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
+        <Route index element={<ExpertHome />} />
+        <Route path="pairs" element={<ExpertPairs />} />
+        <Route path="answers" element={<ExpertAnswers />} />
+        <Route path="angoff" element={<ExpertAngoff />} />
+        <Route path="review" element={<Expert />} />
       </Route>
+      <Route path="/expert-invite/:token" element={<ExpertInvite />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/login" element={<Login />} />

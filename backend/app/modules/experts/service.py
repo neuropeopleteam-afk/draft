@@ -18,7 +18,7 @@ from app.modules.experts import pack as P
 from app.modules.experts.models import ExpertItem, ExpertLabel, ExpertPanelist
 
 INVITE_DOMAIN = "panel.example.com"  # служебные почты экспертов (RFC 2606: письма туда не уходят)
-FLAGS = ("none", "copy", "injection", "offtopic")
+FLAGS = ("none", "copy", "ai", "injection", "offtopic")
 MINUTES = {"A": 0.6, "B": 1.5, "C": 1.0}  # ориентир темпа на объект (протокол: ~40 с на пару, 1,5–2 мин на ответ)
 
 
@@ -158,7 +158,7 @@ def _validate(kind: str, it: ExpertItem, v: dict) -> dict:
             bad("Общая оценка — целое число от 0 до 3")
         flag = v.get("flag") or "none"
         if flag not in FLAGS:
-            bad("Флаг — none, copy, injection или offtopic")
+            bad("Флаг — none, copy, ai, injection или offtopic")
         return {"criteria": vals, "holistic": h, "flag": flag}
     if kind == "C":
         floor = int(it.payload.get("floor") or 0)
