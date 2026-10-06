@@ -1,0 +1,138 @@
+# Сквозные сценарии жюри (Playwright, папка e2e/).
+#
+#   target=stand  против стенда (по умолчанию https://fsp.neuropeople.pro): ручной запуск и по расписанию.
+#                 Нужен секрет репозитория E2E_BASIC_PASSWORD (пароль базовой авторизации, логин — переменная
+#                 E2E_BASIC_USER или demo). Перед прогоном и после него — сброс демо жюри (POST /api/jury/reset),
+#                 после тестов на стенде не остаётся созданных ими данных. Расписание выключается переменной
+#                 репозитория E2E_STAND_SCHEDULE=off (например, на дни работы жюри).
+#   target=local  собирает Docker-образы (api, web и keycloak профиля fsp-id), поднимает стек, загружает
+#                 демо-данные, делает дымовую проверку и гоняет те же сценарии против собранного стека.
+#                 Так же вызывается из ci.yml на каждый push и pull request.
+name: E2E
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Против чего запускать"
+        type: choice
+        options: [stand, local]
+        default: stand
+      base_url:
+        description: "Адрес стенда (для target=stand)"
+        type: string
+        default: https://fsp.neuropeople.pro
+  schedule:
+    - cron: "30 23 * * *"  # 02:30 по Москве: ночью, когда жюри стендом не пользуется
+  workflow_call:
+    inputs:
+      target:
+        type: string
+        default: local
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "20"
+  FORCE_COLOR: "1"
+
+jobs:
+  stand:
+    name: E2E · стенд
+    if: inputs.target == 'stand' || (github.event_name == 'schedule' && vars.E2E_STAND_SCHEDULE != 'off')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    # сценарии меняют общее состояние демо жюри — не больше одного прогона против стенда одновременно
+    concurrency:
+      group: e2e-stand
+      cancel-in-progress: false
+    env:
+      E2E_BASE_URL: ${{ inputs.base_url || 'https://fsp.neuropeople.pro' }}
+      E2E_BASIC_USER: ${{ vars.E2E_BASIC_USER || 'demo' }}
+      E2E_BASIC_PASSWORD: ${{ secrets.E2E_BASIC_PASSWORD }}
+    defaults:
+      run:
+        working-directory: e2e
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+      - name: Зависимости и Chromium
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Проверка типов сценариев
+        run: npx tsc --noEmit
+      - name: Сценарии жюри против стенда
+        run: npx playwright test
+      - name: Сводка
+        if: ${{ !cancelled() }}
+        run: node scripts/summary.mjs reports/results.json "стенд $E2E_BASE_URL" >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-stand-report
+          path: e2e/reports
+          retention-days: 14
+          if-no-files-found: ignore
+
+  local:
+    name: E2E · локальный стек
+    if: inputs.target == 'local'  # ручной запуск с target=local или вызов из ci.yml
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    env:
+      E2E_BASE_URL: http://127.0.0.1:8140
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Сборка образов, запуск стека (db, api, web)
+        run: tools/ci/stack.sh up
+      - name: Образ Keycloak «ФСП ID» (профиль fsp-id, только сборка)
+        run: docker compose --profile fsp-id build keycloak
+      - name: Демо-данные
+        run: tools/ci/stack.sh seed
+      - name: Дымовая проверка стека
+        run: tools/ci/stack.sh smoke
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+      - name: Зависимости и Chromium
+        working-directory: e2e
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Проверка типов сценариев
+        working-directory: e2e
+        run: npx tsc --noEmit
+      - name: Сценарии жюри против локального стека
+        working-directory: e2e
+        run: npx playwright test
+      - name: Сводка
+        if: ${{ !cancelled() }}
+        working-directory: e2e
+        run: |
+          node scripts/summary.mjs reports/results.json "локальный стек (Docker)" >> "$GITHUB_STEP_SUMMARY"
+          docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep -E '^spectrek_fsp' \
+            | awk 'BEGIN {print "\nОбразы:\n"} {print "- `" $1 "` — " $2}' >> "$GITHUB_STEP_SUMMARY"
+      - name: Логи стека
+        if: ${{ failure() }}
+        run: |
+          mkdir -p e2e/reports
+          docker compose ps -a > e2e/reports/compose-ps.txt
+          docker compose logs --no-color --timestamps > e2e/reports/compose-logs.txt
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: e2e-local-report
+          path: e2e/reports
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Остановить стек
+        if: ${{ always() }}
+        run: tools/ci/stack.sh down
