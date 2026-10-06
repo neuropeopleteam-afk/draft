@@ -9,7 +9,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # env_ignore_empty: пустая переменная (DEV_MODE= в .env из .env.example) — как незаданная, берётся значение
+    # по умолчанию; иначе `make env && make up` на чистой машине падал на разборе bool из пустой строки.
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", env_ignore_empty=True)
 
     # Рабочее название продукта — единственное место, где оно задано (фронтенд берёт его из /api/meta).
     product_name: str = "Встречный"
