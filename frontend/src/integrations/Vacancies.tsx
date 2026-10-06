@@ -31,7 +31,7 @@ export function AppStatus({ s }: { s: string }) {
 function Events({ items }: { items: { status: string; at: string; by: string; note?: string }[] }) {
   return (
     <ol className="space-y-2 border-l-2 border-brand-blush pl-4">
-      {items.map((e, i) => <li key={i} className="text-sm"><span className="font-semibold text-brand-night">{APP_STATUS[e.status]?.[0] ?? e.status}</span><span className="text-brand-ink/55"> · {dtt(e.at)} · {e.by === "candidate" ? "кандидат" : "работодатель"}</span>{e.note && <p className="text-brand-ink/70">«{e.note}»</p>}</li>)}
+      {items.map((e, i) => <li key={i} className="text-sm"><span className="font-semibold text-brand-night">{APP_STATUS[e.status]?.[0] ?? e.status}</span><span className="text-brand-ink/65"> · {dtt(e.at)} · {e.by === "candidate" ? "кандидат" : "работодатель"}</span>{e.note && <p className="text-brand-ink/70">«{e.note}»</p>}</li>)}
     </ol>
   );
 }
@@ -91,7 +91,7 @@ function VacancyList() {
                 <div className="mt-auto flex flex-wrap items-center gap-2">
                   {v.category_title && <span className="rounded-full bg-[#F3F2FB] px-2.5 py-1 text-xs font-semibold text-brand-night">{v.category_title}</span>}
                   <TrustBadge t={v.trust} compact />
-                  {v.is_demo && <span className="text-[11px] text-brand-ink/40">демо</span>}
+                  {v.is_demo && <span className="text-xs text-brand-ink/65">демо</span>}
                 </div>
               </button>
             </li>
@@ -121,7 +121,7 @@ function VacancyModal({ v, onClose, onApplied }: { v: Vacancy | null; onClose: (
         <div className="space-y-4 text-sm">
           <p className="text-brand-ink/65"><Link to={`/candidate/companies/${d.company.id}`} className="font-semibold text-brand hover:underline">{d.company.name}</Link>{d.company.industry ? ` · ${d.company.industry}` : ""}{d.city ? ` · ${d.city}` : ""} · {FORMAT[d.work_format]}</p>
           <p className="text-2xl font-extrabold text-brand-night">{range(d.salary_from, d.salary_to)}</p>
-          {d.market_range && <p className="text-xs text-brand-ink/55">Рынок категории «{d.category_title}»: {range(d.market_range.from, d.market_range.to)} (Хабр Карьера)</p>}
+          {d.market_range && <p className="text-xs text-brand-ink/65">Рынок категории «{d.category_title}»: {range(d.market_range.from, d.market_range.to)} (Хабр Карьера)</p>}
           <p className="whitespace-pre-line text-brand-ink/80">{d.description}</p>
           {d.stack.length > 0 && <div className="flex flex-wrap gap-1.5">{d.stack.map((s) => <span key={s.tag} className="rounded-full bg-brand-blush/50 px-2.5 py-1 text-xs font-semibold text-brand-plum">{s.title}</span>)}</div>}
           <TrustPanel t={d.trust} />
@@ -245,7 +245,7 @@ function VacancyForm({ init, catalog, onClose, onSaved }: { init: typeof EMPTY &
           <Field label="Вилка от, ₽ в месяц" htmlFor="vs1"><input id="vs1" type="number" min={1} step={5000} className="input" value={f.salary_from} onChange={(e) => set("salary_from", e.target.value)} /></Field>
           <Field label="Вилка до, ₽ в месяц" htmlFor="vs2"><input id="vs2" type="number" min={1} step={5000} className="input" value={f.salary_to} onChange={(e) => set("salary_to", e.target.value)} /></Field>
         </div>
-        {market && <p className="-mt-2 text-xs text-brand-ink/60">Рынок категории: {range(market.market_salary_from, market.market_salary_to)} (Хабр Карьера). Вилка сильно выше рынка снижает индекс доверия.</p>}
+        {market && <p className="-mt-2 text-xs text-brand-ink/65">Рынок категории: {range(market.market_salary_from, market.market_salary_to)} (Хабр Карьера). Вилка сильно выше рынка снижает индекс доверия.</p>}
         <Field label="Город" htmlFor="vcity"><input id="vcity" className="input" value={f.city} onChange={(e) => set("city", e.target.value)} /></Field>
         <Field label="Описание" htmlFor="vdesc" hint="Задачи, команда, условия — от 20 символов"><textarea id="vdesc" className="input min-h-[120px]" value={f.description} onChange={(e) => set("description", e.target.value)} /></Field>
         {stackOpts.length > 0 && (
@@ -294,7 +294,7 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
             <article key={a.id} className="space-y-3 rounded-xl border border-brand-night/10 p-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-bold text-brand-night">{a.contacts?.full_name || a.card.ref} <span className="font-normal text-brand-ink/55">· {a.card.category?.title ?? "без категории"}</span></p>
+                  <p className="font-bold text-brand-night">{a.contacts?.full_name || a.card.ref} <span className="font-normal text-brand-ink/65">· {a.card.category?.title ?? "без категории"}</span></p>
                   {a.contacts && <p className="text-brand-ink/70">{a.contacts.email}{a.contacts.phone ? ` · ${a.contacts.phone}` : ""}{a.contacts.telegram ? ` · ${a.contacts.telegram}` : ""}</p>}
                 </div>
                 <AppStatus s={a.status} />

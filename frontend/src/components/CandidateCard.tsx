@@ -15,7 +15,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
           <p className="mt-1 text-lg font-bold text-brand-night">{c.category?.title ?? "Категория не присвоена"}</p>
-          <p className="mt-0.5 text-sm text-brand-ink/60">
+          <p className="mt-0.5 text-sm text-brand-ink/65">
             {c.rank_in_category ? `Место ${c.rank_in_category} из ${c.category_size} в категории · ` : ""}
             {c.experience_years != null ? `стаж ${years(c.experience_years)} · ` : ""}
             {c.work_format ? WF[c.work_format] : ""}{c.city ? ` · ${c.city}` : ""}{c.relocation ? " · готов к переезду" : ""}
@@ -24,7 +24,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
         {score != null && (
           <div className="text-right">
             <p className="text-2xl font-extrabold text-brand">{Math.round(score * 100)}</p>
-            <p className="text-[11px] text-brand-ink/55">соответствие из 100</p>
+            <p className="text-xs text-brand-ink/65">соответствие из 100</p>
           </div>
         )}
       </div>
@@ -32,7 +32,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
         <div className="rounded-xl bg-brand-blush/25 p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level="T1" /> Тест</p>
-          {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {signed(t.theta)} ± {num(t.se)}</p> : <p className="mt-1 text-brand-ink/55">нет результата</p>}
+          {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {signed(t.theta)} ± {num(t.se)}</p> : <p className="mt-1 text-brand-ink/65">нет результата</p>}
           {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
           {c.skills_confirmed?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -43,12 +43,12 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
         </div>
         <div className="rounded-xl bg-[#F3F2FB] p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level={fsp.achievements?.length ? "T2" : "none"} /> Паспорт ФСП</p>
-          {fsp.hidden ? <p className="mt-1 text-brand-ink/55">скрыто кандидатом</p>
+          {fsp.hidden ? <p className="mt-1 text-brand-ink/65">скрыто кандидатом</p>
             : fsp.achievements?.length ? (
               <ul className="mt-1 space-y-1 text-brand-ink/75">{fsp.achievements.slice(0, compact ? 2 : 4).map((a: any, i: number) => <li key={i}>{a.text}</li>)}</ul>
-            ) : <p className="mt-1 text-brand-ink/55">истории ФСП нет — нейтрально</p>}
-          {fsp.unverified_count > 0 && <p className="mt-1 text-xs text-brand-ink/60">Заявлено без подтверждения реестром: {fsp.unverified_count} — не учитывается</p>}
-          {fsp.source === "demo" && <p className="mt-1 text-[11px] text-brand-lavender">демо-реестр</p>}
+            ) : <p className="mt-1 text-brand-ink/65">истории ФСП нет — нейтрально</p>}
+          {fsp.unverified_count > 0 && <p className="mt-1 text-xs text-brand-ink/65">Заявлено без подтверждения реестром: {fsp.unverified_count} — не учитывается</p>}
+          {fsp.source === "demo" && <p className="mt-1 text-xs text-brand-lavender">демо-реестр</p>}
         </div>
       </div>
 
@@ -74,7 +74,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        {c.market_range ? <p className="text-xs text-brand-ink/55">Рынок категории: {range(c.market_range.from, c.market_range.to)}</p> : <span />}
+        {c.market_range ? <p className="text-xs text-brand-ink/65">Рынок категории: {range(c.market_range.from, c.market_range.to)}</p> : <span />}
         {actions}
       </div>
     </article>

@@ -56,7 +56,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
     <article className="card">
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="chip">{FORMAT[it.format] ?? it.format}</span>
-        <span className="text-brand-ink/60">Кандидат {it.candidate_ref ?? "—"} · {DIRECTIONS[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
+        <span className="text-brand-ink/65">Кандидат {it.candidate_ref ?? "—"} · {DIRECTIONS[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
         {it.session_status === "finished" && it.status === "pending" && <span className="chip bg-brand-blush text-brand-plum">результат предварительный</span>}
         {it.llm?.error === "prompt_injection_suspected" && <span className="chip bg-brand-night text-white" title={it.llm.injection_note ?? undefined}>Похоже на инструкции оценщику — LLM не вызывался</span>}
       </div>

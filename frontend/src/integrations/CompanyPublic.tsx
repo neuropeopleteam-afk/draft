@@ -20,7 +20,7 @@ export function CompanyPublic() {
       <TrustPanel t={data.trust as Trust} />
       <section className="space-y-3">
         <h2 className="font-bold text-brand-night">Открытые вакансии</h2>
-        {!data.vacancies?.length ? <p className="text-sm text-brand-ink/60">Сейчас нет опубликованных вакансий. Компания может пригласить вас напрямую.</p> : (
+        {!data.vacancies?.length ? <p className="text-sm text-brand-ink/65">Сейчас нет опубликованных вакансий. Компания может пригласить вас напрямую.</p> : (
           <ul className="space-y-2">
             {data.vacancies.map((v: any) => (
               <li key={v.id} className="card flex flex-wrap items-center justify-between gap-3">
