@@ -294,7 +294,10 @@ def test_red_button_demographics_attack(client):
         seed(db)
         db.commit()
         names = {p.public_ref: (p.full_name, p.about) for p in db.scalars(select(CandidateProfile)).all()}
-    r = client.post("/api/validation/attacks/demographics", json={})
+    from tests.conftest import register_and_verify
+
+    tok = register_and_verify(client, "demographics-attack@example.com", role="employer")  # атаки — только после входа (аудит, С9)
+    r = client.post("/api/validation/attacks/demographics", json={}, headers=H(tok))
     assert r.status_code == 200, r.text
     x = r.json()
     assert x["violated"] is False, x
