@@ -68,8 +68,10 @@ def _prompt(stem: str, code: str | None, step_prompt: str | None, rubric: dict, 
 
 
 def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: dict | None, answer: str,
-               use_llm: bool = True) -> GradeOutcome:
-    """Оценка одного открытого ответа. Никогда не бросает исключений."""
+               use_llm: bool = True, model: str | None = None) -> GradeOutcome:
+    """Оценка одного открытого ответа. Никогда не бросает исключений.
+
+    model — явная модель (сравнение моделей-оценщиков на экспертной разметке); по умолчанию LLM_GRADING_MODEL."""
     text = (answer or "").strip()
     if len(re.sub(r"\s+", " ", text)) < MIN_CHARS:
         return GradeOutcome(status="scored", score=0.0, method="rule", comment="Ответ пустой или слишком короткий")
@@ -83,9 +85,9 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
     red = redact(text, use_ner=True)
     res = chat([{"role": "system", "content": SYSTEM},
                 {"role": "user", "content": _prompt(stem, code, step_prompt, rubric, red.text)}],
-               temperature=0.0, max_tokens=1500, want_json=True, model=s.llm_grading_model,
+               temperature=0.0, max_tokens=1500, want_json=True, model=model or s.llm_grading_model,
                timeout_s=s.llm_grading_timeout_s)
-    model = re.sub(r"^gpt://[^/]+/", "", resolve_model(s.llm_grading_model) or "")
+    model = re.sub(r"^gpt://[^/]+/", "", resolve_model(model or s.llm_grading_model) or "")
     out = GradeOutcome(status="pending", method="llm", model=model, latency_ms=res.latency_ms,
                        redacted=sorted(red.found))
     if not res.ok or not isinstance(res.data, dict):
