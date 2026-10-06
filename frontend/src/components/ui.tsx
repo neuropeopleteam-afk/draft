@@ -44,9 +44,9 @@ export function useApi<T>(path: string | null, deps: unknown[] = []) {
 
 const LEVEL_STYLE: Record<string, string> = {
   T2: "bg-brand-night text-white",
-  T1: "bg-brand text-white",
+  T1: "bg-[#E0004C] text-white",  // brand чуть темнее: белый 12 px на #FF0053 — 3,9 : 1
   T0: "bg-brand-blush text-brand-plum",
-  none: "bg-gray-100 text-gray-500",
+  none: "bg-gray-100 text-gray-600",
 };
 const LEVEL_HINT: Record<string, string> = {
   T2: "Подтверждено реестром ФСП",
