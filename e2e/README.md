@@ -9,5 +9,7 @@ E2E_BASE_URL=https://fsp.neuropeople.pro E2E_BASIC_USER=demo E2E_BASIC_PASSWORD=
 npm run report                                        # HTML-отчёт последнего прогона
 ```
 
-До и после прогона демо жюри сбрасывается (`POST /api/jury/reset`), созданные тестами данные не остаются.
-`E2E_KEEP_STATE=1` — не сбрасывать после прогона.
+Один прогон = своя песочница жюри (вход с `scenario: "new"`); браузер входит в неё же (id в localStorage
+`jury_scenario`). После прогона сбрасывается только она (`POST /api/jury/reset`), общее демо и чужие песочницы
+не трогаются. `E2E_SCENARIO=<id>` — продолжить свою песочницу, `E2E_KEEP_STATE=1` — не сбрасывать после прогона,
+`E2E_STRICT=1` — известные ошибки продукта валят тест. Снимки 390 px — `reports/mobile`.
