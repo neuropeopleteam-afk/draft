@@ -1,7 +1,11 @@
 # Стек: db (PostgreSQL 16) + api (FastAPI) + web (nginx со сборкой React).
 # Порты публикуются только на 127.0.0.1; наружу сайт отдаёт nginx хоста.
-# Бюджет памяти стека вместе с Keycloak ≤ 2 ГБ: db 384M + api 768M + web 64M + keycloak 640M = 1856M
-# (без профиля fsp-id — 1216M; NER Natasha ~100 МБ на воркер). Keycloak включается COMPOSE_PROFILES=fsp-id.
+# Память (бюджет стека ≤ 2 ГБ): db 320M + api 640M + web 32M + keycloak 576M = 1568M; без профиля fsp-id — 992M.
+# Лимиты — по фактическому потреблению на стенде (06.10, cgroup memory.peak с запуска 05.10, OOM-событий 0):
+#   api пик 351 МБ (2 воркера, NER Natasha ~100 МБ на воркер) + разбор PDF в отдельном процессе ~40 МБ (один на воркер,
+#   предел 256 МБ) + одна симуляция «Красной кнопки» вне кэша ~140 МБ на контейнер;
+#   db пик 99 МБ (shared_buffers 128 МБ + до ~36 соединений); web 5 МБ; keycloak пик 365 МБ (куча ≤ 45 % лимита ≈ 259 МБ).
+# Нагрузочный тест (docs/LOAD_TEST.md, 50 пользователей): весь стек 639 МБ. Keycloak включается COMPOSE_PROFILES=fsp-id.
 name: spectrek_fsp
 
 services:
@@ -22,7 +26,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    mem_limit: 384m
+    mem_limit: 320m
 
   api:
     build: ./backend
@@ -43,6 +47,11 @@ services:
       # ФСП ID: FSP_OIDC_CLIENT_SECRET, FSP_DEMO_PASSWORD (тот же файл читает Keycloak при импорте realm)
       - path: ${FSP_ID_ENV_FILE:-./secrets/fsp_id.env}
         required: false
+      # ATS: TALANTIX_TOKENS_JSON (или TALANTIX_ACCESS_TOKEN + TALANTIX_REFRESH_TOKEN), TALANTIX_VACANCY_ID, POTOK_TOKEN,
+      # POTOK_VACANCY_ID, HUNTFLOW_TOKEN, HUNTFLOW_ACCOUNT_ID, HUNTFLOW_VACANCY_ID, ATS_USER_AGENT_CONTACT.
+      # Импорт в компанию: python -m app.integrations.ats.cli import-env --employer-email ... (см. docs/ATS.md)
+      - path: ${ATS_ENV_FILE:-./secrets/ats.env}
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fsp}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fsp}
       # Пусто — кнопка «Войти через ФСП ID» скрыта. Прод: https://fsp.neuropeople.pro/auth/realms/fsp
@@ -53,7 +62,7 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:${API_PORT:-8141}:8000"
-    mem_limit: 768m
+    mem_limit: 640m
 
   web:
     build: ./frontend
@@ -62,7 +71,7 @@ services:
       - api
     ports:
       - "127.0.0.1:${WEB_PORT:-8140}:80"
-    mem_limit: 64m
+    mem_limit: 32m
 
   # ФСП ID (демо) — Keycloak, realm fsp (keycloak/realm-fsp.json), OIDC Authorization Code + PKCE.
   # За nginx по пути /auth (web → keycloak:8080), консоль администратора — только 127.0.0.1:${KEYCLOAK_PORT}.
@@ -90,7 +99,8 @@ services:
       KC_HTTP_ENABLED: "true"
       KC_PROXY_HEADERS: xforwarded
       PLATFORM_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8140}
-      JAVA_OPTS_KC_HEAP: "-XX:MaxRAMPercentage=40 -XX:InitialRAMPercentage=8 -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20"
+      # Куча ≤ 45 % от 576M ≈ 259 МБ (как прежние 40 % от 640M), остальное — метаданные классов и потоки JVM
+      JAVA_OPTS_KC_HEAP: "-XX:MaxRAMPercentage=45 -XX:InitialRAMPercentage=8 -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20"
       JAVA_OPTS_APPEND: "-XX:TieredStopAtLevel=1"
     depends_on:
       db:
@@ -103,7 +113,7 @@ services:
       timeout: 5s
       retries: 20
       start_period: 90s
-    mem_limit: 640m
+    mem_limit: 576m
 
 volumes:
   db_data:

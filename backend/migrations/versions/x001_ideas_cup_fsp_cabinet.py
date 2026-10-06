@@ -2,7 +2,7 @@
 участия, уровень мероприятия «platform» в паспорте ФСП
 
 Revision ID: x001
-Revises: 0004
+Revises: at01
 Create Date: 2026-10-05
 
 Ветка ideas: при перебазировании на main down_revision указывает на актуальную голову main.
@@ -16,7 +16,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision: str = "x001"
-down_revision: str | None = "0004"
+down_revision: str | None = "at01"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -69,6 +69,7 @@ def upgrade() -> None:
         sa.Column("finalized_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("summary", JSONType, nullable=False),
         sa.Column("is_demo", sa.Boolean(), server_default=sa.false(), nullable=False),
+        sa.Column("jury_scope", sa.String(length=16), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
@@ -87,6 +88,7 @@ def upgrade() -> None:
     with op.batch_alter_table("cups") as b:
         b.create_index("ix_cups_category_ends", ["category_id", "ends_at"], unique=False)
         b.create_index(b.f("ix_cups_company_id"), ["company_id"], unique=False)
+        b.create_index(b.f("ix_cups_jury_scope"), ["jury_scope"], unique=False)
 
     op.create_table(
         "cup_entries",

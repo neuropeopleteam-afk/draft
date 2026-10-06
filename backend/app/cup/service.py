@@ -30,6 +30,7 @@ from app.modules.catalog.seed_data import category_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.invitations import service as inv_svc
 from app.modules.invitations.models import Invitation
+from app.modules.jury import scope as jury_scope
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile, Company
 
@@ -273,6 +274,18 @@ def result_title(place: int) -> str:
     return "победитель" if place == 1 else "призёр" if place <= 3 else "участник"
 
 
+def credits(db: Session, cup: Cup, user_id: uuid.UUID) -> bool:
+    """Получает ли участник за место факт T1 и запись в паспорт ФСП.
+
+    Кубок платформы — да, все. Кубок демо жюри (cup.jury_scope) — только учётки этой песочницы: демо-кандидаты
+    платформы там «статисты» (место и приглашение — да, факты — нет), иначе каждая копия демо жюри меняла бы
+    их рейтинг и паспорт, а с ними — общую аналитику Кабинета ФСП."""
+    if cup.jury_scope is None:
+        return True
+    u = db.get(User, user_id)
+    return u is not None and jury_scope.key_of(u.email) == cup.jury_scope
+
+
 def write_passport(db: Session, cup: Cup, e: CupEntry, total: int, company_name: str) -> str:
     """Запись участия в паспорт ФСП (идемпотентно). Нет паспорта — pending_link."""
     pp = db.scalar(select(FspPassport).where(FspPassport.user_id == e.candidate_user_id))
@@ -311,7 +324,7 @@ def sync_passport(db: Session, user_id: uuid.UUID) -> int:
     n = 0
     for e in rows:
         cup = db.get(Cup, e.cup_id)
-        if cup is None or f"cup:{cup.id}" in have:
+        if cup is None or f"cup:{cup.id}" in have or not credits(db, cup, user_id):
             continue
         comp = db.get(Company, cup.company_id)
         write_passport(db, cup, e, int((cup.summary or {}).get("placed") or e.place), comp.name if comp else "")
@@ -345,8 +358,11 @@ def finalize(db: Session, cup: Cup, actor: User | None, *, early: bool = False) 
     total = len(order)
     company = db.get(Company, cup.company_id)
     employer = actor or (db.get(User, cup.created_by) if cup.created_by else None)
+    credited = [e for e in order if credits(db, cup, e.candidate_user_id)]
     for i, e in enumerate(order, start=1):
         e.place = i
+        if e not in credited:
+            continue
         title = f"Кубок «{cup.title}»: {i} место из {total}"
         fact = db.scalar(select(CandidateFact).where(CandidateFact.user_id == e.candidate_user_id,
                                                      CandidateFact.source_ref == f"cup:{cup.id}"))
@@ -357,7 +373,7 @@ def finalize(db: Session, cup: Cup, actor: User | None, *, early: bool = False) 
                                  evidence_level=EvidenceLevel.T1, source=FactSource.probe, source_ref=f"cup:{cup.id}"))
         write_passport(db, cup, e, total, company.name if company else "")
     db.flush()
-    for e in order:
+    for e in credited:
         refresh_rating(db, e.candidate_user_id)
     cup.status = "finished"
     cup.finalized_at = now

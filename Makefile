@@ -38,11 +38,17 @@ test-pg: ## Те же тесты на PostgreSQL (отдельная база fs
 test-local: ## Тесты backend без Docker (нужен Python 3.12+ и зависимости из requirements*.txt)
 	cd backend && python -m pytest
 
-validate: ## Пересчёт метрик /validation: банк, симуляция теста, повтор, утечка, подбор (≈ 2 мин)
+validate: ## Пересчёт метрик /validation: K Sympson — Hetter, банк, симуляция теста (до/после), повтор, утечка, подбор (≈ 15–20 мин)
 	cd backend && python ../tools/calibrate_exposure.py && python -m app.modules.validation
 
 validate-docker: ## То же в контейнере api (без пересчёта K Sympson — Hetter)
 	$(COMPOSE) run --rm --no-deps api python -m app.modules.validation
+
+bench: ## Бенчмарк подбора со скрытой истиной: 200 × 2000, абляции, веса на отложенных данных (≈ 1 мин CPU)
+	cd backend && python -m app.modules.validation.matching_bench
+
+bench-quick: ## Быстрая проверка бенчмарка 40 × 400 без записи результатов
+	cd backend && python -m app.modules.validation.matching_bench --quick --no-write
 
 dev-backend: ## Локальный backend с автоперезагрузкой (SQLite)
 	cd backend && DATABASE_URL=sqlite:///./dev.db DEV_MODE=true alembic upgrade head && \
@@ -52,3 +58,4 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
+.PHONY: bench bench-quick

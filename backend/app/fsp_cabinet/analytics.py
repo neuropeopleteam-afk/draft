@@ -8,6 +8,9 @@
   компании не раскрывается);
 * названия компаний — только у кубков (кубок — публичное мероприятие).
 
+Копии демо жюри (учётки ``…@jury.example.com``, их компании и кубки — app.modules.jury.scope) в аналитику не
+входят: сколько бы экспертов жюри ни открыли свою песочницу, цифры кабинета одни и те же.
+
 Источники: приглашения-офферы (вилка «от–до» обязательна), потребности работодателей (структурированные
 требования), подтверждённые навыки T1, паспорта ФСП (только verified — T2; кубки платформы считаются отдельно),
 кубки работодателей. Связь «ФСП → приглашения» — наблюдательная: рейтинг уже учитывает ФСП, поэтому показан и
@@ -21,7 +24,7 @@ from datetime import timedelta
 import statistics
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session
 
 from app.core.db import as_aware, utcnow
@@ -31,7 +34,9 @@ from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTIONS, STACK, category_title
 from app.modules.fsp.models import FspAchievement, FspPassport
+from app.modules.auth.models import User
 from app.modules.invitations.models import Invitation
+from app.modules.jury import scope as jury_scope
 from app.modules.matching.models import EmployerNeed
 from app.modules.profiles.models import CandidateFact, CandidateProfile, Company
 
@@ -118,10 +123,23 @@ class Data:
     demo_companies: set = field(default_factory=set)
 
 
+def _jury(db: Session) -> tuple[set, set]:
+    """Учётки демо жюри (общее демо и все песочницы) и компании, которые в аналитику входят: все, кроме компаний
+    жюри (строки удалённых компаний, если БД не удалила их каскадом, тоже не входят)."""
+    users = set(db.scalars(select(User.id).where(User.email.like(f"%@{jury_scope.DOMAIN}"))).all())
+    cond = and_(Company.is_demo.is_(True), Company.name.like("Демо жюри%"))
+    if users:
+        cond = or_(cond, Company.created_by.in_(users))
+    companies = set(db.scalars(select(Company.id)).all())
+    return users, companies - set(db.scalars(select(Company.id).where(cond)).all())
+
+
 def load(db: Session, days: int | None = None) -> Data:
     since = utcnow() - timedelta(days=days) if days else None
+    jury_users, companies = _jury(db)
     cands: dict[uuid.UUID, Cand] = {}
-    for p in db.scalars(select(CandidateProfile).where(CandidateProfile.current_category_id.is_not(None))).all():
+    for p in db.scalars(select(CandidateProfile).join(User, User.id == CandidateProfile.user_id).where(
+            CandidateProfile.current_category_id.is_not(None), User.email.not_like(f"%@{jury_scope.DOMAIN}"))).all():
         cands[p.user_id] = Cand(p.user_id, p.current_category_id, p.current_direction_id or p.current_category_id.split(".")[0])
     pp = {p.id: p for p in db.scalars(select(FspPassport).where(FspPassport.user_id.in_(list(cands)))).all()} if cands else {}
     for p in pp.values():
@@ -153,19 +171,21 @@ def load(db: Session, days: int | None = None) -> Data:
     q = select(Invitation)
     if since:
         q = q.where(Invitation.created_at >= since)
-    invs = [i for i in db.scalars(q).all() if i.status != InvitationStatus.withdrawn]
+    invs = [i for i in db.scalars(q).all() if i.status != InvitationStatus.withdrawn
+            and i.company_id in companies and i.candidate_user_id not in jury_users]
     for i in invs:
         if i.candidate_user_id in cands:
             cands[i.candidate_user_id].invitations.append(i)
     nq = select(EmployerNeed)
     if since:
         nq = nq.where(EmployerNeed.created_at >= since)
-    needs = list(db.scalars(nq).all())
-    cq = select(Cup).where(Cup.status != "cancelled")
+    needs = [n for n in db.scalars(nq).all() if n.company_id in companies]
+    cq = select(Cup).where(Cup.status != "cancelled", Cup.jury_scope.is_(None))
     if since:
         cq = cq.where(Cup.ends_at >= since)
-    cups = list(db.scalars(cq).all())
-    entries = list(db.scalars(select(CupEntry).where(CupEntry.cup_id.in_([c.id for c in cups])))) if cups else []
+    cups = [c for c in db.scalars(cq).all() if c.company_id in companies]
+    entries = [e for e in db.scalars(select(CupEntry).where(CupEntry.cup_id.in_([c.id for c in cups]))).all()
+               if e.candidate_user_id not in jury_users] if cups else []
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     demo = set(db.scalars(select(Company.id).where(Company.is_demo.is_(True))).all())
     return Data(cands, invs, needs, cats, cups, entries, days, demo)

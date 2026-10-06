@@ -1,24 +1,37 @@
 family_id: common.git.undo_mcq
-title: Исправление истории Git — reset, revert, restore, перенос коммитов
+title: Исправление истории Git — reset --soft, revert, restore
 direction: common
-skills: [git, branching, history_rewriting]
-target_grades: [junior, middle]
+skills:
+- git
+- branching
+- history_rewriting
+target_grades:
+- junior
+- middle
 format: mcq_concept
 language: text
 invariants:
   n_options: 4
   extra:
-    scenarios: [move, soft, revert, restore]
+    scenarios:
+    - soft
+    - revert
+    - restore
 time_limit_s: 150
 canary: false
 prior_difficulty:
   b: -0.2
   a: 1.1
-  sigma_variant: 0.4
-  basis: "Ситуация из практики без кода, 4 варианта команд; четыре сценария разной трудности (reset --soft и revert опубликованного коммита проще, перенос коммитов в новую ветку и восстановление одного файла труднее) → σ повышена; Junior/Middle"
+  sigma_variant: 0.3
+  basis: 'Ситуация из практики без кода, 4 варианта команд; четыре сценария разной трудности (reset --soft
+    и revert опубликованного коммита проще, перенос коммитов в новую ветку и восстановление одного файла
+    труднее) → σ повышена; Junior/Middle. Калибровка панелью LLM 05.10: варианты неизоморфны (σ > 0,5,
+    χ² p < 0,01), разброс объяснялся подтипом; оставлены сценарии reset --soft, revert опубликованного
+    коммита, restore одного файла, второй подтип выделен в common.git.move_commits_mcq; σ снижена до 0,3.'
 generator: assessment_bank.families.common.git_undo_mcq
-version: 1
-description: >
-  Цель задана конечным состоянием репозитория; выбрать команды, которые к нему приводят. Каждый
-  вариант исполняется настоящим git в одноразовом репозитории: верный даёт целевое состояние
-  (ветка, история, индекс, содержимое файлов), остальные — другое.
+version: 2
+description: 'Цель задана конечным состоянием репозитория; выбрать команды, которые к нему приводят. Каждый
+  вариант исполняется настоящим git в одноразовом репозитории: верный даёт целевое состояние (ветка, история,
+  индекс, содержимое файлов), остальные — другое. Версия 2: только сценарии reset --soft, revert опубликованного
+  коммита, restore одного файла; сценарий «перенести коммиты в новую ветку» (порядок branch → reset --hard)
+  — семейство common.git.move_commits_mcq.'

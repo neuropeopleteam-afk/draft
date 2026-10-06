@@ -8,7 +8,7 @@
 Позиции помечены «(демо)», удаляются командой --delete.
 
 Запуск: python -m app.fsp_cabinet.demo [--reset | --delete]   (заодно создаёт демо-кубки app.cup.demo)
-Вход жюри (POST /api/jury/login) и сброс демо жюри (POST /api/jury/reset) вызывают prepare() сами.
+Вход жюри (POST /api/jury/login) и запасная песочница вызывают prepare() сами (app.modules.jury.seed.ensure_ideas).
 """
 from __future__ import annotations
 
@@ -16,21 +16,19 @@ import argparse
 from datetime import timedelta
 import math
 import random
-import secrets
 import threading
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal, get_engine, utcnow
-from app.core.enums import InvitationStatus, UserRole
+from app.core.enums import InvitationStatus
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.invitations.models import Invitation, InvitationEvent
 from app.modules.matching.models import EmployerNeed
 from app.modules.profiles.models import CandidateProfile, Company, EmployerProfile
 
-ANALYST_EMAIL = "fsp-analyst@jury.example.com"
 MARK = " (демо)"
 DEMAND = {"backend.junior": 7, "backend.middle": 16, "backend.senior": 9, "frontend.junior": 6,
           "frontend.middle": 12, "frontend.senior": 7, "data_ml.junior": 5, "data_ml.middle": 11,
@@ -40,17 +38,6 @@ POSITIONS = {"backend": "Backend-разработчик", "frontend": "Frontend-
              "qa": "QA-инженер", "security": "Специалист по ИБ"}
 GRADE_T = {"junior": "Junior", "middle": "Middle", "senior": "Senior"}
 _mx = threading.Lock()
-
-
-def ensure_analyst(db: Session) -> User:
-    u = db.scalar(select(User).where(User.email == ANALYST_EMAIL))
-    if u is None:
-        from app.core.security import hash_password
-        from app.modules.demo.seed import _user
-
-        u = _user(db, ANALYST_EMAIL, UserRole.fsp_analyst, hash_password(secrets.token_urlsafe(24)))
-        db.commit()
-    return u
 
 
 def _demo_companies(db: Session) -> list[tuple[Company, User]]:
@@ -166,20 +153,20 @@ def delete_invitations(db: Session) -> int:
 
 
 def prepare(db: Session, *, reset: bool = False) -> dict:
-    """Демо кабинета ФСП и кубков: аналитик, история приглашений, кубки демо-компаний.
+    """Общее демо кабинета ФСП и кубков (одно на платформу, не на песочницу жюри): история приглашений демо-компаний
+    и кубки демо-компаний «Демо: …».
 
-    reset=True — пересоздать всё (сброс демо жюри); иначе — досоздать недостающее и пересеять устаревшие кубки
-    (идущий кубок подходит к концу — см. app.cup.demo.is_stale). Блокировку между воркерами держит вызывающий
-    (app.modules.jury.seed._lock)."""
+    reset=True — пересоздать (python -m app.fsp_cabinet.demo --reset); иначе — досоздать недостающее и пересеять
+    устаревшие кубки (идущий кубок подходит к концу — см. app.cup.demo.is_stale). Блокировку между воркерами держит
+    вызывающий (app.modules.jury.seed.ensure_ideas)."""
     from app.cup import demo as cup_demo
 
-    out = {"analyst": True, "invitations": 0, "cups": []}
+    out = {"invitations": 0, "cups": []}
     with _mx:
-        ensure_analyst(db)
         if not _demo_companies(db):
             return out
         if reset:
-            cup_demo.delete_cups(db)
+            cup_demo.delete_cups(db, seeded_only=True)
             delete_invitations(db)
         if not has_demo_invitations(db):
             out["invitations"] = seed_invitations(db)
@@ -187,14 +174,6 @@ def prepare(db: Session, *, reset: bool = False) -> dict:
             cup_demo.delete_cups(db, seeded_only=True)
             out["cups"] = cup_demo.seed_cups(db)["cups"]
     return out
-
-
-def ensure_demo(db: Session) -> dict:
-    """Ленивая подготовка демо кабинета ФСП (вход «ФСП» в один клик): аналитик + история приглашений + кубки."""
-    from app.modules.jury.seed import _lock
-
-    with _lock(db):
-        return prepare(db)
 
 
 def main() -> None:

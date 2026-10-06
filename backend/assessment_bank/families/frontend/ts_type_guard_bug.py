@@ -31,12 +31,16 @@ SYMPTOM = {
 }
 
 
-def generate(seed: int):
-    rng = make_rng(FAMILY_ID, seed)
+# Калибровка 05.10: подтипы null_check выделены в frontend.ts.typeof_null_guard_bug (варианты были неизоморфны).
+SUBTYPES_HERE = ('array_check', 'id_check', 'enum_check')
+
+
+def _generate(seed: int, family_id: str, subtypes):
+    rng = make_rng(family_id, seed)
     T, guard, parse, st, vals, lst, el, ctx = rng.choice(TYPES)
     const = rng.choice(["ALLOWED", "KNOWN_VALUES", st.upper() + "_VALUES"])
     vname = rng.choice(["v", "rec", "obj"])
-    subtype = rng.choice(["null_check", "array_check", "id_check", "enum_check"])
+    subtype = rng.choice(list(subtypes))
     lit = " | ".join(f"'{x}'" for x in vals)
     arr = ", ".join(f"'{x}'" for x in vals)
     L = {  # ключ: (TS, JS)
@@ -71,6 +75,11 @@ def generate(seed: int):
                 f"  return Array.isArray(data) ? data.filter({guard}) : [];", "}"]
         return "\n".join(out)
     buggy, fixed = lines(B, False), lines(L, False)
+    # 0–2 строки нейтрального комментария сверху: номер строки дефекта не постоянен
+    # (после разделения подтипов у typeof null ключ иначе был бы одним и тем же)
+    hdr = rng.choice(["", "// Типы и разбор ответа API.\n",
+                      "// Модуль разбора ответа сервиса.\n// Используется на экране списка.\n"])
+    buggy, fixed = hdr + buggy, hdr + fixed
     buggy_js, fixed_js = lines(B, True), lines(L, True)
     diff = changed_lines(buggy, fixed)
     assert len(diff) == 1
@@ -112,8 +121,13 @@ def generate(seed: int):
                    explanation=f"Строка {key_line}: {why[subtype]}. Type guard — обещание "
                                f"компилятору: TypeScript верит `value is {T}` и не проверяет "
                                f"тело функции, поэтому ошибка в нём не ловится при компиляции.")
-    return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
+    return build_variant(family_id, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="unsound_type_guard",
                          display_code_note="Для проверки ключа аннотации типов удалены (построчно), "
                                            "код исполняется как JavaScript в Node.js.",
                          params={"fixed_code": fixed, "subtype": subtype})
+
+
+
+def generate(seed: int):
+    return _generate(seed, FAMILY_ID, SUBTYPES_HERE)

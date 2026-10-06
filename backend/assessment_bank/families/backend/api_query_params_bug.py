@@ -82,7 +82,9 @@ def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     c = rng.choice(CONTEXTS)
     fn = rng.choice(FN_NAMES)
-    bug = rng.choice(SUBTYPES)
+    # Калибровка 05.10: подтип empty_split (''.split(",") → ['']) не решила ни одна модель (0,00 против
+    # 0,32–0,55) — это знание частного поведения str.split, а не разбора параметров; исключён.
+    bug = rng.choice([b for b in SUBTYPES if b != "empty_split"])
     order = rng.sample(["limit", "offset", "flag", "list"], 4)
     ret_order = rng.sample(["limit", "offset", "flag", "list"], 4)
     f, l = c["flag"], c["lst"]

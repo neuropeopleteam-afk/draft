@@ -9,10 +9,16 @@ from tests.test_day2_rules import INVITE, H, candidate_with_category, employer, 
 
 
 def analyst_token(client) -> str:
-    r = client.post("/api/fsp-cabinet/demo-login")
-    assert r.status_code == 200, r.text
-    assert r.json()["landing"] == "/fsp" and r.json()["user"]["role"] == "fsp_analyst"
-    return r.json()["access_token"]
+    """Учётка роли «ФСП» без режима жюри (вход жюри за ФСП проверяется ниже)."""
+    from app.core.enums import UserRole
+    from app.core.security import hash_password
+    from app.modules.auth.service import issue_token
+    from app.modules.demo.seed import _user
+
+    with SessionLocal() as db:
+        u = _user(db, "analyst@example.com", UserRole.fsp_analyst, hash_password("analyst-pass-123"))
+        db.commit()
+        return issue_token(u).access_token
 
 
 def test_access_by_role(client):
@@ -65,19 +71,27 @@ def test_k_rules_pure():
     assert kr(3, 10) is None and kr(5, 10) == 0.5 and kr(0, 7) == 0.0 and kr(5, 4) is None
 
 
-def test_demo_report_and_cups(client):
-    from app.cup.models import Cup, CupEntry
-    from app.fsp_cabinet import demo
+def _platform_demo():
     from app.modules.demo.seed import seed
+    from app.modules.jury.seed import ensure_ideas
 
     with SessionLocal() as db:
         seed(db)
         db.commit()
-    ta = analyst_token(client)  # демо-вход сам готовит историю приглашений и демо-кубки
+        ensure_ideas(db)  # кубки демо-компаний и история приглашений — одни на платформу
+
+
+def test_demo_report_and_cups(client):
+    from app.cup.models import Cup, CupEntry
+    from app.fsp_cabinet import demo
+
+    _platform_demo()
+    ta = analyst_token(client)
     with SessionLocal() as db:
         assert demo.has_demo_invitations(db)
         cups = db.scalars(select(Cup)).all()
         assert len(cups) == 6 and {c.status for c in cups} == {"finished", "active"}
+        assert all(c.jury_scope is None for c in cups)
         placed = db.scalars(select(CupEntry).where(CupEntry.place.is_not(None))).all()
         assert placed and all(e.passport_status in ("written", "pending_link") for e in placed)
         assert any(e.passport_status == "written" for e in placed)
@@ -100,107 +114,140 @@ def test_demo_report_and_cups(client):
     assert f["all"][0]["count"] >= 150 and f["all"][1]["conversion"] is not None
     assert len(rep["cups"]) == 6 and all("participants" in c for c in rep["cups"])
     assert all(s["count"] is not None for s in f["cups"])  # воронка кубков раскрыта целиком (каждый этап ≥ 5)
-    # демо-кубки видны демо-кандидатам своей категории; удаление демо — чистое
-    with SessionLocal() as db:
+    with SessionLocal() as db:  # удаление демо — чистое
         from app.cup import demo as cup_demo
 
         assert cup_demo.delete_cups(db) == 6 and demo.delete_invitations(db) >= 100
         assert db.scalars(select(Cup)).all() == []
 
 
-def test_jury_employer_gets_review_cup(client):
-    from app.modules.demo.seed import seed
-    from app.modules.jury.seed import EMAILS
-
-    with SessionLocal() as db:
-        seed(db)
-        db.commit()
-    r = client.post("/api/jury/login", json={"persona": "employer"})
+# ---------------------------------------------------------------- режим жюри: песочницы, персона «ФСП», сброс
+def _login(client, persona, scenario=None):
+    r = client.post("/api/jury/login", json={"persona": persona, **({"scenario": scenario} if scenario else {})})
     assert r.status_code == 200, r.text
-    te = r.json()["access_token"]
-    assert EMAILS["employer"] == "employer@jury.example.com"
-    cups = client.get("/api/employer/cups", headers=H(te)).json()
-    assert len(cups) == 1 and cups[0]["phase"] == "judging" and cups[0]["to_review"] == 2
-    cup = client.get(f"/api/employer/cups/{cups[0]['id']}", headers=H(te)).json()
-    todo = [s for s in cup["solutions"] if s["status"] == "submitted"]
-    assert len(todo) == 2
-    for s in todo:
-        r = client.post(f"/api/employer/cups/{cup['id']}/entries/{s['entry_id']}/score",
-                        json={"criteria": {"correctness": 1, "tradeoffs": 0.5, "clarity": 1}}, headers=H(te))
-        assert r.status_code == 200, r.text
-    res = r.json()  # последняя оценка — итоги подведены автоматически (срок кубка вышел)
-    assert res["phase"] == "finished" and res["summary"]["invited"] >= 1
-    assert len(client.get("/api/employer/cups", headers=H(te)).json()) == 1  # повторно не создаётся
+    return r.json()
 
 
-# ---------------------------------------------------------------- режим жюри: персона «ФСП», сброс, свежесть демо
-def _ideas_state(db):
+def _box(db, key):
+    """Состояние копии демо жюри: её кубки, Мария (место, паспорт, приглашение), факты кубков."""
     from app.cup.models import Cup, CupEntry
-    from app.cup.service import phase
     from app.modules.auth.models import User
-    from app.modules.fsp.models import FspAchievement
     from app.modules.invitations.models import Invitation
-    from app.modules.jury.seed import EMAILS
-    from app.modules.profiles.models import CandidateFact
+    from app.modules.jury import scope
 
-    cups = db.scalars(select(Cup)).all()
-    ids = {f"cup:{c.id}" for c in cups}
-    facts = db.scalars(select(CandidateFact.source_ref).where(CandidateFact.source_ref.like("cup:%"))).all()
-    ach = db.scalars(select(FspAchievement.source_ref).where(FspAchievement.source_ref.like("cup:%"))).all()
-    maria = db.scalar(select(User).where(User.email == EMAILS["candidate"]))
+    cups = {c.title: c for c in db.scalars(select(Cup).where(Cup.jury_scope == key)).all()}
+    maria = db.scalar(select(User).where(User.email == scope.emails("" if key == scope.SHARED else key)["candidate"]))
     me = db.scalars(select(CupEntry).where(CupEntry.candidate_user_id == maria.id)).all() if maria else []
     inv = [db.get(Invitation, e.invitation_id) for e in me if e.invitation_id]
-    return {"phases": sorted(phase(c) for c in cups), "facts": len(facts), "orphans": set(facts + ach) - ids,
-            "maria": [(e.place, e.passport_status) for e in me], "maria_inv": [i.status.value for i in inv if i]}
+    return {"cups": {t: c.id for t, c in cups.items()}, "maria": [(e.place, e.passport_status) for e in me],
+            "maria_inv": [i.status.value for i in inv if i]}
 
 
-def test_jury_fsp_persona_and_reset_recreates_cups(client, monkeypatch):
+def _orphans(db):
     from app.cup.models import Cup
-    from app.modules.demo.seed import seed
+    from app.modules.fsp.models import FspAchievement
+    from app.modules.profiles.models import CandidateFact
+
+    ids = {f"cup:{c}" for c in db.scalars(select(Cup.id)).all()}
+    refs = db.scalars(select(CandidateFact.source_ref).where(CandidateFact.source_ref.like("cup:%"))).all()
+    refs += db.scalars(select(FspAchievement.source_ref).where(FspAchievement.source_ref.like("cup:%"))).all()
+    return set(refs) - ids
+
+
+def _numbers(rep):
+    ov = rep["overview"]
+    return (ov["candidates"], ov["candidates_fsp"], ov["companies_active"], ov["needs"], ov["invitations"], ov["cups"],
+            ov["cup_participants"], [s["count"] for s in rep["funnel"]["cups"]],
+            [g["candidates"] for g in rep["fsp_effect"]["groups"]])
+
+
+def test_jury_sandboxes_get_own_cups_and_shared_analytics(client, monkeypatch):
+    """Две песочницы: у каждой свои кубки и своя Мария на 2-м месте; кубки чужой песочницы не видны; аналитика ФСП
+    одна и та же при любом числе песочниц и после итогов кубка жюри; сброс пересоздаёт только свои кубки."""
+    from app.fsp_cabinet import analytics
     from app.modules.jury import router as jr
 
+    _platform_demo()
     with SessionLocal() as db:
-        seed(db)
-        db.commit()
+        base = _numbers(analytics.report(db))
     st = client.get("/api/jury/status").json()
     assert any(p["id"] == "fsp" and p["role"] == "fsp_analyst" for p in st["personas"])
-    r = client.post("/api/jury/login", json={"persona": "fsp"})
-    assert r.status_code == 200, r.text
-    assert r.json()["landing"] == "/fsp" and r.json()["user"]["role"] == "fsp_analyst"
-    ta = r.json()["access_token"]
+    a = _login(client, "candidate", "new")
+    b = _login(client, "candidate", "new")
+    sa, sb = a["scenario"], b["scenario"]
+    assert sa and sb and sa != sb
     with SessionLocal() as db:
-        s1 = _ideas_state(db)
-    # 3 завершены, 2 идут, 1 скоро; Мария — с местом в завершённом кубке, запись в паспорте, приглашение ждёт ответа
-    assert s1["phases"] == ["active", "active", "finished", "finished", "finished", "upcoming"]
-    assert s1["maria"] and s1["maria"][0][0] is not None and s1["maria"][0][1] == "written"
-    assert s1["maria_inv"] == ["sent"] and not s1["orphans"]
-    rep = client.get("/api/fsp-cabinet/report", headers=H(ta)).json()
-    assert rep["overview"]["invitations"] >= 100 and rep["overview"]["cups"] == 6
-    # работодатель жюри получает свой кубок «на оценке»; после сброса он и его факты T1 исчезают, демо — как было
-    te = client.post("/api/jury/login", json={"persona": "employer"}).json()["access_token"]
-    cups = client.get("/api/employer/cups", headers=H(te)).json()
-    assert len(cups) == 1 and cups[0]["to_review"] == 2
-    cup = client.get(f"/api/employer/cups/{cups[0]['id']}", headers=H(te)).json()
-    for s in [x for x in cup["solutions"] if x["status"] == "submitted"]:
-        client.post(f"/api/employer/cups/{cup['id']}/entries/{s['entry_id']}/score",
-                    json={"criteria": {"correctness": 1, "tradeoffs": 1, "clarity": 1}}, headers=H(te))
+        box_a, box_b = _box(db, sa), _box(db, sb)
+        assert not _orphans(db)
+    for box in (box_a, box_b):  # Мария — 2-е место в «Платёжном шлюзе», запись в паспорте, приглашение ждёт ответа
+        assert set(box["cups"]) == {"Платёжный шлюз", "Вебхуки без дублей"}
+        assert box["maria"] == [(2, "written")] and box["maria_inv"] == ["sent"]
+    assert not set(box_a["cups"].values()) & set(box_b["cups"].values())
+    # кандидат видит кубки своей песочницы и кубки платформы, но не чужие
+    items = client.get("/api/candidate/cups", headers=H(a["access_token"])).json()["items"]
+    mine = [c for c in items if c["title"] == "Платёжный шлюз"]
+    assert len(mine) == 1 and mine[0]["id"] == str(box_a["cups"]["Платёжный шлюз"]) and mine[0]["my_place"] == 2
+    assert {"Маршрутизация заказов", "Надёжные платежи"} <= {c["title"] for c in items}
+    assert client.get(f"/api/candidate/cups/{box_b['cups']['Платёжный шлюз']}",
+                      headers=H(a["access_token"])).status_code == 404
+    pas = client.get("/api/candidate/cups/passport", headers=H(a["access_token"])).json()
+    assert [(p["title"], p["place"], p["passport_status"], p["invited"]) for p in pas] == \
+        [("Платёжный шлюз", 2, "written", True)]
+    # ФСП песочницы A: та же аналитика, что без песочниц
+    f = _login(client, "fsp", sa)
+    assert f["landing"] == "/fsp" and f["user"]["role"] == "fsp_analyst" and f["scenario"] == sa
+    rep = client.get("/api/fsp-cabinet/report", headers=H(f["access_token"])).json()
+    assert _numbers(rep) == base
+    # работодатель песочницы A: два кубка; оценил два решения — итоги и приглашения топ-3, без фактов «статистам»
+    te = _login(client, "employer", sa)["access_token"]
+    cups = {c["title"]: c for c in client.get("/api/employer/cups", headers=H(te)).json()}
+    assert set(cups) == {"Платёжный шлюз", "Вебхуки без дублей"}
+    assert cups["Платёжный шлюз"]["phase"] == "finished" and cups["Платёжный шлюз"]["summary"]["invited"] == 3
+    rev = cups["Вебхуки без дублей"]
+    assert rev["phase"] == "judging" and rev["to_review"] == 2
+    cup = client.get(f"/api/employer/cups/{rev['id']}", headers=H(te)).json()
+    for sol in [x for x in cup["solutions"] if x["status"] == "submitted"]:
+        r = client.post(f"/api/employer/cups/{rev['id']}/entries/{sol['entry_id']}/score",
+                        json={"criteria": {"correctness": 1, "tradeoffs": 1, "clarity": 1}}, headers=H(te))
+        assert r.status_code == 200, r.text
+    res = r.json()
+    assert res["phase"] == "finished" and res["summary"]["invited"] == 3
+    assert all(not x.get("invite_note") for x in res["leaderboard"][:3])
     with SessionLocal() as db:
-        assert _ideas_state(db)["facts"] > s1["facts"]  # итоги кубка жюри — факты T1 у демо-кандидатов
-    for _ in range(2):
-        monkeypatch.setitem(jr._state, "last_reset", 0.0)
-        r = client.post("/api/jury/reset")
-        assert r.status_code == 200 and r.json()["deleted_users"] == 5, r.text
-        assert len(r.json()["ideas"]["cups"]) == 6
-        with SessionLocal() as db:
-            s2 = _ideas_state(db)
-            assert s2["phases"] == s1["phases"] and s2["facts"] == s1["facts"] and not s2["orphans"]
-            assert s2["maria_inv"] == ["sent"] and len(db.scalars(select(Cup)).all()) == 6
-    ta = client.post("/api/jury/login", json={"persona": "fsp"}).json()["access_token"]
-    rep = client.get("/api/fsp-cabinet/report", headers=H(ta)).json()
-    assert rep["overview"]["invitations"] >= 100 and rep["overview"]["cups"] == 6
-    assert all(s["count"] is not None for s in rep["funnel"]["cups"])
-    te = client.post("/api/jury/login", json={"persona": "employer"}).json()["access_token"]
-    assert client.get("/api/employer/cups", headers=H(te)).json()[0]["to_review"] == 2  # кубок жюри — заново
+        from app.modules.profiles.models import CandidateFact
+
+        assert db.scalars(select(CandidateFact).where(CandidateFact.source_ref == f"cup:{rev['id']}")).all() == []
+        assert _numbers(analytics.report(db)) == base
+    # сброс песочницы A: её кубки — заново, у B — те же, сирот нет
+    monkeypatch.setitem(jr._state, sa, 0.0)
+    r = client.post("/api/jury/reset", headers=H(te))
+    assert r.status_code == 200 and r.json()["deleted_users"] == 5, r.text
+    assert set(r.json()["employer"]["cups"]) == {"Платёжный шлюз", "Вебхуки без дублей"}
+    with SessionLocal() as db:
+        new_a, again_b = _box(db, sa), _box(db, sb)
+        assert again_b == box_b and not set(new_a["cups"].values()) & set(box_a["cups"].values())
+        assert new_a["maria"] == [(2, "written")] and new_a["maria_inv"] == ["sent"] and not _orphans(db)
+        assert _numbers(analytics.report(db)) == base
+    te = r.json()["access_token"]
+    assert {c["title"]: c["to_review"] for c in client.get("/api/employer/cups", headers=H(te)).json()} == \
+        {"Платёжный шлюз": 0, "Вебхуки без дублей": 2}
+
+
+def test_spare_sandbox_comes_with_cups(client, monkeypatch):
+    from app.core.config import get_settings
+    from app.modules.jury import router as jr
+
+    _platform_demo()
+    monkeypatch.setattr(get_settings(), "jury_spare_sandboxes", 1)
+    monkeypatch.setattr(jr, "_refill", lambda: None)  # без фонового пополнения после выдачи
+    spare = jr.make_spare()
+    assert spare
+    with SessionLocal() as db:
+        box = _box(db, spare)
+    assert set(box["cups"]) == {"Платёжный шлюз", "Вебхуки без дублей"} and box["maria"] == [(2, "written")]
+    r = _login(client, "employer", "new")
+    assert r["scenario"] == spare  # запасная выдана как есть — кубки уже на месте
+    assert len(client.get("/api/employer/cups", headers=H(r["access_token"])).json()) == 2
 
 
 def test_stale_demo_cups_reseeded_on_jury_login(client):
@@ -208,27 +255,26 @@ def test_stale_demo_cups_reseeded_on_jury_login(client):
 
     from app.cup import demo as cup_demo
     from app.cup.models import Cup
-    from app.modules.demo.seed import seed
 
+    _platform_demo()
+    tc = _login(client, "candidate")["access_token"]  # общее демо: тоже свои кубки (jury_scope = shared)
     with SessionLocal() as db:
-        seed(db)
-        db.commit()
-    assert client.post("/api/jury/login", json={"persona": "candidate"}).status_code == 200
-    with SessionLocal() as db:
-        assert not cup_demo.is_stale(db)
+        assert not cup_demo.is_stale(db) and len(cup_demo._seeded(db)) == 6
         cup = db.scalar(select(Cup).where(Cup.title == "Маршрутизация заказов"))
         old = cup.id
         cup.ends_at = utcnow() + timedelta(hours=2)  # идущий кубок вот-вот закончится
         db.commit()
         assert cup_demo.is_stale(db)
-    tc = client.post("/api/jury/login", json={"persona": "candidate"}).json()["access_token"]
+        shared = _box(db, "shared")["cups"]
+    # Мария записалась в идущий кубок платформы; пересев общего демо её запись снимает, кубки копий жюри не трогает
+    assert client.post(f"/api/candidate/cups/{old}/join", headers=H(tc)).status_code == 200
+    tc = _login(client, "candidate")["access_token"]
     with SessionLocal() as db:
         assert not cup_demo.is_stale(db)
         cup = db.scalar(select(Cup).where(Cup.title == "Маршрутизация заказов"))
-        assert cup.id != old and len(db.scalars(select(Cup)).all()) == 6
+        assert cup.id != old and len(cup_demo._seeded(db)) == 6 and _box(db, "shared")["cups"] == shared
+        assert not _orphans(db)
     items = client.get("/api/candidate/cups", headers=H(tc)).json()["items"]
     titles = {c["title"]: c for c in items}
     assert titles["Маршрутизация заказов"]["phase"] == "active" and titles["Маршрутизация заказов"]["my_status"] is None
-    assert titles["Надёжные платежи"]["my_place"] is not None
-    pas = client.get("/api/candidate/cups/passport", headers=H(tc)).json()
-    assert pas and pas[0]["passport_status"] == "written" and pas[0]["invited"]
+    assert titles["Платёжный шлюз"]["my_place"] == 2

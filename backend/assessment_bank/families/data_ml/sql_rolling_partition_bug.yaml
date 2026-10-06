@@ -1,0 +1,42 @@
+family_id: data_ml.sql.rolling_partition_bug
+title: Скользящее окно в SQL без PARTITION BY
+direction: data_ml
+skills:
+- sql
+- window_functions
+- feature_engineering
+- time_series
+- data_leakage
+target_grades:
+- middle
+format: find_bug
+language: sql
+invariants:
+  code_lines:
+  - 6
+  - 8
+  operations:
+  - 4
+  - 4
+  defect_type: window_frame
+  extra:
+    subtypes:
+    - no_partition
+    window_days:
+    - 3
+    - 4
+    - 5
+    - 7
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.1
+  a: 1.1
+  sigma_variant: 0.3
+  basis: 'Выделено из data_ml.sql.rolling_window_bug: подтип «нет PARTITION BY»: окно смешивает группы.
+    Калибровка панелью LLM 05.10: варианты неизоморфны (σ > 0,5, χ² p < 0,01), разброс объяснялся подтипом.
+    b оставлен −0,1: содержательной причины менять нет.'
+generator: assessment_bank.families.data_ml.sql_rolling_partition_bug
+version: 1
+description: 'Выделено из data_ml.sql.rolling_window_bug по итогам калибровки 05.10: подтип «нет PARTITION
+  BY»: окно смешивает группы. Генератор общий с исходным семейством, подтип фиксирован.'

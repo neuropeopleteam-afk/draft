@@ -29,6 +29,7 @@ CONTEXTS = [("клиенты банка", "clients", "client"), ("транзак
             ("отзывы покупателей", "reviews", "review"), ("снимки МРТ", "scans", "scan"),
             ("сессии пользователей", "sessions", "session"), ("заявки на кредит", "applications", "app")]
 DISTRACTORS = ["global_seed", "global_sort", "shuffle_input", "module_rng"]
+NEAR_MISSES = ["near_global_call", "near_unseeded"]
 
 
 def _tail(rows, share):
@@ -46,6 +47,12 @@ def _func(kind, fn, rows, share):
     head = f"def {fn}({rows}, {share}, seed):"
     if kind == "good":
         body = ["    rng = random.Random(seed)", f"    idx = list(range(len({rows})))",
+                "    rng.shuffle(idx)"] + _tail(rows, share)
+    elif kind == "near_global_call":   # локальный генератор создан, но перемешивает глобальный
+        body = ["    rng = random.Random(seed)", f"    idx = list(range(len({rows})))",
+                "    random.shuffle(idx)"] + _tail(rows, share)
+    elif kind == "near_unseeded":      # локальный генератор без seed
+        body = ["    rng = random.Random()", f"    idx = list(range(len({rows})))",
                 "    rng.shuffle(idx)"] + _tail(rows, share)
     elif kind == "global_seed":
         body = ["    random.seed(seed)", f"    idx = list(range(len({rows})))",
@@ -102,7 +109,10 @@ def generate(seed: int):
     n = rng.randint(20, 40)
     frac = rng.choice([0.2, 0.25, 0.3])
     tseed = rng.randint(1, 999)
-    chosen = rng.sample(DISTRACTORS, 3)
+    # Версия 2 (калибровка 05.10: решалась малыми моделями — все дистракторы явно трогали
+    # глобальный random или входной список, верный узнавался по `random.Random(seed)`).
+    # Теперь всегда есть «почти верный» вариант, отличающийся от ключа одним токеном.
+    chosen = [rng.choice(NEAR_MISSES)] + rng.sample(DISTRACTORS, 2)
     idx_name = rng.choice(["idx", "order", "perm", "positions"])
     cut_name = rng.choice(["n_test", "cut", "k_test", "border"])
     ren = lambda c: _rename(c, idx_name, cut_name)
@@ -133,7 +143,12 @@ def generate(seed: int):
             f"независимо от обращений к `random` в остальном коде; (2) не меняет глобальное "
             f"состояние модуля `random` — от него зависят другие этапы; (3) не меняет входной "
             f"список. Какая замена выполняет все три требования?")
-    why = {"global_seed": "random.seed внутри функции сбрасывает глобальный генератор — "
+    why = {"near_global_call": "локальный генератор создан, но перемешивание вызывает глобальный "
+                               "random.shuffle — результат зависит от других потребителей, а "
+                               "глобальное состояние меняется (требования 1 и 2)",
+           "near_unseeded": "random.Random() без аргумента берёт seed из системной энтропии — "
+                            "параметр seed игнорируется, разбиение не воспроизводится (требование 1)",
+           "global_seed": "random.seed внутри функции сбрасывает глобальный генератор — "
                           "меняется случайность остальных этапов (нарушено требование 2)",
            "global_sort": "сортировка по random.random после random.seed тоже меняет "
                           "глобальное состояние (требование 2)",

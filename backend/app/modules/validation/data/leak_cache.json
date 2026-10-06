@@ -1,0 +1,1416 @@
+{
+ "seed": 20261006,
+ "n": 160,
+ "results": {
+  "backend:0.1": {
+   "violated": false,
+   "fact": "Утечка 10% вариантов (backend, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.20, с детектором -0.02, с карантином субпула -0.08; детектор поймал 81% списывающих, ложные срабатывания у честных 0.0%",
+   "details": {
+    "threshold": 2.516,
+    "leak_share": 0.1,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.132,
+     "honest_bias_theta": -0.082,
+     "cheaters_grade_inflated": 0.135,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.029
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.203,
+     "honest_bias_theta": -0.051,
+     "cheaters_grade_inflated": 0.378,
+     "cheaters_false_confirm": 0.1,
+     "honest_false_confirm": 0.088
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.023,
+     "honest_bias_theta": -0.096,
+     "cheaters_grade_inflated": 0.27,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.088,
+     "detector_tpr": 0.811,
+     "detector_fpr": 0.0
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.078,
+     "honest_bias_theta": -0.099,
+     "cheaters_grade_inflated": 0.135,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.0,
+     "detector_tpr": 0.892,
+     "detector_fpr": 0.008
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 14
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.009,
+     "honest_bias_theta": -0.001,
+     "cheaters_grade_inflated": 0.216,
+     "cheaters_false_confirm": 0.1,
+     "honest_false_confirm": 0.029
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.112,
+     "honest_bias_theta": -0.012,
+     "cheaters_grade_inflated": 0.216,
+     "cheaters_false_confirm": 0.1,
+     "honest_false_confirm": 0.0
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 2.1,
+     "honest_bias_theta": 0.014,
+     "cheaters_grade_inflated": 0.919,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.029
+    },
+    "n_unqualified_cheaters": 10,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.1,
+     "leak_detector": 0.0,
+     "leak_detector_rotation": 0.0,
+     "fixed_no_leak": 0.1,
+     "fixed_leak": 0.1,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 9.3,
+   "computed_at": "2026-10-06 07:42"
+  },
+  "backend:0.3": {
+   "violated": false,
+   "fact": "Утечка 30% вариантов (backend, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.55, с детектором +0.18, с карантином субпула -0.11; детектор поймал 68% списывающих, ложные срабатывания у честных 0.8%",
+   "details": {
+    "threshold": 2.516,
+    "leak_share": 0.3,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.132,
+     "honest_bias_theta": -0.082,
+     "cheaters_grade_inflated": 0.135,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.029
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.553,
+     "honest_bias_theta": -0.099,
+     "cheaters_grade_inflated": 0.595,
+     "cheaters_false_confirm": 0.5,
+     "honest_false_confirm": 0.088
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.18,
+     "honest_bias_theta": -0.065,
+     "cheaters_grade_inflated": 0.351,
+     "cheaters_false_confirm": 0.3,
+     "honest_false_confirm": 0.118,
+     "detector_tpr": 0.676,
+     "detector_fpr": 0.008
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.108,
+     "honest_bias_theta": -0.116,
+     "cheaters_grade_inflated": 0.162,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.088,
+     "detector_tpr": 0.892,
+     "detector_fpr": 0.008
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.009,
+     "honest_bias_theta": -0.021,
+     "cheaters_grade_inflated": 0.135,
+     "cheaters_false_confirm": 0.1,
+     "honest_false_confirm": 0.118
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.424,
+     "honest_bias_theta": -0.024,
+     "cheaters_grade_inflated": 0.405,
+     "cheaters_false_confirm": 0.3,
+     "honest_false_confirm": 0.059
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 2.047,
+     "honest_bias_theta": -0.125,
+     "cheaters_grade_inflated": 0.919,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.059
+    },
+    "n_unqualified_cheaters": 10,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.5,
+     "leak_detector": 0.3,
+     "leak_detector_rotation": 0.0,
+     "fixed_no_leak": 0.1,
+     "fixed_leak": 0.3,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 11.2,
+   "computed_at": "2026-10-06 07:42"
+  },
+  "backend:0.5": {
+   "violated": false,
+   "fact": "Утечка 50% вариантов (backend, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.95, с детектором +0.70, с карантином субпула -0.09; детектор поймал 35% списывающих, ложные срабатывания у честных 0.0%",
+   "details": {
+    "threshold": 2.516,
+    "leak_share": 0.5,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.132,
+     "honest_bias_theta": -0.082,
+     "cheaters_grade_inflated": 0.135,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.029
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.952,
+     "honest_bias_theta": -0.117,
+     "cheaters_grade_inflated": 0.838,
+     "cheaters_false_confirm": 0.5,
+     "honest_false_confirm": 0.059
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.696,
+     "honest_bias_theta": -0.042,
+     "cheaters_grade_inflated": 0.622,
+     "cheaters_false_confirm": 0.5,
+     "honest_false_confirm": 0.088,
+     "detector_tpr": 0.351,
+     "detector_fpr": 0.0
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.092,
+     "honest_bias_theta": -0.128,
+     "cheaters_grade_inflated": 0.162,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.088,
+     "detector_tpr": 0.892,
+     "detector_fpr": 0.008
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.009,
+     "honest_bias_theta": -0.021,
+     "cheaters_grade_inflated": 0.135,
+     "cheaters_false_confirm": 0.1,
+     "honest_false_confirm": 0.118
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.782,
+     "honest_bias_theta": -0.024,
+     "cheaters_grade_inflated": 0.73,
+     "cheaters_false_confirm": 0.5,
+     "honest_false_confirm": 0.059
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 2.047,
+     "honest_bias_theta": -0.125,
+     "cheaters_grade_inflated": 0.919,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.059
+    },
+    "n_unqualified_cheaters": 10,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.5,
+     "leak_detector": 0.5,
+     "leak_detector_rotation": 0.0,
+     "fixed_no_leak": 0.1,
+     "fixed_leak": 0.5,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 7.6,
+   "computed_at": "2026-10-06 07:43"
+  },
+  "frontend:0.1": {
+   "violated": true,
+   "fact": "Утечка 10% вариантов (frontend, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.15, с детектором +0.15, с карантином субпула +0.01; детектор поймал 85% списывающих, ложные срабатывания у честных 0.0%",
+   "details": {
+    "threshold": 2.081,
+    "leak_share": 0.1,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": -0.049,
+     "honest_bias_theta": 0.001,
+     "cheaters_grade_inflated": 0.109,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.03
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.152,
+     "honest_bias_theta": -0.01,
+     "cheaters_grade_inflated": 0.348,
+     "cheaters_false_confirm": 0.263,
+     "honest_false_confirm": 0.061
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.152,
+     "honest_bias_theta": -0.069,
+     "cheaters_grade_inflated": 0.283,
+     "cheaters_false_confirm": 0.211,
+     "honest_false_confirm": 0.061,
+     "detector_tpr": 0.848,
+     "detector_fpr": 0.0
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.015,
+     "honest_bias_theta": 0.026,
+     "cheaters_grade_inflated": 0.196,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.121,
+     "detector_tpr": 0.891,
+     "detector_fpr": 0.0
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.111,
+     "honest_bias_theta": 0.013,
+     "cheaters_grade_inflated": 0.196,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.121
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.237,
+     "honest_bias_theta": -0.006,
+     "cheaters_grade_inflated": 0.283,
+     "cheaters_false_confirm": 0.158,
+     "honest_false_confirm": 0.091
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 2.107,
+     "honest_bias_theta": 0.039,
+     "cheaters_grade_inflated": 0.913,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.182
+    },
+    "n_unqualified_cheaters": 19,
+    "attack_success_rate": {
+     "no_leak": 0.053,
+     "leak_no_detector": 0.263,
+     "leak_detector": 0.211,
+     "leak_detector_rotation": 0.053,
+     "fixed_no_leak": 0.053,
+     "fixed_leak": 0.158,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 12.5,
+   "computed_at": "2026-10-06 07:43"
+  },
+  "frontend:0.3": {
+   "violated": false,
+   "fact": "Утечка 30% вариантов (frontend, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.67, с детектором +0.36, с карантином субпула +0.01; детектор поймал 78% списывающих, ложные срабатывания у честных 0.9%",
+   "details": {
+    "threshold": 2.081,
+    "leak_share": 0.3,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": -0.049,
+     "honest_bias_theta": 0.001,
+     "cheaters_grade_inflated": 0.109,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.03
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.668,
+     "honest_bias_theta": -0.003,
+     "cheaters_grade_inflated": 0.587,
+     "cheaters_false_confirm": 0.368,
+     "honest_false_confirm": 0.091
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.359,
+     "honest_bias_theta": -0.104,
+     "cheaters_grade_inflated": 0.391,
+     "cheaters_false_confirm": 0.316,
+     "honest_false_confirm": 0.091,
+     "detector_tpr": 0.783,
+     "detector_fpr": 0.009
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.015,
+     "honest_bias_theta": 0.026,
+     "cheaters_grade_inflated": 0.196,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.121,
+     "detector_tpr": 0.891,
+     "detector_fpr": 0.0
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.111,
+     "honest_bias_theta": 0.013,
+     "cheaters_grade_inflated": 0.196,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.121
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.647,
+     "honest_bias_theta": -0.006,
+     "cheaters_grade_inflated": 0.543,
+     "cheaters_false_confirm": 0.474,
+     "honest_false_confirm": 0.091
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 2.107,
+     "honest_bias_theta": 0.039,
+     "cheaters_grade_inflated": 0.913,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.182
+    },
+    "n_unqualified_cheaters": 19,
+    "attack_success_rate": {
+     "no_leak": 0.053,
+     "leak_no_detector": 0.368,
+     "leak_detector": 0.316,
+     "leak_detector_rotation": 0.053,
+     "fixed_no_leak": 0.053,
+     "fixed_leak": 0.474,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 16.4,
+   "computed_at": "2026-10-06 07:43"
+  },
+  "frontend:0.5": {
+   "violated": false,
+   "fact": "Утечка 50% вариантов (frontend, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +1.21, с детектором +1.06, с карантином субпула +0.07; детектор поймал 35% списывающих, ложные срабатывания у честных 0.9%",
+   "details": {
+    "threshold": 2.081,
+    "leak_share": 0.5,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": -0.049,
+     "honest_bias_theta": 0.001,
+     "cheaters_grade_inflated": 0.109,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.03
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 1.211,
+     "honest_bias_theta": -0.021,
+     "cheaters_grade_inflated": 0.761,
+     "cheaters_false_confirm": 0.789,
+     "honest_false_confirm": 0.152
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 1.062,
+     "honest_bias_theta": 0.006,
+     "cheaters_grade_inflated": 0.739,
+     "cheaters_false_confirm": 0.737,
+     "honest_false_confirm": 0.091,
+     "detector_tpr": 0.348,
+     "detector_fpr": 0.009
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.07,
+     "honest_bias_theta": -0.056,
+     "cheaters_grade_inflated": 0.217,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.121,
+     "detector_tpr": 0.913,
+     "detector_fpr": 0.0
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.041,
+     "honest_bias_theta": 0.02,
+     "cheaters_grade_inflated": 0.217,
+     "cheaters_false_confirm": 0.105,
+     "honest_false_confirm": 0.091
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 0.921,
+     "honest_bias_theta": -0.031,
+     "cheaters_grade_inflated": 0.674,
+     "cheaters_false_confirm": 0.579,
+     "honest_false_confirm": 0.03
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 46,
+     "cheaters_bias_theta": 2.22,
+     "honest_bias_theta": -0.047,
+     "cheaters_grade_inflated": 0.913,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.121
+    },
+    "n_unqualified_cheaters": 19,
+    "attack_success_rate": {
+     "no_leak": 0.053,
+     "leak_no_detector": 0.789,
+     "leak_detector": 0.737,
+     "leak_detector_rotation": 0.053,
+     "fixed_no_leak": 0.105,
+     "fixed_leak": 0.579,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 18.5,
+   "computed_at": "2026-10-06 07:43"
+  },
+  "data_ml:0.1": {
+   "violated": false,
+   "fact": "Утечка 10% вариантов (data_ml, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.19, с детектором +0.05, с карантином субпула -0.02; детектор поймал 92% списывающих, ложные срабатывания у честных 1.8%",
+   "details": {
+    "threshold": 2.037,
+    "leak_share": 0.1,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.082,
+     "honest_bias_theta": 0.018,
+     "cheaters_grade_inflated": 0.149,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.121
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.192,
+     "honest_bias_theta": 0.025,
+     "cheaters_grade_inflated": 0.213,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.152
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.051,
+     "honest_bias_theta": -0.02,
+     "cheaters_grade_inflated": 0.191,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.091,
+     "detector_tpr": 0.915,
+     "detector_fpr": 0.018
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": -0.016,
+     "honest_bias_theta": -0.0,
+     "cheaters_grade_inflated": 0.149,
+     "cheaters_false_confirm": 0.105,
+     "honest_false_confirm": 0.121,
+     "detector_tpr": 0.915,
+     "detector_fpr": 0.009
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.098,
+     "honest_bias_theta": -0.062,
+     "cheaters_grade_inflated": 0.191,
+     "cheaters_false_confirm": 0.105,
+     "honest_false_confirm": 0.061
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.15,
+     "honest_bias_theta": 0.052,
+     "cheaters_grade_inflated": 0.191,
+     "cheaters_false_confirm": 0.158,
+     "honest_false_confirm": 0.121
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 2.087,
+     "honest_bias_theta": -0.034,
+     "cheaters_grade_inflated": 0.915,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.121
+    },
+    "n_unqualified_cheaters": 19,
+    "attack_success_rate": {
+     "no_leak": 0.053,
+     "leak_no_detector": 0.053,
+     "leak_detector": 0.053,
+     "leak_detector_rotation": 0.105,
+     "fixed_no_leak": 0.105,
+     "fixed_leak": 0.158,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 35.1,
+   "computed_at": "2026-10-06 07:44"
+  },
+  "data_ml:0.3": {
+   "violated": false,
+   "fact": "Утечка 30% вариантов (data_ml, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.64, с детектором +0.40, с карантином субпула +0.12; детектор поймал 74% списывающих, ложные срабатывания у честных 1.8%",
+   "details": {
+    "threshold": 2.037,
+    "leak_share": 0.3,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.082,
+     "honest_bias_theta": 0.018,
+     "cheaters_grade_inflated": 0.149,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.121
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.644,
+     "honest_bias_theta": 0.024,
+     "cheaters_grade_inflated": 0.596,
+     "cheaters_false_confirm": 0.526,
+     "honest_false_confirm": 0.152
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.404,
+     "honest_bias_theta": -0.016,
+     "cheaters_grade_inflated": 0.383,
+     "cheaters_false_confirm": 0.263,
+     "honest_false_confirm": 0.182,
+     "detector_tpr": 0.745,
+     "detector_fpr": 0.018
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.12,
+     "honest_bias_theta": -0.083,
+     "cheaters_grade_inflated": 0.234,
+     "cheaters_false_confirm": 0.158,
+     "honest_false_confirm": 0.121,
+     "detector_tpr": 0.894,
+     "detector_fpr": 0.0
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": -0.019,
+     "honest_bias_theta": -0.009,
+     "cheaters_grade_inflated": 0.128,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.121
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.656,
+     "honest_bias_theta": -0.006,
+     "cheaters_grade_inflated": 0.511,
+     "cheaters_false_confirm": 0.421,
+     "honest_false_confirm": 0.091
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 2.02,
+     "honest_bias_theta": -0.034,
+     "cheaters_grade_inflated": 0.915,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.152
+    },
+    "n_unqualified_cheaters": 19,
+    "attack_success_rate": {
+     "no_leak": 0.053,
+     "leak_no_detector": 0.526,
+     "leak_detector": 0.263,
+     "leak_detector_rotation": 0.158,
+     "fixed_no_leak": 0.0,
+     "fixed_leak": 0.421,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 18.1,
+   "computed_at": "2026-10-06 07:44"
+  },
+  "data_ml:0.5": {
+   "violated": false,
+   "fact": "Утечка 50% вариантов (data_ml, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +1.17, с детектором +0.81, с карантином субпула +0.04; детектор поймал 57% списывающих, ложные срабатывания у честных 4.4%",
+   "details": {
+    "threshold": 2.037,
+    "leak_share": 0.5,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.082,
+     "honest_bias_theta": 0.018,
+     "cheaters_grade_inflated": 0.149,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.121
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 1.169,
+     "honest_bias_theta": 0.076,
+     "cheaters_grade_inflated": 0.787,
+     "cheaters_false_confirm": 0.789,
+     "honest_false_confirm": 0.242
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.81,
+     "honest_bias_theta": -0.035,
+     "cheaters_grade_inflated": 0.66,
+     "cheaters_false_confirm": 0.579,
+     "honest_false_confirm": 0.152,
+     "detector_tpr": 0.574,
+     "detector_fpr": 0.044
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 0.036,
+     "honest_bias_theta": 0.042,
+     "cheaters_grade_inflated": 0.149,
+     "cheaters_false_confirm": 0.053,
+     "honest_false_confirm": 0.091,
+     "detector_tpr": 0.915,
+     "detector_fpr": 0.009
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": -0.019,
+     "honest_bias_theta": -0.009,
+     "cheaters_grade_inflated": 0.128,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.121
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 1.003,
+     "honest_bias_theta": -0.006,
+     "cheaters_grade_inflated": 0.787,
+     "cheaters_false_confirm": 0.632,
+     "honest_false_confirm": 0.091
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 47,
+     "cheaters_bias_theta": 2.02,
+     "honest_bias_theta": -0.034,
+     "cheaters_grade_inflated": 0.915,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.152
+    },
+    "n_unqualified_cheaters": 19,
+    "attack_success_rate": {
+     "no_leak": 0.053,
+     "leak_no_detector": 0.789,
+     "leak_detector": 0.579,
+     "leak_detector_rotation": 0.053,
+     "fixed_no_leak": 0.0,
+     "fixed_leak": 0.632,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 13.3,
+   "computed_at": "2026-10-06 07:44"
+  },
+  "qa:0.1": {
+   "violated": false,
+   "fact": "Утечка 10% вариантов (qa, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.14, с детектором -0.07, с карантином субпула -0.01; детектор поймал 95% списывающих, ложные срабатывания у честных 1.6%",
+   "details": {
+    "threshold": 2.388,
+    "leak_share": 0.1,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.123,
+     "honest_bias_theta": -0.03,
+     "cheaters_grade_inflated": 0.081,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.057
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.136,
+     "honest_bias_theta": -0.045,
+     "cheaters_grade_inflated": 0.297,
+     "cheaters_false_confirm": 0.273,
+     "honest_false_confirm": 0.114
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.075,
+     "honest_bias_theta": -0.096,
+     "cheaters_grade_inflated": 0.216,
+     "cheaters_false_confirm": 0.182,
+     "honest_false_confirm": 0.0,
+     "detector_tpr": 0.946,
+     "detector_fpr": 0.016
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.006,
+     "honest_bias_theta": -0.01,
+     "cheaters_grade_inflated": 0.216,
+     "cheaters_false_confirm": 0.273,
+     "honest_false_confirm": 0.114,
+     "detector_tpr": 0.946,
+     "detector_fpr": 0.016
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 15
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.138,
+     "honest_bias_theta": -0.057,
+     "cheaters_grade_inflated": 0.054,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.0
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.124,
+     "honest_bias_theta": -0.089,
+     "cheaters_grade_inflated": 0.162,
+     "cheaters_false_confirm": 0.091,
+     "honest_false_confirm": 0.057
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 2.05,
+     "honest_bias_theta": -0.085,
+     "cheaters_grade_inflated": 0.919,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.029
+    },
+    "n_unqualified_cheaters": 11,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.273,
+     "leak_detector": 0.182,
+     "leak_detector_rotation": 0.273,
+     "fixed_no_leak": 0.0,
+     "fixed_leak": 0.091,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 13.0,
+   "computed_at": "2026-10-06 07:45"
+  },
+  "qa:0.3": {
+   "violated": false,
+   "fact": "Утечка 30% вариантов (qa, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.57, с детектором +0.28, с карантином субпула -0.00; детектор поймал 84% списывающих, ложные срабатывания у честных 0.8%",
+   "details": {
+    "threshold": 2.388,
+    "leak_share": 0.3,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.123,
+     "honest_bias_theta": -0.03,
+     "cheaters_grade_inflated": 0.081,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.057
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.575,
+     "honest_bias_theta": -0.009,
+     "cheaters_grade_inflated": 0.595,
+     "cheaters_false_confirm": 0.636,
+     "honest_false_confirm": 0.114
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.279,
+     "honest_bias_theta": -0.079,
+     "cheaters_grade_inflated": 0.486,
+     "cheaters_false_confirm": 0.182,
+     "honest_false_confirm": 0.143,
+     "detector_tpr": 0.838,
+     "detector_fpr": 0.008
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.004,
+     "honest_bias_theta": -0.072,
+     "cheaters_grade_inflated": 0.243,
+     "cheaters_false_confirm": 0.182,
+     "honest_false_confirm": 0.086,
+     "detector_tpr": 0.946,
+     "detector_fpr": 0.016
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 15
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.138,
+     "honest_bias_theta": -0.057,
+     "cheaters_grade_inflated": 0.054,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.0
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.428,
+     "honest_bias_theta": -0.089,
+     "cheaters_grade_inflated": 0.324,
+     "cheaters_false_confirm": 0.182,
+     "honest_false_confirm": 0.057
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 2.05,
+     "honest_bias_theta": -0.085,
+     "cheaters_grade_inflated": 0.919,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.029
+    },
+    "n_unqualified_cheaters": 11,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.636,
+     "leak_detector": 0.182,
+     "leak_detector_rotation": 0.182,
+     "fixed_no_leak": 0.0,
+     "fixed_leak": 0.182,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 12.3,
+   "computed_at": "2026-10-06 07:45"
+  },
+  "qa:0.5": {
+   "violated": false,
+   "fact": "Утечка 50% вариантов (qa, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +1.16, с детектором +0.65, с карантином субпула -0.02; детектор поймал 54% списывающих, ложные срабатывания у честных 2.4%",
+   "details": {
+    "threshold": 2.388,
+    "leak_share": 0.5,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.123,
+     "honest_bias_theta": -0.03,
+     "cheaters_grade_inflated": 0.081,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.057
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 1.159,
+     "honest_bias_theta": 0.022,
+     "cheaters_grade_inflated": 0.757,
+     "cheaters_false_confirm": 0.636,
+     "honest_false_confirm": 0.086
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.653,
+     "honest_bias_theta": -0.137,
+     "cheaters_grade_inflated": 0.568,
+     "cheaters_false_confirm": 0.545,
+     "honest_false_confirm": 0.086,
+     "detector_tpr": 0.541,
+     "detector_fpr": 0.024
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.017,
+     "honest_bias_theta": -0.034,
+     "cheaters_grade_inflated": 0.162,
+     "cheaters_false_confirm": 0.182,
+     "honest_false_confirm": 0.114,
+     "detector_tpr": 0.946,
+     "detector_fpr": 0.024
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 15
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": -0.138,
+     "honest_bias_theta": -0.057,
+     "cheaters_grade_inflated": 0.054,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.0
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 0.847,
+     "honest_bias_theta": -0.089,
+     "cheaters_grade_inflated": 0.676,
+     "cheaters_false_confirm": 0.545,
+     "honest_false_confirm": 0.057
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 37,
+     "cheaters_bias_theta": 2.05,
+     "honest_bias_theta": -0.085,
+     "cheaters_grade_inflated": 0.919,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.029
+    },
+    "n_unqualified_cheaters": 11,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.636,
+     "leak_detector": 0.545,
+     "leak_detector_rotation": 0.182,
+     "fixed_no_leak": 0.0,
+     "fixed_leak": 0.545,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 7.5,
+   "computed_at": "2026-10-06 07:45"
+  },
+  "security:0.1": {
+   "violated": false,
+   "fact": "Утечка 10% вариантов (security, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.21, с детектором +0.02, с карантином субпула +0.02; детектор поймал 82% списывающих, ложные срабатывания у честных 0.8%",
+   "details": {
+    "threshold": 2.445,
+    "leak_share": 0.1,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": -0.012,
+     "honest_bias_theta": 0.026,
+     "cheaters_grade_inflated": 0.15,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.194
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.213,
+     "honest_bias_theta": 0.114,
+     "cheaters_grade_inflated": 0.3,
+     "cheaters_false_confirm": 0.154,
+     "honest_false_confirm": 0.129
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.023,
+     "honest_bias_theta": -0.047,
+     "cheaters_grade_inflated": 0.125,
+     "cheaters_false_confirm": 0.077,
+     "honest_false_confirm": 0.097,
+     "detector_tpr": 0.825,
+     "detector_fpr": 0.008
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.021,
+     "honest_bias_theta": -0.031,
+     "cheaters_grade_inflated": 0.15,
+     "cheaters_false_confirm": 0.077,
+     "honest_false_confirm": 0.097,
+     "detector_tpr": 0.875,
+     "detector_fpr": 0.0
+    },
+    "fixed_form_items": {
+     "junior": 12,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": -0.069,
+     "honest_bias_theta": 0.002,
+     "cheaters_grade_inflated": 0.025,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.097
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.226,
+     "honest_bias_theta": 0.008,
+     "cheaters_grade_inflated": 0.225,
+     "cheaters_false_confirm": 0.308,
+     "honest_false_confirm": 0.065
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 1.972,
+     "honest_bias_theta": 0.06,
+     "cheaters_grade_inflated": 0.85,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.097
+    },
+    "n_unqualified_cheaters": 13,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.154,
+     "leak_detector": 0.077,
+     "leak_detector_rotation": 0.077,
+     "fixed_no_leak": 0.0,
+     "fixed_leak": 0.308,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 6.8,
+   "computed_at": "2026-10-06 07:45"
+  },
+  "security:0.3": {
+   "violated": false,
+   "fact": "Утечка 30% вариантов (security, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.60, с детектором +0.26, с карантином субпула -0.04; детектор поймал 65% списывающих, ложные срабатывания у честных 0.0%",
+   "details": {
+    "threshold": 2.445,
+    "leak_share": 0.3,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": -0.012,
+     "honest_bias_theta": 0.026,
+     "cheaters_grade_inflated": 0.15,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.194
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.604,
+     "honest_bias_theta": 0.105,
+     "cheaters_grade_inflated": 0.55,
+     "cheaters_false_confirm": 0.615,
+     "honest_false_confirm": 0.097
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.263,
+     "honest_bias_theta": -0.0,
+     "cheaters_grade_inflated": 0.225,
+     "cheaters_false_confirm": 0.154,
+     "honest_false_confirm": 0.0,
+     "detector_tpr": 0.65,
+     "detector_fpr": 0.0
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": -0.044,
+     "honest_bias_theta": 0.025,
+     "cheaters_grade_inflated": 0.1,
+     "cheaters_false_confirm": 0.154,
+     "honest_false_confirm": 0.129,
+     "detector_tpr": 0.875,
+     "detector_fpr": 0.0
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.01,
+     "honest_bias_theta": 0.044,
+     "cheaters_grade_inflated": 0.15,
+     "cheaters_false_confirm": 0.231,
+     "honest_false_confirm": 0.065
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.681,
+     "honest_bias_theta": 0.088,
+     "cheaters_grade_inflated": 0.45,
+     "cheaters_false_confirm": 0.462,
+     "honest_false_confirm": 0.129
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 2.288,
+     "honest_bias_theta": 0.002,
+     "cheaters_grade_inflated": 0.85,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.097
+    },
+    "n_unqualified_cheaters": 13,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.615,
+     "leak_detector": 0.154,
+     "leak_detector_rotation": 0.154,
+     "fixed_no_leak": 0.231,
+     "fixed_leak": 0.462,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 6.6,
+   "computed_at": "2026-10-06 07:45"
+  },
+  "security:0.5": {
+   "violated": false,
+   "fact": "Утечка 50% вариантов (security, 160 симулированных кандидатов, из них 25 % списывают): завышение θ у списывающих без детектора +0.98, с детектором +0.78, с карантином субпула +0.03; детектор поймал 45% списывающих, ложные срабатывания у честных 0.0%",
+   "details": {
+    "threshold": 2.445,
+    "leak_share": 0.5,
+    "cheater_share": 0.25,
+    "fpr_target": 0.01,
+    "no_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": -0.012,
+     "honest_bias_theta": 0.026,
+     "cheaters_grade_inflated": 0.15,
+     "cheaters_false_confirm": 0.0,
+     "honest_false_confirm": 0.194
+    },
+    "leak_no_detector": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.976,
+     "honest_bias_theta": 0.065,
+     "cheaters_grade_inflated": 0.675,
+     "cheaters_false_confirm": 0.692,
+     "honest_false_confirm": 0.129
+    },
+    "leak_detector": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.784,
+     "honest_bias_theta": -0.058,
+     "cheaters_grade_inflated": 0.525,
+     "cheaters_false_confirm": 0.692,
+     "honest_false_confirm": 0.129,
+     "detector_tpr": 0.45,
+     "detector_fpr": 0.0
+    },
+    "leak_detector_rotation": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.032,
+     "honest_bias_theta": 0.037,
+     "cheaters_grade_inflated": 0.075,
+     "cheaters_false_confirm": 0.077,
+     "honest_false_confirm": 0.194,
+     "detector_tpr": 0.85,
+     "detector_fpr": 0.008
+    },
+    "fixed_form_items": {
+     "junior": 16,
+     "middle": 16,
+     "senior": 16
+    },
+    "fixed_no_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 0.123,
+     "honest_bias_theta": 0.133,
+     "cheaters_grade_inflated": 0.225,
+     "cheaters_false_confirm": 0.077,
+     "honest_false_confirm": 0.161
+    },
+    "fixed_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 1.043,
+     "honest_bias_theta": 0.159,
+     "cheaters_grade_inflated": 0.75,
+     "cheaters_false_confirm": 0.769,
+     "honest_false_confirm": 0.226
+    },
+    "fixed_full_leak": {
+     "n": 160,
+     "n_cheaters": 40,
+     "cheaters_bias_theta": 2.161,
+     "honest_bias_theta": 0.117,
+     "cheaters_grade_inflated": 0.85,
+     "cheaters_false_confirm": 1.0,
+     "honest_false_confirm": 0.065
+    },
+    "n_unqualified_cheaters": 13,
+    "attack_success_rate": {
+     "no_leak": 0.0,
+     "leak_no_detector": 0.692,
+     "leak_detector": 0.692,
+     "leak_detector_rotation": 0.077,
+     "fixed_no_leak": 0.077,
+     "fixed_leak": 0.769,
+     "fixed_full_leak": 1.0
+    }
+   },
+   "computed_seconds": 6.9,
+   "computed_at": "2026-10-06 07:45"
+  }
+ }
+}

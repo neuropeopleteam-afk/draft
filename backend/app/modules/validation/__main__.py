@@ -6,12 +6,15 @@
 пары разметки — в docs/validation/matching_pairs.json):
 1. Банк: валидатор (детерминизм по seed, ключи, инварианты) — из assessment_bank/BANK_SYNC.json.
 2. Калибровка на панели: если есть ../bank/calibration/panel_*/params.json — сводка, иначе «ожидается».
-3. Симуляция теста в конфигурации платформы на банке 128 семейств: точность θ и решения по грейду,
-   длина и время; сравнение с конфигурацией дня 2 (без контроля частоты и ротации).
-4. Стабильность грейда при повторе (другой субпул и другие варианты).
-5. Частота показа семейств: Sympson — Hetter + 2 субпула против «без контроля».
-6. Утечка части банка: без детектора, с детектором, с карантином субпула.
-7. Качество подбора: precision@5 / nDCG на 15 потребностях × 20 кандидатах демо-данных (временная SQLite).
+3. Симуляция теста в конфигурации платформы на банке 128 семейств: точность θ и решения по грейду, κ с истиной,
+   длина и время; сравнение с механикой до 06.10 (те же seed) и с конфигурацией дня 2.
+4. Стабильность грейда при повторе (другой субпул и другие варианты): κ, точное совпадение, ±1, ICC по θ, потолок
+   при данной погрешности; до/после; без ошибки параметров; абляция «априорное по заявленному грейду».
+5. Частота показа семейств: Sympson — Hetter + 2 субпула, до/после, против «без контроля».
+6. Утечка части банка: без детектора, с детектором, с карантином субпула; таблица по доле слитых вариантов;
+   атака завышением заявленного грейда.
+7. Прогон «в других условиях»: 20 заданий, ошибка параметров b + N(0; 0,35), a · LogN(0; 0,2).
+8. Качество подбора: precision@5 / nDCG на 15 потребностях × 20 кандидатах демо-данных (временная SQLite).
 """
 from __future__ import annotations
 
@@ -64,7 +67,33 @@ def calibration_section() -> dict:
     return out
 
 
+def _rng(i: int, tag: int) -> np.random.Generator:
+    """Отдельный поток случайных чисел на (направление, блок): «до» и «после» получают одинаковые seed."""
+    return np.random.default_rng([20261006, i, tag])
+
+
+def _mean(rows: list[dict], keys) -> dict:
+    out = {}
+    for k in keys:
+        vals = [r.get(k) for r in rows if isinstance(r.get(k), (int, float))]
+        out[k] = round(float(np.mean(vals)), 3) if vals else None
+    return out
+
+
+RT_KEYS = ("r_theta", "icc_theta", "grade_exact_agreement", "grade_within_1", "grade_two_step_change",
+           "grade_kappa_quadratic", "decision_agreement", "mean_diff_theta", "loa_theta", "mean_items", "max_items",
+           "mean_time_min", "extension_share", "mean_ext_items", "mean_se", "rms_se")
+
+
+def _rt_mean(rts: list[dict]) -> dict:
+    m = _mean(rts, RT_KEYS)
+    m["ceiling"] = _mean([r["ceiling"] for r in rts], ("grade_exact_agreement", "grade_within_1", "grade_kappa_quadratic"))
+    return m
+
+
 def simulation_section(n: int, quick: bool) -> dict:
+    from dataclasses import asdict, replace
+
     from assessment_bank.psychometrics import ExposureControl
     from assessment_bank.simulation import make_population, make_truth
 
@@ -74,50 +103,142 @@ def simulation_section(n: int, quick: bool) -> dict:
     cfg = sim.app_config_from_settings()
     pool = sim.make_pool(cfg.subpools)
     pool1 = sim.make_pool(1)
-    k_all = (exposure_table() or {}).get("k", {})
-    out = {"config": {"min_items": cfg.min_items, "max_items": cfg.max_items, "se_target": cfg.se_target,
-                      "max_minutes": cfg.max_minutes, "subpools": cfg.subpools, "exposure": cfg.exposure,
-                      "max_per_format": cfg.max_per_format},
+    table = exposure_table() or {}
+    k_all, k_leg_all = table.get("k", {}), table.get("k_legacy") or table.get("k", {})
+    n_rt = n if not quick else max(150, n // 2)
+    n_leak, n_tab, n_comp, n_oc = max(200, n // 2 if quick else n), max(150, n // 2 if quick else 300), \
+        max(200, n // 2 if quick else n), max(200, n // 2 if quick else 300)
+
+    def conf(c) -> dict:
+        d = asdict(c)
+        return {k: d[k] for k in ("min_items", "max_items", "se_target", "max_minutes", "subpools", "exposure",
+                                  "max_per_format", "stop_rule", "classify_z", "select_at", "ext_items", "ext_minutes",
+                                  "ext_own_first", "legacy_ext", "rotation")}
+
+    out = {"config": conf(cfg),
+           "legacy": conf(sim.LEGACY),
            "baseline": {"max_items": sim.BASELINE_DAY2.max_items, "max_minutes": sim.BASELINE_DAY2.max_minutes,
                         "subpools": 1, "exposure": False, "max_per_format": {}},
            "population": f"θ ~ N(0, 1), n = {n} на направление; истинные параметры = предкалибровка + ошибка эксперта "
                          "σ = 0,5 (по трудности семейства); время ответа — логнормальная модель банка",
+           "conditions": {"n_per_direction": n, "n_retest_pairs": n_rt, "n_leak": n_leak, "n_leak_table": n_tab,
+                          "n_other": n_comp, "n_overclaim": n_oc, "param_error_b_sd": 0.5,
+                          "param_error_note": "сдвиг трудности семейства N(0; 0,5) + N(0; 0,15) по шагам, a × LogN(0; 0,25)",
+                          "seeds": "numpy default_rng([20261006, направление, блок]) — одинаковые для «до» и «после»"},
+           "policies": {
+               "app": "сейчас: классификационная остановка (порог вне θ̂ ± 1,28·SE), выбор у неопределённого порога, "
+                      "дотестирование до 6 коротких заданий у ближайшего порога (сначала из своего субпула)",
+               "legacy": "до 06.10 в продукте: остановка по SE ≤ 0,35, выбор в θ̂, при |θ̂ − порог заявленного| < SE "
+                         "ещё 3 задания из всего банка",
+               "legacy_sim": "до 06.10 на /validation: та же механика, но без дотестирования (симуляция его не моделировала)"},
+           "ceiling_curve": sim.ceiling_curve(),
            "directions": {}}
     dirs = sim.DIRECTIONS[:2] if quick else sim.DIRECTIONS
     for i, d in enumerate(dirs):
         t0 = time.time()
-        rng = np.random.default_rng(20261006 + i)
-        truth = make_truth(pool, rng, misspec=0.5)
-        truth1 = {f: t for f, t in truth.items()}
-        k = k_all.get(d, {})
-        people = make_population(n, rng)
-        cnt_app = ExposureControl(0.3)
-        r_app = sim.run_population(pool, truth, people, d, cfg, rng, k=k, counter=cnt_app)
-        cnt_base = ExposureControl(1.0)
-        r_base = sim.run_population(pool1, truth1, people, d, sim.BASELINE_DAY2, rng, counter=cnt_base)
-        s_app, s_base = sim.summarize_safe(people, r_app), sim.summarize_safe(people, r_base)
-        s_app["ob3_max"] = int(max(r["n_ob3"] for r in r_app))
-        s_base["ob3_max"] = int(max(r["n_ob3"] for r in r_base))
-        rt_people = make_population(max(150, n // 2), rng)
-        rt = sim.retest(pool, truth, rt_people, d, cfg, rng, k)
-        # те же люди, но истинные параметры = параметры банка (без ошибки эксперта) — как «чистая» синтетика
-        rt["ideal_params"] = sim.retest(pool, make_truth(pool, rng, misspec=0.0), rt_people, d, cfg, rng, k)
-        if i == 0:  # «что поможет»: длиннее тест — SE ≤ 0,25, до 30 заданий и 120 минут (одно направление, для оценки)
-            long_cfg = sim.AppConfig(min_items=cfg.min_items, max_items=30, se_target=0.25, max_minutes=120,
-                                     subpools=cfg.subpools, exposure=cfg.exposure, max_per_format=cfg.max_per_format)
-            rt["long_test"] = sim.retest(pool, truth, rt_people, d, long_cfg, rng, k)
-        leak = sim.leak_experiment(pool, truth, d, cfg, rng, k, n=max(200, n // 2 if quick else n))
+        rng0 = _rng(i, 0)
+        truth = make_truth(pool, rng0, misspec=0.5)
+        people = make_population(n, rng0)
+        rt_people = make_population(n_rt, rng0)
+        truth_ideal = make_truth(pool, rng0, misspec=0.0)
+        k, k_leg = k_all.get(d, {}), k_leg_all.get(d, {})
+        # 1. точность и частота показа: сейчас / до / день 2 (одни и те же люди и seed)
+        cnt_app, cnt_leg, cnt_base = ExposureControl(0.3), ExposureControl(0.3), ExposureControl(1.0)
+        r_app = sim.run_population(pool, truth, people, d, cfg, _rng(i, 1), k=k, counter=cnt_app)
+        r_leg = sim.run_population(pool, truth, people, d, sim.LEGACY, _rng(i, 1), k=k_leg, counter=cnt_leg)
+        r_base = sim.run_population(pool1, truth, people, d, sim.BASELINE_DAY2, _rng(i, 1), counter=cnt_base)
+        acc = {}
+        for name, r in (("app", r_app), ("legacy", r_leg), ("baseline_day2", r_base)):
+            s_ = sim.summarize_safe(people, r)
+            s_.update({k_: v for k_, v in sim.truth_metrics(people, r).items() if k_ in ("kappa_true",)})
+            s_["ob3_max"] = int(max(x["n_ob3"] for x in r))
+            s_["extension_share"] = round(float(np.mean([x.get("n_ext", 0) > 0 for x in r])), 3)
+            s_["max_items"] = int(max(x["n_items"] for x in r))
+            acc[name] = s_
+        # 2. повтор: сейчас / до (в продукте) / до (как считалось) / без ошибки параметров / абляция «априорное по
+        # заявленному грейду»
+        rt = sim.retest(pool, truth, rt_people, d, cfg, _rng(i, 2), k)
+        rt_leg = sim.retest(pool, truth, rt_people, d, sim.LEGACY, _rng(i, 2), k_leg)
+        rt_leg_sim = sim.retest(pool, truth, rt_people, d, sim.LEGACY_SIM, _rng(i, 2), k_leg)
+        rt["ideal_params"] = sim.retest(pool, truth_ideal, rt_people, d, cfg, _rng(i, 3), k)
+        rt_prior = sim.retest(pool, truth, rt_people, d, replace(cfg, claim_prior=True), _rng(i, 2), k)
+        # 3. атака завышением заявленного грейда (проверка, что досрочная остановка не завышает грейд)
+        oc = {"app": sim.overclaim_attack(pool, truth, d, cfg, _rng(i, 4), k, n_oc),
+              "legacy": sim.overclaim_attack(pool, truth, d, sim.LEGACY, _rng(i, 4), k_leg, n_oc),
+              "claim_prior": sim.overclaim_attack(pool, truth, d, replace(cfg, claim_prior=True), _rng(i, 4), k, n_oc)}
+        # 4. утечка 30 %: сейчас и до
+        leak = sim.leak_experiment(pool, truth, d, cfg, _rng(i, 5), k, n=n_leak)
+        leak_leg = sim.leak_experiment(pool, truth, d, sim.LEGACY, _rng(i, 5), k_leg, n=n_leak)
+        # 5. атака по доле слитых вариантов
+        ltab = sim.leak_share_table(pool, truth, d, cfg, _rng(i, 6), k, n=n_tab)
+        # 6. «в других условиях»: 20 заданий, ошибка параметров b + N(0; 0,35), a · LogN(0; 0,2)
+        comp = sim.other_run(pool1, d, _rng(i, 7), k, n_comp)
         out["directions"][d] = {
-            "app": s_app, "baseline_day2": s_base, "retest": rt,
-            "exposure": {"app": sim.exposure_stats(cnt_app, pool, d), "baseline_day2": sim.exposure_stats(cnt_base, pool1, d)},
-            "leak": leak, "seconds": round(time.time() - t0, 1)}
-        print(f"  симуляция {d}: r={s_app['r_theta']} items={s_app['mean_items']} retest r={rt['r_theta']} "
-              f"exposure max {out['directions'][d]['exposure']['app']['max_rate']} ({time.time() - t0:.0f} с)", flush=True)
-    keys = ("r_theta", "rmse", "mean_items", "mean_time_min", "grade_exact", "decision_accuracy", "false_confirm_rate",
-            "false_reject_rate")
-    out["mean"] = {k: round(float(np.mean([v["app"][k] for v in out["directions"].values()])), 3) for k in keys}
-    out["mean_baseline"] = {k: round(float(np.mean([v["baseline_day2"][k] for v in out["directions"].values()])), 3)
-                            for k in keys}
+            "app": acc["app"], "legacy": acc["legacy"], "baseline_day2": acc["baseline_day2"],
+            "retest": rt, "retest_legacy": rt_leg, "retest_legacy_sim": rt_leg_sim, "retest_claim_prior": rt_prior,
+            "overclaim": oc,
+            "exposure": {"app": sim.exposure_stats(cnt_app, pool, d), "legacy": sim.exposure_stats(cnt_leg, pool, d),
+                         "baseline_day2": sim.exposure_stats(cnt_base, pool1, d)},
+            "leak": leak,
+            "leak_legacy": {"attack_success_rate": leak_leg["attack_success_rate"],
+                            "n_unqualified_cheaters": leak_leg["n_unqualified_cheaters"],
+                            "detector_tpr": leak_leg["leak_detector"].get("detector_tpr"),
+                            "detector_fpr": leak_leg["leak_detector"].get("detector_fpr")},
+            "leak_table": ltab, "other_like": comp, "seconds": round(time.time() - t0, 1)}
+        if i == 0:
+            # чувствительность к дискриминации заданий: a × 1,37 (медиана панели LLM) — только для объяснения разницы
+            # с ориентирами, не заголовочная цифра
+            pool_a = sim.make_pool(cfg.subpools)
+            for it in pool_a:
+                it.a = it.a * 1.37
+            rng_a = _rng(i, 8)
+            truth_a = make_truth(pool_a, rng_a, misspec=0.5)
+            ppl_a = make_population(n_rt, rng_a)
+            out["sensitivity_a"] = {"direction": d, "a_scale": 1.37,
+                                    "app": sim.retest(pool_a, truth_a, ppl_a, d, cfg, _rng(i, 9), k),
+                                    "legacy": sim.retest(pool_a, truth_a, ppl_a, d, sim.LEGACY, _rng(i, 9), k_leg)}
+        print(f"  симуляция {d}: κ повтора {rt_leg['grade_kappa_quadratic']} → {rt['grade_kappa_quadratic']} "
+              f"(потолок {rt['ceiling']['grade_kappa_quadratic']}), заданий {rt_leg['mean_items']} → {rt['mean_items']}, "
+              f"ASR 30 % {leak_leg['attack_success_rate']['leak_detector']} → {leak['attack_success_rate']['leak_detector']}, "
+              f"частота макс. {out['directions'][d]['exposure']['legacy']['max_rate']} → "
+              f"{out['directions'][d]['exposure']['app']['max_rate']} ({time.time() - t0:.0f} с)", flush=True)
+    D = out["directions"].values()
+    keys = ("r_theta", "rmse", "mean_items", "mean_time_min", "grade_exact", "grade_within_1", "kappa_true",
+            "decision_accuracy", "false_confirm_rate", "false_reject_rate", "extension_share")
+    out["mean"] = _mean([v["app"] for v in D], keys)
+    out["mean_legacy"] = _mean([v["legacy"] for v in D], keys)
+    out["mean_baseline"] = _mean([v["baseline_day2"] for v in D], keys)
+    out["retest_mean"] = {"app": _rt_mean([v["retest"] for v in D]), "legacy": _rt_mean([v["retest_legacy"] for v in D]),
+                          "legacy_sim": _rt_mean([v["retest_legacy_sim"] for v in D]),
+                          "ideal_params": _rt_mean([v["retest"]["ideal_params"] for v in D]),
+                          "claim_prior": _rt_mean([v["retest_claim_prior"] for v in D])}
+    out["overclaim_mean"] = {k_: _mean([v["overclaim"][k_] for v in D], ("false_confirm",))["false_confirm"]
+                             for k_ in ("app", "legacy", "claim_prior")}
+    asr_keys = ("no_leak", "leak_no_detector", "leak_detector", "leak_detector_rotation", "fixed_no_leak", "fixed_leak",
+                "fixed_full_leak")
+    out["asr_mean"] = {"app": _mean([v["leak"]["attack_success_rate"] for v in D], asr_keys),
+                       "legacy": _mean([v["leak_legacy"]["attack_success_rate"] for v in D], asr_keys),
+                       "detector_fpr": {"app": _mean([v["leak"]["leak_detector"] for v in D], ("detector_fpr",))["detector_fpr"],
+                                        "legacy": _mean([v["leak_legacy"] for v in D], ("detector_fpr",))["detector_fpr"]}}
+    shares = [r["leak_share"] for r in next(iter(D))["leak_table"]["rows"]]
+    out["leak_table_mean"] = {"n_per_direction": n_tab, "cheater_share": 0.25, "rows": [
+        {"leak_share": sh, **_mean([next(r for r in v["leak_table"]["rows"] if r["leak_share"] == sh) for v in D],
+                                   ("fixed_form", "no_detector", "detector", "detector_quarantine", "detector_tpr",
+                                    "detector_fpr"))} for sh in shares]}
+    out["exposure_mean"] = {k_: _mean([v["exposure"][k_] for v in D], ("max_rate", "mean_rate", "share_over_rmax",
+                                                                       "unused_share")) for k_ in ("app", "legacy")}
+    out["other_like"] = {"config": conf(sim.OTHER_LIKE), "error": sim.OTHER_ERROR, "n_per_direction": n_comp,
+                              "truth": _mean([v["other_like"]["truth"] for v in D],
+                                             ("grade_exact", "grade_within_1", "kappa_true", "r_theta", "mean_items",
+                                              "mean_time_min")),
+                              "retest": _rt_mean([v["other_like"]["retest"] for v in D]),
+                              # цифры из README/отчётов ориентиров (spectrek/intel/others.md, raw/0610)
+                              "reference": {"внешний репозиторий": {"grade_exact": 0.805, "kappa_true": 0.898,
+                                                                    "grade_within_1": 0.999, "r_theta_retest": 0.866,
+                                                                    "decision_kappa_retest": 0.54, "length": 20,
+                                                                    "n": 1600, "param_error": "b + N(0; 0,35), a · LogN(0; 0,2)"},
+                                            "внешний репозиторий": {"kappa_retest": 0.86,
+                                                                     "param_error": "не опубликована"}}}
     return out
 
 

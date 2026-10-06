@@ -2,6 +2,7 @@ import { Link, Route, Routes } from "react-router-dom";
 import { CabinetLayout } from "./components/CabinetLayout";
 import { JuryGuide } from "./components/JuryGuide";
 import Expert from "./pages/Expert";
+import { ExpertAngoff, ExpertAnswers, ExpertHome, ExpertInvite, ExpertPairs, panelSections } from "./pages/expert/Panel";
 import Validation from "./pages/Validation";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -9,12 +10,14 @@ import Register from "./pages/Register";
 import Verify from "./pages/Verify";
 import Assessment, { TestRun } from "./pages/candidate/Assessment";
 import Category from "./pages/candidate/Category";
+import Feedback from "./pages/candidate/Feedback";
 import { Invitations, Probes } from "./pages/candidate/Contact";
 import CandidateOverview from "./pages/candidate/Overview";
 import Profile from "./pages/candidate/Profile";
 import { Fsp, Settings } from "./pages/candidate/Settings";
 import { candidateSections } from "./pages/candidate/sections";
 import { EmployerInvitations, EmployerProbes } from "./pages/employer/Contact";
+import { Compare, CompareLanding } from "./pages/employer/Compare";
 import { Needs, Selection } from "./pages/employer/Needs";
 import EmployerOverview, { Company } from "./pages/employer/Overview";
 import { CandidateDetail, Search } from "./pages/employer/Search";
@@ -36,9 +39,14 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/validation" element={<Validation />} />
-      <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={[]} />}>
-        <Route index element={<Expert />} />
+      <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
+        <Route index element={<ExpertHome />} />
+        <Route path="pairs" element={<ExpertPairs />} />
+        <Route path="answers" element={<ExpertAnswers />} />
+        <Route path="angoff" element={<ExpertAngoff />} />
+        <Route path="review" element={<Expert />} />
       </Route>
+      <Route path="/expert-invite/:token" element={<ExpertInvite />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/login" element={<Login />} />
@@ -51,6 +59,7 @@ export default function App() {
         <Route path="assessment" element={<Assessment />} />
         <Route path="assessment/test/:id" element={<TestRun />} />
         <Route path="category" element={<Category />} />
+        <Route path="feedback" element={<Feedback />} />
         <Route path="profile" element={<Profile />} />
         <Route path="invitations" element={<Invitations />} />
         <Route path="probes" element={<Probes />} />
@@ -68,6 +77,8 @@ export default function App() {
         <Route path="needs" element={<Needs />} />
         <Route path="needs/:id" element={<Selection />} />
         <Route path="needs/:id/v/:version" element={<Selection />} />
+        <Route path="needs/:id/compare" element={<Compare />} />
+        <Route path="compare" element={<CompareLanding />} />
         <Route path="search" element={<Search />} />
         <Route path="candidates/:ref" element={<CandidateDetail />} />
         <Route path="probes" element={<EmployerProbes />} />

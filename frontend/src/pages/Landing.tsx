@@ -147,10 +147,10 @@ function Rule({ title, text }: { title: string; text: string }) {
 }
 
 const JURY: { id: Persona; title: string; text: string }[] = [
-  { id: "candidate", title: "Кандидат с паспортом ФСП", text: "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП из реестра (T2), место в рейтинге и в кубке работодателя." },
+  { id: "candidate", title: "Кандидат с паспортом ФСП", text: "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП из реестра (T2), место в рейтинге и 2-е место в кубке работодателя." },
   { id: "candidate_nofsp", title: "Кандидат без ФСП", text: "Илья Сергеев · Backend · Middle. Нет истории ФСП — нейтрально. Ждёт приглашение с вилкой." },
-  { id: "employer", title: "Работодатель", text: "«Северный платёж»: две потребности текстом, подборки с объяснением, поиск, кубок с решениями на оценке." },
-  { id: "expert", title: "Эксперт", text: "Проверка развёрнутых ответов по рубрике: «на проверке» и выборочно за LLM." },
+  { id: "employer", title: "Работодатель", text: "«Северный платёж»: потребности текстом с цитатами, фильтр ст. 64 ТК РФ, подборки с объяснением, сравнение кандидатов, кубок с решениями на оценке." },
+  { id: "expert", title: "Эксперт", text: "Разметка вслепую: пары «потребность — кандидат», ответы по рубрике, пороги грейдов. И проверка ответов «на проверке»." },
   { id: "fsp", title: "Федерация (ФСП)", text: "Кабинет ФСП: спрос работодателей, эффект соревнований на приглашения, зарплаты из офферов. Только агрегаты." },
 ];
 
@@ -167,7 +167,7 @@ function JuryBlock() {
   }
   async function reset() {
     setBusy("reset"); setMsg(null);
-    try { const r = await juryReset(); setMsg(`Демо жюри пересоздано в исходное состояние за ${r.seconds} с.`); }
+    try { const r = await juryReset(signIn); setMsg(`Ваше демо пересоздано в исходное состояние за ${String(r.seconds).replace(".", ",")} с. У других экспертов ничего не изменилось.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
   }
   return (
@@ -179,6 +179,7 @@ function JuryBlock() {
             <h2 id="jury-title" className="mt-2 text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Вход в один клик и проводник по сценарию</h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-ink/75">
               Готовые демо-учётки: регистрация, опрос и тест уже пройдены, правило 90 дней для них снято.
+              У каждого эксперта — своя копия демо: ваши действия и сброс не видны другим.
               Проводник ведёт по сквозному сценарию: регистрация → опрос и тест → категория → поиск работодателем → контакт.
             </p>
             <p className="mt-2 text-sm font-semibold text-brand-night">Доступ к стенду: demo / ***</p>
@@ -204,7 +205,7 @@ function JuryBlock() {
             Начать проводник с регистрации
           </button>
           <button className="font-semibold text-brand-plum underline-offset-2 hover:underline disabled:opacity-50" disabled={!!busy} onClick={reset}>
-            {busy === "reset" ? "Сбрасываем…" : "Сбросить демо в исходное состояние"}
+            {busy === "reset" ? "Сбрасываем…" : "Сбросить своё демо в исходное состояние"}
           </button>
           {msg && <span className="text-brand-ink/75" role="status">{msg}</span>}
         </div>

@@ -10,6 +10,7 @@ from app.modules.assessment.exposure import choose_subpool, exposure_control, ex
 from app.modules.assessment.grader import GradeOutcome
 from app.modules.matching.need_parser import parse_need, parse_salary
 from app.modules.validation.matching_eval import dcg, ndcg, precision
+from tests.conftest import register_and_verify
 from tests.test_bank_engine import oracle, run_session
 from tests.test_day2_rules import H
 
@@ -224,7 +225,8 @@ def test_jury_login_reset_and_expert(client, monkeypatch):
     # работодатель: потребности и подборки, у кандидата без ФСП — входящее приглашение
     e = client.post("/api/jury/login", json={"persona": "employer"}).json()["access_token"]
     needs = client.get("/api/employer/needs", headers=H(e)).json()
-    assert len(needs if isinstance(needs, list) else needs.get("items", [])) == 2
+    assert len(needs if isinstance(needs, list) else needs.get("items", [])) == 3
+    assert sum(1 for n in needs if n["requirements"].get("bias")) == 1  # потребность для показа фильтра ст. 64 ТК РФ
     # эксперт: в очереди есть ответ «на проверке»
     x = client.post("/api/jury/login", json={"persona": "expert"}).json()["access_token"]
     q = client.get("/api/expert/queue", headers=H(x)).json()
@@ -236,20 +238,27 @@ def test_jury_login_reset_and_expert(client, monkeypatch):
     assert r.status_code == 200, r.text
     assert r.json()["review"]["applied"] and r.json()["recomputed"]
     assert client.get("/api/expert/queue", headers=H(tok)).status_code == 403  # кандидат — не эксперт
-    # сброс: пересоздаёт только учётки жюри; повтор сразу — 429
-    monkeypatch.setitem(jr._state, "last_reset", 0.0)
-    r = client.post("/api/jury/reset")
-    assert r.status_code == 200 and r.json()["deleted_users"] == 5
+    # сброс — только по токену демо-персоны (аудит, С9); общее демо не сбрасывается: вместо этого своя песочница
+    assert client.post("/api/jury/reset").status_code == 401
+    r = client.post("/api/jury/reset", headers=H(tok))
+    assert r.status_code == 200 and r.json()["moved"] and r.json()["scenario"], r.text
+    sid, sb = r.json()["scenario"], r.json()["access_token"]
+    assert client.get("/api/me", headers=H(tok)).status_code == 200  # общее демо не тронуто
     with SessionLocal() as db:  # у кандидата без ФСП два ухода со вкладки → достоверность средняя
-        from app.modules.jury.seed import EMAILS
+        from app.modules.jury.scope import emails
         from app.modules.auth.models import User
 
-        u = db.scalar(select(User).where(User.email == EMAILS["candidate_nofsp"]))
+        u = db.scalar(select(User).where(User.email == emails(sid)["candidate_nofsp"]))
         t = db.scalars(select(TestSession).where(TestSession.user_id == u.id)).all()
         assert t[0].result["engine_result"]["details"]["integrity"]["level"] == "medium"
-    assert client.post("/api/jury/reset").status_code == 429
-    assert client.get("/api/me", headers=H(tok)).status_code == 401  # старый токен удалённой учётки
-    assert get_settings().jury_mode_available
+    # сброс своей песочницы: учётки пересозданы, новый токен той же персоны; повтор сразу — 429
+    r = client.post("/api/jury/reset", headers=H(sb))
+    assert r.status_code == 200 and r.json()["deleted_users"] == 5 and r.json()["scenario"] == sid
+    new = r.json()["access_token"]
+    assert client.get("/api/me", headers=H(new)).json()["email"] == emails(sid)["candidate"]
+    assert client.post("/api/jury/reset", headers=H(new)).status_code == 429
+    assert client.get("/api/me", headers=H(sb)).status_code == 401  # старый токен удалённой учётки
+    assert get_settings().jury_mode_available and jr.LANDING["expert"] == "/expert"
 
 
 def test_red_button_attacks(client):
@@ -258,12 +267,14 @@ def test_red_button_attacks(client):
     with SessionLocal() as db:
         seed(db)
         db.commit()
-    for aid in ("inflate_keywords", "rename", "fake_fsp", "remove_fsp"):
-        r = client.post(f"/api/validation/attacks/{aid}", json={})
+    assert client.post("/api/validation/attacks/rename", json={}).status_code == 401  # вход обязателен (С9)
+    tok = register_and_verify(client, "redbutton@example.com")
+    for aid in ("inflate_keywords", "rename", "demographics", "fake_fsp", "remove_fsp"):
+        r = client.post(f"/api/validation/attacks/{aid}", json={}, headers=H(tok))
         assert r.status_code == 200, r.text
         assert r.json()["violated"] is False, r.json()
     rep = client.get("/api/validation/report").json()
-    assert len(rep["attacks"]) == 5 and "live" in rep
+    assert len(rep["attacks"]) == 6 and "live" in rep
     # атаки ничего не записали
     with SessionLocal() as db:
         from sqlalchemy import func, select

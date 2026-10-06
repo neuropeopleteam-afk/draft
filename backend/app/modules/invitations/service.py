@@ -1,7 +1,7 @@
 """Зонды и приглашения: правила, статусы с историей, раскрытие контактов, доказательства.
 
 Правила (покрыты тестами):
-* вилка «от–до» в рублях обязательна и для зонда, и для приглашения (0 < from ≤ to);
+* вилка «от–до» в рублях обязательна и для зонда, и для приглашения (0 < from ≤ to ≤ 1,5 × from);
 * одно приглашение кандидату от одного работодателя (компании) за 30 дней → иначе 409 invitation_cooldown;
 * контакты кандидата видны работодателю только после принятия приглашения его компании;
 * работодатель видит рыночный диапазон категории, минимум кандидата — никогда.
@@ -20,12 +20,14 @@ from app.core.enums import EvidenceLevel, FactSource, InvitationStatus, ProbeSta
 from app.core.errors import api_error
 from app.modules.auth.models import User
 from app.modules.catalog.seed_data import STACK, category_title
-from app.modules.invitations.models import Invitation, InvitationEvent, Probe
+from app.modules.invitations.models import Invitation, InvitationComplaint, InvitationEvent, Probe
 from app.modules.matching.models import EmployerNeed
 from app.modules.profiles.facts import achievement_text, fmt_count, load_bundles, refresh_rating, skill_confirmed
 from app.modules.profiles.models import CandidateFact, CandidateProfile, Company
 
 INVITATION_COOLDOWN_DAYS = 30
+# Ширина вилки: «до» не больше чем в 1,5 раза выше «от» (200–300 тыс. можно, 100–300 тыс. — нет)
+SALARY_MAX_RATIO = 1.5
 
 
 def profile_by_ref(db: Session, ref: str) -> CandidateProfile:
@@ -40,6 +42,13 @@ def check_salary(salary_from: int | None, salary_to: int | None) -> None:
         raise api_error(422, "salary_range_required", "Укажите вилку зарплаты «от» и «до» в рублях")
     if salary_from > salary_to:
         raise api_error(422, "salary_range_invalid", "Нижняя граница вилки больше верхней")
+    if salary_to > SALARY_MAX_RATIO * salary_from:
+        top = int(salary_from * SALARY_MAX_RATIO) // 1000 * 1000
+        rub = (lambda v: f"{v:,}".replace(",", "\u00a0") + "\u00a0₽")
+        raise api_error(422, "salary_range_too_wide",
+                        f"Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от». При «от» "
+                        f"{rub(salary_from)} укажите «до» не выше {rub(top)} — так кандидат понимает, "
+                        f"что ему предлагают")
 
 
 def cooldown_until(db: Session, company_id: uuid.UUID, candidate_id: uuid.UUID):
@@ -144,6 +153,43 @@ def respond(db: Session, inv: Invitation, actor: uuid.UUID, accept: bool, reason
         _event(db, inv, InvitationStatus.declined, actor, inv.decline_reason)
     db.commit()
     return inv
+
+
+COMPLAINT_REASONS = {
+    "salary": "Нереальная вилка",
+    "role": "Не та роль",
+    "spam": "Спам или массовая рассылка",
+    "other": "Другое",
+}
+
+
+def complaint_of(db: Session, inv: Invitation) -> InvitationComplaint | None:
+    return db.scalar(select(InvitationComplaint).where(InvitationComplaint.invitation_id == inv.id))
+
+
+def complaint_out(c: InvitationComplaint | None, *, with_comment: bool) -> dict | None:
+    if c is None:
+        return None
+    out = {"reason": c.reason, "reason_title": COMPLAINT_REASONS.get(c.reason, c.reason), "at": c.created_at.isoformat()}
+    if with_comment:
+        out["comment"] = c.comment
+    return out
+
+
+def complain(db: Session, inv: Invitation, actor: uuid.UUID, reason: str, comment: str | None) -> InvitationComplaint:
+    """Жалоба приглашённого кандидата; неотвеченное приглашение заодно отклоняется. Одна жалоба на приглашение."""
+    if reason not in COMPLAINT_REASONS:
+        raise api_error(422, "complaint_reason", "Неизвестная причина жалобы")
+    if complaint_of(db, inv) is not None:
+        raise api_error(409, "complaint_exists", "Жалоба на это приглашение уже отправлена")
+    c = InvitationComplaint(invitation_id=inv.id, company_id=inv.company_id, candidate_user_id=inv.candidate_user_id,
+                            reason=reason, comment=(comment or "").strip() or None)
+    db.add(c)
+    if inv.status in (InvitationStatus.sent, InvitationStatus.viewed):
+        respond(db, inv, actor, False, f"Жалоба: {COMPLAINT_REASONS[reason].lower()}")
+    else:
+        db.commit()
+    return c
 
 
 def withdraw(db: Session, inv: Invitation, actor: uuid.UUID) -> Invitation:

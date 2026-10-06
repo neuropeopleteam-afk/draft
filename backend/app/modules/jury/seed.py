@@ -6,23 +6,30 @@
   заданным уровнем), паспорт ФСП из демо-реестра (T2); демо-режим жюри включён — правило 90 дней снято;
 * candidate_nofsp — Илья Сергеев, Backend · Middle, тот же путь, но без истории ФСП (нейтральное состояние);
   один развёрнутый ответ оставлен «на проверке» — для экрана эксперта; есть входящее приглашение с вилкой;
-* employer — HR компании «Демо жюри: Северный платёж»: профиль, две потребности текстом, подборки с версиями;
+* employer — HR компании «Демо жюри: Северный платёж»: профиль, три потребности текстом (третья — с
+  дискриминационными фразами для показа фильтра ст. 64 ТК РФ), подборки с версиями;
 * expert — эксперт (роль admin): очередь развёрнутых ответов, оценка по рубрике;
-* fsp — аналитик ФСП (роль fsp_analyst): Кабинет ФСП — обезличенная аналитика платформы.
+* fsp — аналитик ФСП (роль fsp_analyst): Кабинет ФСП — обезличенная аналитика платформы (общая, без копий жюри).
 
-Сброс (POST /api/jury/reset) удаляет только эти учётки и компанию (каскадом — их сессии, подборки,
-зонды, приглашения) и создаёт заново; демо-кубки и история приглашений для Кабинета ФСП пересоздаются
-(app.fsp_cabinet.demo.prepare). Остальные демо-данные и учётки живых пользователей не затрагиваются.
+У работодателя каждой копии — два своих кубка (app.cup.demo.seed_jury_cups): завершённый, где Мария этой копии на
+2-м месте (запись в паспорте ФСП, приглашение ждёт ответа), и кубок с двумя решениями на оценке. Общее демо кубков
+и Кабинета ФСП (кубки демо-компаний, история приглашений) — одно на платформу: ensure_ideas.
+
+Песочницы (scope.py): у каждого эксперта жюри свой набор этих персон (почты ``candidate+<sid>@…``), чтобы жюри
+не мешали друг другу. Сброс (POST /api/jury/reset) удаляет только учётки, компанию и кубки СВОЕЙ песочницы
+(каскадом — их сессии, подборки, зонды, приглашения) и создаёт заново. Другие песочницы, остальные демо-данные и учётки живых
+пользователей не затрагиваются.
 """
 from __future__ import annotations
 
+import contextvars
 from contextlib import contextmanager
 from datetime import date
 import logging
 import time
 
 import numpy as np
-from sqlalchemy import delete, select, text
+from sqlalchemy import and_, delete, or_, select, text, update
 from sqlalchemy.orm import Session
 
 from app.core.db import utcnow
@@ -38,11 +45,11 @@ from app.modules.matching.need_parser import parse_need
 from app.modules.profiles.facts import refresh_rating, set_t0_facts
 from app.modules.profiles.models import CandidateProfile, Company, EmployerProfile
 from app.modules.profiles.refs import new_public_ref
+from app.modules.jury import scope
 
 log = logging.getLogger("jury")
-DOMAIN = "jury.example.com"
-EMAILS = {"candidate": f"candidate@{DOMAIN}", "candidate_nofsp": f"candidate-nofsp@{DOMAIN}",
-          "employer": f"employer@{DOMAIN}", "expert": f"expert@{DOMAIN}", "fsp": f"fsp-analyst@{DOMAIN}"}
+DOMAIN = scope.DOMAIN
+EMAILS = scope.emails("")  # общее демо; песочница — scope.emails(sid)
 COMPANY = "Демо жюри: Северный платёж"
 PERSONAS = [
     {"id": "candidate", "role": "candidate", "title": "Кандидат с паспортом ФСП",
@@ -50,7 +57,8 @@ PERSONAS = [
     {"id": "candidate_nofsp", "role": "candidate", "title": "Кандидат без ФСП",
      "description": "Илья Сергеев · Backend · Middle. Истории ФСП нет — нейтрально. Ждёт входящее приглашение."},
     {"id": "employer", "role": "employer", "title": "Работодатель",
-     "description": "«Северный платёж»: профиль компании, две потребности и подборки с объяснениями."},
+     "description": "«Северный платёж»: профиль компании, три потребности с цитатами и подборки с объяснениями, "
+                    "сравнение кандидатов, фильтр ст. 64 ТК РФ."},
     {"id": "expert", "role": "expert", "title": "Эксперт",
      "description": "Проверка развёрнутых ответов по рубрике: очередь «на проверке» и выборочная проверка LLM."},
     {"id": "fsp", "role": "fsp_analyst", "title": "Федерация (ФСП)",
@@ -61,6 +69,10 @@ NEEDS = [
     "Будет плюсом Kafka и Docker. Удалённо. Зарплата 260 000 ₽ на руки.",
     "Frontend-разработчик middle для личного кабинета: React, TypeScript, HTML/CSS обязательно; "
     "желательно тестирование фронтенда. Гибрид, Санкт-Петербург, от 200 до 250 тыс.",
+    # Демонстрация фильтра ст. 64 ТК РФ: фразы про пол, возраст, внешность и детей подсвечены, в требования
+    # и в ранжирование не попадают, предложен текст через навыки
+    "Python-разработчик middle в отдел интеграций: только мужчины до 35 лет, славянской внешности, без детей, "
+    "в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве, 180–240 тыс.",
 ]
 STACK = ["python", "fastapi", "postgresql", "redis", "docker", "sql", "git", "linux"]
 
@@ -151,17 +163,22 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
     return assessment.finish_session(db, ts, engine=eng)
 
 
-def _user(db: Session, persona: str, role: UserRole) -> User:
+def _user(db: Session, persona: str, role: UserRole, sid: str = "") -> User:
     from app.modules.demo.seed import _user as demo_user
     from app.core.security import hash_password
     import secrets
 
-    return demo_user(db, EMAILS[persona], role, hash_password(secrets.token_urlsafe(24)))
+    u = demo_user(db, scope.emails(sid)[persona], role, hash_password(secrets.token_urlsafe(24)))
+    if sid and not _SPARE.get():
+        # песочница уже чья-то (вход, сброс, пересоздание): отметка входа — сразу при создании, чтобы её
+        # не выдали другому эксперту как запасную ни на миг
+        u.last_login_at = utcnow()
+    return u
 
 
 def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int,
-               away_items: tuple[int, ...] = ()):
-    u = _user(db, persona, UserRole.candidate)
+               away_items: tuple[int, ...] = (), sid: str = ""):
+    u = _user(db, persona, UserRole.candidate, sid)
     p = CandidateProfile(user_id=u.id, full_name=name, phone="+7 900 000-00-00", telegram=f"@jury_{persona}",
                          city="Москва", work_format=WorkFormat.remote, relocation=False, experience_years=3.5,
                          salary_min_hidden=200_000, privacy={}, visible_to_employers=True,
@@ -201,21 +218,55 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
     return u, p, res
 
 
-def delete_jury(db: Session) -> int:
-    ids = db.scalars(select(User.id).where(User.email.in_(list(EMAILS.values())))).all()
-    db.execute(delete(Company).where(Company.name == COMPANY, Company.is_demo.is_(True)))
+def delete_jury(db: Session, sid: str = "") -> int:
+    """Удаляет учётки и компанию одной песочницы (sid "" — общее демо). Чужие песочницы не трогает."""
+    from app.integrations.ats.models import AtsSettings, AtsStubRecord
+
+    from app.cup.demo import delete_cups
+    from app.cup.models import CupEntry
+
+    delete_cups(db, jury_scope=sid or scope.SHARED)  # кубки песочницы — с приглашениями по итогам и фактами T1
+    ids = db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all()
+    if ids:  # участия её кандидатов в общих кубках платформы
+        db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
+    own = Company.created_by.in_(ids) if ids else Company.id.is_(None)
+    # компания без автора (автор удалён раньше) — только для общего демо, как было до песочниц
+    cond = and_(Company.name == COMPANY, Company.is_demo.is_(True), or_(own, and_(Company.created_by.is_(None), not sid)))
+    keys = db.scalars(select(AtsSettings.stub_key).join(Company, Company.id == AtsSettings.company_id)
+                      .where(cond, AtsSettings.stub_key.is_not(None))).all()
+    if keys:  # «входящие» демо-ATS удаляемой демо-компании
+        db.execute(delete(AtsStubRecord).where(AtsStubRecord.stub_key.in_(list(keys))))
+    db.execute(delete(Company).where(cond))
     if ids:
         db.execute(delete(User).where(User.id.in_(ids)))
     db.commit()
     return len(ids)
 
 
-def create_jury(db: Session) -> dict:
+def _connect_demo_ats(db: Session, company_id) -> None:
+    """Демо-ATS у компании жюри: Хантфлоу, Talantix, «Поток» и вебхук на заглушках — принятие приглашения Ильёй
+    сразу видно в журнале передач. Сбой интеграций не должен ломать сид жюри."""
+    try:
+        from app.integrations.ats.demo import connect_demo_all
+
+        connect_demo_all(db, company_id)
+        db.commit()
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("jury: demo ATS connect failed")
+
+
+def create_jury(db: Session, sid: str = "") -> dict:
+    with scope.use(sid):  # подборки песочницы строятся по её кандидатам, без чужих песочниц
+        return _create_jury(db, sid)
+
+
+def _create_jury(db: Session, sid: str) -> dict:
     t0 = time.time()
-    _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0)
+    _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0, sid=sid)
     # у Ильи — два ухода со вкладки во время теста: достоверность «средняя» (видно работодателю с причиной)
-    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8))
-    eu = _user(db, "employer", UserRole.employer)
+    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid)
+    eu = _user(db, "employer", UserRole.employer, sid)
     c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург", website="https://example.invalid",
                 description="Платёжный сервис для малого бизнеса. Демо-компания для экспертов жюри.",
                 contact_email=f"hr@{DOMAIN}", created_by=eu.id, is_demo=True)
@@ -223,6 +274,7 @@ def create_jury(db: Session) -> dict:
     db.flush()
     db.add(EmployerProfile(user_id=eu.id, company_id=c.id, full_name="Ольга Миронова", position="HR-партнёр (демо)"))
     db.commit()
+    _connect_demo_ats(db, c.id)
     needs = []
     for text_ in NEEDS:
         req = parse_need(text_, use_llm=False)
@@ -242,14 +294,46 @@ def create_jury(db: Session) -> dict:
                       offer_description="Команда платежей: FastAPI, PostgreSQL, Redis. Удалённо, гибкий график.",
                       salary_from=240_000, salary_to=270_000, contact_method="Почта HR и звонок 20 минут",
                       need_id=needs[0].id, probe_id=None)
-    ex = _user(db, "expert", UserRole.expert)  # не admin: только /api/expert/*, только демо-кандидаты
-    _user(db, "fsp", UserRole.fsp_analyst)  # только агрегаты /api/fsp-cabinet/*
+    cups = _jury_cups(db, sid, eu, c, p1)
+    _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
+    # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
+    ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
     db.commit()
     return {"candidate": {"ref": p1.public_ref, "confirmed": r1.get("confirmed"), "theta": r1.get("theta")},
             "candidate_nofsp": {"ref": p2.public_ref, "confirmed": r2.get("confirmed"), "theta": r2.get("theta"),
                                 "pending": (r2.get("details") or {}).get("pending_review")},
-            "employer": {"company": c.name, "needs": len(needs)}, "expert": {"email": ex.email},
-            "seconds": round(time.time() - t0, 1)}
+            "employer": {"company": c.name, "needs": len(needs), "cups": cups}, "expert": {"email": ex.email},
+            "scenario": sid or None, "seconds": round(time.time() - t0, 1)}
+
+
+def _jury_cups(db: Session, sid: str, eu: User, c: Company, maria: CandidateProfile) -> list[str]:
+    """Кубки работодателя песочницы (app.cup.demo.seed_jury_cups). Сбой кубков не должен ломать сид жюри: кубки
+    досоздадутся при открытии раздела «Кубки» работодателем (ensure_jury_cups)."""
+    from app.cup.demo import seed_jury_cups
+
+    try:
+        return seed_jury_cups(db, sid or scope.SHARED, eu, c, maria)
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("jury: demo cups failed")
+        return []
+
+
+def ensure_ideas(db: Session) -> None:
+    """Общее демо кубков и Кабинета ФСП (одно на платформу): кубки демо-компаний и история приглашений для
+    аналитики. Дёшево, если всё на месте; пересев — если демо нет или идущий кубок подходит к концу."""
+    from app.cup.demo import is_stale
+    from app.fsp_cabinet.demo import has_demo_invitations, prepare
+
+    try:
+        if not is_stale(db) and has_demo_invitations(db):
+            return
+        with _lock(db):
+            if is_stale(db) or not has_demo_invitations(db):  # другой воркер мог уже пересеять, пока мы ждали
+                prepare(db)
+    except Exception:  # noqa: BLE001 — демо кубков не должно ломать вход жюри
+        db.rollback()
+        log.exception("jury: ideas demo failed")
 
 
 @contextmanager
@@ -269,58 +353,87 @@ def _lock(db: Session):
             conn.commit()
 
 
-def _complete(db: Session) -> bool:
-    have = set(db.scalars(select(User.email).where(User.email.in_(list(EMAILS.values())))).all())
+def _complete(db: Session, sid: str = "") -> bool:
+    want = set(scope.emails(sid).values())
+    have = set(db.scalars(select(User.email).where(User.email.in_(list(want)))).all())
     db.commit()
-    return have == set(EMAILS.values())
+    return have == want
 
 
-def _ideas(db: Session, *, reset: bool) -> dict:
-    """Кубки и Кабинет ФСП (app.cup, app.fsp_cabinet): демо-кубки и история приглашений для аналитики."""
-    from app.fsp_cabinet import demo as ideas_demo
-
-    try:
-        return ideas_demo.prepare(db, reset=reset)
-    except Exception:  # noqa: BLE001 — демо кубков не должно ломать вход жюри
-        db.rollback()
-        log.exception("Демо кубков и Кабинета ФСП не подготовлено")
-        return {"error": True}
-
-
-def reset(db: Session) -> dict:
-    from app.cup.demo import delete_cups
-
+def reset(db: Session, sid: str = "") -> dict:
     with _lock(db):
-        delete_cups(db)  # до удаления компании жюри: факты T1 и записи паспорта её кубка — у демо-кандидатов
-        n = delete_jury(db)
-        out = create_jury(db)
-        out["ideas"] = _ideas(db, reset=True)
+        n = delete_jury(db, sid)
+        out = create_jury(db, sid)
     out["deleted_users"] = n
     log.info("Демо жюри пересоздано: %s", out)
     return out
 
 
-def ensure(db: Session) -> bool:
-    """Создаёт учётки жюри, если их нет (первый вход после выкладки). True — созданы сейчас."""
-    if _complete(db):
-        _ensure_ideas(db)
+def ensure(db: Session, sid: str = "") -> bool:
+    """Создаёт учётки песочницы (sid "" — общее демо), если их нет. True — созданы сейчас."""
+    if _complete(db, sid):
         return False
     with _lock(db):
-        if _complete(db):  # другой воркер уже создал, пока мы ждали
+        if _complete(db, sid):  # другой воркер уже создал, пока мы ждали
             return False
-        delete_jury(db)
-        create_jury(db)
-        _ideas(db, reset=True)  # Мария — участница завершённого демо-кубка
+        delete_jury(db, sid)
+        create_jury(db, sid)
     return True
 
 
-def _ensure_ideas(db: Session) -> None:
-    """Досоздать демо кубков и Кабинета ФСП, если их нет или идущий кубок устарел (дёшево, если всё на месте)."""
-    from app.cup.demo import is_stale
-    from app.fsp_cabinet.demo import has_demo_invitations
+def sandboxes(db: Session) -> dict[str, float]:
+    """Песочницы жюри → время последней активности (вход или создание), секунды эпохи."""
+    rows = db.execute(select(User.email, User.last_login_at, User.created_at)
+                      .where(User.email.like(f"%+%@{DOMAIN}"))).all()
+    out: dict[str, float] = {}
+    for email, last, created in rows:
+        _, sid = scope.parse(email)
+        if sid:
+            t = max(x.timestamp() for x in (last, created) if x is not None) if (last or created) else 0.0
+            out[sid] = max(out.get(sid, 0.0), t)
+    return out
 
-    if not is_stale(db) and has_demo_invitations(db):
-        return
-    with _lock(db):
-        if is_stale(db) or not has_demo_invitations(db):
-            _ideas(db, reset=False)
+
+_SPARE: contextvars.ContextVar[bool] = contextvars.ContextVar("jury_spare", default=False)
+
+
+@contextmanager
+def as_spare():
+    """Создаваемая песочница — запасная: ещё ничья, отметок входа нет (см. spares, claim)."""
+    tok = _SPARE.set(True)
+    try:
+        yield
+    finally:
+        _SPARE.reset(tok)
+
+
+def spares(db: Session) -> list[str]:
+    """Запасные песочницы: полностью созданы, но ещё не выданы (у кандидата песочницы нет отметки входа)."""
+    rows = db.execute(select(User.email, User.last_login_at).where(User.email.like(f"candidate+%@{DOMAIN}"))).all()
+    out = []
+    for email, last in rows:
+        persona, sid = scope.parse(email)
+        if persona == "candidate" and sid and last is None and _complete(db, sid):
+            out.append(sid)
+    return sorted(out)
+
+
+def claim(db: Session, sid: str) -> bool:
+    """Атомарно выдать запасную песочницу одному эксперту: отметка входа у её кандидата ставится одним UPDATE
+    с условием «ещё не было входа» — из двух одновременных входов песочницу получит только один."""
+    r = db.execute(update(User).where(User.email == scope.emails(sid)["candidate"], User.last_login_at.is_(None))
+                   .values(last_login_at=utcnow()))
+    db.commit()
+    return r.rowcount == 1
+
+
+def evict(db: Session, keep: int, protect: str | None = None) -> list[str]:
+    """Удаляет самые давние песочницы сверх keep (кроме protect). Возвращает удалённые sid."""
+    boxes = sorted((t, s) for s, t in sandboxes(db).items() if s != protect)
+    gone = [s for _, s in boxes[: max(0, len(boxes) - keep)]]
+    if gone:
+        with _lock(db):
+            for s in gone:
+                delete_jury(db, s)
+        log.info("Песочницы жюри удалены по лимиту: %s", gone)
+    return gone

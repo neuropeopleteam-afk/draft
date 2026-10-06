@@ -9,14 +9,12 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.deps import require_role
 from app.core.enums import UserRole
 from app.core.errors import api_error, err
 from app.fsp_cabinet import analytics as an
 from app.modules.auth.models import User
-from app.modules.auth.service import issue_token
 
 router = APIRouter(prefix="/api/fsp-cabinet", tags=["fsp-cabinet"])
 analyst = require_role(UserRole.fsp_analyst, UserRole.admin)
@@ -117,15 +115,3 @@ def export(section: str, days: int | None = Days, user: User = Depends(analyst),
         w.writerow([_cell(row.get(c)) for c in cols])
     return Response(content="\ufeff" + buf.getvalue(), media_type="text/csv; charset=utf-8",
                     headers={"Content-Disposition": f'attachment; filename="fsp_{section}.csv"'})
-
-
-@router.post("/demo-login", summary="Режим жюри: вход в один клик под демо-учёткой «ФСП»",
-             responses={404: err("Режим жюри выключен")})
-def demo_login(db: Session = Depends(get_db)) -> dict:
-    if not get_settings().jury_mode_available:
-        raise api_error(404, "jury_disabled", "Режим жюри выключен")
-    from app.fsp_cabinet import demo
-
-    prepared = demo.ensure_demo(db)
-    user = demo.ensure_analyst(db)
-    return {**issue_token(user).model_dump(), "persona": "fsp", "landing": "/fsp", "prepared": prepared}

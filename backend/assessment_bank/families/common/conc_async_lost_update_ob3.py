@@ -201,7 +201,9 @@ def generate(seed: int):
     texts = [_describe(i, c, m, fn) for i, c, m in scen]
     opts1, key1 = make_options(rng, (texts[0], None), [(t, None) for t in texts[1:]], step=1)
     by_text = dict(zip(texts, scen))
-    good = rng.choice(["good_lock", "good_reorder"])
+    # Калибровка 05.10: подтип верного исправления разводил трудность шага 2 (reorder 0,08 / lock 0,74);
+    # подтип зафиксирован — верное исправление всегда asyncio.Lock вокруг проверки и записи.
+    good = rng.choice(["good_lock"])
     wrong = rng.sample(["lock_inside", "lock_write_only", "reread_write", "yield_first"], 3)
     opts2, key2 = make_options(rng, ("Заменить код на:", _code(fn, store, arg, aud, good)),
                                [("Заменить код на:", _code(fn, store, arg, aud, w)) for w in wrong],
