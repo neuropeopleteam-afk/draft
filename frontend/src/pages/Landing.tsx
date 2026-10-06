@@ -154,7 +154,7 @@ const JURY: { id: Persona; title: string; text: string }[] = [
 ];
 
 function JuryBlock() {
-  const { signIn } = useAuth();
+  const { me, signIn } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
@@ -166,7 +166,7 @@ function JuryBlock() {
   }
   async function reset() {
     setBusy("reset"); setMsg(null);
-    try { const r = await juryReset(); setMsg(`Демо жюри пересоздано в исходное состояние за ${r.seconds} с.`); }
+    try { const r = await juryReset(me?.email, signIn); setMsg(`Ваше демо пересоздано в исходное состояние за ${r.seconds} с. У других экспертов ничего не изменилось.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
   }
   return (
@@ -178,6 +178,7 @@ function JuryBlock() {
             <h2 id="jury-title" className="mt-2 text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Вход в один клик и проводник по сценарию</h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-ink/75">
               Готовые демо-учётки: регистрация, опрос и тест уже пройдены, правило 90 дней для них снято.
+              У каждого эксперта — своя копия демо: ваши действия и сброс не видны другим.
               Проводник ведёт по сквозному сценарию: регистрация → опрос и тест → категория → поиск работодателем → контакт.
             </p>
             <p className="mt-2 text-sm font-semibold text-brand-night">Доступ к стенду: demo / Hakaton</p>
@@ -203,7 +204,7 @@ function JuryBlock() {
             Начать проводник с регистрации
           </button>
           <button className="font-semibold text-brand-plum underline-offset-2 hover:underline disabled:opacity-50" disabled={!!busy} onClick={reset}>
-            {busy === "reset" ? "Сбрасываем…" : "Сбросить демо в исходное состояние"}
+            {busy === "reset" ? "Сбрасываем…" : "Сбросить своё демо в исходное состояние"}
           </button>
           {msg && <span className="text-brand-ink/75" role="status">{msg}</span>}
         </div>

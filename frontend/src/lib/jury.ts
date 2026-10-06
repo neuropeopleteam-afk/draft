@@ -3,6 +3,18 @@ import { api, type TokenOut } from "./api";
 export type Persona = "candidate" | "candidate_nofsp" | "employer" | "expert";
 export const JURY_DOMAIN = "@jury.example.com";
 export const isJury = (email?: string | null) => !!email && email.endsWith(JURY_DOMAIN);
+const LOCAL: Record<string, Persona> = { candidate: "candidate", "candidate-nofsp": "candidate_nofsp", employer: "employer", expert: "expert" };
+/** Персона по почте демо-учётки: candidate@… (общее демо) или candidate+<песочница>@… */
+export const personaOf = (email?: string | null): Persona | null =>
+  isJury(email) ? LOCAL[email!.slice(0, -JURY_DOMAIN.length).split("+")[0]] ?? null : null;
+
+// Своя песочница жюри: у каждого эксперта свой набор демо-персон, сброс не мешает другим.
+const KEY_SCENARIO = "jury_scenario";
+export const scenario = {
+  get: () => localStorage.getItem(KEY_SCENARIO),
+  set: (s: string | null | undefined) => { if (s) localStorage.setItem(KEY_SCENARIO, s); },
+};
+type JuryTokenOut = TokenOut & { landing: string; scenario: string | null; shared: boolean; persona: Persona };
 
 const KEY_ON = "jury_guide";
 const KEY_HIDDEN = "jury_guide_hidden";
@@ -18,8 +30,15 @@ export const guide = {
   setStep: (n: number) => localStorage.setItem(KEY_STEP, String(n)),
 };
 
+/** Токен персоны своей песочницы (первый вход создаёт песочницу; лимит исчерпан — общее демо). */
+export async function juryToken(persona: Persona): Promise<JuryTokenOut> {
+  const r = await api<JuryTokenOut>("/jury/login", { method: "POST", body: { persona, scenario: scenario.get() ?? "new" }, auth: false });
+  scenario.set(r.scenario);
+  return r;
+}
+
 export async function juryLogin(persona: Persona, signIn: (t: string) => Promise<unknown>): Promise<string> {
-  const r = await api<TokenOut & { landing: string }>("/jury/login", { method: "POST", body: { persona }, auth: false });
+  const r = await juryToken(persona);
   await signIn(r.access_token);
   guide.enable();
   // проводник переходит к первому шагу этой роли, если текущий шаг — за другую
@@ -30,8 +49,13 @@ export async function juryLogin(persona: Persona, signIn: (t: string) => Promise
   return r.landing;
 }
 
-export async function juryReset(): Promise<{ seconds: number }> {
-  return api("/jury/reset", { method: "POST", auth: false });
+/** Сброс своей песочницы. Нужен токен демо-персоны: если вход не выполнен — входим в свою песочницу. */
+export async function juryReset(email: string | null | undefined, signIn: (t: string) => Promise<unknown>): Promise<{ seconds: number }> {
+  if (!isJury(email)) await signIn((await juryToken("candidate")).access_token);
+  const r = await api<JuryTokenOut & { seconds: number }>("/jury/reset", { method: "POST" });
+  scenario.set(r.scenario);
+  await signIn(r.access_token);  // учётки пересозданы — старый токен недействителен
+  return r;
 }
 
 export interface GuideStep {
