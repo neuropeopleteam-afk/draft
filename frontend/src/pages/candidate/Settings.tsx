@@ -3,6 +3,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, Level, Loading, Toggle, dt, errText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { FspIdLinkButton } from "../../integrations/FspId";
+import { CupPassportEvents } from "../../ideas/cup/Candidate";
 import { useAuth } from "../../lib/auth";
 import { useMeta } from "../../lib/meta";
 
@@ -41,6 +42,7 @@ export function Fsp() {
           <ul className="mt-3 space-y-2 text-sm">{data.achievements.map((a: any, i: number) => <li key={i} className="flex items-start gap-2"><Level level="T2" />{a.text}</li>)}</ul>
         </section>
       ) : <Empty title="Достижений нет" text="Это нейтральное состояние: на категорию и рейтинг не влияет отрицательно." />}
+      <CupPassportEvents />
     </div>
   );
 }
