@@ -20,7 +20,7 @@ from app.modules.assessment.engine import get_engine
 from app.modules.assessment.models import (GradeHistory, SandboxTestStart, SurveyResponse, TaskFamily, TaskVariant,
                                            TestAnswer, TestSession, TestSessionItem)
 from app.modules.auth.models import User
-from app.modules.assessment.rules import apply_result, check_can_start
+from app.modules.assessment.rules import GradeOutcome, apply_result, check_can_start
 from app.modules.catalog.seed_data import STACK
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile
@@ -67,20 +67,41 @@ def active_session(db: Session, user_id: uuid.UUID) -> TestSession | None:
     ).order_by(TestSession.created_at.desc()).limit(1))
 
 
+def _mode(ts: TestSession) -> str:
+    return ((ts.result or {}).get("state") or {}).get("mode") or "full"
+
+
 def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_name: str | None = None, *,
-                  integrity_ack: bool = False, enforce_sandbox_quota: bool = False) -> TestSession:
-    """enforce_sandbox_quota — запрос кандидата через API (демо-сиды жюри проходят тест без лимита)."""
+                  integrity_ack: bool = False, enforce_sandbox_quota: bool = False, mode: str = "full") -> TestSession:
+    """enforce_sandbox_quota — запрос кандидата через API (демо-сиды жюри проходят тест без лимита).
+
+    mode="confirm" — короткое дотестирование у порога Junior для подтверждения «Junior (предварительно)»
+    (provisional.py): ответы сессии, по которой стоит статус, переносятся, добавляется до 6 коротких заданий."""
     profile = db.get(CandidateProfile, user_id)
     survey = latest_survey(db, user_id)
     if profile is None or survey is None or profile.onboarding_completed_at is None:
         raise api_error(409, "onboarding_required", "Сначала пройдите опрос: направление, стек и опыт")
     now = utcnow()
+    confirm_src = None
+    if mode == "confirm":
+        from app.modules.assessment import provisional
+
+        opts = provisional.options(db, profile)
+        if opts is None:
+            raise api_error(409, "not_provisional", "Дотестирование нужно только для категории «Junior (предварительно)»")
+        if profile.current_direction_id != survey.direction_id:
+            raise api_error(409, "direction_changed", "Направление в опросе изменилось — пройдите тест на Junior заново")
+        if not opts["can_confirm_test"]:
+            raise api_error(409, "confirm_unavailable", opts["confirm_unavailable_reason"] or "Дотестирование недоступно")
+        confirm_src = provisional.source_session(db, profile)
+        claimed_grade = profile.current_grade_id or "junior"
     check = check_can_start(profile.current_grade_id, profile.grade_locked_until, claimed_grade, now,
                             is_sandbox(profile))
     if not check.allowed:
         raise api_error(409 if check.code == "grade_locked" else 422, check.code or "not_allowed", check.message or "")
     old = active_session(db, user_id)
-    if old is not None and old.claimed_grade_id == claimed_grade and old.direction_id == survey.direction_id:
+    if (old is not None and old.claimed_grade_id == claimed_grade and old.direction_id == survey.direction_id
+            and _mode(old) == mode):
         if integrity_ack and not (old.result or {}).get("integrity_ack"):
             old.result = {**old.result, "integrity_ack": {"at": now.isoformat()}}
             flag_modified(old, "result")
@@ -99,10 +120,23 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     if old is not None:
         old.status = TestSessionStatus.aborted
         old.finished_at = now
-    engine = get_engine(engine_name)
+    engine = get_engine(engine_name or ("bank" if confirm_src is not None else None))
     seed = secrets.randbelow(2**31)
     stack = list((survey.answers or {}).get("stack", {}).keys())
-    if engine.name.startswith("bank"):
+    if confirm_src is not None:
+        if not engine.name.startswith("bank"):
+            raise api_error(409, "confirm_unavailable", "Дотестирование доступно только для теста банка заданий")
+        prev_state = dict((confirm_src.result or {}).get("state") or {},
+                          final_theta=confirm_src.theta, final_se=confirm_src.theta_se)
+        past = [((t.result or {}).get("state") or {}) for t in db.scalars(
+            select(TestSession).where(TestSession.user_id == user_id, TestSession.status == TestSessionStatus.finished)
+            .order_by(TestSession.created_at.desc()).limit(5))]
+        fams = sorted({i.get("family_id") for st in past for i in (st.get("items") or []) + (st.get("prior") or [])
+                       if i.get("family_id")})
+        state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
+                             previous_families=fams, confirm_from=prev_state)
+        state["confirm"]["source_session_id"] = str(confirm_src.id)
+    elif engine.name.startswith("bank"):
         # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма);
         # семейства последней попытки не попадают в дотестирование у порога (оно берёт задания и из другого субпула)
         past = [((t.result or {}).get("state") or {}) for t in db.scalars(
@@ -119,6 +153,8 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     st_ = get_settings()
     minutes = (st_.assessment_max_minutes + max(30, st_.assessment_extension_minutes + 10)
                if engine.name.startswith("bank") else 30)
+    if confirm_src is not None:  # только дотестирование: его лимит + запас
+        minutes = st_.assessment_extension_minutes + 10
     ts = TestSession(
         user_id=user_id, survey_id=survey.id, direction_id=survey.direction_id, claimed_grade_id=claimed_grade,
         status=TestSessionStatus.in_progress, form_seed=seed, is_sandbox=sandbox, started_at=now,
@@ -159,6 +195,8 @@ def progress(ts: TestSession) -> tuple[int, int, bool]:
         done = sum(1 for i in st.get("items", []) if i.get("done"))
         cfg = st.get("cfg", {})
         ext = st.get("ext") or {}
+        if st.get("mode") == "confirm":  # дотестирование: только новые короткие задания
+            return done, int(ext.get("n") or cfg.get("ext_items", 6)), bool(st.get("done"))
         return done, int(cfg.get("max_items", 20)) + 3 + int(ext.get("n", 0)), bool(st.get("done"))
     total = len(st.get("item_ids", []))
     answered = len(st.get("answers", {}))
@@ -273,32 +311,9 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
     profile = db.get(CandidateProfile, ts.user_id)
     res = (engine or get_engine(_engine_key(ts))).finish(ts.result["state"])
     now = utcnow()
-    sandbox = is_sandbox(profile)
-    # Тест в другом направлении: подтверждённый грейд считается «нет» для правил (категория — пара направление·грейд)
-    current = profile.current_grade_id if profile.current_direction_id == ts.direction_id else None
-    outcome = apply_result(current, ts.claimed_grade_id, res.confirmed, now, sandbox,
-                           get_settings().grade_change_interval_days, profile.grade_locked_until)
     ts.status = TestSessionStatus.finished
     ts.finished_at = now
-    ts.theta, ts.theta_se = res.theta, res.se
-    ts.score = res.correct / res.answered if res.answered else 0.0
-    ts.result_grade_id = ts.claimed_grade_id if res.confirmed else None
-    ts.result = {**ts.result, "engine_result": res.to_dict(),
-                 "outcome": {"changed": outcome.changed, "grade": outcome.new_grade, "message": outcome.message}}
-    flag_modified(ts, "result")
-
-    if outcome.changed or (res.confirmed and outcome.new_grade == ts.claimed_grade_id):
-        if outcome.changed:
-            db.add(GradeHistory(user_id=ts.user_id, direction_id=ts.direction_id, from_grade_id=current,
-                                to_grade_id=outcome.new_grade, reason=GradeChangeReason(outcome.reason),
-                                test_session_id=ts.id, locked_until=outcome.locked_until))
-            profile.current_direction_id = ts.direction_id
-            profile.current_grade_id = outcome.new_grade
-            profile.current_category_id = f"{ts.direction_id}.{outcome.new_grade}"
-            profile.grade_locked_until = outcome.locked_until
-        _write_t1_facts(db, ts, res)
-        db.flush()
-        refresh_rating(db, ts.user_id)
+    outcome = apply_engine_result(db, ts, res, profile, now)
     db.commit()
     return {
         "session_id": str(ts.id), "theta": res.theta, "se": res.se, "claimed_grade": ts.claimed_grade_id,
@@ -307,6 +322,10 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         "answered": res.answered, "explanation": res.explanation, "grade_changed": outcome.changed,
         "current_grade": profile.current_grade_id, "category_id": profile.current_category_id,
         "message": outcome.message, "engine": res.engine,
+        # «Junior (предварительно)»: итог теста и статус профиля после него
+        "provisional": res.provisional, "provisional_reason": res.provisional_reason, "p_claimed": res.p_claimed,
+        "category_provisional": bool(profile.grade_provisional) and bool(profile.current_category_id),
+        "status_changed": outcome.status_changed, "mode": _mode(ts),
         "locked_until": as_aware(profile.grade_locked_until).isoformat() if profile.grade_locked_until else None,
         # Кандидату — только ход теста; показатели детектора утечек видны в данных сессии, не в ответе
         "details": {k: res.details.get(k) for k in ("stop_reason", "n_scored", "n_canaries", "time_used_s",
@@ -314,8 +333,71 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
     }
 
 
-def _write_t1_facts(db: Session, ts: TestSession, res) -> None:
-    """Результат теста и навыки, проверенные заданиями, — факты T1 (заменяют прежние факты теста)."""
+def apply_engine_result(db: Session, ts: TestSession, res, profile: CandidateProfile, now) -> GradeOutcome:
+    """Итог движка → история грейда, профиль, факты T1, рейтинг (завершение теста и пересчёт после проверки).
+
+    «Junior (предварительно)» (provisional.py): присвоение без 90 дней; подтверждение того же грейда — не смена
+    грейда (причина confirmed, период 90 дней от даты попадания в категорию); любой следующий тест на Junior в том же
+    направлении обновляет оценку в фактах (работодатель видит актуальную), но статус снимает только подтверждение.
+    """
+    from app.modules.assessment import provisional
+
+    sandbox = is_sandbox(profile)
+    same_dir = profile.current_direction_id == ts.direction_id
+    # Тест в другом направлении: подтверждённый грейд считается «нет» для правил (категория — пара направление·грейд)
+    current = profile.current_grade_id if same_dir else None
+    cur_prov = bool(profile.grade_provisional) and current is not None
+    elsewhere = (profile.current_category_id if profile.current_category_id and not same_dir
+                 and not profile.grade_provisional else None)
+    since_at = provisional.since(db, ts.user_id, ts.direction_id) if cur_prov else None
+    outcome = apply_result(current, ts.claimed_grade_id, res.confirmed, now, sandbox,
+                           get_settings().grade_change_interval_days, profile.grade_locked_until,
+                           provisional=bool(getattr(res, "provisional", False)), current_provisional=cur_prov,
+                           provisional_since=since_at, confirmed_elsewhere=elsewhere)
+    mode = _mode(ts)
+    ts.theta, ts.theta_se = res.theta, res.se
+    ts.score = res.correct / res.answered if res.answered else 0.0
+    ts.result_grade_id = ts.claimed_grade_id if res.confirmed else None
+    ts.result = {**ts.result, "engine_result": res.to_dict(),
+                 "outcome": {"changed": outcome.changed, "grade": outcome.new_grade, "message": outcome.message,
+                             "provisional": outcome.provisional, "status_changed": outcome.status_changed}}
+    flag_modified(ts, "result")
+    write, extra = False, None
+    if outcome.changed:
+        db.add(GradeHistory(user_id=ts.user_id, direction_id=ts.direction_id, from_grade_id=current,
+                            to_grade_id=outcome.new_grade, reason=GradeChangeReason(outcome.reason),
+                            test_session_id=ts.id, locked_until=outcome.locked_until))
+        profile.current_direction_id = ts.direction_id
+        profile.current_grade_id = outcome.new_grade
+        profile.current_category_id = f"{ts.direction_id}.{outcome.new_grade}"
+        profile.grade_locked_until = outcome.locked_until
+        profile.grade_provisional = outcome.provisional
+        write = True
+        if outcome.provisional:
+            extra = provisional.fact_extra(ts, res, since_at=now, attempts=0)
+    elif outcome.status_changed:  # предварительный → подтверждён тем же тестом на Junior: не смена грейда
+        by = "sandbox" if sandbox else ("extension" if mode == "confirm" else "test")
+        provisional.mark_confirmed(db, profile, by=by, session_id=ts.id, sandbox=sandbox)
+        write = True
+        extra = {"status": "confirmed", "confirmed_by": by, "confirmed_at": now.isoformat(),
+                 "provisional_since": since_at.isoformat() if since_at else None}
+    elif res.confirmed and outcome.new_grade == ts.claimed_grade_id:
+        write = True
+    elif cur_prov and ts.claimed_grade_id == current:
+        # тест на Junior (дотестирование или полный) не подтвердил: статус сохраняется, оценка — актуальная
+        write = True
+        extra = provisional.fact_extra(ts, res, since_at=since_at,
+                                       attempts=provisional.confirm_attempts(db, ts.user_id, since_at), now=now)
+    if write:
+        _write_t1_facts(db, ts, res, extra)
+        db.flush()
+        refresh_rating(db, ts.user_id)
+    return outcome
+
+
+def _write_t1_facts(db: Session, ts: TestSession, res, extra: dict | None = None) -> None:
+    """Результат теста и навыки, проверенные заданиями, — факты T1 (заменяют прежние факты теста).
+    extra — статус «Junior (предварительно)» / как подтверждён (provisional.fact_extra)."""
     db.execute(delete(CandidateFact).where(CandidateFact.user_id == ts.user_id, CandidateFact.source == FactSource.test))
     d = res.details or {}
     db.add(CandidateFact(
@@ -325,7 +407,7 @@ def _write_t1_facts(db: Session, ts: TestSession, res) -> None:
                "correct": res.correct, "answered": res.answered, "engine": res.engine, "session_id": str(ts.id),
                "pending_review": d.get("pending_review"), "extension": bool(d.get("extension")),
                "preknowledge_flagged": (d.get("preknowledge") or {}).get("flagged"),
-               "integrity": d.get("integrity")},
+               "integrity": d.get("integrity"), **(extra or {})},
         evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=f"test_session:{ts.id}",
     ))
     for tag, s in res.skills.items():
@@ -336,7 +418,17 @@ def _write_t1_facts(db: Session, ts: TestSession, res) -> None:
         ))
 
 
+def _confirmed_by(db: Session, user_id: uuid.UUID) -> dict | None:
+    from app.modules.assessment import provisional
+
+    f = db.scalar(select(CandidateFact).where(CandidateFact.user_id == user_id, CandidateFact.kind == "test_result",
+                                              CandidateFact.source == FactSource.test)
+                  .order_by(CandidateFact.created_at.desc()).limit(1))
+    return provisional.confirmed_by(f.value if f else None)
+
+
 def status(db: Session, user_id: uuid.UUID) -> dict:
+    from app.modules.assessment import provisional
     from app.modules.catalog.models import Category
 
     profile = db.get(CandidateProfile, user_id)
@@ -367,7 +459,9 @@ def status(db: Session, user_id: uuid.UUID) -> dict:
         "claimed_grade": survey.claimed_grade_id if survey else None,
         "current": {
             "direction": profile.current_direction_id, "grade": profile.current_grade_id,
-            "category_id": profile.current_category_id, "category_title": cat.title if cat else None,
+            "category_id": profile.current_category_id,
+            "category_title": provisional.title(cat.title, bool(profile.grade_provisional)) if cat else None,
+            "provisional": bool(profile.grade_provisional) and cat is not None,
             "rating_score": profile.rating_score, "rank": rank, "category_size": total,
             "market_range": {"from": cat.market_salary_from, "to": cat.market_salary_to,
                              "median": cat.market_salary_median} if cat else None,
@@ -383,10 +477,15 @@ def status(db: Session, user_id: uuid.UUID) -> dict:
         "grade_change_interval_days": get_settings().grade_change_interval_days,
         "active_session_id": str(active.id) if active else None,
         "active_grade": active.claimed_grade_id if active else None,
+        "active_mode": _mode(active) if active else None,
+        # «Junior (предварительно)»: уровень доказанности и как подтвердить (provisional.options)
+        "provisional": provisional.options(db, profile),
+        "confirmed_by": _confirmed_by(db, user_id),
         "engine": get_engine().name,
         "sessions": [{
             "id": str(s.id), "direction": s.direction_id, "claimed_grade": s.claimed_grade_id, "status": s.status.value,
             "theta": s.theta, "se": s.theta_se, "confirmed": (s.result or {}).get("engine_result", {}).get("confirmed"),
+            "provisional": (s.result or {}).get("engine_result", {}).get("provisional"), "mode": _mode(s),
             "message": (s.result or {}).get("outcome", {}).get("message"), "is_sandbox": s.is_sandbox,
             "started_at": s.started_at.isoformat() if s.started_at else None,
             "finished_at": s.finished_at.isoformat() if s.finished_at else None,

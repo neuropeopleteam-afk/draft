@@ -270,6 +270,13 @@ def review_probe(db: Session, p: Probe, verdict: str, comment: str | None) -> Pr
                          source=FactSource.probe, source_ref=f"probe:{p.id}"))
     db.flush()
     refresh_rating(db, p.candidate_user_id)
+    # «Junior (предварительно)»: зонд с оценкой «хорошее решение» и выше подтверждает грейд (не смена грейда)
+    from app.modules.assessment import provisional
+    from app.modules.matching.models import EmployerNeed
+
+    need = db.get(EmployerNeed, p.need_id) if p.need_id else None
+    provisional.confirm_by_work(db, p.candidate_user_id, source="probe", ref=f"probe:{p.id}", ref_title=p.title,
+                                score=float(score), direction=need.direction_id if need else None)
     db.commit()
     return p
 

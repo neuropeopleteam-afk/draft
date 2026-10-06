@@ -11,6 +11,12 @@
 Итог: θ, SE, решение по грейду ``psychometrics.decide`` (без принудительного понижения), детектор предзнания
 по канарейкам и времени ответов (``psychometrics.CanaryDetector``) с пересчётом θ без подозрительных ответов.
 
+«Junior (предварительно)» (решение владельца 06.10): тест на Junior не подтвердил грейд, но уровень ниже порога не
+доказан — P(θ ≥ порога Junior) ≥ 0,10 (``psychometrics.grading.provisional_status``). Подтверждение —
+короткое дотестирование (``start(confirm_from=…)``): ответы прошлой сессии переносятся в θ, затем до N коротких
+заданий по информации в пороге Junior (только новые семейства, без канареек), пока порог не выйдет из интервала;
+итог — тем же правилом ``decide`` по всем ответам.
+
 Безопасность:
 * кандидату уходит только stem/код/варианты текущего шага; ключ, рубрика, семейство и seed остаются на
   сервере. item_id — случайный токен: по variant_id (family_id:seed) открытый генератор восстановил бы ключ;
@@ -139,7 +145,13 @@ class BankEngine:
 
     # ------------------------------------------------------------------ протокол
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
-              previous_subpools: list[int] | None = None, previous_families: list[str] | None = None) -> dict:
+              previous_subpools: list[int] | None = None, previous_families: list[str] | None = None,
+              confirm_from: dict | None = None) -> dict:
+        """confirm_from — состояние завершённой сессии с итогом «Junior (предварительно)»: новая сессия —
+        короткое дотестирование у порога Junior поверх её ответов (см. _start_confirm)."""
+        if confirm_from is not None:
+            return self._start_confirm(direction=direction, stack_tags=stack_tags, seed=seed, prev=confirm_from,
+                                       previous_families=previous_families)
         cfg = self._base_cfg()
         # Ротация субпулов: первая попытка — по seed сессии, повторная — другой субпул (параллельная форма);
         # субпулы на карантине (утечка) не выдаются. См. exposure.py.
@@ -150,6 +162,33 @@ class BankEngine:
             "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
             # семейства прошлой попытки не попадают в дотестирование (оно берёт задания и из другого субпула)
             "exclude_ext": sorted(set(previous_families or [])),
+            "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
+            "started_at": time.time(),
+        }
+
+    def _start_confirm(self, *, direction: str, stack_tags: list[str], seed: int, prev: dict,
+                       previous_families: list[str] | None) -> dict:
+        """Дотестирование для подтверждения предварительного Junior.
+
+        Ответы прошлой сессии (оцениваемые и канарейки) переносятся как «prior» — входят в θ и в детектор, но
+        заново не показываются. Основная часть считается завершённой (max_items = число перенесённых заданий), поэтому
+        выбор сразу идёт по информации в пороге Junior (cuts = только порог Junior) из коротких заданий (≤ 5 мин)
+        всего банка направления, кроме уже показанных этому кандидату семейств. Стоп — порог вышел из θ̂ ± z·SE,
+        набрано ext_items заданий или кончился запас времени ext_time_s.
+        """
+        cfg = self._base_cfg()
+        prior = [{k: v for k, v in it.items() if k not in ("public", "key", "rubric", "answers")}
+                 for it in (prev.get("prior") or []) + (prev.get("items") or []) if it.get("done")]
+        n_prior = sum(1 for it in prior if not it.get("canary"))
+        used_time = sum(float(it.get("time_s") or 0) for it in prior)
+        cfg.update({"mode": "confirm", "min_items": n_prior, "max_items": n_prior, "max_time_s": used_time,
+                    "stop_rule": "classification", "cuts_only": "junior"})
+        excl = sorted(set(previous_families or []) | {it["family_id"] for it in prior})
+        return {
+            "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": "junior",
+            "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": prev.get("subpool"), "items": [],
+            "skipped": [], "exclude_ext": excl, "mode": "confirm", "prior": prior,
+            "confirm": {"theta": prev.get("final_theta"), "se": prev.get("final_se")},
             "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
             "started_at": time.time(),
         }
@@ -217,7 +256,9 @@ class BankEngine:
                 self._score(it, retry=True)
         sess = self._rebuild(state)
         theta, se = float(sess.theta), float(sess.se)
-        done = [i for i in state["items"] if i["done"]]
+        prior = state.get("prior") or []
+        # дотестирование: перенесённые ответы прошлой сессии — в θ, детекторе и навыках наравне с новыми
+        done = [i for i in prior if i.get("done")] + [i for i in state["items"] if i["done"]]
         lookup = sess.items
         clean, canary, clean_idx = [], [], []
         for k, it in enumerate(done):
@@ -243,6 +284,7 @@ class BankEngine:
         dec = decide(theta, se, claimed, self.scale)
 
         scored = [i for i in done if not i["canary"]]
+        new_scored = [i for i in state["items"] if i["done"] and not i["canary"]]
         pending = [i for i in scored if any(v is None for v in i["x"])]
         answered = [i for i in scored if any(v is not None for v in i["x"])]
         correct = sum(1 for i in answered if np.mean([v for v in i["x"] if v is not None]) >= 0.5)
@@ -269,7 +311,7 @@ class BankEngine:
             "stop_reason": state.get("stop_reason") or sess.stop_reason or "finished_early",
             "n_scored": len(scored), "n_canaries": sum(1 for i in done if i["canary"]),
             "time_used_s": round(sum(i.get("time_s", 0) for i in done), 1),
-            "extension": ({"items": sum(1 for i in scored if i.get("ext")), "max_items": ext["n"],
+            "extension": ({"items": sum(1 for i in new_scored if i.get("ext")), "max_items": ext["n"],
                            "theta_before": ext["theta"], "se_before": ext["se"], "cut": ext["cut"]} if ext else None),
             "classification": {"stop_rule": state["cfg"].get("stop_rule", "se"),
                                "z": state["cfg"].get("classify_z", 1.0),
@@ -283,8 +325,15 @@ class BankEngine:
             "integrity": integ,
             "subpool": state.get("subpool"), "exposure": state["cfg"].get("exposure"),
             "formats": {f: sum(1 for i in scored if i["format"] == f) for f in sorted({i["format"] for i in scored})},
-            "category": f"{state['direction']}.{claimed}" if dec.confirmed else None,
+            "category": f"{state['direction']}.{claimed}" if (dec.confirmed or dec.provisional) else None,
             "assigned_grade": dec.assigned,
+            "provisional": ({"reason": dec.provisional_reason, "p": dec.p_claimed, "cut": self.scale.cuts[claimed],
+                             "level": 0.10} if dec.provisional else None),
+            "mode": state.get("mode") or "full",
+            "confirm": ({"prior_items": sum(1 for i in prior if not i.get("canary")), "new_items": len(new_scored),
+                         "theta_before": (state.get("confirm") or {}).get("theta"),
+                         "se_before": (state.get("confirm") or {}).get("se")}
+                        if state.get("mode") == "confirm" else None),
             "trace": [[round(t, 3), round(s_, 3)] for t, s_ in sess.trace],
             "grading": [{"format": i["format"], "parts": [g.get("method") if g else "auto" for g in i["grading"]],
                          "status": "pending" if any(v is None for v in i["x"]) else "scored"}
@@ -296,6 +345,7 @@ class BankEngine:
             point_grade=dec.point_grade, confirmed=dec.confirmed, upgrade_available=dec.upgrade_available,
             retake_lower=retake, probabilities=dec.probabilities, answered=len(answered), correct=correct,
             skills=skills, explanation=self._explain(dec, theta, se, claimed, details), details=_finite(details),
+            provisional=dec.provisional, provisional_reason=dec.provisional_reason, p_claimed=dec.p_claimed,
         )
 
     # ------------------------------------------------------------------ внутреннее
@@ -310,8 +360,9 @@ class BankEngine:
         c = state["cfg"]
         ext = state.get("ext")
         # сессии, начатые до 06.10 (в cfg нет новых ключей), доигрываются по прежним правилам остановки и выбора
+        cuts = ((self.scale.cuts[c["cuts_only"]],) if c.get("cuts_only") else tuple(self.scale.cuts[g] for g in GRADES))
         return CATConfig(min_items=c["min_items"], max_items=c["max_items"], se_target=c["se_target"],
-                         max_time_s=c["max_time_s"], cuts=tuple(self.scale.cuts[g] for g in GRADES),
+                         max_time_s=c["max_time_s"], cuts=cuts,
                          stop_rule=c.get("stop_rule", "se"), classify_z=float(c.get("classify_z", 1.0)),
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
@@ -321,7 +372,8 @@ class BankEngine:
     def _rebuild(self, state: dict) -> CATSession:
         pool = list(_pool(state["cfg"].get("subpools", 1)))
         have = {p.family_id for p in pool}
-        for it in state["items"]:
+        prior = state.get("prior") or []
+        for it in prior + state["items"]:
             if it["family_id"] not in have:  # семейство пропало из банка после выкладки — берём снимок параметров
                 pool.append(_pool_from_snapshot(it["pool"]))
                 have.add(it["family_id"])
@@ -334,10 +386,10 @@ class BankEngine:
                              state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
                              exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked)
         lookup = sess.items
-        for it in state["items"]:
+        for it in prior + state["items"]:
             if it["done"] and it["family_id"] in lookup:
                 sess.record(lookup[it["family_id"]], _x_list(it), it["log_t"], time_s=it["time_s"])
-        for it in state["items"]:
+        for it in prior + state["items"]:
             sess.used.add(it["family_id"])
         sess.used.update(state.get("skipped", []))
         ext = state.get("ext")
@@ -528,6 +580,8 @@ class BankEngine:
     def _total_est(self, state: dict) -> int:
         c = state["cfg"]
         ext = state.get("ext")
+        if state.get("mode") == "confirm":
+            return int(ext["n"] if ext else c.get("ext_items", 6))
         n_can = 3  # позиции канареек 2, 6, 10
         return c["max_items"] + n_can + (ext["n"] if ext else 0)
 
@@ -544,7 +598,7 @@ class BankEngine:
             step_prompt=(steps[k - 1]["prompt"] if is_ob3 and len(steps) >= k else None),
             elapsed_s=int(max(0, time.time() - it["issued_at"])), block="common" if it["block"] == "common" else "direction",
             adaptive=True, min_items=c["min_items"], max_items=c["max_items"],
-            answered=sum(1 for i in state["items"] if i["done"]), extension=bool(it.get("ext")),
+            answered=sum(1 for i in state["items"] if i["done"]), extension=bool(it.get("ext")) or state.get("mode") == "confirm",
         )
 
     @staticmethod
@@ -557,13 +611,23 @@ class BankEngine:
             s = f"Грейд {g} подтверждён: θ = {theta:+.2f} ± {se:.2f}, вероятность уровня не ниже {g} — {ps}."
             if dec.upgrade_available:
                 s += f" Результат уверенно выше порога — можно пройти тест на {GRADE_RU[GRADES[GRADES.index(claimed) + 1]]}."
+        elif dec.provisional:
+            s = (f"Грейд {g} пока не подтверждён, но и уровень ниже порога не доказан: θ = {theta:+.2f} ± {se:.2f}, "
+                 f"вероятность уровня не ниже {g} — {ps} (для подтверждения нужно ≥ 80 %, «не доказанно ниже» — "
+                 "≥ 10 %). Категория Junior присвоена предварительно: работодатели видят её с пометкой «предварительно». "
+                 "Подтвердить можно коротким дотестированием у порога (до 6 заданий, до 20 минут) или работой — "
+                 "зондом работодателя или кубком.")
         else:
             s = (f"Грейд {g} пока не подтверждён: θ = {theta:+.2f} ± {se:.2f}, вероятность уровня не ниже {g} — "
                  f"{ps} (нужно ≥ 80 %). Принудительного понижения нет")
             s += (f": можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower else
                   ": можно пройти тест на грейд ниже или повторить после подготовки.")
+        cf = details.get("confirm")
+        if cf:
+            s += (f" Дотестирование у порога Junior: к ответам прошлой попытки ({cf['prior_items']}) добавлено "
+                  f"{_items_ru(cf['new_items'])}, оценка — по всем ответам.")
         ext = details.get("extension")
-        if ext and ext.get("items"):
+        if ext and ext.get("items") and not cf:
             s += f" Результат был у порога грейда — тест продлён на {_items_ru(ext['items'])} у этого порога."
         if details.get("pending_review"):
             s += (f" Открытых ответов на проверке: {details['pending_review']} — они пока не учтены, "
