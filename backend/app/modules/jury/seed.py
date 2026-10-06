@@ -227,6 +227,11 @@ def delete_jury(db: Session, sid: str = "") -> int:
     from app.cup.models import CupEntry
 
     delete_cups(db, jury_scope=sid or scope.SHARED)  # кубки песочницы — с приглашениями по итогам и фактами T1
+    if sid:  # гости живой демонстрации (QR → мини-тест, app.jury_live); зал и его код остаются — QR на слайде рабочий
+        from app.jury_live import service as live
+
+        live.delete_guests(db, list(db.scalars(select(User.id).where(User.email.like(live.guest_emails_like(sid)))).all()))
+        live.bump_sid(db, sid)
     ids = db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all()
     if ids:  # участия её кандидатов в общих кубках платформы
         db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))

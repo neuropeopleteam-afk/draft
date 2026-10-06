@@ -98,19 +98,22 @@ export async function currentSubscription(): Promise<PushSubscription | null> {
   return reg ? reg.pushManager.getSubscription() : null;
 }
 
-/** Разрешение → подписка в push-сервисе браузера → сохранение на сервере. */
-export async function subscribePush(): Promise<{ ok: boolean; reason?: string }> {
+type PushKeys = { endpoint: string; keys: { p256dh: string; auth: string } };
+
+/** Разрешение → подписка в push-сервисе браузера → сохранение на сервере. save — куда сохранить подписку
+ * (по умолчанию — учётке, вошедшей в кабинет; гость живой демонстрации сохраняет по своему токену). */
+export async function subscribePush(save?: (j: PushKeys) => Promise<unknown>): Promise<{ ok: boolean; reason?: string }> {
   if (!pushSupported()) return { ok: false, reason: "Браузер не поддерживает Web Push. На iPhone уведомления работают только в установленном приложении (iOS 16.4+)." };
   const cfg = await api<{ enabled: boolean; vapid_public_key: string | null }>("/push/config", { auth: false });
   if (!cfg.enabled || !cfg.vapid_public_key) return { ok: false, reason: "Web Push на сервере не настроен" };
-  const perm = await Notification.requestPermission();
+  const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
   if (perm !== "granted") return { ok: false, reason: "Уведомления запрещены в настройках браузера" };
   const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
   await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();
   if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(cfg.vapid_public_key) as BufferSource });
-  const j = sub.toJSON() as { endpoint: string; keys: { p256dh: string; auth: string } };
-  await api("/push/subscribe", { body: { endpoint: j.endpoint, keys: j.keys } });
+  const j = sub.toJSON() as PushKeys;
+  await (save ? save({ endpoint: j.endpoint, keys: j.keys }) : api("/push/subscribe", { body: { endpoint: j.endpoint, keys: j.keys } }));
   return { ok: true };
 }
 

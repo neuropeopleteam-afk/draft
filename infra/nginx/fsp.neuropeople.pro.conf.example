@@ -64,6 +64,9 @@ server {
         proxy_busy_buffers_size 128k;
     }
 
+    # Живая демонстрация для жюри: /j/<код>, /assets/, /recover.js — без пароля (QR с телефона эксперта)
+    include /etc/nginx/snippets/spectrek_fsp_jury_live.conf;
+
     location / {
         auth_basic "FSP demo";
         auth_basic_user_file /etc/nginx/htpasswd_spectrek_fsp;

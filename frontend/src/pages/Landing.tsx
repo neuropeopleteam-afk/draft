@@ -189,6 +189,7 @@ function JuryBlock() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link to="/jury/live" className="btn-primary">Демонстрация для жюри: QR</Link>
             <Link to="/validation" className="btn-ghost">Как мы проверяем себя</Link>
             <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
           </div>
