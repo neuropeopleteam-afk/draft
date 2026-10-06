@@ -50,7 +50,7 @@ export default function Category() {
           {s.jury_mode_available && s.jury_mode_allowed && (
             <div className="mt-3 border-t border-brand/10 pt-2">
               <Toggle checked={s.jury_mode} onChange={jury} label="Демо-режим жюри" hint="Только для демо-учёток. Снимает ограничение 90 дней для показа; в истории такие смены помечаются." />
-              {s.sandbox_starts && <p className="text-xs text-brand-ink/60">Новых тестов за 24 часа осталось: {s.sandbox_starts.left} из {s.sandbox_starts.limit} — чтобы банк заданий нельзя было выкачать перезапусками.</p>}
+              {s.sandbox_starts && <p className="text-xs text-brand-ink/65">Новых тестов за 24 часа осталось: {s.sandbox_starts.left} из {s.sandbox_starts.limit} — чтобы банк заданий нельзя было выкачать перезапусками.</p>}
             </div>
           )}
         </div>
@@ -71,11 +71,11 @@ export default function Category() {
               {s.grade_history.map((h: any, i: number) => (
                 <li key={i} className="border-l-2 border-brand-blush pl-3">
                   <p className="font-semibold">{h.from ? `${GRADES[h.from]} → ` : ""}{GRADES[h.to]} · {DIRECTIONS[h.direction]}</p>
-                  <p className="text-brand-ink/60">{REASON[h.reason] ?? h.reason} · {dt(h.at)}</p>
+                  <p className="text-brand-ink/65">{REASON[h.reason] ?? h.reason} · {dt(h.at)}</p>
                 </li>
               ))}
             </ul>
-          ) : <p className="mt-3 text-sm text-brand-ink/60">Пока пусто.</p>}
+          ) : <p className="mt-3 text-sm text-brand-ink/65">Пока пусто.</p>}
         </section>
         <section className="card">
           <h2 className="font-bold text-brand-night">Тесты</h2>
@@ -85,15 +85,15 @@ export default function Category() {
                 <li key={t.id} className="flex items-start justify-between gap-3 border-l-2 border-brand-blush pl-3">
                   <div>
                     <p className="font-semibold">{DIRECTIONS[t.direction]} · {GRADES[t.claimed_grade]}{t.is_sandbox ? " · демо" : ""}</p>
-                    <p className="text-brand-ink/60">{SESSION[t.status] ?? t.status} · {dtt(t.finished_at ?? t.started_at)}</p>
-                    {t.theta != null && <p className="text-brand-ink/60">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : "не подтверждён"}</p>}
+                    <p className="text-brand-ink/65">{SESSION[t.status] ?? t.status} · {dtt(t.finished_at ?? t.started_at)}</p>
+                    {t.theta != null && <p className="text-brand-ink/65">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : "не подтверждён"}</p>}
                   </div>
                   {t.status === "in_progress" && <Link className="text-sm font-semibold text-brand" to={`/candidate/assessment/test/${t.id}`}>Продолжить</Link>}
                   {t.status === "finished" && <Link className="shrink-0 text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>}
                 </li>
               ))}
             </ul>
-          ) : <p className="mt-3 text-sm text-brand-ink/60">Тестов ещё не было.</p>}
+          ) : <p className="mt-3 text-sm text-brand-ink/65">Тестов ещё не было.</p>}
         </section>
       </div>
       <section className="card">

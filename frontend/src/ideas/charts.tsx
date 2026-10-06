@@ -50,13 +50,13 @@ export function BarList({ rows, max, base, baseLabel, tone = "brand", labelWidth
         return (
           <li key={r.key} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 sm:grid-cols-[var(--lw)_minmax(0,1fr)_5.5rem]"
             style={{ ["--lw" as string]: labelWidth }}>
-            <span className={`col-span-2 text-sm leading-snug sm:col-span-1 ${r.muted ? "text-brand-ink/45" : "text-brand-ink/85"}`}>{r.label}</span>
+            <span className={`col-span-2 text-sm leading-snug sm:col-span-1 ${r.muted ? "text-brand-ink/65" : "text-brand-ink/85"}`}>{r.label}</span>
             <span className="relative block h-3 rounded-full bg-brand-blush/45">
               {w > 0 && <span className={`absolute inset-y-0 left-0 rounded-full ${BG[r.tone ?? tone]}`} style={{ width: `${w}%` }} />}
               {basePos != null && <span className="absolute -inset-y-1 border-l-2 border-dashed border-brand-night/45" style={{ left: `${basePos}%` }} title={baseLabel} />}
             </span>
-            <span className={`text-right text-sm font-semibold tabular-nums ${r.value == null ? "text-brand-ink/40" : "text-brand-night"}`}>{r.display ?? (r.value == null ? "< 5" : ru(r.value))}</span>
-            {r.sub && <span className="col-span-2 -mt-0.5 text-xs text-brand-ink/55 sm:col-start-2">{r.sub}</span>}
+            <span className={`text-right text-sm font-semibold tabular-nums ${r.value == null ? "text-brand-ink/65" : "text-brand-night"}`}>{r.display ?? (r.value == null ? "< 5" : ru(r.value))}</span>
+            {r.sub && <span className="col-span-2 -mt-0.5 text-xs text-brand-ink/65 sm:col-start-2">{r.sub}</span>}
           </li>
         );
       })}
@@ -76,7 +76,7 @@ export function PairBars({ rows, max, a, b, fmt = fpct }: {
       <span className="relative block h-2.5 rounded-full bg-brand-blush/40">
         {v ? <span className={`absolute inset-y-0 left-0 rounded-full ${BG[t]}`} style={{ width: `${Math.max(1.5, (100 * v) / m)}%` }} /> : null}
       </span>
-      <span className={`text-right text-xs font-semibold tabular-nums ${v == null ? "text-brand-ink/40" : "text-brand-night"}`}>{text ?? (v == null ? "< 5" : fmt(v))}</span>
+      <span className={`text-right text-xs font-semibold tabular-nums ${v == null ? "text-brand-ink/65" : "text-brand-night"}`}>{text ?? (v == null ? "< 5" : fmt(v))}</span>
     </span>
   );
   return (
@@ -89,7 +89,7 @@ export function PairBars({ rows, max, a, b, fmt = fpct }: {
             <span className="space-y-1">
               {bar(r.a, a.tone, r.aText)}
               {bar(r.b, b.tone, r.bText)}
-              {r.sub && <span className="block text-xs text-brand-ink/55">{r.sub}</span>}
+              {r.sub && <span className="block text-xs text-brand-ink/65">{r.sub}</span>}
             </span>
           </li>
         ))}
@@ -120,13 +120,13 @@ export function Funnel({ stages, tone = "night" }: { stages: Stage[]; tone?: Ton
         return (
           <li key={s.key}>
             {i > 0 && (
-              <p className="py-0.5 text-center text-[11px] font-semibold text-brand-ink/50">
+              <p className="py-0.5 text-center text-xs font-semibold text-brand-ink/65">
                 {s.conversion != null ? `↓ ${fpct(s.conversion)}` : "↓ скрыто (< 5)"}
               </p>
             )}
             <div className="flex items-baseline justify-between gap-3 text-sm">
               <span className="text-brand-ink/80">{s.title}</span>
-              <span className={`font-bold tabular-nums ${s.count == null ? "text-brand-ink/45" : "text-brand-night"}`}>{fk(s.count)}</span>
+              <span className={`font-bold tabular-nums ${s.count == null ? "text-brand-ink/65" : "text-brand-night"}`}>{fk(s.count)}</span>
             </div>
             <div className="mt-1 flex justify-center">
               <div className={`h-4 rounded-md ${s.count == null ? "border border-dashed border-brand-night/25 bg-white" : BG[tone]}`} style={{ width: `${w}%` }} />
@@ -167,7 +167,7 @@ export function Heatmap({ rows, cols, cell, fmt, tone = "night" }: {
     <div className="overflow-x-auto">
       <table className="w-full min-w-[17.5rem] border-separate border-spacing-1 text-sm">
         <thead>
-          <tr><th className="w-[30%]" />{cols.map((c) => <th key={c.id} className="px-1 pb-1 text-center text-[10px] font-semibold uppercase tracking-wide text-brand-ink/50 sm:text-xs">{c.title}</th>)}</tr>
+          <tr><th className="w-[30%]" />{cols.map((c) => <th key={c.id} className="px-1 pb-1 text-center text-[11px] font-semibold uppercase tracking-wide text-brand-ink/65 sm:text-xs">{c.title}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r) => (
@@ -177,7 +177,7 @@ export function Heatmap({ rows, cols, cell, fmt, tone = "night" }: {
                 const v = cell(r.id, c.id);
                 const a = v == null ? 0 : 0.08 + 0.85 * (v / m);
                 return (
-                  <td key={c.id} className={`h-11 rounded-lg text-center text-sm font-bold tabular-nums sm:h-12 ${v == null ? "border border-dashed border-brand-night/20 text-brand-ink/40" : a > 0.5 ? "text-white" : "text-brand-night"}`}
+                  <td key={c.id} className={`h-11 rounded-lg text-center text-sm font-bold tabular-nums sm:h-12 ${v == null ? "border border-dashed border-brand-night/20 text-brand-ink/65" : a > 0.5 ? "text-white" : "text-brand-night"}`}
                     style={v == null ? undefined : { backgroundColor: `rgba(${rgb},${a.toFixed(3)})` }}>
                     {fmt(v)}
                   </td>
@@ -225,20 +225,20 @@ export function RangeChart({ rows }: { rows: RangeRowData[] }) {
                 {r.offer && <span className="absolute inset-y-1.5 rounded bg-brand" style={{ left: pos(r.offer[0]), width: width(r.offer[0], r.offer[1]) }} />}
                 {r.mid ? <span className="absolute -inset-y-0.5 w-1 rounded bg-brand-night" style={{ left: pos(r.mid) }} /> : null}
               </span>
-              {r.note && <span className="mt-0.5 block text-xs text-brand-ink/55">{r.note}</span>}
+              {r.note && <span className="mt-0.5 block text-xs text-brand-ink/65">{r.note}</span>}
             </span>
           </li>
         ))}
       </ul>
       <div className="grid sm:grid-cols-[12rem_minmax(0,1fr)] sm:gap-x-3" aria-hidden>
         <span />
-        <span className="relative block h-4 text-[10px] text-brand-ink/45">
+        <span className="relative block h-4 text-xs text-brand-ink/65">
           {ticks.map((t, i) => (
             <span key={t} className={`absolute -translate-x-1/2 tabular-nums ${i % 2 && ticks.length > 7 ? "hidden sm:inline" : ""}`} style={{ left: pos(t) }}>{Math.round(t / 1000)}</span>
           ))}
         </span>
       </div>
-      <p className="text-right text-[10px] text-brand-ink/45">тыс. ₽ в месяц</p>
+      <p className="text-right text-xs text-brand-ink/65">тыс. ₽ в месяц</p>
     </div>
   );
 }

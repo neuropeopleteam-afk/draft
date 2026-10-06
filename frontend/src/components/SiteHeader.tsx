@@ -33,7 +33,7 @@ export function SiteHeader({ dark = false }: { dark?: boolean }) {
 export function SiteFooter() {
   return (
     <footer className="border-t border-brand-night/10 bg-white">
-      <div className="mx-auto flex max-w-content flex-col gap-3 px-6 py-8 text-sm text-brand-ink/60 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto flex max-w-content flex-col gap-3 px-6 py-8 text-sm text-brand-ink/65 md:flex-row md:items-center md:justify-between">
         <p>Прототип спецтрека ФСП · ЛЦТ 2026. Открытый код, лицензия MIT.</p>
         <p className="flex gap-5">
           <a className="hover:text-brand-night" href="/api/docs">Документация API</a>

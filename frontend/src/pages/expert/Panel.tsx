@@ -177,7 +177,7 @@ function Shell({ title, subtitle, l, children, guide }: { title: string; subtitl
       <div className="card space-y-3 py-4">
         <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
           <span className="font-semibold text-brand-night">{l.idx + 1} из {l.items.length} · оценено {l.done}</span>
-          <span className="text-brand-ink/60" aria-live="polite">{l.saving ? "Сохраняю…" : l.savedAt ? "Сохранено" : "Оценка сохраняется сразу"}</span>
+          <span className="text-brand-ink/65" aria-live="polite">{l.saving ? "Сохраняю…" : l.savedAt ? "Сохранено" : "Оценка сохраняется сразу"}</span>
         </div>
         <Bar done={l.done} total={l.items.length} />
         <div className="flex flex-wrap gap-1" aria-label="Переход к объекту">
@@ -353,7 +353,7 @@ export function ExpertAnswers() {
             <legend className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Критерии рубрики</legend>
             {crit.map((c) => (
               <div key={c.id} className="rounded-xl border border-brand-night/10 p-3">
-                <p className="text-sm text-brand-night">{c.description} <span className="text-brand-ink/55">· вес {Number(c.weight).toLocaleString("ru-RU")}</span></p>
+                <p className="text-sm text-brand-night">{c.description} <span className="text-brand-ink/65">· вес {Number(c.weight).toLocaleString("ru-RU")}</span></p>
                 <div className="mt-2"><Choice label={c.description} value={marks[c.id]} onPick={(v) => setMarks((m) => ({ ...m, [c.id]: v }))} options={MARKS} /></div>
               </div>
             ))}
@@ -410,7 +410,7 @@ export function ExpertAngoff() {
         </ul></details>}>
       {it && (
         <article className="card space-y-4">
-          <div className="flex flex-wrap gap-2 text-xs"><span className="chip">{it.block_title}</span><span className="chip">{it.format_title}</span><span className="text-brand-ink/60">{it.title} · лимит {Math.round((it.time_limit_s ?? 0) / 60) || 1} мин</span></div>
+          <div className="flex flex-wrap gap-2 text-xs"><span className="chip">{it.block_title}</span><span className="chip">{it.format_title}</span><span className="text-brand-ink/65">{it.title} · лимит {Math.round((it.time_limit_s ?? 0) / 60) || 1} мин</span></div>
           <p className="whitespace-pre-line font-semibold leading-relaxed text-brand-night">{it.stem}</p>
           {it.code && <pre className="max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{numbered(it.code, it.format === "find_bug")}</code></pre>}
           <Task it={it} />
@@ -422,20 +422,20 @@ export function ExpertAngoff() {
             {BOUND.map((b) => (
               <div key={b.id} className="rounded-xl border border-brand-night/10 p-3">
                 <p className="text-sm font-semibold text-brand-night">{b.title}</p>
-                <p className="text-xs text-brand-ink/60">{open ? "Средняя доля максимального балла, %" : "Решат верно из 100"}</p>
+                <p className="text-xs text-brand-ink/65">{open ? "Средняя доля максимального балла, %" : "Решат верно из 100"}</p>
                 <div className="mt-2 flex items-center gap-3">
                   <input type="range" min={floor} max={100} step={5} value={v[b.id] ?? floor} aria-label={b.title}
                     onChange={(e) => setV((x) => ({ ...x, [b.id]: Number(e.target.value) }))}
                     onPointerUp={(e) => { const n = Number(e.currentTarget.value); setV((x) => ({ ...x, [b.id]: n })); }}
                     onKeyUp={(e) => { const n = Number(e.currentTarget.value); setV((x) => ({ ...x, [b.id]: n })); }}
                     className="w-full accent-[#E4007E]" />
-                  <span className={`w-12 text-right text-lg font-bold ${v[b.id] == null ? "text-brand-ink/30" : "text-brand-night"}`}>{v[b.id] ?? "—"}</span>
+                  <span className={`w-12 text-right text-lg font-bold ${v[b.id] == null ? "text-brand-ink/65" : "text-brand-night"}`}>{v[b.id] ?? "—"}</span>
                 </div>
               </div>
             ))}
           </div>
           {order && <Alert>Пограничный Senior не может решать хуже пограничного Middle.</Alert>}
-          {floor > 5 && <p className="text-xs text-brand-ink/60">Задание с выбором из четырёх вариантов: не ниже {floor} — столько дало бы угадывание.</p>}
+          {floor > 5 && <p className="text-xs text-brand-ink/65">Задание с выбором из четырёх вариантов: не ниже {floor} — столько дало бы угадывание.</p>}
           <div className="space-y-2"><Label>Уверенность</Label><Choice label="Уверенность" value={conf} onPick={setConf} options={CONF} disabled={l.saving} /></div>
           <input className="input" value={comment} onChange={(e) => setComment(e.target.value)} maxLength={2000} placeholder="Комментарий, если сомневаетесь" aria-label="Комментарий" />
           <div className="flex justify-end">
@@ -468,7 +468,7 @@ function Task({ it }: { it: any }) {
           <div key={s.step}>
             <p className="text-sm font-semibold text-brand-night">{s.prompt}</p>
             <ul className="mt-2 space-y-1.5">{opts.filter((o) => o.step === s.step).map((o) => <Opt key={o.id} o={o} ok={key.value?.[String(s.step)] === o.id} />)}</ul>
-            {!opts.some((o) => o.step === s.step) && <p className="mt-1 text-xs text-brand-ink/60">Развёрнутое объяснение, оценивается по рубрике.</p>}
+            {!opts.some((o) => o.step === s.step) && <p className="mt-1 text-xs text-brand-ink/65">Развёрнутое объяснение, оценивается по рубрике.</p>}
           </div>
         ))}
       </div>

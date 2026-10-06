@@ -123,7 +123,7 @@ export function RetestSection({ sim }: { sim: any }) {
           return [DIRECTIONS[d] ?? d, arrow(b.grade_kappa_quadratic, a.grade_kappa_quadratic), arrow(b.grade_exact_agreement, a.grade_exact_agreement, pct),
             arrow(b.icc_theta, a.icc_theta), arrow(b.mean_items, a.mean_items, (x) => num(x, 1)), num(a.ceiling?.grade_kappa_quadratic)];
         })} />
-      <p className="mt-2 text-xs text-brand-ink/55">Разброс между прогонами с другими seed — около ±0,02–0,03 по κ на направление, поэтому смотреть стоит на среднее.</p>
+      <p className="mt-2 text-xs text-brand-ink/65">Разброс между прогонами с другими seed — около ±0,02–0,03 по κ на направление, поэтому смотреть стоит на среднее.</p>
 
       <H3>Теоретический потолок совпадения при данной погрешности</H3>
       <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
@@ -196,13 +196,13 @@ export function OtherConditions({ sim }: { sim: any }) {
       <Table head={["Кто и в каких условиях", "Грейд точно", "κ с истиной", "±1 ступень", "r(θ̂, θ)", "κ повтора", "r(θ₁, θ₂)", "Заданий"]}
         strong={[1]}
         rows={[
-          [<>Прототип А, их симуляция<br /><span className="text-xs font-normal text-brand-ink/60">{ref.length} заданий, {ref.param_error}, {ref.n} кандидатов</span></>,
+          [<>Прототип А, их симуляция<br /><span className="text-xs font-normal text-brand-ink/65">{ref.length} заданий, {ref.param_error}, {ref.n} кандидатов</span></>,
             pct(ref.grade_exact, 1), num(ref.kappa_true, 3), pct(ref.grade_within_1, 1), "—", "—", num(ref.r_theta_retest, 3), String(ref.length ?? "—")],
-          [<>Наш тест в их условиях<br /><span className="text-xs font-normal text-brand-ink/60">ровно {cl.config?.max_items} заданий из всего банка, b + N(0; {num(cl.error?.b_sd)}), a × LogN(0; {num(cl.error?.a_logsd, 1)}), {cl.n_per_direction} × {n} кандидатов</span></>,
+          [<>Наш тест в их условиях<br /><span className="text-xs font-normal text-brand-ink/65">ровно {cl.config?.max_items} заданий из всего банка, b + N(0; {num(cl.error?.b_sd)}), a × LogN(0; {num(cl.error?.a_logsd, 1)}), {cl.n_per_direction} × {n} кандидатов</span></>,
             pct(t.grade_exact, 1), num(t.kappa_true, 3), pct(t.grade_within_1, 1), num(t.r_theta, 3), num(r.grade_kappa_quadratic), num(r.r_theta, 3), num(t.mean_items, 1)],
-          [<>Наш тест в наших условиях<br /><span className="text-xs font-normal text-brand-ink/60">{lengthText(sim?.config)}, σ = 0,5, {c.n_per_direction} × {n} кандидатов</span></>,
+          [<>Наш тест в наших условиях<br /><span className="text-xs font-normal text-brand-ink/65">{lengthText(sim?.config)}, σ = 0,5, {c.n_per_direction} × {n} кандидатов</span></>,
             pct(m.grade_exact, 1), num(m.kappa_true, 3), pct(m.grade_within_1, 1), num(m.r_theta, 3), num(ra.grade_kappa_quadratic), num(ra.r_theta, 3), num(m.mean_items, 1)],
-          [<>Прототип В<br /><span className="text-xs font-normal text-brand-ink/60">условия симуляции не опубликованы</span></>,
+          [<>Прототип В<br /><span className="text-xs font-normal text-brand-ink/65">условия симуляции не опубликованы</span></>,
             "—", "—", "—", "—", num(jb.kappa_retest), "—", "—"],
         ]} />
       <ul className="mt-3 max-w-4xl list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-brand-ink/75">
