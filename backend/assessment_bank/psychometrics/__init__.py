@@ -1,7 +1,7 @@
 """Психометрика банка: Раш/2PL, иерархия семейств, адаптивный тест, грейды, предзнание."""
 from .cat import (CATConfig, CATResult, CATSession, ExposureControl, PoolItem,
                   calibrate_sympson_hetter, pool_from_specs, run_cat)
-from .grading import GRADE_ORDER, GradeDecision, GradeScale, decide
+from .grading import GRADE_ORDER, PROVISIONAL_LEVEL, GradeDecision, GradeScale, decide, provisional_status
 from .hierarchical import FamilyParams, effective_a, fit_hierarchy, marginal_prob
 from .irt import (CalibrationResult, ThetaEstimate, eap_batch, estimate_theta, fit_mml,
                   item_fit, item_information, prob)
