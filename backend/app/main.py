@@ -3,6 +3,8 @@
 Swagger UI и ReDoc раздаются с нашего сервера (app/static/apidocs), без внешних CDN.
 """
 import logging
+import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI
@@ -25,7 +27,9 @@ from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import router as catalog_router
 from app.modules.invitations.router import candidate_router as candidate_contact_router
 from app.modules.invitations.router import employer_router as employer_contact_router
+from app.modules.jury.router import make_spare
 from app.modules.jury.router import router as jury_router
+from app.modules.jury.scope import JuryScopeMiddleware
 from app.modules.matching.router import router as employer_router
 from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
@@ -50,9 +54,20 @@ TAGS = [
 ]
 
 
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    # Запасная песочница жюри — в фоне после старта: первый вход эксперта не ждёт её создания
+    if get_settings().jury_spare_sandboxes > 0:
+        t = threading.Timer(5.0, make_spare)
+        t.daemon = True
+        t.start()
+    yield
+
+
 def create_app() -> FastAPI:
     s = get_settings()
     app = FastAPI(
+        lifespan=lifespan,
         title="Спецтрек ФСП — API платформы подбора",
         version=s.app_version,
         description=(
@@ -65,6 +80,7 @@ def create_app() -> FastAPI:
         redoc_url=None,
         openapi_url="/api/openapi.json",
     )
+    app.add_middleware(JuryScopeMiddleware)  # песочница жюри из токена → видимость кандидатов и ответов
     app.add_middleware(
         CORSMiddleware,
         allow_origins=s.cors_origin_list,
@@ -108,24 +124,17 @@ def create_app() -> FastAPI:
     class HealthOut(BaseModel):
         status: str
         db: str
-        version: str
-        dev_mode: bool
-        mail_backend: str
 
-    @app.get("/api/health", response_model=HealthOut, tags=["system"], summary="Проверка работоспособности")
+    @app.get("/api/health", response_model=HealthOut, tags=["system"], summary="Проверка работоспособности",
+             description="Только состояние сервиса и БД: режим разработки, почта и версия здесь не раскрываются "
+                         "(версия продукта — в /api/meta).")
     def health(db: Session = Depends(get_db)) -> HealthOut:
         try:
             db.execute(text("SELECT 1"))
             db_state = "ok"
         except Exception:  # noqa: BLE001
             db_state = "error"
-        return HealthOut(
-            status="ok" if db_state == "ok" else "degraded",
-            db=db_state,
-            version=s.app_version,
-            dev_mode=s.effective_dev_mode,
-            mail_backend=s.effective_mail_backend,
-        )
+        return HealthOut(status="ok" if db_state == "ok" else "degraded", db=db_state)
 
     return app
 

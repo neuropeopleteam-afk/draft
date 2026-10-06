@@ -14,6 +14,7 @@ os.environ["JWT_SECRET"] = "test-secret-not-for-prod-0123456789abcdef"
 os.environ["MAIL_BACKEND"] = "dev"
 os.environ.setdefault("ASSESSMENT_ENGINE", "stub")  # правила — на быстрой заглушке; банк — tests/test_bank_engine.py
 os.environ["LLM_DISABLED"] = "true"
+os.environ["JURY_SPARE_SANDBOXES"] = "0"  # фоновые песочницы мешали бы очистке БД между тестами; проверка — отдельно
 os.environ.pop("POSTBOX_ACCESS_KEY_ID", None)
 os.environ.pop("POSTBOX_SECRET_ACCESS_KEY", None)
 
@@ -51,6 +52,9 @@ def engine():
 
 @pytest.fixture(autouse=True)
 def clean_db(engine):
+    from app.core.ratelimit import reset_all
+
+    reset_all()  # лимиты частоты в памяти процесса — у каждого теста свои
     yield
     from app.models import metadata
 

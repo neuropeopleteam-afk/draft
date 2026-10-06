@@ -1,17 +1,27 @@
 """«Красная кнопка жюри»: атаки на подбор и тест, которые эксперт запускает сам.
 
 Каждая атака выполняется на живых демо-данных В ПАМЯТИ: объекты меняются только в пределах запроса, после —
-db.rollback() (ничего не записывается). Ответ: ожидаемое свойство, факт (числа до/после), нарушено или нет.
+db.rollback(); запись в БД во время атаки запрещена (flush сессии вызывает ошибку). Ответ: ожидаемое свойство,
+факт (числа до/после), нарушено или нет.
+
+Симуляция утечки банка («leak_bank») тяжёлая (~8 с CPU), поэтому результат берётся из кэша: файл
+data/leak_cache.json (5 направлений × доли 10/30/50 %, фиксированный seed; пересчёт —
+``python -m app.modules.validation.attacks``), остальные доли считаются один раз на процесс и запоминаются.
 """
 from __future__ import annotations
 
 from datetime import date
+import json
+import os
+from pathlib import Path
 import random
 import re
+import tempfile
+import threading
 import time
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.orm import Session
 
 from app.core.enums import EvidenceLevel, FactSource, FspEventLevel
@@ -21,7 +31,21 @@ from app.modules.matching.need_parser import parse_need
 from app.modules.matching.ranking import WEIGHTS, score_candidate
 from app.modules.profiles.facts import Bundle, CandidateFact, card, load_bundles
 from app.modules.fsp.models import FspAchievement
+from app.modules.auth.models import User
+from app.modules.jury import scope as jury_scope
 from app.modules.profiles.models import CandidateProfile
+
+LEAK_CACHE = Path(__file__).resolve().parent / "data" / "leak_cache.json"
+SIM_LOCK = Path(tempfile.gettempdir()) / "fsp_leak_sim.lock"
+LEAK_SHARES = (0.1, 0.3, 0.5)
+DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security")
+_leak_mem: dict[str, dict] = {}
+_leak_mx = threading.Lock()
+
+
+class AttackBusy(Exception):
+    """Симуляция для этих параметров уже считается в этом процессе."""
+
 
 DEFAULT_NEED = ("Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. "
                 "Будет плюсом Kafka. Удалённо, 220–300 тыс.")
@@ -46,6 +70,7 @@ ATTACKS = [
 
 
 def _need_req(db: Session, need_id: uuid.UUID | None) -> tuple[dict, str]:
+    """Требования потребности (владельца проверяет роутер) или потребность по умолчанию."""
     if need_id:
         n = db.get(EmployerNeed, need_id)
         if n is not None and n.requirements:
@@ -54,8 +79,9 @@ def _need_req(db: Session, need_id: uuid.UUID | None) -> tuple[dict, str]:
 
 
 def _pool(db: Session, req: dict) -> list[Bundle]:
-    q = select(CandidateProfile).where(CandidateProfile.current_category_id.is_not(None),
-                                       CandidateProfile.visible_to_employers.is_(True))
+    q = (select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
+         .where(CandidateProfile.current_category_id.is_not(None), CandidateProfile.visible_to_employers.is_(True),
+                jury_scope.pool_clause(User.email)))
     if req.get("direction"):
         q = q.where(CandidateProfile.current_direction_id == req["direction"])
     ps = db.scalars(q).all()
@@ -86,15 +112,18 @@ def run(db: Session, attack_id: str, need_id: uuid.UUID | None = None, params: d
     if meta is None:
         raise KeyError(attack_id)
     t0 = time.time()
-    try:
-        if attack_id == "leak_bank":
-            out = _leak(params or {})
-        else:
+    if attack_id == "leak_bank":
+        out = leak_cached(params or {})
+    else:
+        event.listen(db, "before_flush", _no_writes)
+        try:
             req, text = _need_req(db, need_id)
             out = _profile_attack(db, attack_id, req)
             out["need"] = text
-    finally:
-        db.rollback()  # ничего из атаки не записывается
+        finally:
+            db.rollback()  # ничего из атаки не записывается
+            event.remove(db, "before_flush", _no_writes)
+    out = dict(out)
     if isinstance(out.get("fact"), str):  # десятичная запятая и «30 %» — как в остальном интерфейсе
         out["fact"] = re.sub(r"(\d)%", r"\1 %", re.sub(r"(?<=\d)\.(?=\d)", ",", out["fact"]))
     return {**meta, **out, "seconds": round(time.time() - t0, 2)}
@@ -169,7 +198,86 @@ def _profile_attack(db: Session, attack_id: str, req: dict) -> dict:
     raise KeyError(attack_id)
 
 
-def _leak(params: dict) -> dict:
+def _no_writes(session, flush_context, instances):
+    raise RuntimeError("Атака «Красной кнопки» не должна ничего записывать в БД")
+
+
+def _leak_key(direction: str, share: float) -> str:
+    return f"{direction}:{share:.1f}"
+
+
+def _leak_params(params: dict) -> tuple[str, float]:
+    share = round(min(0.8, max(0.1, float(params.get("leak_share", 0.3)))), 1)
+    direction = params.get("direction") if params.get("direction") in DIRECTIONS else "backend"
+    return direction, share
+
+
+def _leak_file() -> dict:
+    if "__file__" not in _leak_mem:
+        try:
+            _leak_mem["__file__"] = json.loads(LEAK_CACHE.read_text(encoding="utf-8")).get("results", {})
+        except (OSError, ValueError):
+            _leak_mem["__file__"] = {}
+    return _leak_mem["__file__"]
+
+
+def leak_cached(params: dict) -> dict:
+    """Результат симуляции утечки из кэша; нет в кэше — считается один раз (не больше одной на процесс)."""
+    direction, share = _leak_params(params)
+    key = _leak_key(direction, share)
+    hit = _leak_file().get(key) or _leak_mem.get(key)
+    if hit is None:
+        if not _leak_mx.acquire(blocking=False):
+            raise AttackBusy(key)
+        lock = None
+        try:
+            hit = _leak_mem.get(key)
+            if hit is None:
+                lock = _sim_lock()  # одна симуляция на контейнер (оба воркера): +~140 МБ, не больше
+                if lock is None:
+                    raise AttackBusy(key)
+                t0 = time.time()
+                hit = {**_leak({"leak_share": share, "direction": direction}),
+                       "computed_seconds": round(time.time() - t0, 1), "computed_at": time.strftime("%Y-%m-%d %H:%M")}
+                _leak_mem[key] = hit
+        finally:
+            if lock is not None:
+                lock.close()  # закрытие файла снимает flock
+            _leak_mx.release()
+    return {**hit, "cached": True}
+
+
+def _sim_lock():
+    """Неблокирующая межпроцессная блокировка (flock); None — симуляция уже идёт в другом воркере."""
+    try:
+        import fcntl
+    except ImportError:  # не POSIX — достаточно блокировки процесса
+        return open(os.devnull, "w")
+    f = open(SIM_LOCK, "w")
+    try:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return f
+    except OSError:
+        f.close()
+        return None
+
+
+def build_leak_cache(seed: int = 20261006) -> dict:
+    """Пересчёт data/leak_cache.json (≈ 2 мин на 2 ядрах): 5 направлений × доли 10/30/50 %."""
+    results = {}
+    for d in DIRECTIONS:
+        for sh in LEAK_SHARES:
+            t0 = time.time()
+            r = _leak({"leak_share": sh, "direction": d}, seed=seed)
+            results[_leak_key(d, sh)] = {**r, "computed_seconds": round(time.time() - t0, 1),
+                                         "computed_at": time.strftime("%Y-%m-%d %H:%M")}
+            print(_leak_key(d, sh), results[_leak_key(d, sh)]["computed_seconds"], "с", flush=True)
+    data = {"seed": seed, "n": 160, "results": results}
+    LEAK_CACHE.write_text(json.dumps(data, ensure_ascii=False, indent=1, default=float) + "\n", encoding="utf-8")
+    return data
+
+
+def _leak(params: dict, seed: int | None = None) -> dict:
     import numpy as np
 
     from assessment_bank.simulation import make_truth
@@ -181,7 +289,7 @@ def _leak(params: dict) -> dict:
     direction = params.get("direction") if params.get("direction") in ("backend", "frontend", "data_ml", "qa",
                                                                        "security") else "backend"
     cfg = app_config_from_settings()
-    rng = np.random.default_rng(int(time.time()) % 10_000)
+    rng = np.random.default_rng(int(time.time()) % 10_000 if seed is None else seed)
     pool = make_pool(cfg.subpools)
     truth = make_truth(pool, rng, misspec=0.5)
     k = (exposure_table() or {}).get("k", {}).get(direction, {})
@@ -196,3 +304,7 @@ def _leak(params: dict) -> dict:
                     f"с карантином субпула {rot['cheaters_bias_theta']:+.2f}; детектор поймал {dt.get('detector_tpr', 0):.0%} "
                     f"списывающих, ложные срабатывания у честных {fpr:.1%}",
             "details": r}
+
+
+if __name__ == "__main__":
+    build_leak_cache()

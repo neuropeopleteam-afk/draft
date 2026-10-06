@@ -85,11 +85,19 @@ class Settings(BaseSettings):
     assessment_subpool_quarantine: str = ""
     # Контроль частоты показа: sympson_hetter (K_f из assessment/exposure_k.json) | none
     assessment_exposure: str = "sympson_hetter"
-    # Демо-учётки жюри: вход в один клик, сброс в исходное состояние (не чаще раза в N секунд)
+    # Демо-учётки жюри: вход в один клик, сброс своей песочницы (не чаще раза в N секунд)
     jury_reset_cooldown_s: int = 20
+    # Песочницы жюри (свой набор персон у каждого эксперта): сверх лимита удаляются самые давние
+    jury_sandboxes_max: int = 30
+    # Запас готовых песочниц (создаются в фоне): первый вход эксперта — мгновенно, а не ~4 с создания
+    jury_spare_sandboxes: int = 1
 
-    # Резюме: максимальный размер PDF
+    # Резюме: максимальный размер PDF, разбор — в отдельном процессе с тайм-аутом и лимитом памяти
     resume_max_bytes: int = 5 * 1024 * 1024
+    resume_max_pages: int = 20
+    resume_parse_timeout_s: float = 10.0
+    resume_parse_memory_mb: int = 256  # адресное пространство процесса разбора; обычному PDF хватает ~100 МБ
+    resume_uploads_per_hour: int = 5
 
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
