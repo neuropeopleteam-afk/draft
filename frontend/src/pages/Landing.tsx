@@ -56,7 +56,7 @@ export default function Landing() {
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Входящее приглашение</p>
             <p className="mt-4 text-xl font-bold">Backend-разработчик в команду платежей</p>
             <p className="mt-1 text-sm text-white/60">ООО «Пример» · удалённо</p>
-            <p className="mt-5 text-3xl font-extrabold text-white">220 000 – 290 000 ₽</p>
+            <p className="mt-5 text-3xl font-extrabold text-white">{"220\u00A0000\u00A0– 290\u00A0000\u00A0₽"}</p>
             <ul className="mt-5 space-y-2 text-sm text-white/80">
               <li className="flex gap-2"><span className="font-bold text-brand-soft">T1</span> SQL и индексы — тест, 9 из 10</li>
               <li className="flex gap-2"><span className="font-bold text-brand-soft">T1</span> FastAPI — зонд «найди ошибку»</li>

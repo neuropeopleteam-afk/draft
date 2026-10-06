@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Seg, Status, catTitle, dt, errText, range, useApi } from "../../components/ui";
+import { Alert, Empty, Field, History, Level, Loading, Seg, Status, catTitle, dt, errText, range, rub, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { AtsInvitationActions } from "../../integrations/Ats";
 
@@ -16,9 +16,9 @@ function SalaryFields({ from, to, setFrom, setTo, market }: { from: string; to: 
         <Field label="Вилка до, ₽ в месяц" htmlFor="st"><input id="st" required type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
       </div>
       <p className={`mt-2 text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/60"}`}>
-        {wide ? `Вилка слишком широкая: при «от» ${Number(from).toLocaleString("ru-RU")} ₽ «до» — не выше ${maxTo(from).toLocaleString("ru-RU")} ₽.` : "«До» — не больше чем в 1,5 раза выше «от»: узкая вилка показывает кандидату реальное предложение."}
+        {wide ? `Вилка слишком широкая: при «от» ${rub(Number(from))} «до» — не выше ${rub(maxTo(from))}.` : "«До» — не больше чем в 1,5 раза выше «от»: узкая вилка показывает кандидату реальное предложение."}
       </p>
-      {market && <p className="mt-1 text-xs text-brand-ink/60">Рынок категории: {range(market.from, market.to)}{market.median ? `, медиана ${market.median.toLocaleString("ru-RU")} ₽` : ""} (Хабр Карьера). Минимум кандидата вам не показывается.</p>}
+      {market && <p className="mt-1 text-xs text-brand-ink/60">Рынок категории: {range(market.from, market.to)}{market.median ? `, медиана ${rub(market.median)}` : ""} (Хабр Карьера). Минимум кандидата вам не показывается.</p>}
     </div>
   );
 }
@@ -40,7 +40,7 @@ export function defaultRange(market: Market, need?: { from?: number | null; to?:
 function salaryError(from: string, to: string) {
   if (!from || !to || Number(from) <= 0 || Number(to) <= 0) return "Укажите вилку зарплаты «от» и «до» — это обязательно";
   if (Number(from) > Number(to)) return "Нижняя граница вилки больше верхней";
-  if (Number(to) > Number(from) * SALARY_MAX_RATIO) return `Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от» (не выше ${maxTo(from).toLocaleString("ru-RU")} ₽)`;
+  if (Number(to) > Number(from) * SALARY_MAX_RATIO) return `Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от» (не выше ${rub(maxTo(from))})`;
   return null;
 }
 
