@@ -1,12 +1,16 @@
 """Демо-данные «Кубка работодателя» (поверх основных демо-данных app.modules.demo.seed).
 
-* 5 кубков демо-компаний: 2 завершены (места, приглашения лучшим, записи в паспорт ФСП), 2 идут (в одном
+* 6 кубков демо-компаний: 3 завершены (места, приглашения лучшим, записи в паспорт ФСП; в «Надёжных платежах»
+  участвовала и демо-кандидат жюри Мария Королёва — её место в паспорте ФСП, приглашение ждёт ответа), 2 идут (в
   Backend · Middle можно поучаствовать демо-кандидатом жюри), 1 скоро начнётся;
 * работодателю жюри при первом открытии раздела «Кубки» создаётся свой кубок: срок вышел, 5 решений оценены,
   2 ждут его оценки — после оценки итоги подводятся, лучшим уходят приглашения (ensure_jury_cup).
 
 Ответы участников генерирует «демо-респондент»: вероятность верного ответа растёт с рейтингом кандидата.
 Оценки открытых решений в демо — score_method="demo" (не LLM и не эксперт; так и показывается).
+
+Даты относительные (от момента посева). Когда идущий кубок подходит к концу или «скоро» начинается, демо
+устаревает (is_stale) — вход жюри и сброс демо пересевают кубки демо-компаний (app.fsp_cabinet.demo.prepare).
 
 Запуск: python -m app.cup.demo [--reset | --delete]
 """
@@ -20,7 +24,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
 
-from app.core.db import SessionLocal, get_engine, utcnow
+from app.core.db import SessionLocal, as_aware, get_engine, utcnow
 from app.cup import service as svc
 from app.cup import tasks as auto
 from app.cup.models import Cup, CupEntry
@@ -28,38 +32,97 @@ from app.modules.auth.models import User
 from app.modules.fsp.models import FspAchievement
 from app.modules.invitations import service as inv_svc
 from app.modules.invitations.models import Invitation
+from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile, Company, EmployerProfile
 
-JURY_EMPLOYER_EMAIL = "employer@jury.example.com"
-ANSWERS = {
+JURY_DOMAIN = "jury.example.com"
+JURY_EMPLOYER_EMAIL = f"employer@{JURY_DOMAIN}"
+JURY_CANDIDATE_EMAIL = f"candidate@{JURY_DOMAIN}"  # Мария Королёва, Backend · Middle, с паспортом ФСП
+# Разные тексты для одного уровня: в слепой оценке у работодателя не должно быть одинаковых решений.
+ANSWERS: dict[str, dict[str, list[str]]] = {
     "webhooks": {
-        "strong": "Храню ключ идемпотентности (event_id провайдера) в таблице processed_events с уникальным индексом; "
-                  "обработка в одной транзакции: INSERT ... ON CONFLICT DO NOTHING, если вставка не прошла — событие уже "
-                  "обработано, отвечаю 200. Порядок событий не гарантирован, поэтому статус платежа меняю только вперёд "
-                  "по конечному автомату. Повторы провайдера — с экспоненциальной задержкой, ответ быстрый, тяжёлую "
-                  "работу — в очередь (outbox). Тесты: двойная доставка, перестановка событий, падение после коммита.",
-        "medium": "Сохраняю id события в Redis с TTL сутки и перед обработкой проверяю, был ли он. Если был — пропускаю. "
-                  "Обработку делаю в транзакции. Порядок событий может быть разным, это надо учитывать.",
-        "weak": "Добавлю проверку, что такой платёж уже есть в базе, и не буду создавать второй. Можно ещё логировать.",
+        "strong": [
+            "Храню ключ идемпотентности (event_id провайдера) в таблице processed_events с уникальным индексом; "
+            "обработка в одной транзакции: INSERT ... ON CONFLICT DO NOTHING, если вставка не прошла — событие уже "
+            "обработано, отвечаю 200. Порядок событий не гарантирован, поэтому статус платежа меняю только вперёд "
+            "по конечному автомату. Повторы провайдера — с экспоненциальной задержкой, ответ быстрый, тяжёлую "
+            "работу — в очередь (outbox). Тесты: двойная доставка, перестановка событий, падение после коммита.",
+            "Уникальное ограничение на (provider, event_id) в PostgreSQL. В одной транзакции — вставка ключа, "
+            "UPDATE платежа с условием на текущий статус и запись в outbox; повтор с тем же ключом получает 200 без "
+            "побочных эффектов. Запоздавшее событие сравниваю по версии провайдера и не откатываю статус назад. "
+            "Раз в сутки — сверка с API провайдера, она ловит потерянные вебхуки. Тесты: две копии параллельно, "
+            "обратный порядок, таймаут после коммита.",
+            "Подпись вебхука проверяю до любой записи. Дальше журнал входящих событий с уникальным id и состоянием "
+            "«принято → применено»; применение — идемпотентная операция над платежом с оптимистичной блокировкой "
+            "по version. Ответ провайдеру сразу после записи в журнал, применение — воркером, повтор при сбое "
+            "безопасен. Метрики: доля дублей, задержка применения, расхождения сверки.",
+        ],
+        "medium": [
+            "Сохраняю id события в Redis с TTL сутки и перед обработкой проверяю, был ли он. Если был — пропускаю. "
+            "Обработку делаю в транзакции. Порядок событий может быть разным, это надо учитывать.",
+            "Перед зачислением ищу платёж по id провайдера: если он уже «оплачен» — выхожу, иначе меняю статус и "
+            "баланс. От гонок — SELECT FOR UPDATE на строку платежа. Повторы провайдера тогда не страшны. "
+            "Тест — на повторный вебхук.",
+            "Кладу вебхук в Kafka с ключом партиции payment_id, чтобы события одного платежа шли по порядку. "
+            "Консьюмер отсекает дубли по таблице обработанных id. Если консьюмер упал, Kafka передоставит.",
+        ],
+        "weak": [
+            "Добавлю проверку, что такой платёж уже есть в базе, и не буду создавать второй. Можно ещё логировать.",
+            "Буду отвечать провайдеру 200 сразу, а обработку запускать в фоне — тогда он не станет присылать "
+            "повторы и дублей не будет.",
+            "Сделаю флаг processed у платежа и буду ставить его после обработки. Если пришёл второй раз и флаг "
+            "стоит — ничего не делаю.",
+        ],
     },
     "a11y": {
-        "strong": "Каждое поле с видимым label и связкой for/id, ошибки — текстом рядом с полем и в aria-describedby, "
-                  "фокус переводится на первую ошибку, сводка ошибок в role=alert. Номер карты — inputmode=numeric, "
-                  "autocomplete=cc-number, без маски, ломающей экранные дикторы. Контраст 4.5:1, состояние :focus-visible. "
-                  "Проверка: клавиатура без мыши, NVDA и VoiceOver, axe в CI, тест на 200 % масштаба.",
-        "medium": "Поставлю label к полям, ошибки красным под полем, добавлю aria-invalid. Проверю контраст и что "
-                  "форма проходится табом. Можно прогнать Lighthouse.",
-        "weak": "Сделаю поля побольше и подсказки placeholder внутри полей, ошибки покажу всплывающим окном.",
+        "strong": [
+            "Каждое поле с видимым label и связкой for/id, ошибки — текстом рядом с полем и в aria-describedby, "
+            "фокус переводится на первую ошибку, сводка ошибок в role=alert. Номер карты — inputmode=numeric, "
+            "autocomplete=cc-number, без маски, ломающей экранные дикторы. Контраст 4.5:1, состояние :focus-visible. "
+            "Проверка: клавиатура без мыши, NVDA и VoiceOver, axe в CI, тест на 200 % масштаба.",
+            "Нативные input и button вместо div, группа «срок действия» в fieldset с legend. Ошибки не только "
+            "цветом: текст и значок, связка aria-describedby, при отправке — сводка со ссылками на поля. "
+            "Автозаполнение cc-name, cc-exp, cc-csc, таймаут сессии с предупреждением и продлением. Проверяю "
+            "клавиатурой, экранным диктором и автотестами axe-core в Playwright.",
+        ],
+        "medium": [
+            "Поставлю label к полям, ошибки красным под полем, добавлю aria-invalid. Проверю контраст и что "
+            "форма проходится табом. Можно прогнать Lighthouse.",
+            "Сделаю порядок табуляции по смыслу, подписи к полям и понятные тексты ошибок. Маску для номера "
+            "карты возьму готовую библиотеку. Проверю расширением axe.",
+        ],
+        "weak": [
+            "Сделаю поля побольше и подсказки placeholder внутри полей, ошибки покажу всплывающим окном.",
+            "Добавлю атрибуты alt и title ко всем элементам формы, ошибки подсвечу красной рамкой.",
+        ],
     },
     "traffic": {
-        "strong": "Базовая модель — сезонная наивная по дню недели и часу, затем градиентный бустинг на лагах 1/7/14 дней, "
-                  "календаре, погоде и событиях; валидация по времени (rolling origin), метрика MAPE и WAPE по станциям. "
-                  "Отдельно — иерархическая согласованность сумм по линиям. Аномалии (праздники, перекрытия) — флагами.",
-        "medium": "Возьму историю пассажиропотока, сделаю признаки по дню недели и часу, обучу случайный лес. "
-                  "Проверю качество на последнем месяце по MAE.",
-        "weak": "Посчитаю среднее за прошлые недели и буду использовать его как прогноз.",
+        "strong": [
+            "Базовая модель — сезонная наивная по дню недели и часу, затем градиентный бустинг на лагах 1/7/14 дней, "
+            "календаре, погоде и событиях; валидация по времени (rolling origin), метрика MAPE и WAPE по станциям. "
+            "Отдельно — иерархическая согласованность сумм по линиям. Аномалии (праздники, перекрытия) — флагами.",
+            "Глобальная модель на все станции: LightGBM с эмбеддингом станции, лаги и скользящие средние, "
+            "признаки праздников и погоды из прогноза, а не факта, чтобы не было утечки. Прогноз на 7 дней — "
+            "прямой, отдельная модель на горизонт. Бэктест на 12 неделях, WAPE и квантильная потеря для "
+            "интервалов; сравнение с наивной сезонной.",
+        ],
+        "medium": [
+            "Возьму историю пассажиропотока, сделаю признаки по дню недели и часу, обучу случайный лес. "
+            "Проверю качество на последнем месяце по MAE.",
+            "Попробую Prophet для каждой станции с праздниками РФ, погоду добавлю регрессором. Качество — "
+            "по MAPE на отложенном месяце.",
+        ],
+        "weak": [
+            "Посчитаю среднее за прошлые недели и буду использовать его как прогноз.",
+            "Обучу нейросеть LSTM на всех данных и проверю на тех же данных, насколько точно она предсказывает.",
+        ],
     },
 }
+
+
+# Уровни решений по порядку участников (strong > 0.72 > medium > 0.45 > weak): тексты не повторяются.
+SPREAD = {"webhooks": [0.85, 0.6, 0.3, 0.8, 0.55, 0.65, 0.4], "a11y": [0.85, 0.6, 0.35, 0.8, 0.55, 0.3],
+          "traffic": [0.8, 0.6, 0.85, 0.55, 0.35]}
 
 
 def _cands(db: Session, category: str, n: int, rnd: random.Random) -> list[CandidateProfile]:
@@ -100,9 +163,11 @@ def _cup(db: Session, c: Company, u: User, *, title: str, description: str, cate
 
 
 def _play(db: Session, cup: Cup, p: CandidateProfile, rnd: random.Random, alias_n: int, *, state: str,
-          text_key: str | None = None, demo_score: bool = True) -> CupEntry:
+          text_key: str | None = None, demo_score: bool = True, skill: float | None = None) -> CupEntry:
     """Демо-участие: state = joined | scored | submitted (ждёт оценки)."""
-    skill = min(0.95, max(0.25, (p.rating_score or 0.5) + rnd.uniform(-0.15, 0.2)))
+    if skill is None and text_key in SPREAD:  # открытая задача: сильные, средние и слабые решения вперемешку
+        skill = SPREAD[text_key][(alias_n - 1) % len(SPREAD[text_key])]
+    skill = skill if skill is not None else min(0.95, max(0.25, (p.rating_score or 0.5) + rnd.uniform(-0.15, 0.2)))
     e = CupEntry(cup_id=cup.id, candidate_user_id=p.user_id, alias=f"Участник {alias_n:02d}", status="joined", tasks=[])
     db.add(e)
     if state == "joined":
@@ -130,7 +195,11 @@ def _play(db: Session, cup: Cup, p: CandidateProfile, rnd: random.Random, alias_
         e.score_method, e.status = "auto", "scored"
         return e
     lvl = "strong" if skill > 0.72 else "medium" if skill > 0.45 else "weak"
-    body = ANSWERS[text_key][lvl]
+    variants = ANSWERS[text_key][lvl]
+    mine = [x for x in db.new if isinstance(x, CupEntry) and x.cup_id == cup.id]  # ещё не записанные (autoflush выключен)
+    mine += db.scalars(select(CupEntry).where(CupEntry.cup_id == cup.id)).all()
+    used = {x.answer.get("text") for x in mine if x.answer}
+    body = next((v for v in variants if v not in used), variants[alias_n % len(variants)])
     e.answer = {"text": body, "link": None, "text_redacted": body, "redacted": []}
     e.status = "submitted"
     if demo_score:
@@ -142,7 +211,9 @@ def _play(db: Session, cup: Cup, p: CandidateProfile, rnd: random.Random, alias_
 
 
 def _finish(db: Session, cup: Cup, statuses: list[str]) -> None:
-    """Итоги демо-кубка: штатный finalize, затем ответы кандидатов на приглашения и даты задним числом."""
+    """Итоги демо-кубка: штатный finalize, затем ответы кандидатов на приглашения и даты задним числом.
+
+    На приглашение демо-кандидату жюри никто не отвечает за него — оно ждёт ответа в его кабинете."""
     ends = cup.ends_at
     cup.ends_at = utcnow() - timedelta(seconds=1)
     db.commit()
@@ -150,14 +221,23 @@ def _finish(db: Session, cup: Cup, statuses: list[str]) -> None:
     cup = db.get(Cup, cup.id)
     cup.ends_at = ends
     cup.finalized_at = ends + timedelta(hours=2)
-    for iid, st in zip(inv_ids, statuses, strict=False):
-        inv = db.get(Invitation, iid)
+    jury = set(db.scalars(select(User.id).where(User.email.like(f"%@{JURY_DOMAIN}"))).all())
+    invs = [db.get(Invitation, iid) for iid in inv_ids]
+    for inv in invs:
         inv.created_at = ends + timedelta(hours=3)
+    # статусы — только демо-кандидатам по порядку мест; кандидат жюри отвечает сам и слот не занимает
+    for inv, st in zip([i for i in invs if i.candidate_user_id not in jury], statuses, strict=False):
         if st in ("accepted", "declined"):
             inv_svc.respond(db, inv, inv.candidate_user_id, st == "accepted", None)
         elif st == "viewed":
             inv_svc.mark_viewed(db, inv, inv.candidate_user_id)
     db.commit()
+
+
+def _jury_candidate(db: Session, category: str) -> CandidateProfile | None:
+    u = db.scalar(select(User).where(User.email == JURY_CANDIDATE_EMAIL))
+    p = db.get(CandidateProfile, u.id) if u else None
+    return p if p and p.current_category_id == category and p.visible_to_employers else None
 
 
 def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
@@ -176,13 +256,15 @@ def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
         ps = _cands(db, "backend.middle", 8, rnd)
         for i, p in enumerate(ps, start=1):
             _play(db, cup, p, rnd, i, state="joined" if i == len(ps) else "scored")
+        if (jp := _jury_candidate(db, "backend.middle")) is not None:  # Мария: место, паспорт, приглашение ждёт ответа
+            _play(db, cup, jp, rnd, len(ps) + 1, state="scored", skill=1.0)
         db.commit()
-        _finish(db, cup, ["accepted", "viewed", "accepted"])
+        _finish(db, cup, ["accepted", "accepted", "viewed"])
         made.append(cup.title)
     if (x := comp("Демо: Студия Интерфейсов")):
         c, u = x
         cup = _cup(db, c, u, title="Доступная форма оплаты", category="frontend.middle", mode="rubric",
-                   start_days=-32, end_days=-25, salary=(190_000, 240_000), top=2, position="Frontend-разработчик",
+                   start_days=-32, end_days=-25, salary=(190_000, 240_000), top=3, position="Frontend-разработчик",
                    description="Спроектировать форму оплаты, удобную для клавиатуры и экранных дикторов. Оценка по "
                                "рубрике: корректность, компромиссы, проверяемость.",
                    task_text="Опишите, как сделать форму оплаты картой доступной (WCAG 2.2 AA): разметка полей, ошибки, "
@@ -190,12 +272,23 @@ def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
         for i, p in enumerate(_cands(db, "frontend.middle", 6, rnd), start=1):
             _play(db, cup, p, rnd, i, state="scored", text_key="a11y")
         db.commit()
-        _finish(db, cup, ["accepted", "declined"])
+        _finish(db, cup, ["accepted", "declined", "accepted"])
+        made.append(cup.title)
+    if (x := comp("Демо: Тест-Качество")):
+        c, u = x
+        cup = _cup(db, c, u, title="Дефекты в API", category="qa.middle", mode="auto", start_days=-45, end_days=-38,
+                   salary=(150_000, 200_000), top=4, position="QA-инженер (тестирование API)",
+                   description="Пять заданий банка: найти дефект, предсказать вывод, выбрать исправление. Своя вариация "
+                               "у каждого участника, автопроверка, 15 минут.", rnd=rnd)
+        for i, p in enumerate(_cands(db, "qa.middle", 7, rnd), start=1):
+            _play(db, cup, p, rnd, i, state="scored")
+        db.commit()
+        _finish(db, cup, ["accepted", "accepted", "declined", "accepted"])
         made.append(cup.title)
     if (x := comp("Демо: ЛогистикПро")):
         c, u = x
         cup = _cup(db, c, u, title="Маршрутизация заказов", category="backend.middle", mode="auto", start_days=-2,
-                   end_days=5, salary=(220_000, 280_000), top=3, position="Backend-разработчик (маршрутизация)",
+                   end_days=6, salary=(220_000, 280_000), top=3, position="Backend-разработчик (маршрутизация)",
                    description="Кубок идёт: пять заданий банка с автопроверкой на 15 минут. Лучшим трём — приглашение "
                                "с зарплатой 220–280 тыс. ₽.", rnd=rnd)
         for i, p in enumerate(_cands(db, "backend.middle", 5, rnd), start=1):
@@ -204,7 +297,7 @@ def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
     if (x := comp("Демо: ГородДанные")):
         c, u = x
         cup = _cup(db, c, u, title="Прогноз пассажиропотока", category="data_ml.middle", mode="employer",
-                   start_days=-3, end_days=4, salary=(200_000, 270_000), top=2, position="Data Scientist",
+                   start_days=-3, end_days=6, salary=(200_000, 270_000), top=2, position="Data Scientist",
                    description="Предложить подход к прогнозу пассажиропотока метро на неделю вперёд. Решения "
                                "оценивает работодатель вслепую — под псевдонимами, без ссылок и контактов.",
                    task_text="Есть почасовые данные входов по станциям за 3 года, погода и календарь событий. Опишите "
@@ -214,8 +307,8 @@ def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
         made.append(cup.title)
     if (x := comp("Демо: КиберЩит")):
         c, u = x
-        cup = _cup(db, c, u, title="Разбор веб-уязвимостей", category="security.middle", mode="auto", start_days=2,
-                   end_days=9, salary=(180_000, 250_000), top=2, position="Специалист по безопасности приложений",
+        cup = _cup(db, c, u, title="Разбор веб-уязвимостей", category="security.middle", mode="auto", start_days=5,
+                   end_days=12, salary=(180_000, 250_000), top=2, position="Специалист по безопасности приложений",
                    description="Скоро старт: задания банка на OWASP, криптографию и сетевую безопасность, 15 минут.",
                    rnd=rnd)
         for i, p in enumerate(_cands(db, "security.middle", 2, rnd), start=1):
@@ -223,6 +316,30 @@ def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
         made.append(cup.title)
     db.commit()
     return {"cups": made}
+
+
+def _seeded(db: Session) -> list[Cup]:
+    """Кубки демо-компаний «Демо: …» (без кубка работодателя жюри — он живёт вместе с его компанией)."""
+    return list(db.scalars(select(Cup).join(Company, Company.id == Cup.company_id).where(
+        Cup.is_demo.is_(True), Company.is_demo.is_(True), Company.name.like("Демо: %"))).all())
+
+
+def is_stale(db: Session, margin_h: float = 12) -> bool:
+    """Демо-кубки надо пересеять: их нет, идущий скоро закончится или «скоро старт» вот-вот начнётся."""
+    rows = _seeded(db)
+    if not rows:
+        return True
+    now = utcnow()
+    for cup in rows:
+        if cup.status != "active":
+            continue
+        ph = svc.phase(cup, now)
+        if ph == "judging":
+            return True
+        edge = as_aware(cup.starts_at) if ph == "upcoming" else as_aware(cup.ends_at)
+        if edge - now < timedelta(hours=margin_h):
+            return True
+    return False
 
 
 def ensure_jury_cup(db: Session, user: User, company: Company) -> Cup | None:
@@ -247,10 +364,13 @@ def ensure_jury_cup(db: Session, user: User, company: Company) -> Cup | None:
     return cup
 
 
-def delete_cups(db: Session) -> int:
-    ids = db.scalars(select(Cup.id).where(Cup.is_demo.is_(True))).all()
+def delete_cups(db: Session, seeded_only: bool = False) -> int:
+    """Удаляет демо-кубки с участиями, фактами T1, записями паспорта и приглашениями по итогам; пересчитывает
+    рейтинг затронутых кандидатов. seeded_only — только кубки демо-компаний «Демо: …»."""
+    ids = [c.id for c in _seeded(db)] if seeded_only else list(db.scalars(select(Cup.id).where(Cup.is_demo.is_(True))).all())
     if not ids:
         return 0
+    users = set(db.scalars(select(CupEntry.candidate_user_id).where(CupEntry.cup_id.in_(ids))).all())
     inv = [i for i in db.scalars(select(CupEntry.invitation_id).where(CupEntry.cup_id.in_(ids))).all() if i]
     refs = [f"cup:{i}" for i in ids]
     db.execute(delete(CandidateFact).where(CandidateFact.source_ref.in_(refs)))
@@ -262,6 +382,9 @@ def delete_cups(db: Session) -> int:
         db.execute(delete(InvitationEvent).where(InvitationEvent.invitation_id.in_(inv)))
         db.execute(delete(Invitation).where(Invitation.id.in_(inv)))
     db.execute(delete(Cup).where(Cup.id.in_(ids)))
+    db.flush()
+    for uid in users:
+        refresh_rating(db, uid)
     db.commit()
     return len(ids)
 
@@ -277,8 +400,7 @@ def main() -> None:
             print(f"Удалено демо-кубков: {delete_cups(db)}")
         if a.delete:
             return
-        if db.scalar(select(Cup.id).where(Cup.is_demo.is_(True), Cup.company_id.in_(
-                select(Company.id).where(Company.name.like("Демо: %")))).limit(1)):
+        if _seeded(db):
             print("Демо-кубки уже есть. Для пересоздания: --reset")
             return
         print(seed_cups(db))
