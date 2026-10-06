@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.db import get_db
+from app.core.db import as_aware, get_db
 from app.core.deps import require_role
 from app.core.enums import UserRole
 from app.core.errors import api_error, err
@@ -90,6 +90,11 @@ class FinishIn(BaseModel):
 
 # ------------------------------------------------------------------ представления
 
+def _iso(v) -> str | None:
+    """Время всегда с часовым поясом (SQLite возвращает наивное UTC) — таймер кандидата не съезжает на часы."""
+    return as_aware(v).isoformat() if v else None
+
+
 def _pct(v: float | None) -> int | None:
     return None if v is None else round(v * 100)
 
@@ -102,7 +107,7 @@ def cup_out(db: Session, cup: Cup, side: str) -> dict:
         "id": str(cup.id), "title": cup.title, "description": cup.description, "category_id": cup.category_id,
         "category_title": category_title(cup.category_id), "direction": cup.direction_id, "grade": cup.grade_id,
         "mode": cup.mode, "mode_title": svc.MODES.get(cup.mode, cup.mode), "phase": svc.phase(cup), "status": cup.status,
-        "starts_at": cup.starts_at.isoformat(), "ends_at": cup.ends_at.isoformat(),
+        "starts_at": _iso(cup.starts_at), "ends_at": _iso(cup.ends_at),
         "time_limit_min": cup.time_limit_min, "n_tasks": len(cup.task_families or []),
         "salary_from": cup.salary_from, "salary_to": cup.salary_to, "invite_top_n": cup.invite_top_n,
         "min_score_pct": _pct(cup.min_score), "position_title": cup.position_title,
@@ -112,7 +117,7 @@ def cup_out(db: Session, cup: Cup, side: str) -> dict:
         "company": {"id": str(comp.id), "name": comp.name, "industry": comp.industry, "city": comp.city} if comp else None,
         "participants": sum(cnt.values()), "submitted": cnt.get("submitted", 0) + cnt.get("scored", 0),
         "to_review": cnt.get("submitted", 0), "summary": cup.summary or {},
-        "finalized_at": cup.finalized_at.isoformat() if cup.finalized_at else None, "is_demo": cup.is_demo,
+        "finalized_at": _iso(cup.finalized_at), "is_demo": cup.is_demo,
     }
     if side == "employer":
         out["task_text"] = cup.task_text
@@ -149,9 +154,9 @@ def entry_out(db: Session, cup: Cup, e: CupEntry | None) -> dict | None:
         return None
     started = e.status not in ("joined",)
     return {"id": str(e.id), "alias": e.alias, "status": e.status,
-            "started_at": e.started_at.isoformat() if e.started_at else None,
-            "deadline_at": e.deadline_at.isoformat() if e.deadline_at else None,
-            "submitted_at": e.submitted_at.isoformat() if e.submitted_at else None,
+            "started_at": _iso(e.started_at),
+            "deadline_at": _iso(e.deadline_at),
+            "submitted_at": _iso(e.submitted_at),
             "time_spent_s": e.time_spent_s, "score_pct": _pct(e.score) if e.status == "scored" else None,
             "score_method": e.score_method, "place": e.place,
             "task_text": cup.task_text if started else None,
@@ -171,7 +176,7 @@ def solutions_out(db: Session, cup: Cup) -> list[dict]:
             continue
         g = e.grading or {}
         out.append({"entry_id": str(e.id), "alias": e.alias, "status": e.status,
-                    "submitted_at": e.submitted_at.isoformat() if e.submitted_at else None,
+                    "submitted_at": _iso(e.submitted_at),
                     "time_spent_s": e.time_spent_s, "score_pct": _pct(e.score), "score_method": e.score_method,
                     "text": (e.answer or {}).get("text_redacted"), "has_link": bool((e.answer or {}).get("link")),
                     "redacted": (e.answer or {}).get("redacted") or [],

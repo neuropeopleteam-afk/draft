@@ -8,6 +8,7 @@
 Позиции помечены «(демо)», удаляются командой --delete.
 
 Запуск: python -m app.fsp_cabinet.demo [--reset | --delete]   (заодно создаёт демо-кубки app.cup.demo)
+Вход жюри (POST /api/jury/login) и сброс демо жюри (POST /api/jury/reset) вызывают prepare() сами.
 """
 from __future__ import annotations
 
@@ -164,23 +165,36 @@ def delete_invitations(db: Session) -> int:
     return len(ids)
 
 
-def ensure_demo(db: Session) -> dict:
-    """Ленивая подготовка демо кабинета ФСП (вход «Войти как ФСП»): аналитик + история приглашений + кубки."""
+def prepare(db: Session, *, reset: bool = False) -> dict:
+    """Демо кабинета ФСП и кубков: аналитик, история приглашений, кубки демо-компаний.
+
+    reset=True — пересоздать всё (сброс демо жюри); иначе — досоздать недостающее и пересеять устаревшие кубки
+    (идущий кубок подходит к концу — см. app.cup.demo.is_stale). Блокировку между воркерами держит вызывающий
+    (app.modules.jury.seed._lock)."""
     from app.cup import demo as cup_demo
-    from app.cup.models import Cup
 
     out = {"analyst": True, "invitations": 0, "cups": []}
     with _mx:
         ensure_analyst(db)
         if not _demo_companies(db):
             return out
+        if reset:
+            cup_demo.delete_cups(db)
+            delete_invitations(db)
         if not has_demo_invitations(db):
             out["invitations"] = seed_invitations(db)
-        demo_cup = db.scalar(select(Cup.id).join(Company, Company.id == Cup.company_id).where(
-            Cup.is_demo.is_(True), Company.name.like("Демо: %")).limit(1))
-        if demo_cup is None:
+        if reset or cup_demo.is_stale(db):
+            cup_demo.delete_cups(db, seeded_only=True)
             out["cups"] = cup_demo.seed_cups(db)["cups"]
     return out
+
+
+def ensure_demo(db: Session) -> dict:
+    """Ленивая подготовка демо кабинета ФСП (вход «ФСП» в один клик): аналитик + история приглашений + кубки."""
+    from app.modules.jury.seed import _lock
+
+    with _lock(db):
+        return prepare(db)
 
 
 def main() -> None:
@@ -192,11 +206,10 @@ def main() -> None:
     a = ap.parse_args()
     get_engine()
     with SessionLocal() as db:
-        if a.reset or a.delete:
-            print(f"Удалено демо-кубков: {cup_demo.delete_cups(db)}, демо-приглашений: {delete_invitations(db)}")
         if a.delete:
+            print(f"Удалено демо-кубков: {cup_demo.delete_cups(db)}, демо-приглашений: {delete_invitations(db)}")
             return
-        print(ensure_demo(db))
+        print(prepare(db, reset=a.reset))
 
 
 if __name__ == "__main__":

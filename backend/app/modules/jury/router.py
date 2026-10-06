@@ -20,11 +20,12 @@ from app.modules.jury import seed
 router = APIRouter(prefix="/api/jury", tags=["jury"])
 _state = {"last_reset": 0.0}
 _mx = threading.Lock()
-LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "employer": "/employer", "expert": "/expert"}
+LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "employer": "/employer", "expert": "/expert",
+           "fsp": "/fsp"}
 
 
 class LoginIn(BaseModel):
-    persona: Literal["candidate", "candidate_nofsp", "employer", "expert"]
+    persona: Literal["candidate", "candidate_nofsp", "employer", "expert", "fsp"]
 
 
 def _available() -> None:
