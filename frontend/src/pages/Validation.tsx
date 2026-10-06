@@ -2,6 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
+import { useAuth } from "../lib/auth";
+import { juryToken } from "../lib/jury";
+import { useMeta } from "../lib/meta";
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")} %`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -129,13 +132,21 @@ function Report({ r }: { r: any }) {
 }
 
 function RedButton({ attacks }: { attacks: any[] }) {
+  const { me, signIn } = useAuth();
+  const meta = useMeta();
   const [res, setRes] = useState<Record<string, any>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const [share, setShare] = useState(0.3);
   const [err, setErr] = useState<string | null>(null);
+  const oneClick = !me && meta?.jury_mode_available !== false;
   async function run(id: string) {
     setBusy(id); setErr(null);
-    try { setRes({ ...res, [id]: await api<any>(`/validation/attacks/${id}`, { method: "POST", body: id === "leak_bank" ? { leak_share: share } : {}, auth: false }) }); }
+    try {
+      // Атаки — только после входа. В режиме жюри вход выполняется сам (демо-работодатель своей песочницы) — один клик.
+      if (!me) await signIn((await juryToken("employer")).access_token);
+      const x = await api<any>(`/validation/attacks/${id}`, { method: "POST", body: id === "leak_bank" ? { leak_share: share } : {} });
+      setRes((prev) => ({ ...prev, [id]: x }));
+    }
     catch (e) { setErr(errText(e)); } finally { setBusy(null); }
   }
   return (
@@ -143,6 +154,7 @@ function RedButton({ attacks }: { attacks: any[] }) {
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Для экспертов жюри</p>
       <h2 id="rb-title" className="mt-2 text-2xl font-extrabold tracking-tight">Красная кнопка: атакуйте сами</h2>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-white/75">Каждая атака выполняется на живых демо-данных в памяти и ничего не записывает. Видно ожидаемое свойство, факт и вердикт. Подборка — по потребности «Backend · Middle: Python, FastAPI, PostgreSQL».</p>
+      {oneClick && <p className="mt-2 max-w-3xl text-xs text-white/60">Запуск доступен после входа: по нажатию кнопки вы войдёте как демо-работодатель жюри (своя копия демо) и атака сразу запустится.</p>}
       {err && <div className="mt-4"><Alert>{err}</Alert></div>}
       <div className="mt-6 grid gap-4 lg:grid-cols-2">
         {attacks.map((a) => {
@@ -160,7 +172,7 @@ function RedButton({ attacks }: { attacks: any[] }) {
                 </label>
               )}
               <button className="btn mt-4 bg-brand px-4 text-white hover:bg-brand-soft disabled:opacity-60" disabled={!!busy} onClick={() => run(a.id)}>
-                {busy === a.id ? (a.id === "leak_bank" ? "Симулируем ~10 с…" : "Атакуем…") : x ? "Запустить ещё раз" : "Запустить атаку"}
+                {busy === a.id ? (a.id === "leak_bank" ? "Симулируем…" : "Атакуем…") : x ? "Запустить ещё раз" : "Запустить атаку"}
               </button>
               {x && (
                 <div className="mt-4 rounded-xl bg-white p-4 text-sm text-brand-ink" role="status">
@@ -168,7 +180,7 @@ function RedButton({ attacks }: { attacks: any[] }) {
                     {x.violated === false ? "Свойство выполнено" : x.violated ? "Свойство нарушено" : "Проверка не проведена"}
                   </p>
                   <p className="mt-2 leading-relaxed"><b>Факт:</b> {x.fact}</p>
-                  <p className="mt-1 text-xs text-brand-ink/55">{x.seconds} с · ничего не записано</p>
+                  <p className="mt-1 text-xs text-brand-ink/55">{x.cached ? `Симуляция посчитана заранее (${String(x.computed_seconds ?? "—").replace(".", ",")} с расчёта, 160 кандидатов, фиксированный seed) · ничего не записано` : `${String(x.seconds).replace(".", ",")} с · ничего не записано`}</p>
                 </div>
               )}
             </article>
