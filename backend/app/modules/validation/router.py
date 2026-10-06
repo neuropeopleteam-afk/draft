@@ -77,3 +77,18 @@ def run_attack(attack_id: str, data: AttackIn | None = None, db: Session = Depen
         finally:
             _leak_lock.release()
     return attacks.run(db, attack_id, data.need_id)
+
+
+BENCH = Path(__file__).resolve().parent / "data" / "matching_bench.json"
+
+
+@lru_cache(maxsize=1)
+def _bench() -> dict:
+    if not BENCH.exists():
+        return {"missing": True}
+    return json.loads(BENCH.read_text(encoding="utf-8"))
+
+
+@router.get("/matching-bench", summary="Бенчмарк подбора со скрытой истиной (пересчёт: make bench)")
+def matching_bench():
+    return _bench()
