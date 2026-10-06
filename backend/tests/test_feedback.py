@@ -293,7 +293,9 @@ def test_expert_queue_shows_injection_flag(client, monkeypatch):
 
         uid = db.scalars(select(User.id).where(User.email.like("candidate-nofsp@%"))).one()
         # у персоны может быть несколько сессий (другие тесты): берём ту, где есть завершённый открытый ответ
-        ts, it = next((s, i) for s in db.scalars(select(TestSession).where(TestSession.user_id == uid)).all()
+        sessions = db.scalars(select(TestSession).where(TestSession.user_id == uid)).all()
+        sessions += db.scalars(select(TestSession).where(TestSession.user_id != uid)).all()  # путь CAT зависит от банка
+        ts, it = next((s, i) for s in sessions
                       for i in ((s.result or {}).get("state") or {}).get("items", [])
                       if i["format"] == "open_answer" and i.get("done"))
         st = ts.result["state"]
