@@ -1,19 +1,25 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { CandidateCard } from "../../components/CandidateCard";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
 
 interface Tag { id: string; title: string; direction_id: string | null }
+export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
+export interface StackItem { tag: string; weight: number; evidence?: Ev | null; status?: ItemStatus }
 export interface Req {
-  direction: string | null; grade: string | null; stack_required: { tag: string; weight: number }[];
-  stack_desired: { tag: string; weight: number }[]; experience_years_min: number | null; work_format: string | null;
+  direction: string | null; grade: string | null; stack_required: StackItem[];
+  stack_desired: StackItem[]; experience_years_min: number | null; work_format: string | null;
   salary_from: number | null; salary_to: number | null; method?: string;
+  evidence?: Record<string, Ev | null>; review?: Record<string, string>;
+  bias?: BiasHit[]; suggested_text?: string | null; llm?: any; salary_net?: boolean | null;
 }
 
 const EXAMPLE = "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс. ₽";
+const EXAMPLE_BIAS = "Python-разработчик middle в отдел интеграций: только мужчины до 35 лет, славянской внешности, без детей, в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве, 180–240 тыс.";
 
 export function useTags() {
   const [tags, setTags] = useState<Tag[]>([]);
@@ -24,57 +30,144 @@ export function useTags() {
   return useMemo(() => Object.fromEntries(tags.map((t) => [t.id, t])), [tags]);
 }
 
-/** Редактор структурированных требований (после разбора текста). */
-export function ReqEditor({ req, onChange }: { req: Req; onChange: (r: Req) => void }) {
+type Zone = "stack_required" | "stack_desired";
+const SCALARS = ["direction", "grade", "experience_years_min", "work_format", "salary"] as const;
+type Scalar = typeof SCALARS[number];
+const present = (req: Req, k: Scalar) => (k === "salary" ? !!(req.salary_from || req.salary_to) : req[k] != null);
+const scalarStatus = (req: Req, k: Scalar): ItemStatus => (req.review?.[k] as ItemStatus) ?? (req.evidence?.[k] ? "extracted" : "manual");
+const itemStatus = (x: StackItem): ItemStatus => x.status ?? (x.evidence ? "extracted" : "manual");
+
+/** Сколько требований работодатель уже проверил (подтвердил или изменил) из извлечённых. */
+export function reviewCounts(req: Req) {
+  const st = [...req.stack_required, ...req.stack_desired].map(itemStatus)
+    .concat(SCALARS.filter((k) => present(req, k)).map((k) => scalarStatus(req, k)));
+  return { total: st.length, pending: st.filter((x) => x === "extracted").length };
+}
+
+/** Подтвердить все извлечённые и ещё не проверенные требования. */
+export function confirmAll(req: Req): Req {
+  const fix = (x: StackItem): StackItem => (itemStatus(x) === "extracted" ? { ...x, status: "confirmed" } : x);
+  const review = { ...(req.review ?? {}) };
+  for (const k of SCALARS) if (present(req, k) && scalarStatus(req, k) === "extracted") review[k] = "confirmed";
+  return { ...req, stack_required: req.stack_required.map(fix), stack_desired: req.stack_desired.map(fix), review };
+}
+
+/** Тело запроса: только поля требований (находки фильтра считает сервер по тексту). */
+export function reqBody(req: Req) {
+  const { method: _m, bias: _b, suggested_text: _s, llm: _l, salary_net: _n, ...clean } = req;
+  void _m; void _b; void _s; void _l; void _n;
+  return clean;
+}
+
+const STATUS_CHIP: Record<ItemStatus, [string, string]> = {
+  extracted: ["из текста", "bg-gray-100 text-gray-600"],
+  confirmed: ["подтверждено", "bg-emerald-50 text-emerald-700"],
+  edited: ["изменено", "bg-[#ECEAF8] text-brand-night"],
+  manual: ["вручную", "bg-brand-blush text-brand-plum"],
+};
+
+function Quote({ ev }: { ev?: Ev | null }) {
+  if (!ev) return <p className="mt-0.5 text-xs text-brand-ink/45">нет цитаты — добавлено вручную</p>;
+  return (
+    <p className="mt-0.5 text-xs text-brand-ink/60" title={ev.context}>
+      <span className="rounded bg-brand-blush/60 px-1 text-brand-night">«{ev.quote}»</span>
+      <span className="text-brand-ink/45"> · {ev.source === "llm" ? "LLM, цитата найдена в тексте" : ev.basis === "stack" ? "по технологиям" : ev.basis === "experience" ? "по опыту" : "словарь"}</span>
+    </p>
+  );
+}
+
+function Row({ id, label, status, ev, focus, onFocus, onConfirm, onDelete, children }: {
+  id: string; label: string; status: ItemStatus; ev?: Ev | null; focus?: string | null; onFocus?: (k: string | null) => void;
+  onConfirm: () => void; onDelete: () => void; children: ReactNode;
+}) {
+  const on = focus === id;
+  const [t, c] = STATUS_CHIP[status];
+  return (
+    <li className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-3 py-2 ${on ? "border-brand bg-brand-blush/20" : "border-brand-night/10"}`}
+      onMouseEnter={() => onFocus?.(id)} onMouseLeave={() => onFocus?.(null)}>
+      <div className="min-w-[12rem] flex-1">
+        <div className="flex flex-wrap items-center gap-2 text-sm"><span className="text-brand-ink/60">{label}:</span>{children}</div>
+        <Quote ev={ev} />
+      </div>
+      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${c}`}>{t}</span>
+      <div className="flex items-center gap-1">
+        <button type="button" aria-pressed={status === "confirmed"} onClick={onConfirm}
+          className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${status === "confirmed" ? "bg-emerald-600 text-white" : "border border-emerald-600/40 text-emerald-800 hover:bg-emerald-50"}`}>
+          {status === "confirmed" ? "Верно" : "Подтвердить"}
+        </button>
+        <button type="button" aria-label={`Удалить требование: ${label}`} onClick={onDelete} className="rounded-lg px-2.5 py-1 text-xs font-semibold text-brand-plum hover:bg-brand-blush/60">Удалить</button>
+      </div>
+    </li>
+  );
+}
+
+/** Разбор потребности: у каждого требования — цитата из текста; работодатель подтверждает, правит или удаляет. */
+export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChange: (r: Req) => void; focus?: string | null; onFocus?: (k: string | null) => void }) {
   const tags = useTags();
   const [add, setAdd] = useState("");
   const list = Object.values(tags).filter((t) => !req.direction || !t.direction_id || t.direction_id === req.direction);
   const used = new Set([...req.stack_required, ...req.stack_desired].map((x) => x.tag));
-  const move = (tag: string, to: "stack_required" | "stack_desired") => {
-    const from = to === "stack_required" ? "stack_desired" : "stack_required";
+  const edited = (x: StackItem): StackItem => ({ ...x, status: itemStatus(x) === "manual" ? "manual" : "edited" });
+  const setItem = (zone: Zone, tag: string, f: (x: StackItem) => StackItem) => onChange({ ...req, [zone]: req[zone].map((y) => (y.tag === tag ? f(y) : y)) } as Req);
+  const move = (tag: string, to: Zone) => {
+    const from: Zone = to === "stack_required" ? "stack_desired" : "stack_required";
     const item = req[from].find((x) => x.tag === tag)!;
-    onChange({ ...req, [from]: req[from].filter((x) => x.tag !== tag), [to]: [...req[to], { tag, weight: to === "stack_required" ? 0.8 : 0.3 }] } as Req);
-    void item;
+    onChange({ ...req, [from]: req[from].filter((x) => x.tag !== tag), [to]: [...req[to], edited({ ...item, weight: to === "stack_required" ? 0.8 : 0.3 })] } as Req);
   };
-  const chips = (key: "stack_required" | "stack_desired") => (
-    <div className="flex flex-wrap gap-2">
-      {req[key].map((x) => (
-        <span key={x.tag} className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm ${key === "stack_required" ? "border-brand bg-brand-blush/40" : "border-brand-lavender/50 bg-[#F3F2FB]"}`}>
-          <b className="font-semibold">{tags[x.tag]?.title ?? x.tag}</b>
-          <select aria-label={`Вес: ${x.tag}`} value={x.weight} className="bg-transparent text-xs focus:outline-none"
-            onChange={(e) => onChange({ ...req, [key]: req[key].map((y) => (y.tag === x.tag ? { ...y, weight: Number(e.target.value) } : y)) } as Req)}>
-            {[...new Set([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, x.weight])].sort((p, q) => q - p).map((w) => <option key={w} value={w}>вес {w.toLocaleString("ru-RU")}</option>)}
-          </select>
-          <button type="button" className="text-xs text-brand-plum hover:underline" onClick={() => move(x.tag, key === "stack_required" ? "stack_desired" : "stack_required")}>
-            {key === "stack_required" ? "→ желательно" : "→ обязательно"}
-          </button>
-          <button type="button" aria-label={`Убрать ${x.tag}`} className="text-brand-ink/40 hover:text-brand" onClick={() => onChange({ ...req, [key]: req[key].filter((y) => y.tag !== x.tag) } as Req)}>✕</button>
-        </span>
-      ))}
-      {!req[key].length && <span className="text-sm text-brand-ink/45">нет</span>}
-    </div>
+  const setScalar = (k: Scalar, patch: Partial<Req>) => {
+    const review = { ...(req.review ?? {}) };
+    const next = { ...req, ...patch };
+    if (present(next, k)) review[k] = "edited"; else delete review[k];
+    onChange({ ...next, review });
+  };
+  const confirmScalar = (k: Scalar) => onChange({ ...req, review: { ...(req.review ?? {}), [k]: scalarStatus(req, k) === "confirmed" ? (req.evidence?.[k] ? "extracted" : "edited") : "confirmed" } });
+  const delScalar = (k: Scalar) => {
+    const review = { ...(req.review ?? {}) }; delete review[k];
+    const evidence = { ...(req.evidence ?? {}) }; delete evidence[k];
+    const patch: Partial<Req> = k === "salary" ? { salary_from: null, salary_to: null } : { [k]: null };
+    onChange({ ...req, ...patch, review, evidence });
+  };
+  const sRow = (k: Scalar, label: string, control: ReactNode) => (
+    <Row key={k} id={`ev:${k}`} label={label} ev={req.evidence?.[k]} status={scalarStatus(req, k)} focus={focus} onFocus={onFocus}
+      onConfirm={() => confirmScalar(k)} onDelete={() => delScalar(k)}>{control}</Row>
   );
+  const stackRows = (zone: Zone) => req[zone].map((x) => (
+    <Row key={x.tag} id={`stack:${x.tag}`} label={zone === "stack_required" ? "Обязательно" : "Желательно"} ev={x.evidence} status={itemStatus(x)} focus={focus} onFocus={onFocus}
+      onConfirm={() => setItem(zone, x.tag, (y) => ({ ...y, status: itemStatus(y) === "confirmed" ? (y.evidence ? "extracted" : "manual") : "confirmed" }))}
+      onDelete={() => onChange({ ...req, [zone]: req[zone].filter((y) => y.tag !== x.tag) } as Req)}>
+      <b className="font-semibold text-brand-night">{tags[x.tag]?.title ?? x.tag}</b>
+      <select aria-label={`Вес: ${tags[x.tag]?.title ?? x.tag}`} value={x.weight} className="rounded-lg border border-brand-night/15 bg-white px-1.5 py-0.5 text-xs focus:outline-none"
+        onChange={(e) => setItem(zone, x.tag, (y) => edited({ ...y, weight: Number(e.target.value) }))}>
+        {[...new Set([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, x.weight])].sort((p, q) => q - p).map((w) => <option key={w} value={w}>вес {w.toLocaleString("ru-RU")}</option>)}
+      </select>
+      <button type="button" className="text-xs text-brand-plum hover:underline" onClick={() => move(x.tag, zone === "stack_required" ? "stack_desired" : "stack_required")}>
+        {zone === "stack_required" ? "→ в желательные" : "→ в обязательные"}
+      </button>
+    </Row>
+  ));
+  const sel = "rounded-lg border border-brand-night/15 bg-white px-2 py-1 text-sm focus:outline-none";
+  const { total, pending } = reviewCounts(req);
   return (
-    <div className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Направление" htmlFor="rd">
-          <select id="rd" className="input" value={req.direction ?? ""} onChange={(e) => onChange({ ...req, direction: e.target.value || null })}>
-            <option value="">не указано</option>{Object.entries(DIRECTIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </Field>
-        <Field label="Грейд" htmlFor="rg">
-          <select id="rg" className="input" value={req.grade ?? ""} onChange={(e) => onChange({ ...req, grade: e.target.value || null })}>
-            <option value="">не указан</option>{Object.entries(GRADES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-        </Field>
-        <Field label="Формат работы" htmlFor="rw">
-          <select id="rw" className="input" value={req.work_format ?? ""} onChange={(e) => onChange({ ...req, work_format: e.target.value || null })}>
-            <option value="">любой</option><option value="remote">Удалённо</option><option value="hybrid">Гибрид</option><option value="office">Офис</option>
-          </select>
-        </Field>
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+        <p className="text-brand-ink/70">Проверено требований: <b>{total - pending}</b> из {total}. Наведите на требование — фрагмент подсветится в тексте.</p>
+        {pending > 0 && <button type="button" className="text-sm font-semibold text-emerald-700 hover:underline" onClick={() => onChange(confirmAll(req))}>Подтвердить все</button>}
       </div>
-      <div><p className="label">Обязательный стек</p>{chips("stack_required")}</div>
-      <div><p className="label">Желательный стек</p>{chips("stack_desired")}</div>
+      <div>
+        <p className="label">Специализация</p>
+        <ul className="space-y-2">
+          {sRow("direction", "Направление", (
+            <select aria-label="Направление" className={sel} value={req.direction ?? ""} onChange={(e) => setScalar("direction", { direction: e.target.value || null })}>
+              <option value="">не указано</option>{Object.entries(DIRECTIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>))}
+          {sRow("grade", "Грейд", (
+            <select aria-label="Грейд" className={sel} value={req.grade ?? ""} onChange={(e) => setScalar("grade", { grade: e.target.value || null })}>
+              <option value="">не указан</option>{Object.entries(GRADES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>))}
+        </ul>
+      </div>
+      <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/45">нет</p>}</div>
+      <div><p className="label">Желательный стек</p>{req.stack_desired.length ? <ul className="space-y-2">{stackRows("stack_desired")}</ul> : <p className="text-sm text-brand-ink/45">нет</p>}</div>
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-[14rem] flex-1">
           <Field label="Добавить технологию" htmlFor="addt">
@@ -83,13 +176,25 @@ export function ReqEditor({ req, onChange }: { req: Req; onChange: (r: Req) => v
             </select>
           </Field>
         </div>
-        <button type="button" className="btn-ghost" disabled={!add} onClick={() => { onChange({ ...req, stack_required: [...req.stack_required, { tag: add, weight: 0.8 }] }); setAdd(""); }}>В обязательные</button>
-        <button type="button" className="btn-ghost" disabled={!add} onClick={() => { onChange({ ...req, stack_desired: [...req.stack_desired, { tag: add, weight: 0.3 }] }); setAdd(""); }}>В желательные</button>
+        <button type="button" className="btn-ghost" disabled={!add} onClick={() => { onChange({ ...req, stack_required: [...req.stack_required, { tag: add, weight: 0.8, status: "manual" }] }); setAdd(""); }}>В обязательные</button>
+        <button type="button" className="btn-ghost" disabled={!add} onClick={() => { onChange({ ...req, stack_desired: [...req.stack_desired, { tag: add, weight: 0.3, status: "manual" }] }); setAdd(""); }}>В желательные</button>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Field label="Опыт от, лет" htmlFor="rexp"><input id="rexp" type="number" min={0} className="input" value={req.experience_years_min ?? ""} onChange={(e) => onChange({ ...req, experience_years_min: e.target.value ? Number(e.target.value) : null })} /></Field>
-        <Field label="Вилка от, ₽" htmlFor="rsf"><input id="rsf" type="number" min={0} step={5000} className="input" value={req.salary_from ?? ""} onChange={(e) => onChange({ ...req, salary_from: e.target.value ? Number(e.target.value) : null })} /></Field>
-        <Field label="Вилка до, ₽" htmlFor="rst"><input id="rst" type="number" min={0} step={5000} className="input" value={req.salary_to ?? ""} onChange={(e) => onChange({ ...req, salary_to: e.target.value ? Number(e.target.value) : null })} /></Field>
+      <div>
+        <p className="label">Условия (фильтры, в скор не входят)</p>
+        <ul className="space-y-2">
+          {sRow("work_format", "Формат работы", (
+            <select aria-label="Формат работы" className={sel} value={req.work_format ?? ""} onChange={(e) => setScalar("work_format", { work_format: e.target.value || null })}>
+              <option value="">любой</option><option value="remote">Удалённо</option><option value="hybrid">Гибрид</option><option value="office">Офис</option>
+            </select>))}
+          {sRow("experience_years_min", "Опыт от, лет", (
+            <input aria-label="Опыт от, лет" type="number" min={0} className={`${sel} w-24`} value={req.experience_years_min ?? ""} onChange={(e) => setScalar("experience_years_min", { experience_years_min: e.target.value ? Number(e.target.value) : null })} />))}
+          {sRow("salary", "Вилка, ₽", (
+            <span className="inline-flex items-center gap-1.5">
+              <input aria-label="Вилка от, ₽" type="number" min={0} step={5000} className={`${sel} w-32`} value={req.salary_from ?? ""} onChange={(e) => setScalar("salary", { salary_from: e.target.value ? Number(e.target.value) : null })} />
+              <span>–</span>
+              <input aria-label="Вилка до, ₽" type="number" min={0} step={5000} className={`${sel} w-32`} value={req.salary_to ?? ""} onChange={(e) => setScalar("salary", { salary_to: e.target.value ? Number(e.target.value) : null })} />
+            </span>))}
+        </ul>
       </div>
     </div>
   );
@@ -98,44 +203,67 @@ export function ReqEditor({ req, onChange }: { req: Req; onChange: (r: Req) => v
 export function Needs() {
   const { data, loading, error } = useApi<any[]>("/employer/needs");
   const navigate = useNavigate();
-  const [text, setText] = useState("");
+  const loc = useLocation();
+  const tags = useTags();
+  const [text, setText] = useState<string>(((loc.state as any)?.text as string) ?? "");
+  const [parsed, setParsed] = useState<string>("");  // текст, по которому получены требования (для подсветки)
   const [req, setReq] = useState<Req | null>(null);
+  const [focus, setFocus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  async function parse() {
+  async function parse(t: string = text) {
     setErr(null); setBusy(true);
-    try { setReq(await api<Req>("/employer/needs/parse", { body: { text } })); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+    try { const r = await api<Req>("/employer/needs/parse", { body: { text: t } }); setParsed(t); setReq(r); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
+  useEffect(() => { if ((loc.state as any)?.text) parse((loc.state as any).text); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  function rewrite(t: string) { setText(t); parse(t); }
   async function create() {
     if (!req) return;
     setErr(null); setBusy(true);
     try {
-      const { method: _m, ...clean } = req as any; void _m;
-      const n = await api<any>("/employer/needs", { body: { text, requirements: clean } });
+      const n = await api<any>("/employer/needs", { body: { text: parsed, requirements: reqBody(confirmAll(req)) } });
       navigate(`/employer/needs/${n.id}`);
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
+  const counts = req ? reviewCounts(req) : { total: 0, pending: 0 };
+  const llmDropped = req?.llm?.dropped_without_quote ?? 0;
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Потребности и подборки" subtitle="Опишите, кто нужен, своими словами — система выделит направление, грейд и стек. Подборка строится по подтверждённым фактам." />
+      <PageTitle title="Потребности и подборки" subtitle="Опишите, кто нужен, своими словами. У каждого извлечённого требования — цитата из вашего текста: подтвердите, поправьте или удалите. Подборка строится по подтверждённым фактам о кандидатах." />
       <section className="card space-y-4">
-        <Field label="Кого вы ищете" htmlFor="need" hint="Контакты из текста вырезаются до обработки. Без LLM разбор идёт по словарю технологий и правилам.">
+        <Field label="Кого вы ищете" htmlFor="need" hint="Контакты из текста вырезаются до обработки. Без LLM разбор идёт по словарю технологий и правилам. Требования к полу, возрасту, внешности, семье (ст. 64 ТК РФ) не учитываются.">
           <textarea id="need" className="input min-h-[120px]" value={text} onChange={(e) => { setText(e.target.value); setReq(null); }} placeholder={EXAMPLE} />
         </Field>
-        {!text && <button type="button" className="text-sm font-semibold text-brand hover:underline" onClick={() => setText(EXAMPLE)}>Подставить пример</button>}
+        {!req && (
+          <div className="flex flex-wrap gap-4 text-sm">
+            <button type="button" className="font-semibold text-brand hover:underline" onClick={() => setText(EXAMPLE)}>Подставить пример</button>
+            <button type="button" className="font-semibold text-brand-plum hover:underline" onClick={() => setText(EXAMPLE_BIAS)}>Пример с нарушением ст. 64 ТК РФ</button>
+          </div>
+        )}
         <Alert>{err}</Alert>
         {!req ? (
-          <button className="btn-primary" disabled={text.trim().length < 10 || busy} onClick={parse}>{busy ? "Разбираем…" : "Разобрать требования"}</button>
+          <button className="btn-primary" disabled={text.trim().length < 10 || busy} onClick={() => parse()}>{busy ? "Разбираем…" : "Разобрать требования"}</button>
         ) : (
           <>
-            <div className="flex items-center justify-between border-t border-brand-night/10 pt-4">
-              <h2 className="font-bold text-brand-night">Требования</h2>
-              <span className="chip">{req.method === "rules" ? "разбор по словарю" : "разбор: словарь + LLM"}</span>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-brand-night/10 pt-4">
+              <h2 className="font-bold text-brand-night">Откуда взяты требования</h2>
+              <span className="chip">{req.method === "rules" ? "разбор по словарю" : "разбор: словарь + LLM, цитаты проверены"}</span>
             </div>
-            <ReqEditor req={req} onChange={setReq} />
-            <button className="btn-primary" disabled={busy} onClick={create}>{busy ? "Подбираем…" : "Сохранить и показать подборку"}</button>
+            <div className="rounded-xl bg-[#F7F6FB] p-4">
+              <QuotedText text={parsed} marks={reqMarks(req, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
+            </div>
+            {llmDropped > 0 && <p className="text-xs text-brand-ink/55">LLM предложил требований без цитаты из текста: {llmDropped} — они отброшены.</p>}
+            <BiasPanel bias={req.bias ?? []} suggested={req.suggested_text} onRewrite={rewrite} focus={focus} onFocus={setFocus} />
+            <h2 className="border-t border-brand-night/10 pt-4 font-bold text-brand-night">Требования</h2>
+            <ReqEditor req={req} onChange={setReq} focus={focus} onFocus={setFocus} />
+            <div className="flex flex-wrap items-center gap-3 border-t border-brand-night/10 pt-4">
+              <button className="btn-primary" disabled={busy} onClick={create}>
+                {busy ? "Подбираем…" : counts.pending ? "Подтвердить остальные и показать подборку" : "Сохранить и показать подборку"}
+              </button>
+              <button type="button" className="btn-ghost" disabled={busy} onClick={() => setReq(null)}>Изменить текст</button>
+            </div>
           </>
         )}
       </section>
@@ -176,6 +304,7 @@ export function Selection() {
   const [refineReq, setRefineReq] = useState<Req | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [probeOpen, setProbeOpen] = useState(false);
+  const [focus, setFocus] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -185,7 +314,7 @@ export function Selection() {
     setErr(null); setBusy(true);
     try {
       const body: any = { parent_version: v, filters };
-      if (refineReq) { const { method: _m, ...clean } = refineReq as any; void _m; body.requirements = clean; }
+      if (refineReq) body.requirements = reqBody(refineReq);
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload(); setRefineReq(null);
       navigate(`/employer/needs/${id}/v/${r.version}`);
@@ -195,15 +324,25 @@ export function Selection() {
   if (need.loading && !need.data) return <Loading />;
   if (need.error || !need.data) return <Alert>{need.error}</Alert>;
   const s = sel.data;
+  const reqOf: Req | undefined = s?.requirements ?? need.data.requirements;
   const reqTags = s ? [...(s.requirements.stack_required ?? []), ...(s.requirements.stack_desired ?? [])].map((x: any) => x.tag) : [];
   const toggleArr = (k: string, t: string) => { const cur: string[] = filters[k] ?? []; setFilters({ ...filters, [k]: cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t] }); };
 
   return (
     <div className="max-w-6xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <PageTitle title={need.data.title} subtitle={need.data.raw_text} />
+        <PageTitle title={need.data.title} subtitle="Подборка по подтверждённым фактам: тест платформы (T1), зонды и ФСП (T2). Заявленное кандидатом (T0) показано отдельно и в скор не входит." />
         <Link to="/employer/needs" className="btn-ghost">Все потребности</Link>
       </div>
+      <section className="card space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-bold text-brand-night">Текст потребности</h2>
+          <span className="text-xs text-brand-ink/55">подсвечены фрагменты, из которых извлечены требования{reqOf?.bias?.length ? "; волнистой линией — не учитываемые (ст. 64 ТК РФ)" : ""}</span>
+        </div>
+        <QuotedText text={need.data.raw_text} marks={reqMarks(reqOf, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
+        <BiasPanel bias={reqOf?.bias ?? []} suggested={reqOf?.suggested_text} rewriteLabel="Создать потребность из исправленного текста"
+          onRewrite={(t) => navigate("/employer/needs", { state: { text: t } })} focus={focus} onFocus={setFocus} />
+      </section>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-brand-ink/60">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
@@ -264,14 +403,19 @@ export function Selection() {
             {refineReq && <section className="card"><h2 className="mb-4 font-bold text-brand-night">Требования для новой версии</h2><ReqEditor req={refineReq} onChange={setRefineReq} /></section>}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
-              <button className="btn-primary" disabled={!picked.length} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button className="btn-ghost" disabled={picked.length < 2 || picked.length > 3} title="Отметьте 2–3 кандидатов"
+                  onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
+                <button className="btn-primary" disabled={!picked.length} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
+              </div>
             </div>
+            <p className="text-xs text-brand-ink/55">Отметьте 2–3 кандидатов, чтобы сравнить их рядом по требованиям потребности, или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>сравните первых трёх</Link>.</p>
             <LevelLegend />
             {!s.results.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или выберите соседнюю категорию." /> : s.results.map((r: any) => (
               <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} compact
                 actions={
                   <div className="flex flex-wrap items-center gap-3">
-                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand" checked={picked.includes(r.ref)} onChange={() => setPicked(picked.includes(r.ref) ? picked.filter((x) => x !== r.ref) : [...picked, r.ref])} />для зонда</label>
+                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand" checked={picked.includes(r.ref)} onChange={() => setPicked(picked.includes(r.ref) ? picked.filter((x) => x !== r.ref) : [...picked, r.ref])} />выбрать</label>
                     <Link className="btn-ghost !py-2" to={`/employer/candidates/${r.ref}?need=${id}`}>Открыть</Link>
                   </div>
                 } />
