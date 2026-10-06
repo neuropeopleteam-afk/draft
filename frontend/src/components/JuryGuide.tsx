@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { guide, isJury, juryLogin, juryReset, STEPS, type Persona } from "../lib/jury";
+import { guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/jury";
 import { errText } from "./ui";
-
-const PERSONA_EMAIL: Record<Persona, string> = {
-  candidate: "candidate@jury.example.com", candidate_nofsp: "candidate-nofsp@jury.example.com",
-  employer: "employer@jury.example.com", expert: "expert@jury.example.com",
-};
 
 /** Пошаговый проводник для экспертов жюри по сквозному сценарию (п. 3.3 ТЗ). Можно скрыть. */
 export function JuryGuide() {
@@ -38,12 +33,12 @@ export function JuryGuide() {
   }
   const s = STEPS[step];
   const here = s.match.test(loc.pathname);
-  const needLogin = s.persona && me?.email !== PERSONA_EMAIL[s.persona];
+  const needLogin = s.persona && personaOf(me?.email) !== s.persona;
 
   async function go(i: number) {
     const t = STEPS[i];
     setStep(i); guide.setStep(i); setMsg(null);
-    if (t.persona && me?.email !== PERSONA_EMAIL[t.persona]) {
+    if (t.persona && personaOf(me?.email) !== t.persona) {
       setBusy(true);
       try { await juryLogin(t.persona, signIn); } catch (e) { setMsg(errText(e)); setBusy(false); return; }
       setBusy(false);
@@ -51,9 +46,9 @@ export function JuryGuide() {
     navigate(t.path);
   }
   async function reset() {
-    if (!confirm("Сбросить демо жюри в исходное состояние? Приглашения, зонды и тесты демо-учёток будут пересозданы.")) return;
+    if (!confirm("Сбросить своё демо в исходное состояние? Приглашения, зонды и тесты ваших демо-учёток будут пересозданы. У других экспертов жюри ничего не изменится.")) return;
     setBusy(true); setMsg(null);
-    try { const r = await juryReset(); setMsg(`Демо пересоздано за ${r.seconds} с. Войдите заново.`); }
+    try { const r = await juryReset(me?.email, signIn); setMsg(`Демо пересоздано за ${r.seconds} с, вход сохранён.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(false); }
   }
 
