@@ -290,7 +290,7 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
 interface Opt { id: string; text: string; code?: string | null }
 
 /** Текст задания: `код` в обратных кавычках — моноширинным шрифтом (разметка банка заданий). */
-function Rich({ text }: { text: string }) {
+export function Rich({ text }: { text: string }) {
   const parts = text.split("`");
   if (parts.length < 3) return <>{text}</>;
   return <>{parts.map((p, i) => (i % 2 === 1 && i < parts.length - 1

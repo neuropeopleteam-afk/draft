@@ -30,7 +30,8 @@ export function JuryGuide() {
     else if (i < 0 && guide.step() !== step) setStep(guide.step());  // шаг выставлен входом в один клик
   }, [loc.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!active || loc.pathname === "/" && !guide.on()) return null;
+  // телефон гостя живой демонстрации (/j/…) — без проводника: эксперт там не вошёл и проходит мини-тест
+  if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/")) return null;
   if (hidden) {
     return (
       <button className="fixed bottom-4 right-4 z-40 rounded-full bg-brand-night px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-brand-plum"
