@@ -55,7 +55,9 @@ def _live(db: Session) -> dict:
 
 @router.get("/report", summary="Метрики валидации (пересчёт: make validate)")
 def report(db: Session = Depends(get_db)):
-    return {**_report(), "live": _live(db), "attacks": attacks.ATTACKS}
+    from app.modules.experts.section import section as experts_section
+
+    return {**_report(), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db)}
 
 
 class AttackIn(BaseModel):
