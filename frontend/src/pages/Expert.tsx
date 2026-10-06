@@ -89,7 +89,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
             </div>
           </div>
         ))}
-        {!done && <textarea className="input" rows={2} placeholder="Комментарий (необязательно): что упущено, что верно" value={comment} onChange={(e) => setComment(e.target.value)} />}
+        {!done && <textarea className="input" rows={2} aria-label="Комментарий эксперта" placeholder="Комментарий (необязательно): что упущено, что верно" value={comment} onChange={(e) => setComment(e.target.value)} />}
       </fieldset>
       {err && <div className="mt-3"><Alert>{err}</Alert></div>}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
