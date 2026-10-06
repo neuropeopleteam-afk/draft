@@ -206,8 +206,9 @@ function ExpertsSection({ ex }: { ex: any }) {
       )}
       {ex.panel?.length > 0 && (
         <div className="mt-4">
-          <Table head={["Эксперт", "A · пары", "B · ответы", "C · Ангофф", "Последняя активность"]}
-            rows={ex.panel.map((p: any) => [p.code, ...["A", "B", "C"].map((k) => `${p.progress[k].done} из ${p.progress[k].total}`), dtt(p.last_seen_at)])} />
+          <Table head={["Эксперт", "A · пары", "B · ответы", "C · Ангофф", "Последняя активность", "Проверка"]}
+            rows={ex.panel.map((p: any) => [p.code, ...["A", "B", "C"].map((k) => `${p.progress[k].done} из ${p.progress[k].total}`), dtt(p.last_seen_at),
+              p.uniform?.length ? `одинаковые оценки во всём блоке ${p.uniform.join(", ")} — уточнить у эксперта` : "замечаний нет"])} />
         </div>
       )}
       {ex.labels > 0 ? <ExpertResults res={ex} /> : (

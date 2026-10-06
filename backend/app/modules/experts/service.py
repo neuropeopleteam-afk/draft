@@ -208,6 +208,19 @@ def ack_instructions(db: Session, pan: ExpertPanelist) -> dict:
     return me(db, pan)
 
 
+def uniform_blocks(db: Session, pan: ExpertPanelist, min_n: int = 10) -> list[str]:
+    """Блоки, где все оценки одинаковы (признак невнимательной работы, протокол п. 8) — для проверки координатором."""
+    vals: dict[str, set] = {}
+    cnt: dict[str, int] = {}
+    for lb, kind in db.execute(select(ExpertLabel, ExpertItem.kind).join(ExpertItem, ExpertItem.id == ExpertLabel.item_id)
+                               .where(ExpertLabel.panelist_id == pan.id)).all():
+        v = lb.value.get("relevance") if kind == "A" else lb.value.get("holistic") if kind == "B" else \
+            (lb.value.get("junior_middle"), lb.value.get("middle_senior"))
+        vals.setdefault(kind, set()).add(v)
+        cnt[kind] = cnt.get(kind, 0) + 1
+    return sorted(k for k, v in vals.items() if cnt[k] >= min_n and len(v) == 1)
+
+
 def panel_status(db: Session) -> list[dict]:
     """Обезличенный статус панели для /validation: коды, назначено, сделано, последняя активность (без имён)."""
     out = []
@@ -216,5 +229,6 @@ def panel_status(db: Session) -> list[dict]:
         pr = progress(db, pan)
         out.append({"code": pan.code, "active": pan.is_active, "started": any(v["done"] for v in pr.values()),
                     "progress": {k: {"done": v["done"], "total": v["total"]} for k, v in pr.items()},
+                    "uniform": uniform_blocks(db, pan),
                     "last_seen_at": pan.last_seen_at.isoformat() if pan.last_seen_at else None})
     return out

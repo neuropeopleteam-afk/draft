@@ -142,9 +142,13 @@ def test_invite_link_blind_items_and_saving(client):
     assert client.post("/api/expert-panel/enter", json={"token": inv["token"]}).status_code == 404
     t2 = client.post("/api/expert-panel/enter", json={"token": new["token"]}).json()["access_token"]
     assert client.get("/api/expert-panel/me", headers=H(t2)).json()["progress"]["A"]["done"] == 1
+    # одинаковая оценка во всём блоке (10+ подряд) — помечается для координатора
+    for x in a[:11]:
+        assert client.post("/api/expert-panel/labels", headers=H(t2), json={"item_id": x["id"], "value": {"relevance": 2}}).status_code == 200
     # /validation: блок экспертов — разметка идёт, проверка расчёта на синтетике проходит
     ex = client.get("/api/validation/report").json()["experts"]
     assert ex["status"]["state"] == "partial" and ex["panel"][0]["code"] == "E1"
+    assert ex["panel"][0]["uniform"] == ["A"]
     assert ex["synthetic_check"]["ok"] is True
     assert "Тест" not in str(ex["panel"])  # имена экспертов наружу не уходят
 
@@ -197,6 +201,7 @@ def test_full_labeling_by_three_experts_gives_metrics(client):
         db.commit()
     ex = client.get("/api/validation/report").json()["experts"]
     assert ex["status"]["state"] == "ready", ex["status"]
+    assert all(p["uniform"] == [] for p in ex["panel"])
     m = ex["matching"]["summary"]
     assert m["p@5"]["platform"]["mean"] > m["p@5"]["bm25"]["mean"] > m["p@5"]["random"]["mean"]
     assert m["p@5"]["diff_platform_bm25"]["lo"] is not None
