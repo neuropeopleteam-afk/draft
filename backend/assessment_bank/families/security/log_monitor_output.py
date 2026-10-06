@@ -14,7 +14,9 @@ def generate(seed: int):
     ctx = rng.choice(CONTEXTS)
     cutoff = rng.randint(100, 800)
     threshold = rng.choice([2, 3, 4])
-    subjects = [f"demo-session-{i}" for i in rng.sample(range(10, 99), 3)]
+    # Калибровка 05.10: 17 строк журнала давали канцелярскую нагрузку без новых ловушек;
+    # сессий 2 вместо 3 (все четыре ловушки — граница, статус, событие, порог — сохранены)
+    subjects = [f"demo-session-{i}" for i in rng.sample(range(10, 99), 2)]
     rows = []
     for i, subject in enumerate(subjects):
         for _ in range(threshold + (1 if i == 0 else -1)):

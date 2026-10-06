@@ -1,27 +1,48 @@
 family_id: data_ml.metrics.roc_auc_ties_bug
-title: ROC-AUC вручную — учёт одинаковых скоров (найти ошибку)
+title: ROC-AUC по рангам — учёт одинаковых скоров (найти ошибку)
 direction: data_ml
-skills: [python, roc_auc, classification_metrics, mann_whitney, ties]
-target_grades: [middle, senior]
+skills:
+- python
+- roc_auc
+- classification_metrics
+- mann_whitney
+- ties
+target_grades:
+- middle
+- senior
 format: find_bug
 language: python
 invariants:
-  code_lines: [13, 15]
-  operations: [12, 14]
+  code_lines:
+  - 13
+  - 15
+  operations:
+  - 12
+  - 14
   defect_type: tie_handling
   extra:
-    implementations: [pairwise, rank]
-    subtypes: [pair_ge, pair_weight, rank_ordinal, rank_min]
+    implementations:
+    - rank
+    subtypes:
+    - rank_ordinal
+    - rank_min
 time_limit_s: 300
 canary: false
 prior_difficulty:
   b: 0.4
   a: 1.1
-  sigma_variant: 0.4
-  basis: "13–15 строк; нужно знать определение ROC-AUC как вероятности упорядочивания пары с весом 0,5 для ничьей и его ранговую форму (Манн — Уитни со средними рангами); пример расхождения со sklearn дан в условии. Ранговые подтипы (порядковый/минимальный ранг) заметно труднее попарных — σ повышена (Middle/Senior)"
+  sigma_variant: 0.3
+  basis: '13–15 строк; нужно знать определение ROC-AUC как вероятности упорядочивания пары с весом 0,5
+    для ничьей и его ранговую форму (Манн — Уитни со средними рангами); пример расхождения со sklearn
+    дан в условии. Ранговые подтипы (порядковый/минимальный ранг) заметно труднее попарных — σ повышена
+    (Middle/Senior). Калибровка панелью LLM 05.10: варианты неизоморфны (σ > 0,5, χ² p < 0,01), разброс
+    объяснялся подтипом; оставлены ранговые подтипы (порядковый и минимальный ранг вместо среднего), второй
+    подтип выделен в data_ml.metrics.auc_pairwise_ties_bug; σ снижена до 0,3.'
 generator: assessment_bank.families.data_ml.metrics_roc_auc_ties_bug
-version: 1
-description: >
-  Собственная функция ROC-AUC расходится со sklearn на данных с одинаковыми скорами.
-  Попарная реализация засчитывает ничью как победу, ранговая — присваивает в группе равных
-  скоров не средний ранг. Ключ проверяется исполнением на эталонных значениях.
+version: 2
+description: 'Собственная функция ROC-AUC расходится со sklearn на данных с одинаковыми скорами. Попарная
+  реализация засчитывает ничью как победу, ранговая — присваивает в группе равных скоров не средний ранг.
+  Ключ проверяется исполнением на эталонных значениях. Версия 2: только ранговые подтипы (порядковый и
+  минимальный ранг вместо среднего); попарный подтип «>= вместо >» (ветка ничьей недостижима); подтип
+  «вес ничьей 1,0» исключён: неверная константа рядом с определением — подсказка (доля верных 0,69 против
+  0,12–0,36) — семейство data_ml.metrics.auc_pairwise_ties_bug.'

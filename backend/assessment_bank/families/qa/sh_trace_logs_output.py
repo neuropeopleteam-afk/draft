@@ -24,7 +24,7 @@ KINDS = ["masked", "per_version", "error_rate", "users"]
 
 def _gen(rng, svc):
     log_name, _title, paths, oks, errs = svc
-    n = rng.randint(8, 11)
+    n = rng.randint(6, 8)  # калибровка 05.10: «слишком трудное» — журналы короче (было 8–11 строк)
     base = rng.randint(100, 800)
     t = rng.randint(0, 20)
     versions = ["1.%d.%d" % (rng.randint(2, 7), p) for p in sorted(rng.sample(range(0, 9), 2))]
@@ -115,7 +115,9 @@ WHY = {"masked": "comm -12 печатает строки, общие для дв
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     svc = rng.choice(SERVICES)
-    kind = rng.choice(KINDS)
+    # Калибровка 05.10: kind=users (grep -o | sort -u | wc -l, уровень Junior) решался в 0,42 против
+    # 0,00–0,14 у остальных конвейеров; исключён — остаются конвейеры с состоянием и агрегацией.
+    kind = rng.choice([k for k in KINDS if k != "users"])
     for _ in range(500):
         gw, sv, rows, log = _gen(rng, svc)
         out = _model(kind, rows)

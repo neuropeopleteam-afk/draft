@@ -1,0 +1,50 @@
+family_id: backend.py.idempotency_coarse_ob3
+title: Идемпотентная обработка вебхуков — слишком грубый ключ (открытая книга)
+direction: backend
+skills:
+- python
+- idempotency
+- webhooks
+- distributed_systems
+- payments
+target_grades:
+- middle
+- senior
+format: open_book_3step
+language: python
+invariants:
+  code_lines:
+  - 11
+  - 11
+  operations:
+  - 10
+  - 10
+  defect_type: idempotency_key
+  n_options: 4
+  extra:
+    subtypes:
+    - coarse
+    step3_conditions:
+    - concurrency
+    - crash
+    - memory
+    - ordering
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.0
+  sigma_variant: 0.3
+  step_offsets:
+  - -0.5
+  - 0.0
+  - 0.9
+  basis: 'Выделено из backend.py.idempotency_ob3: подтип «слишком грубый ключ» (ключ по объекту — законный
+    возврат отбрасывается как дубль). Калибровка панелью LLM 05.10: варианты неизоморфны (σ > 0,5, χ²
+    p < 0,01), разброс объяснялся подтипом. b +0,2: обратный, менее известный режим отказа идемпотентности
+    (перехват законных событий), его воспроизведение требует построить два разных события по одному объекту.'
+generator: assessment_bank.families.backend.py_idempotency_coarse_ob3
+version: 1
+description: 'Выделено из backend.py.idempotency_ob3 по итогам калибровки 05.10: подтип «слишком грубый
+  ключ» (ключ по объекту — законный возврат отбрасывается как дубль). Генератор общий с исходным семейством,
+  подтип фиксирован.'

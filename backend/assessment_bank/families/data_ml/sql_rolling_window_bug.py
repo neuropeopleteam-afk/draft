@@ -73,10 +73,14 @@ def _ref(rows, agg, k, sub):
     return out
 
 
-def generate(seed: int):
-    rng = make_rng(FAMILY_ID, seed)
+# Калибровка 05.10: подтипы no_partition выделены в data_ml.sql.rolling_partition_bug (варианты были неизоморфны).
+SUBTYPES_HERE = ('frame_off_by_one', 'future_frame')
+
+
+def _generate(seed: int, family_id: str, subtypes):
+    rng = make_rng(family_id, seed)
     T, obj, val, ctx, what, (lo, hi) = rng.choice(CONTEXTS)
-    sub = rng.choice(SUBTYPES)
+    sub = rng.choice(list(subtypes))
     agg = rng.choice(["SUM", "AVG"])
     k = rng.choice([3, 4, 5, 7])
     day = rng.choice(["day", "dt", "report_date", "date_key"])
@@ -118,6 +122,11 @@ def generate(seed: int):
            "future_frame": "окно смотрит вперёд (`FOLLOWING`): в признак попадают будущие дни — "
                            "это и неверно, и утечка"}[sub]
     ak = AnswerKey(kind="line", value=key_line, explanation=f"Строка {key_line}: {why}.")
-    return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
+    return build_variant(family_id, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="window_frame",
                          params={"fixed_code": fixed, "subtype": sub, "k": k, "agg": agg})
+
+
+
+def generate(seed: int):
+    return _generate(seed, FAMILY_ID, SUBTYPES_HERE)

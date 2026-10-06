@@ -68,7 +68,9 @@ else:
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     t, a, b, c, cvals, ctx = rng.choice(CONTEXTS)
-    name, cls, tpl, why = rng.choice(CASES)
+    # Калибровка 05.10: класс «both» (индекс по обоим столбцам) решался в 0,66 против 0,19–0,31;
+    # как ключ исключён, как дистрактор остаётся.
+    name, cls, tpl, why = rng.choice([c for c in CASES if c[1] != "both"])
     month = rng.randint(1, 9)
     vals = dict(t=t, a=a, b=b, c=c, n=rng.randint(10, 999), n2=rng.randint(1000, 1999),
                 n3=rng.randint(2000, 2999), d=f"2026-{month:02d}-{rng.randint(1, 28):02d}",

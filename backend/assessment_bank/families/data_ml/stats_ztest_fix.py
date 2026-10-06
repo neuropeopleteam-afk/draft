@@ -63,7 +63,9 @@ def generate(seed: int):
             break
     p_one = p_two / 2
     buggy = "import math\n\n\n" + _func("buggy", fn, x)
-    chosen = rng.sample(DISTRACTORS, 3)
+    # Калибровка 05.10: σ = 2,0 объяснялась составом дистракторов — с «doubled» (2·erfc) доля верных 0,18,
+    # без него 0,67. Состав зафиксирован: самая сильная ошибка «удвоить двустороннее p» есть всегда.
+    chosen = ["doubled"] + rng.sample([d for d in DISTRACTORS if d != "doubled"], 2)
     opts, key = balanced_options(FAMILY_ID, seed, rng, ("Заменить функцию на:", _func("good", fn, x)),
                              [("Заменить функцию на:", _func(d, fn, x)) for d in chosen])
     cases = [(xa, n, xb, n), (xb, n, xa, n), (120, 3000, 150, 3100), (400, 9000, 330, 8800),

@@ -72,7 +72,8 @@ def _ref(t, rows):
 
 
 def _rows(rng, groups):
-    n = rng.randint(5, 6)
+    # Калибровка 05.10: трудность росла с числом строк; строк всегда 5 (ловушки ничьих сохранены)
+    n = 5
     ids = sorted(rng.sample(range(1, 30), n))
     orders = [rng.randint(1, 4) for _ in range(n)]
     vals = [rng.randint(1, 9) * 10 for _ in range(n)]
