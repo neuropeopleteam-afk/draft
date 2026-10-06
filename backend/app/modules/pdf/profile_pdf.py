@@ -186,8 +186,8 @@ def _growth_block(fb: dict, st) -> list:
     items = dm.get("items") or []
     if items:
         el.append(Spacer(1, 6))
-        el.append(Paragraph(f"Что требуют работодатели — {_esc(dm.get('scope_title'))} ({dm.get('sources')} "
-                            "потребностей и вакансий)", st["p"]))
+        el.append(Paragraph(f"Что требуют работодатели — {_esc(dm.get('scope_title'))} (активные потребности и "
+                            f"вакансии, источников: {dm.get('sources')})", st["p"]))
         rows = [["Навык", "Доля", "У вас"]]
         for d in items[:8]:
             rows.append([_esc(d.get("title")), _pct(d.get("share")), _DEMAND.get(d.get("status"), "—")])
@@ -196,7 +196,7 @@ def _growth_block(fb: dict, st) -> list:
     if route:
         el.append(Spacer(1, 6))
         el.append(Paragraph("Маршрут роста", st["p"]))
-        for i, r in enumerate(route[:6], 1):
+        for i, r in enumerate(route[:4], 1):
             el.append(Paragraph(f"{i}. <b>{_esc(r.get('title'))}</b> — {_esc(r.get('text'))}", st["p"]))
     comps = fb.get("competitions") or []
     if comps:

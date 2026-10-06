@@ -9,6 +9,7 @@ import Register from "./pages/Register";
 import Verify from "./pages/Verify";
 import Assessment, { TestRun } from "./pages/candidate/Assessment";
 import Category from "./pages/candidate/Category";
+import Feedback from "./pages/candidate/Feedback";
 import { Invitations, Probes } from "./pages/candidate/Contact";
 import CandidateOverview from "./pages/candidate/Overview";
 import Profile from "./pages/candidate/Profile";
@@ -47,6 +48,7 @@ export default function App() {
         <Route path="assessment" element={<Assessment />} />
         <Route path="assessment/test/:id" element={<TestRun />} />
         <Route path="category" element={<Category />} />
+        <Route path="feedback" element={<Feedback />} />
         <Route path="profile" element={<Profile />} />
         <Route path="invitations" element={<Invitations />} />
         <Route path="probes" element={<Probes />} />

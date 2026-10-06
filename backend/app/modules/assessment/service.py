@@ -376,6 +376,7 @@ def status(db: Session, user_id: uuid.UUID) -> dict:
         "sandbox_starts": sandbox_quota(db, user.email) if sandbox and user is not None else None,
         "grade_change_interval_days": get_settings().grade_change_interval_days,
         "active_session_id": str(active.id) if active else None,
+        "active_grade": active.claimed_grade_id if active else None,
         "engine": get_engine().name,
         "sessions": [{
             "id": str(s.id), "direction": s.direction_id, "claimed_grade": s.claimed_grade_id, "status": s.status.value,

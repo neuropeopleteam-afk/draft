@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { FeedbackSummary } from "./Feedback";
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
 interface Onb {
@@ -206,18 +207,39 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
   );
 }
 
+/** Прозрачный античит: что отслеживается во время теста и как это влияет на результат. */
+export function IntegrityNotice() {
+  return (
+    <div className="card mt-4 space-y-3 text-sm text-brand-ink/75">
+      <p className="font-bold text-brand-night">Что отслеживается во время теста</p>
+      <ul className="grid gap-2 sm:grid-cols-2">
+        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Уход со вкладки.</b> Сколько раз окно теста теряло фокус и сколько секунд было скрыто.</li>
+        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Вставка текста.</b> Число вставок и их объём в полях ответа. Что именно вставлено, не сохраняется.</li>
+        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Скорость ответов.</b> Время засекает сервер. Верный ответ на сложное задание за несколько секунд — аномалия.</li>
+        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Контрольные задания.</b> Несколько заданий-«канареек» в оценку не входят: по ним видно, решаются ли задания или ответы известны заранее. Развёрнутый ответ с инструкциями для автоматического оценщика передаётся эксперту.</li>
+      </ul>
+      <p><b className="text-brand-night">Сигналы не наказывают автоматически.</b> Они не меняют оценку уровня, не отменяют грейд и не прерывают тест. Сигналы только снижают «достоверность результата» — отметку рядом с категорией, которую видит работодатель, с понятными причинами. Ту же отметку и причины после теста видите и вы.</p>
+    </div>
+  );
+}
+
 function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () => void }) {
   const navigate = useNavigate();
-  const [grade, setGrade] = useState<string>(status?.claimed_grade ?? "middle");
+  const [q] = useSearchParams();
+  const qGrade = q.get("grade");
+  const [grade, setGrade] = useState<string>(qGrade && qGrade in GRADES ? qGrade : status?.claimed_grade ?? "middle");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [ack, setAck] = useState(false);
   const locked = status?.lock_active && !status?.sandbox_active;
   const dir = status?.survey_direction;
+  const resume = !!status?.active_session_id && status?.active_grade === grade;
+  const quota = status?.sandbox_starts as { limit: number; used: number; left: number; next_at: string | null } | null;
 
   async function start() {
     setError(null); setBusy(true);
     try {
-      const s = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: grade } });
+      const s = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: grade, integrity_ack: ack } });
       navigate(`/candidate/assessment/test/${s.session_id}`);
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   }
@@ -244,10 +266,20 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
         <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней.</p>
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
-      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда — с {dt(status.locked_until)}. Для показа жюри можно включить демо-режим в разделе «Категория и грейд».</Alert></div>}
+      <IntegrityNotice />
+      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда — с {dt(status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
+      {status?.sandbox_active && quota && (
+        <div className="mt-4"><Alert kind="info">Демо-режим жюри: новых тестов за 24 часа осталось {quota.left} из {quota.limit}. Лимит не даёт выкачать банк заданий перезапусками; продолжение начатого теста его не тратит.</Alert></div>
+      )}
       <div className="mt-4"><Alert>{error}</Alert></div>
+      {!resume && (
+        <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-brand-ink/80">
+          <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+          <span>Я прочитал(а), что отслеживается во время теста, и понимаю, как это влияет на «достоверность результата».</span>
+        </label>
+      )}
       <div className="mt-6 flex flex-wrap gap-3">
-        <button className="btn-primary" onClick={start} disabled={busy || locked}>{busy ? "Готовим задания…" : status?.active_session_id ? "Продолжить тест" : "Начать тест"}</button>
+        <button className="btn-primary" onClick={start} disabled={busy || locked || (!resume && !ack)}>{busy ? "Готовим задания…" : resume ? "Продолжить тест" : "Начать тест"}</button>
         <button className="btn-ghost" onClick={onEditSurvey}>Изменить ответы опроса</button>
       </div>
     </>
@@ -334,7 +366,7 @@ export function TestRun() {
 
   if (error && !s) return <Alert>{error}</Alert>;
   if (!s) return <Loading />;
-  if (result) return <TestResult r={result} onCategory={() => navigate("/candidate/category")} />;
+  if (result) return <TestResult r={result} sessionId={id!} onCategory={() => navigate("/candidate/category")} />;
   if (!s.item) return (
     <div className="max-w-2xl"><Alert kind="info">{s.status === "in_progress" ? "Тест окончен: движок набрал достаточно ответов." : "Сессия теста закрыта."}</Alert>
       <div className="mt-4"><Alert>{error}</Alert></div>
@@ -421,7 +453,7 @@ export function TestRun() {
   );
 }
 
-function TestResult({ r, onCategory }: { r: any; onCategory: () => void }) {
+function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
   return (
     <div className="max-w-2xl">
       <PageTitle title={r.confirmed ? "Грейд подтверждён" : "Грейд не подтверждён"} subtitle={r.message} />
@@ -439,7 +471,11 @@ function TestResult({ r, onCategory }: { r: any; onCategory: () => void }) {
         </p>
       )}
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.</Alert></div>}
-      <button className="btn-primary mt-6" onClick={onCategory}>Перейти к категории</button>
+      <FeedbackSummary sessionId={sessionId} />
+      <div className="mt-6 flex flex-wrap gap-3">
+        <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
+        <Link className="btn-ghost" to={`/candidate/feedback?session=${sessionId}`}>Карта навыков и маршрут роста</Link>
+      </div>
     </div>
   );
 }
