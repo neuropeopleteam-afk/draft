@@ -14,7 +14,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class IntegrationSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    # пустые значения в .env — как незаданные (так же, как в app.core.config)
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", env_ignore_empty=True)
 
     public_base_url: str = "http://localhost:8080"
     jwt_secret: str = "dev-only-change-me"

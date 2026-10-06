@@ -9,9 +9,15 @@ __pycache__/
 .pytest_cache/
 .venv/
 *.db
-# node
-node_modules/
+# node (без косой черты: в worktree node_modules бывает символической ссылкой)
+node_modules
 frontend/dist/
+# отчёты тестов и покрытия
+.coverage
+.coverage.*
+coverage*.xml
+htmlcov/
+junit*.xml
 # прочее
 .DS_Store
 *.log
