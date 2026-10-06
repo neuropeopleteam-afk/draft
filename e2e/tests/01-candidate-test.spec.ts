@@ -133,7 +133,7 @@ test("кандидат: демо-вход → тест → результат �
     await expect(main.getByRole("heading", { level: 2, name: "Карта навыков по темам" })).toBeVisible();
     const topics = main.getByRole("listitem").filter({ hasText: /\d+ задани[еяй] · уровень заданий/ });
     expect(await topics.count(), "тем в карте навыков").toBeGreaterThanOrEqual(3);
-    await expect(topics.first().getByText(/^Ожидаемо для вашего уровня — \d+ %/)).toBeVisible();
+    await expect(topics.first().getByText(/^Ожидаемо для вашего уровня — \d+\s%/)).toBeVisible();
     await expect(main.getByRole("heading", { level: 2, name: /^Что требуют работодатели — категория Backend · / })).toBeVisible();
     await expect(main.getByRole("heading", { level: 2, name: "Маршрут роста" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 2, name: "Соревнования ФСП" })).toBeVisible();
