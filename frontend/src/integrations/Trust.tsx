@@ -29,7 +29,7 @@ const LEVEL: Record<string, [string, string]> = {
 };
 const FACTOR_ICON: Record<string, [string, string]> = {
   ok: ["✓", "text-emerald-600"], warn: ["!", "text-amber-600"], bad: ["✕", "text-brand"],
-  unknown: ["?", "text-brand-ink/40"], neutral: ["·", "text-brand-ink/40"],
+  unknown: ["?", "text-brand-ink/65"], neutral: ["·", "text-brand-ink/65"],
 };
 
 export function TrustBadge({ t, compact }: { t?: TrustShort | null; compact?: boolean }) {
@@ -54,14 +54,14 @@ export function TrustPanel({ t, title = "Индекс доверия работ�
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{title}</p>
           <p className="mt-1 flex items-baseline gap-2">
             <span className="text-3xl font-extrabold tabular-nums text-brand-night">{t.score}</span>
-            <span className="text-sm text-brand-ink/55">из 100</span>
+            <span className="text-sm text-brand-ink/65">из 100</span>
             <span className={`ml-1 inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ${cls}`}><span className={`h-1.5 w-1.5 rounded-full ${dot}`} />{t.level_title}</span>
           </p>
         </div>
         {companyLink && <Link to={`/candidate/companies/${t.company_id}`} className="text-sm font-semibold text-brand hover:underline">Профиль компании</Link>}
       </div>
       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-brand-night/10" aria-hidden><div className={`h-full ${dot}`} style={{ width: `${t.score}%` }} /></div>
-      {t.preliminary && <p className="mt-2 text-xs text-brand-ink/60">Оценка предварительная: часть сведений не удалось проверить.</p>}
+      {t.preliminary && <p className="mt-2 text-xs text-brand-ink/65">Оценка предварительная: часть сведений не удалось проверить.</p>}
       {t.offer_salary && (
         <p className={`mt-3 rounded-lg px-3 py-2 text-sm ${t.offer_salary.status === "ok" ? "bg-emerald-50 text-emerald-800" : t.offer_salary.status === "warn" ? "bg-amber-50 text-amber-800" : "bg-[#F3F2FB] text-brand-night"}`}>
           <b>Вилка этого предложения:</b> {t.offer_salary.text}
@@ -74,13 +74,13 @@ export function TrustPanel({ t, title = "Индекс доверия работ�
             <li key={f.id} className="flex items-start gap-3 text-sm">
               <span className={`mt-0.5 w-4 shrink-0 text-center font-bold ${c}`} aria-label={f.status}>{ic}</span>
               <span className="flex-1"><span className="font-semibold text-brand-night">{f.title}.</span> <span className="text-brand-ink/75">{f.text}</span></span>
-              <span className="shrink-0 tabular-nums text-xs text-brand-ink/45">{f.max ? `${Math.round(f.points)}/${f.max}` : f.points < 0 ? `−${Math.abs(Math.round(f.points))}` : "0"}</span>
+              <span className="shrink-0 tabular-nums text-xs text-brand-ink/65">{f.max ? `${Math.round(f.points)}/${f.max}` : f.points < 0 ? `−${Math.abs(Math.round(f.points))}` : "0"}</span>
             </li>
           );
         })}
       </ul>
       {r && r.status === "found" && (
-        <p className="mt-3 border-t border-brand-night/5 pt-3 text-xs text-brand-ink/55">
+        <p className="mt-3 border-t border-brand-night/5 pt-3 text-xs text-brand-ink/65">
           ЕГРЮЛ (ФНС, egrul.nalog.ru): {r.name}{r.ogrn ? `, ОГРН ${r.ogrn}` : ""}{r.registered_at ? `, регистрация ${dateOnly(r.registered_at)}` : ""}{r.director ? `, ${r.director_role?.toLowerCase() ?? "руководитель"} ${r.director}` : ""}. Проверено {dt(r.checked_at).replace(/\.$/, "")}.
         </p>
       )}
@@ -104,7 +104,7 @@ export function CompanyTrustCard({ hasInn }: { hasInn: boolean }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="font-bold text-brand-night">Проверка в ФНС и индекс доверия</h2>
-          <p className="text-sm text-brand-ink/60">Кандидат видит этот индекс в каждом приглашении и в профиле компании.</p>
+          <p className="text-sm text-brand-ink/65">Кандидат видит этот индекс в каждом приглашении и в профиле компании.</p>
         </div>
         <button className="btn-primary" onClick={check} disabled={busy || !hasInn}>{busy ? "Запрос в ФНС…" : "Проверить по ИНН"}</button>
       </div>

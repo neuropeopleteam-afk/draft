@@ -110,9 +110,13 @@ export default function App() {
 function NotFound() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="text-6xl font-extrabold text-brand">404</p>
-      <p className="text-brand-ink/70">Такой страницы нет.</p>
-      <Link to="/" className="btn-primary">На главную</Link>
+      <p className="text-6xl font-extrabold text-brand" aria-hidden="true">404</p>
+      <h1 className="text-xl font-bold text-brand-night">Такой страницы нет</h1>
+      <p className="max-w-sm text-sm text-brand-ink/70">Возможно, ссылка устарела. Демо-учётки для жюри — на главной, вход в один клик.</p>
+      <div className="flex flex-wrap justify-center gap-3">
+        <Link to="/" className="btn-primary">На главную</Link>
+        <Link to="/#jury" className="btn-ghost">Демо для жюри</Link>
+      </div>
     </div>
   );
 }

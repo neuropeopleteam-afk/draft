@@ -33,7 +33,7 @@ export function FspIdLogin() {
   if (!data?.enabled) return null;
   return (
     <div className="mt-6 space-y-3">
-      <div className="flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-brand-ink/40"><span className="h-px flex-1 bg-brand-night/10" />или<span className="h-px flex-1 bg-brand-night/10" /></div>
+      <div className="flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-brand-ink/65"><span className="h-px flex-1 bg-brand-night/10" />или<span className="h-px flex-1 bg-brand-night/10" /></div>
       <button type="button" className="btn-ghost w-full gap-2" disabled={busy}
         onClick={async () => { setBusy(true); setErr(null); try { await start("login"); } catch (e) { setErr(errText(e)); setBusy(false); } }}>
         <FspIdMark /> {busy ? "Переходим в ФСП ID…" : "Войти через ФСП ID (демо)"}
@@ -48,7 +48,7 @@ export function FspIdLogin() {
             {data.demo_accounts.map((a) => <li key={a.username}><code className="rounded bg-white px-1.5 py-0.5 font-semibold">{a.username}</code> — {a.title}</li>)}
           </ul>
           {data.demo_password && <p className="mt-2">Пароль для всех демо-учёток: <code className="rounded bg-white px-1.5 py-0.5 font-semibold">{data.demo_password}</code></p>}
-          <p className="mt-2 text-brand-ink/60">{data.note}</p>
+          <p className="mt-2 text-brand-ink/65">{data.note}</p>
         </div>
       )}
     </div>
@@ -65,7 +65,7 @@ export function FspIdLinkButton({ linkedVia }: { linkedVia?: string | null }) {
       <button className="btn-primary gap-2" onClick={async () => { setErr(null); try { await start("link"); } catch (e) { setErr(errText(e)); } }}>
         <FspIdMark /> {linkedVia === "keycloak" ? "Обновить из ФСП ID" : "Связать через ФСП ID (демо)"}
       </button>
-      <p className="text-xs text-brand-ink/55">Достижения из ФСП ID попадут в паспорт с уровнем доказанности T2 — «подтверждено реестром».</p>
+      <p className="text-xs text-brand-ink/65">Достижения из ФСП ID попадут в паспорт с уровнем доказанности T2 — «подтверждено реестром».</p>
       <Alert>{err}</Alert>
     </div>
   );
@@ -120,7 +120,7 @@ export function FspIdDone() {
                 ))}
               </ul>
             ) : <p className="mt-1 text-brand-ink/65">Истории соревнований ФСП нет — это нейтрально: без бонуса и без штрафа в рейтинге.</p>}
-            <p className="mt-2 text-xs text-brand-ink/50">ФИО и контакты из ФСП ID в карточку не попадают; работодатель увидит их только после вашего согласия.</p>
+            <p className="mt-2 text-xs text-brand-ink/65">ФИО и контакты из ФСП ID в карточку не попадают; работодатель увидит их только после вашего согласия.</p>
           </div>
           {state.email_taken && <Alert kind="info">Аккаунт с почтой {p?.email} уже есть. Войдите паролем и свяжите ФСП ID в разделе «Паспорт ФСП».</Alert>}
           <Toggle checked={ok} onChange={setOk} label="Согласен на обработку персональных данных (152-ФЗ)" hint="Обязательно для создания кабинета" />

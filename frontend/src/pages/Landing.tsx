@@ -35,36 +35,41 @@ export default function Landing() {
       <section className="relative overflow-hidden bg-brand-night text-white">
         <div className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-brand-plum/70 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-48 right-24 h-80 w-80 rounded-full bg-brand/30 blur-3xl" />
-        <div className="relative mx-auto grid max-w-content gap-12 px-6 pb-20 pt-14 md:grid-cols-[1.15fr_0.85fr] md:pt-20">
+        <div className="relative mx-auto grid max-w-content gap-12 px-6 pb-14 pt-10 md:grid-cols-[1.15fr_0.85fr] md:pb-16 md:pt-14">
           <div>
             <span className="chip bg-white/10 text-brand-blush">Спецтрек ФСП · ЛЦТ 2026</span>
-            <h1 className="mt-6 text-4xl font-extrabold leading-[1.08] tracking-tight md:text-[3.4rem]">
+            <h1 className="mt-5 text-[2.1rem] font-extrabold leading-[1.15] tracking-tight sm:text-4xl md:text-[3.1rem]">
               Работодатель находит вас сам — и сразу называет зарплату
             </h1>
-            <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/75">
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg">
               Платформа подбора ИТ-специалистов наоборот. Кандидат один раз подтверждает уровень тестом,
               попадает в категорию «направление · грейд» и получает приглашения с вилкой в рублях.
               Без откликов вслепую и без сотен нерелевантных резюме.
             </p>
-            <div className="mt-9 flex flex-wrap gap-3">
+            <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/register?role=candidate" className="btn-primary px-6">Я ищу работу</Link>
               <Link to="/register?role=employer" className="btn-light px-6">Я нанимаю</Link>
             </div>
+            <a href="#jury" className="group mt-6 inline-flex items-center gap-3 rounded-xl bg-white/[0.07] py-2.5 pl-3 pr-4 text-sm ring-1 ring-white/15 transition-colors hover:bg-white/[0.12]">
+              <span className="rounded-md bg-brand-blush px-2 py-0.5 text-xs font-bold text-brand-plum">Жюри</span>
+              <span><span className="font-semibold text-white">Готовые демо-учётки: вход в один клик</span><span className="hidden text-white/70 sm:inline"> — кандидат, работодатель, эксперт, ФСП</span></span>
+              <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-brand-blush transition-transform group-hover:translate-y-0.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M10 4v12m0 0l-5-5m5 5l5-5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            </a>
           </div>
 
-          <div className="self-end rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/10 backdrop-blur" aria-label="Пример приглашения">
+          <div className="hidden self-end rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/10 backdrop-blur sm:block" role="figure" aria-label="Пример приглашения">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Входящее приглашение</p>
             <p className="mt-4 text-xl font-bold">Backend-разработчик в команду платежей</p>
-            <p className="mt-1 text-sm text-white/60">ООО «Пример» · удалённо</p>
-            <p className="mt-5 text-3xl font-extrabold text-white">220 000 – 290 000 ₽</p>
+            <p className="mt-1 text-sm text-white/70">ООО «Пример» · удалённо</p>
+            <p className="mt-5 text-3xl font-extrabold text-white">{"220\u00A0000\u00A0– 290\u00A0000\u00A0₽"}</p>
             <ul className="mt-5 space-y-2 text-sm text-white/80">
               <li className="flex gap-2"><span className="font-bold text-brand-soft">T1</span> SQL и индексы — тест, 9 из 10</li>
               <li className="flex gap-2"><span className="font-bold text-brand-soft">T1</span> FastAPI — зонд «найди ошибку»</li>
               <li className="flex gap-2"><span className="font-bold text-brand-lavender">T2</span> Призёр соревнований ФСП</li>
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <span className="btn bg-brand text-white">Принять</span>
-              <span className="btn bg-white/10 text-white">Отклонить</span>
+              <span className="btn bg-brand text-white" aria-hidden="true">Принять</span>
+              <span className="btn bg-white/10 text-white" aria-hidden="true">Отклонить</span>
             </div>
           </div>
         </div>
@@ -172,35 +177,35 @@ function JuryBlock() {
   }
   return (
     <section id="jury" className="border-b border-brand-night/10 bg-[#F3F2FB]" aria-labelledby="jury-title">
-      <div className="mx-auto max-w-content px-6 py-12">
+      <div className="mx-auto max-w-content px-6 py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
             <h2 id="jury-title" className="mt-2 text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Вход в один клик и проводник по сценарию</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-brand-ink/75">
-              Готовые демо-учётки: регистрация, опрос и тест уже пройдены, правило 90 дней для них снято.
-              У каждого эксперта — своя копия демо: ваши действия и сброс не видны другим.
-              Проводник ведёт по сквозному сценарию: регистрация → опрос и тест → категория → поиск работодателем → контакт.
+            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-brand-ink/75">
+              Выберите роль — регистрация, опрос и тест у демо-учёток уже пройдены. У каждого эксперта своя копия демо:
+              ваши действия и сброс не видны другим. Проводник ведёт по сценарию: регистрация → тест → категория → поиск работодателем → контакт.
+              <span className="font-semibold text-brand-night"> Доступ к стенду: demo / ***.</span>
             </p>
-            <p className="mt-2 text-sm font-semibold text-brand-night">Доступ к стенду: demo / ***</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Link to="/validation" className="btn-ghost">Как мы проверяем себя</Link>
             <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
           </div>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {JURY.map((p) => (
             <button key={p.id} onClick={() => enter(p.id)} disabled={!!busy}
-              className="card flex flex-col items-start border-transparent p-5 text-left transition-shadow hover:shadow-md hover:ring-2 hover:ring-brand/40 focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-60">
+              aria-label={`Войти как: ${p.title}`}
+              className="card flex h-full flex-col items-start border-transparent p-5 text-left transition-shadow hover:shadow-md hover:ring-2 hover:ring-brand/40 focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-60 sm:p-5">
               <span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Войти как</span>
               <span className="mt-1 text-lg font-bold text-brand-night">{p.title}</span>
               <span className="mt-1.5 text-sm leading-relaxed text-brand-ink/70">{p.text}</span>
-              <span className="mt-4 text-sm font-semibold text-brand">{busy === p.id ? "Входим…" : "Войти →"}</span>
+              <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-semibold text-brand">{busy === p.id ? "Входим…" : <>Войти<span aria-hidden="true">→</span></>}</span>
             </button>
           ))}
         </div>
-        <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { guide.enable(); guide.setStep(0); navigate("/register?role=candidate"); }}>
             Начать проводник с регистрации
           </button>

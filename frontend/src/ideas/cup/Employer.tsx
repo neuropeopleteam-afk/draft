@@ -172,7 +172,7 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
         <div>
           <p className="label">Как оцениваются решения</p>
           <Seg label="Режим оценки" value={mode} onChange={setMode} options={[{ id: "auto", title: "Автопроверка" }, { id: "rubric", title: "Рубрика" }, { id: "employer", title: "Оцениваю сам" }]} />
-          <p className="mt-1 text-xs text-brand-ink/55">{opt.data?.modes?.[mode]}</p>
+          <p className="mt-1 text-xs text-brand-ink/65">{opt.data?.modes?.[mode]}</p>
         </div>
         <Field label="Описание (видно до старта)" htmlFor="cd"><textarea id="cd" rows={3} className="input" value={f.description} onChange={(e) => set("description", e.target.value)} /></Field>
         {mode === "auto" ? (
@@ -193,11 +193,11 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
                   <div key={i} className="flex gap-2">
                     <input className="input min-w-0 flex-1" value={c.title} aria-label={`Критерий ${i + 1}`} onChange={(e) => setRubric(rubric.map((x, j) => (j === i ? { ...x, title: e.target.value } : x)))} />
                     <input className="input w-20 shrink-0" type="number" step={0.1} min={0.1} max={1} value={c.weight} aria-label={`Вес ${i + 1}`} onChange={(e) => setRubric(rubric.map((x, j) => (j === i ? { ...x, weight: Number(e.target.value) } : x)))} />
-                    {rubric.length > 2 && <button type="button" className="shrink-0 rounded-lg px-2 text-brand-ink/50 hover:bg-brand-blush/50 hover:text-brand-night" aria-label={`Убрать критерий ${i + 1}`} onClick={() => setRubric(rubric.filter((_, j) => j !== i))}>✕</button>}
+                    {rubric.length > 2 && <button type="button" className="shrink-0 rounded-lg px-2 text-brand-ink/65 hover:bg-brand-blush/50 hover:text-brand-night" aria-label={`Убрать критерий ${i + 1}`} onClick={() => setRubric(rubric.filter((_, j) => j !== i))}>✕</button>}
                   </div>
                 ))}
                 {rubric.length < 5 && <button type="button" className="text-sm font-semibold text-brand-plum hover:text-brand" onClick={() => setRubric([...rubric, { title: "", weight: 0.2 }])}>Добавить критерий</button>}
-                <p className="text-xs text-brand-ink/55">Веса нормируются к 1. Если LLM недоступен, решение оцените вы по этим же критериям.</p>
+                <p className="text-xs text-brand-ink/65">Веса нормируются к 1. Если LLM недоступен, решение оцените вы по этим же критериям.</p>
               </div>
             )}
           </>
@@ -274,10 +274,10 @@ export function EmployerCup() {
       )}
       <section className="card">
         <h2 className="text-lg font-bold text-brand-night">Таблица результатов</h2>
-        <p className="mt-1 text-sm text-brand-ink/60">Без имён: псевдоним до приглашения, обезличенный номер — после, имя — когда кандидат примет приглашение.</p>
-        {!c.leaderboard.length ? <p className="mt-4 text-sm text-brand-ink/60">Пока никто не записался.</p> : (
+        <p className="mt-1 text-sm text-brand-ink/65">Без имён: псевдоним до приглашения, обезличенный номер — после, имя — когда кандидат примет приглашение.</p>
+        {!c.leaderboard.length ? <p className="mt-4 text-sm text-brand-ink/65">Пока никто не записался.</p> : (
           <table className="mt-4 w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-brand-ink/50">
+            <thead className="text-xs uppercase tracking-wide text-brand-ink/65">
               <tr><th className="py-2 pr-3">Место</th><th className="pr-3">Участник</th><th className="pr-3">Балл</th><th className="hidden pr-3 sm:table-cell">Время</th><th className="hidden pr-3 sm:table-cell">Статус</th><th className="hidden sm:table-cell">Приглашение</th></tr>
             </thead>
             <tbody className="divide-y divide-brand-night/5">
@@ -286,13 +286,13 @@ export function EmployerCup() {
                   <td className="py-2.5 pr-3 font-bold text-brand-night">{r.position ?? "—"}</td>
                   <td className="pr-3">
                     <span className="whitespace-nowrap">{r.full_name ?? r.alias}</span>{r.candidate_ref && <Link className="ml-2 text-xs font-semibold text-brand" to={`/employer/candidates/${r.candidate_ref}`}>{r.candidate_ref}</Link>}
-                    <span className="block text-xs text-brand-ink/50 sm:hidden">{ENTRY[r.status] ?? r.status} · {mins(r.time_spent_s)}</span>
-                    {(r.invitation_status || r.invite_note) && <span className="mt-1 block sm:hidden">{r.invitation_status ? <Status s={r.invitation_status} /> : <span className="text-xs text-brand-ink/55">{r.invite_note}</span>}</span>}
+                    <span className="block text-xs text-brand-ink/65 sm:hidden">{ENTRY[r.status] ?? r.status} · {mins(r.time_spent_s)}</span>
+                    {(r.invitation_status || r.invite_note) && <span className="mt-1 block sm:hidden">{r.invitation_status ? <Status s={r.invitation_status} /> : <span className="text-xs text-brand-ink/65">{r.invite_note}</span>}</span>}
                   </td>
                   <td className="pr-3 tabular-nums">{r.score_pct != null ? `${r.score_pct} %` : "—"}</td>
                   <td className="hidden pr-3 tabular-nums sm:table-cell">{mins(r.time_spent_s)}</td>
                   <td className="hidden pr-3 sm:table-cell">{ENTRY[r.status] ?? r.status}</td>
-                  <td className="hidden sm:table-cell">{r.invitation_status ? <Status s={r.invitation_status} /> : r.invite_note ? <span className="text-xs text-brand-ink/55">{r.invite_note}</span> : "—"}</td>
+                  <td className="hidden sm:table-cell">{r.invitation_status ? <Status s={r.invitation_status} /> : r.invite_note ? <span className="text-xs text-brand-ink/65">{r.invite_note}</span> : "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -302,7 +302,7 @@ export function EmployerCup() {
       {review.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-lg font-bold text-brand-night">Решения — оценка вслепую{c.to_review ? ` · ждут оценки: ${c.to_review}` : ""}</h2>
-          <p className="text-sm text-brand-ink/60">Контакты и ПДн вырезаны из текста, ссылки скрыты: репозиторий может раскрыть личность.</p>
+          <p className="text-sm text-brand-ink/65">Контакты и ПДн вырезаны из текста, ссылки скрыты: репозиторий может раскрыть личность.</p>
           {review.map((s: any) => <Solution key={s.entry_id} s={s} cup={c} onScore={(body) => act(`entries/${s.entry_id}/score`, body)} />)}
         </section>
       )}
@@ -327,10 +327,10 @@ function Solution({ s, cup, onScore }: { s: any; cup: any; onScore: (b: unknown)
     <div className="card">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-bold text-brand-night">{s.alias}</p>
-        <span className="text-xs text-brand-ink/55">{dtt(s.submitted_at)} · {mins(s.time_spent_s)}{s.score_method ? ` · оценено: ${METHOD[s.score_method] ?? s.score_method}` : ""}</span>
+        <span className="text-xs text-brand-ink/65">{dtt(s.submitted_at)} · {mins(s.time_spent_s)}{s.score_method ? ` · оценено: ${METHOD[s.score_method] ?? s.score_method}` : ""}</span>
       </div>
       <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-brand-ink/85">{s.text}</p>
-      {(s.redacted?.length > 0 || s.has_link) && <p className="mt-2 text-xs text-brand-ink/50">{s.redacted?.length ? "Вырезаны ПДн. " : ""}{s.has_link ? "Ссылка скрыта до приглашения." : ""}</p>}
+      {(s.redacted?.length > 0 || s.has_link) && <p className="mt-2 text-xs text-brand-ink/65">{s.redacted?.length ? "Вырезаны ПДн. " : ""}{s.has_link ? "Ссылка скрыта до приглашения." : ""}</p>}
       {s.llm?.status === "scored" && <Alert kind="info">LLM: {Math.round((s.llm.score ?? 0) * 100)} % — {s.llm.comment}</Alert>}
       {editable && (
         <div className="mt-4 flex flex-wrap items-end gap-4 border-t border-brand-night/5 pt-4">
@@ -338,7 +338,7 @@ function Solution({ s, cup, onScore }: { s: any; cup: any; onScore: (b: unknown)
             <>
               {cup.rubric.map((r: any) => (
                 <div key={r.id} className="min-w-[12rem]">
-                  <p className="mb-1 text-xs font-medium text-brand-ink/70">{r.title} <span className="text-brand-ink/40">· {Math.round(r.weight * 100)} %</span></p>
+                  <p className="mb-1 text-xs font-medium text-brand-ink/70">{r.title} <span className="text-brand-ink/65">· {Math.round(r.weight * 100)} %</span></p>
                   <Seg label={r.title} value={String(crit[r.id] ?? "")} onChange={(v) => setCrit({ ...crit, [r.id]: Number(v) })}
                     options={[{ id: "0", title: "0" }, { id: "0.5", title: "½" }, { id: "1", title: "1" }]} />
                 </div>

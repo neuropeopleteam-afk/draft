@@ -8,7 +8,7 @@ import { useAuth } from "../lib/auth";
 import { juryToken } from "../lib/jury";
 import { useMeta } from "../lib/meta";
 
-const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")} %`);
+const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
 const sgn = (v?: number | null) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2).replace(".", ",")}`);
 
@@ -45,7 +45,7 @@ function Report({ r }: { r: any }) {
   const live = r.live ?? {};
   return (
     <>
-      <p className="mt-4 text-xs text-brand-ink/55">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
+      <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
         {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
@@ -89,12 +89,12 @@ function Report({ r }: { r: any }) {
         lead={`Опубликовано ${pct(sim.directions?.[dirs[0]]?.leak?.leak_share)} вариантов и все канарейки, ${pct(sim.directions?.[dirs[0]]?.leak?.cheater_share)} кандидатов пользуются утечкой. Порог детектора — по честным кандидатам при 1 % ложных срабатываний.`}>
         <Table head={["Направление", "Без утечки: завышение θ", "Утечка, без детектора", "С детектором", "Детектор + карантин", "Поймано списывающих", "Ложные срабатывания"]}
           rows={dirs.map((d) => { const l = sim.directions[d].leak; return [DIRECTIONS[d], sgn(l.no_leak.cheaters_bias_theta), sgn(l.leak_no_detector.cheaters_bias_theta), sgn(l.leak_detector.cheaters_bias_theta), sgn(l.leak_detector_rotation.cheaters_bias_theta), pct(l.leak_detector.detector_tpr), pct(l.leak_detector.detector_fpr, 1)]; })} />
-        <p className="mt-2 text-xs text-brand-ink/55">Завышение θ — средняя разница «оценка − истинный уровень» у списывающих, в единицах шкалы (1 ≈ одна ступень грейда).</p>
+        <p className="mt-2 text-xs text-brand-ink/65">Завышение θ — средняя разница «оценка − истинный уровень» у списывающих, в единицах шкалы (1 ≈ одна ступень грейда).</p>
         <h3 className="mt-6 text-base font-bold text-brand-night">Доля успешной атаки слитыми ответами</h3>
         <p className="mt-1 text-sm text-brand-ink/70">Успех атаки — списывающий без нужного уровня получил подтверждение заявленного грейда. Фиксированная форма — одни и те же задания всем кандидатам грейда (без адаптивности, ротации, канареек и детектора); после утечки она остаётся той же, поэтому показан и случай «утекла целиком».</p>
         <Table head={["Направление", "Фикс. форма: без утечки", "Фикс. форма: утечка 30 %", "Фикс. форма: утекла целиком", "Наш тест: утечка 30 %", "+ детектор", "+ детектор и карантин", "Списывающих без уровня"]}
           rows={dirs.map((d) => { const l = sim.directions[d].leak; const a = l.attack_success_rate ?? {}; return [DIRECTIONS[d], pct(a.fixed_no_leak), pct(a.fixed_leak), pct(a.fixed_full_leak), pct(a.leak_no_detector), pct(a.leak_detector), pct(a.leak_detector_rotation), l.n_unqualified_cheaters ?? "—"]; })} />
-        <p className="mt-2 text-xs text-brand-ink/55">Базовая доля «без утечки» — ошибка теста, а не атака. Выборка списывающих без уровня — десятки человек на направление, поэтому разброс ±10 п. п.</p>
+        <p className="mt-2 text-xs text-brand-ink/65">Базовая доля «без утечки» — ошибка теста, а не атака. Выборка списывающих без уровня — десятки человек на направление, поэтому разброс ±10 п. п.</p>
         <SimConditions sim={sim} kind="leak" />
         <LeakShareTable sim={sim} />
       </Section>
@@ -104,7 +104,7 @@ function Report({ r }: { r: any }) {
           rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["BM25 по тексту резюме и потребности", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
             [t, num(m.summary?.["p@5"]?.[k]), num(m.summary?.["ndcg@5"]?.[k]), num(m.summary?.["ndcg@10"]?.[k]), num(m.summary?.["within_category_ndcg@3"]?.[k])])} />
         <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Бонус ФСП на общую точность не влияет, внутри категории немного помогает. Пересчёт по оценкам экспертов-тимлидов — в разделе <a href="#experts" className="font-semibold text-brand-plum underline">«Экспертная разметка»</a>.</p>
-        <p className="mt-1 text-xs text-brand-ink/55">Пары и метки: docs/validation/matching_pairs.json</p>
+        <p className="mt-1 text-xs text-brand-ink/65">Пары и метки: docs/validation/matching_pairs.json</p>
       </Section>
       <MatchingBench />
 
@@ -176,13 +176,13 @@ function RedButton({ attacks }: { attacks: any[] }) {
                   {x.details?.top5_before && x.details?.top5_after && (
                     <table className="mt-3 w-full text-xs">
                       <caption className="mb-1 text-left font-semibold text-brand-ink/70">Первые пять выдачи</caption>
-                      <thead><tr className="text-left text-brand-ink/55"><th className="font-medium">#</th><th className="font-medium">До</th><th className="font-medium">После</th></tr></thead>
+                      <thead><tr className="text-left text-brand-ink/65"><th className="font-medium">#</th><th className="font-medium">До</th><th className="font-medium">После</th></tr></thead>
                       <tbody>
                         {x.details.top5_before.map((b: [string, number], i: number) => {
                           const a = x.details.top5_after[i] ?? ["—", 0];
                           return (
                             <tr key={i} className="border-t border-brand-night/10">
-                              <td className="py-1 pr-2 text-brand-ink/55">{i + 1}</td>
+                              <td className="py-1 pr-2 text-brand-ink/65">{i + 1}</td>
                               <td className="py-1 pr-2 font-mono">{b[0]} · {(b[1] * 100).toFixed(1).replace(".", ",")}</td>
                               <td className={`py-1 font-mono ${a[0] !== b[0] ? "text-brand" : ""}`}>{a[0]} · {(a[1] * 100).toFixed(1).replace(".", ",")}</td>
                             </tr>
@@ -191,7 +191,7 @@ function RedButton({ attacks }: { attacks: any[] }) {
                       </tbody>
                     </table>
                   )}
-                  <p className="mt-1 text-xs text-brand-ink/55">{x.cached ? `Симуляция посчитана заранее (${String(x.computed_seconds ?? "—").replace(".", ",")} с расчёта, 160 кандидатов, фиксированный seed) · ничего не записано` : `${String(x.seconds).replace(".", ",")} с · ничего не записано`}</p>
+                  <p className="mt-1 text-xs text-brand-ink/65">{x.cached ? `Симуляция посчитана заранее (${String(x.computed_seconds ?? "—").replace(".", ",")} с расчёта, 160 кандидатов, фиксированный seed) · ничего не записано` : `${String(x.seconds).replace(".", ",")} с · ничего не записано`}</p>
                 </div>
               )}
             </article>
@@ -269,7 +269,7 @@ function ExpertResults({ res }: { res: any }) {
                   .map(([t, k]) => [t, ci(s["p@5"][k]), ci(s["ndcg@5"][k])])} /></div>
               <p className="mt-2 text-sm text-brand-ink/75">Платформа − BM25: precision@5 {ci(s["p@5"].diff_platform_bm25)}, p = {pv(s["p@5"].diff_platform_bm25.wilcoxon_p)}; nDCG@5 {ci(s["ndcg@5"].diff_platform_bm25)}, p = {pv(s["ndcg@5"].diff_platform_bm25.wilcoxon_p)} (знаковый критерий Уилкоксона по потребностям).
                 {m.vs_rules && ` Совпадение эталона экспертов с разметкой по правилам: κ = ${num(m.vs_rules.kappa)} (${m.vs_rules.level}), одинаково «релевантна / нет» — ${pct(m.vs_rules.relevant_agree)}.`}</p>
-              <p className="mt-1 text-xs text-brand-ink/55">Топ-5 платформы и BM25 размечены полностью; идеальный DCG — по всем размеченным кандидатам пула (топы обоих способов и случайные), поэтому nDCG сопоставим между способами. Случайный порядок — оценка по всей базе: объединение топов размечено целиком, остальное — по случайной выборке.</p>
+              <p className="mt-1 text-xs text-brand-ink/65">Топ-5 платформы и BM25 размечены полностью; идеальный DCG — по всем размеченным кандидатам пула (топы обоих способов и случайные), поэтому nDCG сопоставим между способами. Случайный порядок — оценка по всей базе: объединение топов размечено целиком, остальное — по случайной выборке.</p>
             </>
           ) : <div className="mt-3"><Alert kind="info">Ни одна потребность ещё не размечена полностью — метрики появятся, когда все пары хотя бы одной потребности получат оценки.</Alert></div>}
         </div>
@@ -282,7 +282,7 @@ function ExpertResults({ res }: { res: any }) {
               const a = ag[k];
               return [TASK_T[k], a.coders, a.units_multi, a.kappa_mean == null ? "—" : `${num(a.kappa_mean)} (${a.kappa_level})`, a.alpha == null ? "—" : `${num(a.alpha)} [${num(a.alpha_ci?.lo)}; ${num(a.alpha_ci?.hi)}]`, a.alpha_verdict ?? "—"];
             })} /></div>
-          <p className="mt-2 text-xs text-brand-ink/55">κ — квадратично взвешенная каппа Коэна на общих объектах (≥ 0,61 — существенное согласие по Ландису — Коху), α — порядковая для оценок 0–3 и интервальная для долей (≥ 0,80 — надёжно, 0,667–0,80 — только предварительные выводы). Контрольные ответы в согласие не входят{ag.B_controls?.injection ? `; инструкцию проверяющему отметили ${ag.B_controls.injection.flagged} из ${ag.B_controls.injection.n} оценок, копию эталона — ${ag.B_controls.copy?.flagged ?? 0} из ${ag.B_controls.copy?.n ?? 0}` : ""}.</p>
+          <p className="mt-2 text-xs text-brand-ink/65">κ — квадратично взвешенная каппа Коэна на общих объектах (≥ 0,61 — существенное согласие по Ландису — Коху), α — порядковая для оценок 0–3 и интервальная для долей (≥ 0,80 — надёжно, 0,667–0,80 — только предварительные выводы). Контрольные ответы в согласие не входят{ag.B_controls?.injection ? `; инструкцию проверяющему отметили ${ag.B_controls.injection.flagged} из ${ag.B_controls.injection.n} оценок, копию эталона — ${ag.B_controls.copy?.flagged ?? 0} из ${ag.B_controls.copy?.n ?? 0}` : ""}.</p>
         </div>
       )}
       <div>
@@ -297,7 +297,7 @@ function ExpertResults({ res }: { res: any }) {
           <div className="mt-3"><Table head={["Граница", "Сейчас θ", "Ангофф θ ± SE", "Разница", "По экспертам", "Разброс по семействам", "Сдвиг доли кандидатов", "Вывод"]}
             rows={res.angoff.boundaries.map((b: any) => [b.title, num(b.current), `${num(b.angoff)}${b.se != null ? ` ± ${num(b.se)}` : ""}`, sgn(b.delta), (b.per_expert ?? []).map((x: number) => num(x)).join(" · "), num(b.family_sd), pct(b.population_shift, 1),
               b.replace_suggested == null ? "нужно 2+ эксперта" : b.replace_suggested ? "предложить новый порог" : "оставить текущий"])} /></div>
-          <p className="mt-2 text-xs text-brand-ink/55">«Предложить новый порог» — когда разница больше стандартной ошибки среднего по экспертам. Сдвиг доли — сколько кандидатов при стандартном нормальном распределении уровня сменили бы грейд. Порог меняет владелец после разбора, автоматически не меняется.</p>
+          <p className="mt-2 text-xs text-brand-ink/65">«Предложить новый порог» — когда разница больше стандартной ошибки среднего по экспертам. Сдвиг доли — сколько кандидатов при стандартном нормальном распределении уровня сменили бы грейд. Порог меняет владелец после разбора, автоматически не меняется.</p>
         </div>
       )}
     </div>
@@ -309,7 +309,7 @@ function LlmTable({ llm, note }: { llm: any; note?: string }) {
     <>
       <Table head={["Модель", "Прогонов", "κ с консенсусом экспертов", "κ с экспертами, среднее", "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
         rows={llm.models.map((x: any) => [x.model, x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), x.injection_ok == null ? "—" : x.injection_ok ? "не повлияла" : "подняла балл", x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
-      <p className="mt-2 text-xs text-brand-ink/55">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). Допустима, если согласие с экспертами не хуже межэкспертного минус 0,1, разброс между прогонами не больше 0,5 балла и инструкция в контрольном ответе не подняла балл. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
+      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). Допустима, если согласие с экспертами не хуже межэкспертного минус 0,1, разброс между прогонами не больше 0,5 балла и инструкция в контрольном ответе не подняла балл. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
     </>
   );
 }
@@ -329,7 +329,7 @@ function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: s
     <div className="card">
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-lavender">{label}</p>
       <p className="mt-2 text-2xl font-extrabold text-brand-night">{value ?? "—"}</p>
-      {hint && <p className="mt-1 text-xs text-brand-ink/60">{hint}</p>}
+      {hint && <p className="mt-1 text-xs text-brand-ink/65">{hint}</p>}
     </div>
   );
 }
