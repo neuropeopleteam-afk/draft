@@ -1,13 +1,14 @@
 /**
  * Сценарий жюри, часть 1 (ТЗ п. 3.3, шаги «опрос → выбор грейда → тест → категория»):
- * демо-вход кандидатом в один клик → пересдача адаптивного теста на банке заданий → результат → категория.
+ * демо-вход кандидатом в один клик → экран «что отслеживается» и согласие → пересдача адаптивного теста на банке
+ * заданий → результат → категория → карта навыков и маршрут роста по этому тесту.
  *
  * Ответы даются «вслепую» (первый вариант, третья строка кода, короткий текст) — ключи на клиент не попадают,
  * поэтому грейд обычно не подтверждается. Проверяем механику: движок выдаёт задания до остановки (8–16 заданий,
  * шаги open_book), результат считается сервером, а категория при неподтверждении НЕ понижается.
  */
 import type { Page } from "@playwright/test";
-import { expect, test } from "../lib/fixtures";
+import { expect, productIssue, test } from "../lib/fixtures";
 import { juryEnter, openSection } from "../lib/ui";
 
 const RESULT = /^Грейд (не )?подтверждён$/;
@@ -57,9 +58,25 @@ test("кандидат: демо-вход → тест → результат �
     await expect(middle).toHaveAttribute("aria-pressed", "true");
   });
 
+  await test.step("прозрачный античит: что отслеживается, согласие до старта", async () => {
+    const main = page.getByRole("main");
+    await expect(main.getByText("Что отслеживается во время теста", { exact: true })).toBeVisible();
+    for (const signal of ["Уход со вкладки.", "Вставка текста.", "Скорость ответов.", "Контрольные задания."]) {
+      await expect(main.getByRole("listitem").filter({ hasText: signal }), signal).toBeVisible();
+    }
+    await expect(main.getByText(/^Сигналы не наказывают автоматически\./)).toBeVisible();
+    // лимит новых тестов у песочницы жюри: не больше 5 в сутки, чтобы банк нельзя было выкачать перезапусками
+    await expect(page.getByRole("status").filter({ hasText: /новых тестов за 24 часа осталось \d+ из 5/ })).toBeVisible();
+    const start = page.getByRole("button", { name: /^Начать тест$/ });
+    const ack = page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ });
+    await expect(start, "без согласия тест не начать").toBeDisabled();
+    await ack.check();
+    await expect(start).toBeEnabled();
+  });
+
   const kinds: Record<string, number> = {};
   await test.step("адаптивный тест до остановки движком", async () => {
-    await page.getByRole("button", { name: /^(Начать|Продолжить) тест$/ }).click();
+    await page.getByRole("button", { name: /^Начать тест$/ }).click();
     await expect(page).toHaveURL(/\/candidate\/assessment\/test\/[\w-]+$/);
     await expect(page.getByText(/^Тест · Backend · Middle$/)).toBeVisible();
 
@@ -103,5 +120,27 @@ test("кандидат: демо-вход → тест → результат �
     await expect(card.getByText(/^Backend · (Middle|Senior)$/)).toBeVisible();
     await expect(card.getByText(/Место в категории:/)).toBeVisible();
     await expect(card.getByText("Правило 90 дней")).toBeVisible();
+  });
+
+  await test.step("карта навыков и маршрут роста по этому тесту", async () => {
+    await openSection(page, "Карта навыков и рост", /\/candidate\/feedback$/);
+    const main = page.getByRole("main");
+    await expect(main.getByRole("heading", { level: 1, name: "Карта навыков и рост" })).toBeVisible();
+    // разбор свежего теста (сегодняшняя дата), только темы — без заданий и ключей
+    const today = new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Moscow" }).format(new Date());
+    await expect(main.getByText(new RegExp(`^Тест Backend · (Middle|Senior) от ${today}`))).toBeVisible();
+    await expect(main.getByText(/Только темы — без самих заданий и ключей/)).toBeVisible();
+    await expect(main.getByRole("heading", { level: 2, name: "Карта навыков по темам" })).toBeVisible();
+    const topics = main.getByRole("listitem").filter({ hasText: /\d+ задани[еяй] · уровень заданий/ });
+    expect(await topics.count(), "тем в карте навыков").toBeGreaterThanOrEqual(3);
+    await expect(topics.first().getByText(/^Ожидаемо для вашего уровня — \d+ %/)).toBeVisible();
+    await expect(main.getByRole("heading", { level: 2, name: /^Что требуют работодатели — категория Backend · / })).toBeVisible();
+    await expect(main.getByRole("heading", { level: 2, name: "Маршрут роста" })).toBeVisible();
+    await expect(main.getByRole("heading", { level: 2, name: "Соревнования ФСП" })).toBeVisible();
+    // темы показаны по-русски: служебные ключи банка наружу не выходят
+    await productIssue("карта навыков: тема без русского названия («other»)",
+      async () => (await main.getByText(/^(other|misc|common)$/).count()) > 0);
+    await productIssue("карта навыков: двойная точка в подписи теста («г..»)",
+      async () => (await main.getByText(/ г\.\./).count()) > 0);
   });
 });

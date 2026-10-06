@@ -7,9 +7,8 @@
  * API под её же демо-учёткой — так тест не зависит от случайного номера, который выдаётся при сбросе демо.
  */
 import type { Browser, Page } from "@playwright/test";
-import { expect, test } from "../lib/fixtures";
-import { installNetRetry } from "../lib/net";
-import { apiContext, apiGet, juryToken } from "../lib/stand";
+import { expect, newPersonaContext, test } from "../lib/fixtures";
+import { apiContext, apiGet, juryToken, sandboxId } from "../lib/stand";
 import { juryEnter, openSection } from "../lib/ui";
 
 const RUN = new Date().toISOString().slice(11, 19).replace(/:/g, "");
@@ -25,8 +24,7 @@ let ref = "";
 let needUrl = "";
 
 async function asPersona(browser: Browser, persona: "employer" | "candidate"): Promise<Page> {
-  const ctx = await browser.newContext();
-  await installNetRetry(ctx);
+  const ctx = await newPersonaContext(browser);
   const page = await ctx.newPage();
   await juryEnter(page, persona);
   return page;
@@ -46,19 +44,31 @@ test.beforeAll(async () => {
 test("работодатель: потребность → подборка с объяснениями → приглашение", async ({ browser }) => {
   const page = await asPersona(browser, "employer");
 
-  await test.step("потребность текстом и разбор требований", async () => {
+  await test.step("потребность текстом и разбор требований с цитатами", async () => {
     await openSection(page, "Потребности и подборки", /\/employer\/needs$/);
-    await expect(page.getByRole("heading", { name: "Потребности и подборки" })).toBeVisible();
-    await page.locator("textarea#need").fill(NEED);
+    await expect(page.getByRole("heading", { level: 1, name: "Потребности и подборки" })).toBeVisible();
+    await page.getByRole("textbox", { name: "Кого вы ищете" }).fill(NEED);
     await page.getByRole("button", { name: "Разобрать требования" }).click();
-    await expect(page.getByRole("heading", { name: "Требования" })).toBeVisible({ timeout: 60_000 });
-    await expect(page.locator("select#rd")).toHaveValue("backend");
-    await expect(page.locator("select#rg")).toHaveValue("middle");
-    for (const tag of ["Python", "FastAPI", "PostgreSQL"]) {
-      await expect(page.getByText(tag, { exact: true }).filter({ visible: true }).first()).toBeVisible();
+    const main = page.getByRole("main");
+    await expect(main.getByRole("heading", { level: 2, name: "Требования", exact: true })).toBeVisible({ timeout: 60_000 });
+    await expect(main.getByRole("combobox", { name: "Направление", exact: true })).toHaveValue("backend");
+    await expect(main.getByRole("combobox", { name: "Грейд", exact: true })).toHaveValue("middle");
+    await expect(main.getByRole("spinbutton", { name: "Вилка от, ₽" })).toHaveValue("230000");
+    await expect(main.getByRole("spinbutton", { name: "Вилка до, ₽" })).toHaveValue("290000");
+    const row = (zone: string, tag: string) => main.getByRole("listitem")
+      .filter({ has: page.getByRole("combobox", { name: `Вес: ${tag}`, exact: true }) }).filter({ hasText: `${zone}:` });
+    for (const tag of ["Python", "FastAPI", "PostgreSQL", "Redis"]) await expect(row("Обязательно", tag), `обязательно ${tag}`).toBeVisible();
+    for (const tag of ["Docker", "Kafka"]) await expect(row("Желательно", tag), `желательно ${tag}`).toBeVisible();
+    // у каждого требования — цитата: фрагменты подсвечены в исходном тексте
+    await expect(main.getByRole("heading", { level: 2, name: "Откуда взяты требования" })).toBeVisible();
+    const marks = main.locator("mark");
+    for (const q of ["middle", "Python", "FastAPI", "PostgreSQL", "Redis", "Docker", "Kafka", "Удалённо"]) {
+      await expect(marks.filter({ hasText: q }).first(), `цитата «${q}»`).toBeVisible();
     }
-    await expect(page.locator("input#rsf")).toHaveValue("230000");
-    await expect(page.locator("input#rst")).toHaveValue("290000");
+    // в тексте нет требований вне деловых качеств — фильтра ст. 64 нет
+    await expect(main.getByRole("status", { name: "Фильтр ст. 64 ТК РФ" })).toHaveCount(0);
+    await main.getByRole("button", { name: "Подтвердить все" }).click();
+    await expect(main.getByText(/^Проверено требований: (\d+) из \1\./)).toBeVisible();
   });
 
   await test.step("подборка: категории, кандидаты, объяснение «почему»", async () => {
@@ -133,19 +143,41 @@ test("кандидат принимает → работодатель види�
     await page.context().close();
   });
 
+  let emp!: Page;
   await test.step("работодатель: статус и контакты открыты", async () => {
-    const page = await asPersona(browser, "employer");
+    const page = (emp = await asPersona(browser, "employer"));
     await openSection(page, "Приглашения", /\/employer\/invitations$/);
     const inv = page.locator("article").filter({ hasText: POSITION });
     await expect(inv.getByText("Контакты кандидата")).toBeVisible();
     await expect(inv).toContainText(CANDIDATE_NAME);
-    await expect(inv).toContainText("candidate@jury.example.com");
+    // почта демо-кандидата песочницы: candidate+<id песочницы>@jury.example.com
+    await expect(inv).toContainText(`candidate+${sandboxId()}@jury.example.com`);
 
     await inv.getByRole("link", { name: ref }).click();
     await expect(page.getByRole("heading", { name: `Кандидат ${ref}` })).toBeVisible();
     await expect(page.getByText("Кандидат принял ваше приглашение — контакты открыты.")).toBeVisible();
     await expect(page.getByText("Контакты", { exact: true })).toBeVisible();
     await expect(page.getByText(CANDIDATE_NAME).first()).toBeVisible();
+  });
+
+  await test.step("работодатель: журнал передач в ATS после принятия", async () => {
+    const page = emp;
+    await openSection(page, "Интеграция с ATS", /\/employer\/ats$/);
+    const main = page.getByRole("main");
+    await expect(main.getByRole("heading", { level: 1, name: "Интеграция с ATS" })).toBeVisible();
+    const journal = main.getByRole("table").filter({ has: page.getByRole("columnheader", { name: "Куда" }) });
+    await expect(main.getByRole("heading", { level: 2, name: "Журнал передач" })).toBeVisible();
+    // принятое приглашение уходит автоматически во все подключённые демо-ATS
+    for (const ats of ["Talantix", "Поток", "Хантфлоу", "Вебхук"]) {
+      const row = journal.getByRole("row").filter({ hasText: POSITION }).filter({ has: page.getByRole("cell", { name: ats, exact: true }) });
+      await expect(row, `передача в ${ats}`).toHaveCount(1, { timeout: 60_000 });
+      await expect(row.getByRole("cell", { name: /^передано/ })).toBeVisible();
+    }
+    // что пришло в тестовую ATS: профиль с контактами — только кандидаты своей песочницы
+    const inbox = main.getByRole("heading", { level: 2, name: "Тестовая ATS: что пришло" }).locator("xpath=following-sibling::ul[1]");
+    await expect(inbox.getByRole("listitem").filter({ hasText: `${CANDIDATE_NAME.split(" ").reverse().join(" ")} · candidate+${sandboxId()}@jury.example.com` }).first()).toBeVisible();
+    const emails = (await inbox.textContent())?.match(/[\w.+-]+@jury\.example\.com/g) ?? ([] as string[]);
+    expect(emails.filter((e) => !e.includes(`+${sandboxId()}@`)), "в тестовой ATS нет кандидатов чужих песочниц").toEqual([]);
     await page.context().close();
   });
 });
