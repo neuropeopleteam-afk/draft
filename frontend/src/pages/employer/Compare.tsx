@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, useApi } from "../../components/ui";
+import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, ruText, useApi } from "../../components/ui";
 import { InviteForm, ProbeForm } from "./Contact";
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
@@ -30,12 +30,12 @@ function WhyBlock({ why }: { why: Why[] }) {
             {w.pro.length > 0 && (
               <ul className="mt-2 space-y-1.5">
                 {w.pro.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2"><Level level={f.level} /><span className="flex-1">{f.text}</span><span className="whitespace-nowrap font-semibold text-emerald-700">+{pts(f.points)}</span></li>
+                  <li key={i} className="flex items-start gap-2"><Level level={f.level} /><span className="flex-1">{ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-emerald-700">+{pts(f.points)}</span></li>
                 ))}
               </ul>
             )}
             {w.con.map((f, i) => (
-              <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><Level level={f.level} /><span className="flex-1">В пользу {w.lower}: {f.text}</span><span className="whitespace-nowrap font-semibold text-brand-plum">−{pts(f.points)}</span></p>
+              <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><Level level={f.level} /><span className="flex-1">В пользу {w.lower}: {ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-brand-plum">−{pts(f.points)}</span></p>
             ))}
           </li>
         ))}
@@ -136,7 +136,7 @@ export function Compare() {
                         {!cell ? <span className="text-brand-ink/65">—</span> : (
                           <div className="flex items-start gap-2">
                             {cell.level !== "market" && <Level level={cell.level} />}
-                            <p className={STATUS_TEXT[cell.status] ?? ""}>{cell.text}{cell.best && <span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">лучше в строке</span>}</p>
+                            <p className={STATUS_TEXT[cell.status] ?? ""}>{ruText(cell.text)}{cell.best && <span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">лучше в строке</span>}</p>
                           </div>
                         )}
                       </div>
