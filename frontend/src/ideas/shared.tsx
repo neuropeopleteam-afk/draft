@@ -20,12 +20,12 @@ export function Phase({ p }: { p: string }) {
 
 /** Число людей с правилом K = 5: null — группа меньше пяти. */
 export const kn = (v: number | null | undefined) => (v === null ? "< 5" : v === undefined ? "—" : v.toLocaleString("ru-RU"));
-export const pct = (v: number | null | undefined, digits = 0) => (v === null || v === undefined ? "—" : `${(v * 100).toFixed(digits)} %`);
+export const pct = (v: number | null | undefined, digits = 0) => (v === null || v === undefined ? "—" : `${(v * 100).toFixed(digits).replace(".", ",")}\u00A0%`);
 export const mins = (s?: number | null) => (s ? `${Math.floor(s / 60)} мин ${String(s % 60).padStart(2, "0")} с` : "—");
 export const thousand = (v?: number | null) => (v ? `${Math.round(v / 1000).toLocaleString("ru-RU")} тыс.` : "—");
 
 export function Hidden({ children }: { children?: ReactNode }) {
-  return <span title="Скрыто: группа меньше 5 человек" className="cursor-help text-brand-ink/40">{children ?? "< 5"}</span>;
+  return <span title="Скрыто: группа меньше 5 человек" className="cursor-help text-brand-ink/65">{children ?? "< 5"}</span>;
 }
 
 export function Bar({ value, max, tone = "brand" }: { value: number | null | undefined; max: number; tone?: "brand" | "night" | "lavender" }) {

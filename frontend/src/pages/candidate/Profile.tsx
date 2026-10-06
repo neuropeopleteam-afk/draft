@@ -71,7 +71,7 @@ export default function Profile() {
         </div>
         {resume.loading && !r ? <div className="mt-4"><Loading /></div> : r ? (
           <div className="mt-5 space-y-4">
-            <p className="text-sm text-brand-ink/60">{r.filename} · {r.pages} стр. · {r.created_at ? dtt(r.created_at) : "только что"} · {r.method === "rules" ? "разбор по словарям" : "разбор: словари + LLM"}</p>
+            <p className="text-sm text-brand-ink/65">{r.filename} · {r.pages} стр. · {r.created_at ? dtt(r.created_at) : "только что"} · {r.method === "rules" ? "разбор по словарям" : "разбор: словари + LLM"}</p>
             <div className="rounded-xl bg-[#F3F2FB] p-4 text-sm">
               <p className="font-semibold text-brand-night">Вырезано до обработки</p>
               <p className="mt-1 text-brand-ink/70">
@@ -94,7 +94,7 @@ export default function Profile() {
             </div>
             <button className="btn-ghost" onClick={() => applyResume(r.id)}>Добавить в профиль</button>
           </div>
-        ) : <p className="mt-4 text-sm text-brand-ink/55">Резюме ещё не загружено.</p>}
+        ) : <p className="mt-4 text-sm text-brand-ink/65">Резюме ещё не загружено.</p>}
       </section>
 
       <section>
@@ -109,7 +109,7 @@ function Extracted({ title, items }: { title: string; items?: string[] }) {
   return (
     <div className="rounded-xl border border-brand-night/10 p-4">
       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{title} <Level level="T0" /></p>
-      <p className="mt-2 text-sm">{items?.length ? items.join(", ") : <span className="text-brand-ink/50">не найдено</span>}</p>
+      <p className="mt-2 text-sm">{items?.length ? items.join(", ") : <span className="text-brand-ink/65">не найдено</span>}</p>
     </div>
   );
 }

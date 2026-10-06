@@ -7,6 +7,8 @@ import { apiDownload } from "../../lib/api";
 import { InviteForm, ProbeForm } from "./Contact";
 import { useTags } from "./Needs";
 
+const PAGE = 20;
+
 export function Search() {
   const tags = useTags();
   const [direction, setDirection] = useState("");
@@ -15,13 +17,15 @@ export function Search() {
   const [level, setLevel] = useState<"any" | "t1">("any");
   const [fsp, setFsp] = useState(false);
   const [add, setAdd] = useState("");
+  const [page, setPage] = useState(0);
   const qs = new URLSearchParams();
   if (direction) qs.set("direction", direction);
   if (grade) qs.set("grade", grade);
   stack.forEach((s) => qs.append("stack", s));
   qs.set("stack_level", level);
   if (fsp) qs.set("fsp", "true");
-  qs.set("limit", "50");
+  qs.set("limit", String(PAGE));
+  if (page) qs.set("offset", String(page * PAGE));
   const { data, loading, error } = useApi<any>(`/employer/candidates?${qs.toString()}`);
   const cats = useApi<any[]>("/employer/categories");
   const avail = Object.values(tags).filter((t: any) => !direction || !t.direction_id || t.direction_id === direction);
@@ -32,37 +36,46 @@ export function Search() {
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
         <aside className="card h-fit space-y-4">
           <Field label="Специализация" htmlFor="sd">
-            <select id="sd" className="input" value={direction} onChange={(e) => { setDirection(e.target.value); setStack([]); }}>
+            <select id="sd" className="input" value={direction} onChange={(e) => { setDirection(e.target.value); setStack([]); setPage(0); }}>
               <option value="">все</option>{Object.entries(DIRECTIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </Field>
           <Field label="Грейд" htmlFor="sg">
-            <select id="sg" className="input" value={grade} onChange={(e) => setGrade(e.target.value)}>
+            <select id="sg" className="input" value={grade} onChange={(e) => { setGrade(e.target.value); setPage(0); }}>
               <option value="">все</option>{Object.entries(GRADES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </Field>
           <div>
             <p className="label">Стек</p>
             <div className="flex flex-wrap gap-1.5">
-              {stack.map((s) => <button key={s} className="rounded-full border border-brand bg-brand-blush/50 px-2.5 py-1 text-xs font-semibold" onClick={() => setStack(stack.filter((x) => x !== s))}>{(tags as any)[s]?.title ?? s} ✕</button>)}
+              {stack.map((s) => <button key={s} className="rounded-full border border-brand bg-brand-blush/50 px-2.5 py-1 text-xs font-semibold" onClick={() => { setStack(stack.filter((x) => x !== s)); setPage(0); }} aria-label={`Убрать ${(tags as any)[s]?.title ?? s}`}>{(tags as any)[s]?.title ?? s} ✕</button>)}
             </div>
-            <select aria-label="Добавить технологию" className="input mt-2" value={add} onChange={(e) => { if (e.target.value) setStack([...stack, e.target.value]); setAdd(""); }}>
+            <select aria-label="Добавить технологию" className="input mt-2" value={add} onChange={(e) => { if (e.target.value) { setStack([...stack, e.target.value]); setPage(0); } setAdd(""); }}>
               <option value="">добавить…</option>{avail.filter((t: any) => !stack.includes(t.id)).map((t: any) => <option key={t.id} value={t.id}>{t.title}</option>)}
             </select>
             {stack.length > 0 && <div className="mt-2"><Seg label="Уровень навыка" value={level} onChange={setLevel} options={[{ id: "any", title: "Заявлен или подтверждён" }, { id: "t1", title: "Подтверждён (T1)" }]} /></div>}
           </div>
-          <Toggle checked={fsp} onChange={setFsp} label="Есть паспорт ФСП" />
+          <Toggle checked={fsp} onChange={(v) => { setFsp(v); setPage(0); }} label="Есть паспорт ФСП" />
           {cats.data && (
-            <div className="border-t border-brand-night/10 pt-3 text-xs text-brand-ink/60">
+            <div className="hidden border-t border-brand-night/10 pt-3 text-xs text-brand-ink/65 lg:block">
               <p className="mb-1 font-semibold text-brand-night">Кандидатов по категориям</p>
               <ul className="grid grid-cols-1 gap-0.5">{cats.data.filter((c) => !direction || c.direction === direction).map((c) => <li key={c.id} className="flex justify-between"><span>{c.title}</span><span>{c.count}</span></li>)}</ul>
             </div>
           )}
         </aside>
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-brand-ink/70">Найдено: <b>{data?.total ?? "…"}</b></p><LevelLegend /></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-brand-ink/70" aria-live="polite">Найдено: <b>{data?.total ?? "…"}</b>{data?.total > PAGE && <> · показаны {page * PAGE + 1}–{Math.min(data.total, (page + 1) * PAGE)}</>}</p><LevelLegend /></div>
           {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.items.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры." /> :
-            data.items.map((c: any) => <CandidateCard key={c.ref} c={c} compact actions={<Link className="btn-ghost !py-2" to={`/employer/candidates/${c.ref}`}>Открыть</Link>} />)}
+            <>
+              {data.items.map((c: any) => <CandidateCard key={c.ref} c={c} compact actions={<Link className="btn-ghost !py-2" to={`/employer/candidates/${c.ref}`}>Открыть</Link>} />)}
+              {data.total > PAGE && (
+                <nav className="flex flex-wrap items-center justify-between gap-3 pt-2" aria-label="Страницы результатов">
+                  <button className="btn-ghost" disabled={page === 0 || loading} onClick={() => { setPage(page - 1); window.scrollTo({ top: 0 }); }}>← Предыдущие</button>
+                  <span className="text-sm text-brand-ink/70">Страница {page + 1} из {Math.ceil(data.total / PAGE)}</span>
+                  <button className="btn-ghost" disabled={(page + 1) * PAGE >= data.total || loading} onClick={() => { setPage(page + 1); window.scrollTo({ top: 0 }); }}>Следующие →</button>
+                </nav>
+              )}
+            </>}
         </div>
       </div>
     </div>

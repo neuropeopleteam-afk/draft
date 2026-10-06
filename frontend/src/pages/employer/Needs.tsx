@@ -67,11 +67,11 @@ const STATUS_CHIP: Record<ItemStatus, [string, string]> = {
 };
 
 function Quote({ ev }: { ev?: Ev | null }) {
-  if (!ev) return <p className="mt-0.5 text-xs text-brand-ink/45">нет цитаты — добавлено вручную</p>;
+  if (!ev) return <p className="mt-0.5 text-xs text-brand-ink/65">нет цитаты — добавлено вручную</p>;
   return (
-    <p className="mt-0.5 text-xs text-brand-ink/60" title={ev.context}>
+    <p className="mt-0.5 text-xs text-brand-ink/65" title={ev.context}>
       <span className="rounded bg-brand-blush/60 px-1 text-brand-night">«{ev.quote}»</span>
-      <span className="text-brand-ink/45"> · {ev.source === "llm" ? "LLM, цитата найдена в тексте" : ev.basis === "stack" ? "по технологиям" : ev.basis === "experience" ? "по опыту" : "словарь"}</span>
+      <span className="text-brand-ink/65"> · {ev.source === "llm" ? "LLM, цитата найдена в тексте" : ev.basis === "stack" ? "по технологиям" : ev.basis === "experience" ? "по опыту" : "словарь"}</span>
     </p>
   );
 }
@@ -86,8 +86,8 @@ function Row({ id, label, status, ev, focus, onFocus, onConfirm, onDelete, child
     return (
       <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-dashed border-brand-night/15 px-3 py-2">
         <div className="min-w-[12rem] flex-1">
-          <div className="flex flex-wrap items-center gap-2 text-sm"><span className="text-brand-ink/60">{label}:</span>{children}</div>
-          <p className="mt-0.5 text-xs text-brand-ink/45">в тексте не указано — можно задать вручную</p>
+          <div className="flex flex-wrap items-center gap-2 text-sm"><span className="text-brand-ink/65">{label}:</span>{children}</div>
+          <p className="mt-0.5 text-xs text-brand-ink/65">в тексте не указано — можно задать вручную</p>
         </div>
       </li>
     );
@@ -96,10 +96,10 @@ function Row({ id, label, status, ev, focus, onFocus, onConfirm, onDelete, child
     <li className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-3 py-2 ${on ? "border-brand bg-brand-blush/20" : "border-brand-night/10"}`}
       onMouseEnter={() => onFocus?.(id)} onMouseLeave={() => onFocus?.(null)}>
       <div className="min-w-[12rem] flex-1">
-        <div className="flex flex-wrap items-center gap-2 text-sm"><span className="text-brand-ink/60">{label}:</span>{children}</div>
+        <div className="flex flex-wrap items-center gap-2 text-sm"><span className="text-brand-ink/65">{label}:</span>{children}</div>
         <Quote ev={ev} />
       </div>
-      <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${c}`}>{t}</span>
+      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${c}`}>{t}</span>
       <div className="flex items-center gap-1">
         <button type="button" aria-pressed={status === "confirmed"} onClick={onConfirm}
           className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${status === "confirmed" ? "bg-emerald-600 text-white" : "border border-emerald-600/40 text-emerald-800 hover:bg-emerald-50"}`}>
@@ -176,8 +176,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
             </select>))}
         </ul>
       </div>
-      <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/45">нет</p>}</div>
-      <div><p className="label">Желательный стек</p>{req.stack_desired.length ? <ul className="space-y-2">{stackRows("stack_desired")}</ul> : <p className="text-sm text-brand-ink/45">нет</p>}</div>
+      <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
+      <div><p className="label">Желательный стек</p>{req.stack_desired.length ? <ul className="space-y-2">{stackRows("stack_desired")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
       <div className="flex flex-wrap items-end gap-3">
         <div className="min-w-[14rem] flex-1">
           <Field label="Добавить технологию" htmlFor="addt">
@@ -264,7 +264,7 @@ export function Needs() {
             <div className="rounded-xl bg-[#F7F6FB] p-4">
               <QuotedText text={parsed} marks={reqMarks(req, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
             </div>
-            {llmDropped > 0 && <p className="text-xs text-brand-ink/55">LLM предложил требований без цитаты из текста: {llmDropped} — они отброшены.</p>}
+            {llmDropped > 0 && <p className="text-xs text-brand-ink/65">LLM предложил требований без цитаты из текста: {llmDropped} — они отброшены.</p>}
             <BiasPanel bias={req.bias ?? []} suggested={req.suggested_text} onRewrite={rewrite} focus={focus} onFocus={setFocus} />
             <h2 className="border-t border-brand-night/10 pt-4 font-bold text-brand-night">Требования</h2>
             <ReqEditor req={req} onChange={setReq} focus={focus} onFocus={setFocus} />
@@ -286,7 +286,7 @@ export function Needs() {
                 <Link to={`/employer/needs/${n.id}`} className="card flex flex-wrap items-center justify-between gap-3 hover:border-brand/40">
                   <div>
                     <p className="font-bold text-brand-night">{n.title}</p>
-                    <p className="text-sm text-brand-ink/60">{n.requirements.direction ? catTitle(`${n.requirements.direction}.${n.requirements.grade ?? ""}`) : "направление не указано"} · версий подборки: {n.versions.length} · {dtt(n.created_at)}</p>
+                    <p className="text-sm text-brand-ink/65">{n.requirements.direction ? catTitle(`${n.requirements.direction}.${n.requirements.grade ?? ""}`) : "направление не указано"} · версий подборки: {n.versions.length} · {dtt(n.created_at)}</p>
                   </div>
                   <span className="text-sm font-semibold text-brand">Открыть</span>
                 </Link>
@@ -347,14 +347,14 @@ export function Selection() {
       <section className="card space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-brand-night">Текст потребности</h2>
-          <span className="text-xs text-brand-ink/55">подсвечены фрагменты, из которых извлечены требования{reqOf?.bias?.length ? "; волнистой линией — не учитываемые (ст. 64 ТК РФ)" : ""}</span>
+          <span className="text-xs text-brand-ink/65">подсвечены фрагменты, из которых извлечены требования{reqOf?.bias?.length ? "; волнистой линией — не учитываемые (ст. 64 ТК РФ)" : ""}</span>
         </div>
         <QuotedText text={need.data.raw_text} marks={reqMarks(reqOf, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
         <BiasPanel bias={reqOf?.bias ?? []} suggested={reqOf?.suggested_text} rewriteLabel="Создать потребность из исправленного текста"
           onRewrite={(t) => navigate("/employer/needs", { state: { text: t } })} focus={focus} onFocus={setFocus} />
       </section>
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-brand-ink/60">Версии подборки:</span>
+        <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
           <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
             v{x.version} · {x.total}
@@ -375,7 +375,7 @@ export function Selection() {
                           const base: string[] = filters.categories ?? s.categories.filter((x: any) => ["exact", "direction", "all"].includes(x.relation)).map((x: any) => x.id);
                           setFilters({ ...filters, categories: base.includes(c.id) ? base.filter((y) => y !== c.id) : [...base, c.id] });
                         }} />
-                      <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/55">{REL[c.relation]} · {range(c.market_range?.from, c.market_range?.to)}</span></span>
+                      <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{REL[c.relation]} · {range(c.market_range?.from, c.market_range?.to)}</span></span>
                     </label>
                     <span className="chip">{c.count}</span>
                   </li>
@@ -406,7 +406,7 @@ export function Selection() {
               <button type="button" className="text-sm font-semibold text-brand hover:underline" onClick={() => setRefineReq(refineReq ? null : s.requirements)}>{refineReq ? "Не менять требования" : "Изменить требования"}</button>
               <Alert>{err}</Alert>
               <button className="btn-primary w-full" disabled={busy} onClick={refine}>{busy ? "Пересчитываем…" : `Сохранить как v${(last ?? 0) + 1}`}</button>
-              <p className="text-xs text-brand-ink/50">Прежние версии подборки сохраняются.</p>
+              <p className="text-xs text-brand-ink/65">Прежние версии подборки сохраняются.</p>
             </section>
           </aside>
           <div className="space-y-4">
@@ -419,7 +419,7 @@ export function Selection() {
                 <button className="btn-primary" disabled={!picked.length} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
               </div>
             </div>
-            <p className="text-xs text-brand-ink/55">Отметьте 2–3 кандидатов, чтобы сравнить их рядом по требованиям потребности, или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>сравните первых трёх</Link>.</p>
+            <p className="text-xs text-brand-ink/65">Отметьте 2–3 кандидатов, чтобы сравнить их рядом по требованиям потребности, или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>сравните первых трёх</Link>.</p>
             <LevelLegend />
             {!s.results.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или выберите соседнюю категорию." /> : s.results.map((r: any) => (
               <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} compact

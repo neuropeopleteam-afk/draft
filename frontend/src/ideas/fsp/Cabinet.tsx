@@ -16,7 +16,7 @@ const DIRS = Object.entries(DIRECTIONS).map(([id, title]) => ({ id, title: id ==
 const GRS = Object.entries(GRADES).map(([id, title]) => ({ id, title }));
 const q = (days: string) => (days === "all" ? "" : `?days=${days}`);
 /** Отклонение в процентах со знаком: «+4,2 %», «−10 %». */
-const sgn = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { maximumFractionDigits: 1 })} %`;
+const sgn = (v: number) => `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toLocaleString("ru-RU", { maximumFractionDigits: 1 })}\u00A0%`;
 
 /** Обёртка разделов: один запрос /fsp-cabinet/report на период, общий для всех экранов кабинета. */
 export function FspReportLayout() {
@@ -46,7 +46,7 @@ function Head({ title, subtitle, csv }: { title: string; subtitle: string; csv?:
             {PERIODS.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
           </select>
         </label>
-        <span className="text-xs text-brand-ink/55" aria-live="polite">
+        <span className="text-xs text-brand-ink/65" aria-live="polite">
           {loading ? "Обновляем…" : rep ? `Только агрегаты · группы меньше ${rep.k} человек скрыты` : ""}
         </span>
         {csv && (
@@ -74,7 +74,7 @@ function Card({ title, sub, children, more }: { title: string; sub?: string; chi
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h2 className="text-lg font-bold text-brand-night">{title}</h2>
-          {sub && <p className="mt-1 text-sm text-brand-ink/60">{sub}</p>}
+          {sub && <p className="mt-1 text-sm text-brand-ink/65">{sub}</p>}
         </div>
         {more && <Link to={more.to} className="text-sm font-semibold text-brand hover:text-brand-soft">{more.label} →</Link>}
       </div>
@@ -190,7 +190,7 @@ export function FspDemand() {
             <Card title="Категории «направление · грейд»" sub="Выберите показатель. Пустая клетка с пунктиром — группа меньше 5 человек.">
               <Seg label="Показатель" value={metric} onChange={setMetric} options={METRICS.map(({ id, title }) => ({ id, title }))} />
               <Heatmap rows={DIRS} cols={GRS} cell={get} fmt={m.fmt} tone={metric === "needs" || metric === "invitations" ? "brand" : "night"} />
-              {noGrade.length > 0 && <p className="text-xs text-brand-ink/55">Потребности без грейда: {noGrade.map(([d, n]) => `${DIRECTIONS[d] ?? d} — ${n}`).join(", ")}.</p>}
+              {noGrade.length > 0 && <p className="text-xs text-brand-ink/65">Потребности без грейда: {noGrade.map(([d, n]) => `${DIRECTIONS[d] ?? d} — ${n}`).join(", ")}.</p>}
             </Card>
             <Card title="Навыки в потребностях" sub="Сколько потребностей требуют навык (обязательно и желательно) и как часто приглашают тех, кто подтвердил его тестом (T1).">
               <Legend items={[{ tone: "brand", label: "обязательно" }, { tone: "soft", label: "желательно" }]} />
@@ -202,7 +202,7 @@ export function FspDemand() {
                       <StackBar max={smax} parts={[{ value: s.needs_required, tone: "brand", label: "обязательно" }, { value: s.needs_desired, tone: "soft", label: "желательно" }]} />
                       <span className="w-8 shrink-0 text-right text-sm font-semibold tabular-nums text-brand-night">{s.needs_required + s.needs_desired}</span>
                     </span>
-                    <span className="text-xs text-brand-ink/60">
+                    <span className="text-xs text-brand-ink/65">
                       компаний {s.companies} · подтвердили {fk(s.supply_confirmed)} · приглашены {fpct(s.invite_rate_with_skill)}
                     </span>
                   </li>
@@ -217,7 +217,7 @@ export function FspDemand() {
             <Card title="Таблица по категориям">
               <div className="-mx-6 overflow-x-auto px-6">
                 <table className="w-full min-w-[46rem] text-left text-sm">
-                  <thead className="text-xs uppercase tracking-wide text-brand-ink/50">
+                  <thead className="text-xs uppercase tracking-wide text-brand-ink/65">
                     <tr><th className="py-2 pr-3">Категория</th><th className="pr-3 text-right">Потребности</th><th className="pr-3 text-right">Компании</th><th className="pr-3 text-right">Приглашения</th><th className="pr-3 text-right">Кандидаты</th><th className="pr-3 text-right">Приглашены</th><th className="pr-3 text-right">Приняли</th><th className="text-right">Медиана рынка</th></tr>
                   </thead>
                   <tbody className="divide-y divide-brand-night/5 tabular-nums">
@@ -228,8 +228,8 @@ export function FspDemand() {
                         <td className="pr-3 text-right">{c.companies}</td>
                         <td className="pr-3 text-right">{c.invitations}</td>
                         <td className="pr-3 text-right">{fk(c.supply)}</td>
-                        <td className="pr-3 text-right">{fk(c.invited_candidates)}{c.invite_rate != null && <span className="text-brand-ink/50"> · {fpct(c.invite_rate)}</span>}</td>
-                        <td className="pr-3 text-right">{fk(c.accepted_candidates)}{c.accept_rate != null && <span className="text-brand-ink/50"> · {fpct(c.accept_rate)}</span>}</td>
+                        <td className="pr-3 text-right">{fk(c.invited_candidates)}{c.invite_rate != null && <span className="text-brand-ink/65"> · {fpct(c.invite_rate)}</span>}</td>
+                        <td className="pr-3 text-right">{fk(c.accepted_candidates)}{c.accept_rate != null && <span className="text-brand-ink/65"> · {fpct(c.accept_rate)}</span>}</td>
                         <td className="text-right">{ftr(c.market_median)}</td>
                       </tr>
                     ))}
@@ -282,7 +282,7 @@ export function FspEffect() {
                   aText: d.fsp.invite_rate == null ? (d.fsp.candidates === 0 ? "нет" : "< 5") : undefined,
                   bText: d.no_fsp.invite_rate == null ? (d.no_fsp.candidates === 0 ? "нет" : "< 5") : undefined }))} />
             </Card>
-            <p className="flex items-center gap-2 text-xs text-brand-ink/60"><span className="h-3 border-l-2 border-dashed border-brand-night/50" aria-hidden /> Пунктир на графиках ниже — доля приглашённых без истории ФСП ({fpct(base)}).</p>
+            <p className="flex items-center gap-2 text-xs text-brand-ink/65"><span className="h-3 border-l-2 border-dashed border-brand-night/50" aria-hidden /> Пунктир на графиках ниже — доля приглашённых без истории ФСП ({fpct(base)}).</p>
             <div className="grid gap-5 2xl:grid-cols-2">
               <Card title="Дисциплины ЕВСК" sub="Доля приглашённых среди кандидатов с достижением в дисциплине">
                 <BarList rows={groupRows(fe.disciplines)} max={max} base={base} baseLabel={baseLabel} tone="night" labelWidth="12rem" />
@@ -333,7 +333,7 @@ export function FspSalaries() {
             <Card title="По направлениям" sub="Квартили нижней и верхней границы вилки">
               <div className="-mx-6 overflow-x-auto px-6">
                 <table className="w-full min-w-[40rem] text-left text-sm">
-                  <thead className="text-xs uppercase tracking-wide text-brand-ink/50">
+                  <thead className="text-xs uppercase tracking-wide text-brand-ink/65">
                     <tr><th className="py-2 pr-3">Направление</th><th className="pr-3 text-right">Офферы</th><th className="pr-3 text-right">«От», p25</th><th className="pr-3 text-right">«От», медиана</th><th className="pr-3 text-right">«До», медиана</th><th className="pr-3 text-right">«До», p75</th><th className="text-right">Середина</th></tr>
                   </thead>
                   <tbody className="divide-y divide-brand-night/5 tabular-nums">
@@ -341,7 +341,7 @@ export function FspSalaries() {
                       <tr key={d.direction}>
                         <td className="py-2 pr-3 font-medium text-brand-night">{d.title}</td>
                         <td className="pr-3 text-right">{fk(d.offers)}</td>
-                        {d.suppressed ? <td colSpan={5} className="text-right text-brand-ink/45">скрыто: {d.reason}</td> : (
+                        {d.suppressed ? <td colSpan={5} className="text-right text-brand-ink/65">скрыто: {d.reason}</td> : (
                           <>
                             <td className="pr-3 text-right">{ftr(d.from_p25)}</td><td className="pr-3 text-right">{ftr(d.from_median)}</td>
                             <td className="pr-3 text-right">{ftr(d.to_median)}</td><td className="pr-3 text-right">{ftr(d.to_p75)}</td>
@@ -360,7 +360,7 @@ export function FspSalaries() {
                   rows={rows.filter((r) => r.accepted_mid_median && r.declined_mid_median).map((r) => ({ key: r.category_id, label: r.title, a: r.accepted_mid_median, b: r.declined_mid_median }))} />
               </Card>
             )}
-            <p className="text-xs text-brand-ink/55">Рынок — {rows.find((r) => r.market_source)?.market_source ?? "Хабр Карьера"}, p25–p75 по категории.</p>
+            <p className="text-xs text-brand-ink/65">Рынок — {rows.find((r) => r.market_source)?.market_source ?? "Хабр Карьера"}, p25–p75 по категории.</p>
           </>
         );
       }}</Body>
@@ -392,7 +392,7 @@ export function FspFunnel() {
                 rows={[1, 2, 3].map((i) => ({ key: String(i), label: f.all[i].title, a: conv(f.fsp, i), b: conv(f.no_fsp, i) }))} />
             </Card>
             <Card title="Все кандидаты"><Funnel stages={f.all} tone="plum" /></Card>
-            <p className="text-xs text-brand-ink/55">{f.note}</p>
+            <p className="text-xs text-brand-ink/65">{f.note}</p>
           </>
         );
       }}</Body>
@@ -425,12 +425,12 @@ export function FspCups() {
                 <dl className="grid grid-cols-3 gap-2 text-center sm:grid-cols-5">
                   {[["Участники", c.participants], ["С местом", c.placed], ["Приглашены", c.invited], ["Приняли", c.accepted], ["В паспорте", c.passport_written]].map(([t, v]) => (
                     <div key={t as string} className="rounded-xl bg-[#F7F4FA] px-2 py-2">
-                      <dt className="text-[10px] font-semibold uppercase tracking-wide text-brand-ink/50">{t}</dt>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-brand-ink/65">{t}</dt>
                       <dd className="mt-0.5 text-base font-bold tabular-nums text-brand-night">{fk(v as number | null)}</dd>
                     </div>
                   ))}
                 </dl>
-                <p className="text-xs text-brand-ink/55">
+                <p className="text-xs text-brand-ink/65">
                   {c.score_median_pct != null ? `Медиана балла ${c.score_median_pct} %. ` : ""}
                   {c.passport_pending ? `Ждут связки с ФСП ID: ${fk(c.passport_pending)}.` : ""}
                 </p>
@@ -461,7 +461,7 @@ export function FspMethod() {
             <h2 className="text-lg font-bold text-brand-night">Доступ</h2>
             <p>Роль «ФСП» видит только агрегаты: ни карточек кандидатов, ни потребностей, ни приглашений поштучно. Каждое обращение к кабинету и каждая выгрузка записываются в журнал сервера.</p>
             <p>API: <a className="font-semibold text-brand hover:text-brand-soft" href="/api/docs#/fsp-cabinet" target="_blank" rel="noreferrer">/api/fsp-cabinet</a> — те же данные для BI федерации, CSV в кодировке UTF-8 с разделителем «;».</p>
-            <p className="text-xs text-brand-ink/55">Отчёт сформирован {new Date(rep.generated_at).toLocaleString("ru-RU")}.</p>
+            <p className="text-xs text-brand-ink/65">Отчёт сформирован {new Date(rep.generated_at).toLocaleString("ru-RU")}.</p>
           </section>
         </>
       )}</Body>

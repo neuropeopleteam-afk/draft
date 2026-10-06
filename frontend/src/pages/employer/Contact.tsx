@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Seg, Status, catTitle, dt, errText, range, useApi } from "../../components/ui";
+import { Alert, Empty, Field, History, Level, Loading, Seg, Status, catTitle, dt, errText, range, rub, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { AtsInvitationActions } from "../../integrations/Ats";
 
@@ -15,10 +15,10 @@ function SalaryFields({ from, to, setFrom, setTo, market }: { from: string; to: 
         <Field label="Вилка от, ₽ в месяц" htmlFor="sf"><input id="sf" required type="number" min={1} step={5000} className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
         <Field label="Вилка до, ₽ в месяц" htmlFor="st"><input id="st" required type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
       </div>
-      <p className={`mt-2 text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/60"}`}>
-        {wide ? `Вилка слишком широкая: при «от» ${Number(from).toLocaleString("ru-RU")} ₽ «до» — не выше ${maxTo(from).toLocaleString("ru-RU")} ₽.` : "«До» — не больше чем в 1,5 раза выше «от»: узкая вилка показывает кандидату реальное предложение."}
+      <p className={`mt-2 text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/65"}`}>
+        {wide ? `Вилка слишком широкая: при «от» ${rub(Number(from))} «до» — не выше ${rub(maxTo(from))}.` : "«До» — не больше чем в 1,5 раза выше «от»: узкая вилка показывает кандидату реальное предложение."}
       </p>
-      {market && <p className="mt-1 text-xs text-brand-ink/60">Рынок категории: {range(market.from, market.to)}{market.median ? `, медиана ${market.median.toLocaleString("ru-RU")} ₽` : ""} (Хабр Карьера). Минимум кандидата вам не показывается.</p>}
+      {market && <p className="mt-1 text-xs text-brand-ink/65">Рынок категории: {range(market.from, market.to)}{market.median ? `, медиана ${rub(market.median)}` : ""} (Хабр Карьера). Минимум кандидата вам не показывается.</p>}
     </div>
   );
 }
@@ -40,7 +40,7 @@ export function defaultRange(market: Market, need?: { from?: number | null; to?:
 function salaryError(from: string, to: string) {
   if (!from || !to || Number(from) <= 0 || Number(to) <= 0) return "Укажите вилку зарплаты «от» и «до» — это обязательно";
   if (Number(from) > Number(to)) return "Нижняя граница вилки больше верхней";
-  if (Number(to) > Number(from) * SALARY_MAX_RATIO) return `Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от» (не выше ${maxTo(from).toLocaleString("ru-RU")} ₽)`;
+  if (Number(to) > Number(from) * SALARY_MAX_RATIO) return `Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от» (не выше ${rub(maxTo(from))})`;
   return null;
 }
 
@@ -105,7 +105,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className="input min-h-[110px]" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" /></Field>
       <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className="input" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
       <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} market={market} />
-      <p className="text-xs text-brand-ink/55">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. Одно приглашение кандидату — не чаще раза в 30 дней.</p>
+      <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. Одно приглашение кандидату — не чаще раза в 30 дней.</p>
       <Alert>{err}</Alert>
       <button className="btn-primary" disabled={title.length < 3 || desc.length < 20 || contact.length < 3} onClick={send}>Отправить приглашение</button>
     </div>
@@ -131,7 +131,7 @@ export function EmployerProbes() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-bold text-brand-night">{p.title}</p>
-              <p className="text-brand-ink/60"><Link className="font-semibold text-brand" to={`/employer/candidates/${p.candidate_ref}`}>{p.candidate_ref}</Link> · {catTitle(p.candidate_category)} · {range(p.salary_from, p.salary_to)} · {dt(p.created_at)}</p>
+              <p className="text-brand-ink/65"><Link className="font-semibold text-brand" to={`/employer/candidates/${p.candidate_ref}`}>{p.candidate_ref}</Link> · {catTitle(p.candidate_category)} · {range(p.salary_from, p.salary_to)} · {dt(p.created_at)}</p>
             </div>
             <Status s={p.status} />
           </div>
@@ -147,7 +147,7 @@ export function EmployerProbes() {
             </div>
           )}
           {p.review && <p className="flex items-center gap-2"><Level level="T1" /> {p.review.verdict_title}{p.review.comment ? ` — «${p.review.comment}»` : ""}</p>}
-          <details><summary className="cursor-pointer text-brand-ink/60">История</summary><div className="mt-2"><History items={p.events} /></div></details>
+          <details><summary className="cursor-pointer text-brand-ink/65">История</summary><div className="mt-2"><History items={p.events} /></div></details>
         </article>
       ))}
     </div>
@@ -171,7 +171,7 @@ export function EmployerInvitations() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-bold text-brand-night">{i.position_title}</p>
-              <p className="text-brand-ink/60"><Link className="font-semibold text-brand" to={`/employer/candidates/${i.candidate_ref}`}>{i.candidate_ref}</Link> · {catTitle(i.candidate_category)} · {range(i.salary_from, i.salary_to)}</p>
+              <p className="text-brand-ink/65"><Link className="font-semibold text-brand" to={`/employer/candidates/${i.candidate_ref}`}>{i.candidate_ref}</Link> · {catTitle(i.candidate_category)} · {range(i.salary_from, i.salary_to)}</p>
             </div>
             <Status s={i.status} />
           </div>
@@ -180,7 +180,7 @@ export function EmployerInvitations() {
               <p className="font-semibold">Контакты кандидата</p>
               <p className="mt-1">{[i.contacts.full_name, i.contacts.email, i.contacts.phone, i.contacts.telegram].filter(Boolean).join(" · ")}</p>
             </div>
-          ) : <p className="text-brand-ink/55">Контакты откроются после принятия приглашения.</p>}
+          ) : <p className="text-brand-ink/65">Контакты откроются после принятия приглашения.</p>}
           <AtsInvitationActions invitationId={i.id} status={i.status} candidateRef={i.candidate_ref} />
           {i.complaint ? (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Жалоба кандидата: <b>{i.complaint.reason_title.toLowerCase()}</b>. Жалобы снижают индекс доверия компании — его видят кандидаты.</p>

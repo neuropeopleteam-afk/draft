@@ -1,8 +1,24 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { ApiError, api } from "../lib/api";
 
-export const rub = (v?: number | null) => (v ? `${v.toLocaleString("ru-RU")} ₽` : "—");
-export const range = (a?: number | null, b?: number | null) => (a || b ? `${a ? rub(a) : "…"} – ${b ? rub(b) : "…"}` : "—");
+/** Неразрывный пробел: между числом и «₽»/«%», внутри «220 000». */
+export const NB = "\u00A0";
+/** 1234567 → «1 234 567 ₽» (разряды и знак рубля — неразрывными пробелами). */
+export const rub = (v?: number | null) => (v ? `${v.toLocaleString("ru-RU")}${NB}₽` : "—");
+export const range = (a?: number | null, b?: number | null) => (a || b ? `${a ? rub(a) : "…"}${NB}– ${b ? rub(b) : "…"}` : "—");
+/** Число по-русски: десятичная запятая, минус «−», разряды. num(1.756) → «1,76». */
+export const num = (v?: number | null, d = 2) => (v == null || Number.isNaN(Number(v)) ? "—"
+  : Number(v).toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }).replace("-", "−"));
+/** Со знаком: «+1,76», «−0,10». */
+export const signed = (v?: number | null, d = 2) => (v == null ? "—" : `${v > 0 ? "+" : ""}${num(v, d)}`);
+/** Текст объяснений с сервера: «θ = 1.27 ± 0.49» → «θ = 1,27 ± 0,49», «260 000 ₽» — с неразрывными пробелами.
+ *  Даты «06.10» и версии вида «v1.2» не трогает. */
+export const ruText = (s?: string | null) => (s ?? "")
+  .replace(/(^|[\s(=±+−-])(0|[1-9]\d{0,2})\.(\d+)(?![.\d])/g, "$1$2,$3")
+  .replace(/(\d) (?=\d{3}(?!\d))/g, `$1${NB}`)
+  .replace(/(\d) (₽|%|тыс\.)/g, `$1${NB}$2`);
+/** Доля → проценты: 0.953 → «95 %». */
+export const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${num(v * 100, d)}${NB}%`);
 export const dt = (s?: string | null) => (s ? new Date(s).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "—");
 export const dtt = (s?: string | null) => (s ? new Date(s).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—");
 export const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Не удалось связаться с сервером");
@@ -34,9 +50,9 @@ export function useApi<T>(path: string | null, deps: unknown[] = []) {
 
 const LEVEL_STYLE: Record<string, string> = {
   T2: "bg-brand-night text-white",
-  T1: "bg-brand text-white",
+  T1: "bg-[#E0004C] text-white",  // brand чуть темнее: белый 12 px на #FF0053 — 3,9 : 1
   T0: "bg-brand-blush text-brand-plum",
-  none: "bg-gray-100 text-gray-500",
+  none: "bg-gray-100 text-gray-600",
 };
 const LEVEL_HINT: Record<string, string> = {
   T2: "Подтверждено реестром ФСП",
@@ -48,7 +64,7 @@ const LEVEL_HINT: Record<string, string> = {
 export function Level({ level }: { level?: string | null }) {
   const l = level ?? "none";
   return (
-    <span title={LEVEL_HINT[l]} className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide ${LEVEL_STYLE[l] ?? LEVEL_STYLE.none}`}>
+    <span title={LEVEL_HINT[l]} aria-label={`${l === "none" ? "нет данных" : l}: ${LEVEL_HINT[l] ?? ""}`} className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide ${LEVEL_STYLE[l] ?? LEVEL_STYLE.none}`}>
       {l === "none" ? "нет" : l}
     </span>
   );
@@ -56,7 +72,7 @@ export function Level({ level }: { level?: string | null }) {
 
 export function LevelLegend() {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-brand-ink/65">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-brand-ink/70">
       {["T1", "T2", "T0"].map((l) => <span key={l} className="inline-flex items-center gap-1.5"><Level level={l} />{LEVEL_HINT[l]}</span>)}
     </div>
   );
@@ -88,7 +104,8 @@ export function Alert({ kind = "error", children }: { kind?: "error" | "info" | 
 
 export function Loading({ text = "Загрузка…" }: { text?: string }) {
   return (
-    <div className="space-y-3" aria-busy="true" aria-label={text}>
+    <div className="space-y-3" aria-busy="true" aria-live="polite" role="status">
+      <span className="sr-only">{text}</span>
       <div className="h-6 w-1/3 animate-pulse rounded bg-brand-blush/60" />
       <div className="h-24 animate-pulse rounded-2xl bg-brand-blush/30" />
       <div className="h-24 animate-pulse rounded-2xl bg-brand-blush/30" />
@@ -98,10 +115,13 @@ export function Loading({ text = "Загрузка…" }: { text?: string }) {
 
 export function Empty({ title, text, action }: { title: string; text?: string; action?: ReactNode }) {
   return (
-    <div className="card border-dashed text-center">
+    <div className="card border-dashed px-6 py-10 text-center">
+      <svg viewBox="0 0 24 24" className="mx-auto mb-3 h-8 w-8 text-brand-lavender" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true">
+        <rect x="3.5" y="5" width="17" height="14" rx="3" /><path d="M3.5 13h5l1.5 2h4l1.5-2h5" />
+      </svg>
       <p className="font-semibold text-brand-night">{title}</p>
-      {text && <p className="mx-auto mt-1 max-w-md text-sm text-brand-ink/60">{text}</p>}
-      {action && <div className="mt-4">{action}</div>}
+      {text && <p className="mx-auto mt-1 max-w-md text-sm leading-relaxed text-brand-ink/70">{text}</p>}
+      {action && <div className="mt-5 flex flex-wrap justify-center gap-2">{action}</div>}
     </div>
   );
 }
@@ -111,7 +131,7 @@ export function Field({ label, hint, children, htmlFor }: { label: string; hint?
     <div>
       <label className="label" htmlFor={htmlFor}>{label}</label>
       {children}
-      {hint && <p className="mt-1 text-xs text-brand-ink/55">{hint}</p>}
+      {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
     </div>
   );
 }
@@ -121,7 +141,7 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
     <label className="flex cursor-pointer items-start justify-between gap-4 py-2">
       <span>
         <span className="block text-sm font-medium text-brand-ink">{label}</span>
-        {hint && <span className="block text-xs text-brand-ink/55">{hint}</span>}
+        {hint && <span className="block text-xs leading-relaxed text-brand-ink/65">{hint}</span>}
       </span>
       <span className="relative mt-0.5 inline-flex shrink-0">
         <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
@@ -136,27 +156,37 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
   return (
     <div className="card">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
-      <p className="mt-2 text-xl font-bold text-brand-night">{value}</p>
-      {hint && <p className="mt-1 text-xs text-brand-ink/55">{hint}</p>}
+      <p className="mt-2 text-xl font-bold tabular-nums text-brand-night">{value}</p>
+      {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
     </div>
   );
 }
 
 export function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const close = useRef(onClose);
+  close.current = onClose;
+  // Только при открытии/закрытии (onClose часто новая функция на каждый рендер — фокус не должен прыгать)
   useEffect(() => {
     if (!open) return;
-    const h = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const prev = document.activeElement as HTMLElement | null;
+    const h = (e: KeyboardEvent) => e.key === "Escape" && close.current();
     window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
-  }, [open, onClose]);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";  // фон под окном не прокручивается
+    box.current?.focus({ preventScroll: true });
+    return () => { window.removeEventListener("keydown", h); document.body.style.overflow = overflow; prev?.focus?.({ preventScroll: true }); };
+  }, [open]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-brand-night/40 p-0 md:items-center md:p-6" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}
-        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-white p-6 shadow-xl md:rounded-2xl">
+      <div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}
+        className="max-h-[92vh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-5 shadow-xl outline-none sm:p-6 md:rounded-2xl">
         <div className="mb-4 flex items-start justify-between gap-4">
           <h2 className="text-lg font-bold text-brand-night">{title}</h2>
-          <button onClick={onClose} className="rounded-lg px-2 py-1 text-brand-ink/50 hover:bg-brand-blush/50 hover:text-brand-night" aria-label="Закрыть">✕</button>
+          <button onClick={onClose} className="-mr-1 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-brand-ink/65 hover:bg-brand-blush/50 hover:text-brand-night" aria-label="Закрыть">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
         </div>
         {children}
       </div>
@@ -170,7 +200,7 @@ export function History({ items }: { items: { status: string; at: string; by?: s
       {items.map((e, i) => (
         <li key={i} className="text-sm">
           <span className="font-semibold text-brand-night">{statusTitle(e.status)}</span>
-          <span className="text-brand-ink/55"> · {dtt(e.at)}{e.by ? ` · ${e.by === "candidate" ? "кандидат" : "работодатель"}` : ""}</span>
+          <span className="text-brand-ink/65"> · {dtt(e.at)}{e.by ? ` · ${e.by === "candidate" ? "кандидат" : "работодатель"}` : ""}</span>
           {e.note && <p className="text-brand-ink/70">«{e.note}»</p>}
         </li>
       ))}
@@ -183,7 +213,7 @@ export function Seg<T extends string>({ value, onChange, options, label }: { val
     <div className="inline-flex flex-wrap gap-1 rounded-xl bg-brand-blush/40 p-1" role="radiogroup" aria-label={label}>
       {options.map((o) => (
         <button key={o.id} type="button" role="radio" aria-checked={value === o.id} onClick={() => onChange(o.id)}
-          className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${value === o.id ? "bg-white text-brand-night shadow-sm" : "text-brand-plum/70 hover:text-brand-plum"}`}>
+          className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${value === o.id ? "bg-white text-brand-night shadow-sm" : "text-brand-plum/80 hover:text-brand-plum"}`}>
           {o.title}
         </button>
       ))}

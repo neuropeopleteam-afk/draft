@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PageTitle } from "../components/CabinetLayout";
-import { Alert, catTitle, DIRECTIONS, dtt, Empty, errText, Loading, Seg, useApi } from "../components/ui";
+import { Alert, catTitle, DIRECTIONS, dtt, Empty, errText, Loading, num, Seg, signed, useApi } from "../components/ui";
 import { api } from "../lib/api";
 
 type Mode = "pending" | "llm" | "reviewed";
@@ -56,7 +56,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
     <article className="card">
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="chip">{FORMAT[it.format] ?? it.format}</span>
-        <span className="text-brand-ink/60">Кандидат {it.candidate_ref ?? "—"} · {DIRECTIONS[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
+        <span className="text-brand-ink/65">Кандидат {it.candidate_ref ?? "—"} · {DIRECTIONS[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
         {it.session_status === "finished" && it.status === "pending" && <span className="chip bg-brand-blush text-brand-plum">результат предварительный</span>}
         {it.llm?.error === "prompt_injection_suspected" && <span className="chip bg-brand-night text-white" title={it.llm.injection_note ?? undefined}>Похоже на инструкции оценщику — LLM не вызывался</span>}
       </div>
@@ -89,18 +89,18 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
             </div>
           </div>
         ))}
-        {!done && <textarea className="input" rows={2} placeholder="Комментарий (необязательно): что упущено, что верно" value={comment} onChange={(e) => setComment(e.target.value)} />}
+        {!done && <textarea className="input" rows={2} aria-label="Комментарий эксперта" placeholder="Комментарий (необязательно): что упущено, что верно" value={comment} onChange={(e) => setComment(e.target.value)} />}
       </fieldset>
       {err && <div className="mt-3"><Alert>{err}</Alert></div>}
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-brand-ink/75">{score != null ? <>Итог по рубрике: <b className="text-brand-night">{score.toFixed(2).replace(".", ",")}</b></> : "Оцените все критерии"}</p>
+        <p className="text-sm text-brand-ink/75">{score != null ? <>Итог по рубрике: <b className="text-brand-night">{num(score)}</b></> : "Оцените все критерии"}</p>
         {!done && <button className="btn-primary" disabled={score == null || busy} onClick={submit}>{busy ? "Сохраняем…" : "Сохранить оценку"}</button>}
       </div>
       {(res || mode === "reviewed") && (
         <div className="mt-3"><Alert kind="ok">
           {res?.review?.applied || it.method === "expert" ? "Оценка эксперта вошла в результат теста." : "Оценка сохранена рядом с оценкой LLM."}
-          {(res?.review?.llm_score ?? it.llm?.score) != null && ` Балл LLM: ${Number(res?.review?.llm_score ?? it.llm?.score).toFixed(2)}.`}
-          {res?.recomputed && ` Результат пересчитан: θ = ${res.theta >= 0 ? "+" : ""}${res.theta.toFixed(2)}, грейд ${res.confirmed ? "подтверждён" : "не подтверждён"}.`}
+          {(res?.review?.llm_score ?? it.llm?.score) != null && ` Балл LLM: ${num(Number(res?.review?.llm_score ?? it.llm?.score))}.`}
+          {res?.recomputed && ` Результат пересчитан: θ = ${signed(res.theta)}, грейд ${res.confirmed ? "подтверждён" : "не подтверждён"}.`}
           {res && <button className="ml-2 font-semibold underline" onClick={onDone}>Обновить очередь</button>}
         </Alert></div>
       )}
