@@ -7,6 +7,8 @@
   интерфейса, через API) — тоже причина;
 * **сервер**: время ответа по часам сервера. «Аномально быстро» — быстрее max(5 с, 8 % рекомендуемого
   времени задания); быстрый верный ответ — признак предзнания, быстрый неверный — угадывания;
+* **оценщик открытых ответов**: ответ с инструкциями для модели (grader.injection_signals) не оценивается
+  LLM, уходит эксперту и понижает достоверность;
 * **детектор предзнания** (``assessment_bank.psychometrics.CanaryDetector``): канарейки — намеренно
   опубликованные варианты на позициях 2, 6, 10 — и модель времени; при срабатывании θ пересчитывается
   без подозрительных ответов (bank_engine.finish).
@@ -111,6 +113,10 @@ def assess(items: list[dict], preknowledge: dict | None = None) -> dict:
                            f"{_n(paste_chars, 'символ', 'символа', 'символов')}"))
     elif paste_items:
         reasons.append((1, f"Вставка готового текста в ответ: 1 задание, {_n(paste_chars, 'символ', 'символа', 'символов')}"))
+    inj = [i for i in done if i.get("injection")]
+    if inj:  # развёрнутый ответ адресован модели-оценщику (grader.injection_signals) — оценивает эксперт
+        reasons.append((2, "В развёрнутом ответе — инструкции для автоматического оценщика "
+                           f"({_n(len(inj), 'задание', 'задания', 'заданий')}); ответ передан эксперту"))
     if done and len(with_sig) < 0.5 * len(done):
         reasons.append((1, "Интерфейс теста не прислал сигналы по большинству заданий — ответы отправлены "
                            "в обход интерфейса (через API)"))
@@ -124,7 +130,8 @@ def assess(items: list[dict], preknowledge: dict | None = None) -> dict:
         "signals": {"items": len(done), "scored": n, "fast_correct": len(fast_correct), "fast_wrong": len(fast_wrong),
                     "canary_fast": len(canary_fast), "focus_lost_items": len(focus_items), "focus_lost_total": focus_total,
                     "hidden_s": round(hidden_s, 1), "paste_items": len(paste_items), "paste_chars": paste_chars,
-                    "client_signals_items": len(with_sig), "preknowledge_flagged": bool(pk.get("flagged"))},
+                    "client_signals_items": len(with_sig), "preknowledge_flagged": bool(pk.get("flagged")),
+                    "injection_items": len(inj)},
     }
 
 
