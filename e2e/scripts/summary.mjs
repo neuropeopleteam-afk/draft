@@ -9,11 +9,19 @@ if (!existsSync(file)) {
 } else {
   const r = JSON.parse(readFileSync(file, "utf8"));
   const rows = [];
+  const issues = new Set();
   const walk = (suite, path) => {
     for (const spec of suite.specs ?? []) {
       for (const t of spec.tests) {
         const last = t.results.at(-1);
-        const note = (t.annotations ?? []).filter((a) => a.type === "ответов").map((a) => `ответов: ${a.description}`);
+        // аннотации из test.info() — в результате попытки (и в тесте у старых версий Playwright)
+        const ann = [...(t.annotations ?? []), ...(last?.annotations ?? [])]
+          .filter((a, i, all) => all.findIndex((b) => b.type === a.type && b.description === a.description) === i);
+        const note = ann.filter((a) => a.type === "ответов").map((a) => `ответов: ${a.description}`);
+        for (const a of ann.filter((a) => a.type === "ошибка продукта")) {
+          issues.add(a.description);
+          note.push(`ошибка продукта: ${a.description}`);
+        }
         rows.push(`| ${last?.status === "passed" ? "прошёл" : last?.status ?? t.status} | ${path} › ${spec.title} | ` +
           `${((last?.duration ?? 0) / 1000).toFixed(1)} с | ${note.join("; ")} |`);
       }
@@ -24,5 +32,6 @@ if (!existsSync(file)) {
   const st = r.stats;
   out.push(`Итог: прошло **${st.expected}**, упало **${st.unexpected}**, нестабильных ${st.flaky}, пропущено ${st.skipped}; ` +
     `время ${(st.duration / 1000 / 60).toFixed(1)} мин.`, "", "| Статус | Сценарий | Время | Примечание |", "|---|---|---:|---|", ...rows);
+  if (issues.size) out.push("", "Известные ошибки продукта (прогон не валят, E2E_STRICT=1 — валят):", ...[...issues].map((x) => `- ${x}`));
 }
 console.log(out.join("\n") + "\n");
