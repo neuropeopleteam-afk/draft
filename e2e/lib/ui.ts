@@ -20,7 +20,7 @@ export async function juryEnter(page: Page, persona: Persona): Promise<void> {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   const block = page.locator("section#jury");
   await expect(block.getByRole("heading", { name: "Вход в один клик и проводник по сценарию" })).toBeVisible();
-  await block.getByRole("button", { name: new RegExp(`^Войти как\\s*${TITLES[persona]}`) }).click();
+  await block.getByRole("button", { name: new RegExp(`^Войти как:?\\s*${TITLES[persona]}`) }).click();
   await expect(page).toHaveURL(LANDING[persona], { timeout: 60_000 });
   // вход — в песочницу прогона, а не в общее демо: фронтенд хранит её id там же, где мы его задали
   expect(await page.evaluate(() => localStorage.getItem("jury_scenario")), "песочница жюри в браузере").toBe(sandboxId());
