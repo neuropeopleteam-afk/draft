@@ -47,6 +47,17 @@ def pass_test(client, token, grade="middle", correct=True) -> dict:
     return r.json()
 
 
+def make_demo(email: str) -> None:
+    """Пометить учётку как демо (как у входа жюри в один клик) — для проверок демо-режима."""
+    from sqlalchemy import update
+
+    from app.modules.auth.models import User
+
+    with SessionLocal() as db:
+        db.execute(update(User).where(User.email == email).values(is_demo=True))
+        db.commit()
+
+
 def candidate_with_category(client, email="cand@example.com", grade="middle", **onb) -> str:
     t = register_and_verify(client, email=email)
     r = client.put("/api/me/onboarding", json={**ONBOARDING, **onb}, headers=H(t))
@@ -97,6 +108,10 @@ def test_stub_test_assigns_category_and_90_day_lock_with_jury_bypass(client):
     assert st["grade_history"][0]["reason"] == "initial"
     r = client.post("/api/assessment/sessions", json={"claimed_grade": "senior"}, headers=H(t))
     assert r.status_code == 409 and r.json()["detail"]["code"] == "grade_locked"
+    # демо-режим жюри — только для демо-учёток: живой кандидат правило 90 дней не снимет
+    r = client.put("/api/me/jury-mode", json={"enabled": True}, headers=H(t))
+    assert r.status_code == 403 and r.json()["detail"]["code"] == "jury_mode_demo_only"
+    make_demo("cand@example.com")
     assert client.put("/api/me/jury-mode", json={"enabled": True}, headers=H(t)).status_code == 200
     res = pass_test(client, t, "senior")
     assert res["grade_changed"] and res["current_grade"] == "senior"
@@ -106,6 +121,7 @@ def test_stub_test_assigns_category_and_90_day_lock_with_jury_bypass(client):
 
 def test_failed_test_does_not_downgrade(client):
     t = candidate_with_category(client)
+    make_demo("cand@example.com")
     client.put("/api/me/jury-mode", json={"enabled": True}, headers=H(t))
     res = pass_test(client, t, "senior", correct=False)
     assert not res["confirmed"] and res["current_grade"] == "middle"
