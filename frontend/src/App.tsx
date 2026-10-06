@@ -32,6 +32,8 @@ import { CandidateCup, CandidateCups } from "./ideas/cup/Candidate";
 import { EmployerCup, EmployerCups } from "./ideas/cup/Employer";
 import { FspCups, FspDemand, FspEffect, FspFunnel, FspMethod, FspOverview, FspReportLayout, FspSalaries } from "./ideas/fsp/Cabinet";
 import { fspSections } from "./ideas/fsp/sections";
+import LiveGuest from "./ideas/live/Guest";
+import LiveScreen from "./ideas/live/Screen";
 
 export default function App() {
   return (
@@ -39,6 +41,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/validation" element={<Validation />} />
+      <Route path="/jury/live" element={<LiveScreen />} />
+      <Route path="/j/:code" element={<LiveGuest />} />
       <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
         <Route index element={<ExpertHome />} />
         <Route path="pairs" element={<ExpertPairs />} />
