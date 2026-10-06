@@ -50,8 +50,21 @@ function messageFrom(status: number, body: any): { code: string; message: string
     const fieldRu: Record<string, string> = { email: "Почта", password: "Пароль", code: "Код" };
     return { code: "validation_error", message: field && fieldRu[field] ? `${fieldRu[field]}: ${raw}` : raw };
   }
-  return { code: "http_" + status, message: status >= 500 ? "Сервис временно недоступен" : "Ошибка запроса" };
+  // Строка от FastAPI: русская — показываем как есть, английская по умолчанию («Not Found») — по коду статуса
+  if (typeof d === "string" && /[а-яё]/i.test(d)) return { code: "http_" + status, message: d };
+  return { code: "http_" + status, message: STATUS_TEXT[status] ?? (status >= 500 ? "Сервис временно недоступен, повторите через минуту" : "Не удалось выполнить запрос") };
 }
+
+const STATUS_TEXT: Record<number, string> = {
+  400: "Проверьте введённые данные",
+  401: "Сессия истекла — войдите заново",
+  403: "Нет доступа к этому разделу",
+  404: "Не найдено: возможно, запись удалена или ссылка устарела",
+  409: "Данные уже изменились — обновите страницу",
+  413: "Файл слишком большой",
+  422: "Проверьте поля формы",
+  429: "Слишком много запросов — подождите минуту и повторите",
+};
 
 // Абсолютный адрес API от origin: если стенд открыт как https://логин:пароль@хост/ (базовая авторизация),
 // относительный fetch унаследовал бы учётные данные из адреса страницы и браузер отклонил бы запрос.
