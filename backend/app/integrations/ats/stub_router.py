@@ -51,6 +51,16 @@ def statuses(account_id: int, authorization: str | None = Header(None), db: Sess
     return {"items": STATUSES}
 
 
+@router.get("/huntflow/v2/accounts/{account_id}/vacancies", summary="Заглушка Хантфлоу: вакансии организации")
+def hf_vacancies(account_id: int, authorization: str | None = Header(None), db: Session = Depends(get_db)) -> dict:
+    _key(authorization, db)
+    return {"page": 1, "count": 3, "total_pages": 1, "total_items": 3,
+            "items": [{"id": 101, "position": "Backend-разработчик (платежи)", "company": "Платёжная платформа",
+                       "state": "OPEN", "money": "240 000 – 280 000 ₽"},
+                      {"id": 102, "position": "Python-разработчик (интеграции)", "company": "Интеграции", "state": "OPEN"},
+                      {"id": 103, "position": "Аналитик данных", "company": "Аналитика", "state": "CLOSED"}]}
+
+
 @router.post("/huntflow/v2/accounts/{account_id}/applicants", summary="Заглушка Хантфлоу: создать кандидата")
 async def create_applicant(account_id: int, request: Request, authorization: str | None = Header(None),
                            db: Session = Depends(get_db)) -> dict:

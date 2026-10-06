@@ -1,23 +1,33 @@
-"""Передача кандидата в ATS работодателя: Хантфлоу (API v2), вебхук, экспорт карточки в JSON.
+"""Передача кандидата в ATS работодателя: Хантфлоу (API v2), Talantix (GraphQL), «Поток» (REST v3), вебхук,
+экспорт карточки в JSON. Провайдеры — общий интерфейс providers/base.Provider.
 
 Когда: автоматически при принятии приглашения (если включено ``auto_push``) и вручную — по кнопке у принятого
 приглашения или у отклика на вакансию. Контакты уходят в ATS только когда они уже раскрыты работодателю
 (приглашение принято / кандидат откликнулся сам) — правило ТЗ сохраняется и за пределами платформы.
 Попытки: до ATS_MAX_ATTEMPTS с паузой 0,5 → 2 с; результат и ошибка — в журнале ats_deliveries (без ПДн).
+Идемпотентность: ats_links (кандидат платформы → id в ATS и вакансии) — повтор не создаёт дубликат,
+короткая блокировка строки связи защищает от гонки двух воркеров (авто-передача и кнопка одновременно).
 """
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import time
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import or_, select, update
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.db import SessionLocal, utcnow
 from app.core.enums import InvitationStatus
-from app.integrations.ats.clients import AtsError, HuntflowClient, post_webhook
-from app.integrations.ats.models import AtsDelivery, AtsSettings
+from app.integrations.ats import profile as prof
+from app.integrations.ats import providers
+from app.integrations.ats.clients import AtsError, post_webhook
+from app.integrations.ats.models import AtsDelivery, AtsLink, AtsSettings
+from app.integrations.ats.profile import split_fio  # noqa: F401 — совместимость импорта
+from app.integrations.ats.providers.base import LinkState, Target
+from app.integrations.ats.providers.huntflow import applicant_body as hf_body
 from app.integrations.crypto import decrypt
 from app.integrations.settings import get_isettings
 from app.integrations.vacancies.models import Vacancy, VacancyApplication
@@ -30,10 +40,9 @@ from app.modules.profiles.models import CandidateProfile, Company
 
 log = logging.getLogger(__name__)
 SCHEMA = "vstrechny.candidate.v1"
-
-
-def _rub(v: int) -> str:
-    return f"{v:,}".replace(",", " ") + " ₽"
+LOCK_S = 90
+TARGET_TITLES = {"huntflow": "Хантфлоу", "talantix": "Talantix", "potok": "Поток", "webhook": "Вебхук"}
+NO_RETRY = (400, 401, 402, 403, 404, 422)
 
 
 def export_payload(db: Session, company: Company, *, invitation: Invitation | None = None,
@@ -55,97 +64,88 @@ def export_payload(db: Session, company: Company, *, invitation: Invitation | No
                "vacancy_id": str(v.id), "position_title": v.title, "salary_from": v.salary_from,
                "salary_to": v.salary_to, "applied_at": application.created_at.isoformat(),
                "cover_letter": application.cover_letter}
+    base = get_isettings().public_base_url.rstrip("/")
     return {
         "schema": SCHEMA, "exported_at": utcnow().isoformat(),
-        "source": {"platform": "Встречный (спецтрек ФСП)", "url": get_isettings().public_base_url},
+        "source": {"platform": "Встречный (спецтрек ФСП)", "url": base},
         "company": {"id": str(company.id), "name": company.name, "inn": company.inn},
         "candidate": {"ref": cp.public_ref, "category_id": cp.current_category_id,
                       "category_title": category_title(cp.current_category_id) if cp.current_category_id else None,
                       "contacts": contacts, "card": card},
         "context": ctx,
+        "links": {"pdf": prof.pdf_url(str(company.id), str(cand_id)),
+                  "card": f"{base}/employer/candidates/{cp.public_ref}"},
         "evidence_levels": {"T0": "заявлено кандидатом", "T1": "подтверждено тестом/зондом",
                             "T2": "подтверждено реестром ФСП"},
     }
 
 
-def _resume_text(p: dict) -> str:
-    c, ctx = p["candidate"], p["context"]
-    card = c.get("card") or {}
-    lines = [f"Кандидат {c['ref']} с платформы «Встречный» (спецтрек ФСП).",
-             f"Категория: {c.get('category_title') or 'не присвоена'}.",
-             f"Позиция: {ctx.get('position_title')}; вилка {_rub(ctx['salary_from'])} – {_rub(ctx['salary_to'])}."]
-    for e in ctx.get("evidence") or []:
-        lines.append(f"[{e.get('level')}] {e.get('text')}")
-    test = card.get("test") or {}
-    if test.get("theta") is not None:
-        lines.append(f"[T1] Тест: {test.get('correct')} из {test.get('answered')} верно, θ = {test['theta']:+.2f}")
-    for s in (card.get("skills_confirmed") or [])[:8]:
-        lines.append(f"[T1] Навык подтверждён заданиями: {s.get('title')}")
-    for a in ((card.get("fsp") or {}).get("achievements") or [])[:5]:
-        lines.append(f"[T2] ФСП: {a.get('text')}")
-    if ctx.get("cover_letter"):
-        lines.append(f"Сопроводительное письмо: {ctx['cover_letter']}")
-    lines.append(f"Карточка: {p['source']['url']}/employer/candidates/{c['ref']}")
-    return "\n".join(lines)
-
-
-PATRONYMIC = ("вич", "вна", "ична", "чна", "оглы", "кызы")
-SURNAME = ("ов", "ев", "ёв", "ин", "ын", "ова", "ева", "ёва", "ина", "ына", "ский", "цкий", "ская", "цкая", "ко", "ук",
-           "юк", "дзе", "швили", "ян", "их", "ых")
-
-
-def split_fio(full_name: str | None) -> tuple[str | None, str | None, str | None]:
-    """(фамилия, имя, отчество) из свободной строки: «Петров Иван Сергеевич», «Иван Сергеевич Петров», «Иван Петров»."""
-    parts = (full_name or "").split()
-    if not parts:
-        return None, None, None
-    if len(parts) == 1:
-        return parts[0], "—", None
-    low = [x.lower() for x in parts]
-    if len(parts) >= 3:
-        if low[2].endswith(PATRONYMIC):
-            return parts[0], parts[1], " ".join(parts[2:])
-        if low[1].endswith(PATRONYMIC):
-            return parts[-1], parts[0], parts[1]
-        return parts[0], parts[1], " ".join(parts[2:])
-    if low[1].endswith(SURNAME) and not low[0].endswith(SURNAME):
-        return parts[1], parts[0], None
-    return parts[0], parts[1], None
-
-
 def huntflow_applicant(p: dict) -> dict:
-    ct = p["candidate"]["contacts"]
-    last, first, middle = split_fio(ct.get("full_name"))
-    if not last:
-        last, first = p["candidate"]["ref"], "Кандидат"
-    ctx = p["context"]
-    body = {"last_name": last, "first_name": first, "email": ct.get("email"), "phone": ct.get("phone"),
-            "position": p["candidate"].get("category_title"),
-            "money": f"{ctx['salary_from']}–{ctx['salary_to']} ₽ (вилка предложения)",
-            "externals": [{"auth_type": "NATIVE", "data": {"body": _resume_text(p)}}]}
-    if middle:
-        body["middle_name"] = middle
-    if ct.get("telegram"):
-        body["social"] = [{"social_type": "TELEGRAM", "value": ct["telegram"].lstrip("@")}]
-    return {k: v for k, v in body.items() if v not in (None, "")}
+    """Тело POST /accounts/{id}/applicants Хантфлоу из карточки ``vstrechny.candidate.v1``."""
+    return hf_body(prof.build(p))
 
 
-def _run_huntflow(st: AtsSettings, p: dict) -> dict:
-    token = decrypt(st.huntflow_token_enc)
-    if not token or not st.huntflow_account_id:
-        raise AtsError("Хантфлоу: не заданы токен или id организации")
-    cl = HuntflowClient(st.huntflow_base_url or get_isettings().huntflow_default_base_url, token)
-    created = cl.create_applicant(st.huntflow_account_id, huntflow_applicant(p))
-    res = {"applicant_id": created.get("id")}
-    if st.huntflow_vacancy_id and created.get("id"):
-        status_id = st.huntflow_status_id
-        if not status_id:
-            items = sorted(cl.statuses(st.huntflow_account_id), key=lambda s: s.get("order", 0))
-            status_id = next((s["id"] for s in items if not s.get("removed")), None)
-        if status_id:
-            link = cl.add_to_vacancy(st.huntflow_account_id, created["id"], st.huntflow_vacancy_id, status_id,
-                                     f"Принял приглашение на платформе «Встречный»: {p['context']['position_title']}")
-            res.update({"vacancy_id": st.huntflow_vacancy_id, "status_id": status_id, "link_id": link.get("id")})
+def _target(db: Session, company_id: uuid.UUID, code: str, st: AtsSettings, *,
+            application: VacancyApplication | None, override: int | None) -> Target:
+    """Вакансия в ATS: явно выбранная при передаче → сопоставление вакансии платформы → вакансия по умолчанию."""
+    if code == "huntflow":
+        return Target(vacancy_id=override or st.huntflow_vacancy_id, stage_id=st.huntflow_status_id)
+    conn = providers.connection(db, company_id, code, create=False)
+    if override:
+        return Target(vacancy_id=override)
+    if application is not None:
+        m = (conn.vacancy_map or {}).get(str(application.vacancy_id))
+        if m and m.get("id"):
+            return Target(vacancy_id=int(m["id"]), vacancy_title=m.get("title"), stage_id=m.get("stage_id"),
+                          stage_title=m.get("stage_title"))
+    return Target(vacancy_id=conn.vacancy_id, vacancy_title=conn.vacancy_title, stage_id=conn.stage_id,
+                  stage_title=conn.stage_title)
+
+
+def _link(db: Session, company_id: uuid.UUID, code: str, cand_id: uuid.UUID) -> AtsLink:
+    """Связь кандидата с ATS под короткой блокировкой (два воркера, двойной клик, авто-передача + кнопка)."""
+    q = select(AtsLink).where(AtsLink.company_id == company_id, AtsLink.provider == code,
+                              AtsLink.candidate_user_id == cand_id)
+    link = db.scalar(q)
+    if link is None:
+        db.add(AtsLink(company_id=company_id, provider=code, candidate_user_id=cand_id, vacancies=[]))
+        try:
+            db.commit()
+        except IntegrityError:
+            db.rollback()
+        link = db.scalar(q)
+    now = utcnow()
+    got = db.execute(update(AtsLink).where(AtsLink.id == link.id,
+                                           or_(AtsLink.lock_until.is_(None), AtsLink.lock_until < now))
+                     .values(lock_until=now + timedelta(seconds=LOCK_S))
+                     .execution_options(synchronize_session=False)).rowcount
+    db.commit()
+    if got != 1:
+        raise AtsError("Передача этого кандидата уже идёт — повтор через пару секунд", 409)
+    db.refresh(link)
+    return link
+
+
+def _run_provider(db: Session, company_id: uuid.UUID, code: str, st: AtsSettings, p: dict, *,
+                  cand_id: uuid.UUID, application: VacancyApplication | None, override: int | None,
+                  force: bool) -> dict:
+    if code == "huntflow" and not st.huntflow_account_id:
+        raise AtsError("Хантфлоу: не задан id организации (account_id)", 422)
+    provider = providers.make(db, company_id, code)
+    target = _target(db, company_id, code, st, application=application, override=override)
+    link = _link(db, company_id, code, cand_id)
+
+    def saver(ls: LinkState) -> None:  # id в ATS фиксируем сразу: следующий шаг может упасть, повтор продолжит
+        link.external_id, link.vacancies = ls.external_id, [dict(v) for v in ls.vacancies]
+        db.commit()
+
+    ls = LinkState(external_id=link.external_id, vacancies=[dict(v) for v in (link.vacancies or [])], saver=saver)
+    try:
+        res = provider.push(prof.build(p), target, ls, force=force)
+    finally:
+        link.lock_until = None
+        db.commit()
+    res["external_id"] = str(res["external_id"]) if res.get("external_id") is not None else None
     return res
 
 
@@ -159,8 +159,9 @@ def _run_webhook(st: AtsSettings, p: dict, delivery_id: str, event: str) -> dict
 
 def deliver(db: Session, company_id: uuid.UUID, *, invitation_id: uuid.UUID | None = None,
             application_id: uuid.UUID | None = None, trigger: str = "invitation_accepted",
-            only: str | None = None) -> list[AtsDelivery]:
-    """Отправить кандидата во все включённые ATS компании. Возвращает записи журнала."""
+            only: str | set[str] | list[str] | None = None, vacancy_override: int | None = None,
+            force: bool = False) -> list[AtsDelivery]:
+    """Отправить кандидата во все включённые ATS компании (или только в ``only``). Возвращает записи журнала."""
     st = db.get(AtsSettings, company_id)
     company = db.get(Company, company_id)
     if st is None or company is None:
@@ -173,13 +174,15 @@ def deliver(db: Session, company_id: uuid.UUID, *, invitation_id: uuid.UUID | No
         return []
     payload = export_payload(db, company, invitation=inv, application=app_)
     event = "candidate.accepted_invitation" if inv else "candidate.applied"
-    targets = [t for t, on in (("huntflow", st.huntflow_enabled), ("webhook", st.webhook_enabled)) if on]
+    targets = providers.enabled_targets(db, company_id, st)
     if only:
-        targets = [t for t in targets if t == only]
+        want = {only} if isinstance(only, str) else set(only)
+        targets = [t for t in targets if t in want]
+    cand_id = (inv or app_).candidate_user_id
     out = []
     max_attempts = get_isettings().ats_max_attempts
     for target in targets:
-        d = AtsDelivery(company_id=company_id, candidate_user_id=(inv or app_).candidate_user_id,
+        d = AtsDelivery(company_id=company_id, candidate_user_id=cand_id,
                         invitation_id=inv.id if inv else None, application_id=app_.id if app_ else None,
                         target=target, status="pending", trigger=trigger, result={})
         db.add(d)
@@ -187,15 +190,24 @@ def deliver(db: Session, company_id: uuid.UUID, *, invitation_id: uuid.UUID | No
         for attempt in range(1, max_attempts + 1):
             d.attempts = attempt
             try:
-                d.result = _run_huntflow(st, payload) if target == "huntflow" else \
-                    _run_webhook(st, payload, str(d.id), event)
+                if target == "webhook":
+                    d.result = _run_webhook(st, payload, str(d.id), event)
+                else:
+                    d.result = _run_provider(db, company_id, target, st, payload, cand_id=cand_id,
+                                             application=app_, override=vacancy_override, force=force)
                 d.status, d.error, d.http_status = "ok", None, d.result.get("http_status", 200)
                 break
             except AtsError as e:
                 d.status, d.error, d.http_status = "error", str(e)[:500], e.status
-                if e.status in (400, 401, 403, 404, 422) or attempt == max_attempts:
+                if e.status in NO_RETRY or attempt == max_attempts:
                     break
                 time.sleep(0.5 if attempt == 1 else 2.0)
+            except Exception as e:  # noqa: BLE001 — неожиданный ответ ATS не должен оставлять запись «pending»
+                log.exception("ATS %s push failed", target)
+                db.rollback()
+                d.attempts = attempt
+                d.status, d.error, d.http_status = "error", f"Внутренняя ошибка адаптера: {type(e).__name__}", None
+                break
         db.commit()
         out.append(d)
     return out
@@ -221,7 +233,8 @@ def delivery_out(db: Session, d: AtsDelivery) -> dict:
         a = db.get(VacancyApplication, d.application_id)
         v = db.get(Vacancy, a.vacancy_id) if a else None
         title = v.title if v else None
-    return {"id": str(d.id), "target": d.target, "status": d.status, "attempts": d.attempts,
+    return {"id": str(d.id), "target": d.target, "target_title": TARGET_TITLES.get(d.target, d.target),
+            "status": d.status, "attempts": d.attempts,
             "http_status": d.http_status, "result": d.result, "error": d.error, "trigger": d.trigger,
             "candidate_ref": cp.public_ref if cp else None, "position_title": title,
             "invitation_id": str(d.invitation_id) if d.invitation_id else None,
