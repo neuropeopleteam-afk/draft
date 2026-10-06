@@ -76,12 +76,22 @@ function Quote({ ev }: { ev?: Ev | null }) {
   );
 }
 
-function Row({ id, label, status, ev, focus, onFocus, onConfirm, onDelete, children }: {
+function Row({ id, label, status, ev, focus, onFocus, onConfirm, onDelete, children, empty = false }: {
   id: string; label: string; status: ItemStatus; ev?: Ev | null; focus?: string | null; onFocus?: (k: string | null) => void;
-  onConfirm: () => void; onDelete: () => void; children: ReactNode;
+  onConfirm: () => void; onDelete: () => void; children: ReactNode; empty?: boolean;
 }) {
   const on = focus === id;
   const [t, c] = STATUS_CHIP[status];
+  if (empty) {
+    return (
+      <li className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-dashed border-brand-night/15 px-3 py-2">
+        <div className="min-w-[12rem] flex-1">
+          <div className="flex flex-wrap items-center gap-2 text-sm"><span className="text-brand-ink/60">{label}:</span>{children}</div>
+          <p className="mt-0.5 text-xs text-brand-ink/45">в тексте не указано — можно задать вручную</p>
+        </div>
+      </li>
+    );
+  }
   return (
     <li className={`flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border px-3 py-2 ${on ? "border-brand bg-brand-blush/20" : "border-brand-night/10"}`}
       onMouseEnter={() => onFocus?.(id)} onMouseLeave={() => onFocus?.(null)}>
@@ -128,7 +138,7 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
     onChange({ ...req, ...patch, review, evidence });
   };
   const sRow = (k: Scalar, label: string, control: ReactNode) => (
-    <Row key={k} id={`ev:${k}`} label={label} ev={req.evidence?.[k]} status={scalarStatus(req, k)} focus={focus} onFocus={onFocus}
+    <Row key={k} id={`ev:${k}`} label={label} ev={req.evidence?.[k]} status={scalarStatus(req, k)} focus={focus} onFocus={onFocus} empty={!present(req, k)}
       onConfirm={() => confirmScalar(k)} onDelete={() => delScalar(k)}>{control}</Row>
   );
   const stackRows = (zone: Zone) => req[zone].map((x) => (
@@ -424,7 +434,7 @@ export function Selection() {
         </div>
       )}
       <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Зонд для ${picked.length} канд.`}>
-        <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} onDone={() => { setProbeOpen(false); setPicked([]); }} />
+        <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to }} onDone={() => { setProbeOpen(false); setPicked([]); }} />
       </Modal>
     </div>
   );

@@ -11,7 +11,39 @@ interface Cand {
   cells: Record<string, Cell>; market_range: { from: number; to: number; median?: number } | null;
   can_invite: boolean; invite_available_at: string | null; last_invitation_status: string | null; probe_active: boolean;
 }
-interface CompareOut { need: { id: string; title: string; raw_text: string; version: number | null }; rows: Row[]; candidates: Cand[]; selection_total: number }
+interface WhyF { level: string; points: number; text: string }
+interface Why { higher: string; lower: string; diff: number; summary: string; text: string; pro: WhyF[]; con: WhyF[] }
+interface CompareOut { need: { id: string; title: string; raw_text: string; version: number | null; requirements: any }; rows: Row[]; candidates: Cand[]; selection_total: number; why: Why[] }
+
+const pts = (x: number) => Math.abs(x).toFixed(1).replace(".", ",");
+
+/** «Почему A выше B»: вклад подтверждённых фактов в разницу скоров. */
+function WhyBlock({ why }: { why: Why[] }) {
+  if (!why?.length) return null;
+  return (
+    <section className="card space-y-3" aria-label="Почему один кандидат выше другого">
+      <h2 className="text-sm font-bold text-brand-night">Почему выше</h2>
+      <ul className="grid gap-3 md:grid-cols-2">
+        {why.map((w) => (
+          <li key={`${w.higher}-${w.lower}`} className="rounded-xl bg-[#F7F6FB] p-4 text-sm">
+            <p className="font-semibold text-brand-night">{w.summary}</p>
+            {w.pro.length > 0 && (
+              <ul className="mt-2 space-y-1.5">
+                {w.pro.map((f, i) => (
+                  <li key={i} className="flex items-start gap-2"><Level level={f.level} /><span className="flex-1">{f.text}</span><span className="whitespace-nowrap font-semibold text-emerald-700">+{pts(f.points)}</span></li>
+                ))}
+              </ul>
+            )}
+            {w.con.map((f, i) => (
+              <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><Level level={f.level} /><span className="flex-1">В пользу {w.lower}: {f.text}</span><span className="whitespace-nowrap font-semibold text-brand-plum">−{pts(f.points)}</span></p>
+            ))}
+          </li>
+        ))}
+      </ul>
+      <p className="text-xs text-brand-ink/55">Баллы из 100 — вклад фактора в разницу скоров. Учитываются только подтверждённые факты: тест и навыки (T1), ФСП из реестра (T2), оценённые зонды (T1).</p>
+    </section>
+  );
+}
 
 const STATUS_TEXT: Record<string, string> = {
   confirmed: "text-brand-ink", partial: "text-brand-ink/80", declared: "text-brand-ink/60", missing: "text-brand-ink/45",
@@ -36,13 +68,14 @@ export function Compare() {
   if (error || !data) return <div className="max-w-3xl space-y-4"><Alert>{error}</Alert><Link to={`/employer/needs/${id}`} className="btn-ghost">К подборке</Link></div>;
   const cs = data.candidates;
   const market = cs.find((c) => c.market_range)?.market_range ?? null;
+  const needSalary = { from: data.need.requirements?.salary_from, to: data.need.requirements?.salary_to };
   const groups: { group: string; rows: Row[] }[] = [];
   for (const r of data.rows) {
     const g = groups.at(-1);
     if (g && g.group === r.group) g.rows.push(r); else groups.push({ group: r.group, rows: [r] });
   }
   const back = `/employer/needs/${id}${data.need.version ? `/v/${data.need.version}` : ""}`;
-  const cols = `minmax(14rem,18rem) repeat(${cs.length}, minmax(15rem,1fr))`;
+  const cols = `minmax(12rem,16rem) repeat(${cs.length}, minmax(0,1fr))`;
 
   return (
     <div className="max-w-6xl space-y-5">
@@ -54,9 +87,10 @@ export function Compare() {
         </div>
       </div>
       {done && <Alert kind="ok">{done}</Alert>}
+      <WhyBlock why={data.why} />
       <LevelLegend />
       <div className="overflow-x-auto rounded-2xl border border-brand-night/10">
-        <div role="table" aria-label="Сравнение кандидатов" className="min-w-max" style={{ display: "grid", gridTemplateColumns: cols }}>
+        <div role="table" aria-label="Сравнение кандидатов" style={{ display: "grid", gridTemplateColumns: cols, minWidth: `${14 + cs.length * 15}rem` }}>
           <div role="row" className="contents">
             <div role="columnheader" className="sticky left-0 z-10 border-b border-brand-night/10 bg-white p-4 text-xs text-brand-ink/60">
               Требование потребности и цитата из текста
@@ -116,10 +150,10 @@ export function Compare() {
       </div>
       <p className="text-xs text-brand-ink/55">Пол, возраст, имя и фото в сравнении и в ранжировании не участвуют. Контакты откроются только после того, как кандидат примет приглашение.</p>
       <Modal open={!!probe} onClose={() => setProbe(null)} title={`Зонд для ${probe?.length ?? 0} канд.`}>
-        {probe && <ProbeForm refs={probe} needId={id} market={market} onDone={() => { setProbe(null); setDone("Зонд отправлен. Ответы появятся в разделе «Зонды»."); reload(); }} />}
+        {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={() => { setProbe(null); setDone("Зонд отправлен. Ответы появятся в разделе «Зонды»."); reload(); }} />}
       </Modal>
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение ${invite?.ref ?? ""}`}>
-        {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} onDone={() => { setInvite(null); setDone(`Приглашение ${invite.ref} отправлено. Контакты откроются после согласия кандидата.`); reload(); }} />}
+        {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} needSalary={needSalary} onDone={() => { setInvite(null); setDone(`Приглашение ${invite.ref} отправлено. Контакты откроются после согласия кандидата.`); reload(); }} />}
       </Modal>
     </div>
   );

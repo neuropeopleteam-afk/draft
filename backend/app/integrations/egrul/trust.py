@@ -11,10 +11,13 @@
 | Реалистичность вилок относительно рынка категории | 15 | приглашения и вакансии vs p25–p75 Хабр Карьеры |
 | Доля принятых приглашений | 10 | история приглашений |
 | Скорость ответа работодателя | 10 | отклики и зонды |
+| Жалобы кандидатов на приглашения | штраф до −25 | нереальная вилка, не та роль, спам — за 180 дней |
 
 Ликвидированная компания или ИНН, которого нет в реестре, — индекс не выше 10 («низкий»).
 Если ФНС не ответила (капча, сбой) — признак «не удалось проверить», индекс помечается как предварительный.
 Мало данных по поведению (меньше 3 ответов) — нейтрально: половина баллов, без штрафа.
+Жалобы: −5 за каждого пожаловавшегося кандидата (не больше −25); три и больше жалоб на 30 % приглашений и
+выше — признак «плохо». Жаловаться может только приглашённый кандидат, одна жалоба на приглашение.
 """
 from __future__ import annotations
 
@@ -23,7 +26,7 @@ import re
 from statistics import median
 from urllib.parse import urlparse
 
-from sqlalchemy import select
+from sqlalchemy import func as sa_func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import as_aware, utcnow
@@ -33,7 +36,7 @@ from app.integrations.egrul.models import RegistryCheck
 from app.integrations.vacancies.models import Vacancy, VacancyApplication
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
-from app.modules.invitations.models import Invitation, Probe
+from app.modules.invitations.models import Invitation, InvitationComplaint, Probe
 from app.modules.profiles.models import CandidateProfile, Company, EmployerProfile
 
 FREE_MAIL = {
@@ -263,6 +266,32 @@ def speed_factor(db: Session, company: Company) -> dict:
     return _factor("speed", "Скорость ответа", "warn", 1, 10, f"отвечает медленно: медиана {m / 24:.0f} дн.")
 
 
+COMPLAINT_PENALTY, COMPLAINT_MAX_PENALTY = 5, 25
+
+
+def complaints_factor(db: Session, company: Company) -> dict:
+    """Штраф за жалобы кандидатов на приглашения за 180 дней (баллы ≤ 0, максимум 0)."""
+    from app.modules.invitations.service import COMPLAINT_REASONS
+
+    since = utcnow() - timedelta(days=180)
+    rows = db.scalars(select(InvitationComplaint).where(InvitationComplaint.company_id == company.id,
+                                                        InvitationComplaint.created_at > since)).all()
+    if not rows:
+        return _factor("complaints", "Жалобы кандидатов", "ok", 0, 0, "жалоб на приглашения нет")
+    people = {r.candidate_user_id for r in rows}
+    sent = db.scalar(select(sa_func.count()).select_from(Invitation).where(
+        Invitation.company_id == company.id, Invitation.created_at > since)) or 0
+    by: dict[str, int] = {}
+    for r in rows:
+        by[r.reason] = by.get(r.reason, 0) + 1
+    what = ", ".join(f"{COMPLAINT_REASONS.get(k, k).lower()} — {v}" for k, v in sorted(by.items(), key=lambda x: -x[1]))
+    pen = min(COMPLAINT_MAX_PENALTY, COMPLAINT_PENALTY * len(people))
+    share = len(rows) / sent if sent else 1.0
+    status = "bad" if len(people) >= 3 and share >= 0.3 else "warn"
+    return _factor("complaints", "Жалобы кандидатов", status, -pen, 0,
+                   f"жалоб за полгода: {len(rows)} из {sent} приглашений ({what})")
+
+
 def compute(db: Session, company: Company, *, invitation: Invitation | None = None,
             vacancy: Vacancy | None = None, refresh: bool = False) -> dict:
     """Индекс доверия компании; с invitation/vacancy — плюс отдельная оценка вилки этого предложения."""
@@ -279,7 +308,8 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
     factors.append(sal)
     factors.append(acceptance_factor(db, company))
     factors.append(speed_factor(db, company))
-    score = sum(f["points"] for f in factors)
+    factors.append(complaints_factor(db, company))
+    score = max(0, sum(f["points"] for f in factors))
     if critical:
         score = min(score, 10)
     score = round(score)
