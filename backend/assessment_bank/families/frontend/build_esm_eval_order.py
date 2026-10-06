@@ -39,7 +39,8 @@ def _evaluate(mods, entry):
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     for _ in range(200):
-        chosen = rng.sample(POOL, rng.randint(3, 4))
+        # Калибровка 05.10: трудность росла с длиной вывода (4–8 строк, ρ = −0,26) — модулей всегда 3
+        chosen = rng.sample(POOL, 3)
         names = [c[0] for c in chosen]
         mods = {}
         for i, (name, exp, val) in enumerate(chosen):

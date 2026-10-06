@@ -12,7 +12,7 @@ _GLOBAL: dict[str, str] = {
     "algorithms": "algorithms", "binary_search": "algorithms", "heap": "algorithms", "data_structures": "algorithms",
     "complexity": "algorithms", "sorting": "algorithms", "stack": "algorithms", "queue": "algorithms",
     "intervals": "algorithms", "ordered_dict": "algorithms", "boundary_conditions": "algorithms",
-    "branching": "algorithms", "caching": "algorithms",
+    "branching": "git", "caching": "algorithms",  # branching — только в семействах про ветки git
     "sql": "sql", "joins": "sql", "window_functions": "sql", "having": "sql", "subqueries": "sql",
     "aggregation": "sql", "null_semantics": "sql", "three_valued_logic": "sql", "indexes": "sql",
     "query_planning": "sql", "databases": "sql", "reporting": "sql", "date_ranges": "sql", "sqlite": "sql",
@@ -38,7 +38,9 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "arrays": "javascript", "async_await": "javascript", "closures": "javascript", "operators": "javascript",
         "promises": "javascript", "scope": "javascript", "timers": "javascript", "race_conditions": "javascript",
         "core_web_vitals": "vite-webpack", "web_performance": "vite-webpack", "ux": "a11y",
-        "testing": "frontend-testing",
+        "testing": "frontend-testing", "accessibility": "a11y", "aria": "a11y", "screen_readers": "a11y",
+        "focus_management": "a11y", "keyboard": "a11y", "html": "html-css",
+        "state_management": "state-management", "bundlers": "vite-webpack", "build": "vite-webpack",
     },
     "data_ml": {
         "ab_testing": "statistics", "hypothesis_testing": "statistics", "p_value": "statistics",
@@ -62,6 +64,12 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "data_testing": "test-design", "data_quality": "test-design",
         "fixtures": "pytest", "parametrize": "pytest", "unittest_mock": "pytest", "async_testing": "pytest",
         "jest": "frontend-testing", "ci": "ci-cd", "bash": "ci-cd", "exit_codes": "ci-cd",
+        "test_design": "test-design", "boundary_value_analysis": "test-design",
+        "equivalence_partitioning": "test-design", "pairwise_testing": "test-design",
+        "combinatorial_testing": "test-design", "risk_based_testing": "test-design",
+        "regression_strategy": "test-design", "defect_management": "test-design", "triage": "test-design",
+        "api_testing": "api-testing", "contract_testing": "api-testing",
+        "performance_testing": "load-testing", "load_testing": "load-testing",
     },
     "security": {
         "secure_code_review": "owasp", "input_validation": "owasp", "output_encoding": "owasp", "csrf": "owasp",

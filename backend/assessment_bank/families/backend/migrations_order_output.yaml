@@ -2,7 +2,7 @@ family_id: backend.migrations.order_output
 title: Порядок применения миграций — сортировка имён и зависимости
 direction: backend
 skills: [python, migrations, sqlite, sorting]
-target_grades: [junior]
+target_grades: [junior, middle]
 format: predict_output
 language: python
 invariants:
@@ -14,10 +14,10 @@ invariants:
 time_limit_s: 240
 canary: false
 prior_difficulty:
-  b: -0.4
+  b: 0.2
   a: 1.0
   sigma_variant: 0.4
-  basis: "16–17 строк, 8 операций, 5–6 миграций двух таблиц; нужно отсортировать имена как строки (10 < 2) и отследить зависимости ALTER/INDEX от CREATE; в 30 % вариантов раннер сортирует по числу — защита от угадывания «всегда ошибка»; σ повышена из-за разной длины вывода; Junior"
+  basis: "16–17 строк, 8 операций, 5–6 миграций двух таблиц; нужно отсортировать имена как строки (10 < 2) и отследить зависимости ALTER/INDEX от CREATE; в 30 % вариантов раннер сортирует по числу — защита от угадывания «всегда ошибка»; σ повышена из-за разной длины вывода; Junior. Пересмотр 06.10: b −0,4 → +0,2 и грейды Junior/Middle — ответ конъюнктивный: нужно одновременно применить строковую сортировку имён (ловушка 10 < 2) и проследить зависимости 5–6 миграций, ошибка в любом шаге даёт неверный вывод целиком; для Junior это верхняя граница"
 generator: assessment_bank.families.backend.migrations_order_output
 version: 1
 description: >

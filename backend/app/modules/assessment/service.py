@@ -9,7 +9,7 @@ import secrets
 import uuid
 
 from sqlalchemy import delete, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 from sqlalchemy.orm.attributes import flag_modified
 
 from app.core.config import get_settings
@@ -17,8 +17,9 @@ from app.core.db import as_aware, utcnow
 from app.core.enums import EvidenceLevel, FactSource, GradeChangeReason, TestSessionStatus
 from app.core.errors import api_error
 from app.modules.assessment.engine import get_engine
-from app.modules.assessment.models import (GradeHistory, SurveyResponse, TaskFamily, TaskVariant, TestAnswer,
-                                           TestSession, TestSessionItem)
+from app.modules.assessment.models import (GradeHistory, SandboxTestStart, SurveyResponse, TaskFamily, TaskVariant,
+                                           TestAnswer, TestSession, TestSessionItem)
+from app.modules.auth.models import User
 from app.modules.assessment.rules import apply_result, check_can_start
 from app.modules.catalog.seed_data import STACK
 from app.modules.profiles.facts import refresh_rating
@@ -26,8 +27,32 @@ from app.modules.profiles.models import CandidateFact, CandidateProfile
 
 
 def is_sandbox(profile: CandidateProfile) -> bool:
+    """Правило 90 дней снято: глобальная песочница или демо-режим жюри — только у демо-учёток (users.is_demo)."""
     s = get_settings()
-    return s.demo_sandbox or (s.jury_mode_available and profile.jury_mode)
+    if s.demo_sandbox:
+        return True
+    if not (s.jury_mode_available and profile.jury_mode):
+        return False
+    db = object_session(profile)
+    user = db.get(User, profile.user_id) if db is not None else None
+    return bool(user and user.is_demo)
+
+
+def sandbox_quota(db: Session, email: str) -> dict:
+    """Сколько тестов ещё можно начать в демо-режиме за скользящие 24 часа (лимит JURY_MAX_TEST_STARTS_PER_DAY).
+
+    Без лимита демо-режим (правило 90 дней снято, вход под жюри — в один клик) позволял бы перезапусками
+    выкачать банк заданий: каждая новая сессия выдаёт новые варианты.
+    """
+    limit = get_settings().jury_max_test_starts_per_day
+    since = utcnow() - timedelta(hours=24)
+    rows = db.scalars(select(SandboxTestStart.created_at).where(SandboxTestStart.email == email,
+                                                                SandboxTestStart.created_at >= since)
+                      .order_by(SandboxTestStart.created_at)).all()
+    used = len(rows)
+    reset_at = as_aware(rows[0]) + timedelta(hours=24) if rows and used >= limit else None
+    return {"limit": limit, "used": used, "left": max(0, limit - used),
+            "next_at": reset_at.isoformat() if reset_at else None}
 
 
 def latest_survey(db: Session, user_id: uuid.UUID) -> SurveyResponse | None:
@@ -42,7 +67,9 @@ def active_session(db: Session, user_id: uuid.UUID) -> TestSession | None:
     ).order_by(TestSession.created_at.desc()).limit(1))
 
 
-def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_name: str | None = None) -> TestSession:
+def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_name: str | None = None, *,
+                  integrity_ack: bool = False, enforce_sandbox_quota: bool = False) -> TestSession:
+    """enforce_sandbox_quota — запрос кандидата через API (демо-сиды жюри проходят тест без лимита)."""
     profile = db.get(CandidateProfile, user_id)
     survey = latest_survey(db, user_id)
     if profile is None or survey is None or profile.onboarding_completed_at is None:
@@ -53,29 +80,52 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     if not check.allowed:
         raise api_error(409 if check.code == "grade_locked" else 422, check.code or "not_allowed", check.message or "")
     old = active_session(db, user_id)
+    if old is not None and old.claimed_grade_id == claimed_grade and old.direction_id == survey.direction_id:
+        if integrity_ack and not (old.result or {}).get("integrity_ack"):
+            old.result = {**old.result, "integrity_ack": {"at": now.isoformat()}}
+            flag_modified(old, "result")
+            db.commit()
+        return old
+    sandbox = is_sandbox(profile)
+    if enforce_sandbox_quota and sandbox:
+        user = db.get(User, user_id)
+        q = sandbox_quota(db, user.email)
+        if q["left"] <= 0:
+            when = f" Следующая попытка — после {q['next_at'][:16].replace('T', ' ')} UTC." if q["next_at"] else ""
+            raise api_error(429, "sandbox_restarts_exhausted",
+                            f"В демо-режиме можно начать не больше {q['limit']} тестов за 24 часа — так банк заданий "
+                            f"нельзя выкачать перезапусками.{when}")
+        db.add(SandboxTestStart(email=user.email, user_id=user_id))
     if old is not None:
-        if old.claimed_grade_id == claimed_grade and old.direction_id == survey.direction_id:
-            return old
         old.status = TestSessionStatus.aborted
         old.finished_at = now
     engine = get_engine(engine_name)
     seed = secrets.randbelow(2**31)
     stack = list((survey.answers or {}).get("stack", {}).keys())
     if engine.name.startswith("bank"):
-        # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма)
-        prev = [sp for sp in (((t.result or {}).get("state") or {}).get("subpool") for t in db.scalars(
+        # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма);
+        # семейства последней попытки не попадают в дотестирование у порога (оно берёт задания и из другого субпула)
+        past = [((t.result or {}).get("state") or {}) for t in db.scalars(
             select(TestSession).where(TestSession.user_id == user_id, TestSession.status == TestSessionStatus.finished)
-            .order_by(TestSession.created_at.desc()).limit(5))) if sp is not None]
+            .order_by(TestSession.created_at.desc()).limit(5))]
+        prev = [st.get("subpool") for st in past if st.get("subpool") is not None]
+        last_families = [i.get("family_id") for i in (past[0].get("items") or []) if i.get("family_id")] if past else []
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
-                             previous_subpools=prev)
+                             previous_subpools=prev, previous_families=last_families)
     else:
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
-    # Адаптивный тест банка: до 60 минут (лимит CATConfig) + запас на дотестирование у порога; заглушка — 30 минут
-    minutes = get_settings().assessment_max_minutes + 30 if engine.name.startswith("bank") else 30
+    # Адаптивный тест банка: до 60 минут (лимит CATConfig) + запас на дотестирование у порога (не меньше 30 минут,
+    # как раньше); заглушка — 30 минут
+    st_ = get_settings()
+    minutes = (st_.assessment_max_minutes + max(30, st_.assessment_extension_minutes + 10)
+               if engine.name.startswith("bank") else 30)
     ts = TestSession(
         user_id=user_id, survey_id=survey.id, direction_id=survey.direction_id, claimed_grade_id=claimed_grade,
-        status=TestSessionStatus.in_progress, form_seed=seed, is_sandbox=is_sandbox(profile), started_at=now,
-        deadline_at=now + timedelta(minutes=minutes), result={"engine": engine.name, "state": state},
+        status=TestSessionStatus.in_progress, form_seed=seed, is_sandbox=sandbox, started_at=now,
+        deadline_at=now + timedelta(minutes=minutes),
+        result={"engine": engine.name, "state": state,
+                # кандидат прочитал экран «что отслеживается» (прозрачный античит) до начала теста
+                "integrity_ack": {"at": now.isoformat()} if integrity_ack else None},
     )
     db.add(ts)
     db.commit()
@@ -309,6 +359,8 @@ def status(db: Session, user_id: uuid.UUID) -> dict:
         mine = profile.rating_score or 0
         rank = 1 + sum(1 for r in peers if (r or 0) > mine)
     active = active_session(db, user_id)
+    user = db.get(User, user_id)
+    jury_allowed = bool(get_settings().jury_mode_available and user is not None and user.is_demo)
     return {
         "onboarding_completed": profile.onboarding_completed_at is not None,
         "survey_direction": survey.direction_id if survey else None,
@@ -323,10 +375,14 @@ def status(db: Session, user_id: uuid.UUID) -> dict:
         "locked_until": lock.isoformat() if lock else None,
         "lock_active": bool(lock and now < lock),
         "can_retest_now": not (lock and now < lock) or sandbox,
-        "jury_mode": profile.jury_mode, "jury_mode_available": get_settings().jury_mode_available,
+        "jury_mode": profile.jury_mode and jury_allowed, "jury_mode_available": get_settings().jury_mode_available,
+        # демо-режим жюри доступен только демо-учёткам (вход жюри в один клик); живым кандидатам — нет
+        "jury_mode_allowed": jury_allowed,
         "sandbox_active": sandbox,
+        "sandbox_starts": sandbox_quota(db, user.email) if sandbox and user is not None else None,
         "grade_change_interval_days": get_settings().grade_change_interval_days,
         "active_session_id": str(active.id) if active else None,
+        "active_grade": active.claimed_grade_id if active else None,
         "engine": get_engine().name,
         "sessions": [{
             "id": str(s.id), "direction": s.direction_id, "claimed_grade": s.claimed_grade_id, "status": s.status.value,

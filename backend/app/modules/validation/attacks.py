@@ -1,17 +1,27 @@
 """«Красная кнопка жюри»: атаки на подбор и тест, которые эксперт запускает сам.
 
 Каждая атака выполняется на живых демо-данных В ПАМЯТИ: объекты меняются только в пределах запроса, после —
-db.rollback() (ничего не записывается). Ответ: ожидаемое свойство, факт (числа до/после), нарушено или нет.
+db.rollback(); запись в БД во время атаки запрещена (flush сессии вызывает ошибку). Ответ: ожидаемое свойство,
+факт (числа до/после), нарушено или нет.
+
+Симуляция утечки банка («leak_bank») тяжёлая (~8 с CPU), поэтому результат берётся из кэша: файл
+data/leak_cache.json (5 направлений × доли 10/30/50 %, фиксированный seed; пересчёт —
+``python -m app.modules.validation.attacks``), остальные доли считаются один раз на процесс и запоминаются.
 """
 from __future__ import annotations
 
 from datetime import date
+import json
+import os
+from pathlib import Path
 import random
 import re
+import tempfile
+import threading
 import time
 import uuid
 
-from sqlalchemy import select
+from sqlalchemy import event, select
 from sqlalchemy.orm import Session
 
 from app.core.enums import EvidenceLevel, FactSource, FspEventLevel
@@ -21,7 +31,21 @@ from app.modules.matching.need_parser import parse_need
 from app.modules.matching.ranking import WEIGHTS, score_candidate
 from app.modules.profiles.facts import Bundle, CandidateFact, card, load_bundles
 from app.modules.fsp.models import FspAchievement
+from app.modules.auth.models import User
+from app.modules.jury import scope as jury_scope
 from app.modules.profiles.models import CandidateProfile
+
+LEAK_CACHE = Path(__file__).resolve().parent / "data" / "leak_cache.json"
+SIM_LOCK = Path(tempfile.gettempdir()) / "fsp_leak_sim.lock"
+LEAK_SHARES = (0.1, 0.3, 0.5)
+DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security")
+_leak_mem: dict[str, dict] = {}
+_leak_mx = threading.Lock()
+
+
+class AttackBusy(Exception):
+    """Симуляция для этих параметров уже считается в этом процессе."""
+
 
 DEFAULT_NEED = ("Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. "
                 "Будет плюсом Kafka. Удалённо, 220–300 тыс.")
@@ -32,6 +56,12 @@ ATTACKS = [
     {"id": "rename", "title": "Поменять имя при тех же навыках",
      "action": "Тому же кандидату меняем ФИО (другой пол и происхождение имени)",
      "expected": "Скор не меняется ни на тысячную, ФИО нет в карточке работодателя"},
+    {"id": "demographics", "title": "Сменить пол, возраст и имя",
+     "action": "Всем кандидатам пула меняем ФИО на имя другого пола и происхождения, дописываем в «о себе», заголовок "
+               "и анкету пол, возраст (19–64 года) и семейное положение; в потребность добавляем «только мужчины до "
+               "35 лет, славянской внешности, без детей, в молодой коллектив»",
+     "expected": "Выдача не меняется ни на тысячную: тот же порядок и те же скоры у всех; фильтр ст. 64 ТК РФ находит "
+                 "фразы в потребности, и они не попадают в требования. Пола, возраста и имени нет в карточке"},
     {"id": "fake_fsp", "title": "Добавить неподтверждённый значок ФСП",
      "action": "Кандидату без ФСП добавляем «победу на Чемпионате России» без подтверждения реестром",
      "expected": "Ни бонуса ФСП, ни отметки T2: в карточке и объяснении — только подтверждённое реестром"},
@@ -46,6 +76,7 @@ ATTACKS = [
 
 
 def _need_req(db: Session, need_id: uuid.UUID | None) -> tuple[dict, str]:
+    """Требования потребности (владельца проверяет роутер) или потребность по умолчанию."""
     if need_id:
         n = db.get(EmployerNeed, need_id)
         if n is not None and n.requirements:
@@ -54,8 +85,9 @@ def _need_req(db: Session, need_id: uuid.UUID | None) -> tuple[dict, str]:
 
 
 def _pool(db: Session, req: dict) -> list[Bundle]:
-    q = select(CandidateProfile).where(CandidateProfile.current_category_id.is_not(None),
-                                       CandidateProfile.visible_to_employers.is_(True))
+    q = (select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
+         .where(CandidateProfile.current_category_id.is_not(None), CandidateProfile.visible_to_employers.is_(True),
+                jury_scope.pool_clause(User.email)))
     if req.get("direction"):
         q = q.where(CandidateProfile.current_direction_id == req["direction"])
     ps = db.scalars(q).all()
@@ -86,21 +118,89 @@ def run(db: Session, attack_id: str, need_id: uuid.UUID | None = None, params: d
     if meta is None:
         raise KeyError(attack_id)
     t0 = time.time()
-    try:
-        if attack_id == "leak_bank":
-            out = _leak(params or {})
-        else:
+    if attack_id == "leak_bank":
+        out = leak_cached(params or {})
+    else:
+        event.listen(db, "before_flush", _no_writes)
+        try:
             req, text = _need_req(db, need_id)
-            out = _profile_attack(db, attack_id, req)
+            out = _profile_attack(db, attack_id, req, text)
             out["need"] = text
-    finally:
-        db.rollback()  # ничего из атаки не записывается
+        finally:
+            db.rollback()  # ничего из атаки не записывается
+            event.remove(db, "before_flush", _no_writes)
+    out = dict(out)
     if isinstance(out.get("fact"), str):  # десятичная запятая и «30 %» — как в остальном интерфейсе
         out["fact"] = re.sub(r"(\d)%", r"\1 %", re.sub(r"(?<=\d)\.(?=\d)", ",", out["fact"]))
     return {**meta, **out, "seconds": round(time.time() - t0, 2)}
 
 
-def _profile_attack(db: Session, attack_id: str, req: dict) -> dict:
+BIASED_TAIL = " Только мужчины до 35 лет, славянской внешности, без детей, в молодой коллектив."
+NAMES = {"m": ["Тимур Ким", "Иван Петров", "Арсений Цой", "Давид Мкртчян", "Олег Рахимов"],
+         "f": ["Гульнара Абдуллаева", "Анна Смирнова", "Мадина Алиева", "Ольга Ли", "Сара Коэн"]}
+
+
+def _plural(n: int, one: str, few: str, many: str) -> str:
+    n10, n100 = n % 10, n % 100
+    return one if n10 == 1 and n100 != 11 else few if 2 <= n10 <= 4 and not 12 <= n100 <= 14 else many
+
+
+def _fingerprint(ranked) -> list[tuple[str, float]]:
+    return [(b.profile.public_ref, round(s, 12)) for s, b in ranked]
+
+
+def _demographics(db: Session, req: dict, text: str, pool: list[Bundle], cats: dict, rnd: random.Random) -> dict:
+    """Меняем пол, возраст и имя у всех кандидатов пула и добавляем дискриминационные фразы в потребность."""
+    req_clean = parse_need(text, use_llm=False)
+    req_biased = parse_need(text.rstrip() + BIASED_TAIL, use_llm=False)
+    found = req_biased.get("bias") or []
+    keys = ("direction", "grade", "stack_required", "stack_desired", "experience_years_min", "work_format")
+    strip = (lambda r: {k: ([(i["tag"], i["weight"]) for i in r.get(k) or []] if k.startswith("stack") else r.get(k))
+                        for k in keys})
+    req_same = strip(req_biased) == strip(req_clean)
+    before, before_clean = _fingerprint(_rank(pool, req)), _fingerprint(_rank(pool, req_clean))
+    leaks = []
+    for i, b in enumerate(pool):
+        p = b.profile
+        old = p.full_name or ""
+        sex = "m" if old.split()[-1:] and old.split()[-1].endswith(("а", "я")) else "f"
+        age = rnd.randint(19, 64)
+        new = NAMES[sex][i % len(NAMES[sex])]
+        p.full_name = new
+        gender = "мужчина" if sex == "m" else "женщина"
+        family = rnd.choice(["двое детей", "без детей", "в декрете до прошлого года", "женат", "не замужем"])
+        p.headline = f"{gender}, {age} лет"
+        origin = rnd.choice(["Махачкала", "Казань", "Владивосток", "Грозный", "Псков", "Улан-Удэ"])
+        p.about = f"Мне {age} лет, {gender}, {family}. Родом: {origin}."
+        # Те же сведения — фактами анкеты (T0), как если бы кандидат указал их сам
+        b.t0["personal"] = [
+            CandidateFact(user_id=p.user_id, kind="personal", key=k, title=v, value={"value": v},
+                          evidence_level=EvidenceLevel.T0, source=FactSource.resume, source_ref="attack")
+            for k, v in (("gender", gender), ("age", str(age)), ("family", family))]
+        c = str(card(b, cats))
+        if new in c or p.headline in c or p.about in c or gender in c or family in c:
+            leaks.append(p.public_ref)
+    after, after_biased = _fingerprint(_rank(pool, req)), _fingerprint(_rank(pool, req_biased))
+    order = (lambda fp: [r for r, _ in fp])
+    order_same = order(before) == order(after) and order(before_clean) == order(after_biased)
+    max_diff = max([abs(x[1] - y[1]) for x, y in zip(before, after, strict=True)]
+                   + [abs(x[1] - y[1]) for x, y in zip(before_clean, after_biased, strict=True)] + [0.0])
+    violated = not (order_same and max_diff < 1e-12 and req_same and not leaks and len(found) >= 4)
+    return {"violated": violated,
+            "fact": f"Изменены пол, возраст и имя у всех {len(pool)} кандидатов пула; в потребность добавлено "
+                    f"«{BIASED_TAIL.strip().rstrip('.')}». Порядок выдачи {'тот же' if order_same else 'изменился'}, "
+                    f"максимальное изменение скора {max_diff:.4f}. Фильтр ст. 64 ТК РФ нашёл {len(found)} "
+                    f"{_plural(len(found), 'фрагмент', 'фрагмента', 'фрагментов')}: "
+                    f"{', '.join('«' + f['quote'] + '»' for f in found)}; "
+                    f"требования для ранжирования "
+                    f"{'не изменились' if req_same else 'изменились'}. Имя, пол или возраст в карточке: "
+                    f"{'есть у ' + ', '.join(leaks) if leaks else 'нет'}",
+            "details": {"pool": len(pool), "order_same": order_same, "max_score_diff": max_diff,
+                        "requirements_same": req_same, "bias_found": [f["quote"] for f in found],
+                        "top5_before": before[:5], "top5_after": after[:5], "card_leaks": leaks}}
+
+
+def _profile_attack(db: Session, attack_id: str, req: dict, text: str = DEFAULT_NEED) -> dict:
     pool = _pool(db, req)
     if len(pool) < 5:
         return {"violated": None, "fact": "Мало кандидатов в пуле для проверки", "details": {}}
@@ -108,6 +208,8 @@ def _profile_attack(db: Session, attack_id: str, req: dict) -> dict:
     ranked = _rank(pool, req)
     rnd = random.Random(int(time.time()))
     with db.no_autoflush:
+        if attack_id == "demographics":
+            return _demographics(db, req, text, pool, cats, rnd)
         if attack_id in ("inflate_keywords", "rename"):
             mid = [b for _, b in ranked[len(ranked) // 3: 2 * len(ranked) // 3]] or [b for _, b in ranked]
             b = rnd.choice(mid)
@@ -169,7 +271,86 @@ def _profile_attack(db: Session, attack_id: str, req: dict) -> dict:
     raise KeyError(attack_id)
 
 
-def _leak(params: dict) -> dict:
+def _no_writes(session, flush_context, instances):
+    raise RuntimeError("Атака «Красной кнопки» не должна ничего записывать в БД")
+
+
+def _leak_key(direction: str, share: float) -> str:
+    return f"{direction}:{share:.1f}"
+
+
+def _leak_params(params: dict) -> tuple[str, float]:
+    share = round(min(0.8, max(0.1, float(params.get("leak_share", 0.3)))), 1)
+    direction = params.get("direction") if params.get("direction") in DIRECTIONS else "backend"
+    return direction, share
+
+
+def _leak_file() -> dict:
+    if "__file__" not in _leak_mem:
+        try:
+            _leak_mem["__file__"] = json.loads(LEAK_CACHE.read_text(encoding="utf-8")).get("results", {})
+        except (OSError, ValueError):
+            _leak_mem["__file__"] = {}
+    return _leak_mem["__file__"]
+
+
+def leak_cached(params: dict) -> dict:
+    """Результат симуляции утечки из кэша; нет в кэше — считается один раз (не больше одной на процесс)."""
+    direction, share = _leak_params(params)
+    key = _leak_key(direction, share)
+    hit = _leak_file().get(key) or _leak_mem.get(key)
+    if hit is None:
+        if not _leak_mx.acquire(blocking=False):
+            raise AttackBusy(key)
+        lock = None
+        try:
+            hit = _leak_mem.get(key)
+            if hit is None:
+                lock = _sim_lock()  # одна симуляция на контейнер (оба воркера): +~140 МБ, не больше
+                if lock is None:
+                    raise AttackBusy(key)
+                t0 = time.time()
+                hit = {**_leak({"leak_share": share, "direction": direction}),
+                       "computed_seconds": round(time.time() - t0, 1), "computed_at": time.strftime("%Y-%m-%d %H:%M")}
+                _leak_mem[key] = hit
+        finally:
+            if lock is not None:
+                lock.close()  # закрытие файла снимает flock
+            _leak_mx.release()
+    return {**hit, "cached": True}
+
+
+def _sim_lock():
+    """Неблокирующая межпроцессная блокировка (flock); None — симуляция уже идёт в другом воркере."""
+    try:
+        import fcntl
+    except ImportError:  # не POSIX — достаточно блокировки процесса
+        return open(os.devnull, "w")
+    f = open(SIM_LOCK, "w")
+    try:
+        fcntl.flock(f, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return f
+    except OSError:
+        f.close()
+        return None
+
+
+def build_leak_cache(seed: int = 20261006) -> dict:
+    """Пересчёт data/leak_cache.json (≈ 2 мин на 2 ядрах): 5 направлений × доли 10/30/50 %."""
+    results = {}
+    for d in DIRECTIONS:
+        for sh in LEAK_SHARES:
+            t0 = time.time()
+            r = _leak({"leak_share": sh, "direction": d}, seed=seed)
+            results[_leak_key(d, sh)] = {**r, "computed_seconds": round(time.time() - t0, 1),
+                                         "computed_at": time.strftime("%Y-%m-%d %H:%M")}
+            print(_leak_key(d, sh), results[_leak_key(d, sh)]["computed_seconds"], "с", flush=True)
+    data = {"seed": seed, "n": 160, "results": results}
+    LEAK_CACHE.write_text(json.dumps(data, ensure_ascii=False, indent=1, default=float) + "\n", encoding="utf-8")
+    return data
+
+
+def _leak(params: dict, seed: int | None = None) -> dict:
     import numpy as np
 
     from assessment_bank.simulation import make_truth
@@ -181,7 +362,7 @@ def _leak(params: dict) -> dict:
     direction = params.get("direction") if params.get("direction") in ("backend", "frontend", "data_ml", "qa",
                                                                        "security") else "backend"
     cfg = app_config_from_settings()
-    rng = np.random.default_rng(int(time.time()) % 10_000)
+    rng = np.random.default_rng(int(time.time()) % 10_000 if seed is None else seed)
     pool = make_pool(cfg.subpools)
     truth = make_truth(pool, rng, misspec=0.5)
     k = (exposure_table() or {}).get("k", {}).get(direction, {})
@@ -196,3 +377,7 @@ def _leak(params: dict) -> dict:
                     f"с карантином субпула {rot['cheaters_bias_theta']:+.2f}; детектор поймал {dt.get('detector_tpr', 0):.0%} "
                     f"списывающих, ложные срабатывания у честных {fpr:.1%}",
             "details": r}
+
+
+if __name__ == "__main__":
+    build_leak_cache()

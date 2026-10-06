@@ -75,11 +75,15 @@ def _model(bug, mult, db, ops):
     return out
 
 
-def generate(seed: int):
-    rng = make_rng(FAMILY_ID, seed)
+# Калибровка 05.10: подтипы key_missing_param выделены в backend.cache.key_params_bug (варианты были неизоморфны).
+SUBTYPES_HERE = ('invalidate_constant', 'invalidate_wrong_arg')
+
+
+def _generate(seed: int, family_id: str, subtypes):
+    rng = make_rng(family_id, seed)
     c = rng.choice(CONTEXTS)
     ctx, get, sett, _prefix, idn, par, tname, mult, what = c
-    bug = rng.choice(SUBTYPES)
+    bug = rng.choice(list(subtypes))
     params = list(mult)
     ids = rng.sample(range(1, 40), 3)
     ids_vals = {i: rng.randint(5, 90) * 100 for i in ids}
@@ -127,6 +131,11 @@ def generate(seed: int):
            "invalidate_wrong_arg": f"ключ для удаления строится из `value` вместо `{idn}`, "
                                    f"поэтому удаляются несуществующие записи"}[bug]
     ak = AnswerKey(kind="line", value=key_line, explanation=f"Строка {key_line}: {why}.")
-    return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
+    return build_variant(family_id, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="cache_staleness",
                          params={"fixed_code": fixed, "subtype": bug, "ops": [list(o) for o in ops]})
+
+
+
+def generate(seed: int):
+    return _generate(seed, FAMILY_ID, SUBTYPES_HERE)

@@ -1,6 +1,5 @@
 // Общие помощники нестандартных решений 9 и 10: «Кубок работодателя» и «Кабинет ФСП».
 import { useEffect, useState, type ReactNode } from "react";
-import { api, type TokenOut } from "../lib/api";
 
 export const PHASE: Record<string, [string, string]> = {
   upcoming: ["Скоро старт", "bg-[#ECEAF8] text-brand-night"],
@@ -67,10 +66,4 @@ export function CodeBlock({ code, numbered }: { code: string; numbered?: boolean
       ))}
     </pre>
   );
-}
-
-export async function fspDemoLogin(signIn: (t: string) => Promise<unknown>): Promise<string> {
-  const r = await api<TokenOut & { landing: string }>("/fsp-cabinet/demo-login", { method: "POST", auth: false });
-  await signIn(r.access_token);
-  return r.landing;
 }

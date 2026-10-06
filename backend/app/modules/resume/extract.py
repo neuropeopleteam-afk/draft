@@ -8,7 +8,12 @@ from __future__ import annotations
 
 from datetime import date
 import io
+import json
+import os
+from pathlib import Path
 import re
+import subprocess
+import sys
 
 from app.modules.catalog.dictionary import (
     DIRECTION_KEYWORDS,
@@ -35,11 +40,53 @@ _YEARS_MONTHS = re.compile(r"(\d{1,2})\s*(?:год|лет|года)\s*(\d{1,2})\
 
 
 def pdf_to_text(data: bytes) -> tuple[str, int]:
+    """Разбор в текущем процессе (без тайм-аута) — для скриптов и тестов. В API — pdf_to_text_safe."""
     from pypdf import PdfReader
 
     reader = PdfReader(io.BytesIO(data))
     pages = [(p.extract_text() or "") for p in reader.pages[:20]]
     return "\n".join(pages), len(reader.pages)
+
+
+class PdfError(Exception):
+    def __init__(self, code: str, pages: int | None = None):
+        super().__init__(code)
+        self.code, self.pages = code, pages
+
+
+_WORKER = Path(__file__).with_name("pdf_worker.py")
+
+
+def _limits(memory_mb: int, cpu_s: int):
+    import resource  # импорт в родителе: в дочернем процессе после fork — только системные вызовы
+
+    def apply() -> None:  # выполняется в дочернем процессе до запуска Python
+        lim = memory_mb * 1024 * 1024
+        resource.setrlimit(resource.RLIMIT_AS, (lim, lim))
+        resource.setrlimit(resource.RLIMIT_CPU, (cpu_s, cpu_s))
+
+    return apply
+
+
+def pdf_to_text_safe(data: bytes, max_pages: int = 20, timeout_s: float = 10.0, memory_mb: int = 512) -> tuple[str, int]:
+    """Разбор PDF в отдельном процессе: тайм-аут, лимит памяти и CPU, отказ при > max_pages страниц до разбора.
+
+    Ошибки — PdfError с кодом: too_many_pages | timeout | unreadable. Воркер API не блокируется и не падает
+    от «тяжёлого» или вредоносного PDF: процесс разбора убивается по тайм-ауту.
+    """
+    try:
+        res = subprocess.run([sys.executable, "-I", str(_WORKER), str(max_pages)], input=data, capture_output=True,
+                             timeout=timeout_s, preexec_fn=_limits(memory_mb, int(timeout_s) + 2),
+                             env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LANG": "C.UTF-8"})
+    except subprocess.TimeoutExpired:
+        raise PdfError("timeout") from None
+    try:
+        out = json.loads(res.stdout.decode("utf-8").strip().splitlines()[-1])
+    except (ValueError, IndexError, UnicodeDecodeError):
+        raise PdfError("unreadable") from None  # процесс убит по лимиту памяти/CPU или упал
+    if out.get("error"):
+        raise PdfError(out["error"], out.get("pages"))
+    return out.get("text") or "", int(out.get("pages") or 0)
 
 
 def experience_years(text: str, today: date | None = None) -> float | None:

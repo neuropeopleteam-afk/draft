@@ -8,30 +8,49 @@ import { AtsInvitationActions } from "../../integrations/Ats";
 type Market = { from: number; to: number; median?: number } | null | undefined;
 
 function SalaryFields({ from, to, setFrom, setTo, market }: { from: string; to: string; setFrom: (v: string) => void; setTo: (v: string) => void; market: Market }) {
+  const wide = Number(from) > 0 && Number(to) > Number(from) * SALARY_MAX_RATIO;
   return (
     <div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Вилка от, ₽ в месяц" htmlFor="sf"><input id="sf" required type="number" min={1} step={5000} className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
         <Field label="Вилка до, ₽ в месяц" htmlFor="st"><input id="st" required type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
       </div>
-      {market && <p className="mt-2 text-xs text-brand-ink/60">Рынок категории: {range(market.from, market.to)}{market.median ? `, медиана ${market.median.toLocaleString("ru-RU")} ₽` : ""} (Хабр Карьера). Минимум кандидата вам не показывается.</p>}
+      <p className={`mt-2 text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/60"}`}>
+        {wide ? `Вилка слишком широкая: при «от» ${Number(from).toLocaleString("ru-RU")} ₽ «до» — не выше ${maxTo(from).toLocaleString("ru-RU")} ₽.` : "«До» — не больше чем в 1,5 раза выше «от»: узкая вилка показывает кандидату реальное предложение."}
+      </p>
+      {market && <p className="mt-1 text-xs text-brand-ink/60">Рынок категории: {range(market.from, market.to)}{market.median ? `, медиана ${market.median.toLocaleString("ru-RU")} ₽` : ""} (Хабр Карьера). Минимум кандидата вам не показывается.</p>}
     </div>
   );
+}
+
+/** «До» не больше чем в 1,5 раза выше «от» — то же правило проверяет сервер (salary_range_too_wide). */
+export const SALARY_MAX_RATIO = 1.5;
+const maxTo = (from: string | number) => Math.floor((Number(from) * SALARY_MAX_RATIO) / 1000) * 1000;
+const round5k = (v: number) => Math.round(v / 5000) * 5000;
+
+/** Вилка по умолчанию: из потребности, иначе вокруг медианы рынка категории — в пределах допустимой ширины. */
+export function defaultRange(market: Market, need?: { from?: number | null; to?: number | null } | null): [string, string] {
+  if (need?.from && need?.to && need.to <= need.from * SALARY_MAX_RATIO) return [String(need.from), String(need.to)];
+  if (!market) return ["", ""];
+  const mid = market.median ?? (market.from + market.to) / 2;
+  const lo = Math.max(market.from, round5k(mid * 0.9));
+  return [String(lo), String(Math.min(maxTo(lo), Math.max(lo, round5k(mid * 1.25))))];
 }
 
 function salaryError(from: string, to: string) {
   if (!from || !to || Number(from) <= 0 || Number(to) <= 0) return "Укажите вилку зарплаты «от» и «до» — это обязательно";
   if (Number(from) > Number(to)) return "Нижняя граница вилки больше верхней";
+  if (Number(to) > Number(from) * SALARY_MAX_RATIO) return `Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от» (не выше ${maxTo(from).toLocaleString("ru-RU")} ₽)`;
   return null;
 }
 
-export function ProbeForm({ refs, needId, market, onDone }: { refs: string[]; needId?: string; market: Market; onDone: () => void }) {
+export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: string[]; needId?: string; market: Market; needSalary?: { from?: number | null; to?: number | null } | null; onDone: () => void }) {
   const [title, setTitle] = useState("");
   const [task, setTask] = useState("");
   const [mode, setMode] = useState<"any" | "solution" | "approach">("any");
   const [mins, setMins] = useState("30");
-  const [from, setFrom] = useState(market?.from?.toString() ?? "");
-  const [to, setTo] = useState(market?.to?.toString() ?? "");
+  const [from, setFrom] = useState(() => defaultRange(market, needSalary)[0]);
+  const [to, setTo] = useState(() => defaultRange(market, needSalary)[1]);
   const [err, setErr] = useState<string | null>(null);
   const [res, setRes] = useState<any>(null);
   async function send() {
@@ -65,12 +84,12 @@ export function ProbeForm({ refs, needId, market, onDone }: { refs: string[]; ne
   );
 }
 
-export function InviteForm({ cref, needId, probeId, market, onDone }: { cref: string; needId?: string | null; probeId?: string | null; market: Market; onDone: (inv: any) => void }) {
+export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }: { cref: string; needId?: string | null; probeId?: string | null; market: Market; needSalary?: { from?: number | null; to?: number | null } | null; onDone: (inv: any) => void }) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [contact, setContact] = useState("");
-  const [from, setFrom] = useState(market?.from?.toString() ?? "");
-  const [to, setTo] = useState(market?.to?.toString() ?? "");
+  const [from, setFrom] = useState(() => defaultRange(market, needSalary)[0]);
+  const [to, setTo] = useState(() => defaultRange(market, needSalary)[1]);
   const [err, setErr] = useState<string | null>(null);
   async function send() {
     const se = salaryError(from, to);
@@ -163,7 +182,9 @@ export function EmployerInvitations() {
             </div>
           ) : <p className="text-brand-ink/55">Контакты откроются после принятия приглашения.</p>}
           <AtsInvitationActions invitationId={i.id} status={i.status} candidateRef={i.candidate_ref} />
-          {i.decline_reason && <p className="text-brand-ink/70">Причина отказа: «{i.decline_reason}»</p>}
+          {i.complaint ? (
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Жалоба кандидата: <b>{i.complaint.reason_title.toLowerCase()}</b>. Жалобы снижают индекс доверия компании — его видят кандидаты.</p>
+          ) : i.decline_reason && <p className="text-brand-ink/70">Причина отказа: «{i.decline_reason}»</p>}
           <History items={i.history} />
           {["sent", "viewed"].includes(i.status) && <button className="text-sm font-semibold text-brand-plum hover:underline" onClick={() => withdraw(i.id)}>Отозвать</button>}
         </article>

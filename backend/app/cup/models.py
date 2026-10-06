@@ -49,6 +49,9 @@ class Cup(UUIDPk, Timestamps, Base):
     finalized_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     summary: Mapped[dict] = mapped_column(default=dict)  # итоги: участники, места, приглашения
     is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    # Кубок демо жюри (app.modules.jury.scope): sid песочницы или "shared" — общее демо. Виден кандидатам только
+    # этой песочницы; места, факты T1 и записи паспорта получают только её учётки. NULL — обычный кубок платформы.
+    jury_scope: Mapped[str | None] = mapped_column(sa.String(16), index=True)
 
 
 class CupEntry(UUIDPk, Timestamps, Base):

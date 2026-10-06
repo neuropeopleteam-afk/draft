@@ -1,49 +1,49 @@
 {
   "source": "/home/user/workspace/spectrek/bank",
-  "commit": "b324325",
-  "dirty_files": 98,
-  "content_hash": "2cd0b0746c9f776d",
-  "synced_at": "2026-10-05T12:35:05+00:00",
-  "n_families": 128,
+  "commit": "8683dc4",
+  "dirty_files": 0,
+  "content_hash": "5e5e41e7a2880d52",
+  "synced_at": "2026-10-06T08:45:18+00:00",
+  "n_families": 138,
   "by_direction": {
     "backend": {
-      "families": 22,
+      "families": 24,
       "canary": 2,
       "formats": {
         "choose_fix": 5,
         "predict_output": 5,
-        "find_bug": 4,
-        "open_book_3step": 4,
+        "find_bug": 5,
+        "open_book_3step": 5,
         "open_answer": 2,
         "mcq_concept": 2
       }
     },
     "common": {
-      "families": 26,
+      "families": 30,
       "canary": 3,
       "formats": {
-        "find_bug": 2,
-        "mcq_concept": 8,
+        "find_bug": 3,
+        "mcq_concept": 10,
         "predict_output": 7,
         "open_book_3step": 4,
-        "choose_fix": 3,
+        "choose_fix": 4,
         "open_answer": 2
       }
     },
     "data_ml": {
-      "families": 20,
+      "families": 22,
       "canary": 1,
       "formats": {
         "mcq_concept": 2,
         "choose_fix": 5,
-        "find_bug": 5,
+        "find_bug": 7,
         "predict_output": 5,
         "open_answer": 1,
         "open_book_3step": 2
       }
     },
     "frontend": {
-      "families": 23,
+      "families": 25,
       "canary": 2,
       "formats": {
         "mcq_concept": 4,
@@ -51,7 +51,7 @@
         "open_answer": 3,
         "predict_output": 4,
         "choose_fix": 4,
-        "find_bug": 4
+        "find_bug": 6
       }
     },
     "qa": {
@@ -82,32 +82,32 @@
   "excluded": [],
   "validation": {
     "summary": {
-      "n_families": 128,
-      "n_variants_generated": 2560,
-      "n_unique_variants": 2542,
-      "n_checks": 1113,
+      "n_families": 138,
+      "n_variants_generated": 2760,
+      "n_unique_variants": 2742,
+      "n_checks": 1215,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 113,
-        "WARN": 15
+        "PASS": 127,
+        "WARN": 11
       },
       "by_direction": {
-        "backend": 22,
-        "common": 26,
-        "data_ml": 20,
-        "frontend": 23,
+        "backend": 24,
+        "common": 30,
+        "data_ml": 22,
+        "frontend": 25,
         "qa": 19,
         "security": 18
       },
       "by_format": {
-        "choose_fix": 23,
+        "choose_fix": 24,
         "predict_output": 28,
-        "find_bug": 24,
-        "open_book_3step": 18,
+        "find_bug": 30,
+        "open_book_3step": 19,
         "open_answer": 11,
-        "mcq_concept": 24
+        "mcq_concept": 26
       },
-      "seconds": 72.5
+      "seconds": 144.3
     },
     "seeds": 20,
     "verify_seeds": 3

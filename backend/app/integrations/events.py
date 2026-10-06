@@ -35,6 +35,7 @@ def invitation_sent(inv_id: uuid.UUID) -> None:
 
 
 def invitation_answered(inv_id: uuid.UUID, accepted: bool) -> None:
+    from app.integrations.ats.providers import enabled_targets
     from app.integrations.ats.service import deliver
     from app.integrations.ats.models import AtsSettings
     from app.modules.invitations.models import Invitation
@@ -53,7 +54,7 @@ def invitation_answered(inv_id: uuid.UUID, accepted: bool) -> None:
                          "/employer/invitations", f"inv-{i.id}")
         if accepted:
             st = db.get(AtsSettings, i.company_id)
-            if st is not None and st.auto_push and (st.huntflow_enabled or st.webhook_enabled):
+            if st is not None and st.auto_push and enabled_targets(db, i.company_id, st):
                 deliver(db, i.company_id, invitation_id=i.id, trigger="invitation_accepted")
     except Exception:  # noqa: BLE001
         log.exception("integrations invitation_answered failed")

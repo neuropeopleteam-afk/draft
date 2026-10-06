@@ -27,6 +27,7 @@ from app.modules.profiles.facts import (
     skill_confirmed,
     test_component,
 )
+from app.modules.jury import scope as jury_scope
 from app.modules.profiles.models import CandidateProfile
 
 ALGORITHM_VERSION = "match-v1"
@@ -39,7 +40,7 @@ def visible_pool(db: Session, direction: str | None = None, grades: list[str] | 
                  category_ids: list[str] | None = None) -> list[CandidateProfile]:
     q = (select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
          .where(CandidateProfile.visible_to_employers.is_(True), CandidateProfile.current_category_id.is_not(None),
-                User.is_active.is_(True), User.is_email_verified.is_(True)))
+                User.is_active.is_(True), User.is_email_verified.is_(True), jury_scope.pool_clause(User.email)))
     if direction:
         q = q.where(CandidateProfile.current_direction_id == direction)
     if grades:

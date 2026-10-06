@@ -233,3 +233,5 @@ def test_options_and_validation(client):
     assert r.status_code == 422
     r = client.post("/api/employer/cups", json={**CUP, "salary_from": 400000}, headers=H(te))
     assert r.status_code == 422
+    r = client.post("/api/employer/cups", json={**CUP, "salary_from": 150000}, headers=H(te))
+    assert r.status_code == 422 and "1,5" in r.text  # то же правило вилки, что у приглашений: итоги не упадут

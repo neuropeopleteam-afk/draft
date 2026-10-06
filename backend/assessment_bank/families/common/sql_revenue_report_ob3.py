@@ -24,6 +24,7 @@ CONTEXTS = [
 ]
 NAMES = ["Анна", "Борис", "Вера", "Глеб", "Дина", "Егор", "Жанна", "Илья"]
 DISTRACTORS = ["distinct", "inner_join", "max_amount", "avg_trick"]
+NEAR_MISSES = ["agg_inner", "agg_by_parent", "agg_no_group"]
 
 
 def _query(C, kind="buggy"):
@@ -35,6 +36,21 @@ def _query(C, kind="buggy"):
         s1 = f"MAX({o}.amount)"
     elif kind == "avg_trick":
         s1 = f"COUNT(DISTINCT {o}.id) * AVG({o}.amount)"
+    if kind in ("agg_inner", "agg_by_parent", "agg_no_group"):
+        # почти верные варианты с подзапросом (версия 2): ключ больше не единственный с агрегацией
+        if kind == "agg_by_parent":
+            sub = (f"  SELECT o2.{C['ofk']}, SUM({x}.amount) AS total\n  FROM {C['X']} {x}\n"
+                   f"  JOIN {C['O']} o2 ON o2.id = {x}.{C['xfk']}\n  GROUP BY o2.{C['ofk']}\n"
+                   f") agg ON agg.{C['ofk']} = {p}.id\n")
+        else:
+            grp = "" if kind == "agg_no_group" else f"  GROUP BY {C['xfk']}\n"
+            sub = (f"  SELECT {C['xfk']}, SUM(amount) AS total\n  FROM {C['X']}\n{grp}"
+                   f") agg ON agg.{C['xfk']} = {o}.id\n")
+        join = "JOIN" if kind == "agg_inner" else "LEFT JOIN"
+        return (f"SELECT {p}.id, {p}.name, SUM({o}.amount) AS {C['c1']}, SUM(agg.total) AS {C['c2']}\n"
+                f"FROM {C['P']} {p}\nJOIN {C['O']} {o} ON {o}.{C['ofk']} = {p}.id\n"
+                f"{join} (\n{sub}"
+                f"GROUP BY {p}.id, {p}.name\nORDER BY {p}.id;")
     if kind == "good":
         return (f"SELECT {p}.id, {p}.name, SUM({o}.amount) AS {C['c1']}, SUM(agg.total) AS {C['c2']}\n"
                 f"FROM {C['P']} {p}\nJOIN {C['O']} {o} ON {o}.{C['ofk']} = {p}.id\n"
@@ -221,7 +237,10 @@ def generate(seed: int):
     if len(set(texts)) < 4:
         raise RuntimeError("совпали описания наборов данных")
     opts1, key1 = make_options(rng, (texts[0], None), [(t, None) for t in texts[1:]], step=1)
-    chosen = rng.sample(DISTRACTORS, 3)
+    # Версия 2 (калибровка 05.10: шаг 2 решался малыми моделями — только верный вариант содержал
+    # подзапрос с предагрегацией). Теперь два дистрактора — почти верные подзапросы (INNER JOIN к
+    # агрегату, агрегат по субъекту, агрегат без GROUP BY), третий — из прежнего набора.
+    chosen = rng.sample(NEAR_MISSES, 2) + [rng.choice(DISTRACTORS)]
     opts2, key2 = make_options(rng, ("Переписать запрос так:", _query(C, "good")),
                                [("Переписать запрос так:", _query(C, d)) for d in chosen], step=2)
     # тестовый набор для шага 2: размножение, равные суммы, документ без поступлений
@@ -262,7 +281,12 @@ def generate(seed: int):
     why = {"distinct": "SUM(DISTINCT) склеит разные документы с равной суммой",
            "inner_join": "JOIN выбросит документы без поступлений и не уберёт размножение",
            "max_amount": "MAX вместо SUM потеряет остальные документы",
-           "avg_trick": "AVG по размноженным строкам взвешен числом поступлений"}
+           "avg_trick": "AVG по размноженным строкам взвешен числом поступлений",
+           "agg_inner": "внутренний JOIN к агрегату выбросит документы без поступлений из суммы документов",
+           "agg_by_parent": "агрегат по субъекту присоединён к каждому его документу — поступления "
+                            "умножаются на число документов",
+           "agg_no_group": "подзапрос без GROUP BY даёт одну строку на всю таблицу — поступления "
+                           "достаются одному документу"}
     ak = AnswerKey(kind="steps", value={"1": key1, "2": key2, "3": "rubric"},
                    explanation="Дефект: документ с несколькими поступлениями даёт несколько строк "
                                "после LEFT JOIN, и его сумма учитывается многократно. Исправление "
