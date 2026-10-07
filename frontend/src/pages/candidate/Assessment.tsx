@@ -4,6 +4,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, num, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { Integrity } from "../../components/CandidateCard";
 import { FeedbackSummary } from "./Feedback";
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
@@ -207,20 +208,14 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
   );
 }
 
-/** Прозрачный античит: что отслеживается во время теста и как это влияет на результат. */
+/** Перед тестом (решение Р27): общее предупреждение о проверке самостоятельности, без перечня механизмов —
+ *  механика описана для жюри (lib/jury.ts) и в docs/ANTIFRAUD.md. Версия текста — NOTICE_VERSION в integrity.py. */
 export function IntegrityNotice() {
   return (
     <div className="card mt-4 space-y-3 text-sm text-brand-ink/75">
-      <p className="font-bold text-brand-night">Что отслеживается во время теста</p>
-      <ul className="grid gap-2 sm:grid-cols-2">
-        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Полноэкранный режим и вкладка.</b> Тест открывается во весь экран, если браузер это умеет. Учитываются выходы из полноэкранного режима, уход со вкладки и время вне теста.</li>
-        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Текст задания.</b> Выделить и скопировать текст, код и варианты нельзя; попытка копирования отмечается.</li>
-        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Набор ответа.</b> В развёрнутых ответах — сколько текста набрано с клавиатуры, а сколько вставлено. Сохраняются только счётчики, не текст и не клавиши.</li>
-        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Скорость ответов.</b> Время засекает сервер. Верный ответ на сложное задание за несколько секунд или длинный ответ быстрее, чем его можно набрать, — аномалия.</li>
-        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Скрытые метки.</b> В тексте развёрнутых заданий есть метки, которых не видно на экране. Если текст задания передать нейросети, метка проявится в её ответе.</li>
-        <li className="rounded-xl bg-brand-blush/25 p-3"><b className="text-brand-night">Контрольные задания.</b> Несколько заданий-«канареек» в оценку не входят: по ним видно, решаются ли задания или ответы известны заранее. Развёрнутый ответ с инструкциями для автоматического оценщика передаётся эксперту.</li>
-      </ul>
-      <p><b className="text-brand-night">Сигналы не наказывают автоматически.</b> Они не меняют оценку уровня, не отменяют грейд и не прерывают тест. Сигналы только снижают «достоверность результата» — отметку рядом с категорией, которую видит работодатель, с понятными причинами. Ту же отметку и причины после теста видите и вы.</p>
+      <p className="font-bold text-brand-night">Самостоятельность выполнения</p>
+      <p>Тест проходят самостоятельно: без помощи других людей и без готовых ответов нейросетей. Результат проверяется на самостоятельность выполнения и может получить пометку «достоверность результата»: высокая, средняя или низкая.</p>
+      <p><b className="text-brand-night">Автоматических наказаний нет.</b> Пометка не прерывает тест, не меняет оценку уровня и не отменяет грейд. Работодатель видит её рядом с категорией, решение по ней принимает человек. После теста уровень достоверности и общую причину пометки увидите и вы. Если по части ответов видно, что они были известны заранее, эти ответы не учитываются в оценке уровня — об этом будет сказано в результате.</p>
     </div>
   );
 }
@@ -271,7 +266,7 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
       </div>
       <div className="card mt-6 space-y-3 text-sm text-brand-ink/75">
         <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам, обычно 8–16 заданий, до 60 минут. Если результат у самого порога грейда, будет ещё до 6 коротких заданий (до 20 минут) — чтобы грейд не зависел от случайности. Повторная попытка — из другого набора заданий.</p>
-        <p>Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои; время ответов учитывается для защиты от утечек.</p>
+        <p>Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои.</p>
         <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней.</p>
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
@@ -284,7 +279,7 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
       {!resume && (
         <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-brand-ink/80">
           <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={ack} onChange={(e) => setAck(e.target.checked)} />
-          <span>Я прочитал(а), что отслеживается во время теста, и понимаю, как это влияет на «достоверность результата».</span>
+          <span>Я ознакомлен(а) с условиями и даю согласие оператору платформы на обработку сведений о ходе прохождения теста (время ответов, действия в интерфейсе теста) с целью проверки самостоятельности выполнения и указания достоверности результата работодателям. Сведения хранятся вместе с результатом теста.</span>
         </label>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
@@ -471,7 +466,7 @@ export function TestRun() {
       </div>
       {fsOk && !fsOn && (
         <div className="mt-4"><Alert kind="info">
-          Тест идёт не в полноэкранном режиме. Это не прерывает тест, но учитывается в «достоверности результата».
+          Тест рассчитан на полноэкранный режим.
           <button type="button" className="ml-1 font-semibold underline" onClick={enterFullscreen}>Вернуться в полноэкранный режим</button>
         </Alert></div>
       )}
@@ -516,10 +511,10 @@ export function TestRun() {
               spellCheck={it.format !== "predict_output"} />
           </Field></div>
         )}
-        {(away.focus > 0 || away.paste > 0 || away.copy > 0) && (
+        {s.is_sandbox && (away.focus > 0 || away.paste > 0 || away.copy > 0) && (
           <div className="mt-4"><Alert kind="info">
-            Зафиксировано за тест: {[away.focus > 0 && `уход со вкладки — ${away.focus}`, away.paste > 0 && `вставка текста — ${away.paste}`, away.copy > 0 && `копирование задания — ${away.copy}`].filter(Boolean).join(", ")}.
-            Это не блокирует тест, но снижает «достоверность результата», которую видит работодатель.
+            Демо-режим жюри: зафиксировано за тест — {[away.focus > 0 && `уход со вкладки: ${away.focus}`, away.paste > 0 && `вставка текста: ${away.paste}`, away.copy > 0 && `копирование задания: ${away.copy}`].filter(Boolean).join(", ")}.
+            Кандидат вне демо-режима этой плашки не видит (Р27): ему — только уровень достоверности и общая причина после теста.
           </Alert></div>
         )}
         <div className="mt-4"><Alert>{error}</Alert></div>
@@ -529,7 +524,7 @@ export function TestRun() {
       </div>
       <p className="mt-4 text-xs text-brand-ink/65">
         {it.adaptive ? `Адаптивный тест: следующее задание подбирается по вашим ответам, обычно ${it.min_items}–${it.max_items} заданий. ` : ""}
-        Вернуться к прошлому заданию нельзя. Время ответа фиксирует сервер. Интерфейс отмечает выход из полноэкранного режима, уход со вкладки, копирование задания и вставку текста — это входит в «достоверность результата». Код кандидатов не выполняется; ключи не покидают сервер.
+        Вернуться к прошлому заданию нельзя. Рекомендуемое время задания — ориентир. Код кандидатов не выполняется; ключи не покидают сервер.
       </p>
     </div>
   );
@@ -547,12 +542,13 @@ function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; o
       <div className="card mt-4 text-sm text-brand-ink/75">{r.explanation}</div>
       {r.details?.n_scored != null && (
         <p className="mt-3 text-xs text-brand-ink/65">
-          Оценено заданий: {r.details.n_scored}{r.details.n_canaries ? ` (+ ${r.details.n_canaries} контрольных, в оценку не входят)` : ""}
+          Оценено заданий: {r.details.n_scored}
           {r.details.extension ? ` · дотестирование: ${r.details.extension.items}` : ""}
           {r.details.time_used_s ? ` · время: ${Math.round(r.details.time_used_s / 60)} мин` : ""}
         </p>
       )}
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.</Alert></div>}
+      {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={r.integrity} /></div>}
       <FeedbackSummary sessionId={sessionId} />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>

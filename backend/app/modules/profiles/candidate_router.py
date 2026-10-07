@@ -400,10 +400,16 @@ def apply_resume(resume_id: str, data: ApplyIn, user: User = Depends(candidate),
 
 # ------------------------------------------------------------------ PDF-профиль
 
-def candidate_card_for(db: Session, user_id, *, include_hidden: bool) -> dict:
+def candidate_card_for(db: Session, user_id, *, include_hidden: bool, for_candidate: bool = False) -> dict:
+    """Карточка кандидата. for_candidate — версия для самого кандидата («Как вас видит работодатель», свой PDF)."""
     b = load_bundles(db, [user_id])[user_id]
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
-    return card(b, cats, include_hidden=include_hidden)
+    c = card(b, cats, include_hidden=include_hidden)
+    if for_candidate and c.get("test") and b.test is not None:  # Р27: кандидату — уровень и общая причина
+        from app.modules.assessment.integrity import candidate_view
+
+        c["test"]["integrity"] = candidate_view((b.test.value or {}).get("integrity"))
+    return c
 
 
 @router.get("/profile.pdf", summary="Стандартизированный PDF-профиль (с моими контактами)",
@@ -412,7 +418,7 @@ def my_profile_pdf(user: User = Depends(candidate), db: Session = Depends(get_db
     from app.modules.pdf.profile_pdf import render_profile
 
     refresh_rating(db, user.id)
-    c = candidate_card_for(db, user.id, include_hidden=True)
+    c = candidate_card_for(db, user.id, include_hidden=True, for_candidate=True)
     p = db.get(CandidateProfile, user.id)
     from app.modules.assessment.feedback import build as build_feedback
 
@@ -431,5 +437,5 @@ def my_profile_pdf(user: User = Depends(candidate), db: Session = Depends(get_db
 
 @router.get("/card", summary="Как меня видит работодатель (обезличенная карточка)", responses=AUTH)
 def my_card(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
-    return {**candidate_card_for(db, user.id, include_hidden=False), "directions": DIRECTIONS}
+    return {**candidate_card_for(db, user.id, include_hidden=False, for_candidate=True), "directions": DIRECTIONS}
 

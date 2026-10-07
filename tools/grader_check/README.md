@@ -16,7 +16,21 @@
 cd backend && ../../../.venv/bin/python -m app.modules.validation.grader_check report --dir /tmp/ig09/empty
 ```
 
-## Прогон на YandexGPT (ключ — только на сервере, запускает координатор)
+## Прогон на YandexGPT внутри контейнера api (ключ уже там; запускает штаб)
+
+```
+bash tools/grader_check/run_in_container.sh                       # полный набор: 232 + 406 запросов + второй вызов
+bash tools/grader_check/run_in_container.sh --limit-per-group 10  # дешёвый вариант (≈ 60 + 100 запросов)
+DRY=1 bash tools/grader_check/run_in_container.sh                 # только показать команды к серверу
+```
+
+Скрипт строит запросы локально, передаёт их в контейнер `spectrek_fsp-api-1` (через `docker exec -i … cat`),
+запускает `llm_runner.py` в фоне внутри контейнера с его `LLM_API_KEY`/`LLM_FOLDER_ID`/`LLM_BASE_URL`, раз в минуту
+показывает прогресс, забирает ответы, делает второй вызов для сомнительных и пишет отчёт
+`backend/app/modules/validation/data/grader_check.json`; временные файлы на сервере и в контейнере удаляет.
+Прерванный прогон продолжается повторным запуском. Ниже — прежний ручной вариант с ключом из файла на сервере.
+
+## Прогон на YandexGPT вручную (ключ — только на сервере)
 
 Запросы строятся теми же функциями, что в продукте (`grader.build_messages`), ответы разбираются `parse_reply`,
 `doubts`, `combine`. Ключ не покидает сервер: на сервер уходят файлы запросов, обратно — ответы модели.
