@@ -567,6 +567,7 @@ class BankEngine:
             s = (f"Грейд {g} пока не подтверждён: θ = {theta:+.2f} ± {se:.2f}, вероятность уровня не ниже {g} — "
                  f"{ps} (нужно ≥ 80 %). Принудительного понижения нет")
             s += (f": можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower else
+                  ": можно повторить после подготовки." if GRADES.index(claimed) == 0 else
                   ": можно пройти тест на грейд ниже или повторить после подготовки.")
         ext = details.get("extension")
         if ext and ext.get("items"):
