@@ -144,15 +144,41 @@ def test_main_print_and_state_file(tmp_path, monkeypatch, capsys):
     monkeypatch.setenv("MONITOR_TO", "")
     monkeypatch.setattr(mon, "CHECKS", {"disk": ("Диск", lambda c: (False, "занято 95 %"))})
     assert mon.main(["--print"]) == 1 and not (tmp_path / "state.json").exists()
-    for _ in range(2):
+    for _ in range(3):
         assert mon.main([]) == 0
     out = capsys.readouterr().out
-    assert "MONITOR_TO не задан" in out  # письмо не ушло — повторим при следующем запуске
+    # почта ещё не задана: письмо один раз попадает в журнал, без повторов каждые 5 минут
+    assert out.count("MONITOR_TO пуст") == 1 and "Диск: СБОЙ. занято 95 %" in out and "раздел 11.1" in out
     st = json.loads((tmp_path / "state.json").read_text())
-    assert st["checks"]["disk"]["fails"] == 2 and st["checks"]["disk"]["alerted"] is False
+    assert st["checks"]["disk"]["fails"] == 3 and st["checks"]["disk"]["alerted"] is True
+
+
+def test_main_mail_failure_is_retried(tmp_path, monkeypatch, capsys):
+    """Postbox не принял письмо — сбой не считается отправленным, следующий запуск пробует снова."""
+    monkeypatch.setenv("MONITOR_ENV_FILES", "")
+    monkeypatch.setenv("MONITOR_STATE", str(tmp_path / "state.json"))
+    monkeypatch.setenv("MONITOR_TO", "owner@example.invalid")
+    monkeypatch.setenv("MONITOR_FAILS", "1")
+    monkeypatch.setattr(mon, "CHECKS", {"disk": ("Диск", lambda c: (False, "занято 95 %"))})
+    sent = []
+    monkeypatch.setattr(mon, "send_mail", lambda cfg, subj, text: sent.append(subj) or (False, "Postbox ответил 0"))
+    assert mon.main([]) == 0 and mon.main([]) == 0
+    assert len(sent) == 2  # повтор, а не тишина
+    monkeypatch.setattr(mon, "send_mail", lambda cfg, subj, text: sent.append(subj) or (True, "отправлено"))
+    mon.main([]); mon.main([])
+    assert len(sent) == 3  # после успешной отправки — тишина до напоминания
+    st = json.loads((tmp_path / "state.json").read_text())
+    assert st["checks"]["disk"]["alerted"] is True and st["checks"]["disk"]["since"] is not None
 
 
 @pytest.mark.parametrize("name", ["spectrek-monitor.service", "spectrek-monitor.timer", "monitor.env.example"])
 def test_unit_files_present(name):
     text = (ROOT / "infra" / "monitor" / name).read_text()
     assert "Spectrek" in text or "MONITOR_TO" in text
+
+
+def test_docker_cli_missing_is_clear():
+    def run(cmd):
+        raise FileNotFoundError(cmd[0])
+    ok, text = mon.check_docker(CFG, run)
+    assert not ok and "docker не найдена" in text
