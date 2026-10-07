@@ -70,7 +70,28 @@ def test_copy_ai_mark_fast_text_typing_meta_rules():
     r = integrity.assess([_item(meta_claims=True)] + [_item() for _ in range(5)])
     assert r["points"] == 1 and "утверждения об оценке" in r["reasons"][0]
     # только снижение достоверности: в оценку и ранжирование сигналы не входят (функция не трогает score)
-    assert set(r) == {"level", "title", "points", "reasons", "signals"}
+    assert set(r) == {"level", "title", "points", "reasons", "signals", "sources"}
+
+
+def test_external_reason_source_extension_point(monkeypatch):
+    """Точка расширения для внешних сигналов (камера, И16): источник получает задания и extra сессии."""
+    monkeypatch.setattr(integrity, "SOURCES", list(integrity.SOURCES))
+
+    def camera(done, extra):
+        ev = extra.get("camera") or {}
+        return ([(2, f"Лицо вне кадра: {ev['away']} раза")] if ev.get("away") else []), {"camera_away": ev.get("away", 0)}
+
+    def broken(done, extra):
+        raise RuntimeError("сбой источника")
+
+    integrity.register_source("camera", camera)
+    integrity.register_source("broken", broken)
+    integrity.register_source("camera", camera)  # повторная регистрация заменяет
+    assert [n for n, _ in integrity.SOURCES] == ["proctoring", "camera", "broken"]
+    r = integrity.assess([_item() for _ in range(6)], extra={"camera": {"away": 3}})
+    assert r["points"] == 2 and r["reasons"][0] == "Лицо вне кадра: 3 раза" and r["signals"]["camera_away"] == 3
+    assert r["sources"] == ["proctoring", "camera", "broken"]
+    assert integrity.assess([_item() for _ in range(6)])["level"] == "high"
 
 
 def test_fast_text_and_typing_flags():

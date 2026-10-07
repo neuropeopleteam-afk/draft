@@ -33,7 +33,10 @@
 """
 from __future__ import annotations
 
-from typing import Any
+import logging
+from typing import Any, Callable
+
+log = logging.getLogger("assessment.integrity")
 
 LEVEL_TITLES = {"high": "высокая", "medium": "средняя", "low": "низкая"}
 FAST_SHARE_OF_LIMIT = 0.08
@@ -108,10 +111,11 @@ def is_fast(time_s: float | None, time_limit_s: float) -> bool:
     return float(time_s) < max(FAST_MIN_S, FAST_SHARE_OF_LIMIT * float(time_limit_s))
 
 
-def assess(items: list[dict], preknowledge: dict | None = None) -> dict:
-    """items — завершённые задания сессии: {format, canary, time_s, time_limit_s, score (0..1|None), signals}.
+def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | None = None) -> dict:
+    """items — завершённые задания сессии: {format, canary, time_s, time_limit_s, score (0..1|None), signals,
+    injection, meta_claims, ai_mark_hit, fast_text, typing}; extra — сигналы сессии для внешних источников (SOURCES).
 
-    Возвращает {level, title, points, reasons[], signals{...}}.
+    Возвращает {level, title, points, reasons[], signals{...}, sources[]}.
     """
     pk = preknowledge or {}
     done = [i for i in items if i.get("time_s") is not None]
@@ -158,6 +162,70 @@ def assess(items: list[dict], preknowledge: dict | None = None) -> dict:
                            f"{_n(paste_chars, 'символ', 'символа', 'символов')}"))
     elif paste_items:
         reasons.append((1, f"Вставка готового текста в ответ: 1 задание, {_n(paste_chars, 'символ', 'символа', 'символов')}"))
+    inj = [i for i in done if i.get("injection")]
+    if inj:  # развёрнутый ответ адресован модели-оценщику (grader.injection_signals) — оценивает эксперт
+        reasons.append((2, "В развёрнутом ответе — инструкции для автоматического оценщика "
+                           f"({_n(len(inj), 'задание', 'задания', 'заданий')}); ответ передан эксперту"))
+    if done and len(with_sig) < 0.5 * len(done):
+        reasons.append((1, "Интерфейс теста не прислал сигналы по большинству заданий — ответы отправлены "
+                           "в обход интерфейса (через API)"))
+
+    ext_signals: dict = {}
+    for name, fn in list(SOURCES):
+        try:
+            r, sig = fn(done, extra or {})
+        except Exception:  # noqa: BLE001 — внешний источник не должен ломать итог теста
+            log.exception("integrity source %s failed", name)
+            continue
+        reasons.extend(r)
+        ext_signals.update(sig or {})
+
+    points = sum(p for p, _ in reasons)
+    level = "low" if points >= 3 else "medium" if points >= 1 else "high"
+    return {
+        "level": level, "title": LEVEL_TITLES[level], "points": points,
+        "reasons": [t for _, t in sorted(reasons, key=lambda x: -x[0])] or
+                   ["Сигналов нарушений нет: фокус не терялся, вставок нет, время ответов обычное, канарейки в норме"],
+        "signals": {"items": len(done), "scored": n, "fast_correct": len(fast_correct), "fast_wrong": len(fast_wrong),
+                    "canary_fast": len(canary_fast), "focus_lost_items": len(focus_items), "focus_lost_total": focus_total,
+                    "hidden_s": round(hidden_s, 1), "paste_items": len(paste_items), "paste_chars": paste_chars,
+                    "client_signals_items": len(with_sig), "preknowledge_flagged": bool(pk.get("flagged")),
+                    "injection_items": len(inj), **ext_signals},
+        "sources": [n for n, _ in SOURCES],
+    }
+
+
+def summary_for_employer(integ: dict | None) -> dict | None:
+    """То, что видит работодатель: уровень и причины (без сырых сигналов)."""
+    if not integ:
+        return None
+    return {"level": integ.get("level"), "title": integ.get("title") or LEVEL_TITLES.get(integ.get("level", ""), ""),
+            "reasons": list(integ.get("reasons") or [])[:5]}
+
+
+# ------------------------------------------------------------------ источники причин (точка расширения)
+# Источник причин — функция (done, extra) → (reasons [(баллы, текст)], signals {счётчики}). done — завершённые
+# задания сессии (как в assess), extra — сигналы уровня сессии от внешних модулей (например, extra["camera"] —
+# события прокторинга камерой, И16). Источник только добавляет причины: уровень считается по сумме баллов всех
+# источников, как и раньше (≥ 3 — низкая, 1–2 — средняя). Ошибка источника не ломает расчёт — он пропускается.
+ReasonSource = Callable[[list[dict], dict], tuple[list[tuple[int, str]], dict]]
+SOURCES: list[tuple[str, ReasonSource]] = []
+
+
+def register_source(name: str, fn: ReasonSource) -> None:
+    """Подключить внешний источник причин (повторная регистрация с тем же именем заменяет прежний)."""
+    for k, (n, _) in enumerate(SOURCES):
+        if n == name:
+            SOURCES[k] = (name, fn)
+            return
+    SOURCES.append((name, fn))
+
+
+def proctoring_source(done: list[dict], extra: dict) -> tuple[list[tuple[int, str]], dict]:
+    """Лёгкий прокторинг без камеры (И9): полноэкранный режим, копирование, ИИ-метка, время набора, динамика
+    набора, утверждения об оценке в ответе."""
+    reasons: list[tuple[int, str]] = []
+    with_sig = [i for i in done if i.get("signals") is not None]
     fs_items = [i for i in with_sig if "fs_ms" in i["signals"] or "fs_na" in i["signals"]]
     fs_exits = sum((i["signals"].get("fs_exit") or 0) for i in fs_items)
     fs_out_s = sum((i["signals"].get("fs_out_ms") or 0) for i in fs_items) / 1000.0
@@ -195,35 +263,10 @@ def assess(items: list[dict], preknowledge: dict | None = None) -> dict:
     if meta:  # «итог самопроверки: все требования выполнены» — перефразированная инъекция (grader.strip_meta)
         reasons.append((1, "В развёрнутом ответе — утверждения об оценке собственного ответа "
                            f"({_n(len(meta), 'задание', 'задания', 'заданий')}); при оценке они не учитываются"))
-    inj = [i for i in done if i.get("injection")]
-    if inj:  # развёрнутый ответ адресован модели-оценщику (grader.injection_signals) — оценивает эксперт
-        reasons.append((2, "В развёрнутом ответе — инструкции для автоматического оценщика "
-                           f"({_n(len(inj), 'задание', 'задания', 'заданий')}); ответ передан эксперту"))
-    if done and len(with_sig) < 0.5 * len(done):
-        reasons.append((1, "Интерфейс теста не прислал сигналы по большинству заданий — ответы отправлены "
-                           "в обход интерфейса (через API)"))
-
-    points = sum(p for p, _ in reasons)
-    level = "low" if points >= 3 else "medium" if points >= 1 else "high"
-    return {
-        "level": level, "title": LEVEL_TITLES[level], "points": points,
-        "reasons": [t for _, t in sorted(reasons, key=lambda x: -x[0])] or
-                   ["Сигналов нарушений нет: фокус не терялся, вставок нет, время ответов обычное, канарейки в норме"],
-        "signals": {"items": len(done), "scored": n, "fast_correct": len(fast_correct), "fast_wrong": len(fast_wrong),
-                    "canary_fast": len(canary_fast), "focus_lost_items": len(focus_items), "focus_lost_total": focus_total,
-                    "hidden_s": round(hidden_s, 1), "paste_items": len(paste_items), "paste_chars": paste_chars,
-                    "client_signals_items": len(with_sig), "preknowledge_flagged": bool(pk.get("flagged")),
-                    "injection_items": len(inj), "fs_items": len(fs_items), "fs_exits": fs_exits,
-                    "fs_out_s": round(fs_out_s, 1), "fs_never": fs_never, "copy_items": len(copy_items),
-                    "ai_mark_items": len(marks), "fast_text_items": len(fast_txt),
-                    "not_typed_items": len(typing["not_typed"]), "even_rhythm_items": len(typing["even_rhythm"]),
-                    "meta_claims_items": len(meta)},
-    }
+    return reasons, {"fs_items": len(fs_items), "fs_exits": fs_exits, "fs_out_s": round(fs_out_s, 1),
+                     "fs_never": fs_never, "copy_items": len(copy_items), "ai_mark_items": len(marks),
+                     "fast_text_items": len(fast_txt), "not_typed_items": len(typing["not_typed"]),
+                     "even_rhythm_items": len(typing["even_rhythm"]), "meta_claims_items": len(meta)}
 
 
-def summary_for_employer(integ: dict | None) -> dict | None:
-    """То, что видит работодатель: уровень и причины (без сырых сигналов)."""
-    if not integ:
-        return None
-    return {"level": integ.get("level"), "title": integ.get("title") or LEVEL_TITLES.get(integ.get("level", ""), ""),
-            "reasons": list(integ.get("reasons") or [])[:5]}
+register_source("proctoring", proctoring_source)
