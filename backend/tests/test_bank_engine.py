@@ -129,6 +129,50 @@ def test_session_started_before_update_still_works(bank):
     assert res.details["classification"]["stop_rule"] == "se"
 
 
+def test_stack_filter_excludes_tech_families(bank):
+    """Фильтр по стеку (07.10, Р2): семейства Go, Java, Django, Kafka, Docker выдаются только кандидатам с тегом в стеке."""
+    from assessment_bank import load_specs
+    from app.modules.assessment.skill_map import STACK_GATED, stack_gate
+
+    gated = {fid: stack_gate(s.direction, s.skills) for fid, s in load_specs().items()}
+    gated = {fid: g for fid, g in gated.items() if g}
+    assert gated, "в банке нет технологических семейств — синхронизируйте банк (tools/sync_bank.py)"
+    assert {t for g in gated.values() for t in g} <= STACK_GATED
+    # без стека — все технологические семейства исключены, обычные нет
+    excl = be.stack_excluded([])
+    assert excl == set(gated)
+    assert "backend.py.mutable_default" not in excl
+    # Go в стеке — семейства Go доступны, Java по-прежнему нет
+    excl_go = be.stack_excluded(["python", "go"])
+    assert all("go" not in g for fid, g in gated.items() if fid in excl_go)
+    assert {fid for fid, g in gated.items() if g == {"go"}} & set(gated) and not ({fid for fid, g in gated.items() if g == {"go"}} & excl_go)
+    assert {fid for fid, g in gated.items() if g == {"java"}} <= excl_go
+    # полный стек — ничего не исключено
+    assert be.stack_excluded(sorted(STACK_GATED)) == set()
+
+
+def test_session_without_stack_never_issues_tech_families(bank):
+    st = bank.start(direction="backend", claimed_grade="middle", stack_tags=["python", "fastapi"], seed=2024)
+    while (item := bank.next_item(st)) is not None:
+        it = next(i for i in st["items"] if i["token"] == item.item_id)
+        assert bank.answer(st, item.item_id, oracle(it, item.step or 1, True), 1000, step=item.step).accepted
+    fams = {i["family_id"] for i in st["items"]}
+    assert fams and not fams & be.stack_excluded(st["stack"])
+    sess = bank._rebuild(st)
+    assert not {p.family_id for p in sess.scored_pool} & be.stack_excluded(st["stack"])
+    assert not {p.family_id for p in sess.ext_pool} & be.stack_excluded(st["stack"])
+
+
+def test_session_with_go_stack_can_get_go_families(bank):
+    """Кандидат с Go в стеке: семейства Go в пуле сессии есть, Java — нет."""
+    st = bank.start(direction="backend", claimed_grade="middle", stack_tags=["python", "go"], seed=99)
+    sess = bank._rebuild(st)
+    pool = {p.family_id for p in sess.scored_pool} | {p.family_id for p in sess.ext_pool}
+    assert any(f.startswith("backend.go.") for f in pool)
+    assert not any(f.startswith("backend.java.") for f in pool)
+    assert not any(f.startswith("backend.django.") for f in pool)
+
+
 def test_items_ru():
     assert [be._items_ru(n) for n in (1, 3, 5, 11, 21, 22)] == [
         "1 короткое задание", "3 коротких задания", "5 коротких заданий", "11 коротких заданий",
