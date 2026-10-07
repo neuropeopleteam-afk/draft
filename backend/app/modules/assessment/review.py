@@ -106,23 +106,13 @@ def recompute(db: Session, ts: TestSession) -> dict:
     res = get_engine("bank").finish(ts.result["state"])
     profile = db.get(CandidateProfile, ts.user_id)
     now = utcnow()
-    sandbox = service.is_sandbox(profile)
-    specialization = ensure_specialization(db, profile, ts.direction_id)
-    current = specialization.grade_id
     before = (ts.result.get("engine_result") or {}).get("confirmed")
-    outcome = apply_result(current, ts.claimed_grade_id, res.confirmed, now, sandbox,
-                           get_settings().grade_change_interval_days, specialization.locked_until)
-    ts.theta, ts.theta_se = res.theta, res.se
-    ts.score = res.correct / res.answered if res.answered else 0.0
-    ts.result_grade_id = ts.claimed_grade_id if res.confirmed else ts.result_grade_id
-    ts.result = {**ts.result, "engine_result": res.to_dict(), "recomputed_at": now.isoformat(),
-                 "outcome": {"changed": outcome.changed, "grade": outcome.new_grade, "message": outcome.message}}
+    keep_grade = ts.result_grade_id
+    outcome = service.apply_engine_result(db, ts, res, profile, now)
+    ts.result = {**ts.result, "recomputed_at": now.isoformat()}
     flag_modified(ts, "result")
-    if res.confirmed:
-        service.store_confirmed(db, profile, specialization, ts, res, outcome, current)
-        service._write_t1_facts(db, ts, res)
-        db.flush()
-        refresh_rating(db, ts.user_id)
+    if not res.confirmed:
+        ts.result_grade_id = keep_grade
     return {"theta": res.theta, "se": res.se, "confirmed": res.confirmed, "confirmed_before": before,
             "pending_left": (res.details or {}).get("pending_review"), "message": outcome.message}
 

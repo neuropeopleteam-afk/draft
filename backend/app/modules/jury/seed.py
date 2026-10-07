@@ -57,6 +57,9 @@ PERSONAS = [
      "description": "Мария Королёва · Backend · Middle и Frontend · Junior. Два отдельных теста, достижения ФСП (T2)."},
     {"id": "candidate_nofsp", "role": "candidate", "title": "Кандидат без ФСП",
      "description": "Илья Сергеев · Backend · Middle. Истории ФСП нет — нейтрально. Ждёт входящее приглашение."},
+    {"id": "candidate_junior", "role": "candidate", "title": "Кандидат «Junior (предварительно)»",
+     "description": "Артём Лебедев · Backend · Junior (предварительно). Тест у порога Junior: грейд не подтверждён, но и "
+                    "не доказанно ниже — вероятность уровня, короткое дотестирование у порога, статус у работодателя."},
     {"id": "employer", "role": "employer", "title": "Работодатель",
      "description": "«Северный платёж»: профиль компании, три потребности с цитатами и подборки с объяснениями, "
                     "сравнение кандидатов, фильтр ст. 64 ТК РФ."},
@@ -178,23 +181,29 @@ def _user(db: Session, persona: str, role: UserRole, sid: str = "") -> User:
 
 
 def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int,
-               away_items: tuple[int, ...] = (), sid: str = ""):
+               away_items: tuple[int, ...] = (), sid: str = "", claimed: str = "middle", experience: float = 3.5,
+               salary: int = 200_000, want: str = "category"):
+    """Демо-кандидат жюри. want — какой исход теста нужен: category — любая категория (подтверждённая или
+    предварительная), provisional — «Junior (предварительно)»; демо-респондент случаен, поэтому до 6 попыток
+    с разными seed, затем остаётся последний исход."""
     u = _user(db, persona, UserRole.candidate, sid)
+    stack = STACK if claimed != "junior" else STACK[:5]
+    level = 3 if claimed != "junior" else 2
     p = CandidateProfile(user_id=u.id, full_name=name, phone="+7 900 000-00-00", telegram=f"@jury_{persona}",
-                         city="Москва", work_format=WorkFormat.remote, relocation=False, experience_years=3.5,
-                         salary_min_hidden=200_000, privacy={}, visible_to_employers=True,
+                         city="Москва", work_format=WorkFormat.remote, relocation=False, experience_years=experience,
+                         salary_min_hidden=salary, privacy={}, visible_to_employers=True,
                          public_ref=new_public_ref(db), onboarding_completed_at=utcnow(),
-                         roles=["developer"], headline="backend · middle (демо жюри)", jury_mode=True)
+                         roles=["developer"], headline=f"backend · {claimed} (демо жюри)", jury_mode=True)
     db.add(p)
     db.flush()
-    sv = SurveyResponse(user_id=u.id, direction_id="backend", claimed_grade_id="middle", experience_years=3.5,
-                        answers={"stack": {t: 3 for t in STACK}, "roles": ["developer"], "demo": True, "jury": True})
+    sv = SurveyResponse(user_id=u.id, direction_id="backend", claimed_grade_id=claimed, experience_years=experience,
+                        answers={"stack": {t: level for t in stack}, "roles": ["developer"], "demo": True, "jury": True})
     db.add(sv)
     db.flush()
-    for t in STACK:
-        db.add(SurveyStackTag(survey_id=sv.id, stack_tag_id=t, self_level=3))
-    set_t0_facts(db, u.id, FactSource.self_report, stack=STACK, roles=["developer"],
-                 soft_skills=["communication", "teamwork"], experience_years=3.5)
+    for t in stack:
+        db.add(SurveyStackTag(survey_id=sv.id, stack_tag_id=t, self_level=level))
+    set_t0_facts(db, u.id, FactSource.self_report, stack=stack, roles=["developer"],
+                 soft_skills=["communication", "teamwork"], experience_years=experience)
     if with_fsp:
         pp = FspPassport(user_id=u.id, link_source=FspLinkSource.demo, synced_at=utcnow(), sport_rank="КМС",
                          raw={"demo": True, "jury": True, "fsp_id": "FSP-770012", "note": "демо-реестр хакатона"})
@@ -211,9 +220,11 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
                               verified=True, source_ref="demo-registry"))
     db.commit()
     res = {}
-    for attempt in range(6):  # демо-респондент случаен: нужен подтверждённый грейд — иначе следующий seed
-        res = run_demo_test(db, u.id, "middle", theta, seed + attempt, pending_left, away_items)
-        if res.get("confirmed") or res.get("category_id"):
+    for attempt in range(6):  # демо-респондент случаен: нужен заданный исход — иначе следующий seed
+        res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items)
+        if want == "provisional" and res.get("category_provisional"):
+            break
+        if want == "category" and (res.get("confirmed") or res.get("category_id")):
             break
     refresh_rating(db, u.id)
     db.commit()
@@ -288,6 +299,9 @@ def _create_jury(db: Session, sid: str) -> dict:
             break
     # у Ильи — два ухода со вкладки во время теста: достоверность «средняя» (видно работодателю с причиной)
     u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid)
+    # у порога Junior: тест не подтвердил грейд, но и не доказал уровень ниже — «Junior (предварительно)»
+    _, p3, r3 = _candidate(db, "candidate_junior", "Артём Лебедев", False, -1.05, 5301, 0, sid=sid, claimed="junior",
+                           experience=0.5, salary=80_000, want="provisional")
     eu = _user(db, "employer", UserRole.employer, sid)
     c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург", website="https://example.invalid",
                 description="Платёжный сервис для малого бизнеса. Демо-компания для экспертов жюри.",
@@ -324,6 +338,8 @@ def _create_jury(db: Session, sid: str) -> dict:
     return {"candidate": {"ref": p1.public_ref, "confirmed": r1.get("confirmed"), "theta": r1.get("theta")},
             "candidate_nofsp": {"ref": p2.public_ref, "confirmed": r2.get("confirmed"), "theta": r2.get("theta"),
                                 "pending": (r2.get("details") or {}).get("pending_review")},
+            "candidate_junior": {"ref": p3.public_ref, "provisional": r3.get("category_provisional"),
+                                 "theta": r3.get("theta"), "category_id": r3.get("category_id")},
             "employer": {"company": c.name, "needs": len(needs), "cups": cups}, "expert": {"email": ex.email},
             "scenario": sid or None, "seconds": round(time.time() - t0, 1)}
 

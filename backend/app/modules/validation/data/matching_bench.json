@@ -1,5 +1,5 @@
 {
- "version": "bench-v1",
+ "version": "bench-v2",
  "algorithm": "match-v1",
  "weights": {
   "test": 0.45,
@@ -8,11 +8,7 @@
   "fsp": 0.1,
   "probe": 0.05
  },
- "fsp_rating": {
-  "version": "fsp-v2",
-  "policy": "Все дисциплины и типы мероприятий равны. Победитель — 1; призёр — 0,85; финалист — 0,60; участник — 0,15. Лучший результат даёт 80 % силы паспорта; остальные соревнования — до 20 % с убывающей отдачей. Первые 12 месяцев вес полный, далее плавно снижается, но не ниже 70 %. Только подтверждённые результаты (T2)."
- },
- "generated_at": "2026-10-07T10:13:39+00:00",
+ "generated_at": "2026-10-07T11:41:54+00:00",
  "command": "make bench",
  "config": {
   "seed": 20261006,
@@ -34,9 +30,11 @@
   "truth": "capable",
   "cov_full": 0.75,
   "cov_min": 0.5,
-  "min_relevant_per_need": 3
+  "min_relevant_per_need": 3,
+  "decision": "bank",
+  "provisional": true
  },
- "config_hash": "54468334081f",
+ "config_hash": "19255e3a8b95",
  "seeds": {
   "world": 20261006,
   "world2": 20261007,
@@ -118,9 +116,10 @@
   },
   "with_fsp": 520,
   "unverified_fsp_badge": 112,
-  "no_category": 465,
-  "retake": 623,
-  "category_equals_true_grade": 0.673,
+  "no_category": 381,
+  "provisional": 302,
+  "retake": 554,
+  "category_equals_true_grade": 0.604,
   "declared_equals_true_grade": 0.654,
   "parser": {
    "direction_accuracy": 1.0,
@@ -213,9 +212,9 @@
  "metrics": {
   "platform": {
    "p@5": {
-    "mean": 0.776,
-    "lo": 0.742,
-    "hi": 0.81
+    "mean": 0.785,
+    "lo": 0.751,
+    "hi": 0.818
    },
    "p@10": {
     "mean": 0.757,
@@ -223,9 +222,9 @@
     "hi": 0.786
    },
    "ndcg@5": {
-    "mean": 0.603,
-    "lo": 0.573,
-    "hi": 0.633
+    "mean": 0.606,
+    "lo": 0.574,
+    "hi": 0.635
    },
    "ndcg@10": {
     "mean": 0.589,
@@ -233,9 +232,9 @@
     "hi": 0.614
    },
    "mrr": {
-    "mean": 0.895,
-    "lo": 0.862,
-    "hi": 0.925
+    "mean": 0.887,
+    "lo": 0.853,
+    "hi": 0.918
    }
   },
   "bm25": {
@@ -348,218 +347,218 @@
   },
   "grade_only": {
    "p@5": {
-    "mean": 0.564,
-    "lo": 0.537,
-    "hi": 0.591
+    "mean": 0.587,
+    "lo": 0.559,
+    "hi": 0.615
    },
    "p@10": {
-    "mean": 0.565,
-    "lo": 0.539,
-    "hi": 0.591
+    "mean": 0.587,
+    "lo": 0.56,
+    "hi": 0.616
    },
    "ndcg@5": {
-    "mean": 0.423,
-    "lo": 0.404,
-    "hi": 0.442
+    "mean": 0.437,
+    "lo": 0.416,
+    "hi": 0.457
    },
    "ndcg@10": {
-    "mean": 0.428,
-    "lo": 0.41,
-    "hi": 0.447
+    "mean": 0.443,
+    "lo": 0.423,
+    "hi": 0.463
    },
    "mrr": {
-    "mean": 0.728,
-    "lo": 0.707,
-    "hi": 0.748
+    "mean": 0.741,
+    "lo": 0.72,
+    "hi": 0.763
    }
   },
   "no_fsp": {
    "p@5": {
-    "mean": 0.776,
-    "lo": 0.743,
-    "hi": 0.809
+    "mean": 0.773,
+    "lo": 0.737,
+    "hi": 0.806
    },
    "p@10": {
-    "mean": 0.753,
-    "lo": 0.724,
-    "hi": 0.783
+    "mean": 0.761,
+    "lo": 0.732,
+    "hi": 0.789
    },
    "ndcg@5": {
-    "mean": 0.601,
-    "lo": 0.57,
+    "mean": 0.6,
+    "lo": 0.569,
     "hi": 0.631
    },
    "ndcg@10": {
-    "mean": 0.584,
-    "lo": 0.558,
-    "hi": 0.61
+    "mean": 0.589,
+    "lo": 0.563,
+    "hi": 0.616
    },
    "mrr": {
-    "mean": 0.88,
-    "lo": 0.847,
-    "hi": 0.913
+    "mean": 0.892,
+    "lo": 0.857,
+    "hi": 0.923
    }
   },
   "no_guard": {
    "p@5": {
-    "mean": 0.846,
-    "lo": 0.818,
-    "hi": 0.873
+    "mean": 0.838,
+    "lo": 0.809,
+    "hi": 0.864
    },
    "p@10": {
-    "mean": 0.812,
-    "lo": 0.786,
-    "hi": 0.835
+    "mean": 0.825,
+    "lo": 0.8,
+    "hi": 0.848
    },
    "ndcg@5": {
-    "mean": 0.698,
-    "lo": 0.67,
-    "hi": 0.726
+    "mean": 0.686,
+    "lo": 0.657,
+    "hi": 0.715
    },
    "ndcg@10": {
-    "mean": 0.671,
-    "lo": 0.647,
-    "hi": 0.694
+    "mean": 0.669,
+    "lo": 0.645,
+    "hi": 0.693
    },
    "mrr": {
-    "mean": 0.92,
-    "lo": 0.889,
-    "hi": 0.946
+    "mean": 0.897,
+    "lo": 0.865,
+    "hi": 0.925
    }
   }
  },
  "paired_platform_minus": {
   "bm25": {
    "p@5": {
-    "mean": 0.338,
-    "lo": 0.293,
-    "hi": 0.383
+    "mean": 0.347,
+    "lo": 0.302,
+    "hi": 0.392
    },
    "ndcg@10": {
     "mean": 0.187,
-    "lo": 0.156,
+    "lo": 0.157,
     "hi": 0.217
    },
    "mrr": {
-    "mean": 0.243,
-    "lo": 0.193,
-    "hi": 0.293
+    "mean": 0.236,
+    "lo": 0.187,
+    "hi": 0.287
    }
   },
   "keywords_grade": {
    "p@5": {
-    "mean": 0.384,
-    "lo": 0.323,
-    "hi": 0.445
+    "mean": 0.393,
+    "lo": 0.332,
+    "hi": 0.455
    },
    "ndcg@10": {
-    "mean": 0.179,
-    "lo": 0.137,
-    "hi": 0.223
+    "mean": 0.18,
+    "lo": 0.136,
+    "hi": 0.224
    },
    "mrr": {
-    "mean": 0.35,
-    "lo": 0.298,
-    "hi": 0.403
+    "mean": 0.342,
+    "lo": 0.287,
+    "hi": 0.398
    }
   },
   "random": {
    "p@5": {
-    "mean": 0.724,
-    "lo": 0.69,
-    "hi": 0.759
+    "mean": 0.733,
+    "lo": 0.7,
+    "hi": 0.766
    },
    "ndcg@10": {
     "mean": 0.54,
-    "lo": 0.514,
+    "lo": 0.515,
     "hi": 0.566
    },
    "mrr": {
-    "mean": 0.736,
-    "lo": 0.703,
-    "hi": 0.767
+    "mean": 0.728,
+    "lo": 0.694,
+    "hi": 0.759
    }
   },
   "no_test": {
    "p@5": {
-    "mean": 0.407,
-    "lo": 0.341,
-    "hi": 0.475
+    "mean": 0.416,
+    "lo": 0.35,
+    "hi": 0.482
    },
    "ndcg@10": {
     "mean": 0.177,
-    "lo": 0.132,
+    "lo": 0.131,
     "hi": 0.223
    },
    "mrr": {
-    "mean": 0.385,
-    "lo": 0.321,
-    "hi": 0.446
+    "mean": 0.377,
+    "lo": 0.311,
+    "hi": 0.44
    }
   },
   "grade_only": {
    "p@5": {
-    "mean": 0.212,
-    "lo": 0.185,
-    "hi": 0.239
+    "mean": 0.198,
+    "lo": 0.172,
+    "hi": 0.225
    },
    "ndcg@10": {
-    "mean": 0.16,
-    "lo": 0.144,
-    "hi": 0.175
+    "mean": 0.146,
+    "lo": 0.13,
+    "hi": 0.161
    },
    "mrr": {
-    "mean": 0.167,
-    "lo": 0.138,
-    "hi": 0.196
+    "mean": 0.146,
+    "lo": 0.117,
+    "hi": 0.175
    }
   },
   "no_fsp": {
    "p@5": {
-    "mean": -0.0,
-    "lo": -0.02,
-    "hi": 0.02
+    "mean": 0.012,
+    "lo": -0.006,
+    "hi": 0.031
    },
    "ndcg@10": {
-    "mean": 0.005,
-    "lo": -0.004,
-    "hi": 0.013
+    "mean": -0.001,
+    "lo": -0.009,
+    "hi": 0.008
    },
    "mrr": {
-    "mean": 0.015,
-    "lo": -0.011,
-    "hi": 0.041
+    "mean": -0.005,
+    "lo": -0.032,
+    "hi": 0.023
    }
   },
   "no_guard": {
    "p@5": {
-    "mean": -0.07,
-    "lo": -0.1,
-    "hi": -0.042
+    "mean": -0.053,
+    "lo": -0.081,
+    "hi": -0.025
    },
    "ndcg@10": {
-    "mean": -0.083,
-    "lo": -0.099,
-    "hi": -0.067
+    "mean": -0.081,
+    "lo": -0.095,
+    "hi": -0.065
    },
    "mrr": {
-    "mean": -0.025,
-    "lo": -0.056,
-    "hi": 0.009
+    "mean": -0.009,
+    "lo": -0.041,
+    "hi": 0.025
    }
   }
  },
  "groups": {
   "fsp": {
    "platform": {
-    "with_fsp_percentile": 0.0949,
-    "without_fsp_percentile": 0.1516,
-    "without_fsp_share_of_relevant_top10": 0.358
+    "with_fsp_percentile": 0.1057,
+    "without_fsp_percentile": 0.1664,
+    "without_fsp_share_of_relevant_top10": 0.36
    },
    "no_fsp": {
-    "with_fsp_percentile": 0.1123,
-    "without_fsp_percentile": 0.1402,
-    "without_fsp_share_of_relevant_top10": 0.56
+    "with_fsp_percentile": 0.1203,
+    "without_fsp_percentile": 0.1566,
+    "without_fsp_share_of_relevant_top10": 0.557
    },
    "bm25": {
     "with_fsp_percentile": 0.1128,
@@ -576,7 +575,7 @@
   "inflated": {
    "platform": {
     "irrelevant_inflated_top10": 0.041,
-    "inflated_top10": 0.171
+    "inflated_top10": 0.1705
    },
    "bm25": {
     "irrelevant_inflated_top10": 0.3115,
@@ -591,14 +590,14 @@
     "inflated_top10": 0.6055
    },
    "no_guard": {
-    "irrelevant_inflated_top10": 0.144,
-    "inflated_top10": 0.486
+    "irrelevant_inflated_top10": 0.1305,
+    "inflated_top10": 0.48
    },
    "population_share": 0.198
   },
   "modest": {
    "platform": {
-    "relevant_modest_percentile": 0.1179
+    "relevant_modest_percentile": 0.1043
    },
    "bm25": {
     "relevant_modest_percentile": 0.1989
@@ -610,7 +609,7 @@
     "relevant_modest_percentile": 0.1774
    },
    "no_guard": {
-    "relevant_modest_percentile": 0.112
+    "relevant_modest_percentile": 0.0994
    }
   }
  },
@@ -618,61 +617,61 @@
   "by_direction": {
    "backend": {
     "n": 40,
-    "platform": 0.613,
+    "platform": 0.612,
     "bm25": 0.449,
     "no_test": 0.391,
-    "grade_only": 0.45
+    "grade_only": 0.468
    },
    "data_ml": {
     "n": 40,
-    "platform": 0.633,
+    "platform": 0.646,
     "bm25": 0.416,
     "no_test": 0.423,
-    "grade_only": 0.478
+    "grade_only": 0.497
    },
    "frontend": {
     "n": 40,
-    "platform": 0.631,
+    "platform": 0.637,
     "bm25": 0.399,
     "no_test": 0.359,
-    "grade_only": 0.477
+    "grade_only": 0.504
    },
    "qa": {
     "n": 40,
     "platform": 0.477,
     "bm25": 0.377,
     "no_test": 0.503,
-    "grade_only": 0.352
+    "grade_only": 0.354
    },
    "security": {
     "n": 40,
-    "platform": 0.59,
+    "platform": 0.571,
     "bm25": 0.37,
     "no_test": 0.384,
-    "grade_only": 0.385
+    "grade_only": 0.39
    }
   },
   "by_grade": {
    "junior": {
     "n": 53,
-    "platform": 0.494,
+    "platform": 0.493,
     "bm25": 0.49,
     "no_test": 0.735,
-    "grade_only": 0.35
+    "grade_only": 0.338
    },
    "middle": {
     "n": 104,
     "platform": 0.603,
     "bm25": 0.386,
     "no_test": 0.257,
-    "grade_only": 0.426
+    "grade_only": 0.446
    },
    "senior": {
     "n": 43,
-    "platform": 0.671,
+    "platform": 0.672,
     "bm25": 0.332,
     "no_test": 0.389,
-    "grade_only": 0.532
+    "grade_only": 0.562
    }
   },
   "by_testable": {
@@ -681,14 +680,14 @@
     "platform": 0.597,
     "bm25": 0.403,
     "no_test": 0.413,
-    "grade_only": 0.433
+    "grade_only": 0.448
    },
    "few": {
     "n": 10,
-    "platform": 0.432,
+    "platform": 0.437,
     "bm25": 0.393,
     "no_test": 0.387,
-    "grade_only": 0.336
+    "grade_only": 0.347
    }
   }
  },
@@ -697,29 +696,29 @@
   "metrics": {
    "platform": {
     "p@5": {
-     "mean": 0.764,
-     "lo": 0.732,
-     "hi": 0.796
+     "mean": 0.762,
+     "lo": 0.731,
+     "hi": 0.793
     },
     "p@10": {
-     "mean": 0.757,
-     "lo": 0.729,
-     "hi": 0.784
+     "mean": 0.763,
+     "lo": 0.736,
+     "hi": 0.789
     },
     "ndcg@5": {
      "mean": 0.557,
-     "lo": 0.527,
-     "hi": 0.587
+     "lo": 0.529,
+     "hi": 0.588
     },
     "ndcg@10": {
-     "mean": 0.553,
-     "lo": 0.528,
-     "hi": 0.578
+     "mean": 0.556,
+     "lo": 0.531,
+     "hi": 0.582
     },
     "mrr": {
-     "mean": 0.848,
-     "lo": 0.811,
-     "hi": 0.883
+     "mean": 0.875,
+     "lo": 0.839,
+     "hi": 0.908
     }
    },
    "bm25": {
@@ -766,39 +765,39 @@
    "probe": 0.05
   },
   "weights_tuned": {
-   "test": 0.45,
-   "stack_required": 0.45,
-   "stack_desired": 0.0,
-   "fsp": 0.05,
+   "test": 0.55,
+   "stack_required": 0.35,
+   "stack_desired": 0.05,
+   "fsp": 0.0,
    "probe": 0.05
   },
-  "product_rank_in_grid": 8,
+  "product_rank_in_grid": 58,
   "train": {
-   "product": 0.599,
-   "tuned": 0.601
+   "product": 0.603,
+   "tuned": 0.614
   },
   "test": {
    "product": {
-    "mean": 0.578,
-    "lo": 0.543,
-    "hi": 0.613
+    "mean": 0.574,
+    "lo": 0.539,
+    "hi": 0.611
    },
    "tuned": {
-    "mean": 0.583,
-    "lo": 0.548,
-    "hi": 0.62
+    "mean": 0.573,
+    "lo": 0.539,
+    "hi": 0.608
    },
    "tuned_minus_product": {
-    "mean": 0.006,
-    "lo": -0.006,
-    "hi": 0.018
+    "mean": -0.001,
+    "lo": -0.014,
+    "hi": 0.012
    }
   },
   "world2": {
    "product": {
-    "mean": 0.553,
-    "lo": 0.529,
-    "hi": 0.58
+    "mean": 0.556,
+    "lo": 0.531,
+    "hi": 0.583
    },
    "tuned": {
     "mean": 0.561,
@@ -806,9 +805,9 @@
     "hi": 0.588
    },
    "tuned_minus_product": {
-    "mean": 0.007,
-    "lo": 0.0,
-    "hi": 0.015
+    "mean": 0.005,
+    "lo": -0.004,
+    "hi": 0.013
    }
   },
   "decision": "Веса продукта не меняются по итогам бенчмарка: подобранные на синтетике веса — подсказка, а не настройка под истину, которую мы сами задали."
@@ -822,246 +821,7 @@
    "n_candidates": 600,
    "platform": {
     "p@5": 0.707,
-    "ndcg@10": 0.563,
-    "mrr": 0.873
-   },
-   "bm25": {
-    "p@5": 0.427,
-    "ndcg@10": 0.437,
-    "mrr": 0.675
-   },
-   "no_test": {
-    "p@5": 0.41,
-    "ndcg@10": 0.454,
-    "mrr": 0.521
-   },
-   "no_fsp": {
-    "p@5": 0.697,
-    "ndcg@10": 0.562,
-    "mrr": 0.853
-   },
-   "no_guard": {
-    "p@5": 0.77,
-    "ndcg@10": 0.651,
-    "mrr": 0.923
-   }
-  },
-  {
-   "id": "sigma_035",
-   "title": "Погрешность теста σθ = 0,35",
-   "overrides": {
-    "theta_sigma": 0.35
-   },
-   "n_needs": 60,
-   "n_candidates": 600,
-   "platform": {
-    "p@5": 0.737,
-    "ndcg@10": 0.581,
-    "mrr": 0.891
-   },
-   "bm25": {
-    "p@5": 0.427,
-    "ndcg@10": 0.437,
-    "mrr": 0.675
-   },
-   "no_test": {
-    "p@5": 0.41,
-    "ndcg@10": 0.454,
-    "mrr": 0.521
-   },
-   "no_fsp": {
-    "p@5": 0.707,
-    "ndcg@10": 0.582,
-    "mrr": 0.872
-   },
-   "no_guard": {
-    "p@5": 0.8,
-    "ndcg@10": 0.669,
-    "mrr": 0.906
-   }
-  },
-  {
-   "id": "sigma_065",
-   "title": "Погрешность теста σθ = 0,65",
-   "overrides": {
-    "theta_sigma": 0.65
-   },
-   "n_needs": 60,
-   "n_candidates": 600,
-   "platform": {
-    "p@5": 0.693,
-    "ndcg@10": 0.56,
-    "mrr": 0.886
-   },
-   "bm25": {
-    "p@5": 0.427,
-    "ndcg@10": 0.437,
-    "mrr": 0.675
-   },
-   "no_test": {
-    "p@5": 0.41,
-    "ndcg@10": 0.454,
-    "mrr": 0.521
-   },
-   "no_fsp": {
-    "p@5": 0.687,
-    "ndcg@10": 0.56,
-    "mrr": 0.854
-   },
-   "no_guard": {
-    "p@5": 0.763,
-    "ndcg@10": 0.646,
-    "mrr": 0.943
-   }
-  },
-  {
-   "id": "inflated_0",
-   "title": "Без «раздутых» резюме",
-   "overrides": {
-    "share_inflated": 0.0
-   },
-   "n_needs": 60,
-   "n_candidates": 600,
-   "platform": {
-    "p@5": 0.743,
-    "ndcg@10": 0.577,
-    "mrr": 0.883
-   },
-   "bm25": {
-    "p@5": 0.533,
-    "ndcg@10": 0.498,
-    "mrr": 0.764
-   },
-   "no_test": {
-    "p@5": 0.777,
-    "ndcg@10": 0.673,
-    "mrr": 0.879
-   },
-   "no_fsp": {
-    "p@5": 0.723,
-    "ndcg@10": 0.575,
-    "mrr": 0.89
-   },
-   "no_guard": {
-    "p@5": 0.883,
-    "ndcg@10": 0.699,
-    "mrr": 0.964
-   }
-  },
-  {
-   "id": "inflated_40",
-   "title": "«Раздутых» резюме 40 %",
-   "overrides": {
-    "share_inflated": 0.4
-   },
-   "n_needs": 60,
-   "n_candidates": 600,
-   "platform": {
-    "p@5": 0.707,
-    "ndcg@10": 0.551,
-    "mrr": 0.887
-   },
-   "bm25": {
-    "p@5": 0.38,
-    "ndcg@10": 0.366,
-    "mrr": 0.564
-   },
-   "no_test": {
-    "p@5": 0.277,
-    "ndcg@10": 0.355,
-    "mrr": 0.427
-   },
-   "no_fsp": {
-    "p@5": 0.683,
-    "ndcg@10": 0.551,
-    "mrr": 0.867
-   },
-   "no_guard": {
-    "p@5": 0.723,
-    "ndcg@10": 0.605,
-    "mrr": 0.907
-   }
-  },
-  {
-   "id": "inflated_60",
-   "title": "«Раздутых» резюме 60 %",
-   "overrides": {
-    "share_inflated": 0.6
-   },
-   "n_needs": 60,
-   "n_candidates": 600,
-   "platform": {
-    "p@5": 0.683,
-    "ndcg@10": 0.546,
-    "mrr": 0.867
-   },
-   "bm25": {
-    "p@5": 0.347,
-    "ndcg@10": 0.34,
-    "mrr": 0.5
-   },
-   "no_test": {
-    "p@5": 0.263,
-    "ndcg@10": 0.316,
-    "mrr": 0.411
-   },
-   "no_fsp": {
-    "p@5": 0.667,
-    "ndcg@10": 0.541,
-    "mrr": 0.86
-   },
-   "no_guard": {
-    "p@5": 0.703,
-    "ndcg@10": 0.583,
-    "mrr": 0.864
-   }
-  },
-  {
-   "id": "inflated_all_40",
-   "title": "40 % «раздутых», дописывают все навыки направления",
-   "overrides": {
-    "share_inflated": 0.4,
-    "inflate_all": true
-   },
-   "n_needs": 60,
-   "n_candidates": 600,
-   "platform": {
-    "p@5": 0.707,
-    "ndcg@10": 0.551,
-    "mrr": 0.887
-   },
-   "bm25": {
-    "p@5": 0.3,
-    "ndcg@10": 0.33,
-    "mrr": 0.56
-   },
-   "no_test": {
-    "p@5": 0.253,
-    "ndcg@10": 0.301,
-    "mrr": 0.367
-   },
-   "no_fsp": {
-    "p@5": 0.683,
-    "ndcg@10": 0.551,
-    "mrr": 0.867
-   },
-   "no_guard": {
-    "p@5": 0.627,
-    "ndcg@10": 0.539,
-    "mrr": 0.811
-   }
-  },
-  {
-   "id": "fsp_noise",
-   "title": "ФСП не связан с умением",
-   "overrides": {
-    "fsp_informative": false
-   },
-   "n_needs": 60,
-   "n_candidates": 600,
-   "platform": {
-    "p@5": 0.697,
-    "ndcg@10": 0.563,
+    "ndcg@10": 0.574,
     "mrr": 0.878
    },
    "bm25": {
@@ -1075,14 +835,253 @@
     "mrr": 0.521
    },
    "no_fsp": {
-    "p@5": 0.697,
-    "ndcg@10": 0.562,
-    "mrr": 0.853
+    "p@5": 0.717,
+    "ndcg@10": 0.571,
+    "mrr": 0.86
    },
    "no_guard": {
+    "p@5": 0.807,
+    "ndcg@10": 0.656,
+    "mrr": 0.931
+   }
+  },
+  {
+   "id": "sigma_035",
+   "title": "Погрешность теста σθ = 0,35",
+   "overrides": {
+    "theta_sigma": 0.35
+   },
+   "n_needs": 60,
+   "n_candidates": 600,
+   "platform": {
+    "p@5": 0.73,
+    "ndcg@10": 0.578,
+    "mrr": 0.868
+   },
+   "bm25": {
+    "p@5": 0.427,
+    "ndcg@10": 0.437,
+    "mrr": 0.675
+   },
+   "no_test": {
+    "p@5": 0.41,
+    "ndcg@10": 0.454,
+    "mrr": 0.521
+   },
+   "no_fsp": {
+    "p@5": 0.717,
+    "ndcg@10": 0.574,
+    "mrr": 0.869
+   },
+   "no_guard": {
+    "p@5": 0.793,
+    "ndcg@10": 0.663,
+    "mrr": 0.908
+   }
+  },
+  {
+   "id": "sigma_065",
+   "title": "Погрешность теста σθ = 0,65",
+   "overrides": {
+    "theta_sigma": 0.65
+   },
+   "n_needs": 60,
+   "n_candidates": 600,
+   "platform": {
+    "p@5": 0.67,
+    "ndcg@10": 0.566,
+    "mrr": 0.844
+   },
+   "bm25": {
+    "p@5": 0.427,
+    "ndcg@10": 0.437,
+    "mrr": 0.675
+   },
+   "no_test": {
+    "p@5": 0.41,
+    "ndcg@10": 0.454,
+    "mrr": 0.521
+   },
+   "no_fsp": {
+    "p@5": 0.67,
+    "ndcg@10": 0.559,
+    "mrr": 0.812
+   },
+   "no_guard": {
+    "p@5": 0.767,
+    "ndcg@10": 0.649,
+    "mrr": 0.919
+   }
+  },
+  {
+   "id": "inflated_0",
+   "title": "Без «раздутых» резюме",
+   "overrides": {
+    "share_inflated": 0.0
+   },
+   "n_needs": 60,
+   "n_candidates": 600,
+   "platform": {
+    "p@5": 0.737,
+    "ndcg@10": 0.581,
+    "mrr": 0.887
+   },
+   "bm25": {
+    "p@5": 0.533,
+    "ndcg@10": 0.498,
+    "mrr": 0.764
+   },
+   "no_test": {
     "p@5": 0.777,
-    "ndcg@10": 0.652,
-    "mrr": 0.942
+    "ndcg@10": 0.673,
+    "mrr": 0.879
+   },
+   "no_fsp": {
+    "p@5": 0.727,
+    "ndcg@10": 0.579,
+    "mrr": 0.889
+   },
+   "no_guard": {
+    "p@5": 0.87,
+    "ndcg@10": 0.699,
+    "mrr": 0.975
+   }
+  },
+  {
+   "id": "inflated_40",
+   "title": "«Раздутых» резюме 40 %",
+   "overrides": {
+    "share_inflated": 0.4
+   },
+   "n_needs": 60,
+   "n_candidates": 600,
+   "platform": {
+    "p@5": 0.737,
+    "ndcg@10": 0.568,
+    "mrr": 0.889
+   },
+   "bm25": {
+    "p@5": 0.38,
+    "ndcg@10": 0.366,
+    "mrr": 0.564
+   },
+   "no_test": {
+    "p@5": 0.277,
+    "ndcg@10": 0.355,
+    "mrr": 0.427
+   },
+   "no_fsp": {
+    "p@5": 0.72,
+    "ndcg@10": 0.565,
+    "mrr": 0.865
+   },
+   "no_guard": {
+    "p@5": 0.767,
+    "ndcg@10": 0.601,
+    "mrr": 0.883
+   }
+  },
+  {
+   "id": "inflated_60",
+   "title": "«Раздутых» резюме 60 %",
+   "overrides": {
+    "share_inflated": 0.6
+   },
+   "n_needs": 60,
+   "n_candidates": 600,
+   "platform": {
+    "p@5": 0.727,
+    "ndcg@10": 0.567,
+    "mrr": 0.86
+   },
+   "bm25": {
+    "p@5": 0.347,
+    "ndcg@10": 0.34,
+    "mrr": 0.5
+   },
+   "no_test": {
+    "p@5": 0.263,
+    "ndcg@10": 0.316,
+    "mrr": 0.411
+   },
+   "no_fsp": {
+    "p@5": 0.713,
+    "ndcg@10": 0.565,
+    "mrr": 0.867
+   },
+   "no_guard": {
+    "p@5": 0.757,
+    "ndcg@10": 0.592,
+    "mrr": 0.852
+   }
+  },
+  {
+   "id": "inflated_all_40",
+   "title": "40 % «раздутых», дописывают все навыки направления",
+   "overrides": {
+    "share_inflated": 0.4,
+    "inflate_all": true
+   },
+   "n_needs": 60,
+   "n_candidates": 600,
+   "platform": {
+    "p@5": 0.737,
+    "ndcg@10": 0.568,
+    "mrr": 0.889
+   },
+   "bm25": {
+    "p@5": 0.3,
+    "ndcg@10": 0.33,
+    "mrr": 0.56
+   },
+   "no_test": {
+    "p@5": 0.253,
+    "ndcg@10": 0.301,
+    "mrr": 0.367
+   },
+   "no_fsp": {
+    "p@5": 0.72,
+    "ndcg@10": 0.565,
+    "mrr": 0.865
+   },
+   "no_guard": {
+    "p@5": 0.667,
+    "ndcg@10": 0.545,
+    "mrr": 0.843
+   }
+  },
+  {
+   "id": "fsp_noise",
+   "title": "ФСП не связан с умением",
+   "overrides": {
+    "fsp_informative": false
+   },
+   "n_needs": 60,
+   "n_candidates": 600,
+   "platform": {
+    "p@5": 0.7,
+    "ndcg@10": 0.573,
+    "mrr": 0.892
+   },
+   "bm25": {
+    "p@5": 0.427,
+    "ndcg@10": 0.437,
+    "mrr": 0.675
+   },
+   "no_test": {
+    "p@5": 0.41,
+    "ndcg@10": 0.454,
+    "mrr": 0.521
+   },
+   "no_fsp": {
+    "p@5": 0.717,
+    "ndcg@10": 0.571,
+    "mrr": 0.86
+   },
+   "no_guard": {
+    "p@5": 0.797,
+    "ndcg@10": 0.664,
+    "mrr": 0.958
    }
   },
   {
@@ -1094,9 +1093,9 @@
    "n_needs": 60,
    "n_candidates": 600,
    "platform": {
-    "p@5": 0.393,
-    "ndcg@10": 0.421,
-    "mrr": 0.557
+    "p@5": 0.35,
+    "ndcg@10": 0.403,
+    "mrr": 0.504
    },
    "bm25": {
     "p@5": 0.273,
@@ -1109,17 +1108,190 @@
     "mrr": 0.476
    },
    "no_fsp": {
-    "p@5": 0.373,
-    "ndcg@10": 0.42,
-    "mrr": 0.557
+    "p@5": 0.343,
+    "ndcg@10": 0.4,
+    "mrr": 0.535
    },
    "no_guard": {
-    "p@5": 0.433,
-    "ndcg@10": 0.502,
-    "mrr": 0.608
+    "p@5": 0.37,
+    "ndcg@10": 0.458,
+    "mrr": 0.488
    }
   }
  ],
+ "junior": {
+  "columns": [
+   {
+    "id": "stub06",
+    "title": "Как было: заглушка, порог 0,6",
+    "overrides": {
+     "decision": "stub06",
+     "provisional": false
+    },
+    "world": {
+     "n_candidates": 2000,
+     "no_category": 465,
+     "junior_category": 858,
+     "provisional": 0,
+     "provisional_share_of_junior": 0.0,
+     "provisional_true_below": 0,
+     "provisional_true_below_share": 0.0,
+     "rejected_true_junior": 101,
+     "rejected_true_junior_share": 0.164,
+     "declared_junior": 867,
+     "tested_junior": 858,
+     "true_junior_or_above_declared_junior": 617
+    },
+    "all": {
+     "p@5": 0.781,
+     "p@10": 0.76,
+     "ndcg@10": 0.589,
+     "mrr": 0.893
+    },
+    "junior_needs": {
+     "p@5": 0.679,
+     "p@10": 0.668,
+     "ndcg@10": 0.498,
+     "mrr": 0.813
+    },
+    "n_junior_needs": 53
+   },
+   {
+    "id": "bank08",
+    "title": "Как в продукте: правило банка, порог 0,8",
+    "overrides": {
+     "decision": "bank",
+     "provisional": false
+    },
+    "world": {
+     "n_candidates": 2000,
+     "no_category": 683,
+     "junior_category": 767,
+     "provisional": 0,
+     "provisional_share_of_junior": 0.0,
+     "provisional_true_below": 0,
+     "provisional_true_below_share": 0.0,
+     "rejected_true_junior": 175,
+     "rejected_true_junior_share": 0.284,
+     "declared_junior": 867,
+     "tested_junior": 767,
+     "true_junior_or_above_declared_junior": 617
+    },
+    "all": {
+     "p@5": 0.785,
+     "p@10": 0.757,
+     "ndcg@10": 0.589,
+     "mrr": 0.887
+    },
+    "junior_needs": {
+     "p@5": 0.664,
+     "p@10": 0.662,
+     "ndcg@10": 0.493,
+     "mrr": 0.786
+    },
+    "n_junior_needs": 53
+   },
+   {
+    "id": "provisional",
+    "title": "После: порог 0,8 + «Junior (предварительно)»",
+    "overrides": {
+     "decision": "bank",
+     "provisional": true
+    },
+    "world": {
+     "n_candidates": 2000,
+     "no_category": 381,
+     "junior_category": 1069,
+     "provisional": 302,
+     "provisional_share_of_junior": 0.283,
+     "provisional_true_below": 99,
+     "provisional_true_below_share": 0.328,
+     "rejected_true_junior": 16,
+     "rejected_true_junior_share": 0.026,
+     "declared_junior": 867,
+     "tested_junior": 1069,
+     "true_junior_or_above_declared_junior": 617
+    },
+    "all": {
+     "p@5": 0.785,
+     "p@10": 0.757,
+     "ndcg@10": 0.589,
+     "mrr": 0.887
+    },
+    "junior_needs": {
+     "p@5": 0.664,
+     "p@10": 0.662,
+     "ndcg@10": 0.493,
+     "mrr": 0.786
+    },
+    "n_junior_needs": 53
+   }
+  ],
+  "penalty_sensitivity": [
+   {
+    "penalty": 0.0,
+    "all": {
+     "p@5": 0.785,
+     "p@10": 0.757,
+     "ndcg@10": 0.589,
+     "mrr": 0.887
+    },
+    "junior_needs": {
+     "p@5": 0.664,
+     "p@10": 0.662,
+     "ndcg@10": 0.493,
+     "mrr": 0.786
+    },
+    "provisional_in_top10_junior_needs": 0.0,
+    "provisional_in_top20_junior_needs": 0.002,
+    "irrelevant_provisional_in_top10_junior_needs": 0.0,
+    "relevant_provisional_percentile_junior_needs": 0.0751,
+    "relevant_provisional_share": 0.018
+   },
+   {
+    "penalty": 0.05,
+    "all": {
+     "p@5": 0.785,
+     "p@10": 0.757,
+     "ndcg@10": 0.589,
+     "mrr": 0.887
+    },
+    "junior_needs": {
+     "p@5": 0.664,
+     "p@10": 0.662,
+     "ndcg@10": 0.493,
+     "mrr": 0.786
+    },
+    "provisional_in_top10_junior_needs": 0.0,
+    "provisional_in_top20_junior_needs": 0.0,
+    "irrelevant_provisional_in_top10_junior_needs": 0.0,
+    "relevant_provisional_percentile_junior_needs": 0.0808,
+    "relevant_provisional_share": 0.018
+   },
+   {
+    "penalty": 0.1,
+    "all": {
+     "p@5": 0.785,
+     "p@10": 0.757,
+     "ndcg@10": 0.589,
+     "mrr": 0.887
+    },
+    "junior_needs": {
+     "p@5": 0.664,
+     "p@10": 0.662,
+     "ndcg@10": 0.493,
+     "mrr": 0.786
+    },
+    "provisional_in_top10_junior_needs": 0.0,
+    "provisional_in_top20_junior_needs": 0.0,
+    "irrelevant_provisional_in_top10_junior_needs": 0.0,
+    "relevant_provisional_percentile_junior_needs": 0.0845,
+    "relevant_provisional_share": 0.018
+   }
+  ],
+  "penalty_product": 0.05,
+  "note": "Истина одна и та же во всех столбцах: меняется только решение по грейду у порога. Кандидаты без категории в бенчмарке стоят после всех с категорией (как «грейд не подтверждён» в продукте), поэтому на p@k и nDCG@10 они почти не влияют; дотестирование у порога здесь не моделируется — его эффект считает симуляция теста (раздел «Junior у порога» на /validation)."
+ },
  "score_rebuild_max_error": 0.00010000000000010001,
- "seconds": 60.4
+ "seconds": 90.2
 }

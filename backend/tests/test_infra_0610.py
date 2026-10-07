@@ -37,13 +37,15 @@ def test_jury_sandboxes_are_isolated(client):
                                           headers=H(ea["access_token"])).json()["items"]}
     own_b = {c["ref"] for c in client.get("/api/employer/candidates", params={"direction": "backend"},
                                           headers=H(eb["access_token"])).json()["items"]}
-    assert len(own_a) == 2 and len(own_b) == 2 and not own_a & own_b  # чужая песочница не видна
+    assert len(own_a) == 3 and len(own_b) == 3 and not own_a & own_b  # чужая песочница не видна (3 демо-кандидата)
     # подборка песочницы — только по её кандидатам
     need = next(n for n in client.get("/api/employer/needs", headers=H(ea["access_token"])).json()
                 if n["requirements"].get("direction") == "backend")
     sel = client.get(f"/api/employer/needs/{need['id']}/selections/1", headers=H(ea["access_token"])).json()
     refs = {c["ref"] for c in sel["results"]}
-    assert refs == own_a, (refs, own_a)
+    # подборка по умолчанию — категория потребности (backend.middle): два своих подтверждённых; «Junior
+    # (предварительно)» песочницы в неё не входит, но виден в поиске по направлению
+    assert len(refs) == 2 and refs < own_a and not refs & own_b, (refs, own_a)
     # обычный работодатель песочниц не видит
     real = register_and_verify(client, "hr@real.example.org", role="employer", company_name="Настоящая")
     seen = {c["ref"] for c in client.get("/api/employer/candidates", headers=H(real)).json()["items"]}

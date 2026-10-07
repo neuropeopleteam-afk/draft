@@ -428,7 +428,7 @@ export function TestRun() {
   return (
     <div className="max-w-3xl">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-ink/65">
-        <span>Тест · {DIRECTIONS[s.direction]} · {GRADES[s.claimed_grade]}</span>
+        <span>{s.mode === "confirm" ? "Дотестирование у порога" : "Тест"} · {DIRECTIONS[s.direction]} · {GRADES[s.claimed_grade]}</span>
         <span>{it.adaptive ? `Задание ${it.position} · отвечено ${it.answered}` : `Задание ${it.position} из ${it.total}`}</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-blush/60">
@@ -501,9 +501,18 @@ export function TestRun() {
 }
 
 function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
+  const title = r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
+    : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
+    : "Грейд не подтверждён";
   return (
     <div className="max-w-2xl">
-      <PageTitle title={r.confirmed ? "Грейд подтверждён" : "Грейд не подтверждён"} subtitle={r.message} />
+      <PageTitle title={title} subtitle={r.message} />
+      {!r.confirmed && r.category_provisional && (
+        <div className="mt-4"><Alert kind="info">
+          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от 80 %, «не доказанно ниже» — от 10 %).
+          {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, зондом работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, зондом работодателя или кубком."}
+        </Alert></div>
+      )}
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-xl font-bold text-brand-night">θ = {signed(r.theta)}</p><p className="text-xs text-brand-ink/65">погрешность ± {num(r.se)}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>

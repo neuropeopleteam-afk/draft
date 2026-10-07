@@ -68,6 +68,8 @@ class GradeChangeReason(StrEnum):
     retest_down = "retest_down"
     sandbox = "sandbox"
     admin = "admin"
+    provisional = "provisional"  # присвоена категория «Junior (предварительно)» — не подтверждённый грейд
+    confirmed = "confirmed"  # предварительный грейд подтверждён — не смена грейда, новый период 90 дней не начинается
 
 
 class WorkFormat(StrEnum):
