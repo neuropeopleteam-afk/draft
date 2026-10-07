@@ -4,6 +4,7 @@ import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, e
 import { api } from "../../lib/api";
 import { SusPrompt } from "../../integrations/Sus";
 import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
+import { AtsStageBadge } from "../../integrations/Ats";
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -51,7 +52,7 @@ export function Invitations() {
                   <p className="text-sm text-brand-ink/65">{i.company?.name} · {range(i.salary_from, i.salary_to)} · {dt(i.created_at)}</p>
                   {i.below_my_minimum && <p className="mt-1 text-xs font-semibold text-brand-plum">Верх вилки ниже вашего минимума</p>}
                 </div>
-                <div className="flex flex-wrap items-center gap-2"><TrustBadge t={trust[i.id]} compact /><Status s={i.status} /></div>
+                <div className="flex flex-wrap items-center gap-2"><TrustBadge t={trust[i.id]} compact /><AtsStageBadge s={i.ats_stage} /><Status s={i.status} /></div>
               </button>
             </li>
           ))}
@@ -60,7 +61,7 @@ export function Invitations() {
       <Modal open={!!open} onClose={() => setOpen(null)} title={open?.position_title ?? ""}>
         {open && (
           <div className="space-y-4 text-sm">
-            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><span className="text-brand-ink/65">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span></div>
+            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><AtsStageBadge s={open.ats_stage} /><span className="text-brand-ink/65">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span></div>
             <p className="text-2xl font-extrabold text-brand-night">{range(open.salary_from, open.salary_to)}</p>
             {open.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Работодатель этот минимум не видит.</Alert>}
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>
