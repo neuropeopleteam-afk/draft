@@ -17,13 +17,15 @@ from app.core.db import get_db, utcnow
 from app.core.deps import require_role
 from app.core.enums import InvitationStatus, UserRole
 from app.core.errors import api_error, err
+from app.core.ratelimit import SlidingWindow, hit
 from app.integrations.ats import profile as prof
 from app.integrations.ats import providers
 from app.integrations.ats import service as svc
 from app.integrations.ats import stub_providers as stub
 from app.integrations.ats.demo import connect_demo, connect_demo_all, reset_links, stub_huntflow_webhook
 from app.integrations.ats.clients import AtsError, check_url
-from app.integrations.ats.models import AtsConnection, AtsDelivery, AtsLink, AtsSettings, AtsStubRecord
+from app.integrations.ats import stages
+from app.integrations.ats.models import AtsConnection, AtsDelivery, AtsLink, AtsSettings, AtsStageEvent, AtsStubRecord
 from app.integrations.ats.providers.talantix import parse_tokens
 from app.integrations.crypto import decrypt, encrypt, mask
 from app.integrations.settings import get_isettings
@@ -441,6 +443,79 @@ def retry_delivery(delivery_id: uuid.UUID, user: User = Depends(employer), db: S
     rows = svc.deliver(db, c.id, invitation_id=d.invitation_id, application_id=d.application_id, trigger="retry",
                        only=d.target)
     return [svc.delivery_out(db, x) for x in rows]
+
+
+# ------------------------------------------------------------------ обратный канал: этапы из ATS («Поток»)
+
+_stage_sync_rl = SlidingWindow(12, 60)
+
+
+def _stage_refs(db: Session, rows) -> dict:
+    from app.modules.profiles.models import CandidateProfile
+
+    ids = {e.candidate_user_id for e in rows if e.candidate_user_id}
+    return {p.user_id: p.public_ref for p in db.scalars(select(CandidateProfile)
+                                                         .where(CandidateProfile.user_id.in_(ids)))} if ids else {}
+
+
+@router.get("/stages", summary="Обратный канал: последний опрос этапов в ATS и журнал изменений",
+            responses=AUTH)
+def stage_journal(user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    c = my_company(db, user)
+    rows = db.scalars(select(AtsStageEvent).where(AtsStageEvent.company_id == c.id)
+                      .order_by(AtsStageEvent.created_at.desc()).limit(100)).all()
+    refs = _stage_refs(db, rows)
+    out = {"poll_s": get_isettings().ats_stage_poll_s, "providers": [], "events": [stages.event_out(e, refs)
+                                                                                   for e in rows]}
+    for code in stages.PROVIDERS_WITH_STAGES:
+        conn = db.get(AtsConnection, (c.id, code))
+        out["providers"].append({"code": code, "title": providers.TITLES[code], "enabled": bool(conn and conn.enabled),
+                                 "mode": conn.mode if conn else None,
+                                 "synced_at": _iso(conn.stages_synced_at) if conn else None,
+                                 "info": (conn.stages_sync_info or {}) if conn else {},
+                                 "linked": db.scalar(select(func.count()).select_from(AtsLink).where(
+                                     AtsLink.company_id == c.id, AtsLink.provider == code,
+                                     AtsLink.external_id.is_not(None))) or 0})
+    return out
+
+
+@router.post("/stages/sync", summary="Обратный канал: опросить этапы кандидатов в ATS сейчас",
+             responses={**AUTH, 422: err("ATS не подключена"), 429: err("Слишком часто")})
+def stage_sync(code: str = "potok", user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    c = my_company(db, user)
+    hit(_stage_sync_rl, str(c.id), "too_many_requests", "Этапы обновляются не чаще 12 раз в минуту")
+    try:
+        return stages.sync_company(db, c.id, _code(code), trigger="manual")
+    except AtsError as e:
+        raise api_error(422, "ats_not_configured", str(e)) from None
+
+
+@router.get("/stub/potok/pipeline", summary="Демо-«Поток»: кандидаты на вакансиях и этапы — как видит рекрутёр",
+            responses=AUTH)
+def stub_potok_pipeline(user: User = Depends(employer), db: Session = Depends(get_db)) -> list[dict]:
+    st = svc.company_settings(db, my_company(db, user).id)
+    return stub.potok_demo_pipeline(db, st.stub_key) if st.stub_key else []
+
+
+class StubMoveIn(BaseModel):
+    join_id: int
+    stage_id: int | None = None
+    decline: bool = False
+
+
+@router.post("/stub/potok/move", summary="Демо-«Поток»: рекрутёр переводит кандидата на этап или отклоняет",
+             responses={**AUTH, 404: err("Кандидата нет в демо-«Потоке»"), 409: err("«Поток» не в демо-режиме")})
+def stub_potok_move(data: StubMoveIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    c = my_company(db, user)
+    conn = db.get(AtsConnection, (c.id, "potok"))
+    st = svc.company_settings(db, c.id)
+    if conn is None or conn.mode != "demo" or not st.stub_key:
+        raise api_error(409, "not_demo", "Двигать кандидатов здесь можно только в демо-«Потоке»; в настоящем — в его "
+                                         "интерфейсе, платформа узнает при опросе")
+    r = stub.potok_demo_move(db, st.stub_key, data.join_id, stage_id=data.stage_id, decline=data.decline)
+    if r is None:
+        raise api_error(404, "not_found", "Кандидата или этапа нет в демо-«Потоке»")
+    return {"moved": r, "pipeline": stub.potok_demo_pipeline(db, st.stub_key)}
 
 
 @export_router.get("/invitations/{inv_id}/export.json", summary="Экспорт карточки кандидата в JSON (после принятия)",

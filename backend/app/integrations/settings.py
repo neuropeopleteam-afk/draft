@@ -43,6 +43,9 @@ class IntegrationSettings(BaseSettings):
     huntflow_default_base_url: str = "https://api.huntflow.ru/v2"
     ats_timeout_s: float = 10.0
     ats_max_attempts: int = 3
+    # Обратный канал: опрос этапов кандидатов в ATS («Поток») раз в N секунд; 0 — только кнопкой в кабинете
+    ats_stage_poll_s: int = 300
+    ats_stage_poll_batch: int = 200  # не больше N пар «кандидат — вакансия» за один опрос компании
     # Адрес тестовой ATS-заглушки (по умолчанию — наш публичный адрес, запросы идут по настоящему HTTP)
     ats_stub_base_url: str | None = None
     # User-Agent для Talantix обязателен: компания и контакт для связи при проблемах

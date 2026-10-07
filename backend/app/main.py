@@ -65,6 +65,10 @@ async def lifespan(_app: FastAPI):
         t = threading.Timer(5.0, make_spare)
         t.daemon = True
         t.start()
+    # Обратный канал ATS: опрос этапов кандидатов в «Потоке» (ATS_STAGE_POLL_S; 0 — выключено)
+    from app.integrations.ats.stages import start_poller
+
+    start_poller()
     yield
 
 

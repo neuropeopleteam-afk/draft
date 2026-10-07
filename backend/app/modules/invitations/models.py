@@ -72,6 +72,9 @@ class Invitation(UUIDPk, Timestamps, Base):
     contacts_revealed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     decline_reason: Mapped[str | None] = mapped_column(sa.Text)
     expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    # Этап у работодателя по данным его ATS (обратный канал, app/integrations/ats/stages.py): после «Принять»
+    # статус приглашения остаётся accepted (контакты открыты), а этап подбора — {stage, title, stage_name, provider, at}
+    ats_stage: Mapped[dict | None]
 
 
 class InvitationEvent(UUIDPk, Base):
