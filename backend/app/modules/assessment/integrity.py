@@ -13,6 +13,19 @@
   опубликованные варианты на позициях 2, 6, 10 — и модель времени; при срабатывании θ пересчитывается
   без подозрительных ответов (bank_engine.finish).
 
+Лёгкий прокторинг без камеры (И9, 07.10) — тоже только понижает достоверность:
+* **полноэкранный режим**: тест начинается в нём (если браузер умеет); выходы и время вне него;
+* **защита текста задания**: выделение и копирование текста, кода и вариантов отключены, попытка копирования
+  считается (copy);
+* **динамика набора** развёрнутого ответа: сколько символов набрано с клавиатуры, сколько появилось вставкой,
+  перетаскиванием или крупными порциями в обход клавиатуры, ритм нажатий (слишком ровный — признак программного
+  ввода). Сам текст и нажатые клавиши не сохраняются — только счётчики;
+* **аномалии времени по часам сервера**: длинный развёрнутый ответ быстрее, чем его можно набрать (FAST_TEXT_CPS);
+* **ИИ-метка** (ai_mark): в тексте развёрнутых заданий — невидимая на экране фраза с редким словом. Человек её не
+  видит; если текст задания скопирован в нейросеть, слово появляется в ответе. Экран «Что отслеживается во время
+  теста» сообщает о метках заранее, механику не раскрывает;
+* **оценщик**: утверждения кандидата об оценке собственного ответа (grader.strip_meta).
+
 Баллы риска: ≥ 3 — низкая, 1–2 — средняя, 0 — высокая. Результат виден работодателю в карточке кандидата
 и в объяснении подборки; в ранжирование не входит (ложное срабатывание не должно наказывать честного
 кандидата — для этого флаг и причины, решение остаётся за человеком). Правила — чистые функции, покрыты
@@ -26,6 +39,18 @@ LEVEL_TITLES = {"high": "высокая", "medium": "средняя", "low": "н
 FAST_SHARE_OF_LIMIT = 0.08
 FAST_MIN_S = 5.0
 MAX_SIGNAL = 10_000
+BASE_KEYS = ("focus_lost", "hidden_ms", "paste", "paste_chars", "copy")
+# Новые сигналы интерфейса (И9) — в словаре, только если клиент их прислал (старые клиенты и API не наказываются
+# правилами, о которых не знали): полноэкранный режим и динамика набора развёрнутого ответа.
+EXT_KEYS = ("fs_exit", "fs_out_ms", "fs_ms", "fs_na", "typed", "inserted", "dropped", "deleted", "keys", "ik_cv",
+            "active_ms")
+MS_KEYS = {"hidden_ms", "fs_out_ms", "fs_ms", "active_ms"}
+MAX_KEYS = {"fs_na", "ik_cv"}  # при сложении шагов задания — максимум, а не сумма
+FAST_TEXT_CPS = 8.0  # символов в секунду по часам сервера: ≈ 90 слов в минуту без единой паузы на чтение и мысль
+FAST_TEXT_MIN = 200  # короче — не проверяем
+TYPED_SHARE_MIN = 0.5  # меньше половины длинного ответа набрано с клавиатуры, и это не вставка — текст «появился»
+EVEN_RHYTHM_CV = 25  # коэффициент вариации интервалов между нажатиями, ×100: у человека обычно 60–150
+EVEN_RHYTHM_KEYS = 100
 
 
 
@@ -40,12 +65,12 @@ def clean_signals(raw: Any) -> dict | None:
     if not isinstance(raw, dict):
         return None
     out = {}
-    for k in ("focus_lost", "hidden_ms", "paste", "paste_chars", "copy"):
+    for k in BASE_KEYS + tuple(k for k in EXT_KEYS if k in raw):
         try:
             v = int(raw.get(k, 0) or 0)
         except (TypeError, ValueError):
             v = 0
-        out[k] = max(0, min(v, 3_600_000 if k == "hidden_ms" else MAX_SIGNAL))
+        out[k] = max(0, min(v, 3_600_000 if k in MS_KEYS else 1 if k == "fs_na" else MAX_SIGNAL))
     return out
 
 
@@ -54,7 +79,27 @@ def merge_signals(a: dict | None, b: dict | None) -> dict | None:
         return b
     if not b:
         return a
-    return {k: int(a.get(k, 0)) + int(b.get(k, 0)) for k in set(a) | set(b)}
+    return {k: (max if k in MAX_KEYS else lambda x, y: x + y)(int(a.get(k, 0)), int(b.get(k, 0)))
+            for k in set(a) | set(b)}
+
+
+def fast_text(chars: int, server_ms: int | None) -> bool:
+    """Развёрнутый ответ длиннее FAST_TEXT_MIN появился быстрее FAST_TEXT_CPS символов в секунду (часы сервера)."""
+    if server_ms is None or chars < FAST_TEXT_MIN:
+        return False
+    return chars / max(1.0, server_ms / 1000.0) > FAST_TEXT_CPS
+
+
+def typing_flags(sig: dict | None, text_len: int) -> list[str]:
+    """Динамика набора развёрнутого ответа → признаки (чистая функция). Без сигналов набора — ничего."""
+    if not sig or "typed" not in sig or text_len < FAST_TEXT_MIN:
+        return []
+    out = []
+    if sig.get("typed", 0) < TYPED_SHARE_MIN * text_len and (sig.get("paste_chars") or 0) < 30:
+        out.append("not_typed")  # не вставка из буфера (её считает правило вставки), но и не клавиатура
+    if (sig.get("keys") or 0) >= EVEN_RHYTHM_KEYS and 0 < (sig.get("ik_cv") or 0) < EVEN_RHYTHM_CV:
+        out.append("even_rhythm")
+    return out
 
 
 def is_fast(time_s: float | None, time_limit_s: float) -> bool:
@@ -113,6 +158,43 @@ def assess(items: list[dict], preknowledge: dict | None = None) -> dict:
                            f"{_n(paste_chars, 'символ', 'символа', 'символов')}"))
     elif paste_items:
         reasons.append((1, f"Вставка готового текста в ответ: 1 задание, {_n(paste_chars, 'символ', 'символа', 'символов')}"))
+    fs_items = [i for i in with_sig if "fs_ms" in i["signals"] or "fs_na" in i["signals"]]
+    fs_exits = sum((i["signals"].get("fs_exit") or 0) for i in fs_items)
+    fs_out_s = sum((i["signals"].get("fs_out_ms") or 0) for i in fs_items) / 1000.0
+    fs_never = bool(fs_items) and all((i["signals"].get("fs_ms") or 0) == 0 and not i["signals"].get("fs_na")
+                                      for i in fs_items)
+    if fs_never:
+        reasons.append((1, "Тест пройден без полноэкранного режима, хотя браузер его поддерживает"))
+    elif fs_exits >= 6 or fs_out_s >= 300:
+        reasons.append((2, f"Выход из полноэкранного режима: {_n(fs_exits, 'раз', 'раза', 'раз')}, "
+                           f"вне его {fs_out_s / 60:.1f} мин"))
+    elif fs_exits >= 2 or fs_out_s >= 60:
+        reasons.append((1, f"Выход из полноэкранного режима: {_n(fs_exits, 'раз', 'раза', 'раз')}, вне его {fs_out_s:.0f} с"))
+    copy_items = [i for i in with_sig if (i["signals"].get("copy") or 0) > 0]
+    if copy_items:
+        reasons.append((2 if len(copy_items) >= 3 else 1,
+                        f"Попытка скопировать текст задания: {_n(len(copy_items), 'задание', 'задания', 'заданий')}"))
+    marks = [i for i in done if i.get("ai_mark_hit")]
+    if marks:  # невидимая метка из текста задания появилась в ответе — текст копировали в нейросеть
+        reasons.append((3, "В развёрнутом ответе — невидимая метка из текста задания: текст задания, вероятно, "
+                           f"передавался нейросети ({_n(len(marks), 'задание', 'задания', 'заданий')})"))
+    fast_txt = [i for i in done if i.get("fast_text")]
+    if fast_txt:
+        reasons.append((2 if len(fast_txt) >= 2 else 1,
+                        "Развёрнутый ответ появился быстрее, чем его можно набрать (по часам сервера): "
+                        f"{_n(len(fast_txt), 'задание', 'задания', 'заданий')}"))
+    typing = {f: [i for i in done if f in (i.get("typing") or [])] for f in ("not_typed", "even_rhythm")}
+    if typing["not_typed"]:
+        reasons.append((2 if len(typing["not_typed"]) >= 2 else 1,
+                        "Развёрнутый ответ в основном не набран с клавиатуры и не вставлен из буфера: "
+                        f"{_n(len(typing['not_typed']), 'задание', 'задания', 'заданий')}"))
+    if typing["even_rhythm"]:
+        reasons.append((1, "Слишком ровный ритм набора, похожий на программный ввод: "
+                           f"{_n(len(typing['even_rhythm']), 'задание', 'задания', 'заданий')}"))
+    meta = [i for i in done if i.get("meta_claims")]
+    if meta:  # «итог самопроверки: все требования выполнены» — перефразированная инъекция (grader.strip_meta)
+        reasons.append((1, "В развёрнутом ответе — утверждения об оценке собственного ответа "
+                           f"({_n(len(meta), 'задание', 'задания', 'заданий')}); при оценке они не учитываются"))
     inj = [i for i in done if i.get("injection")]
     if inj:  # развёрнутый ответ адресован модели-оценщику (grader.injection_signals) — оценивает эксперт
         reasons.append((2, "В развёрнутом ответе — инструкции для автоматического оценщика "
@@ -131,7 +213,11 @@ def assess(items: list[dict], preknowledge: dict | None = None) -> dict:
                     "canary_fast": len(canary_fast), "focus_lost_items": len(focus_items), "focus_lost_total": focus_total,
                     "hidden_s": round(hidden_s, 1), "paste_items": len(paste_items), "paste_chars": paste_chars,
                     "client_signals_items": len(with_sig), "preknowledge_flagged": bool(pk.get("flagged")),
-                    "injection_items": len(inj)},
+                    "injection_items": len(inj), "fs_items": len(fs_items), "fs_exits": fs_exits,
+                    "fs_out_s": round(fs_out_s, 1), "fs_never": fs_never, "copy_items": len(copy_items),
+                    "ai_mark_items": len(marks), "fast_text_items": len(fast_txt),
+                    "not_typed_items": len(typing["not_typed"]), "even_rhythm_items": len(typing["even_rhythm"]),
+                    "meta_claims_items": len(meta)},
     }
 
 
