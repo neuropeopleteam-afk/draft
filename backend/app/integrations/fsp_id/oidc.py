@@ -80,6 +80,8 @@ def redirect_uri() -> str:
 
 def authorize_url(state: str, nonce: str, challenge: str, *, prompt_login: bool = False) -> str:
     s = get_isettings()
+    if "openid" not in s.fsp_oidc_scopes.split():
+        raise OidcError("FSP_OIDC_SCOPES должен включать openid")
     q = {"client_id": s.fsp_oidc_client_id, "response_type": "code", "scope": s.fsp_oidc_scopes,
          "redirect_uri": redirect_uri(), "state": state, "nonce": nonce, "code_challenge": challenge,
          "code_challenge_method": "S256", "ui_locales": "ru"}
@@ -130,6 +132,10 @@ def verify_id_token(id_token: str, nonce: str) -> dict:
         raise OidcError(f"Подпись или поля id_token не прошли проверку ({type(e).__name__})") from None
     if claims.get("nonce") != nonce:
         raise OidcError("nonce в id_token не совпадает")
+    if claims.get("azp") not in (None, s.fsp_oidc_client_id):
+        raise OidcError("azp в id_token не совпадает с клиентом платформы")
+    if isinstance(claims.get("aud"), list) and len(claims["aud"]) > 1 and claims.get("azp") != s.fsp_oidc_client_id:
+        raise OidcError("Для нескольких aud требуется azp клиента платформы")
     return claims
 
 

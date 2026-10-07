@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import MatchingBench from "../components/MatchingBench";
+import { FspRatingValidation } from "../components/validation/FspRating";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
@@ -106,6 +107,7 @@ function Report({ r }: { r: any }) {
         <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Пересчёт по оценкам экспертов-тимлидов — в разделе <a href="#experts" className="font-semibold text-brand-plum underline">«Экспертная разметка»</a>.</p>
         <p className="mt-3 rounded-xl bg-[#F3F2FB] p-4 text-sm text-brand-ink/80">Рейтинг ФСП v2: все дисциплины и типы мероприятий имеют одинаковый вес. Победитель / призёр выше финалиста, финалист выше участника отбора. Повторные соревнования дают убывающий вклад; после 12 месяцев вес плавно снижается. Бонус ФСП в подборке — 0,10, грейд он не меняет. Возрастные группы 18+, 16–17 и 14–15 не участвуют в скоре: это проверяет «Красная кнопка».</p>
         <p className="mt-1 text-xs text-brand-ink/65">Пары и метки: docs/validation/matching_pairs.json</p>
+        <FspRatingValidation />
       </Section>
       <MatchingBench />
 
