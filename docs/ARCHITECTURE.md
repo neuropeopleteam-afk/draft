@@ -386,6 +386,44 @@ server {
 `/robots.txt` с `Disallow: /`, `/api/` и файлы PWA без базовой авторизации, `/auth/` (Keycloak «ФСП ID») со своим входом,
 остальное — под базовой авторизацией (`auth_basic_user_file /etc/nginx/htpasswd_spectrek_fsp`). Доступ к стенду: demo / Hakaton.
 
+### 11.1. Мониторинг стенда
+
+`infra/monitor/monitor.py` — одна проверка за запуск, только стандартная библиотека Python 3.10+ хоста (без boto3 и
+pip). Запускает systemd-таймер `spectrek-monitor.timer` раз в 5 минут; настройки — `/opt/spectrek_fsp/infra/monitor.env`
+(образец `infra/monitor/monitor.env.example`), ключи Postbox и Yandex AI Studio — из секретов приложения
+(`MONITOR_ENV_FILES`), в файл мониторинга не копируются. Состояние — `/var/lib/spectrek-monitor/state.json`.
+
+| Проверка | Что считается сбоем | Что делать |
+|---|---|---|
+| Сайт и API (`site`) | `GET /api/health` не 200 или `status != ok` | `docker compose ps`, `docker compose logs --tail 200 api`; БД — `docker compose logs db` |
+| Фронтенд (`web`) | `GET /` не 200 и не 401 (401 — пароль стенда, это норма) | `docker compose logs web`; `sudo nginx -t`, `systemctl status nginx` |
+| QR без пароля (`jury`, при `MONITOR_CHECK_JURY_LIVE=1`) | `/j/monitor` требует пароль или не отвечает | фрагмент `infra/nginx/fsp.neuropeople.pro.jury-live.conf` подключён? (`grep jury_live /etc/nginx/sites-available/fsp.neuropeople.pro`) |
+| Yandex AI Studio (`llm`, раз в час) | ответ не 200: 401 — ключ, 403 — права каталога (`ai.languageModels.user`, так было 06.10), 429 — квота | ключ и каталог в `/opt/spectrek_fsp/secrets/llm.env`; пока не починено, продукт работает по запасному пути без LLM |
+| Диск (`disk`) | занято больше `MONITOR_DISK_MAX_PCT` (90 %) | `docker system df`, `docker image prune -f`, старые копии в `/opt/spectrek_fsp/backups` |
+| Контейнеры (`docker`) | api, db или web не запущен, OOM, память api > 90 % лимита (768 МБ) | `docker inspect -f '{{.State.OOMKilled}} {{.RestartCount}}' spectrek_fsp-api-1`, `docker stats --no-stream` |
+| Резервная копия (`backup`) | нет `*.sql.gz` в `/opt/spectrek_fsp/backups/db` моложе 30 ч | cron резервного копирования, свободное место |
+
+Письмо (Postbox, API SESv2 `SendEmail`, подпись SigV4 своей реализацией) уходит после `MONITOR_FAILS` (2) неудач
+подряд — разовый тайм-аут не будит; напоминание — раз в `MONITOR_REMIND_H` (6) часов, пока сбой не прошёл; при
+восстановлении — письмо «восстановлено». Если Postbox письмо не принял, следующий запуск пробует снова. Пока
+`MONITOR_TO` пуст (почту даст владелец), письма выключены: текст письма один раз пишется в журнал, без повторов.
+
+```bash
+python3 infra/monitor/monitor.py --print       # все проверки сейчас, без писем и без записи состояния (MONITOR_TO не нужен)
+python3 infra/monitor/monitor.py --test-mail   # пробное письмо на MONITOR_TO (проверка ключей Postbox и адреса)
+journalctl -u spectrek-monitor.service -n 50   # итоги запусков таймера
+systemctl list-timers spectrek-monitor.timer   # когда следующий запуск
+```
+
+Установка на сервере (координатор):
+
+```bash
+sudo mkdir -p /opt/spectrek_fsp/infra
+sudo cp infra/monitor/monitor.env.example /opt/spectrek_fsp/infra/monitor.env && sudo chmod 600 /opt/spectrek_fsp/infra/monitor.env
+sudo cp infra/monitor/spectrek-monitor.service infra/monitor/spectrek-monitor.timer /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now spectrek-monitor.timer
+```
+
 ## 12. LLM-слой
 
 - Провайдер: **Yandex AI Studio** (`https://llm.api.cloud.yandex.net/v1`, OpenAI-совместимый API), модель

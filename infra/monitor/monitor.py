@@ -20,7 +20,7 @@ boto3): письмо уходит через Yandex Cloud Postbox (API SESv2 Sen
 MONITOR_STATE (JSON). Ключи и пароли в письмо и журнал не попадают.
 
     python3 monitor.py            # одна проверка (так вызывает таймер)
-    python3 monitor.py --print    # проверить и показать итог, без писем и без записи состояния
+    python3 monitor.py --print    # проверить и показать итог, без писем и без записи состояния (MONITOR_TO не нужен)
     python3 monitor.py --test-mail  # отправить пробное письмо (проверка ключей Postbox и адреса)
 """
 from __future__ import annotations
@@ -180,7 +180,10 @@ def check_docker(cfg, run=_run) -> tuple[bool, str]:
     if not names:
         return True, "контейнеры не заданы"
     fmt = "{{.Name}}|{{.State.Running}}|{{.State.OOMKilled}}|{{.RestartCount}}|{{.HostConfig.Memory}}"
-    out = run(["docker", "inspect", "-f", fmt, *names])
+    try:
+        out = run(["docker", "inspect", "-f", fmt, *names])
+    except FileNotFoundError:
+        return False, "команда docker не найдена (мониторинг запущен не на сервере стенда?)"
     seen, bad, notes = {}, [], []
     for line in out.splitlines():
         p = line.strip().lstrip("/").split("|")
@@ -263,18 +266,19 @@ def evaluate(state: dict, results: dict[str, tuple[bool, str]], now: float, cfg)
     mails = []
     for name, (ok, text) in results.items():
         c = checks.setdefault(name, {"ok": True, "fails": 0, "alerted": False})
-        was_cached = name == "llm" and c.get("checked_at") and c.get("text") == text and c.get("ok") == ok \
+        was_cached = name == "llm" and c.get("checked_at") is not None and c.get("text") == text and c.get("ok") == ok \
             and now - c["checked_at"] < float(cfg["MONITOR_LLM_EVERY_S"])
         if not was_cached:
             c["checked_at"] = now
             c["fails"] = 0 if ok else c.get("fails", 0) + 1
         c["ok"], c["text"] = ok, text
         if ok and c.get("alerted"):
-            mails.append({"kind": "recovered", "check": name, "text": text, "since": c.get("since")})
+            mails.append({"kind": "recovered", "check": name, "text": text, "since": c.get("since"),
+                          "last_mail": c.get("last_mail")})
             c.update(alerted=False, since=None, last_mail=None)
         elif not ok and not was_cached:
-            c.setdefault("since", None)
-            c["since"] = c["since"] or now
+            if c.get("since") is None:  # время первого сбоя (0 — тоже время, поэтому не «or»)
+                c["since"] = now
             if not c.get("alerted") and c["fails"] >= need:
                 mails.append({"kind": "alert", "check": name, "text": text, "since": c["since"]})
                 c.update(alerted=True, last_mail=now)
@@ -300,7 +304,8 @@ def compose(mails: list[dict], results: dict[str, tuple[bool, str]], cfg, now: f
         lines.append(f"{CHECKS[m['check']][0]}: {what}. {m['text']}" + (f" (с {ts(m['since'])})" if m.get("since") else ""))
     lines += ["", "Все проверки:"]
     lines += [f"  {'ok  ' if ok else 'СБОЙ'} {CHECKS[n][0]}: {t}" for n, (ok, t) in results.items()]
-    lines += ["", "Что делать — docs/DEPLOY.md, раздел «Мониторинг». Письмо отправил spectrek-monitor.timer."]
+    lines += ["", "Что делать — docs/ARCHITECTURE.md, раздел 11.1 «Мониторинг стенда» (по каждой проверке).",
+              "Письмо отправил spectrek-monitor.timer; журнал — journalctl -u spectrek-monitor.service."]
     return subject, "\n".join(lines)
 
 
@@ -392,15 +397,21 @@ def main(argv: list[str] | None = None) -> int:
     mails = evaluate(state, results, now, cfg)
     if mails:
         subject, text = compose(mails, results, cfg, now)
-        ok, info = send_mail(cfg, subject, text)
-        print(f"письмо «{subject}»: {info}")
-        if not ok:  # письмо не ушло — повторим при следующем запуске
-            for m in mails:
-                c = state["checks"][m["check"]]
-                if m["kind"] == "alert":
-                    c["alerted"] = False
-                elif m["kind"] == "recovered":
-                    c["alerted"] = True
+        if not cfg.get("MONITOR_TO", "").strip():
+            # Почта ещё не задана (её даст владелец): письмо — только в журнал (journalctl -u spectrek-monitor),
+            # состояние как после отправки, чтобы не повторять одно и то же каждые 5 минут.
+            print(f"письмо не отправлено — MONITOR_TO пуст (письма выключены): «{subject}»")
+            print(text)
+        else:
+            ok, info = send_mail(cfg, subject, text)
+            print(f"письмо «{subject}»: {info}")
+            if not ok:  # Postbox не принял (сеть, ключи) — повторим при следующем запуске
+                for m in mails:
+                    c = state["checks"][m["check"]]
+                    if m["kind"] == "alert":
+                        c["alerted"] = False
+                    elif m["kind"] == "recovered":
+                        c.update(alerted=True, since=m.get("since"), last_mail=m.get("last_mail"))
     save_state(cfg["MONITOR_STATE"], state)
     return 0
 
