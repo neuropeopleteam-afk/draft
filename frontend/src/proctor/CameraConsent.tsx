@@ -4,7 +4,7 @@
  * выдаёт при создании сессии). Любая ошибка камеры или модели — понятное сообщение и продолжение без камеры.
  */
 import { useEffect, useRef, useState } from "react";
-import { Alert, Loading, errText } from "../components/ui";
+import { Alert, Loading, dt, errText } from "../components/ui";
 import { api } from "../lib/api";
 import { camera, stateTitle, useCamera } from "./controller";
 
@@ -14,6 +14,9 @@ export interface ConsentText {
   title: string; what: string[]; stored: string[]; how_long: string; who_sees: string[]; effect: string; revoke: string; operator: string; version: string;
 }
 export interface ConsentState { active: boolean; granted_at: string | null; version: string | null; current_version: string; text: ConsentText; enabled: boolean }
+
+/** Редакция согласия хранится датой ГГГГ-ММ-ДД — показываем по-русски. */
+export const verDate = (v: string | null | undefined) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? dt(v) : v ?? "—");
 
 /** Текст согласия — общий для экрана перед тестом и настроек. */
 export function ConsentBody({ t, compact = false }: { t: ConsentText; compact?: boolean }) {
@@ -26,7 +29,7 @@ export function ConsentBody({ t, compact = false }: { t: ConsentText; compact?: 
       <p><b className="text-brand-night">Как влияет на результат.</b> {t.effect}</p>
       <p><b className="text-brand-night">Срок хранения.</b> {t.how_long}</p>
       <p><b className="text-brand-night">Отзыв согласия.</b> {t.revoke}</p>
-      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия: {t.version}.</p>
+      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDate(t.version)}.</p>
     </div>
   );
 }
