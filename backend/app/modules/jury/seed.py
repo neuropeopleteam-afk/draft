@@ -136,7 +136,7 @@ def _p_correct(it: dict, theta: float, part: int) -> float:
 
 
 def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, pending_left: int = 0,
-                  away_items: tuple[int, ...] = ()) -> dict:
+                  away_items: tuple[int, ...] = (), camera: bool = False) -> dict:
     """Проходит тест движком банка за «демо-респондента»: ответы по модели 2PL на уровне theta, время —
     обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений, кроме away_items — позиций, где
     «кандидат» уходил со вкладки (для демонстрации «достоверности результата»). Возвращает итог finish_session."""
@@ -161,6 +161,9 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
 
     flag_modified(ts, "result")
     db.commit()
+    from app.modules.proctor.service import seed_demo  # камера по согласию (И16): с камерой без замечаний / без камеры
+
+    seed_demo(db, ts, camera)
     return assessment.finish_session(db, ts, engine=eng)
 
 
@@ -178,7 +181,7 @@ def _user(db: Session, persona: str, role: UserRole, sid: str = "") -> User:
 
 
 def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int,
-               away_items: tuple[int, ...] = (), sid: str = ""):
+               away_items: tuple[int, ...] = (), sid: str = "", camera: bool = False):
     u = _user(db, persona, UserRole.candidate, sid)
     p = CandidateProfile(user_id=u.id, full_name=name, phone="+7 900 000-00-00", telegram=f"@jury_{persona}",
                          city="Москва", work_format=WorkFormat.remote, relocation=False, experience_years=3.5,
@@ -211,7 +214,7 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
     db.commit()
     res = {}
     for attempt in range(6):  # демо-респондент случаен: нужен подтверждённый грейд — иначе следующий seed
-        res = run_demo_test(db, u.id, "middle", theta, seed + attempt, pending_left, away_items)
+        res = run_demo_test(db, u.id, "middle", theta, seed + attempt, pending_left, away_items, camera)
         if res.get("confirmed") or res.get("category_id"):
             break
     refresh_rating(db, u.id)
@@ -269,7 +272,8 @@ def create_jury(db: Session, sid: str = "") -> dict:
 
 def _create_jury(db: Session, sid: str) -> dict:
     t0 = time.time()
-    _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0, sid=sid)
+    # у Марии тест пройден с камерой по согласию (замечаний нет); у Ильи — «тест без камеры» (нейтрально)
+    _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0, sid=sid, camera=True)
     # у Ильи — два ухода со вкладки во время теста: достоверность «средняя» (видно работодателю с причиной)
     u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid)
     eu = _user(db, "employer", UserRole.employer, sid)

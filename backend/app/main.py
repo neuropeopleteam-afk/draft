@@ -34,6 +34,7 @@ from app.modules.jury.router import make_spare
 from app.modules.jury.router import router as jury_router
 from app.modules.jury.scope import JuryScopeMiddleware
 from app.modules.matching.router import router as employer_router
+from app.modules.proctor.router import router as proctor_router
 from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
@@ -48,6 +49,8 @@ TAGS = [
     {"name": "profiles", "description": "Профиль текущего пользователя: кандидат или работодатель"},
     {"name": "candidate", "description": "Кандидат: опрос, согласия 152-ФЗ, приватность, ФСП ID, резюме, PDF-профиль"},
     {"name": "assessment", "description": "Тест на грейд и экран «Категория и грейд» (правило 90 дней, демо-режим жюри)"},
+    {"name": "proctor", "description": "Камера во время теста по согласию: анализ только в браузере, на сервер — события без кадров; "
+                                     "без камеры тест доступен полностью"},
     {"name": "candidate-contact", "description": "Кандидат: зонды и приглашения, принятие и отказ"},
     {"name": "employer", "description": "Работодатель: потребности, подборки с версиями, поиск, карточки кандидатов"},
     {"name": "employer-contact", "description": "Работодатель: зонды и приглашения-офферы (вилка обязательна, лимит 30 дней)"},
@@ -94,7 +97,7 @@ def create_app() -> FastAPI:
     )
     for r in (auth_router, profiles_router, candidate_router, legal_router, assessment_router,
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
-              expert_router, expert_panel_router, jury_router, validation_router):
+              expert_router, expert_panel_router, jury_router, validation_router, proctor_router):
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
@@ -124,6 +127,7 @@ def create_app() -> FastAPI:
 
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
                 "jury_mode_available": s.jury_mode_available, "demo_sandbox": s.demo_sandbox,
+                "proctor_camera": s.proctor_camera_enabled,  # false — экран камеры перед тестом не показывается
                 "llm": llm_status(), "assessment_engine": get_engine().name}
 
     class HealthOut(BaseModel):
