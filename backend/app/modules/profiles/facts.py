@@ -228,6 +228,8 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "level": "T1", "theta": t.get("theta"), "se": t.get("se"), "correct": t.get("correct"),
             "answered": t.get("answered"), "engine": t.get("engine"), "date": b.test.created_at.date().isoformat(),
             "integrity": integrity_summary(t.get("integrity")),
+            # экспресс-тест жюри (5–7 заданий, интервал шире) и принятый уровень ниже — видны работодателю честно
+            "mode": t.get("mode", "full"), "accepted_lower": bool(t.get("accepted_lower")), "grade": t.get("grade"),
         } if t else None,
         "skills_confirmed": [
             {"tag": k, "title": STACK.get(k, (k,))[0], "score": f.value.get("score"), "level": "T1"}

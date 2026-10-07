@@ -200,7 +200,7 @@ def test_jury_login_reset_and_expert(client, monkeypatch):
     from app.modules.jury import router as jr
 
     r = client.get("/api/jury/status")
-    assert r.status_code == 200 and len(r.json()["personas"]) == 5
+    assert r.status_code == 200 and len(r.json()["personas"]) == 6
     r = client.post("/api/jury/login", json={"persona": "candidate"})
     assert r.status_code == 200, r.text
     tok = r.json()["access_token"]
@@ -253,7 +253,7 @@ def test_jury_login_reset_and_expert(client, monkeypatch):
         assert t[0].result["engine_result"]["details"]["integrity"]["level"] == "medium"
     # сброс своей песочницы: учётки пересозданы, новый токен той же персоны; повтор сразу — 429
     r = client.post("/api/jury/reset", headers=H(sb))
-    assert r.status_code == 200 and r.json()["deleted_users"] == 5 and r.json()["scenario"] == sid
+    assert r.status_code == 200 and r.json()["deleted_users"] == 6 and r.json()["scenario"] == sid
     new = r.json()["access_token"]
     assert client.get("/api/me", headers=H(new)).json()["email"] == emails(sid)["candidate"]
     assert client.post("/api/jury/reset", headers=H(new)).status_code == 429
