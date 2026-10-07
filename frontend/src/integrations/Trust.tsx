@@ -117,8 +117,9 @@ export function CompanyTrustCard({ hasInn }: { hasInn: boolean }) {
 }
 
 /** Индекс доверия в карточке приглашения у кандидата (с оценкой вилки этого предложения). */
-export function InvitationTrust({ invitationId }: { invitationId: string }) {
-  const { data } = useApi<Trust>(`/candidate/invitations/${invitationId}/trust`, [invitationId]);
+export function InvitationTrust({ invitationId, version }: { invitationId: string; version?: string | number | null }) {
+  // version — признак изменения приглашения (статус, жалоба): после жалобы индекс перечитывается в открытом окне
+  const { data } = useApi<Trust>(`/candidate/invitations/${invitationId}/trust`, [invitationId, version ?? ""]);
   if (!data) return <div className="h-24 animate-pulse rounded-2xl bg-brand-blush/30" />;
   return <TrustPanel t={data} companyLink />;
 }

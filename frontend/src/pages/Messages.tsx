@@ -32,8 +32,8 @@ export function Messages({ role }: { role: "candidate" | "employer" }) {
         <Empty title="Переписок пока нет" text={role === "candidate" ? "Когда работодатель пригласит вас или вы откликнетесь на вакансию, здесь можно будет задать вопрос." : "Отправьте приглашение кандидату или опубликуйте вакансию — переписка появится здесь."}
           action={<Link className="btn-primary" to={`${base}/${role === "candidate" ? "invitations" : "needs"}`}>{role === "candidate" ? "К приглашениям" : "К подборкам"}</Link>} />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
-          <ul className={`space-y-2 ${sel ? "hidden lg:block" : ""}`} aria-label="Переписки">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
+          <ul className={`min-w-0 space-y-2 ${sel ? "hidden lg:block" : ""}`} aria-label="Переписки">
             {data.map((t) => {
               const active = cur?.kind === t.kind && cur?.id === t.id;
               return (

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Empty, Field, GRADES, Loading, Modal, Seg, Stat, Status, catTitle, dt, dtt, errText, range, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Empty, Field, GRADES, Loading, Modal, Seg, Stat, Status, catTitle, dt, dtt, errText, useApi } from "../../components/ui";
+import { BasisSeg, MarketNote, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { ENTRY, MODE_SHORT, Phase, mins } from "../shared";
 
@@ -42,7 +43,7 @@ export function EmployerCups() {
                 {c.to_review > 0 && <span className="font-semibold text-brand">{c.to_review} ждут оценки</span>}
                 {c.phase === "finished" && <span><b>{c.summary?.invited ?? 0}</b> приглашено</span>}
               </div>
-              <p className="mt-3 text-sm font-semibold text-brand-plum">{range(c.salary_from, c.salary_to)} · топ-{c.invite_top_n}</p>
+              <p className="mt-3 text-sm font-semibold text-brand-plum">{salaryText(c.salary_from, c.salary_to, c.salary_basis)} · топ-{c.invite_top_n}</p>
             </Link>
           ))}
         </div>
@@ -54,10 +55,10 @@ export function EmployerCups() {
 
 interface Draft {
   title: string; description: string; task_text: string; n_tasks: number; time_limit_min: number; starts_at: string; duration_days: number;
-  salary_from: string; salary_to: string; invite_top_n: number; min_score: number; position_title: string; offer_description: string; contact_method: string;
+  salary_from: string; salary_to: string; salary_basis: Basis; invite_top_n: number; min_score: number; position_title: string; offer_description: string; contact_method: string;
 }
 const EMPTY: Draft = {
-  title: "", description: "", task_text: "", n_tasks: 5, time_limit_min: 15, starts_at: "", duration_days: 7, salary_from: "", salary_to: "",
+  title: "", description: "", task_text: "", n_tasks: 5, time_limit_min: 15, starts_at: "", duration_days: 7, salary_from: "", salary_to: "", salary_basis: "gross",
   invite_top_n: 3, min_score: 50, position_title: "", offer_description: "", contact_method: "",
 };
 const round10k = (v: number) => Math.round(v / 10_000) * 10_000;
@@ -115,7 +116,7 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
     setMode("employer");
     setF((x) => ({
       ...x, title: x.title || p.title, task_text: p.task_text, time_limit_min: Math.min(120, Math.max(5, p.time_limit_min || 30)),
-      salary_from: String(p.salary_from), salary_to: String(p.salary_to),
+      salary_from: String(p.salary_from), salary_to: String(p.salary_to), salary_basis: (p.salary_basis as Basis) || "gross",
       description: x.description || `Открытая задача из нашего зонда «${p.title}». Решения оцениваем вслепую, лучшим — приглашение с вилкой кубка.`,
     }));
   }
@@ -141,7 +142,7 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
         task_text: mode === "auto" ? null : f.task_text.trim(), rubric: mode === "rubric" ? rubric : null,
         n_tasks: f.n_tasks, time_limit_min: f.time_limit_min, duration_days: f.duration_days,
         starts_at: f.starts_at ? new Date(f.starts_at).toISOString() : null,
-        salary_from: Number(f.salary_from), salary_to: Number(f.salary_to), invite_top_n: f.invite_top_n, min_score: f.min_score / 100,
+        salary_from: Number(f.salary_from), salary_to: Number(f.salary_to), salary_basis: f.salary_basis, invite_top_n: f.invite_top_n, min_score: f.min_score / 100,
         position_title: f.position_title.trim(), offer_description: f.offer_description.trim(), contact_method: f.contact_method.trim(),
       };
       const r = await api<any>("/employer/cups", { body });
@@ -164,7 +165,7 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
           )}
         </div>
         <Field label="Название" htmlFor="ct"><input id="ct" className="input" value={f.title} onChange={(e) => set("title", e.target.value)} placeholder="Надёжные платежи" /></Field>
-        <Field label="Категория" htmlFor="cc" hint={opt.data ? `Кандидатов с опубликованным профилем: ${opt.data.candidates}. Рынок: ${range(m.from, m.to)}` : undefined}>
+        <Field label="Категория" htmlFor="cc" hint={opt.data ? `Кандидатов с опубликованным профилем: ${opt.data.candidates}.` : undefined}>
           <select id="cc" className="input" value={cat} onChange={(e) => setCat(e.target.value)}>
             {CATEGORIES.map((c) => <option key={c} value={c}>{catTitle(c)}</option>)}
           </select>
@@ -212,10 +213,13 @@ function CreateCup({ open, onClose, onCreated }: { open: boolean; onClose: () =>
           <Field label="Пригласить лучших" htmlFor="ctop"><input id="ctop" type="number" min={1} max={10} className="input" value={f.invite_top_n || ""} onChange={num("invite_top_n")} /></Field>
           <Field label="Порог балла, %" htmlFor="cms" hint="Ниже порога приглашение не уходит"><input id="cms" type="number" min={0} max={100} className="input" value={f.min_score} onChange={num("min_score")} /></Field>
         </div>
+        <div><p className="label">Сумма указана</p><BasisSeg value={f.salary_basis} onChange={(b) => set("salary_basis", b)} /></div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Зарплата от, ₽" htmlFor="csf"><input id="csf" type="number" className="input" value={f.salary_from} onChange={(e) => set("salary_from", e.target.value)} placeholder={m?.from ? String(m.from) : ""} /></Field>
           <Field label="Зарплата до, ₽" htmlFor="cst"><input id="cst" type="number" className="input" value={f.salary_to} onChange={(e) => set("salary_to", e.target.value)} placeholder={m?.to ? String(m.to) : ""} /></Field>
         </div>
+        {Number(f.salary_from) > 0 && Number(f.salary_to) >= Number(f.salary_from) && <p className="-mt-2 text-xs text-brand-ink/65">{otherBasis(Number(f.salary_from), Number(f.salary_to), f.salary_basis)} · по шкале НДФЛ 13–22 %</p>}
+        <MarketNote m={m} />
         <Field label="Позиция в приглашении" htmlFor="cp"><input id="cp" className="input" value={f.position_title} onChange={(e) => set("position_title", e.target.value)} placeholder="Backend-разработчик" /></Field>
         <Field label="Текст приглашения" htmlFor="co"><textarea id="co" rows={2} className="input" value={f.offer_description} onChange={(e) => set("offer_description", e.target.value)} /></Field>
         <Field label="Способ связи" htmlFor="cm"><input id="cm" className="input" value={f.contact_method} onChange={(e) => set("contact_method", e.target.value)} placeholder="Telegram @hr" /></Field>
@@ -255,7 +259,7 @@ export function EmployerCup() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Stat label="Участники" value={c.participants} hint={`${dt(c.starts_at)} — ${dt(c.ends_at)}`} />
         <Stat label="Решения" value={c.submitted} hint={c.to_review ? `ждут оценки: ${c.to_review}` : "все оценены"} />
-        <Stat label="Вилка" value={range(c.salary_from, c.salary_to)} hint={`приглашения топ-${c.invite_top_n} от ${c.min_score_pct} %`} />
+        <Stat label="Вилка" value={salaryText(c.salary_from, c.salary_to, c.salary_basis)} hint={`приглашения топ-${c.invite_top_n} от ${c.min_score_pct} %`} />
         <Stat label="Итоги" value={c.phase === "finished" ? `${c.summary.invited} приглашено` : "—"} hint={c.finalized_at ? `подведены ${dtt(c.finalized_at)}` : "после окончания срока"} />
       </div>
       {err && <Alert>{err}</Alert>}
@@ -307,7 +311,7 @@ export function EmployerCup() {
         </section>
       )}
       <Modal open={confirm} onClose={() => setConfirm(false)} title="Завершить кубок досрочно?">
-        <p className="text-sm text-brand-ink/75">Окончание сдвинется на текущий момент. Участники, которые решают прямо сейчас, не получат место. Лучшим {c.invite_top_n} уйдут приглашения с вилкой {range(c.salary_from, c.salary_to)}.</p>
+        <p className="text-sm text-brand-ink/75">Окончание сдвинется на текущий момент. Участники, которые решают прямо сейчас, не получат место. Лучшим {c.invite_top_n} уйдут приглашения с вилкой {salaryText(c.salary_from, c.salary_to, c.salary_basis)}.</p>
         <div className="mt-5 flex justify-end gap-2">
           <button className="btn-ghost" onClick={() => setConfirm(false)}>Нет</button>
           <button className="btn-primary" onClick={() => { setConfirm(false); void act("finish", { early: true }); }}>Подвести итоги</button>
