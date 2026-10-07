@@ -20,9 +20,9 @@ candidate = require_role(UserRole.candidate)
 
 class StartIn(BaseModel):
     claimed_grade: Literal["junior", "middle", "senior"] = Field(description="Предполагаемый грейд, выбранный кандидатом")
-    integrity_ack: bool = Field(False, description="Кандидат прочитал, что отслеживается во время теста (потеря фокуса, "
-                                                   "вставка текста, скорость, канарейки) и что сигналы только снижают "
-                                                   "«достоверность результата». Сохраняется в сессии")
+    integrity_ack: bool = Field(False, description="Кандидат согласился с проверкой самостоятельности выполнения: "
+                                                   "результат может получить пометку «достоверность результата». "
+                                                   "Сохраняется в сессии с версией текста")
 
 
 class OptionOut(BaseModel):
@@ -35,7 +35,7 @@ class ItemOut(BaseModel):
     """Задание без ключа, рубрики, семейства и seed. item_id — непрозрачный токен сессии."""
 
     item_id: str
-    position: int = Field(description="Номер задания в сессии (с канарейками)")
+    position: int = Field(description="Номер задания в сессии")
     total: int = Field(description="Ориентир общего числа заданий (адаптивный тест может закончиться раньше)")
     format: str = Field(description="find_bug | predict_output | choose_fix | open_book_3step | mcq_concept | open_answer")
     stem: str
@@ -78,9 +78,8 @@ class AnswerIn(BaseModel):
     step: int | None = Field(None, ge=1, le=3, description="Шаг open_book_3step (защита от двойной отправки)")
     time_spent_ms: int | None = Field(None, ge=0, le=7_200_000, description="Время по часам клиента (справочно)")
     signals: dict[str, int] | None = Field(
-        None, description="Сигналы интерфейса теста за время задания (античит): focus_lost — потерь фокуса / "
-                          "переключений вкладки, hidden_ms — время вне вкладки, paste — вставок текста, "
-                          "paste_chars — вставлено символов. Влияют только на «достоверность результата»")
+        None, description="Служебные счётчики интерфейса теста за время задания. Влияют только на «достоверность "
+                          "результата», не на оценку")
 
 
 def _session_out(db, ts) -> SessionOut:

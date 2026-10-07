@@ -70,7 +70,7 @@ def test_copy_ai_mark_fast_text_typing_meta_rules():
     r = integrity.assess([_item(meta_claims=True)] + [_item() for _ in range(5)])
     assert r["points"] == 1 and "утверждения об оценке" in r["reasons"][0]
     # только снижение достоверности: в оценку и ранжирование сигналы не входят (функция не трогает score)
-    assert set(r) == {"level", "title", "points", "reasons", "signals", "sources"}
+    assert set(r) == {"level", "title", "points", "reasons", "kinds", "signals", "sources"}
 
 
 def test_external_reason_source_extension_point(monkeypatch):
