@@ -19,6 +19,8 @@ from app.core.enums import InvitationStatus, ProbeStatus, UserRole
 from app.core.errors import api_error, err
 from app.integrations import events as integration_events
 from app.modules.auth.models import User
+from app.modules.contact import service as contact_svc
+from app.modules.contact.salary import basis_out, basis_title
 from app.modules.invitations import service as svc
 from app.modules.invitations.models import Invitation, Probe
 from app.modules.matching.router import my_company
@@ -34,8 +36,9 @@ C_AUTH = {401: err("Не выполнен вход"), 403: err("Только д�
 
 
 class SalaryRange(BaseModel):
-    salary_from: int = Field(gt=0, le=10_000_000, description="Вилка «от», ₽ в месяц до вычета НДФЛ — обязательно")
+    salary_from: int = Field(gt=0, le=10_000_000, description="Вилка «от», ₽ в месяц — обязательно")
     salary_to: int = Field(gt=0, le=10_000_000, description="Вилка «до», ₽ — обязательно")
+    salary_basis: Literal["gross", "net"] = Field("gross", description="gross — до вычета НДФЛ, net — на руки")
 
     @model_validator(mode="after")
     def _range(self):
@@ -94,12 +97,12 @@ def _probe_out(db: Session, p: Probe, side: str) -> dict:
            "salary_from": p.salary_from, "salary_to": p.salary_to, "time_limit_min": p.time_limit_s // 60,
            "status": p.status.value, "events": p.events, "answer": p.answer, "review": p.review,
            "created_at": p.created_at.isoformat(), "deadline_at": p.deadline_at.isoformat() if p.deadline_at else None,
-           "company": {"name": comp.name, "industry": comp.industry} if comp else None}
+           "company": {"name": comp.name, "industry": comp.industry} if comp else None, **basis_out(p.salary_basis)}
     if side == "employer":
         out["candidate_ref"] = cand.public_ref
         out["candidate_category"] = cand.current_category_id
     else:
-        out["below_my_minimum"] = svc.below_minimum(cand, p.salary_to)
+        out["below_my_minimum"] = svc.below_minimum(cand, p.salary_to, p.salary_basis)
     return out
 
 
@@ -120,7 +123,8 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
         out["candidate_category"] = cand.current_category_id
         out["contacts"] = svc.candidate_contacts(db, i.candidate_user_id) if i.contacts_revealed_at else None
     else:
-        out["below_my_minimum"] = svc.below_minimum(cand, i.salary_to)
+        out["below_my_minimum"] = svc.below_minimum(cand, i.salary_to, i.salary_basis)
+    out.update(contact_svc.invitation_extras(db, i, side))  # НДФЛ, встречное, доступ к контактам, переписка
     return out
 
 
@@ -143,7 +147,8 @@ def send_probes(data: ProbeIn, bg: BackgroundTasks, user: User = Depends(employe
         try:
             pr = svc.create_probe(db, user, c, p, title=data.title, task_text=data.task_text,
                                   answer_mode=data.answer_mode, salary_from=data.salary_from, salary_to=data.salary_to,
-                                  time_limit_min=data.time_limit_min, need_id=data.need_id)
+                                  time_limit_min=data.time_limit_min, need_id=data.need_id,
+                                  salary_basis=data.salary_basis)
         except Exception as e:  # noqa: BLE001 — например, уже есть активный зонд
             db.rollback()
             skipped.append({"ref": ref, "reason": getattr(e, "detail", {}).get("message", "ошибка")})
@@ -152,7 +157,7 @@ def send_probes(data: ProbeIn, bg: BackgroundTasks, user: User = Depends(employe
         cu = _candidate_user(db, p.user_id)
         bg.add_task(notify, cu.email, f"Короткая задача от компании {c.name}",
                     [f"Компания {c.name} предлагает короткую задачу «{data.title}».",
-                     f"Вилка зарплаты: {_rub(data.salary_from)} – {_rub(data.salary_to)}.",
+                     f"Вилка зарплаты: {_rub(data.salary_from)} – {_rub(data.salary_to)} {basis_title(data.salary_basis)}.",
                      "Контакты не раскрываются, пока вы сами не примете приглашение."],
                     is_demo=cu.is_demo, link_path="/candidate/probes")
     return {"created": created, "skipped": skipped}
@@ -192,12 +197,13 @@ def send_invitation(data: InvitationIn, bg: BackgroundTasks, user: User = Depend
     inv = svc.create_invitation(db, user, c, p, position_title=data.position_title,
                                 offer_description=data.offer_description, salary_from=data.salary_from,
                                 salary_to=data.salary_to, contact_method=data.contact_method, need_id=data.need_id,
-                                probe_id=data.probe_id)
+                                probe_id=data.probe_id, salary_basis=data.salary_basis)
     cu = _candidate_user(db, p.user_id)
     bg.add_task(notify, cu.email, f"Приглашение от компании {c.name}",
                 [f"Компания {c.name} приглашает вас на позицию «{data.position_title}».",
-                 f"Вилка зарплаты: {_rub(data.salary_from)} – {_rub(data.salary_to)}.",
-                 "Ваши контакты работодатель увидит, только если вы примете приглашение."],
+                 f"Вилка зарплаты: {_rub(data.salary_from)} – {_rub(data.salary_to)} {basis_title(data.salary_basis)}.",
+                 "Ваши контакты работодатель увидит, только если вы примете приглашение.",
+                 "До принятия можно задать вопрос внутри платформы или предложить свою вилку."],
                 is_demo=cu.is_demo, link_path="/candidate/invitations")
     bg.add_task(integration_events.invitation_sent, inv.id)
     return _inv_out(db, inv, "employer")

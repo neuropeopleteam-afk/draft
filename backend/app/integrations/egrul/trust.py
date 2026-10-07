@@ -96,17 +96,26 @@ def _rub(v: int) -> str:
     return f"{v:,}".replace(",", " ") + " ₽"
 
 
-def salary_check(salary_from: int, salary_to: int, cat: Category | None) -> tuple[str, str]:
-    """(status, текст) для одной вилки относительно рыночного диапазона категории."""
+def salary_check(salary_from: int, salary_to: int, cat: Category | None,
+                 basis: str | None = "gross") -> tuple[str, str]:
+    """(status, текст) для одной вилки относительно рыночного диапазона категории. Рынок (Хабр Карьера) — на руки,
+    поэтому вилка до вычета НДФЛ сравнивается после пересчёта (app.modules.contact.salary)."""
+    from app.modules.contact.salary import to_net
+
     if cat is None:
         return "unknown", "категория неизвестна — сравнить не с чем"
     lo, hi = cat.market_salary_from, cat.market_salary_to
-    rng = f"рынок {cat.title}: {_rub(lo)} – {_rub(hi)}"
-    if salary_to > SALARY_HIGH_X * hi:
-        return "warn", f"верх вилки {_rub(salary_to)} больше чем вдвое выше рынка ({rng}) — так бывает в вакансиях-приманках"
-    if salary_from < SALARY_LOW_X * lo:
-        return "warn", f"низ вилки {_rub(salary_from)} заметно ниже рынка ({rng})"
-    return "ok", f"вилка {_rub(salary_from)} – {_rub(salary_to)} в разумных пределах ({rng})"
+    rng = f"рынок {cat.title} на руки: {_rub(lo)} – {_rub(hi)}"
+    f_net, t_net = to_net(salary_from, basis), to_net(salary_to, basis)
+    gross = (basis or "gross") == "gross"
+    note = f" до вычета НДФЛ, ≈ {_rub(f_net)} – {_rub(t_net)} на руки" if gross else " на руки"
+    if t_net > SALARY_HIGH_X * hi:
+        return "warn", (f"верх вилки {_rub(salary_to)}{' (≈ ' + _rub(t_net) + ' на руки)' if gross else ''} больше "
+                        f"чем вдвое выше рынка ({rng}) — так бывает в вакансиях-приманках")
+    if f_net < SALARY_LOW_X * lo:
+        return "warn", (f"низ вилки {_rub(salary_from)}{' (≈ ' + _rub(f_net) + ' на руки)' if gross else ''} "
+                        f"заметно ниже рынка ({rng})")
+    return "ok", f"вилка {_rub(salary_from)} – {_rub(salary_to)}{note} в разумных пределах ({rng})"
 
 
 def registry_factors(chk: RegistryCheck | None, company: Company) -> tuple[list[dict], dict, bool, bool]:
@@ -200,10 +209,11 @@ def salary_factor(db: Session, company: Company, cats: dict[str, Category]) -> t
     for inv in db.scalars(select(Invitation).where(Invitation.company_id == company.id,
                                                    Invitation.created_at > since)).all():
         cp = db.get(CandidateProfile, inv.candidate_user_id)
-        st, txt = salary_check(inv.salary_from, inv.salary_to, cats.get(cp.current_category_id) if cp else None)
+        st, txt = salary_check(inv.salary_from, inv.salary_to, cats.get(cp.current_category_id) if cp else None,
+                               inv.salary_basis)
         checks.append({"kind": "invitation", "title": inv.position_title, "status": st, "text": txt})
     for v in db.scalars(select(Vacancy).where(Vacancy.company_id == company.id, Vacancy.status != "draft")).all():
-        st, txt = salary_check(v.salary_from, v.salary_to, cats.get(v.category_id))
+        st, txt = salary_check(v.salary_from, v.salary_to, cats.get(v.category_id), v.salary_basis)
         checks.append({"kind": "vacancy", "title": v.title, "status": st, "text": txt})
     known = [c for c in checks if c["status"] != "unknown"]
     if not known:
@@ -318,10 +328,11 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
     if invitation is not None:
         cp = db.get(CandidateProfile, invitation.candidate_user_id)
         st, txt = salary_check(invitation.salary_from, invitation.salary_to,
-                               cats.get(cp.current_category_id) if cp else None)
+                               cats.get(cp.current_category_id) if cp else None, invitation.salary_basis)
         offer = {"status": st, "text": txt}
     elif vacancy is not None:
-        st, txt = salary_check(vacancy.salary_from, vacancy.salary_to, cats.get(vacancy.category_id))
+        st, txt = salary_check(vacancy.salary_from, vacancy.salary_to, cats.get(vacancy.category_id),
+                               vacancy.salary_basis)
         offer = {"status": st, "text": txt}
     reasons_bad = [f for f in factors if f["status"] in ("bad", "warn")]
     reasons_ok = [f for f in factors if f["status"] == "ok"]

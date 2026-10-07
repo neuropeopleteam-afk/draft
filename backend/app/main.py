@@ -27,6 +27,7 @@ from app.modules.assessment.expert_router import router as expert_router
 from app.modules.assessment.router import router as assessment_router
 from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import router as catalog_router
+from app.modules.contact import router as contact
 from app.modules.experts.router import router as expert_panel_router
 from app.modules.invitations.router import candidate_router as candidate_contact_router
 from app.modules.invitations.router import employer_router as employer_contact_router
@@ -79,7 +80,7 @@ def create_app() -> FastAPI:
             "кандидата по категории «направление · грейд» и приглашает с зарплатой.\n\n"
             "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
         ),
-        openapi_tags=TAGS + INTEGRATION_TAGS + IDEAS_TAGS,
+        openapi_tags=TAGS + contact.TAGS + INTEGRATION_TAGS + IDEAS_TAGS,
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -94,7 +95,8 @@ def create_app() -> FastAPI:
     )
     for r in (auth_router, profiles_router, candidate_router, legal_router, assessment_router,
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
-              expert_router, expert_panel_router, jury_router, validation_router):
+              expert_router, expert_panel_router, jury_router, validation_router,
+              contact.router, contact.candidate_router, contact.employer_router):  # переписка, встречное (И4)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
