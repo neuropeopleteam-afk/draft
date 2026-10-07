@@ -63,7 +63,7 @@ export function InternCutSection({ ic }: { ic: any }) {
       </p>
       {easy.length > 0 && (
         <>
-          <h3 className="mt-6 text-base font-bold text-brand-night">Банк с лёгкими семействами: {ic.with_easy_families.per_block} синтетических семейства на блок, b от −2,5 до −1,5</h3>
+          <h3 className="mt-6 text-base font-bold text-brand-night">Банк с лёгкими семействами: {ic.with_easy_families.per_block} синтетических семейств на блок, b от −2,5 до −1,5</h3>
           <div className="mt-3">
             <Table head={["Порог", "Ложное подтверждение", "Ложный отказ", "Подтверждение в полосе Стажёра", "Предложен Junior в полосе", "Заданий", "SE", "Исчерпание пула", "Доля полосы, θ ~ N(0; 1)"]}
               rows={easy.map(row)} mark={idxE} />
