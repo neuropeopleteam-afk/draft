@@ -5,7 +5,7 @@ import { guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/ju
 import { errText } from "./ui";
 
 const PERSONA_NAME: Record<string, string> = {
-  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
+  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", candidate_new: "демо-кандидат без категории", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
 };
 const whoAmI = (email: string) => {
   const p = personaOf(email);

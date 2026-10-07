@@ -43,10 +43,14 @@ export default function Category() {
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTIONS[s.survey_direction] ?? "—"}.</p>}
         </div>
         <div className="rounded-xl bg-brand-blush/30 p-4 text-sm">
-          <p className="font-semibold text-brand-night">Правило 90 дней</p>
+          <p className="font-semibold text-brand-night">Правила 90 и 30 дней</p>
           {s.lock_active
             ? <p className="mt-1 text-brand-ink/75">Смена грейда доступна с <b>{dt(s.locked_until).replace(/ г\.$/, "")}</b>.{s.sandbox_active && " Сейчас ограничение снято демо-режимом."}</p>
             : <p className="mt-1 text-brand-ink/75">{c.grade ? "Можно пройти тест на грейд выше или ниже." : "Ограничений нет — пройдите тест."}</p>}
+          {Object.keys(s.retake_locks ?? {}).length > 0 && (
+            <p className="mt-1 text-brand-ink/75">Повтор после неподтверждённой попытки: {Object.entries(s.retake_locks as Record<string, string>).map(([g, at]) => `${GRADES[g]} — с ${dt(at).replace(/ г\.$/, "")}`).join(", ")}. Тест на грейд ниже — сразу.</p>
+          )}
+          <p className="mt-1 text-xs text-brand-ink/65">Смена подтверждённого грейда — не чаще раза в {s.grade_change_interval_days ?? 90} дней; повтор на тот же грейд после неудачи — через {s.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу.</p>
           {s.jury_mode_available && s.jury_mode_allowed && (
             <div className="mt-3 border-t border-brand/10 pt-2">
               <Toggle checked={s.jury_mode} onChange={jury} label="Демо-режим жюри" hint="Только для демо-учёток. Снимает ограничение 90 дней для показа; в истории такие смены помечаются." />
@@ -84,9 +88,9 @@ export default function Category() {
               {s.sessions.map((t: any) => (
                 <li key={t.id} className="flex items-start justify-between gap-3 border-l-2 border-brand-blush pl-3">
                   <div>
-                    <p className="font-semibold">{DIRECTIONS[t.direction]} · {GRADES[t.claimed_grade]}{t.is_sandbox ? " · демо" : ""}</p>
+                    <p className="font-semibold">{DIRECTIONS[t.direction]} · {GRADES[t.claimed_grade]}{t.is_sandbox ? " · демо" : ""}{t.mode === "express" ? " · экспресс" : ""}</p>
                     <p className="text-brand-ink/65">{SESSION[t.status] ?? t.status} · {dtt(t.finished_at ?? t.started_at)}</p>
-                    {t.theta != null && <p className="text-brand-ink/65">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : "не подтверждён"}</p>}
+                    {t.theta != null && <p className="text-brand-ink/65">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADES[t.accepted_lower]}` : "не подтверждён"}</p>}
                   </div>
                   {t.status === "in_progress" && <Link className="text-sm font-semibold text-brand" to={`/candidate/assessment/test/${t.id}`}>Продолжить</Link>}
                   {t.status === "finished" && <Link className="shrink-0 text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>}
