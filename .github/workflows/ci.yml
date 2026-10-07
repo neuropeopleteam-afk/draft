@@ -2,6 +2,8 @@
 # Те же команды запускаются локально (см. docs/testing.md, раздел «Как запустить»).
 #
 #   lint            actionlint (+ shellcheck внутри run-блоков), shellcheck скриптов, docker compose config
+#   security        gitleaks по всей истории (.gitleaks.toml), pip-audit зависимостей бэкенда (с транзитивными)
+#                   и банка заданий, npm audit production-зависимостей фронтенда (high и выше)
 #   backend-sqlite  pytest на SQLite: покрытие с порогом (fail_under в backend/pyproject.toml), JUnit, значки
 #   backend-postgres те же тесты на PostgreSQL 16 (service-контейнер), миграции Alembic до head
 #   bank            валидатор банка заданий: детерминизм, разнообразие, инварианты, ключи исполнением кода
@@ -51,6 +53,79 @@ jobs:
           sed -i 's/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=ci/; s/^JWT_SECRET=.*/JWT_SECRET=ci/' .env
           docker compose config -q
           docker compose --profile fsp-id config -q
+
+  security:
+    name: Безопасность · секреты · уязвимости зависимостей
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GITLEAKS_VERSION: "8.28.0"
+      GITLEAKS_SHA256: a65b5253807a68ac0cafa4414031fd740aeb55f54fb7e55f386acb52e6a840eb
+      PIP_AUDIT_VERSION: "2.9.0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # gitleaks смотрит всю историю, не только последний коммит
+      - name: gitleaks — секреты в истории и рабочем дереве (исключения в .gitleaks.toml)
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/gitleaks.tgz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "$GITLEAKS_SHA256  $RUNNER_TEMP/gitleaks.tgz" | sha256sum -c -
+          tar xzf "$RUNNER_TEMP/gitleaks.tgz" -C "$RUNNER_TEMP" gitleaks
+          "$RUNNER_TEMP/gitleaks" git --no-banner --redact=100 --config .gitleaks.toml \
+            --report-format sarif --report-path "$RUNNER_TEMP/gitleaks-git.sarif" .
+          "$RUNNER_TEMP/gitleaks" dir --no-banner --redact=100 --config .gitleaks.toml \
+            --report-format sarif --report-path "$RUNNER_TEMP/gitleaks-dir.sarif" .
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+      - name: pip-audit — зависимости бэкенда (requirements + dev, вместе с транзитивными) и банка заданий
+        working-directory: backend
+        run: |
+          # приложение ставится в отдельное окружение, чтобы в проверку не попали зависимости самого pip-audit
+          python -m venv "$RUNNER_TEMP/app"
+          "$RUNNER_TEMP/app/bin/python" -m pip install --upgrade pip
+          "$RUNNER_TEMP/app/bin/pip" install -r requirements.txt -r requirements-dev.txt
+          pip install "pip-audit==${PIP_AUDIT_VERSION}"
+          site="$("$RUNNER_TEMP/app/bin/python" -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+          pip-audit --strict --progress-spinner off --desc on --path "$site"
+          # пины самих файлов требований: бэкенд и банк заданий (у банка свои версии pydantic, PyYAML, pytest)
+          pip-audit --strict --progress-spinner off --desc on --no-deps --disable-pip \
+            -r requirements.txt -r requirements-dev.txt
+          pip-audit --strict --progress-spinner off --desc on --no-deps --disable-pip \
+            -r assessment_bank/BANK_requirements.txt
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: npm audit — production-зависимости фронтенда, порог high (dev-инструменты сборки — отдельно, см. docs/ci)
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+      - name: Сводка
+        if: ${{ !cancelled() }}
+        working-directory: frontend
+        run: |
+          {
+            echo "### Безопасность"
+            echo
+            echo "- gitleaks ${GITLEAKS_VERSION}: история и рабочее дерево, исключения — \`.gitleaks.toml\`"
+            echo "- pip-audit ${PIP_AUDIT_VERSION}: окружение бэкенда (requirements + dev с транзитивными), пины банка заданий"
+            echo "- npm audit (production, порог high); все зависимости, включая dev:"
+            echo
+            echo '```'
+            npm audit --audit-level=none 2>&1 | tail -n 3 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: ${{ !cancelled() }}
+        with:
+          name: security-reports
+          path: |
+            ${{ runner.temp }}/gitleaks-git.sarif
+            ${{ runner.temp }}/gitleaks-dir.sarif
+          retention-days: 14
+          if-no-files-found: ignore
 
   backend-sqlite:
     name: Бэкенд · SQLite · покрытие
