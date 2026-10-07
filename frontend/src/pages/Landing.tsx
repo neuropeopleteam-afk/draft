@@ -154,6 +154,7 @@ function Rule({ title, text }: { title: string; text: string }) {
 const JURY: { id: Persona; title: string; text: string }[] = [
   { id: "candidate", title: "Кандидат с паспортом ФСП", text: "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП из реестра (T2), место в рейтинге и 2-е место в кубке работодателя." },
   { id: "candidate_nofsp", title: "Кандидат без ФСП", text: "Илья Сергеев · Backend · Middle. Нет истории ФСП — нейтрально. Ждёт приглашение с вилкой." },
+  { id: "candidate_new", title: "Пройдите тест сами", text: "Антон Лебедев · Backend · категории нет. Экспресс-тест около 5 минут или полный, подсказка грейда по резюме, путь до категории и подборки." },
   { id: "employer", title: "Работодатель", text: "«Северный платёж»: потребности текстом с цитатами, фильтр ст. 64 ТК РФ, подборки с объяснением, сравнение кандидатов, кубок с решениями на оценке." },
   { id: "expert", title: "Эксперт", text: "Разметка вслепую: пары «потребность — кандидат», ответы по рубрике, пороги грейдов. И проверка ответов «на проверке»." },
   { id: "fsp", title: "Федерация (ФСП)", text: "Кабинет ФСП: спрос работодателей, эффект соревнований на приглашения, зарплаты из офферов. Только агрегаты." },
@@ -183,8 +184,8 @@ function JuryBlock() {
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
             <h2 id="jury-title" className="mt-2 text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Вход в один клик и проводник по сценарию</h2>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-brand-ink/75">
-              Выберите роль — регистрация, опрос и тест у демо-учёток уже пройдены. У каждого эксперта своя копия демо:
-              ваши действия и сброс не видны другим. Проводник ведёт по сценарию: регистрация → тест → категория → поиск работодателем → контакт.
+              Выберите роль — регистрация, опрос и тест у демо-учёток уже пройдены; у «Пройдите тест сами» теста нет — его проходите вы.
+              У каждого эксперта своя копия демо: ваши действия и сброс не видны другим. Проводник ведёт по сценарию: регистрация → тест → категория → поиск работодателем → контакт.
               <span className="font-semibold text-brand-night"> Доступ к стенду: demo / ***.</span>
             </p>
           </div>
@@ -194,7 +195,7 @@ function JuryBlock() {
             <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
           </div>
         </div>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {JURY.map((p) => (
             <button key={p.id} onClick={() => enter(p.id)} disabled={!!busy}
               aria-label={`Войти как: ${p.title}`}

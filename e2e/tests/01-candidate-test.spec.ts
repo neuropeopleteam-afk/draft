@@ -65,8 +65,8 @@ test("кандидат: демо-вход → тест → результат �
       await expect(main.getByRole("listitem").filter({ hasText: signal }), signal).toBeVisible();
     }
     await expect(main.getByText(/^Сигналы не наказывают автоматически\./)).toBeVisible();
-    // лимит новых тестов у песочницы жюри: не больше 5 в сутки, чтобы банк нельзя было выкачать перезапусками
-    await expect(page.getByRole("status").filter({ hasText: /новых тестов за 24 часа осталось \d+ из 5/ })).toBeVisible();
+    // лимит новых тестов у песочницы жюри: не больше 30 в сутки (жюри само проходит и повторяет тест), чтобы банк нельзя было выкачать перезапусками
+    await expect(page.getByRole("status").filter({ hasText: /новых тестов за 24 часа осталось \d+ из 30/ })).toBeVisible();
     const start = page.getByRole("button", { name: /^Начать тест$/ });
     const ack = page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ });
     await expect(start, "без согласия тест не начать").toBeDisabled();

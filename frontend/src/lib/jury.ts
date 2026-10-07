@@ -1,9 +1,9 @@
 import { api, ApiError, type TokenOut } from "./api";
 
-export type Persona = "candidate" | "candidate_nofsp" | "employer" | "expert" | "fsp";
+export type Persona = "candidate" | "candidate_nofsp" | "candidate_new" | "employer" | "expert" | "fsp";
 export const JURY_DOMAIN = "@jury.example.com";
 export const isJury = (email?: string | null) => !!email && email.endsWith(JURY_DOMAIN);
-const LOCAL: Record<string, Persona> = { candidate: "candidate", "candidate-nofsp": "candidate_nofsp", employer: "employer", expert: "expert", "fsp-analyst": "fsp" };
+const LOCAL: Record<string, Persona> = { candidate: "candidate", "candidate-nofsp": "candidate_nofsp", "candidate-new": "candidate_new", employer: "employer", expert: "expert", "fsp-analyst": "fsp" };
 /** Персона по почте демо-учётки: candidate@… (общее демо) или candidate+<песочница>@… */
 export const personaOf = (email?: string | null): Persona | null =>
   isJury(email) ? LOCAL[email!.slice(0, -JURY_DOMAIN.length).split("+")[0]] ?? null : null;
@@ -72,8 +72,10 @@ export interface GuideStep {
 export const STEPS: GuideStep[] = [
   { title: "Регистрация соискателя", persona: null, path: "/register?role=candidate", match: /^\/(register|verify)/, cta: "Открыть регистрацию",
     text: "Почта с кодом подтверждения и согласие на обработку данных. Чтобы не ждать письма, следующий шаг откроет готового демо-кандидата — регистрация у него уже пройдена." },
-  { title: "Опрос и тест", persona: "candidate", path: "/candidate/assessment", match: /^\/candidate\/assessment/, cta: "Войти как кандидат",
-    text: "Опрос пройден, тест сдан настоящим адаптивным движком: 8–16 заданий из банка 138 семейств (у самого порога грейда — ещё до 6 коротких), у каждого свой вариант, 3 контрольных задания-«канарейки». Перед стартом кандидат видит, что отслеживается (уход со вкладки, вставка, скорость, канарейки), и подтверждает, что прочитал: сигналы только снижают «достоверность результата», не наказывают. Для демо-учёток снято правило 90 дней, но новых тестов — не больше 5 в сутки, чтобы банк нельзя было выкачать перезапусками." },
+  { title: "Опрос и тест", persona: "candidate", path: "/candidate/assessment", match: /^\/candidate\/assessment(?!\/test)/, cta: "Войти как кандидат",
+    text: "Опрос пройден, тест сдан настоящим адаптивным движком: 8–16 заданий из банка 138 семейств (у самого порога грейда — ещё до 6 коротких), у каждого свой вариант, 3 контрольных задания-«канарейки». Перед стартом кандидат видит, что отслеживается (уход со вкладки, вставка, скорость, канарейки), и подтверждает, что прочитал: сигналы только снижают «достоверность результата», не наказывают. Для демо-учёток снято правило 90 дней, но новых тестов — не больше 30 в сутки, чтобы банк нельзя было выкачать перезапусками." },
+  { title: "Пройдите тест сами", persona: "candidate_new", path: "/candidate/express", match: /^\/candidate\/(express|assessment\/test)/, cta: "Войти как кандидат без категории",
+    text: "Антон Лебедев: опрос и резюме есть, категории нет. На экране выбора грейда — необязательная подсказка по опросу, резюме и паспорту ФСП с объяснением (правила, без нейросети); выбор за кандидатом. Экспресс-тест — 5–7 коротких заданий настоящего банка, около 5 минут, честно помечен «экспресс» и с более широким интервалом; полный — 8–16 заданий. Пройдите его сами и повторите: вторая попытка — из другого набора заданий. Если заявленный грейд не подтвердился, но уровень ниже доказан (P ≥ 80 %), его можно принять одним действием; повтор на тот же грейд — через 30 дней, на грейд ниже — сразу (в демо-режиме ограничение снято). Синтетические профили любого уровня — в «Проверьте сами» на /validation." },
   { title: "Присвоение категории", persona: "candidate", path: "/candidate/category", match: /^\/candidate\/category/, cta: "Открыть категорию",
     text: "Категория «Backend · Middle» и место в рейтинге. Рейтинг строится только на подтверждённом: тест (T1) и достижения ФСП из реестра (T2). Нет истории ФСП — нейтрально, без штрафа." },
   { title: "Карта навыков и рост", persona: "candidate", path: "/candidate/feedback", match: /^\/candidate\/feedback/, cta: "Открыть карту навыков",
