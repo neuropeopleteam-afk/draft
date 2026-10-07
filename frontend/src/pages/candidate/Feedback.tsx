@@ -211,7 +211,7 @@ export default function Feedback() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Карта навыков и рост"
-        subtitle={`Тест ${s.direction_title} · ${s.grade_title}${s.finished_at ? ` от ${dt(s.finished_at)}` : ""}. Только темы — без самих заданий и ключей. Работодатель этот разбор не видит.`} />
+        subtitle={`Тест ${s.direction_title} · ${s.grade_title}${s.finished_at ? ` от ${dt(s.finished_at).replace(/\.$/, "")}` : ""}. Только темы — без самих заданий и ключей. Работодатель этот разбор не видит.`} />
       <section className="grid gap-4 sm:grid-cols-4">
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(s.category_id)}</p>{s.confirmed != null && <p className="text-xs text-brand-ink/65">{s.confirmed ? "грейд подтверждён" : "грейд не подтверждён"}</p>}</div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Уверенно</p><p className="mt-2 text-xl font-bold text-brand-night">{sum.strong} из {sum.topics}</p><p className="text-xs text-brand-ink/65">тем теста</p></div>

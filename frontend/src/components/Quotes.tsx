@@ -42,7 +42,7 @@ export function QuotedText({ text, marks, focus, onFocus }: { text: string; mark
     const on = !!focus && s.keys.includes(focus);
     const cls = s.kind === "bias"
       ? `bg-amber-100 text-amber-950 underline decoration-brand decoration-wavy underline-offset-4 ${on ? "ring-2 ring-brand" : ""}`
-      : on ? "bg-brand text-white" : "bg-brand-blush/70 text-brand-night";
+      : on ? "bg-brand-strong text-white" : "bg-brand-blush/70 text-brand-night";
     parts.push(
       <mark key={`m${i}`} title={s.labels.join("; ")} className={`rounded px-0.5 transition-colors ${cls}`}
         onMouseEnter={() => onFocus?.(s.keys[0])} onMouseLeave={() => onFocus?.(null)}>

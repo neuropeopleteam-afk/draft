@@ -68,7 +68,7 @@ export default function Landing() {
               <li className="flex gap-2"><span className="font-bold text-brand-lavender">T2</span> Призёр соревнований ФСП</li>
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <span className="btn bg-brand text-white" aria-hidden="true">Принять</span>
+              <span className="btn bg-brand-strong text-white" aria-hidden="true">Принять</span>
               <span className="btn bg-white/10 text-white" aria-hidden="true">Отклонить</span>
             </div>
           </div>

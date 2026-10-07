@@ -32,7 +32,7 @@ export default function EmployerOverview() {
         <ol className="mt-5 space-y-4">
           {steps.map((s, i) => (
             <li key={s.title} className="flex items-start gap-4">
-              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${s.done ? "bg-brand text-white" : "bg-brand-plum text-white"}`}>{s.done ? "✓" : i + 1}</span>
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${s.done ? "bg-brand-strong text-white" : "bg-brand-plum text-white"}`}>{s.done ? "✓" : i + 1}</span>
               <div className="flex-1">
                 <p className="font-semibold">{s.title}</p>
                 <p className="text-sm text-brand-ink/65">{s.text}</p>
