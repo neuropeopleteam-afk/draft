@@ -163,3 +163,58 @@ def test_api_serves_committed_report(client):
     assert d["world"]["n_pairs"] >= 500 * 50
     assert d["metrics"]["platform"]["ndcg@10"]["mean"] > d["metrics"]["bm25"]["ndcg@10"]["mean"]
     assert d["caveat"] and d["truth_rules"] and d["heldout_weights"]["test"]
+
+
+# ---------------------------------------------------------------- Junior: решение банка, «предварительно», штраф
+
+def test_world_uses_bank_decision_and_provisional(world):
+    """Решение по грейду — правилом банка (0,8); у порога Junior — «Junior (предварительно)»; штраф в скоре."""
+    from assessment_bank.psychometrics import decide
+
+    from app.modules.profiles.facts import PROVISIONAL_PENALTY
+
+    prov = [c for c in world.candidates if c.obs.category_provisional]
+    assert prov, "в мире из 200 кандидатов должны быть предварительные Junior"
+    for c in prov:
+        t = c.obs.test
+        assert c.obs.category_grade == "junior" and t["claimed"] == "junior" and not t["confirmed"]
+        d = decide(t["theta"], t["se"], "junior")
+        assert d.provisional and not d.confirmed and 0.10 <= t["p_claimed"] < 0.80
+        assert t["status"] == "provisional" and t["provisional"]["p"] == t["p_claimed"]
+    for c in world.candidates:
+        t = c.obs.test
+        if t and t["confirmed"]:
+            assert decide(t["theta"], t["se"], t["claimed"]).confirmed  # порог 0,8, не 0,6
+    # штраф «предварительно» в скоре — как в продукте, и пересборка скора из компонент его учитывает
+    b_prov = build_bundle(prov[0].obs)
+    assert b_prov.provisional and b_prov.profile.grade_provisional
+    req = {"direction": prov[0].latent.direction, "grade": "junior", "stack_required": [], "stack_desired": []}
+    s, comps, _ = score_candidate(b_prov, req)
+    assert comps["provisional"] == PROVISIONAL_PENALTY
+    sc = mb.score_world(world, [req])
+    assert sc["provisional"].sum() == len(prov) and sc["max_rebuild_error"] < 1e-3
+    s0, s10 = mb.weighted(sc, np.array([mb.WEIGHTS[k] for k in mb.COMP_KEYS]), 0.0), \
+        mb.weighted(sc, np.array([mb.WEIGHTS[k] for k in mb.COMP_KEYS]), 0.10)
+    j = [i for i, c in enumerate(world.candidates) if c.obs.category_provisional][0]
+    assert s0[0, j] - s10[0, j] == pytest.approx(0.10, abs=1e-3)
+    # абляция «без теста» предварительного статуса не знает (категория — по заявленному грейду)
+    assert not build_bundle(prov[0].obs, "t0_only").provisional
+
+
+def test_stub06_column_differs_only_in_decision():
+    """Столбцы раздела Junior: одна истина, разные правила решения; stub06 без предварительных."""
+    cfg = BenchConfig(n_needs=10, n_candidates=150)
+    w_bank = generate(cfg)
+    w_stub = generate(replace(cfg, decision="stub06", provisional=False))
+    w_08 = generate(replace(cfg, provisional=False))
+    assert np.array_equal(w_bank.rel, w_stub.rel) and np.array_equal(w_bank.rel, w_08.rel)
+    assert not any(c.obs.category_provisional for c in w_stub.candidates)
+    assert not any(c.obs.category_provisional for c in w_08.candidates)
+    n_none = lambda w: sum(1 for c in w.candidates if not c.obs.category_grade)  # noqa: E731
+    assert n_none(w_stub) <= n_none(w_08) and n_none(w_bank) < n_none(w_08)  # «предварительно» возвращает в категорию
+    out = mb.junior_section(cfg, mb.bank_blocks())
+    assert [c["id"] for c in out["columns"]] == ["stub06", "bank08", "provisional"]
+    assert [p["penalty"] for p in out["penalty_sensitivity"]] == list(mb.PENALTIES)
+    c3 = out["columns"][2]["world"]
+    assert c3["provisional"] > 0 and 0 <= c3["provisional_true_below_share"] <= 1
+    assert out["columns"][2]["world"]["no_category"] < out["columns"][1]["world"]["no_category"]
