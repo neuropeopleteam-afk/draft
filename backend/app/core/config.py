@@ -68,9 +68,14 @@ class Settings(BaseSettings):
     # Окончательный выбор — по согласию с экспертами на проверочном наборе (docs/ARCHITECTURE.md, раздел 8).
     llm_grading_model: str | None = None
     llm_grading_timeout_s: float = 40.0
+    # Вторая оценка при сомнении (grader.doubts): расхождение двух оценок больше порога — ответ эксперту
+    llm_grading_second_opinion: bool = True
+    llm_grading_disagree: float = 0.25
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"
+    # Невидимая «ИИ-метка» в тексте развёрнутых заданий (assessment/ai_mark.py) — сигнал достоверности
+    assessment_ai_mark: bool = True
     # Параметры адаптивного теста. Длина: 8–16 оцениваемых заданий (+3 канарейки, +до 6 дотестирования),
     # не дольше 60 минут; open_book_3step — не больше 2, open_answer — не больше 1 (см. exposure.py)
     assessment_min_items: int = 8
