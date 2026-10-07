@@ -25,13 +25,16 @@ from app.modules.assessment.models import TestSession
 from app.modules.auth.models import User
 from app.modules.matching.models import EmployerNeed
 from app.modules.profiles.models import EmployerProfile
-from app.modules.validation import attacks
+from app.modules.validation import attacks, selfcheck
 
 router = APIRouter(prefix="/api/validation", tags=["validation"])
 REPORT = Path(__file__).resolve().parent / "data" / "report.json"
 # Лимиты «Красной кнопки» (на воркер): 12 атак в минуту на пользователя, 90 в минуту всего
 _per_user = SlidingWindow(12, 60)
 _global = SlidingWindow(90, 60)
+# «Проверьте сами»: до 20 кандидатов × 2 попытки за запрос; не чаще 6 запусков в минуту на пользователя, 30 всего
+_sc_user = SlidingWindow(6, 60)
+_sc_global = SlidingWindow(30, 60)
 
 
 @lru_cache(maxsize=1)
@@ -68,7 +71,9 @@ def _live(db: Session) -> dict:
 def report(db: Session = Depends(get_db)):
     from app.modules.experts.section import section as experts_section
 
-    return {**_report(), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db)}
+    return {**_report(), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db),
+            "self_check": {"strategies": selfcheck.STRATEGIES, "max_n": selfcheck.MAX_N,
+                           "directions": list(selfcheck.DIRECTIONS)}}
 
 
 class AttackIn(BaseModel):
@@ -103,6 +108,40 @@ def run_attack(attack_id: str, data: AttackIn | None = None, user: User = Depend
             raise api_error(429, "attack_busy", "Симуляция утечки уже идёт, повторите через несколько секунд") from None
     need_id = _own_need(db, user, data.need_id) if data.need_id else None
     return attacks.run(db, attack_id, need_id)
+
+
+class SelfCheckIn(BaseModel):
+    strategy: str = Field("level_middle", description="theta | level_junior | level_middle | level_senior | all_correct | "
+                                                      "all_wrong | random | common_only")
+    theta: float | None = Field(None, ge=-3, le=3, description="Истинный уровень для strategy=theta")
+    direction: str = Field("backend")
+    claimed_grade: str = Field("middle", pattern="^(junior|middle|senior)$")
+    n: int = Field(10, ge=1, le=selfcheck.MAX_N, description="Сколько синтетических кандидатов")
+    repeat: bool = Field(True, description="Вторая попытка каждого кандидата на другом субпуле — согласие повторов")
+    mode: str = Field("full", pattern="^(full|express)$", description="full — обычный тест, express — экспресс-тест жюри")
+    seed: int | None = Field(None, ge=0, description="Для воспроизводимости; без него — случайный")
+
+
+@router.post("/self-check",
+             summary="«Проверьте сами»: синтетический кандидат проходит N тестов на настоящем движке банка (вход обязателен)",
+             description="Настоящий BankEngine, настоящие варианты заданий и ключи, адаптивный выбор, канарейки, "
+                         "дотестирование и правило решения — как у живого кандидата; в БД ничего не пишется. Развёрнутые "
+                         "ответы синтетический кандидат не пишет — их балл задаёт стратегия, время расчётное. "
+                         "Один расчёт за раз (иначе 429 self_check_busy).",
+             responses={401: err("Не выполнен вход"), 404: err("Нет такого направления или стратегии"),
+                        429: err("Слишком частые запуски или расчёт уже идёт")})
+def self_check(data: SelfCheckIn, user: User = Depends(get_current_user)):
+    if data.direction not in selfcheck.DIRECTIONS:
+        raise api_error(404, "direction_not_found", "Нет такого направления")
+    if data.strategy not in {s["id"] for s in selfcheck.STRATEGIES}:
+        raise api_error(404, "strategy_not_found", "Нет такой стратегии")
+    hit(_sc_user, str(user.id), "self_check_rate", "Слишком часто: не больше 6 проверок в минуту")
+    hit(_sc_global, "all", "self_check_rate_global", "«Проверьте сами» сейчас запускают слишком часто")
+    try:
+        return selfcheck.run(strategy=data.strategy, theta=data.theta, direction=data.direction,
+                             claimed=data.claimed_grade, n=data.n, repeat=data.repeat, mode=data.mode, seed=data.seed)
+    except selfcheck.Busy:
+        raise api_error(429, "self_check_busy", "Проверка уже идёт, повторите через несколько секунд") from None
 
 
 BENCH = Path(__file__).resolve().parent / "data" / "matching_bench.json"

@@ -17,8 +17,8 @@ import secrets
 from sqlalchemy import or_
 
 DOMAIN = "jury.example.com"
-PERSONA_LOCAL = {"candidate": "candidate", "candidate_nofsp": "candidate-nofsp", "employer": "employer",
-                 "expert": "expert", "fsp": "fsp-analyst"}
+PERSONA_LOCAL = {"candidate": "candidate", "candidate_nofsp": "candidate-nofsp", "candidate_new": "candidate-new",
+                 "employer": "employer", "expert": "expert", "fsp": "fsp-analyst"}
 SID_RE = re.compile(r"^[a-z0-9]{10}$")
 CLAIM = "jsc"
 SHARED = "shared"  # ключ общего демо (sid "") там, где нужна непустая строка

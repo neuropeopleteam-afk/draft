@@ -22,6 +22,11 @@
 Время показа и ответа фиксирует сервер (для каждого шага), клиентское время сохраняется рядом —
 из серверного времени считается log T для модели времени детектора.
 
+Экспресс-режим (``mode="express"``, только демо-режим жюри): 5–7 коротких автопроверяемых заданий (без
+open_book_3step и open_answer, рекомендуемое время ≤ 4 мин), без канареек и дотестирования, ≈ 5 минут. Тот же
+банк, тот же адаптивный выбор, та же оценка θ и то же правило решения (P ≥ 0,8) — интервал θ шире, о чём честно
+сказано в результате; сессия помечена «экспресс» для кандидата и работодателя.
+
 Состояние — JSON в test_sessions.result["state"]; CATSession пересобирается из него на каждом запросе
 (детерминированно: ГСЧ выбора зависит от seed сессии и номера позиции). Пакет банка не изменяется.
 """
@@ -138,16 +143,26 @@ class BankEngine:
                 "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer}}
 
     # ------------------------------------------------------------------ протокол
+    def _express_cfg(self, cfg: dict) -> dict:
+        s = self._settings()
+        return {**cfg, "mode": "express", "min_items": s.assessment_express_min_items,
+                "max_items": s.assessment_express_max_items, "max_time_s": s.assessment_express_max_minutes * 60.0,
+                "canary_positions": [], "ext_items": 0, "max_item_time_s": float(s.assessment_express_item_time_s),
+                "max_per_format": {"open_book_3step": 0, "open_answer": 0}}
+
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
-              previous_subpools: list[int] | None = None, previous_families: list[str] | None = None) -> dict:
+              previous_subpools: list[int] | None = None, previous_families: list[str] | None = None,
+              mode: str = "full") -> dict:
         cfg = self._base_cfg()
+        if mode == "express":
+            cfg = self._express_cfg(cfg)
         # Ротация субпулов: первая попытка — по seed сессии, повторная — другой субпул (параллельная форма);
         # субпулы на карантине (утечка) не выдаются. См. exposure.py.
         subpool = choose_subpool(cfg["subpools"], seed, previous_subpools,
                                  parse_quarantine(self._settings().assessment_subpool_quarantine))
         return {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": claimed_grade,
-            "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
+            "mode": mode, "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
             # семейства прошлой попытки не попадают в дотестирование (оно берёт задания и из другого субпула)
             "exclude_ext": sorted(set(previous_families or [])),
             "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
@@ -265,7 +280,7 @@ class BankEngine:
             "injection": any((g or {}).get("error") == "prompt_injection_suspected" for g in i.get("grading") or [])}
             for i in done], pk)
         details = {
-            "bank": self.manifest, "n_families_in_bank": self.n_families,
+            "bank": self.manifest, "n_families_in_bank": self.n_families, "mode": state.get("mode", "full"),
             "stop_reason": state.get("stop_reason") or sess.stop_reason or "finished_early",
             "n_scored": len(scored), "n_canaries": sum(1 for i in done if i["canary"]),
             "time_used_s": round(sum(i.get("time_s", 0) for i in done), 1),
@@ -312,6 +327,7 @@ class BankEngine:
         # сессии, начатые до 06.10 (в cfg нет новых ключей), доигрываются по прежним правилам остановки и выбора
         return CATConfig(min_items=c["min_items"], max_items=c["max_items"], se_target=c["se_target"],
                          max_time_s=c["max_time_s"], cuts=tuple(self.scale.cuts[g] for g in GRADES),
+                         canary_positions=tuple(c.get("canary_positions", (2, 6, 10))),
                          stop_rule=c.get("stop_rule", "se"), classify_z=float(c.get("classify_z", 1.0)),
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
@@ -332,6 +348,7 @@ class BankEngine:
         blocked = parse_quarantine(self._settings().assessment_subpool_quarantine)
         sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
                              state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
+                             max_item_time_s=cfg.get("max_item_time_s"),
                              exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked)
         lookup = sess.items
         for it in state["items"]:
@@ -528,7 +545,7 @@ class BankEngine:
     def _total_est(self, state: dict) -> int:
         c = state["cfg"]
         ext = state.get("ext")
-        n_can = 3  # позиции канареек 2, 6, 10
+        n_can = len(c.get("canary_positions", (2, 6, 10)))  # позиции канареек 2, 6, 10; экспресс — без них
         return c["max_items"] + n_can + (ext["n"] if ext else 0)
 
     def _public(self, state: dict, it: dict) -> ItemPublic:
@@ -570,4 +587,7 @@ class BankEngine:
                   "результат предварительный.")
         if details["preknowledge"]["rescored"]:
             s += " Часть ответов исключена из оценки как аномально быстрые и верные (детектор утечек)."
+        if details.get("mode") == "express":
+            s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без контрольных и дотестирования, "
+                  "поэтому интервал θ шире, чем у полного теста (8–16 заданий); правило решения то же — P ≥ 80 %.")
         return s
