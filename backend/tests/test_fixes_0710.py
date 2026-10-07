@@ -6,6 +6,7 @@ import tempfile
 import uuid
 
 from alembic import command
+from alembic.script import ScriptDirectory
 import pytest
 import sqlalchemy as sa
 from sqlalchemy import select
@@ -69,7 +70,9 @@ def test_skill_map_topics_have_russian_titles():
 def test_fx01_strips_place_from_cup_fact_titles():
     url = f"sqlite:///{Path(tempfile.mkdtemp()) / 'fx01.db'}"
     cfg = alembic_config(url)
-    command.upgrade(cfg, "qr01")
+    # ревизия перед fx01 — из самой миграции: после слияния fx01 встанет в конец цепочки, тест не меняется
+    down = ScriptDirectory.from_config(cfg).get_revision("fx01").down_revision
+    command.upgrade(cfg, down)
     eng = sa.create_engine(url)
     fid, other = uuid.uuid4().hex, uuid.uuid4().hex
     row = {"user_id": uuid.uuid4().hex, "kind": "probe", "key": "cup:x", "value": "{}", "evidence_level": "T1",
@@ -87,7 +90,9 @@ def test_fx01_strips_place_from_cup_fact_titles():
     assert titles[fid] == "Кубок «Платёжный шлюз»"  # место — только в вердикте
     assert titles[other] == "Зонд: 2 место из 5"  # не кубок — не трогаем
     assert {"source", "source_model"} <= cols
-    command.downgrade(cfg, "qr01")
+    command.downgrade(cfg, down)
+    with eng.connect() as c:
+        assert not {"source", "source_model"} & {x["name"] for x in sa.inspect(c).get_columns("expert_panelists")}
     eng.dispose()
 
 
