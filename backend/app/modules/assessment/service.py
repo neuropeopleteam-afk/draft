@@ -16,6 +16,7 @@ from app.core.config import get_settings
 from app.core.db import as_aware, utcnow
 from app.core.enums import EvidenceLevel, FactSource, GradeChangeReason, TestSessionStatus
 from app.core.errors import api_error
+from app.modules.assessment.bank_engine import express_params
 from app.modules.assessment.engine import get_engine
 from app.modules.assessment.models import (GradeHistory, SandboxTestStart, SurveyResponse, TaskFamily, TaskVariant,
                                            TestAnswer, TestSession, TestSessionItem)
@@ -141,11 +142,11 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     else:
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
     # Адаптивный тест банка: до 60 минут (лимит CATConfig) + запас на дотестирование у порога (не меньше 30 минут,
-    # как раньше); экспресс — 20 минут; заглушка — 30 минут
+    # как раньше); экспресс — 20 минут (за Senior — длиннее, см. express_params); заглушка — 30 минут
     if not engine.name.startswith("bank"):
         minutes = 30
     elif mode == "express":
-        minutes = st_.assessment_express_max_minutes
+        minutes = express_params(st_, claimed_grade)["max_minutes"]
     else:
         minutes = st_.assessment_max_minutes + max(30, st_.assessment_extension_minutes + 10)
     ts = TestSession(
@@ -500,9 +501,11 @@ def status(db: Session, user_id: uuid.UUID) -> dict:
         # неподтверждённая попытка: повтор на тот же грейд и выше — через retake_same_grade_days, ниже — сразу
         "retake_same_grade_days": st_.retake_same_grade_days,
         "retake_locks": {g: t.isoformat() for g, t in r_locks.items()},
-        # экспресс-тест (5–7 заданий, ≈ 5 минут, интервал шире) — только в демо-режиме жюри
+        # экспресс-тест (5–7 заданий, ≈ 5 минут, интервал шире; за Senior — 8–12 заданий) — только в демо-режиме жюри;
+        # min_items/max_items — для Junior/Middle (как раньше), by_grade — по каждому грейду
         "express_available": sandbox and get_engine().name.startswith("bank"),
-        "express": {"min_items": st_.assessment_express_min_items, "max_items": st_.assessment_express_max_items},
+        "express": {"min_items": st_.assessment_express_min_items, "max_items": st_.assessment_express_max_items,
+                    "by_grade": {g: express_params(st_, g) for g in ("junior", "middle", "senior")}},
         "active_session_id": str(active.id) if active else None,
         "active_grade": active.claimed_grade_id if active else None,
         "active_mode": (active.result or {}).get("mode", "full") if active else None,
