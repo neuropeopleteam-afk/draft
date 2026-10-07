@@ -37,6 +37,7 @@ function Body({ r }: { r: any }) {
   const base = sens.find((s) => s.id === "base");
   const strategic = sens.find((s) => s.id === "inflated_all_40");
   const jun = r.breakdown?.by_grade?.junior;
+  const jr = r.junior;
   const methods = Object.entries<any>(r.methods ?? {}).filter(([k]) => m[k]);
   return (
     <>
@@ -71,8 +72,10 @@ function Body({ r }: { r: any }) {
         <li>Раздутые резюме: нерелевантные «раздутые» занимают {pct(g.inflated?.platform?.irrelevant_inflated_top10)} мест топ-10 у платформы, {pct(g.inflated?.bm25?.irrelevant_inflated_top10)} у BM25 и {pct(g.inflated?.no_guard?.irrelevant_inflated_top10)}, если засчитывать заявленное как подтверждённое.</li>
         <li>Цена защиты от раздувания: при {pct(r.config?.share_inflated)} «раздутых» засчитывание заявленных навыков дало бы nDCG@10 {sgn(-(pm.no_guard?.["ndcg@10"]?.mean ?? 0))}{strategic ? <> — но если 40 % кандидатов дописывают все навыки направления, оно {strategic.no_guard?.["ndcg@10"] <= strategic.platform?.["ndcg@10"] + 0.01 ? "уже не выигрывает у платформы" : "всё ещё выигрывает у платформы"} ({n2(strategic.no_guard?.["ndcg@10"])} против {n2(strategic.platform?.["ndcg@10"])}, мир {strategic.n_needs} × {strategic.n_candidates}), а у платформы nDCG@10 почти не меняется ({n2(base?.platform?.["ndcg@10"])} → {n2(strategic.platform?.["ndcg@10"])})</> : null}. Заявленное (T0) в скор не входит намеренно — это устойчивость к атаке «дописать в резюме навыки вакансии».</li>
         <li>Вклад бонуса ФСП в nDCG@10: {sgn(pm.no_fsp?.["ndcg@10"]?.mean)} (ДИ {range(pm.no_fsp?.["ndcg@10"])}). Кандидаты без ФСП не тонут: средний перцентиль места подходящих — {n2(g.fsp?.platform?.without_fsp_percentile)} против {n2(g.fsp?.platform?.with_fsp_percentile)} у кандидатов с ФСП (0 — вершина выдачи). Но бонус переставляет подходящих: среди подходящих в топ-10 без ФСП {pct(g.fsp?.platform?.without_fsp_share_of_relevant_top10)} (без бонуса {pct(g.fsp?.no_fsp?.without_fsp_share_of_relevant_top10)}, среди всех подходящих {pct(g.fsp?.without_fsp_share_of_all_relevant)}).</li>
-        {jun && jun.no_test > jun.platform ? <li>Слабое место — потребности уровня Junior: nDCG@10 {n2(jun.platform)} против {n2(jun.no_test)} у самоописания. Тест у порога Junior осторожен: часть подходящих не подтверждает грейд и остаётся без категории (без категории — {intRu(w.no_category)} из {intRu(w.n_candidates)}). Дотестирование у порога в синтетике не моделируется.</li> : null}
+        {jun && jun.no_test > jun.platform ? <li>Слабое место — потребности уровня Junior: nDCG@10 {n2(jun.platform)} против {n2(jun.no_test)} у самоописания. Тест у порога Junior осторожен (подтверждение от P = 0,8): часть подходящих не подтверждает грейд и остаётся без категории (без категории — {intRu(w.no_category)} из {intRu(w.n_candidates)}). Дотестирование у порога в синтетике не моделируется.</li> : null}
       </ul>
+
+      {jr?.columns?.length ? <JuniorBlock jr={jr} /> : null}
 
       <h3 className="mt-8 text-base font-bold text-brand-night">Веса на отложенных данных</h3>
       <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">{ho.method}</p>
@@ -100,7 +103,7 @@ function Body({ r }: { r: any }) {
         <ul className="mt-1 list-disc space-y-1 pl-5 text-brand-ink/80">
           <li>Подходящих на потребность: в среднем {n2(w.relevant_per_need?.mean, 0)}, от {w.relevant_per_need?.min} до {w.relevant_per_need?.max}.</li>
           <li>Самоописание: честных {intRu(w.personas?.honest)}, «раздутых» {intRu(w.personas?.inflated)} (грейд на ступень выше, лишние навыки, повтор ключевых слов), «скромных» {intRu(w.personas?.modest)}; заявленный грейд совпадает с истинным у {pct(w.declared_equals_true_grade)}.</li>
-          <li>Тест: погрешность θ {n2(r.config?.theta_sigma)} — как у нашего адаптивного теста в симуляции на банке; решение по грейду — функцией платформы, при отказе — пересдача ступенью ниже ({intRu(w.retake)}); категория совпала с истинным грейдом у {pct(w.category_equals_true_grade)}; без категории — {intRu(w.no_category)}. Навыки — по ответам на задания с тегами реального банка; тестом проверяемы {pct(w.required_testable_share)} обязательных навыков потребностей.</li>
+          <li>Тест: погрешность θ {n2(r.config?.theta_sigma)} — как у нашего адаптивного теста в симуляции на банке; решение по грейду — правилом банка (подтверждение от P = 0,8, у порога Junior — «Junior (предварительно)»: {intRu(w.provisional)}), при отказе — пересдача ступенью ниже ({intRu(w.retake)}); категория совпала с истинным грейдом у {pct(w.category_equals_true_grade)}; без категории — {intRu(w.no_category)}. Навыки — по ответам на задания с тегами реального банка; тестом проверяемы {pct(w.required_testable_share)} обязательных навыков потребностей.</li>
           <li>ФСП: паспорт у {intRu(w.with_fsp)}, неподтверждённый «значок из анкеты» у {intRu(w.unverified_fsp_badge)}.</li>
           <li>Парсер потребностей на текстах мира: направление {pct(w.parser?.direction_accuracy)}, грейд {pct(w.parser?.grade_accuracy)}, обязательные навыки — точность {pct(w.parser?.required_precision)}, полнота {pct(w.parser?.required_recall)}.</li>
         </ul>
@@ -110,6 +113,43 @@ function Body({ r }: { r: any }) {
         </p>
         <p className="mt-2 text-brand-ink/70">Разрез по направлениям (nDCG@10, платформа / BM25): {Object.entries<any>(r.breakdown?.by_direction ?? {}).map(([d, v]) => `${DIRECTIONS[d] ?? d} ${n2(v.platform)} / ${n2(v.bm25)}`).join("; ")}. По грейдам: {Object.entries<any>(r.breakdown?.by_grade ?? {}).map(([gr, v]) => `${GRADES[gr] ?? gr} ${n2(v.platform)} / ${n2(v.bm25)}`).join("; ")}.</p>
       </details>
+    </>
+  );
+}
+
+/** Junior у порога: три правила решения при одной истине и чувствительность штрафа «предварительно». */
+function JuniorBlock({ jr }: { jr: any }) {
+  const cols: any[] = jr.columns ?? [];
+  const pen: any[] = jr.penalty_sensitivity ?? [];
+  const row = (title: string, fn: (c: any) => ReactNode): ReactNode[] => [title, ...cols.map(fn)];
+  return (
+    <>
+      <h3 className="mt-8 text-base font-bold text-brand-night">Junior у порога: решение банка и «Junior (предварительно)»</h3>
+      <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+        Одна и та же истина (те же кандидаты, навыки, потребности), меняется только правило решения у порога Junior: прежняя заглушка бенчмарка с порогом 0,6; правило банка с порогом 0,8, как в продукте; то же правило плюс статус «Junior (предварительно)» для тех, кого тест не подтвердил, но и не доказал уровень ниже, — они остаются в категории со штрафом {n2(jr.penalty_product)} к скору.
+      </p>
+      <Table head={["", ...cols.map((c) => c.title)]}
+        rows={[
+          row("Без категории", (c) => intRu(c.world?.no_category)),
+          row("Категория Junior", (c) => intRu(c.world?.junior_category)),
+          row("Из них предварительно", (c) => intRu(c.world?.provisional)),
+          row("Ложных предварительных (истинный уровень ниже порога)", (c) => c.world?.provisional ? `${intRu(c.world?.provisional_true_below)} (${pct(c.world?.provisional_true_below_share)})` : "—"),
+          row("Ложные отказы заявившим Junior с истинным уровнем не ниже порога", (c) => `${intRu(c.world?.rejected_true_junior)} из ${intRu(c.world?.true_junior_or_above_declared_junior)} (${pct(c.world?.rejected_true_junior_share)})`),
+          row("nDCG@10, Junior-потребности", (c) => n2(c.junior_needs?.["ndcg@10"])),
+          row("p@5, Junior-потребности", (c) => n2(c.junior_needs?.["p@5"])),
+          row("MRR, Junior-потребности", (c) => n2(c.junior_needs?.mrr)),
+          row("nDCG@10, все потребности", (c) => n2(c.all?.["ndcg@10"])),
+        ]} />
+      <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">{jr.note}</p>
+      {pen.length > 0 && (
+        <>
+          <h4 className="mt-5 text-sm font-bold text-brand-night">Чувствительность штрафа «предварительно» (третий столбец)</h4>
+          <Table head={["Штраф", "nDCG@10 Junior", "p@5 Junior", "nDCG@10 все", "Предварительных в топ-10 / топ-20 Junior-потребностей", "Перцентиль места подходящих предварительных"]}
+            hi={pen.findIndex((p) => p.penalty === jr.penalty_product)}
+            rows={pen.map((p) => [n2(p.penalty), n2(p.junior_needs?.["ndcg@10"]), n2(p.junior_needs?.["p@5"]), n2(p.all?.["ndcg@10"]), `${pct(p.provisional_in_top10_junior_needs)} / ${pct(p.provisional_in_top20_junior_needs)}`, n2(p.relevant_provisional_percentile_junior_needs)])} />
+          <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Перцентиль места: 0 — вершина выдачи, 1 — конец. Предварительные у порога почти не попадают в верх выдачи и без штрафа (компонент теста у них мал), поэтому в мире из {intRu(jr.columns?.[2]?.world?.n_candidates)} кандидатов штраф на топ-10 не влияет; в маленьком пуле (как на демо-стенде) он заметнее. Штраф {n2(jr.penalty_product)} задан до бенчмарка (решение владельца 06.10, вес одного зонда) и на нём не подбирался; выделена строка продукта.</p>
+        </>
+      )}
     </>
   );
 }
