@@ -13,7 +13,8 @@ import base64
 from functools import lru_cache
 import hashlib
 import secrets
-from urllib.parse import urlencode
+import time
+from urllib.parse import urlencode, urlparse
 
 import httpx
 import jwt
@@ -36,10 +37,33 @@ def _internal() -> str:
     return (s.fsp_oidc_internal_base or s.fsp_oidc_issuer or "").rstrip("/")
 
 
+@lru_cache(maxsize=8)
+def _discovery(pub: str, internal: str, bucket: int) -> dict:
+    try:
+        r = httpx.get(f"{internal}/.well-known/openid-configuration", timeout=10)
+        r.raise_for_status()
+        ep = r.json()
+        if ep.get("issuer") != pub:
+            raise OidcError("issuer в OIDC discovery не совпадает с настройкой ФСП ID")
+        for key in ("authorization_endpoint", "token_endpoint", "jwks_uri", "userinfo_endpoint"):
+            value = ep.get(key)
+            if not isinstance(value, str) or urlparse(value).scheme not in ("https", "http"):
+                raise OidcError(f"В OIDC discovery отсутствует корректный {key}")
+        # Только серверные адреса, и только внутри того же issuer. Браузер всегда идёт на публичный.
+        for key in ("token_endpoint", "jwks_uri", "userinfo_endpoint"):
+            if ep[key].startswith(pub + "/"):
+                ep[key] = internal + ep[key][len(pub):]
+        return ep
+    except (httpx.HTTPError, ValueError) as e:
+        raise OidcError(f"OIDC discovery ФСП ID недоступен ({type(e).__name__})") from None
+
+
 def endpoints() -> dict:
     s = get_isettings()
     pub = (s.fsp_oidc_issuer or "").rstrip("/")
     internal = _internal()
+    if s.fsp_oidc_discovery:
+        return dict(_discovery(pub, internal, int(time.monotonic() // 300)))
     return {
         "issuer": pub,
         "authorization_endpoint": f"{pub}/protocol/openid-connect/auth",
@@ -69,6 +93,13 @@ def exchange_code(code: str, verifier: str) -> dict:
     data = {"grant_type": "authorization_code", "code": code, "redirect_uri": redirect_uri(),
             "client_id": s.fsp_oidc_client_id, "code_verifier": verifier}
     auth = (s.fsp_oidc_client_id, s.fsp_oidc_client_secret) if s.fsp_oidc_client_secret else None
+    if s.fsp_oidc_token_auth_method == "client_secret_post":
+        auth = None
+        data["client_secret"] = s.fsp_oidc_client_secret or ""
+    elif s.fsp_oidc_token_auth_method == "none":
+        auth = None
+    elif s.fsp_oidc_token_auth_method != "client_secret_basic":
+        raise OidcError("Неизвестный FSP_OIDC_TOKEN_AUTH_METHOD")
     try:
         r = httpx.post(endpoints()["token_endpoint"], data=data, auth=auth, timeout=10)
     except httpx.HTTPError as e:

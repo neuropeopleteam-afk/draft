@@ -53,6 +53,12 @@ class ProbeIn(SalaryRange):
     time_limit_min: int = Field(30, ge=5, le=240)
 
 
+class EmploymentTerms(BaseModel):
+    format: Literal["employment", "internship", "light_work"] = "employment"
+    reduced_time: bool = False
+    employer_acknowledged: bool = False
+
+
 class InvitationIn(SalaryRange):
     candidate_ref: str
     need_id: uuid.UUID | None = None
@@ -60,6 +66,7 @@ class InvitationIn(SalaryRange):
     position_title: str = Field(min_length=3, max_length=200)
     offer_description: str = Field(min_length=20, max_length=5000)
     contact_method: str = Field(min_length=3, max_length=255, description="Как связаться с работодателем")
+    employment_terms: EmploymentTerms = Field(default_factory=EmploymentTerms)
 
 
 class ReviewIn(BaseModel):
@@ -107,6 +114,7 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
     comp = db.get(Company, i.company_id)
     cand = db.get(CandidateProfile, i.candidate_user_id)
     out = {"id": str(i.id), "position_title": i.position_title, "offer_description": i.offer_description,
+           "employment_terms": i.employment_terms,
            "salary_from": i.salary_from, "salary_to": i.salary_to, "contact_method": i.contact_method,
            "evidence": i.evidence, "status": i.status.value, "decline_reason": i.decline_reason,
            "created_at": i.created_at.isoformat(), "viewed_at": i.viewed_at.isoformat() if i.viewed_at else None,
@@ -192,7 +200,7 @@ def send_invitation(data: InvitationIn, bg: BackgroundTasks, user: User = Depend
     inv = svc.create_invitation(db, user, c, p, position_title=data.position_title,
                                 offer_description=data.offer_description, salary_from=data.salary_from,
                                 salary_to=data.salary_to, contact_method=data.contact_method, need_id=data.need_id,
-                                probe_id=data.probe_id)
+                                probe_id=data.probe_id, employment_terms=data.employment_terms.model_dump())
     cu = _candidate_user(db, p.user_id)
     bg.add_task(notify, cu.email, f"Приглашение от компании {c.name}",
                 [f"Компания {c.name} приглашает вас на позицию «{data.position_title}».",

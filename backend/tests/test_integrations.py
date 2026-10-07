@@ -130,7 +130,7 @@ def fsp(isettings, monkeypatch):
     from app.integrations.fsp_id import oidc
 
     isettings(FSP_OIDC_ISSUER=ISSUER, FSP_OIDC_INTERNAL_BASE="http://keycloak:8080/auth/realms/fsp",
-              FSP_OIDC_CLIENT_SECRET="s3cret", FSP_DEMO_PASSWORD="demo-pass")
+              FSP_OIDC_CLIENT_SECRET="s3cret", FSP_DEMO_PASSWORD="demo-pass", FSP_OIDC_DISCOVERY="false")
     box = {"claims": _claims()}
 
     def exchange(code, verifier):
@@ -207,7 +207,7 @@ def test_fsp_id_disabled_without_issuer(client, isettings):
 def test_id_token_signature_verification(isettings, monkeypatch):
     from app.integrations.fsp_id import oidc
 
-    isettings(FSP_OIDC_ISSUER=ISSUER)
+    isettings(FSP_OIDC_ISSUER=ISSUER, FSP_OIDC_DISCOVERY="false")
     key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
     class K:

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, Level, Loading, Toggle, dt, errText, useApi } from "../../components/ui";
+import { Alert, Empty, Field, Level, Loading, Toggle, dt, errText, num, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { FspIdLinkButton } from "../../integrations/FspId";
 import { CupPassportEvents } from "../../ideas/cup/Candidate";
@@ -25,7 +25,20 @@ export function Fsp() {
       <section className="card space-y-4">
         <div className="flex items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p></div>
         <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром (T2).` : data.note}</p>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl bg-[#F3F2FB] p-4 text-center text-sm" data-testid="fsp-identity-link">
+          <div className="min-w-0"><p className="font-bold text-brand-night">ФСП ID</p><p className="mt-1 break-all text-xs text-brand-ink/70">{data.fsp_id_claimed || "Не указан"}</p></div>
+          <span className="text-brand-plum" aria-label="Связь">↔</span>
+          <div><p className="font-bold text-brand-night">Ваш профиль</p><p className="mt-1 text-xs text-brand-ink/70">{data.identity_linked ? "Вход подтверждён OIDC" : data.linked ? "Демо-паспорт" : "Ожидает связи"}</p></div>
+        </div>
+        {data.registry?.demo && <Alert kind="info">Достижения получены из синтетического API реестра. Это демонстрационные данные, не официальный реестр ФСП.</Alert>}
+        {data.registry_warning && <Alert kind="info">{data.registry_warning}</Alert>}
+        {data.sport_rank && <p className="text-sm">Спортивный разряд: <b>{data.sport_rank}</b></p>}
         <FspIdLinkButton linkedVia={data.link_source} />
+        {data.registry_sync_available && <button className="btn-ghost" data-testid="button-fsp-registry-sync" onClick={async () => {
+          setMsg(null);
+          try { await api("/me/fsp/registry-sync", { body: {} }); await reload(); setMsg({ k: "ok", t: "Достижения обновлены из API реестра." }); }
+          catch (e) { setMsg({ k: "error", t: errText(e) }); }
+        }}>Обновить достижения из реестра{data.link_source === "demo" ? " (мок)" : ""}</button>}
         {data.link_source !== "keycloak" && <>
         <p className="pt-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-ink/65">Или укажите ФСП ID вручную — до подтверждения реестром</p>
         <div className="flex flex-wrap items-end gap-3">
@@ -36,10 +49,11 @@ export function Fsp() {
         {data.fsp_id_claimed && !data.linked && <p className="text-xs text-brand-plum">Указан ФСП ID {data.fsp_id_claimed} — ожидает подтверждения реестром.</p>}
         {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       </section>
+      {data.rating && <section className="card space-y-3"><h2 className="font-bold text-brand-night">Сила паспорта ФСП: {num(data.rating.strength, 3)}</h2><p className="text-sm text-brand-ink/70">{data.rating.policy}</p><p className="text-xs text-brand-ink/65">Учтено соревнований: {num(data.rating.competitions, 0)}. В подборке ФСП — бонус с весом 0,10; грейд он не меняет.</p></section>}
       {data.achievements?.length ? (
         <section className="card">
           <h2 className="font-bold text-brand-night">Достижения</h2>
-          <ul className="mt-3 space-y-2 text-sm">{data.achievements.map((a: any, i: number) => <li key={i} className="flex items-start gap-2"><Level level="T2" />{a.text}</li>)}</ul>
+          <ul className="mt-3 space-y-3 text-sm">{data.achievements.map((a: any, i: number) => <li key={i} className="flex items-start gap-2"><Level level="T2" /><div><p>{a.text}</p>{(a.team || a.evsk_code || a.sport_rank) && <p className="mt-1 text-xs text-brand-ink/65">{[a.team ? `Команда: ${a.team}` : null, a.team_result?.place ? `командное место: ${num(a.team_result.place, 0)}` : null, a.evsk_code ? `ЕВСК: ${a.evsk_code}` : null, a.sport_rank ? `разряд: ${a.sport_rank}` : null].filter(Boolean).join(" · ")}</p>}</div></li>)}</ul>
         </section>
       ) : <Empty title="Достижений нет" text="Это нейтральное состояние: на категорию и рейтинг не влияет отрицательно." />}
       <CupPassportEvents />

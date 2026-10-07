@@ -141,8 +141,13 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     verified = [a for a in b.achievements if a.verified]
     if verified:
         best = min(verified, key=lambda a: a.place or 99)
+        from app.modules.fsp.rating import details
+
+        rating = details(verified)
         reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
-                        "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")})
+                        "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")
+                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}. "
+                        + rating["policy"]})
     else:
         # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
         extra = len(b.achievements)

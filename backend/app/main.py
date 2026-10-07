@@ -38,6 +38,7 @@ from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
 from app.modules.validation.router import router as validation_router
+from app.modules.fsp.registry import router as fsp_registry_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -85,6 +86,7 @@ def create_app() -> FastAPI:
         openapi_url="/api/openapi.json",
     )
     app.add_middleware(JuryScopeMiddleware)  # песочница жюри из токена → видимость кандидатов и ответов
+    app.include_router(fsp_registry_router)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=s.cors_origin_list,

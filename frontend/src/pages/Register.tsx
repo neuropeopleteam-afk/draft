@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthShell, FormError } from "../components/AuthShell";
 import { api, ApiError, type RegisterOut, type Role } from "../lib/api";
+import { FspIdLogin } from "../integrations/FspId";
 
 export default function Register() {
   const [params] = useSearchParams();
@@ -53,6 +54,7 @@ export default function Register() {
           </button>
         ))}
       </div>
+      <div className="mb-6"><FspIdLogin role={role === "employer" ? "employer" : "candidate"} /></div>
       <form onSubmit={submit} className="space-y-4" noValidate>
         <div>
           <label className="label" htmlFor="full_name">{role === "employer" ? "Ваше имя (контактное лицо)" : "Имя и фамилия"}</label>

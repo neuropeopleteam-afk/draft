@@ -27,10 +27,32 @@ from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateProfile
+from app.integrations.settings import get_isettings
 
 DISCIPLINES = {d["id"] for d in FSP_DISCIPLINES}
 LEVELS = {lv.value for lv in FspEventLevel}
 PASSPORT_CLAIMS = ("fsp_id", "fsp_rank", "fsp_disciplines", "fsp_achievements")
+
+
+def normalize_claims(claims: dict) -> dict:
+    """Настраиваемые dotted paths. Стандартные OIDC-поля безопасности не переименовываются."""
+    out = dict(claims)
+    allowed = {*PASSPORT_CLAIMS, "email", "email_verified", "preferred_username"}
+    for target, path in get_isettings().fsp_oidc_claims_map.items():
+        if target not in allowed:
+            raise ValueError(f"Недопустимое поле в FSP_OIDC_CLAIMS_MAP: {target}")
+        value = claims
+        for part in path.split("."):
+            value = value.get(part) if isinstance(value, dict) else None
+        out[target] = value
+    return out
+
+
+def identity_subject(claims: dict) -> str:
+    """Одинаковые sub двух issuer — разные люди (смена стенда безопасна)."""
+    import hashlib
+
+    return "oidc:" + hashlib.sha256(f"{claims['iss']}|{claims['sub']}".encode()).hexdigest()
 
 
 def _as_list(v) -> list:
@@ -65,7 +87,15 @@ def parse_achievements(raw) -> list[dict]:
         out.append({"discipline": disc, "event": str(a["event"])[:255], "level": lvl, "date": d,
                     "place": int(place) if isinstance(place, int | str) and str(place).isdigit() else None,
                     "result": (str(a.get("result") or "")[:100] or None), "team": (str(a.get("team") or "")[:200] or None),
-                    "role": (str(a.get("role") or "")[:100] or None)})
+                    "role": (str(a.get("role") or "")[:100] or None),
+                    "event_id": str(a.get("event_id") or "")[:100] or None,
+                    "result_kind": a.get("result_kind") if a.get("result_kind") in
+                    ("winner", "prize", "finalist", "participant") else None,
+                    "evsk_code": str(a.get("evsk_code") or "")[:64] or None,
+                    "sport_rank": str(a.get("sport_rank") or "")[:64] or None,
+                    "team_result": a.get("team_result") if isinstance(a.get("team_result"), dict) else None,
+                    "verified": a.get("verified") is not False,
+                    "source_id": str(a.get("id") or "")[:100] or None})
     return out
 
 
@@ -80,8 +110,11 @@ def passport_preview(claims: dict) -> dict:
 
 def apply_claims(db: Session, user_id, claims: dict) -> FspPassport:
     """Создаёт или обновляет паспорт по claims ФСП ID; достижения заменяются целиком (источник истины — ФСП ID)."""
-    sub = claims["sub"]
+    sub = identity_subject(claims)
     pp = db.scalar(select(FspPassport).where(FspPassport.user_id == user_id))
+    if pp is not None and claims.get("_registry_warning"):
+        pp.raw = {**(pp.raw or {}), "registry_warning": claims["_registry_warning"]}
+        return pp  # сбой реестра не стирает ранее подтверждённые результаты
     other = db.scalar(select(FspPassport).where(FspPassport.fsp_subject == sub, FspPassport.user_id != user_id))
     if other is not None:
         other.fsp_subject = None
@@ -92,17 +125,24 @@ def apply_claims(db: Session, user_id, claims: dict) -> FspPassport:
     pp.link_source = FspLinkSource.keycloak
     pp.linked_at = pp.linked_at or utcnow()
     pp.synced_at = utcnow()
-    pp.sport_rank = (claims.get("fsp_rank") or None)
+    pp.sport_rank = str(claims.get("fsp_rank") or "")[:64] or None
     prev = passport_preview(claims)
     pp.raw = {"source": "fsp_id_oidc", "fsp_id": claims.get("fsp_id"), "disciplines": prev["disciplines"],
-              "issuer": claims.get("iss"), "evidence_level": "T2", "has_history": prev["has_history"]}
+              "issuer": claims.get("iss"), "oidc_sub": claims["sub"], "evidence_level": "T2",
+              "has_history": prev["has_history"], "registry": claims.get("_registry"),
+              "registry_warning": claims.get("_registry_warning")}
     db.flush()
-    db.execute(delete(FspAchievement).where(FspAchievement.passport_id == pp.id))
+    # Факты T1 кубков работодателей — другой источник; синхронизация ФСП их не удаляет.
+    db.execute(delete(FspAchievement).where(FspAchievement.passport_id == pp.id,
+                                           ~FspAchievement.source_ref.like("cup:%") |
+                                           FspAchievement.source_ref.is_(None)))
     for a in parse_achievements(claims.get("fsp_achievements")):
         db.add(FspAchievement(passport_id=pp.id, discipline=a["discipline"], event_name=a["event"],
                               event_level=FspEventLevel(a["level"]), event_date=a["date"], place=a["place"],
                               result_title=a["result"], team_name=a["team"], role_in_team=a["role"],
-                              verified=True, source_ref=f"fsp-id:{sub}"))
+                              verified=a["verified"], source_ref=f"registry:{a['source_id']}" if a["source_id"]
+                              else f"fsp-id:{sub}", event_id=a["event_id"], result_kind=a["result_kind"],
+                              evsk_code=a["evsk_code"], sport_rank=a["sport_rank"], team_result=a["team_result"]))
     cp = db.get(CandidateProfile, user_id)
     if cp is not None and claims.get("fsp_id"):
         cp.fsp_id_claimed = str(claims["fsp_id"])[:64]

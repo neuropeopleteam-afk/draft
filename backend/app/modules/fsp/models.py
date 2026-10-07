@@ -39,4 +39,9 @@ class FspAchievement(UUIDPk, Base):
     role_in_team: Mapped[str | None] = mapped_column(sa.String(100))
     verified: Mapped[bool] = mapped_column(default=False)  # True — подтверждено реестром (T2)
     source_ref: Mapped[str | None] = mapped_column(sa.String(255))
+    event_id: Mapped[str | None] = mapped_column(sa.String(100))
+    result_kind: Mapped[str | None] = mapped_column(sa.String(16))
+    evsk_code: Mapped[str | None] = mapped_column(sa.String(64))
+    sport_rank: Mapped[str | None] = mapped_column(sa.String(64))
+    team_result: Mapped[dict | None]
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)

@@ -1,5 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 import uuid
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -34,9 +35,14 @@ class CandidateProfileOut(_ORM):
     roles: list = Field(default_factory=list)
     fsp_id_claimed: str | None = None
     jury_mode: bool = False
+    age_group: Literal["18+", "16-17", "14-15"] = "18+"
+    parental_consent: bool = False
+    parental_consent_at: datetime | None = None
 
 
 class CandidateProfileUpdate(BaseModel):
+    age_group: Literal["18+", "16-17", "14-15"] | None = None
+    parental_consent: bool | None = None
     full_name: str | None = Field(None, max_length=200)
     phone: str | None = Field(None, max_length=32)
     telegram: str | None = Field(None, max_length=64)
