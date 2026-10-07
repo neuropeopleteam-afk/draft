@@ -114,7 +114,12 @@ def _event(db: Session, inv: Invitation, to: InvitationStatus, actor: uuid.UUID 
 
 def create_invitation(db: Session, employer: User, company: Company, candidate: CandidateProfile, *,
                       position_title: str, offer_description: str, salary_from: int, salary_to: int,
-                      contact_method: str, need_id: uuid.UUID | None, probe_id: uuid.UUID | None) -> Invitation:
+                      contact_method: str, need_id: uuid.UUID | None, probe_id: uuid.UUID | None,
+                      employment_terms: dict | None = None) -> Invitation:
+    from app.modules.fsp.youth import check_offer
+
+    terms = employment_terms or {"format": "employment", "reduced_time": False, "employer_acknowledged": False}
+    check_offer(candidate, terms)
     check_salary(salary_from, salary_to)
     until = cooldown_until(db, company.id, candidate.user_id)
     if until:
@@ -126,7 +131,8 @@ def create_invitation(db: Session, employer: User, company: Company, candidate: 
     inv = Invitation(company_id=company.id, employer_user_id=employer.id, candidate_user_id=candidate.user_id,
                      need_id=need.id if need else None, probe_id=probe_id, position_title=position_title,
                      offer_description=offer_description, salary_from=salary_from, salary_to=salary_to,
-                     contact_method=contact_method, evidence=build_evidence(db, candidate.user_id, company.id, need),
+                     contact_method=contact_method, employment_terms=terms,
+                     evidence=build_evidence(db, candidate.user_id, company.id, need),
                      status=InvitationStatus.sent, expires_at=utcnow() + timedelta(days=INVITATION_COOLDOWN_DAYS))
     db.add(inv)
     db.flush()
@@ -152,6 +158,9 @@ def respond(db: Session, inv: Invitation, actor: uuid.UUID, accept: bool, reason
         _event(db, inv, InvitationStatus.viewed, actor)
     inv.responded_at = now
     if accept:
+        from app.modules.fsp.youth import check_offer
+
+        check_offer(db.get(CandidateProfile, inv.candidate_user_id), inv.employment_terms or {})
         _event(db, inv, InvitationStatus.accepted, actor)
         inv.contacts_revealed_at = now
     else:

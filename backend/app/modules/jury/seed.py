@@ -197,7 +197,8 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
                  soft_skills=["communication", "teamwork"], experience_years=3.5)
     if with_fsp:
         pp = FspPassport(user_id=u.id, link_source=FspLinkSource.demo, synced_at=utcnow(), sport_rank="КМС",
-                         raw={"demo": True, "jury": True, "note": "демо-реестр хакатона"})
+                         raw={"demo": True, "jury": True, "fsp_id": "FSP-770012", "note": "демо-реестр хакатона"})
+        p.fsp_id_claimed = "FSP-770012"
         db.add(pp)
         db.flush()
         db.add(FspAchievement(passport_id=pp.id, discipline="product", event_level=FspEventLevel.national,

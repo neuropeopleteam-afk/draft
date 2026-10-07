@@ -62,6 +62,7 @@ class Invitation(UUIDPk, Timestamps, Base):
     salary_from: Mapped[int]
     salary_to: Mapped[int]
     contact_method: Mapped[str] = mapped_column(sa.String(255))  # способ связи со стороны работодателя
+    employment_terms: Mapped[dict | None]
     # Подтверждённые факты (T1/T2), на которые опирается приглашение — «приглашение-доказательство».
     evidence: Mapped[list] = mapped_column(default=list)
     status: Mapped[InvitationStatus] = mapped_column(

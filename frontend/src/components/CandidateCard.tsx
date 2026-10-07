@@ -51,8 +51,15 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
             ) : <p className="mt-1 text-brand-ink/65">истории ФСП нет — нейтрально</p>}
           {fsp.unverified_count > 0 && <p className="mt-1 text-xs text-brand-ink/65">Заявлено без подтверждения реестром: {fsp.unverified_count} — не учитывается</p>}
           {fsp.source === "demo" && <p className="mt-1 text-xs text-brand-lavender">демо-реестр</p>}
+          {fsp.rating && !fsp.hidden && fsp.rating.competitions > 0 && <details className="mt-2 text-xs text-brand-ink/70">
+            <summary className="cursor-pointer font-semibold text-brand-plum">Как считается ФСП: {num(fsp.rating.strength, 3)} · соревнований {num(fsp.rating.competitions, 0)}</summary>
+            <p className="mt-2 leading-relaxed">{fsp.rating.policy}</p>
+          </details>}
         </div>
       </div>
+      {c.employment_safety?.minor && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+        <b>Особые условия оффера · {c.employment_safety.age_group === "16-17" ? "16–17 лет" : "14–15 лет"}.</b> {c.employment_safety.warning} {c.employment_safety.parental_consent ? "Отметка согласия есть." : "Отметки согласия пока нет."}
+      </p>}
 
       {(c.stack_declared?.length > 0 || c.roles?.length > 0) && (
         <div className="mt-3 text-sm">

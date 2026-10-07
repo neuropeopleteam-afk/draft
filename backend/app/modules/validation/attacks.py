@@ -167,6 +167,8 @@ def _demographics(db: Session, req: dict, text: str, pool: list[Bundle], cats: d
         age = rnd.randint(19, 64)
         new = NAMES[sex][i % len(NAMES[sex])]
         p.full_name = new
+        p.age_group = ("18+", "16-17", "14-15")[i % 3]
+        p.parental_consent = bool(i % 2)
         gender = "мужчина" if sex == "m" else "женщина"
         family = rnd.choice(["двое детей", "без детей", "в декрете до прошлого года", "женат", "не замужем"])
         p.headline = f"{gender}, {age} лет"
