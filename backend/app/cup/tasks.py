@@ -20,21 +20,28 @@ SEED_MIN, SEED_MAX = 10_000_000, 2**31 - 1
 MAX_TEXT = 4000
 
 
-def available_families(direction: str, grade: str) -> dict[str, list[str]]:
-    """Семейства банка для кубка: блок направления и общий блок, подходящие грейду (иначе — любые)."""
+def available_families(direction: str, grade: str, stack: list[str] | None = None) -> dict[str, list[str]]:
+    """Семейства банка для кубка: блок направления и общий блок, подходящие грейду (иначе — любые).
+
+    Технологические семейства (Go, Java, Django, Kafka, Docker) — только если тег есть в ``stack``: кубок открыт всей
+    категории, и без стека задания должны быть посильны любому участнику (фильтр по стеку такой же, как в тесте)."""
+    from app.modules.assessment.skill_map import allowed_for_stack
+
     specs = load_specs()
     out: dict[str, list[str]] = {}
     for block in (direction, "common"):
-        pool = [s for s in specs.values() if s.direction == block and s.format in AUTO_FORMATS and not s.canary]
+        pool = [s for s in specs.values() if s.direction == block and s.format in AUTO_FORMATS and not s.canary
+                and allowed_for_stack(s.direction, s.skills, stack)]
         fit = [s.family_id for s in pool if grade in s.target_grades]
         out[block] = sorted(fit if len(fit) >= 2 else [s.family_id for s in pool])
     return out
 
 
-def pick_families(direction: str, grade: str, n: int, seed: int | None = None) -> list[str]:
+def pick_families(direction: str, grade: str, n: int, seed: int | None = None,
+                  stack: list[str] | None = None) -> list[str]:
     """n семейств: примерно 2/3 из направления, остальное — общий блок; разные форматы по возможности."""
     rnd = random.Random(seed if seed is not None else secrets.randbits(32))
-    av = available_families(direction, grade)
+    av = available_families(direction, grade, stack)
     n_dir = min(len(av[direction]), max(1, round(n * 2 / 3)))
     chosen = rnd.sample(av[direction], n_dir)
     rest = [f for f in av["common"] if f not in chosen]

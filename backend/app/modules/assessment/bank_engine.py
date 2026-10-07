@@ -49,7 +49,7 @@ from app.modules.assessment import integrity
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
 from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
 from app.modules.assessment.grader import grade_open
-from app.modules.assessment.skill_map import to_stack_tags
+from app.modules.assessment.skill_map import stack_gate, to_stack_tags
 
 log = logging.getLogger("assessment")
 
@@ -71,6 +71,20 @@ def bank_manifest() -> dict:
 @lru_cache(maxsize=4)
 def _pool(n_subpools: int) -> tuple[PoolItem, ...]:
     return tuple(pool_from_specs(load_specs().values(), n_subpools=n_subpools))
+
+
+@lru_cache(maxsize=1)
+def _stack_gates() -> dict[str, frozenset[str]]:
+    """Семейство → стек-теги, без которых оно кандидату не выдаётся (только семейства с непустым условием)."""
+    out = {fid: stack_gate(s.direction, s.skills) for fid, s in load_specs().items()}
+    return {fid: g for fid, g in out.items() if g}
+
+
+def stack_excluded(stack: list[str] | None) -> set[str]:
+    """Семейства, которые не выдаются кандидату с заявленным стеком ``stack`` (Go, Java, Django, Kafka, Docker —
+    только тем, у кого тег есть в стеке). Стек выбирает вопросы, в ранжировании не участвует."""
+    have = set(stack or ())
+    return {fid for fid, g in _stack_gates().items() if not g <= have}
 
 
 def _pool_snapshot(pi: PoolItem) -> dict:
@@ -330,9 +344,12 @@ class BankEngine:
         expo = exposure_control(state["direction"]) if cfg.get("exposure", "none") == "sympson_hetter" else None
         # карантин читается на каждом запросе: субпул, выведенный из ротации посреди сессии, не попадёт и в дотестирование
         blocked = parse_quarantine(self._settings().assessment_subpool_quarantine)
+        # фильтр по стеку: семейства Go, Java, Django, Kafka, Docker — только кандидатам с этим тегом в стеке опроса;
+        # уже выданные задания остаются в сессии (они есть в sess.items и записываются ниже)
         sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
                              state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
-                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked)
+                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked,
+                             exclude=stack_excluded(state.get("stack")))
         lookup = sess.items
         for it in state["items"]:
             if it["done"] and it["family_id"] in lookup:
