@@ -109,7 +109,8 @@ def _event(db: Session, inv: Invitation, to: InvitationStatus, actor: uuid.UUID 
 
 def create_invitation(db: Session, employer: User, company: Company, candidate: CandidateProfile, *,
                       position_title: str, offer_description: str, salary_from: int, salary_to: int,
-                      contact_method: str, need_id: uuid.UUID | None, probe_id: uuid.UUID | None) -> Invitation:
+                      contact_method: str, need_id: uuid.UUID | None, probe_id: uuid.UUID | None,
+                      salary_basis: str = "gross") -> Invitation:
     check_salary(salary_from, salary_to)
     until = cooldown_until(db, company.id, candidate.user_id)
     if until:
@@ -121,7 +122,7 @@ def create_invitation(db: Session, employer: User, company: Company, candidate: 
     inv = Invitation(company_id=company.id, employer_user_id=employer.id, candidate_user_id=candidate.user_id,
                      need_id=need.id if need else None, probe_id=probe_id, position_title=position_title,
                      offer_description=offer_description, salary_from=salary_from, salary_to=salary_to,
-                     contact_method=contact_method, evidence=build_evidence(db, candidate.user_id, company.id, need),
+                     salary_basis=salary_basis, contact_method=contact_method, evidence=build_evidence(db, candidate.user_id, company.id, need),
                      status=InvitationStatus.sent, expires_at=utcnow() + timedelta(days=INVITATION_COOLDOWN_DAYS))
     db.add(inv)
     db.flush()
@@ -146,6 +147,9 @@ def respond(db: Session, inv: Invitation, actor: uuid.UUID, accept: bool, reason
         inv.viewed_at = now
         _event(db, inv, InvitationStatus.viewed, actor)
     inv.responded_at = now
+    from app.modules.contact.service import close_pending_counter  # встречное закрывается ответом кандидата
+
+    close_pending_counter(db, inv, actor)
     if accept:
         _event(db, inv, InvitationStatus.accepted, actor)
         inv.contacts_revealed_at = now
@@ -196,6 +200,9 @@ def complain(db: Session, inv: Invitation, actor: uuid.UUID, reason: str, commen
 def withdraw(db: Session, inv: Invitation, actor: uuid.UUID) -> Invitation:
     if inv.status not in (InvitationStatus.sent, InvitationStatus.viewed):
         raise api_error(409, "invitation_closed", "Отозвать можно только неотвеченное приглашение")
+    from app.modules.contact.service import close_pending_counter
+
+    close_pending_counter(db, inv, actor)
     _event(db, inv, InvitationStatus.withdrawn, actor)
     db.commit()
     return inv
@@ -204,7 +211,8 @@ def withdraw(db: Session, inv: Invitation, actor: uuid.UUID) -> Invitation:
 def events_of(db: Session, inv: Invitation) -> list[dict]:
     rows = db.scalars(select(InvitationEvent).where(InvitationEvent.invitation_id == inv.id)
                       .order_by(InvitationEvent.created_at)).all()
-    return [{"status": e.to_status.value, "at": e.created_at.isoformat(), "note": e.note,
+    # kind — событие без смены статуса (встречное предложение, доступ к контактам): показывается как статус истории
+    return [{"status": e.kind or e.to_status.value, "at": e.created_at.isoformat(), "note": e.note,
              "by": "candidate" if e.actor_user_id == inv.candidate_user_id else "employer"} for e in rows]
 
 
@@ -221,7 +229,7 @@ def probe_event(p: Probe, status: ProbeStatus, by: str, note: str | None = None)
 
 def create_probe(db: Session, employer: User, company: Company, candidate: CandidateProfile, *, title: str,
                  task_text: str, answer_mode: str, salary_from: int, salary_to: int, time_limit_min: int,
-                 need_id: uuid.UUID | None) -> Probe:
+                 need_id: uuid.UUID | None, salary_basis: str = "gross") -> Probe:
     check_salary(salary_from, salary_to)
     active = db.scalar(select(Probe).where(
         Probe.company_id == company.id, Probe.candidate_user_id == candidate.user_id,
@@ -231,7 +239,8 @@ def create_probe(db: Session, employer: User, company: Company, candidate: Candi
     need = db.get(EmployerNeed, need_id) if need_id else None
     p = Probe(company_id=company.id, employer_user_id=employer.id, candidate_user_id=candidate.user_id,
               need_id=need.id if need and need.company_id == company.id else None, title=title, task_text=task_text,
-              answer_mode=answer_mode, salary_from=salary_from, salary_to=salary_to, time_limit_s=time_limit_min * 60,
+              answer_mode=answer_mode, salary_from=salary_from, salary_to=salary_to, salary_basis=salary_basis,
+              time_limit_s=time_limit_min * 60,
               deadline_at=utcnow() + timedelta(days=7), events=[])
     probe_event(p, ProbeStatus.sent, "employer")
     db.add(p)
@@ -275,7 +284,10 @@ def review_probe(db: Session, p: Probe, verdict: str, comment: str | None) -> Pr
     return p
 
 
-def below_minimum(profile: CandidateProfile, salary_to: int) -> bool:
-    """Видно только кандидату: верх вилки ниже его скрытого минимума."""
-    return bool(profile.salary_min_hidden and salary_to < profile.salary_min_hidden)
+def below_minimum(profile: CandidateProfile, salary_to: int, salary_basis: str | None = "gross") -> bool:
+    """Видно только кандидату: верх вилки ниже его скрытого минимума. Минимум — на руки, поэтому вилка до вычета
+    НДФЛ сравнивается после пересчёта (app.modules.contact.salary)."""
+    from app.modules.contact.salary import to_net
+
+    return bool(profile.salary_min_hidden and to_net(salary_to, salary_basis) < profile.salary_min_hidden)
 
