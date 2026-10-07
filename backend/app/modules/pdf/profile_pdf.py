@@ -85,6 +85,16 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
     legend = ("Уровни доказанности: <b>T1</b> — подтверждено тестом или зондом на платформе; <b>T2</b> — подтверждено "
               "реестром ФСП; <b>T0</b> — указано самим кандидатом, на категорию и рейтинг не влияет.")
     el.append(Paragraph(legend, st["small"]))
+    specializations = card.get("specializations") or []
+    if len(specializations) > 1:
+        el.append(Paragraph("Основная и дополнительная специализации", st["h2"]))
+        for s in specializations:
+            proof = "подтверждено отдельным тестом · T1" if s.get("confirmed_by") == "test" else "ожидает подтверждения"
+            metrics = ((f"; θ = {s['theta']:+.2f} ± {s['se']:.2f}").replace(".", ",").replace("-", "−")
+                       if s.get("theta") is not None and s.get("se") is not None else "")
+            el.append(Paragraph(
+                f"<b>{_esc(s.get('category_title') or s['direction_title'])}</b> — "
+                f"{'основная' if s['is_primary'] else 'дополнительная'}; {proof}{metrics}", st["p"]))
 
     if contacts:
         el.append(Paragraph("Контакты", st["h2"]))

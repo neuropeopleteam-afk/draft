@@ -321,17 +321,21 @@ def categories(user: User = Depends(employer), db: Session = Depends(get_db)) ->
 
 @router.get("/candidates/{ref}", summary="Карточка кандидата: факты с уровнями, история контактов, контакты после принятия",
             responses={**AUTH, 404: err("Кандидат не найден или скрыл профиль")})
-def candidate_detail(ref: str, need_id: uuid.UUID | None = None, user: User = Depends(employer),
+def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
+                     direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+                     user: User = Depends(employer),
                      db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
     p = profile_by_ref(db, ref)
-    b = load_bundles(db, [p.user_id])[p.user_id]
+    n = _own_need(db, c, need_id) if need_id else None
+    selected_direction = (n.requirements or {}).get("direction") if n else direction
+    b = load_bundles(db, [p.user_id], direction=selected_direction)[p.user_id]
     cats = {x.id: x for x in db.scalars(select(Category)).all()}
-    peers = ranking.visible_pool(db, category_ids=[p.current_category_id])
-    rank = 1 + sum(1 for x in peers if (x.rating_score or 0) > (p.rating_score or 0))
+    peers = ranking.visible_pool(db, category_ids=[b.category_id]) if b.category_id else []
+    peer_bundles = load_bundles(db, [x.user_id for x in peers], category_ids=[b.category_id])
+    rank = 1 + sum(1 for x in peer_bundles.values() if (x.rating or 0) > (b.rating or 0))
     out = card(b, cats, rank=rank, rank_total=len(peers))
     if need_id:
-        n = _own_need(db, c, need_id)
         s, comps, reasons = ranking.score_candidate(b, n.requirements)
         out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons}
     until = cooldown_until(db, c.id, p.user_id)

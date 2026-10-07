@@ -19,6 +19,8 @@ candidate = require_role(UserRole.candidate)
 
 
 class StartIn(BaseModel):
+    direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = Field(
+        None, description="Направление опроса; без параметра — основное")
     claimed_grade: Literal["junior", "middle", "senior"] = Field(description="Предполагаемый грейд, выбранный кандидатом")
     integrity_ack: bool = Field(False, description="Кандидат прочитал, что отслеживается во время теста (потеря фокуса, "
                                                    "вставка текста, скорость, канарейки) и что сигналы только снижают "
@@ -97,8 +99,9 @@ def _session_out(db, ts) -> SessionOut:
 
 @router.get("/status", summary="Категория и грейд: статус, история опроса и тестов, правило 90 дней",
             responses=AUTH)
-def get_status(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
-    return service.status(db, user.id)
+def get_status(direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+               user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    return service.status(db, user.id, direction)
 
 
 @router.post(
@@ -113,11 +116,11 @@ def get_status(user: User = Depends(candidate), db: Session = Depends(get_db)) -
                422: err("Неизвестный грейд"), 429: err("sandbox_restarts_exhausted — лимит перезапусков в демо-режиме")},
 )
 def start(data: StartIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> SessionOut:
-    survey = service.latest_survey(db, user.id)
+    survey = service.latest_survey(db, user.id, data.direction)
     if survey is not None and survey.claimed_grade_id != data.claimed_grade:
         survey.claimed_grade_id = data.claimed_grade
     return _session_out(db, service.start_session(db, user.id, data.claimed_grade, integrity_ack=data.integrity_ack,
-                                                  enforce_sandbox_quota=True))
+                                                  enforce_sandbox_quota=True, direction=data.direction))
 
 
 @router.get("/sessions/{session_id}", response_model=SessionOut, summary="Сессия теста и следующее задание",
@@ -148,7 +151,7 @@ def finish(session_id: uuid.UUID, user: User = Depends(candidate), db: Session =
 @router.get("/feedback", summary="Обратная связь после теста: карта навыков, спрос работодателей, маршрут роста",
             description="Карта навыков по темам банка (без заданий и ключей), разрыв с требованиями активных потребностей "
                         "и вакансий в категории кандидата, маршрут роста и рекомендованные дисциплины ФСП. По умолчанию — "
-                        "последний завершённый тест; session_id — конкретный.",
+                        "последний завершённый тест основного направления; session_id — конкретный тест любого направления.",
             responses={**AUTH, 404: err("Сессия не найдена"), 409: err("Тест ещё не завершён")})
 def get_feedback(session_id: uuid.UUID | None = None, user: User = Depends(candidate),
                  db: Session = Depends(get_db)) -> dict:

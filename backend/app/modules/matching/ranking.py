@@ -11,7 +11,7 @@ score = 0,45·тест + 0,35·покрытие обязательного ст�
 """
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
 from app.modules.auth.models import User
@@ -28,7 +28,7 @@ from app.modules.profiles.facts import (
     test_component,
 )
 from app.modules.jury import scope as jury_scope
-from app.modules.profiles.models import CandidateProfile
+from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
 ALGORITHM_VERSION = "match-v1"
 WEIGHTS = {"test": 0.45, "stack_required": 0.35, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05}
@@ -38,22 +38,32 @@ LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "по�
 
 def visible_pool(db: Session, direction: str | None = None, grades: list[str] | None = None,
                  category_ids: list[str] | None = None) -> list[CandidateProfile]:
-    q = (select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
-         .where(CandidateProfile.visible_to_employers.is_(True), CandidateProfile.current_category_id.is_not(None),
-                User.is_active.is_(True), User.is_email_verified.is_(True), jury_scope.pool_clause(User.email)))
+    legacy = [CandidateProfile.current_category_id.is_not(None)]
+    special = [CandidateSpecialization.user_id == CandidateProfile.user_id,
+               CandidateSpecialization.category_id.is_not(None),
+               CandidateSpecialization.status.in_(["confirmed", "provisional"])]
     if direction:
-        q = q.where(CandidateProfile.current_direction_id == direction)
+        legacy.append(CandidateProfile.current_direction_id == direction)
+        special.append(CandidateSpecialization.direction_id == direction)
     if grades:
-        q = q.where(CandidateProfile.current_grade_id.in_(grades))
+        legacy.append(CandidateProfile.current_grade_id.in_(grades))
+        special.append(CandidateSpecialization.grade_id.in_(grades))
     if category_ids:
-        q = q.where(CandidateProfile.current_category_id.in_(category_ids))
+        legacy.append(CandidateProfile.current_category_id.in_(category_ids))
+        special.append(CandidateSpecialization.category_id.in_(category_ids))
+    q = (select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
+         .where(CandidateProfile.visible_to_employers.is_(True),
+                or_(and_(*legacy), select(CandidateSpecialization.user_id).where(*special).exists()),
+                User.is_active.is_(True), User.is_email_verified.is_(True), jury_scope.pool_clause(User.email)))
     return list(db.scalars(q).all())
 
 
 def category_counts(db: Session) -> dict[str, int]:
     out: dict[str, int] = {}
-    for p in visible_pool(db):
-        out[p.current_category_id] = out.get(p.current_category_id, 0) + 1
+    for b in load_bundles(db, [p.user_id for p in visible_pool(db)]).values():
+        for r in b.specializations.values():
+            if r.category_id and r.status in ("confirmed", "provisional"):
+                out[r.category_id] = out.get(r.category_id, 0) + 1
     return out
 
 
@@ -91,8 +101,8 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     p = b.profile
     reasons: list[dict] = []
     t = b.test.value if b.test else {}
-    test = test_component(t.get("theta"), t.get("se"), req.get("grade") or p.current_grade_id)
-    cat_title = category_title(p.current_category_id)
+    test = test_component(t.get("theta"), t.get("se"), req.get("grade") or b.grade)
+    cat_title = category_title(b.category_id)
     if b.test and t.get("mini"):  # экспресс-категория по мини-тесту живой демонстрации (app.jury_live)
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "partial",
@@ -109,8 +119,8 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     else:
         reasons.append({"requirement": "Специализация и грейд", "level": "none", "status": "missing",
                         "text": "Нет результата теста"})
-    if req.get("grade") and p.current_grade_id and req["grade"] != p.current_grade_id:
-        rel = "выше" if GRADE_LEVEL[p.current_grade_id] > GRADE_LEVEL[req["grade"]] else "ниже"
+    if req.get("grade") and b.grade and req["grade"] != b.grade:
+        rel = "выше" if GRADE_LEVEL[b.grade] > GRADE_LEVEL[req["grade"]] else "ниже"
         reasons[-1]["text"] += f" — грейд на ступень {rel} запрошенного"
         reasons[-1]["status"] = "partial"
 
@@ -207,7 +217,8 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> d
     recs = recommended_categories(req, counts, cats)
     cat_ids = filters.get("categories") or [r["id"] for r in recs if r["relation"] in ("exact", "direction", "all")]
     pool = visible_pool(db, category_ids=cat_ids)
-    bundles = list(load_bundles(db, [p.user_id for p in pool]).values())
+    bundles = list(load_bundles(db, [p.user_id for p in pool], direction=req.get("direction"),
+                                category_ids=cat_ids).values())
     bundles = apply_filters(bundles, filters)
     scored = []
     for b in bundles:
@@ -215,11 +226,11 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> d
         if filters.get("min_score") and s < float(filters["min_score"]):
             continue
         scored.append((s, b, comps, reasons))
-    scored.sort(key=lambda x: (-x[0], -(x[1].profile.rating_score or 0), x[1].profile.public_ref or ""))
+    scored.sort(key=lambda x: (-x[0], -(x[1].rating or 0), x[1].profile.public_ref or ""))
     results = []
     for rank, (s, b, comps, reasons) in enumerate(scored[:limit], start=1):
         results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
-                        "reasons": reasons, "category_id": b.profile.current_category_id,
+                        "reasons": reasons, "category_id": b.category_id,
                         "card": card(b, cats)})
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": ALGORITHM_VERSION,
             "weights": WEIGHTS}
@@ -230,19 +241,22 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     pool = visible_pool(db, direction=direction, grades=[grade] if grade else None,
                         category_ids=[category] if category else None)
-    bundles = list(load_bundles(db, [p.user_id for p in pool]).values())
+    wanted = [category] if category else [c.id for c in cats.values() if c.grade_id == grade] if grade else None
+    bundles = list(load_bundles(db, [p.user_id for p in pool], direction=direction, category_ids=wanted).values())
     f = {"fsp_only": fsp_only}
     if stack:
         f["stack_t1" if stack_level == "t1" else "stack_any"] = stack
     bundles = apply_filters(bundles, f)
-    bundles.sort(key=lambda b: (-(b.profile.rating_score or 0), b.profile.public_ref or ""))
+    bundles.sort(key=lambda b: (-(b.rating or 0), b.profile.public_ref or ""))
     # Место в категории — по рейтингу среди видимых
     by_cat: dict[str, list[float]] = {}
-    for p in visible_pool(db):
-        by_cat.setdefault(p.current_category_id, []).append(p.rating_score or 0)
+    for b in load_bundles(db, [p.user_id for p in visible_pool(db)]).values():
+        for r in b.specializations.values():
+            if r.category_id:
+                by_cat.setdefault(r.category_id, []).append(r.rating_score or 0)
     items = []
     for b in bundles[offset: offset + limit]:
-        peers = by_cat.get(b.profile.current_category_id, [])
-        rank = 1 + sum(1 for r in peers if r > (b.profile.rating_score or 0))
+        peers = by_cat.get(b.category_id, [])
+        rank = 1 + sum(1 for r in peers if r > (b.rating or 0))
         items.append(card(b, cats, rank=rank, rank_total=len(peers)))
     return {"total": len(bundles), "items": items}

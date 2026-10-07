@@ -9,7 +9,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends, File, UploadFile
 from fastapi.responses import Response
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -27,6 +27,8 @@ from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTIONS, STACK
 from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, card, load_bundles, refresh_rating, set_t0_facts
 from app.modules.profiles.models import CandidateProfile, CandidateResume
+from app.modules.profiles.models import CandidateSpecialization
+from app.modules.profiles.specializations import ensure_specialization
 
 router = APIRouter(prefix="/api/me", tags=["candidate"])
 # Резюме: попытки (в т. ч. неудачные) — не больше 10 в час на пользователя; одновременно — один разбор на воркер
@@ -107,6 +109,8 @@ class StackItem(BaseModel):
 
 class OnboardingIn(BaseModel):
     direction: Literal["backend", "frontend", "data_ml", "qa", "security"]
+    additional_direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None
+    additional_stack: list[StackItem] = Field(default_factory=list, max_length=40)
     stack: list[StackItem] = Field(default_factory=list, max_length=40)
     experience_years: float = Field(ge=0, le=50)
     roles: list[str] = Field(default_factory=list, max_length=10)
@@ -119,7 +123,13 @@ class OnboardingIn(BaseModel):
     consent_publication: bool = Field(description="Согласие на показ обезличенного профиля работодателям")
     fsp_id: str | None = Field(None, max_length=64, description="ФСП ID — заглушка до подключения ФСП ID (Keycloak)")
 
-    @field_validator("stack")
+    @model_validator(mode="after")
+    def _distinct_directions(self):
+        if self.additional_direction == self.direction:
+            raise ValueError("Основное и дополнительное направления должны различаться")
+        return self
+
+    @field_validator("stack", "additional_stack")
     @classmethod
     def _known_tags(cls, v: list[StackItem]) -> list[StackItem]:
         bad = [s.tag for s in v if s.tag not in STACK]
@@ -150,8 +160,18 @@ def _grade_hint(years: float) -> str:
 @router.get("/onboarding", summary="Опрос: текущие ответы и справочники", responses=AUTH)
 def get_onboarding(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     p = db.get(CandidateProfile, user.id)
-    survey = db.scalar(select(SurveyResponse).where(SurveyResponse.user_id == user.id)
+    primary = db.scalar(select(CandidateSpecialization).where(
+        CandidateSpecialization.user_id == user.id, CandidateSpecialization.is_primary.is_(True)))
+    secondary = db.scalar(select(CandidateSpecialization).where(
+        CandidateSpecialization.user_id == user.id, CandidateSpecialization.is_primary.is_(False)))
+    q = select(SurveyResponse).where(SurveyResponse.user_id == user.id)
+    if primary:
+        q = q.where(SurveyResponse.direction_id == primary.direction_id)
+    survey = db.scalar(q
                        .order_by(SurveyResponse.created_at.desc()).limit(1))
+    extra = db.scalar(select(SurveyResponse).where(
+        SurveyResponse.user_id == user.id, SurveyResponse.direction_id == secondary.direction_id)
+        .order_by(SurveyResponse.created_at.desc()).limit(1)) if secondary else None
     stack = []
     if survey:
         stack = [{"tag": s.stack_tag_id, "level": s.self_level} for s in
@@ -160,6 +180,9 @@ def get_onboarding(user: User = Depends(candidate), db: Session = Depends(get_db
         "completed": p.onboarding_completed_at is not None,
         "answers": {
             "direction": survey.direction_id if survey else None,
+            "additional_direction": secondary.direction_id if secondary else None,
+            "additional_stack": [{"tag": s.stack_tag_id, "level": s.self_level} for s in db.scalars(
+                select(SurveyStackTag).where(SurveyStackTag.survey_id == extra.id))] if extra else [],
             "stack": stack,
             "experience_years": float(p.experience_years) if p.experience_years is not None else None,
             "roles": p.roles or [], "work_format": p.work_format.value, "city": p.city, "relocation": p.relocation,
@@ -181,6 +204,9 @@ def get_onboarding(user: User = Depends(candidate), db: Session = Depends(get_db
             responses={**AUTH, 422: err("Ошибка валидации: неизвестные стек-теги или роли")})
 def save_onboarding(data: OnboardingIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     p = db.get(CandidateProfile, user.id)
+    ensure_specialization(db, p, data.direction)
+    if data.additional_direction:
+        ensure_specialization(db, p, data.additional_direction)
     survey = SurveyResponse(
         user_id=user.id, direction_id=data.direction, claimed_grade_id=_grade_hint(data.experience_years),
         experience_years=data.experience_years,
@@ -191,6 +217,14 @@ def save_onboarding(data: OnboardingIn, user: User = Depends(candidate), db: Ses
     db.flush()
     for s in data.stack:
         db.add(SurveyStackTag(survey_id=survey.id, stack_tag_id=s.tag, self_level=s.level))
+    if data.additional_direction:
+        extra = SurveyResponse(user_id=user.id, direction_id=data.additional_direction,
+                               claimed_grade_id=_grade_hint(data.experience_years), experience_years=data.experience_years,
+                               answers={"stack": {s.tag: s.level for s in data.additional_stack}, "roles": data.roles})
+        db.add(extra)
+        db.flush()
+        for s in data.additional_stack:
+            db.add(SurveyStackTag(survey_id=extra.id, stack_tag_id=s.tag, self_level=s.level))
     p.experience_years = data.experience_years
     p.roles = data.roles
     p.work_format = data.work_format
@@ -200,7 +234,8 @@ def save_onboarding(data: OnboardingIn, user: User = Depends(candidate), db: Ses
     p.privacy = {k: bool(v) for k, v in {**DEFAULT_PRIVACY, **data.privacy}.items() if k in DEFAULT_PRIVACY}
     p.fsp_id_claimed = data.fsp_id
     p.onboarding_completed_at = p.onboarding_completed_at or utcnow()
-    set_t0_facts(db, user.id, FactSource.self_report, stack=[s.tag for s in data.stack], roles=data.roles,
+    set_t0_facts(db, user.id, FactSource.self_report,
+                 stack=list(dict.fromkeys(s.tag for s in [*data.stack, *data.additional_stack])), roles=data.roles,
                  experience_years=data.experience_years)
     if data.consent_publication:
         _grant(db, user.id, ConsentKind.publication)
@@ -432,4 +467,3 @@ def my_profile_pdf(user: User = Depends(candidate), db: Session = Depends(get_db
 @router.get("/card", summary="Как меня видит работодатель (обезличенная карточка)", responses=AUTH)
 def my_card(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     return {**candidate_card_for(db, user.id, include_hidden=False), "directions": DIRECTIONS}
-
