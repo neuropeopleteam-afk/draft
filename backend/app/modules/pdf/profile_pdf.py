@@ -81,6 +81,17 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
     el.append(Paragraph(f"Категория: <b>{_esc(cat.get('title') or 'не присвоена')}</b>"
                         + (f" · место в категории {card['rank_in_category']} из {card['category_size']}"
                            if card.get("rank_in_category") else ""), st["p"]))
+    pv = card.get("provisional")
+    if pv:
+        el.append(Paragraph(
+            "Грейд <b>предварительный</b>: тест на Junior не подтвердил грейд, но и не показал, что уровень ниже "
+            f"порога. Вероятность уровня не ниже Junior — {_esc(pv.get('p_pct', '—'))} % (подтверждение — от 80 %, "
+            "«не доказанно ниже» — от 10 %). Подтверждается дотестированием у порога, зондом работодателя или кубком; "
+            "подтверждение — не смена грейда.", st["small"]))
+    cb = card.get("confirmed_by")
+    if cb:
+        el.append(Paragraph(f"Грейд был предварительным и подтверждён {_esc(cb.get('title'))}"
+                            + (f" («{_esc(cb['ref_title'])}»)" if cb.get("ref_title") else "") + ".", st["small"]))
     el.append(Spacer(1, 4))
     legend = ("Уровни доказанности: <b>T1</b> — подтверждено тестом или зондом на платформе; <b>T2</b> — подтверждено "
               "реестром ФСП; <b>T0</b> — указано самим кандидатом, на категорию и рейтинг не влияет.")
@@ -98,6 +109,8 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
     if t:
         el.append(_table([
             ["Грейд", _esc(card.get("grade_title"))],
+            *([["Уровень доказанности", f"предварительно: P(уровень ≥ Junior) = {_esc(pv.get('p_pct', '—'))} %"]]
+              if pv else []),
             ["Оценка уровня θ", f"{t['theta']:+.2f} ± {t['se']:.2f}" if t.get("theta") is not None else "—"],
             ["Верных ответов", f"{t.get('correct')} из {t.get('answered')}"],
             ["Дата", _esc(t.get("date"))],

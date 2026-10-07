@@ -111,6 +111,7 @@ class Filters(BaseModel):
     stack_t1: list[str] | None = Field(None, description="Только с подтверждёнными (T1) навыками")
     stack_any: list[str] | None = Field(None, description="Навык заявлен (T0) или подтверждён (T1)")
     fsp_only: bool = False
+    confirmed_only: bool = Field(False, description="Без категории «Junior (предварительно)» — только подтверждённые")
     work_format: Literal["office", "hybrid", "remote"] | None = None
     city: str | None = Field(None, max_length=100)
     experience_min: float | None = Field(None, ge=0, le=30)
@@ -303,19 +304,21 @@ def search_candidates(
     stack: list[str] = Query(default_factory=list, description="Стек-теги (все должны быть)"),
     stack_level: Literal["any", "t1"] = Query("any", description="any — заявлен или подтверждён; t1 — подтверждён"),
     fsp: bool = Query(False, description="Только с паспортом ФСП"),
+    confirmed: bool = Query(False, description="Только подтверждённые категории (без «Junior (предварительно)»)"),
     limit: int = Query(30, ge=1, le=100), offset: int = Query(0, ge=0),
     user: User = Depends(employer), db: Session = Depends(get_db),
 ) -> dict:
     my_company(db, user)
     return ranking.search(db, direction=direction, grade=grade, category=category, stack=stack or None,
-                          stack_level=stack_level, fsp_only=fsp, limit=limit, offset=offset)
+                          stack_level=stack_level, fsp_only=fsp, limit=limit, offset=offset, confirmed_only=confirmed)
 
 
 @router.get("/categories", summary="Категории с числом видимых кандидатов и рыночным диапазоном", responses=AUTH)
 def categories(user: User = Depends(employer), db: Session = Depends(get_db)) -> list[dict]:
     counts = ranking.category_counts(db)
+    prov = ranking.provisional_counts(db)
     return [{"id": c.id, "title": c.title, "direction": c.direction_id, "grade": c.grade_id,
-             "count": counts.get(c.id, 0), "market_range": ranking._mr(c)}
+             "count": counts.get(c.id, 0), "provisional": prov.get(c.id, 0), "market_range": ranking._mr(c)}
             for c in db.scalars(select(Category).order_by(Category.direction_id)).all()]
 
 

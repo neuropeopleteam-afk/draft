@@ -8,6 +8,7 @@
 
 score = 0,45·тест + 0,35·покрытие обязательного стека (T1) + 0,05·желательный стек (T1)
         + 0,10·ФСП (T2, бонус; нет истории — 0 без штрафа) + 0,05·зонды (T1)
+        − 0,05, если категория «Junior (предварительно)» (ниже подтверждённого при прочих равных)
 """
 from __future__ import annotations
 
@@ -19,6 +20,7 @@ from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
 from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
+    PROVISIONAL_PENALTY,
     fmt_count,
     Bundle,
     achievement_text,
@@ -54,6 +56,15 @@ def category_counts(db: Session) -> dict[str, int]:
     out: dict[str, int] = {}
     for p in visible_pool(db):
         out[p.current_category_id] = out.get(p.current_category_id, 0) + 1
+    return out
+
+
+def provisional_counts(db: Session) -> dict[str, int]:
+    """Сколько в категории «предварительно» (только Junior: правило нижнего порога)."""
+    out: dict[str, int] = {}
+    for p in visible_pool(db):
+        if p.grade_provisional:
+            out[p.current_category_id] = out.get(p.current_category_id, 0) + 1
     return out
 
 
@@ -100,10 +111,23 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                     f"{t.get('correct')} из {t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}"
                     " — предварительно, полный тест уточнит грейд",
         })
+    elif b.test and b.provisional:
+        pv = t.get("provisional") or {}
+        pct = f"{round(100 * float(pv['p']))} %" if pv.get("p") is not None else "—"
+        reasons.append({
+            "requirement": "Специализация и грейд", "level": "T1", "status": "partial", "provisional": True,
+            "text": f"Категория {cat_title} — предварительно: тест {b.test.created_at:%d.%m.%Y} не подтвердил грейд, "
+                    f"но и не доказал уровень ниже (вероятность уровня не ниже Junior — {pct}, подтверждение — от 80 %; "
+                    f"θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}). В ранжировании −{PROVISIONAL_PENALTY:.2f}; "
+                    "можно подтвердить зондом",
+        })
     elif b.test:
+        by = t.get("confirmed_by") if t.get("status") == "confirmed" else None
+        how = {"probe": " (предварительный грейд подтверждён зондом)", "cup": " (предварительный грейд подтверждён кубком)",
+               "extension": " с дотестированием у порога"}.get(by or "", "")
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "confirmed",
-            "text": f"Категория {cat_title} подтверждена тестом {b.test.created_at:%d.%m.%Y}: "
+            "text": f"Категория {cat_title} подтверждена тестом {b.test.created_at:%d.%m.%Y}{how}: "
                     f"{t.get('correct')} из {t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}",
         })
     else:
@@ -168,13 +192,13 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({"requirement": "Формат работы", "level": "T0", "status": "declared" if ok else "mismatch",
                         "text": "Заявленный формат подходит" if ok else "Заявлен другой формат работы"})
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
-             "probe": probe}
+             "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0}
     if not req.get("stack_required"):
         # Нет обязательного стека — вес переносим на тест
         comps_w = dict(WEIGHTS, test=WEIGHTS["test"] + WEIGHTS["stack_required"], stack_required=0.0)
     else:
         comps_w = WEIGHTS
-    score = sum(comps_w[k] * comps[k] for k in WEIGHTS)
+    score = sum(comps_w[k] * comps[k] for k in WEIGHTS) - comps["provisional"]
     return round(score, 4), comps, reasons
 
 
@@ -184,6 +208,8 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
     for b in bundles:
         p = b.profile
         if f.get("fsp_only") and not b.achievements:
+            continue
+        if f.get("confirmed_only") and b.provisional:  # без «Junior (предварительно)»
             continue
         if f.get("stack_t1") and not all(skill_confirmed(b.skills_t1.get(t)) for t in f["stack_t1"]):
             continue
@@ -221,17 +247,22 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> d
         results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
                         "reasons": reasons, "category_id": b.profile.current_category_id,
                         "card": card(b, cats)})
+    prov = provisional_counts(db)
+    for r in recs:
+        r["provisional"] = prov.get(r["id"], 0)
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": ALGORITHM_VERSION,
-            "weights": WEIGHTS}
+            "weights": WEIGHTS, "provisional_penalty": PROVISIONAL_PENALTY,
+            "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional)}
 
 
 def search(db: Session, *, direction=None, grade=None, category=None, stack: list[str] | None = None,
-           stack_level: str = "any", fsp_only: bool = False, limit: int = 50, offset: int = 0) -> dict:
+           stack_level: str = "any", fsp_only: bool = False, limit: int = 50, offset: int = 0,
+           confirmed_only: bool = False) -> dict:
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     pool = visible_pool(db, direction=direction, grades=[grade] if grade else None,
                         category_ids=[category] if category else None)
     bundles = list(load_bundles(db, [p.user_id for p in pool]).values())
-    f = {"fsp_only": fsp_only}
+    f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only}
     if stack:
         f["stack_t1" if stack_level == "t1" else "stack_any"] = stack
     bundles = apply_filters(bundles, f)
@@ -245,4 +276,5 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
         peers = by_cat.get(b.profile.current_category_id, [])
         rank = 1 + sum(1 for r in peers if r > (b.profile.rating_score or 0))
         items.append(card(b, cats, rank=rank, rank_total=len(peers)))
-    return {"total": len(bundles), "items": items}
+    return {"total": len(bundles), "items": items,
+            "provisional": sum(1 for b in bundles if b.provisional)}

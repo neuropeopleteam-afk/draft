@@ -105,29 +105,12 @@ def recompute(db: Session, ts: TestSession) -> dict:
     res = get_engine("bank").finish(ts.result["state"])
     profile = db.get(CandidateProfile, ts.user_id)
     now = utcnow()
-    sandbox = service.is_sandbox(profile)
-    current = profile.current_grade_id if profile.current_direction_id == ts.direction_id else None
     before = (ts.result.get("engine_result") or {}).get("confirmed")
-    outcome = apply_result(current, ts.claimed_grade_id, res.confirmed, now, sandbox,
-                           get_settings().grade_change_interval_days, profile.grade_locked_until)
-    ts.theta, ts.theta_se = res.theta, res.se
-    ts.score = res.correct / res.answered if res.answered else 0.0
-    ts.result_grade_id = ts.claimed_grade_id if res.confirmed else ts.result_grade_id
-    ts.result = {**ts.result, "engine_result": res.to_dict(), "recomputed_at": now.isoformat(),
-                 "outcome": {"changed": outcome.changed, "grade": outcome.new_grade, "message": outcome.message}}
-    flag_modified(ts, "result")
-    if res.confirmed:
-        if outcome.changed:
-            db.add(GradeHistory(user_id=ts.user_id, direction_id=ts.direction_id, from_grade_id=current,
-                                to_grade_id=outcome.new_grade, reason=GradeChangeReason(outcome.reason),
-                                test_session_id=ts.id, locked_until=outcome.locked_until))
-            profile.current_direction_id = ts.direction_id
-            profile.current_grade_id = outcome.new_grade
-            profile.current_category_id = f"{ts.direction_id}.{outcome.new_grade}"
-            profile.grade_locked_until = outcome.locked_until
-        service._write_t1_facts(db, ts, res)
-        db.flush()
-        refresh_rating(db, ts.user_id)
+    keep_grade = ts.result_grade_id
+    outcome = service.apply_engine_result(db, ts, res, profile, now)
+    ts.result = {**ts.result, "recomputed_at": now.isoformat()}
+    if not res.confirmed:
+        ts.result_grade_id = keep_grade
     return {"theta": res.theta, "se": res.se, "confirmed": res.confirmed, "confirmed_before": before,
             "pending_left": (res.details or {}).get("pending_review"), "message": outcome.message}
 

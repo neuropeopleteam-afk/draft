@@ -23,6 +23,10 @@ class StartIn(BaseModel):
     integrity_ack: bool = Field(False, description="Кандидат прочитал, что отслеживается во время теста (потеря фокуса, "
                                                    "вставка текста, скорость, канарейки) и что сигналы только снижают "
                                                    "«достоверность результата». Сохраняется в сессии")
+    mode: Literal["full", "confirm"] = Field(
+        "full", description="full — полный адаптивный тест; confirm — короткое дотестирование у порога Junior для "
+                            "подтверждения категории «Junior (предварительно)»: ответы прошлой попытки учитываются, "
+                            "добавляется до 6 коротких заданий (до 20 минут), не больше 2 попыток")
 
 
 class OptionOut(BaseModel):
@@ -70,6 +74,8 @@ class SessionOut(BaseModel):
     answered: int
     total: int
     can_finish: bool = Field(False, description="Тест окончен по правилам движка (SE, лимит заданий/времени)")
+    mode: str = Field("full", description="full — полный тест; confirm — дотестирование для подтверждения "
+                                          "«Junior (предварительно)»")
 
 
 class AnswerIn(BaseModel):
@@ -92,6 +98,7 @@ def _session_out(db, ts) -> SessionOut:
         deadline_at=ts.deadline_at.isoformat() if ts.deadline_at else None,
         item=ItemOut(**item.__dict__) if item else None, answered=answered, total=total,
         can_finish=can_finish or (item is None and ts.status.value == "in_progress"),
+        mode=service._mode(ts),
     )
 
 
@@ -109,7 +116,8 @@ def get_status(user: User = Depends(candidate), db: Session = Depends(get_db)) -
                 "Смена подтверждённого грейда — не чаще раза в 90 дней (демо-режим жюри снимает ограничение, но число "
                 "новых сессий в демо-режиме ограничено: JURY_MAX_TEST_STARTS_PER_DAY за 24 часа на учётку). "
                 "Если активная сессия на тот же грейд уже есть — вернётся она.",
-    responses={**AUTH, 409: err("onboarding_required — нет опроса; grade_locked — действует правило 90 дней"),
+    responses={**AUTH, 409: err("onboarding_required — нет опроса; grade_locked — действует правило 90 дней; "
+                                "not_provisional / confirm_unavailable — дотестирование недоступно"),
                422: err("Неизвестный грейд"), 429: err("sandbox_restarts_exhausted — лимит перезапусков в демо-режиме")},
 )
 def start(data: StartIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> SessionOut:
@@ -117,7 +125,7 @@ def start(data: StartIn, user: User = Depends(candidate), db: Session = Depends(
     if survey is not None and survey.claimed_grade_id != data.claimed_grade:
         survey.claimed_grade_id = data.claimed_grade
     return _session_out(db, service.start_session(db, user.id, data.claimed_grade, integrity_ack=data.integrity_ack,
-                                                  enforce_sandbox_quota=True))
+                                                  enforce_sandbox_quota=True, mode=data.mode))
 
 
 @router.get("/sessions/{session_id}", response_model=SessionOut, summary="Сессия теста и следующее задание",
