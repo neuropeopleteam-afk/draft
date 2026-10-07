@@ -1,0 +1,606 @@
+{
+  "algorithm": "match-v1",
+  "n_needs": 15,
+  "n_pool": 500,
+  "set_size": 20,
+  "n_pairs": 300,
+  "relevant_share": 0.353,
+  "methods": {
+    "platform": "Подборка платформы",
+    "platform_no_fsp": "Платформа без бонуса ФСП",
+    "bm25": "BM25 по тексту резюме и потребности",
+    "keywords": "Совпадение тегов заявленного стека",
+    "random": "Случайный порядок"
+  },
+  "summary": {
+    "p@5": {
+      "platform": 0.893,
+      "platform_no_fsp": 0.893,
+      "bm25": 0.533,
+      "keywords": 0.627,
+      "random": 0.357
+    },
+    "ndcg@5": {
+      "platform": 0.886,
+      "platform_no_fsp": 0.869,
+      "bm25": 0.696,
+      "keywords": 0.786,
+      "random": 0.431
+    },
+    "ndcg@10": {
+      "platform": 0.927,
+      "platform_no_fsp": 0.927,
+      "bm25": 0.781,
+      "keywords": 0.822,
+      "random": 0.501
+    },
+    "within_category_ndcg@3": {
+      "platform": 0.767,
+      "platform_no_fsp": 0.745,
+      "bm25": 0.918,
+      "keywords": 0.979,
+      "random": 0.698
+    },
+    "within_category_needs": 9
+  },
+  "per_need": [
+    {
+      "need": "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс.",
+      "direction": "backend",
+      "grade": "middle",
+      "relevant": 7,
+      "labels": {
+        "0": 7,
+        "1": 6,
+        "2": 6,
+        "3": 1
+      },
+      "platform": {
+        "p@5": 0.8,
+        "ndcg@5": 0.622,
+        "ndcg@10": 0.812
+      },
+      "platform_no_fsp": {
+        "p@5": 0.8,
+        "ndcg@5": 0.628,
+        "ndcg@10": 0.818
+      },
+      "bm25": {
+        "p@5": 0.8,
+        "ndcg@5": 0.902,
+        "ndcg@10": 0.915
+      },
+      "keywords": {
+        "p@5": 0.6,
+        "ndcg@5": 0.842,
+        "ndcg@10": 0.866
+      },
+      "random": {
+        "p@5": 0.354,
+        "ndcg@5": 0.373,
+        "ndcg@10": 0.451
+      }
+    },
+    {
+      "need": "Нужен senior Java-разработчик для платёжного ядра: Java, PostgreSQL, Kafka, gRPC обязательно. Гибрид, Санкт-Петербург.",
+      "direction": "backend",
+      "grade": "senior",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 7,
+        "3": 1
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 0.885,
+        "ndcg@10": 0.892
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 0.885,
+        "ndcg@10": 0.892
+      },
+      "bm25": {
+        "p@5": 0.6,
+        "ndcg@5": 0.855,
+        "ndcg@10": 0.922
+      },
+      "keywords": {
+        "p@5": 0.6,
+        "ndcg@5": 0.873,
+        "ndcg@10": 0.936
+      },
+      "random": {
+        "p@5": 0.401,
+        "ndcg@5": 0.385,
+        "ndcg@10": 0.456
+      }
+    },
+    {
+      "need": "Data Scientist middle: Python, pandas, scikit-learn, статистика, SQL. Желательно Airflow и ClickHouse. 200–280 тыс. ₽",
+      "direction": "data_ml",
+      "grade": "middle",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 8,
+        "3": 0
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "bm25": {
+        "p@5": 0.6,
+        "ndcg@5": 0.744,
+        "ndcg@10": 0.818
+      },
+      "keywords": {
+        "p@5": 0.6,
+        "ndcg@5": 0.631,
+        "ndcg@10": 0.734
+      },
+      "random": {
+        "p@5": 0.394,
+        "ndcg@5": 0.499,
+        "ndcg@10": 0.552
+      }
+    },
+    {
+      "need": "Junior аналитик данных/ML: Python, pandas, SQL; будет плюсом опыт с numpy. Офис в Москве или гибрид.",
+      "direction": "data_ml",
+      "grade": "junior",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 7,
+        "3": 1
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 0.809,
+        "ndcg@10": 0.851
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 0.689,
+        "ndcg@10": 0.843
+      },
+      "bm25": {
+        "p@5": 0.6,
+        "ndcg@5": 0.652,
+        "ndcg@10": 0.724
+      },
+      "keywords": {
+        "p@5": 0.4,
+        "ndcg@5": 0.764,
+        "ndcg@10": 0.809
+      },
+      "random": {
+        "p@5": 0.394,
+        "ndcg@5": 0.39,
+        "ndcg@10": 0.471
+      }
+    },
+    {
+      "need": "Специалист по ИБ middle: OWASP, Burp Suite, пентест веб-приложений, сетевая безопасность. Желательно CTF.",
+      "direction": "security",
+      "grade": "middle",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 8,
+        "3": 0
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "bm25": {
+        "p@5": 0.8,
+        "ndcg@5": 0.903,
+        "ndcg@10": 0.931
+      },
+      "keywords": {
+        "p@5": 0.8,
+        "ndcg@5": 0.913,
+        "ndcg@10": 0.882
+      },
+      "random": {
+        "p@5": 0.394,
+        "ndcg@5": 0.499,
+        "ndcg@10": 0.54
+      }
+    },
+    {
+      "need": "Senior SOC-аналитик: SIEM/SOC, форензика, сетевая безопасность, Linux. Удалённо.",
+      "direction": "security",
+      "grade": "senior",
+      "relevant": 7,
+      "labels": {
+        "0": 7,
+        "1": 6,
+        "2": 6,
+        "3": 1
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 0.963
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 0.963
+      },
+      "bm25": {
+        "p@5": 0.4,
+        "ndcg@5": 0.388,
+        "ndcg@10": 0.627
+      },
+      "keywords": {
+        "p@5": 0.6,
+        "ndcg@5": 0.842,
+        "ndcg@10": 0.847
+      },
+      "random": {
+        "p@5": 0.379,
+        "ndcg@5": 0.387,
+        "ndcg@10": 0.465
+      }
+    },
+    {
+      "need": "Frontend-разработчик middle: React, TypeScript, HTML/CSS обязательно; Next.js будет плюсом. 180–250 тыс.",
+      "direction": "frontend",
+      "grade": "middle",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 8,
+        "3": 0
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 0.953
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 0.953
+      },
+      "bm25": {
+        "p@5": 0.8,
+        "ndcg@5": 0.903,
+        "ndcg@10": 0.873
+      },
+      "keywords": {
+        "p@5": 0.8,
+        "ndcg@5": 0.913,
+        "ndcg@10": 0.931
+      },
+      "random": {
+        "p@5": 0.391,
+        "ndcg@5": 0.487,
+        "ndcg@10": 0.543
+      }
+    },
+    {
+      "need": "Бэкенд junior: Python, Django, SQL, Git. Обучим остальному. Казань или удалённо.",
+      "direction": "backend",
+      "grade": "junior",
+      "relevant": 0,
+      "labels": {
+        "0": 8,
+        "1": 12,
+        "2": 0,
+        "3": 0
+      },
+      "platform": {
+        "p@5": 0.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 0.936
+      },
+      "platform_no_fsp": {
+        "p@5": 0.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "bm25": {
+        "p@5": 0.0,
+        "ndcg@5": 0.854,
+        "ndcg@10": 0.77
+      },
+      "keywords": {
+        "p@5": 0.0,
+        "ndcg@5": 0.684,
+        "ndcg@10": 0.726
+      },
+      "random": {
+        "p@5": 0.0,
+        "ndcg@5": 0.597,
+        "ndcg@10": 0.592
+      }
+    },
+    {
+      "need": "QA-инженер middle: тест-дизайн, API-тестирование, pytest; желательно Playwright и Allure.",
+      "direction": "qa",
+      "grade": "middle",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 5,
+        "3": 3
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 0.954,
+        "ndcg@10": 0.962
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 0.855,
+        "ndcg@10": 0.948
+      },
+      "bm25": {
+        "p@5": 0.2,
+        "ndcg@5": 0.303,
+        "ndcg@10": 0.58
+      },
+      "keywords": {
+        "p@5": 0.6,
+        "ndcg@5": 0.625,
+        "ndcg@10": 0.654
+      },
+      "random": {
+        "p@5": 0.414,
+        "ndcg@5": 0.36,
+        "ndcg@10": 0.466
+      }
+    },
+    {
+      "need": "Senior Go-разработчик для маршрутизации: Go, PostgreSQL, Kafka, Docker. От 5 лет опыта.",
+      "direction": "backend",
+      "grade": "senior",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 8,
+        "3": 0
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "bm25": {
+        "p@5": 0.2,
+        "ndcg@5": 0.431,
+        "ndcg@10": 0.69
+      },
+      "keywords": {
+        "p@5": 0.6,
+        "ndcg@5": 0.677,
+        "ndcg@10": 0.819
+      },
+      "random": {
+        "p@5": 0.415,
+        "ndcg@5": 0.516,
+        "ndcg@10": 0.565
+      }
+    },
+    {
+      "need": "Junior frontend: JavaScript, HTML/CSS, React. Желательно TypeScript. Томск, офис или гибрид.",
+      "direction": "frontend",
+      "grade": "junior",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 6,
+        "3": 2
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 0.74,
+        "ndcg@10": 0.864
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 0.688,
+        "ndcg@10": 0.822
+      },
+      "bm25": {
+        "p@5": 0.4,
+        "ndcg@5": 0.633,
+        "ndcg@10": 0.728
+      },
+      "keywords": {
+        "p@5": 0.6,
+        "ndcg@5": 0.684,
+        "ndcg@10": 0.711
+      },
+      "random": {
+        "p@5": 0.398,
+        "ndcg@5": 0.371,
+        "ndcg@10": 0.453
+      }
+    },
+    {
+      "need": "ML-инженер senior: PyTorch, компьютерное зрение (CV), MLOps, Python. Желательно Spark.",
+      "direction": "data_ml",
+      "grade": "senior",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 8,
+        "3": 0
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "bm25": {
+        "p@5": 0.8,
+        "ndcg@5": 0.913,
+        "ndcg@10": 0.934
+      },
+      "keywords": {
+        "p@5": 0.8,
+        "ndcg@5": 0.913,
+        "ndcg@10": 0.881
+      },
+      "random": {
+        "p@5": 0.386,
+        "ndcg@5": 0.495,
+        "ndcg@10": 0.545
+      }
+    },
+    {
+      "need": "Senior frontend: TypeScript, React, state management, доступность (a11y), тестирование фронтенда.",
+      "direction": "frontend",
+      "grade": "senior",
+      "relevant": 8,
+      "labels": {
+        "0": 6,
+        "1": 6,
+        "2": 3,
+        "3": 5
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 0.803,
+        "ndcg@10": 0.943
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 0.803,
+        "ndcg@10": 0.931
+      },
+      "bm25": {
+        "p@5": 0.8,
+        "ndcg@5": 0.623,
+        "ndcg@10": 0.625
+      },
+      "keywords": {
+        "p@5": 0.8,
+        "ndcg@5": 0.855,
+        "ndcg@10": 0.906
+      },
+      "random": {
+        "p@5": 0.421,
+        "ndcg@5": 0.369,
+        "ndcg@10": 0.481
+      }
+    },
+    {
+      "need": "Junior QA: ручное тестирование, тест-дизайн, SQL, основы API-тестирования. Самара, офис.",
+      "direction": "qa",
+      "grade": "junior",
+      "relevant": 6,
+      "labels": {
+        "0": 9,
+        "1": 5,
+        "2": 5,
+        "3": 1
+      },
+      "platform": {
+        "p@5": 1.0,
+        "ndcg@5": 0.689,
+        "ndcg@10": 0.801
+      },
+      "platform_no_fsp": {
+        "p@5": 1.0,
+        "ndcg@5": 0.689,
+        "ndcg@10": 0.802
+      },
+      "bm25": {
+        "p@5": 0.6,
+        "ndcg@5": 0.637,
+        "ndcg@10": 0.639
+      },
+      "keywords": {
+        "p@5": 0.6,
+        "ndcg@5": 0.577,
+        "ndcg@10": 0.637
+      },
+      "random": {
+        "p@5": 0.302,
+        "ndcg@5": 0.31,
+        "ndcg@10": 0.406
+      }
+    },
+    {
+      "need": "Автоматизатор тестирования senior: Python, pytest, Selenium или Playwright, CI/CD, нагрузочное тестирование.",
+      "direction": "qa",
+      "grade": "senior",
+      "relevant": 6,
+      "labels": {
+        "0": 6,
+        "1": 8,
+        "2": 6,
+        "3": 0
+      },
+      "platform": {
+        "p@5": 0.6,
+        "ndcg@5": 0.79,
+        "ndcg@10": 0.922
+      },
+      "platform_no_fsp": {
+        "p@5": 0.6,
+        "ndcg@5": 0.799,
+        "ndcg@10": 0.93
+      },
+      "bm25": {
+        "p@5": 0.4,
+        "ndcg@5": 0.702,
+        "ndcg@10": 0.934
+      },
+      "keywords": {
+        "p@5": 1.0,
+        "ndcg@5": 1.0,
+        "ndcg@10": 1.0
+      },
+      "random": {
+        "p@5": 0.313,
+        "ndcg@5": 0.431,
+        "ndcg@10": 0.528
+      }
+    }
+  ],
+  "caveat": "Фильтр по категории в подборке и грейд в разметке совпадают по смыслу, поэтому общий p@5 завышает преимущество платформы над поиском по тексту; честнее сравнение внутри категории (within_category_ndcg@3). Внутри категории разметка различает кандидатов только по заявленным навыкам — их платформа намеренно не учитывает, а BM25 и теги учитывают.",
+  "method": "Разметка по правилам требований (направление, грейд, обязательные навыки, формат); релевантен — метка ≥ 2 из 3. Синтетические демо-данные; экспертная разметка — следующий шаг.",
+  "generated_at": "2026-10-07T11:34:54.946518+00:00"
+}

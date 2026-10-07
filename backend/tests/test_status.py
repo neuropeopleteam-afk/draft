@@ -181,7 +181,8 @@ def test_demo_seed_status_variants_do_not_shift_main_candidates(client):
 
     with SessionLocal() as db:
         out = seed(db)
-        assert out["candidates"] == 150 + len(PROVISIONAL_DEMO) + len(UNCONFIRMED_DEMO) + out["interns"]
+        # 150 основных + статусы грейда (И1) + стажёры (И13) + расширение И8 до 500
+        assert out["candidates"] == 500 >= 150 + len(PROVISIONAL_DEMO) + len(UNCONFIRMED_DEMO) + out["interns"]
         rows = db.execute(select(User.email, CandidateProfile.full_name, CandidateProfile.current_category_id,
                                  CandidateProfile.grade_provisional)
                           .join(CandidateProfile, CandidateProfile.user_id == User.id)
@@ -203,8 +204,10 @@ def test_demo_seed_status_variants_do_not_shift_main_candidates(client):
         assert picked and all(b.profile.current_category_id and not b.provisional for b in picked)
 
     e = employer(client)
-    found = client.get("/api/employer/candidates", params={"direction": "backend", "grade": "junior"}, headers=H(e)).json()
-    assert found["provisional"] == 1 and found["unconfirmed"] == 1 and found["total"] == 12
+    found = client.get("/api/employer/candidates", params={"direction": "backend", "grade": "junior", "limit": 100},
+                       headers=H(e)).json()
+    # 10 основных + 1 предварительный + 1 не подтверждён + расширение демо до 500 (И8)
+    assert found["provisional"] == 1 and found["unconfirmed"] == 1 and found["total"] >= 12
     assert [c["status"]["status"] for c in found["items"]][-1] == "unconfirmed"
 
 

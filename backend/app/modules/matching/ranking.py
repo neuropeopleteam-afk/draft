@@ -215,7 +215,9 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                         "text": "Нет результата теста"})
     if req.get("grade") and b.grade and req["grade"] != b.grade:
         rel = "выше" if GRADE_LEVEL[b.grade] > GRADE_LEVEL[req["grade"]] else "ниже"
-        reasons[-1]["text"] += f" — грейд на ступень {rel} запрошенного"
+        distance = abs(GRADE_LEVEL[b.grade] - GRADE_LEVEL[req["grade"]])
+        step = {1: "на ступень", 2: "на две ступени"}.get(distance, "на три ступени")
+        reasons[-1]["text"] += f" — грейд {step} {rel} запрошенного"
         reasons[-1]["status"] = "partial"
 
     def stack_part(items: list[dict], label: str) -> float:
@@ -273,9 +275,16 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     # Фильтровые требования (T0): показываем, но в скор не включаем
     wf = req.get("work_format")
     if wf:
-        ok = p.work_format.value in (wf, "any")
+        allowed = req.get("work_formats") or [wf]
+        ok = p.work_format.value in (*allowed, "any")
         reasons.append({"requirement": "Формат работы", "level": "T0", "status": "declared" if ok else "mismatch",
                         "text": "Заявленный формат подходит" if ok else "Заявлен другой формат работы"})
+    if req.get("city") and wf in ("office", "hybrid"):
+        ok = getattr(p, "relocation", False) or (getattr(p, "city", None) or "").casefold() == req["city"].casefold()
+        reasons.append({"requirement": "Город присутствия", "level": "T0",
+                        "status": "declared" if ok else "mismatch",
+                        "text": "Город подходит или заявлен переезд" if ok else
+                                f"Нужен {req['city']}; заявлен другой город без переезда"})
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
              "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0,
              "grade_status": b.grade_status}
@@ -293,6 +302,29 @@ def tier(b: Bundle) -> int:
     return GRADE_STATUS_ORDER[b.grade_status]
 
 
+def requirement_priority(b: Bundle, req: dict) -> int:
+    """Offline proposal: fewer unverified mandatory skills, then the unchanged T1/T2 score.
+
+    No declared skills, no labels, no tuned coefficients. Existing score/weights remain unchanged.
+    Not enabled in build_selection: the 500-candidate hidden-truth guard failed.
+    A profile with gaps is not hidden: employer can check it with a probe.
+    """
+    must = req.get("stack_required") or []
+    return sum(not skill_confirmed(b.skills_t1.get(i["tag"])) for i in must)
+
+
+def condition_filters(req: dict, filters: dict) -> dict:
+    """T0 conditions narrow the pool, never add points to the confirmation score."""
+    out = {}
+    if req.get("work_formats"):
+        out["work_formats"] = req["work_formats"]
+    elif req.get("work_format") in ("office", "hybrid", "remote"):
+        out["work_format"] = req["work_format"]
+    if req.get("city") and req.get("work_format") in ("office", "hybrid"):
+        out["city"] = req["city"]
+    return {**out, **filters}
+
+
 def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
     """Фильтры уточнения. T0-фильтры (заявленный стек, формат, город, стаж) только сужают выдачу."""
     out = []
@@ -308,7 +340,8 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
             have = b.stack_t0 | {k for k, v in b.skills_t1.items() if skill_confirmed(v)}
             if not all(t in have for t in f["stack_any"]):
                 continue
-        if f.get("work_format") and p.work_format.value not in (f["work_format"], "any"):
+        formats = f.get("work_formats") or ([f["work_format"]] if f.get("work_format") else [])
+        if formats and p.work_format.value not in (*formats, "any"):
             continue
         if f.get("city") and (p.city or "").strip().lower() != f["city"].strip().lower() and not p.relocation:
             continue
@@ -329,6 +362,9 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> d
         # без подтверждённого грейда — по заявленной категории, отдельным ярусом ниже (видео №6: показывать, не скрывать)
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids)]
     bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=cat_ids).values())
+    # T0 only filters an explicitly chosen pool, never sorts profiles or adds points.
+    # Automatically restricting a parsed need is evaluated separately in the audit;
+    # it is not enabled without confirming conditions in the employer's filter panel.
     bundles = apply_filters(bundles, filters)
     scored = []
     for b in bundles:
@@ -336,6 +372,8 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> d
         if filters.get("min_score") and s < float(filters["min_score"]):
             continue
         scored.append((s, b, comps, reasons))
+    # Mandatory-gap-first (И8) was evaluated without fitting, but failed the hidden-truth 500 guard.
+    # Keep the established order: tier (grade status) → score; mandatory T1 and T0 conditions are explicit filters.
     scored.sort(key=lambda x: (tier(x[1]), -x[0], -(x[1].rating or 0), x[1].profile.public_ref or ""))
     results = []
     for rank, (s, b, comps, reasons) in enumerate(scored[:limit], start=1):
