@@ -1,0 +1,57 @@
+{
+  "needs": [
+    {
+      "id": "need-1",
+      "text": "Backend middle, Python и PostgreSQL, удалённо."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "candidate-1",
+      "direction": "backend",
+      "grade": "middle",
+      "theta": 0.8,
+      "se": 0.4,
+      "work_format": "remote",
+      "skills": [
+        {
+          "tag": "python",
+          "correct": 4,
+          "total": 5
+        },
+        {
+          "tag": "postgresql",
+          "correct": 3,
+          "total": 4
+        }
+      ],
+      "declared_stack": [
+        "docker"
+      ],
+      "achievements": []
+    },
+    {
+      "id": "candidate-2",
+      "direction": "backend",
+      "grade": "middle",
+      "theta": 0.2,
+      "skills": [],
+      "declared_stack": [
+        "python",
+        "postgresql"
+      ]
+    }
+  ],
+  "labels": [
+    {
+      "need_id": "need-1",
+      "candidate_id": "candidate-1",
+      "relevance": 3
+    },
+    {
+      "need_id": "need-1",
+      "candidate_id": "candidate-2",
+      "relevance": 1
+    }
+  ]
+}

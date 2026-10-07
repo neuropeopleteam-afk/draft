@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import MatchingBench from "../components/MatchingBench";
 import { FspRatingValidation } from "../components/validation/FspRating";
 import JuniorStability from "../components/validation/JuniorStability";
+import ClosedSet from "../components/validation/ClosedSet";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
@@ -32,6 +33,7 @@ export default function Validation() {
           (параметры заданий — экспертная предкалибровка, пока нет калибровки на людях), подбор — на размеченных парах
           «потребность — кандидат» из демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
         </p>
+        <ClosedSet />
         {loading ? <div className="mt-8"><Loading /></div> : error ? <div className="mt-8"><Alert>{error}</Alert></div> : r?.missing
           ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div>
           : <Report r={r} />}

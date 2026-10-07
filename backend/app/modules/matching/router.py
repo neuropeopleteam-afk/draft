@@ -76,10 +76,12 @@ class Requirements(BaseModel):
     stack_desired: list[StackReq] = Field(default_factory=list, max_length=20)
     experience_years_min: float | None = Field(None, ge=0, le=30)
     work_format: Literal["office", "hybrid", "remote", "any"] | None = None
+    work_formats: list[Literal["office", "hybrid", "remote"]] | None = Field(None, max_length=3)
+    city: str | None = Field(None, max_length=100)
     salary_from: int | None = Field(None, gt=0)
     salary_to: int | None = Field(None, gt=0)
-    evidence: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary"], Evidence | None] | None = None
-    review: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary"], ReviewStatus] | None = None
+    evidence: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary", "city"], Evidence | None] | None = None
+    review: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary", "city"], ReviewStatus] | None = None
 
     @model_validator(mode="after")
     def _range(self):
@@ -114,6 +116,7 @@ class Filters(BaseModel):
     confirmed_only: bool = Field(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
                                                     "кандидатов со статусом «грейд не подтверждён»")
     work_format: Literal["office", "hybrid", "remote"] | None = None
+    work_formats: list[Literal["office", "hybrid", "remote"]] | None = Field(None, max_length=3)
     city: str | None = Field(None, max_length=100)
     experience_min: float | None = Field(None, ge=0, le=30)
     min_score: float | None = Field(None, ge=0, le=1)
@@ -134,6 +137,11 @@ def _req_dict(r: Requirements | dict, text: str) -> dict:
                      "stack_desired": [dict(x) for x in d.get("stack_desired") or []]},
                     method=d.get("method", "manual"))
     req["bias"], req["suggested_text"] = bias_report(text, req)
+    from app.modules.matching.coverage import coverage
+
+    cov = coverage(text)
+    if cov:
+        req["coverage"] = cov
     return req
 
 

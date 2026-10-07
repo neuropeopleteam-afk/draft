@@ -37,7 +37,7 @@ import numpy as np
 
 from app.modules.catalog.seed_data import GRADE_ORDER
 from app.modules.matching.need_parser import parse_need
-from app.modules.matching.ranking import ALGORITHM_VERSION, WEIGHTS, score_candidate
+from app.modules.matching.ranking import ALGORITHM_VERSION, WEIGHTS, requirement_priority, score_candidate
 from app.modules.profiles.facts import PROVISIONAL_PENALTY
 from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate, true_grade)
 from app.modules.validation.matching_eval import _tokens, keyword_score, selection_categories
@@ -121,6 +121,7 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
             comps[i, j] = [c[k] for k in COMP_KEYS]
     has_req = np.array([bool(r.get("stack_required")) for r in reqs])
     out = {"comps": comps, "has_req": has_req, "vis": _vis(bundles, reqs),
+           "mandatory_gaps": np.array([[requirement_priority(b, r) for b in bundles] for r in reqs]),
            "rating": np.array([b.profile.rating_score or 0.0 for b in bundles]),
            "ref_rank": np.argsort(np.argsort([b.profile.public_ref for b in bundles])),
            "provisional": np.array([1.0 if b.provisional else 0.0 for b in bundles]),  # «Junior (предварительно)»
@@ -141,10 +142,14 @@ def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY) -> n
     return np.round(raw - penalty * sc["provisional"][None, :], 4)
 
 
-def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROVISIONAL_PENALTY) -> np.ndarray:
-    """Порядок как в build_selection: категория → −скор → −рейтинг → public_ref."""
+def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROVISIONAL_PENALTY, *,
+                    experimental: bool = False) -> np.ndarray:
+    """Порядок как в build_selection: категория → −скор (со штрафом «предварительно») → −рейтинг → public_ref;
+    эксперимент «сначала без пробелов в обязательных навыках» (И8) включается только явно."""
     s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w, penalty)
-    return np.stack([np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], -sc["vis"][i])) for i in range(len(s))])
+    gaps = sc.get("mandatory_gaps", np.zeros_like(s)) if experimental else np.zeros_like(s)
+    return np.stack([np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], gaps[i], -sc["vis"][i]))
+                     for i in range(len(s))])
 
 
 class BM25Matrix:
@@ -334,7 +339,7 @@ def heldout(world: World, run: dict, world2: World, run2: dict, seed: int) -> di
 
     def full(sc_, rel_, rows, w):
         o = platform_orders({**sc_, "comps": sc_["comps"][rows], "has_req": sc_["has_req"][rows],
-                             "vis": sc_["vis"][rows]}, w)
+                             "vis": sc_["vis"][rows], "mandatory_gaps": sc_["mandatory_gaps"][rows]}, w)
         return per_need(rel_[rows], o)["ndcg@10"]
 
     t_prod, t_best = full(sc, rel, test, w_prod), full(sc, rel, test, best)
