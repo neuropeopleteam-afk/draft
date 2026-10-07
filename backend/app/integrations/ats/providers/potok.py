@@ -112,9 +112,10 @@ class PotokClient:
             j = next((o for o in objs if o.get("applicant_id") in (applicant_id, None)), None)
             if j is None:
                 return None
-            return {"id": j.get("id"), "stage_id": (j.get("stage") or {}).get("id"),
-                    "stage_type": (j.get("stage") or {}).get("stage_type"), "active": j.get("active", True),
-                    "source": "ajs_joins"}
+            # в спецификации — и «stage: {id, stage_type}» (схема), и «stage_id» (пример ответа): принимаем оба
+            stg = j.get("stage") or {}
+            return {"id": j.get("id"), "stage_id": stg.get("id") or j.get("stage_id"),
+                    "stage_type": stg.get("stage_type"), "active": j.get("active", True), "source": "ajs_joins"}
         except AtsError as e:
             if e.status not in (403, 404):
                 raise

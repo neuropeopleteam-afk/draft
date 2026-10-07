@@ -152,6 +152,11 @@ def test_potok_client_join_state_and_fallback(http):  # noqa: F811
     assert st["stage_type"] == "interview_client" and st["stage_name"] == "Интервью" and st["active"] is None
     http.on("GET", r"/jobs/5/ajs_joins\.json$", (200, {"objects": []}))
     assert po_client().join_state(5, 7) is None
+    # пример ответа в спецификации — «stage_id» без объекта stage: тип этапа тогда берётся из GET /jobs/{id}.json
+    http.on("GET", r"/jobs/5/ajs_joins\.json$", (200, {"objects": [{"id": 9, "job_id": 5, "applicant_id": 7,
+                                                                   "stage_id": 53, "active": True}]}))
+    assert po_client().join_state(5, 7) == {"id": 9, "stage_id": 53, "stage_type": None, "active": True,
+                                            "source": "ajs_joins"}
 
 
 def test_back_channel_errors_logged_once(client, ats_http, monkeypatch):  # noqa: F811
@@ -179,3 +184,42 @@ def test_back_channel_errors_logged_once(client, ats_http, monkeypatch):  # noqa
         db.commit()
     r = client.post("/api/employer/ats/stub/potok/move", json={"join_id": 1, "decline": True}, headers=H(te))
     assert r.status_code == 409
+
+
+def test_potok_stub_back_channel_methods_match_spec_subset(client, ats_http):  # noqa: F811
+    """Заглушка «Потока» отвечает на методы обратного канала по docs/ats/potok-api-v3.subset.json (схемы ответа и
+    тела), а клиент обратного канала читает её ответ так же, как ответ настоящего API."""
+    import json
+    from pathlib import Path
+
+    from tests.test_ats_providers import _schema_ok, _stub_key
+
+    spec = json.loads((Path(__file__).resolve().parents[2] / "docs" / "ats" / "potok-api-v3.subset.json")
+                      .read_text())["paths"]
+    tc, te, inv = _accepted(client)
+    assert client.post("/api/employer/ats/providers/potok/demo", headers=H(te)).status_code == 200
+    client.post(f"/api/candidate/invitations/{inv['id']}/accept", headers=H(tc))
+    row = _pipeline(client, te)[0]
+    auth = {"Authorization": f"Bearer ptk.{_stub_key(client, te)}"}
+    base = "/api/ats-stub/potok/api/v3"
+
+    r = ats_http.get(f"{base}/jobs/{row['job_id']}/ajs_joins.json", params={"applicant_id": row["applicant_id"]},
+                     headers=auth)
+    assert r.status_code == 200, r.text
+    _schema_ok(r.json(), spec["/jobs/{job_id}/ajs_joins.json"]["get"]["responseBody"])
+    obj = r.json()["objects"][0]
+    assert obj["id"] == row["join_id"] and obj["stage"]["stage_type"] and obj["active"] is True
+
+    url = f"{base}/jobs/{row['job_id']}/{row['applicant_id']}/decline.json"
+    assert ats_http.post(url, json={"decline": {"author_id": 1}}, headers=auth).status_code == 422  # без причины
+    body = {"decline": {"author_id": 1, "declination_reason_id": 12, "comment": "не подходит"}}
+    _schema_ok(body, spec["/jobs/{job_id}/{applicant_id}/decline.json"]["post"]["requestBody"])
+    d = ats_http.post(url, json=body, headers=auth)
+    assert d.status_code == 200 and d.json() == {"result": "success"}
+    _schema_ok(d.json(), spec["/jobs/{job_id}/{applicant_id}/decline.json"]["post"]["responseBody"])
+    assert ats_http.get(f"{base}/jobs/{row['job_id']}/ajs_joins.json", params={"applicant_id": row["applicant_id"]},
+                        headers=auth).json()["objects"][0]["active"] is False
+    res = _sync(client, te)
+    assert res["changed"] == 1 and res["errors"] == 0
+    mine = next(i for i in client.get("/api/candidate/invitations", headers=H(tc)).json() if i["id"] == inv["id"])
+    assert mine["ats_stage"]["stage"] == "rejected" and mine["status"] == "accepted"  # статус ТЗ не трогаем

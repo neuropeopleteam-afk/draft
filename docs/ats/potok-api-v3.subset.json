@@ -1,6 +1,6 @@
 {
  "source": "https://api-doc.potok.io/potok-api-v3.yml",
- "note": "Подмножество спецификации OpenAPI «Потока» v3 (запросы, которые использует адаптер); описания полей опущены.",
+ "note": "Подмножество спецификации OpenAPI «Потока» v3 (запросы, которые использует адаптер); описания полей опущены. Пути /jobs/{job_id}/ajs_joins.json и /jobs/{job_id}/{applicant_id}/decline.json — из той же спецификации (сверено 07.10.2026), responseBody — сокращённая схема ответа.",
  "servers": [
   {
    "url": "https://app.potok.io/api/v3",
@@ -691,6 +691,128 @@
     "responses": [
      "200"
     ]
+   }
+  },
+  "/jobs/{job_id}/ajs_joins.json": {
+   "get": {
+    "summary": "Кандидаты на вакансии: этап и признак активности (обратный канал → этап на платформе)",
+    "requestBody": null,
+    "parameters": [
+     "job_id",
+     "applicant_id",
+     "page_cursor",
+     "page_size"
+    ],
+    "responses": [
+     "200",
+     "422"
+    ],
+    "responseBody": {
+     "type": "object",
+     "properties": {
+      "objects": {
+       "type": "array",
+       "items": {
+        "type": "object",
+        "properties": {
+         "id": {
+          "type": "integer"
+         },
+         "job_id": {
+          "type": "integer"
+         },
+         "applicant_id": {
+          "type": "integer"
+         },
+         "stage": {
+          "type": "object",
+          "properties": {
+           "id": {
+            "type": "integer"
+           },
+           "stage_type": {
+            "type": "string"
+           }
+          }
+         },
+         "responsible_user_id": {
+          "type": "integer"
+         },
+         "demand_id": {
+          "type": "integer"
+         },
+         "planned_employment_date": {
+          "type": "string"
+         },
+         "datetime_of_create": {
+          "type": "string"
+         },
+         "dynamic_fields": {
+          "type": "object"
+         },
+         "active": {
+          "type": "boolean"
+         }
+        }
+       }
+      },
+      "has_next_page": {
+       "type": "boolean"
+      },
+      "page_next_cursor": {
+       "type": "string"
+      }
+     }
+    },
+    "note": "В примере ответа спецификации вместо объекта stage — поле stage_id; адаптер принимает оба. active=false — кандидат отклонён на вакансии."
+   }
+  },
+  "/jobs/{job_id}/{applicant_id}/decline.json": {
+   "post": {
+    "summary": "Отклонение кандидата на вакансии (в демо-«Потоке» — кнопка рекрутёра «Отклонить»)",
+    "requestBody": {
+     "type": "object",
+     "properties": {
+      "decline": {
+       "type": "object",
+       "properties": {
+        "author_id": {
+         "type": "integer"
+        },
+        "declination_reason_id": {
+         "type": "integer"
+        },
+        "comment": {
+         "type": "string"
+        }
+       },
+       "required": [
+        "author_id",
+        "declination_reason_id"
+       ]
+      }
+     }
+    },
+    "parameters": [
+     "job_id",
+     "applicant_id"
+    ],
+    "responses": [
+     "200",
+     "422"
+    ],
+    "responseBody": {
+     "type": "object",
+     "properties": {
+      "result": {
+       "type": "string"
+      }
+     },
+     "required": [
+      "result"
+     ]
+    },
+    "note": "Платформа этот метод не вызывает (кандидата отклоняет рекрутёр в «Потоке»); метод есть в заглушке, чтобы демо-«Поток» вёл себя как настоящий."
    }
   }
  }
