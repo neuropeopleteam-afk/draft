@@ -188,9 +188,10 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
 
 
 def requirement_priority(b: Bundle, req: dict) -> int:
-    """Fewer unverified mandatory skills come first, then the unchanged T1/T2 score.
+    """Offline proposal: fewer unverified mandatory skills, then the unchanged T1/T2 score.
 
     No declared skills, no labels, no tuned coefficients. Existing score/weights remain unchanged.
+    Not enabled in build_selection: the 500-candidate hidden-truth guard failed.
     A profile with gaps is not hidden: employer can check it with a probe.
     """
     must = req.get("stack_required") or []

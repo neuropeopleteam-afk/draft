@@ -15,6 +15,13 @@ const origin = "http://127.0.0.1:5108";
   const errors = [];
   page.on("pageerror", e => errors.push(e.message));
   const results = [];
+  async function hideGuide() {
+    const button = page.getByRole("button", { name: "Скрыть", exact: true });
+    if (await button.count()) {
+      await button.click();
+      await button.waitFor({ state: "hidden" });
+    }
+  }
   for (const format of ["json", "csv"]) {
     const response = await context.request.get(`${origin}/api/validation/closed-set/template/${format}`);
     assert.equal(response.status(), 200);
@@ -32,11 +39,11 @@ const origin = "http://127.0.0.1:5108";
   const download = await downloadPromise;
   await download.saveAs(path.join(out, "browser_closed_set_results.csv"));
   assert.match(fs.readFileSync(path.join(out, "browser_closed_set_results.csv"), "utf8"), /explanations/);
-  const guideHide = page.getByRole("button", { name: "Скрыть", exact: true });
-  if (await guideHide.count()) await guideHide.click();
+  await hideGuide();
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.locator('#closed-set [aria-live="polite"]').scrollIntoViewIfNeeded();
+    await hideGuide();
     const dimensions = await page.evaluate(() => ({
       width: innerWidth, scrollWidth: document.documentElement.scrollWidth,
     }));
@@ -58,6 +65,7 @@ const origin = "http://127.0.0.1:5108";
   await page.getByText(/Отдельной категории «Мобильная разработка»/).waitFor();
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 1000 });
+    await hideGuide();
     const dimensions = await page.evaluate(() => ({
       width: innerWidth, scrollWidth: document.documentElement.scrollWidth,
     }));

@@ -152,10 +152,12 @@ def main():
                for version in ("before", "after", "mandatory_only", "rules_before", "rules_after",
                                "rules_mandatory_only")}
     # No fitting or label-derived parameters. Dropping any need cannot change these normative rules.
+    # The experiment was proposed after reading N00/N03 errors: this is not a new blind holdout.
     loo = [{"held_out": row["need"], "training_needs": [r["need"] for r in rows if r is not row],
             "rule_hash": hashlib.sha256(inspect.getsource(requirement_priority).encode()).hexdigest(),
             "held_out_before": row["before"], "held_out_after": row["mandatory_only"],
-            "interpretation": "Fixed ex-ante policy, zero fitted parameters. Not independent confirmation on new labels."}
+            "interpretation": "Fixed normative policy, zero fitted parameters. Post-hoc audit after N00/N03, "
+                              "not independent confirmation on new labels."}
            for row in rows]
     result = {"n_needs": len(rows), "n_pairs": len(items), "summary": summary, "per_need": rows,
               "leave_one_need_out": loo,
