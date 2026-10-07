@@ -115,6 +115,8 @@ def test_ai_mark_apply_hidden_and_detect():
     # ответ нейросети, выполнившей скрытое требование, — в любой форме слова, кириллицей или латиницей
     assert ai_mark.hit(f"Это случай «{mk['word'].upper()}»: гонка.", mk)
     assert not ai_mark.hit(ANSWER, mk)
+    code_stem = "Вызов `a. b` падает. Почему?"
+    assert ai_mark.apply(code_stem, mk).startswith("Вызов `a. b` падает." + ai_mark.SEP)
     lat = next(m for m in ({"root": r, "lat": l} for _, r, l in ai_mark.WORDS) if m["lat"])
     assert ai_mark.hit(f"Incident {lat['lat'].title()}: race", lat)
 
@@ -335,3 +337,26 @@ def test_grader_check_offline_numbers():
     assert c["panel_det"]["groups"]["adv_e5"]["mean"] == 0.0 and c["panel_det"]["attacks"]["pass"] == 0
     for g in ("adv_e1", "adv_e3", "adv_e5"):
         assert not any(G.injection_signals(r["answer"]) for r in rows if r["group"] == g)
+
+
+def test_jury_sandbox_shows_new_signals(client):
+    """Песочница жюри: Мария — тест во весь экран, достоверность высокая; у Ильи — уходы со вкладки и попытка
+    скопировать текст задания (средняя, причины видят и работодатель, и он сам)."""
+    import uuid
+
+    from sqlalchemy import select
+
+    from app.core.db import SessionLocal
+    from app.modules.assessment.models import TestSession
+
+    out = {}
+    for persona in ("candidate", "candidate_nofsp"):
+        r = client.post("/api/jury/login", json={"persona": persona})
+        assert r.status_code == 200, r.text
+        me = client.get("/api/me", headers={"Authorization": f"Bearer {r.json()['access_token']}"}).json()
+        with SessionLocal() as db:
+            ts = db.scalars(select(TestSession).where(TestSession.user_id == uuid.UUID(me["id"]))).all()
+            out[persona] = ts[0].result["engine_result"]["details"]["integrity"]
+    assert out["candidate"]["level"] == "high" and out["candidate"]["signals"]["fs_items"] > 0
+    ilya = out["candidate_nofsp"]
+    assert ilya["level"] == "medium" and any("скопировать текст задания" in x for x in ilya["reasons"])

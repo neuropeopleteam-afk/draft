@@ -63,9 +63,9 @@ def apply(stem: str, mark: dict | None) -> str:
     if not mark or not stem:
         return stem
     hidden = f"{SEP} {phrase(mark)}{SEP}"
-    m = re.search(r"[.!?:](?=\s)", stem)
-    if m and m.end() < len(stem) - 1:
-        return stem[:m.end()] + hidden + stem[m.end():]
+    for m in re.finditer(r"[.!?:](?=\s)", stem):  # не внутри `кода` в обратных кавычках
+        if m.end() < len(stem) - 1 and stem[:m.end()].count("`") % 2 == 0:
+            return stem[:m.end()] + hidden + stem[m.end():]
     return stem + hidden
 
 

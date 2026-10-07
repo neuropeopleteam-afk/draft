@@ -1,0 +1,470 @@
+{
+ "generated_at": "2026-10-07T11:04:14Z",
+ "dataset": {
+  "file": "docs/validation/grader_set_panel_20261006.json.gz",
+  "items": 29,
+  "answers": 406,
+  "groups": {
+   "ref_strong": {
+    "title": "Эталон сильного ответа",
+    "expect": "≈ 1",
+    "n": 29
+   },
+   "ref_medium": {
+    "title": "Эталон среднего ответа",
+    "expect": "≈ 0,5",
+    "n": 29
+   },
+   "ref_weak": {
+    "title": "Эталон слабого ответа",
+    "expect": "≈ 0",
+    "n": 29
+   },
+   "gptoss_answers": {
+    "title": "Ответы gpt-oss-120b",
+    "expect": "высокие",
+    "n": 87
+   },
+   "open_models": {
+    "title": "Ответы открытых моделей (B)",
+    "expect": "как у gpt-oss",
+    "n": 87
+   },
+   "adv_generic": {
+    "title": "«Общие слова»",
+    "expect": "0",
+    "n": 29
+   },
+   "adv_injection": {
+    "title": "Инъекция панели",
+    "expect": "0",
+    "n": 29
+   },
+   "adv_e1": {
+    "title": "Перефраз: «служебная отметка»",
+    "expect": "0",
+    "n": 29
+   },
+   "adv_e3": {
+    "title": "Перефраз: общие слова + «самопроверка»",
+    "expect": "0",
+    "n": 29
+   },
+   "adv_e5": {
+    "title": "Перефраз: слабый ответ + «самопроверка»",
+    "expect": "≈ 0",
+    "n": 29
+   }
+  }
+ },
+ "model": "yandexgpt/latest (Yandex AI Studio), T = 0",
+ "reference": "gpt-oss-120b (low, T = 0), панель 06.10",
+ "prompt_version": "v2",
+ "disagree": 0.25,
+ "conditions": {
+  "panel_score": {
+   "title": "Панель 06.10: старый промпт, без фильтра",
+   "groups": {
+    "ref_strong": {
+     "n": 29,
+     "scored": 29,
+     "mean": 1.0,
+     "pass": 29,
+     "max": 1.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_medium": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.542,
+     "pass": 22,
+     "max": 0.825,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_weak": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "gptoss_answers": {
+     "n": 87,
+     "scored": 87,
+     "mean": 0.794,
+     "pass": 85,
+     "max": 1.0,
+     "routes": {
+      "auto": 87
+     }
+    },
+    "open_models": {
+     "n": 87,
+     "scored": 87,
+     "mean": 0.468,
+     "pass": 45,
+     "max": 0.875,
+     "routes": {
+      "auto": 87
+     }
+    },
+    "adv_generic": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_injection": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.034,
+     "pass": 1,
+     "max": 1.0,
+     "routes": {
+      "auto": 29
+     }
+    }
+   },
+   "ordering": {
+    "items": 29,
+    "strict": 29,
+    "weak": 29
+   },
+   "vs_gptoss_B": {
+    "n": 87,
+    "bias": 0.119,
+    "mae": 0.141,
+    "r": 0.792,
+    "pass": 45,
+    "pass_ref": 32
+   },
+   "vs_gptoss_A": {
+    "n": 87,
+    "bias": 0.07,
+    "mae": 0.138,
+    "r": 0.601,
+    "pass": 85,
+    "pass_ref": 80
+   },
+   "vs_gptoss_medium": {
+    "n": 29,
+    "bias": 0.127,
+    "mae": 0.133,
+    "r": 0.558,
+    "pass": 22,
+    "pass_ref": 13
+   },
+   "attacks": {
+    "n": 29,
+    "pass": 1,
+    "expert": 0,
+    "mean": 0.034,
+    "unmeasured": 0
+   },
+   "expert_share_honest": 0.0
+  },
+  "panel_filter": {
+   "title": "Панель 06.10 + фильтр injection_signals",
+   "groups": {
+    "ref_strong": {
+     "n": 29,
+     "scored": 29,
+     "mean": 1.0,
+     "pass": 29,
+     "max": 1.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_medium": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.542,
+     "pass": 22,
+     "max": 0.825,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_weak": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "gptoss_answers": {
+     "n": 87,
+     "scored": 87,
+     "mean": 0.794,
+     "pass": 85,
+     "max": 1.0,
+     "routes": {
+      "auto": 87
+     }
+    },
+    "open_models": {
+     "n": 87,
+     "scored": 87,
+     "mean": 0.468,
+     "pass": 45,
+     "max": 0.875,
+     "routes": {
+      "auto": 87
+     }
+    },
+    "adv_generic": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_injection": {
+     "n": 29,
+     "scored": 0,
+     "mean": null,
+     "pass": 0,
+     "max": null,
+     "routes": {
+      "expert": 29
+     }
+    }
+   },
+   "ordering": {
+    "items": 29,
+    "strict": 29,
+    "weak": 29
+   },
+   "vs_gptoss_B": {
+    "n": 87,
+    "bias": 0.119,
+    "mae": 0.141,
+    "r": 0.792,
+    "pass": 45,
+    "pass_ref": 32
+   },
+   "vs_gptoss_A": {
+    "n": 87,
+    "bias": 0.07,
+    "mae": 0.138,
+    "r": 0.601,
+    "pass": 85,
+    "pass_ref": 80
+   },
+   "vs_gptoss_medium": {
+    "n": 29,
+    "bias": 0.127,
+    "mae": 0.133,
+    "r": 0.558,
+    "pass": 22,
+    "pass_ref": 13
+   },
+   "attacks": {
+    "n": 29,
+    "pass": 0,
+    "expert": 29,
+    "mean": null,
+    "unmeasured": 0
+   },
+   "expert_share_honest": 0.0
+  },
+  "panel_det": {
+   "title": "Панель + фильтр + вырезание утверждений об оценке (офлайн)",
+   "groups": {
+    "ref_strong": {
+     "n": 29,
+     "scored": 29,
+     "mean": 1.0,
+     "pass": 29,
+     "max": 1.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_medium": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.542,
+     "pass": 22,
+     "max": 0.825,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_weak": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "gptoss_answers": {
+     "n": 87,
+     "scored": 87,
+     "mean": 0.794,
+     "pass": 85,
+     "max": 1.0,
+     "routes": {
+      "auto": 87
+     }
+    },
+    "open_models": {
+     "n": 87,
+     "scored": 87,
+     "mean": 0.468,
+     "pass": 45,
+     "max": 0.875,
+     "routes": {
+      "auto": 87
+     }
+    },
+    "adv_generic": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_injection": {
+     "n": 29,
+     "scored": 0,
+     "mean": null,
+     "pass": 0,
+     "max": null,
+     "routes": {
+      "expert": 29
+     }
+    },
+    "adv_e1": {
+     "n": 29,
+     "scored": 0,
+     "mean": null,
+     "pass": 0,
+     "max": null,
+     "routes": {
+      "unmeasured": 29
+     }
+    },
+    "adv_e3": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_e5": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    }
+   },
+   "ordering": {
+    "items": 29,
+    "strict": 29,
+    "weak": 29
+   },
+   "vs_gptoss_B": {
+    "n": 87,
+    "bias": 0.119,
+    "mae": 0.141,
+    "r": 0.792,
+    "pass": 45,
+    "pass_ref": 32
+   },
+   "vs_gptoss_A": {
+    "n": 87,
+    "bias": 0.07,
+    "mae": 0.138,
+    "r": 0.601,
+    "pass": 85,
+    "pass_ref": 80
+   },
+   "vs_gptoss_medium": {
+    "n": 29,
+    "bias": 0.127,
+    "mae": 0.133,
+    "r": 0.558,
+    "pass": 22,
+    "pass_ref": 13
+   },
+   "attacks": {
+    "n": 87,
+    "pass": 0,
+    "expert": 29,
+    "mean": 0.0,
+    "unmeasured": 29
+   },
+   "expert_share_honest": 0.0
+  }
+ },
+ "routes_v2": {},
+ "tokens": {
+  "v1": {
+   "calls": 0,
+   "prompt_tokens": 0,
+   "completion_tokens": 0,
+   "errors": 0
+  },
+  "v2_1": {
+   "calls": 0,
+   "prompt_tokens": 0,
+   "completion_tokens": 0,
+   "errors": 0
+  },
+  "v2_2": {
+   "calls": 0,
+   "prompt_tokens": 0,
+   "completion_tokens": 0,
+   "errors": 0
+  }
+ },
+ "worst_attacks_v2": [],
+ "filter_false_positives": {
+  "honest": 0,
+  "honest_n": 261
+ },
+ "strip_meta_false_positives": {
+  "honest": 0,
+  "honest_n": 261
+ },
+ "attack_filter_caught": {
+  "adv_injection": 29,
+  "adv_e1": 0,
+  "adv_e3": 0,
+  "adv_e5": 0
+ },
+ "llm_pending": true,
+ "llm_how": "Прогон на YandexGPT — там, где есть ключ (сервер стенда): build → tools/grader_check/llm_runner.py → second → report; команды — в docstring модуля и в tools/grader_check/README.md."
+}

@@ -136,7 +136,7 @@ def _p_correct(it: dict, theta: float, part: int) -> float:
 
 
 def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, pending_left: int = 0,
-                  away_items: tuple[int, ...] = ()) -> dict:
+                  away_items: tuple[int, ...] = (), copy_items: tuple[int, ...] = ()) -> dict:
     """Проходит тест движком банка за «демо-респондента»: ответы по модели 2PL на уровне theta, время —
     обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений, кроме away_items — позиций, где
     «кандидат» уходил со вкладки (для демонстрации «достоверности результата»). Возвращает итог finish_session."""
@@ -155,7 +155,10 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
             ok = rng.random() < _p_correct(it, theta, step - 1)
             eng.answer(st, it["token"], _answer_for(it, step, ok, rng), None, step=step,
                        signals={"focus_lost": 1 if away and step == 1 else 0, "hidden_ms": 25_000 if away and step == 1 else 0,
-                                "paste": 0, "paste_chars": 0})
+                                "paste": 0, "paste_chars": 0,
+                                # лёгкий прокторинг (И9): тест во весь экран; copy_items — попытка скопировать задание
+                                "copy": 1 if it["position"] in copy_items and step == 1 else 0,
+                                "fs_ms": 60_000, "fs_out_ms": 0, "fs_exit": 0, "fs_na": 0})
             if step < it["parts"] and str(step) in it["answers"]:  # шаги тоже занимают время (часы сервера)
                 it["answers"][str(step)]["at"] = it["issued_at"] + (time.time() - it["issued_at"]) * step / it["parts"]
     assessment._drain_outbox(db, ts)
@@ -180,7 +183,7 @@ def _user(db: Session, persona: str, role: UserRole, sid: str = "") -> User:
 
 
 def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int,
-               away_items: tuple[int, ...] = (), sid: str = ""):
+               away_items: tuple[int, ...] = (), sid: str = "", copy_items: tuple[int, ...] = ()):
     u = _user(db, persona, UserRole.candidate, sid)
     p = CandidateProfile(user_id=u.id, full_name=name, phone="+7 900 000-00-00", telegram=f"@jury_{persona}",
                          city="Москва", work_format=WorkFormat.remote, relocation=False, experience_years=3.5,
@@ -213,7 +216,7 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
     db.commit()
     res = {}
     for attempt in range(6):  # демо-респондент случаен: нужен подтверждённый грейд — иначе следующий seed
-        res = run_demo_test(db, u.id, "middle", theta, seed + attempt, pending_left, away_items)
+        res = run_demo_test(db, u.id, "middle", theta, seed + attempt, pending_left, away_items, copy_items)
         if res.get("confirmed") or res.get("category_id"):
             break
     refresh_rating(db, u.id)
@@ -272,8 +275,10 @@ def create_jury(db: Session, sid: str = "") -> dict:
 def _create_jury(db: Session, sid: str) -> dict:
     t0 = time.time()
     _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0, sid=sid)
-    # у Ильи — два ухода со вкладки во время теста: достоверность «средняя» (видно работодателю с причиной)
-    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid)
+    # у Ильи — два ухода со вкладки и попытка скопировать текст задания: достоверность «средняя» (видно
+    # работодателю и Илье с причинами)
+    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid,
+                            copy_items=(8,))
     eu = _user(db, "employer", UserRole.employer, sid)
     c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург", website="https://example.invalid",
                 description="Платёжный сервис для малого бизнеса. Демо-компания для экспертов жюри.",
