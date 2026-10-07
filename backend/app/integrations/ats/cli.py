@@ -21,7 +21,7 @@ import sys
 
 from sqlalchemy import select
 
-from app.core.db import SessionLocal
+from app.core.db import SessionLocal, get_engine
 from app.integrations.ats import providers
 from app.integrations.ats import service as svc
 from app.integrations.ats.clients import AtsError
@@ -122,6 +122,7 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--provider", choices=list(providers.PROVIDERS))
     ap.add_argument("--force", action="store_true")
     args = ap.parse_args(argv)
+    get_engine()  # вне приложения движок БД сам не создаётся: без этого SessionLocal() — UnboundExecutionError
     with SessionLocal() as db:
         cid = _company_id(db, args)
         if args.command == "import-env":

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import re
+import uuid
 
 from fastapi.testclient import TestClient
 import httpx
@@ -303,6 +304,10 @@ def po_client():
 
 
 def _schema_ok(value, schema: dict, path: str = "") -> None:
+    if schema.get("type") == "array":
+        assert isinstance(value, list), f"{path}: в «Потоке» — список"
+    elif schema.get("type") == "object":
+        assert isinstance(value, dict), f"{path}: в «Потоке» — объект"
     if isinstance(value, list):
         for x in value:
             _schema_ok(x, schema.get("items") or {}, path + "[]")
@@ -319,7 +324,9 @@ def test_potok_applicant_body_matches_openapi_and_push(http):
     _schema_ok({"applicant": body}, spec["/applicants.json"]["post"]["requestBody"])
     assert body["phones"] == ["79001112233"] and body["emails"] == ["ilya@example.com"]
     assert body["source_type"] == "sourced" and body["source_url"] == get_isettings().public_base_url
-    assert body["ajs_joins"] == [{"job_id": 410101}] and body["events"]["type"] == "Event::Comment"
+    # events — список: объект настоящий «Поток» отклоняет с 500 (проверено на API 07.10.2026)
+    assert body["ajs_joins"] == [{"job_id": 410101}] and isinstance(body["events"], list)
+    assert body["events"][0]["type"] == "Event::Comment" and body["events"][0]["body"]
     cv = body["resumes"][0]["cv_params"]
     assert cv["certificate"][0]["url"] == DOC["links"]["pdf"] and "asyncio" in cv["skill_set"]
     assert cv["awards"][0]["name"] == "Финалист ICPC 2025" and "T1" in cv["education"]["attestation"][0]["result"]
@@ -546,3 +553,100 @@ def test_cli_import_env_masked_and_talantix_not_reimported(client, monkeypatch, 
         assert "Talantix: включено, режим real" in out and "вакансия 55679" in out and "env-" not in out
     finally:
         get_isettings.cache_clear()
+
+
+# ------------------------------------------------------------------ регрессия 07.10: реальный «Поток», автопередача, CLI
+
+def _stub_key(client, te) -> str:
+    from app.core.db import SessionLocal
+    from app.integrations.ats.models import AtsSettings
+    from app.modules.matching.router import my_company
+    from app.modules.auth.models import User
+
+    with SessionLocal() as db:
+        u = db.query(User).filter(User.email == "hr@corp.ru").one()
+        return db.get(AtsSettings, my_company(db, u).id).stub_key
+
+
+def test_potok_stub_events_only_list_like_real_api(client, ats_http):
+    """Настоящий «Поток» на events-объект отвечает 500 (проверено 07.10.2026) — заглушка ведёт себя так же."""
+    te = employer(client)
+    assert client.post("/api/employer/ats/providers/potok/demo", headers=H(te)).status_code == 200
+    auth = {"Authorization": f"Bearer ptk.{_stub_key(client, te)}"}
+    url = "/api/ats-stub/potok/api/v3/applicants.json"
+    obj = {"applicant": {"first_name": "Илья", "last_name": "Петров",
+                         "events": {"body": "Комментарий", "type": "Event::Comment"}}}
+    assert ats_http.post(url, json=obj, headers=auth).status_code == 500
+    ok = ats_http.post(url, json={"applicant": {**obj["applicant"], "events": [obj["applicant"]["events"]]}},
+                       headers=auth)
+    assert ok.status_code == 200, ok.text
+    recs = client.get("/api/employer/ats/stub/records", headers=H(te)).json()
+    assert [r["payload"]["body"] for r in recs if r["kind"] == "potok_event"] == ["Комментарий"]
+    # и тело, которое строит провайдер, заглушка (как и настоящий API) принимает
+    body = pt.applicant_body(prof.build(DOC), vacancy_id=410101)
+    assert ats_http.post(url, json={"applicant": body}, headers=auth).status_code == 200
+
+
+def _real_potok(company_id) -> None:
+    from app.core.db import SessionLocal
+    from app.integrations.ats.models import AtsConnection
+
+    with SessionLocal() as db:  # как на стенде: «Поток» подключён токеном, строки ats_settings ещё нет
+        db.add(AtsConnection(company_id=company_id, provider="potok", enabled=True, mode="real"))
+        db.commit()
+
+
+def _company_of(email: str):
+    from app.core.db import SessionLocal
+    from app.modules.auth.models import User
+    from app.modules.matching.router import my_company
+
+    with SessionLocal() as db:
+        return my_company(db, db.query(User).filter(User.email == email).one()).id
+
+
+def test_auto_push_on_accept_without_settings_row(client, monkeypatch):
+    from app.core.db import SessionLocal
+    from app.integrations.ats import service
+    from app.integrations.ats.models import AtsSettings
+
+    calls = []
+    monkeypatch.setattr(service, "deliver", lambda db, cid, **kw: calls.append((cid, kw)) or [])
+    monkeypatch.setattr(service, "deliver_bg", lambda cid, **kw: calls.append((cid, kw)))
+    tc, te, inv = _accepted(client)
+    cid = _company_of("hr@corp.ru")
+    _real_potok(cid)
+    with SessionLocal() as db:
+        assert db.get(AtsSettings, cid) is None
+    client.post(f"/api/candidate/invitations/{inv['id']}/accept", headers=H(tc))
+    assert calls == [(cid, {"invitation_id": uuid.UUID(inv["id"]), "trigger": "invitation_accepted"})]
+    with SessionLocal() as db:
+        assert db.get(AtsSettings, cid).auto_push  # строка создана с автопередачей по умолчанию
+
+    # отклик на вакансию, «Пригласить на интервью» — тот же путь (у новой компании строки настроек тоже нет)
+    from tests.test_integrations import VAC
+
+    te2 = employer(client, email="hr2@corp.ru", company="ООО Лютик")
+    cid2 = _company_of("hr2@corp.ru")
+    _real_potok(cid2)
+    v = client.post("/api/employer/vacancies", json=VAC, headers=H(te2)).json()
+    a = client.post(f"/api/vacancies/{v['id']}/apply", json={"consent_contacts": True}, headers=H(tc)).json()
+    calls.clear()
+    r = client.post(f"/api/employer/applications/{a['id']}/status", json={"status": "accepted"}, headers=H(te2))
+    assert r.status_code == 200
+    assert calls == [(cid2, {"application_id": uuid.UUID(a["id"]), "trigger": "application_accepted"})]
+
+
+def test_ats_cli_runs_in_fresh_process(client):
+    """python -m app.integrations.ats.cli в отдельном процессе: движок БД создаётся сам (было UnboundExecutionError)."""
+    import os
+    import subprocess
+    import sys
+
+    employer(client, email="ats-cli2@corp.ru", company="ООО Консоль")
+    root = Path(__file__).resolve().parents[1]
+    for mod, args in (("app.integrations.ats.cli", ["status", "--employer-email", "ats-cli2@corp.ru"]),):
+        r = subprocess.run([sys.executable, "-m", mod, *args], cwd=root, capture_output=True, text=True, timeout=120,
+                           env={**os.environ})
+        assert r.returncode == 0, r.stderr[-2000:]
+        assert "Поток" in r.stdout and "UnboundExecutionError" not in r.stderr
