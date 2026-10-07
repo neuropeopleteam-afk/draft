@@ -4,6 +4,7 @@ import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, e
 import { api } from "../../lib/api";
 import { SusPrompt } from "../../integrations/Sus";
 import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
+import { EmploymentTermsText } from "../../integrations/Youth";
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -64,6 +65,7 @@ export function Invitations() {
             <p className="text-2xl font-extrabold text-brand-night">{range(open.salary_from, open.salary_to)}</p>
             {open.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Работодатель этот минимум не видит.</Alert>}
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>
+            <EmploymentTermsText terms={open.employment_terms} />
             <p><b>Способ связи:</b> {open.contact_method}</p>
             <InvitationTrust invitationId={open.id} />
             {open.evidence?.length > 0 && (

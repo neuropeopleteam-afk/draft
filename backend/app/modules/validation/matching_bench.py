@@ -39,6 +39,7 @@ from app.modules.matching.need_parser import parse_need
 from app.modules.matching.ranking import ALGORITHM_VERSION, WEIGHTS, score_candidate
 from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate)
 from app.modules.validation.matching_eval import _tokens, keyword_score, selection_categories
+from app.modules.fsp.rating import VERSION as FSP_RATING_VERSION, POLICY as FSP_RATING_POLICY
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[3]
@@ -502,6 +503,7 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
     cfg_d = cfg.to_dict()
     rep = {
         "version": BENCH_VERSION, "algorithm": ALGORITHM_VERSION, "weights": WEIGHTS,
+        "fsp_rating": {"version": FSP_RATING_VERSION, "policy": FSP_RATING_POLICY},
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "command": "make bench" if not quick else "python -m app.modules.validation.matching_bench --quick",
         "config": cfg_d, "config_hash": hashlib.sha256(json.dumps(cfg_d, sort_keys=True).encode()).hexdigest()[:12],

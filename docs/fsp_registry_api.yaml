@@ -1,0 +1,257 @@
+openapi: 3.1.0
+info:
+  title: Предложение API реестра ФСП · синтетический мок
+  version: '1.0'
+  description: 'Не официальный API ФСП. Контракт команды «Встречный»: места, разряды,
+    дисциплины ЕВСК, командные результаты и даты. Мок содержит только FSP-770012,
+    FSP-770013, FSP-770014; весь паспорт — один ограниченный снимок (до 1000 достижений).
+    Реальный реестр потребует сервисной авторизации, согласования кодов ЕВСК и пагинации.
+    Поле evsk_code в моках пустое: официальные коды не придумываем. Обоснование: https://drive.google.com/file/d/11L9QI3apRb04DslW6hhass4SIksRUCYK/view
+    (53:44–55:16).'
+servers:
+- url: http://127.0.0.1:8106
+  description: Локальный мок исполнителя И6
+paths:
+  /api/fsp-registry/v1/participants/{fsp_id}/achievements:
+    get:
+      tags:
+      - fsp-registry
+      summary: 'Синтетический реестр ФСП: места, разряды, ЕВСК, команды, даты'
+      operationId: mock_endpoint_api_fsp_registry_v1_participants__fsp_id__achievements_get
+      parameters:
+      - name: fsp_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Fsp Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistryPassport'
+        '404':
+          description: Синтетический участник не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    ErrorDetail:
+      properties:
+        code:
+          type: string
+          title: Code
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - code
+      - message
+      title: ErrorDetail
+    ErrorResponse:
+      properties:
+        detail:
+          $ref: '#/components/schemas/ErrorDetail'
+      type: object
+      required:
+      - detail
+      title: ErrorResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    RegistryAchievement:
+      properties:
+        id:
+          type: string
+          maxLength: 100
+          title: Id
+        event_id:
+          type: string
+          maxLength: 100
+          title: Event Id
+        event_name:
+          type: string
+          maxLength: 255
+          title: Event Name
+        event_type:
+          type: string
+          title: Event Type
+          description: Тип мероприятия — справочная информация, не вес рейтинга
+        event_level:
+          type: string
+          enum:
+          - school
+          - regional
+          - interregional
+          - national
+          - international
+          title: Event Level
+        date:
+          type: string
+          format: date
+          title: Date
+        discipline:
+          type: string
+          enum:
+          - algorithmic
+          - product
+          - security
+          - robotics
+          - uav
+          title: Discipline
+        evsk_code:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Evsk Code
+          description: Код из актуального справочника ЕВСК
+        place:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Place
+        result:
+          type: string
+          enum:
+          - winner
+          - prize
+          - finalist
+          - participant
+          title: Result
+        sport_rank:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Sport Rank
+        team:
+          anyOf:
+          - $ref: '#/components/schemas/RegistryTeam'
+          - type: 'null'
+        verified:
+          type: boolean
+          title: Verified
+          default: true
+      type: object
+      required:
+      - id
+      - event_id
+      - event_name
+      - event_type
+      - event_level
+      - date
+      - discipline
+      - result
+      title: RegistryAchievement
+    RegistryPassport:
+      properties:
+        schema_version:
+          type: string
+          const: '1.0'
+          title: Schema Version
+          default: '1.0'
+        fsp_id:
+          type: string
+          maxLength: 64
+          title: Fsp Id
+        sport_rank:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          title: Sport Rank
+        updated_at:
+          type: string
+          format: date
+          title: Updated At
+        demo:
+          type: boolean
+          title: Demo
+          default: true
+        achievements:
+          items:
+            $ref: '#/components/schemas/RegistryAchievement'
+          type: array
+          maxItems: 1000
+          title: Achievements
+      type: object
+      required:
+      - fsp_id
+      - updated_at
+      title: RegistryPassport
+    RegistryTeam:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        place:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Place
+        members_count:
+          anyOf:
+          - type: integer
+            minimum: 1.0
+          - type: 'null'
+          title: Members Count
+        role:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Role
+      type: object
+      required:
+      - id
+      - name
+      title: RegistryTeam
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+x-proposed-production-auth: 'Authorization: Bearer <service-token> (FSP_REGISTRY_TOKEN)'

@@ -118,3 +118,9 @@ def _bench() -> dict:
 @router.get("/matching-bench", summary="Бенчмарк подбора со скрытой истиной (пересчёт: make bench)")
 def matching_bench():
     return _bench()
+
+
+@router.get("/fsp-rating", summary="Парный регрессионный бенчмарк формулы ФСП v1/v2")
+def fsp_rating_regression():
+    path = BENCH.parent / "fsp_rating_regression_0710.json"
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {"missing": True}
