@@ -29,10 +29,10 @@ router = APIRouter(prefix="/api/jury", tags=["jury"])
 log = logging.getLogger(__name__)
 _state: dict[str, float] = {}  # sid ("" — общее демо) → время последнего сброса
 _mx = threading.Lock()
-# Создание песочницы — несколько секунд CPU: не больше 12 в час с адреса и 60 в час всего (на воркер).
+# Создание песочницы — несколько секунд CPU: не больше JURY_NEW_SANDBOXES_PER_IP_HOUR (40) в час с адреса — счётчик
+# в памяти воркера — и JURY_NEW_SANDBOXES_TOTAL_HOUR (120) в час всего — по БД, для всех воркеров сразу.
 # Лимит исчерпан — вход в общее демо (в один клик работает всегда).
-_new_ip = SlidingWindow(12, 3600)
-_new_all = SlidingWindow(60, 3600)
+_new_ip = SlidingWindow(get_settings().jury_new_sandboxes_per_ip_hour, 3600)
 LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "employer": "/employer", "expert": "/expert",
            "fsp": "/fsp"}
 
@@ -62,7 +62,9 @@ def _token(db: Session, sid: str, persona: str) -> dict:
 def _new_sandbox(db: Session, request: Request, sid: str | None = None) -> str | None:
     """Выдаёт новую песочницу: запасную (мгновенно) или создаёт сейчас; sid — пересоздать удалённую по лимиту.
     None — лимит создания исчерпан."""
-    if _new_ip.retry_after(client_ip(request)) or _new_all.retry_after("all"):
+    s = get_settings()
+    _new_ip.limit = s.jury_new_sandboxes_per_ip_hour  # настройку можно поменять без перезапуска (тесты)
+    if seed.created_last_hour(db) >= s.jury_new_sandboxes_total_hour or _new_ip.retry_after(client_ip(request)):
         return None
     if sid is None:
         for spare in seed.spares(db):

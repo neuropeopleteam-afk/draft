@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Seg, Status, catTitle, dt, errText, range, rub, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
-import { AtsInvitationActions } from "../../integrations/Ats";
+import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 
 type Market = { from: number; to: number; median?: number } | null | undefined;
 
@@ -173,7 +173,7 @@ export function EmployerInvitations() {
               <p className="font-bold text-brand-night">{i.position_title}</p>
               <p className="text-brand-ink/65"><Link className="font-semibold text-brand" to={`/employer/candidates/${i.candidate_ref}`}>{i.candidate_ref}</Link> · {catTitle(i.candidate_category)} · {range(i.salary_from, i.salary_to)}</p>
             </div>
-            <Status s={i.status} />
+            <div className="flex flex-wrap items-center gap-2"><AtsStageBadge s={i.ats_stage} /><Status s={i.status} /></div>
           </div>
           {i.contacts ? (
             <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-emerald-900">
