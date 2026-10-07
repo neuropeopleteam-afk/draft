@@ -38,3 +38,26 @@ def test_jury_sandbox_total_limit_counts_db_for_all_workers(client, monkeypatch)
     # повторный вход в свою песочницу лимитом не ограничен
     again = _login(client, "employer", first)
     assert again["scenario"] == first and not again["created"]
+
+
+def test_readme_demo_commands_on_fresh_sqlite(tmp_path):
+    """Путь README без Docker (п. 5, «чистая» машина): миграции и демо-данные в отдельных процессах на SQLite.
+    Было: `python -m app.integrations.vacancies.demo` падал на SQLite ('str' object has no attribute 'hex') —
+    в отдельном процессе тип created_by (FK на users) не определялся без импорта всех моделей."""
+    import os
+    from pathlib import Path
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[1]
+    env = {**os.environ, "DATABASE_URL": f"sqlite:///{tmp_path / 'clean.db'}", "LLM_DISABLED": "true"}
+
+    def run(*args):
+        r = subprocess.run([sys.executable, *args], cwd=root, capture_output=True, text=True, timeout=300, env=env)
+        assert r.returncode == 0, (args, r.stderr[-2000:])
+        return r.stdout
+
+    run("-m", "alembic", "upgrade", "head")
+    assert "'candidates': 150" in run("-m", "app.modules.demo.seed")
+    assert '"created": 11' in run("-m", "app.integrations.vacancies.demo")
+    assert "cups" in run("-m", "app.cup.demo")
