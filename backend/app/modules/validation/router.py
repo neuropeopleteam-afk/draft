@@ -28,6 +28,9 @@ from app.modules.profiles.models import EmployerProfile
 from app.modules.validation import attacks
 
 router = APIRouter(prefix="/api/validation", tags=["validation"])
+from app.modules.validation.closed_set import router as closed_set_router
+
+router.include_router(closed_set_router)
 REPORT = Path(__file__).resolve().parent / "data" / "report.json"
 INTERN_CUT = Path(__file__).resolve().parent / "data" / "intern_cut.json"
 # Лимиты «Красной кнопки» (на воркер): 12 атак в минуту на пользователя, 90 в минуту всего

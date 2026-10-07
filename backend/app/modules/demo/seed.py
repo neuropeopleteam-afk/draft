@@ -1,4 +1,8 @@
-"""Демо-данные для показа жюри: 150 кандидатов (по 10 в каждой из 15 категорий), 10 работодателей, 15 потребностей.
+"""Демо-данные: 500 кандидатов, 10 работодателей, 15 потребностей.
+
+Исходные 150 кандидатов и их идентификаторы сохраняются; extend_candidates добавляет только 151..500.
+Обе аудитории: школьники/студенты ФСП и опытные специалисты. Все результаты — синтетическое демо,
+не доказательство прохождения реального банка по Kotlin, C#, PHP или Kubernetes.
 
 Все записи помечены как демо: users.is_demo / companies.is_demo, почты на зарезервированном домене *.invalid
 (письма туда не уходят и уйти не могут), паспорта ФСП — link_source=demo («демо-реестр»), результаты тестов —
@@ -142,16 +146,17 @@ def _user(db: Session, email: str, role: UserRole, pwd_hash: str) -> User:
 
 
 def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade: str, pwd_hash: str, with_fsp: bool,
-               status: str = "confirmed"):
+               status: str = "confirmed", *, core_override: list[str] | None = None, audience: str | None = None):
     """Демо-кандидат. status — статус грейда (единая модель): confirmed — категория подтверждена тестом;
     provisional — «Junior (предварительно)» (только grade == junior); unconfirmed_notest — опрос пройден, теста нет;
-    unconfirmed_failed — тест на заявленный грейд его не подтвердил (категории нет)."""
+    unconfirmed_failed — тест на заявленный грейд его не подтвердил (категории нет).
+    core_override / audience — расширение демо до 500 (И8): свой стек и аудитория (школьник / студент / специалист)."""
     u = _user(db, f"demo-candidate-{idx:03d}@demo.invalid", UserRole.candidate, pwd_hash)
     female = rnd.random() < 0.35
     last = rnd.choice(LAST) + ("а" if female else "")
     name = f"{rnd.choice(FIRST_F if female else FIRST_M)} {last}"
     exp = round(rnd.uniform(*EXP[grade]), 1)
-    core = CORE[direction]
+    core = core_override or CORE[direction]
     k = {"intern": 3, "junior": 4, "middle": 6, "senior": 8}[grade]
     stack = list(dict.fromkeys(core[:3] + rnd.sample(core[3:], min(len(core) - 3, k - 2))))[:k]
     roles = ["developer" if direction != "qa" else "tester"]
@@ -171,6 +176,11 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
         headline=f"{direction} · {grade} (демо)" if status == "confirmed" else f"{direction} (демо)",
     )
     db.add(p)
+    if audience:
+        p.about = {"school": "Школьник, участник ФСП. Учебные проекты и соревнования (синтетическое демо).",
+                   "student": "Студент, участник ФСП. Стажировка и командные проекты (синтетическое демо).",
+                   "professional": "Опытный ИТ-специалист. Коммерческие проекты (синтетическое демо)."}[audience]
+        p.privacy = {"demo_audience": audience}
     db.flush()
     created = utcnow() - timedelta(days=rnd.randint(5, 80))
     survey = SurveyResponse(user_id=u.id, direction_id=direction, claimed_grade_id=grade, experience_years=exp,
@@ -249,6 +259,10 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     for t in tested:
         total = rnd.randint(2, 4)
         corr = max(0, min(total, int(round(total * min(1.0, 0.45 + 0.25 * (theta - CUT[grade]) + rnd.uniform(-0.2, 0.25))))))
+        # New dictionary entries broaden T0, not the actual assessment bank's coverage.
+        # Consume RNG identically, but do not invent confirmation for unsupported new tags.
+        if audience and t in {"kotlin", "csharp", "php", "kubernetes"}:
+            continue
         db.add(CandidateFact(user_id=u.id, kind="skill", key=t, title=STACK[t][0],
                              value={"score": round(corr / total, 2), "correct": corr, "total": total},
                              evidence_level=EvidenceLevel.T1, source=FactSource.test,
@@ -272,6 +286,49 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
                                   verified=True, source_ref="demo-registry"))
     db.flush()
     refresh_rating(db, u.id)
+    return p
+
+
+def extend_candidates(db: Session, rng_seed: int = 20261007, *, base_seed: int = 20261006) -> dict:
+    """Идемпотентное добавление демо-кандидатов после 150 основных (их строки не читаются и не меняются):
+    151…161 — статусы грейда (И1), 162…171 — стажёры (И13), далее до 500 — расширение И8 (две аудитории, широкий стек).
+    Повторный запуск (и запуск на сервере без --reset) добавляет только отсутствующих."""
+    existing = set(db.scalars(select(User.email).where(User.email.like("demo-candidate-%@demo.invalid"))))
+    pwd_hash = hash_password(secrets.token_urlsafe(24))
+    added = 0
+    if f"demo-candidate-{STATUS_INTERN_FIRST:03d}@demo.invalid" not in existing:
+        last = _status_and_intern_candidates(db, STATUS_INTERN_FIRST - 1, base_seed, pwd_hash)
+        added += last - STATUS_INTERN_FIRST + 1
+        existing |= {f"demo-candidate-{i:03d}@demo.invalid" for i in range(STATUS_INTERN_FIRST, last + 1)}
+    backends = [
+        ["go", "postgresql", "grpc", "kafka", "docker", "kubernetes", "redis", "git"],
+        ["java", "kafka", "postgresql", "docker", "kubernetes", "grpc", "redis", "git"],
+        ["kotlin", "postgresql", "kafka", "java", "docker", "kubernetes", "grpc", "git"],
+        ["csharp", "postgresql", "rest-api", "kafka", "docker", "kubernetes", "redis", "git"],
+        ["php", "postgresql", "redis", "docker", "kafka", "kubernetes", "http", "git"],
+        CORE["backend"],
+    ]
+    audiences = {"school": 0, "student": 0, "professional": 0}
+    for idx in range(151, 501):
+        if f"demo-candidate-{idx:03d}@demo.invalid" in existing:  # в т. ч. 151…171 — статусы грейда и стажёры
+            continue
+        rnd = random.Random(rng_seed + idx)
+        offset = idx - 151
+        # План И8: 120 backend + 230 по остальным направлениям; индексы 151…171 заняты статусами грейда и стажёрами,
+        # поэтому из backend-части расширения остаётся 99 (всего 500 демо-кандидатов)
+        direction = "backend" if offset < 120 else DIRECTIONS[1 + (offset - 120) % 4]
+        grade = GRADES[(offset // 5) % 3]
+        audience = ("school" if offset % 4 == 0 else "student") if grade == "junior" else "professional"
+        core = backends[offset % len(backends)] if direction == "backend" else CORE[direction]
+        _candidate(db, rnd, idx, direction, grade, pwd_hash, audience != "professional" or offset % 3 == 0,
+                   core_override=core, audience=audience)
+        audiences[audience] += 1
+        added += 1
+        if added % 50 == 0:
+            db.flush()
+    db.flush()
+    # existing уже включает добавленных выше 151…171; audiences — только расширение И8
+    return {"added": added, "total": len(existing) + sum(audiences.values()), "audiences_added": audiences}
 
 
 PROVISIONAL_DEMO = (("backend", True), ("frontend", False), ("data_ml", False), ("qa", True), ("security", False))
@@ -299,6 +356,21 @@ def _extra_candidates(db: Session, idx: int, rng_seed: int, pwd_hash: str) -> in
     return idx
 
 
+STATUS_INTERN_FIRST = 151  # первый индекс после 150 основных: статусы грейда (И1), затем стажёры (И13)
+
+
+def _status_and_intern_candidates(db: Session, idx: int, rng_seed: int, pwd_hash: str) -> int:
+    """151…161 — статусы грейда, 162…171 — стажёры; отдельные генераторы, 150 основных кандидатов не сдвигаются."""
+    idx = _extra_candidates(db, idx, rng_seed, pwd_hash)
+    rnd_i = random.Random(rng_seed + 13)
+    for d in DIRECTIONS:
+        for i in range(INTERN_PER_DIRECTION):
+            idx += 1
+            _candidate(db, rnd_i, idx, d, "intern", pwd_hash, with_fsp=(i == 0))
+    db.commit()
+    return idx
+
+
 def seed(db: Session, rng_seed: int = 20261006) -> dict:
     rnd = random.Random(rng_seed)
     pwd_hash = hash_password(secrets.token_urlsafe(24))  # случайный, нигде не сохраняется
@@ -311,15 +383,8 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
                 idx += 1
                 _candidate(db, rnd, idx, d, g, pwd_hash, fsp_flags[i])
             db.commit()
-    # Статусы грейда (единая модель) — отдельными генераторами, чтобы не сдвинуть 150 основных кандидатов:
-    # 5 «Junior (предварительно)» и кандидаты без подтверждённого грейда (теста нет / тест не подтвердил) — 151…161
-    idx = _extra_candidates(db, idx, rng_seed, pwd_hash)
-    # Стажёры — отдельным потоком случайности (162…171), исходные 150 кандидатов остаются теми же
-    rnd_i = random.Random(rng_seed + 13)
-    for d in DIRECTIONS:
-        for i in range(INTERN_PER_DIRECTION):
-            idx += 1
-            _candidate(db, rnd_i, idx, d, "intern", pwd_hash, with_fsp=(i == 0))
+    # После 150 основных: статусы грейда (И1, 151…161), стажёры (И13, 162…171), расширение до 500 (И8)
+    extension = extend_candidates(db, base_seed=rng_seed)
     db.commit()
     employers = []
     for i, (name, industry, city) in enumerate(COMPANIES, start=1):
@@ -345,7 +410,7 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
     db.commit()
     fsp = db.scalar(select(func.count()).select_from(FspPassport).join(User, User.id == FspPassport.user_id)
                     .where(User.is_demo.is_(True)))
-    return {"candidates": idx, "interns": INTERN_PER_DIRECTION * len(DIRECTIONS), "with_fsp": fsp,
+    return {"candidates": idx + extension["added"], "interns": INTERN_PER_DIRECTION * len(DIRECTIONS), "with_fsp": fsp,
             "employers": len(employers), "needs": len(NEEDS) + len(INTERN_NEEDS)}
 
 
@@ -356,14 +421,16 @@ def main() -> None:
     a = ap.parse_args()
     get_engine()
     with SessionLocal() as db:
-        exists = db.scalar(select(func.count()).select_from(User).where(User.is_demo.is_(True))) or 0
+        exists = db.scalar(select(func.count()).select_from(User)
+                           .where(User.email.like("demo-candidate-%@demo.invalid"))) or 0
         if a.reset or a.delete:
             print(f"Удалено демо-пользователей: {delete_demo(db)}")
             exists = 0
         if a.delete:
             return
         if exists:
-            print(f"Демо-данные уже есть ({exists} пользователей). Для пересоздания: --reset")
+            print(extend_candidates(db))
+            db.commit()
             return
         print(seed(db))
 

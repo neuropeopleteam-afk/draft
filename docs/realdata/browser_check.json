@@ -1,0 +1,33 @@
+{
+  "results": [
+    {
+      "screen": "closed-set-results",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "passed": true
+    },
+    {
+      "screen": "closed-set-results",
+      "width": 390,
+      "scrollWidth": 390,
+      "passed": true
+    },
+    {
+      "screen": "unsupported-mobile",
+      "width": 1440,
+      "scrollWidth": 1440,
+      "passed": true
+    },
+    {
+      "screen": "unsupported-mobile",
+      "width": 390,
+      "scrollWidth": 390,
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "json_upload": true,
+  "csv_upload": true,
+  "csv_export": true,
+  "clear_and_reload": true
+}
