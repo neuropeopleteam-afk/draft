@@ -15,7 +15,7 @@ def test_grade_order_and_cuts_consistent():
     assert GRADE_ORDER == ("intern", "junior", "middle", "senior")
     assert [GRADE_LEVEL[g] for g in GRADE_ORDER] == [0, 1, 2, 3]
     cuts = [GRADE_CUTS[g] for g in GRADE_ORDER]
-    assert cuts == sorted(cuts) and cuts[0] == -2.0 and cuts[1] == -1.0
+    assert cuts == sorted(cuts) and cuts[0] == -1.75 and cuts[1] == -1.0
     assert GRADES["intern"] == "Стажёр" and category_title("qa.intern") == "QA · Стажёр"
     assert grade_above("intern") == "junior" and grade_below("intern") is None and grade_above("senior") is None
 
@@ -29,9 +29,9 @@ def test_grade_by_experience():
 
 def test_point_grade_and_probabilities_full_scale():
     assert point_grade(-2.5) == "none" and point_grade(-1.5) == "intern" and point_grade(-0.5) == "junior"
-    p = probabilities(-1.5, 0.3)
+    p = probabilities(-1.4, 0.3)
     assert set(p) == {"none", "intern", "junior", "middle", "senior"}
-    assert abs(sum(p.values()) - 1) < 1e-3 and p["intern"] > 0.85
+    assert abs(sum(p.values()) - 1) < 1e-3 and p["intern"] > 0.7 and p["intern"] == max(p.values())
 
 
 def test_decide_intern_same_rule_as_others():
@@ -47,9 +47,9 @@ def test_decide_intern_same_rule_as_others():
 
 
 def test_decide_junior_suggests_intern_as_lower():
-    d = decide_grade(-1.5, 0.3, "junior")
+    d = decide_grade(-1.4, 0.3, "junior")
     assert not d.confirmed and d.retake_lower == "intern" and d.point_grade == "intern"
-    assert "intern" in d.explanation and d.probabilities["intern"] > 0.8
+    assert "intern" in d.explanation and d.probabilities["intern"] > 0.7
     # решения для прежних грейдов не меняются
     m = decide_grade(0.6, 0.3, "middle")
     assert m.confirmed and m.assigned == "middle"
@@ -58,13 +58,13 @@ def test_decide_junior_suggests_intern_as_lower():
 
 
 def test_stub_grade_decision_full_scale():
-    d = stub.grade_decision(-1.5, 0.3, "intern")
+    d = stub.grade_decision(-1.4, 0.3, "intern")
     assert d["confirmed"] and d["point_grade"] == "intern"
     assert set(d["probabilities"]) == {"none", "intern", "junior", "middle", "senior"}
     assert abs(sum(d["probabilities"].values()) - 1) < 1e-2
-    j = stub.grade_decision(-1.6, 0.3, "junior")
+    j = stub.grade_decision(-1.4, 0.3, "junior")
     assert not j["confirmed"] and j["retake_lower"] == "intern"
-    assert "Стажёр" in stub._explain(j, -1.6, 0.3, "junior")
+    assert "Стажёр" in stub._explain(j, -1.4, 0.3, "junior")
 
 
 def test_rules_accept_intern():
@@ -113,10 +113,10 @@ def test_bank_engine_intern_session_uses_only_intern_pool():
     assert st["subpool"] is None  # без ротации субпулов
     keep = intern_family_ids(_pool(st["cfg"]["subpools"]), "qa")
     sess = eng._rebuild(st)
-    assert sess.theta == pytest.approx(-1.5)  # стартовая θ Стажёра
+    assert sess.theta == pytest.approx(-1.25)  # стартовая θ Стажёра
     assert all(i.family_id in keep for i in sess.scored_pool)
     assert all(i.family_id in keep for i in sess.ext_pool)
-    assert sess.cfg.cuts[0] == -2.0
+    assert sess.cfg.cuts[0] == -1.75
     # ответы «всё верно» → тест заканчивается подтверждением Стажёра с предложением идти на Junior
     for _ in range(40):
         it = eng.next_item(st)
@@ -144,3 +144,25 @@ def test_need_parser_intern_keywords():
         assert r["grade"] == "intern", text
     assert parse_rules("Junior Python-разработчик, опыт от 1 года: Django, PostgreSQL")["grade"] == "junior"
     assert parse_rules("Наставник стажёров, senior backend: Go, Kafka")["grade"] == "senior"
+
+
+def test_intern_cut_simulation_quick_and_report_block(client):
+    from app.modules.validation import intern_cut
+
+    res = intern_cut.run(quick=True, synthetic=True)
+    assert res["chosen"]["cut"] in res["candidate_cuts"]
+    assert res["chosen"]["basis"] == "with_easy_families"
+    for s in res["by_cut"]:
+        assert 0 <= (s["false_confirm"] or 0) <= 1 and 0 <= (s["false_reject"] or 0) <= 1
+        assert s["n_sessions"] == len(res["theta_grid"]) * res["n_per_theta"] * len(res["directions"])
+        assert set(s["stop_reasons"]) and len(s["by_theta"]) == len(res["theta_grid"])
+    assert res["with_easy_families"]["pool"]["backend"][str(res["chosen"]["cut"])]["n_families"] > \
+        res["pool"]["backend"][str(res["chosen"]["cut"])]["n_families"]
+    assert res["families_used"] and all(not f.startswith("synthetic.") for f in res["families_used"])
+    # сохранённые данные отдаются в отчёте валидации, выбранный порог совпадает с порогом платформы
+    rep = client.get("/api/validation/report").json()
+    blk = rep["intern_cut"]
+    assert not blk.get("missing")
+    assert blk["cut_in_use"] == GRADE_CUTS["intern"] == blk["chosen"]["cut"]
+    assert blk["pool_now"]["qa"]["n_common"] + blk["pool_now"]["qa"]["n_direction"] >= 8
+    assert all(k in blk for k in ("by_cut", "with_easy_families", "retest", "rule"))
