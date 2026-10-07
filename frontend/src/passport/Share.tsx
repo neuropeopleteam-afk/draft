@@ -1,5 +1,6 @@
 // Кабинет кандидата: «Поделиться паспортом» — QR, ссылка, отзыв и новая ссылка, история.
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Alert, dt, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { GRADE_STATUS, StateBadge, verifyHref, type PassportPublic, type PassportState } from "./common";
@@ -14,6 +15,10 @@ export function PassportShare() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const box = useRef<HTMLElement>(null);
+  const { hash } = useLocation();
+  // /candidate/category#passport (шаг проводника жюри «Паспорт грейда») — прокрутить к блоку, когда он загрузится
+  useEffect(() => { if (hash === "#passport" && data) box.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, [hash, !!data]); // eslint-disable-line react-hooks/exhaustive-deps
   if (error) return <section className="card"><Alert>{error}</Alert></section>;
   if (!data) return null;
   const a = data.active;
@@ -22,12 +27,16 @@ export function PassportShare() {
     setBusy(true); setErr(null);
     try { setData(await api<Owner>(path, { method: "POST" })); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
-  async function copy(url: string) {
+  // на телефоне — системное меню «Поделиться» (мессенджер, почта), на компьютере — ссылка в буфер обмена
+  async function share(url: string) {
+    if (typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches) {
+      try { await navigator.share({ title: "Паспорт грейда · Встречный", url }); return; } catch (e) { if ((e as DOMException).name === "AbortError") return; }
+    }
     try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2500); } catch { setErr("Не удалось скопировать — выделите ссылку вручную"); }
   }
   const past = data.history.filter((h) => !a || h.id !== a.id).slice(0, 3);
   return (
-    <section className="card" aria-labelledby="passport-share">
+    <section ref={box} id="passport" className="card scroll-mt-24" aria-labelledby="passport-share">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 id="passport-share" className="font-bold text-brand-night">Паспорт грейда</h2>
@@ -43,7 +52,7 @@ export function PassportShare() {
             <p><b className="text-brand-night">{a.passport.category.title}</b> · {GRADE_STATUS[a.passport.grade_status]} · действителен до {dt(a.passport.valid_until)}</p>
             <p className="break-all rounded-xl bg-[#F7F6FB] px-3 py-2 font-mono text-xs text-brand-night">{verifyHref(a.id)}</p>
             <div className="flex flex-wrap gap-3">
-              <button className="btn-primary" onClick={() => void copy(verifyHref(a.id))}>{copied ? "Ссылка скопирована" : "Поделиться паспортом"}</button>
+              <button className="btn-primary" onClick={() => void share(verifyHref(a.id))}>{copied ? "Ссылка скопирована" : "Поделиться паспортом"}</button>
               <a className="btn-ghost" href={`/verify/${a.id}`} target="_blank" rel="noreferrer">Открыть страницу проверки</a>
               <button className="btn-ghost" disabled={busy} onClick={() => void act("/me/passport/revoke", "Отозвать ссылку? Страница проверки по ней покажет «Отозван». Новую ссылку можно выпустить сразу.")}>Отозвать ссылку</button>
             </div>
