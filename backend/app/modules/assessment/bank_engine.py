@@ -25,7 +25,9 @@
 Экспресс-режим (``mode="express"``, только демо-режим жюри): 5–7 коротких автопроверяемых заданий (без
 open_book_3step и open_answer, рекомендуемое время ≤ 4 мин), без канареек и дотестирования, ≈ 5 минут. Тот же
 банк, тот же адаптивный выбор, та же оценка θ и то же правило решения (P ≥ 0,8) — интервал θ шире, о чём честно
-сказано в результате; сессия помечена «экспресс» для кандидата и работодателя.
+сказано в результате; сессия помечена «экспресс» для кандидата и работодателя. Длина и лимит задания зависят от
+заявленного грейда (``express_params``): за Senior — 8–12 заданий с лимитом ≤ 6 мин, иначе крайняя категория не
+подтверждается даже при всех верных (потолок EAP за 7 заданий ≈ 1,4 при SE 0,7); порог доказательности один везде.
 
 Состояние — JSON в test_sessions.result["state"]; CATSession пересобирается из него на каждом запросе
 (детерминированно: ГСЧ выбора зависит от seed сессии и номера позиции). Пакет банка не изменяется.
@@ -114,6 +116,18 @@ def _x_list(it: dict) -> list[float]:
     return [float("nan") if v is None else float(v) for v in it["x"]]
 
 
+def express_params(settings, claimed_grade: str | None) -> dict:
+    """Параметры экспресса по заявленному грейду: Junior/Middle — 5–7 заданий с лимитом ≤ 240 с; Senior — 8–12 с лимитом
+    ≤ 360 с (консилиум 07.10, решение 5). Одна точка правды для движка, статуса и дедлайна сессии."""
+    s = settings
+    if claimed_grade == "senior":
+        return {"min_items": s.assessment_express_senior_min_items, "max_items": s.assessment_express_senior_max_items,
+                "item_time_s": s.assessment_express_senior_item_time_s,
+                "max_minutes": s.assessment_express_senior_max_minutes}
+    return {"min_items": s.assessment_express_min_items, "max_items": s.assessment_express_max_items,
+            "item_time_s": s.assessment_express_item_time_s, "max_minutes": s.assessment_express_max_minutes}
+
+
 class BankEngine:
     def __init__(self) -> None:
         specs = load_specs()  # реестр семейств грузится сразу: ошибка — заметна при старте, а не на кандидате
@@ -143,19 +157,18 @@ class BankEngine:
                 "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer}}
 
     # ------------------------------------------------------------------ протокол
-    def _express_cfg(self, cfg: dict) -> dict:
-        s = self._settings()
-        return {**cfg, "mode": "express", "min_items": s.assessment_express_min_items,
-                "max_items": s.assessment_express_max_items, "max_time_s": s.assessment_express_max_minutes * 60.0,
-                "canary_positions": [], "ext_items": 0, "max_item_time_s": float(s.assessment_express_item_time_s),
-                "max_per_format": {"open_book_3step": 0, "open_answer": 0}}
+    def _express_cfg(self, cfg: dict, claimed_grade: str) -> dict:
+        p = express_params(self._settings(), claimed_grade)
+        return {**cfg, "mode": "express", "min_items": p["min_items"], "max_items": p["max_items"],
+                "max_time_s": p["max_minutes"] * 60.0, "canary_positions": [], "ext_items": 0,
+                "max_item_time_s": float(p["item_time_s"]), "max_per_format": {"open_book_3step": 0, "open_answer": 0}}
 
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
               previous_subpools: list[int] | None = None, previous_families: list[str] | None = None,
               mode: str = "full") -> dict:
         cfg = self._base_cfg()
         if mode == "express":
-            cfg = self._express_cfg(cfg)
+            cfg = self._express_cfg(cfg, claimed_grade)
         # Ротация субпулов: первая попытка — по seed сессии, повторная — другой субпул (параллельная форма);
         # субпулы на карантине (утечка) не выдаются. См. exposure.py.
         subpool = choose_subpool(cfg["subpools"], seed, previous_subpools,
@@ -281,6 +294,8 @@ class BankEngine:
             for i in done], pk)
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families, "mode": state.get("mode", "full"),
+            "length": {"min_items": state["cfg"]["min_items"], "max_items": state["cfg"]["max_items"],
+                       "max_item_time_s": state["cfg"].get("max_item_time_s")},
             "stop_reason": state.get("stop_reason") or sess.stop_reason or "finished_early",
             "n_scored": len(scored), "n_canaries": sum(1 for i in done if i["canary"]),
             "time_used_s": round(sum(i.get("time_s", 0) for i in done), 1),
@@ -590,4 +605,8 @@ class BankEngine:
         if details.get("mode") == "express":
             s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без контрольных и дотестирования, "
                   "поэтому интервал θ шире, чем у полного теста (8–16 заданий); правило решения то же — P ≥ 80 %.")
+            if claimed == "senior":
+                mx = (details.get("length") or {}).get("max_items", 12)
+                s += (f" За Senior экспресс длиннее (до {mx} заданий): крайняя категория подтверждается при почти всех верных "
+                      "ответах.")
         return s
