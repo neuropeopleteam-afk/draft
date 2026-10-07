@@ -183,8 +183,9 @@ class BankEngine:
         used_time = sum(float(it.get("time_s") or 0) for it in prior)
         cfg.update({"mode": "confirm", "min_items": n_prior, "max_items": n_prior, "max_time_s": used_time,
                     "stop_rule": "classification", "cuts_only": "junior"})
-        excl = sorted(set(previous_families or []) | {it["family_id"] for it in prior})
-        return {
+        own = {it["family_id"] for it in prior}
+        excl = sorted(set(previous_families or []) | own)
+        state = {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": "junior",
             "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": prev.get("subpool"), "items": [],
             "skipped": [], "exclude_ext": excl, "mode": "confirm", "prior": prior,
@@ -192,6 +193,13 @@ class BankEngine:
             "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
             "started_at": time.time(),
         }
+        # После нескольких попыток исключённые семейства прошлых сессий могут выбрать все короткие задания банка —
+        # тогда исключаем только семейства исходной сессии (её ответы и так перенесены), чтобы дотестирование
+        # не закончилось без единого нового задания.
+        if len(excl) > len(own) and not self._rebuild(state)._ext_candidates():
+            state["exclude_ext"] = sorted(own)
+            state["confirm"]["exclusion_relaxed"] = True
+        return state
 
     def next_item(self, state: dict) -> ItemPublic | None:
         if state.get("done"):
