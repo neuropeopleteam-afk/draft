@@ -21,13 +21,10 @@ from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
 from app.modules.fsp.models import FspAchievement, FspPassport
-<<<<<<< HEAD
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
-=======
 from app.modules.fsp.rating import details as fsp_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile
->>>>>>> feat/fsp2
 
 DEFAULT_PRIVACY = {
     "show_city": True, "show_experience": True, "show_work_format": True, "show_roles": True,
