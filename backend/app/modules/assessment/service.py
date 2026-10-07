@@ -427,6 +427,13 @@ def _confirmed_by(db: Session, user_id: uuid.UUID) -> dict | None:
     return provisional.confirmed_by(f.value if f else None)
 
 
+def _grade_status(db: Session, user_id: uuid.UUID) -> dict | None:
+    from app.modules.profiles.facts import grade_status, load_bundles
+
+    b = load_bundles(db, [user_id]).get(user_id)
+    return grade_status(b) if b is not None else None
+
+
 def status(db: Session, user_id: uuid.UUID) -> dict:
     from app.modules.assessment import provisional
     from app.modules.catalog.models import Category
@@ -480,6 +487,8 @@ def status(db: Session, user_id: uuid.UUID) -> dict:
         "active_mode": _mode(active) if active else None,
         # «Junior (предварительно)»: уровень доказанности и как подтвердить (provisional.options)
         "provisional": provisional.options(db, profile),
+        # единая модель статуса грейда (та же, что видит работодатель): подтверждён / предварительно / не подтверждён
+        "grade_status": _grade_status(db, user_id),
         "confirmed_by": _confirmed_by(db, user_id),
         "engine": get_engine().name,
         "sessions": [{

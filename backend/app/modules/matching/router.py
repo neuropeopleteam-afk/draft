@@ -111,7 +111,8 @@ class Filters(BaseModel):
     stack_t1: list[str] | None = Field(None, description="Только с подтверждёнными (T1) навыками")
     stack_any: list[str] | None = Field(None, description="Навык заявлен (T0) или подтверждён (T1)")
     fsp_only: bool = False
-    confirmed_only: bool = Field(False, description="Без категории «Junior (предварительно)» — только подтверждённые")
+    confirmed_only: bool = Field(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
+                                                    "кандидатов со статусом «грейд не подтверждён»")
     work_format: Literal["office", "hybrid", "remote"] | None = None
     city: str | None = Field(None, max_length=100)
     experience_min: float | None = Field(None, ge=0, le=30)
@@ -165,15 +166,34 @@ def _make_version(db: Session, need: EmployerNeed, user: User, filters: dict, pa
     return v
 
 
+def _result_status(r: dict) -> str:
+    """Статус грейда результата подборки (у версий до единой модели статуса — по карточке)."""
+    if r.get("grade_status"):
+        return r["grade_status"]
+    c = r.get("card") or {}
+    if (c.get("status") or {}).get("status"):
+        return c["status"]["status"]
+    return "provisional" if (c.get("category") or {}).get("provisional") else "confirmed"
+
+
 def _version_out(db: Session, v: SelectionVersion) -> dict:
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     counts = ranking.category_counts(db)
+    prov, unc = ranking.provisional_counts(db), ranking.unconfirmed_counts(db)
+    recs = ranking.recommended_categories(v.requirements, counts, cats)
+    for r in recs:
+        r["provisional"], r["unconfirmed"] = prov.get(r["id"], 0), unc.get(r["id"], 0)
+    st = [_result_status(r) for r in v.results]
     return {
         "version": v.version, "parent_version": v.parent_version, "created_at": v.created_at.isoformat(),
         "filters": v.filters, "requirements": v.requirements, "algorithm": v.algorithm_version,
-        "weights": ranking.WEIGHTS, "levels": ranking.LEVELS,
-        "categories": ranking.recommended_categories(v.requirements, counts, cats),
+        "weights": ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
+        "categories": recs,
         "total": len(v.results), "results": v.results,
+        # единая модель статуса: сколько в выдаче подтверждённых / предварительных / не подтверждённых
+        "confirmed_matched": sum(1 for x in st if x == "confirmed"),
+        "provisional_matched": sum(1 for x in st if x == "provisional"),
+        "unconfirmed_matched": sum(1 for x in st if x == "unconfirmed"),
     }
 
 
@@ -304,7 +324,8 @@ def search_candidates(
     stack: list[str] = Query(default_factory=list, description="Стек-теги (все должны быть)"),
     stack_level: Literal["any", "t1"] = Query("any", description="any — заявлен или подтверждён; t1 — подтверждён"),
     fsp: bool = Query(False, description="Только с паспортом ФСП"),
-    confirmed: bool = Query(False, description="Только подтверждённые категории (без «Junior (предварительно)»)"),
+    confirmed: bool = Query(False, description="Только подтверждённый грейд: без «Junior (предварительно)» и без "
+                                               "«грейд не подтверждён» (по умолчанию они показываются ниже подтверждённых)"),
     limit: int = Query(30, ge=1, le=100), offset: int = Query(0, ge=0),
     user: User = Depends(employer), db: Session = Depends(get_db),
 ) -> dict:
@@ -316,9 +337,10 @@ def search_candidates(
 @router.get("/categories", summary="Категории с числом видимых кандидатов и рыночным диапазоном", responses=AUTH)
 def categories(user: User = Depends(employer), db: Session = Depends(get_db)) -> list[dict]:
     counts = ranking.category_counts(db)
-    prov = ranking.provisional_counts(db)
+    prov, unc = ranking.provisional_counts(db), ranking.unconfirmed_counts(db)
     return [{"id": c.id, "title": c.title, "direction": c.direction_id, "grade": c.grade_id,
-             "count": counts.get(c.id, 0), "provisional": prov.get(c.id, 0), "market_range": ranking._mr(c)}
+             "count": counts.get(c.id, 0), "provisional": prov.get(c.id, 0), "unconfirmed": unc.get(c.id, 0),
+             "market_range": ranking._mr(c)}
             for c in db.scalars(select(Category).order_by(Category.direction_id)).all()]
 
 
@@ -330,9 +352,12 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None, user: User = De
     p = profile_by_ref(db, ref)
     b = load_bundles(db, [p.user_id])[p.user_id]
     cats = {x.id: x for x in db.scalars(select(Category)).all()}
-    peers = ranking.visible_pool(db, category_ids=[p.current_category_id])
-    rank = 1 + sum(1 for x in peers if (x.rating_score or 0) > (p.rating_score or 0))
-    out = card(b, cats, rank=rank, rank_total=len(peers))
+    if p.current_category_id:
+        peers = ranking.visible_pool(db, category_ids=[p.current_category_id])
+        rank = 1 + sum(1 for x in peers if (x.rating_score or 0) > (p.rating_score or 0))
+        out = card(b, cats, rank=rank, rank_total=len(peers))
+    else:  # грейд не подтверждён: места в категории нет
+        out = card(b, cats)
     if need_id:
         n = _own_need(db, c, need_id)
         s, comps, reasons = ranking.score_candidate(b, n.requirements)
