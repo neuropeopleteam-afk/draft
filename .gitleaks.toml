@@ -1,0 +1,32 @@
+# Gitleaks 8.28: поиск секретов в истории и рабочем дереве (задание security в .github/workflows/ci.yml).
+# Локально из корня: gitleaks git --no-banner --redact=100 .   (история)
+#                    gitleaks dir --no-banner --redact=100 .   (рабочее дерево)
+# Правила — стандартный набор gitleaks; ниже только известные ложные срабатывания. Добавляя исключение,
+# пишите рядом, почему это не секрет. Журнал прогонов: docs/ci/security_run_0710.md.
+title = "spectrek-fsp"
+
+[extend]
+useDefault = true
+
+# Вендорные минифицированные файлы Swagger UI и ReDoc (backend/app/static/apidocs) и integrity-хэши npm:
+# длинные строки высокой энтропии, секретов там нет.
+[[allowlists]]
+description = "Вендорные файлы документации API и lock-файл npm"
+paths = [
+  '''backend/app/static/apidocs/.*\.(js|css|map)$''',
+  '''frontend/package-lock.json$''',
+  '''e2e/package-lock.json$''',
+]
+
+# Тестовые фикстуры: секрет подписи JWT в backend/tests/conftest.py задан строкой с явной пометкой.
+[[allowlists]]
+description = "Тестовые фикстуры"
+regexes = ['''test-secret-not-for-prod''']
+
+# Шаблоны переменных окружения (.env.example): пустое значение `JWT_SECRET=` заставляет generic-api-key
+# захватить следующую строку (`JWT_TTL_MINUTES=720`) как «секрет». Исключается именно такая пара строк,
+# а не весь файл: непустое значение в шаблоне по-прежнему будет найдено.
+[[allowlists]]
+description = "Пустая переменная шаблона .env, за которой идёт следующая переменная"
+regexTarget = "match"
+regexes = ['''^[A-Z0-9_]+=\s*\n[A-Z0-9_]+=''']
