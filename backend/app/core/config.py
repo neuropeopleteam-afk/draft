@@ -97,6 +97,9 @@ class Settings(BaseSettings):
     assessment_subpool_quarantine: str = ""
     # Контроль частоты показа: sympson_hetter (K_f из assessment/exposure_k.json) | none
     assessment_exposure: str = "sympson_hetter"
+    # Камера во время теста по согласию (app/modules/proctor): false — экран камеры не показывается вообще,
+    # тест идёт без камеры. Камера и так необязательна: без неё тест доступен полностью, грейд не меняется
+    proctor_camera_enabled: bool = True
     # Демо-учётки жюри: вход в один клик, сброс своей песочницы (не чаще раза в N секунд)
     jury_reset_cooldown_s: int = 20
     # Демо-режим жюри снимает правило 90 дней; чтобы перезапусками нельзя было выкачать банк заданий —
