@@ -16,6 +16,8 @@ from dataclasses import asdict, dataclass, field
 import math
 from typing import Any, Protocol
 
+from app.core.fmt import theta_se
+
 GRADES = ("junior", "middle", "senior")
 # Временные пороги на шкале θ (как в assessment_bank.psychometrics.grading.GradeScale)
 GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
@@ -303,11 +305,11 @@ class StubEngine:
 def _explain(dec: dict, theta: float, se: float, claimed: str) -> str:
     i = GRADES.index(claimed)
     if dec["confirmed"]:
-        s = f"Грейд {claimed.capitalize()} подтверждён (θ = {theta:+.2f} ± {se:.2f})."
+        s = f"Грейд {claimed.capitalize()} подтверждён (θ = {theta_se(theta, se)})."
         if dec["upgrade_available"]:
             s += f" Результат уверенный — можно пройти тест на {GRADES[i + 1].capitalize()}."
         return s
-    s = f"Грейд {claimed.capitalize()} пока не подтверждён (θ = {theta:+.2f} ± {se:.2f}). Принудительного понижения нет"
+    s = f"Грейд {claimed.capitalize()} пока не подтверждён (θ = {theta_se(theta, se)}). Принудительного понижения нет"
     return s + (f": можно пройти тест на {dec['retake_lower'].capitalize()}." if dec["retake_lower"] else
                 ": можно пройти тест ещё раз после подготовки.")
 

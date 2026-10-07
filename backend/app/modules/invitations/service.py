@@ -18,6 +18,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from app.core.db import as_aware, utcnow
 from app.core.enums import EvidenceLevel, FactSource, InvitationStatus, ProbeStatus
 from app.core.errors import api_error
+from app.core.fmt import theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.seed_data import STACK, category_title
 from app.modules.invitations.models import Invitation, InvitationComplaint, InvitationEvent, Probe
@@ -83,7 +84,7 @@ def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, 
         what = ("Экспресс-категория {} по мини-тесту" if t.get("mini") else "Категория {} подтверждена тестом")
         ev.append({"level": "T1", "kind": "test",
                    "text": f"{what.format(category_title(b.profile.current_category_id))}: {t.get('correct')} из "
-                           f"{t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}"})
+                           f"{t.get('answered')} верно, θ = {theta_se(t.get('theta', 0), t.get('se', 0))}"})
     wanted = []
     if need:
         r = need.requirements or {}
