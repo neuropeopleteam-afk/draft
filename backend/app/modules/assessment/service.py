@@ -356,6 +356,8 @@ def _result_payload(db: Session, ts: TestSession, profile: CandidateProfile) -> 
         "accept_lower_p": (round(sum(float(v) for g, v in (er.get("probabilities") or {}).items()
                                      if GRADE_LEVEL.get(g, 0) >= GRADE_LEVEL[can_lower]), 3) if can_lower and not accepted else None),
         "accepted_lower": accepted,
+        # в демо-режиме жюри правило 30 дней не действует — фронт не обещает ожидание
+        "sandbox": is_sandbox(profile), "retake_same_grade_days": get_settings().retake_same_grade_days,
         # Кандидату — только ход теста; показатели детектора утечек видны в данных сессии, не в ответе
         "details": {k: details.get(k) for k in ("stop_reason", "n_scored", "n_canaries", "time_used_s",
                                                 "extension", "pending_review", "n_families_in_bank", "mode")},
