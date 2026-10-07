@@ -15,6 +15,7 @@ import uuid
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.core.db import as_aware
 from app.core.enums import EvidenceLevel, FactSource
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
@@ -148,7 +149,7 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, Bund
         elif f.kind == "test_result":
             b.test = f  # последний по времени
         elif f.kind == "skill":
-            b.skills_t1[f.key] = f
+            b.skills_t1[f.key] = merge_skill(b.skills_t1.get(f.key), f)  # тест + задания работодателя (И7)
         elif f.kind == "probe":
             b.probes_t1.append(f)
     passports = db.scalars(select(FspPassport).where(FspPassport.user_id.in_(user_ids))).all()
@@ -194,6 +195,47 @@ def verified_achievements(b: "Bundle") -> list:
 
 def skill_confirmed(f: CandidateFact | None) -> bool:
     return bool(f and f.value.get("score", 0) >= 0.5)
+
+
+def merge_skill(prev: CandidateFact | None, f: CandidateFact) -> CandidateFact:
+    """Несколько фактов T1 по одному навыку (тест платформы и задания работодателя, И7) — одно слитое значение:
+    верные и всего суммируются, score — доля; по источникам — в value["parts"]. Объект не в сессии — только чтение."""
+    if prev is None:
+        return f
+    parts: dict = dict(prev.value.get("parts") or {_origin(prev): _part(prev)})
+    parts[_origin(f)] = {k: (parts.get(_origin(f), {}).get(k, 0) + v) for k, v in _part(f).items()}
+    correct = sum(x["correct"] for x in parts.values())
+    total = sum(x["total"] for x in parts.values())
+    m = CandidateFact(user_id=f.user_id, kind="skill", key=f.key, title=f.title,
+                      value={**prev.value, **f.value, "correct": correct, "total": total,
+                             "score": round(correct / total, 4) if total else 0.0, "parts": parts},
+                      evidence_level=EvidenceLevel.T1, source=f.source, source_ref=f.source_ref, weight=f.weight)
+    m.created_at = max(as_aware(prev.created_at), as_aware(f.created_at)) if prev.created_at and f.created_at else f.created_at
+    return m
+
+
+def _origin(f: CandidateFact) -> str:
+    return (f.value or {}).get("origin") or ("assignment" if (f.source_ref or "").startswith("assignment:") else "test")
+
+
+def _part(f: CandidateFact) -> dict:
+    v = f.value or {}
+    try:
+        return {"correct": float(v.get("correct") or 0), "total": float(v.get("total") or 0)}
+    except (TypeError, ValueError):
+        return {"correct": 0.0, "total": 0.0}
+
+
+def skill_evidence_text(f: CandidateFact) -> str:
+    """«Подтверждено заданиями теста: 2 из 3», с заданием работодателя — «… и заданием работодателя (3 из 3)»."""
+    v = f.value or {}
+    parts = v.get("parts") or {_origin(f): _part(f)}
+    names = {"test": "заданиями теста", "assignment": "заданием работодателя"}
+    if len(parts) == 1:
+        k, x = next(iter(parts.items()))
+        return f"Подтверждено {names.get(k, k)}: {fmt_count(x['correct'])} из {fmt_count(x['total'])}"
+    return "Подтверждено " + " и ".join(f"{names.get(k, k)} ({fmt_count(x['correct'])} из {fmt_count(x['total'])})"
+                                        for k, x in parts.items())
 
 
 
