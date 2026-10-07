@@ -16,6 +16,7 @@ export const TICK_MS = 700;
 const FLUSH_MS = 15_000;
 const STABLE_TICKS = 2; // смена состояния — после двух одинаковых кадров подряд (сглаживание ложных срабатываний)
 const MIN_EVENT_MS = 1000;
+const SPLIT_OPEN_MS = 10_000;
 const MAX_PENDING = 100;
 
 export type CamStatus = "off" | "starting" | "on" | "error";
@@ -58,7 +59,7 @@ class CameraController {
   private pending: EventOut[] = [];
   private observed = new Map<string, Observed>();
   private flushing: Promise<void> | null = null;
-  private pagehide = () => { void this.flush(true); };
+  private pagehide = () => { void this.flush({ keepalive: true }); };
 
   // ------------------------------------------------------------- подписка (React)
   subscribe = (fn: () => void) => { this.listeners.add(fn); return () => { this.listeners.delete(fn); }; };
@@ -158,8 +159,8 @@ class CameraController {
     this.set({ status: "off", state: "unknown", faces: 0, sessionId: null, itemId: null, error: null, errorCode: null });
   }
 
-  /** Отправить накопленное (перед finish — обязательно дождаться). */
-  async flush(keepalive = false): Promise<void> {
+  /** Отправить накопленное. Перед завершением теста — flush({ final: true }) и обязательно дождаться. */
+  async flush(opts: { keepalive?: boolean; final?: boolean } = {}): Promise<void> {
     const sid = this.snap.sessionId;
     if (!sid) return;
     const now = Date.now();
@@ -167,13 +168,15 @@ class CameraController {
     const observed = [...this.observed.entries()].filter(([, o]) => o.ms > 0 || o.frames > 0)
       .map(([item_id, o]) => ({ item_id, ms: Math.round(o.ms), frames: o.frames, face: o.face }));
     this.observed.clear();
+    if (opts.final) this.closeOpen(now);
     const events = this.pending.splice(0, MAX_PENDING);
-    if (this.open && now - this.open.startedAt >= MIN_EVENT_MS) {
-      // длинный открытый интервал тоже отправляем частями: иначе он потерялся бы при закрытии вкладки
+    if (this.open && now - this.open.startedAt >= SPLIT_OPEN_MS) {
+      // длинный открытый интервал отправляем частями (каждая заведомо длиннее порога учёта): иначе он потерялся бы при закрытии вкладки
       events.push(this.toEvent(this.open, now));
       this.open = { ...this.open, startedAt: now };
     }
     if (!events.length && !observed.length) return;
+    const keepalive = !!opts.keepalive;
     const run = async () => {
       try {
         const res = await this.post(`/proctor/sessions/${sid}/events`, { events, observed }, keepalive);

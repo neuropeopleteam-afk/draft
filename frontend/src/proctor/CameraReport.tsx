@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Alert, DIRECTIONS, GRADES, Loading, dtt, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { useMeta } from "../lib/meta";
-import { ConsentBody, type ConsentState } from "./CameraConsent";
+import { ConsentBody, verDate, type ConsentState } from "./CameraConsent";
 
 interface Summary { mode: "on" | "off"; title: string; remarks: string[]; notes: string[]; points?: number; totals?: Record<string, number> }
 interface Ev { position: number; kind: string; title: string; duration_s: number; faces: number | null; counted: boolean; at: string | null }
@@ -93,7 +93,7 @@ export function CameraSettings() {
         <div>
           <p className="font-semibold">{d.text.title}</p>
           <p className="text-brand-ink/65">
-            {d.active ? `Дано ${dtt(d.granted_at)}, редакция ${d.version}${d.version !== d.current_version ? ` (текущая ${d.current_version})` : ""}` : "Не дано — спрашивается на экране перед тестом"}
+            {d.active ? `Дано ${dtt(d.granted_at)}, редакция от ${verDate(d.version)}${d.version !== d.current_version ? ` (текущая — от ${verDate(d.current_version)})` : ""}` : "Не дано — спрашивается на экране перед тестом"}
             {" · "}<button type="button" className="font-semibold text-brand hover:underline" onClick={() => setText((t) => !t)}>{text ? "скрыть текст" : "текст"}</button>
           </p>
         </div>

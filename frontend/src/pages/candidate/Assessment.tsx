@@ -360,7 +360,7 @@ export function TestRun() {
 
   async function finish() {
     setBusy(true); setError(null);
-    try { await camera.flush(); setResult(await api<any>(`/assessment/sessions/${id}/finish`, { method: "POST" })); camera.detach(); await refresh(); }
+    try { await camera.flush({ final: true }); setResult(await api<any>(`/assessment/sessions/${id}/finish`, { method: "POST" })); camera.detach(); await refresh(); }
     catch (e) { setError(errText(e)); } finally { setBusy(false); }
   }
 
