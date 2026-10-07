@@ -10,7 +10,7 @@
 «Встречный» — рабочее название, меняется в `frontend/src/components/Logo.tsx`.
 
 - Развёрнутый прототип: https://fsp.neuropeople.pro
-- Доступ к стенду: demo / Hakaton (базовая авторизация nginx; без неё открыты только `/api/*`, `/robots.txt`, манифест PWA, `sw.js`, иконки)
+- Доступ к стенду: demo / Hakaton (базовая авторизация nginx; без неё открыты только `/api/*`, `/robots.txt`, манифест PWA, `sw.js`, иконки и страница гостя живой демонстрации `/j/<код>` со статикой `/assets/`, `/recover.js` — QR с телефона эксперта)
 - Для жюри: блок «Для экспертов жюри» на главной — вход в один клик за кандидата (с паспортом ФСП и без), работодателя и эксперта, проводник по сценарию, сброс демо; метрики — страница `/validation`
 - Документация API (OpenAPI/Swagger): https://fsp.neuropeople.pro/api/docs
 - Архитектура и модель данных: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
@@ -129,6 +129,8 @@ make env && make up          # порты публикуются только н
 [infra/nginx/fsp.neuropeople.pro.conf.example](infra/nginx/fsp.neuropeople.pro.conf.example), описание — раздел «Развёртывание» в docs/ARCHITECTURE.md),
 сертификат — `certbot certonly --webroot`. Обновление: `git pull && docker compose up -d --build`
 (миграции применяются при старте контейнера api).
+Страница QR без пароля — `sudo bash infra/nginx/apply-public-snippets.sh` (копия файла сайта, `nginx -t`, откат при
+ошибке, проверка адресов). Мониторинг с письмом владельцу — раздел 11.1 в [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Лицензия
 
