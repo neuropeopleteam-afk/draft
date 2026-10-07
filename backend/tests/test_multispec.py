@@ -212,7 +212,12 @@ def test_migration_backfill_preserves_data_and_downgrade(engine, tmp_path):
     command.upgrade(cfg, "qr01")
     legacy_engine = sa.create_engine(url)
     until = utcnow() + timedelta(days=60)
-    with Session(legacy_engine) as db:
+    # Строки собираются моделями текущей схемы во временной базе и переносятся в базу qr01 только теми колонками,
+    # которые там есть: тест не ломается от новых полей других миграций (fs01 и далее).
+    from app.core.db import Base
+    head_engine = sa.create_engine("sqlite://")
+    Base.metadata.create_all(head_engine)
+    with Session(head_engine) as db:
         old = User(email="legacy@example.com", role=UserRole.candidate, password_hash="test", is_email_verified=True)
         fresh = User(email="untested@example.com", role=UserRole.candidate, password_hash="test", is_email_verified=True)
         db.add_all([old, fresh])
@@ -228,6 +233,18 @@ def test_migration_backfill_preserves_data_and_downgrade(engine, tmp_path):
             GradeHistory(user_id=uid, direction_id="backend", to_grade_id="middle", reason="initial", locked_until=until),
         ])
         db.commit()
+    legacy_meta = sa.MetaData()
+    legacy_meta.reflect(legacy_engine)
+    with head_engine.connect() as src, legacy_engine.begin() as dst:
+        for model in (User, CandidateProfile, CandidateFact, SurveyResponse, GradeHistory):
+            name = model.__table__.name
+            cols = [c.name for c in legacy_meta.tables[name].columns]
+            raw = src.exec_driver_sql(f"SELECT * FROM {name}").mappings()  # значения как в базе, без типов моделей
+            for r in raw:
+                keys = [k for k in cols if k in r]
+                dst.exec_driver_sql(f"INSERT INTO {name} ({', '.join(keys)}) VALUES ({', '.join('?' * len(keys))})",
+                                    tuple(r[k] for k in keys))
+    head_engine.dispose()
     command.upgrade(cfg, "ms01")
     with Session(legacy_engine) as db:
         row = db.get(CandidateSpecialization, (uid, "backend"))
@@ -239,8 +256,10 @@ def test_migration_backfill_preserves_data_and_downgrade(engine, tmp_path):
         assert len(list(db.scalars(select(GradeHistory)))) == 1
     command.downgrade(cfg, "qr01")
     assert "candidate_specializations" not in sa.inspect(legacy_engine).get_table_names()
-    with Session(legacy_engine) as db:
-        assert db.get(CandidateProfile, uid).current_category_id == "backend.middle"
+    with legacy_engine.connect() as conn:
+        cat = conn.exec_driver_sql("SELECT current_category_id FROM candidate_profiles WHERE user_id = ?",
+                                   (uid.hex if hasattr(uid, "hex") else uid,)).scalar()
+        assert cat == "backend.middle"
     legacy_engine.dispose()
 
 

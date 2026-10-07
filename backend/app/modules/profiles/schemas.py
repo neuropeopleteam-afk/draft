@@ -35,13 +35,10 @@ class CandidateProfileOut(_ORM):
     roles: list = Field(default_factory=list)
     fsp_id_claimed: str | None = None
     jury_mode: bool = False
-<<<<<<< HEAD
     specializations: list[dict] = Field(default_factory=list)
-=======
     age_group: Literal["18+", "16-17", "14-15"] = "18+"
     parental_consent: bool = False
     parental_consent_at: datetime | None = None
->>>>>>> feat/fsp2
 
 
 class CandidateProfileUpdate(BaseModel):
