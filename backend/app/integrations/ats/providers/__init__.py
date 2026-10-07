@@ -35,7 +35,7 @@ def real_base(code: str) -> str:
 
 
 def demo_base(code: str) -> str:
-    stub = get_isettings().stub_base
+    stub = get_isettings().stub_public_base  # хранится и показывается публичный; вызов — clients.check_url
     return {"talantix": f"{stub}/api/ats-stub/talantix", "potok": f"{stub}/api/ats-stub/potok/api/v3",
             "huntflow": f"{stub}/api/ats-stub/huntflow/v2"}[code]
 

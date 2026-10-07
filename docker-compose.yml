@@ -59,6 +59,9 @@ services:
       # Пусто — кнопка «Войти через ФСП ID» скрыта. Прод: https://fsp.neuropeople.pro/auth/realms/fsp
       FSP_OIDC_ISSUER: ${FSP_OIDC_ISSUER:-}
       FSP_OIDC_INTERNAL_BASE: ${FSP_OIDC_INTERNAL_BASE:-http://keycloak:8080/auth/realms/fsp}
+      # Демо-ATS (заглушки Talantix, «Поток», Хантфлоу, вебхук) api вызывает сам у себя — напрямую, без адреса сайта
+      # (localhost:8140 изнутри контейнера недоступен). В настройках компании и в интерфейсе — публичный адрес.
+      ATS_STUB_BASE_URL: ${ATS_STUB_BASE_URL:-http://127.0.0.1:8000}
     depends_on:
       db:
         condition: service_healthy

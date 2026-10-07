@@ -43,7 +43,8 @@ class IntegrationSettings(BaseSettings):
     huntflow_default_base_url: str = "https://api.huntflow.ru/v2"
     ats_timeout_s: float = 10.0
     ats_max_attempts: int = 3
-    # Адрес тестовой ATS-заглушки (по умолчанию — наш публичный адрес, запросы идут по настоящему HTTP)
+    # Куда api сам ходит к тестовой ATS-заглушке (по настоящему HTTP). Пусто — публичный адрес сайта; в docker-compose
+    # по умолчанию http://127.0.0.1:8000 — сам api в контейнере (адрес сайта изнутри контейнера может быть недоступен)
     ats_stub_base_url: str | None = None
     # User-Agent для Talantix обязателен: компания и контакт для связи при проблемах
     ats_user_agent_company: str = "Vstrechny, FSP special track, fsp.neuropeople.pro"
@@ -78,7 +79,14 @@ class IntegrationSettings(BaseSettings):
 
     @property
     def stub_base(self) -> str:
+        """Адрес заглушек для вызовов изнутри api (clients.check_url переписывает на него публичный)."""
         return (self.ats_stub_base_url or self.public_base_url).rstrip("/")
+
+    @property
+    def stub_public_base(self) -> str:
+        """Адрес заглушек в настройках компании и в интерфейсе — публичный адрес сайта
+        (не зависит от ATS_STUB_BASE_URL)."""
+        return self.public_base_url.rstrip("/")
 
 
 @lru_cache

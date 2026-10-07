@@ -29,7 +29,7 @@ def reset_links(db: Session, company_id: uuid.UUID, code: str) -> None:
 def stub_huntflow_webhook(st: AtsSettings) -> None:
     """Хантфлоу-совместимая заглушка и приёмник вебхука с подписью (ящик компании — stub_key)."""
     st.stub_key = st.stub_key or secrets.token_urlsafe(24)
-    base = get_isettings().stub_base
+    base = get_isettings().stub_public_base
     st.huntflow_enabled, st.huntflow_base_url = True, f"{base}/api/ats-stub/huntflow/v2"
     st.huntflow_account_id, st.huntflow_vacancy_id, st.huntflow_status_id = 1, 101, None
     st.huntflow_token_enc = encrypt(st.stub_key)
