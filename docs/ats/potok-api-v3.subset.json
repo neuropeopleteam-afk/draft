@@ -507,13 +507,17 @@
          }
         },
         "events": {
-         "type": "object",
-         "properties": {
-          "body": {
-           "type": "string"
-          },
-          "type": {
-           "type": "string"
+         "type": "array",
+         "description": "В опубликованной спецификации — объект {body, type}; настоящий API на объект отвечает 500, список принимает (проверено 07.10.2026)",
+         "items": {
+          "type": "object",
+          "properties": {
+           "body": {
+            "type": "string"
+           },
+           "type": {
+            "type": "string"
+           }
           }
          }
         },
