@@ -271,7 +271,7 @@ class BankEngine:
             "injection": any((g or {}).get("error") == "prompt_injection_suspected" for g in i.get("grading") or []),
             "meta_claims": any("meta_claims" in ((g or {}).get("flags") or []) for g in i.get("grading") or []),
             "ai_mark_hit": bool(i.get("ai_mark_hit")), "fast_text": bool(i.get("fast_text")), "typing": i.get("typing")}
-            for i in done], pk)
+            for i in done], pk, extra=state.get("integrity_extra") or {})  # extra — сигналы сессии внешних модулей
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families,
             "stop_reason": state.get("stop_reason") or sess.stop_reason or "finished_early",
