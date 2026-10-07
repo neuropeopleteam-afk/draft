@@ -21,6 +21,7 @@ from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
 from app.modules.fsp.models import FspAchievement, FspPassport
+from app.modules.fsp.rating import details as fsp_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile
 
 DEFAULT_PRIVACY = {
@@ -36,14 +37,6 @@ DISCIPLINE_TITLES = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
 LEVEL_TITLES = {"school": "школьные", "regional": "региональные", "interregional": "межрегиональные",
                 "national": "всероссийские", "international": "международные",
                 "platform": "кубок работодателя на платформе"}
-LEVEL_WEIGHT = {"international": 1.0, "national": 0.85, "interregional": 0.65, "regional": 0.45, "school": 0.25}
-DISCIPLINE_RELEVANCE = {
-    "algorithmic": {"backend": 0.9, "frontend": 0.6, "data_ml": 1.0, "qa": 0.6, "security": 0.6},
-    "product": {"backend": 1.0, "frontend": 1.0, "data_ml": 0.8, "qa": 0.9, "security": 0.5},
-    "security": {"backend": 0.5, "frontend": 0.3, "data_ml": 0.3, "qa": 0.4, "security": 1.0},
-    "robotics": {"backend": 0.3, "frontend": 0.3, "data_ml": 0.5, "qa": 0.3, "security": 0.3},
-    "uav": {"backend": 0.3, "frontend": 0.3, "data_ml": 0.5, "qa": 0.3, "security": 0.3},
-}
 GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
 
 
@@ -71,20 +64,8 @@ def set_t0_facts(db: Session, user_id: uuid.UUID, source: FactSource, *, stack: 
 
 
 def fsp_strength(achievements: list[FspAchievement], direction: str | None) -> float:
-    """Сила паспорта ФСП для направления, 0..1: лучшее достижение + 25 % остальных, только подтверждённые."""
-    vals = []
-    for a in achievements:
-        if not a.verified:
-            continue
-        lvl = LEVEL_WEIGHT.get(a.event_level.value if hasattr(a.event_level, "value") else a.event_level, 0.3)
-        place = a.place or 99
-        res = 1.0 if place == 1 else 0.85 if place <= 3 else 0.6 if place <= 10 else 0.3
-        rel = DISCIPLINE_RELEVANCE.get(a.discipline, {}).get(direction or "", 0.5)
-        vals.append(lvl * res * rel)
-    if not vals:
-        return 0.0
-    vals.sort(reverse=True)
-    return round(min(1.0, vals[0] + 0.25 * sum(vals[1:])), 3)
+    """Направление сохранено в сигнатуре для совместимости, но не влияет на вес ФСП."""
+    return fsp_rating(achievements)["strength"]
 
 
 def achievement_text(a: FspAchievement) -> str:
@@ -214,6 +195,8 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
     cat = categories.get(p.current_category_id or "")
     t = b.test.value if b.test else None
     show = (lambda k: include_hidden or pv.get(k, True))
+    from app.modules.fsp.youth import employment_safety
+
     return {
         "ref": p.public_ref,
         "category": {"id": cat.id, "title": cat.title} if cat else None,
@@ -239,6 +222,7 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "linked": b.passport is not None, "level": "T2" if verified_achievements(b) else None,
             "source": b.passport.link_source.value if b.passport else None,
             "strength": b.fsp,
+            "rating": fsp_rating(b.achievements),
             "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified}
                              for a in verified_achievements(b)[:5]],
             "unverified_count": sum(1 for a in b.achievements
@@ -255,4 +239,5 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
         "market_range": {"from": cat.market_salary_from, "to": cat.market_salary_to,
                          "median": cat.market_salary_median} if cat else None,
         "is_demo": None,
+        "employment_safety": employment_safety(p),
     }

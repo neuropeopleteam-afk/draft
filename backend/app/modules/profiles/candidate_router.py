@@ -25,7 +25,7 @@ from app.modules.auth.models import Consent, User
 from app.modules.catalog.dictionary import ROLE_TITLES
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTIONS, STACK
-from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, card, load_bundles, refresh_rating, set_t0_facts
+from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, achievement_text, card, load_bundles, refresh_rating, set_t0_facts
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 
 router = APIRouter(prefix="/api/me", tags=["candidate"])
@@ -262,13 +262,61 @@ def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> di
         "fsp_id_claimed": b.profile.fsp_id_claimed,
         "linked": b.passport is not None,
         "link_source": b.passport.link_source.value if b.passport else None,
-        "achievements": c["fsp"]["achievements"],
+        "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified,
+                          "event_id": a.event_id, "place": a.place, "date": a.event_date.isoformat() if a.event_date else None,
+                          "evsk_code": a.evsk_code, "sport_rank": a.sport_rank, "team": a.team_name,
+                          "team_result": a.team_result}
+                         for a in b.achievements if a.verified],
+        "rating": c["fsp"]["rating"],
+        "sport_rank": b.passport.sport_rank if b.passport else None,
+        "synced_at": b.passport.synced_at.isoformat() if b.passport and b.passport.synced_at else None,
+        "registry": (b.passport.raw or {}).get("registry") if b.passport else None,
+        "registry_warning": (b.passport.raw or {}).get("registry_warning") if b.passport else None,
+        "identity_linked": bool(user.fsp_subject),
+        "registry_sync_available": bool(b.passport and (b.passport.raw or {}).get("fsp_id")),
         "keycloak_ready": bool(get_settings().fsp_oidc_issuer),
         "note": ("Свяжите профиль через ФСП ID (демо-стенд Keycloak, OIDC): достижения придут с уровнем T2. "
                  if get_settings().fsp_oidc_issuer else
                  "Связь через ФСП ID (OIDC, Keycloak) появится после подключения реестра. ")
                 + "Без истории ФСП — нейтральное состояние: бонуса нет, штрафа нет.",
     }
+
+
+@router.post("/fsp/registry-sync", summary="Обновить достижения из API реестра для уже связанного паспорта",
+             responses={**AUTH, 409: err("Сначала свяжите ФСП ID"), 503: err("Реестр недоступен")})
+def sync_fsp_registry(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    from app.integrations.fsp_id.mapping import apply_claims
+    from app.integrations.settings import get_isettings
+    from app.modules.fsp.registry import fetch_passport, registry_claims
+    from app.core.enums import FspLinkSource
+
+    b = load_bundles(db, [user.id])[user.id]
+    raw = b.passport.raw if b.passport else {}
+    if not b.passport or not raw.get("fsp_id"):
+        raise api_error(409, "fsp_identity_required", "Сначала свяжите ФСП ID: заявленный вручную номер не подтверждает принадлежность")
+    if get_isettings().fsp_registry_mode == "claims":
+        if b.passport.link_source != FspLinkSource.demo:
+            raise api_error(409, "registry_not_configured", "API реестра не настроен; обновите паспорт входом через ФСП ID")
+        from app.modules.fsp.registry import mock_passport
+        passport = mock_passport(raw["fsp_id"])
+    else:
+        try:
+            passport = fetch_passport(raw["fsp_id"])
+        except Exception:
+            raise api_error(503, "registry_unavailable", "Реестр временно недоступен. Достижения сохранены, попробуйте позже") from None
+    demo = b.passport.link_source == FspLinkSource.demo
+    source = b.passport.link_source
+    subject = b.passport.fsp_subject
+    apply_claims(db, user.id, {"sub": raw.get("oidc_sub") or subject or str(user.id),
+                             "iss": raw.get("issuer") or "urn:demo:fsp-registry",
+                             **registry_claims(passport),
+                             "_registry": {"mode": "mock" if passport.demo else "external", "demo": passport.demo,
+                                           "updated_at": passport.updated_at.isoformat()}})
+    if demo:
+        b.passport.link_source = source
+        b.passport.fsp_subject = subject
+    db.commit()
+    return my_fsp(user, db)
 
 
 class FspLinkIn(BaseModel):
@@ -432,4 +480,3 @@ def my_profile_pdf(user: User = Depends(candidate), db: Session = Depends(get_db
 @router.get("/card", summary="Как меня видит работодатель (обезличенная карточка)", responses=AUTH)
 def my_card(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     return {**candidate_card_for(db, user.id, include_hidden=False), "directions": DIRECTIONS}
-

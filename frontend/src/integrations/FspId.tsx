@@ -2,12 +2,12 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AuthShell } from "../components/AuthShell";
-import { Alert, Level, Loading, Toggle, errText, useApi } from "../components/ui";
+import { Alert, Field, Level, Loading, Toggle, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { cabinetPath, useAuth } from "../lib/auth";
 import { dateOnly } from "./Trust";
 
-interface FspConfig { enabled: boolean; title: string; demo_accounts: { username: string; title: string }[]; demo_password: string | null; note: string }
+interface FspConfig { enabled: boolean; demo: boolean; title: string; demo_accounts: { username: string; title: string }[]; demo_password: string | null; note: string }
 
 export function FspIdMark({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -19,29 +19,30 @@ export function FspIdMark({ className = "h-5 w-5" }: { className?: string }) {
   );
 }
 
-async function start(intent: "login" | "link") {
-  const r = await api<{ authorize_url: string }>("/fsp-id/start", { body: { intent } });
+async function start(intent: "login" | "link", role: "candidate" | "employer" = "candidate") {
+  const r = await api<{ authorize_url: string }>("/fsp-id/start", { body: { intent, registration_role: role } });
   window.location.assign(r.authorize_url);
 }
 
 /** Кнопка входа на странице «Вход» + раскрывающаяся подсказка с демо-учётками realm fsp. */
-export function FspIdLogin() {
+export function FspIdLogin({ role = "candidate" }: { role?: "candidate" | "employer" }) {
   const { data } = useApi<FspConfig>("/fsp-id/config");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState(false);
-  if (!data?.enabled) return null;
+  if (!data) return null;
   return (
     <div className="mt-6 space-y-3">
       <div className="flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-brand-ink/65"><span className="h-px flex-1 bg-brand-night/10" />или<span className="h-px flex-1 bg-brand-night/10" /></div>
-      <button type="button" className="btn-ghost w-full gap-2" disabled={busy}
-        onClick={async () => { setBusy(true); setErr(null); try { await start("login"); } catch (e) { setErr(errText(e)); setBusy(false); } }}>
-        <FspIdMark /> {busy ? "Переходим в ФСП ID…" : "Войти через ФСП ID (демо)"}
+      <button type="button" data-testid="button-fsp-login" className="btn-ghost w-full gap-2 !border-brand-plum/30 !bg-[#F3F2FB] !text-brand-night" disabled={busy || !data.enabled}
+        onClick={async () => { setBusy(true); setErr(null); try { await start("login", role); } catch (e) { setErr(errText(e)); setBusy(false); } }}>
+        <FspIdMark /> {busy ? "Переходим в ФСП ID…" : "Войти через ФСП ID"}
       </button>
+      <p className="text-center text-xs leading-relaxed text-brand-ink/70">{data.enabled ? `ФСП ID ↔ профиль${role === "candidate" ? " ↔ достижения" : " компании"}${data.demo ? " · демо-Keycloak" : ""}. При первом входе создадим кабинет ${role === "candidate" ? "кандидата" : "работодателя"}.` : "ФСП ID ↔ профиль ↔ достижения. Подключение к ФСП ID на этом сервере ещё не настроено."}</p>
       <Alert>{err}</Alert>
-      <button type="button" className="w-full text-center text-xs font-semibold text-brand-plum hover:text-brand" onClick={() => setHint(!hint)} aria-expanded={hint}>
+      {data.demo_accounts.length > 0 && <button type="button" className="w-full text-center text-xs font-semibold text-brand-plum hover:text-brand" onClick={() => setHint(!hint)} aria-expanded={hint}>
         {hint ? "Скрыть демо-учётки" : "Демо-учётки ФСП ID для проверки"}
-      </button>
+      </button>}
       {hint && (
         <div className="rounded-xl bg-[#F3F2FB] p-4 text-xs leading-relaxed text-brand-night">
           <ul className="space-y-1.5">
@@ -63,7 +64,7 @@ export function FspIdLinkButton({ linkedVia }: { linkedVia?: string | null }) {
   return (
     <div className="space-y-2">
       <button className="btn-primary gap-2" onClick={async () => { setErr(null); try { await start("link"); } catch (e) { setErr(errText(e)); } }}>
-        <FspIdMark /> {linkedVia === "keycloak" ? "Обновить из ФСП ID" : "Связать через ФСП ID (демо)"}
+        <FspIdMark /> {linkedVia === "keycloak" ? "Обновить из ФСП ID" : "Связать через ФСП ID"}
       </button>
       <p className="text-xs text-brand-ink/65">Достижения из ФСП ID попадут в паспорт с уровнем доказанности T2 — «подтверждено реестром».</p>
       <Alert>{err}</Alert>
@@ -78,7 +79,8 @@ const LEVEL_RU: Record<string, string> = { school: "школьный", regional:
 export function FspIdDone() {
   const [sp] = useSearchParams();
   const ticket = sp.get("ticket");
-  const [state, setState] = useState<{ status: string; passport?: Preview; email_taken?: boolean } | null>(null);
+  const [state, setState] = useState<{ status: string; passport?: Preview; email_taken?: boolean; registration_role?: string } | null>(null);
+  const [company, setCompany] = useState("");
   const [err, setErr] = useState<string | null>(sp.get("error"));
   const [pub, setPub] = useState(true);
   const [ok, setOk] = useState(false);
@@ -99,17 +101,18 @@ export function FspIdDone() {
 
   async function complete() {
     setErr(null);
-    try { await finish(await api<any>("/fsp-id/complete", { auth: false, body: { ticket, consent_processing: ok, consent_publication: pub } })); }
+    try { await finish(await api<any>("/fsp-id/complete", { auth: false, body: { ticket, consent_processing: ok, consent_publication: pub, company_name: company || null } })); }
     catch (e) { setErr(errText(e)); }
   }
 
   const p = state?.passport;
   return (
-    <AuthShell title="ФСП ID (демо)" subtitle="Вход через единую учётную запись участника соревнований ФСП."
+    <AuthShell title="ФСП ID" subtitle="Вход через единую учётную запись участника соревнований ФСП."
       footer={<Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Вернуться ко входу</Link>}>
       {err ? <Alert>{err}</Alert> : !state ? <Loading text="Проверяем ответ ФСП ID…" /> : (
         <div className="space-y-4 text-sm">
-          <Alert kind="info">Учётная запись {p?.username ? <b>{p.username}</b> : null} подтверждена ФСП ID. Создадим кабинет кандидата — пароль не нужен, вход всегда через ФСП ID.</Alert>
+          <Alert kind="info">Учётная запись {p?.username ? <b>{p.username}</b> : null} подтверждена ФСП ID. Создадим кабинет {state.registration_role === "employer" ? "работодателя" : "кандидата"} — пароль не нужен, вход всегда через ФСП ID.</Alert>
+          {state.registration_role === "employer" && <Field label="Название компании" htmlFor="fsp-company"><input id="fsp-company" className="input" value={company} onChange={e => setCompany(e.target.value)} /></Field>}
           <div className="rounded-xl border border-brand-night/10 p-4">
             <p className="font-semibold text-brand-night">Что придёт в паспорт ФСП</p>
             {p?.has_history ? (
@@ -124,7 +127,7 @@ export function FspIdDone() {
           </div>
           {state.email_taken && <Alert kind="info">Аккаунт с почтой {p?.email} уже есть. Войдите паролем и свяжите ФСП ID в разделе «Паспорт ФСП».</Alert>}
           <Toggle checked={ok} onChange={setOk} label="Согласен на обработку персональных данных (152-ФЗ)" hint="Обязательно для создания кабинета" />
-          <Toggle checked={pub} onChange={setPub} label="Показывать обезличенный профиль работодателям" hint="Можно изменить позже в настройках" />
+          {state.registration_role !== "employer" && <Toggle checked={pub} onChange={setPub} label="Показывать обезличенный профиль работодателям" hint="Можно изменить позже в настройках" />}
           <button className="btn-primary w-full" disabled={!ok || state.email_taken} onClick={complete}>Создать кабинет и войти</button>
         </div>
       )}
