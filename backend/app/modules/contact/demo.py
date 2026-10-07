@@ -6,13 +6,15 @@
 * работодатель «Демо жюри: Северный платёж» — три приглашения общим демо-кандидатам: встречное предложение
   ждёт решения, принятое приглашение с чатом (одно непрочитанное от кандидата), приглашение с отозванным доступом
   к контактам;
-* кандидат Мария — отклик на общую демо-вакансию «Python-разработчик (платёжные сервисы)» с вопросом
-  работодателя (если демо-вакансии загружены: python -m app.integrations.vacancies.demo).
+* кандидат Мария — отклик на вакансию компании жюри «Backend-разработчик (платёжные сервисы)» (создаётся здесь
+  же): вопрос работодателя, ответ Марии и уточнение работодателя, непрочитанное у Марии; работодатель видит тред в
+  «Откликах» вакансии и в «Сообщениях». Вакансия работодателя песочницы видна только в его песочнице
+  (vacancies.router.list_vacancies), поэтому общий список вакансий не засоряется копиями.
 
 Общие демо-кандидаты выбираются детерминированно: backend, видимые работодателям, не из первой пятёрки подборок
 песочницы — чтобы сравнение кандидатов и приглашение из подборки в путеводителе не упирались в «уже приглашён».
 Приглашения компании жюри не попадают в аналитику ФСП (fsp.analytics исключает «Демо жюри…»); при сбросе
-песочницы удаляются вместе с компанией (ON DELETE CASCADE), отклик Марии — вместе с её учёткой.
+песочницы удаляются вместе с компанией (ON DELETE CASCADE), вакансия и отклик Марии — вместе с компанией.
 """
 from __future__ import annotations
 
@@ -33,7 +35,7 @@ from app.modules.invitations.models import Invitation, InvitationEvent
 from app.modules.matching.models import SelectionVersion
 from app.modules.profiles.models import CandidateProfile, Company
 
-DEMO_VACANCY = "Python-разработчик (платёжные сервисы)"
+DEMO_VACANCY = "Backend-разработчик (платёжные сервисы)"
 
 
 def _msg(db: Session, *, inv: Invitation | None = None, app: VacancyApplication | None = None, user_id, side: str,
@@ -61,6 +63,8 @@ def _retime(db: Session, inv: Invitation, start: datetime, step: timedelta) -> N
         inv.responded_at = start + step * 2
     if inv.contacts_revealed_at:
         inv.contacts_revealed_at = start + step * 2
+    if inv.contacts_revoked_at:
+        inv.contacts_revoked_at = start + step * 3  # как у события «Доступ к контактам отозван»
 
 
 def shared_candidates(db: Session, needs: list, k: int = 3) -> list[CandidateProfile]:
@@ -86,6 +90,7 @@ def seed_jury_contact(db: Session, eu: User, c: Company, ilya: CandidateProfile,
     ii = db.scalar(select(Invitation).where(Invitation.company_id == c.id, Invitation.candidate_user_id == ilya.user_id))
     if ii is not None and ii.status in svc.OPEN:
         inv_svc.mark_viewed(db, ii, ilya.user_id)
+        _retime(db, ii, now - timedelta(hours=5), timedelta(hours=1))  # отправлено и просмотрено до переписки
         _msg(db, inv=ii, user_id=ilya.user_id, side="candidate", mode="qa", at=now - timedelta(hours=3), read=True,
              body="Здравствуйте. Подскажите, сколько человек в команде платежей и есть ли дежурства? "
                   "Если удобнее голосом — мой номер +7 912 345-67-89.")
@@ -139,11 +144,19 @@ def seed_jury_contact(db: Session, eu: User, c: Company, ilya: CandidateProfile,
              body="Спасибо за предложение. Я принял оффер в другой компании, поэтому закрыл контакты.")
         db.commit()
         out["revoked"] = cc.public_ref
-    # 5. Мария: отклик на общую демо-вакансию и вопрос работодателя
-    v = db.scalar(select(Vacancy).where(Vacancy.title == DEMO_VACANCY, Vacancy.is_demo.is_(True),
-                                        Vacancy.status == "published").limit(1))
-    if v is not None and db.scalar(select(VacancyApplication.id).where(
-            VacancyApplication.vacancy_id == v.id, VacancyApplication.candidate_user_id == maria.user_id)) is None:
+    # 5. Мария: отклик на вакансию компании жюри и переписка по отклику (видна обеим сторонам)
+    v = db.scalar(select(Vacancy).where(Vacancy.company_id == c.id, Vacancy.title == DEMO_VACANCY).limit(1))
+    if v is None:
+        v = Vacancy(company_id=c.id, created_by=eu.id, title=DEMO_VACANCY, category_id="backend.middle",
+                    description="Сервисы платежей для малого бизнеса: API на FastAPI, PostgreSQL, очереди Kafka. "
+                                "Код-ревью, тесты, дежурства по графику с доплатой. Удалённо или гибрид.",
+                    stack=["python", "fastapi", "postgresql", "kafka"], salary_from=220_000, salary_to=280_000,
+                    salary_basis="gross", work_format="remote", city="Санкт-Петербург", status="published",
+                    published_at=now - timedelta(days=5), is_demo=True)
+        db.add(v)
+        db.flush()
+    if db.scalar(select(VacancyApplication.id).where(VacancyApplication.vacancy_id == v.id,
+                                                     VacancyApplication.candidate_user_id == maria.user_id)) is None:
         t0 = now - timedelta(hours=30)
         ap = VacancyApplication(vacancy_id=v.id, candidate_user_id=maria.user_id, status="viewed", viewed_at=t0 +
                                 timedelta(hours=4), cover_letter="Делаю бэкенд на FastAPI и PostgreSQL, на "
@@ -154,10 +167,15 @@ def seed_jury_contact(db: Session, eu: User, c: Company, ilya: CandidateProfile,
                                          "title": STATUS_TITLES["viewed"], "by": "employer"}])
         db.add(ap)
         db.flush()
-        emp = v.created_by or eu.id
-        _msg(db, app=ap, user_id=emp, side="employer", mode="chat", at=t0 + timedelta(hours=5), read=False,
+        _msg(db, app=ap, user_id=eu.id, side="employer", mode="chat", at=t0 + timedelta(hours=5), read=True,
              body="Спасибо за отклик. Посмотрели паспорт ФСП: расскажите, какую часть решения на чемпионате делали "
                   "вы и сколько длился проект?")
+        _msg(db, app=ap, user_id=maria.user_id, side="candidate", mode="chat", at=t0 + timedelta(hours=9), read=True,
+             body="Проект шёл трое суток. Я делала API заказов на FastAPI и очередь на Kafka с повторами, напарник — "
+                  "фронтенд. Код в репозитории команды, могу показать на созвоне.")
+        _msg(db, app=ap, user_id=eu.id, side="employer", mode="chat", at=now - timedelta(hours=1, minutes=30),
+             read=False, body="Отлично. Предлагаем созвон на 30 минут во вторник или среду после 15:00 — какой день "
+                               "удобнее?")
         db.commit()
         out["application"] = str(ap.id)
     return out

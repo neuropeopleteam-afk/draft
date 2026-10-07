@@ -247,10 +247,17 @@ def recipients(db: Session, t: Thread) -> list[User]:
 
 
 def counterpart_title(db: Session, t: Thread, for_side: str) -> str:
+    """Как сторона for_side видит собеседника: кандидату — компания; работодателю — обезличенный «Кандидат C-…»,
+    а имя — только пока контакты открыты (отклик на вакансию; принятое приглашение без отзыва доступа)."""
     if for_side == "candidate":
         return t.company.name if t.company else "Компания"
     p = db.get(CandidateProfile, t.candidate_user_id)
-    return f"Кандидат {p.public_ref}" if p else "Кандидат"
+    if p is None:
+        return "Кандидат"
+    st = thread_state(db, t)
+    if st["mode"] == "chat" and not st["revoked"] and p.full_name:
+        return p.full_name
+    return f"Кандидат {p.public_ref}"
 
 
 def unread_counts(db: Session, user: User) -> dict:
@@ -333,7 +340,16 @@ def thread_out(db: Session, t: Thread) -> dict:
 
 def thread_summary(db: Session, inv: Invitation, side: str) -> dict:
     """Короткая сводка переписки для карточки приглашения."""
-    msgs = db.scalars(select(ContactMessage).where(ContactMessage.invitation_id == inv.id)).all()
+    return _summary(db, ContactMessage.invitation_id == inv.id, side)
+
+
+def application_thread_summary(db: Session, app_id: uuid.UUID, side: str) -> dict:
+    """То же для отклика на вакансию (integrations.vacancies.router._app_out)."""
+    return _summary(db, ContactMessage.application_id == app_id, side)
+
+
+def _summary(db: Session, cond, side: str) -> dict:
+    msgs = db.scalars(select(ContactMessage).where(cond)).all()
     other = "employer" if side == "candidate" else "candidate"
     return {"total": len(msgs), "unread": sum(1 for m in msgs if m.sender_side == other and m.read_at is None)}
 

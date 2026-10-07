@@ -251,4 +251,4 @@ def restore(inv_id: uuid.UUID, bg: BackgroundTasks, user: User = Depends(candida
     return _inv_out(db, i, "candidate")
 
 
-__all__ = ["router", "candidate_router", "employer_router", "TAGS", "basis_title"]
+__all__ = ["router", "candidate_router", "employer_router", "TAGS"]

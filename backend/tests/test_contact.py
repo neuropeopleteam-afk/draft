@@ -148,6 +148,9 @@ def test_chat_after_accept_without_masking_and_closed_after_decline(client):
     assert client.post(f"/api/candidate/invitations/{inv['id']}/accept", headers=H(tc)).status_code == 200
     r = _post(client, tc, "invitation", inv["id"], "Мой телефон +7 912 345-67-89")
     assert r.status_code == 201 and r.json()["mode"] == "chat" and "345-67-89" in r.json()["sent"]["body"]
+    # контакты открыты — работодатель видит в переписке имя, а не обезличенный номер
+    th = client.get(f"/api/messages/invitation/{inv['id']}", headers=H(te)).json()
+    assert th["counterpart"] == "Иван Петров"
     for k in range(3):  # в чате нет ограничения «вопрос — ответ»
         assert _post(client, tc, "invitation", inv["id"], f"Сообщение {k}").status_code == 201
     tc2 = candidate_with_category(client, email="c2@example.com")
@@ -287,9 +290,11 @@ def test_revoke_and_restore_contacts(client):
     assert client.post("/api/employer/ats/stub/connect", json={}, headers=H(te)).status_code == 200
     r = client.post("/api/employer/ats/push", json={"invitation_id": inv["id"]}, headers=H(te))
     assert r.status_code == 409 and r.json()["detail"]["code"] == "contacts_revoked"
-    # переписка снова «вопрос — ответ» с маскированием
+    # переписка снова «вопрос — ответ» с маскированием, собеседник у работодателя — снова обезличен
     r = _post(client, te, "invitation", inv["id"], "Почему? Напишите на hr@corp.ru")
     assert r.status_code == 201 and r.json()["mode"] == "qa" and "hr@corp.ru" not in r.json()["sent"]["body"]
+    th = client.get(f"/api/messages/invitation/{inv['id']}", headers=H(te)).json()
+    assert th["counterpart"] == f"Кандидат {ref}" and "Иван" not in str(th)
     assert client.post(f"{url}/revoke", headers=H(tc)).status_code == 409
     r = client.post(f"{url}/restore", headers=H(tc))
     assert r.status_code == 200 and r.json()["contacts_revoked"] is False
@@ -349,8 +354,14 @@ def test_vacancy_application_chat(client):
     r = _post(client, te, "application", a["id"], "Спасибо за отклик. Удобно созвониться? Наш номер +7 495 123-45-67")
     assert r.status_code == 201 and r.json()["mode"] == "chat" and "123-45-67" in r.json()["sent"]["body"]
     assert client.get("/api/messages/unread", headers=H(tc)).json() == {"total": 1, "invitations": 0, "applications": 1}
+    # сводка переписки в карточках отклика у обеих сторон (для счётчика непрочитанных в списках)
+    mine = client.get("/api/candidate/applications", headers=H(tc)).json()[0]
+    assert mine["thread"] == {"total": 1, "unread": 1}
+    apps = client.get(f"/api/employer/vacancies/{v['id']}/applications", headers=H(te)).json()
+    assert apps[0]["thread"] == {"total": 1, "unread": 0}
     th = client.get(f"/api/messages/application/{a['id']}", headers=H(tc)).json()
     assert th["title"] == "Python-разработчик" and th["counterpart"] == "ООО Ромашка"
+    assert client.get("/api/candidate/applications", headers=H(tc)).json()[0]["thread"]["unread"] == 0
     te2 = employer(client, email="hr2@corp.ru", company="ООО Лютик")
     assert client.get(f"/api/messages/application/{a['id']}", headers=H(te2)).status_code == 404
     client.post(f"/api/candidate/applications/{a['id']}/withdraw", headers=H(tc))
@@ -387,9 +398,30 @@ def test_jury_sandbox_has_contact_demo(client):
     e = client.post("/api/jury/login", json={"persona": "employer", "scenario": sid}).json()["access_token"]
     invs = client.get("/api/employer/invitations", headers=H(e)).json()
     assert any(i["counter"] and i["counter"]["status"] == "pending" for i in invs)
-    assert any(i["contacts_revoked"] for i in invs)
+    rv = next(i for i in invs if i["contacts_revoked"])
+    # дата отзыва согласована с событием истории (демо датировано задним числом)
+    ev = next(e for e in rv["history"] if e["status"] == "contacts_revoked")
+    assert rv["contacts_revoked_at"][:16] == ev["at"][:16]
     assert any(i["status"] == "accepted" and i["thread"]["unread"] == 1 for i in invs)
     assert client.get("/api/messages/unread", headers=H(e)).json()["total"] >= 1
+    # Мария: отклик на вакансию компании жюри с перепиской — виден обеим сторонам; вакансия песочницы видна
+    # только в своей песочнице и не попадает в общий список
+    from app.modules.contact.demo import DEMO_VACANCY
+
+    maria = client.post("/api/jury/login", json={"persona": "candidate", "scenario": sid}).json()["access_token"]
+    mine = client.get("/api/candidate/applications", headers=H(maria)).json()
+    assert [a["vacancy_title"] for a in mine] == [DEMO_VACANCY] and mine[0]["thread"] == {"total": 3, "unread": 1}
+    assert client.get("/api/messages/unread", headers=H(maria)).json()["applications"] == 1
+    vac = client.get("/api/employer/vacancies", headers=H(e)).json()
+    assert [v["title"] for v in vac] == [DEMO_VACANCY] and vac[0]["applications"]["total"] == 1
+    apps = client.get(f"/api/employer/vacancies/{vac[0]['id']}/applications", headers=H(e)).json()
+    assert apps[0]["thread"] == {"total": 3, "unread": 0} and apps[0]["contacts"]["full_name"]
+    assert any(t["kind"] == "application" for t in client.get("/api/messages/threads", headers=H(e)).json())
+    ids = lambda tok: {v["id"] for v in client.get("/api/vacancies?limit=100", headers=H(tok)).json()["items"]}  # noqa: E731
+    assert vac[0]["id"] in ids(maria)
+    other = client.post("/api/jury/login", json={"persona": "candidate", "scenario": "new"}).json()["access_token"]
+    assert vac[0]["id"] not in ids(other)  # у другой песочницы — своя копия, чужая не видна
+    assert vac[0]["id"] not in ids(candidate_with_category(client))  # обычному кандидату — тоже
     # демо-кандидаты не из первой пятёрки подборок песочницы
     from app.modules.contact.demo import shared_candidates
     from app.modules.matching.models import EmployerNeed
