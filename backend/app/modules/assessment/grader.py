@@ -408,7 +408,8 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
     """Оценка одного открытого ответа. Никогда не бросает исключений.
 
     model — явная модель (сравнение моделей-оценщиков на экспертной разметке); по умолчанию LLM_GRADING_MODEL."""
-    text = (answer or "").strip()
+    # Скрытые фрагменты текста задания (ИИ-метка, ai_mark) в оценщик не уходят — если ответ вставлен вместе с ними
+    text = re.sub("\u2063[^\u2063]*\u2063", "", answer or "").replace("\u2063", "").strip()
     if len(re.sub(r"\s+", " ", text)) < MIN_CHARS:
         return GradeOutcome(status="scored", score=0.0, method="rule", comment="Ответ пустой или слишком короткий")
     if not rubric or not rubric.get("criteria"):

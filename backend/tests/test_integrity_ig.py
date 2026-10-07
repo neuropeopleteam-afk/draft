@@ -413,3 +413,16 @@ def test_expert_queue_counts_two_call_grade_as_llm(client):
         rev = [x for x in queue(db, "reviewed")["items"] if x["token"] == it["token"]]
         assert rev and rev[0]["llm"]["score"] == 0.75 and rev[0]["llm"]["scores"] == [0.7, 0.8]
         assert rev[0]["llm"]["quotes"] == {"a": "цитата"}
+
+
+def test_grader_drops_hidden_task_fragments(monkeypatch):
+    """Ответ, вставленный вместе со скрытой меткой задания: фрагмент между U+2063 в оценщик не уходит."""
+    calls: list = []
+    _fake_llm(monkeypatch, [GOOD], calls)
+    mark = ai_mark.new_mark("open_answer")
+    stem = ai_mark.apply("Сервис теряет блокировку. Объясните почему.", mark)
+    hidden = stem.split("\u2063")[1].strip()
+    G.grade_open(stem="x", code=None, step_prompt=None, rubric=RUBRIC,
+                 answer=stem + " Два запроса одновременно читают остаток без транзакции, нужен SELECT FOR UPDATE.")
+    sent = "\n".join(m["content"] for m in calls[0])
+    assert hidden and hidden not in sent and "\u2063" not in sent and "SELECT FOR UPDATE" in sent
