@@ -15,7 +15,7 @@ interface Step { kind: string; title: string; text: string; tags: string[] }
 interface Comp { discipline: string; title: string; score: number; reasons: string[]; your_level: string | null; your_level_title: string | null; next_step: string; peers?: { category_size: number; with_discipline: number } }
 export interface FeedbackData {
   available: boolean; message?: string; source?: string;
-  session?: { id: string | null; direction: string; direction_title: string; claimed_grade: string; grade_title: string; theta: number | null; se: number | null; confirmed: boolean | null; finished_at: string | null; category_id: string | null; integrity: { level: string; title: string; reasons: string[] } | null };
+  session?: { id: string | null; direction: string; direction_title: string; claimed_grade: string; grade_title: string; theta: number | null; se: number | null; confirmed: boolean | null; finished_at: string | null; category_id: string | null; integrity: { level: string; title: string; reasons: string[]; note?: string } | null };
   skill_map?: { topics: Topic[]; summary: { topics: number; strong: number; ok: number; gap: number; pending: number; best: string[]; weakest: string[] }; note: string };
   demand?: { scope: string; scope_title: string; sources: number; sources_in_category: number; items: DemandItem[]; full_match: number; with_required: number; avg_required_coverage: number | null; note: string };
   route?: Step[]; competitions?: Comp[]; fsp_calendar_url?: string;
@@ -216,10 +216,10 @@ export default function Feedback() {
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(s.category_id)}</p>{s.confirmed != null && <p className="text-xs text-brand-ink/65">{s.confirmed ? "грейд подтверждён" : "грейд не подтверждён"}</p>}</div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Уверенно</p><p className="mt-2 text-xl font-bold text-brand-night">{sum.strong} из {sum.topics}</p><p className="text-xs text-brand-ink/65">тем теста</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Пробелы</p><p className="mt-2 text-xl font-bold text-brand-night">{sum.gap}</p><p className="text-xs text-brand-ink/65">{sum.weakest.length ? sum.weakest.join(", ") : "нет"}</p></div>
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Достоверность</p><p className="mt-2 text-lg font-bold text-brand-night">{s.integrity?.title ?? "—"}</p><p className="text-xs text-brand-ink/65">так её видит работодатель</p></div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Достоверность</p><p className="mt-2 text-lg font-bold text-brand-night">{s.integrity?.title ?? "—"}</p><p className="text-xs text-brand-ink/65">этот уровень видит работодатель</p></div>
       </section>
       {s.integrity && s.integrity.level !== "high" && (
-        <Alert kind="info">Причины, по которым снижена достоверность результата: {s.integrity.reasons.join("; ")}. Оценку уровня и грейд это не меняет.</Alert>
+        <Alert kind="info">Достоверность результата снижена. Общая причина: {s.integrity.reasons.join("; ").toLowerCase()}. {s.integrity.note ?? "Оценку уровня и грейд это не меняет."}</Alert>
       )}
       {fb.source === "facts" && <Alert kind="info">Подробной разбивки по заданиям для этого теста нет — карта построена по навыкам, подтверждённым тестом (T1).</Alert>}
       <SkillMap fb={fb} />

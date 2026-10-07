@@ -17,6 +17,7 @@ from app.core.db import as_aware, utcnow
 from app.core.enums import EvidenceLevel, FactSource, GradeChangeReason, TestSessionStatus
 from app.core.errors import api_error
 from app.modules.assessment.engine import get_engine
+from app.modules.assessment.integrity import NOTICE_VERSION, candidate_view
 from app.modules.assessment.models import (GradeHistory, SandboxTestStart, SurveyResponse, TaskFamily, TaskVariant,
                                            TestAnswer, TestSession, TestSessionItem)
 from app.modules.auth.models import User
@@ -82,7 +83,7 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     old = active_session(db, user_id)
     if old is not None and old.claimed_grade_id == claimed_grade and old.direction_id == survey.direction_id:
         if integrity_ack and not (old.result or {}).get("integrity_ack"):
-            old.result = {**old.result, "integrity_ack": {"at": now.isoformat()}}
+            old.result = {**old.result, "integrity_ack": {"at": now.isoformat(), "notice": NOTICE_VERSION}}
             flag_modified(old, "result")
             db.commit()
         return old
@@ -124,8 +125,8 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
         status=TestSessionStatus.in_progress, form_seed=seed, is_sandbox=sandbox, started_at=now,
         deadline_at=now + timedelta(minutes=minutes),
         result={"engine": engine.name, "state": state,
-                # кандидат прочитал экран «что отслеживается» (прозрачный античит) до начала теста
-                "integrity_ack": {"at": now.isoformat()} if integrity_ack else None},
+                # согласие с проверкой самостоятельности до начала теста (текст — версия NOTICE_VERSION, Р27)
+                "integrity_ack": {"at": now.isoformat(), "notice": NOTICE_VERSION} if integrity_ack else None},
     )
     db.add(ts)
     db.commit()
@@ -308,9 +309,11 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         "current_grade": profile.current_grade_id, "category_id": profile.current_category_id,
         "message": outcome.message, "engine": res.engine,
         "locked_until": as_aware(profile.grade_locked_until).isoformat() if profile.grade_locked_until else None,
-        # Кандидату — только ход теста; показатели детектора утечек видны в данных сессии, не в ответе
-        "details": {k: res.details.get(k) for k in ("stop_reason", "n_scored", "n_canaries", "time_used_s",
+        # Кандидату — только ход теста; показатели детектора утечек и контрольные задания видны в данных сессии,
+        # не в ответе. Достоверность — уровень и общая причина (Р27), подробности — работодателю
+        "details": {k: res.details.get(k) for k in ("stop_reason", "n_scored", "time_used_s",
                                                      "extension", "pending_review", "n_families_in_bank")},
+        "integrity": candidate_view((res.details or {}).get("integrity")),
     }
 
 
