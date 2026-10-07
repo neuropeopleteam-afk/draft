@@ -138,6 +138,11 @@ def why_pairs(items: list[dict], req: dict) -> list[dict]:
         if abs(dp) >= 0.05:
             pr = (lambda x: f"оценка {x['comps']['probe'] * 100:.0f} %" if x["comps"]["probe"] else "нет")
             factors.append({"level": "T1", "points": dp, "label": "зонд", "a": pr(a), "b": pr(b)})
+        # «Junior (предварительно)» — −0,05 к скору: подтверждённый выше при прочих равных
+        dv = -(a["comps"].get("provisional", 0.0) - b["comps"].get("provisional", 0.0)) * 100
+        if abs(dv) >= 0.05:
+            pv = (lambda x: "предварительно" if x["comps"].get("provisional") else "подтверждён")
+            factors.append({"level": "T1", "points": dv, "label": "грейд", "a": pv(a), "b": pv(b)})
         factors.sort(key=lambda f: -f["points"])
         pro = [f for f in factors if f["points"] > 0][:3]
         con = [f for f in factors if f["points"] < 0][-1:]  # главный фактор в пользу второго
@@ -247,7 +252,12 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                 rel = (" — на ступень выше запрошенного" if GRADE_LEVEL[g] > GRADE_LEVEL[want_grade]
                        else " — на ступень ниже запрошенного")
                 st = "partial"
-            cells["category"] = {"level": "T1", "status": st,
+            pv = c.get("provisional")
+            if pv:  # «Junior (предварительно)»: грейд не подтверждён, но и уровень ниже не доказан
+                st = "partial"
+                rel += (f"; предварительно — вероятность уровня не ниже Junior {pv.get('p_pct', '—')} % "
+                        "(подтверждение — от 80 %)")
+            cells["category"] = {"level": "T1", "status": st, "provisional": bool(pv),
                                  "text": f"{category_title(p.current_category_id)}{rel}; тест "
                                          f"{b.test.created_at:%d.%m.%Y}, {t.get('correct')} из {t.get('answered')} верно"}
             th, se = float(t.get("theta") or 0), float(t.get("se") or 0)

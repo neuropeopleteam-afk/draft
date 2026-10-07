@@ -9,6 +9,15 @@
 * иначе — «не подтверждён», предлагается пройти тест на ближайший грейд, который
   подтверждается с той же уверенностью (если такой есть);
 * «можно повысить», если P(θ ≥ cut[следующий]) ≥ upgrade_level.
+
+«Предварительный Junior» (нижний порог, решение владельца 06.10). Тест на Junior не подтвердил грейд, но и не
+доказал, что уровень ниже: P(θ ≥ cut[junior]) ≥ provisional_level (по умолчанию 0,10 — верхняя граница
+одностороннего 90 % интервала θ̂ + 1,28·SE достаёт до порога). Сюда попадают и θ̂ ниже порога с интервалом,
+пересекающим порог, и θ̂ выше порога, когда точности не хватило до confirm_level. Такой кандидат получает
+категорию «Junior (предварительно)» — это не подтверждённый грейд (assigned остаётся «none»), а отдельный статус:
+его можно только подтвердить (дотестированием у порога, работой — зондом или кубком). Правило касается только
+теста на нижний грейд: кандидату, заявившему Middle или Senior, Junior не присваивается даже предварительно —
+грейд не понижается принудительно, тест на грейд ниже — выбор кандидата.
 """
 from __future__ import annotations
 
@@ -56,10 +65,30 @@ class GradeDecision:
     retake_lower: str | None
     probabilities: dict[str, float]
     explanation: str
+    provisional: bool = False           # «Junior (предварительно)»: не подтверждён, но и не доказанно ниже
+    provisional_reason: str | None = None  # uncertain — θ̂ ниже порога, интервал его пересекает; precision — θ̂
+    #                                        у порога или выше, но уверенности не хватило до confirm_level
+    p_claimed: float | None = None      # P(θ ≥ порога заявленного грейда)
+
+
+PROVISIONAL_LEVEL = 0.10  # P(θ ≥ cut[junior]) ≥ 0,10 ⇔ θ̂ + 1,28·SE ≥ cut[junior]: «не доказанно ниже»
+
+
+def provisional_status(theta: float, se: float, claimed: str, confirmed: bool, scale: GradeScale | None = None,
+                       provisional_level: float = PROVISIONAL_LEVEL) -> tuple[bool, str | None]:
+    """(предварительный?, причина) — только для теста на нижний грейд и только если он не подтверждён."""
+    scale = scale or GradeScale()
+    if confirmed or claimed != GRADE_ORDER[1]:
+        return False, None
+    if scale.p_at_least(theta, se, claimed) < provisional_level:
+        return False, None
+    return True, ("precision" if theta >= scale.cuts[claimed] else "uncertain")
 
 
 def decide(theta: float, se: float, claimed: str, scale: GradeScale | None = None,
-           confirm_level: float = 0.8, upgrade_level: float = 0.9) -> GradeDecision:
+           confirm_level: float = 0.8, upgrade_level: float = 0.9,
+           provisional_level: float | None = PROVISIONAL_LEVEL) -> GradeDecision:
+    """provisional_level=None — без «предварительного Junior» (прежнее правило, для сравнения до/после)."""
     scale = scale or GradeScale()
     if claimed not in GRADE_ORDER[1:]:
         raise ValueError("claimed: junior | middle | senior")
@@ -78,6 +107,8 @@ def decide(theta: float, se: float, claimed: str, scale: GradeScale | None = Non
                 retake = g
                 break
     assigned = claimed if confirmed else "none"
+    prov, prov_reason = (provisional_status(theta, se, claimed, confirmed, scale, provisional_level)
+                         if provisional_level is not None else (False, None))
     if confirmed:
         expl = (f"Заявленный грейд {claimed} подтверждён: P(θ ≥ порога) = {p_claim:.2f}"
                 f" при θ = {theta:.2f} ± {se:.2f}.")
@@ -88,4 +119,8 @@ def decide(theta: float, se: float, claimed: str, scale: GradeScale | None = Non
                 "Грейд не понижается принудительно; "
                 + (f"можно пройти тест на {retake}." if retake else
                    "можно пройти тест на грейд ниже после подготовки."))
-    return GradeDecision(claimed, point, confirmed, assigned, upgrade, retake, probs, expl)
+        if prov:
+            expl += (f" Уровень ниже порога не доказан (P = {p_claim:.2f} ≥ {provisional_level:.2f}): "
+                     "категория Junior присваивается предварительно, её можно подтвердить дотестированием у порога.")
+    return GradeDecision(claimed, point, confirmed, assigned, upgrade, retake, probs, expl, prov, prov_reason,
+                         round(p_claim, 4))

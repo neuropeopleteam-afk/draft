@@ -375,6 +375,13 @@ def finalize(db: Session, cup: Cup, actor: User | None, *, early: bool = False) 
     db.flush()
     for e in credited:
         refresh_rating(db, e.candidate_user_id)
+    # «Junior (предварительно)»: кубок своего направления с результатом ≥ 70 % подтверждает грейд (не смена грейда)
+    from app.modules.assessment import provisional
+
+    for e in credited:
+        provisional.confirm_by_work(db, e.candidate_user_id, source="cup", ref=f"cup:{cup.id}",
+                                    ref_title=f"Кубок «{cup.title}»", score=float(e.score or 0),
+                                    direction=getattr(cup, "direction_id", None))
     cup.status = "finished"
     cup.finalized_at = now
     db.commit()

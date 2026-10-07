@@ -45,6 +45,9 @@ DISCIPLINE_RELEVANCE = {
     "uav": {"backend": 0.3, "frontend": 0.3, "data_ml": 0.5, "qa": 0.3, "security": 0.3},
 }
 GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
+# «Junior (предварительно)» ниже подтверждённого при прочих равных: −0,05 к рейтингу в категории и к скору подбора
+# (вес одного зонда; задан до бенчмарка и на нём не подбирался — см. app.modules.assessment.provisional)
+PROVISIONAL_PENALTY = 0.05
 
 
 def set_t0_facts(db: Session, user_id: uuid.UUID, source: FactSource, *, stack: list[str] | None = None,
@@ -125,12 +128,19 @@ class Bundle:
     def fsp(self) -> float:
         return fsp_strength(self.achievements, self.profile.current_direction_id)
 
+    @property
+    def provisional(self) -> bool:
+        """Категория «предварительно» (тест на Junior не подтвердил грейд, но и не доказал уровень ниже)."""
+        return bool(getattr(self.profile, "grade_provisional", False) and self.profile.current_category_id)
+
     def strength(self) -> float:
-        """Рейтинг внутри категории (только T1/T2): тест 0,65 + зонды 0,10 + ФСП 0,25 (бонус)."""
+        """Рейтинг внутри категории (только T1/T2): тест 0,65 + зонды 0,10 + ФСП 0,25 (бонус);
+        «предварительно» — −0,05 (ниже подтверждённого при прочих равных)."""
         t = self.test.value if self.test else {}
         test = test_component(t.get("theta"), t.get("se"), self.profile.current_grade_id)
         probe = max((f.value.get("score", 0) for f in self.probes_t1), default=0.0)
-        return round(0.65 * test + 0.10 * probe + 0.25 * self.fsp, 4)
+        pen = PROVISIONAL_PENALTY if self.provisional else 0.0
+        return round(max(0.0, 0.65 * test + 0.10 * probe + 0.25 * self.fsp - pen), 4)
 
 
 def load_bundles(db: Session, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, Bundle]:
@@ -210,17 +220,23 @@ def _uniq(facts: list) -> list:
 def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None, rank_total: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
+    from app.modules.assessment import provisional as prov
+
     p, pv = b.profile, b.privacy
     cat = categories.get(p.current_category_id or "")
     t = b.test.value if b.test else None
     show = (lambda k: include_hidden or pv.get(k, True))
+    is_prov = b.provisional and cat is not None
     return {
         "ref": p.public_ref,
-        "category": {"id": cat.id, "title": cat.title} if cat else None,
+        "category": {"id": cat.id, "title": prov.title(cat.title, is_prov), "provisional": is_prov} if cat else None,
         "direction": p.current_direction_id,
         "direction_title": DIRECTIONS.get(p.current_direction_id or "", None),
         "grade": p.current_grade_id,
-        "grade_title": GRADES.get(p.current_grade_id or "", None),
+        "grade_title": prov.title(GRADES.get(p.current_grade_id or "", None), is_prov),
+        # «Junior (предварительно)»: уровень доказанности (вероятность уровня не ниже Junior), причина, попытки
+        "provisional": (prov.info(t) or {"text": "Junior предварительно"}) if is_prov else None,
+        "confirmed_by": prov.confirmed_by(t),
         "rating_score": p.rating_score,
         "rank_in_category": rank,
         "category_size": rank_total,
