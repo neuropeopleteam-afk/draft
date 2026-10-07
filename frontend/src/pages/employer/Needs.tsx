@@ -375,7 +375,7 @@ export function Selection() {
                           const base: string[] = filters.categories ?? s.categories.filter((x: any) => ["exact", "direction", "all"].includes(x.relation)).map((x: any) => x.id);
                           setFilters({ ...filters, categories: base.includes(c.id) ? base.filter((y) => y !== c.id) : [...base, c.id] });
                         }} />
-                      <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{REL[c.relation]} · {range(c.market_range?.from, c.market_range?.to)}</span></span>
+                      <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{REL[c.relation]} · рынок {range(c.market_range?.from, c.market_range?.to)} на руки</span></span>
                     </label>
                     <span className="chip">{c.count}</span>
                   </li>
@@ -434,7 +434,7 @@ export function Selection() {
         </div>
       )}
       <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Зонд для ${picked.length} канд.`}>
-        <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to }} onDone={() => { setProbeOpen(false); setPicked([]); }} />
+        <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={() => { setProbeOpen(false); setPicked([]); }} />
       </Modal>
     </div>
   );

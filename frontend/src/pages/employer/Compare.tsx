@@ -68,7 +68,7 @@ export function Compare() {
   if (error || !data) return <div className="max-w-3xl space-y-4"><Alert>{error}</Alert><Link to={`/employer/needs/${id}`} className="btn-ghost">К подборке</Link></div>;
   const cs = data.candidates;
   const market = cs.find((c) => c.market_range)?.market_range ?? null;
-  const needSalary = { from: data.need.requirements?.salary_from, to: data.need.requirements?.salary_to };
+  const needSalary = { from: data.need.requirements?.salary_from, to: data.need.requirements?.salary_to, net: data.need.requirements?.salary_net };
   const groups: { group: string; rows: Row[] }[] = [];
   for (const r of data.rows) {
     const g = groups.at(-1);

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, Level, Loading, Modal, Status, dt, dtt, errText, range, useApi } from "../../components/ui";
+import { Alert, Empty, Field, Level, Loading, Modal, Status, dt, dtt, errText, useApi } from "../../components/ui";
+import { salaryText } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { CodeBlock, Countdown, ENTRY, MODE_SHORT, Phase, mins } from "../shared";
 
@@ -43,7 +44,7 @@ function CupGrid({ title, items }: { title: string; items: any[] }) {
               <Phase p={c.phase} />
             </div>
             <p className="mt-2 line-clamp-2 text-sm text-brand-ink/65">{c.description}</p>
-            <p className="mt-3 text-sm font-semibold text-brand-plum">{range(c.salary_from, c.salary_to)} · приглашения топ-{c.invite_top_n}</p>
+            <p className="mt-3 text-sm font-semibold text-brand-plum">{salaryText(c.salary_from, c.salary_to, c.salary_basis)} · приглашения топ-{c.invite_top_n}</p>
             <p className="mt-1 text-xs text-brand-ink/65">до {dt(c.ends_at)} · {c.time_limit_min} мин на решение · {c.participants} участников</p>
             {c.my_status && <p className="mt-3 text-sm font-semibold text-brand-night">Моё участие: {ENTRY[c.my_status]}{c.my_place ? ` · ${c.my_place} место` : ""}</p>}
             {c.below_my_minimum && <p className="mt-1 text-xs text-brand-plum">Верх вилки ниже вашего скрытого минимума</p>}
@@ -99,7 +100,7 @@ export function CandidateCup() {
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div><dt className="text-brand-ink/65">Срок</dt><dd className="font-semibold">{dt(c.starts_at)} — {dt(c.ends_at)}</dd></div>
             <div><dt className="text-brand-ink/65">Время на решение</dt><dd className="font-semibold">{c.time_limit_min} мин с момента старта{c.mode === "auto" ? `, ${c.n_tasks} заданий` : ""}</dd></div>
-            <div><dt className="text-brand-ink/65">Приглашение лучшим</dt><dd className="font-semibold">топ-{c.invite_top_n} с баллом от {c.min_score_pct} %: «{c.position_title}», {range(c.salary_from, c.salary_to)}</dd></div>
+            <div><dt className="text-brand-ink/65">Приглашение лучшим</dt><dd className="font-semibold">топ-{c.invite_top_n} с баллом от {c.min_score_pct} %: «{c.position_title}», {salaryText(c.salary_from, c.salary_to, c.salary_basis)}</dd></div>
             <div><dt className="text-brand-ink/65">Участники</dt><dd className="font-semibold">{c.participants}</dd></div>
           </dl>
           {c.rubric && <p className="text-xs text-brand-ink/65">Критерии: {c.rubric.map((r: any) => `${r.title} (${Math.round(r.weight * 100)} %)`).join("; ")}</p>}
@@ -211,7 +212,7 @@ function MyResult({ c, e }: { c: any; e: any }) {
         <p className="text-sm text-brand-ink/80">Балл <b>{e.score_pct} %</b>{e.auto ? ` (${e.auto.correct} из ${e.auto.total})` : ""} за {mins(e.time_spent_s)}.{e.place ? <> Итоговое место: <b>{e.place}</b>.</> : " Место — после подведения итогов."}</p>
       )}
       {e.invitation_id && (
-        <Alert kind="ok">Вы в числе лучших — компания отправила приглашение с вилкой {range(c.salary_from, c.salary_to)}. <Link className="font-semibold underline" to="/candidate/invitations">Открыть приглашения</Link>{e.invitation_status ? <span className="ml-2"><Status s={e.invitation_status} /></span> : null}</Alert>
+        <Alert kind="ok">Вы в числе лучших — компания отправила приглашение с вилкой {salaryText(c.salary_from, c.salary_to, c.salary_basis)}. <Link className="font-semibold underline" to="/candidate/invitations">Открыть приглашения</Link>{e.invitation_status ? <span className="ml-2"><Status s={e.invitation_status} /></span> : null}</Alert>
       )}
       {e.place && !e.invitation_id && e.invite_note && <p className="text-xs text-brand-ink/65">Приглашение не отправлено: {e.invite_note}.</p>}
       {e.place && (
