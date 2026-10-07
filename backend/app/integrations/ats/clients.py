@@ -39,11 +39,16 @@ class AtsError(Exception):
         self.status = status
 
 
+STUB_PATH = "/api/ats-stub/"
+
+
 def check_url(url: str) -> str:
-    """Защита от SSRF: только https и публичные адреса (исключение — наша тестовая ATS-заглушка)."""
-    stub = get_isettings().stub_base
-    if url.startswith(stub + "/api/ats-stub/"):
-        return url
+    """Защита от SSRF: только https и публичные адреса (исключение — наша тестовая ATS-заглушка: её публичный адрес
+    из настроек компании переписывается на внутренний stub_base — так api не зависит от доступности сайта изнутри)."""
+    s = get_isettings()
+    for base in (s.stub_base, s.stub_public_base):
+        if url.startswith(base + STUB_PATH):
+            return s.stub_base + url[len(base):]
     p = urlparse(url)
     if p.scheme != "https" or not p.hostname:
         raise AtsError("Адрес должен начинаться с https://")

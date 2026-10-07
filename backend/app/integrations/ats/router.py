@@ -40,7 +40,7 @@ AUTH = {401: err("Не выполнен вход"), 403: err("Только дл�
 
 
 def settings_out(st: AtsSettings) -> dict:
-    stub_base = get_isettings().stub_base
+    stub_base = get_isettings().stub_public_base
     return {
         "auto_push": st.auto_push,
         "huntflow": {"enabled": st.huntflow_enabled, "base_url": st.huntflow_base_url
