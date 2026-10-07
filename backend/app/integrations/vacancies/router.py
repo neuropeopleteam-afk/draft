@@ -19,6 +19,7 @@ from app.integrations.ats.models import AtsSettings
 from app.integrations.egrul import trust
 from app.integrations.push.service import notify_user
 from app.integrations.vacancies.models import Vacancy, VacancyApplication
+from app.modules.assignments import service as assignments  # задание к вакансии (И7)
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import STACK, category_title
@@ -93,6 +94,7 @@ def _vac_out(db: Session, v: Vacancy, *, company: Company | None = None, with_tr
     if applied is not None:
         out["my_application"] = {"id": str(applied.id), "status": applied.status,
                                  "status_title": STATUS_TITLES[applied.status]}
+    out["assignment"] = assignments.vacancy_brief(db, v.id)  # И7: откликнувшийся проходит задание работодателя
     return out
 
 
@@ -198,6 +200,7 @@ def _app_out(db: Session, a: VacancyApplication, side: str, v: Vacancy | None = 
         c = db.get(Company, v.company_id)
         out["company"] = {"id": str(c.id), "name": c.name}
         out["employer_note"] = a.employer_note if a.status in ("accepted", "rejected") else None
+    out["assignment"] = assignments.attempt_for_application(db, a)  # И7: результат задания рядом с откликом
     return out
 
 
@@ -349,6 +352,8 @@ def apply(vid: uuid.UUID, data: ApplyIn, bg: BackgroundTasks, user: User = Depen
         ref = db.get(CandidateProfile, user.id).public_ref
         bg.add_task(notify_user, v.created_by, f"Новый отклик: {ref}", f"«{v.title}»", "/employer/vacancies",
                     f"vac-{v.id}")
+    if assignments.on_application(db, v, a) is not None:  # И7: к вакансии прикреплено задание — предложить его
+        db.commit()
     return _app_out(db, a, "candidate", v)
 
 

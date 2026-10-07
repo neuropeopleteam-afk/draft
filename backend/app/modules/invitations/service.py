@@ -22,7 +22,7 @@ from app.modules.auth.models import User
 from app.modules.catalog.seed_data import STACK, category_title
 from app.modules.invitations.models import Invitation, InvitationComplaint, InvitationEvent, Probe
 from app.modules.matching.models import EmployerNeed
-from app.modules.profiles.facts import achievement_text, fmt_count, load_bundles, refresh_rating, skill_confirmed
+from app.modules.profiles.facts import achievement_text, fmt_count, load_bundles, refresh_rating, skill_confirmed, skill_evidence_text
 from app.modules.profiles.models import CandidateFact, CandidateProfile, Company
 
 INVITATION_COOLDOWN_DAYS = 30
@@ -91,13 +91,16 @@ def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, 
     for tag, f in b.skills_t1.items():
         if skill_confirmed(f) and (not wanted or tag in wanted):
             ev.append({"level": "T1", "kind": "skill",
-                       "text": f"{STACK.get(tag, (tag,))[0]}: подтверждено заданиями ({fmt_count(f.value.get('correct'))} из {fmt_count(f.value.get('total'))})"})
+                       "text": f"{STACK.get(tag, (tag,))[0]}: {skill_evidence_text(f).lower()}"})  # тест и задания (И7)
     for a in b.achievements[:3]:
         if a.verified:
             ev.append({"level": "T2", "kind": "fsp", "text": achievement_text(a)})
     for pr in db.scalars(select(Probe).where(Probe.company_id == company_id, Probe.candidate_user_id == candidate_id,
                                             Probe.status == ProbeStatus.reviewed)).all():
         ev.append({"level": "T1", "kind": "probe", "text": f"Зонд «{pr.title}»: {(pr.review or {}).get('verdict_title', 'оценён')}"})
+    for f in b.probes_t1:  # задания работодателя с автопроверкой (И7)
+        if (f.value or {}).get("origin") == "assignment":
+            ev.append({"level": "T1", "kind": "assignment", "text": f"{f.title}: {f.value.get('verdict')}"})
     return ev
 
 
