@@ -563,7 +563,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
           <p className="font-semibold text-brand-night">Уровень {GRADES[r.accept_lower_grade]} доказан уверенно</p>
           <p className="mt-1 text-brand-ink/75">
             Тест не подтвердил {GRADES[r.claimed_grade]}, но вероятность уровня не ниже {GRADES[r.accept_lower_grade]} по этому же тесту — {pct(r.accept_lower_p)}.
-            Можно принять его одним действием без нового теста. Принудительно уровень не понижается: решение за вами. Повторить тест на {GRADES[r.claimed_grade]} можно через 30 дней.
+            Можно принять его одним действием без нового теста. Принудительно уровень не понижается: решение за вами.{" "}
+            {r.sandbox ? `В демо-режиме повторить тест на ${GRADES[r.claimed_grade]} можно сразу (у живого кандидата — через ${r.retake_same_grade_days ?? 30} дней).` : `Повторить тест на ${GRADES[r.claimed_grade]} можно через ${r.retake_same_grade_days ?? 30} дней.`}
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
             <button className="btn-primary" onClick={acceptLower} disabled={busy}>{busy ? "Принимаем…" : `Принять уровень ${GRADES[r.accept_lower_grade]} без нового теста`}</button>
@@ -571,7 +572,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         </div>
       )}
       {!r.confirmed && !r.accepted_lower && !r.accept_lower_available && r.claimed_grade !== "junior" && (
-        <p className="mt-3 text-xs text-brand-ink/65">Повторить тест на {GRADES[r.claimed_grade]} можно через 30 дней; тест на грейд ниже — сразу, без зачёта попыток.</p>
+        <p className="mt-3 text-xs text-brand-ink/65">{r.sandbox ? "В демо-режиме повторить тест можно сразу; у живого кандидата" : "Повторить тест"} на {GRADES[r.claimed_grade]} {r.sandbox ? "— через" : "можно через"} {r.retake_same_grade_days ?? 30} дней; тест на грейд ниже — сразу, без зачёта попыток.</p>
       )}
       <div className="mt-3"><Alert>{err}</Alert></div>
       <FeedbackSummary sessionId={sessionId} />
