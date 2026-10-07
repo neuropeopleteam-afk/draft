@@ -34,6 +34,7 @@ import { FspCups, FspDemand, FspEffect, FspFunnel, FspMethod, FspOverview, FspRe
 import { fspSections } from "./ideas/fsp/sections";
 import LiveGuest from "./ideas/live/Guest";
 import LiveScreen from "./ideas/live/Screen";
+import PassportVerify from "./passport/VerifyPage";
 
 export default function App() {
   return (
@@ -53,6 +54,7 @@ export default function App() {
       <Route path="/expert-invite/:token" element={<ExpertInvite />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
+      <Route path="/verify/:id" element={<PassportVerify />} />
       <Route path="/login" element={<Login />} />
       <Route path="/fsp-id/done" element={<FspIdDone />} />
       <Route path="/install" element={<InstallPage />} />

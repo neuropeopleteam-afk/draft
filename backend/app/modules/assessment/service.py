@@ -299,6 +299,10 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         _write_t1_facts(db, ts, res)
         db.flush()
         refresh_rating(db, ts.user_id)
+        # подписанный паспорт грейда: выпуск или перевыпуск (при понижении старый отзывается), app/passport
+        from app.passport.service import on_test_finished
+
+        on_test_finished(db, ts.user_id, ts, previous_grade=current, previous_direction=ts.direction_id)  # сбой не роняет тест
     db.commit()
     return {
         "session_id": str(ts.id), "theta": res.theta, "se": res.se, "claimed_grade": ts.claimed_grade_id,

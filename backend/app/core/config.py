@@ -121,6 +121,12 @@ class Settings(BaseSettings):
     resume_parse_memory_mb: int = 256  # адресное пространство процесса разбора; обычному PDF хватает ~100 МБ
     resume_uploads_per_hour: int = 5
 
+    # Подписанный паспорт грейда (app/passport): ключ Ed25519 — только из secrets/passport.env на сервере
+    # (генератор tools/passport/genkey.py); пусто — эфемерный «тестовый ключ» процесса. Срок действия — от даты теста.
+    passport_signing_key: str | None = None
+    passport_retired_public_keys: str = ""  # открытые ключи выведенных из оборота ключей (base64url через запятую)
+    passport_ttl_days: int = 365
+
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
     fsp_oidc_client_id: str | None = None
