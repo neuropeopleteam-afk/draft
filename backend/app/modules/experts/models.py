@@ -3,6 +3,7 @@
 * ExpertPanelist — эксперт панели (код E1…E3, слот назначения). Вход — по персональной ссылке: в базе хранится
   только SHA-256 токена. Учётка пользователя с ролью expert создаётся вместе с приглашением (без регистрации).
   Демо-эксперт жюри тоже получает «панелиста» (is_demo): его оценки сохраняются, но в метрики не входят.
+  source — кто размечает под этим кодом: люди или языковая модель в роли эксперта (честная подпись на /validation).
 * ExpertItem — объект разметки пакета (версия pack). payload — то, что видит эксперт (вслепую: без ранга, скора,
   источника и меток системы), hidden — служебное (ранги платформы и BM25, источник пула, метка по правилам,
   параметры семейства, оценки модели-оценщика). Пакет — снимок: не зависит от последующих изменений демо-данных.
@@ -27,6 +28,9 @@ class ExpertPanelist(UUIDPk, Timestamps, Base):
     team_size: Mapped[int] = mapped_column(default=3)
     display_name: Mapped[str | None] = mapped_column(sa.String(120))
     profile: Mapped[str | None] = mapped_column(sa.String(255))  # «тимлид Backend» — для отчёта, не для расчёта
+    # кто размечает: people — человек, model — языковая модель по экспертному протоколу (подпись на /validation)
+    source: Mapped[str] = mapped_column(sa.String(16), default="people", server_default="people")
+    source_model: Mapped[str | None] = mapped_column(sa.String(64))  # название модели, если source == "model"
     user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id", ondelete="CASCADE"), unique=True)
     token_hash: Mapped[str | None] = mapped_column(sa.String(64), unique=True)
     pack: Mapped[str] = mapped_column(sa.String(16))
