@@ -6,6 +6,9 @@ export default {
       colors: {
         brand: {
           DEFAULT: "#FF0053",
+          // фон под белым текстом (кнопки, бейджи): #E0004C — 4,9 : 1, при наведении #C20042 — 6,2 : 1 (AA для 14 px)
+          strong: "#E0004C",
+          deep: "#C20042",
           soft: "#FC3777",
           blush: "#FFD6E4",
           lavender: "#8A83D1",

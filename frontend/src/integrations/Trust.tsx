@@ -1,15 +1,10 @@
 // Индекс доверия работодателя: бейдж (кратко) и панель с причинами (ЕГРЮЛ, почта, вилка, поведение).
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Alert, dt, errText, useApi } from "../components/ui";
+import { Alert, dateOnly, dt, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 
-/** Дата без времени (ГГГГ-ММ-ДД) — без сдвига часового пояса браузера. */
-export function dateOnly(v?: string | null): string {
-  const m = v ? /^(\d{4})-(\d{2})-(\d{2})/.exec(v) : null;
-  if (!m) return dt(v ?? undefined);
-  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
-}
+export { dateOnly };
 
 export interface TrustShort {
   score: number; level: "high" | "medium" | "low"; level_title: string; preliminary: boolean; critical: boolean;
@@ -116,14 +111,15 @@ export function CompanyTrustCard({ hasInn }: { hasInn: boolean }) {
   );
 }
 
-/** Индекс доверия в карточке приглашения у кандидата (с оценкой вилки этого предложения). */
-export function InvitationTrust({ invitationId }: { invitationId: string }) {
-  const { data } = useApi<Trust>(`/candidate/invitations/${invitationId}/trust`, [invitationId]);
+/** Индекс доверия в карточке приглашения у кандидата (с оценкой вилки этого предложения).
+ * version меняется после ответа или жалобы — индекс перечитывается в открытом окне. */
+export function InvitationTrust({ invitationId, version = 0 }: { invitationId: string; version?: number }) {
+  const { data } = useApi<Trust>(`/candidate/invitations/${invitationId}/trust`, [invitationId, version]);
   if (!data) return <div className="h-24 animate-pulse rounded-2xl bg-brand-blush/30" />;
   return <TrustPanel t={data} companyLink />;
 }
 
 /** Краткие индексы по всем приглашениям кандидата: { [invitation_id]: TrustShort }. */
-export function useInvitationsTrust() {
-  return useApi<Record<string, TrustShort>>("/candidate/invitations-trust").data ?? {};
+export function useInvitationsTrust(version = 0) {
+  return useApi<Record<string, TrustShort>>("/candidate/invitations-trust", [version]).data ?? {};
 }

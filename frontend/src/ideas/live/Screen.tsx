@@ -2,10 +2,11 @@
 // момент приглашения и лента событий. Работодатель своей песочницы жюри; вход — в один клик автоматически.
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Alert, Level, catTitle, errText, range } from "../../components/ui";
+import { Alert, Level, catTitle, errText, range, ruText } from "../../components/ui";
 import { api, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { juryLogin, personaOf, scenario } from "../../lib/jury";
+import { usePageTitle } from "../../lib/meta";
 import { chime, type Feed, type Guest, num, plain, STAGE_TITLE, time, unlockAudio } from "./api";
 
 const sidOf = (email?: string | null) => (email && email.includes("+") ? email.split("+")[1].split("@")[0] : null);
@@ -22,7 +23,7 @@ export default function LiveScreen() {
   const state = useRef<{ rev: number | null; since: string | null; invited: number }>({ rev: null, since: null, invited: -1 });
   const [ready, setReady] = useState(false);
 
-  useEffect(() => { document.title = "Демонстрация для жюри · Встречный"; }, []);
+  usePageTitle("Демонстрация для жюри");
 
   // Вход работодателем своей песочницы (ссылка «#s=…» — та же песочница на другом устройстве)
   useEffect(() => {
@@ -190,7 +191,7 @@ function pickFocus(guests: Guest[], events: Feed["events"], focus: { n: number; 
 
 function Counter({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
-    <div className={`rounded-2xl px-3 py-3 text-center ${accent ? "bg-brand text-white" : "border border-brand-night/10 bg-white"}`}>
+    <div className={`rounded-2xl px-3 py-3 text-center ${accent ? "bg-brand-strong text-white" : "border border-brand-night/10 bg-white"}`}>
       <p className={`text-2xl font-extrabold ${accent ? "" : "text-brand-night"}`}>{value}</p>
       <p className={`text-[11px] font-semibold ${accent ? "text-white/85" : "text-brand-ink/60"}`}>{label}</p>
     </div>
@@ -203,7 +204,7 @@ function GuestStrip({ guests, focused, onPick }: { guests: Guest[]; focused: num
     <div className="flex flex-wrap gap-2" aria-label="Участники зала">
       {guests.map((g) => (
         <button key={g.number} onClick={() => onPick(g.number)} aria-pressed={focused === g.number}
-          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${focused === g.number ? "border-brand bg-brand text-white" : "border-brand-night/15 bg-white text-brand-night hover:border-brand/40"}`}>
+          className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${focused === g.number ? "border-brand-strong bg-brand-strong text-white" : "border-brand-night/15 bg-white text-brand-night hover:border-brand/40"}`}>
           {g.label} · {g.direction_title} · {g.stage === "testing" ? `${g.answered}/${g.total}` : STAGE_TITLE[g.stage]}
         </button>
       ))}
@@ -264,7 +265,7 @@ function Focus({ g }: { g: Guest }) {
           <p className="mt-4 text-sm font-bold text-brand-night">Почему {g.label} на {sel.rank}-м месте</p>
           <ul className="mt-2 grid gap-2 md:grid-cols-2">
             {sel.reasons.map((x, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs leading-relaxed text-brand-ink/80"><Level level={x.level} /><span><b>{x.requirement}.</b> {x.text}</span></li>
+              <li key={i} className="flex items-start gap-2 text-xs leading-relaxed text-brand-ink/80"><Level level={x.level} /><span><b>{x.requirement}.</b> {ruText(x.text)}</span></li>
             ))}
           </ul>
         </div>
@@ -302,7 +303,7 @@ function Timeline({ g }: { g: Guest }) {
     <ol className="flex flex-wrap items-center gap-1.5" aria-label="Путь участника">
       {steps.map(([t, done], i) => (
         <li key={t} className="flex items-center gap-1.5">
-          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${done ? "bg-brand text-white" : "bg-brand-blush/50 text-brand-ink/45"}`}>{t}</span>
+          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${done ? "bg-brand-strong text-white" : "bg-brand-blush/50 text-brand-ink/45"}`}>{t}</span>
           {i < steps.length - 1 && <span className={`h-0.5 w-3 ${done ? "bg-brand" : "bg-brand-blush"}`} aria-hidden="true" />}
         </li>
       ))}

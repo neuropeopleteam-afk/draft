@@ -3,8 +3,9 @@
 // запасной путь — живое обновление страницы со звуком, вибрацией и заголовком вкладки.
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Alert, Level, catTitle, errText, range, rub } from "../../components/ui";
+import { Alert, Level, catTitle, errText, range, rub, ruText } from "../../components/ui";
 import { isStandalone, platform, pushSupported, subscribePush } from "../../integrations/pwa";
+import { usePageTitle } from "../../lib/meta";
 import { Rich } from "../../pages/candidate/Assessment";
 import { chime, FORMAT_TITLE, type Guest, guestApi, guestToken, type LiveItem, num, plain, type RoomPublic, time, unlockAudio } from "./api";
 
@@ -35,7 +36,7 @@ export default function LiveGuest() {
   const prevStage = useRef<string | null>(null);
   useRoomManifest(c);
 
-  useEffect(() => { document.title = "Мини-тест · Встречный"; }, []);
+  usePageTitle("Мини-тест");
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -247,7 +248,7 @@ function Item({ code, g, item, onNext }: { code: string; g: Guest; item: LiveIte
 function Step({ done, active, title, children }: { done: boolean; active: boolean; title: string; children?: React.ReactNode }) {
   return (
     <li className="flex gap-3">
-      <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-brand text-white" : active ? "border-2 border-brand text-brand" : "border border-brand-night/20 text-brand-ink/40"}`} aria-hidden="true">
+      <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-brand-strong text-white" : active ? "border-2 border-brand text-brand" : "border border-brand-night/20 text-brand-ink/40"}`} aria-hidden="true">
         {done ? <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M3.5 8.5l3 3 6-7" /></svg>
           : active ? <span className="h-2 w-2 animate-ping rounded-full bg-brand" /> : null}
       </span>
@@ -296,7 +297,7 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
           {inv.market && <p className="mt-1 text-xs text-white/70">Рынок категории: {rub(inv.market.from)} – {rub(inv.market.to)}</p>}
           {g.stage === "invited" ? (
             <div className="mt-4 grid grid-cols-2 gap-2">
-              <button className="btn bg-brand py-3.5 text-white hover:bg-brand-soft" disabled={!!busy} onClick={() => respond(true)}>{busy === "accept" ? "Отправляем…" : "Принять"}</button>
+              <button className="btn bg-brand-strong py-3.5 text-white hover:bg-brand-deep" disabled={!!busy} onClick={() => respond(true)}>{busy === "accept" ? "Отправляем…" : "Принять"}</button>
               <button className="btn bg-white/10 py-3.5 text-white hover:bg-white/20" disabled={!!busy} onClick={() => respond(false)}>{busy === "decline" ? "Отправляем…" : "Отклонить"}</button>
             </div>
           ) : (
@@ -340,7 +341,7 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
           {why && (
             <ul className="mt-3 space-y-2">
               {sel.reasons.map((x, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs leading-relaxed text-brand-ink/80"><Level level={x.level} /><span><b>{x.requirement}.</b> {x.text}</span></li>
+                <li key={i} className="flex items-start gap-2 text-xs leading-relaxed text-brand-ink/80"><Level level={x.level} /><span><b>{x.requirement}.</b> {ruText(x.text)}</span></li>
               ))}
             </ul>
           )}
@@ -350,7 +351,7 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
         <div className="card mt-4 p-4">
           <p className="text-sm font-bold text-brand-night">Доказательства в приглашении</p>
           <ul className="mt-2 space-y-1.5">
-            {inv.evidence.map((e, i) => <li key={i} className="flex items-start gap-2 text-xs text-brand-ink/80"><Level level={e.level} /><span>{e.text}</span></li>)}
+            {inv.evidence.map((e, i) => <li key={i} className="flex items-start gap-2 text-xs text-brand-ink/80"><Level level={e.level} /><span>{ruText(e.text)}</span></li>)}
           </ul>
           {inv.trust && (
             <p className="mt-3 text-xs leading-relaxed text-brand-ink/65">

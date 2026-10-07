@@ -250,7 +250,7 @@ function VacancyForm({ init, catalog, onClose, onSaved }: { init: typeof EMPTY &
         <Field label="Описание" htmlFor="vdesc" hint="Задачи, команда, условия — от 20 символов"><textarea id="vdesc" className="input min-h-[120px]" value={f.description} onChange={(e) => set("description", e.target.value)} /></Field>
         {stackOpts.length > 0 && (
           <div><p className="label">Стек</p><div className="flex flex-wrap gap-1.5">
-            {stackOpts.map((t) => { const on = f.stack.includes(t.id); return <button key={t.id} type="button" onClick={() => set("stack", on ? f.stack.filter((x) => x !== t.id) : [...f.stack, t.id].slice(0, 20))} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${on ? "bg-brand text-white" : "bg-brand-blush/40 text-brand-plum"}`}>{t.title}</button>; })}
+            {stackOpts.map((t) => { const on = f.stack.includes(t.id); return <button key={t.id} type="button" onClick={() => set("stack", on ? f.stack.filter((x) => x !== t.id) : [...f.stack, t.id].slice(0, 20))} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${on ? "bg-brand-strong text-white" : "bg-brand-blush/40 text-brand-plum"}`}>{t.title}</button>; })}
           </div></div>
         )}
         <Alert>{err}</Alert>
