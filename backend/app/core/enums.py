@@ -18,6 +18,7 @@ class VerificationPurpose(StrEnum):
 class ConsentKind(StrEnum):
     processing = "processing"  # обработка ПДн (152-ФЗ)
     publication = "publication"  # показ обезличенного профиля работодателям
+    proctoring = "proctoring"  # камера во время теста: анализ только в браузере, на сервер — события (app/modules/proctor)
 
 
 class EvidenceLevel(StrEnum):
