@@ -343,6 +343,13 @@ def report(d: str, write: bool = True) -> dict:
         "tokens": tokens, "worst_attacks_v2": [{"id": r["id"], "score": r.get("v2"), "route": r.get("v2_route")} for r in worst],
         "filter_false_positives": {"honest": sum(1 for r in rows if r["group"] in HONEST and G.injection_signals(r["answer"])),
                                    "honest_n": sum(1 for r in rows if r["group"] in HONEST)},
+        "strip_meta_false_positives": {"honest": sum(1 for r in rows if r["group"] in HONEST and r.get("meta")),
+                                       "honest_n": sum(1 for r in rows if r["group"] in HONEST)},
+        "attack_filter_caught": {g: sum(1 for r in rows if r["group"] == g and G.injection_signals(r["answer"]))
+                                 for g in ATTACKS},
+        "llm_pending": not any(res[k] for k in res),
+        "llm_how": ("Прогон на YandexGPT — там, где есть ключ (сервер стенда): build → tools/grader_check/llm_runner.py → "
+                    "second → report; команды — в docstring модуля и в tools/grader_check/README.md."),
     }
     if write:
         OUT.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
