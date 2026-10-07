@@ -35,6 +35,25 @@ from app.modules.matching import bias as bias_filter
 DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security")
 GRADES = ("junior", "middle", "senior")
 COMMON_TAGS = {"algorithms", "sql", "http", "git", "linux", "docker"}
+CITY_ALIASES = {
+    "Москва": ["Москва", "Москве", "Москвы"], "Санкт-Петербург": ["Санкт-Петербург", "Петербурге"],
+    "Казань": ["Казань", "Казани"], "Новосибирск": ["Новосибирск", "Новосибирске"],
+    "Екатеринбург": ["Екатеринбург", "Екатеринбурге"], "Нижний Новгород": ["Нижний Новгород", "Нижнем Новгороде"],
+    "Томск": ["Томск", "Томске"], "Самара": ["Самара", "Самаре"], "Краснодар": ["Краснодар", "Краснодаре"],
+    "Иннополис": ["Иннополис", "Иннополисе"], "Пермь": ["Пермь", "Перми"],
+}
+
+
+def city_span(text: str, work_format: str | None) -> tuple[str | None, tuple[int, int] | None]:
+    """Only an explicit office/hybrid location, never residence inferred from any other mention."""
+    if work_format not in ("office", "hybrid"):
+        return None, None
+    for city, aliases in CITY_ALIASES.items():
+        for alias in aliases:
+            m = re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I)
+            if m and re.search(r"офис|гибрид", text[max(0, m.start()-100):m.end()+80], re.I):
+                return city, m.span()
+    return None, None
 
 
 def tag_directions() -> dict[str, str | None]:
@@ -46,8 +65,18 @@ _SALARY_RE = re.compile(
     r"(\d{2,3}(?:[\s\u00a0]?\d{3})?)\s*(?:(к|k|тыс\.?)\s*(?:₽|руб\w*|р\.)?|(?:₽|руб\w*|р\.))",
     re.IGNORECASE,
 )
-_EXP_RE = re.compile(r"(?:опыт\w*[^.\n]{0,40}?(?:от|не менее|более)?\s*)(\d{1,2})(?:\s*[-–+]\s*(\d{1,2}))?\+?\s*(?:год|лет)",
+_EXP_RE = re.compile(r"(?:опыт\w*[^\n]{0,100}?|коммерческ\w*[^\n]{0,60}?|(?:Java|Go|Kotlin|PHP)\s+\w+\s+от\s*)"
+                     r"(\d{1,2}(?:[.,]\d+)?)(?:\s*(?:до|[-–+])\s*(\d{1,2}(?:[.,]\d+)?))?"
+                     r"(?:\s*[-–]?\s*[хx])?\+?\s*(год\w*|лет|месяц\w*)",
                      re.IGNORECASE)
+_WORD_EXP_RE = re.compile(r"опыт\w*[^.\n]{0,90}?(?:от|не менее)\s+"
+                          r"(года|одного|двух|трех|трёх|четырех|четырёх|пяти|полутора)\s*(?:лет|год\w*)?", re.I)
+_ZERO_EXP_RE = re.compile(r"опыт\s+работы\s*:\s*не\s+требуется", re.I)
+_TOTAL_EXP_RE = re.compile(r"(?:общий|суммарный)\s+опыт\s+(?:от\s*)?(\d+(?:[.,]\d+)?)\s*(?:лет|год)", re.I)
+_REVERSE_EXP_RE = re.compile(r"(?:от\s*)?(\d+(?:[.,]\d+)?)\s*(?:[-–]\s*\d+)?\s*(?:лет|год\w*)"
+                            r"\s+коммерческ\w*\s+(?:опыт\w*|разработ\w*)", re.I)
+_EXP_WORDS = {"года": 1, "одного": 1, "двух": 2, "трех": 3, "трёх": 3,
+              "четырех": 4, "четырёх": 4, "пяти": 5, "полутора": 1.5}
 
 
 def _money(num: str, suffix: str | None) -> int:
@@ -59,7 +88,7 @@ def _money(num: str, suffix: str | None) -> int:
     return v
 
 
-_NUM = r"(\d{2,3}(?:[\s\u00a0]\d{3})+|\d{2,7})"
+_NUM = r"(\d{2,3}(?:[\s\u00a0,]\d{3})+|\d{2,7})"
 _SUF = r"(?:(к|k|тыс\.?|тысяч\w*)(?![а-яёa-z]))"
 _CUR = r"(?:₽|руб\w*|р\.|rub)"
 _ONE_SIDE_RE = re.compile(rf"(от|до)\s*{_NUM}\s*(?:{_SUF}\s*{_CUR}?|{_CUR})", re.IGNORECASE)
@@ -71,6 +100,8 @@ _KEYWORD_RE = re.compile(rf"(?:зарплат\w*|оклад\w*|зп|з/п|дох
 _KEYWORD_RANGE_RE = re.compile(rf"(?:зарплат\w*|оклад\w*|зп|з/п|доход\w*|вилк\w*|компенсац\w*)\s*[:—–-]?\s*(?:от\s*)?"
                                rf"{_NUM}\s*{_SUF}?\s*(?:—|–|-|до)\s*{_NUM}\s*{_SUF}?", re.IGNORECASE)
 _NET_RE = re.compile(r"на\s+руки|после\s+вычета|чистыми|\bnet\b", re.IGNORECASE)
+_GENERAL_RANGE_RE = re.compile(rf"(?:от\s*)?{_NUM}\s*{_SUF}?\s*(?:₽|руб\w*|RUB)?\s*"
+                               rf"(?:—|–|-|до)\s*{_NUM}\s*{_SUF}?\s*(?:₽|руб\w*|RUB)", re.I)
 
 
 def _ok(v: int) -> bool:
@@ -86,7 +117,9 @@ def parse_salary(text: str) -> tuple[int | None, int | None]:
 
 def parse_salary_span(text: str) -> tuple[int | None, int | None, tuple[int, int] | None]:
     """То же, что parse_salary, и позиция фрагмента с вилкой в тексте (для цитаты)."""
-    m = _SALARY_RE.search(text)
+    # Remove display-only characters without changing evidence offsets.
+    text = text.replace("\u200d", " ").replace("*", " ").replace("`", " ")
+    m = _GENERAL_RANGE_RE.search(text) or _SALARY_RE.search(text)
     if m:
         lo, hi = _money(m.group(1), m.group(2) or m.group(4)), _money(m.group(3), m.group(4))
         if lo > hi:
@@ -117,8 +150,25 @@ def salary_is_net(text: str) -> bool:
 
 
 def parse_experience(text: str) -> float | None:
-    m = _EXP_RE.search(text)
-    return float(m.group(1)) if m else None
+    return experience_span(text)[0]
+
+
+def experience_span(text: str) -> tuple[float | None, tuple[int, int] | None]:
+    clean = text.replace("*", " ").replace("`", " ")
+    if m := _ZERO_EXP_RE.search(clean):
+        return 0.0, m.span()
+    if m := _TOTAL_EXP_RE.search(clean):
+        return float(m.group(1).replace(",", ".")), m.span()
+    if m := _REVERSE_EXP_RE.search(clean):
+        return float(m.group(1).replace(",", ".")), m.span()
+    if m := _EXP_RE.search(clean):
+        value = float(m.group(1).replace(",", "."))
+        if m.group(3).lower().startswith("месяц"):
+            value = round(value / 12, 4)
+        return value, m.span()
+    if m := _WORD_EXP_RE.search(clean):
+        return float(_EXP_WORDS[m.group(1).lower()]), m.span()
+    return None, None
 
 
 def _context(text: str, s: int, e: int) -> str:
@@ -226,19 +276,33 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
         d = dirs.get(t)
         if d:
             votes[d] = votes.get(d, 0) + 1
-    direction = hint_direction or (max(votes, key=votes.get) if votes else None)
+    # Some public texts start with an introductory line and put the role on the next line.
+    head = text[:200].split(":", 1)[0]
+    title_dirs = find_keys(head, DIRECTION_KEYWORDS)
+    if "qa" in title_dirs:
+        title_dirs = {"qa": title_dirs["qa"]}
+    # Incidental testing, models or interfaces in responsibilities do not change a developer's role.
+    if (not title_dirs or not any(d in title_dirs for d in ("qa", "security"))) and re.search(
+            r"(?:Go|Golang|Java|Kotlin|PHP|C#|\.NET)[ -]*(?:разработ|developer)|разработ\w*\s+(?:Go|Java|PHP)", head, re.I):
+        title_dirs = {"backend": 1}
+    elif not title_dirs:
+        if re.search(r"\b(?:Go|Golang|Java|Kotlin|PHP)\b|C#|\.NET", head, re.I):
+            title_dirs = {"backend": 1}
+    direction = hint_direction or (max(title_dirs, key=title_dirs.get) if title_dirs else
+                                   max(votes, key=votes.get) if votes else None)
     ev: dict[str, dict | None] = {}
     if direction and not hint_direction:
-        if direction in dk:
+        if direction in title_dirs and find_key_span(head, DIRECTION_KEYWORDS[direction]):
+            ev["direction"] = _ev(text, find_key_span(head, DIRECTION_KEYWORDS[direction]), basis="title")
+        elif direction in dk:
             ev["direction"] = _ev(text, find_key_span(text, DIRECTION_KEYWORDS[direction]), basis="keyword")
         else:  # направление выведено по технологиям — цитата первой из них
             first = min((sp for t, sp in spans.items() if dirs.get(t) == direction), default=None)
             ev["direction"] = _ev(text, first, basis="stack")
 
     # Грейд: ключевые слова, иначе по требуемому опыту
-    gk = find_keys(text, GRADE_KEYWORDS)
-    exp_m = _EXP_RE.search(text)
-    exp = float(exp_m.group(1)) if exp_m else None
+    gk = find_keys(head, GRADE_KEYWORDS) or find_keys(text[:400], GRADE_KEYWORDS) or find_keys(text, GRADE_KEYWORDS)
+    exp, exp_span = experience_span(text)
     if hint_grade:
         grade = hint_grade
     elif gk:
@@ -246,11 +310,11 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
         ev["grade"] = _ev(text, find_key_span(text, GRADE_KEYWORDS[grade]), basis="keyword")
     elif exp is not None:
         grade = "junior" if exp < 1.5 else "middle" if exp < 4 else "senior"
-        ev["grade"] = _ev(text, exp_m.span(), basis="experience")
+        ev["grade"] = _ev(text, exp_span, basis="experience")
     else:
         grade = None
-    if exp_m:
-        ev["experience_years_min"] = _ev(text, exp_m.span())
+    if exp_span:
+        ev["experience_years_min"] = _ev(text, exp_span)
 
     required, desired = [], []
     for t, pos in sorted(tags.items(), key=lambda kv: kv[1]):
@@ -271,8 +335,15 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
 
     wf = find_keys(text, WORK_FORMAT_KEYWORDS)
     work_format = max(wf, key=wf.get) if wf else None
+    work_formats = None
+    if re.search(r"офис[^\n.!?]{0,45}или[^\n.!?]{0,20}гибрид|гибрид[^\n.!?]{0,45}или[^\n.!?]{0,20}офис",
+                 text, re.I):
+        work_formats = ["office", "hybrid"]
     if work_format:
         ev["work_format"] = _ev(text, find_key_span(text, WORK_FORMAT_KEYWORDS[work_format]))
+    city, city_pos = city_span(text, work_format)
+    if city:
+        ev["city"] = _ev(text, city_pos)
     salary_from, salary_to, sal_span = parse_salary_span(text)
     if salary_from or salary_to:
         ev["salary"] = _ev(text, sal_span)
@@ -283,6 +354,8 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
         "stack_desired": desired,
         "experience_years_min": exp,
         "work_format": work_format,
+        "work_formats": work_formats,
+        "city": city,
         "salary_from": salary_from,
         "salary_to": salary_to,
         "salary_net": salary_is_net(text) if (salary_from or salary_to) else None,
@@ -290,7 +363,7 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
     }, method="rules")
 
 
-EVIDENCE_KEYS = ("direction", "grade", "experience_years_min", "work_format", "salary")
+EVIDENCE_KEYS = ("direction", "grade", "experience_years_min", "work_format", "salary", "city")
 ITEM_STATUSES = ("extracted", "confirmed", "edited", "manual")
 REVIEW_STATUSES = ("extracted", "confirmed", "edited")
 
@@ -347,7 +420,9 @@ def normalize(req: dict, method: str) -> dict:
     if sf and st and sf > st:  # одна сторона вилки допустима («от 200 тыс.», «до 300 000 ₽»)
         sf, st = st, sf
     exp = req.get("experience_years_min")
-    present = {"direction": d, "grade": g, "experience_years_min": exp, "work_format": wf, "salary": sf or st}
+    city = req.get("city") if isinstance(req.get("city"), str) else None
+    city = city.strip()[:100] if city and city.strip() else None
+    present = {"direction": d, "grade": g, "experience_years_min": exp, "work_format": wf, "salary": sf or st, "city": city}
     raw_ev = req.get("evidence") if isinstance(req.get("evidence"), dict) else {}
     evidence = {k: clean_evidence(raw_ev.get(k)) for k in EVIDENCE_KEYS if present[k] is not None}
     raw_rv = req.get("review") if isinstance(req.get("review"), dict) else {}
@@ -359,6 +434,8 @@ def normalize(req: dict, method: str) -> dict:
         "stack_desired": desired,
         "experience_years_min": float(exp) if isinstance(exp, (int, float)) else None,
         "work_format": wf,
+        "work_formats": [f for f in req.get("work_formats", []) or [] if f in ("office", "hybrid", "remote")] or None,
+        "city": city,
         "salary_from": sf,
         "salary_to": st,
         "salary_net": bool(req.get("salary_net")) if (sf or st) else None,
@@ -459,6 +536,14 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
     merged = _with_quotes_from_original(merged, text)
     merged["bias"] = bias_filter.suggestions(found, merged)
     merged["suggested_text"] = bias_filter.rewrite(text, found, merged)
+    from app.modules.matching.coverage import coverage
+
+    cov = coverage(text)
+    if cov:
+        merged["coverage"] = cov
+        if not hint_direction:
+            merged["direction"] = cov["nearest_direction"]
+            merged["evidence"]["direction"] = cov["evidence"]
     return merged
 
 

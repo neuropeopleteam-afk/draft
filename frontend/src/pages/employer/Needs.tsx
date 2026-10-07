@@ -16,6 +16,9 @@ export interface Req {
   salary_from: number | null; salary_to: number | null; method?: string;
   evidence?: Record<string, Ev | null>; review?: Record<string, string>;
   bias?: BiasHit[]; suggested_text?: string | null; llm?: any; salary_net?: boolean | null;
+  coverage?: { message: string; tested: string; not_tested: string };
+  city?: string | null;
+  work_formats?: string[] | null;
 }
 
 const EXAMPLE = "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс. ₽";
@@ -31,7 +34,7 @@ export function useTags() {
 }
 
 type Zone = "stack_required" | "stack_desired";
-const SCALARS = ["direction", "grade", "experience_years_min", "work_format", "salary"] as const;
+const SCALARS = ["direction", "grade", "experience_years_min", "work_format", "salary", "city"] as const;
 type Scalar = typeof SCALARS[number];
 const present = (req: Req, k: Scalar) => (k === "salary" ? !!(req.salary_from || req.salary_to) : req[k] != null);
 const scalarStatus = (req: Req, k: Scalar): ItemStatus => (req.review?.[k] as ItemStatus) ?? (req.evidence?.[k] ? "extracted" : "manual");
@@ -159,6 +162,10 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
   const { total, pending } = reviewCounts(req);
   return (
     <div className="space-y-4">
+      {req.coverage && <Alert kind="info"><b>{req.coverage.message}</b>
+        <p className="mt-2">Проверяется: {req.coverage.tested}.</p>
+        <p className="mt-1">Не проверяется: {req.coverage.not_tested}. Для этих навыков нужен отдельный зонд или интервью.</p>
+      </Alert>}
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <p className="text-brand-ink/70">Проверено требований: <b>{total - pending}</b> из {total}. Наведите на требование — фрагмент подсветится в тексте.</p>
         {pending > 0 && <button type="button" className="text-sm font-semibold text-emerald-700 hover:underline" onClick={() => onChange(confirmAll(req))}>Подтвердить все</button>}
@@ -176,6 +183,9 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
             </select>))}
         </ul>
       </div>
+      <ul className="space-y-2">{sRow("city", "Город присутствия",
+        <input aria-label="Город присутствия" className="input max-w-xs" value={req.city ?? ""}
+          onChange={(e) => setScalar("city", { city: e.target.value || null })} />)}</ul>
       <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
       <div><p className="label">Желательный стек</p>{req.stack_desired.length ? <ul className="space-y-2">{stackRows("stack_desired")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
       <div className="flex flex-wrap items-end gap-3">
@@ -193,7 +203,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <p className="label">Условия (фильтры, в скор не входят)</p>
         <ul className="space-y-2">
           {sRow("work_format", "Формат работы", (
-            <select aria-label="Формат работы" className={sel} value={req.work_format ?? ""} onChange={(e) => setScalar("work_format", { work_format: e.target.value || null })}>
+            <select aria-label="Формат работы" className={sel} value={req.work_formats?.length === 2 ? "office_hybrid" : req.work_format ?? ""} onChange={(e) => setScalar("work_format", { work_format: e.target.value === "office_hybrid" ? "hybrid" : e.target.value || null, work_formats: e.target.value === "office_hybrid" ? ["office", "hybrid"] : null })}>
+              <option value="office_hybrid">Офис или гибрид</option>
               <option value="">любой</option><option value="remote">Удалённо</option><option value="hybrid">Гибрид</option><option value="office">Офис</option>
             </select>))}
           {sRow("experience_years_min", "Опыт от, лет", (
@@ -388,6 +399,10 @@ export function Selection() {
               {reqTags.length > 0 && (
                 <div>
                   <p className="label">Навык подтверждён тестом (T1)</p>
+                  <button type="button" className="mb-2 text-left text-xs font-semibold text-brand hover:underline"
+                    onClick={() => setFilters({ ...filters, stack_t1: s.requirements.stack_required.map((x: StackItem) => x.tag) })}>
+                    Подставить все обязательные навыки
+                  </button>
                   <div className="flex flex-wrap gap-1.5">
                     {reqTags.map((t: string) => (
                       <button key={t} type="button" aria-pressed={(filters.stack_t1 ?? []).includes(t)} onClick={() => toggleArr("stack_t1", t)}
@@ -397,11 +412,20 @@ export function Selection() {
                 </div>
               )}
               <Field label="Формат (заявленный, T0)" htmlFor="fwf">
-                <select id="fwf" className="input" value={filters.work_format ?? ""} onChange={(e) => setFilters({ ...filters, work_format: e.target.value || undefined })}>
+                <select id="fwf" className="input" value={filters.work_formats?.length === 2 ? "office_hybrid" : filters.work_format ?? ""} onChange={(e) => setFilters({ ...filters, work_format: e.target.value === "office_hybrid" ? undefined : e.target.value || undefined, work_formats: e.target.value === "office_hybrid" ? ["office", "hybrid"] : undefined })}>
                   <option value="">любой</option><option value="remote">Удалённо</option><option value="hybrid">Гибрид</option><option value="office">Офис</option>
+                  <option value="office_hybrid">Офис или гибрид</option>
                 </select>
               </Field>
               <Field label="Город (или готов к переезду)" htmlFor="fcity"><input id="fcity" className="input" value={filters.city ?? ""} onChange={(e) => setFilters({ ...filters, city: e.target.value || undefined })} /></Field>
+              {(s.requirements.city || s.requirements.work_format) && (
+                <button type="button" className="text-left text-sm font-semibold text-brand hover:underline"
+                  onClick={() => setFilters({ ...filters, city: s.requirements.city || undefined,
+                    work_format: s.requirements.work_formats?.length ? undefined : s.requirements.work_format || undefined,
+                    work_formats: s.requirements.work_formats || undefined })}>
+                  Подставить город и формат из потребности
+                </button>
+              )}
               <Field label="Стаж от, лет (T0)" htmlFor="fexp"><input id="fexp" type="number" min={0} className="input" value={filters.experience_min ?? ""} onChange={(e) => setFilters({ ...filters, experience_min: e.target.value ? Number(e.target.value) : undefined })} /></Field>
               <button type="button" className="text-sm font-semibold text-brand hover:underline" onClick={() => setRefineReq(refineReq ? null : s.requirements)}>{refineReq ? "Не менять требования" : "Изменить требования"}</button>
               <Alert>{err}</Alert>

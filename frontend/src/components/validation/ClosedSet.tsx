@@ -57,6 +57,9 @@ export default function ClosedSet() {
         Без theta профиль не входит в подтверждённую подборку. Не включайте имена и контакты.
         Этот эксперимент разбирает потребность без LLM.
       </p>
+      {!isJury(me?.email) && <p className="mt-2 text-xs text-brand-ink/65">
+        При проверке откроется ваша демо-песочница в роли работодателя.
+      </p>}
       <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold text-brand-plum">
         <a href={apiUrl("/validation/closed-set/template/json")} download>Скачать шаблон JSON</a>
         <a href={apiUrl("/validation/closed-set/template/csv")} download>Скачать шаблон CSV</a>
@@ -70,7 +73,7 @@ export default function ClosedSet() {
               const file = e.target.files?.[0];
               if (!file) return;
               if (file.size > 2_000_000) { setError("Файл не должен превышать 2 МБ"); setContent(""); return; }
-              try { setContent(await file.text()); setFormat(file.name.endsWith(".csv") ? "csv" : "json"); setFilename(file.name); }
+              try { setContent(await file.text()); setFormat(file.name.toLowerCase().endsWith(".csv") ? "csv" : "json"); setFilename(file.name); }
               catch { setError("Не удалось прочитать файл"); }
             }} />
           {filename && <p className="mt-1 break-all text-xs font-normal text-brand-ink/60">{filename}</p>}
@@ -99,6 +102,7 @@ export default function ClosedSet() {
             <p className="text-xs text-brand-ink/65">{label}</p><p className="mt-1 text-xl font-bold text-brand-night">{value}</p>
           </div>)}
         </div>
+        {result.summary && <p className="text-sm text-brand-ink/70">Метрики по {num(result.evaluated_needs, 0)} из {num(result.n_needs, 0)} потребностей с полной разметкой.</p>}
         {!result.summary && <p className="text-sm text-brand-ink/70">Нет полной разметки: выдача готова, метрики не рассчитываются.</p>}
         {result.per_need.map((need: any) => <details key={need.need_id} className="rounded-xl border border-brand-night/10 p-4" open={result.n_needs === 1}>
           <summary className="cursor-pointer break-all text-sm font-semibold text-brand-night">

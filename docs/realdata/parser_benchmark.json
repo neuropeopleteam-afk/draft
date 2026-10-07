@@ -1,0 +1,560 @@
+{
+  "corpus_size": 50,
+  "annotation": "silver, not expert; exact source excerpts",
+  "comparison_note": "LLM and baseline rules: same deployed 763b8f7. Current branch rules reported separately.",
+  "baseline_rules": {
+    "fields": {
+      "direction": {
+        "correct": 38,
+        "n": 50,
+        "accuracy": 0.76
+      },
+      "grade": {
+        "correct": 38,
+        "n": 39,
+        "accuracy": 0.9744
+      },
+      "experience_years_min": {
+        "correct": 34,
+        "n": 50,
+        "accuracy": 0.68
+      },
+      "work_format": {
+        "correct": 49,
+        "n": 50,
+        "accuracy": 0.98
+      },
+      "salary_from": {
+        "correct": 48,
+        "n": 50,
+        "accuracy": 0.96
+      },
+      "salary_to": {
+        "correct": 49,
+        "n": 50,
+        "accuracy": 0.98
+      }
+    },
+    "grade_inferences_on_unspecified": 7,
+    "stack_micro_precision": 0.8567,
+    "stack_micro_recall": 0.851,
+    "stack_tp_fp_fn": [
+      257,
+      43,
+      45
+    ],
+    "quotes": 462,
+    "invalid_quotes": 0,
+    "mismatches": [
+      {
+        "id": "vac-001",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "frontend",
+        "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+      },
+      {
+        "id": "vac-002",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "data_ml",
+        "source_url": "https://hh.ru/vacancy/129355447"
+      },
+      {
+        "id": "vac-002",
+        "field": "experience_years_min",
+        "expected": 5,
+        "actual": null,
+        "source_url": "https://hh.ru/vacancy/129355447"
+      },
+      {
+        "id": "vac-004",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "qa",
+        "source_url": "https://hh.ru/vacancy/124603073"
+      },
+      {
+        "id": "vac-005",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "frontend",
+        "source_url": "https://career.habr.com/vacancies/1000168459"
+      },
+      {
+        "id": "vac-006",
+        "field": "salary_from",
+        "expected": 200000,
+        "actual": 300000,
+        "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+      },
+      {
+        "id": "vac-009",
+        "field": "experience_years_min",
+        "expected": 1.5,
+        "actual": null,
+        "source_url": "https://youngjunior.ru/javascript/jobs/15439"
+      },
+      {
+        "id": "vac-011",
+        "field": "experience_years_min",
+        "expected": 3,
+        "actual": null,
+        "source_url": "https://career.habr.com/vacancies/1000161900"
+      },
+      {
+        "id": "vac-012",
+        "field": "experience_years_min",
+        "expected": 1.5,
+        "actual": null,
+        "source_url": "https://youngjunior.ru/data/jobs/31786"
+      },
+      {
+        "id": "vac-014",
+        "field": "direction",
+        "expected": "data_ml",
+        "actual": "frontend",
+        "source_url": "https://quick-offer.ru/job/data-engineer-middle-81430"
+      },
+      {
+        "id": "vac-016",
+        "field": "work_format",
+        "expected": "office",
+        "actual": null,
+        "source_url": "https://hh.ru/vacancy/137706135"
+      },
+      {
+        "id": "vac-017",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "security",
+        "source_url": "https://hh.ru/vacancy/127601108"
+      },
+      {
+        "id": "vac-018",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "qa",
+        "source_url": "https://hh.ru/vacancy/129957759"
+      },
+      {
+        "id": "vac-019",
+        "field": "direction",
+        "expected": "frontend",
+        "actual": "backend",
+        "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+      },
+      {
+        "id": "vac-019",
+        "field": "experience_years_min",
+        "expected": 2,
+        "actual": null,
+        "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+      },
+      {
+        "id": "vac-019",
+        "field": "salary_from",
+        "expected": 250000,
+        "actual": null,
+        "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+      },
+      {
+        "id": "vac-019",
+        "field": "salary_to",
+        "expected": 265000,
+        "actual": null,
+        "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+      },
+      {
+        "id": "vac-020",
+        "field": "direction",
+        "expected": "frontend",
+        "actual": "backend",
+        "source_url": "https://hh.ru/vacancy/135126969"
+      },
+      {
+        "id": "vac-021",
+        "field": "experience_years_min",
+        "expected": 2,
+        "actual": null,
+        "source_url": "https://yandex.ru/jobs/vacancies/3895"
+      },
+      {
+        "id": "vac-022",
+        "field": "direction",
+        "expected": "data_ml",
+        "actual": "backend",
+        "source_url": "https://career.habr.com/vacancies/1000168593"
+      },
+      {
+        "id": "vac-024",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "security",
+        "source_url": "https://hh.ru/vacancy/137160769"
+      },
+      {
+        "id": "vac-026",
+        "field": "experience_years_min",
+        "expected": 2,
+        "actual": 1.0,
+        "source_url": "https://career.habr.com/vacancies/1000168587"
+      },
+      {
+        "id": "vac-027",
+        "field": "experience_years_min",
+        "expected": 3,
+        "actual": 5.0,
+        "source_url": "https://career.habr.com/vacancies/1000168583"
+      },
+      {
+        "id": "vac-028",
+        "field": "experience_years_min",
+        "expected": 1.5,
+        "actual": 2.0,
+        "source_url": "https://career.habr.com/vacancies/1000168581"
+      },
+      {
+        "id": "vac-029",
+        "field": "experience_years_min",
+        "expected": 3,
+        "actual": null,
+        "source_url": "https://career.habr.com/vacancies/1000168926"
+      },
+      {
+        "id": "vac-035",
+        "field": "experience_years_min",
+        "expected": 0.5,
+        "actual": null,
+        "source_url": "https://career.habr.com/vacancies/1000168590"
+      },
+      {
+        "id": "vac-036",
+        "field": "experience_years_min",
+        "expected": 0.25,
+        "actual": null,
+        "source_url": "https://career.habr.com/vacancies/1000168214"
+      },
+      {
+        "id": "vac-046",
+        "field": "experience_years_min",
+        "expected": 1.5,
+        "actual": 5.0,
+        "source_url": "https://career.habr.com/vacancies/1000168883"
+      },
+      {
+        "id": "vac-048",
+        "field": "experience_years_min",
+        "expected": 5,
+        "actual": 2.0,
+        "source_url": "https://career.habr.com/vacancies/1000167502"
+      },
+      {
+        "id": "vac-049",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "qa",
+        "source_url": "https://career.habr.com/vacancies/1000164183"
+      },
+      {
+        "id": "vac-049",
+        "field": "experience_years_min",
+        "expected": 3,
+        "actual": null,
+        "source_url": "https://career.habr.com/vacancies/1000164183"
+      },
+      {
+        "id": "vac-050",
+        "field": "grade",
+        "expected": "junior",
+        "actual": null,
+        "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+      },
+      {
+        "id": "vac-050",
+        "field": "experience_years_min",
+        "expected": 0,
+        "actual": null,
+        "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+      }
+    ]
+  },
+  "current_rules": {
+    "fields": {
+      "direction": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      },
+      "grade": {
+        "correct": 39,
+        "n": 39,
+        "accuracy": 1.0
+      },
+      "experience_years_min": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      },
+      "work_format": {
+        "correct": 49,
+        "n": 50,
+        "accuracy": 0.98
+      },
+      "salary_from": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      },
+      "salary_to": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      }
+    },
+    "grade_inferences_on_unspecified": 8,
+    "stack_micro_precision": 0.884,
+    "stack_micro_recall": 0.9338,
+    "stack_tp_fp_fn": [
+      282,
+      37,
+      20
+    ],
+    "quotes": 499,
+    "invalid_quotes": 0,
+    "mismatches": [
+      {
+        "id": "vac-037",
+        "field": "work_format",
+        "expected": "hybrid",
+        "actual": "remote",
+        "source_url": "https://career.habr.com/vacancies/1000167022"
+      }
+    ]
+  },
+  "live": {
+    "fields": {
+      "direction": {
+        "correct": 38,
+        "n": 50,
+        "accuracy": 0.76
+      },
+      "grade": {
+        "correct": 38,
+        "n": 39,
+        "accuracy": 0.9744
+      },
+      "experience_years_min": {
+        "correct": 41,
+        "n": 50,
+        "accuracy": 0.82
+      },
+      "work_format": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      },
+      "salary_from": {
+        "correct": 48,
+        "n": 50,
+        "accuracy": 0.96
+      },
+      "salary_to": {
+        "correct": 49,
+        "n": 50,
+        "accuracy": 0.98
+      }
+    },
+    "grade_inferences_on_unspecified": 8,
+    "stack_micro_precision": 0.8233,
+    "stack_micro_recall": 0.8642,
+    "stack_tp_fp_fn": [
+      261,
+      56,
+      41
+    ],
+    "quotes": 488,
+    "invalid_quotes": 0,
+    "mismatches": [
+      {
+        "id": "vac-001",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "frontend",
+        "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+      },
+      {
+        "id": "vac-002",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "data_ml",
+        "source_url": "https://hh.ru/vacancy/129355447"
+      },
+      {
+        "id": "vac-004",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "qa",
+        "source_url": "https://hh.ru/vacancy/124603073"
+      },
+      {
+        "id": "vac-005",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "frontend",
+        "source_url": "https://career.habr.com/vacancies/1000168459"
+      },
+      {
+        "id": "vac-006",
+        "field": "salary_from",
+        "expected": 200000,
+        "actual": 300000,
+        "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+      },
+      {
+        "id": "vac-014",
+        "field": "direction",
+        "expected": "data_ml",
+        "actual": "frontend",
+        "source_url": "https://quick-offer.ru/job/data-engineer-middle-81430"
+      },
+      {
+        "id": "vac-017",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "security",
+        "source_url": "https://hh.ru/vacancy/127601108"
+      },
+      {
+        "id": "vac-018",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "qa",
+        "source_url": "https://hh.ru/vacancy/129957759"
+      },
+      {
+        "id": "vac-019",
+        "field": "direction",
+        "expected": "frontend",
+        "actual": "backend",
+        "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+      },
+      {
+        "id": "vac-019",
+        "field": "salary_from",
+        "expected": 250000,
+        "actual": null,
+        "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+      },
+      {
+        "id": "vac-019",
+        "field": "salary_to",
+        "expected": 265000,
+        "actual": null,
+        "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+      },
+      {
+        "id": "vac-020",
+        "field": "direction",
+        "expected": "frontend",
+        "actual": "backend",
+        "source_url": "https://hh.ru/vacancy/135126969"
+      },
+      {
+        "id": "vac-022",
+        "field": "direction",
+        "expected": "data_ml",
+        "actual": "backend",
+        "source_url": "https://career.habr.com/vacancies/1000168593"
+      },
+      {
+        "id": "vac-024",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "security",
+        "source_url": "https://hh.ru/vacancy/137160769"
+      },
+      {
+        "id": "vac-026",
+        "field": "experience_years_min",
+        "expected": 2,
+        "actual": 1.0,
+        "source_url": "https://career.habr.com/vacancies/1000168587"
+      },
+      {
+        "id": "vac-027",
+        "field": "experience_years_min",
+        "expected": 3,
+        "actual": 5.0,
+        "source_url": "https://career.habr.com/vacancies/1000168583"
+      },
+      {
+        "id": "vac-028",
+        "field": "experience_years_min",
+        "expected": 1.5,
+        "actual": 2.0,
+        "source_url": "https://career.habr.com/vacancies/1000168581"
+      },
+      {
+        "id": "vac-035",
+        "field": "experience_years_min",
+        "expected": 0.5,
+        "actual": null,
+        "source_url": "https://career.habr.com/vacancies/1000168590"
+      },
+      {
+        "id": "vac-036",
+        "field": "experience_years_min",
+        "expected": 0.25,
+        "actual": null,
+        "source_url": "https://career.habr.com/vacancies/1000168214"
+      },
+      {
+        "id": "vac-046",
+        "field": "experience_years_min",
+        "expected": 1.5,
+        "actual": 5.0,
+        "source_url": "https://career.habr.com/vacancies/1000168883"
+      },
+      {
+        "id": "vac-048",
+        "field": "experience_years_min",
+        "expected": 5,
+        "actual": 2.0,
+        "source_url": "https://career.habr.com/vacancies/1000167502"
+      },
+      {
+        "id": "vac-049",
+        "field": "direction",
+        "expected": "backend",
+        "actual": "qa",
+        "source_url": "https://career.habr.com/vacancies/1000164183"
+      },
+      {
+        "id": "vac-049",
+        "field": "experience_years_min",
+        "expected": 3,
+        "actual": null,
+        "source_url": "https://career.habr.com/vacancies/1000164183"
+      },
+      {
+        "id": "vac-050",
+        "field": "grade",
+        "expected": "junior",
+        "actual": null,
+        "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+      },
+      {
+        "id": "vac-050",
+        "field": "experience_years_min",
+        "expected": 0,
+        "actual": null,
+        "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+      }
+    ],
+    "http_200": 50,
+    "llm_used": 49,
+    "date": "2026-10-07",
+    "provider": "Yandex AI Studio"
+  }
+}
