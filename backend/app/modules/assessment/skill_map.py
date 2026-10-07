@@ -23,6 +23,9 @@ _GLOBAL: dict[str, str] = {
     "python": "python", "asyncio": "asyncio", "concurrency": "asyncio", "race_conditions": "asyncio",
     "javascript": "javascript", "typescript": "typescript", "react": "react",
     "pytest": "pytest", "statistics": "statistics", "mlops": "mlops", "cryptography": "cryptography",
+    # технологические семейства банка (06.10): Docker — общий блок, остальные — backend
+    "docker": "docker", "dockerfile": "docker", "docker_compose": "docker", "docker_build_cache": "docker",
+    "docker_networking": "docker", "docker_volumes": "docker",
 }
 
 _BY_DIRECTION: dict[str, dict[str, str]] = {
@@ -33,6 +36,14 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "reliability": "rest-api", "caching": "redis", "decimal": "python", "money": "python",
         "numeric_precision": "python", "dict": "python", "functions": "python", "state": "python",
         "sorting": "python", "algorithms": "python", "testing": "pytest",
+        # технологические семейства банка (06.10); «concurrency»/«race_conditions» в них не используются
+        "go": "go", "go_slices": "go", "go_defer": "go", "panic_recover": "go", "goroutines": "go",
+        "go_channels": "go", "data_races": "go", "sync_mutex": "go", "go_context": "go",
+        "java": "java", "java_collections": "java", "equals_hashcode": "java", "java_streams": "java",
+        "java_concurrency": "java", "completable_future": "java", "java_exceptions": "java",
+        "django": "django", "django_orm": "django", "django_forms": "django", "django_transactions": "django",
+        "kafka": "kafka", "kafka_consumer_groups": "kafka", "kafka_partitions": "kafka",
+        "kafka_delivery": "kafka", "kafka_offsets": "kafka", "kafka_outbox": "kafka",
     },
     "frontend": {
         "arrays": "javascript", "async_await": "javascript", "closures": "javascript", "operators": "javascript",
