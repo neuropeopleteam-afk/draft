@@ -118,3 +118,18 @@ def _bench() -> dict:
 @router.get("/matching-bench", summary="Бенчмарк подбора со скрытой истиной (пересчёт: make bench)")
 def matching_bench():
     return _bench()
+
+
+GRADER = Path(__file__).resolve().parent / "data" / "grader_check.json"
+
+
+@lru_cache(maxsize=1)
+def _grader() -> dict:
+    if not GRADER.exists():
+        return {"missing": True}
+    return json.loads(GRADER.read_text(encoding="utf-8"))
+
+
+@router.get("/grader-check", summary="Оценщик открытых ответов на наборе панели 06.10: инъекции и завышение, до и после")
+def grader_check():
+    return _grader()
