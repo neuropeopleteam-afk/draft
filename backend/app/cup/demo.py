@@ -287,7 +287,7 @@ def seed_cups(db: Session, rng_seed: int = 20261010) -> dict:
         cup = _cup(db, c, u, title="Маршрутизация заказов", category="backend.middle", mode="auto", start_days=-2,
                    end_days=6, salary=(220_000, 280_000), top=3, position="Backend-разработчик (маршрутизация)",
                    description="Кубок идёт: пять заданий банка с автопроверкой на 15 минут. Лучшим трём — приглашение "
-                               "с зарплатой 220–280 тыс. ₽.", rnd=rnd)
+                               "с зарплатой 220–280\u00a0тыс.\u00a0₽.", rnd=rnd)
         for i, p in enumerate(_cands(db, "backend.middle", 5, rnd), start=1):
             _play(db, cup, p, rnd, i, state="scored")
         made.append(cup.title)
