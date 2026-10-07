@@ -199,8 +199,10 @@ def summary_for_employer(integ: dict | None) -> dict | None:
     """То, что видит работодатель: уровень и причины (без сырых сигналов)."""
     if not integ:
         return None
+    rs = list(integ.get("reasons") or [])  # по убыванию веса; сверх пяти — одной строкой, чтобы не терялось число
+    more = [f"И ещё {_n(len(rs) - 5, 'причина', 'причины', 'причин')} меньшего веса"] if len(rs) > 5 else []
     return {"level": integ.get("level"), "title": integ.get("title") or LEVEL_TITLES.get(integ.get("level", ""), ""),
-            "reasons": list(integ.get("reasons") or [])[:5]}
+            "reasons": rs[:5] + more}
 
 
 # ------------------------------------------------------------------ источники причин (точка расширения)
