@@ -37,7 +37,8 @@ import numpy as np
 
 from app.modules.matching.need_parser import parse_need
 from app.modules.matching.ranking import ALGORITHM_VERSION, WEIGHTS, score_candidate
-from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate)
+from app.modules.profiles.facts import PROVISIONAL_PENALTY
+from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate, true_grade)
 from app.modules.validation.matching_eval import _tokens, keyword_score, selection_categories
 from app.modules.fsp.rating import VERSION as FSP_RATING_VERSION, POLICY as FSP_RATING_POLICY
 
@@ -47,8 +48,9 @@ DATA_OUT = HERE / "data" / "matching_bench.json"
 DOCS_JSON = REPO / "docs" / "validation" / "matching_bench.json"
 DOCS_MD = REPO / "docs" / "validation" / "MATCHING_BENCH.md"
 
-BENCH_VERSION = "bench-v1"
+BENCH_VERSION = "bench-v2"  # v2 (07.10): решение по грейду — правилом банка (0,8), «Junior (предварительно)», раздел Junior
 COMP_KEYS = ("test", "stack_required", "stack_desired", "fsp", "probe")  # порядок = ranking.WEIGHTS
+PENALTIES = (0.0, 0.05, 0.10)  # чувствительность штрафа «предварительно» (в продукте 0,05 — решение владельца 06.10)
 METRICS = ("p@5", "p@10", "ndcg@5", "ndcg@10", "mrr")
 N_BOOT = 2000
 SENS_SIZE = (60, 600)  # размер мира в анализе чувствительности (как у бенчмарка FSP Talent), 9 вариантов
@@ -120,6 +122,7 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
     out = {"comps": comps, "has_req": has_req, "vis": _vis(bundles, reqs),
            "rating": np.array([b.profile.rating_score or 0.0 for b in bundles]),
            "ref_rank": np.argsort(np.argsort([b.profile.public_ref for b in bundles])),
+           "provisional": np.array([1.0 if b.provisional else 0.0 for b in bundles]),  # «Junior (предварительно)»
            "bundles": bundles}
     rebuilt = weighted(out, np.array([WEIGHTS[k] for k in COMP_KEYS]))
     out["max_rebuild_error"] = float(np.abs(rebuilt - prod).max()) if n else 0.0
@@ -127,17 +130,19 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
     return out
 
 
-def weighted(sc: dict, w: np.ndarray) -> np.ndarray:
-    """Скор продукта по весам w (порядок COMP_KEYS); нет обязательного стека — его вес переходит на тест."""
+def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY) -> np.ndarray:
+    """Скор продукта по весам w (порядок COMP_KEYS); нет обязательного стека — его вес переходит на тест;
+    «Junior (предварительно)» — минус penalty (в продукте 0,05)."""
     w_b = w.copy()
     w_b[0] += w_b[1]
     w_b[1] = 0.0
-    return np.round(np.where(sc["has_req"][:, None], sc["comps"] @ w, sc["comps"] @ w_b), 4)
+    raw = np.where(sc["has_req"][:, None], sc["comps"] @ w, sc["comps"] @ w_b)
+    return np.round(raw - penalty * sc["provisional"][None, :], 4)
 
 
-def platform_orders(sc: dict, w: np.ndarray | None = None) -> np.ndarray:
+def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROVISIONAL_PENALTY) -> np.ndarray:
     """Порядок как в build_selection: категория → −скор → −рейтинг → public_ref."""
-    s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w)
+    s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w, penalty)
     return np.stack([np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], -sc["vis"][i])) for i in range(len(s))])
 
 
@@ -302,7 +307,7 @@ def weight_grid(step: float = 0.05) -> np.ndarray:
 def fast_ndcg10(sc: dict, rel: np.ndarray, rows: np.ndarray, w: np.ndarray, ideal10: np.ndarray) -> float:
     """nDCG@10 по подмножеству потребностей без полного lexsort (для перебора сетки). Порядок: категория → скор →
     рейтинг (как в продукте; разбиение оставшихся ничьих по public_ref здесь не воспроизводится)."""
-    sub = {"comps": sc["comps"][rows], "has_req": sc["has_req"][rows]}
+    sub = {"comps": sc["comps"][rows], "has_req": sc["has_req"][rows], "provisional": sc["provisional"]}
     key = sc["vis"][rows] * 10.0 + weighted(sub, w) + sc["rating"][None, :] * 1e-6
     top = np.argpartition(-key, 10, axis=1)[:, :10]
     kt = np.take_along_axis(key, top, axis=1)
@@ -378,6 +383,7 @@ def world_stats(world: World, reqs: list[dict]) -> dict:
         "with_fsp": sum(1 for x in c if any(a["verified"] for a in x.obs.achievements)),
         "unverified_fsp_badge": sum(1 for x in c if any(not a["verified"] for a in x.obs.achievements)),
         "no_category": sum(1 for x in c if not x.obs.category_grade),
+        "provisional": sum(1 for x in c if x.obs.category_provisional),
         "retake": sum(1 for x in c if x.obs.sessions > 1),
         "category_equals_true_grade": round(float(np.mean([x.obs.category_grade == x.latent.true_grade for x in cat])), 3),
         "declared_equals_true_grade": round(float(np.mean([x.obs.grade_declared == (x.latent.true_grade or "junior")
@@ -477,20 +483,112 @@ def _examples(world: World, reqs: list[dict], orders: dict, k: int = 5, n: int =
     return out
 
 
+# ---------------------------------------------------------------- Junior: решение банка, «предварительно», штраф
+
+JUNIOR_COLUMNS = (
+    ("stub06", "Как было: заглушка, порог 0,6", {"decision": "stub06", "provisional": False}),
+    ("bank08", "Как в продукте: правило банка, порог 0,8", {"decision": "bank", "provisional": False}),
+    ("provisional", "После: порог 0,8 + «Junior (предварительно)»", {"decision": "bank", "provisional": True}),
+)
+
+
+def _junior_world_stats(world: World) -> dict:
+    """Что стало с кандидатами у порога Junior: категории, предварительные, ложные предварительные и отказы."""
+    c = world.candidates
+    theta = np.array([x.latent.theta for x in c])
+    cat = np.array([x.obs.category_grade or "" for x in c])
+    prov = np.array([x.obs.category_provisional for x in c])
+    true_jun_or_above = theta >= -1.0  # истинный уровень не ниже порога Junior
+    declared_jun = np.array([x.obs.grade_declared == "junior" for x in c])
+    tested_jun = np.array([bool(x.obs.test and x.obs.test.get("claimed") == "junior") for x in c])
+    return {"n_candidates": len(c), "no_category": int((cat == "").sum()),
+            "junior_category": int((cat == "junior").sum()), "provisional": int(prov.sum()),
+            "provisional_share_of_junior": round(float(prov.sum() / max((cat == "junior").sum(), 1)), 3),
+            # ложные предварительные: категория Junior присвоена предварительно, а истинный уровень ниже порога
+            "provisional_true_below": int((prov & ~true_jun_or_above).sum()),
+            "provisional_true_below_share": round(float((prov & ~true_jun_or_above).sum() / max(prov.sum(), 1)), 3),
+            # ложные отказы: истинный уровень не ниже Junior, заявлен Junior, категории нет
+            "rejected_true_junior": int((declared_jun & true_jun_or_above & (cat == "")).sum()),
+            "rejected_true_junior_share": round(float((declared_jun & true_jun_or_above & (cat == "")).sum()
+                                                      / max((declared_jun & true_jun_or_above).sum(), 1)), 3),
+            "declared_junior": int(declared_jun.sum()), "tested_junior": int(tested_jun.sum()),
+            "true_junior_or_above_declared_junior": int((declared_jun & true_jun_or_above).sum())}
+
+
+def _metrics_subset(pn: dict, mask: np.ndarray) -> dict:
+    return {m: round(float(pn[m][mask].mean()), 3) for m in ("p@5", "p@10", "ndcg@10", "mrr")}
+
+
+def junior_section(cfg: BenchConfig, blocks: dict, main_world: World | None = None, main_scored: dict | None = None) -> dict:
+    """Три столбца при одной и той же истине (тот же seed → те же θ*, навыки, тексты и потребности):
+    решение заглушки с порогом 0,6 (как считал бенчмарк раньше) / правило банка с порогом 0,8 (как в продукте
+    до «предварительно») / правило банка + «Junior (предварительно)» со штрафом 0,05. Плюс чувствительность
+    штрафа 0 / 0,05 / 0,10 на третьем мире (порядок меняется только внутри категории)."""
+    cols = []
+    rel_ref = None
+    third = None
+    for cid, title, kw in JUNIOR_COLUMNS:
+        c = replace(cfg, **kw)
+        if main_world is not None and main_scored is not None and c.to_dict() == cfg.to_dict():
+            w, sc = main_world, main_scored
+        else:
+            w = generate(c, blocks)
+            sc = score_world(w, _parsed(w))
+        if rel_ref is None:
+            rel_ref = w.rel
+        assert np.array_equal(rel_ref, w.rel), "истина должна совпадать между столбцами"
+        pn = per_need(w.rel, platform_orders(sc))
+        jun = np.array([nd.grade == "junior" for nd in w.needs])
+        cols.append({"id": cid, "title": title, "overrides": kw, "world": _junior_world_stats(w),
+                     "all": _metrics_subset(pn, np.ones(len(w.needs), bool)), "junior_needs": _metrics_subset(pn, jun),
+                     "n_junior_needs": int(jun.sum())})
+        print(f"    Junior/{cid}: nDCG@10 по Junior-потребностям {cols[-1]['junior_needs']['ndcg@10']}, "
+              f"без категории {cols[-1]['world']['no_category']}, предварительных {cols[-1]['world']['provisional']}",
+              flush=True)
+        if cid == "provisional":
+            third = (w, sc, jun)
+    pen = []
+    if third is not None:
+        w, sc, jun = third
+        prov = sc["provisional"].astype(bool)
+        rel_any = w.rel >= 2
+        for pv in PENALTIES:
+            o = platform_orders(sc, penalty=pv)
+            pn = per_need(w.rel, o)
+            top = o[:, :10]
+            in_top = prov[top]
+            r_top = np.take_along_axis(w.rel, top, axis=1) >= 2
+            top20 = prov[o[:, :20]]
+            pen.append({"penalty": pv, "all": _metrics_subset(pn, np.ones(len(w.needs), bool)),
+                        "junior_needs": _metrics_subset(pn, jun),
+                        "provisional_in_top10_junior_needs": round(float(in_top[jun].mean()), 3),
+                        "provisional_in_top20_junior_needs": round(float(top20[jun].mean()), 3),
+                        "irrelevant_provisional_in_top10_junior_needs":
+                            round(float((in_top & ~r_top)[jun].sum() / max(in_top[jun].sum(), 1)), 3),
+                        # средний перцентиль места подходящих предварительных по Junior-потребностям (0 — вершина)
+                        "relevant_provisional_percentile_junior_needs": group_position(w.rel[jun], o[jun], prov),
+                        "relevant_provisional_share": round(float((rel_any[:, prov]).mean()), 3) if prov.any() else None})
+    return {"columns": cols, "penalty_sensitivity": pen, "penalty_product": PROVISIONAL_PENALTY,
+            "note": ("Истина одна и та же во всех столбцах: меняется только решение по грейду у порога. Кандидаты без "
+                     "категории в бенчмарке стоят после всех с категорией (как «грейд не подтверждён» в продукте), "
+                     "поэтому на p@k и nDCG@10 они почти не влияют; дотестирование у порога здесь не моделируется — "
+                     "его эффект считает симуляция теста (раздел «Junior у порога» на /validation).")}
+
+
 # ---------------------------------------------------------------- запуск
 
 def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None = None, write: bool = True) -> dict:
     t0 = time.time()
     blocks = bank_blocks()
-    print(f"1/5 мир: {cfg.n_needs} потребностей × {cfg.n_candidates} кандидатов, seed {cfg.seed}", flush=True)
+    print(f"1/6 мир: {cfg.n_needs} потребностей × {cfg.n_candidates} кандидатов, seed {cfg.seed}", flush=True)
     world = generate(cfg, blocks)
     reqs = _parsed(world)
-    print("2/5 методы и абляции", flush=True)
+    print("2/6 методы и абляции", flush=True)
     r = run_methods(world, reqs, cfg.seed)
     s = summarize(world, r, cfg.seed)
     print(f"    платформа nDCG@10 {s['metrics']['platform']['ndcg@10']['mean']}, "
           f"BM25 {s['metrics']['bm25']['ndcg@10']['mean']} ({r['cpu_seconds']} с CPU)", flush=True)
-    print("3/5 второй мир и веса на отложенных данных", flush=True)
+    print("3/6 второй мир и веса на отложенных данных", flush=True)
     cfg2 = replace(cfg, seed=cfg.seed + 1)
     world2 = generate(cfg2, blocks)
     r2 = run_methods(world2, _parsed(world2), cfg2.seed, ("platform", "bm25"))
@@ -498,8 +596,15 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
     ho = heldout(world, r, world2, r2, cfg.seed)
     print(f"    веса: продукт {ho['test']['product']['mean']} / подобранные {ho['test']['tuned']['mean']} "
           f"на отложенной половине", flush=True)
-    print("4/5 чувствительность", flush=True)
+    print("4/6 чувствительность", flush=True)
     sens = [] if quick else sensitivity(cfg, blocks, *(sens_size or SENS_SIZE))
+    print("5/6 Junior: решение банка, «предварительно», штраф", flush=True)
+    if quick:
+        jcfg = replace(cfg, n_needs=min(cfg.n_needs, 40), n_candidates=min(cfg.n_candidates, 400))
+        junior = junior_section(jcfg, blocks, world if jcfg.to_dict() == cfg.to_dict() else None,
+                                r["scored"] if jcfg.to_dict() == cfg.to_dict() else None)
+    else:
+        junior = junior_section(cfg, blocks, world, r["scored"])
     cfg_d = cfg.to_dict()
     rep = {
         "version": BENCH_VERSION, "algorithm": ALGORITHM_VERSION, "weights": WEIGHTS,
@@ -514,7 +619,7 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "metrics": s["metrics"], "paired_platform_minus": s["paired_platform_minus"],
         "groups": groups(world, r["orders"]), "breakdown": breakdown(world, s["per_need"]),
         "world2": {"seed": cfg2.seed, "metrics": s2["metrics"]},
-        "heldout_weights": ho, "sensitivity": sens,
+        "heldout_weights": ho, "sensitivity": sens, "junior": junior,
         "score_rebuild_max_error": r["scored"]["max_rebuild_error"],
     }
     rep["seconds"] = round(time.time() - t0, 1)
@@ -531,7 +636,7 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         DOCS_MD.write_text(markdown(rep), encoding="utf-8")
     where = (f"→ {DOCS_JSON.relative_to(REPO)}, {DATA_OUT.relative_to(REPO)}, {DOCS_MD.relative_to(REPO)}" if write
              else "без записи результатов (--no-write)")
-    print(f"5/5 {where} ({rep['seconds']} с)", flush=True)
+    print(f"6/6 {where} ({rep['seconds']} с)", flush=True)
     return rep
 
 
@@ -593,11 +698,34 @@ def findings(rep: dict) -> list[str]:
                f"{_pct(fp['without_fsp_share_of_all_relevant'])}); средний перцентиль места подходящих без ФСП "
                f"{_f(fp['platform']['without_fsp_percentile'], 2)}, с ФСП {_f(fp['platform']['with_fsp_percentile'], 2)}.")
     jun = rep["breakdown"]["by_grade"].get("junior")
+    jr = {c["id"]: c for c in (rep.get("junior") or {}).get("columns", [])}
     if jun and jun["no_test"] > jun["platform"]:
         out.append(f"Слабое место — потребности уровня Junior: nDCG@10 {_f(jun['platform'], 2)} против {_f(jun['no_test'], 2)} "
-                   "у самоописания. Тест у порога Junior осторожен (порог подтверждения 0,6 при SE ≈ 0,4): часть подходящих "
-                   f"не подтверждает грейд и остаётся без категории ({rep['world']['no_category']} из "
-                   f"{rep['world']['n_candidates']}). Дотестирование у порога в синтетике не моделируется.")
+                   "у самоописания. Тест у порога Junior осторожен (подтверждение от P = 0,8 при SE ≈ 0,4): часть подходящих "
+                   f"не подтверждает грейд ({rep['world']['no_category']} из {rep['world']['n_candidates']} без категории). "
+                   "Дотестирование у порога в синтетике не моделируется.")
+    if {"stub06", "bank08", "provisional"} <= set(jr):
+        a, b, c = jr["stub06"], jr["bank08"], jr["provisional"]
+        out.append(f"Junior у порога при одной истине: прежний порог 0,6 оставлял без категории {a['world']['no_category']} "
+                   f"кандидатов, правило банка с порогом 0,8 — {b['world']['no_category']}, «Junior (предварительно)» "
+                   f"возвращает в категорию {c['world']['provisional']} (ложных предварительных — истинный уровень ниже "
+                   f"порога — {_pct(c['world']['provisional_true_below_share'])} из них); ложные отказы заявившим Junior "
+                   f"с истинным уровнем не ниже порога: {_pct(a['world']['rejected_true_junior_share'])} → "
+                   f"{_pct(b['world']['rejected_true_junior_share'])} → {_pct(c['world']['rejected_true_junior_share'])}. "
+                   f"nDCG@10 по Junior-потребностям {_f(a['junior_needs']['ndcg@10'], 2)} / {_f(b['junior_needs']['ndcg@10'], 2)} / "
+                   f"{_f(c['junior_needs']['ndcg@10'], 2)}, p@5 {_f(a['junior_needs']['p@5'], 2)} / {_f(b['junior_needs']['p@5'], 2)} / "
+                   f"{_f(c['junior_needs']['p@5'], 2)}.")
+        pen = {p["penalty"]: p for p in rep["junior"].get("penalty_sensitivity", [])}
+        if pen:
+            out.append("Штраф «предварительно» 0 / 0,05 / 0,10 меняет nDCG@10 по Junior-потребностям на "
+                       + " / ".join(_f(pen[p]["junior_needs"]["ndcg@10"], 3) for p in sorted(pen))
+                       + "; доля предварительных в топ-10 Junior-потребностей "
+                       + " / ".join(_pct(pen[p]["provisional_in_top10_junior_needs"]) for p in sorted(pen))
+                       + ", перцентиль места подходящих предварительных "
+                       + " / ".join(_f(pen[p].get("relevant_provisional_percentile_junior_needs")) for p in sorted(pen))
+                       + ". Предварительные у порога почти не попадают в верх выдачи и без штрафа (компонент теста у них "
+                         "мал), поэтому в мире из 2000 кандидатов штраф на топ-10 не влияет; штраф 0,05 задан до бенчмарка "
+                         "(вес одного зонда) и на нём не подбирался.")
     if "strict_truth" in sens:
         st = sens["strict_truth"]
         out.append(f"При строгой истине (подходит только точный грейд) nDCG@10 платформы {_f(st['platform']['ndcg@10'], 2)}, "
@@ -632,7 +760,8 @@ def markdown(rep: dict) -> str:
         "- Кандидат = скрытая истина (направление, истинный уровень θ*, освоенные навыки, талант) + то, что видит "
         "система: самоописание T0 (шумное; 20 % «раздутых» резюме, 15 % «скромных»), тест T1 (θ̂ = θ* + N(0, σθ), "
         f"σθ = {_f(rep['config']['theta_sigma'], 2)} — RMSE нашего адаптивного теста в симуляции; решение по грейду — "
-        "функцией платформы, при отказе — пересдача ступенью ниже; навыки — по ответам на задания с тегами из банка), "
+        "правилом банка (подтверждение от P = 0,8, у порога Junior — «Junior (предварительно)»), при отказе — пересдача "
+        "ступенью ниже; навыки — по ответам на задания с тегами из банка), "
         "паспорт ФСП T2 у части кандидатов.",
         "- Потребность = истина (направление, грейд, 2–4 обязательных навыка) + текст; платформа получает только "
         "разбор текста парсером.",
@@ -682,6 +811,36 @@ def markdown(rep: dict) -> str:
             L.append(f"| {v['title']} | {_f(v['platform']['ndcg@10'])} | {_f(v['no_fsp']['ndcg@10'])} | "
                      f"{_f(v['no_test']['ndcg@10'])} | {_f(v['no_guard']['ndcg@10'])} | {_f(v['bm25']['ndcg@10'])} |")
         L.append("")
+    jr = rep.get("junior") or {}
+    if jr.get("columns"):
+        cols = jr["columns"]
+        L += ["## Junior у порога: решение банка и «Junior (предварительно)» (одна истина, три правила)", "",
+              "| | " + " | ".join(c["title"] for c in cols) + " |", "|---|" + "---|" * len(cols)]
+        rows = [("Без категории", lambda c: str(c["world"]["no_category"])),
+                ("Категория Junior", lambda c: str(c["world"]["junior_category"])),
+                ("Из них предварительно", lambda c: str(c["world"]["provisional"])),
+                ("Ложных предварительных (истинный уровень ниже порога)",
+                 lambda c: f"{c['world']['provisional_true_below']} ({_pct(c['world']['provisional_true_below_share'])})"),
+                ("Ложные отказы заявившим Junior с истинным уровнем не ниже порога",
+                 lambda c: f"{c['world']['rejected_true_junior']} из {c['world']['true_junior_or_above_declared_junior']} "
+                           f"({_pct(c['world']['rejected_true_junior_share'])})"),
+                ("nDCG@10, Junior-потребности", lambda c: _f(c["junior_needs"]["ndcg@10"])),
+                ("p@5, Junior-потребности", lambda c: _f(c["junior_needs"]["p@5"])),
+                ("MRR, Junior-потребности", lambda c: _f(c["junior_needs"]["mrr"])),
+                ("nDCG@10, все потребности", lambda c: _f(c["all"]["ndcg@10"]))]
+        for title, fn in rows:
+            L.append(f"| {title} | " + " | ".join(fn(c) for c in cols) + " |")
+        L += ["", jr.get("note", ""), ""]
+        if jr.get("penalty_sensitivity"):
+            L += ["### Чувствительность штрафа «предварительно» (третий мир)", "",
+                  "| Штраф | nDCG@10 Junior | p@5 Junior | nDCG@10 все | Предварительных в топ-10 / топ-20 Junior | "
+                  "Перцентиль места подходящих предварительных |", "|---|---|---|---|---|---|"]
+            for pv in jr["penalty_sensitivity"]:
+                L.append(f"| {_f(pv['penalty'], 2)} | {_f(pv['junior_needs']['ndcg@10'])} | {_f(pv['junior_needs']['p@5'])} | "
+                         f"{_f(pv['all']['ndcg@10'])} | {_pct(pv['provisional_in_top10_junior_needs'])} / "
+                         f"{_pct(pv['provisional_in_top20_junior_needs'])} | "
+                         f"{_f(pv.get('relevant_provisional_percentile_junior_needs'))} |")
+            L.append("")
     ws = w["parser"]
     L += ["## Данные мира", "",
           f"- Релевантных на потребность: в среднем {_f(w['relevant_per_need']['mean'], 0)}, от "

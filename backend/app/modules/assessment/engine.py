@@ -21,6 +21,9 @@ GRADES = ("junior", "middle", "senior")
 GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
 CONFIRM_LEVEL = 0.6  # P(θ ≥ порог заявленного грейда) для подтверждения
 UPGRADE_LEVEL = 0.8  # P(θ ≥ порог следующего грейда) для предложения пройти тест выше
+# «Junior (предварительно)»: тест на Junior не подтвердил грейд, но P(θ ≥ порога) ≥ 0,10 — уровень ниже не доказан
+# (как assessment_bank.psychometrics.grading.PROVISIONAL_LEVEL; движок банка использует его напрямую)
+PROVISIONAL_LEVEL = 0.10
 
 
 @dataclass
@@ -80,6 +83,9 @@ class EngineResult:
     skills: dict[str, dict]  # стек-тег → {"correct": k, "total": n, "score": k/n}
     explanation: str
     details: dict = field(default_factory=dict)  # стоп-критерий, дотестирование, предзнание, ответы «на проверке»
+    provisional: bool = False  # «Junior (предварительно)»: не подтверждён, но и не доказанно ниже порога
+    provisional_reason: str | None = None  # uncertain | precision (см. grading.provisional_status)
+    p_claimed: float | None = None  # P(θ ≥ порога заявленного грейда)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -147,8 +153,11 @@ def grade_decision(theta: float, se: float, claimed: str) -> dict:
                 break
         if lower is None and i > 0:
             lower = GRADES[i - 1]
+    prov = (not confirmed and claimed == GRADES[0] and at_least[claimed] >= PROVISIONAL_LEVEL)
     return {"point_grade": point, "confirmed": confirmed, "upgrade_available": upgrade, "retake_lower": lower,
-            "probabilities": probs}
+            "probabilities": probs, "provisional": prov,
+            "provisional_reason": ("precision" if theta >= GRADE_CUTS[claimed] else "uncertain") if prov else None,
+            "p_claimed": round(at_least[claimed], 4)}
 
 
 # ---------------------------------------------------------------- временная заглушка
@@ -308,8 +317,11 @@ def _explain(dec: dict, theta: float, se: float, claimed: str) -> str:
             s += f" Результат уверенный — можно пройти тест на {GRADES[i + 1].capitalize()}."
         return s
     s = f"Грейд {claimed.capitalize()} пока не подтверждён (θ = {theta:+.2f} ± {se:.2f}). Принудительного понижения нет"
-    return s + (f": можно пройти тест на {dec['retake_lower'].capitalize()}." if dec["retake_lower"] else
-                ": можно пройти тест ещё раз после подготовки.")
+    s += (f": можно пройти тест на {dec['retake_lower'].capitalize()}." if dec["retake_lower"] else
+          ": можно пройти тест ещё раз после подготовки.")
+    if dec.get("provisional"):
+        s += " Уровень ниже порога не доказан — категория Junior присвоена предварительно."
+    return s
 
 
 _ENGINES: dict[str, AssessmentEngine] = {"stub": StubEngine()}

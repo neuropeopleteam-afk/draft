@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { GradeBadge, GradeStatusNote } from "./GradeStatus";
 import { Level, num, pct, range, ruText, signed, years } from "./ui";
 import { Specializations } from "./Specializations";
 
@@ -15,7 +16,12 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
-          <p className="mt-1 text-lg font-bold text-brand-night">{c.category?.title ?? "Категория не присвоена"}</p>
+          <div className="mt-1 flex flex-wrap items-center gap-2">
+            <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
+            <GradeBadge s={c.status} claimed={c.claimed} />
+          </div>
+          <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
+          {c.confirmed_by && <p className="mt-1 text-xs text-brand-ink/70">Грейд был предварительным и подтверждён {c.confirmed_by.title}{c.confirmed_by.ref_title ? ` («${c.confirmed_by.ref_title}»)` : ""}</p>}
           <p className="mt-0.5 text-sm text-brand-ink/65">
             {c.rank_in_category ? `Место ${c.rank_in_category} из ${c.category_size} в категории · ` : ""}
             {c.experience_years != null ? `стаж ${years(c.experience_years)} · ` : ""}
@@ -34,7 +40,10 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
         <div className="rounded-xl bg-brand-blush/25 p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level="T1" /> Тест</p>
-          {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {signed(t.theta)} ± {num(t.se)}</p> : <p className="mt-1 text-brand-ink/65">нет результата</p>}
+          {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {signed(t.theta)} ± {num(t.se)}</p>
+            : c.status?.attempt?.theta != null ? <p className="mt-1 text-brand-ink/65">последняя попытка на {c.status.attempt.grade_title ?? c.status.attempt.grade}: θ = {signed(c.status.attempt.theta)} ± {num(c.status.attempt.se)} — грейд не подтверждён, в скор не входит</p>
+            : <p className="mt-1 text-brand-ink/65">нет результата</p>}
+          {c.provisional && <p className="mt-1 text-xs text-brand-ink/70">P(уровень не ниже Junior) = {c.provisional.p_pct} % · подтверждение от {c.provisional.confirm_pct} %, «не доказанно ниже» от {c.provisional.level_pct} %{c.provisional.attempts ? ` · дотестирований ${c.provisional.attempts} из ${c.provisional.attempts_max}` : ""}</p>}
           {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
           {c.skills_confirmed?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">

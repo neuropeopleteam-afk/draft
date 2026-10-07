@@ -32,6 +32,9 @@ class CandidateProfile(Timestamps, Base):
     current_grade_id: Mapped[str | None] = mapped_column(sa.ForeignKey("grades.id"))
     current_category_id: Mapped[str | None] = mapped_column(sa.ForeignKey("categories.id"), index=True)
     rating_score: Mapped[float | None]
+    # «Junior (предварительно)»: тест на Junior не подтвердил грейд, но и не доказал уровень ниже порога.
+    # Категория видна работодателю с пометкой и уровнем доказанности; подтверждение — не смена грейда.
+    grade_provisional: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     grade_locked_until: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     # Приватность: что видно работодателю в обезличенной карточке.
     privacy: Mapped[dict] = mapped_column(default=dict)

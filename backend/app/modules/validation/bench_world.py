@@ -8,9 +8,11 @@
   - T0, самоописание: заявленный грейд, заявленный стек, стаж, текст резюме. Оно шумное, у части кандидатов
     «раздутое» (грейд на ступень выше, лишние модные навыки, повтор ключевых слов) или «скромное»
     (грейд ниже, половина навыков не указана);
-  - T1, тест: θ̂ = θ* + ε, ε ~ N(0, σθ), решение по грейду — функцией платформы ``engine.grade_decision``
-    (при отказе — пересдача на ступень ниже, как подсказывает платформа); навыки — по ответам на задания,
-    теги которых взяты из реального банка (``assessment_bank`` + ``skill_map``);
+  - T1, тест: θ̂ = θ* + ε, ε ~ N(0, σθ), решение по грейду — правилом банка ``psychometrics.decide``
+    (подтверждение от P = 0,8, как в продукте; у порога Junior — «Junior (предварительно)», если P ≥ 0,1;
+    при отказе — пересдача на ступень ниже, как подсказывает платформа); ``decision="stub06"`` — прежнее правило
+    заглушки с порогом 0,6 (для сравнения «как было»); навыки — по ответам на задания, теги которых взяты из
+    реального банка (``assessment_bank`` + ``skill_map``);
   - T2, паспорт ФСП: подтверждённые реестром достижения у части кандидатов; у остальных истории ФСП нет.
 
 Потребность — тоже две части: спецификация (истина: направление, грейд, обязательные и желательные навыки)
@@ -129,6 +131,11 @@ class BenchConfig:
     cov_full: float = 0.75
     cov_min: float = 0.5
     min_relevant_per_need: int = 3
+    # Решение по грейду: bank — psychometrics.decide (подтверждение от 0,8, как в продукте); stub06 — прежняя
+    # заглушка engine.grade_decision с порогом 0,6 (как считал бенчмарк до 07.10)
+    decision: str = "bank"
+    # «Junior (предварительно)» у порога (только decision = bank): категория Junior при P(θ ≥ −1) ∈ [0,1; 0,8)
+    provisional: bool = True
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -158,9 +165,10 @@ class Observed:
     experience_years: float
     work_format: str
     resume_text: str
-    # T1 (последняя сессия; категория — только при подтверждении грейда)
+    # T1 (последняя сессия; категория — при подтверждении грейда или предварительно у порога Junior)
     category_grade: str | None
     test: dict | None
+    category_provisional: bool = False
     skills_t1: dict[str, dict] = field(default_factory=dict)
     sessions: int = 0
     # T2
@@ -292,11 +300,25 @@ def _shift_grade(g: str, step: int) -> str:
     return GRADES[i]
 
 
+def decide_grade(theta_hat: float, se: float, claimed: str, cfg: BenchConfig) -> dict:
+    """Решение по грейду в конфигурации бенчмарка: confirmed, retake_lower, provisional, p_claimed."""
+    if cfg.decision == "stub06":
+        d = grade_decision(theta_hat, se, claimed)
+        return {"confirmed": d["confirmed"], "retake_lower": d["retake_lower"], "provisional": False,
+                "p_claimed": None, "provisional_reason": None}
+    from assessment_bank.psychometrics import decide
+    from assessment_bank.psychometrics.grading import PROVISIONAL_LEVEL
+
+    d = decide(theta_hat, se, claimed, provisional_level=PROVISIONAL_LEVEL if cfg.provisional else None)
+    return {"confirmed": d.confirmed, "retake_lower": d.retake_lower, "provisional": bool(d.provisional),
+            "p_claimed": d.p_claimed, "provisional_reason": d.provisional_reason}
+
+
 def _run_test(lat: Latent, claimed: str, cfg: BenchConfig, blocks: dict, rng: np.random.Generator) -> dict:
     """Одна сессия теста: θ̂ с погрешностью, решение платформы по грейду, ответы на задания с тегами банка."""
     theta_hat = float(np.clip(lat.theta + rng.normal(0, cfg.theta_sigma), -3.5, 3.5))
     se = float(np.clip(cfg.se_reported + rng.normal(0, 0.04), 0.3, 0.55))
-    dec = grade_decision(theta_hat, se, claimed)
+    dec = decide_grade(theta_hat, se, claimed, cfg)
     n_items = int(np.clip(round(rng.normal(cfg.items_mean, 1.5)), 8, 16))
     n_common = int(round(cfg.common_share * n_items))
     fams: list[tuple[str, ...]] = []
@@ -324,7 +346,8 @@ def _run_test(lat: Latent, claimed: str, cfg: BenchConfig, blocks: dict, rng: np
     for d in skills.values():
         d["score"] = round(d["correct"] / d["total"], 2) if d["total"] else 0.0
     return {"theta": round(theta_hat, 3), "se": round(se, 3), "claimed": claimed, "confirmed": dec["confirmed"],
-            "retake_lower": dec["retake_lower"], "correct": correct, "answered": len(fams), "skills": skills}
+            "retake_lower": dec["retake_lower"], "provisional": dec["provisional"], "p_claimed": dec["p_claimed"],
+            "provisional_reason": dec["provisional_reason"], "correct": correct, "answered": len(fams), "skills": skills}
 
 
 def _make_candidate(i: int, cfg: BenchConfig, blocks: dict) -> Candidate:
@@ -375,13 +398,15 @@ def _make_candidate(i: int, cfg: BenchConfig, blocks: dict) -> Candidate:
         text = f"{role.capitalize()}, {g_decl}. Опыт {years:g} лет. Стек: {', '.join(words)}. {proj}"
     wf = ("office", "hybrid", "remote", "any")[int(r0.integers(4))]
 
-    # T1 — тест на заявленный грейд, при отказе — пересдача ступенью ниже (не больше одной)
+    # T1 — тест на заявленный грейд, при отказе — пересдача ступенью ниже (не больше одной); у порога Junior —
+    # «Junior (предварительно)» без пересдачи (в продукте кандидат остаётся в категории и подтверждает её позже)
     sess = _run_test(lat, g_decl, cfg, blocks, rt)
     n_sess = 1
-    if not sess["confirmed"] and sess["retake_lower"]:
+    if not sess["confirmed"] and not sess["provisional"] and sess["retake_lower"]:
         sess = _run_test(lat, sess["retake_lower"], cfg, blocks, rt)
         n_sess = 2
-    cat_grade = sess["claimed"] if sess["confirmed"] else None
+    cat_prov = bool(sess["provisional"]) and not sess["confirmed"]
+    cat_grade = sess["claimed"] if sess["confirmed"] or cat_prov else None
 
     # T2 — паспорт ФСП
     ach: list[dict] = []
@@ -400,8 +425,11 @@ def _make_candidate(i: int, cfg: BenchConfig, blocks: dict) -> Candidate:
 
     obs = Observed(idx=i, public_ref=f"B{int(rng.integers(16 ** 7)):07X}", direction_declared=d,
                    grade_declared=g_decl, stack_declared=stack, experience_years=years, work_format=wf,
-                   resume_text=text, category_grade=cat_grade,
-                   test={k: sess[k] for k in ("theta", "se", "claimed", "confirmed", "correct", "answered")}
+                   resume_text=text, category_grade=cat_grade, category_provisional=cat_prov,
+                   test=({k: sess[k] for k in ("theta", "se", "claimed", "confirmed", "correct", "answered", "p_claimed")}
+                         | ({"status": "provisional", "provisional": {"p": sess["p_claimed"], "cut": -1.0,
+                                                                      "reason": sess["provisional_reason"]}}
+                            if cat_prov else {}))
                    if cat_grade else None,
                    skills_t1=sess["skills"] if cat_grade else {}, sessions=n_sess, achievements=ach)
     return Candidate(latent=lat, obs=obs)
@@ -499,7 +527,8 @@ def build_bundle(o: Observed, mode: str = "platform", orm: bool = False) -> Bund
         d, g = (o.direction_declared, o.category_grade) if o.category_grade else (None, None)
     p = _mk(CandidateProfile, orm, user_id=uid, public_ref=o.public_ref, current_direction_id=d, current_grade_id=g,
             current_category_id=f"{d}.{g}" if d and g else None, work_format=WorkFormat(o.work_format),
-            experience_years=Decimal(str(o.experience_years)), about=o.resume_text, rating_score=None)
+            experience_years=Decimal(str(o.experience_years)), about=o.resume_text, rating_score=None,
+            grade_provisional=bool(o.category_provisional) and mode != "t0_only")
     b = BenchBundle(profile=p)
     for t in o.stack_declared:
         b.t0["stack"].append(_fact(uid, "stack", t, {}, EvidenceLevel.T0, FactSource.self_report, orm))

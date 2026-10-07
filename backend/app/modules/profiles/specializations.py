@@ -14,11 +14,12 @@ def legacy_specialization(p: CandidateProfile) -> CandidateSpecialization | None
     """Read-only переходный путь для старых сидов/интеграций, пишущих current_*."""
     if not p.current_direction_id:
         return None
+    provisional = bool(getattr(p, "grade_provisional", False)) and bool(p.current_category_id)
     return CandidateSpecialization(
         user_id=p.user_id, direction_id=p.current_direction_id, is_primary=True,
         grade_id=p.current_grade_id, category_id=p.current_category_id,
-        status="confirmed" if p.current_category_id else "declared", rating_score=p.rating_score,
-        locked_until=p.grade_locked_until,
+        status=("provisional" if provisional else "confirmed") if p.current_category_id else "declared",
+        rating_score=p.rating_score, locked_until=p.grade_locked_until,
     )
 
 
@@ -52,6 +53,8 @@ def sync_primary(p: CandidateProfile, r: CandidateSpecialization) -> None:
         p.current_category_id = r.category_id
         p.grade_locked_until = r.locked_until
         p.rating_score = r.rating_score
+        # статус «Junior (предварительно)» основного направления зеркалируется в профиль (старые клиенты, подбор)
+        p.grade_provisional = r.status == "provisional" and bool(r.category_id)
 
 
 def summary(r: CandidateSpecialization, test=None) -> dict:
@@ -60,9 +63,10 @@ def summary(r: CandidateSpecialization, test=None) -> dict:
         "direction": r.direction_id, "direction_title": DIRECTIONS.get(r.direction_id, r.direction_id),
         "is_primary": r.is_primary, "grade": r.grade_id, "grade_title": GRADES.get(r.grade_id or ""),
         "category_id": r.category_id,
-        "category_title": f"{DIRECTIONS.get(r.direction_id, r.direction_id)} · {GRADES.get(r.grade_id, r.grade_id)}"
-                          if r.category_id else None,
-        "status": r.status, "confirmed_by": "test" if r.status == "confirmed" and (test or r.test_session_id) else None,
+        "category_title": (f"{DIRECTIONS.get(r.direction_id, r.direction_id)} · {GRADES.get(r.grade_id, r.grade_id)}"
+                           + (" (предварительно)" if r.status == "provisional" else "")) if r.category_id else None,
+        "status": r.status, "provisional": r.status == "provisional" and bool(r.category_id),
+        "confirmed_by": "test" if r.status == "confirmed" and (test or r.test_session_id) else None,
         "theta": r.theta if r.theta is not None else v.get("theta"),
         "se": r.theta_se if r.theta_se is not None else v.get("se"),
         "rating_score": r.rating_score,
