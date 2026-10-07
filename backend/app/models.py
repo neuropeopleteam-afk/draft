@@ -11,7 +11,7 @@ from app.modules.assessment.models import (  # noqa: F401
     TestSession,
     TestSessionItem,
 )
-from app.modules.auth.models import Consent, EmailVerification, User  # noqa: F401
+from app.modules.auth.models import Consent, EmailVerification, TwoFactorRecoveryCode, User, UserTwoFactor  # noqa: F401
 from app.modules.catalog.models import Category, Direction, Grade, StackTag  # noqa: F401
 from app.modules.fsp.models import FspAchievement, FspPassport  # noqa: F401
 from app.modules.invitations.models import Invitation, InvitationComplaint, InvitationEvent, Probe  # noqa: F401

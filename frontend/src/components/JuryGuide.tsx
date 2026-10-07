@@ -30,8 +30,9 @@ export function JuryGuide() {
     else if (i < 0 && guide.step() !== step) setStep(guide.step());  // шаг выставлен входом в один клик
   }, [loc.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // телефон гостя живой демонстрации (/j/…) — без проводника: эксперт там не вошёл и проходит мини-тест
-  if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/")) return null;
+  // телефон гостя живой демонстрации (/j/…) — без проводника: эксперт там не вошёл и проходит мини-тест;
+  // экран кода второго фактора (/login/2fa) — тоже: на телефоне панель перекрывала бы форму
+  if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa") return null;
   if (hidden) {
     return (
       <button className="fixed bottom-4 right-4 z-40 rounded-full bg-brand-night px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-brand-plum"
@@ -47,12 +48,14 @@ export function JuryGuide() {
   async function go(i: number) {
     const t = STEPS[i];
     setStep(i); guide.setStep(i); setMsg(null);
+    let to = t.path;
     if (t.persona && personaOf(me?.email) !== t.persona) {
       setBusy(true);
-      try { await juryLogin(t.persona, signIn); } catch (e) { setMsg(errText(e)); setBusy(false); return; }
+      // персона с включённым вторым фактором — сначала экран кода (/login/2fa), затем шаг
+      try { to = await juryLogin(t.persona, signIn, t.path); } catch (e) { setMsg(errText(e)); setBusy(false); return; }
       setBusy(false);
     }
-    navigate(t.path);
+    navigate(to);
   }
   async function reset() {
     if (!confirm("Сбросить своё демо в исходное состояние? Приглашения, зонды, тесты и кубки ваших демо-учёток будут пересозданы. У других экспертов жюри ничего не изменится.")) return;

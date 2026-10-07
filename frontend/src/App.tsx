@@ -7,6 +7,7 @@ import Validation from "./pages/Validation";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import { TwoFactorLogin, TwoFactorSettings } from "./pages/Security";
 import Verify from "./pages/Verify";
 import Assessment, { TestRun } from "./pages/candidate/Assessment";
 import Category from "./pages/candidate/Category";
@@ -49,11 +50,13 @@ export default function App() {
         <Route path="answers" element={<ExpertAnswers />} />
         <Route path="angoff" element={<ExpertAngoff />} />
         <Route path="review" element={<Expert />} />
+        <Route path="security" element={<TwoFactorSettings />} />
       </Route>
       <Route path="/expert-invite/:token" element={<ExpertInvite />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/login/2fa" element={<TwoFactorLogin />} />
       <Route path="/fsp-id/done" element={<FspIdDone />} />
       <Route path="/install" element={<InstallPage />} />
       <Route path="/sus" element={<SusPage />} />
@@ -103,6 +106,7 @@ export default function App() {
           <Route path="cups" element={<FspCups />} />
           <Route path="method" element={<FspMethod />} />
         </Route>
+        <Route path="security" element={<TwoFactorSettings />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

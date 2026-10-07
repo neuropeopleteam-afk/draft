@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 import uuid
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
@@ -71,3 +72,86 @@ class TokenOut(BaseModel):
     token_type: str = "bearer"
     expires_in: int
     user: UserOut
+
+
+# ---------------------------------------------------------------------------------- второй фактор (TOTP)
+
+class TwoFactorChallengeOut(BaseModel):
+    """Пароль (или ссылка) принят, но входа ещё нет: нужен код из приложения (или обязательное подключение).
+    ``pending_token`` принимают только /api/auth/2fa/verify (или /setup, /confirm при setup_required)."""
+
+    second_factor_required: Literal[True] = True
+    pending_token: str
+    expires_in: int = Field(description="Секунд до истечения промежуточного токена")
+    setup_required: bool = Field(description="Роль с обязательным вторым фактором, приложение ещё не подключено")
+    methods: list[str]
+    email: str
+    role: UserRole
+    landing: str | None = None
+    persona: str | None = None
+    scenario: str | None = None
+    shared: bool | None = None
+
+
+class TwoFactorCodeIn(BaseModel):
+    code: str = Field(min_length=6, max_length=16, description="6 цифр из приложения или резервный код XXXX-XXXX")
+
+
+class TwoFactorSetupIn(BaseModel):
+    code: str | None = Field(None, min_length=6, max_length=16, description="Текущий код — только при перевыпуске")
+
+
+class TwoFactorVerifyIn(BaseModel):
+    pending_token: str = Field(min_length=16)
+    code: str = Field(min_length=6, max_length=16)
+
+
+class TwoFactorSetupOut(BaseModel):
+    secret: str = Field(description="Ключ Base32 для ручного ввода — показывается только при подключении")
+    secret_grouped: str
+    otpauth_uri: str
+    qr_svg: str
+    issuer: str
+    account: str
+    algorithm: str
+    digits: int
+    period_s: int
+    rotation: bool
+
+
+class TwoFactorConfirmOut(BaseModel):
+    enabled: bool = True
+    recovery_codes: list[str] = Field(description="Показываются один раз, каждый действует однократно")
+    token: TokenOut | None = Field(None, description="Полноценный вход, если подключение шло по токену обязательного подключения")
+
+
+class TwoFactorStatusOut(BaseModel):
+    enabled: bool
+    required: bool
+    pending_setup: bool
+    rotation_pending: bool
+    confirmed_at: datetime | None
+    last_verified_at: datetime | None
+    recovery_codes_left: int
+    recovery_codes_total: int
+    locked_until: datetime | None
+    method: str
+    params: dict
+    can_disable: bool
+    is_demo: bool
+    demo_note: str | None
+
+
+class TwoFactorLoginOut(TokenOut):
+    """Итог входа с кодом: токен и контекст первого фактора (куда вести, песочница жюри)."""
+
+    method: str
+    landing: str | None = None
+    persona: str | None = None
+    scenario: str | None = None
+    shared: bool | None = None
+    code: str | None = None
+
+
+class AdminTwoFactorResetIn(BaseModel):
+    email: EmailStr

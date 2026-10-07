@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from html import escape
 import struct
 import zlib
 
@@ -24,7 +25,7 @@ def svg(text: str, *, dark: str = "#20124D", light: str = "#FFFFFF") -> str:
     n = len(m) + 2 * QUIET
     path = "".join(f"M{c + QUIET} {r + QUIET}h1v1h-1z" for r, row in enumerate(m) for c, v in enumerate(row) if v)
     return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {n} {n}" shape-rendering="crispEdges" '
-            f'role="img" aria-label="QR-код: {text}"><rect width="{n}" height="{n}" fill="{light}"/>'
+            f'role="img" aria-label="QR-код: {escape(text, quote=True)}"><rect width="{n}" height="{n}" fill="{light}"/>'
             f'<path fill="{dark}" d="{path}"/></svg>')
 
 
