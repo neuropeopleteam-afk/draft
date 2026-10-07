@@ -263,6 +263,28 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
     return {"candidates": idx, "with_fsp": fsp, "employers": len(employers), "needs": len(NEEDS)}
 
 
+def demo_pool_size(db: Session) -> int:
+    """Демо-пользователи основных демо-данных — без учёток жюри и гостей живой демонстрации (@jury.example.com):
+    их api создаёт сам при старте (общее демо, запасная песочница), и они не значат, что 150 кандидатов уже есть."""
+    from app.modules.jury.scope import DOMAIN
+
+    return db.scalar(select(func.count()).select_from(User).where(
+        User.is_demo.is_(True), User.email.not_like(f"%@{DOMAIN}"))) or 0
+
+
+def drop_jury_built_on_empty_pool(db: Session) -> list[str]:
+    """Демо жюри (общее и песочницы), созданное api до основных демо-данных: его подборки и кубки собраны по пустой
+    базе (в подборках — только кандидаты жюри, у Марии «1 место из 1»). Удаляем — при первом входе жюри оно
+    создастся заново уже по полным данным, запасная песочница — при открытии главной.
+    Возвращает удалённые ("" — общее)."""
+    from app.modules.jury import seed as jury
+
+    sids = ["", *sorted(jury.sandboxes(db))]
+    for sid in sids:
+        jury.delete_jury(db, sid)
+    return sids
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Демо-данные платформы")
     ap.add_argument("--reset", action="store_true", help="удалить демо-данные и создать заново")
@@ -270,16 +292,21 @@ def main() -> None:
     a = ap.parse_args()
     get_engine()
     with SessionLocal() as db:
-        exists = db.scalar(select(func.count()).select_from(User).where(User.is_demo.is_(True))) or 0
+        exists = demo_pool_size(db)
         if a.reset or a.delete:
             print(f"Удалено демо-пользователей: {delete_demo(db)}")
             exists = 0
         if a.delete:
             return
+        from app.integrations.vacancies import demo as vacancies_demo
+
         if exists:
             print(f"Демо-данные уже есть ({exists} пользователей). Для пересоздания: --reset")
-            return
-        print(seed(db))
+        else:
+            if not a.reset and (boxes := [s for s in drop_jury_built_on_empty_pool(db) if s]):
+                print(f"Демо жюри, созданное до демо-данных, удалено (песочниц: {len(boxes)}) — создастся при входе")
+            print(seed(db))
+        print(f"Демо-вакансии: {vacancies_demo.ensure(db)}")  # отдельной командой их легко забыть
 
 
 if __name__ == "__main__":
