@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Level, num, pct, range, ruText, signed, years } from "./ui";
+import { Specializations } from "./Specializations";
 
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
@@ -29,6 +30,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
         )}
       </div>
 
+      {c.specializations?.length > 1 && <div className="mt-4"><Specializations items={c.specializations} /></div>}
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
         <div className="rounded-xl bg-brand-blush/25 p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level="T1" /> Тест</p>

@@ -20,6 +20,7 @@ from app.modules.profiles.models import (  # noqa: F401
     CandidateFact,
     CandidateProfile,
     CandidateResume,
+    CandidateSpecialization,
     Company,
     EmployerProfile,
 )

@@ -29,6 +29,7 @@ from app.modules.jury import scope as jury_scope
 from app.modules.assessment.rules import apply_result
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateProfile
+from app.modules.profiles.specializations import ensure_specialization
 
 
 def _bank_sessions(db: Session, limit: int = 400, demo_only: bool = False) -> list[TestSession]:
@@ -106,10 +107,11 @@ def recompute(db: Session, ts: TestSession) -> dict:
     profile = db.get(CandidateProfile, ts.user_id)
     now = utcnow()
     sandbox = service.is_sandbox(profile)
-    current = profile.current_grade_id if profile.current_direction_id == ts.direction_id else None
+    specialization = ensure_specialization(db, profile, ts.direction_id)
+    current = specialization.grade_id
     before = (ts.result.get("engine_result") or {}).get("confirmed")
     outcome = apply_result(current, ts.claimed_grade_id, res.confirmed, now, sandbox,
-                           get_settings().grade_change_interval_days, profile.grade_locked_until)
+                           get_settings().grade_change_interval_days, specialization.locked_until)
     ts.theta, ts.theta_se = res.theta, res.se
     ts.score = res.correct / res.answered if res.answered else 0.0
     ts.result_grade_id = ts.claimed_grade_id if res.confirmed else ts.result_grade_id
@@ -117,14 +119,7 @@ def recompute(db: Session, ts: TestSession) -> dict:
                  "outcome": {"changed": outcome.changed, "grade": outcome.new_grade, "message": outcome.message}}
     flag_modified(ts, "result")
     if res.confirmed:
-        if outcome.changed:
-            db.add(GradeHistory(user_id=ts.user_id, direction_id=ts.direction_id, from_grade_id=current,
-                                to_grade_id=outcome.new_grade, reason=GradeChangeReason(outcome.reason),
-                                test_session_id=ts.id, locked_until=outcome.locked_until))
-            profile.current_direction_id = ts.direction_id
-            profile.current_grade_id = outcome.new_grade
-            profile.current_category_id = f"{ts.direction_id}.{outcome.new_grade}"
-            profile.grade_locked_until = outcome.locked_until
+        service.store_confirmed(db, profile, specialization, ts, res, outcome, current)
         service._write_t1_facts(db, ts, res)
         db.flush()
         refresh_rating(db, ts.user_id)
