@@ -11,6 +11,7 @@ import json
 
 from sqlalchemy import delete, select
 
+import app.models  # noqa: F401 — все модели: иначе в отдельном процессе тип created_by (FK на users) не определён
 from app.core.db import SessionLocal, get_engine, utcnow
 from app.integrations.vacancies.models import Vacancy
 from app.modules.profiles.models import Company
