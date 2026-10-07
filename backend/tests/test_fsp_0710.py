@@ -230,3 +230,57 @@ def test_demo_registry_sync_preserves_sandbox_identity(client):
     assert r.json()["identity_linked"] is False and r.json()["link_source"] == "demo"
     assert r.json()["rating"]["competitions"] == 1
     assert client.get("/api/me", headers=H(token)).json()["candidate"]["public_ref"] == before["candidate"]["public_ref"]
+
+
+def test_registry_http_adapter_authorization_and_identity(isettings, monkeypatch):
+    from app.modules.fsp import registry
+
+    isettings(FSP_REGISTRY_MODE="external", FSP_REGISTRY_BASE_URL="https://registry.example/v1", FSP_REGISTRY_TOKEN="test-only")
+    calls = []
+    def get(url, **kwargs):
+        calls.append((url, kwargs))
+        return httpx.Response(200, request=httpx.Request("GET", url), json=mock_passport("FSP-770012").model_dump(mode="json"))
+    monkeypatch.setattr(registry.httpx, "get", get)
+    assert registry.fetch_passport("FSP-770012").sport_rank == "КМС"
+    assert calls[0][0] == "https://registry.example/v1/participants/FSP-770012/achievements"
+    assert calls[0][1]["headers"]["Authorization"] == "Bearer test-only"
+    with pytest.raises(ValueError):
+        registry.fetch_passport("FSP-770013")
+
+
+def test_openapi_contract_matches_implementation():
+    import importlib.util
+    from pathlib import Path
+    import yaml
+
+    root = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location("fsp_export", root / "tools/export_fsp_registry_api.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert yaml.safe_load((root / "docs/fsp_registry_api.yaml").read_text()) == module.contract()
+
+
+def test_offer_requires_employer_ack(client):
+    token, employer, ref, payload = _youth(client)
+    client.patch("/api/me/candidate-profile", json={"age_group": "16-17", "parental_consent": True}, headers=H(token))
+    r = client.post("/api/employer/invitations", headers=H(employer), json={**payload, "employment_terms": {"format": "light_work", "reduced_time": True}})
+    assert r.status_code == 422 and r.json()["detail"]["code"] == "youth_offer_ack_required"
+
+
+def test_fsp_regression_public_report(client):
+    r = client.get("/api/validation/fsp-rating")
+    assert r.status_code == 200
+    report = r.json()
+    assert report["weights_changed"] is False and report["truth_changed"] is False
+    assert report["needs"] == 200 and report["candidates"] == 2000
+    assert report["metrics"]["ndcg@10"]["paired_ci95"][0] < 0 < report["metrics"]["ndcg@10"]["paired_ci95"][1]
+
+
+def test_external_provider_hides_demo_accounts_and_passport_note(client, isettings):
+    isettings(FSP_OIDC_ISSUER=ISSUER, FSP_ID_DEMO="false")
+    config = client.get("/api/fsp-id/config").json()
+    assert config["enabled"] and not config["demo"]
+    assert config["demo_accounts"] == [] and config["demo_password"] is None
+    token = register_and_verify(client)
+    passport = client.get("/api/me/fsp", headers=H(token)).json()
+    assert passport["keycloak_ready"] and "демо-стенд" not in passport["note"]
