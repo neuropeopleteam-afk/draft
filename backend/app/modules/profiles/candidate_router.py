@@ -256,6 +256,9 @@ def set_jury_mode(data: JuryIn, user: User = Depends(candidate), db: Session = D
 
 @router.get("/fsp", summary="Паспорт ФСП: статус связи и достижения (T2)", responses=AUTH)
 def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    from app.integrations.settings import get_isettings
+
+    integration = get_isettings()
     b = load_bundles(db, [user.id])[user.id]
     c = card(b, {}, include_hidden=True)
     return {
@@ -274,9 +277,10 @@ def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> di
         "registry_warning": (b.passport.raw or {}).get("registry_warning") if b.passport else None,
         "identity_linked": bool(user.fsp_subject),
         "registry_sync_available": bool(b.passport and (b.passport.raw or {}).get("fsp_id")),
-        "keycloak_ready": bool(get_settings().fsp_oidc_issuer),
-        "note": ("Свяжите профиль через ФСП ID (демо-стенд Keycloak, OIDC): достижения придут с уровнем T2. "
-                 if get_settings().fsp_oidc_issuer else
+        "keycloak_ready": integration.fsp_enabled,
+        "note": ((("Свяжите профиль через ФСП ID (демо-стенд Keycloak, OIDC)" if integration.fsp_id_demo
+                   else "Свяжите профиль через ФСП ID (OIDC)") + ": достижения придут с уровнем T2. ")
+                 if integration.fsp_enabled else
                  "Связь через ФСП ID (OIDC, Keycloak) появится после подключения реестра. ")
                 + "Без истории ФСП — нейтральное состояние: бонуса нет, штрафа нет.",
     }

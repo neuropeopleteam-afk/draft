@@ -68,8 +68,9 @@ def config() -> dict:
             "demo_accounts": [{"username": u, "title": DEMO_TITLES.get(u, "")}
                               for u in s.fsp_demo_accounts.split(",") if u.strip()] if s.fsp_enabled and s.fsp_id_demo else [],
             "demo_password": s.fsp_demo_password if s.fsp_enabled and s.fsp_id_demo else None,
-            "note": "Демонстрационный Keycloak с синтетическими участниками. Реальный ФСП ID подключается сменой "
-                    "issuer и секрета клиента (docs/FSP_INTEGRATION.md)."}
+            "note": ("Демонстрационный Keycloak с синтетическими участниками. Реальный ФСП ID подключается "
+                     "настройками (docs/FSP_INTEGRATION.md)." if s.fsp_id_demo else
+                     "Подключён настроенный OIDC-провайдер ФСП ID; демонстрационные учётные записи скрыты.")}
 
 
 class StartIn(BaseModel):
@@ -236,7 +237,8 @@ def complete(data: CompleteIn, db: Session = Depends(get_db)) -> dict:
         raise api_error(409, "email_taken", "Учётная запись с этой почтой уже есть: войдите паролем и свяжите "
                                             "ФСП ID в разделе «Паспорт ФСП»")
     u = User(email=email, password_hash=hash_password(secrets.token_urlsafe(32)), role=role,
-             is_email_verified=bool(c.get("email_verified")), email_verified_at=utcnow(),
+             is_email_verified=c.get("email_verified") is True,
+             email_verified_at=utcnow() if c.get("email_verified") is True else None,
              fsp_subject=identity_subject(c), last_login_at=utcnow())
     db.add(u)
     db.flush()
