@@ -112,6 +112,14 @@ class Settings(BaseSettings):
     assessment_express_max_items: int = 7
     assessment_express_item_time_s: int = 240
     assessment_express_max_minutes: int = 20
+    # За Senior экспресс длиннее (консилиум 07.10, решение 5): 7 заданий с лимитом 240 с не подтверждают Senior даже при
+    # всех верных (потолок θ̂ ≈ 1,4 при SE 0,7), а лимит 240 с отсекает трудные задания. 8–12 заданий с лимитом 360 с —
+    # «всё верно» даёт Senior, правило P ≥ 0,8 то же. Лимит сессии 45 мин — верхняя граница по рекомендуемому времени
+    # заданий (жюри при темпе 30–60 с отвечает за 8–12 мин); при 30 мин движок не успевал выдать 12 заданий
+    assessment_express_senior_min_items: int = 8
+    assessment_express_senior_max_items: int = 12
+    assessment_express_senior_item_time_s: int = 360
+    assessment_express_senior_max_minutes: int = 45
     # Песочницы жюри (свой набор персон у каждого эксперта): сверх лимита удаляются самые давние
     jury_sandboxes_max: int = 30
     # Запас готовых песочниц (создаются в фоне): первый вход эксперта — мгновенно, а не ~4 с создания
