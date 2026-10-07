@@ -156,6 +156,8 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
             eng.answer(st, it["token"], _answer_for(it, step, ok, rng), None, step=step,
                        signals={"focus_lost": 1 if away and step == 1 else 0, "hidden_ms": 25_000 if away and step == 1 else 0,
                                 "paste": 0, "paste_chars": 0})
+            if step < it["parts"] and str(step) in it["answers"]:  # шаги тоже занимают время (часы сервера)
+                it["answers"][str(step)]["at"] = it["issued_at"] + (time.time() - it["issued_at"]) * step / it["parts"]
     assessment._drain_outbox(db, ts)
     from sqlalchemy.orm.attributes import flag_modified
 

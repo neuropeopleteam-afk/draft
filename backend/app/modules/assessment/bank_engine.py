@@ -45,7 +45,7 @@ from assessment_bank.psychometrics import (CanaryDetector, CATConfig, CATSession
                                            decide, pool_from_specs, prob)
 from assessment_bank.registry import canary_published_seeds
 
-from app.modules.assessment import integrity
+from app.modules.assessment import ai_mark, integrity
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
 from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
 from app.modules.assessment.grader import grade_open
@@ -198,6 +198,12 @@ class BankEngine:
         sig = integrity.clean_signals(signals)
         if sig is not None:  # сигналы интерфейса (фокус, вставка) — копятся по шагам задания
             it["signals"] = integrity.merge_signals(it.get("signals"), sig)
+        if kind == "text" and it["format"] in ai_mark.FORMATS:  # сигналы сервера по развёрнутому ответу
+            if ai_mark.hit(value, it.get("ai_mark")):
+                it["ai_mark_hit"] = True
+            if integrity.fast_text(len(value.strip()), it["answers"][str(k)]["server_ms"]):
+                it["fast_text"] = {"chars": len(value.strip()), "server_ms": it["answers"][str(k)]["server_ms"]}
+            it["typing"] = integrity.typing_flags(it.get("signals"), len(value.strip()))
         if k < it["parts"]:
             return AnswerFeedback(True, n_done, self._total_est(state), False)
         self._score(it)
@@ -262,7 +268,9 @@ class BankEngine:
             "format": i["format"], "canary": i["canary"], "time_s": i.get("time_s"), "time_limit_s": i["time_limit_s"],
             "score": (float(np.mean([v for v in i["x"] if v is not None])) if any(v is not None for v in i["x"]) else None),
             "signals": i.get("signals"),
-            "injection": any((g or {}).get("error") == "prompt_injection_suspected" for g in i.get("grading") or [])}
+            "injection": any((g or {}).get("error") == "prompt_injection_suspected" for g in i.get("grading") or []),
+            "meta_claims": any("meta_claims" in ((g or {}).get("flags") or []) for g in i.get("grading") or []),
+            "ai_mark_hit": bool(i.get("ai_mark_hit")), "fast_text": bool(i.get("fast_text")), "typing": i.get("typing")}
             for i in done], pk)
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families,
@@ -382,6 +390,7 @@ class BankEngine:
             "key": v.answer_key.model_dump(include={"kind", "value", "accept"}),
             "rubric": v.rubric.model_dump() if v.rubric else None,
             "answers": {}, "x": [None] * spec.n_parts, "grading": [None] * spec.n_parts, "done": False,
+            "ai_mark": ai_mark.new_mark(spec.format) if self._settings().assessment_ai_mark else None,
         }
         state["items"].append(it)
         state["current"] = it["token"]
@@ -538,7 +547,8 @@ class BankEngine:
         c = state["cfg"]
         return ItemPublic(
             item_id=it["token"], position=it["position"], total=self._total_est(state), format=it["format"],
-            stem=it["public"]["stem"], options=self._step_options(it, k), code=it["public"]["code"],
+            stem=ai_mark.apply(it["public"]["stem"], it.get("ai_mark")), options=self._step_options(it, k),
+            code=it["public"]["code"],
             code_language=it["language"], time_limit_s=int(it["time_limit_s"]), skills=it["skills"],
             answer_kind=self._answer_kind(it, k), step=k if is_ob3 else None, steps_total=3 if is_ob3 else None,
             step_prompt=(steps[k - 1]["prompt"] if is_ob3 and len(steps) >= k else None),
