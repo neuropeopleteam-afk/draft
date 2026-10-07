@@ -61,10 +61,14 @@ def verify_file(data: SignedIn, request: Request, db: Session = Depends(get_db))
     kid = str(data.signature.get("kid") or data.passport.get("kid") or "")
     value = str(data.signature.get("value") or "")
     try:
-        document = crypto.canonical(data.passport).decode("utf-8")
+        forms = [f.decode("utf-8") for f in crypto.canonical_forms(data.passport)]
     except (TypeError, ValueError):
         raise api_error(422, "passport_invalid", "Файл не похож на паспорт: неверный JSON") from None
-    sig = service.verify_document(db, document, value, kid)
+    # канон; если не сошлось — канон первых паспортов (до замены 1.0 → 1)
+    document, sig = forms[0], service.verify_document(db, forms[0], value, kid)
+    for alt in forms[1:]:
+        if not sig["signature_valid"] and (alt_sig := service.verify_document(db, alt, value, kid))["signature_valid"]:
+            document, sig = alt, alt_sig
     pid = data.passport.get("id")
     reg = db.get(GradePassport, pid) if isinstance(pid, str) and 8 <= len(pid) <= 32 else None
     registry = service.evaluate(db, reg) if reg is not None else None

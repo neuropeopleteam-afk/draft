@@ -1,10 +1,13 @@
 """Ключи и подпись паспорта грейда: Ed25519 (cryptography), канонический JSON, JWK (RFC 8037), kid — отпечаток RFC 7638.
 
 Канонический вид (подписывается именно он, байт в байт):
-    json.dumps(claims, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
-В составе — только строки, целые, булевы, null и десятичные дроби с ≤ 3 знаками (θ, SE, доли): их кратчайшая запись
-одинакова в Python и JavaScript, поэтому паспорт можно проверить и не нашим кодом. Та же функция — в
-tools/passport/verify.py (без зависимостей от приложения); тест сверяет, что они совпадают.
+    json.dumps(claims, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8"),
+где дробь с нулевой дробной частью (1.0) сначала заменяется целым (1). В составе — только строки, целые, булевы, null
+и десятичные дроби с ≤ 3 знаками (θ, SE, доли): их кратчайшая запись одинакова в Python и JavaScript, а 1.0 и 1
+JavaScript (JSON.parse/JSON.stringify) не различает — поэтому файл, сохранённый браузером, jq или другим JSON-кодом,
+проверяется так же. Та же функция — в tools/passport/verify.py (без зависимостей от приложения); тест сверяет,
+что они совпадают. Паспорта, подписанные до этой замены (канон без неё, «1.0»), проверяются запасным
+canonical_legacy — при той же подписи и том же ключе.
 
 Ключ подписи — PASSPORT_SIGNING_KEY (base64url 32-байтного seed или PEM PKCS#8; генератор tools/passport/genkey.py).
 Без ключа (разработка, тесты) — эфемерный ключ процесса с пометкой «тестовый ключ» в паспорте и в JWK.
@@ -41,8 +44,30 @@ def b64u_dec(s: str) -> bytes:
     return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
 
 
-def canonical(obj) -> bytes:
+def _ints(v):
+    """1.0 → 1 во всей глубине: JSON-библиотеки браузера и многих языков не отличают целую дробь от целого."""
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
+    if isinstance(v, dict):
+        return {k: _ints(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_ints(x) for x in v]
+    return v
+
+
+def canonical_legacy(obj) -> bytes:
+    """Канон первых паспортов (до замены 1.0 → 1): только для проверки уже выданных, не для подписи."""
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def canonical(obj) -> bytes:
+    return canonical_legacy(_ints(obj))
+
+
+def canonical_forms(obj) -> list[bytes]:
+    """Чем проверять подпись файла: канон и, если отличается, канон первых паспортов."""
+    cur, old = canonical(obj), canonical_legacy(obj)
+    return [cur] if cur == old else [cur, old]
 
 
 def public_raw(pub: Ed25519PublicKey) -> bytes:

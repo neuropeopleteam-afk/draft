@@ -353,7 +353,8 @@ def public_view(db: Session, p: GradePassport) -> dict:
         "status": evaluate(db, p),
         "keys": [keys[p.kid]] if p.kid in keys else [],
         "verify_url": verify_url(p.id),
-        "canonicalization": "json.dumps(passport, ensure_ascii=False, sort_keys=True, separators=(',', ':'))",
+        "canonicalization": "json.dumps(passport, ensure_ascii=False, sort_keys=True, separators=(',', ':')), "
+                            "UTF-8; дробь с нулевой дробной частью (1.0) записывается как целое (1)",
     }
 
 
