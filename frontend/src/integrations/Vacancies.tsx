@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../components/CabinetLayout";
-import { Alert, Empty, Field, Level, Loading, Modal, Seg, Toggle, catTitle, dt, dtt, errText, range, useApi } from "../components/ui";
+import { Alert, Empty, Field, Level, Loading, Modal, Seg, Toggle, catTitle, dt, dtt, errText, rub, useApi } from "../components/ui";
+import { InlineThread } from "../components/Chat";
+import { BasisSeg, MarketNote, SalaryLine, otherBasis, salaryText, type Basis } from "../components/Salary";
 import { api, apiDownload, type Catalog } from "../lib/api";
 import { SusPrompt } from "./Sus";
 import { TrustBadge, TrustPanel, type Trust, type TrustShort } from "./Trust";
@@ -11,10 +13,10 @@ import { atsPushText } from "./Ats";
 
 export interface Vacancy {
   id: string; title: string; category_id: string | null; category_title: string | null; description: string;
-  stack: { tag: string; title: string }[]; salary_from: number; salary_to: number; work_format: string; city: string | null;
+  stack: { tag: string; title: string }[]; salary_from: number; salary_to: number; salary_basis?: Basis; work_format: string; city: string | null;
   status: "draft" | "published" | "closed"; published_at: string | null; updated_at: string; is_demo: boolean;
   company: { id: string; name: string; city: string | null; industry: string | null };
-  market_range: { from: number; to: number; median: number } | null;
+  market_range: { from: number; to: number; median: number | null } | null;
   trust?: TrustShort | Trust; applications?: { total: number; new: number };
   my_application?: { id: string; status: string; status_title: string };
 }
@@ -87,7 +89,7 @@ function VacancyList() {
                   {v.my_application && <AppStatus s={v.my_application.status} />}
                 </div>
                 <p className="text-sm text-brand-ink/65">{v.company.name}{v.city ? ` · ${v.city}` : ""} · {FORMAT[v.work_format]}</p>
-                <p className="text-lg font-extrabold text-brand-night">{range(v.salary_from, v.salary_to)}</p>
+                <p className="text-lg font-extrabold text-brand-night">{salaryText(v.salary_from, v.salary_to, v.salary_basis)}</p>
                 <div className="mt-auto flex flex-wrap items-center gap-2">
                   {v.category_title && <span className="rounded-full bg-[#F3F2FB] px-2.5 py-1 text-xs font-semibold text-brand-night">{v.category_title}</span>}
                   <TrustBadge t={v.trust} compact />
@@ -120,8 +122,8 @@ function VacancyModal({ v, onClose, onApplied }: { v: Vacancy | null; onClose: (
       {!d ? <Loading /> : (
         <div className="space-y-4 text-sm">
           <p className="text-brand-ink/65"><Link to={`/candidate/companies/${d.company.id}`} className="font-semibold text-brand hover:underline">{d.company.name}</Link>{d.company.industry ? ` · ${d.company.industry}` : ""}{d.city ? ` · ${d.city}` : ""} · {FORMAT[d.work_format]}</p>
-          <p className="text-2xl font-extrabold text-brand-night">{range(d.salary_from, d.salary_to)}</p>
-          {d.market_range && <p className="text-xs text-brand-ink/65">Рынок категории «{d.category_title}»: {range(d.market_range.from, d.market_range.to)} (Хабр Карьера)</p>}
+          <SalaryLine big from={d.salary_from} to={d.salary_to} basis={d.salary_basis} />
+          <MarketNote m={d.market_range} title={`Рынок категории «${d.category_title}»`} />
           <p className="whitespace-pre-line text-brand-ink/80">{d.description}</p>
           {d.stack.length > 0 && <div className="flex flex-wrap gap-1.5">{d.stack.map((s) => <span key={s.tag} className="rounded-full bg-brand-blush/50 px-2.5 py-1 text-xs font-semibold text-brand-plum">{s.title}</span>)}</div>}
           <TrustPanel t={d.trust} />
@@ -156,10 +158,14 @@ function MyApplications() {
       {data.map((a) => (
         <article key={a.id} className="card space-y-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
-            <div><p className="font-bold text-brand-night">{a.vacancy_title}</p><p className="text-sm text-brand-ink/65">{a.company.name} · {range(a.salary_from, a.salary_to)} · отклик {dt(a.created_at)}</p></div>
-            <AppStatus s={a.status} />
+            <div><p className="font-bold text-brand-night">{a.vacancy_title}</p><p className="text-sm text-brand-ink/65">{a.company.name} · {salaryText(a.salary_from, a.salary_to, a.salary_basis)} · отклик {dt(a.created_at)}</p></div>
+            <div className="flex flex-wrap items-center gap-2">
+              {a.thread?.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {a.thread.unread}</span>}
+              <AppStatus s={a.status} />
+            </div>
           </div>
           {a.employer_note && <p className="rounded-lg bg-[#F3F2FB] px-3 py-2 text-sm text-brand-night"><b>Ответ компании:</b> {a.employer_note}</p>}
+          <InlineThread kind="application" id={a.id} thread={a.thread} onUpdate={reload} who="с компанией" base="/candidate" />
           <Events items={a.events} />
           {["sent", "viewed"].includes(a.status) && <button className="btn-ghost" onClick={async () => { try { await api(`/candidate/applications/${a.id}/withdraw`, { method: "POST" }); void reload(); } catch (e) { setErr(errText(e)); } }}>Отозвать отклик</button>}
         </article>
@@ -170,7 +176,10 @@ function MyApplications() {
 
 // ------------------------------------------------------------------ работодатель
 
-const EMPTY = { title: "", category_id: "", description: "", stack: [] as string[], salary_from: "", salary_to: "", work_format: "any", city: "" };
+const EMPTY = { title: "", category_id: "", description: "", stack: [] as string[], salary_from: "", salary_to: "", salary_basis: "gross" as Basis, work_format: "any", city: "" };
+/** «До» не больше чем в 1,5 раза выше «от» — то же правило, что у приглашений, зондов и кубков (сервер: salary_range_too_wide). */
+const SALARY_MAX_RATIO = 1.5;
+const maxTo = (from: number) => Math.floor((from * SALARY_MAX_RATIO) / 1000) * 1000;
 
 export function EmployerVacancies() {
   const { data, loading, error, reload } = useApi<Vacancy[]>("/employer/vacancies");
@@ -196,11 +205,11 @@ export function EmployerVacancies() {
             <li key={v.id} className="card flex flex-wrap items-center justify-between gap-3">
               <div>
                 <p className="font-bold text-brand-night">{v.title} <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold ${v.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>{v.status === "published" ? "Опубликована" : v.status === "draft" ? "Черновик" : "Снята"}</span></p>
-                <p className="text-sm text-brand-ink/65">{v.category_title ?? "Без категории"} · {range(v.salary_from, v.salary_to)} · {FORMAT[v.work_format]}</p>
+                <p className="text-sm text-brand-ink/65">{v.category_title ?? "Без категории"} · {salaryText(v.salary_from, v.salary_to, v.salary_basis)} · {FORMAT[v.work_format]}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <button className="btn-primary" onClick={() => setApps(v)}>Отклики: {v.applications?.total ?? 0}{v.applications?.new ? ` (+${v.applications.new})` : ""}</button>
-                <button className="btn-ghost" onClick={() => setEdit({ id: v.id, title: v.title, category_id: v.category_id ?? "", description: v.description, stack: v.stack.map((s) => s.tag), salary_from: String(v.salary_from), salary_to: String(v.salary_to), work_format: v.work_format, city: v.city ?? "" })}>Изменить</button>
+                <button className="btn-primary" onClick={() => setApps(v)}>Отклики: {v.applications?.total ?? 0}{v.applications?.new ? ` (новых: ${v.applications.new})` : ""}</button>
+                <button className="btn-ghost" onClick={() => setEdit({ id: v.id, title: v.title, category_id: v.category_id ?? "", description: v.description, stack: v.stack.map((s) => s.tag), salary_from: String(v.salary_from), salary_to: String(v.salary_to), salary_basis: v.salary_basis ?? "gross", work_format: v.work_format, city: v.city ?? "" })}>Изменить</button>
                 {v.status === "published" ? <button className="btn-ghost" onClick={() => setStatus(v, "close")}>Снять</button> : <button className="btn-ghost" onClick={() => setStatus(v, "publish")}>Опубликовать</button>}
               </div>
             </li>
@@ -220,11 +229,14 @@ function VacancyForm({ init, catalog, onClose, onSaved }: { init: typeof EMPTY &
   const dirOf = f.category_id.split(".")[0];
   const stackOpts = (catalog?.stack_tags ?? []).filter((t) => !dirOf || !t.direction_id || t.direction_id === dirOf).slice(0, 60);
   const set = (k: keyof typeof EMPTY, v: any) => setF({ ...f, [k]: v });
+  const sf = Number(f.salary_from), st = Number(f.salary_to);
+  const wide = sf > 0 && st > sf * SALARY_MAX_RATIO;
   async function save(publish: boolean) {
     setErr(null);
-    if (!f.salary_from || !f.salary_to || Number(f.salary_from) <= 0 || Number(f.salary_to) <= 0) { setErr("Укажите вилку зарплаты «от» и «до» — это обязательно"); return; }
-    if (Number(f.salary_from) > Number(f.salary_to)) { setErr("Нижняя граница вилки больше верхней"); return; }
-    const body = { title: f.title, category_id: f.category_id || null, description: f.description, stack: f.stack, salary_from: Number(f.salary_from), salary_to: Number(f.salary_to), work_format: f.work_format, city: f.city || null };
+    if (!f.salary_from || !f.salary_to || sf <= 0 || st <= 0) { setErr("Укажите вилку зарплаты «от» и «до» — это обязательно"); return; }
+    if (sf > st) { setErr("Нижняя граница вилки больше верхней"); return; }
+    if (wide) { setErr(`Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от» (не выше ${rub(maxTo(sf))})`); return; }
+    const body = { title: f.title, category_id: f.category_id || null, description: f.description, stack: f.stack, salary_from: sf, salary_to: st, salary_basis: f.salary_basis, work_format: f.work_format, city: f.city || null };
     try {
       if (f.id) await api(`/employer/vacancies/${f.id}`, { method: "PATCH", body });
       else await api("/employer/vacancies", { body: { ...body, publish } });
@@ -241,11 +253,17 @@ function VacancyForm({ init, catalog, onClose, onSaved }: { init: typeof EMPTY &
           </select></Field>
           <Field label="Формат" htmlFor="vf"><select id="vf" className="input" value={f.work_format} onChange={(e) => set("work_format", e.target.value)}>{Object.entries(FORMAT).map(([k, t]) => <option key={k} value={k}>{t}</option>)}</select></Field>
         </div>
+        <div><p className="label">Сумма указана</p><BasisSeg value={f.salary_basis} onChange={(b) => set("salary_basis", b)} /></div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Вилка от, ₽ в месяц" htmlFor="vs1"><input id="vs1" type="number" min={1} step={5000} className="input" value={f.salary_from} onChange={(e) => set("salary_from", e.target.value)} /></Field>
           <Field label="Вилка до, ₽ в месяц" htmlFor="vs2"><input id="vs2" type="number" min={1} step={5000} className="input" value={f.salary_to} onChange={(e) => set("salary_to", e.target.value)} /></Field>
         </div>
-        {market && <p className="-mt-2 text-xs text-brand-ink/65">Рынок категории: {range(market.market_salary_from, market.market_salary_to)} (Хабр Карьера). Вилка сильно выше рынка снижает индекс доверия.</p>}
+        <p className={`-mt-2 text-xs ${wide ? "font-semibold text-brand-plum" : "text-brand-ink/65"}`}>
+          {wide ? `Вилка слишком широкая: при «от» ${rub(sf)} «до» — не выше ${rub(maxTo(sf))}.`
+            : sf > 0 && st >= sf ? `${otherBasis(sf, st, f.salary_basis)} · по шкале НДФЛ 13–22 %. «До» — не больше чем в 1,5 раза выше «от».`
+              : "«До» — не больше чем в 1,5 раза выше «от», как у приглашений."}
+        </p>
+        {market && <MarketNote m={{ from: market.market_salary_from, to: market.market_salary_to }} extra="Вилка сильно выше рынка снижает индекс доверия." />}
         <Field label="Город" htmlFor="vcity"><input id="vcity" className="input" value={f.city} onChange={(e) => set("city", e.target.value)} /></Field>
         <Field label="Описание" htmlFor="vdesc" hint="Задачи, команда, условия — от 20 символов"><textarea id="vdesc" className="input min-h-[120px]" value={f.description} onChange={(e) => set("description", e.target.value)} /></Field>
         {stackOpts.length > 0 && (
@@ -297,7 +315,10 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
                   <p className="font-bold text-brand-night">{a.contacts?.full_name || a.card.ref} <span className="font-normal text-brand-ink/65">· {a.card.category?.title ?? "без категории"}</span></p>
                   {a.contacts && <p className="text-brand-ink/70">{a.contacts.email}{a.contacts.phone ? ` · ${a.contacts.phone}` : ""}{a.contacts.telegram ? ` · ${a.contacts.telegram}` : ""}</p>}
                 </div>
-                <AppStatus s={a.status} />
+                <div className="flex flex-wrap items-center gap-2">
+                  {a.thread?.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {a.thread.unread}</span>}
+                  <AppStatus s={a.status} />
+                </div>
               </div>
               <ul className="space-y-1">
                 {a.card.test?.theta != null && <li className="flex items-center gap-2"><Level level="T1" /> Тест: {a.card.test.correct} из {a.card.test.answered} верно</li>}
@@ -316,6 +337,7 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
                   <div className="flex gap-2"><button className="btn-primary" onClick={() => decide(a, "accepted")}>Пригласить на интервью</button><button className="btn-ghost" onClick={() => decide(a, "rejected")}>Отказать</button></div>
                 </div>
               )}
+              <InlineThread kind="application" id={a.id} thread={a.thread} onUpdate={reload} />
               <Events items={a.events} />
             </article>
           ))}

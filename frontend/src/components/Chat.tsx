@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { Alert, Loading, dtt, errText } from "./ui";
 
@@ -15,12 +16,14 @@ export const messagesChanged = () => window.dispatchEvent(new Event(MESSAGES_CHA
 
 const MASK = "[контакт скрыт до принятия приглашения]";
 
-function Body({ text }: { text: string }) {
+function Body({ text, mine }: { text: string; mine: boolean }) {
   const parts = text.split(MASK);
+  // пометка читается и на тёмном пузыре своих сообщений, и на белом — чужих
+  const mask = mine ? "bg-white/20 text-white" : "bg-brand-night/10 text-brand-plum";
   return (
     <p className="whitespace-pre-line break-words">
       {parts.map((p, i) => (
-        <span key={i}>{p}{i < parts.length - 1 && <span className="rounded bg-brand-night/10 px-1 text-[0.85em] font-semibold text-brand-plum">контакт скрыт</span>}</span>
+        <span key={i}>{p}{i < parts.length - 1 && <span className={`rounded px-1 text-[0.85em] font-semibold ${mask}`} title="Телефон, почта или ссылка на мессенджер скрыты до принятия приглашения">контакт скрыт</span>}</span>
       ))}
     </p>
   );
@@ -89,7 +92,7 @@ export function Thread({ kind, id, compact, onUpdate }: { kind: ThreadKind; id: 
           <div key={m.id} className={`flex ${m.mine ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm ${m.mine ? "rounded-br-md bg-brand-night text-white" : "rounded-bl-md bg-white text-brand-ink"}`}>
               <p className={`mb-0.5 text-[11px] font-semibold ${m.mine ? "text-white/70" : "text-brand-plum"}`}>{m.mine ? "Вы" : other}</p>
-              <Body text={m.body} />
+              <Body text={m.body} mine={m.mine} />
               <p className={`mt-1 text-right text-[11px] ${m.mine ? "text-white/60" : "text-brand-ink/50"}`}>
                 {dtt(m.at)}{m.mine ? (m.read_at ? " · прочитано" : " · не прочитано") : ""}
               </p>
@@ -110,6 +113,26 @@ export function Thread({ kind, id, compact, onUpdate }: { kind: ThreadKind; id: 
         </div>
       ) : t.reason && <Alert kind="info">{t.reason}</Alert>}
       <Alert>{err}</Alert>
+    </div>
+  );
+}
+
+/** Переписка в карточке приглашения или отклика: свёрнута, число непрочитанных рядом, ссылка на раздел «Сообщения». */
+export function InlineThread({ kind, id, thread, onUpdate, who = "с кандидатом", base = "/employer" }: {
+  kind: ThreadKind; id: string; thread?: { total: number; unread: number } | null; onUpdate?: () => void; who?: string; base?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const t = thread ?? { total: 0, unread: 0 };
+  return (
+    <div>
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" className="text-sm font-semibold text-brand-plum hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
+          {open ? "Скрыть переписку" : `Переписка ${who}`}{!open && t.total ? ` (${t.total})` : ""}
+        </button>
+        {t.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых: {t.unread}</span>}
+        <Link className="text-xs font-semibold text-brand hover:underline" to={`${base}/messages?t=${kind}:${id}`}>Открыть в «Сообщениях»</Link>
+      </div>
+      {open && <div className="mt-3"><Thread compact kind={kind} id={id} onUpdate={onUpdate} /></div>}
     </div>
   );
 }

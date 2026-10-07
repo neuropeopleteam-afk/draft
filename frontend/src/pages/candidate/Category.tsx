@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, range, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, signed, useApi } from "../../components/ui";
+import { MarketNote } from "../../components/Salary";
 import { api } from "../../lib/api";
 
 const REASON: Record<string, string> = { initial: "Первое присвоение", retest_up: "Пересдача на грейд выше", retest_down: "Пересдача на грейд ниже", sandbox: "Демо-режим жюри", admin: "Администратор" };
@@ -36,10 +37,10 @@ export default function Category() {
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Текущая категория</p>
           <p className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night">{catTitle(c.category_id)}</p>
           {c.category_id ? (
-            <p className="mt-2 text-sm text-brand-ink/70">
-              {c.rank ? <>Место в категории: <b>{c.rank}</b> из {c.category_size}. </> : null}
-              Рынок категории: {range(c.market_range?.from, c.market_range?.to)}.
-            </p>
+            <div className="mt-2 space-y-1 text-sm text-brand-ink/70">
+              {c.rank ? <p>Место в категории: <b>{c.rank}</b> из {c.category_size}.</p> : null}
+              <MarketNote m={c.market_range} />
+            </div>
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTIONS[s.survey_direction] ?? "—"}.</p>}
         </div>
         <div className="rounded-xl bg-brand-blush/30 p-4 text-sm">

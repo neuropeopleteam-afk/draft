@@ -51,13 +51,19 @@ export function SalaryLine({ from, to, basis, big }: { from?: number | null; to?
   );
 }
 
-/** Рыночный диапазон с пометкой источника и основания. */
-export function MarketNote({ m, title = "Рынок категории", extra }: { m?: { from: number; to: number; median?: number | null } | null; title?: string; extra?: string }) {
+/** Источник рыночных диапазонов (docs/SALARY_SOURCES.md): калькулятор Хабр Карьеры отдаёт суммы на руки. */
+export const MARKET_SOURCE = "калькулятор зарплат Хабр Карьеры, 25–75-й перцентиль, 05.10.2026";
+
+/** Рыночный диапазон с пометкой основания («на руки») и источника; short — одной строкой для карточек в списках. */
+export function MarketNote({ m, title = "Рынок категории", extra, short }: {
+  m?: { from: number; to: number; median?: number | null } | null; title?: string; extra?: string; short?: boolean;
+}) {
   if (!m) return null;
+  if (short) return <p className="text-xs text-brand-ink/65" title={`Источник: ${MARKET_SOURCE}; суммы на руки`}>{title}: {range(m.from, m.to)} на руки (Хабр Карьера, 05.10.2026)</p>;
   return (
     <p className="text-xs text-brand-ink/65">
       {title}: {range(m.from, m.to)} на руки{m.median ? `, медиана ${rub(m.median)}` : ""}{" "}
-      <span className="whitespace-nowrap">({otherBasis(m.from, m.to, "net")})</span>. Источник: калькулятор зарплат Хабр Карьеры, 25–75-й перцентиль, 05.10.2026.{extra ? ` ${extra}` : ""}
+      <span className="whitespace-nowrap">({otherBasis(m.from, m.to, "net")})</span>. Источник: {MARKET_SOURCE}.{extra ? ` ${extra}` : ""}
     </p>
   );
 }

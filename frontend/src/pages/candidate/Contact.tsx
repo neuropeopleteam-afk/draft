@@ -71,7 +71,7 @@ export function Invitations() {
             {open.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Работодатель этот минимум не видит.</Alert>}
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>
             <p><b>Способ связи:</b> {open.contact_method}</p>
-            <InvitationTrust invitationId={open.id} />
+            <InvitationTrust invitationId={open.id} version={`${open.status}:${open.complaint?.at ?? ""}`} />
             {open.evidence?.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-night">На чём основано приглашение</p>
