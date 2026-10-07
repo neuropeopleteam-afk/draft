@@ -140,4 +140,21 @@ def summary_for_employer(integ: dict | None) -> dict | None:
     if not integ:
         return None
     return {"level": integ.get("level"), "title": integ.get("title") or LEVEL_TITLES.get(integ.get("level", ""), ""),
-            "reasons": list(integ.get("reasons") or [])[:5]}
+            "reasons": list(integ.get("reasons") or [])[:5],
+            **({"camera": integ["camera"]} if integ.get("camera") else {})}  # итог камеры по согласию (И16)
+
+
+def add_reasons(integ: dict, extra: list[tuple[int, str]], **attach: Any) -> dict:
+    """Сигналы отдельных модулей (камера по согласию — app/modules/proctor) в общую достоверность: баллы
+    складываются, причины добавляются, уровень — по тем же порогам (≥ 3 — низкая, 1–2 — средняя). attach —
+    сводки модулей для работодателя (camera=…). Как и сигналы интерфейса, только понижают достоверность."""
+    out = {**integ, **attach}
+    pts = sum(p for p, _ in extra if p > 0)
+    if pts:
+        base = int(integ.get("points") or 0)
+        points = base + pts
+        level = "low" if points >= 3 else "medium" if points >= 1 else "high"
+        out.update(points=points, level=level, title=LEVEL_TITLES[level],
+                   reasons=(list(integ.get("reasons") or []) if base else [])
+                   + [t for p, t in sorted(extra, key=lambda x: -x[0]) if p > 0])
+    return out
