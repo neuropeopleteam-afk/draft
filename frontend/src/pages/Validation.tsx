@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import MatchingBench from "../components/MatchingBench";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
@@ -6,6 +6,7 @@ import { api } from "../lib/api";
 import { CompetitorConditions, ExposureNote, LeakShareTable, RetestSection, SimConditions } from "../components/validation/StabilityBlocks";
 import { useAuth } from "../lib/auth";
 import { juryToken } from "../lib/jury";
+import { useHashScroll } from "../lib/hashScroll";
 import { useMeta } from "../lib/meta";
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
@@ -15,9 +16,7 @@ const sgn = (v?: number | null) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}
 /** «Как мы проверяем себя»: метрики теста, банка и подбора — как получились — и «Красная кнопка» жюри. */
 export default function Validation() {
   const { data: r, error, loading } = useApi<any>("/validation/report", []);
-  useEffect(() => {
-    if (r && location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
-  }, [r]);
+  useHashScroll(!!r);  // блоки ниже отчёта (бенчмарк) догружаются позже — якорь держится, пока страница растёт
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
       <SiteHeader />
@@ -52,7 +51,7 @@ function Report({ r }: { r: any }) {
       </nav>
 
       <Section id="bank" title="Банк заданий и калибровка">
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           <Kpi label="Семейств заданий" value={r.bank?.n_families} hint={`версия ${r.bank?.content_hash ?? "—"}`} />
           <Kpi label="Вариантов проверено" value={r.bank?.validator?.n_variants_generated} hint={`${r.bank?.validator?.n_unique_variants} уникальных · 20 seed на семейство`} />
           <Kpi label="Проверок ключей и инвариантов" value={r.bank?.validator?.n_checks} hint={`ошибок: ${r.bank?.validator?.n_checks_failed}`} />
@@ -103,7 +102,7 @@ function Report({ r }: { r: any }) {
         <Table head={["Способ", "precision@5", "nDCG@5", "nDCG@10", "Внутри категории: nDCG@3"]}
           rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["BM25 по тексту резюме и потребности", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
             [t, num(m.summary?.["p@5"]?.[k]), num(m.summary?.["ndcg@5"]?.[k]), num(m.summary?.["ndcg@10"]?.[k]), num(m.summary?.["within_category_ndcg@3"]?.[k])])} />
-        <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Бонус ФСП на общую точность не влияет, внутри категории немного помогает. Пересчёт по оценкам экспертов-тимлидов — в разделе <a href="#experts" className="font-semibold text-brand-plum underline">«Экспертная разметка»</a>.</p>
+        <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Бонус ФСП на общую точность не влияет, внутри категории немного помогает. Пересчёт по экспертной разметке — в разделе <a href="#experts" className="font-semibold text-brand-plum underline">«Экспертная разметка»</a>.</p>
         <p className="mt-1 text-xs text-brand-ink/65">Пары и метки: docs/validation/matching_pairs.json</p>
       </Section>
       <MatchingBench />
@@ -111,7 +110,7 @@ function Report({ r }: { r: any }) {
       {r.experts && <ExpertsSection ex={r.experts} />}
 
       <Section id="live" title="Живые данные платформы">
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
           <Kpi label="Тестов банка завершено" value={live.bank_sessions_finished} hint={`всего сессий: ${live.sessions_total}`} />
           <Kpi label="Достоверность высокая / средняя / низкая" value={`${live.integrity?.high ?? 0} / ${live.integrity?.medium ?? 0} / ${live.integrity?.low ?? 0}`} />
           <Kpi label="Срабатываний детектора предзнания" value={live.preknowledge_flagged} />
@@ -164,12 +163,12 @@ function RedButton({ attacks }: { attacks: any[] }) {
                   </select>
                 </label>
               )}
-              <button className="btn mt-4 bg-brand px-4 text-white hover:bg-brand-soft disabled:opacity-60" disabled={!!busy} onClick={() => run(a.id)}>
+              <button className="btn mt-4 bg-brand-strong px-4 text-white hover:bg-brand-deep disabled:opacity-60" disabled={!!busy} onClick={() => run(a.id)}>
                 {busy === a.id ? (a.id === "leak_bank" ? "Симулируем…" : "Атакуем…") : x ? "Запустить ещё раз" : "Запустить атаку"}
               </button>
               {x && (
                 <div className="mt-4 rounded-xl bg-white p-4 text-sm text-brand-ink" role="status">
-                  <p className={`inline-flex rounded-md px-2 py-0.5 text-xs font-bold ${x.violated === false ? "bg-emerald-100 text-emerald-800" : x.violated ? "bg-brand text-white" : "bg-gray-100 text-gray-600"}`}>
+                  <p className={`inline-flex rounded-md px-2 py-0.5 text-xs font-bold ${x.violated === false ? "bg-emerald-100 text-emerald-800" : x.violated ? "bg-brand-strong text-white" : "bg-gray-100 text-gray-600"}`}>
                     {x.violated === false ? "Свойство выполнено" : x.violated ? "Свойство нарушено" : "Проверка не проведена"}
                   </p>
                   <p className="mt-2 leading-relaxed"><b>Факт:</b> {x.fact}</p>
@@ -208,16 +207,32 @@ const pv = (p?: number | null) => (p == null ? "—" : p < 0.001 ? "< 0,001" : n
 const STATE: Record<string, string> = { waiting: "bg-[#F3F2FB] text-brand-night", partial: "bg-brand-blush text-brand-plum", ready: "bg-emerald-100 text-emerald-800" };
 const TASK_T: Record<string, string> = { A: "A · пары, общая оценка 0–3", B: "B · ответы, общая оценка 0–3", B_weighted: "B · ответы, сумма критериев", C: "C · Ангофф, доли решивших" };
 
+/** Кто разметил (поле source раздела): люди, языковая модель в ролях экспертов или смешанная панель. */
+const WHO: Record<string, { lead: string; coder: string }> = {
+  people: { lead: "Эксперты-практики, которые нанимают (тимлиды и сеньоры), размечают вслепую в кабинете эксперта (вход по персональной ссылке)", coder: "Эксперт" },
+  model: { lead: "Разметка по экспертному протоколу — вслепую, в том же кабинете эксперта, что и у людей", coder: "Прогон" },
+  mixed: { lead: "Разметку по экспертному протоколу выполняют {who} — вслепую, в кабинете эксперта", coder: "Участник" },
+};
+type Source = { kind: string; title: string; model_panel?: boolean; caption?: string | null };
+
 function ExpertsSection({ ex }: { ex: any }) {
   const st = ex.status ?? {};
   const pk = ex.pack;
+  const src = ex.source as Source | null | undefined;
+  // флаг панели: вся разметка — прогоны модели (подпись исчезает, как только в панели появятся люди)
+  const modelPanel = !!ex.model_panel;
+  const who = WHO[src?.kind ?? "people"] ?? WHO.people;
   return (
     <Section id="experts" title="Экспертная разметка: подбор, модель-оценщик, пороги грейдов"
-      lead="Тимлиды и сеньоры размечают вслепую в кабинете эксперта (вход по персональной ссылке): соответствие пар «потребность — кандидат» 0–3, ответы на открытые задания по рубрике, пороги грейдов методом Ангоффа. Ранги, баллы и пометки системы скрыты, порядок перемешан. Здесь те же метрики пересчитываются по их оценкам. Оценки демо-эксперта жюри в расчёт не входят.">
+      lead={`${who.lead.replace("{who}", src?.title ?? "")}: соответствие пар «потребность — кандидат» 0–3, ответы на открытые задания по рубрике, пороги грейдов методом Ангоффа. Ранги, баллы и пометки системы скрыты, порядок перемешан. Здесь те же метрики пересчитываются по этой разметке. Оценки демо-эксперта жюри в расчёт не входят.`}>
       <div className="card flex flex-wrap items-start gap-4">
         <span className={`rounded-full px-3 py-1 text-sm font-bold ${STATE[st.state] ?? STATE.waiting}`}>{st.title ?? "Ожидает экспертов"}</span>
-        <p className="min-w-[16rem] flex-1 text-sm leading-relaxed text-brand-ink/80">{st.text}</p>
+        <div className="min-w-[16rem] flex-1 text-sm leading-relaxed text-brand-ink/80">
+          <p>{st.text}</p>
+          {src && !modelPanel && <p className="mt-1 text-brand-ink/70">Источник разметки: {src.title}.</p>}
+        </div>
       </div>
+      {modelPanel && src?.caption && <div className="mt-4" data-testid="experts-model-caption"><Alert kind="info"><b>Модельная панель. </b>{src.caption}</Alert></div>}
       {pk && (
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <Kpi label="A · пары «потребность — кандидат»" value={pk.A_pairs} hint={`${pk.A_needs} потребностей · ${pk.plan?.A}`} />
@@ -227,12 +242,12 @@ function ExpertsSection({ ex }: { ex: any }) {
       )}
       {ex.panel?.length > 0 && (
         <div className="mt-4">
-          <Table head={["Эксперт", "A · пары", "B · ответы", "C · Ангофф", "Последняя активность", "Проверка"]}
+          <Table head={[who.coder, "A · пары", "B · ответы", "C · Ангофф", "Последняя активность", "Проверка"]}
             rows={ex.panel.map((p: any) => [p.code, ...["A", "B", "C"].map((k) => `${p.progress[k].done} из ${p.progress[k].total}`), dtt(p.last_seen_at),
-              p.uniform?.length ? `одинаковые оценки во всём блоке ${p.uniform.join(", ")} — уточнить у эксперта` : "замечаний нет"])} />
+              p.uniform?.length ? `одинаковые оценки во всём блоке ${p.uniform.join(", ")} — ${p.source === "model" ? "проверить разметку" : "уточнить у эксперта"}` : "замечаний нет"])} />
         </div>
       )}
-      {ex.labels > 0 ? <ExpertResults res={ex} /> : (
+      {ex.labels > 0 ? <ExpertResults res={ex} kind={modelPanel ? "model" : src?.kind} /> : (
         <p className="mt-4 text-sm text-brand-ink/70">Пока оценок нет, ниже — проверка расчёта на синтетической разметке: те же формулы, заложенная истина, сверка.</p>
       )}
       {!ex.llm && ex.llm_without_experts && <div className="mt-4"><LlmTable llm={ex.llm_without_experts} note="Оценки моделей получены, согласие появится после разметки ответов экспертами." /></div>}
@@ -242,7 +257,7 @@ function ExpertsSection({ ex }: { ex: any }) {
           <p className="mt-2 text-sm text-brand-ink/70">Синтетика — не результат. Три «эксперта» с назначениями E1–E3: пары = разметка по правилам + шум, ответы — по замыслу автора + шум, доли Ангоффа — из заложенных порогов θ 0,2 и 1,15 (нарочно не равны текущим), две синтетические модели-оценщика — точная и поддающаяся инструкции в ответе.</p>
           <ul className="mt-3 space-y-1 text-sm">
             {ex.synthetic_check.checks.map((c: any) => (
-              <li key={c.what} className="flex flex-wrap gap-2"><span className={`rounded px-1.5 text-xs font-bold ${c.ok ? "bg-emerald-100 text-emerald-800" : "bg-brand text-white"}`}>{c.ok ? "сходится" : "не сходится"}</span>{c.what}: заложено {String(c.planted).replace(".", ",")}, получено {String(c.got ?? "—").replace(".", ",")}</li>
+              <li key={c.what} className="flex flex-wrap gap-2"><span className={`rounded px-1.5 text-xs font-bold ${c.ok ? "bg-emerald-100 text-emerald-800" : "bg-brand-strong text-white"}`}>{c.ok ? "сходится" : "не сходится"}</span>{c.what}: заложено {String(c.planted).replace(".", ",")}, получено {String(c.got ?? "—").replace(".", ",")}</li>
             ))}
           </ul>
           <ExpertResults res={ex.synthetic_check} />
@@ -252,7 +267,13 @@ function ExpertsSection({ ex }: { ex: any }) {
   );
 }
 
-function ExpertResults({ res }: { res: any }) {
+function ExpertResults({ res, kind = "people" }: { res: any; kind?: string }) {
+  const people = kind === "people";
+  const model = kind === "model";  // модельная панель: согласие прогонов, консенсус модели, Ангофф справочно
+  const by = people ? "по оценкам экспертов" : model ? "по разметке модельной панели" : "по экспертной разметке";
+  const T = people ? { agree: "Межэкспертное согласие", coders: "Экспертов", vs: "против экспертов", per: "По экспертам", ref: "эталона экспертов" }
+    : model ? { agree: "Согласие прогонов модели", coders: "Прогонов", vs: "против консенсуса модельной панели", per: "По прогонам", ref: "консенсуса модельной панели" }
+    : { agree: "Согласие между участниками разметки", coders: "Участников", vs: "против экспертной разметки", per: "По участникам", ref: "эталона разметки" };
   const m = res.matching;
   const s = m?.summary;
   const ag = res.agreement ?? {};
@@ -260,7 +281,7 @@ function ExpertResults({ res }: { res: any }) {
     <div className="mt-6 space-y-6">
       {m && (
         <div>
-          <h3 className="text-base font-bold text-brand-night">Качество подбора по оценкам экспертов</h3>
+          <h3 className="text-base font-bold text-brand-night">Качество подбора {by}</h3>
           <p className="mt-1 text-sm text-brand-ink/70">Размечено пар {m.pairs_labeled} из {m.pairs_total}, полностью — {m.needs_complete} из {m.needs_total} потребностей{m.ratings_per_pair ? `, в среднем ${num(m.ratings_per_pair, 1)} оценки на пару` : ""}. Релевантна пара с медианной оценкой от 2. В скобках — 95 % ДИ (бутстреп по потребностям).</p>
           {s ? (
             <>
@@ -268,7 +289,7 @@ function ExpertResults({ res }: { res: any }) {
                 rows={[["Подборка платформы", "platform"], ["BM25 по тексту резюме и потребности", "bm25"], ["Случайный порядок по всей базе", "random"], ["Для сравнения: платформа по разметке по правилам", "rules_platform"], ["Для сравнения: BM25 по разметке по правилам", "rules_bm25"]]
                   .map(([t, k]) => [t, ci(s["p@5"][k]), ci(s["ndcg@5"][k])])} /></div>
               <p className="mt-2 text-sm text-brand-ink/75">Платформа − BM25: precision@5 {ci(s["p@5"].diff_platform_bm25)}, p = {pv(s["p@5"].diff_platform_bm25.wilcoxon_p)}; nDCG@5 {ci(s["ndcg@5"].diff_platform_bm25)}, p = {pv(s["ndcg@5"].diff_platform_bm25.wilcoxon_p)} (знаковый критерий Уилкоксона по потребностям).
-                {m.vs_rules && ` Совпадение эталона экспертов с разметкой по правилам: κ = ${num(m.vs_rules.kappa)} (${m.vs_rules.level}), одинаково «релевантна / нет» — ${pct(m.vs_rules.relevant_agree)}.`}</p>
+                {m.vs_rules && ` Совпадение ${T.ref} с разметкой по правилам: κ = ${num(m.vs_rules.kappa)} (${m.vs_rules.level}), одинаково «релевантна / нет» — ${pct(m.vs_rules.relevant_agree)}.`}</p>
               <p className="mt-1 text-xs text-brand-ink/65">Топ-5 платформы и BM25 размечены полностью; идеальный DCG — по всем размеченным кандидатам пула (топы обоих способов и случайные), поэтому nDCG сопоставим между способами. Случайный порядок — оценка по всей базе: объединение топов размечено целиком, остальное — по случайной выборке.</p>
             </>
           ) : <div className="mt-3"><Alert kind="info">Ни одна потребность ещё не размечена полностью — метрики появятся, когда все пары хотя бы одной потребности получат оценки.</Alert></div>}
@@ -276,40 +297,44 @@ function ExpertResults({ res }: { res: any }) {
       )}
       {(ag.A || ag.B) && (
         <div>
-          <h3 className="text-base font-bold text-brand-night">Межэкспертное согласие</h3>
-          <div className="mt-3"><Table head={["Задание", "Экспертов", "Объектов с 2+ оценками", "κ попарно, среднее", "α Криппендорфа [95 % ДИ]", "Вывод"]}
+          <h3 className="text-base font-bold text-brand-night">{T.agree}</h3>
+          {model && res.agreement_caveat && <p className="mt-1 text-sm font-semibold text-brand-plum" data-testid="experts-agreement-caveat">κ и α ниже — {res.agreement_caveat}.</p>}
+          <div className="mt-3"><Table head={["Задание", T.coders, "Объектов с 2+ оценками", "κ попарно, среднее", "α Криппендорфа [95 % ДИ]", "Вывод"]}
             rows={["A", "B", "B_weighted", "C"].filter((k) => ag[k]?.coders).map((k) => {
               const a = ag[k];
-              return [TASK_T[k], a.coders, a.units_multi, a.kappa_mean == null ? "—" : `${num(a.kappa_mean)} (${a.kappa_level})`, a.alpha == null ? "—" : `${num(a.alpha)} [${num(a.alpha_ci?.lo)}; ${num(a.alpha_ci?.hi)}]`, a.alpha_verdict ?? "—"];
+              const note = model && res.agreement_caveat ? " *" : "";
+              return [TASK_T[k], a.coders, a.units_multi, a.kappa_mean == null ? "—" : `${num(a.kappa_mean)} (${a.kappa_level})${note}`, a.alpha == null ? "—" : `${num(a.alpha)} [${num(a.alpha_ci?.lo)}; ${num(a.alpha_ci?.hi)}]${note}`, a.alpha_verdict ?? "—"];
             })} /></div>
-          <p className="mt-2 text-xs text-brand-ink/65">κ — квадратично взвешенная каппа Коэна на общих объектах (≥ 0,61 — существенное согласие по Ландису — Коху), α — порядковая для оценок 0–3 и интервальная для долей (≥ 0,80 — надёжно, 0,667–0,80 — только предварительные выводы). Контрольные ответы в согласие не входят{ag.B_controls?.injection ? `; инструкцию проверяющему отметили ${ag.B_controls.injection.flagged} из ${ag.B_controls.injection.n} оценок, копию эталона — ${ag.B_controls.copy?.flagged ?? 0} из ${ag.B_controls.copy?.n ?? 0}` : ""}.</p>
+          <p className="mt-2 text-xs text-brand-ink/65">{model ? `* ${res.agreement_caveat ?? "прогоны одной модели коррелированы"} — шкала надёжности для людей (α ≥ 0,80) к ним не применяется. ` : ""}κ — квадратично взвешенная каппа Коэна на общих объектах{model ? "" : " (≥ 0,61 — существенное согласие по Ландису — Коху)"}, α — порядковая для оценок 0–3 и интервальная для долей{model ? "" : " (≥ 0,80 — надёжно, 0,667–0,80 — только предварительные выводы)"}. Контрольные ответы в согласие не входят{ag.B_controls?.injection ? `; инструкцию проверяющему отметили ${ag.B_controls.injection.flagged} из ${ag.B_controls.injection.n} оценок, копию эталона — ${ag.B_controls.copy?.flagged ?? 0} из ${ag.B_controls.copy?.n ?? 0}` : ""}.</p>
         </div>
       )}
       <div>
-        <h3 className="text-base font-bold text-brand-night">Модель-оценщик открытых ответов против экспертов</h3>
-        {res.llm ? <div className="mt-3"><LlmTable llm={res.llm} /></div>
+        <h3 className="text-base font-bold text-brand-night">Модель-оценщик открытых ответов {T.vs}</h3>
+        {res.llm ? <div className="mt-3"><LlmTable llm={res.llm} panel={model ? "модельной панели" : undefined} /></div>
           : <div className="mt-3"><Alert kind="info">Оценки моделей на ответах пакета ещё не получены (команда <code>python -m app.modules.experts llm-grade</code>, нужен LLM). Без LLM ответы оценивает эксперт — запасной путь.</Alert></div>}
       </div>
       {res.angoff && (
         <div>
-          <h3 className="text-base font-bold text-brand-night">Пороги грейдов: Ангофф против текущих</h3>
-          <p className="mt-1 text-sm text-brand-ink/70">Для каждого эксперта и границы — θ, при котором ожидаемая доля решивших по модели теста (2PL, параметры заданий) совпадает с его оценками; порог — среднее по экспертам. Оценок: {res.angoff.judgements}, экспертов: {res.angoff.coders}.</p>
-          <div className="mt-3"><Table head={["Граница", "Сейчас θ", "Ангофф θ ± SE", "Разница", "По экспертам", "Разброс по семействам", "Сдвиг доли кандидатов", "Вывод"]}
+          <h3 className="text-base font-bold text-brand-night">Пороги грейдов: Ангофф против текущих{res.angoff.reference_only ? ` — ${res.angoff.note}` : ""}</h3>
+          {res.angoff.reference_only && <p className="mt-1 text-sm font-semibold text-brand-plum">Справочно, модельная панель: доли решивших оценены прогонами модели, текущие пороги не меняются.</p>}
+          <p className="mt-1 text-sm text-brand-ink/70">Для каждого {model ? "прогона" : "эксперта"} и границы — θ, при котором ожидаемая доля решивших по модели теста (2PL, параметры заданий) совпадает с его оценками; порог — среднее по {model ? "прогонам" : "экспертам"}. Оценок: {res.angoff.judgements}, {model ? "прогонов" : "экспертов"}: {res.angoff.coders}.</p>
+          <div className="mt-3"><Table head={["Граница", "Сейчас θ", "Ангофф θ ± SE", "Разница", T.per, "Разброс по семействам", "Сдвиг доли кандидатов", "Вывод"]}
             rows={res.angoff.boundaries.map((b: any) => [b.title, num(b.current), `${num(b.angoff)}${b.se != null ? ` ± ${num(b.se)}` : ""}`, sgn(b.delta), (b.per_expert ?? []).map((x: number) => num(x)).join(" · "), num(b.family_sd), pct(b.population_shift, 1),
-              b.replace_suggested == null ? "нужно 2+ эксперта" : b.replace_suggested ? "предложить новый порог" : "оставить текущий"])} /></div>
-          <p className="mt-2 text-xs text-brand-ink/65">«Предложить новый порог» — когда разница больше стандартной ошибки среднего по экспертам. Сдвиг доли — сколько кандидатов при стандартном нормальном распределении уровня сменили бы грейд. Порог меняет владелец после разбора, автоматически не меняется.</p>
+              res.angoff.reference_only ? "справочно, модельная панель" : b.replace_suggested == null ? "нужно 2+ эксперта" : b.replace_suggested ? "предложить новый порог" : "оставить текущий"])} /></div>
+          <p className="mt-2 text-xs text-brand-ink/65">{res.angoff.reference_only ? "Для экспертов-людей «предложить новый порог» — когда разница больше стандартной ошибки среднего; для модельной панели вывод не делается." : "«Предложить новый порог» — когда разница больше стандартной ошибки среднего по экспертам."} Сдвиг доли — сколько кандидатов при стандартном нормальном распределении уровня сменили бы грейд. Порог меняет владелец после разбора, автоматически не меняется.</p>
         </div>
       )}
     </div>
   );
 }
 
-function LlmTable({ llm, note }: { llm: any; note?: string }) {
+/** panel — с чем сравнивается модель-оценщик, если разметка не людей («модельной панели»). */
+function LlmTable({ llm, note, panel }: { llm: any; note?: string; panel?: string }) {
   return (
     <>
-      <Table head={["Модель", "Прогонов", "κ с консенсусом экспертов", "κ с экспертами, среднее", "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
+      <Table head={["Модель", "Прогонов", panel ? `κ с консенсусом ${panel}` : "κ с консенсусом экспертов", panel ? "κ с прогонами панели, среднее" : "κ с экспертами, среднее", panel ? "κ между прогонами панели" : "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
         rows={llm.models.map((x: any) => [x.model, x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), x.injection_ok == null ? "—" : x.injection_ok ? "не повлияла" : "подняла балл", x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
-      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). Допустима, если согласие с экспертами не хуже межэкспертного минус 0,1, разброс между прогонами не больше 0,5 балла и инструкция в контрольном ответе не подняла балл. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
+      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). ${panel ? `Сравнение — с консенсусом ${panel} (прогоны модели, не люди), поэтому вывод справочный. ` : ""}Допустима, если согласие с ${panel ? "панелью" : "экспертами"} не хуже ${panel ? "согласия её прогонов" : "межэкспертного"} минус 0,1, разброс между прогонами не больше 0,5 балла и инструкция в контрольном ответе не подняла балл. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
     </>
   );
 }
@@ -326,9 +351,9 @@ function Section({ id, title, lead, children }: { id: string; title: string; lea
 
 function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="card">
+    <div className="card min-w-0 break-words p-4 sm:p-6">
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-lavender">{label}</p>
-      <p className="mt-2 text-2xl font-extrabold text-brand-night">{value ?? "—"}</p>
+      <p className="mt-2 text-xl font-extrabold text-brand-night sm:text-2xl">{value ?? "—"}</p>
       {hint && <p className="mt-1 text-xs text-brand-ink/65">{hint}</p>}
     </div>
   );

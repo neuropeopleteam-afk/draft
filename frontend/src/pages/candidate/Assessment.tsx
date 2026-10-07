@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, num, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, num, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { FeedbackSummary } from "./Feedback";
@@ -89,7 +89,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         {STEPS.map((s, i) => (
           <li key={s}>
             <button type="button" onClick={() => i < step && setStep(i)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === step ? "bg-brand text-white" : i < step ? "bg-brand-blush text-brand-plum" : "bg-gray-100 text-gray-500"}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === step ? "bg-brand-strong text-white" : i < step ? "bg-brand-blush text-brand-plum" : "bg-gray-100 text-gray-500"}`}>
               {i + 1}. {s}
             </button>
           </li>
@@ -462,7 +462,7 @@ function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; o
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
-      <div className="card mt-4 text-sm text-brand-ink/75">{r.explanation}</div>
+      <div className="card mt-4 text-sm text-brand-ink/75">{ruText(r.explanation)}</div>
       {r.details?.n_scored != null && (
         <p className="mt-3 text-xs text-brand-ink/65">
           Оценено заданий: {r.details.n_scored}{r.details.n_canaries ? ` (+ ${r.details.n_canaries} контрольных, в оценку не входят)` : ""}

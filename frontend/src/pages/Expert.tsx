@@ -84,7 +84,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
             <div className="mt-2 flex flex-wrap gap-2" role="radiogroup" aria-label={`Оценка: ${c.description}`}>
               {MARKS.map((m) => (
                 <button key={m.v} type="button" role="radio" aria-checked={marks[c.id] === m.v}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${marks[c.id] === m.v ? "border-brand bg-brand text-white" : "border-brand-night/15 text-brand-ink hover:border-brand/50"}`}
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium ${marks[c.id] === m.v ? "border-brand-strong bg-brand-strong text-white" : "border-brand-night/15 text-brand-ink hover:border-brand/50"}`}
                   onClick={() => setMarks({ ...marks, [c.id]: m.v })}>{m.t}</button>))}
             </div>
           </div>

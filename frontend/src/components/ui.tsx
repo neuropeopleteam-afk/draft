@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { ApiError, api } from "../lib/api";
 
 /** Неразрывный пробел: между числом и «₽»/«%», внутри «220 000». */
@@ -20,6 +20,12 @@ export const ruText = (s?: string | null) => (s ?? "")
 /** Доля → проценты: 0.953 → «95 %». */
 export const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${num(v * 100, d)}${NB}%`);
 export const dt = (s?: string | null) => (s ? new Date(s).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "—");
+/** Дата без времени (ГГГГ-ММ-ДД) — без сдвига часового пояса браузера: «6 октября 2026 г.». */
+export function dateOnly(v?: string | null): string {
+  const m = v ? /^(\d{4})-(\d{2})-(\d{2})/.exec(v) : null;
+  if (!m) return dt(v ?? undefined);
+  return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+}
 export const dtt = (s?: string | null) => (s ? new Date(s).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—");
 export const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Не удалось связаться с сервером");
 
@@ -50,7 +56,7 @@ export function useApi<T>(path: string | null, deps: unknown[] = []) {
 
 const LEVEL_STYLE: Record<string, string> = {
   T2: "bg-brand-night text-white",
-  T1: "bg-[#E0004C] text-white",  // brand чуть темнее: белый 12 px на #FF0053 — 3,9 : 1
+  T1: "bg-brand-strong text-white",  // brand чуть темнее: белый 12 px на #FF0053 — 3,9 : 1
   T0: "bg-brand-blush text-brand-plum",
   none: "bg-gray-100 text-gray-600",
 };
@@ -154,7 +160,7 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
 
 export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="card">
+    <div className="card min-w-0 break-words">
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
       <p className="mt-2 text-xl font-bold tabular-nums text-brand-night">{value}</p>
       {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
@@ -208,11 +214,22 @@ export function History({ items }: { items: { status: string; at: string; by?: s
   );
 }
 
+/** Переключатель (radiogroup): в группе одна остановка Tab, выбор — стрелками, Home и End (как у радиокнопок). */
 export function Seg<T extends string>({ value, onChange, options, label }: { value: T; onChange: (v: T) => void; options: { id: T; title: string }[]; label: string }) {
+  const cur = Math.max(0, options.findIndex((o) => o.id === value));
+  function onKey(e: ReactKeyboardEvent<HTMLDivElement>) {
+    const step: Record<string, number> = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+    const n = options.length;
+    const i = e.key === "Home" ? 0 : e.key === "End" ? n - 1 : e.key in step ? (cur + step[e.key] + n) % n : -1;
+    if (i < 0 || !n) return;
+    e.preventDefault();
+    onChange(options[i].id);
+    (e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="radio"]')[i])?.focus();
+  }
   return (
-    <div className="inline-flex flex-wrap gap-1 rounded-xl bg-brand-blush/40 p-1" role="radiogroup" aria-label={label}>
-      {options.map((o) => (
-        <button key={o.id} type="button" role="radio" aria-checked={value === o.id} onClick={() => onChange(o.id)}
+    <div className="inline-flex flex-wrap gap-1 rounded-xl bg-brand-blush/40 p-1" role="radiogroup" aria-label={label} onKeyDown={onKey}>
+      {options.map((o, i) => (
+        <button key={o.id} type="button" role="radio" aria-checked={value === o.id} tabIndex={i === cur ? 0 : -1} onClick={() => onChange(o.id)}
           className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${value === o.id ? "bg-white text-brand-night shadow-sm" : "text-brand-plum/80 hover:text-brand-plum"}`}>
           {o.title}
         </button>
