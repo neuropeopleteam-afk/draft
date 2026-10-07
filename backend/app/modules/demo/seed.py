@@ -1,4 +1,8 @@
-"""Демо-данные для показа жюри: 150 кандидатов (по 10 в каждой из 15 категорий), 10 работодателей, 15 потребностей.
+"""Демо-данные: 500 кандидатов, 10 работодателей, 15 потребностей.
+
+Исходные 150 кандидатов и их идентификаторы сохраняются; extend_candidates добавляет только 151..500.
+Обе аудитории: школьники/студенты ФСП и опытные специалисты. Все результаты — синтетическое демо,
+не доказательство прохождения реального банка по Kotlin, C#, PHP или Kubernetes.
 
 Все записи помечены как демо: users.is_demo / companies.is_demo, почты на зарезервированном домене *.invalid
 (письма туда не уходят и уйти не могут), паспорта ФСП — link_source=demo («демо-реестр»), результаты тестов —
@@ -135,13 +139,14 @@ def _user(db: Session, email: str, role: UserRole, pwd_hash: str) -> User:
     return u
 
 
-def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade: str, pwd_hash: str, with_fsp: bool):
+def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade: str, pwd_hash: str, with_fsp: bool,
+               *, core_override: list[str] | None = None, audience: str | None = None):
     u = _user(db, f"demo-candidate-{idx:03d}@demo.invalid", UserRole.candidate, pwd_hash)
     female = rnd.random() < 0.35
     last = rnd.choice(LAST) + ("а" if female else "")
     name = f"{rnd.choice(FIRST_F if female else FIRST_M)} {last}"
     exp = round(rnd.uniform(*EXP[grade]), 1)
-    core = CORE[direction]
+    core = core_override or CORE[direction]
     k = {"junior": 4, "middle": 6, "senior": 8}[grade]
     stack = list(dict.fromkeys(core[:3] + rnd.sample(core[3:], min(len(core) - 3, k - 2))))[:k]
     roles = ["developer" if direction != "qa" else "tester"]
@@ -161,6 +166,11 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
         headline=f"{direction} · {grade} (демо)",
     )
     db.add(p)
+    if audience:
+        p.about = {"school": "Школьник, участник ФСП. Учебные проекты и соревнования (синтетическое демо).",
+                   "student": "Студент, участник ФСП. Стажировка и командные проекты (синтетическое демо).",
+                   "professional": "Опытный ИТ-специалист. Коммерческие проекты (синтетическое демо)."}[audience]
+        p.privacy = {"demo_audience": audience}
     db.flush()
     created = utcnow() - timedelta(days=rnd.randint(5, 80))
     survey = SurveyResponse(user_id=u.id, direction_id=direction, claimed_grade_id=grade, experience_years=exp,
@@ -199,6 +209,10 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     for t in tested:
         total = rnd.randint(2, 4)
         corr = max(0, min(total, int(round(total * min(1.0, 0.45 + 0.25 * (theta - CUT[grade]) + rnd.uniform(-0.2, 0.25))))))
+        # New dictionary entries broaden T0, not the actual assessment bank's coverage.
+        # Consume RNG identically, but do not invent confirmation for unsupported new tags.
+        if audience and t in {"kotlin", "csharp", "php", "kubernetes"}:
+            continue
         db.add(CandidateFact(user_id=u.id, kind="skill", key=t, title=STACK[t][0],
                              value={"score": round(corr / total, 2), "correct": corr, "total": total},
                              evidence_level=EvidenceLevel.T1, source=FactSource.test,
@@ -222,6 +236,40 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
                                   verified=True, source_ref="demo-registry"))
     db.flush()
     refresh_rating(db, u.id)
+    return p
+
+
+def extend_candidates(db: Session, rng_seed: int = 20261007) -> dict:
+    """Idempotent append, no reads/updates/deletes of original 001..150 profiles."""
+    existing = set(db.scalars(select(User.email).where(User.email.like("demo-candidate-%@demo.invalid"))))
+    pwd_hash = hash_password(secrets.token_urlsafe(24))
+    backends = [
+        ["go", "postgresql", "grpc", "kafka", "docker", "kubernetes", "redis", "git"],
+        ["java", "kafka", "postgresql", "docker", "kubernetes", "grpc", "redis", "git"],
+        ["kotlin", "postgresql", "kafka", "java", "docker", "kubernetes", "grpc", "git"],
+        ["csharp", "postgresql", "rest-api", "kafka", "docker", "kubernetes", "redis", "git"],
+        ["php", "postgresql", "redis", "docker", "kafka", "kubernetes", "http", "git"],
+        CORE["backend"],
+    ]
+    added, audiences = 0, {"school": 0, "student": 0, "professional": 0}
+    for idx in range(151, 501):
+        if f"demo-candidate-{idx:03d}@demo.invalid" in existing:
+            continue
+        rnd = random.Random(rng_seed + idx)
+        offset = idx - 151
+        # 120 backend + 230 spread over remaining four directions.
+        direction = "backend" if offset < 120 else DIRECTIONS[1 + (offset - 120) % 4]
+        grade = GRADES[(offset // 5) % 3]
+        audience = ("school" if offset % 4 == 0 else "student") if grade == "junior" else "professional"
+        core = backends[offset % len(backends)] if direction == "backend" else CORE[direction]
+        _candidate(db, rnd, idx, direction, grade, pwd_hash, audience != "professional" or offset % 3 == 0,
+                   core_override=core, audience=audience)
+        audiences[audience] += 1
+        added += 1
+        if added % 50 == 0:
+            db.flush()
+    db.flush()
+    return {"added": added, "total": len(existing) + added, "audiences_added": audiences}
 
 
 def seed(db: Session, rng_seed: int = 20261006) -> dict:
@@ -236,6 +284,8 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
                 idx += 1
                 _candidate(db, rnd, idx, d, g, pwd_hash, fsp_flags[i])
             db.commit()
+    extension = extend_candidates(db)
+    db.commit()
     employers = []
     for i, (name, industry, city) in enumerate(COMPANIES, start=1):
         u = _user(db, f"demo-employer-{i:02d}@demo.invalid", UserRole.employer, pwd_hash)
@@ -260,7 +310,7 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
     db.commit()
     fsp = db.scalar(select(func.count()).select_from(FspPassport).join(User, User.id == FspPassport.user_id)
                     .where(User.is_demo.is_(True)))
-    return {"candidates": idx, "with_fsp": fsp, "employers": len(employers), "needs": len(NEEDS)}
+    return {"candidates": idx + extension["added"], "with_fsp": fsp, "employers": len(employers), "needs": len(NEEDS)}
 
 
 def main() -> None:
@@ -270,14 +320,16 @@ def main() -> None:
     a = ap.parse_args()
     get_engine()
     with SessionLocal() as db:
-        exists = db.scalar(select(func.count()).select_from(User).where(User.is_demo.is_(True))) or 0
+        exists = db.scalar(select(func.count()).select_from(User)
+                           .where(User.email.like("demo-candidate-%@demo.invalid"))) or 0
         if a.reset or a.delete:
             print(f"Удалено демо-пользователей: {delete_demo(db)}")
             exists = 0
         if a.delete:
             return
         if exists:
-            print(f"Демо-данные уже есть ({exists} пользователей). Для пересоздания: --reset")
+            print(extend_candidates(db))
+            db.commit()
             return
         print(seed(db))
 

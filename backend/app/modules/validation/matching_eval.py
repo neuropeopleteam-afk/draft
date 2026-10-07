@@ -28,7 +28,7 @@ from sqlalchemy.orm import Session
 
 from app.modules.catalog.seed_data import GRADE_LEVEL
 from app.modules.matching.need_parser import parse_need
-from app.modules.matching.ranking import WEIGHTS, score_candidate
+from app.modules.matching.ranking import ALGORITHM_VERSION, WEIGHTS, requirement_priority, score_candidate
 from app.modules.profiles.facts import Bundle, load_bundles
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 
@@ -141,7 +141,7 @@ def pick_set(bundles: list[Bundle], req: dict, rnd: random.Random) -> list[Bundl
 METHODS = ("platform", "platform_no_fsp", "bm25", "keywords", "random")
 
 
-def evaluate(db: Session, needs: list[str], seed: int = 20261006) -> dict:
+def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_order: bool = True) -> dict:
     rnd = random.Random(seed)
     profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.current_category_id.is_not(None))).all()
     bundles = sorted(load_bundles(db, [p.user_id for p in profiles]).values(),
@@ -170,11 +170,14 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006) -> dict:
             s0, comps, _ = sc[b.profile.user_id]
             return s0 - WEIGHTS["fsp"] * comps["fsp"]
 
+        def must_priority(b):
+            return 0 if baseline_order else requirement_priority(b, req)
+
         kw_rng, bm_rng = random.Random(seed + qi), random.Random(seed + 1000 + qi)
         order = {
-            "platform": sorted(cand, key=lambda b: (in_cat(b), -sc[b.profile.user_id][0], -(b.profile.rating_score or 0),
+            "platform": sorted(cand, key=lambda b: (in_cat(b), must_priority(b), -sc[b.profile.user_id][0], -(b.profile.rating_score or 0),
                                                     b.profile.public_ref or "")),
-            "platform_no_fsp": sorted(cand, key=lambda b: (in_cat(b), -no_fsp(b), b.profile.public_ref or "")),
+            "platform_no_fsp": sorted(cand, key=lambda b: (in_cat(b), must_priority(b), -no_fsp(b), b.profile.public_ref or "")),
             "bm25": sorted(cand, key=lambda b: (-bm25.score(b.profile.user_id, text), bm_rng.random())),
             "keywords": sorted(cand, key=lambda b: (-keyword_score(b, req), kw_rng.random())),
         }
@@ -215,7 +218,8 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006) -> dict:
     summary = {m: {k: round(sum(v) / len(v), 3) for k, v in agg[m].items()} for m in agg}
     summary["within_category_ndcg@3"] = {k: round(sum(v) / len(v), 3) if v else None for k, v in within.items()}
     summary["within_category_needs"] = len(within["platform"])
-    return {"n_needs": len(needs), "set_size": K_SET, "n_pairs": len(pairs),
+    return {"algorithm": ALGORITHM_VERSION if baseline_order else "experiment-mandatory-gaps",
+            "n_needs": len(needs), "n_pool": len(bundles), "set_size": K_SET, "n_pairs": len(pairs),
             "relevant_share": round(sum(1 for p in pairs if p["label"] >= 2) / max(len(pairs), 1), 3),
             "methods": {"platform": "Подборка платформы", "platform_no_fsp": "Платформа без бонуса ФСП",
                         "bm25": "BM25 по тексту резюме и потребности", "keywords": "Совпадение тегов заявленного стека",

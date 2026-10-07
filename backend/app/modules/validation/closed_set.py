@@ -71,6 +71,8 @@ class Candidate(Strict):
     theta: float | None = Field(None, ge=-5, le=5)
     se: float = Field(0.4, gt=0, le=3)
     work_format: Literal["office", "hybrid", "remote", "any"] = "any"
+    city: str | None = Field(None, max_length=100)
+    relocation: bool = False
     skills: list[Skill] = Field(default_factory=list, max_length=80)
     declared_stack: list[str] = Field(default_factory=list, max_length=80)
     achievements: list[Achievement] = Field(default_factory=list, max_length=30)
@@ -115,6 +117,12 @@ class Upload(Strict):
     content: str = Field(min_length=1, max_length=2_000_000)
     k: int = Field(5, ge=1, le=50)
 
+    @model_validator(mode="after")
+    def byte_limit(self):
+        if len(self.content.encode("utf-8")) > 2_000_000:
+            raise ValueError("Файл не должен превышать 2 МБ")
+        return self
+
 
 def decode(data: Upload) -> Dataset:
     try:
@@ -150,7 +158,8 @@ def bundle(c: Candidate) -> Bundle:
     uid = uuid.uuid5(uuid.NAMESPACE_URL, "closed-set:" + c.id)
     p = CandidateProfile(user_id=uid, public_ref=c.id, current_direction_id=c.direction,
                          current_grade_id=c.grade, current_category_id=f"{c.direction}.{c.grade}",
-                         work_format=WorkFormat(c.work_format), privacy={}, roles=[])
+                         work_format=WorkFormat(c.work_format), city=c.city, relocation=c.relocation,
+                         privacy={}, roles=[])
     b = Bundle(profile=p)
 
     def fact(kind, key, value, level=EvidenceLevel.T1):
@@ -232,7 +241,8 @@ def checked(data: Upload, user: User) -> dict:
 
 
 @router.post("/evaluate", summary="Подбор на закрытом JSON/CSV-наборе, без сохранения")
-def run(data: Upload, user: User = Depends(authorized)):
+def run(data: Upload, response: Response, user: User = Depends(authorized)):
+    response.headers["Cache-Control"] = "no-store"
     return checked(data, user)
 
 
@@ -281,7 +291,7 @@ def template(format: Literal["json", "csv"]):
         content, mime = json.dumps(TEMPLATE, ensure_ascii=False, indent=2), "application/json"
     else:
         out = io.StringIO()
-        fields = ["kind", "id", "text", "direction", "grade", "theta", "se", "work_format", "skills",
+        fields = ["kind", "id", "text", "direction", "grade", "theta", "se", "work_format", "city", "relocation", "skills",
                   "declared_stack", "achievements", "probe_score", "need_id", "candidate_id", "relevance"]
         writer = csv.DictWriter(out, fieldnames=fields)
         writer.writeheader()
