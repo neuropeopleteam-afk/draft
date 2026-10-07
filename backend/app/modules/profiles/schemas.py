@@ -34,6 +34,7 @@ class CandidateProfileOut(_ORM):
     roles: list = Field(default_factory=list)
     fsp_id_claimed: str | None = None
     jury_mode: bool = False
+    specializations: list[dict] = Field(default_factory=list)
 
 
 class CandidateProfileUpdate(BaseModel):

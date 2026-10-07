@@ -31,8 +31,13 @@ SALARY_MAX_RATIO = 1.5
 
 
 def profile_by_ref(db: Session, ref: str) -> CandidateProfile:
+    from app.modules.profiles.models import CandidateSpecialization
+
     p = db.scalar(select(CandidateProfile).where(CandidateProfile.public_ref == ref))
-    if p is None or not p.visible_to_employers or not p.current_category_id:
+    has_category = p and (p.current_category_id or db.scalar(select(CandidateSpecialization.category_id).where(
+        CandidateSpecialization.user_id == p.user_id, CandidateSpecialization.category_id.is_not(None),
+        CandidateSpecialization.status.in_(["confirmed", "provisional"])).limit(1)))
+    if p is None or not p.visible_to_employers or not has_category:
         raise api_error(404, "candidate_not_found", "Кандидат не найден или скрыл профиль")
     return p
 
@@ -278,4 +283,3 @@ def review_probe(db: Session, p: Probe, verdict: str, comment: str | None) -> Pr
 def below_minimum(profile: CandidateProfile, salary_to: int) -> bool:
     """Видно только кандидату: верх вилки ниже его скрытого минимума."""
     return bool(profile.salary_min_hidden and salary_to < profile.salary_min_hidden)
-
