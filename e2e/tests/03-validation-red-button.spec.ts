@@ -73,6 +73,35 @@ test("/validation: бенчмарк со скрытой истиной, усло
     }
     await expect(experts.getByRole("group").filter({ hasText: /^Проверка расчёта на синтетической разметке · пройдена/ })).toBeVisible();
   });
+  await test.step("экспертная разметка: честная подпись источника (люди или прогоны модели)", async () => {
+    const experts = page.locator("section#experts");
+    const ex = (await (await page.request.get("/api/validation/report")).json()).experts ?? {};
+    const caption = experts.getByTestId("experts-model-caption");
+    if (!ex.model_panel) {
+      // панель людей (или смешанная) — модельной подписи и пометок модельной панели нет
+      await expect(caption).toHaveCount(0);
+      await expect(experts.getByTestId("experts-agreement-caveat")).toHaveCount(0);
+      if (ex.source?.title) await expect(experts.getByText(`Источник разметки: ${ex.source.title}.`, { exact: true })).toBeVisible();
+      if (ex.source?.kind === "people" && ex.labels > 0 && ex.agreement?.A) {
+        await expect(experts.getByRole("heading", { level: 3, name: "Межэкспертное согласие", exact: true }).first()).toBeVisible();
+      }
+      return;
+    }
+    // вся панель — прогоны модели: подпись, пояснение к κ/α, нейтральный вывод, Ангофф справочно
+    await expect(caption).toContainText(`Разметка выполнена моделью ${ex.source.models[0]}`);
+    await expect(caption).toContainText("это проверка конвейера и методики, а не замена экспертной панели");
+    await expect(experts.getByText(/тимлиды и сеньоры/)).toHaveCount(0);
+    if (ex.labels > 0 && ex.agreement?.A) {
+      await expect(experts.getByTestId("experts-agreement-caveat")).toContainText("согласие завышено: прогоны одной модели коррелированы");
+      await expect(experts.getByRole("cell", { name: "надёжно", exact: true })).toHaveCount(0);
+      await expect(experts.getByRole("cell", { name: "согласие прогонов модели", exact: true }).first()).toBeVisible();
+    }
+    if (ex.llm) await expect(experts.getByRole("heading", { level: 3, name: /против консенсуса модельной панели$/ })).toBeVisible();
+    if (ex.angoff) {
+      await expect(experts.getByRole("heading", { level: 3, name: /Ангофф против текущих — справочно, модельная панель$/ })).toBeVisible();
+      await expect(experts.getByRole("cell", { name: "предложить новый порог", exact: true })).toHaveCount(0);
+    }
+  });
 });
 
 test("«Красная кнопка»: шесть атак, ожидаемые свойства выполнены", async ({ page }) => {
