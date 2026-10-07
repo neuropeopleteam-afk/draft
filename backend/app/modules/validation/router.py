@@ -29,6 +29,7 @@ from app.modules.validation import attacks
 
 router = APIRouter(prefix="/api/validation", tags=["validation"])
 REPORT = Path(__file__).resolve().parent / "data" / "report.json"
+INTERN_CUT = Path(__file__).resolve().parent / "data" / "intern_cut.json"
 # Лимиты «Красной кнопки» (на воркер): 12 атак в минуту на пользователя, 90 в минуту всего
 _per_user = SlidingWindow(12, 60)
 _global = SlidingWindow(90, 60)
@@ -39,6 +40,20 @@ def _report() -> dict:
     if not REPORT.exists():
         return {"missing": True}
     return json.loads(REPORT.read_text(encoding="utf-8"))
+
+
+@lru_cache(maxsize=1)
+def _intern_cut() -> dict:
+    """Обоснование порога Стажёра (пересчёт: python -m app.modules.validation.intern_cut) — без сырых строк."""
+    if not INTERN_CUT.exists():
+        return {"missing": True}
+    d = json.loads(INTERN_CUT.read_text(encoding="utf-8"))
+    from app.modules.assessment.intern_pool import intern_pool_summary
+    from app.modules.catalog.seed_data import GRADE_CUTS
+
+    return {k: d.get(k) for k in ("generated_at", "n_per_theta", "candidate_cuts", "rule", "config", "by_cut",
+                                  "with_easy_families", "retest", "chosen", "current_bank_rule", "pool")} | {
+        "cut_in_use": GRADE_CUTS["intern"], "pool_now": {d_: intern_pool_summary(d_) for d_ in d.get("directions", [])}}
 
 
 def _live(db: Session) -> dict:
@@ -68,7 +83,8 @@ def _live(db: Session) -> dict:
 def report(db: Session = Depends(get_db)):
     from app.modules.experts.section import section as experts_section
 
-    return {**_report(), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db)}
+    return {**_report(), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db),
+            "intern_cut": _intern_cut()}
 
 
 class AttackIn(BaseModel):

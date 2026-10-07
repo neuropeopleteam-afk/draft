@@ -47,7 +47,7 @@ class CriterionIn(BaseModel):
 class CupIn(BaseModel):
     title: str = Field(min_length=3, max_length=200)
     description: str = Field(min_length=20, max_length=5000, description="Суть кубка — видна до старта")
-    category_id: str = Field(pattern=r"^(backend|frontend|data_ml|qa|security)\.(junior|middle|senior)$")
+    category_id: str = Field(pattern=r"^(backend|frontend|data_ml|qa|security)\.(intern|junior|middle|senior)$")
     mode: Literal["auto", "rubric", "employer"] = "auto"
     task_text: str | None = Field(None, max_length=8000, description="Задача (rubric/employer) — после старта")
     rubric: list[CriterionIn] | None = Field(None, min_length=2, max_length=5)

@@ -20,8 +20,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from app.core.db import as_aware
-
-GRADE_LEVEL = {"junior": 1, "middle": 2, "senior": 3}
+from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES
 
 
 @dataclass
@@ -94,15 +93,15 @@ def apply_result(current_grade: str | None, claimed_grade: str, confirmed: bool,
     if not confirmed:
         if current_grade:
             return GradeOutcome(False, current_grade, None, current_lock,
-                                f"Подтверждённый грейд {current_grade.capitalize()} сохранён: принудительного понижения нет.")
+                                f"Подтверждённый грейд {GRADES.get(current_grade, current_grade)} сохранён: принудительного понижения нет.")
         return GradeOutcome(False, None, None, None, "Категория пока не присвоена — можно пройти тест на грейд ниже.")
     if current_grade is None:
         return GradeOutcome(True, claimed_grade, "sandbox" if sandbox else "initial", lock,
-                            f"Присвоен грейд {claimed_grade.capitalize()}.")
+                            f"Присвоен грейд {GRADES.get(claimed_grade, claimed_grade)}.")
     if current_grade == claimed_grade:
         return GradeOutcome(False, current_grade, None, current_lock,
-                            f"Грейд {claimed_grade.capitalize()} подтверждён повторно, результат обновлён.")
+                            f"Грейд {GRADES.get(claimed_grade, claimed_grade)} подтверждён повторно, результат обновлён.")
     up = GRADE_LEVEL[claimed_grade] > GRADE_LEVEL[current_grade]
     reason = "sandbox" if sandbox else ("retest_up" if up else "retest_down")
     return GradeOutcome(True, claimed_grade, reason, lock,
-                        f"Грейд изменён: {current_grade.capitalize()} → {claimed_grade.capitalize()}.")
+                        f"Грейд изменён: {GRADES.get(current_grade, current_grade)} → {GRADES.get(claimed_grade, claimed_grade)}.")

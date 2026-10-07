@@ -35,7 +35,7 @@ from app.core.legal import CONSENT_VERSION
 from app.core.security import hash_password
 from app.modules.assessment.models import GradeHistory, SurveyResponse, SurveyStackTag, TestSession
 from app.modules.auth.models import Consent, User
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import GRADE_CUTS, STACK
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.matching import ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
@@ -45,9 +45,15 @@ from app.modules.profiles.models import CandidateFact, CandidateProfile, Company
 from app.modules.profiles.refs import new_public_ref
 
 DIRECTIONS = ["backend", "frontend", "data_ml", "qa", "security"]
-GRADES = ["junior", "middle", "senior"]
-CUT = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
-EXP = {"junior": (0.5, 1.9), "middle": (2.0, 4.9), "senior": (5.0, 11.0)}
+GRADES = ["junior", "middle", "senior"]  # 150 исходных демо-кандидатов (по 10 на категорию); их состав не меняется
+CUT = GRADE_CUTS
+EXP = {"intern": (0.0, 0.4), "junior": (0.5, 1.9), "middle": (2.0, 4.9), "senior": (5.0, 11.0)}
+# Стажёры — новые демо-кандидаты поверх исходных 150 (отдельный поток случайности, номера с 151)
+INTERN_PER_DIRECTION = 2
+INTERN_NEEDS = [
+    (6, "Стажёр frontend без опыта: HTML/CSS, JavaScript, основы Git; обучим React. Томск, офис, стипендия 40–60 тыс."),
+    (3, "Стажировка backend для студентов: Python, SQL, Git. Без опыта, наставник в команде. Казань или удалённо."),
+]
 CORE = {
     "backend": ["python", "postgresql", "fastapi", "django", "redis", "docker", "rest-api", "kafka", "go", "java",
                 "asyncio", "sql", "git", "linux", "rabbitmq", "grpc"],
@@ -146,7 +152,7 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     name = f"{rnd.choice(FIRST_F if female else FIRST_M)} {last}"
     exp = round(rnd.uniform(*EXP[grade]), 1)
     core = CORE[direction]
-    k = {"junior": 4, "middle": 6, "senior": 8}[grade]
+    k = {"intern": 3, "junior": 4, "middle": 6, "senior": 8}[grade]
     stack = list(dict.fromkeys(core[:3] + rnd.sample(core[3:], min(len(core) - 3, k - 2))))[:k]
     roles = ["developer" if direction != "qa" else "tester"]
     if grade == "senior":
@@ -156,7 +162,7 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     roles = list(dict.fromkeys(roles))
     city = rnd.choice(CITIES)
     wf = rnd.choice([WorkFormat.remote, WorkFormat.remote, WorkFormat.hybrid, WorkFormat.office, WorkFormat.any])
-    base = {"junior": 70_000, "middle": 160_000, "senior": 280_000}[grade]
+    base = {"intern": 45_000, "junior": 70_000, "middle": 160_000, "senior": 280_000}[grade]
     p = CandidateProfile(
         user_id=u.id, full_name=name, phone=f"+7 900 {rnd.randint(100, 999)}-{rnd.randint(10, 99)}-{rnd.randint(10, 99)}",
         telegram=f"@demo_{idx:03d}", city=city, work_format=wf, relocation=rnd.random() < 0.3, experience_years=exp,
@@ -194,6 +200,11 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     answered = 18
     correct = min(answered, max(5, int(round(answered * (0.55 + 0.12 * (theta - CUT[grade])) + rnd.randint(-1, 1)))))
     confirmed = status == "confirmed"
+    if grade == "intern":  # у Стажёра погрешность выше (лёгких семейств в банке пока мало); θ — чтобы P(θ ≥ порога) ≥ 0,8
+        se = round(rnd.uniform(0.42, 0.5), 2)
+        theta = round(CUT[grade] + 0.85 * se + rnd.uniform(0.02, 0.45), 2)
+        answered = 16
+        correct = max(5, int(round(answered * 0.45 + rnd.randint(-2, 2))))
     ts = TestSession(user_id=u.id, survey_id=survey.id, direction_id=direction, claimed_grade_id=grade,
                      status=TestSessionStatus.finished, form_seed=rnd.randint(1, 2**30), is_sandbox=False,
                      started_at=created, finished_at=created + timedelta(minutes=rnd.randint(18, 40)),
@@ -301,8 +312,15 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
                 _candidate(db, rnd, idx, d, g, pwd_hash, fsp_flags[i])
             db.commit()
     # Статусы грейда (единая модель) — отдельными генераторами, чтобы не сдвинуть 150 основных кандидатов:
-    # 5 «Junior (предварительно)» и кандидаты без подтверждённого грейда (теста нет / тест не подтвердил)
+    # 5 «Junior (предварительно)» и кандидаты без подтверждённого грейда (теста нет / тест не подтвердил) — 151…161
     idx = _extra_candidates(db, idx, rng_seed, pwd_hash)
+    # Стажёры — отдельным потоком случайности (162…171), исходные 150 кандидатов остаются теми же
+    rnd_i = random.Random(rng_seed + 13)
+    for d in DIRECTIONS:
+        for i in range(INTERN_PER_DIRECTION):
+            idx += 1
+            _candidate(db, rnd_i, idx, d, "intern", pwd_hash, with_fsp=(i == 0))
+    db.commit()
     employers = []
     for i, (name, industry, city) in enumerate(COMPANIES, start=1):
         u = _user(db, f"demo-employer-{i:02d}@demo.invalid", UserRole.employer, pwd_hash)
@@ -313,7 +331,7 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
         db.add(EmployerProfile(user_id=u.id, company_id=c.id, full_name=f"HR {name}", position="Рекрутер (демо)"))
         employers.append((u, c))
     db.commit()
-    for ci, text in NEEDS:
+    for ci, text in NEEDS + INTERN_NEEDS:
         u, c = employers[ci]
         req = parse_need(text, use_llm=False)
         n = EmployerNeed(company_id=c.id, created_by=u.id, title=text.split(":")[0][:200], raw_text=text,
@@ -327,7 +345,8 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
     db.commit()
     fsp = db.scalar(select(func.count()).select_from(FspPassport).join(User, User.id == FspPassport.user_id)
                     .where(User.is_demo.is_(True)))
-    return {"candidates": idx, "with_fsp": fsp, "employers": len(employers), "needs": len(NEEDS)}
+    return {"candidates": idx, "interns": INTERN_PER_DIRECTION * len(DIRECTIONS), "with_fsp": fsp,
+            "employers": len(employers), "needs": len(NEEDS) + len(INTERN_NEEDS)}
 
 
 def main() -> None:

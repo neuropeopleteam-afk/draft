@@ -24,7 +24,7 @@ from app.modules.assessment.models import SurveyResponse, SurveyStackTag
 from app.modules.auth.models import Consent, User
 from app.modules.catalog.dictionary import ROLE_TITLES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, STACK
+from app.modules.catalog.seed_data import DIRECTIONS, STACK, grade_by_experience
 from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, achievement_text, card, load_bundles, refresh_rating, set_t0_facts
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 from app.modules.profiles.models import CandidateSpecialization
@@ -154,7 +154,7 @@ class OnboardingIn(BaseModel):
 
 
 def _grade_hint(years: float) -> str:
-    return "junior" if years < 1.5 else "middle" if years < 4.5 else "senior"
+    return grade_by_experience(years) or "junior"
 
 
 @router.get("/onboarding", summary="Опрос: текущие ответы и справочники", responses=AUTH)

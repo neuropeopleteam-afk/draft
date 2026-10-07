@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, num, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, Loading, Seg, Toggle, catTitle, dt, errText, num, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { FeedbackSummary } from "./Feedback";
@@ -297,12 +297,12 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
       {(chosen?.category_id ?? status?.current?.category_id) && (
         <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}</b>. Подробности — в разделе <Link className="font-semibold underline" to="/candidate/category">«Категория и грейд»</Link>.</Alert>
       )}
-      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Object.entries(GRADES).map(([id, t]) => (
           <button key={id} type="button" onClick={() => setGrade(id)} aria-pressed={grade === id}
             className={`rounded-2xl border p-5 text-left transition-colors ${grade === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
             <p className="text-lg font-bold text-brand-night">{t}</p>
-            <p className="mt-1 text-xs text-brand-ink/65">{id === "junior" ? "до 1,5 лет опыта" : id === "middle" ? "1,5–4,5 года" : "от 4,5 лет"}</p>
+            <p className="mt-1 text-xs text-brand-ink/65">{GRADE_EXPERIENCE[id]}</p>
             {status?.claimed_grade === id && <span className="chip mt-3">Подходит по стажу</span>}
           </button>
         ))}

@@ -35,6 +35,7 @@ import time
 
 import numpy as np
 
+from app.modules.catalog.seed_data import GRADE_ORDER
 from app.modules.matching.need_parser import parse_need
 from app.modules.matching.ranking import ALGORITHM_VERSION, WEIGHTS, score_candidate
 from app.modules.profiles.facts import PROVISIONAL_PENALTY
@@ -386,7 +387,7 @@ def world_stats(world: World, reqs: list[dict]) -> dict:
         "provisional": sum(1 for x in c if x.obs.category_provisional),
         "retake": sum(1 for x in c if x.obs.sessions > 1),
         "category_equals_true_grade": round(float(np.mean([x.obs.category_grade == x.latent.true_grade for x in cat])), 3),
-        "declared_equals_true_grade": round(float(np.mean([x.obs.grade_declared == (x.latent.true_grade or "junior")
+        "declared_equals_true_grade": round(float(np.mean([x.obs.grade_declared == (x.latent.true_grade or GRADE_ORDER[0])
                                                            for x in c])), 3),
         "parser": {"direction_accuracy": round(float(par["direction"]), 3), "grade_accuracy": round(float(par["grade"]), 3),
                    "required_precision": round(tp / max(tp + fp, 1), 3), "required_recall": round(tp / max(tp + fn, 1), 3)},
@@ -432,7 +433,7 @@ def breakdown(world: World, pn: dict) -> dict:
     testable = np.array([np.mean([t in world.bank_coverage[nd.direction] for t in nd.required]) for nd in world.needs])
     keys = [k for k in ("platform", "bm25", "no_test", "grade_only") if k in pn]
     for name, mask_fn, vals in (("by_direction", lambda v: dirs == v, sorted(set(dirs))),
-                                ("by_grade", lambda v: grades == v, ("junior", "middle", "senior")),
+                                ("by_grade", lambda v: grades == v, GRADE_ORDER),
                                 ("by_testable", lambda v: (testable >= 0.5) if v == "most" else (testable < 0.5),
                                  ("most", "few"))):
         for v in vals:

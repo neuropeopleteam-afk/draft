@@ -168,8 +168,11 @@ def test_api_serves_committed_report(client):
 # ---------------------------------------------------------------- Junior: решение банка, «предварительно», штраф
 
 def test_world_uses_bank_decision_and_provisional(world):
-    """Решение по грейду — правилом банка (0,8); у порога Junior — «Junior (предварительно)»; штраф в скоре."""
+    """Решение по грейду — правилом банка (0,8) на шкале платформы со Стажёром; у порога Junior — «Junior
+    (предварительно)»; штраф в скоре."""
     from assessment_bank.psychometrics import decide
+
+    from app.modules.assessment.grades import decide_grade
 
     from app.modules.profiles.facts import PROVISIONAL_PENALTY
 
@@ -184,7 +187,7 @@ def test_world_uses_bank_decision_and_provisional(world):
     for c in world.candidates:
         t = c.obs.test
         if t and t["confirmed"]:
-            assert decide(t["theta"], t["se"], t["claimed"]).confirmed  # порог 0,8, не 0,6
+            assert decide_grade(t["theta"], t["se"], t["claimed"]).confirmed  # порог 0,8, не 0,6 (и для Стажёра)
     # штраф «предварительно» в скоре — как в продукте, и пересборка скора из компонент его учитывает
     b_prov = build_bundle(prov[0].obs)
     assert b_prov.provisional and b_prov.profile.grade_provisional
