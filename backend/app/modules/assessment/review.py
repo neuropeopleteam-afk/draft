@@ -128,6 +128,11 @@ def recompute(db: Session, ts: TestSession) -> dict:
         service._write_t1_facts(db, ts, res)
         db.flush()
         refresh_rating(db, ts.user_id)
+        # паспорт грейда: «предварительно» → «подтверждён» сразу после оценки эксперта (app/passport)
+        from app.passport.service import on_test_finished
+
+        on_test_finished(db, ts.user_id, ts, previous_grade=current, previous_direction=ts.direction_id,
+                         after_review=True)  # неверный ключ подписи не роняет проверку
     return {"theta": res.theta, "se": res.se, "confirmed": res.confirmed, "confirmed_before": before,
             "pending_left": (res.details or {}).get("pending_review"), "message": outcome.message}
 
