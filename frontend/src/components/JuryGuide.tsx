@@ -5,7 +5,8 @@ import { guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/ju
 import { errText } from "./ui";
 
 const PERSONA_NAME: Record<string, string> = {
-  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
+  candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", candidate_junior: "демо-кандидат Junior (предварительно)",
+  employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
 };
 const whoAmI = (email: string) => {
   const p = personaOf(email);
@@ -23,12 +24,15 @@ export function JuryGuide() {
   const [msg, setMsg] = useState<string | null>(null);
   const active = guide.on() || isJury(me?.email);
 
-  // Шаг по текущему адресу: проводник «узнаёт» экран, на котором вы находитесь
+  // Шаг по текущему адресу: проводник «узнаёт» экран, на котором вы находитесь. Если адресу отвечают несколько
+  // шагов (например, «Категория» у разных демо-кандидатов), берётся шаг текущей персоны.
   useEffect(() => {
-    const i = STEPS.findIndex((s) => s.match.test(loc.pathname));
+    const who = personaOf(me?.email);
+    const hits = STEPS.map((s, i) => [s, i] as const).filter(([s]) => s.match.test(loc.pathname));
+    const i = (hits.find(([s]) => !s.persona || s.persona === who) ?? hits[0])?.[1] ?? -1;
     if (i >= 0 && i !== step) { setStep(i); guide.setStep(i); }
     else if (i < 0 && guide.step() !== step) setStep(guide.step());  // шаг выставлен входом в один клик
-  }, [loc.pathname]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loc.pathname, me?.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // телефон гостя живой демонстрации (/j/…) — без проводника: эксперт там не вошёл и проходит мини-тест
   if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/")) return null;

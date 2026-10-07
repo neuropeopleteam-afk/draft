@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { CandidateCard } from "../../components/CandidateCard";
+import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
@@ -377,14 +378,17 @@ export function Selection() {
                         }} />
                       <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{REL[c.relation]} · {range(c.market_range?.from, c.market_range?.to)}</span></span>
                     </label>
-                    <span className="chip">{c.count}</span>
+                    <span className="chip" title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, предварительно ${c.provisional}` : ""}${c.unconfirmed ? `, заявили без подтверждения ${c.unconfirmed}` : ""}`}>{c.count}{c.unconfirmed ? <span className="text-brand-ink/50"> +{c.unconfirmed}</span> : null}</span>
                   </li>
                 ))}
               </ul>
+              {s.categories.some((c: any) => c.unconfirmed) && <p className="mt-2 text-xs text-brand-ink/50">+n — заявили категорию, грейд не подтверждён: в подборке ниже всех подтверждённых</p>}
             </section>
             <section className="card space-y-3">
               <h2 className="text-sm font-bold text-brand-night">Уточнить</h2>
               <Toggle checked={!!filters.fsp_only} onChange={(x) => setFilters({ ...filters, fsp_only: x })} label="Только с паспортом ФСП" />
+              <Toggle checked={!!filters.confirmed_only} onChange={(x) => setFilters({ ...filters, confirmed_only: x || undefined })} label="Только подтверждённый грейд"
+                hint="Убрать «Junior (предварительно)» и кандидатов без подтверждённого грейда. По умолчанию они показаны со статусом ниже подтверждённых." />
               {reqTags.length > 0 && (
                 <div>
                   <p className="label">Навык подтверждён тестом (T1)</p>
@@ -412,7 +416,10 @@ export function Selection() {
           <div className="space-y-4">
             {refineReq && <section className="card"><h2 className="mb-4 font-bold text-brand-night">Требования для новой версии</h2><ReqEditor req={refineReq} onChange={setRefineReq} /></section>}
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
+              <div>
+                <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
+                <StatusCounts confirmed={s.confirmed_matched} provisional={s.provisional_matched} unconfirmed={s.unconfirmed_matched} hiddenNote={!!s.filters?.confirmed_only} />
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button className="btn-ghost" disabled={picked.length < 2 || picked.length > 3} title="Отметьте 2–3 кандидатов"
                   onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>

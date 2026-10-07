@@ -1,9 +1,9 @@
 import { api, ApiError, type TokenOut } from "./api";
 
-export type Persona = "candidate" | "candidate_nofsp" | "employer" | "expert" | "fsp";
+export type Persona = "candidate" | "candidate_nofsp" | "candidate_junior" | "employer" | "expert" | "fsp";
 export const JURY_DOMAIN = "@jury.example.com";
 export const isJury = (email?: string | null) => !!email && email.endsWith(JURY_DOMAIN);
-const LOCAL: Record<string, Persona> = { candidate: "candidate", "candidate-nofsp": "candidate_nofsp", employer: "employer", expert: "expert", "fsp-analyst": "fsp" };
+const LOCAL: Record<string, Persona> = { candidate: "candidate", "candidate-nofsp": "candidate_nofsp", "candidate-junior": "candidate_junior", employer: "employer", expert: "expert", "fsp-analyst": "fsp" };
 /** Персона по почте демо-учётки: candidate@… (общее демо) или candidate+<песочница>@… */
 export const personaOf = (email?: string | null): Persona | null =>
   isJury(email) ? LOCAL[email!.slice(0, -JURY_DOMAIN.length).split("+")[0]] ?? null : null;
@@ -76,6 +76,8 @@ export const STEPS: GuideStep[] = [
     text: "Опрос пройден, тест сдан настоящим адаптивным движком: 8–16 заданий из банка 138 семейств (у самого порога грейда — ещё до 6 коротких), у каждого свой вариант, 3 контрольных задания-«канарейки». Перед стартом кандидат видит, что отслеживается (уход со вкладки, вставка, скорость, канарейки), и подтверждает, что прочитал: сигналы только снижают «достоверность результата», не наказывают. Для демо-учёток снято правило 90 дней, но новых тестов — не больше 5 в сутки, чтобы банк нельзя было выкачать перезапусками." },
   { title: "Присвоение категории", persona: "candidate", path: "/candidate/category", match: /^\/candidate\/category/, cta: "Открыть категорию",
     text: "Категория «Backend · Middle» и место в рейтинге. Рейтинг строится только на подтверждённом: тест (T1) и достижения ФСП из реестра (T2). Нет истории ФСП — нейтрально, без штрафа." },
+  { title: "Статус грейда: подтверждён, предварительно, не подтверждён", persona: "candidate_junior", path: "/candidate/category", match: /^\/candidate\/category/, cta: "Войти как Junior (предварительно)",
+    text: "Артём Лебедев прошёл тест на Junior у самого порога: грейд не подтверждён (вероятность уровня не ниже Junior меньше 80 %), но и не доказанно ниже (не меньше 10 %) — категория «Junior (предварительно)» с вероятностью и короткое дотестирование до 6 заданий (ответы прошлой попытки учитываются; подтверждение — не смена грейда, 90 дней не начинаются заново). Третий статус — «грейд не подтверждён (заявлен …)»: кандидат с опросом, но без сданного теста виден работодателю со статусом и всегда ниже подтверждённых, а не скрыт. Та же модель статуса — в подборке, поиске, карточке, сравнении и PDF; у работодателя есть фильтр «только подтверждённый грейд»." },
   { title: "Карта навыков и рост", persona: "candidate", path: "/candidate/feedback", match: /^\/candidate\/feedback/, cta: "Открыть карту навыков",
     text: "Обратная связь после теста: темы банка с долей баллов против ожидаемой для уровня кандидата (без заданий и ключей), что требуют работодатели в его категории по реальным потребностям и вакансиям — и подтверждено ли это тестом, маршрут роста и дисциплины ФСП. Тот же блок — в PDF-профиле кандидата." },
   { title: "Работодатель: потребность", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs(?!\/[^/]+\/compare)/, cta: "Войти как работодатель",
