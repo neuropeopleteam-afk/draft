@@ -111,7 +111,9 @@ def create_cup(db: Session, user: User, company: Company, data: dict) -> Cup:
               invite_top_n=int(data.get("invite_top_n") or 3), min_score=float(data.get("min_score", 0.5)),
               position_title=data["position_title"].strip(), offer_description=data["offer_description"].strip(),
               contact_method=data["contact_method"].strip(), status="active", summary={},
-              is_demo=bool(company.is_demo))
+              is_demo=bool(company.is_demo),
+              # кубок работодателя песочницы жюри виден только кандидатам этой песочницы (как и засеянные кубки)
+              jury_scope=jury_scope.key_of(user.email))
     db.add(cup)
     db.commit()
     return cup
