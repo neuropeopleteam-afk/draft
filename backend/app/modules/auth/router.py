@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.db import get_db
-from app.core.errors import err
-from app.modules.auth import service
+from app.core.errors import api_error, err
+from app.modules.auth import service, twofa
 from app.modules.auth.schemas import (
     LoginIn,
     RegisterIn,
@@ -13,6 +13,7 @@ from app.modules.auth.schemas import (
     ResendCodeIn,
     ResendCodeOut,
     TokenOut,
+    TwoFactorChallengeOut,
     VerifyEmailIn,
 )
 
@@ -56,12 +57,14 @@ def resend_code(data: ResendCodeIn, db: Session = Depends(get_db)) -> ResendCode
 
 @router.post(
     "/login",
-    response_model=TokenOut,
-    summary="Вход по почте и паролю (JWT)",
+    response_model=TokenOut | TwoFactorChallengeOut,
+    summary="Вход по почте и паролю (JWT); при подключённом втором факторе — промежуточный токен и запрос кода",
     responses={401: err("Неверная почта или пароль"), 403: err("Почта не подтверждена")},
 )
-def login(data: LoginIn, db: Session = Depends(get_db)) -> TokenOut:
-    return service.issue_token(service.authenticate(db, data.email, data.password))
+def login(data: LoginIn, db: Session = Depends(get_db)) -> TokenOut | TwoFactorChallengeOut:
+    user = service.authenticate(db, data.email, data.password)
+    # второй фактор подключён → код; обязателен для роли, но не подключён → токен только для подключения
+    return twofa.after_first_factor(db, user, landing=None)
 
 
 @router.post(
@@ -71,4 +74,10 @@ def login(data: LoginIn, db: Session = Depends(get_db)) -> TokenOut:
     responses={401: err("Неверная почта или пароль"), 403: err("Почта не подтверждена")},
 )
 def token(form: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)) -> TokenOut:
-    return service.issue_token(service.authenticate(db, form.username, form.password))
+    user = service.authenticate(db, form.username, form.password)
+    out = twofa.after_first_factor(db, user)
+    if not isinstance(out, TokenOut):
+        # форма OAuth2 не умеет второй шаг: вход таких учёток — через /api/auth/login и /api/auth/2fa/verify
+        raise api_error(403, "second_factor_required",
+                        "Для этой учётной записи нужен второй фактор: войдите через POST /api/auth/login, затем /api/auth/2fa/verify")
+    return out

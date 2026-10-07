@@ -57,6 +57,8 @@ def _optional_user(token: str | None, db: Session) -> User | None:
         u = db.get(User, uuid.UUID(p["sub"]))
     except (jwt.PyJWTError, KeyError, ValueError):
         return None
+    if p.get("typ"):  # промежуточный токен второго фактора — не вход (app/core/deps.py)
+        return None
     return u if u and u.is_active and p.get("ver", 0) == u.token_version else None
 
 
