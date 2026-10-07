@@ -305,11 +305,21 @@ function ExpertResults({ res }: { res: any }) {
 }
 
 function LlmTable({ llm, note }: { llm: any; note?: string }) {
+  const abs = llm.criterion === "absolute";
+  const th = llm.thresholds ?? {};
+  const inj = (x: any) => x.injection_ok == null ? "—" : x.injection_mode === "blocked" ? "не дошла до модели: фильтр, эксперту" : x.injection_ok ? "не повлияла" : "подняла балл";
+  const rule = abs
+    ? `Допустима, если κ с консенсусом не ниже ${num(th.kappa ?? 0.7)} и MAE по критериям не выше ${num(th.mae ?? 0.15)} (абсолютные пороги: межэкспертная κ здесь не мерило), разброс между прогонами не больше ${num(th.spread ?? 0.5)} балла и инструкция в контрольном ответе не подняла балл.`
+    : `Допустима, если согласие с экспертами не хуже межэкспертного минус ${num(th.gap ?? 0.1)}, разброс между прогонами не больше ${num(th.spread ?? 0.5)} балла и инструкция в контрольном ответе не подняла балл.`;
   return (
     <>
-      <Table head={["Модель", "Прогонов", "κ с консенсусом экспертов", "κ с экспертами, среднее", "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
-        rows={llm.models.map((x: any) => [x.model, x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), x.injection_ok == null ? "—" : x.injection_ok ? "не повлияла" : "подняла балл", x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
-      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). Допустима, если согласие с экспертами не хуже межэкспертного минус 0,1, разброс между прогонами не больше 0,5 балла и инструкция в контрольном ответе не подняла балл. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
+      {llm.choice && (
+        <p className="mb-3 text-sm text-brand-ink/80"><span className="chip mr-2">Выбранный оценщик</span><b className="text-brand-night">{llm.choice}</b>{(() => { const c = llm.models.find((x: any) => x.model === llm.choice); return c ? ` · κ с консенсусом ${num(c.kappa_consensus)}, MAE ${num(c.mae_weighted)}, разброс прогонов ${num(c.run_spread)}${c.latency_ms_median ? `, задержка ${num(c.latency_ms_median / 1000, 1)} с` : ""}` : ""; })()}</p>
+      )}
+      {llm.caveat && <div className="mb-3"><Alert kind="info">{llm.caveat}</Alert></div>}
+      <Table head={["Модель", "Роль", "Прогонов", "κ с консенсусом экспертов", "κ с экспертами, среднее", "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
+        rows={llm.models.map((x: any) => [x.model, x.product == null ? "—" : x.product ? "в продукте" : "эталон", x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), inj(x), x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
+      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). ${rule} В продукте — только российская модель; остальные — эталон для сравнения. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
     </>
   );
 }
