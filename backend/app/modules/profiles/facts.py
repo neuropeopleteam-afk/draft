@@ -209,17 +209,21 @@ def merge_skill(prev: CandidateFact | None, f: CandidateFact) -> CandidateFact:
     m = CandidateFact(user_id=f.user_id, kind="skill", key=f.key, title=f.title,
                       value={**prev.value, **f.value, "correct": correct, "total": total,
                              "score": round(correct / total, 4) if total else 0.0, "parts": parts},
-                      evidence_level=EvidenceLevel.T1, source=f.source, source_ref=f.source_ref, weight=f.weight)
-    m.created_at = max(as_aware(prev.created_at), as_aware(f.created_at)) if prev.created_at and f.created_at else f.created_at
+                      evidence_level=EvidenceLevel.T1, source=f.source, source_ref=getattr(f, "source_ref", None),
+                      weight=getattr(f, "weight", None))
+    pc, fc = getattr(prev, "created_at", None), getattr(f, "created_at", None)
+    m.created_at = max(as_aware(pc), as_aware(fc)) if pc and fc else fc
     return m
 
 
 def _origin(f: CandidateFact) -> str:
-    return (f.value or {}).get("origin") or ("assignment" if (f.source_ref or "").startswith("assignment:") else "test")
+    """Источник факта по навыку: тест или задание работодателя (И7). Терпит лёгкие объекты бенчмарка без source_ref."""
+    ref = getattr(f, "source_ref", None) or ""
+    return (getattr(f, "value", None) or {}).get("origin") or ("assignment" if ref.startswith("assignment:") else "test")
 
 
 def _part(f: CandidateFact) -> dict:
-    v = f.value or {}
+    v = getattr(f, "value", None) or {}
     try:
         return {"correct": float(v.get("correct") or 0), "total": float(v.get("total") or 0)}
     except (TypeError, ValueError):
@@ -228,7 +232,7 @@ def _part(f: CandidateFact) -> dict:
 
 def skill_evidence_text(f: CandidateFact) -> str:
     """«Подтверждено заданиями теста: 2 из 3», с заданием работодателя — «… и заданием работодателя (3 из 3)»."""
-    v = f.value or {}
+    v = getattr(f, "value", None) or {}
     parts = v.get("parts") or {_origin(f): _part(f)}
     names = {"test": "заданиями теста", "assignment": "заданием работодателя"}
     if len(parts) == 1:
