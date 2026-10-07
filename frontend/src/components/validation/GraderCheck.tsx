@@ -36,6 +36,11 @@ function Body({ r }: { r: any }) {
   const before = c.panel_score, filt = c.panel_filter, det = c.panel_det;
   const after = c.v2;
   const caught = r.attack_filter_caught ?? {};
+  const PARA = ["adv_e1", "adv_e3", "adv_e5"];
+  const para = PARA.reduce((a, g) => {
+    const x = det?.groups?.[g] ?? {};
+    return { caught: a.caught + (caught[g] ?? 0), scored: a.scored + (x.scored ?? 0), pass: a.pass + (x.pass ?? 0), wait: a.wait + (x.routes?.unmeasured ?? 0) };
+  }, { caught: 0, scored: 0, pass: 0, wait: 0 });
   return (
     <>
       <p className="max-w-4xl text-sm leading-relaxed text-brand-ink/70">
@@ -44,7 +49,7 @@ function Body({ r }: { r: any }) {
       <div className="mt-4 grid gap-4 md:grid-cols-4">
         <Kpi label="Инъекция панели прошла" value={`${before?.attacks?.pass ?? "—"} → ${filt?.attacks?.pass ?? "—"} из 29`} hint="балл ≥ 0,5 без фильтра → с фильтром injection_signals (ответ уходит эксперту)" />
         <Kpi label="Ложные срабатывания" value={`${r.filter_false_positives?.honest ?? "—"} из ${r.filter_false_positives?.honest_n ?? "—"}`} hint={`фильтр на честных ответах; вырезание утверждений об оценке — ${r.strip_meta_false_positives?.honest ?? "—"}`} />
-        <Kpi label="Перефразированные атаки" value={`фильтр ловит ${(caught.adv_e1 ?? 0) + (caught.adv_e3 ?? 0) + (caught.adv_e5 ?? 0)} из 87`} hint={`после вырезания утверждений прошло ${det?.attacks?.pass ?? "—"} из ${det?.attacks?.n ?? "—"} измеренных; ещё ${det?.attacks?.unmeasured ?? 0} — нужен прогон LLM`} />
+        <Kpi label="Перефразы ловит фильтр" value={`${para.caught} из 87`} hint={`после вырезания утверждений об оценке балл ≥ 0,5 у ${para.pass} из ${para.scored}, которые измеримы без модели; ещё ${para.wait} ждут прогона LLM`} />
         <Kpi label="Завышение к gpt-oss-120b" value={`${sgn(before?.vs_gptoss_B?.bias)}${after?.vs_gptoss_B?.bias != null ? ` → ${sgn(after.vs_gptoss_B.bias)}` : ""}`} hint={after ? `ответы открытых моделей, r ${n2(before?.vs_gptoss_B?.r)} → ${n2(after.vs_gptoss_B?.r)}` : "ответы открытых моделей; «после» — после прогона промпта v2 на YandexGPT"} />
       </div>
       {r.llm_pending && (
