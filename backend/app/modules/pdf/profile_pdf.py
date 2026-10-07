@@ -19,6 +19,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from app.core.config import get_settings
+from app.core.fmt import theta_se
 
 NIGHT = colors.HexColor("#310F53")
 BRAND = colors.HexColor("#FF0053")
@@ -98,7 +99,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
     if t:
         el.append(_table([
             ["Грейд", _esc(card.get("grade_title"))],
-            ["Оценка уровня θ", f"{t['theta']:+.2f} ± {t['se']:.2f}" if t.get("theta") is not None else "—"],
+            ["Оценка уровня θ", theta_se(t['theta'], t['se']) if t.get("theta") is not None else "—"],
             ["Верных ответов", f"{t.get('correct')} из {t.get('answered')}"],
             ["Дата", _esc(t.get("date"))],
         ], st))
