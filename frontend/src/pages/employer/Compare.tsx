@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
+import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
 import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, ruText, useApi } from "../../components/ui";
 import { InviteForm, ProbeForm } from "./Contact";
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
 interface Row { key: string; group: string; title: string; requirement?: string | null; quote?: string | null; weight?: number | null; hint?: string }
 interface Cand {
-  ref: string; category: { id: string; title: string } | null; grade: string | null; score: number; rank_in_selection: number | null;
+  ref: string; category: { id: string; title: string; provisional?: boolean } | null; grade: string | null; score: number; rank_in_selection: number | null;
+  status?: GradeStatusInfo | null; claimed?: { title?: string; grade?: string } | null;
   cells: Record<string, Cell>; market_range: { from: number; to: number; median?: number } | null;
   can_invite: boolean; invite_available_at: string | null; last_invitation_status: string | null; probe_active: boolean;
 }
@@ -47,7 +49,8 @@ function WhyBlock({ why }: { why: Why[] }) {
 
 const STATUS_TEXT: Record<string, string> = {
   confirmed: "text-brand-ink", partial: "text-brand-ink/80", declared: "text-brand-ink/65", missing: "text-brand-ink/65",
-  mismatch: "text-brand-plum", neutral: "text-brand-ink/65", info: "text-brand-ink/80",
+  mismatch: "text-brand-plum", neutral: "text-brand-ink/65", info: "text-brand-ink/80", provisional: "text-amber-900",
+  unconfirmed: "text-brand-ink/65",
 };
 
 /** Сравнение 2–3 кандидатов рядом по требованиям потребности; отсюда — сразу зонд или приглашение. */
@@ -101,7 +104,8 @@ export function Compare() {
                   <p className="font-mono text-sm font-bold text-brand-night">{c.ref}</p>
                   {c.rank_in_selection && <span className="text-xs text-brand-ink/65">место {c.rank_in_selection} из {data.selection_total}</span>}
                 </div>
-                <p className="text-sm text-brand-ink/75">{c.category?.title ?? "без категории"}</p>
+                <p className="text-sm text-brand-ink/75">{c.category?.title ?? (c.claimed?.title ? `заявлено: ${c.claimed.title}` : "без категории")}</p>
+                <GradeBadge s={c.status} claimed={c.claimed} />
                 <p className="text-2xl font-bold text-brand">{Math.round(c.score * 100)}<span className="text-sm font-semibold text-brand-ink/65"> из 100</span></p>
                 <div className="flex flex-wrap gap-1.5">
                   <button className="btn-ghost !px-3 !py-1.5 text-xs" disabled={c.probe_active} title={c.probe_active ? "Зонд уже отправлен и ждёт ответа" : undefined} onClick={() => setProbe([c.ref])}>
