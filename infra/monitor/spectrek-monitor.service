@@ -1,0 +1,14 @@
+# Мониторинг стенда «Встречный»: одна проверка, письмо владельцу при сбое и восстановлении (infra/monitor/monitor.py).
+# Установка — docs/DEPLOY.md, раздел «Мониторинг» (копирование в /etc/systemd/system, monitor.env).
+[Unit]
+Description=Spectrek FSP: availability monitor (site, Yandex AI Studio, disk, containers, backup)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/opt/spectrek_fsp/infra/monitor.env
+ExecStart=/usr/bin/python3 /opt/spectrek_fsp/app/infra/monitor/monitor.py
+StateDirectory=spectrek-monitor
+TimeoutStartSec=120
+Nice=10

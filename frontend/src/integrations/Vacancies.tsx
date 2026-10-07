@@ -7,7 +7,7 @@ import { Alert, Empty, Field, Level, Loading, Modal, Seg, Toggle, catTitle, dt, 
 import { api, apiDownload, type Catalog } from "../lib/api";
 import { SusPrompt } from "./Sus";
 import { TrustBadge, TrustPanel, type Trust, type TrustShort } from "./Trust";
-import { atsPushText } from "./Ats";
+import { AtsStageBadge, atsPushText } from "./Ats";
 
 export interface Vacancy {
   id: string; title: string; category_id: string | null; category_title: string | null; description: string;
@@ -28,10 +28,10 @@ export function AppStatus({ s }: { s: string }) {
   const [t, c] = APP_STATUS[s] ?? [s, "bg-gray-100 text-gray-600"];
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${c}`}>{t}</span>;
 }
-function Events({ items }: { items: { status: string; at: string; by: string; note?: string }[] }) {
+function Events({ items }: { items: { status: string; at: string; by: string; note?: string; title?: string }[] }) {
   return (
     <ol className="space-y-2 border-l-2 border-brand-blush pl-4">
-      {items.map((e, i) => <li key={i} className="text-sm"><span className="font-semibold text-brand-night">{APP_STATUS[e.status]?.[0] ?? e.status}</span><span className="text-brand-ink/65"> · {dtt(e.at)} · {e.by === "candidate" ? "кандидат" : "работодатель"}</span>{e.note && <p className="text-brand-ink/70">«{e.note}»</p>}</li>)}
+      {items.map((e, i) => <li key={i} className="text-sm"><span className="font-semibold text-brand-night">{APP_STATUS[e.status]?.[0] ?? e.title ?? e.status}</span><span className="text-brand-ink/65"> · {dtt(e.at)} · {e.by === "candidate" ? "кандидат" : e.by === "ats" ? "по данным ATS работодателя" : "работодатель"}</span>{e.note && <p className="text-brand-ink/70">{e.by === "ats" ? e.note : `«${e.note}»`}</p>}</li>)}
     </ol>
   );
 }
@@ -157,7 +157,7 @@ function MyApplications() {
         <article key={a.id} className="card space-y-3">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div><p className="font-bold text-brand-night">{a.vacancy_title}</p><p className="text-sm text-brand-ink/65">{a.company.name} · {range(a.salary_from, a.salary_to)} · отклик {dt(a.created_at)}</p></div>
-            <AppStatus s={a.status} />
+            <div className="flex flex-wrap items-center gap-2"><AtsStageBadge s={a.ats_stage} /><AppStatus s={a.status} /></div>
           </div>
           {a.employer_note && <p className="rounded-lg bg-[#F3F2FB] px-3 py-2 text-sm text-brand-night"><b>Ответ компании:</b> {a.employer_note}</p>}
           <Events items={a.events} />
@@ -297,7 +297,7 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
                   <p className="font-bold text-brand-night">{a.contacts?.full_name || a.card.ref} <span className="font-normal text-brand-ink/65">· {a.card.category?.title ?? "без категории"}</span></p>
                   {a.contacts && <p className="text-brand-ink/70">{a.contacts.email}{a.contacts.phone ? ` · ${a.contacts.phone}` : ""}{a.contacts.telegram ? ` · ${a.contacts.telegram}` : ""}</p>}
                 </div>
-                <AppStatus s={a.status} />
+                <div className="flex flex-wrap items-center gap-2"><AtsStageBadge s={a.ats_stage} /><AppStatus s={a.status} /></div>
               </div>
               <ul className="space-y-1">
                 {a.card.test?.theta != null && <li className="flex items-center gap-2"><Level level="T1" /> Тест: {a.card.test.correct} из {a.card.test.answered} верно</li>}
