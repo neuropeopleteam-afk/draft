@@ -30,6 +30,13 @@ def build_me(db: Session, user: User) -> MeOut:
     if user.role == UserRole.candidate:
         profile = db.get(CandidateProfile, user.id)
         me.candidate = CandidateProfileOut.model_validate(profile) if profile else None
+        if me.candidate:
+            from app.modules.profiles.facts import load_bundles
+            from app.modules.profiles.specializations import summary
+
+            b = load_bundles(db, [user.id])[user.id]
+            me.candidate.specializations = [summary(r, b.tests_by_direction.get(r.direction_id))
+                                           for r in sorted(b.specializations.values(), key=lambda r: (not r.is_primary, r.direction_id))]
         passport = db.scalar(select(FspPassport).where(FspPassport.user_id == user.id))
         count = (
             db.scalar(select(func.count()).select_from(FspAchievement).where(FspAchievement.passport_id == passport.id))

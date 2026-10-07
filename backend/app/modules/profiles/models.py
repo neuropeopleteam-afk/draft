@@ -48,6 +48,43 @@ class CandidateProfile(Timestamps, Base):
     jury_mode: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
 
 
+class CandidateSpecialization(Timestamps, Base):
+    """Категория одного направления. История — grade_history по (user_id, direction_id).
+
+    Поля current_* профиля зеркалируют только основное направление для старых клиентов.
+    declared — опрос без подтверждения; provisional зарезервирован для потока статусов.
+    """
+
+    __tablename__ = "candidate_specializations"
+    __table_args__ = (
+        sa.CheckConstraint("status IN ('declared', 'confirmed', 'provisional')", name="status"),
+        sa.CheckConstraint(
+            "(grade_id IS NULL AND category_id IS NULL) OR "
+            "(grade_id IS NOT NULL AND category_id IS NOT NULL AND category_id = direction_id || '.' || grade_id)",
+            name="category_direction",
+        ),
+        sa.Index("ix_candidate_specializations_category_id", "category_id"),
+        sa.Index("uq_candidate_specializations_primary", "user_id", unique=True,
+                 sqlite_where=sa.text("is_primary = 1"), postgresql_where=sa.text("is_primary = true")),
+        sa.Index("uq_candidate_specializations_secondary", "user_id", unique=True,
+                 sqlite_where=sa.text("is_primary = 0"), postgresql_where=sa.text("is_primary = false")),
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        sa.ForeignKey("candidate_profiles.user_id", ondelete="CASCADE"), primary_key=True)
+    direction_id: Mapped[str] = mapped_column(sa.ForeignKey("directions.id"), primary_key=True)
+    is_primary: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    grade_id: Mapped[str | None] = mapped_column(sa.ForeignKey("grades.id"))
+    category_id: Mapped[str | None] = mapped_column(sa.ForeignKey("categories.id"))
+    status: Mapped[str] = mapped_column(sa.String(32), default="declared", server_default="declared")
+    theta: Mapped[float | None]
+    theta_se: Mapped[float | None]
+    rating_score: Mapped[float | None]
+    locked_until: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    test_session_id: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("test_sessions.id", ondelete="SET NULL"))
+    confirmed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+
+
 class Company(UUIDPk, Timestamps, Base):
     __tablename__ = "companies"
 
