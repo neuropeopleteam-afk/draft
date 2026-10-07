@@ -24,6 +24,8 @@ from app.modules.assessment.rules import apply_result, check_can_start
 from app.modules.catalog.seed_data import STACK
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile
+from app.modules.profiles.models import CandidateSpecialization
+from app.modules.profiles.specializations import ensure_specialization, summary, sync_primary
 
 
 def is_sandbox(profile: CandidateProfile) -> bool:
@@ -55,31 +57,43 @@ def sandbox_quota(db: Session, email: str) -> dict:
             "next_at": reset_at.isoformat() if reset_at else None}
 
 
-def latest_survey(db: Session, user_id: uuid.UUID) -> SurveyResponse | None:
-    return db.scalar(select(SurveyResponse).where(SurveyResponse.user_id == user_id)
+def latest_survey(db: Session, user_id: uuid.UUID, direction: str | None = None) -> SurveyResponse | None:
+    if direction is None:
+        direction = db.scalar(select(CandidateSpecialization.direction_id).where(
+            CandidateSpecialization.user_id == user_id, CandidateSpecialization.is_primary.is_(True)))
+    q = select(SurveyResponse).where(SurveyResponse.user_id == user_id)
+    if direction:
+        q = q.where(SurveyResponse.direction_id == direction)
+    return db.scalar(q
                      .order_by(SurveyResponse.created_at.desc()).limit(1))
 
 
-def active_session(db: Session, user_id: uuid.UUID) -> TestSession | None:
-    return db.scalar(select(TestSession).where(
+def active_session(db: Session, user_id: uuid.UUID, direction: str | None = None) -> TestSession | None:
+    q = select(TestSession).where(
         TestSession.user_id == user_id,
         TestSession.status.in_([TestSessionStatus.created, TestSessionStatus.in_progress]),
-    ).order_by(TestSession.created_at.desc()).limit(1))
+    )
+    if direction:
+        q = q.where(TestSession.direction_id == direction)
+    return db.scalar(q.order_by(TestSession.created_at.desc()).limit(1))
 
 
 def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_name: str | None = None, *,
-                  integrity_ack: bool = False, enforce_sandbox_quota: bool = False) -> TestSession:
+                  integrity_ack: bool = False, enforce_sandbox_quota: bool = False,
+                  direction: str | None = None) -> TestSession:
     """enforce_sandbox_quota — запрос кандидата через API (демо-сиды жюри проходят тест без лимита)."""
     profile = db.get(CandidateProfile, user_id)
-    survey = latest_survey(db, user_id)
+    survey = latest_survey(db, user_id, direction)
     if profile is None or survey is None or profile.onboarding_completed_at is None:
         raise api_error(409, "onboarding_required", "Сначала пройдите опрос: направление, стек и опыт")
     now = utcnow()
-    check = check_can_start(profile.current_grade_id, profile.grade_locked_until, claimed_grade, now,
+    specialization = ensure_specialization(db, profile, survey.direction_id)
+    old = active_session(db, user_id, survey.direction_id)
+    # Продолжение уже начатого теста не расходует повтор/лимит.
+    check = check_can_start(specialization.grade_id, specialization.locked_until, claimed_grade, now,
                             is_sandbox(profile))
     if not check.allowed:
         raise api_error(409 if check.code == "grade_locked" else 422, check.code or "not_allowed", check.message or "")
-    old = active_session(db, user_id)
     if old is not None and old.claimed_grade_id == claimed_grade and old.direction_id == survey.direction_id:
         if integrity_ack and not (old.result or {}).get("integrity_ack"):
             old.result = {**old.result, "integrity_ack": {"at": now.isoformat()}}
@@ -106,7 +120,8 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
         # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма);
         # семейства последней попытки не попадают в дотестирование у порога (оно берёт задания и из другого субпула)
         past = [((t.result or {}).get("state") or {}) for t in db.scalars(
-            select(TestSession).where(TestSession.user_id == user_id, TestSession.status == TestSessionStatus.finished)
+            select(TestSession).where(TestSession.user_id == user_id, TestSession.direction_id == survey.direction_id,
+                                      TestSession.status == TestSessionStatus.finished)
             .order_by(TestSession.created_at.desc()).limit(5))]
         prev = [st.get("subpool") for st in past if st.get("subpool") is not None]
         last_families = [i.get("family_id") for i in (past[0].get("items") or []) if i.get("family_id")] if past else []
@@ -274,10 +289,10 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
     res = (engine or get_engine(_engine_key(ts))).finish(ts.result["state"])
     now = utcnow()
     sandbox = is_sandbox(profile)
-    # Тест в другом направлении: подтверждённый грейд считается «нет» для правил (категория — пара направление·грейд)
-    current = profile.current_grade_id if profile.current_direction_id == ts.direction_id else None
+    specialization = ensure_specialization(db, profile, ts.direction_id)
+    current = specialization.grade_id
     outcome = apply_result(current, ts.claimed_grade_id, res.confirmed, now, sandbox,
-                           get_settings().grade_change_interval_days, profile.grade_locked_until)
+                           get_settings().grade_change_interval_days, specialization.locked_until)
     ts.status = TestSessionStatus.finished
     ts.finished_at = now
     ts.theta, ts.theta_se = res.theta, res.se
@@ -288,40 +303,63 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
     flag_modified(ts, "result")
 
     if outcome.changed or (res.confirmed and outcome.new_grade == ts.claimed_grade_id):
-        if outcome.changed:
-            db.add(GradeHistory(user_id=ts.user_id, direction_id=ts.direction_id, from_grade_id=current,
-                                to_grade_id=outcome.new_grade, reason=GradeChangeReason(outcome.reason),
-                                test_session_id=ts.id, locked_until=outcome.locked_until))
-            profile.current_direction_id = ts.direction_id
-            profile.current_grade_id = outcome.new_grade
-            profile.current_category_id = f"{ts.direction_id}.{outcome.new_grade}"
-            profile.grade_locked_until = outcome.locked_until
+        store_confirmed(db, profile, specialization, ts, res, outcome, current)
         _write_t1_facts(db, ts, res)
         db.flush()
         refresh_rating(db, ts.user_id)
-    db.commit()
-    return {
+    result = {
+        "changed": outcome.changed, "grade": outcome.new_grade,
         "session_id": str(ts.id), "theta": res.theta, "se": res.se, "claimed_grade": ts.claimed_grade_id,
         "point_grade": res.point_grade, "confirmed": res.confirmed, "upgrade_available": res.upgrade_available,
         "retake_lower": res.retake_lower, "probabilities": res.probabilities, "correct": res.correct,
         "answered": res.answered, "explanation": res.explanation, "grade_changed": outcome.changed,
-        "current_grade": profile.current_grade_id, "category_id": profile.current_category_id,
+        "direction": ts.direction_id, "current_grade": specialization.grade_id, "category_id": specialization.category_id,
+        "is_primary": specialization.is_primary, "category_status": specialization.status,
         "message": outcome.message, "engine": res.engine,
-        "locked_until": as_aware(profile.grade_locked_until).isoformat() if profile.grade_locked_until else None,
+        "locked_until": as_aware(specialization.locked_until).isoformat() if specialization.locked_until else None,
         # Кандидату — только ход теста; показатели детектора утечек видны в данных сессии, не в ответе
         "details": {k: res.details.get(k) for k in ("stop_reason", "n_scored", "n_canaries", "time_used_s",
                                                      "extension", "pending_review", "n_families_in_bank")},
     }
+    ts.result = {**ts.result, "outcome": {**ts.result["outcome"], **result}}
+    flag_modified(ts, "result")
+    db.commit()
+    return result
+
+
+def store_confirmed(db, profile, specialization, ts, res, outcome, current):
+    """Единый путь записи категории из полного теста и экспертного пересчёта."""
+    if outcome.changed:
+        db.add(GradeHistory(user_id=ts.user_id, direction_id=ts.direction_id, from_grade_id=current,
+                            to_grade_id=outcome.new_grade, reason=GradeChangeReason(outcome.reason),
+                            test_session_id=ts.id, locked_until=outcome.locked_until))
+    specialization.grade_id = outcome.new_grade
+    specialization.category_id = f"{ts.direction_id}.{outcome.new_grade}"
+    specialization.status = "confirmed"
+    specialization.theta, specialization.theta_se = res.theta, res.se
+    specialization.test_session_id = ts.id
+    specialization.confirmed_at = utcnow()
+    specialization.locked_until = outcome.locked_until
+    sync_primary(profile, specialization)
 
 
 def _write_t1_facts(db: Session, ts: TestSession, res) -> None:
     """Результат теста и навыки, проверенные заданиями, — факты T1 (заменяют прежние факты теста)."""
-    db.execute(delete(CandidateFact).where(CandidateFact.user_id == ts.user_id, CandidateFact.source == FactSource.test))
+    rows = db.scalars(select(CandidateFact).where(
+        CandidateFact.user_id == ts.user_id, CandidateFact.source == FactSource.test)).all()
+    past = {f"test_session:{s.id}": s.direction_id for s in db.scalars(
+        select(TestSession).where(TestSession.user_id == ts.user_id))}
+    profile = db.get(CandidateProfile, ts.user_id)
+    for fact in rows:
+        direction = fact.value.get("direction") or past.get(fact.source_ref) or (
+            fact.key.split(".")[0] if fact.kind == "test_result" else profile.current_direction_id)
+        if direction == ts.direction_id:
+            db.delete(fact)
     d = res.details or {}
     db.add(CandidateFact(
         user_id=ts.user_id, kind="test_result", key=f"{ts.direction_id}.{ts.claimed_grade_id}",
         title=f"Тест {ts.direction_id} · {ts.claimed_grade_id}",
-        value={"theta": res.theta, "se": res.se, "grade": ts.claimed_grade_id, "confirmed": res.confirmed,
+        value={"direction": ts.direction_id, "theta": res.theta, "se": res.se, "grade": ts.claimed_grade_id, "confirmed": res.confirmed,
                "correct": res.correct, "answered": res.answered, "engine": res.engine, "session_id": str(ts.id),
                "pending_review": d.get("pending_review"), "extension": bool(d.get("extension")),
                "preknowledge_flagged": (d.get("preknowledge") or {}).get("flagged"),
@@ -331,34 +369,40 @@ def _write_t1_facts(db: Session, ts: TestSession, res) -> None:
     for tag, s in res.skills.items():
         db.add(CandidateFact(
             user_id=ts.user_id, kind="skill", key=tag, title=STACK.get(tag, (tag,))[0],
-            value={"score": s["score"], "correct": s["correct"], "total": s["total"]},
+            value={"direction": ts.direction_id, "score": s["score"], "correct": s["correct"], "total": s["total"]},
             evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=f"test_session:{ts.id}",
         ))
 
 
-def status(db: Session, user_id: uuid.UUID) -> dict:
+def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dict:
     from app.modules.catalog.models import Category
 
     profile = db.get(CandidateProfile, user_id)
-    survey = latest_survey(db, user_id)
+    survey = latest_survey(db, user_id, direction)
     now = utcnow()
     sandbox = is_sandbox(profile)
-    lock = as_aware(profile.grade_locked_until)
+    from app.modules.profiles.facts import load_bundles
+    from app.modules.matching.ranking import visible_pool
+    bundle = load_bundles(db, [user_id], direction=direction)[user_id]
+    selected = direction or (survey.direction_id if survey else None) or bundle.direction
+    specialization = bundle.specializations.get(selected)
+    lock = as_aware(specialization.locked_until) if specialization else None
     sessions = db.scalars(select(TestSession).where(TestSession.user_id == user_id)
                           .order_by(TestSession.created_at.desc()).limit(20)).all()
     history = db.scalars(select(GradeHistory).where(GradeHistory.user_id == user_id)
                          .order_by(GradeHistory.created_at.desc())).all()
     surveys = db.scalars(select(SurveyResponse).where(SurveyResponse.user_id == user_id)
                          .order_by(SurveyResponse.created_at.desc()).limit(10)).all()
-    cat = db.get(Category, profile.current_category_id) if profile.current_category_id else None
+    cat_id = specialization.category_id if specialization else None
+    cat = db.get(Category, cat_id) if cat_id else None
     rank = total = None
     if cat is not None:
-        peers = db.scalars(select(CandidateProfile.rating_score).where(
-            CandidateProfile.current_category_id == cat.id, CandidateProfile.visible_to_employers.is_(True))).all()
+        pool = visible_pool(db, category_ids=[cat.id])
+        peers = [b.rating for b in load_bundles(db, [p.user_id for p in pool], category_ids=[cat.id]).values()]
         total = len(peers) + (0 if profile.visible_to_employers else 1)
-        mine = profile.rating_score or 0
+        mine = specialization.rating_score or 0
         rank = 1 + sum(1 for r in peers if (r or 0) > mine)
-    active = active_session(db, user_id)
+    active = active_session(db, user_id, selected)
     user = db.get(User, user_id)
     jury_allowed = bool(get_settings().jury_mode_available and user is not None and user.is_demo)
     return {
@@ -366,12 +410,22 @@ def status(db: Session, user_id: uuid.UUID) -> dict:
         "survey_direction": survey.direction_id if survey else None,
         "claimed_grade": survey.claimed_grade_id if survey else None,
         "current": {
-            "direction": profile.current_direction_id, "grade": profile.current_grade_id,
-            "category_id": profile.current_category_id, "category_title": cat.title if cat else None,
-            "rating_score": profile.rating_score, "rank": rank, "category_size": total,
+            "direction": selected, "grade": specialization.grade_id if specialization else None,
+            "category_id": cat_id, "category_title": cat.title if cat else None,
+            "rating_score": specialization.rating_score if specialization else None, "rank": rank, "category_size": total,
             "market_range": {"from": cat.market_salary_from, "to": cat.market_salary_to,
                              "median": cat.market_salary_median} if cat else None,
         },
+        "specializations": [
+            {**summary(r, bundle.tests_by_direction.get(r.direction_id)),
+             "lock_active": bool(r.locked_until and now < as_aware(r.locked_until)),
+             "can_retest_now": not (r.locked_until and now < as_aware(r.locked_until)) or sandbox,
+             "grade_history": [{"from": h.from_grade_id, "to": h.to_grade_id, "reason": h.reason.value,
+                                "at": h.created_at.isoformat()} for h in history if h.direction_id == r.direction_id],
+             "active_session_id": str(a.id) if (a := active_session(db, user_id, r.direction_id)) else None,
+             "active_grade": a.claimed_grade_id if a else None}
+            for r in sorted(bundle.specializations.values(), key=lambda r: (not r.is_primary, r.direction_id))],
+        "selected_direction": selected,
         "locked_until": lock.isoformat() if lock else None,
         "lock_active": bool(lock and now < lock),
         "can_retest_now": not (lock and now < lock) or sandbox,

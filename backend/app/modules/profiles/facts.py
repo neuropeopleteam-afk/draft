@@ -8,7 +8,7 @@ T2 — подтверждено реестром (паспорт ФСП по д�
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import math
 import uuid
 
@@ -21,7 +21,8 @@ from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
 from app.modules.fsp.models import FspAchievement, FspPassport
-from app.modules.profiles.models import CandidateFact, CandidateProfile
+from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
+from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
 
 DEFAULT_PRIVACY = {
     "show_city": True, "show_experience": True, "show_work_format": True, "show_roles": True,
@@ -112,6 +113,39 @@ class Bundle:
     t0: dict[str, list[CandidateFact]] = field(default_factory=lambda: defaultdict(list))
     passport: FspPassport | None = None
     achievements: list[FspAchievement] = field(default_factory=list)
+    specializations: dict[str, CandidateSpecialization] = field(default_factory=dict)
+    tests_by_direction: dict[str, CandidateFact] = field(default_factory=dict)
+    skills_by_direction: dict[str, dict[str, CandidateFact]] = field(default_factory=dict)
+    selected_direction: str | None = None
+
+    @property
+    def specialization(self):
+        return self.specializations.get(self.direction)
+
+    @property
+    def direction(self):
+        return self.selected_direction or self.profile.current_direction_id
+
+    @property
+    def grade(self):
+        r = self.specialization
+        return r.grade_id if r else self.profile.current_grade_id if self.direction == self.profile.current_direction_id else None
+
+    @property
+    def category_id(self):
+        r = self.specialization
+        return r.category_id if r else self.profile.current_category_id if self.direction == self.profile.current_direction_id else None
+
+    @property
+    def rating(self):
+        r = self.specialization
+        return r.rating_score if r else self.profile.rating_score if self.direction == self.profile.current_direction_id else None
+
+    def for_direction(self, direction: str | None):
+        if not direction:
+            return self
+        return replace(self, selected_direction=direction, test=self.tests_by_direction.get(direction),
+                       skills_t1=self.skills_by_direction.get(direction, {}))
 
     @property
     def privacy(self) -> dict:
@@ -123,21 +157,33 @@ class Bundle:
 
     @property
     def fsp(self) -> float:
-        return fsp_strength(self.achievements, self.profile.current_direction_id)
+        return fsp_strength(self.achievements, self.direction)
 
     def strength(self) -> float:
         """Рейтинг внутри категории (только T1/T2): тест 0,65 + зонды 0,10 + ФСП 0,25 (бонус)."""
         t = self.test.value if self.test else {}
-        test = test_component(t.get("theta"), t.get("se"), self.profile.current_grade_id)
+        test = test_component(t.get("theta"), t.get("se"), self.grade)
         probe = max((f.value.get("score", 0) for f in self.probes_t1), default=0.0)
         return round(0.65 * test + 0.10 * probe + 0.25 * self.fsp, 4)
 
 
-def load_bundles(db: Session, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, Bundle]:
+def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | None = None,
+                 category_ids: list[str] | None = None) -> dict[uuid.UUID, Bundle]:
     if not user_ids:
         return {}
     profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(user_ids))).all()
     out = {p.user_id: Bundle(profile=p) for p in profiles}
+    for r in db.scalars(select(CandidateSpecialization).where(CandidateSpecialization.user_id.in_(user_ids))):
+        out[r.user_id].specializations[r.direction_id] = r
+    for b in out.values():
+        if b.profile.current_direction_id not in b.specializations:
+            r = legacy_specialization(b.profile)
+            if r:
+                b.specializations[r.direction_id] = r
+    # Старые факты не имеют value.direction: направление восстанавливается по сессии, не по последнему тесту.
+    from app.modules.assessment.models import TestSession
+    session_directions = {f"test_session:{t.id}": t.direction_id for t in db.scalars(
+        select(TestSession).where(TestSession.user_id.in_(user_ids)))}
     for f in db.scalars(select(CandidateFact).where(CandidateFact.user_id.in_(user_ids))
                         .order_by(CandidateFact.created_at)).all():
         b = out.get(f.user_id)
@@ -146,9 +192,11 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, Bund
         if f.evidence_level == EvidenceLevel.T0:
             b.t0[f.kind].append(f)
         elif f.kind == "test_result":
-            b.test = f  # последний по времени
+            d = f.value.get("direction") or session_directions.get(f.source_ref) or f.key.split(".")[0]
+            b.tests_by_direction[d] = f
         elif f.kind == "skill":
-            b.skills_t1[f.key] = f
+            d = f.value.get("direction") or session_directions.get(f.source_ref) or b.profile.current_direction_id
+            b.skills_by_direction.setdefault(d, {})[f.key] = f
         elif f.kind == "probe":
             b.probes_t1.append(f)
     passports = db.scalars(select(FspPassport).where(FspPassport.user_id.in_(user_ids))).all()
@@ -161,6 +209,19 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID]) -> dict[uuid.UUID, Bund
         for a in db.scalars(select(FspAchievement).where(FspAchievement.passport_id.in_(list(by_pid)))
                             .order_by(FspAchievement.event_date.desc())).all():
             by_pid[a.passport_id].achievements.append(a)
+    for uid, b in list(out.items()):
+        primary = next((r.direction_id for r in b.specializations.values() if r.is_primary), b.profile.current_direction_id)
+        proven = [r for r in b.specializations.values() if r.category_id]
+        default = primary
+        if proven and not (b.specializations.get(primary) and b.specializations[primary].category_id):
+            default = sorted(proven, key=lambda r: (not r.is_primary, r.direction_id))[0].direction_id
+        selected = direction or default
+        if category_ids:
+            eligible = [r for r in b.specializations.values() if r.category_id in category_ids
+                        and (not direction or r.direction_id == direction)]
+            if eligible:
+                selected = sorted(eligible, key=lambda r: (not r.is_primary, -(r.rating_score or 0), r.direction_id))[0].direction_id
+        out[uid] = b.for_direction(selected)
     return out
 
 
@@ -168,7 +229,11 @@ def refresh_rating(db: Session, user_id: uuid.UUID) -> float | None:
     b = load_bundles(db, [user_id]).get(user_id)
     if b is None:
         return None
-    b.profile.rating_score = b.strength() if b.profile.current_category_id else None
+    for r in b.specializations.values():
+        r.rating_score = b.for_direction(r.direction_id).strength() if r.category_id else None
+        sync_primary(b.profile, r)
+    if not b.specializations:
+        b.profile.rating_score = b.strength() if b.profile.current_category_id else None
     return b.profile.rating_score
 
 
@@ -211,17 +276,19 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
     p, pv = b.profile, b.privacy
-    cat = categories.get(p.current_category_id or "")
+    cat = categories.get(b.category_id or "")
     t = b.test.value if b.test else None
     show = (lambda k: include_hidden or pv.get(k, True))
     return {
         "ref": p.public_ref,
         "category": {"id": cat.id, "title": cat.title} if cat else None,
-        "direction": p.current_direction_id,
-        "direction_title": DIRECTIONS.get(p.current_direction_id or "", None),
-        "grade": p.current_grade_id,
-        "grade_title": GRADES.get(p.current_grade_id or "", None),
-        "rating_score": p.rating_score,
+        "direction": b.direction,
+        "direction_title": DIRECTIONS.get(b.direction or "", None),
+        "grade": b.grade,
+        "grade_title": GRADES.get(b.grade or "", None),
+        "rating_score": b.rating,
+        "specializations": [summary(r, b.tests_by_direction.get(r.direction_id))
+                            for r in sorted(b.specializations.values(), key=lambda r: (not r.is_primary, r.direction_id))],
         "rank_in_category": rank,
         "category_size": rank_total,
         "test": {

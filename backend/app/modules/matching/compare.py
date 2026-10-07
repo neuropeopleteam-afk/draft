@@ -183,7 +183,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
     req = (sel.requirements if sel else None) or need.requirements or {}
     in_sel = {r["ref"]: r for r in (sel.results if sel else [])}
     profiles = [profile_by_ref(db, r) for r in refs]  # скрытые и без категории → 404
-    bundles = load_bundles(db, [p.user_id for p in profiles])
+    bundles = load_bundles(db, [p.user_id for p in profiles], direction=req.get("direction"))
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     want_grade = req.get("grade")
     want_title = (category_title(f"{req['direction']}.{want_grade}") if req.get("direction") and want_grade
@@ -195,6 +195,8 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         {"key": "category", "group": "Тест", "title": "Категория и грейд",
          "requirement": want_title,
          "quote": ((req.get("evidence") or {}).get("grade") or {}).get("quote")},
+        {"key": "specializations", "group": "Тест", "title": "Оба направления",
+         "hint": "Основное и дополнительное подтверждаются разными тестами"},
         {"key": "theta", "group": "Тест", "title": "θ и точность оценки",
          "hint": "θ — уровень по шкале теста, ± SE — стандартная ошибка; интервал — 95 %"},
         {"key": "integrity", "group": "Тест", "title": "Достоверность результата теста"},
@@ -239,7 +241,15 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         cells["score"] = {"level": "T1", "status": "confirmed", "text": f"{round(s * 100)} из 100",
                           "value": s, "components": comps}
         t = b.test.value if b.test else None
-        g = p.current_grade_id
+        g = b.grade
+        cells["specializations"] = {
+            "level": "T1" if any(x["status"] == "confirmed" for x in c["specializations"]) else "T0",
+            "status": "neutral",
+            "text": "; ".join(
+                f"{x['category_title'] or x['direction_title']} ({'основное' if x['is_primary'] else 'дополнительное'}; "
+                f"{'подтверждено тестом' if x['confirmed_by'] == 'test' else 'ожидает подтверждения'})"
+                for x in c["specializations"]),
+        }
         if t:
             rel = ""
             st = "confirmed"
@@ -248,7 +258,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                        else " — на ступень ниже запрошенного")
                 st = "partial"
             cells["category"] = {"level": "T1", "status": st,
-                                 "text": f"{category_title(p.current_category_id)}{rel}; тест "
+                                 "text": f"{category_title(b.category_id)}{rel}; тест "
                                          f"{b.test.created_at:%d.%m.%Y}, {t.get('correct')} из {t.get('answered')} верно"}
             th, se = float(t.get("theta") or 0), float(t.get("se") or 0)
             gref = want_grade or g
@@ -313,7 +323,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                               "value": float(best.value.get("score", 0))}
         else:
             cells["probe"] = {"level": "none", "status": "neutral", "text": "Зондов пока нет"}
-        cells["market"] = _market_cell(cats.get(p.current_category_id or ""), req)
+        cells["market"] = _market_cell(cats.get(b.category_id or ""), req)
         for k, cell in cells.items():
             if isinstance(cell.get("value"), (int, float)):
                 values.setdefault(k, {})[p.public_ref] = float(cell["value"])

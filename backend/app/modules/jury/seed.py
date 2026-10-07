@@ -54,7 +54,7 @@ EMAILS = scope.emails("")  # общее демо; песочница — scope.e
 COMPANY = "Демо жюри: Северный платёж"
 PERSONAS = [
     {"id": "candidate", "role": "candidate", "title": "Кандидат с паспортом ФСП",
-     "description": "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП (T2), есть место в рейтинге."},
+     "description": "Мария Королёва · Backend · Middle и Frontend · Junior. Два отдельных теста, достижения ФСП (T2)."},
     {"id": "candidate_nofsp", "role": "candidate", "title": "Кандидат без ФСП",
      "description": "Илья Сергеев · Backend · Middle. Истории ФСП нет — нейтрально. Ждёт входящее приглашение."},
     {"id": "employer", "role": "employer", "title": "Работодатель",
@@ -136,13 +136,13 @@ def _p_correct(it: dict, theta: float, part: int) -> float:
 
 
 def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, pending_left: int = 0,
-                  away_items: tuple[int, ...] = ()) -> dict:
+                  away_items: tuple[int, ...] = (), *, direction: str | None = None) -> dict:
     """Проходит тест движком банка за «демо-респондента»: ответы по модели 2PL на уровне theta, время —
     обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений, кроме away_items — позиций, где
     «кандидат» уходил со вкладки (для демонстрации «достоверности результата»). Возвращает итог finish_session."""
     rng = np.random.default_rng(seed)
     eng = DemoRespondentEngine(rng, theta, pending_left)
-    ts = assessment.start_session(db, user_id, claimed, engine_name="bank")
+    ts = assessment.start_session(db, user_id, claimed, engine_name="bank", direction=direction)
     st = ts.result["state"]
     for _ in range(60):
         item = eng.next_item(st)
@@ -270,6 +270,21 @@ def create_jury(db: Session, sid: str = "") -> dict:
 def _create_jury(db: Session, sid: str) -> dict:
     t0 = time.time()
     _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0, sid=sid)
+    # Вторая специализация — реальный отдельный тест банка, не ручная пометка в профиле.
+    from app.modules.profiles.specializations import ensure_specialization
+    ensure_specialization(db, p1, "frontend")
+    sv = SurveyResponse(user_id=p1.user_id, direction_id="frontend", claimed_grade_id="junior",
+                        experience_years=3.5,
+                        answers={"stack": {"javascript": 2, "typescript": 2, "react": 2}, "demo": True, "jury": True})
+    db.add(sv)
+    db.flush()
+    for tag in ("javascript", "typescript", "react"):
+        db.add(SurveyStackTag(survey_id=sv.id, stack_tag_id=tag, self_level=2))
+    db.commit()
+    for attempt in range(6):
+        extra_result = run_demo_test(db, p1.user_id, "junior", 1.6, 5301 + attempt, direction="frontend")
+        if extra_result.get("confirmed"):
+            break
     # у Ильи — два ухода со вкладки во время теста: достоверность «средняя» (видно работодателю с причиной)
     u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid)
     eu = _user(db, "employer", UserRole.employer, sid)
