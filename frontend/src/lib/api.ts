@@ -11,6 +11,7 @@ export interface CandidateProfile {
   rating_score: number | null; grade_locked_until: string | null; visible_to_employers: boolean;
   privacy: Record<string, boolean>; public_ref: string | null; onboarding_completed_at: string | null;
   roles: string[]; fsp_id_claimed: string | null; jury_mode: boolean;
+  age_group: string; parental_consent: boolean; parental_consent_at: string | null;
 }
 export interface Company {
   id: string; name: string; inn: string | null; industry: string | null; description: string | null;

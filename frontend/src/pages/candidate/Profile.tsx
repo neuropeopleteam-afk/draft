@@ -4,6 +4,7 @@ import { CandidateCard } from "../../components/CandidateCard";
 import { Alert, Field, Level, Loading, dtt, errText, useApi, years } from "../../components/ui";
 import { api, apiDownload, apiUpload } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { YouthProfile } from "../../integrations/Youth";
 
 export default function Profile() {
   const { me, refresh } = useAuth();
@@ -45,6 +46,7 @@ export default function Profile() {
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Профиль и резюме" subtitle="Контакты скрыты от работодателей до принятия приглашения. Резюме обрабатывается без передачи ФИО и контактов наружу." />
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
+      <YouthProfile onSaved={() => { void card.reload(); }} />
       <section className="card">
         <h2 className="font-bold text-brand-night">Контакты</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
