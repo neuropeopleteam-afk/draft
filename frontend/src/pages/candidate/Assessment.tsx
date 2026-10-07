@@ -10,7 +10,8 @@ interface Tag { id: string; title: string; kind: string; direction_id: string | 
 interface Onb {
   completed: boolean;
   answers: {
-    direction: string | null; stack: { tag: string; level: number }[]; experience_years: number | null; roles: string[];
+    direction: string | null; additional_direction?: string | null; additional_stack?: { tag: string; level: number }[];
+    stack: { tag: string; level: number }[]; experience_years: number | null; roles: string[];
     work_format: string; city: string | null; relocation: boolean; salary_min_hidden: number | null;
     privacy: Record<string, boolean>; consent_publication: boolean; fsp_id: string | null;
   };
@@ -25,14 +26,15 @@ const STEPS = ["Направление", "Стек", "Опыт и формат",
 export default function Assessment() {
   const onb = useApi<Onb>("/me/onboarding");
   const status = useApi<any>("/assessment/status");
-  const [editing, setEditing] = useState(false);
+  const [q, setQ] = useSearchParams();
+  const [editing, setEditing] = useState(q.get("survey") === "1");
   if (onb.loading || status.loading) return <Loading />;
   if (onb.error || !onb.data) return <Alert>{onb.error}</Alert>;
   const showSurvey = editing || !onb.data.completed;
   return (
     <div className="max-w-3xl">
       {showSurvey ? (
-        <Survey data={onb.data} onDone={() => { setEditing(false); void onb.reload(); void status.reload(); }} />
+        <Survey data={onb.data} onDone={() => { setEditing(false); setQ({}); void onb.reload(); void status.reload(); }} />
       ) : (
         <GradeChoice status={status.data} onEditSurvey={() => setEditing(true)} />
       )}
@@ -44,6 +46,9 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
   const a = data.answers;
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(a.direction ?? "");
+  const [additionalDirection, setAdditionalDirection] = useState(a.additional_direction ?? "");
+  const [additionalStack, setAdditionalStack] = useState<Record<string, number>>(Object.fromEntries((a.additional_stack ?? []).map((s) => [s.tag, s.level])));
+  const [additionalTags, setAdditionalTags] = useState<Tag[]>([]);
   const [stack, setStack] = useState<Record<string, number>>(Object.fromEntries(a.stack.map((s) => [s.tag, s.level])));
   const [exp, setExp] = useState(a.experience_years?.toString() ?? "");
   const [roles, setRoles] = useState<string[]>(a.roles);
@@ -63,6 +68,13 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
     if (!direction) return;
     api<Tag[]>(`/catalog/stack-tags?direction=${direction}`, { auth: false }).then(setTags).catch(() => setTags([]));
   }, [direction]);
+  useEffect(() => {
+    if (!additionalDirection) { setAdditionalTags([]); return; }
+    let active = true;
+    api<Tag[]>(`/catalog/stack-tags?direction=${additionalDirection}`, { auth: false })
+      .then((t) => { if (active) setAdditionalTags(t); }).catch(() => { if (active) setAdditionalTags([]); });
+    return () => { active = false; };
+  }, [additionalDirection]);
   const groups = useMemo(() => ({ own: tags.filter((t) => t.direction_id), common: tags.filter((t) => !t.direction_id) }), [tags]);
 
   const canNext = [!!direction, Object.keys(stack).length > 0, exp !== "" && Number(exp) >= 0, true][step];
@@ -74,6 +86,8 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         method: "PUT",
         body: {
           direction, stack: Object.entries(stack).map(([tag, level]) => ({ tag, level })), experience_years: Number(exp),
+          additional_direction: additionalDirection || null,
+          additional_stack: Object.entries(additionalStack).map(([tag, level]) => ({ tag, level })),
           roles, work_format: wf, city: city || null, relocation: reloc, salary_min_hidden: salary ? Number(salary) : null,
           privacy, consent_publication: consent, fsp_id: fspId || null,
         },
@@ -98,14 +112,23 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
       <div className="card mt-5 space-y-5">
         {step === 0 && (
           <div>
-            <p className="label">Ваше направление</p>
+            <p className="label">Основное направление</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {Object.entries(DIRECTIONS).map(([id, t]) => (
-                <button key={id} type="button" onClick={() => { setDirection(id); if (id !== direction) setStack({}); }}
+                <button key={id} type="button" onClick={() => { setDirection(id); if (id !== direction) setStack({}); if (id === additionalDirection) { setAdditionalDirection(""); setAdditionalStack({}); } }}
                   className={`rounded-xl border px-4 py-4 text-left transition-colors ${direction === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
                   <span className="font-semibold text-brand-night">{t}</span>
                 </button>
               ))}
+            </div>
+            <div className="mt-5">
+              <Field label="Дополнительное направление (необязательно)" htmlFor="additional-direction" hint="Отдельный тест и категория. Подтверждённые направления сохраняются при редактировании опроса. Максимум — два.">
+                <select id="additional-direction" className="input" value={additionalDirection}
+                  onChange={(e) => { setAdditionalDirection(e.target.value); setAdditionalStack({}); }}>
+                  <option value="">Без второго направления</option>
+                  {Object.entries(DIRECTIONS).filter(([id]) => id !== direction).map(([id, title]) => <option key={id} value={id}>{title}</option>)}
+                </select>
+              </Field>
             </div>
           </div>
         )}
@@ -136,6 +159,20 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
                 </div>
               </div>
             ))}
+            {additionalDirection && (
+              <div className="border-t border-brand-night/10 pt-4">
+                <p className="mb-2 text-sm font-semibold text-brand-night">Стек дополнительного направления · {DIRECTIONS[additionalDirection]}</p>
+                <div className="flex flex-wrap gap-2">
+                  {additionalTags.map((tag) => (
+                    <button key={tag.id} type="button" aria-pressed={!!additionalStack[tag.id]}
+                      className={`rounded-full border px-3 py-1.5 text-sm ${additionalStack[tag.id] ? "border-brand bg-brand-blush/40 font-semibold" : "border-brand-night/15"}`}
+                      onClick={() => { const n = { ...additionalStack }; if (n[tag.id]) delete n[tag.id]; else n[tag.id] = 2; setAdditionalStack(n); }}>
+                      {tag.title}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
         {step === 2 && (
@@ -228,18 +265,19 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
   const [q] = useSearchParams();
   const qGrade = q.get("grade");
   const [grade, setGrade] = useState<string>(qGrade && qGrade in GRADES ? qGrade : status?.claimed_grade ?? "middle");
+  const [dir, setDir] = useState<string>(q.get("direction") ?? status?.survey_direction ?? "");
+  const chosen = status?.specializations?.find((s: any) => s.direction === dir);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [ack, setAck] = useState(false);
-  const locked = status?.lock_active && !status?.sandbox_active;
-  const dir = status?.survey_direction;
-  const resume = !!status?.active_session_id && status?.active_grade === grade;
+  const locked = (chosen?.lock_active ?? status?.lock_active) && !status?.sandbox_active;
+  const resume = !!(chosen ? chosen.active_session_id : status?.active_session_id) && (chosen ? chosen.active_grade : status?.active_grade) === grade;
   const quota = status?.sandbox_starts as { limit: number; used: number; left: number; next_at: string | null } | null;
 
   async function start() {
     setError(null); setBusy(true);
     try {
-      const s = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: grade, integrity_ack: ack } });
+      const s = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: grade, direction: dir, integrity_ack: ack } });
       navigate(`/candidate/assessment/test/${s.session_id}`);
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   }
@@ -247,8 +285,17 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
   return (
     <>
       <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTIONS[dir] ?? "—"}. Выберите уровень, на который хотите подтвердиться.`} />
-      {status?.current?.category_id && (
-        <Alert kind="info">Текущая категория: <b>{catTitle(status.current.category_id)}</b>. Подробности — в разделе <Link className="font-semibold underline" to="/candidate/category">«Категория и грейд»</Link>.</Alert>
+      {status?.specializations?.length > 1 && (
+        <div className="mt-4">
+          <Field label="Направление теста" htmlFor="test-direction" hint="Подтверждения и ограничения в двух направлениях независимы.">
+            <select id="test-direction" className="input" value={dir} onChange={(e) => { setDir(e.target.value); setAck(false); }}>
+              {status.specializations.map((s: any) => <option key={s.direction} value={s.direction}>{s.direction_title} · {s.is_primary ? "основное" : "дополнительное"}</option>)}
+            </select>
+          </Field>
+        </div>
+      )}
+      {(chosen?.category_id ?? status?.current?.category_id) && (
+        <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}</b>. Подробности — в разделе <Link className="font-semibold underline" to="/candidate/category">«Категория и грейд»</Link>.</Alert>
       )}
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {Object.entries(GRADES).map(([id, t]) => (
@@ -267,7 +314,7 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
       <IntegrityNotice />
-      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда — с {dt(status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
+      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTIONS[dir]} — с {dt(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
       {status?.sandbox_active && quota && (
         <div className="mt-4"><Alert kind="info">Демо-режим жюри: новых тестов за 24 часа осталось {quota.left} из {quota.limit}. Лимит не даёт выкачать банк заданий перезапусками; продолжение начатого теста его не тратит.</Alert></div>
       )}
@@ -280,7 +327,7 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
       )}
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={start} disabled={busy || locked || (!resume && !ack)}>{busy ? "Готовим задания…" : resume ? "Продолжить тест" : "Начать тест"}</button>
-        <button className="btn-ghost" onClick={onEditSurvey}>Изменить ответы опроса</button>
+        <button className="btn-ghost" onClick={onEditSurvey}>{status?.specializations?.length < 2 ? "Добавить второе направление" : "Изменить ответы опроса"}</button>
       </div>
     </>
   );

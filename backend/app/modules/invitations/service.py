@@ -81,13 +81,13 @@ def candidate_contacts(db: Session, candidate_id: uuid.UUID) -> dict:
 
 def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, need: EmployerNeed | None) -> list[dict]:
     """Подтверждённые факты (T1/T2), прикладываемые к приглашению автоматически."""
-    b = load_bundles(db, [candidate_id])[candidate_id]
+    b = load_bundles(db, [candidate_id], direction=(need.requirements or {}).get("direction") if need else None)[candidate_id]
     ev = []
     if b.test:
         t = b.test.value
         what = ("Экспресс-категория {} по мини-тесту" if t.get("mini") else "Категория {} подтверждена тестом")
         ev.append({"level": "T1", "kind": "test",
-                   "text": f"{what.format(category_title(b.profile.current_category_id))}: {t.get('correct')} из "
+                   "text": f"{what.format(category_title(b.category_id))}: {t.get('correct')} из "
                            f"{t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}"})
     wanted = []
     if need:
@@ -271,8 +271,12 @@ def review_probe(db: Session, p: Probe, verdict: str, comment: str | None) -> Pr
     p.score = score
     p.review = {"verdict": verdict, "verdict_title": title, "comment": comment}
     probe_event(p, ProbeStatus.reviewed, "employer")
+    need = db.get(EmployerNeed, p.need_id) if p.need_id else None
+    profile = db.get(CandidateProfile, p.candidate_user_id)
     db.add(CandidateFact(user_id=p.candidate_user_id, kind="probe", key=str(p.id), title=p.title[:255],
-                         value={"score": score, "verdict": title}, evidence_level=EvidenceLevel.T1,
+                         value={"score": score, "verdict": title,
+                                "direction": need.direction_id if need and need.direction_id else profile.current_direction_id},
+                         evidence_level=EvidenceLevel.T1,
                          source=FactSource.probe, source_ref=f"probe:{p.id}"))
     db.flush()
     refresh_rating(db, p.candidate_user_id)
