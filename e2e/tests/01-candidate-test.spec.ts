@@ -119,7 +119,7 @@ test("кандидат: демо-вход → тест → результат �
     // грейд не понижается принудительно: категория остаётся «Backend · Middle» при любом исходе пересдачи
     await expect(card.getByText(/^Backend · (Middle|Senior)$/)).toBeVisible();
     await expect(card.getByText(/Место в категории:/)).toBeVisible();
-    await expect(card.getByText("Правило 90 дней")).toBeVisible();
+    await expect(card.getByText("Правила 90 и 30 дней")).toBeVisible();
   });
 
   await test.step("карта навыков и маршрут роста по этому тесту", async () => {

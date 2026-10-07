@@ -7,8 +7,10 @@
 метрики не искажаются.
 
 Синтетический кандидат отвечает по стратегии:
-* ``theta`` / ``level_*`` — уровень θ: верный ответ с вероятностью 2PL P(θ) по параметрам задания (как демо-респондент
-  песочницы жюри); ``level_junior`` = −0,5, ``level_middle`` = 0,5, ``level_senior`` = 1,5 (середины полос);
+* ``theta`` / ``level_*`` — уровень θ: верный ответ с вероятностью P(θ) по той же модели заданий, что и у оценщика
+  (логистическая без множителя 1,7, ``irt.prob``); ``level_junior`` = −0,5, ``level_middle`` = 0,5,
+  ``level_senior`` = 1,5 (середины полос). Демо-респондент песочницы жюри (seed._p_correct) отвечает по кривой с
+  множителем 1,7 — круче модели, поэтому там θ̂ систематически уходит от заданного θ; здесь — нет;
 * ``all_correct`` — всегда верно; ``all_wrong`` — всегда неверно; ``random`` — случайный вариант (строка, ответ);
 * ``common_only`` — знает только общий блок: задания общего блока верно, направления — случайно.
 
@@ -30,7 +32,8 @@ import numpy as np
 
 from app.modules.assessment.bank_engine import GRADE_RU, BankEngine
 from app.modules.assessment.engine import GRADES
-from app.modules.jury.seed import _answer_for, _p_correct
+from app.modules.jury.seed import _answer_for
+from assessment_bank.psychometrics.irt import prob as irt_prob
 
 MAX_N = 20
 DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security")
@@ -103,6 +106,14 @@ def _correct(it: dict, step: int, strategy: str, theta: float | None, rng: np.ra
     return bool(rng.random() < _p_correct(it, float(theta), step - 1))
 
 
+def _p_correct(it: dict, theta: float, part: int) -> float:
+    """P(верно) по модели оценщика движка (irt.prob), параметры части part задания."""
+    a = np.asarray(it["pool"]["a"], dtype=float)
+    b = np.asarray(it["pool"]["b"], dtype=float)
+    k = min(part, len(b) - 1)
+    return float(irt_prob(theta, float(a[k]), float(b[k])))
+
+
 def run_one(eng: SyntheticEngine, *, direction: str, claimed: str, mode: str, seed: int,
             previous_subpools: list[int] | None = None) -> dict:
     rng = eng.rng
@@ -153,8 +164,45 @@ def _stat(xs: list[float]) -> dict:
             "sd": round(float(a.std(ddof=1)), 2) if a.size > 1 else 0.0}
 
 
-def expected_for(strategy: str, theta: float | None, claimed: str) -> dict:
-    """Что должно получиться у честного теста при этой стратегии (для вердикта)."""
+def _ncdf(z: float) -> float:
+    return 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
+
+
+def shrink(theta: float, se: float, prior_sd: float = 1.0) -> float:
+    """Куда в среднем смещается EAP-оценка θ̂ при априорном N(0, prior_sd) и погрешности se: к нулю,
+    примерно в 1/(1 + se²/prior_sd²) раз (точно — для нормального правдоподобия). У короткого теста заметно."""
+    return theta / (1.0 + (se / prior_sd) ** 2)
+
+
+def expected_confirm_rate(theta: float, cut: float, se: float, level: float = 0.8) -> float:
+    """Доля подтверждений у кандидата с истинным θ при погрешности se: грейд подтверждается, когда
+    P(θ ≥ cut | θ̂, se) ≥ level, то есть θ̂ ≥ cut + z·se; θ̂ ~ N(shrink(θ), se)."""
+    z = -math.sqrt(2.0) * _erfinv(1.0 - 2.0 * level)  # квантиль N(0,1) уровня level
+    need = cut + z * se
+    return _ncdf((shrink(theta, se) - need) / se)
+
+
+def _erfinv(y: float) -> float:
+    # достаточно точная аппроксимация (Giles) для квантиля
+    w = -math.log((1.0 - y) * (1.0 + y))
+    if w < 5.0:
+        w -= 2.5
+        p = 2.81022636e-08
+        for c in (3.43273939e-07, -3.5233877e-06, -4.39150654e-06, 0.00021858087, -0.00125372503, -0.00417768164,
+                  0.246640727, 1.50140941):
+            p = c + p * w
+    else:
+        w = math.sqrt(w) - 3.0
+        p = -0.000200214257
+        for c in (0.000100950558, 0.00134934322, -0.00367342844, 0.00573950773, -0.0076224613, 0.00943887047,
+                  1.00167406, 2.83297682):
+            p = c + p * w
+    return p * y
+
+
+def expected_for(strategy: str, theta: float | None, claimed: str, se: float | None = None) -> dict:
+    """Что должно получиться у честного теста при этой стратегии (для вердикта). se — средняя погрешность
+    прогонов: для уровня θ ожидаемая доля подтверждений считается по ней (правило P ≥ 0,8 консервативно у порога)."""
     if strategy == "all_correct":
         return {"confirmed": True, "point_grade": "senior", "text": "«Всё верно» — грейд должен подтвердиться, точечная оценка — Senior."}
     if strategy == "all_wrong":
@@ -174,10 +222,20 @@ def expected_for(strategy: str, theta: float | None, claimed: str) -> dict:
     conf = th >= CUTS[claimed]
     txt = f"Истинный уровень θ = {str(round(th, 2)).replace('.', ',')} — это {GRADE_RU[pg]}; грейд {GRADE_RU[claimed]} "
     txt += "должен подтверждаться" if conf else "подтверждаться не должен"
+    out = {"confirmed": conf, "point_grade": pg}
+    if se:
+        rate = expected_confirm_rate(th, CUTS[claimed], se)
+        out["confirm_rate"] = round(rate, 3)
+        out["theta_hat_expected"] = round(shrink(th, se), 2)
+        txt += (f". При погрешности теста ≈ {str(round(se, 2)).replace('.', ',')} оценка θ̂ в среднем сдвинута к нулю "
+                f"(≈ {str(round(shrink(th, se), 2)).replace('.', ',')}: априорное N(0, 1) оценки EAP), и правило «P ≥ 80 %» даёт "
+                f"подтверждение примерно в {round(rate * 100)} % случаев — у порога оно консервативно, ошибка в пользу "
+                "«не подтверждён»")
     if abs(th - near) < 0.35:
         txt += f". Уровень у самого порога {str(near).replace('.', ',')} — решения двух попыток могут расходиться: это ожидаемо, " \
                "именно здесь работает дотестирование у порога"
-    return {"confirmed": conf, "point_grade": pg, "text": txt + "."}
+    out["text"] = txt + "."
+    return out
 
 
 def run(*, strategy: str, theta: float | None, direction: str, claimed: str, n: int, repeat: bool, mode: str,
@@ -210,8 +268,8 @@ def run(*, strategy: str, theta: float | None, direction: str, claimed: str, n: 
     finally:
         _busy.release()
     runs = first + second
-    exp = expected_for(strategy, theta, claimed)
     confirm_rate = float(np.mean([r["confirmed"] for r in runs]))
+    exp = expected_for(strategy, theta, claimed, se=float(np.mean([r["se"] for r in runs])))
     out = {
         "strategy": strategy, "theta": theta, "direction": direction, "claimed_grade": claimed, "mode": mode,
         "n": n, "repeat": repeat, "runs_total": len(runs), "seconds": round(time.time() - t0, 1),
@@ -248,7 +306,14 @@ def run(*, strategy: str, theta: float | None, direction: str, claimed: str, n: 
 
 def _verdict(out: dict, exp: dict) -> dict:
     cr = out["confirm_rate"]
-    if exp["confirmed"] is True:
+    n = out["runs_total"]
+    if exp.get("confirm_rate") is not None:
+        # уровень θ: сравниваем с модельным ожиданием с допуском на случайность выборки (2 σ биномиального) и 10 п.п.
+        e = exp["confirm_rate"]
+        tol = 2 * math.sqrt(max(e * (1 - e), 0.0225) / n) + 0.10
+        ok = abs(cr - e) <= tol
+        text = f"Подтверждений {round(cr * 100)} % при модельном ожидании {round(e * 100)} % (допуск ± {round(tol * 100)} п.п. на {n} прогонов)."
+    elif exp["confirmed"] is True:
         ok = cr >= 0.8
         text = f"Подтверждений {round(cr * 100)} % при ожидаемых ≥ 80 %."
     elif exp["confirmed"] is False:

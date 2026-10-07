@@ -16,7 +16,18 @@ const sgn = (v?: number | null) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}
 export default function Validation() {
   const { data: r, error, loading } = useApi<any>("/validation/report", []);
   useEffect(() => {
-    if (r && location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    if (!r || !location.hash) return;
+    const id = location.hash.slice(1);
+    let manual = false;
+    const stop = () => { manual = true; };
+    const EVENTS = ["wheel", "touchmove", "keydown"] as const;
+    for (const ev of EVENTS) window.addEventListener(ev, stop, { passive: true });
+    const go = () => { if (!manual) document.getElementById(id)?.scrollIntoView(); };
+    go();
+    // бенчмарк и экспертная разметка подгружаются отдельно и сдвигают якорь вниз — повторяем прокрутку, пока
+    // пользователь сам не начал листать
+    const timers = [400, 1200, 2500].map((ms) => setTimeout(go, ms));
+    return () => { timers.forEach(clearTimeout); for (const ev of EVENTS) window.removeEventListener(ev, stop); };
   }, [r]);
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
