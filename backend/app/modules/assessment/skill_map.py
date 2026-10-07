@@ -26,6 +26,8 @@ _GLOBAL: dict[str, str] = {
     # технологические семейства банка (06.10): Docker — общий блок, остальные — backend
     "docker": "docker", "dockerfile": "docker", "docker_compose": "docker", "docker_build_cache": "docker",
     "docker_networking": "docker", "docker_volumes": "docker",
+    # лёгкие семейства у порога Junior (07.10)
+    "sql_aggregates": "sql", "sql_null": "sql", "filesystem": "linux",
 }
 
 _BY_DIRECTION: dict[str, dict[str, str]] = {
@@ -44,6 +46,9 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "django": "django", "django_orm": "django", "django_forms": "django", "django_transactions": "django",
         "kafka": "kafka", "kafka_consumer_groups": "kafka", "kafka_partitions": "kafka",
         "kafka_delivery": "kafka", "kafka_offsets": "kafka", "kafka_outbox": "kafka",
+        # семейства 07.10: Django — миграции и сигналы, Java — память и GC, Python — коллекции
+        "django_signals": "django", "django_migrations": "django", "java_memory": "java", "java_gc": "java",
+        "python_collections": "python",
     },
     "frontend": {
         "arrays": "javascript", "async_await": "javascript", "closures": "javascript", "operators": "javascript",
@@ -52,6 +57,7 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "testing": "frontend-testing", "accessibility": "a11y", "aria": "a11y", "screen_readers": "a11y",
         "focus_management": "a11y", "keyboard": "a11y", "html": "html-css",
         "state_management": "state-management", "bundlers": "vite-webpack", "build": "vite-webpack",
+        "js_types": "javascript",
     },
     "data_ml": {
         "ab_testing": "statistics", "hypothesis_testing": "statistics", "p_value": "statistics",
@@ -68,6 +74,7 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "data_drift": "mlops", "psi": "mlops", "ml_systems": "mlops",
         "llm": "nlp", "rag": "nlp", "chunking": "nlp", "ranking": "nlp",
         "time_series": "pandas", "slowly_changing_data": "sql", "window_functions": "sql",
+        "descriptive_stats": "statistics",
     },
     "qa": {
         "test_review": "test-design", "false_positive": "test-design", "defect_localization": "test-design",
@@ -100,6 +107,7 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "security_logging": "siem-soc", "vulnerability_triage": "siem-soc", "cvss": "siem-soc",
         "risk_prioritization": "siem-soc", "prioritization": "siem-soc", "evidence_preservation": "forensics",
         "recovery": "siem-soc", "communication": "siem-soc", "data_minimization": "owasp",
+        "secrets_handling": "owasp",
     },
 }
 
