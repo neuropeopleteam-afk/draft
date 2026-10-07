@@ -123,7 +123,10 @@ def selection_categories(req: dict) -> set[str] | None:
 
 
 def pick_set(bundles: list[Bundle], req: dict, rnd: random.Random) -> list[Bundle]:
+    """Набор для разметки: только кандидаты с подтверждённой категорией — «Junior (предварительно)» и кандидаты
+    без подтверждённого грейда в набор не попадают (их место в выдаче задано статусом, а не скором)."""
     d, g = req.get("direction"), req.get("grade")
+    bundles = [b for b in bundles if b.profile.current_category_id and not b.provisional]
     same = [b for b in bundles if b.profile.current_direction_id == d]
     exact = [b for b in same if b.profile.current_grade_id == g] if g else same
     near = [b for b in same if b not in exact and g and abs(GRADE_LEVEL[b.profile.current_grade_id] - GRADE_LEVEL[g]) == 1]
@@ -144,7 +147,7 @@ METHODS = ("platform", "platform_no_fsp", "bm25", "keywords", "random")
 def evaluate(db: Session, needs: list[str], seed: int = 20261006) -> dict:
     rnd = random.Random(seed)
     profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.current_category_id.is_not(None))).all()
-    bundles = sorted(load_bundles(db, [p.user_id for p in profiles]).values(),
+    bundles = sorted((b for b in load_bundles(db, [p.user_id for p in profiles]).values() if not b.provisional),
                      key=lambda b: (b.profile.telegram or "", b.profile.public_ref or ""))  # детерминированно
     resumes: dict = {}
     for r in db.scalars(select(CandidateResume).where(CandidateResume.user_id.in_([b.profile.user_id for b in bundles]))):

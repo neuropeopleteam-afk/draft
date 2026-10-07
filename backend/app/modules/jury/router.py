@@ -33,12 +33,13 @@ _mx = threading.Lock()
 # Лимит исчерпан — вход в общее демо (в один клик работает всегда).
 _new_ip = SlidingWindow(12, 3600)
 _new_all = SlidingWindow(60, 3600)
-LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "employer": "/employer", "expert": "/expert",
+LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "candidate_junior": "/candidate/category",
+           "employer": "/employer", "expert": "/expert",
            "fsp": "/fsp"}
 
 
 class LoginIn(BaseModel):
-    persona: Literal["candidate", "candidate_nofsp", "employer", "expert", "fsp"]
+    persona: Literal["candidate", "candidate_nofsp", "candidate_junior", "employer", "expert", "fsp"]
     scenario: str | None = Field(None, pattern=r"^(new|[a-z0-9]{10})$",
                                  description="new — создать свою песочницу; id — продолжить свою; пусто — общее демо")
 
