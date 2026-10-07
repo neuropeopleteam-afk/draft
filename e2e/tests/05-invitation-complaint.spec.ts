@@ -3,7 +3,7 @@
  * «Backend-разработчик (платежи)» → приглашение отклонено с причиной, жалоба одна, индекс доверия компании
  * учитывает её (видят другие кандидаты), работодатель видит причину без комментария кандидата.
  */
-import { expect, newPersonaContext, productIssue, test } from "../lib/fixtures";
+import { expect, newPersonaContext, test } from "../lib/fixtures";
 import { juryEnter, openSection } from "../lib/ui";
 
 const POSITION = "Backend-разработчик (платежи)";
@@ -16,9 +16,13 @@ test("кандидат жалуется на приглашение → откл
   const dialog = page.getByRole("dialog", { name: POSITION });
   const complaints = dialog.getByRole("listitem").filter({ hasText: /Жалобы кандидатов\./ });
 
+  // число индекса — крупная цифра рядом с «из 100»
+  const score = async () => Number(await dialog.locator("p", { hasText: "из 100" }).first().locator("span").first().textContent());
+  let before = 0;
   await test.step("до жалобы: индекс доверия без жалоб", async () => {
     await expect(dialog.getByText("Индекс доверия работодателя")).toBeVisible();
     await expect(complaints).toContainText("жалоб на приглашения нет");
+    before = await score();
   });
 
   await test.step("жалоба с причиной и комментарием", async () => {
@@ -34,8 +38,9 @@ test("кандидат жалуется на приглашение → откл
     // жалоба одна: ни повторной жалобы, ни «принять» после неё
     await expect(dialog.getByRole("button", { name: /^Пожаловаться/ })).toHaveCount(0);
     await expect(dialog.getByRole("button", { name: "Принять и открыть контакты" })).toHaveCount(0);
-    await productIssue("жалоба на приглашение: блок индекса доверия в открытом окне не обновляется (по-прежнему «жалоб нет»)",
-      async () => (await complaints.textContent())?.includes("жалоб на приглашения нет") ?? false);
+    // индекс доверия обновляется в том же окне: строка жалоб и −5 баллов (не ниже 0)
+    await expect(complaints).toContainText(/жалоб за полгода: 1 из \d+ приглашений \(не та роль — 1\)/);
+    await expect.poll(score, { message: "жалоба снижает индекс на 5" }).toBe(Math.max(0, before - 5));
   });
 
   await test.step("индекс доверия компании учитывает жалобу", async () => {

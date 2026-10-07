@@ -8,7 +8,7 @@
  * шаги open_book), результат считается сервером, а категория при неподтверждении НЕ понижается.
  */
 import type { Page } from "@playwright/test";
-import { expect, productIssue, test } from "../lib/fixtures";
+import { expect, test } from "../lib/fixtures";
 import { juryEnter, openSection } from "../lib/ui";
 
 const RESULT = /^Грейд (не )?подтверждён$/;
@@ -138,9 +138,7 @@ test("кандидат: демо-вход → тест → результат �
     await expect(main.getByRole("heading", { level: 2, name: "Маршрут роста" })).toBeVisible();
     await expect(main.getByRole("heading", { level: 2, name: "Соревнования ФСП" })).toBeVisible();
     // темы показаны по-русски: служебные ключи банка наружу не выходят
-    await productIssue("карта навыков: тема без русского названия («other»)",
-      async () => (await main.getByText(/^(other|misc|common)$/).count()) > 0);
-    await productIssue("карта навыков: двойная точка в подписи теста («г..»)",
-      async () => (await main.getByText(/ г\.\./).count()) > 0);
+    await expect(main.getByText(/^(other|misc|common)$/), "тема без русского названия").toHaveCount(0);
+    await expect(main.getByText(/ г\.\./), "двойная точка после даты").toHaveCount(0);
   });
 });
