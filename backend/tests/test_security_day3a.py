@@ -1,9 +1,16 @@
 """Исправления по аудиту безопасности (К1, К2, В1, повторная отправка кода)."""
+import re
 import uuid
 
 from app.core.db import SessionLocal
 from tests.conftest import register, register_and_verify
+from tests.route_walk import iter_routes
 from tests.test_day2_rules import H
+
+
+def _fill(path: str) -> str:
+    """/api/admin/x/{pid}/y → /api/admin/x/x/y: любое значение параметра — отказ в правах должен быть раньше поиска."""
+    return re.sub(r"\{[^}]+\}", "x", path)
 
 
 def test_k1_verify_email_of_verified_account_gives_no_token(client):
@@ -68,11 +75,16 @@ def test_k2_jury_expert_is_not_admin_and_sees_only_demo(client):
     assert r.status_code == 200
     assert r.json()["user"]["role"] == "expert"
     x = r.json()["access_token"]
-    # /api/admin/* — только у администратора
+    # /api/admin/* — только у администратора. Обход — через общий хелпер: в FastAPI 0.142 у элементов app.routes
+    # нет path (это _IncludedRouter), и прежний перебор по path не находил ни одного маршрута — проверка была пустой.
     assert client.get("/api/admin/sus/summary", headers=H(x)).status_code in (401, 403, 404)
-    for path in [p for p in {getattr(rt, "path", "") for rt in client.app.routes} if p.startswith("/api/admin/")]:
-        if "{" not in path:
-            assert client.get(path, headers=H(x)).status_code in (401, 403, 405), path
+    admin_routes = [r for r in iter_routes(client.app) if r.path.startswith("/api/admin/")]
+    assert admin_routes, "обход маршрутов не нашёл /api/admin/* — хелпер tests/route_walk.py сломан"
+    for r in admin_routes:
+        url = _fill(r.path)
+        resp = client.request(r.method, url, headers=H(x), json={})
+        assert resp.status_code in (401, 403), (r.method, r.path, resp.status_code)  # не 404/405/422: отказ — до тела
+        assert client.request(r.method, url, json={}).status_code == 401, (r.method, r.path)  # и анониму
     # реальный (не демо) кандидат с ответом «на проверке»
     tok = register_and_verify(client, "real@example.com")
     me = client.get("/api/me", headers=H(tok)).json()

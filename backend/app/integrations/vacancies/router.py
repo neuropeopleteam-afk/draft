@@ -9,7 +9,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
 from app.core.db import get_db, utcnow
 from app.core.deps import get_current_user, require_role
@@ -23,6 +23,7 @@ from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import STACK, category_title
 from app.modules.invitations.service import candidate_contacts
+from app.modules.jury import scope as jury_scope
 from app.modules.matching.router import my_company
 from app.modules.profiles.candidate_router import candidate_card_for
 from app.modules.profiles.models import CandidateProfile, Company
@@ -101,6 +102,24 @@ def _own_vacancy(db: Session, company: Company, vid: uuid.UUID) -> Vacancy:
     if v is None or v.company_id != company.id:
         raise api_error(404, "vacancy_not_found", "Вакансия не найдена")
     return v
+
+
+# Песочницы жюри: вакансия компании песочницы видна только её кандидатам — та же видимость, что у кандидатов в
+# подборках (jury_scope.pool_clause), только по почте создателя компании. Компания без создателя — платформенная.
+_Creator = aliased(User)
+
+
+def _pool_join(stmt):
+    return (stmt.join(Company, Company.id == Vacancy.company_id)
+            .outerjoin(_Creator, _Creator.id == Company.created_by)
+            .where(or_(_Creator.email.is_(None), jury_scope.pool_clause(_Creator.email))))
+
+
+def _in_pool(db: Session, v: Vacancy) -> bool:
+    """То же условие для одной вакансии (карточка, отклик)."""
+    c = db.get(Company, v.company_id)
+    creator = db.get(User, c.created_by) if c and c.created_by else None
+    return creator is None or jury_scope.visible(creator.email)
 
 
 def _check_refs(db: Session, category_id: str | None, stack: list[str] | None) -> None:
@@ -271,11 +290,10 @@ def list_vacancies(q: str | None = Query(None, max_length=100), direction: str |
                    category_id: str | None = Query(None, max_length=48), salary_min: int | None = Query(None, ge=0),
                    work_format: str | None = Query(None, pattern=FORMATS), limit: int = Query(50, ge=1, le=100),
                    user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    stmt = select(Vacancy).where(Vacancy.status == "published")
+    stmt = _pool_join(select(Vacancy).where(Vacancy.status == "published"))
     if q:
         like = f"%{q.strip()}%"
-        stmt = stmt.join(Company, Company.id == Vacancy.company_id).where(
-            or_(Vacancy.title.ilike(like), Vacancy.description.ilike(like), Company.name.ilike(like)))
+        stmt = stmt.where(or_(Vacancy.title.ilike(like), Vacancy.description.ilike(like), Company.name.ilike(like)))
     if category_id:
         stmt = stmt.where(Vacancy.category_id == category_id)
     elif direction:
@@ -300,7 +318,7 @@ def list_vacancies(q: str | None = Query(None, max_length=100), direction: str |
 def get_vacancy(vid: uuid.UUID, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
     v = db.get(Vacancy, vid)
     own = user.role == UserRole.employer and v is not None and _is_own(db, user, v)
-    if v is None or (v.status != "published" and not own):
+    if v is None or (v.status != "published" and not own) or (not own and not _in_pool(db, v)):
         raise api_error(404, "vacancy_not_found", "Вакансия не найдена")
     mine = db.scalar(select(VacancyApplication).where(VacancyApplication.vacancy_id == v.id,
                                                       VacancyApplication.candidate_user_id == user.id))
@@ -327,7 +345,7 @@ class ApplyIn(BaseModel):
 def apply(vid: uuid.UUID, data: ApplyIn, bg: BackgroundTasks, user: User = Depends(candidate),
           db: Session = Depends(get_db)) -> dict:
     v = db.get(Vacancy, vid)
-    if v is None or v.status != "published":
+    if v is None or v.status != "published" or not _in_pool(db, v):
         raise api_error(404, "vacancy_not_found", "Вакансия не найдена или снята с публикации")
     if not data.consent_contacts:
         raise api_error(422, "consent_required", "Отклик раскрывает ваши контакты компании — подтвердите согласие")
