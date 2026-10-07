@@ -10,7 +10,7 @@ Talantix (``/api/ats-stub/talantix``) — как https://api.talantix.ru:
   Access-токен демо живёт 15 минут — автоматическое обновление по refresh-токену видно в журнале.
 
 «Поток» (``/api/ats-stub/potok/api/v3``) — как https://app.potok.io/api/v3: ``GET /jobs.json``, ``GET /jobs/{id}.json``,
-``POST /applicants.json``, ``GET /applicants/{id}.json``, ``POST /ajs_joins.json`` (422 при повторе),
+``POST /applicants.json`` (``events`` — только список, объект → 500, как у настоящего «Потока»), ``GET /applicants/{id}.json``, ``POST /ajs_joins.json`` (422 при повторе),
 ``POST /ajs_joins/{id}/change_stage.json``, ``POST /events.json``; токен — Bearer или ``?token=``.
 
 Всё, что пришло, хранится в ats_stub_records ящика компании и видно работодателю в «Тестовая ATS: что пришло».
@@ -377,6 +377,9 @@ async def pt_create_applicant(request: Request, token: str | None = None, author
     if key is None:
         return _pt_401()
     a = ((await request.json()) or {}).get("applicant") or {}
+    events = a.get("events")
+    if events is not None and not isinstance(events, list):  # как настоящий «Поток»: events — только список
+        return JSONResponse({"status": 500, "error": "Internal Server Error"}, status_code=500)
     errors: dict[str, list[str]] = {}
     if not (a.get("first_name") or a.get("last_name")):
         errors["name"] = ["не может быть пустым"]
@@ -396,9 +399,9 @@ async def pt_create_applicant(request: Request, token: str | None = None, author
     db.add(AtsStubRecord(stub_key=key, kind="potok_applicant", external_id=aid,
                          payload={**a, "ajs_joins": [{"job_id": j["job"]["id"], "job_name": j["job"]["name"],
                                                       "stage": j["stage"]["name"]} for j in joins]}))
-    if (a.get("events") or {}).get("body"):
-        db.add(AtsStubRecord(stub_key=key, kind="potok_event", external_id=aid,
-                             payload={"applicant_id": aid, **a["events"]}))
+    for ev in events or []:
+        if isinstance(ev, dict) and ev.get("body"):
+            db.add(AtsStubRecord(stub_key=key, kind="potok_event", external_id=aid, payload={"applicant_id": aid, **ev}))
     db.commit()
     return {"id": aid, "first_name": a.get("first_name"), "last_name": a.get("last_name"),
             "middle_name": a.get("middle_name"), "emails": a.get("emails") or [], "phones": a.get("phones") or [],
