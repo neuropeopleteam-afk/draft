@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Alert, errText, num, pct } from "../ui";
+import { Alert, errText, num, pct, ruText } from "../ui";
 import { api, apiUrl, tokenStore } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { isJury, juryToken } from "../../lib/jury";
@@ -112,9 +112,9 @@ export default function ClosedSet() {
           {!need.results.length && <p className="mt-3 text-sm">Нет профилей в подтверждённой категории потребности.</p>}
           <ol className="mt-3 space-y-3">
             {need.results.map((row: any) => <li key={row.candidate_id} className="min-w-0 rounded-lg bg-[#FBF8FC] p-3 text-sm">
-              <b className="break-all">{num(row.rank, 0)}. {row.candidate_id}</b> · скор {num(row.score, 3)} · метка {row.relevance ?? "нет"}
+              <b className="break-all">{num(row.rank, 0)}. {row.candidate_id}</b> · скор {num(row.score, 3)} · метка {row.relevance == null ? "нет" : num(row.relevance, 0)}
               <ul className="mt-2 space-y-1 text-xs leading-relaxed text-brand-ink/75">
-                {row.reasons.map((r: any, i: number) => <li key={i}><b>{r.requirement} [{r.level}]: </b>{r.text}</li>)}
+                {row.reasons.map((r: any, i: number) => <li key={i}><b>{r.requirement} [{r.level}]: </b>{ruText(r.text)}</li>)}
               </ul>
             </li>)}
           </ol>
