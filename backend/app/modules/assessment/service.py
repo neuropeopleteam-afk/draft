@@ -353,6 +353,8 @@ def _result_payload(db: Session, ts: TestSession, profile: CandidateProfile) -> 
         # уровень ниже доказан уверенно (P ≥ 0,8): кандидат может принять его одним действием, без нового теста
         "accept_lower_available": bool(can_lower and not accepted),
         "accept_lower_grade": can_lower if not accepted else None,
+        "accept_lower_p": (round(sum(float(v) for g, v in (er.get("probabilities") or {}).items()
+                                     if GRADE_LEVEL.get(g, 0) >= GRADE_LEVEL[can_lower]), 3) if can_lower and not accepted else None),
         "accepted_lower": accepted,
         # Кандидату — только ход теста; показатели детектора утечек видны в данных сессии, не в ответе
         "details": {k: details.get(k) for k in ("stop_reason", "n_scored", "n_canaries", "time_used_s",

@@ -303,7 +303,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
             <p className="text-lg font-bold text-brand-night">{t}</p>
             <p className="mt-1 text-xs text-brand-ink/65">{id === "junior" ? "до 1,5 лет опыта" : id === "middle" ? "1,5–4,5 года" : "от 4,5 лет"}</p>
             <span className="mt-3 flex flex-wrap gap-1.5">
-              {status?.claimed_grade === id && <span className="chip">Подходит по стажу</span>}
+              {!hint.data && status?.claimed_grade === id && <span className="chip">Подходит по стажу</span>}
               {hint.data?.suggested === id && <span className="chip">Подсказка</span>}
               {retakeLocks[id] && <span className="chip">Повтор с {dt(retakeLocks[id]).replace(/ г\.$/, "")}</span>}
             </span>
@@ -319,7 +319,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           </div>
           <p className="mt-2 text-brand-ink/75">
             {mode === "express"
-              ? "Экспресс-тест для жюри: 5–7 коротких заданий без контрольных и дотестирования, около 5 минут при быстрых ответах. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но интервал θ заметно шире: подтверждение Middle или Junior даётся уверенно, Senior за 7 заданий — почти никогда. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри."
+              ? "Экспресс-тест для жюри: 5–7 коротких заданий без контрольных и дотестирования, около 5 минут при быстрых ответах. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но интервал θ заметно шире (погрешность ≈ 0,65 против ≈ 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах, Senior за 7 заданий — практически никогда; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри."
               : "Полный адаптивный тест: 8–16 заданий, до 60 минут, с контрольными заданиями и дотестированием у порога. Именно он присваивает категорию живым кандидатам."}
           </p>
         </div>
@@ -410,7 +410,13 @@ export function TestRun() {
     const extra = c.awaySince ? Date.now() - c.awaySince : 0;
     return { focus_lost: c.focus_lost, hidden_ms: c.hidden_ms + extra, paste: c.paste, paste_chars: c.paste_chars };
   }
-  useEffect(() => { api<any>(`/assessment/sessions/${id}`).then(show).catch((e) => setError(errText(e))); }, [id]);
+  useEffect(() => {
+    api<any>(`/assessment/sessions/${id}`).then(async (x) => {
+      // завершённый тест (обновили страницу, вернулись из категории) — показываем итог, а не «сессия закрыта»
+      if (x?.status === "finished") { setS(x); setResult(await api<any>(`/assessment/sessions/${id}/result`)); return; }
+      show(x);
+    }).catch((e) => setError(errText(e)));
+  }, [id]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   async function finish() {
