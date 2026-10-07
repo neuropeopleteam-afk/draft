@@ -1,0 +1,89 @@
+{
+  "http_status": 200,
+  "scenario": "5c0127364b",
+  "parser": {
+    "direction": "backend",
+    "grade": "middle",
+    "stack_required": [
+      {
+        "tag": "python",
+        "weight": 1.0,
+        "evidence": {
+          "quote": "Python",
+          "start": 16,
+          "end": 22,
+          "context": "Backend middle: Python, PostgreSQL, Docker.",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
+        "tag": "postgresql",
+        "weight": 0.95,
+        "evidence": {
+          "quote": "PostgreSQL",
+          "start": 24,
+          "end": 34,
+          "context": "Backend middle: Python, PostgreSQL, Docker.",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
+        "tag": "docker",
+        "weight": 0.82,
+        "evidence": {
+          "quote": "Docker",
+          "start": 36,
+          "end": 42,
+          "context": "Backend middle: Python, PostgreSQL, Docker.",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      }
+    ],
+    "stack_desired": [],
+    "experience_years_min": null,
+    "work_format": "remote",
+    "salary_from": null,
+    "salary_to": null,
+    "salary_net": null,
+    "evidence": {
+      "direction": {
+        "quote": "Backend",
+        "start": 0,
+        "end": 7,
+        "context": "Backend middle: Python, PostgreSQL, Docker.",
+        "source": "rules",
+        "basis": "keyword"
+      },
+      "grade": {
+        "quote": "middle",
+        "start": 8,
+        "end": 14,
+        "context": "Backend middle: Python, PostgreSQL, Docker.",
+        "source": "rules",
+        "basis": "keyword"
+      },
+      "work_format": {
+        "quote": "Удалённо",
+        "start": 44,
+        "end": 52,
+        "context": "Удалённо.",
+        "source": "rules"
+      }
+    },
+    "review": {},
+    "method": "llm+rules",
+    "llm": {
+      "used": true,
+      "latency_ms": 4971,
+      "dropped_without_quote": 0
+    },
+    "bias": [],
+    "suggested_text": null
+  }
+}

@@ -12,7 +12,8 @@ STACK_ALIASES: dict[str, list[str]] = {
     "http": ["http", "rest", "веб-протокол", "tcp/ip"],
     "git": ["git", "github", "gitlab", "bitbucket"],
     "linux": ["linux", "bash", "unix", "ubuntu", "debian", "centos", "shell"],
-    "docker": ["docker", "контейнер", "docker-compose", "kubernetes", "k8s"],
+    "docker": ["docker", "контейнер", "docker-compose"],
+    "kubernetes": ["kubernetes", "k8s"],
     "python": ["python", "питон", "python3"],
     "fastapi": ["fastapi", "fast api"],
     "django": ["django", "drf", "django rest"],
@@ -25,7 +26,10 @@ STACK_ALIASES: dict[str, list[str]] = {
     "rest-api": ["rest api", "restful", "openapi", "swagger", "api"],
     "grpc": ["grpc", "protobuf"],
     "go": ["golang", "go-разработ", "на go", "go "],
-    "java": ["java", "spring", "kotlin"],
+    "java": ["java", "spring"],
+    "kotlin": ["kotlin"],
+    "csharp": ["c#", "c sharp", ".net", "asp.net"],
+    "php": ["php", "laravel", "symfony"],
     "javascript": ["javascript", "js", "es6", "ecmascript", "node.js", "nodejs"],
     "typescript": ["typescript", "ts"],
     "react": ["react", "react.js", "reactjs", "реакт"],
@@ -86,9 +90,9 @@ DIRECTION_KEYWORDS: dict[str, list[str]] = {
 }
 
 GRADE_KEYWORDS: dict[str, list[str]] = {
-    "junior": ["junior", "джуниор", "джун", "младш", "начинающ", "стажёр", "стажер", "intern", "без опыта"],
+    "junior": ["junior", "джуниор", "джун", "младш", "начинающ", "стажёр", "стажер", "стажировк", "intern", "без опыта"],
     "middle": ["middle", "мидл", "миддл", "опытный разработчик"],
-    "senior": ["senior", "сеньор", "синьор", "старш", "ведущ", "lead", "тимлид", "архитектор", "principal"],
+    "senior": ["senior", "сеньор", "синьор", "старш", "ведущ", "lead", "тимлид", "архитектор", "principal", "head of"],
 }
 
 ROLES: dict[str, list[str]] = {
@@ -126,9 +130,9 @@ SOFT_SKILL_TITLES = {
 }
 
 WORK_FORMAT_KEYWORDS = {
-    "remote": ["удалённ", "удаленн", "удалёнк", "удаленк", "remote", "дистанцион", "из дома"],
+    "remote": ["удалённ", "удаленн", "удалёнк", "удаленк", "удалённо", "удаленно", "remote", "дистанцион", "из дома"],
     "hybrid": ["гибрид", "hybrid"],
-    "office": ["в офисе", "офис", "office", "on-site"],
+    "office": ["в офисе", "офис", "office", "on-site", "на месте работодателя", "на\u00a0месте работодателя"],
 }
 
 REQUIRED_CUES = ["требован", "обязательн", "необходим", "must", "нужно", "нужен", "нужна", "нужны", "ожидаем", "опыт работы с",
