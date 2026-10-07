@@ -33,6 +33,12 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
         <div className="rounded-xl bg-brand-blush/25 p-3 text-sm">
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level="T1" /> Тест</p>
           {t ? <p className="mt-1 text-brand-ink/75">{t.correct} из {t.answered} верно · θ = {signed(t.theta)} ± {num(t.se)}</p> : <p className="mt-1 text-brand-ink/65">нет результата</p>}
+          {t && (t.mode === "express" || t.accepted_lower) && (
+            <p className="mt-1 flex flex-wrap gap-1.5">
+              {t.mode === "express" && <span className="chip" title="Экспресс-тест: 5–7 коротких заданий, интервал θ шире, чем у полного теста">экспресс-тест</span>}
+              {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом (P ≥ 80 %) и принят кандидатом">принят уровень ниже</span>}
+            </p>
+          )}
           {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
           {c.skills_confirmed?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
