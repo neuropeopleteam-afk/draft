@@ -150,6 +150,44 @@ def test_tampering_any_field_breaks_signature(client):
     assert not r["signature_valid"] and r["state"] == "invalid_signature"
 
 
+def test_file_resaved_by_browser_or_other_json_tool_still_verifies(client):
+    """Браузер (JSON.parse/JSON.stringify) пишет 1.0 как 1, часть экспортов — 1 как 1.0: подпись не ломается."""
+    from app.passport import crypto
+
+    sample = {"a": 1.0, "b": [2.0, 0.5, -0.0], "c": {"d": 1.714, "e": True, "f": None}}
+    js = {"a": 1, "b": [2, 0.5, 0], "c": {"d": 1.714, "e": True, "f": None}}
+    assert crypto.canonical(sample) == crypto.canonical(js) == VT.canonical(sample) == VT.canonical(js)
+    assert crypto.canonical({"t": True}) != crypto.canonical({"t": 1})  # булево не становится числом
+    tok, _ = _candidate_with_category(client)
+    pub = _public(client, client.get("/api/me/passport", headers=H(tok)).json()["active"]["id"])
+    keys = _keys(client)
+    as_js = json.loads(json.dumps(pub), parse_float=lambda x: int(float(x)) if float(x).is_integer() else float(x))
+    as_floats = json.loads(json.dumps(pub), parse_int=float)
+    assert as_floats["passport"]["assessment"]["answered"] == float(pub["passport"]["assessment"]["answered"])
+    for doc in (as_js, as_floats):
+        assert VT.check(doc, keys)["signature_valid"]
+        body = {"passport": doc["passport"], "signature": doc["signature"]}
+        r = client.post("/api/passport/verify", json=body).json()
+        assert r["signature_valid"] and r["state"] == "valid" and r["matches_registry"]
+
+
+def test_passport_signed_with_first_canonical_form_still_verifies(client):
+    """Паспорта, подписанные до замены 1.0 → 1 (канон писал «2.0»), проверяются тем же ключом."""
+    from app.passport import crypto
+
+    tok, _ = _candidate_with_category(client)
+    pub = _public(client, client.get("/api/me/passport", headers=H(tok)).json()["active"]["id"])
+    old = json.loads(json.dumps(pub))
+    old["passport"]["assessment"]["theta"] = 2.0
+    assert crypto.canonical_legacy(old["passport"]) != crypto.canonical(old["passport"])
+    old["signature"]["value"] = crypto.b64u(crypto.signing_key().private.sign(crypto.canonical_legacy(old["passport"])))
+    assert VT.check(old, _keys(client))["signature_valid"]
+    r = client.post("/api/passport/verify", json={"passport": old["passport"], "signature": old["signature"]}).json()
+    assert r["signature_valid"] and r["state"] == "differs"  # подпись верна, но в реестре под этим id другой документ
+    old["passport"]["assessment"]["theta"] = 3.0  # подделка ломает подпись и в старом каноне
+    assert not VT.check(old, _keys(client))["signature_valid"]
+
+
 def test_tampered_registry_row_shows_signature_mismatch(client):
     from app.passport.models import GradePassport
 

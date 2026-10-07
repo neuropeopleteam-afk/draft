@@ -31,8 +31,24 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
 
-def canonical(obj) -> bytes:
+def _ints(v):
+    """1.0 → 1 во всей глубине (браузер и многие JSON-библиотеки не отличают целую дробь от целого)."""
+    if isinstance(v, float) and v.is_integer():
+        return int(v)
+    if isinstance(v, dict):
+        return {k: _ints(x) for k, x in v.items()}
+    if isinstance(v, list):
+        return [_ints(x) for x in v]
+    return v
+
+
+def canonical_legacy(obj) -> bytes:
     return json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+
+
+def canonical(obj) -> bytes:
+    """Подписывается именно это: JSON с сортировкой ключей, без пробелов, UTF-8; 1.0 записывается как 1."""
+    return canonical_legacy(_ints(obj))
 
 
 def b64u_dec(s: str) -> bytes:
@@ -70,9 +86,16 @@ def check(doc: dict, keys: list[dict], now: datetime | None = None) -> dict:
     ok = False
     if key is not None:
         try:
-            Ed25519PublicKey.from_public_bytes(b64u_dec(key["x"])).verify(b64u_dec(sig["value"]), canonical(passport))
-            ok = passport.get("kid") == kid
-        except (InvalidSignature, ValueError, KeyError):
+            pub, value = Ed25519PublicKey.from_public_bytes(b64u_dec(key["x"])), b64u_dec(sig["value"])
+            # канон; для паспортов, подписанных до замены 1.0 → 1, — их исходный канон
+            for body in dict.fromkeys((canonical(passport), canonical_legacy(passport))):
+                try:
+                    pub.verify(value, body)
+                    ok = passport.get("kid") == kid
+                    break
+                except InvalidSignature:
+                    continue
+        except (ValueError, KeyError, TypeError):
             ok = False
     until = passport.get("valid_until")
     try:
