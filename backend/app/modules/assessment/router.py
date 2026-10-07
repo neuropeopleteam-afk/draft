@@ -19,7 +19,8 @@ candidate = require_role(UserRole.candidate)
 
 
 class StartIn(BaseModel):
-    claimed_grade: Literal["junior", "middle", "senior"] = Field(description="Предполагаемый грейд, выбранный кандидатом")
+    claimed_grade: Literal["intern", "junior", "middle", "senior"] = Field(
+        description="Предполагаемый грейд, выбранный кандидатом (intern — Стажёр, ниже Junior)")
     integrity_ack: bool = Field(False, description="Кандидат прочитал, что отслеживается во время теста (потеря фокуса, "
                                                    "вставка текста, скорость, канарейки) и что сигналы только снижают "
                                                    "«достоверность результата». Сохраняется в сессии")
