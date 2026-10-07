@@ -30,7 +30,17 @@ from app.modules.assessment.integrity import summary_for_employer
 from app.modules.assessment.models import TestSession
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
-from app.modules.profiles.facts import DISCIPLINE_RELEVANCE, load_bundles
+from app.modules.profiles.facts import load_bundles
+
+# Только рекомендации для тренировки навыков, не вес соревнований и не рейтинг ФСП.
+# Отделено от profiles/facts.py: в рейтинге v2 все дисциплины равны.
+DISCIPLINE_SKILL_FIT = {
+    "algorithmic": {"backend": .9, "frontend": .6, "data_ml": 1., "qa": .6, "security": .6},
+    "product": {"backend": 1., "frontend": 1., "data_ml": .8, "qa": .9, "security": .5},
+    "security": {"backend": .5, "frontend": .3, "data_ml": .3, "qa": .4, "security": 1.},
+    "robotics": {"backend": .3, "frontend": .3, "data_ml": .5, "qa": .3, "security": .3},
+    "uav": {"backend": .3, "frontend": .3, "data_ml": .5, "qa": .3, "security": .3},
+}
 
 STRONG, OK = 0.75, 0.5  # пороги статуса темы по доле набранных баллов
 REL_DELTA = 0.2  # «выше/ниже вашего уровня»: отклонение от ожидаемой по θ доли
@@ -488,7 +498,7 @@ def _competitions(db: Session, direction: str, category_id: str | None, bundle, 
         g = sorted(gaps & tset, key=_title)
         s = sorted(strong & tset, key=_title)
         w = sorted(wanted & tset, key=_title)
-        rel = DISCIPLINE_RELEVANCE.get(disc, {}).get(direction, 0.3)
+        rel = DISCIPLINE_SKILL_FIT.get(disc, {}).get(direction, 0.3)
         score = rel + 0.4 * len(g) + 0.25 * len(w) + 0.1 * len(s)
         reasons = [DISCIPLINE_WHY[disc][0].upper() + DISCIPLINE_WHY[disc][1:] + "."]
         if g:

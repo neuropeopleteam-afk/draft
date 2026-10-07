@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Seg, Status, catTitle, dt, errText, range, rub, useApi } from "../../components/ui";
+import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, errText, range, rub, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { AtsInvitationActions } from "../../integrations/Ats";
+import { EmploymentTermsText } from "../../integrations/Youth";
 
 type Market = { from: number; to: number; median?: number } | null | undefined;
 
@@ -85,6 +86,11 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: 
 }
 
 export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }: { cref: string; needId?: string | null; probeId?: string | null; market: Market; needSalary?: { from?: number | null; to?: number | null } | null; onDone: (inv: any) => void }) {
+  const candidate = useApi<any>(`/employer/candidates/${cref}`);
+  const safety = candidate.data?.employment_safety;
+  const [format, setFormat] = useState("employment");
+  const [reduced, setReduced] = useState(false);
+  const [ack, setAck] = useState(false);
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [contact, setContact] = useState("");
@@ -96,7 +102,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
     if (se) { setErr(se); return; }
     setErr(null);
     try {
-      onDone(await api<any>("/employer/invitations", { body: { candidate_ref: cref, need_id: needId ?? null, probe_id: probeId ?? null, position_title: title, offer_description: desc, contact_method: contact, salary_from: Number(from), salary_to: Number(to) } }));
+      onDone(await api<any>("/employer/invitations", { body: { candidate_ref: cref, need_id: needId ?? null, probe_id: probeId ?? null, position_title: title, offer_description: desc, contact_method: contact, salary_from: Number(from), salary_to: Number(to), employment_terms: { format, reduced_time: reduced, employer_acknowledged: ack } } }));
     } catch (e) { setErr(errText(e)); }
   }
   return (
@@ -105,9 +111,16 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className="input min-h-[110px]" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" /></Field>
       <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className="input" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
       <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} market={market} />
+      {safety?.minor && <Alert kind="info">{safety.warning} {!safety.offer_allowed && "Оффер недоступен: возраст 14–15 лет или ещё нет отметки согласия."}</Alert>}
+      <Field label="Формат предложения" htmlFor="offer-format"><select id="offer-format" className="input" value={format} onChange={e => setFormat(e.target.value)}>
+        <option value="employment" disabled={safety?.minor}>Работа</option><option value="internship">Стажировка</option><option value="light_work">Лёгкий труд</option>
+      </select></Field>
+      <Toggle checked={reduced} onChange={setReduced} label="Сокращённое рабочее время" />
+      {safety?.minor && <Toggle checked={ack} onChange={setAck} label="Проверю документы и ограничения перед оформлением" />}
       <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. Одно приглашение кандидату — не чаще раза в 30 дней.</p>
       <Alert>{err}</Alert>
-      <button className="btn-primary" disabled={title.length < 3 || desc.length < 20 || contact.length < 3} onClick={send}>Отправить приглашение</button>
+      <button className="btn-primary" disabled={candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>Отправить приглашение</button>
+      {candidate.error && <Alert>{candidate.error}</Alert>}
     </div>
   );
 }
@@ -181,6 +194,7 @@ export function EmployerInvitations() {
               <p className="mt-1">{[i.contacts.full_name, i.contacts.email, i.contacts.phone, i.contacts.telegram].filter(Boolean).join(" · ")}</p>
             </div>
           ) : <p className="text-brand-ink/65">Контакты откроются после принятия приглашения.</p>}
+          <EmploymentTermsText terms={i.employment_terms} />
           <AtsInvitationActions invitationId={i.id} status={i.status} candidateRef={i.candidate_ref} />
           {i.complaint ? (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Жалоба кандидата: <b>{i.complaint.reason_title.toLowerCase()}</b>. Жалобы снижают индекс доверия компании — его видят кандидаты.</p>

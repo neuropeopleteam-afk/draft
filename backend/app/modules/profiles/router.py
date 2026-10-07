@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.db import get_db
+from app.core.db import get_db, utcnow
 from app.core.deps import get_current_user, require_role
 from app.core.enums import UserRole
 from app.core.errors import api_error, err
@@ -78,7 +78,12 @@ def update_candidate_profile(
     profile = db.get(CandidateProfile, user.id) or CandidateProfile(user_id=user.id)
     db.add(profile)
     for k, v in data.model_dump(exclude_unset=True).items():
+        if k in ("age_group", "parental_consent") and v is None:
+            raise api_error(422, "age_group_required", "Возрастная группа и отметка согласия не могут быть пустыми")
         setattr(profile, k, v)
+    if profile.age_group == "18+":
+        profile.parental_consent = False
+    profile.parental_consent_at = ((profile.parental_consent_at or utcnow()) if profile.parental_consent else None)
     db.commit()
     return build_me(db, user)
 

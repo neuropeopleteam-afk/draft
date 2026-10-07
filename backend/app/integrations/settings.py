@@ -35,6 +35,14 @@ class IntegrationSettings(BaseSettings):
     fsp_oidc_client_id: str = "spectrek-platform"
     fsp_oidc_client_secret: str | None = None
     fsp_oidc_scopes: str = "openid email profile"  # claims fsp_* — мапперы клиента
+    fsp_oidc_discovery: bool = True
+    fsp_oidc_claims_map: dict[str, str] = Field(default_factory=dict)
+    fsp_oidc_token_auth_method: str = "client_secret_basic"  # basic | post | none
+    fsp_id_demo: bool = True
+    fsp_registry_mode: str = "claims"  # claims | mock | external
+    fsp_registry_base_url: str | None = None  # …/api/fsp-registry/v1
+    fsp_registry_token: str | None = None
+    fsp_registry_timeout_s: float = 5.0
     # Демо-учётки ФСП ID показываются на странице входа (только демо-realm, без реальных данных)
     fsp_demo_accounts: str = "fsp-champion,fsp-prizer,fsp-newcomer"
     fsp_demo_password: str | None = None
@@ -70,7 +78,7 @@ class IntegrationSettings(BaseSettings):
 
     @property
     def fsp_enabled(self) -> bool:
-        return bool(self.fsp_oidc_issuer)
+        return bool(self.fsp_oidc_issuer and self.fsp_oidc_client_id)
 
     @property
     def push_enabled(self) -> bool:
