@@ -33,6 +33,8 @@ import numpy as np
 from app.modules.assessment.bank_engine import GRADE_RU, BankEngine
 from app.modules.assessment.engine import GRADES
 from app.modules.jury.seed import _answer_for
+from assessment_bank.psychometrics.hierarchical import effective_a
+from assessment_bank.psychometrics.irt import estimate_theta
 from assessment_bank.psychometrics.irt import prob as irt_prob
 
 MAX_N = 20
@@ -142,7 +144,21 @@ def run_one(eng: SyntheticEngine, *, direction: str, claimed: str, mode: str, se
             "n_items": d.get("n_scored"), "n_canaries": d.get("n_canaries"),
             "n_ext": (d.get("extension") or {}).get("items", 0), "time_min": round(t_total / 60, 1),
             "stop": d.get("stop_reason"), "correct": res.correct, "answered": res.answered,
-            "subpool": d.get("subpool"), "probabilities": res.probabilities}
+            "subpool": d.get("subpool"), "probabilities": res.probabilities,
+            # потолок оценки на выданных заданиях: EAP при всех верных ответах (для модельного ожидания)
+            "theta_hat_max": theta_hat_ceiling([i["pool"] for i in st["items"] if i["done"] and not i["canary"]])}
+
+
+def theta_hat_ceiling(pools: list[dict]) -> float | None:
+    """EAP-оценка θ̂ при всех верных ответах на выданные задания (как считает движок: a_eff, априорное N(0, 1)).
+    Это потолок θ̂ данного теста: короткий тест с лёгкими заданиями не поднимет оценку выше, сколько ни отвечай верно."""
+    if not pools:
+        return None
+    a = np.concatenate([np.asarray(p["a"], dtype=float) for p in pools])
+    b = np.concatenate([np.asarray(p["b"], dtype=float) for p in pools])
+    s = np.concatenate([np.asarray(p["sigma"], dtype=float) for p in pools])
+    est = estimate_theta(np.ones_like(b), effective_a(a, s), b)
+    return round(float(est.theta), 3)
 
 
 def _dist(values: list) -> dict:
@@ -162,6 +178,10 @@ def _stat(xs: list[float]) -> dict:
     conv = (lambda v: int(v)) if ints else (lambda v: round(float(v), 2))
     return {"mean": round(float(a.mean()), 2), "min": conv(a.min()), "max": conv(a.max()),
             "sd": round(float(a.std(ddof=1)), 2) if a.size > 1 else 0.0}
+
+
+def _ru(x: float, nd: int = 2) -> str:
+    return str(round(float(x), nd)).replace(".", ",")
 
 
 def _ncdf(z: float) -> float:
@@ -200,9 +220,13 @@ def _erfinv(y: float) -> float:
     return p * y
 
 
-def expected_for(strategy: str, theta: float | None, claimed: str, se: float | None = None) -> dict:
+def expected_for(strategy: str, theta: float | None, claimed: str, se: float | None = None,
+                 theta_hat_max: float | None = None) -> dict:
     """Что должно получиться у честного теста при этой стратегии (для вердикта). se — средняя погрешность
-    прогонов: для уровня θ ожидаемая доля подтверждений считается по ней (правило P ≥ 0,8 консервативно у порога)."""
+    прогонов: для уровня θ ожидаемая доля подтверждений считается по ней (правило P ≥ 0,8 консервативно у порога).
+    theta_hat_max — средний по прогонам потолок θ̂ (EAP при всех верных на выданных заданиях): если он ниже требуемого
+    θ̂ = порог + 0,84·SE, подтверждение невозможно ни при каких ответах — ожидание 0 % (так у экспресса за Senior из 7 заданий
+    с лимитом 240 с: трудные задания отсечены лимитом, и формула со сдвигом EAP без потолка переоценивала ожидание)."""
     if strategy == "all_correct":
         return {"confirmed": True, "point_grade": "senior", "text": "«Всё верно» — грейд должен подтвердиться, точечная оценка — Senior."}
     if strategy == "all_wrong":
@@ -225,12 +249,23 @@ def expected_for(strategy: str, theta: float | None, claimed: str, se: float | N
     out = {"confirmed": conf, "point_grade": pg}
     if se:
         rate = expected_confirm_rate(th, CUTS[claimed], se)
-        out["confirm_rate"] = round(rate, 3)
+        need = CUTS[claimed] - math.sqrt(2.0) * _erfinv(1.0 - 2.0 * 0.8) * se  # θ̂, при котором P(θ ≥ порог) = 0,8
+        out["theta_hat_needed"] = round(need, 2)
         out["theta_hat_expected"] = round(shrink(th, se), 2)
-        txt += (f". При погрешности теста ≈ {str(round(se, 2)).replace('.', ',')} оценка θ̂ в среднем сдвинута к нулю "
-                f"(≈ {str(round(shrink(th, se), 2)).replace('.', ',')}: априорное N(0, 1) оценки EAP), и правило «P ≥ 80 %» даёт "
-                f"подтверждение примерно в {round(rate * 100)} % случаев — у порога оно консервативно, ошибка в пользу "
-                "«не подтверждён»")
+        txt += (f". При погрешности теста ≈ {_ru(se)} оценка θ̂ в среднем сдвинута к нулю "
+                f"(≈ {_ru(shrink(th, se))}: априорное N(0, 1) оценки EAP), а для подтверждения нужно θ̂ ≥ {_ru(need)}")
+        if theta_hat_max is not None:
+            out["theta_hat_max"] = round(theta_hat_max, 2)
+            if theta_hat_max < need:
+                rate = 0.0
+                txt += (f". Потолок оценки на выданных заданиях — θ̂ ≈ {_ru(theta_hat_max)} даже при всех верных ответах: такой короткий "
+                        f"тест не может подтвердить {GRADE_RU[claimed]} ни при каких ответах, ожидание — 0 %")
+            else:
+                txt += f" (потолок θ̂ при всех верных на выданных заданиях ≈ {_ru(theta_hat_max)})"
+        out["confirm_rate"] = round(rate, 3)
+        if rate > 0:
+            txt += (f"; правило «P ≥ 80 %» даёт подтверждение примерно в {round(rate * 100)} % случаев — у порога оно консервативно, "
+                    "ошибка в пользу «не подтверждён»")
     if abs(th - near) < 0.35:
         txt += f". Уровень у самого порога {str(near).replace('.', ',')} — решения двух попыток могут расходиться: это ожидаемо, " \
                "именно здесь работает дотестирование у порога"
@@ -269,7 +304,9 @@ def run(*, strategy: str, theta: float | None, direction: str, claimed: str, n: 
         _busy.release()
     runs = first + second
     confirm_rate = float(np.mean([r["confirmed"] for r in runs]))
-    exp = expected_for(strategy, theta, claimed, se=float(np.mean([r["se"] for r in runs])))
+    ceilings = [r["theta_hat_max"] for r in runs if r.get("theta_hat_max") is not None]
+    exp = expected_for(strategy, theta, claimed, se=float(np.mean([r["se"] for r in runs])),
+                       theta_hat_max=float(np.mean(ceilings)) if ceilings else None)
     out = {
         "strategy": strategy, "theta": theta, "direction": direction, "claimed_grade": claimed, "mode": mode,
         "n": n, "repeat": repeat, "runs_total": len(runs), "seconds": round(time.time() - t0, 1),
@@ -282,6 +319,7 @@ def run(*, strategy: str, theta: float | None, direction: str, claimed: str, n: 
         "extension_share": round(float(np.mean([r["n_ext"] > 0 for r in runs])), 3),
         "correct_share": round(float(np.mean([r["correct"] / r["answered"] if r["answered"] else 0 for r in runs])), 3),
         "stops": _dist([r["stop"] for r in runs]),
+        "theta_hat_max": round(float(np.mean(ceilings)), 2) if ceilings else None,
         "runs": [{k: r[k] for k in ("theta", "se", "confirmed", "point_grade", "n_items", "n_ext", "time_min", "stop",
                                     "correct", "answered")} for r in runs],
     }
@@ -305,14 +343,26 @@ def run(*, strategy: str, theta: float | None, direction: str, claimed: str, n: 
 
 
 def _verdict(out: dict, exp: dict) -> dict:
+    """Вердикт с честной подписью (label): «Как и ожидалось» — разрыв с ожиданием в пределах 2 σ биномиального шума
+    выборки; «В допуске выборки, разрыв N п. п.» — больше 2 σ, но в пределах допуска 2 σ + 10 п. п. (разрыв назван, а не спрятан
+    за «как ожидалось»); «Расхождение с ожиданием, разрыв N п. п.» — вне допуска."""
     cr = out["confirm_rate"]
     n = out["runs_total"]
+    kind, gap_pp = "exact", None
     if exp.get("confirm_rate") is not None:
         # уровень θ: сравниваем с модельным ожиданием с допуском на случайность выборки (2 σ биномиального) и 10 п.п.
         e = exp["confirm_rate"]
-        tol = 2 * math.sqrt(max(e * (1 - e), 0.0225) / n) + 0.10
-        ok = abs(cr - e) <= tol
-        text = f"Подтверждений {round(cr * 100)} % при модельном ожидании {round(e * 100)} % (допуск ± {round(tol * 100)} п.п. на {n} прогонов)."
+        band = 2 * math.sqrt(max(e * (1 - e), 0.0225) / n)
+        tol = band + 0.10
+        gap = abs(cr - e)
+        gap_pp = round(gap * 100)
+        ok = gap <= tol
+        kind = "exact" if gap <= band else ("tolerance" if ok else "mismatch")
+        text = (f"Подтверждений {round(cr * 100)} % при модельном ожидании {round(e * 100)} %: разрыв {gap_pp} п. п. при шуме выборки "
+                f"± {round(band * 100)} п. п. (2 σ на {n} прогонов) и допуске ± {round(tol * 100)} п. п.")
+        if kind == "tolerance":
+            text += " Разрыв больше шума выборки, но в пределах допуска модели: при таком числе прогонов он не доказывает смещения теста."
+        text += "." if not text.endswith(".") else ""
     elif exp["confirmed"] is True:
         ok = cr >= 0.8
         text = f"Подтверждений {round(cr * 100)} % при ожидаемых ≥ 80 %."
@@ -335,4 +385,10 @@ def _verdict(out: dict, exp: dict) -> dict:
     text += f" Длина: {str(n_items['mean']).replace('.', ',')} заданий в среднем ({n_items['min']}–{n_items['max']}), " \
             f"расчётное время {str(out['time_min']['mean']).replace('.', ',')} мин (40–90 % рекомендуемого времени " \
             "заданий; живой кандидат обычно быстрее)."
-    return {"ok": bool(ok), "text": text}
+    if kind == "exact":
+        label = "Как и ожидалось" if ok else "Расхождение с ожиданием"
+    elif kind == "tolerance":
+        label = f"В допуске выборки, разрыв {gap_pp} п. п."
+    else:
+        label = f"Расхождение с ожиданием, разрыв {gap_pp} п. п."
+    return {"ok": bool(ok), "kind": kind, "label": label, "gap_pp": gap_pp, "text": text}

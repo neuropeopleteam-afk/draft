@@ -146,7 +146,10 @@ def test_express_api_only_in_sandbox_and_marked(client, bank):
     t = register_and_verify(client, email="exp@example.com")
     assert client.put("/api/me/onboarding", json=ONBOARDING, headers=H(t)).status_code == 200
     st = client.get("/api/assessment/status", headers=H(t)).json()
-    assert st["express_available"] is False and st["express"] == {"min_items": 5, "max_items": 7}
+    assert st["express_available"] is False and (st["express"]["min_items"], st["express"]["max_items"]) == (5, 7)
+    # консилиум 07.10, решение 5: параметры экспресса по грейду — за Senior длиннее
+    assert st["express"]["by_grade"]["middle"] == {"min_items": 5, "max_items": 7, "item_time_s": 240, "max_minutes": 20}
+    assert st["express"]["by_grade"]["senior"] == {"min_items": 8, "max_items": 12, "item_time_s": 360, "max_minutes": 45}
     r = client.post("/api/assessment/sessions", json={"claimed_grade": "middle", "mode": "express"}, headers=H(t))
     assert r.status_code == 409 and r.json()["detail"]["code"] == "express_sandbox_only"
     make_demo("exp@example.com")
@@ -180,6 +183,85 @@ def test_express_api_only_in_sandbox_and_marked(client, bank):
     assert status["sessions"][0]["mode"] == "express" and status["sandbox_starts"]["used"] == 1
     card = client.get("/api/me/card", headers=H(t)).json()
     assert card["test"]["mode"] == "express"
+
+
+# ------------------------------------------------------------------ консилиум 07.10, решение 5: экспресс за Senior — 8–12 заданий, лимит 360 с
+def test_express_senior_longer_same_rule(bank):
+    """За Senior экспресс длиннее (8–12, лимит задания ≤ 360 с), без канареек и дотестирования; правило P ≥ 0,8 то же —
+    и «всё верно» теперь подтверждает Senior (за 7 заданий с лимитом 240 с потолок θ̂ ≈ 1,4 не давал этого). Junior/Middle — как раньше."""
+    st = bank.start(direction="backend", claimed_grade="senior", stack_tags=[], seed=99, mode="express")
+    c = st["cfg"]
+    assert (c["min_items"], c["max_items"], c["max_item_time_s"], c["max_time_s"]) == (8, 12, 360.0, 45 * 60.0)
+    assert c["canary_positions"] == [] and c["ext_items"] == 0
+    n = 0
+    while (item := bank.next_item(st)) is not None:
+        it = next(i for i in st["items"] if i["token"] == item.item_id)
+        assert item.total == 12 and item.max_items == 12 and not it["canary"]
+        assert it["format"] not in ("open_book_3step", "open_answer") and it["time_limit_s"] <= 360
+        assert bank.answer(st, item.item_id, oracle(it, item.step or 1, True), 1500, step=item.step).accepted
+        n += 1
+    assert 8 <= n <= 12
+    res = bank.finish(st)
+    d = res.details
+    assert d["mode"] == "express" and d["n_canaries"] == 0 and d["extension"] is None and d["length"]["max_items"] == 12
+    assert res.confirmed and res.point_grade == "senior" and res.probabilities["senior"] >= 0.8, (res.theta, res.se)
+    assert "За Senior экспресс длиннее (до 12 заданий)" in res.explanation
+    # Junior — как раньше: 5–7, лимит 240 с, 20 минут
+    jr = bank.start(direction="qa", claimed_grade="junior", stack_tags=[], seed=5, mode="express")
+    assert (jr["cfg"]["min_items"], jr["cfg"]["max_items"], jr["cfg"]["max_item_time_s"], jr["cfg"]["max_time_s"]) == (5, 7, 240.0, 1200.0)
+    assert be.express_params(bank._settings(), "middle") == be.express_params(bank._settings(), "junior")
+
+
+def test_express_senior_api_deadline_and_synthetic(client, bank, monkeypatch):
+    """API: сессия экспресса за Senior с дедлайном 45 минут и total 12; «Проверьте сами»: «всё верно» на SyntheticEngine подтверждает
+    Senior (seed фиксирован), длина 8–12."""
+    from app.modules.assessment.models import TestSession
+    from app.modules.validation import selfcheck as sc
+
+    t = register_and_verify(client, email="exp-sr@example.com")
+    assert client.put("/api/me/onboarding", json=ONBOARDING, headers=H(t)).status_code == 200
+    make_demo("exp-sr@example.com")
+    assert client.put("/api/me/jury-mode", json={"enabled": True}, headers=H(t)).status_code == 200
+    r = client.post("/api/assessment/sessions", json={"claimed_grade": "senior", "mode": "express"}, headers=H(t))
+    assert r.status_code == 201, r.text
+    s = r.json()
+    assert s["mode"] == "express" and s["item"]["total"] == 12 and s["item"]["time_limit_s"] <= 360
+    with SessionLocal() as db:
+        ts = db.get(TestSession, uuid.UUID(s["session_id"]))
+        assert (ts.deadline_at - ts.started_at) == timedelta(minutes=45)
+        assert ts.result["state"]["cfg"]["max_items"] == 12
+    monkeypatch.setattr(be, "grade_open", lambda **kw: (_ for _ in ()).throw(AssertionError("LLM не должен вызываться")))
+    out = sc.run(strategy="all_correct", theta=None, direction="backend", claimed="senior", n=3, repeat=False,
+                 mode="express", seed=7)
+    assert out["confirm_rate"] == 1.0 and out["assigned"] == {"senior": 3} and out["verdict"]["ok"]
+    assert 8 <= out["n_items"]["min"] and out["n_items"]["max"] <= 12 and out["theta_hat_max"] >= 1.5
+
+
+# ------------------------------------------------------------------ консилиум 07.10, 7.5: честная подпись вердикта и потолок θ̂ в ожидании
+def test_self_check_verdict_label_and_ceiling():
+    from app.modules.validation import selfcheck as sc
+
+    base = {"runs_total": 20, "mode": "express", "n_items": {"mean": 7.0, "min": 7, "max": 7}, "time_min": {"mean": 13.6},
+            "correct_share": 0.6}
+    # 10 % против 39 %: больше 2 σ (≈ 22 п. п.), но в допуске (≈ 32 п. п.) — разрыв назван, а не спрятан за «как ожидалось»
+    v = sc._verdict({**base, "confirm_rate": 0.10}, {"confirm_rate": 0.39})
+    assert v["ok"] and v["kind"] == "tolerance" and v["label"] == "В допуске выборки, разрыв 29 п. п." and v["gap_pp"] == 29
+    assert "разрыв 29 п. п." in v["text"] and "не доказывает смещения" in v["text"]
+    v = sc._verdict({**base, "confirm_rate": 0.35}, {"confirm_rate": 0.39})
+    assert v["ok"] and v["kind"] == "exact" and v["label"] == "Как и ожидалось"
+    v = sc._verdict({**base, "confirm_rate": 0.90}, {"confirm_rate": 0.39})
+    assert not v["ok"] and v["kind"] == "mismatch" and v["label"] == "Расхождение с ожиданием, разрыв 51 п. п."
+    v = sc._verdict({**base, "confirm_rate": 1.0}, {"confirmed": True})
+    assert v["ok"] and v["label"] == "Как и ожидалось" and v["gap_pp"] is None
+    # потолок θ̂: за 7 коротких заданий Senior не подтвердить даже при всех верных — ожидание 0 %, а не 22 % по формуле без потолка
+    e0 = sc.expected_for("theta", 1.5, "senior", se=0.67)
+    e1 = sc.expected_for("theta", 1.5, "senior", se=0.67, theta_hat_max=1.39)
+    e2 = sc.expected_for("theta", 1.5, "senior", se=0.67, theta_hat_max=1.9)
+    assert e0["confirm_rate"] > 0.15 and e1["confirm_rate"] == 0.0 and e2["confirm_rate"] == e0["confirm_rate"]
+    assert "Потолок оценки" in e1["text"] and e1["theta_hat_needed"] == 1.56 and "потолок θ̂" in e2["text"]
+    pool7 = [{"a": [1.0], "b": [0.0], "sigma": [0.0]}] * 7
+    c7, c12 = sc.theta_hat_ceiling(pool7), sc.theta_hat_ceiling(pool7 + [{"a": [1.0], "b": [1.0], "sigma": [0.0]}] * 5)
+    assert 1.2 < c7 < 1.6 < c12 and sc.theta_hat_ceiling([]) is None
 
 
 # ------------------------------------------------------------------ п. 3: «Проверьте сами» на настоящем движке

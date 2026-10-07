@@ -178,7 +178,7 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
           <label><span className={lab}>Кандидатов (до {maxN})</span>
             <input className={sel} type="number" min={1} max={maxN} value={f.n} onChange={(e) => setF({ ...f, n: Number(e.target.value) })} /></label>
           <label><span className={lab}>Режим теста</span>
-            <select className={sel} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}><option value="full">Полный · 8–16 заданий</option><option value="express">Экспресс · 5–7 заданий</option></select></label>
+            <select className={sel} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}><option value="full">Полный · 8–16 заданий</option><option value="express">Экспресс · 5–7 заданий (Senior: 8–12)</option></select></label>
           <label className="flex items-center gap-2 self-end pb-2 text-sm text-brand-ink/80"><input type="checkbox" className="h-4 w-4 accent-brand" checked={f.repeat} onChange={(e) => setF({ ...f, repeat: e.target.checked })} />Повторить каждого (согласие попыток)</label>
         </div>
         {oneClick && <p className="mt-3 text-xs text-brand-ink/60">Запуск доступен после входа: по нажатию кнопки вы войдёте как демо-работодатель жюри (своя копия демо) и проверка сразу запустится.</p>}
@@ -190,7 +190,8 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
         {res && (
           <div className="mt-5 space-y-4" role="status" data-testid="self-check-result">
             <div className="rounded-xl bg-brand-blush/25 p-4 text-sm">
-              <p className={`inline-flex rounded-md px-2 py-0.5 text-xs font-bold ${res.verdict?.ok ? "bg-emerald-100 text-emerald-800" : "bg-brand text-white"}`}>{res.verdict?.ok ? "Как и ожидалось" : "Расхождение с ожиданием"}</p>
+              {/* подпись честная: «В допуске выборки, разрыв N п. п.» — разрыв больше шума выборки, но в допуске модели (консилиум 07.10, 7.5) */}
+              <p data-testid="self-check-verdict" className={`inline-flex rounded-md px-2 py-0.5 text-xs font-bold ${!res.verdict?.ok ? "bg-brand text-white" : res.verdict?.kind === "tolerance" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-800"}`}>{res.verdict?.label ?? (res.verdict?.ok ? "Как и ожидалось" : "Расхождение с ожиданием")}</p>
               <p className="mt-2 text-brand-ink/80"><span className="font-semibold text-brand-night">Ожидание: </span>{res.expected?.text}</p>
               <p className="mt-1 text-brand-ink/80"><span className="font-semibold text-brand-night">Факт: </span>{res.verdict?.text}</p>
             </div>
