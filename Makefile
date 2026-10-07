@@ -50,6 +50,9 @@ bench: ## Бенчмарк подбора со скрытой истиной: 20
 bench-quick: ## Быстрая проверка бенчмарка 40 × 400 без записи результатов
 	cd backend && python -m app.modules.validation.matching_bench --quick --no-write
 
+stability: ## Стабильность статуса «Junior (предварительно)» на симуляции теста: до/после, дотестирование (≈ 2 мин)
+	cd backend && python -m app.modules.validation.junior_stability
+
 dev-backend: ## Локальный backend с автоперезагрузкой (SQLite)
 	cd backend && DATABASE_URL=sqlite:///./dev.db DEV_MODE=true alembic upgrade head && \
 	  DATABASE_URL=sqlite:///./dev.db DEV_MODE=true uvicorn app.main:app --reload --port 8000
@@ -58,7 +61,7 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
-.PHONY: bench bench-quick
+.PHONY: bench bench-quick stability
 
 # --- Проверки CI на своей машине: те же команды, что в .github/workflows (docs/testing.md) ---
 PY ?= python

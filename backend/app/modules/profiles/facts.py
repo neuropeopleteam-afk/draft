@@ -19,12 +19,11 @@ from app.core.enums import EvidenceLevel, FactSource
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
+from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK, category_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
 from app.modules.fsp.rating import details as fsp_rating
-from app.modules.profiles.models import CandidateFact, CandidateProfile
 
 DEFAULT_PRIVACY = {
     "show_city": True, "show_experience": True, "show_work_format": True, "show_roles": True,
@@ -40,6 +39,14 @@ LEVEL_TITLES = {"school": "школьные", "regional": "региональн�
                 "national": "всероссийские", "international": "международные",
                 "platform": "кубок работодателя на платформе"}
 GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
+# «Junior (предварительно)» ниже подтверждённого при прочих равных: −0,05 к рейтингу в категории и к скору подбора
+# (вес одного зонда; задан до бенчмарка и на нём не подбирался — см. app.modules.assessment.provisional)
+PROVISIONAL_PENALTY = 0.05
+# Единая модель статуса грейда (видео организаторов №6, решение Р10): подтверждён / предварительно / не подтверждён.
+# «Не подтверждён» — опрос пройден, теста нет или он не подтвердил заявленный грейд: кандидат виден работодателю
+# со статусом «грейд не подтверждён (заявлен …)», в подборке и поиске — всегда ниже подтверждённых и предварительных.
+GRADE_STATUS_TITLES = {"confirmed": "подтверждён", "provisional": "предварительно", "unconfirmed": "не подтверждён"}
+GRADE_STATUS_ORDER = {"confirmed": 0, "provisional": 0, "unconfirmed": 1}  # ярус в выдаче: предварительный — штрафом
 
 
 def set_t0_facts(db: Session, user_id: uuid.UUID, source: FactSource, *, stack: list[str] | None = None,
@@ -100,6 +107,10 @@ class Bundle:
     skills_by_direction: dict[str, dict[str, CandidateFact]] = field(default_factory=dict)
     probes_by_direction: dict[str, list[CandidateFact]] = field(default_factory=dict)
     selected_direction: str | None = None
+    # последний опрос (заявленные направление и грейд) и последняя завершённая попытка теста — для статуса
+    # «не подтверждён (заявлен …)»; у кандидата с категорией не используются
+    survey: object | None = None
+    last_attempt: object | None = None
 
     @property
     def specialization(self):
@@ -143,12 +154,41 @@ class Bundle:
     def fsp(self) -> float:
         return fsp_strength(self.achievements, self.direction)
 
+    @property
+    def provisional(self) -> bool:
+        """Категория выбранного направления «предварительно» (тест на Junior не подтвердил грейд, но и не доказал
+        уровень ниже): статус специализации; для старых профилей без строки специализации — зеркало профиля."""
+        r = self.specialization
+        if r is not None:
+            return r.status == "provisional" and bool(r.category_id)
+        return bool(getattr(self.profile, "grade_provisional", False) and self.category_id)
+
+    @property
+    def unconfirmed(self) -> bool:
+        """Грейд не подтверждён: категории выбранного направления нет (опрос пройден, теста нет или он не подтвердил
+        грейд)."""
+        return not self.category_id
+
+    @property
+    def grade_status(self) -> str:
+        return "unconfirmed" if self.unconfirmed else "provisional" if self.provisional else "confirmed"
+
+    @property
+    def claimed(self) -> tuple[str | None, str | None]:
+        """Заявленные (опрос) направление и грейд — для кандидата без категории."""
+        sv = self.survey
+        if sv is None:
+            return None, None
+        return getattr(sv, "direction_id", None), getattr(sv, "claimed_grade_id", None)
+
     def strength(self) -> float:
-        """Рейтинг внутри категории (только T1/T2): тест 0,65 + зонды 0,10 + ФСП 0,25 (бонус)."""
+        """Рейтинг внутри категории (только T1/T2): тест 0,65 + зонды 0,10 + ФСП 0,25 (бонус);
+        «предварительно» — −0,05 (ниже подтверждённого при прочих равных)."""
         t = self.test.value if self.test else {}
         test = test_component(t.get("theta"), t.get("se"), self.grade)
         probe = max((f.value.get("score", 0) for f in self.probes_t1), default=0.0)
-        return round(0.65 * test + 0.10 * probe + 0.25 * self.fsp, 4)
+        pen = PROVISIONAL_PENALTY if self.provisional else 0.0
+        return round(max(0.0, 0.65 * test + 0.10 * probe + 0.25 * self.fsp - pen), 4)
 
 
 def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | None = None,
@@ -217,6 +257,69 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | Non
             if eligible:
                 selected = sorted(eligible, key=lambda r: (not r.is_primary, -(r.rating_score or 0), r.direction_id))[0].direction_id
         out[uid] = b.for_direction(selected)
+    _load_claims(db, out)
+    return out
+
+
+def _load_claims(db: Session, out: dict) -> None:
+    """Последний опрос и последняя завершённая попытка теста — только кандидатам без категории (статус
+    «не подтверждён (заявлен …)»); остальным они не нужны."""
+    from app.core.enums import TestSessionStatus
+    from app.modules.assessment.models import SurveyResponse, TestSession
+
+    ids = [uid for uid, b in out.items() if not b.category_id]
+    if not ids:
+        return
+    for sv in db.scalars(select(SurveyResponse).where(SurveyResponse.user_id.in_(ids))
+                         .order_by(SurveyResponse.created_at.desc())).all():
+        if out[sv.user_id].survey is None:
+            out[sv.user_id].survey = sv
+    for ts in db.scalars(select(TestSession).where(TestSession.user_id.in_(ids),
+                                                   TestSession.status == TestSessionStatus.finished)
+                         .order_by(TestSession.created_at.desc())).all():
+        if out[ts.user_id].last_attempt is None:
+            out[ts.user_id].last_attempt = ts
+
+
+def grade_status(b: "Bundle") -> dict:
+    """Единая модель статуса грейда для карточки, подборки, поиска, сравнения, PDF и объяснения «почему».
+
+    confirmed — категория присвоена тестом; provisional — «Junior (предварительно)» (вероятность уровня не ниже
+    Junior в карточке); unconfirmed — категории нет: заявленный грейд из опроса и исход последней попытки теста.
+    """
+    from app.modules.assessment import provisional as prov
+
+    st = b.grade_status
+    p = b.profile
+    out = {"status": st, "title": GRADE_STATUS_TITLES[st], "tier": GRADE_STATUS_ORDER[st],
+           "grade": b.grade, "grade_title": GRADES.get(b.grade or "") or None,
+           "direction": b.direction, "claimed_grade": None, "claimed_direction": None,
+           "claimed_category_id": None, "claimed_title": None, "attempt": None, "p_pct": None, "text": ""}
+    t = b.test.value if b.test else None
+    if st == "confirmed":
+        by = prov.confirmed_by(t)
+        out["text"] = "Грейд подтверждён тестом" + (f" ({by['title']})" if by and by.get("by") in ("probe", "cup") else "")
+        return out
+    if st == "provisional":
+        inf = prov.info(t) or {}
+        out["p_pct"] = inf.get("p_pct")
+        out["text"] = inf.get("text") or "Junior предварительно"
+        return out
+    d, g = b.claimed
+    la = b.last_attempt
+    out.update({"claimed_grade": g, "claimed_direction": d,
+                "claimed_category_id": f"{d}.{g}" if d and g else None,
+                "claimed_title": category_title(f"{d}.{g}") if d and g else None})
+    if la is not None:
+        out["attempt"] = {"grade": la.claimed_grade_id, "grade_title": GRADES.get(la.claimed_grade_id, la.claimed_grade_id),
+                          "direction": la.direction_id, "theta": la.theta,
+                          "se": la.theta_se, "at": la.finished_at.date().isoformat() if la.finished_at else None}
+        how = (f"тест на {GRADES.get(la.claimed_grade_id, la.claimed_grade_id)} не подтвердил грейд"
+               + (f" (θ = {la.theta:+.2f} ± {la.theta_se:.2f})" if la.theta is not None and la.theta_se is not None else ""))
+    else:
+        how = "тест не пройден"
+    out["text"] = (f"Грейд не подтверждён (заявлен {GRADES.get(g, g) if g else '—'}): {how}. "
+                   "В подборке и поиске — ниже всех подтверждённых")
     return out
 
 
@@ -270,19 +373,31 @@ def _uniq(facts: list) -> list:
 def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None, rank_total: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
+    from app.modules.assessment import provisional as prov
+
     p, pv = b.profile, b.privacy
     cat = categories.get(b.category_id or "")
     t = b.test.value if b.test else None
     show = (lambda k: include_hidden or pv.get(k, True))
     from app.modules.fsp.youth import employment_safety
 
+    is_prov = b.provisional and cat is not None
+    status = grade_status(b)
+    cd, cg = b.claimed
     return {
         "ref": p.public_ref,
-        "category": {"id": cat.id, "title": cat.title} if cat else None,
+        "category": {"id": cat.id, "title": prov.title(cat.title, is_prov), "provisional": is_prov} if cat else None,
+        # единая модель статуса: подтверждён / предварительно / не подтверждён (+ заявленное из опроса)
+        "status": status,
+        "claimed": ({"direction": cd, "grade": cg, "category_id": f"{cd}.{cg}",
+                     "title": category_title(f"{cd}.{cg}")} if cat is None and cd and cg else None),
         "direction": b.direction,
         "direction_title": DIRECTIONS.get(b.direction or "", None),
         "grade": b.grade,
-        "grade_title": GRADES.get(b.grade or "", None),
+        "grade_title": prov.title(GRADES.get(b.grade or "", None), is_prov),
+        # «Junior (предварительно)»: уровень доказанности (вероятность уровня не ниже Junior), причина, попытки
+        "provisional": (prov.info(t) or {"text": "Junior предварительно"}) if is_prov else None,
+        "confirmed_by": prov.confirmed_by(t),
         "rating_score": b.rating,
         "specializations": [summary(r, b.tests_by_direction.get(r.direction_id))
                             for r in sorted(b.specializations.values(), key=lambda r: (not r.is_primary, r.direction_id))],
