@@ -90,7 +90,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
         el.append(Paragraph("Основная и дополнительная специализации", st["h2"]))
         for s in specializations:
             proof = "подтверждено отдельным тестом · T1" if s.get("confirmed_by") == "test" else "ожидает подтверждения"
-            metrics = (f"; θ = {s['theta']:+.2f} ± {s['se']:.2f}"
+            metrics = ((f"; θ = {s['theta']:+.2f} ± {s['se']:.2f}").replace(".", ",").replace("-", "−")
                        if s.get("theta") is not None and s.get("se") is not None else "")
             el.append(Paragraph(
                 f"<b>{_esc(s.get('category_title') or s['direction_title'])}</b> — "

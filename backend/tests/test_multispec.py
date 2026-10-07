@@ -103,6 +103,14 @@ def test_direction_specific_facts_search_selection_compare_and_pdf(client):
     text = "\n".join(p.extract_text() for p in PdfReader(io.BytesIO(pdf.content)).pages)
     assert "Backend" in text and "Frontend" in text and "отдельным тестом" in text
     assert "Иван" not in text and "cand@example.com" not in text
+    detail_by_direction = client.get(f"/api/employer/candidates/{ref}?direction=frontend", headers=H(hr)).json()
+    assert detail_by_direction["category"]["id"] == "frontend.junior"
+    from tests.test_day2_rules import INVITE
+
+    invitation = client.post("/api/employer/invitations", headers=H(hr),
+                             json={**INVITE, "candidate_ref": ref, "need_id": need["id"]}).json()
+    evidence = next(x for x in invitation["evidence"] if x["kind"] == "test")
+    assert "Frontend" in evidence["text"] and "Backend" not in evidence["text"]
     with SessionLocal() as db:
         uid = db.scalar(select(CandidateProfile.user_id).where(CandidateProfile.public_ref == ref))
         facts = list(db.scalars(select(CandidateFact).where(CandidateFact.kind == "test_result", CandidateFact.user_id == uid)))
@@ -255,3 +263,24 @@ def test_secondary_facts_do_not_leak_to_primary_scoring(client):
         assert components["stack_required"] == 0
         fb = client.get("/api/assessment/feedback?session_id=" + frontend.test.value["session_id"], headers=H(token)).json()
         assert fb["session"]["category_id"] == "frontend.junior" and fb["session"]["direction"] == "frontend"
+
+
+def test_probes_do_not_transfer_to_another_direction(client):
+    from app.core.enums import EvidenceLevel, FactSource
+    from app.modules.profiles.facts import load_bundles
+
+    token = dual(client)
+    finish(client, token, "backend")
+    finish(client, token, "frontend", "junior")
+    ref = my_ref(client, token)
+    with SessionLocal() as db:
+        p = db.scalar(select(CandidateProfile).where(CandidateProfile.public_ref == ref))
+        db.add(CandidateFact(user_id=p.user_id, kind="probe", key="backend-probe", title="Зонд Backend",
+                            value={"direction": "backend", "score": 1}, evidence_level=EvidenceLevel.T1, source=FactSource.probe))
+        # Старый зонд без направления относится к основному направлению, а не к любому.
+        db.add(CandidateFact(user_id=p.user_id, kind="probe", key="legacy-probe", title="Старый зонд",
+                            value={"score": 1}, evidence_level=EvidenceLevel.T1, source=FactSource.probe))
+        db.commit()
+        b = load_bundles(db, [p.user_id])[p.user_id]
+        assert len(b.for_direction("backend").probes_t1) == 2
+        assert not b.for_direction("frontend").probes_t1

@@ -33,18 +33,24 @@ export const catTitle = (id?: string | null) => {
 
 /** Загрузка данных с повтором. */
 export function useApi<T>(path: string | null, deps: unknown[] = []) {
+  // Быстрая смена направления/грейда: запоздавший ответ старого запроса не заменяет новую выдачу.
+  const requestSeq = useRef(0);
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!path);
   const reload = useCallback(async () => {
     if (!path) return;
+    const seq = ++requestSeq.current;
     setLoading(true);
-    try { setData(await api<T>(path)); setError(null); }
-    catch (e) { setError(errText(e)); }
-    finally { setLoading(false); }
+    try {
+      const result = await api<T>(path);
+      if (seq === requestSeq.current) { setData(result); setError(null); }
+    }
+    catch (e) { if (seq === requestSeq.current) setError(errText(e)); }
+    finally { if (seq === requestSeq.current) setLoading(false); }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path, ...deps]);
-  useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => { void reload(); return () => { requestSeq.current++; }; }, [reload]);
   return { data, error, loading, reload, setData };
 }
 
