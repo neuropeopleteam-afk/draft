@@ -1,0 +1,44 @@
+{
+  "task": "И14 Вторая специализация кандидата",
+  "branch": "feat/multispec",
+  "migration": {"revision": "ms01", "down_revision": "qr01", "sqlite_upgrade_backfill_downgrade": "passed", "postgresql_runtime": "not_run"},
+  "backend": {
+    "full_suite_at_f7ec529": {"tests": 252, "result": "passed", "log": "../full_pytest_multispec.log"},
+    "regression_after_direction_evidence_fixes": {"tests": 119, "result": "passed", "log": "../targeted_pytest_multispec.log", "note": "Tool wait expired at 630 s; the process finished subsequently, the complete log has 100% and no failures."},
+    "multispec_tests_final": {"tests": 10, "result": "passed", "log": "../own_pytest_multispec.log"},
+    "jury_live_and_migrations": {"tests": 7, "result": "passed", "log": "../remaining_pytest_multispec.log"},
+    "pdf_after_number_format_fix": "passed",
+    "collected_tests_final": 253
+  },
+  "frontend_build": {"result": "passed", "log": "../build_multispec.log", "warning": "Existing JS bundle exceeds Vite 500 kB advisory threshold."},
+  "browser": {
+    "engine": "Chromium",
+    "viewports": [1440, 390],
+    "horizontal_page_overflow": false,
+    "console_page_errors": [],
+    "checked": [
+      "Candidate categories: two independently confirmed directions and histories",
+      "Direction switch before test: Backend / Frontend / Backend",
+      "Separate Frontend test started from secondary specialization",
+      "New candidate UI onboarding: Backend + QA, separate stacks, QA Junior test started",
+      "Third direction rejected visibly; existing confirmations preserved",
+      "Employer search: Frontend Junior returns secondary specialization",
+      "Delayed older search response cannot overwrite latest direction / grade filters",
+      "Candidate detail keeps Frontend context from search",
+      "Comparison: both directions and direction-specific theta / SE / skills",
+      "Employer PDF downloaded; both directions; no candidate contacts",
+      "FSP cabinet remains available"
+    ],
+    "final_screenshots": [
+      "category-1440.png", "category-390.png", "grade-390.png",
+      "onboarding-1440.png", "onboarding-390.png", "two-stacks-390.png",
+      "test-qa-1440.png", "test-qa-390.png", "test-frontend-390.png",
+      "third-direction-error-1440.png",
+      "search-frontend-final-1440.png", "search-frontend-final-390.png",
+      "detail-frontend-final-1440.png", "detail-frontend-final-390.png",
+      "compare-final-1440.png", "compare-final-390.png", "fsp-390.png"
+    ],
+    "pdf": "employer-two-specializations.pdf",
+    "limitations": ["Comparison table uses its existing internal horizontal scroll on mobile; page itself does not overflow."]
+  }
+}

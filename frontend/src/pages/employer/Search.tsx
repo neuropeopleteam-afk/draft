@@ -67,7 +67,7 @@ export function Search() {
           <div className="flex flex-wrap items-center justify-between gap-3"><p className="text-sm text-brand-ink/70" aria-live="polite">Найдено: <b>{data?.total ?? "…"}</b>{data?.total > PAGE && <> · показаны {page * PAGE + 1}–{Math.min(data.total, (page + 1) * PAGE)}</>}</p><LevelLegend /></div>
           {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.items.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры." /> :
             <>
-              {data.items.map((c: any) => <CandidateCard key={c.ref} c={c} compact actions={<Link className="btn-ghost !py-2" to={`/employer/candidates/${c.ref}`}>Открыть</Link>} />)}
+              {data.items.map((c: any) => <CandidateCard key={c.ref} c={c} compact actions={<Link className="btn-ghost !py-2" to={`/employer/candidates/${c.ref}?direction=${c.direction}`}>Открыть</Link>} />)}
               {data.total > PAGE && (
                 <nav className="flex flex-wrap items-center justify-between gap-3 pt-2" aria-label="Страницы результатов">
                   <button className="btn-ghost" disabled={page === 0 || loading} onClick={() => { setPage(page - 1); window.scrollTo({ top: 0 }); }}>← Предыдущие</button>
@@ -87,7 +87,11 @@ export function CandidateDetail() {
   const { ref } = useParams();
   const [params] = useSearchParams();
   const need = params.get("need");
-  const { data: c, loading, error, reload } = useApi<any>(`/employer/candidates/${ref}${need ? `?need_id=${need}` : ""}`);
+  const direction = params.get("direction");
+  const qs = new URLSearchParams();
+  if (need) qs.set("need_id", need);
+  if (direction) qs.set("direction", direction);
+  const { data: c, loading, error, reload } = useApi<any>(`/employer/candidates/${ref}?${qs.toString()}`);
   const [modal, setModal] = useState<"" | "probe" | "invite">("");
   const [msg, setMsg] = useState<string | null>(null);
   if (loading && !c) return <Loading />;

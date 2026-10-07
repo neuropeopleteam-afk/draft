@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, range, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { Specializations } from "../../components/Specializations";
 
 const REASON: Record<string, string> = { initial: "Первое присвоение", retest_up: "Пересдача на грейд выше", retest_down: "Пересдача на грейд ниже", sandbox: "Демо-режим жюри", admin: "Администратор" };
 const SESSION: Record<string, string> = { finished: "Завершён", in_progress: "Идёт", aborted: "Прерван", expired: "Время истекло", created: "Создан" };
@@ -18,7 +19,7 @@ export default function Category() {
   const idx = c.grade ? grades.indexOf(c.grade) : -1;
 
   // пересдача — через экран выбора грейда: там кандидат читает, что отслеживается во время теста
-  const retest = (g: string) => navigate(`/candidate/assessment?grade=${g}`);
+  const retest = (g: string) => navigate(`/candidate/assessment?grade=${g}&direction=${c.direction}`);
   async function jury(v: boolean) {
     try { await api("/me/jury-mode", { method: "PUT", body: { enabled: v } }); await reload(); } catch (e) { setErr(errText(e)); }
   }
@@ -55,12 +56,19 @@ export default function Category() {
           )}
         </div>
       </section>
+      {s.specializations?.length > 1 && (
+        <section className="card space-y-3">
+          <h2 className="font-bold text-brand-night">Две специализации</h2>
+          <p className="text-sm text-brand-ink/70">Каждое направление подтверждается своим тестом. Правило 90 дней, история и повторные попытки считаются отдельно.</p>
+          <Specializations items={s.specializations} testing />
+        </section>
+      )}
       <Alert>{err}</Alert>
       <section className="flex flex-wrap gap-3">
         {idx > 0 && <button className="btn-ghost" disabled={!s.can_retest_now} onClick={() => retest(grades[idx - 1])}>Тест на {GRADES[grades[idx - 1]]}</button>}
         {idx >= 0 && idx < 2 && <button className="btn-primary" disabled={!s.can_retest_now} onClick={() => retest(grades[idx + 1])}>Тест на {GRADES[grades[idx + 1]]}</button>}
         {idx < 0 && <Link className="btn-primary" to="/candidate/assessment">Выбрать грейд и начать тест</Link>}
-        <Link className="btn-ghost" to="/candidate/assessment">Изменить опрос</Link>
+        <Link className="btn-ghost" to="/candidate/assessment?survey=1">{s.specializations?.length < 2 ? "Добавить второе направление" : "Изменить опрос"}</Link>
         {s.sessions.some((t: any) => t.status === "finished") && <Link className="btn-ghost" to="/candidate/feedback">Карта навыков и маршрут роста</Link>}
       </section>
       <div className="grid gap-6 md:grid-cols-2">

@@ -509,13 +509,19 @@ def _competitions(db: Session, direction: str, category_id: str | None, bundle, 
 
 
 def _latest_finished(db: Session, user_id: uuid.UUID) -> TestSession | None:
-    return db.scalar(select(TestSession).where(TestSession.user_id == user_id,
-                                               TestSession.status == TestSessionStatus.finished)
+    from app.modules.profiles.models import CandidateSpecialization
+
+    primary = db.scalar(select(CandidateSpecialization.direction_id).where(
+        CandidateSpecialization.user_id == user_id, CandidateSpecialization.is_primary.is_(True)))
+    q = select(TestSession).where(TestSession.user_id == user_id, TestSession.status == TestSessionStatus.finished)
+    if primary:
+        q = q.where(TestSession.direction_id == primary)
+    return db.scalar(q
                      .order_by(TestSession.created_at.desc()).limit(1))
 
 
 def build(db: Session, user_id: uuid.UUID, session_id: uuid.UUID | None = None) -> dict:
-    """Обратная связь по сессии теста (по умолчанию — последней завершённой)."""
+    """Обратная связь по сессии; по умолчанию — последний тест основного направления."""
     from app.core.errors import api_error
 
     ts = None
@@ -527,14 +533,14 @@ def build(db: Session, user_id: uuid.UUID, session_id: uuid.UUID | None = None) 
             raise api_error(409, "session_not_finished", "Обратная связь появится после завершения теста")
     else:
         ts = _latest_finished(db, user_id)
-    bundle = load_bundles(db, [user_id]).get(user_id)
+    bundle = load_bundles(db, [user_id], direction=ts.direction_id if ts else None).get(user_id)
     if bundle is None:
         raise api_error(404, "profile_not_found", "Профиль кандидата не найден")
     p = bundle.profile
     if ts is None and not bundle.skills_t1:
         return {"available": False, "message": "Карта навыков появится после первого теста."}
-    direction = (ts.direction_id if ts else None) or p.current_direction_id
-    grade = (ts.claimed_grade_id if ts else None) or p.current_grade_id
+    direction = (ts.direction_id if ts else None) or bundle.direction
+    grade = (ts.claimed_grade_id if ts else None) or bundle.grade
     topics = _topics_from_session(ts) if ts is not None else None
     source = "bank_session"
     # Демо-данные и заглушка: заданий банка в сессии нет — карта по фактам T1 (только если это тот же тест)
@@ -544,8 +550,7 @@ def build(db: Session, user_id: uuid.UUID, session_id: uuid.UUID | None = None) 
     topics = _sort_topics(topics)
     by_tag = {t["tag"]: t for t in topics}
     er = ((ts.result or {}).get("engine_result") or {}) if ts else {}
-    demand = _demand(db, direction, p.current_grade_id if p.current_direction_id == direction and p.current_grade_id
-                     else grade, bundle, by_tag)
+    demand = _demand(db, direction, bundle.grade or grade, bundle, by_tag)
     scored = [t for t in topics if t["score"] is not None]
     summary = {
         "topics": len(topics), "strong": sum(1 for t in topics if t["status"] == "strong"),
@@ -561,7 +566,7 @@ def build(db: Session, user_id: uuid.UUID, session_id: uuid.UUID | None = None) 
             "claimed_grade": grade, "grade_title": GRADES.get(grade), "theta": ts.theta if ts else None,
             "se": ts.theta_se if ts else None, "confirmed": er.get("confirmed") if ts else None,
             "finished_at": ts.finished_at.isoformat() if ts and ts.finished_at else None,
-            "category_id": p.current_category_id,
+            "category_id": bundle.category_id,
             # прозрачный античит: кандидат видит ту же «достоверность результата» и причины, что и работодатель
             "integrity": summary_for_employer((er.get("details") or {}).get("integrity")),
         },
@@ -572,6 +577,6 @@ def build(db: Session, user_id: uuid.UUID, session_id: uuid.UUID | None = None) 
                                "слабая сторона. Контрольные задания-канарейки в карту не входят.")},
         "demand": demand,
         "route": _route(ts, er, p, by_tag, demand),
-        "competitions": _competitions(db, direction, p.current_category_id, bundle, by_tag, demand),
+        "competitions": _competitions(db, direction, bundle.category_id, bundle, by_tag, demand),
         "fsp_calendar_url": FSP_CALENDAR_URL,
     }
