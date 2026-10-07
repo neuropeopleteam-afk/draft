@@ -367,3 +367,49 @@ def test_summary_keeps_count_of_extra_reasons():
     out = integrity.summary_for_employer(integ)
     assert out["reasons"][:5] == integ["reasons"][:5] and out["reasons"][5] == "И ещё 2 причины меньшего веса"
     assert integrity.summary_for_employer({**integ, "reasons": integ["reasons"][:5]})["reasons"] == integ["reasons"][:5]
+
+
+def test_expert_queue_counts_two_call_grade_as_llm(client):
+    """Оценка двумя вызовами (method llm2) попадает в выборочную проверку LLM вслепую; после оценки эксперта
+    рядом видны обе оценки модели и цитаты."""
+    import copy
+    import secrets as _secrets
+
+    from sqlalchemy import select
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.core.db import SessionLocal
+    from app.modules.assessment.models import TestSession
+    from app.modules.assessment.review import queue
+    from app.modules.auth.models import User
+    from assessment_bank import registry
+
+    assert client.post("/api/jury/login", json={"persona": "candidate"}).status_code == 200
+    with SessionLocal() as db:
+        uid = db.scalars(select(User.id).where(User.email == "candidate@jury.example.com")).one()
+        base = db.scalars(select(TestSession).where(TestSession.user_id == uid)
+                          .order_by(TestSession.created_at.desc())).first()
+        fam = next(f for f, sp in registry.load_specs().items() if sp.format == "open_answer")
+        var = registry.generate(fam, 1)
+        g = {"status": "scored", "score": 0.75, "method": "llm2", "criteria": {"a": 0.75}, "comment": "ок",
+             "quotes": {"a": "цитата"}, "scores": [0.7, 0.8], "flags": []}
+        it = {"token": _secrets.token_hex(8), "format": "open_answer", "position": 1, "done": True,
+              "public": {"stem": var.stem, "code": var.code, "steps": []}, "language": None,
+              "rubric": var.rubric.model_dump() if hasattr(var.rubric, "model_dump") else var.rubric,
+              "answers": {"1": {"value": "ответ"}}, "skills": [], "grading": [g], "x": [0.75]}
+        ts = TestSession(user_id=uid, direction_id=base.direction_id, claimed_grade_id=base.claimed_grade_id,
+                         status=base.status, form_seed=base.form_seed, survey_id=base.survey_id,
+                         started_at=base.started_at, finished_at=base.finished_at,
+                         result={**copy.deepcopy(base.result), "state": {**base.result["state"], "items": [it]}})
+        db.add(ts)
+        db.commit()
+        hit = [x for x in queue(db, "llm")["items"] if x["token"] == it["token"]]
+        assert hit and hit[0]["score"] is None and "llm" not in hit[0]  # вслепую
+        it2 = copy.deepcopy(it)
+        it2["grading"][0]["expert"] = {"score": 0.5, "llm_score": 0.75}
+        ts.result = {**ts.result, "state": {**ts.result["state"], "items": [it2]}}
+        flag_modified(ts, "result")
+        db.commit()
+        rev = [x for x in queue(db, "reviewed")["items"] if x["token"] == it["token"]]
+        assert rev and rev[0]["llm"]["score"] == 0.75 and rev[0]["llm"]["scores"] == [0.7, 0.8]
+        assert rev[0]["llm"]["quotes"] == {"a": "цитата"}
