@@ -11,7 +11,7 @@
    ``source_type: sourced``, ``source_url`` — адрес платформы (источник из справочника «Источники кандидатов»),
    ``resumes[0].cv_params``: title (категория), skills (HTML профиля), about_me (оффер), skill_set (подтверждённые
    навыки T1), education.attestation (адаптивный тест T1), awards (достижения ФСП T2), certificate (PDF-профиль);
-   ``events`` — комментарий; ``ajs_joins [{job_id}]`` — сразу на выбранную вакансию;
+   ``events [{body, type}]`` — комментарий (именно список: объект «Поток» отклоняет с 500); ``ajs_joins [{job_id}]`` — сразу на выбранную вакансию;
 2. повтор с известным id: ``POST /ajs_joins.json`` (job_id, applicant_id, stage_type: sourced) — на другую вакансию;
    ответ 422 «кандидат на вакансии уже существует» — уже добавлен, это не ошибка;
 3. ``POST /ajs_joins/{id}/change_stage.json`` — на выбранный этап (необязательно);
@@ -129,7 +129,9 @@ def applicant_body(d: dict, *, vacancy_id: int | None) -> dict:
          "accounts": [{"url": f"https://t.me/{d['telegram']}", "icon_id": "telegram"}] if d["telegram"] else None,
          "source_type": "sourced", "source_url": get_isettings().public_base_url,
          "resumes": [{"cv_params": {k: v for k, v in cv.items() if v}}],
-         "events": {"body": prof.comment_text(d), "type": "Event::Comment"},
+         # Список: объект {"body", "type"} (как в опубликованной спецификации) настоящий «Поток» отклоняет с 500
+         # (проверено на API 07.10.2026), список из одного комментария — принимает
+         "events": [{"body": prof.comment_text(d), "type": "Event::Comment"}],
          "ajs_joins": [{"job_id": vacancy_id}] if vacancy_id else None}
     return {k: v for k, v in a.items() if v not in (None, "", [])}
 
