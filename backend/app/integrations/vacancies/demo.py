@@ -13,6 +13,7 @@ from sqlalchemy import delete, select
 
 from app.core.db import SessionLocal, get_engine, utcnow
 from app.integrations.vacancies.models import Vacancy
+from app.modules.auth.models import User  # noqa: F401 — без таблицы users тип FK created_by не разрешается (запуск модулем)
 from app.modules.profiles.models import Company
 
 # (индекс демо-компании, должность, категория, стек, от, до, формат, описание)
@@ -35,7 +36,8 @@ VACANCIES = [
      "Интерфейсы образовательной платформы. Обучение внутри команды, наставник, ревью каждого изменения."),
     (7, "ML-инженер (компьютерное зрение)", "data_ml.senior", ["python", "pandas"], 340_000, 480_000, "hybrid",
      "Модели контроля качества на производстве: CV, обучение и вывод моделей в эксплуатацию, MLOps."),
-    (8, "Senior frontend: «до 900 тыс. ₽, без опыта»", "frontend.senior", ["react", "typescript"], 600_000, 900_000, "remote",
+    # приманка: верх вилки и на руки (≈ 877 тыс. ₽ после НДФЛ) больше чем вдвое выше рынка frontend.senior (405 тыс. ₽)
+    (8, "Senior frontend: «до 1 млн ₽, без опыта»", "frontend.senior", ["react", "typescript"], 700_000, 1_050_000, "remote",
      "Срочно! Высокий доход с первого дня, опыт не важен, оформление после оплаты обучения. "
      "(Демо: намеренно неправдоподобная вилка — индекс доверия предупреждает кандидата.)"),
     (9, "Junior QA (ручное тестирование)", "qa.junior", ["sql"], 70_000, 100_000, "office",

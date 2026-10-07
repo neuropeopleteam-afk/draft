@@ -24,7 +24,9 @@ from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import STACK, category_title
 from app.modules.contact.salary import basis_out
+from app.modules.contact.service import application_thread_summary
 from app.modules.invitations.service import candidate_contacts, check_salary
+from app.modules.jury import scope
 from app.modules.matching.router import my_company
 from app.modules.profiles.candidate_router import candidate_card_for
 from app.modules.profiles.models import CandidateProfile, Company
@@ -199,7 +201,8 @@ def _app_out(db: Session, a: VacancyApplication, side: str, v: Vacancy | None = 
            "status_title": STATUS_TITLES[a.status], "events": a.events, "cover_letter": a.cover_letter,
            "created_at": a.created_at.isoformat(), "viewed_at": a.viewed_at.isoformat() if a.viewed_at else None,
            "responded_at": a.responded_at.isoformat() if a.responded_at else None,
-           "salary_from": v.salary_from, "salary_to": v.salary_to, **basis_out(v.salary_basis)}
+           "salary_from": v.salary_from, "salary_to": v.salary_to, **basis_out(v.salary_basis),
+           "thread": application_thread_summary(db, a.id, side)}  # переписка по отклику (app.modules.contact)
     if side == "employer":
         out["employer_note"] = a.employer_note
         out["card"] = candidate_card_for(db, a.candidate_user_id, include_hidden=False)
@@ -282,6 +285,9 @@ def list_vacancies(q: str | None = Query(None, max_length=100), direction: str |
                    work_format: str | None = Query(None, pattern=FORMATS), limit: int = Query(50, ge=1, le=100),
                    user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
     stmt = select(Vacancy).where(Vacancy.status == "published")
+    # вакансии работодателя песочницы жюри видны только в его песочнице (как её кандидаты в подборках)
+    stmt = stmt.outerjoin(User, User.id == Vacancy.created_by).where(or_(Vacancy.created_by.is_(None),
+                                                                          scope.pool_clause(User.email)))
     if q:
         like = f"%{q.strip()}%"
         stmt = stmt.join(Company, Company.id == Vacancy.company_id).where(

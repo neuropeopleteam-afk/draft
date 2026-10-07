@@ -466,7 +466,7 @@ def test_demo_vacancies_seed_and_bait_warning():
     r = demo.seed(reset=True)
     assert r["created"] >= 3
     with SessionLocal() as db:
-        bait = db.scalar(select(Vacancy).where(Vacancy.is_demo.is_(True), Vacancy.salary_to == 900_000))
+        bait = db.scalar(select(Vacancy).where(Vacancy.is_demo.is_(True), Vacancy.salary_to == 1_050_000))
         t = trust_mod.compute(db, db.get(Company, bait.company_id), vacancy=bait)
         assert t["offer_salary"]["status"] == "warn"
         db.execute(delete(Vacancy).where(Vacancy.is_demo.is_(True)))
