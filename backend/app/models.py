@@ -28,5 +28,6 @@ import app.integrations.models  # noqa: E402,F401 — модели интегр�
 from app.modules.experts.models import ExpertItem, ExpertLabel, ExpertPanelist  # noqa: E402,F401 — экспертная разметка
 from app.cup.models import Cup, CupEntry  # noqa: E402,F401 — «Кубок работодателя» (идея 10)
 from app.jury_live.models import LiveGuest, LiveRoom  # noqa: E402,F401 — живая демонстрация для жюри (идея 13)
+from app.passport.models import GradePassport, PassportKey  # noqa: E402,F401 — подписанный паспорт грейда
 
 metadata = Base.metadata

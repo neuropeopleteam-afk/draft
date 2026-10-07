@@ -423,8 +423,10 @@ def my_profile_pdf(user: User = Depends(candidate), db: Session = Depends(get_db
 
         logging.getLogger("pdf").exception("Обратная связь для PDF не собралась")
         growth = None
+    from app.passport.service import for_pdf
+
     pdf = render_profile(c, contacts={"full_name": p.full_name, "email": user.email, "phone": p.phone,
-                                      "telegram": p.telegram}, growth=growth)
+                                      "telegram": p.telegram}, growth=growth, passport=for_pdf(db, user.id))
     return Response(pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="profile-{p.public_ref}.pdf"'})
 
