@@ -113,3 +113,19 @@ def to_stack_tags(direction: str, skills: list[str]) -> list[str]:
         if tag and tag not in out:
             out.append(tag)
     return out
+
+
+# Технологические теги (07.10, решение Р2): семейства с такими навыками выдаются только кандидату, у которого тег
+# есть в заявленном стеке опроса (T0). Иначе Python-бэкендер получал бы задания по Go и Java, и это занижало бы θ.
+# Заявленный стек выбирает вопросы, но в ранжировании не участвует (решение 06.10: T0 не учитывается).
+STACK_GATED: frozenset[str] = frozenset({"go", "java", "django", "kafka", "docker"})
+
+
+def stack_gate(direction: str, skills: list[str]) -> frozenset[str]:
+    """Стек-теги, без которых семейство кандидату не выдаётся (подмножество STACK_GATED; пусто — семейство для всех)."""
+    return frozenset(t for t in to_stack_tags(direction, skills) if t in STACK_GATED)
+
+
+def allowed_for_stack(direction: str, skills: list[str], stack: list[str] | set[str] | None) -> bool:
+    """Можно ли выдать семейство кандидату с заявленным стеком ``stack`` (нет стека — только общие семейства)."""
+    return stack_gate(direction, skills) <= set(stack or ())
