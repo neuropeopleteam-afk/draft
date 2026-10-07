@@ -31,7 +31,7 @@ VT = _verify_tool()
 
 
 def _candidate_with_category(client, email="pass@example.com", theta=1.3, grade="middle", seed=11,
-                             name="Пётр Паспортов"):
+                             name="Пётр Паспортов", pending_left=0):
     """Кандидат с категорией по настоящему тесту банка (демо-респондент, θ выше порога)."""
     from app.modules.jury.seed import run_demo_test
     from app.modules.profiles.models import CandidateProfile
@@ -44,7 +44,7 @@ def _candidate_with_category(client, email="pass@example.com", theta=1.3, grade=
         p = db.get(CandidateProfile, uid)
         p.full_name, p.phone, p.telegram, p.city = name, "+7 912 345-67-89", "@petr_secret", "Тверь"
         db.commit()
-        out = run_demo_test(db, uid, grade, theta, seed)
+        out = run_demo_test(db, uid, grade, theta, seed, pending_left)
         db.commit()
     assert out["confirmed"], out
     return tok, uid
@@ -351,3 +351,67 @@ def test_bad_signing_key_does_not_break_test_finish(client, monkeypatch, value):
         monkeypatch.delenv("PASSPORT_SIGNING_KEY", raising=False)
         get_settings.cache_clear()
         crypto.signing_key.cache_clear()
+
+
+def _expert(client, email):
+    from sqlalchemy import select
+
+    from app.core.enums import UserRole
+    from app.modules.auth.models import User
+
+    tok = register_and_verify(client, email)
+    with SessionLocal() as db:
+        db.scalar(select(User).where(User.email == email)).role = UserRole.expert
+        db.commit()
+    return tok
+
+
+def _review_all_pending(client, xtok, ref):
+    """Эксперт оценивает все ответы кандидата «на проверке» по всем критериям рубрики на 1."""
+    items = [i for i in client.get("/api/expert/queue", headers=H(xtok)).json()["items"] if i["candidate_ref"] == ref]
+    assert items, "у кандидата должны быть ответы на проверке"
+    for it in items:
+        r = client.post("/api/expert/review", headers=H(xtok), json={
+            "session_id": it["session_id"], "token": it["token"], "part": it["part"],
+            "criteria": {c["id"]: 1.0 for c in it["rubric"]["criteria"]}})
+        assert r.status_code == 200 and r.json()["recomputed"], r.text
+    return len(items)
+
+
+def test_expert_review_turns_preliminary_into_confirmed(client):
+    """Хук review.recompute: после оценки эксперта паспорт «предварительно» сразу перевыпускается «подтверждён»,
+    без захода кандидата в кабинет; прежний — «заменён после экспертной проверки»."""
+    from app.passport import service
+    from app.passport.models import GradePassport
+
+    tok, uid = _candidate_with_category(client, email="review.pass@example.com", pending_left=1)
+    first = client.get("/api/me/passport", headers=H(tok)).json()["active"]
+    assert first["passport"]["grade_status"] == "preliminary", first["passport"]
+    ref = first["passport"]["subject"]["public_ref"]
+    _review_all_pending(client, _expert(client, "expert.passport@example.com"), ref)
+    with SessionLocal() as db:  # выпуск сделал хук, а не ленивый ensure_current при открытии кабинета
+        cur = service.active(db, uid)
+        assert cur is not None and cur.id != first["id"] and cur.grade_status == "confirmed"
+        old = db.get(GradePassport, first["id"])
+        assert old.revoke_reason == "reviewed" and old.revoked_at is not None
+    st = _public(client, first["id"])["status"]
+    assert st["state"] == "revoked" and "экспертной проверки" in st["reason_title"]
+    new = _public(client, cur.id)
+    assert new["status"]["state"] == "valid" and new["passport"]["grade_status"] == "confirmed"
+    assert VT.check(new, _keys(client))["signature_valid"]
+
+
+def test_expert_review_keeps_candidate_revocation(client):
+    """Кандидат отозвал ссылку сам — проверка эксперта новый паспорт не выпускает (его выпускает только кандидат)."""
+    from app.passport import service
+
+    tok, uid = _candidate_with_category(client, email="review.optout@example.com", pending_left=1, seed=12)
+    ref = client.get("/api/me/passport", headers=H(tok)).json()["active"]["passport"]["subject"]["public_ref"]
+    assert client.post("/api/me/passport/revoke", headers=H(tok)).status_code == 200
+    _review_all_pending(client, _expert(client, "expert.optout@example.com"), ref)
+    with SessionLocal() as db:
+        assert service.active(db, uid) is None
+    me = client.get("/api/me/passport", headers=H(tok)).json()
+    assert me["active"] is None and me["opted_out"] and me["eligible"]
+    again = client.post("/api/me/passport/reissue", headers=H(tok)).json()["active"]
+    assert again["passport"]["grade_status"] == "confirmed" and again["status"]["state"] == "valid"
