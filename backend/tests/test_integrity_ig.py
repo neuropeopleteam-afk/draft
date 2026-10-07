@@ -360,3 +360,10 @@ def test_jury_sandbox_shows_new_signals(client):
     assert out["candidate"]["level"] == "high" and out["candidate"]["signals"]["fs_items"] > 0
     ilya = out["candidate_nofsp"]
     assert ilya["level"] == "medium" and any("скопировать текст задания" in x for x in ilya["reasons"])
+
+
+def test_summary_keeps_count_of_extra_reasons():
+    integ = {"level": "low", "title": "низкая", "reasons": [f"причина {i}" for i in range(7)]}
+    out = integrity.summary_for_employer(integ)
+    assert out["reasons"][:5] == integ["reasons"][:5] and out["reasons"][5] == "И ещё 2 причины меньшего веса"
+    assert integrity.summary_for_employer({**integ, "reasons": integ["reasons"][:5]})["reasons"] == integ["reasons"][:5]
