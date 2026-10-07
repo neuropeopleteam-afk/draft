@@ -116,6 +116,7 @@ class Bundle:
     specializations: dict[str, CandidateSpecialization] = field(default_factory=dict)
     tests_by_direction: dict[str, CandidateFact] = field(default_factory=dict)
     skills_by_direction: dict[str, dict[str, CandidateFact]] = field(default_factory=dict)
+    probes_by_direction: dict[str, list[CandidateFact]] = field(default_factory=dict)
     selected_direction: str | None = None
 
     @property
@@ -145,7 +146,8 @@ class Bundle:
         if not direction:
             return self
         return replace(self, selected_direction=direction, test=self.tests_by_direction.get(direction),
-                       skills_t1=self.skills_by_direction.get(direction, {}))
+                       skills_t1=self.skills_by_direction.get(direction, {}),
+                       probes_t1=self.probes_by_direction.get(direction, []))
 
     @property
     def privacy(self) -> dict:
@@ -184,6 +186,16 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | Non
     from app.modules.assessment.models import TestSession
     session_directions = {f"test_session:{t.id}": t.direction_id for t in db.scalars(
         select(TestSession).where(TestSession.user_id.in_(user_ids)))}
+    from app.modules.invitations.models import Probe
+    from app.modules.matching.models import EmployerNeed
+    from app.cup.models import Cup, CupEntry
+
+    probe_directions = {f"probe:{pid}": d for pid, d in db.execute(
+        select(Probe.id, EmployerNeed.direction_id).outerjoin(EmployerNeed, EmployerNeed.id == Probe.need_id)
+        .where(Probe.candidate_user_id.in_(user_ids))) if d}
+    probe_directions.update({f"cup:{cid}": category.split(".")[0] for cid, category in db.execute(
+        select(Cup.id, Cup.category_id).join(CupEntry, CupEntry.cup_id == Cup.id)
+        .where(CupEntry.candidate_user_id.in_(user_ids)).distinct())})
     for f in db.scalars(select(CandidateFact).where(CandidateFact.user_id.in_(user_ids))
                         .order_by(CandidateFact.created_at)).all():
         b = out.get(f.user_id)
@@ -198,7 +210,8 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | Non
             d = f.value.get("direction") or session_directions.get(f.source_ref) or b.profile.current_direction_id
             b.skills_by_direction.setdefault(d, {})[f.key] = f
         elif f.kind == "probe":
-            b.probes_t1.append(f)
+            d = f.value.get("direction") or probe_directions.get(f.source_ref) or b.profile.current_direction_id
+            b.probes_by_direction.setdefault(d, []).append(f)
     passports = db.scalars(select(FspPassport).where(FspPassport.user_id.in_(user_ids))).all()
     by_pid = {}
     for p in passports:
