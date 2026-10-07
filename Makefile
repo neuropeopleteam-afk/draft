@@ -47,6 +47,9 @@ validate-docker: ## То же в контейнере api (без пересчё
 bench: ## Бенчмарк подбора со скрытой истиной: 200 × 2000, абляции, веса на отложенных данных (≈ 1 мин CPU)
 	cd backend && python -m app.modules.validation.matching_bench
 
+intern-cut: ## Порог грейда «Стажёр»: симуляция теста при 4 порогах-кандидатах, с лёгкими семействами и без (≈ 2 мин CPU)
+	cd backend && python -m app.modules.validation.intern_cut
+
 bench-quick: ## Быстрая проверка бенчмарка 40 × 400 без записи результатов
 	cd backend && python -m app.modules.validation.matching_bench --quick --no-write
 
@@ -61,7 +64,7 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
-.PHONY: bench bench-quick stability
+.PHONY: bench bench-quick stability intern-cut
 
 # --- Проверки CI на своей машине: те же команды, что в .github/workflows (docs/testing.md) ---
 PY ?= python

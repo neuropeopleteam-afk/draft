@@ -291,9 +291,14 @@ def test_api_confirm_mode_with_bank(client, monkeypatch):
         with SessionLocal() as db:
             from app.modules.profiles.models import CandidateProfile
 
+            from app.modules.profiles.models import CandidateSpecialization
+
             p = db.get(CandidateProfile, uid)
             p.current_category_id = p.current_grade_id = p.current_direction_id = None
             p.grade_locked_until, p.grade_provisional = None, False
+            for r in db.scalars(select(CandidateSpecialization).where(CandidateSpecialization.user_id == uid)):
+                r.grade_id = r.category_id = r.locked_until = r.confirmed_at = None
+                r.status = "declared"
             db.commit()
     else:
         pytest.skip("не нашли предварительный итог")

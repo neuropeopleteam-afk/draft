@@ -36,13 +36,14 @@ from app.core.enums import EvidenceLevel, FactSource, FspEventLevel, WorkFormat
 from app.modules.assessment.engine import GRADE_CUTS, grade_decision
 from app.modules.assessment.skill_map import to_stack_tags
 from app.modules.catalog.dictionary import STACK_ALIASES
-from app.modules.catalog.seed_data import GRADE_LEVEL, STACK
+from app.modules.catalog.seed_data import GRADE_LEVEL, GRADE_ORDER, STACK
 from app.modules.fsp.models import FspAchievement
 from app.modules.profiles.facts import Bundle, fsp_strength
 from app.modules.profiles.models import CandidateFact, CandidateProfile
 
 DIRS = ("backend", "frontend", "data_ml", "qa", "security")
-GRADES = ("junior", "middle", "senior")
+GRADES = GRADE_ORDER  # все грейды платформы снизу вверх (со Стажёром)
+NEED_GRADE_P = (0.08, 0.28, 0.42, 0.22)  # доля потребностей по грейдам: стажировок мало, Middle больше всего
 FIXED_NOW = datetime(2026, 10, 1, 12, 0, tzinfo=timezone.utc)  # дата «теста» в синтетике: от неё не зависит ничего
 
 # Популярность навыка в направлении: базовая вероятность, что кандидат им реально владеет.
@@ -147,7 +148,7 @@ class Latent:
 
     direction: str
     theta: float
-    true_grade: str | None  # None — ниже порога junior
+    true_grade: str | None  # None — ниже нижнего порога (Стажёра)
     known: frozenset[str]
     talent: float
     persona: str  # honest | inflated | modest
@@ -228,7 +229,7 @@ def true_relevance(need: NeedSpec, lat: Latent, cfg: BenchConfig) -> int:
     """
     if lat.direction != need.direction:
         return 0
-    have = GRADE_LEVEL[lat.true_grade] if lat.true_grade else 0
+    have = GRADE_LEVEL[lat.true_grade] if lat.true_grade else GRADE_LEVEL[GRADES[0]] - 1
     diff = have - GRADE_LEVEL[need.grade]
     if cfg.truth == "strict":
         rel = {0: 2, 1: 1, -1: 1}.get(diff, 0)
@@ -306,12 +307,14 @@ def decide_grade(theta_hat: float, se: float, claimed: str, cfg: BenchConfig) ->
         d = grade_decision(theta_hat, se, claimed)
         return {"confirmed": d["confirmed"], "retake_lower": d["retake_lower"], "provisional": False,
                 "p_claimed": None, "provisional_reason": None}
-    from assessment_bank.psychometrics import decide
-    from assessment_bank.psychometrics.grading import PROVISIONAL_LEVEL
+    # Решение как в продукте: шкала платформы со Стажёром (И13) поверх правила банка; «предварительно» (И1) не меняет
+    # confirmed/retake_lower, поэтому без cfg.provisional просто не учитывается
+    from app.modules.assessment.grades import decide_grade as platform_decide
 
-    d = decide(theta_hat, se, claimed, provisional_level=PROVISIONAL_LEVEL if cfg.provisional else None)
-    return {"confirmed": d.confirmed, "retake_lower": d.retake_lower, "provisional": bool(d.provisional),
-            "p_claimed": d.p_claimed, "provisional_reason": d.provisional_reason}
+    d = platform_decide(theta_hat, se, claimed)
+    prov = bool(d.provisional) and cfg.provisional
+    return {"confirmed": d.confirmed, "retake_lower": d.retake_lower, "provisional": prov,
+            "p_claimed": d.p_claimed, "provisional_reason": d.provisional_reason if prov else None}
 
 
 def _run_test(lat: Latent, claimed: str, cfg: BenchConfig, blocks: dict, rng: np.random.Generator) -> dict:
@@ -367,10 +370,10 @@ def _make_candidate(i: int, cfg: BenchConfig, blocks: dict) -> Candidate:
                  talent=round(talent, 3), persona=persona)
 
     # T0 — самоописание
-    base = lat.true_grade or "junior"
+    base = lat.true_grade or GRADES[0]
     others = [t for t in pop if t not in known]
     if persona == "inflated":
-        g_decl = _shift_grade(base, +1) if lat.true_grade else "middle"
+        g_decl = _shift_grade(base, +1 if lat.true_grade else +2)
         n_extra = len(others) if cfg.inflate_all else int(r0.integers(4, 9))
         extra = _weighted_sample(r0, others, [pop[t] for t in others], n_extra) if others else []
         stack = sorted(known | set(extra))
@@ -450,7 +453,7 @@ def _need_text(d: str, g: str, req: list[str], des: list[str], wf: str | None, r
 
 def _make_need(i: int, rng: np.random.Generator) -> NeedSpec:
     d = DIRS[i % len(DIRS)]
-    g = str(rng.choice(GRADES, p=[0.3, 0.45, 0.25]))
+    g = str(rng.choice(GRADES, p=list(NEED_GRADE_P)))
     pop = POPULARITY[d]
     tags = list(pop)
     req = _weighted_sample(rng, tags, [pop[t] for t in tags], int(rng.integers(2, 5)))

@@ -278,7 +278,7 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
       <div>
         <h1 className="text-2xl font-extrabold tracking-tight text-brand-night">Категория не присвоена</h1>
         <div className="card mt-4 p-4 text-sm leading-relaxed text-brand-ink/80">
-          <p><b>{r?.correct} из {r?.answered}</b> верно, θ = {num(r?.theta)} ± {plain(r?.se)} — ниже порога Junior (θ = −1).</p>
+          <p><b>{r?.correct} из {r?.answered}</b> верно, θ = {num(r?.theta)} ± {plain(r?.se)} — ниже порога Стажёра (θ = −1,75).</p>
           <p className="mt-2">Так работает и полный тест: без подтверждённой категории кандидат в подборку не попадает и приглашений не получает.</p>
         </div>
         <button className="btn-primary mt-5 w-full py-4 text-base" onClick={onAgain}>Пройти ещё раз</button>

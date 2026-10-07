@@ -25,7 +25,7 @@ from app.modules.catalog.dictionary import (
     find_keys,
     find_stack,
 )
-from app.modules.catalog.seed_data import STACK, tag_direction
+from app.modules.catalog.seed_data import STACK, grade_by_experience, tag_direction
 from app.modules.llm.client import chat_json
 
 _RANGE = re.compile(
@@ -133,7 +133,7 @@ def extract_rules(text: str) -> dict:
     exp = experience_years(text)
     # Стаж надёжнее ключевых слов («наставник стажёров» ≠ junior); слова — только если стаж не найден
     if exp is not None:
-        grade_hint = "junior" if exp < 1.5 else "middle" if exp < 4.5 else "senior"
+        grade_hint = grade_by_experience(exp)
     else:
         grade_hint = max(gk, key=gk.get) if gk else None
     return {

@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -27,6 +29,10 @@ class CategoryOut(_ORM):
     title: str
     market_salary_from: int
     market_salary_to: int
+    market_salary_median: int | None = None
+    market_sample_size: int | None = None
+    market_source: str | None = None
+    market_as_of: date | None = None
 
 
 class StackTagOut(_ORM):

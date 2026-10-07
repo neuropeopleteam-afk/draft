@@ -27,6 +27,7 @@ from assessment_bank.simulation import (LeakModel, Person, _apply_detector, _gra
                                         make_responder, make_truth, quadratic_kappa, summarize)
 
 from app.modules.assessment.exposure import AppCATSession
+from app.modules.assessment.grades import cuts_tuple, start_theta
 
 DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security")
 
@@ -53,10 +54,13 @@ class AppConfig:
     legacy_ext: int = 0            # > 0 — механика до 06.10 (LegacyExtSession), ext_items не используется
     claim_prior: bool = False      # абляция: EAP с априорным распределением по заявленному грейду
     rotation: str = "subpool"      # subpool — параллельные формы-субпулы; exclude_last — весь банк без семейств прошлой попытки
+    cuts: tuple = field(default_factory=cuts_tuple)              # пороги грейдов платформы (со Стажёром), как в bank_engine
+    start_theta: dict = field(default_factory=start_theta)       # стартовая θ по заявленному грейду
 
     def cat(self) -> CATConfig:
         return CATConfig(min_items=self.min_items, max_items=self.max_items, se_target=self.se_target,
                          max_time_s=self.max_minutes * 60.0, exposure="sympson_hetter" if self.exposure else "none",
+                         cuts=tuple(self.cuts), start_theta=dict(self.start_theta),
                          stop_rule=self.stop_rule, classify_z=self.classify_z, select_at=self.select_at,
                          time_weight=self.time_weight, ext_items=0 if self.legacy_ext else self.ext_items,
                          ext_time_s=self.ext_minutes * 60.0, ext_own_first=self.ext_own_first)
