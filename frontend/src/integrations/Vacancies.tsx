@@ -297,7 +297,7 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
                   <p className="font-bold text-brand-night">{a.contacts?.full_name || a.card.ref} <span className="font-normal text-brand-ink/65">· {a.card.category?.title ?? "без категории"}</span></p>
                   {a.contacts && <p className="text-brand-ink/70">{a.contacts.email}{a.contacts.phone ? ` · ${a.contacts.phone}` : ""}{a.contacts.telegram ? ` · ${a.contacts.telegram}` : ""}</p>}
                 </div>
-                <div className="flex flex-wrap items-center gap-2"><AtsStageBadge s={a.ats_stage} /><AppStatus s={a.status} /></div>
+                <div className="flex flex-wrap items-center gap-2"><AtsStageBadge s={a.ats_stage} employer /><AppStatus s={a.status} /></div>
               </div>
               <ul className="space-y-1">
                 {a.card.test?.theta != null && <li className="flex items-center gap-2"><Level level="T1" /> Тест: {a.card.test.correct} из {a.card.test.answered} верно</li>}
