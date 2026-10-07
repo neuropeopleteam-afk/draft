@@ -6,6 +6,7 @@ export interface Meta {
   product_name: string; version: string; jury_mode_available: boolean; demo_sandbox: boolean; assessment_engine: string;
   llm: { configured: boolean; provider: string | null; model: string | null };
   operator: Record<string, string>;
+  proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
 }
 
 const Ctx = createContext<Meta | null>(null);
