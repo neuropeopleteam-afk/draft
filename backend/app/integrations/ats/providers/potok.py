@@ -101,6 +101,32 @@ class PotokClient:
     def change_stage(self, join_id: int, stage_id: int) -> dict:
         return self._req("POST", f"/ajs_joins/{join_id}/change_stage.json", {"stage_id": stage_id})
 
+    def join_state(self, job_id: int, applicant_id: int) -> dict | None:
+        """Этап кандидата на вакансии (обратный канал): ``GET /jobs/{job_id}/ajs_joins.json?applicant_id=…`` →
+        ``{id, stage: {id, stage_type}, active}``; ``active: false`` — кандидат отклонён на вакансии.
+        Если метод недоступен компании (403/404), — ``GET /applicants/{id}.json`` (этап есть, признака отказа нет).
+        None — кандидата на вакансии нет."""
+        try:
+            d = self._req("GET", f"/jobs/{job_id}/ajs_joins.json", params={"applicant_id": applicant_id})
+            objs = d.get("objects") or [] if isinstance(d, dict) else []
+            j = next((o for o in objs if o.get("applicant_id") in (applicant_id, None)), None)
+            if j is None:
+                return None
+            return {"id": j.get("id"), "stage_id": (j.get("stage") or {}).get("id"),
+                    "stage_type": (j.get("stage") or {}).get("stage_type"), "active": j.get("active", True),
+                    "source": "ajs_joins"}
+        except AtsError as e:
+            if e.status not in (403, 404):
+                raise
+        a = self._req("GET", f"/applicants/{applicant_id}.json")
+        j = next((x for x in (a.get("ajs_joins") or []) if (x.get("job") or {}).get("id") == job_id), None)
+        if j is None:
+            return None
+        st = j.get("stage") or {}
+        return {"id": j.get("id"), "stage_id": st.get("id"), "stage_type": st.get("stage_type"),
+                "stage_name": st.get("name") or (j.get("job") or {}).get("stage_name"), "active": None,
+                "source": "applicant"}
+
     def event(self, applicant_id: int, body: str, job_id: int | None = None) -> dict:
         ev = {"applicant_id": applicant_id, "body": body, "type": "Event::Comment"}
         if job_id:
