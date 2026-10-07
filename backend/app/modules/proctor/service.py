@@ -313,6 +313,27 @@ def my_sessions(db: Session, user: User, limit: int = 10) -> list[dict]:
     return out
 
 
+# ------------------------------------------------------------------ демо жюри
+
+def seed_demo(db: Session, ts: TestSession, camera: bool) -> None:
+    """Демо-сессия жюри (jury/seed.py) перед finish_session: с камерой — согласие, окно наблюдения с первого
+    задания и наблюдение по каждому заданию без единого события («замечаний нет»); без камеры — выбор кандидата."""
+    user = db.get(User, ts.user_id)
+    if not camera:
+        db.add(ProctorSession(session_id=ts.id, user_id=ts.user_id, mode="declined", client={}, windows=[], observed={}))
+        db.flush()
+        return
+    consent = grant(db, user)
+    observed = {str(i["position"]): {"ms": int(float(i["time_s"]) * 1000), "frames": int(float(i["time_s"]) / 0.7),
+                                     "face": int(float(i["time_s"]) / 0.7)}
+                for i in rules.items_from_state(_state(ts)) if i.get("time_s") is not None}
+    db.add(ProctorSession(session_id=ts.id, user_id=ts.user_id, mode="camera", consent_id=consent.id,
+                          consent_version=consent.document_version,
+                          client={"model": "blaze_face_short_range", "fps": "1.4", "backend": "cpu"},
+                          windows=[{"from": 1, "to": None, "mid": False}], observed=observed))
+    db.flush()
+
+
 # ------------------------------------------------------------------ агрегат для ФСП
 
 K_MIN = 5  # как в Кабинете ФСП: группы меньше 5 не показываются
