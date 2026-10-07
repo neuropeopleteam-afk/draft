@@ -135,7 +135,11 @@ def _user(db: Session, email: str, role: UserRole, pwd_hash: str) -> User:
     return u
 
 
-def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade: str, pwd_hash: str, with_fsp: bool):
+def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade: str, pwd_hash: str, with_fsp: bool,
+               status: str = "confirmed"):
+    """Демо-кандидат. status — статус грейда (единая модель): confirmed — категория подтверждена тестом;
+    provisional — «Junior (предварительно)» (только grade == junior); unconfirmed_notest — опрос пройден, теста нет;
+    unconfirmed_failed — тест на заявленный грейд его не подтвердил (категории нет)."""
     u = _user(db, f"demo-candidate-{idx:03d}@demo.invalid", UserRole.candidate, pwd_hash)
     female = rnd.random() < 0.35
     last = rnd.choice(LAST) + ("а" if female else "")
@@ -158,7 +162,7 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
         telegram=f"@demo_{idx:03d}", city=city, work_format=wf, relocation=rnd.random() < 0.3, experience_years=exp,
         salary_min_hidden=int(round(base * rnd.uniform(0.9, 1.3), -4)), privacy={}, visible_to_employers=True,
         public_ref=new_public_ref(db), onboarding_completed_at=utcnow(), roles=roles,
-        headline=f"{direction} · {grade} (демо)",
+        headline=f"{direction} · {grade} (демо)" if status == "confirmed" else f"{direction} (демо)",
     )
     db.add(p)
     db.flush()
@@ -172,26 +176,61 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
         db.add(SurveyStackTag(survey_id=survey.id, stack_tag_id=t, self_level=survey.answers["stack"][t]))
     set_t0_facts(db, u.id, FactSource.self_report, stack=stack, roles=roles,
                  soft_skills=rnd.sample(SOFT, rnd.randint(1, 3)), experience_years=exp)
-    # Результат теста: θ выше порога заявленного грейда (иначе категория не была бы присвоена)
-    theta = round(CUT[grade] + rnd.uniform(0.15, 1.3), 2)
-    se = round(rnd.uniform(0.32, 0.5), 2)
+    if status == "unconfirmed_notest":  # опрос пройден, теста нет: «грейд не подтверждён (заявлен …)»
+        db.flush()
+        refresh_rating(db, u.id)
+        return
+    if status == "confirmed":
+        # Результат теста: θ выше порога заявленного грейда (иначе категория не была бы присвоена)
+        theta = round(CUT[grade] + rnd.uniform(0.15, 1.3), 2)
+        se = round(rnd.uniform(0.32, 0.5), 2)
+    elif status == "provisional":
+        # у порога Junior: P(θ ≥ −1) в (0,10; 0,80) ⇔ θ̂ − порог в SE·(−1,28; 0,84)
+        se = round(rnd.uniform(0.36, 0.48), 2)
+        theta = round(CUT[grade] + se * rnd.uniform(-1.1, 0.6), 2)
+    else:  # unconfirmed_failed: уровень ниже порога заявленного грейда доказан (P < 0,10)
+        se = round(rnd.uniform(0.3, 0.4), 2)
+        theta = round(CUT[grade] - se * rnd.uniform(1.5, 2.6), 2)
     answered = 18
-    correct = min(answered, max(9, int(round(answered * (0.55 + 0.12 * (theta - CUT[grade])) + rnd.randint(-1, 1)))))
+    correct = min(answered, max(5, int(round(answered * (0.55 + 0.12 * (theta - CUT[grade])) + rnd.randint(-1, 1)))))
+    confirmed = status == "confirmed"
     ts = TestSession(user_id=u.id, survey_id=survey.id, direction_id=direction, claimed_grade_id=grade,
                      status=TestSessionStatus.finished, form_seed=rnd.randint(1, 2**30), is_sandbox=False,
                      started_at=created, finished_at=created + timedelta(minutes=rnd.randint(18, 40)),
-                     score=correct / answered, theta=theta, theta_se=se, result_grade_id=grade,
-                     result={"engine": "demo-seed", "demo": True}, created_at=created)
+                     score=correct / answered, theta=theta, theta_se=se, result_grade_id=grade if confirmed else None,
+                     result={"engine": "demo-seed", "demo": True, "engine_result": {"confirmed": confirmed,
+                                                                                    "provisional": status == "provisional"}},
+                     created_at=created)
     db.add(ts)
     db.flush()
-    lock = created + timedelta(days=90)
-    db.add(GradeHistory(user_id=u.id, direction_id=direction, from_grade_id=None, to_grade_id=grade,
-                        reason=GradeChangeReason.initial, test_session_id=ts.id, locked_until=lock, created_at=created))
+    if status == "unconfirmed_failed":
+        db.flush()
+        refresh_rating(db, u.id)
+        return
+    from app.modules.assessment import provisional as prov
+
+    p_claimed = round(1 - _norm_cdf((CUT[grade] - theta) / se), 3)
+    if confirmed:
+        lock = created + timedelta(days=90)
+        db.add(GradeHistory(user_id=u.id, direction_id=direction, from_grade_id=None, to_grade_id=grade,
+                            reason=GradeChangeReason.initial, test_session_id=ts.id, locked_until=lock, created_at=created))
+        p.grade_locked_until = lock
+        extra = {}
+    else:  # предварительно: 90 дней не начинаются, вероятность и причина — как у движка (provisional.fact_extra)
+        db.add(GradeHistory(user_id=u.id, direction_id=direction, from_grade_id=None, to_grade_id=grade,
+                            reason=GradeChangeReason.provisional, test_session_id=ts.id, locked_until=None,
+                            created_at=created))
+        p.grade_provisional = True
+        extra = {"status": "provisional",
+                 "provisional": {"reason": "precision" if theta >= CUT[grade] else "uncertain", "p": p_claimed,
+                                 "cut": CUT[grade], "level": prov.LEVEL, "since": created.isoformat(), "attempts": 0,
+                                 "attempts_max": prov.CONFIRM_ATTEMPTS, "session_id": str(ts.id), "last_confirm": None}}
     p.current_direction_id, p.current_grade_id = direction, grade
-    p.current_category_id, p.grade_locked_until = f"{direction}.{grade}", lock
+    p.current_category_id = f"{direction}.{grade}"
     db.add(CandidateFact(user_id=u.id, kind="test_result", key=f"{direction}.{grade}", title=f"Тест {direction} · {grade}",
-                         value={"theta": theta, "se": se, "grade": grade, "confirmed": True, "correct": correct,
-                                "answered": answered, "engine": "demo-seed", "session_id": str(ts.id)},
+                         value={"theta": theta, "se": se, "grade": grade, "confirmed": confirmed, "correct": correct,
+                                "answered": answered, "engine": "demo-seed", "session_id": str(ts.id),
+                                "p_claimed": p_claimed, **extra},
                          evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=f"test_session:{ts.id}",
                          created_at=created))
     # Навыки, проверенные заданиями: часть заявленного стека, у сильных — больше
@@ -224,6 +263,31 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     refresh_rating(db, u.id)
 
 
+PROVISIONAL_DEMO = (("backend", True), ("frontend", False), ("data_ml", False), ("qa", True), ("security", False))
+UNCONFIRMED_DEMO = (("backend", "middle", "unconfirmed_notest"), ("backend", "junior", "unconfirmed_failed"),
+                    ("frontend", "senior", "unconfirmed_failed"), ("data_ml", "junior", "unconfirmed_notest"),
+                    ("qa", "middle", "unconfirmed_failed"), ("security", "junior", "unconfirmed_notest"))
+
+
+def _norm_cdf(x: float) -> float:
+    import math
+    return 0.5 * (1 + math.erf(x / math.sqrt(2)))
+
+
+def _extra_candidates(db: Session, idx: int, rng_seed: int, pwd_hash: str) -> int:
+    """Демо-кандидаты со статусами «предварительно» и «не подтверждён» (после 150 основных, их не сдвигают)."""
+    rnd_p = random.Random(rng_seed + 1)
+    for d, with_fsp in PROVISIONAL_DEMO:
+        idx += 1
+        _candidate(db, rnd_p, idx, d, "junior", pwd_hash, with_fsp, status="provisional")
+    rnd_u = random.Random(rng_seed + 2)
+    for d, g, st in UNCONFIRMED_DEMO:
+        idx += 1
+        _candidate(db, rnd_u, idx, d, g, pwd_hash, False, status=st)
+    db.commit()
+    return idx
+
+
 def seed(db: Session, rng_seed: int = 20261006) -> dict:
     rnd = random.Random(rng_seed)
     pwd_hash = hash_password(secrets.token_urlsafe(24))  # случайный, нигде не сохраняется
@@ -236,6 +300,9 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
                 idx += 1
                 _candidate(db, rnd, idx, d, g, pwd_hash, fsp_flags[i])
             db.commit()
+    # Статусы грейда (единая модель) — отдельными генераторами, чтобы не сдвинуть 150 основных кандидатов:
+    # 5 «Junior (предварительно)» и кандидаты без подтверждённого грейда (теста нет / тест не подтвердил)
+    idx = _extra_candidates(db, idx, rng_seed, pwd_hash)
     employers = []
     for i, (name, industry, city) in enumerate(COMPANIES, start=1):
         u = _user(db, f"demo-employer-{i:02d}@demo.invalid", UserRole.employer, pwd_hash)

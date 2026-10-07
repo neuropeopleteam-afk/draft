@@ -164,3 +164,59 @@ def test_unconfirmed_without_survey_not_listed(client):
     register_and_verify(client, email="raw@example.com")
     e = employer(client)
     assert client.get("/api/employer/candidates", headers=H(e)).json()["total"] == 0
+
+
+# ---------------------------------------------------------------- демо-данные и персона жюри
+
+def test_demo_seed_status_variants_do_not_shift_main_candidates(client):
+    from sqlalchemy import select
+
+    from app.core.db import SessionLocal
+    from app.modules.auth.models import User
+    from app.modules.demo.seed import PROVISIONAL_DEMO, UNCONFIRMED_DEMO, seed
+    from app.modules.matching import ranking
+    from app.modules.profiles.models import CandidateProfile
+    from app.modules.validation.matching_eval import pick_set
+    from app.modules.profiles.facts import load_bundles
+
+    with SessionLocal() as db:
+        out = seed(db)
+        assert out["candidates"] == 150 + len(PROVISIONAL_DEMO) + len(UNCONFIRMED_DEMO)
+        rows = db.execute(select(User.email, CandidateProfile.full_name, CandidateProfile.current_category_id,
+                                 CandidateProfile.grade_provisional)
+                          .join(CandidateProfile, CandidateProfile.user_id == User.id)
+                          .where(User.email.like("demo-candidate-%")).order_by(User.email)).all()
+        main = [r for r in rows if r[0] <= "demo-candidate-150@demo.invalid"]
+        assert len(main) == 150 and all(r[2] and not r[3] for r in main)
+        # первый основной кандидат — тот же, что и до добавления статусов (отдельные генераторы Random(seed+1/+2))
+        assert main[0][1] == "Мария Павлова" and main[0][2] == "backend.junior"
+        assert main[-1][1] == "Ольга Киселёва" and main[-1][2] == "security.senior"
+        prov = [r for r in rows if r[3]]
+        assert len(prov) == 5 and {r[2] for r in prov} == {f"{d}.junior" for d, _ in PROVISIONAL_DEMO}
+        unc = ranking.unconfirmed_counts(db)
+        assert sum(unc.values()) == len(UNCONFIRMED_DEMO) and unc["backend.middle"] == 1
+        # в набор для разметки подбора предварительные и неподтверждённые не попадают
+        ids = [db.scalar(select(User.id).where(User.email == r[0])) for r in rows]
+        bundles = list(load_bundles(db, ids).values())
+        import random
+        picked = pick_set(bundles, {"direction": "backend", "grade": "junior"}, random.Random(1))
+        assert picked and all(b.profile.current_category_id and not b.provisional for b in picked)
+
+    e = employer(client)
+    found = client.get("/api/employer/candidates", params={"direction": "backend", "grade": "junior"}, headers=H(e)).json()
+    assert found["provisional"] == 1 and found["unconfirmed"] == 1 and found["total"] == 12
+    assert [c["status"]["status"] for c in found["items"]][-1] == "unconfirmed"
+
+
+def test_jury_persona_candidate_junior(client):
+    r = client.get("/api/jury/status")
+    assert any(p["id"] == "candidate_junior" and p["role"] == "candidate" for p in r.json()["personas"])
+    r = client.post("/api/jury/login", json={"persona": "candidate_junior"})
+    assert r.status_code == 200, r.text
+    assert r.json()["landing"] == "/candidate/category"
+    tok = r.json()["access_token"]
+    me = client.get("/api/me", headers=H(tok)).json()
+    assert me["email"] == "candidate-junior@jury.example.com" and me["candidate"]["current_category_id"] == "backend.junior"
+    st = client.get("/api/assessment/status", headers=H(tok)).json()
+    assert st["current"]["provisional"] and st["grade_status"]["status"] == "provisional"
+    assert st["provisional"]["attempts_left"] == 2 and st["claimed_grade"] == "junior"
