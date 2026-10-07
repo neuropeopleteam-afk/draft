@@ -3,6 +3,7 @@
 только после отклика (отклик = согласие раскрыть контакты этой компании)."""
 from __future__ import annotations
 
+from typing import Literal
 import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
@@ -22,7 +23,8 @@ from app.integrations.vacancies.models import Vacancy, VacancyApplication
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import STACK, category_title
-from app.modules.invitations.service import candidate_contacts
+from app.modules.contact.salary import basis_out
+from app.modules.invitations.service import candidate_contacts, check_salary
 from app.modules.matching.router import my_company
 from app.modules.profiles.candidate_router import candidate_card_for
 from app.modules.profiles.models import CandidateProfile, Company
@@ -46,6 +48,7 @@ class VacancyIn(BaseModel):
     stack: list[str] = Field(default_factory=list, max_length=20)
     salary_from: int = Field(gt=0, le=10_000_000, description="Вилка обязательна")
     salary_to: int = Field(gt=0, le=10_000_000)
+    salary_basis: Literal["gross", "net"] = Field("gross", description="gross — до вычета НДФЛ, net — на руки")
     work_format: str = Field("any", pattern=FORMATS)
     city: str | None = Field(None, max_length=100)
     publish: bool = True
@@ -64,6 +67,7 @@ class VacancyPatch(BaseModel):
     stack: list[str] | None = Field(None, max_length=20)
     salary_from: int | None = Field(None, gt=0, le=10_000_000)
     salary_to: int | None = Field(None, gt=0, le=10_000_000)
+    salary_basis: Literal["gross", "net"] | None = None
     work_format: str | None = Field(None, pattern=FORMATS)
     city: str | None = Field(None, max_length=100)
 
@@ -81,7 +85,7 @@ def _vac_out(db: Session, v: Vacancy, *, company: Company | None = None, with_tr
            "description": v.description, "stack": [{"tag": t, "title": STACK.get(t, (t,))[0]} for t in v.stack or []],
            "salary_from": v.salary_from, "salary_to": v.salary_to, "work_format": v.work_format, "city": v.city,
            "status": v.status, "published_at": v.published_at.isoformat() if v.published_at else None,
-           "updated_at": v.updated_at.isoformat(), "is_demo": v.is_demo,
+           "updated_at": v.updated_at.isoformat(), "is_demo": v.is_demo, **basis_out(v.salary_basis),
            "company": {"id": str(c.id), "name": c.name, "city": c.city, "industry": c.industry}}
     cat = db.get(Category, v.category_id) if v.category_id else None
     out["market_range"] = {"from": cat.market_salary_from, "to": cat.market_salary_to,
@@ -135,9 +139,11 @@ def my_vacancies(user: User = Depends(employer), db: Session = Depends(get_db)) 
 def create_vacancy(data: VacancyIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
     _check_refs(db, data.category_id, data.stack)
+    check_salary(data.salary_from, data.salary_to)  # ширина ≤ 1,5 — как у приглашений, зондов и кубков
     v = Vacancy(company_id=c.id, created_by=user.id, title=data.title.strip(), category_id=data.category_id,
                 description=data.description.strip(), stack=list(dict.fromkeys(data.stack)),
-                salary_from=data.salary_from, salary_to=data.salary_to, work_format=data.work_format,
+                salary_from=data.salary_from, salary_to=data.salary_to, salary_basis=data.salary_basis,
+                work_format=data.work_format,
                 city=data.city, status="published" if data.publish else "draft",
                 published_at=utcnow() if data.publish else None, is_demo=user.is_demo)
     db.add(v)
@@ -157,6 +163,10 @@ def patch_vacancy(vid: uuid.UUID, data: VacancyPatch, user: User = Depends(emplo
     lo, hi = upd.get("salary_from", v.salary_from), upd.get("salary_to", v.salary_to)
     if lo > hi:
         raise api_error(422, "salary_range", "Нижняя граница вилки больше верхней")
+    if "salary_from" in upd or "salary_to" in upd:  # старые демо-вакансии с широкой вилкой правятся без ошибки
+        check_salary(lo, hi)
+    if upd.get("salary_basis", "") is None:
+        upd.pop("salary_basis")
     for k, val in upd.items():
         setattr(v, k, val)
     db.commit()
@@ -189,7 +199,7 @@ def _app_out(db: Session, a: VacancyApplication, side: str, v: Vacancy | None = 
            "status_title": STATUS_TITLES[a.status], "events": a.events, "cover_letter": a.cover_letter,
            "created_at": a.created_at.isoformat(), "viewed_at": a.viewed_at.isoformat() if a.viewed_at else None,
            "responded_at": a.responded_at.isoformat() if a.responded_at else None,
-           "salary_from": v.salary_from, "salary_to": v.salary_to}
+           "salary_from": v.salary_from, "salary_to": v.salary_to, **basis_out(v.salary_basis)}
     if side == "employer":
         out["employer_note"] = a.employer_note
         out["card"] = candidate_card_for(db, a.candidate_user_id, include_hidden=False)

@@ -168,7 +168,8 @@ def deliver(db: Session, company_id: uuid.UUID, *, invitation_id: uuid.UUID | No
         return []
     inv = db.get(Invitation, invitation_id) if invitation_id else None
     app_ = db.get(VacancyApplication, application_id) if application_id else None
-    if inv is not None and (inv.status != InvitationStatus.accepted or inv.company_id != company_id):
+    if inv is not None and (inv.status != InvitationStatus.accepted or inv.company_id != company_id
+                            or inv.contacts_revealed_at is None):  # доступ к контактам отозван кандидатом
         return []
     if inv is None and app_ is None:
         return []
