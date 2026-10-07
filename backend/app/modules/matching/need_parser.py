@@ -28,12 +28,11 @@ from app.modules.catalog.dictionary import (
     find_stack,
     find_stack_spans,
 )
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, STACK
 from app.modules.llm.client import chat_json
 from app.modules.matching import bias as bias_filter
 
 DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security")
-GRADES = ("junior", "middle", "senior")
 COMMON_TAGS = {"algorithms", "sql", "http", "git", "linux", "docker"}
 
 
@@ -371,7 +370,7 @@ def normalize(req: dict, method: str) -> dict:
 LLM_SYSTEM = (
     "Ты помогаешь структурировать описание вакансии в ИТ. Верни только JSON без пояснений: "
     '{"direction": одно из ["backend","frontend","data_ml","qa","security"] или null, '
-    '"grade": одно из ["junior","middle","senior"] или null, '
+    '"grade": одно из ["intern","junior","middle","senior"] или null (intern — стажёр, без опыта), '
     '"stack_required": [{"tag": id, "weight": 0.1..1.0, "quote": "точный фрагмент текста"}], '
     '"stack_desired": [{"tag": id, "weight": 0.1..0.5, "quote": "точный фрагмент текста"}], '
     '"experience_years_min": число или null, "work_format": "office"|"hybrid"|"remote"|null, '

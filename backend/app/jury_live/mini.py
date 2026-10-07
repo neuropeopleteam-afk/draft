@@ -19,10 +19,11 @@ from typing import Any
 import numpy as np
 
 from assessment_bank import generate, get_spec
-from assessment_bank.psychometrics import GradeScale, PoolItem
+from assessment_bank.psychometrics import PoolItem
 from assessment_bank.psychometrics.irt import estimate_theta
 
 from app.modules.assessment.bank_engine import SEED_MAX, SEED_MIN, BankEngine, _finite, _pool
+from app.modules.assessment.grades import point_grade
 from app.modules.assessment.skill_map import to_stack_tags
 
 N_ITEMS = 3
@@ -123,10 +124,10 @@ def finished(st: dict) -> bool:
 
 
 def result(st: dict) -> dict:
-    """Итог мини-теста. Грейд — точечный по θ (пороги шкалы банка), с честной пометкой «экспресс»."""
+    """Итог мини-теста. Грейд — точечный по θ (пороги платформы, со Стажёром), с честной пометкой «экспресс»."""
     done = [i for i in st["items"] if i["done"]]
     theta, se = float(st["theta"]), float(st["se"])
-    g = GradeScale().point(theta)
+    g = point_grade(theta)
     # Без единого верного ответа категории нет: при 3 заданиях θ (EAP) с априорным N(0; 1) у самых лёгких заданий
     # может остаться у порога Junior, но доказательства уровня нет
     if not any(float(i["x"][0]) > 0 for i in done):

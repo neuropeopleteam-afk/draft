@@ -32,7 +32,7 @@ from app.core.enums import EvidenceLevel, InvitationStatus
 from app.cup.models import Cup, CupEntry
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, STACK, category_title
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_ORDER, STACK, category_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.auth.models import User
 from app.modules.invitations.models import Invitation
@@ -375,7 +375,7 @@ def salaries(d: Data) -> dict:
             row["delta_vs_market_pct"] = round(100 * (cell["mid_median"] / cat.market_salary_median - 1), 1)
         rows.append(row)
     rows.sort(key=lambda r: (list(DIRECTIONS).index(r["direction"]) if r["direction"] in DIRECTIONS else 9,
-                             ["junior", "middle", "senior"].index(r["grade"]) if r["grade"] in ("junior", "middle", "senior") else 9))
+                             GRADE_ORDER.index(r["grade"]) if r["grade"] in GRADE_ORDER else 9))
     dirs = [{"direction": dd, "title": t, **_salary_cell(by_dir.get(dd, []))} for dd, t in DIRECTIONS.items()]
     return {"categories": rows, "directions": dirs, "rules": {"min_offers": K, "min_candidates": K,
                                                               "min_companies": MIN_COMPANIES_SALARY}}

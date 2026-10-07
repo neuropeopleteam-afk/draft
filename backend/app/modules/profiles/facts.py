@@ -19,7 +19,7 @@ from app.core.enums import EvidenceLevel, FactSource
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK, category_title
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK, category_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
@@ -38,7 +38,6 @@ DISCIPLINE_TITLES = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
 LEVEL_TITLES = {"school": "школьные", "regional": "региональные", "interregional": "межрегиональные",
                 "national": "всероссийские", "international": "международные",
                 "platform": "кубок работодателя на платформе"}
-GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
 # «Junior (предварительно)» ниже подтверждённого при прочих равных: −0,05 к рейтингу в категории и к скору подбора
 # (вес одного зонда; задан до бенчмарка и на нём не подбирался — см. app.modules.assessment.provisional)
 PROVISIONAL_PENALTY = 0.05

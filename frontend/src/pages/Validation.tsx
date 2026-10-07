@@ -5,6 +5,7 @@ import JuniorStability from "../components/validation/JuniorStability";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
+import { InternCutSection } from "../components/validation/InternCutBlock";
 import { OtherConditions, ExposureNote, LeakShareTable, RetestSection, SimConditions } from "../components/validation/StabilityBlocks";
 import { useAuth } from "../lib/auth";
 import { juryToken } from "../lib/jury";
@@ -49,7 +50,7 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["junior", "Junior у порога"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -78,6 +79,7 @@ function Report({ r }: { r: any }) {
 
       <RetestSection sim={sim} />
       <JuniorStability />
+      <InternCutSection ic={r.intern_cut} />
       <OtherConditions sim={sim} />
 
       <Section id="exposure" title="Частота показа заданий"

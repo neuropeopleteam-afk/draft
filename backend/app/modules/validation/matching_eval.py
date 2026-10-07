@@ -142,11 +142,15 @@ def pick_set(bundles: list[Bundle], req: dict, rnd: random.Random) -> list[Bundl
 
 
 METHODS = ("platform", "platform_no_fsp", "bm25", "keywords", "random")
+EVAL_GRADES = ("junior", "middle", "senior")
 
 
 def evaluate(db: Session, needs: list[str], seed: int = 20261006) -> dict:
     rnd = random.Random(seed)
-    profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.current_category_id.is_not(None))).all()
+    # Набор кандидатов для разметки зафиксирован до появления грейда «Стажёр» и статуса «предварительно»: стажёры и
+    # предварительные в размеченные пары не входят, иначе изменился бы состав уже размеченных экспертами пар
+    profiles = db.scalars(select(CandidateProfile).where(CandidateProfile.current_category_id.is_not(None),
+                                                         CandidateProfile.current_grade_id.in_(EVAL_GRADES))).all()
     bundles = sorted((b for b in load_bundles(db, [p.user_id for p in profiles]).values() if not b.provisional),
                      key=lambda b: (b.profile.telegram or "", b.profile.public_ref or ""))  # детерминированно
     resumes: dict = {}

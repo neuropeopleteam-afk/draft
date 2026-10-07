@@ -181,7 +181,7 @@ def test_demo_seed_status_variants_do_not_shift_main_candidates(client):
 
     with SessionLocal() as db:
         out = seed(db)
-        assert out["candidates"] == 150 + len(PROVISIONAL_DEMO) + len(UNCONFIRMED_DEMO)
+        assert out["candidates"] == 150 + len(PROVISIONAL_DEMO) + len(UNCONFIRMED_DEMO) + out["interns"]
         rows = db.execute(select(User.email, CandidateProfile.full_name, CandidateProfile.current_category_id,
                                  CandidateProfile.grade_provisional)
                           .join(CandidateProfile, CandidateProfile.user_id == User.id)
