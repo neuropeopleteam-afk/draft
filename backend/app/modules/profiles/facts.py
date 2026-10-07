@@ -251,7 +251,8 @@ def grade_status(b: "Bundle") -> dict:
                 "claimed_category_id": f"{d}.{g}" if d and g else None,
                 "claimed_title": category_title(f"{d}.{g}") if d and g else None})
     if la is not None:
-        out["attempt"] = {"grade": la.claimed_grade_id, "direction": la.direction_id, "theta": la.theta,
+        out["attempt"] = {"grade": la.claimed_grade_id, "grade_title": GRADES.get(la.claimed_grade_id, la.claimed_grade_id),
+                          "direction": la.direction_id, "theta": la.theta,
                           "se": la.theta_se, "at": la.finished_at.date().isoformat() if la.finished_at else None}
         how = (f"тест на {GRADES.get(la.claimed_grade_id, la.claimed_grade_id)} не подтвердил грейд"
                + (f" (θ = {la.theta:+.2f} ± {la.theta_se:.2f})" if la.theta is not None and la.theta_se is not None else ""))

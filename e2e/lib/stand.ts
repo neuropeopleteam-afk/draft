@@ -9,7 +9,7 @@ import { request, type APIRequestContext } from "@playwright/test";
 
 export const BASE_URL = (process.env.E2E_BASE_URL || "http://127.0.0.1:8140").replace(/\/$/, "");
 
-export type Persona = "candidate" | "candidate_nofsp" | "employer" | "expert" | "fsp";
+export type Persona = "candidate" | "candidate_nofsp" | "candidate_junior" | "employer" | "expert" | "fsp";
 
 export async function apiContext(): Promise<APIRequestContext> {
   const user = process.env.E2E_BASIC_USER;
