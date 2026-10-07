@@ -54,6 +54,10 @@ services:
       # Импорт в компанию: python -m app.integrations.ats.cli import-env --employer-email ... (см. docs/ATS.md)
       - path: ${ATS_ENV_FILE:-./secrets/ats.env}
         required: false
+      # Паспорт грейда: PASSPORT_SIGNING_KEY — ключ подписи Ed25519 (python tools/passport/genkey.py > secrets/passport.env,
+      # chmod 600). Нет файла — эфемерный «тестовый ключ» процесса, страница проверки /verify/<id> так и пишет.
+      - path: ${PASSPORT_ENV_FILE:-./secrets/passport.env}
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fsp}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fsp}
       # Пусто — кнопка «Войти через ФСП ID» скрыта. Прод: https://fsp.neuropeople.pro/auth/realms/fsp

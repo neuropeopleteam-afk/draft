@@ -67,6 +67,9 @@ server {
     # Живая демонстрация для жюри: /j/<код>, /assets/, /recover.js — без пароля (QR с телефона эксперта)
     include /etc/nginx/snippets/spectrek_fsp_jury_live.conf;
 
+    # Публичная проверка паспорта грейда: только /verify/<id> — без пароля (/verify для почты остаётся закрытым)
+    include /etc/nginx/snippets/spectrek_fsp_passport.conf;
+
     location / {
         auth_basic "FSP demo";
         auth_basic_user_file /etc/nginx/htpasswd_spectrek_fsp;
