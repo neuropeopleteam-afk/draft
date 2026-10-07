@@ -2,7 +2,7 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Logo } from "../components/Logo";
-import { Alert, Loading, dt, dtt, errText, num, pct } from "../components/ui";
+import { Alert, Loading, NB, dt, dtt, errText, num, pct } from "../components/ui";
 import { api } from "../lib/api";
 import { GRADE_STATUS, INTEGRITY, STATE_HINT, STATE_STYLE, StateBadge, type PassportPublic } from "./common";
 
@@ -16,6 +16,9 @@ const FILE_STATE: Record<string, string> = {
   differs: "Подпись верна, но файл отличается от записи реестра.",
   not_in_registry: "Подпись верна, но паспорта с таким id в реестре нет.",
 };
+
+// паспорт заменён автоматически (пересдача, обновление данных, экспертная проверка) — кандидат не скомпрометирован
+const REPLACED = new Set(["superseded", "reviewed"]);
 
 export default function PassportVerify() {
   const { id = "" } = useParams();
@@ -61,7 +64,7 @@ function Body({ d }: { d: PassportPublic }) {
       <section role="status" aria-live="polite" className={`rounded-2xl border p-5 sm:p-6 ${STATE_STYLE[s.state]}`}>
         <p className="text-xs font-semibold uppercase tracking-[0.12em] opacity-75">Статус паспорта</p>
         <h1 className="mt-1 text-3xl font-extrabold tracking-tight">{s.title}</h1>
-        <p className="mt-2 text-sm">{STATE_HINT[s.state]}{s.reason_title ? ` Причина: ${s.reason_title}${s.revoked_at ? `, ${dt(s.revoked_at).replace(/ г\.$/, "")}` : ""}.` : ""}</p>
+        <p className="mt-2 text-sm">{STATE_HINT[s.state]}{s.reason_title ? ` Причина: ${s.reason_title}${s.revoked_at ? `, ${dt(s.revoked_at).replace(/ г\.$/, "")}` : ""}.` : ""}{s.state === "revoked" && REPLACED.has(s.reason ?? "") ? " Актуальный паспорт кандидат пришлёт новой ссылкой: старая ссылка на новый паспорт не ведёт." : ""}</p>
         <p className="mt-2 text-xs opacity-80">Проверено {dtt(s.checked_at)} · подпись Ed25519 {s.signature_valid ? "верна" : "не сходится"}{s.kid_known ? "" : " · ключ подписи неизвестен"}</p>
         {s.test_key && <p className="mt-2 rounded-lg bg-white/70 px-3 py-2 text-xs font-semibold">Подписано тестовым ключом стенда разработки: это демонстрация механизма, а не доказательство.</p>}
       </section>
@@ -79,7 +82,7 @@ function Body({ d }: { d: PassportPublic }) {
           <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
             <Row k="Тест пройден" v={dt(a.test_date)} />
             <Row k="Оценка уровня θ" v={a.theta != null ? `${num(a.theta)} ± ${num(a.se)}` : "—"} />
-            <Row k={`Вероятность уровня не ниже ${p.category.grade_title}`} v={a.p_grade_or_higher != null ? pct(a.p_grade_or_higher) : "—"} />
+            <Row k={`Вероятность уровня не ниже ${p.category.grade_title}`} v={probText(a.p_grade_or_higher)} />
             <Row k="Верных ответов" v={a.answered ? `${a.correct} из ${a.answered}` : "—"} />
             {a.integrity && <Row k="Достоверность результата" v={INTEGRITY[a.integrity] ?? a.integrity} />}
             <Row k="Действителен до" v={dt(p.valid_until)} />
@@ -108,7 +111,7 @@ function Body({ d }: { d: PassportPublic }) {
 
       <section className="card text-sm">
         <h2 className="font-bold text-brand-night">Как получен грейд</h2>
-        <p className="mt-2 text-brand-ink/80">Категорию присваивает только адаптивный тест платформы: задания банка подбираются под уровень кандидата, θ — оценка уровня по модели IRT, грейд подтверждается, если вероятность уровня не ниже заявленного достаточно высока. Самоописание (T0) в паспорт не входит. Сигналы античита только снижают «достоверность», автоматических наказаний нет.</p>
+        <p className="mt-2 text-brand-ink/80">Категорию присваивает только адаптивный тест платформы: задания банка подбираются под уровень кандидата, θ — оценка уровня по модели IRT, грейд подтверждается, если вероятность уровня не ниже заявленного достаточно высока. Самоописание (T0) в паспорт не входит. Признаки несамостоятельного прохождения только снижают «достоверность результата», автоматических наказаний нет.</p>
         <a className="mt-3 inline-block font-semibold text-brand underline-offset-4 hover:underline" href={p.methodology_url}>Методика и проверка качества теста</a>
       </section>
     </>
@@ -146,7 +149,7 @@ function Signature({ d }: { d: PassportPublic }) {
         <Row k="Выпущен" v={dtt(p.issued_at)} />
       </dl>
       <p className="mt-4 text-brand-ink/80">Подписан канонический JSON состава паспорта. Изменение любого поля — грейда, даты, навыка — делает подпись неверной. Проверить можно и без нашей базы данных, по открытому ключу:</p>
-      <pre className="mt-2 overflow-x-auto rounded-xl bg-brand-night px-3 py-2 text-xs text-white"><code>python tools/passport/verify.py {window.location.origin}/verify/{p.id}</code></pre>
+      <pre className="mt-2 whitespace-pre-wrap break-all rounded-xl bg-brand-night px-3 py-2 text-xs text-white"><code>python tools/passport/verify.py {window.location.origin}/verify/{p.id}</code></pre>
       <div className="mt-4 flex flex-wrap gap-3">
         <button className="btn-ghost" onClick={download}>Скачать файл паспорта</button>
         <button className="btn-ghost" onClick={() => input.current?.click()}>Проверить файл</button>
@@ -159,6 +162,14 @@ function Signature({ d }: { d: PassportPublic }) {
       </div>
     </section>
   );
+}
+
+/** Вероятность без ложной точности: 0,999 — «более 99 %», а не «100 %» (уверенность теста не абсолютна). */
+function probText(v: number | null) {
+  if (v == null) return "—";
+  if (v >= 0.995) return `более 99${NB}%`;
+  if (v <= 0.005) return `менее 1${NB}%`;
+  return pct(v);
 }
 
 function Row({ k, v }: { k: string; v: ReactNode }) {
