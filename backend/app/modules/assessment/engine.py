@@ -16,9 +16,9 @@ from dataclasses import asdict, dataclass, field
 import math
 from typing import Any, Protocol
 
-GRADES = ("junior", "middle", "senior")
-# Временные пороги на шкале θ (как в assessment_bank.psychometrics.grading.GradeScale)
-GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
+from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER  # единый набор грейдов платформы
+
+GRADES = GRADE_ORDER  # ("intern", "junior", "middle", "senior") — снизу вверх
 CONFIRM_LEVEL = 0.6  # P(θ ≥ порог заявленного грейда) для подтверждения
 UPGRADE_LEVEL = 0.8  # P(θ ≥ порог следующего грейда) для предложения пройти тест выше
 
@@ -126,12 +126,9 @@ def grade_decision(theta: float, se: float, claimed: str) -> dict:
         return 1 - _norm_cdf((GRADE_CUTS[g] - theta) / max(se, 1e-6))
 
     at_least = {g: p_at_least(g) for g in GRADES}
-    probs = {
-        "none": round(1 - at_least["junior"], 3),
-        "junior": round(at_least["junior"] - at_least["middle"], 3),
-        "middle": round(at_least["middle"] - at_least["senior"], 3),
-        "senior": round(at_least["senior"], 3),
-    }
+    order = ("none",) + tuple(GRADES)
+    chain = [1.0] + [at_least[g] for g in GRADES] + [0.0]
+    probs = {g: round(chain[i] - chain[i + 1], 3) for i, g in enumerate(order)}
     point = "none"
     for g in GRADES:
         if theta >= GRADE_CUTS[g]:
@@ -221,7 +218,7 @@ DIRECTION_ITEMS = {
            ["Сканирование UDP", "SYN-flood (DoS)", "ARP-спуфинг", "Подбор пароля SSH"], 1, b=0.4),
     ],
 }
-GRADE_SHIFT = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
+GRADE_SHIFT = dict(GRADE_CUTS)  # трудность заглушки сдвигается к порогу заявленного грейда
 
 
 class StubEngine:
@@ -301,14 +298,16 @@ class StubEngine:
 
 
 def _explain(dec: dict, theta: float, se: float, claimed: str) -> str:
+    from app.modules.catalog.seed_data import GRADES as TITLES
+
     i = GRADES.index(claimed)
     if dec["confirmed"]:
-        s = f"Грейд {claimed.capitalize()} подтверждён (θ = {theta:+.2f} ± {se:.2f})."
+        s = f"Грейд {TITLES[claimed]} подтверждён (θ = {theta:+.2f} ± {se:.2f})."
         if dec["upgrade_available"]:
-            s += f" Результат уверенный — можно пройти тест на {GRADES[i + 1].capitalize()}."
+            s += f" Результат уверенный — можно пройти тест на {TITLES[GRADES[i + 1]]}."
         return s
-    s = f"Грейд {claimed.capitalize()} пока не подтверждён (θ = {theta:+.2f} ± {se:.2f}). Принудительного понижения нет"
-    return s + (f": можно пройти тест на {dec['retake_lower'].capitalize()}." if dec["retake_lower"] else
+    s = f"Грейд {TITLES[claimed]} пока не подтверждён (θ = {theta:+.2f} ± {se:.2f}). Принудительного понижения нет"
+    return s + (f": можно пройти тест на {TITLES[dec['retake_lower']]}." if dec["retake_lower"] else
                 ": можно пройти тест ещё раз после подготовки.")
 
 

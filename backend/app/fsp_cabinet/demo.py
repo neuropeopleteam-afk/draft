@@ -25,6 +25,7 @@ from app.core.db import SessionLocal, get_engine, utcnow
 from app.core.enums import InvitationStatus
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
+from app.modules.catalog.seed_data import GRADES
 from app.modules.invitations.models import Invitation, InvitationEvent
 from app.modules.matching.models import EmployerNeed
 from app.modules.profiles.models import CandidateProfile, Company, EmployerProfile
@@ -33,10 +34,12 @@ MARK = " (демо)"
 DEMAND = {"backend.junior": 7, "backend.middle": 16, "backend.senior": 9, "frontend.junior": 6,
           "frontend.middle": 12, "frontend.senior": 7, "data_ml.junior": 5, "data_ml.middle": 11,
           "data_ml.senior": 6, "qa.junior": 5, "qa.middle": 8, "qa.senior": 3, "security.junior": 2,
-          "security.middle": 9, "security.senior": 6}
+          "security.middle": 9, "security.senior": 6,
+          # спрос на стажёров (демо): небольшие потребности-стажировки
+          "backend.intern": 3, "frontend.intern": 2, "qa.intern": 2}
 POSITIONS = {"backend": "Backend-разработчик", "frontend": "Frontend-разработчик", "data_ml": "Data Scientist / ML",
              "qa": "QA-инженер", "security": "Специалист по ИБ"}
-GRADE_T = {"junior": "Junior", "middle": "Middle", "senior": "Senior"}
+GRADE_T = dict(GRADES)
 _mx = threading.Lock()
 
 
