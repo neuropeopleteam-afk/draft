@@ -221,6 +221,66 @@ def uniform_blocks(db: Session, pan: ExpertPanelist, min_n: int = 10) -> list[st
     return sorted(k for k, v in vals.items() if cnt[k] >= min_n and len(v) == 1)
 
 
+SOURCES = ("people", "model")
+_ROLES = {1: "одной роли", 2: "двух ролях", 3: "трёх ролях", 4: "четырёх ролях"}
+_RUNS = {1: "одном прогоне", 2: "двух независимых прогонах", 3: "трёх независимых прогонах",
+         4: "четырёх независимых прогонах"}
+
+
+def set_source(db: Session, codes: list[str], source: str, model: str | None = None,
+               roles: list[str] | None = None) -> list[str]:
+    """Кто размечает под кодами панели: люди или языковая модель (model — её название, обязательно для model).
+    roles — роли модели по порядку кодов («тимлид Backend», …): пишутся в profile и видны в подписи на /validation."""
+    if source not in SOURCES:
+        raise api_error(422, "bad_source", "Источник разметки — people или model")
+    if source == "model" and not (model or "").strip():
+        raise api_error(422, "model_required", "Для разметки моделью укажите название модели")
+    codes = [c.strip().upper() for c in codes if c.strip()]
+    role_of = dict(zip(codes, [r.strip() for r in roles or []]))
+    pans = db.scalars(select(ExpertPanelist).where(ExpertPanelist.code.in_(codes),
+                                                   ExpertPanelist.is_demo.is_(False))).all()
+    for pan in pans:
+        pan.source = source
+        pan.source_model = model.strip()[:64] if source == "model" and model else None
+        if role_of.get(pan.code):
+            pan.profile = role_of[pan.code][:255]
+    db.commit()
+    return sorted(p.code for p in pans)
+
+
+def source_summary(panel: list[dict]) -> dict | None:
+    """Подпись источника разметки для /validation: «люди», «модель X в трёх ролях» или смешанная панель."""
+    if not panel:
+        return None
+    groups: dict[tuple[str, str | None], list[str]] = {}
+    for p in panel:
+        groups.setdefault((p["source"], p.get("source_model")), []).append(p["code"])
+
+    def part(src: str, model: str | None, codes: list[str], alone: bool) -> str:
+        if src == "people":
+            return "люди" if alone else f"люди ({', '.join(codes)})"
+        name = f"модель {model}" if model else "языковая модель"
+        roles = f"{name} в {_ROLES.get(len(codes), f'{len(codes)} ролях')}"
+        return roles if alone else f"{roles} ({', '.join(codes)})"
+
+    alone = len(groups) == 1
+    title = " и ".join(part(s, m, c, alone) for (s, m), c in sorted(groups.items(), key=lambda g: g[1][0]))
+    kinds = {s for s, _ in groups}
+    models = sorted({m for s, m in groups if s == "model" and m})
+    model_panel = kinds == {"model"}
+    caption = None
+    if model_panel:  # вся панель — прогоны модели: честная подпись (исчезает, как только в панели появятся люди)
+        roles = [p.get("role") for p in panel]
+        with_roles = f" с разными ролями ({', '.join(roles)})" if len(panel) > 1 and all(roles) else ""
+        who = (f"моделью {models[0]}" if len(models) == 1 else f"моделями {', '.join(models)}" if models
+               else "языковой моделью")
+        caption = (f"Разметка выполнена {who} в {_RUNS.get(len(panel), f'{len(panel)} прогонах')}{with_roles}, "
+                   "без доступа к коду ранжирования и друг к другу; это проверка конвейера и методики, а не замена "
+                   "экспертной панели — реальных экспертов подключаем на этапе доработки.")
+    return {"kind": kinds.pop() if len(kinds) == 1 else "mixed", "title": title, "models": models,
+            "model_panel": model_panel, "caption": caption}
+
+
 def panel_status(db: Session) -> list[dict]:
     """Обезличенный статус панели для /validation: коды, назначено, сделано, последняя активность (без имён)."""
     out = []
@@ -228,6 +288,9 @@ def panel_status(db: Session) -> list[dict]:
                           .order_by(ExpertPanelist.code)).all():
         pr = progress(db, pan)
         out.append({"code": pan.code, "active": pan.is_active, "started": any(v["done"] for v in pr.values()),
+                    "source": pan.source or "people",
+                    "source_model": pan.source_model if pan.source == "model" else None,
+                    "role": pan.profile if pan.source == "model" else None,  # роль модели; профиль людей не публикуем
                     "progress": {k: {"done": v["done"], "total": v["total"]} for k, v in pr.items()},
                     "uniform": uniform_blocks(db, pan),
                     "last_seen_at": pan.last_seen_at.isoformat() if pan.last_seen_at else None})

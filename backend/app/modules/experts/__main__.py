@@ -3,6 +3,9 @@
     python -m app.modules.experts pack                       # собрать пакет (A, B, C) из демо-данных и банка
     python -m app.modules.experts invite E1 --name "Иван" [--profile "тимлид Backend"] [--team 2] [--rotate]
     python -m app.modules.experts status                     # прогресс экспертов
+    python -m app.modules.experts source E1 E2 E3 --model "Claude Fable 5.1" --roles "тимлид Backend; Data/ML; QA/ИБ"
+                                                             # разметку под кодами делает модель (роли — по порядку)
+    python -m app.modules.experts source E1 --people         # под кодом размечает человек (по умолчанию)
     python -m app.modules.experts llm-grade [--models yandexgpt/latest,gpt-oss-120b/latest] [--runs 3]
     python -m app.modules.experts synth-check                # расчёт на синтетической разметке (проверка)
 
@@ -32,6 +35,12 @@ def main(argv: list[str] | None = None) -> int:
     inv.add_argument("--team", type=int, default=3, choices=(2, 3))
     inv.add_argument("--rotate", action="store_true")
     sub.add_parser("status")
+    src = sub.add_parser("source", help="кто размечает под кодами: люди или языковая модель (подпись на /validation)")
+    src.add_argument("codes", nargs="+")
+    who = src.add_mutually_exclusive_group(required=True)
+    who.add_argument("--model", help="название модели, например «Claude Fable 5.1»")
+    who.add_argument("--people", action="store_true")
+    src.add_argument("--roles", help="роли модели по порядку кодов через «;»: «тимлид Backend; Data/ML; QA/ИБ»")
     lg = sub.add_parser("llm-grade")
     lg.add_argument("--models", default="yandexgpt/latest,gpt-oss-120b/latest")
     lg.add_argument("--runs", type=int, default=3)
@@ -60,6 +69,14 @@ def main(argv: list[str] | None = None) -> int:
             from app.modules.experts.service import panel_status
 
             print(json.dumps(panel_status(db), ensure_ascii=False, indent=1))
+        elif a.cmd == "source":
+            from app.modules.experts.service import panel_status, set_source, source_summary
+
+            roles = [r for r in (a.roles or "").split(";") if r.strip()]
+            done = set_source(db, a.codes, "people" if a.people else "model", a.model, roles)
+            print(f"Источник разметки обновлён: {', '.join(done) or 'коды не найдены'}")
+            s = source_summary(panel_status(db)) or {}
+            print(f"Подпись на /validation: {s.get('caption') or s.get('title', '—')}")
         elif a.cmd == "llm-grade":
             from app.modules.experts.llm_grade import grade_pack
 
