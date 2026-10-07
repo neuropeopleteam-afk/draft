@@ -2,10 +2,10 @@
 
 Списки (поиск, подборки, очередь эксперта) фильтруются через jury_scope.pool_clause, но объекты, доступные по
 идентификатору, тоже обязаны подчиняться той же видимости: карточка и PDF кандидата по public_ref, сравнение,
-зонды и приглашения по ref, вакансии песочницы. Правило: работодатель видит общий пул и свою песочницу, чужая
-песочница для него не существует (404, как для скрытого профиля), — и наоборот, кандидат чужой песочницы не видит
-её вакансий. Каждая проверка падала до исправления profile_by_ref / фильтра вакансий. Песочницы создаются долго (несколько
-секунд CPU каждая), поэтому проверки сгруппированы в два теста на одном «мире».
+зонды и приглашения по ref, вакансии и кубки песочницы. Правило: работодатель видит общий пул и свою песочницу,
+чужая песочница для него не существует (404, как для скрытого профиля), — и наоборот, кандидат чужой песочницы не
+видит её вакансий и кубков. Каждая проверка падала до исправления profile_by_ref / фильтра вакансий / create_cup.
+Песочницы создаются долго (несколько секунд CPU каждая), поэтому проверки сгруппированы в два теста на одном «мире».
 """
 import pytest
 
@@ -32,7 +32,8 @@ def world(client):
     assert sid_a and sid_b and sid_a != sid_b
     shared = _jury(client, "employer", None)
     assert shared["shared"]
-    real = register_and_verify(client, "hr@real-company.example.org", role="employer", company_name="Настоящая компания")
+    real = register_and_verify(client, "hr@real-company.example.org", role="employer",
+                               company_name="Настоящая компания")
     ea, eb, es = a["access_token"], b["access_token"], shared["access_token"]
     refs_a = [c["ref"] for c in client.get("/api/employer/candidates", params={"direction": "backend"},
                                            headers=H(ea)).json()["items"]]
@@ -124,14 +125,15 @@ def _vacancies(client, world):
     assert client.get(f"/api/employer/vacancies/{vid}/applications", headers=H(world["ea"])).json() == []
     # платформенные (не песочные) вакансии кандидат песочницы по-прежнему видит
     rv = register_and_verify(client, "hr2@real-company.example.org", role="employer", company_name="Открытая компания")
-    pub = client.post("/api/employer/vacancies", json={**VACANCY, "title": "Открытая вакансия"}, headers=H(rv)).json()["id"]
+    pub = client.post("/api/employer/vacancies", json={**VACANCY, "title": "Открытая вакансия"},
+                      headers=H(rv)).json()["id"]
     assert pub in {v["id"] for v in client.get("/api/vacancies", headers=H(world["ca"])).json()["items"]}
     assert client.get(f"/api/vacancies/{pub}", headers=H(world["cb"])).status_code == 200
 
 
 # ---------------------------------------------------------------- кубки: засеянные (было) и созданные через API (дыра)
 
-CUP = {"title": "Кубок песочницы", "description": "Кубок, созданный демо-работодателем песочницы жюри через обычный API.",
+CUP = {"title": "Кубок песочницы", "description": "Кубок, созданный демо-работодателем песочницы жюри через API.",
        "mode": "auto", "n_tasks": 3, "time_limit_min": 15, "duration_days": 3, "salary_from": 200_000,
        "salary_to": 250_000, "position_title": "Backend-разработчик", "contact_method": "Почта HR",
        "offer_description": "Приглашение лучшим участникам кубка: команда платежей, удалённо, гибкий график."}
@@ -147,7 +149,7 @@ def _cups(client, world):
     cups = client.get("/api/employer/cups", headers=H(world["ea"])).json()
     assert cups, "у демо-работодателя песочницы должны быть кубки"
     _cup_hidden(client, cups[0]["id"], world["cb"])  # засеянный кубок: изоляция была и раньше
-    # кубок, созданный работодателем песочницы A через API: виден её кандидату, но не песочнице B и не настоящему кандидату
+    # кубок, созданный работодателем песочницы A через API: виден её кандидату, но не песочнице B и не настоящему
     cat = client.get("/api/me/card", headers=H(world["ca"])).json()["category"]["id"]
     r = client.post("/api/employer/cups", json={**CUP, "category_id": cat}, headers=H(world["ea"]))
     assert r.status_code == 201, r.text
@@ -159,7 +161,7 @@ def _cups(client, world):
 
 
 def test_candidate_objects_by_ref_only_inside_own_sandbox(client, world):
-    """Карточка, PDF, сравнение, зонд и приглашение по ref: чужая песочница, общее демо и настоящий работодатель — 404."""
+    """Карточка, PDF, сравнение, зонд, приглашение по ref: чужая песочница, общее демо, настоящий работодатель — 404."""
     _card(client, world)
     _pdf(client, world)
     _compare(client, world)
