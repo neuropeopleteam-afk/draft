@@ -15,7 +15,6 @@ from app.core.db import get_db, utcnow
 from app.core.deps import get_current_user, require_role
 from app.core.enums import UserRole
 from app.core.errors import api_error, err
-from app.integrations.ats.models import AtsSettings
 from app.integrations.egrul import trust
 from app.integrations.push.service import notify_user
 from app.integrations.vacancies.models import Vacancy, VacancyApplication
@@ -254,10 +253,12 @@ def decide(app_id: uuid.UUID, data: DecisionIn, bg: BackgroundTasks, user: User 
     bg.add_task(notify_user, a.candidate_user_id, title, f"{c.name}: «{v.title}» — {STATUS_TITLES[data.status]}",
                 "/candidate/vacancies", f"app-{a.id}")
     if data.status == "accepted":
-        st = db.get(AtsSettings, c.id)
         from app.integrations.ats.providers import enabled_targets
+        from app.integrations.ats.service import company_settings
 
-        if st is not None and st.auto_push and enabled_targets(db, c.id, st):
+        st = company_settings(db, c.id)  # строки настроек может не быть — по умолчанию auto_push=True
+        db.commit()
+        if st.auto_push and enabled_targets(db, c.id, st):
             from app.integrations.ats.service import deliver_bg
 
             bg.add_task(deliver_bg, c.id, application_id=a.id, trigger="application_accepted")
