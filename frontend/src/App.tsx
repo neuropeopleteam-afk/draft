@@ -28,6 +28,8 @@ import { CompanyPublic } from "./integrations/CompanyPublic";
 import { FspIdDone } from "./integrations/FspId";
 import { AdminSus, SusPage } from "./integrations/Sus";
 import { CandidateVacancies, EmployerVacancies } from "./integrations/Vacancies";
+import { CandidateAssignment, CandidateAssignments } from "./pages/assignments/Candidate";  // задания работодателя (И7)
+import { EmployerAssignment, EmployerAssignments } from "./pages/assignments/Employer";
 import { CandidateCup, CandidateCups } from "./ideas/cup/Candidate";
 import { EmployerCup, EmployerCups } from "./ideas/cup/Employer";
 import { FspCups, FspDemand, FspEffect, FspFunnel, FspMethod, FspOverview, FspReportLayout, FspSalaries } from "./ideas/fsp/Cabinet";
@@ -74,6 +76,8 @@ export default function App() {
         <Route path="app" element={<AppSection />} />
         <Route path="cups" element={<CandidateCups />} />
         <Route path="cups/:id" element={<CandidateCup />} />
+        <Route path="assignments" element={<CandidateAssignments />} />
+        <Route path="assignments/:id" element={<CandidateAssignment />} />
       </Route>
       <Route path="/employer" element={<CabinetLayout role="employer" title="Кабинет работодателя" sections={employerSections} />}>
         <Route index element={<EmployerOverview />} />
@@ -92,6 +96,8 @@ export default function App() {
         <Route path="app" element={<AppSection />} />
         <Route path="cups" element={<EmployerCups />} />
         <Route path="cups/:id" element={<EmployerCup />} />
+        <Route path="assignments" element={<EmployerAssignments />} />
+        <Route path="assignments/:id" element={<EmployerAssignment />} />
       </Route>
       <Route path="/fsp" element={<CabinetLayout role="fsp_analyst" alsoRoles={["admin"]} title="Кабинет ФСП" sections={fspSections} />}>
         <Route element={<FspReportLayout />}>
