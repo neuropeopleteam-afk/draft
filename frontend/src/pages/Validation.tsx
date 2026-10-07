@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import MatchingBench from "../components/MatchingBench";
+import GraderCheck from "../components/validation/GraderCheck";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
@@ -47,7 +48,7 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -109,6 +110,7 @@ function Report({ r }: { r: any }) {
       <MatchingBench />
 
       {r.experts && <ExpertsSection ex={r.experts} />}
+      <GraderCheck />
 
       <Section id="live" title="Живые данные платформы">
         <div className="grid gap-4 md:grid-cols-4">
