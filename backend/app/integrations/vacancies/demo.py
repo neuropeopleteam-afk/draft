@@ -3,6 +3,9 @@
 Все записи помечены is_demo и удаляются вместе с демо-компаниями (ON DELETE CASCADE). Вилки — внутри рыночного
 диапазона категории, кроме одной намеренно завышенной («вакансия-приманка»): на ней видно, как индекс доверия
 предупреждает кандидата.
+
+Основной посев демо (app.modules.demo.seed) и песочница жюри (app.modules.jury.seed) вызывают ensure() сами —
+у демо-кандидата жюри на свежем стенде есть вакансии.
 """
 from __future__ import annotations
 
@@ -10,7 +13,9 @@ import argparse
 import json
 
 from sqlalchemy import delete, select
+from sqlalchemy.orm import Session
 
+import app.models  # noqa: F401 — вся metadata: без неё внешние ключи на users.id без типа (SQLite отдаёт строки)
 from app.core.db import SessionLocal, get_engine, utcnow
 from app.integrations.vacancies.models import Vacancy
 from app.modules.profiles.models import Company
@@ -43,29 +48,34 @@ VACANCIES = [
 ]
 
 
+def ensure(db: Session, reset: bool = False) -> dict:
+    """Создаёт демо-вакансии, если их нет (reset — пересоздаёт). Без демо-компаний ничего не делает."""
+    companies = db.scalars(select(Company).where(Company.is_demo.is_(True)).order_by(Company.name)).all()
+    by_name = {c.name: c for c in companies}
+    from app.modules.demo.seed import COMPANIES
+
+    ordered = [by_name.get(name) for name, _, _ in COMPANIES]
+    if reset:
+        db.execute(delete(Vacancy).where(Vacancy.is_demo.is_(True)))
+    elif db.scalar(select(Vacancy.id).where(Vacancy.is_demo.is_(True)).limit(1)):
+        return {"created": 0, "note": "демо-вакансии уже есть (--reset, чтобы пересоздать)"}
+    made = 0
+    for ci, title, cat, stack, s_from, s_to, fmt, desc in VACANCIES:
+        c = ordered[ci] if ci < len(ordered) else None
+        if c is None:
+            continue
+        db.add(Vacancy(company_id=c.id, created_by=c.created_by, title=title, category_id=cat, description=desc,
+                       stack=stack, salary_from=s_from, salary_to=s_to, work_format=fmt, city=c.city,
+                       status="published", published_at=utcnow(), is_demo=True))
+        made += 1
+    db.commit()
+    return {"created": made, "demo_companies": len(companies)}
+
+
 def seed(reset: bool = False) -> dict:
     get_engine()
     with SessionLocal() as db:
-        companies = db.scalars(select(Company).where(Company.is_demo.is_(True)).order_by(Company.name)).all()
-        by_name = {c.name: c for c in companies}
-        from app.modules.demo.seed import COMPANIES
-
-        ordered = [by_name.get(name) for name, _, _ in COMPANIES]
-        if reset:
-            db.execute(delete(Vacancy).where(Vacancy.is_demo.is_(True)))
-        elif db.scalar(select(Vacancy.id).where(Vacancy.is_demo.is_(True)).limit(1)):
-            return {"created": 0, "note": "демо-вакансии уже есть (--reset, чтобы пересоздать)"}
-        made = 0
-        for ci, title, cat, stack, s_from, s_to, fmt, desc in VACANCIES:
-            c = ordered[ci] if ci < len(ordered) else None
-            if c is None:
-                continue
-            db.add(Vacancy(company_id=c.id, created_by=c.created_by, title=title, category_id=cat, description=desc,
-                           stack=stack, salary_from=s_from, salary_to=s_to, work_format=fmt, city=c.city,
-                           status="published", published_at=utcnow(), is_demo=True))
-            made += 1
-        db.commit()
-        return {"created": made, "demo_companies": len(companies)}
+        return ensure(db, reset)
 
 
 def main() -> None:
