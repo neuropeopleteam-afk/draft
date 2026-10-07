@@ -50,3 +50,25 @@
 Read-only запросы к https://fsp.neuropeople.pro/auth/realms/fsp/.well-known/openid-configuration
 и опубликованному JWKS завершились успешно. Проверены совпадающий issuer, адреса authorize/token/userinfo/JWKS
 и два открытых RSA-ключа. Административных операций, входов реальных участников и изменений сервера не было.
+
+## Автоматические проверки
+
+- Полный backend: **292 passed**, 580,56 с, одно предупреждение зависимости Starlette/httpx.
+- ФСП + OIDC + UI-контракт: **68 passed**; в этом наборе 49 новых проверок ФСП.
+- PDF и обратная связь: **13 passed** после отделения матрицы рекомендаций навыков от рейтинга.
+- TypeScript/Vite production build успешен; сохранено стандартное предупреждение о размере общего JS-чанка.
+- SQLite upgrade/downgrade/upgrade и пересчёт материализованных рейтингов проверены.
+  PostgreSQL DDL с JSONB проверен offline; живой PostgreSQL 16 локально не проверялся.
+
+Команды на общей машине команды (venv обязателен, системный Python не содержит зависимостей API):
+
+```bash
+cd /home/user/workspace/spectrek/wt/fsp2/backend
+flock /tmp/spectrek_heavy.lock /home/user/workspace/spectrek/.venv/bin/python -m pytest -q -o addopts=""
+cd ..
+PATH=/home/user/workspace/spectrek/.venv/bin:$PATH flock /tmp/spectrek_heavy.lock make bench
+```
+
+Основной nDCG@10 на трёх знаках: 0,589 → 0,589, но точная парная разница отрицательная:
+−0,0008383, 95 % ДИ [−0,0048836; +0,0032016]. Это не доказательство абсолютной неухудшаемости.
+Все значения сохранены в `docs/validation/fsp_rating_regression_0710.json` и видны на `/validation`.
