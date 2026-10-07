@@ -3,7 +3,7 @@
  * сравнение 2–3 кандидатов рядом по требованиям (кто выше и почему, цитата требования в каждой строке).
  * Работодатель — демо-компания песочницы прогона.
  */
-import { expect, productIssue, test } from "../lib/fixtures";
+import { expect, test } from "../lib/fixtures";
 import { juryEnter, openSection } from "../lib/ui";
 
 // фрагменты примера «с нарушением ст. 64» (frontend/src/pages/employer/Needs.tsx) и ожидаемые категории фильтра
@@ -61,10 +61,9 @@ test("потребность: ст. 64 → цитаты и предупрежд�
     const total = main.getByText(/^v1 · кандидатов:/);
     await expect(total).toBeVisible();
     expect(Number((await total.locator("b").textContent()) ?? 0), "кандидатов в подборке").toBeGreaterThanOrEqual(3);
-    await productIssue("карточка кандидата в подборке: место в кубке повторено («Кубок «…»: 7 место из 7 — 7 место из 7»)",
-      async () => (await main.getByText(/(\d+ место из \d+) — \1/).count()) > 0);
-    await productIssue("карточка кандидата в подборке: θ с десятичной точкой («+1.27 ± 0.49»), в сравнении — с запятой",
-      async () => (await main.getByText(/θ = [+−-]?\d+\.\d+/).count()) > 0);
+    // место в кубке — один раз («Кубок «…» — 2 место из 5»), θ — с запятой, как в сравнении
+    await expect(main.getByText(/(\d+ место из \d+) — \1/), "место в кубке повторено").toHaveCount(0);
+    await expect(main.getByText(/θ = [+−-]?\d+\.\d+/), "θ с десятичной точкой").toHaveCount(0);
   });
 
   await test.step("сравнение трёх кандидатов рядом", async () => {

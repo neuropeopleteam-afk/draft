@@ -69,6 +69,13 @@ test("390 px: главная и «Как мы проверяем себя»", as
 test("390 px: кандидат — опрос, экран задания, категория, карта навыков", async ({ page }) => {
   await juryEnter(page, "candidate");
   await screen(page, "10-кандидат-кабинет");
+  await test.step("390 px: свёрнутый проводник не закрывает низ страницы", async () => {
+    const pill = page.getByRole("button", { name: "Показать проводник для жюри" });
+    await expect(pill).toBeVisible();
+    const h = (await pill.boundingBox())?.height ?? 0;
+    await expect.poll(() => page.evaluate(() => parseFloat(getComputedStyle(document.body).paddingBottom) || 0),
+      { message: "место под проводником внизу страницы" }).toBeGreaterThanOrEqual(h);
+  });
   await screen(page, "11-кандидат-опрос-и-тест", "/candidate/assessment");
   await test.step("экран задания теста", async () => {
     await page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ }).check();
