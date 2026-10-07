@@ -10,8 +10,11 @@ Talantix (``/api/ats-stub/talantix``) — как https://api.talantix.ru:
   Access-токен демо живёт 15 минут — автоматическое обновление по refresh-токену видно в журнале.
 
 «Поток» (``/api/ats-stub/potok/api/v3``) — как https://app.potok.io/api/v3: ``GET /jobs.json``, ``GET /jobs/{id}.json``,
-``POST /applicants.json`` (``events`` — только список, объект → 500, как у настоящего «Потока»), ``GET /applicants/{id}.json``, ``POST /ajs_joins.json`` (422 при повторе),
-``POST /ajs_joins/{id}/change_stage.json``, ``POST /events.json``; токен — Bearer или ``?token=``.
+``POST /applicants.json`` (``events`` — только список, объект → 500, как у настоящего «Потока»),
+``GET /applicants/{id}.json``, ``POST /ajs_joins.json`` (422 при повторе), ``POST /ajs_joins/{id}/change_stage.json``,
+``POST /events.json``; для обратного канала — ``GET /jobs/{id}/ajs_joins.json?applicant_id=`` (этап и признак
+активности) и ``POST /jobs/{id}/{applicant}/decline.json``; рекрутёр демо-«Потока» двигает кандидата по этапам из
+кабинета (``potok_demo_move``). Токен — Bearer или ``?token=``.
 
 Всё, что пришло, хранится в ats_stub_records ящика компании и видно работодателю в «Тестовая ATS: что пришло».
 """
@@ -321,17 +324,25 @@ def _pt_401() -> JSONResponse:
     return JSONResponse({"errors": "Неверный токен"}, status_code=401)
 
 
+# Типы этапов «Потока» (в спецификации: applied, sourced, screening, interview_client, offer, accepted)
+_PT_TYPES = {"interview": "interview_client", "hired": "accepted"}
+
+
+def _pt_type(t: str) -> str:
+    return _PT_TYPES.get(t, t)
+
+
 def _pt_job(j: dict) -> dict:
     return {"id": j["id"], "name": j["title"], "state_id": "closed" if j["status"] != "ACTIVE" else "opened",
             "archived": j["status"] != "ACTIVE", "company_department": {"id": j["id"] // 100, "name": j["department"]},
             "salary_from": j["salary"]["from"], "salary_to": j["salary"]["to"], "currency_type": "RUR",
             "city": j["city"], "stages": [{"id": s["id"], "name": s["name"], "serial": s["position"],
-                                           "stage_type": s["stage_type"]} for s in j["stages"]]}
+                                           "stage_type": _pt_type(s["stage_type"])} for s in j["stages"]]}
 
 
 def _stage_obj(j: dict, stage_type: str = "sourced") -> dict:
     s = next((s for s in j["stages"] if s["stage_type"] == stage_type), j["stages"][0])
-    return {"id": s["id"], "name": s["name"], "stage_type": s["stage_type"]}
+    return {"id": s["id"], "name": s["name"], "stage_type": _pt_type(s["stage_type"])}
 
 
 @router.get("/potok/api/v3/jobs.json", summary="Демо-«Поток»: список вакансий")
@@ -361,7 +372,8 @@ def _pt_add_join(db: Session, key: str, job: dict, applicant_id: int, stage_type
     jid, stage = _new_id(), _stage_obj(job, stage_type)
     db.add(AtsStubRecord(stub_key=key, kind="potok_join", external_id=jid,
                          payload={"job_id": job["id"], "job_name": job["title"], "applicant_id": applicant_id,
-                                  "stage_id": stage["id"], "stage_name": stage["name"]}))
+                                  "stage_id": stage["id"], "stage_name": stage["name"], "active": True,
+                                  "created_at": utcnow().isoformat()}))
     return {"id": jid, "job": {"id": job["id"], "name": job["title"]}, "stage": stage,
             "applicant": {"id": applicant_id}}
 
@@ -415,7 +427,101 @@ def pt_applicant(applicant_id: int, token: str | None = None, authorization: str
     if key is None:
         return _pt_401()
     r = next((r for r in _records(db, key, "potok_applicant") if r.external_id == applicant_id), None)
-    return {"id": r.external_id, **r.payload} if r else JSONResponse({"errors": "Not found"}, status_code=404)
+    if r is None:
+        return JSONResponse({"errors": "Not found"}, status_code=404)
+    joins = []
+    for j in _pt_joins(db, key):
+        p, job = j.payload, _vacancy(j.payload.get("job_id"))
+        if p.get("applicant_id") != applicant_id or job is None:
+            continue
+        st = next((x for x in job["stages"] if x["id"] == p.get("stage_id")), job["stages"][0])
+        joins.append({"id": j.external_id, "job": {"id": job["id"], "name": job["title"], "stage_name": st["name"],
+                                                   "active": job["status"] == "ACTIVE"},
+                      "stage": {"id": st["id"], "name": st["name"], "serial": st["position"],
+                                "stage_type": _pt_type(st["stage_type"])}})
+    return {"id": r.external_id, **{k: v for k, v in r.payload.items() if k != "ajs_joins"}, "ajs_joins": joins}
+
+
+@router.get("/potok/api/v3/jobs/{job_id}/ajs_joins.json", summary="Демо-«Поток»: кандидаты на вакансии и их этапы")
+def pt_job_joins(job_id: int, applicant_id: int | None = None, page_size: int = 20, token: str | None = None,
+                 authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    key = _pt_key(db, authorization, token)
+    if key is None:
+        return _pt_401()
+    job = _vacancy(job_id)
+    if job is None:
+        return JSONResponse({"errors": "Not found"}, status_code=404)
+    out = []
+    for j in _pt_joins(db, key):
+        p = j.payload
+        if p.get("job_id") != job_id or (applicant_id is not None and p.get("applicant_id") != applicant_id):
+            continue
+        st = next((x for x in job["stages"] if x["id"] == p.get("stage_id")), job["stages"][0])
+        out.append({"id": j.external_id, "job_id": job_id, "applicant_id": p.get("applicant_id"),
+                    "stage": {"id": st["id"], "stage_type": _pt_type(st["stage_type"])},
+                    "responsible_user_id": None, "demand_id": None, "planned_employment_date": None,
+                    "datetime_of_create": p.get("created_at"), "dynamic_fields": {}, "active": p.get("active", True)})
+    return {"objects": out[:page_size], "has_next_page": len(out) > page_size, "page_next_cursor": None}
+
+
+@router.post("/potok/api/v3/jobs/{job_id}/{applicant_id}/decline.json", summary="Демо-«Поток»: отклонить кандидата")
+async def pt_decline(job_id: int, applicant_id: int, request: Request, token: str | None = None,
+                     authorization: str | None = Header(None), db: Session = Depends(get_db)):
+    key = _pt_key(db, authorization, token)
+    if key is None:
+        return _pt_401()
+    d = ((await request.json()) or {}).get("decline") or {}
+    if not d.get("declination_reason_id"):
+        return JSONResponse({"errors": {"decline_params": ["не заполнен параметр"]}}, status_code=422)
+    r = next((r for r in _pt_joins(db, key) if r.payload.get("job_id") == job_id
+              and r.payload.get("applicant_id") == applicant_id), None)
+    if r is None:
+        return JSONResponse({"errors": {"ajs_join": ["кандидат на вакансии не найден"]}}, status_code=422)
+    potok_demo_move(db, key, r.external_id, decline=True, comment=d.get("comment"))
+    return {"result": "success"}
+
+
+def potok_demo_pipeline(db: Session, stub_key: str) -> list[dict]:
+    """Демо-«Поток» глазами рекрутёра: кандидаты на вакансиях, текущий этап и этапы воронки (для кабинета)."""
+    names = {r.external_id: " ".join(x for x in (r.payload.get("last_name"), r.payload.get("first_name")) if x)
+             for r in _records(db, stub_key, "potok_applicant")}
+    out = []
+    for j in _pt_joins(db, stub_key):
+        p, job = j.payload, _vacancy(j.payload.get("job_id"))
+        if job is None:
+            continue
+        out.append({"join_id": j.external_id, "applicant_id": p.get("applicant_id"),
+                    "applicant": names.get(p.get("applicant_id")) or f"Кандидат {p.get('applicant_id')}",
+                    "job_id": job["id"], "job_name": job["title"], "stage_id": p.get("stage_id"),
+                    "stage_name": p.get("stage_name"), "active": p.get("active", True),
+                    "stages": [{"id": x["id"], "name": x["name"], "stage_type": _pt_type(x["stage_type"])}
+                               for x in job["stages"]]})
+    return out
+
+
+def potok_demo_move(db: Session, stub_key: str, join_id: int, *, stage_id: int | None = None,
+                    decline: bool = False, comment: str | None = None) -> dict | None:
+    """Демо: рекрутёр в «Потоке» переводит кандидата на этап или отклоняет (как в интерфейсе «Потока»).
+    Платформа узнаёт об этом только опросом API — так же, как у настоящего «Потока». None — нет такой записи."""
+    r = next((r for r in _pt_joins(db, stub_key) if r.external_id == join_id), None)
+    job = _vacancy(r.payload["job_id"]) if r else None
+    if r is None or job is None:
+        return None
+    if decline:
+        r.payload = {**r.payload, "active": False, "declined_at": utcnow().isoformat()}
+        db.add(AtsStubRecord(stub_key=stub_key, kind="potok_stage", external_id=r.payload["applicant_id"],
+                             payload={"join_id": join_id, "job_name": job["title"], "stage_name": "Отклонён",
+                                      "by": "recruiter", **({"comment": comment} if comment else {})}))
+    else:
+        st = next((x for x in job["stages"] if x["id"] == stage_id), None)
+        if st is None:
+            return None
+        r.payload = {**r.payload, "stage_id": st["id"], "stage_name": st["name"], "active": True}
+        db.add(AtsStubRecord(stub_key=stub_key, kind="potok_stage", external_id=r.payload["applicant_id"],
+                             payload={"join_id": join_id, "job_name": job["title"], "stage_name": st["name"],
+                                      "by": "recruiter"}))
+    db.commit()
+    return dict(r.payload)
 
 
 @router.post("/potok/api/v3/ajs_joins.json", summary="Демо-«Поток»: добавить кандидата на вакансию")
@@ -448,11 +554,11 @@ async def pt_change_stage(join_id: int, request: Request, token: str | None = No
     stage = next((s for s in (job or {}).get("stages", []) if s["id"] == b.get("stage_id")), None)
     if r is None or stage is None:
         return JSONResponse({"errors": {"stage_id": ["этап не найден"]}}, status_code=422)
-    r.payload = {**r.payload, "stage_id": stage["id"], "stage_name": stage["name"]}
+    r.payload = {**r.payload, "stage_id": stage["id"], "stage_name": stage["name"], "active": True}
     db.add(AtsStubRecord(stub_key=key, kind="potok_stage", external_id=r.payload["applicant_id"],
                          payload={"join_id": join_id, "job_name": job["title"], "stage_name": stage["name"]}))
     db.commit()
-    return {"id": join_id, "stage": {"id": stage["id"], "name": stage["name"], "stage_type": stage["stage_type"]}}
+    return {"id": join_id, "stage": {"id": stage["id"], "name": stage["name"], "stage_type": _pt_type(stage["stage_type"])}}
 
 
 @router.post("/potok/api/v3/events.json", summary="Демо-«Поток»: комментарий к кандидату")
