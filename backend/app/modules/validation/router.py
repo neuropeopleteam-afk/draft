@@ -118,3 +118,18 @@ def _bench() -> dict:
 @router.get("/matching-bench", summary="Бенчмарк подбора со скрытой истиной (пересчёт: make bench)")
 def matching_bench():
     return _bench()
+
+
+STABILITY = Path(__file__).resolve().parent / "data" / "junior_stability.json"
+
+
+@lru_cache(maxsize=1)
+def _stability() -> dict:
+    if not STABILITY.exists():
+        return {"missing": True}
+    return json.loads(STABILITY.read_text(encoding="utf-8"))
+
+
+@router.get("/junior-stability", summary="Стабильность статуса «Junior (предварительно)» (пересчёт: make stability)")
+def junior_stability():
+    return _stability()
