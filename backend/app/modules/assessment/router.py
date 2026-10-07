@@ -20,6 +20,9 @@ candidate = require_role(UserRole.candidate)
 
 class StartIn(BaseModel):
     claimed_grade: Literal["junior", "middle", "senior"] = Field(description="Предполагаемый грейд, выбранный кандидатом")
+    mode: Literal["full", "express"] = Field("full", description="full — обычный адаптивный тест (8–16 заданий); "
+                                                     "express — экспресс-тест для жюри: 5–7 коротких заданий, ≈ 5 минут, "
+                                                     "интервал θ шире. Доступен только в демо-режиме жюри")
     integrity_ack: bool = Field(False, description="Кандидат прочитал, что отслеживается во время теста (потеря фокуса, "
                                                    "вставка текста, скорость, канарейки) и что сигналы только снижают "
                                                    "«достоверность результата». Сохраняется в сессии")
@@ -65,6 +68,7 @@ class SessionOut(BaseModel):
     claimed_grade: str
     engine: str
     is_sandbox: bool
+    mode: str = Field("full", description="full | express")
     deadline_at: str | None
     item: ItemOut | None = Field(None, description="Следующее задание; null — тест окончен, вызовите finish")
     answered: int
@@ -88,7 +92,7 @@ def _session_out(db, ts) -> SessionOut:
     answered, total, can_finish = service.progress(ts)
     return SessionOut(
         session_id=ts.id, status=ts.status.value, direction=ts.direction_id, claimed_grade=ts.claimed_grade_id,
-        engine=ts.result.get("engine", "?"), is_sandbox=ts.is_sandbox,
+        engine=ts.result.get("engine", "?"), is_sandbox=ts.is_sandbox, mode=ts.result.get("mode", "full"),
         deadline_at=ts.deadline_at.isoformat() if ts.deadline_at else None,
         item=ItemOut(**item.__dict__) if item else None, answered=answered, total=total,
         can_finish=can_finish or (item is None and ts.status.value == "in_progress"),
@@ -106,10 +110,13 @@ def get_status(user: User = Depends(candidate), db: Session = Depends(get_db)) -
     summary="Начать тест на выбранный грейд",
     description="Требует пройденного опроса. Адаптивный тест банка заданий: общий блок + блок направления, "
                 "8–16 заданий (остановка по SE ≤ 0,35), до 60 минут, не больше 2 заданий open_book_3step; у порога грейда — ещё 3 задания. "
-                "Смена подтверждённого грейда — не чаще раза в 90 дней (демо-режим жюри снимает ограничение, но число "
-                "новых сессий в демо-режиме ограничено: JURY_MAX_TEST_STARTS_PER_DAY за 24 часа на учётку). "
-                "Если активная сессия на тот же грейд уже есть — вернётся она.",
-    responses={**AUTH, 409: err("onboarding_required — нет опроса; grade_locked — действует правило 90 дней"),
+                "Смена подтверждённого грейда — не чаще раза в 90 дней; повтор после неподтверждённой попытки на тот же "
+                "грейд и выше — не раньше чем через RETAKE_SAME_GRADE_DAYS (30) дней, на грейд ниже — сразу. Демо-режим "
+                "жюри снимает ограничения, но число новых сессий в нём ограничено: JURY_MAX_TEST_STARTS_PER_DAY за 24 часа "
+                "на учётку. mode=express (только демо-режим) — экспресс-тест 5–7 коротких заданий. "
+                "Если активная сессия на тот же грейд и режим уже есть — вернётся она.",
+    responses={**AUTH, 409: err("onboarding_required — нет опроса; grade_locked — правило 90 дней; retake_cooldown — "
+                                "повтор на тот же грейд раньше 30 дней; express_sandbox_only — экспресс вне демо-режима"),
                422: err("Неизвестный грейд"), 429: err("sandbox_restarts_exhausted — лимит перезапусков в демо-режиме")},
 )
 def start(data: StartIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> SessionOut:
@@ -117,7 +124,17 @@ def start(data: StartIn, user: User = Depends(candidate), db: Session = Depends(
     if survey is not None and survey.claimed_grade_id != data.claimed_grade:
         survey.claimed_grade_id = data.claimed_grade
     return _session_out(db, service.start_session(db, user.id, data.claimed_grade, integrity_ack=data.integrity_ack,
-                                                  enforce_sandbox_quota=True))
+                                                  enforce_sandbox_quota=True, mode=data.mode))
+
+
+@router.get("/grade-hint", summary="Подсказка грейда по опросу, резюме и паспорту ФСП (необязательная, по правилам)",
+            description="Каждый сигнал — отдельно, с источником и объяснением; итог — предполагаемый грейд и уверенность. "
+                        "Без LLM. Выбор грейда остаётся за кандидатом, категорию присваивает только тест.",
+            responses=AUTH)
+def get_grade_hint(user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    from app.modules.assessment.grade_hint import grade_hint
+
+    return grade_hint(db, user.id)
 
 
 @router.get("/sessions/{session_id}", response_model=SessionOut, summary="Сессия теста и следующее задание",
@@ -143,6 +160,23 @@ def answer(session_id: uuid.UUID, data: AnswerIn, user: User = Depends(candidate
                         409: err("session_closed — сессия закрыта; test_not_complete — тест ещё не окончен")})
 def finish(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     return service.finish_session(db, service.get_own_session(db, user.id, session_id, lock=True))
+
+
+@router.get("/sessions/{session_id}/result", summary="Итог завершённого теста (как после finish)",
+            responses={**AUTH, 404: err("Сессия не найдена"), 409: err("Тест ещё не завершён")})
+def get_result(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    return service.result(db, service.get_own_session(db, user.id, session_id))
+
+
+@router.post("/sessions/{session_id}/accept-lower",
+             summary="Принять уровень ниже по этому тесту (заявленный грейд не подтверждён, уровень ниже доказан с P ≥ 0,8)",
+             description="Одно действие кандидата вместо нового теста (видео организаторов №7). Категория присваивается "
+                         "по доказанному уровню; принудительно уровень не понижается — только по этому запросу. "
+                         "Повторный вызов — 409 already_accepted.",
+             responses={**AUTH, 404: err("Сессия не найдена"),
+                        409: err("test_not_finished | already_accepted | accept_lower_unavailable")})
+def accept_lower(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    return service.accept_lower_grade(db, service.get_own_session(db, user.id, session_id, lock=True))
 
 
 @router.get("/feedback", summary="Обратная связь после теста: карта навыков, спрос работодателей, маршрут роста",

@@ -11,6 +11,7 @@
 * **Состав сессии.** Не больше ``max_per_format`` заданий формата: open_book_3step — 2 (три шага, ~15 мин,
   адаптивный выбор иначе тянет их из-за большой информации), open_answer — 1 (~20 мин). Лимит действует и в
   дотестировании у порога (там и так только короткие задания, см. ``CATConfig.ext_item_time_s``).
+  ``max_item_time_s`` — только задания с рекомендуемым временем не больше этого (экспресс-тест жюри: 5–7 коротких).
 """
 from __future__ import annotations
 
@@ -27,8 +28,10 @@ DEFAULT_FORMAT_LIMITS = {"open_book_3step": 2, "open_answer": 1}
 class AppCATSession(CATSession):
     """CATSession с ограничением числа заданий одного формата в сессии."""
 
-    def __init__(self, *args, max_per_format: dict[str, int] | None = None, **kwargs):
+    def __init__(self, *args, max_per_format: dict[str, int] | None = None, max_item_time_s: float | None = None,
+                 **kwargs):
         self.max_per_format = dict(DEFAULT_FORMAT_LIMITS if max_per_format is None else max_per_format)
+        self.max_item_time_s = max_item_time_s
         super().__init__(*args, **kwargs)
         self._fmt = {fid: i.format for fid, i in self.items.items()}
 
@@ -41,6 +44,8 @@ class AppCATSession(CATSession):
         return out
 
     def _limit(self, cands: list[PoolItem]) -> list[PoolItem]:
+        if self.max_item_time_s is not None:
+            cands = [i for i in cands if i.time_limit_s <= self.max_item_time_s]
         if not self.max_per_format:
             return cands
         cnt = self.format_counts()
