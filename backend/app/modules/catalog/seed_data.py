@@ -18,11 +18,13 @@ GRADES: dict[str, str] = {
 }
 GRADE_LEVEL = {"intern": 0, "junior": 1, "middle": 2, "senior": 3}
 GRADE_ORDER: tuple[str, ...] = tuple(GRADES)  # ("intern", "junior", "middle", "senior")
-# Пороги на шкале θ: θ ≥ cut[g] → не ниже грейда g. Шаг между грейдами — одна единица шкалы (как у Junior → Middle →
-# Senior); порог Стажёра −2,0 обоснован симуляцией на банке (app/modules/validation/intern_cut.py, /validation).
-GRADE_CUTS = {"intern": -2.0, "junior": -1.0, "middle": 0.0, "senior": 1.0}
+# Пороги на шкале θ: θ ≥ cut[g] → не ниже грейда g. Между Junior, Middle и Senior — одна единица шкалы; порог Стажёра
+# −1,75 выбран симуляцией теста по заранее заданному правилу (app/modules/validation/intern_cut.py, блок на /validation):
+# из кандидатов −1,5/−1,75/−2,0/−2,25 только он даёт ложные подтверждения ≤ 10 % и ложные отказы ≤ 20 % на банке
+# с лёгкими семействами; на текущем банке у него же минимальная сумма ошибок.
+GRADE_CUTS = {"intern": -1.75, "junior": -1.0, "middle": 0.0, "senior": 1.0}
 # Стартовая оценка θ адаптивного теста по заявленному грейду (середина полосы грейда, у Стажёра — чуть выше порога)
-GRADE_START_THETA = {"intern": -1.5, "junior": -0.5, "middle": 0.5, "senior": 1.3}
+GRADE_START_THETA = {"intern": -1.25, "junior": -0.5, "middle": 0.5, "senior": 1.3}
 # Подсказка грейда по стажу (лет): до полугода — Стажёр, до 1,5 — Junior, до 4,5 — Middle, дальше — Senior
 GRADE_BY_EXPERIENCE: tuple[tuple[float, str], ...] = ((0.5, "intern"), (1.5, "junior"), (4.5, "middle"))
 GRADE_EXPERIENCE_TEXT = {"intern": "без опыта или до полугода", "junior": "до 1,5 лет опыта", "middle": "1,5–4,5 года",
