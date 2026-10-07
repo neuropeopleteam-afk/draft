@@ -4,6 +4,11 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, errText, num, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { useMeta } from "../../lib/meta";
+import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
+import { CameraIndicator } from "../../proctor/CameraIndicator";
+import { CameraReport } from "../../proctor/CameraReport";
+import { camera } from "../../proctor/controller";
 import { FeedbackSummary } from "./Feedback";
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
@@ -235,14 +240,20 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
   const dir = status?.survey_direction;
   const resume = !!status?.active_session_id && status?.active_grade === grade;
   const quota = status?.sandbox_starts as { limit: number; used: number; left: number; next_at: string | null } | null;
+  // И16: экран камеры (по согласию) — до создания сессии, т. к. первое задание выдаётся при её создании; при выключенном флаге экрана нет
+  const meta = useMeta();
+  const [cam, setCam] = useState(false);
 
-  async function start() {
+  async function start(mode?: CamMode, reason?: string | null) {
+    if (!mode && !resume && meta?.proctor_camera) { setCam(true); return; }
     setError(null); setBusy(true);
     try {
       const s = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: grade, integrity_ack: ack } });
+      if (mode) await startProctor(s.session_id, mode, reason).catch(() => undefined); // ошибка камеры не прерывает тест
       navigate(`/candidate/assessment/test/${s.session_id}`);
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   }
+  if (cam) return <CameraConsent onDone={start} onBack={() => setCam(false)} busy={busy} error={error} />;
 
   return (
     <>
@@ -279,7 +290,7 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
         </label>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
-        <button className="btn-primary" onClick={start} disabled={busy || locked || (!resume && !ack)}>{busy ? "Готовим задания…" : resume ? "Продолжить тест" : "Начать тест"}</button>
+        <button className="btn-primary" onClick={() => start()} disabled={busy || locked || (!resume && !ack)}>{busy ? "Готовим задания…" : resume ? "Продолжить тест" : "Начать тест"}</button>
         <button className="btn-ghost" onClick={onEditSurvey}>Изменить ответы опроса</button>
       </div>
     </>
@@ -343,10 +354,13 @@ export function TestRun() {
   }
   useEffect(() => { api<any>(`/assessment/sessions/${id}`).then(show).catch((e) => setError(errText(e))); }, [id]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  // И16: камера (если включена на экране перед тестом) — события режутся по заданиям; уход со страницы выключает камеру
+  useEffect(() => { camera.enterTest(id!); return () => camera.leaveTest(); }, [id]);
+  useEffect(() => { camera.setItem(s?.item?.item_id ?? null); }, [s?.item?.item_id]);
 
   async function finish() {
     setBusy(true); setError(null);
-    try { setResult(await api<any>(`/assessment/sessions/${id}/finish`, { method: "POST" })); await refresh(); }
+    try { await camera.flush(); setResult(await api<any>(`/assessment/sessions/${id}/finish`, { method: "POST" })); camera.detach(); await refresh(); }
     catch (e) { setError(errText(e)); } finally { setBusy(false); }
   }
 
@@ -395,6 +409,7 @@ export function TestRun() {
           {left >= 0 ? `Рекомендуемое время: ${fmtTime(left)}` : `Сверх рекомендуемого: ${fmtTime(-left)}`}
         </span>
       </div>
+      <CameraIndicator sessionId={id!} />
       <div className="card mt-4">
         <p className="whitespace-pre-line text-base font-semibold leading-relaxed text-brand-night"><Rich text={it.stem} /></p>
         {it.code && (
@@ -471,6 +486,7 @@ function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; o
         </p>
       )}
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.</Alert></div>}
+      <CameraReport sessionId={sessionId} />
       <FeedbackSummary sessionId={sessionId} />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
