@@ -200,14 +200,21 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
               <Kpi label="Заданий" value={num(res.n_items?.mean, 1)} hint={`от ${res.n_items?.min} до ${res.n_items?.max} · дотестирование у ${pct(res.extension_share)}`} />
               <Kpi label="Расчётное время" value={`${num(res.time_min?.mean, 0)} мин`} hint={`от ${num(res.time_min?.min, 0)} до ${num(res.time_min?.max, 0)} мин`} />
             </div>
-            <Table head={["Показатель", "Значение"]} rows={[
-              ["Присвоенный грейд", dist(res.assigned)], ["Точечный грейд по θ̂", dist(res.point_grade)],
-              ["Доля верных ответов", pct(res.correct_share)], ["Причины остановки", Object.entries(res.stops ?? {}).map(([k, v]) => `${k}: ${v}`).join(" · ")],
-              ...(res.retest ? [
-                ["Повтор: решение совпало", pct(res.retest.decision_agreement)], ["Повтор: грейд точно / в пределах одного", `${pct(res.retest.grade_exact_agreement)} / ${pct(res.retest.grade_within_1)}`],
-                ["Повтор: |Δθ| в среднем", `${num(res.retest.mean_abs_diff_theta)} при среднем SE ${num(res.retest.mean_se)}`],
-              ] : []),
-            ]} />
+            <dl className="divide-y divide-brand-night/5 rounded-2xl bg-white text-sm ring-1 ring-brand-night/10">
+              {([
+                ["Присвоенный грейд", dist(res.assigned)], ["Точечный грейд по θ̂", dist(res.point_grade)],
+                ["Доля верных ответов", pct(res.correct_share)], ["Причины остановки", Object.entries(res.stops ?? {}).map(([k, v]) => `${k}: ${v}`).join(" · ")],
+                ...(res.retest ? [
+                  ["Повтор: решение совпало", pct(res.retest.decision_agreement)], ["Повтор: грейд точно / в пределах одного", `${pct(res.retest.grade_exact_agreement)} / ${pct(res.retest.grade_within_1)}`],
+                  ["Повтор: |Δθ| в среднем", `${num(res.retest.mean_abs_diff_theta)} при среднем SE ${num(res.retest.mean_se)}`],
+                ] : []),
+              ] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="grid gap-1 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] sm:gap-4">
+                  <dt className="font-medium text-brand-night">{k}</dt>
+                  <dd className="tabular-nums text-brand-ink/80">{v}</dd>
+                </div>
+              ))}
+            </dl>
             {res.retest?.note && <p className="text-xs text-brand-ink/60">{res.retest.note}</p>}
             <details className="text-sm">
               <summary className="cursor-pointer font-semibold text-brand-plum">Все прогоны ({res.runs?.length})</summary>
