@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     # Вторая оценка при сомнении (grader.doubts): расхождение двух оценок больше порога — ответ эксперту
     llm_grading_second_opinion: bool = True
     llm_grading_disagree: float = 0.25
+    # Чья экспертная разметка пакета (раздел «Экспертная разметка» /validation): human | model | auto (по профилям).
+    # model — критерий допуска модели-оценщика абсолютный (κ с консенсусом и MAE), а не разрыв с межэкспертной κ.
+    expert_panel_kind: str = "auto"
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"
