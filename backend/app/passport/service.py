@@ -38,6 +38,7 @@ GRADE_ORDER = ["junior", "middle", "senior"]
 STATUS_TITLES = {"confirmed": "подтверждён", "preliminary": "предварительно"}
 REASONS = {
     "superseded": "заменён новым паспортом после пересдачи или обновления данных",
+    "reviewed": "заменён новым паспортом после экспертной проверки развёрнутых ответов",
     "downgraded": "грейд понижен по результату пересдачи",
     "integrity_annulled": "результат теста аннулирован по проверке достоверности",
     "account_deleted": "учётная запись кандидата удалена",
@@ -223,10 +224,13 @@ def _candidate_opted_out(db: Session, user_id: uuid.UUID) -> bool:
 
 
 def on_test_finished(db: Session, user_id: uuid.UUID, ts, *, previous_grade: str | None,
-                     previous_direction: str | None) -> GradePassport | None:
-    """Хук после теста (finish_session): категория присвоена или подтверждена — выпуск или перевыпуск.
+                     previous_direction: str | None, after_review: bool = False) -> GradePassport | None:
+    """Хук после теста (finish_session) и после экспертной проверки (review.recompute): категория присвоена
+    или подтверждена — выпуск или перевыпуск.
 
     Понижение грейда (пересдача на грейд ниже) — старый паспорт отзывается с причиной downgraded.
+    after_review: пересчёт той же сессии по оценке эксперта (не новый тест) — прежний паспорт «заменён после
+    экспертной проверки» (reviewed), а ссылку, которую кандидат отозвал сам, проверка эксперта не возвращает.
     """
     try:
         crypto.signing_key()  # неверный PASSPORT_SIGNING_KEY — до изменений в сессии: тест завершается, паспорта нет
@@ -237,12 +241,12 @@ def on_test_finished(db: Session, user_id: uuid.UUID, ts, *, previous_grade: str
     profile = db.get(CandidateProfile, user_id)
     if profile is None or content is None:
         return None
-    reason = "superseded"
+    reason = "reviewed" if after_review else "superseded"
     if (previous_direction == profile.current_direction_id and previous_grade in GRADE_ORDER
             and profile.current_grade_id in GRADE_ORDER
             and GRADE_ORDER.index(profile.current_grade_id) < GRADE_ORDER.index(previous_grade)):
         reason = "downgraded"
-    if active(db, user_id) is None and _candidate_opted_out(db, user_id):
+    if not after_review and active(db, user_id) is None and _candidate_opted_out(db, user_id):
         # кандидат отозвал ссылку сам: новый тест — новый паспорт (отзыв относился к старому составу)
         return issue(db, user_id, content, test_session_id=ts.id)
     return ensure_current(db, user_id, reason=reason, test_session_id=ts.id, content=content)
