@@ -36,8 +36,7 @@ def invitation_sent(inv_id: uuid.UUID) -> None:
 
 def invitation_answered(inv_id: uuid.UUID, accepted: bool) -> None:
     from app.integrations.ats.providers import enabled_targets
-    from app.integrations.ats.service import deliver
-    from app.integrations.ats.models import AtsSettings
+    from app.integrations.ats.service import company_settings, deliver
     from app.modules.invitations.models import Invitation
     from app.modules.profiles.models import CandidateProfile
 
@@ -53,8 +52,11 @@ def invitation_answered(inv_id: uuid.UUID, accepted: bool) -> None:
                          f"«{i.position_title}»" + (" — контакты открыты" if accepted else ""),
                          "/employer/invitations", f"inv-{i.id}")
         if accepted:
-            st = db.get(AtsSettings, i.company_id)
-            if st is not None and st.auto_push and enabled_targets(db, i.company_id, st):
+            # Строки настроек у новой компании ещё нет (её создаёт первый заход в кабинет ATS), а «Поток» или Talantix
+            # уже могут быть подключены: company_settings создаёт её с auto_push=True — как в кабинете по умолчанию
+            st = company_settings(db, i.company_id)
+            db.commit()
+            if st.auto_push and enabled_targets(db, i.company_id, st):
                 deliver(db, i.company_id, invitation_id=i.id, trigger="invitation_accepted")
     except Exception:  # noqa: BLE001
         log.exception("integrations invitation_answered failed")
