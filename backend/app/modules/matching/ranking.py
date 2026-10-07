@@ -9,6 +9,11 @@
 score = 0,45·тест + 0,35·покрытие обязательного стека (T1) + 0,05·желательный стек (T1)
         + 0,10·ФСП (T2, бонус; нет истории — 0 без штрафа) + 0,05·зонды (T1)
         − 0,05, если категория «Junior (предварительно)» (ниже подтверждённого при прочих равных)
+
+Статус грейда (profiles.facts.grade_status): подтверждён / предварительно / не подтверждён. Кандидаты без
+подтверждённого грейда (опрос пройден, теста нет или он не подтвердил заявленный грейд) видны работодателю
+со статусом «грейд не подтверждён (заявлен …)» и всегда ниже подтверждённых и предварительных (отдельный ярус
+выдачи); фильтр confirmed_only убирает и их, и «предварительно» (видео организаторов №6, решение Р10).
 """
 from __future__ import annotations
 
@@ -20,11 +25,13 @@ from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
 from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
+    GRADE_STATUS_ORDER,
     PROVISIONAL_PENALTY,
     fmt_count,
     Bundle,
     achievement_text,
     card,
+    grade_status,
     load_bundles,
     skill_confirmed,
     test_component,
@@ -38,11 +45,20 @@ LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "по�
           "none": "нет данных"}
 
 
+def _pool_query(confirmed: bool):
+    q = (select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
+         .where(CandidateProfile.visible_to_employers.is_(True), User.is_active.is_(True),
+                User.is_email_verified.is_(True), jury_scope.pool_clause(User.email)))
+    if confirmed:
+        return q.where(CandidateProfile.current_category_id.is_not(None))
+    return q.where(CandidateProfile.current_category_id.is_(None),
+                   CandidateProfile.onboarding_completed_at.is_not(None))
+
+
 def visible_pool(db: Session, direction: str | None = None, grades: list[str] | None = None,
                  category_ids: list[str] | None = None) -> list[CandidateProfile]:
-    q = (select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
-         .where(CandidateProfile.visible_to_employers.is_(True), CandidateProfile.current_category_id.is_not(None),
-                User.is_active.is_(True), User.is_email_verified.is_(True), jury_scope.pool_clause(User.email)))
+    """Кандидаты с категорией (подтверждённой или предварительной), видимые работодателю."""
+    q = _pool_query(confirmed=True)
     if direction:
         q = q.where(CandidateProfile.current_direction_id == direction)
     if grades:
@@ -50,6 +66,42 @@ def visible_pool(db: Session, direction: str | None = None, grades: list[str] | 
     if category_ids:
         q = q.where(CandidateProfile.current_category_id.in_(category_ids))
     return list(db.scalars(q).all())
+
+
+def unconfirmed_pool(db: Session, direction: str | None = None, grades: list[str] | None = None,
+                     category_ids: list[str] | None = None) -> list[tuple[CandidateProfile, str, str]]:
+    """Кандидаты без подтверждённого грейда (опрос пройден, категории нет), видимые работодателю, с заявленными
+    направлением и грейдом из последнего опроса: [(профиль, направление, грейд)]. Фильтры — по заявленному."""
+    from app.modules.assessment.models import SurveyResponse
+
+    profiles = list(db.scalars(_pool_query(confirmed=False)).all())
+    if not profiles:
+        return []
+    claims: dict = {}
+    for sv in db.scalars(select(SurveyResponse).where(SurveyResponse.user_id.in_([p.user_id for p in profiles]))
+                         .order_by(SurveyResponse.created_at.desc())).all():
+        claims.setdefault(sv.user_id, (sv.direction_id, sv.claimed_grade_id))
+    out = []
+    for p in profiles:
+        d, g = claims.get(p.user_id, (None, None))
+        if not d or not g:
+            continue
+        if direction and d != direction:
+            continue
+        if grades and g not in grades:
+            continue
+        if category_ids and f"{d}.{g}" not in category_ids:
+            continue
+        out.append((p, d, g))
+    return out
+
+
+def unconfirmed_counts(db: Session) -> dict[str, int]:
+    """Сколько кандидатов без подтверждённого грейда заявили каждую категорию."""
+    out: dict[str, int] = {}
+    for _, d, g in unconfirmed_pool(db):
+        out[f"{d}.{g}"] = out.get(f"{d}.{g}", 0) + 1
+    return out
 
 
 def category_counts(db: Session) -> dict[str, int]:
@@ -104,7 +156,13 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     t = b.test.value if b.test else {}
     test = test_component(t.get("theta"), t.get("se"), req.get("grade") or p.current_grade_id)
     cat_title = category_title(p.current_category_id)
-    if b.test and t.get("mini"):  # экспресс-категория по мини-тесту живой демонстрации (app.jury_live)
+    if b.unconfirmed:
+        # грейд не подтверждён: заявленное из опроса (T0) и исход последней попытки; результат теста в скор не входит
+        gs = grade_status(b)
+        reasons.append({"requirement": "Специализация и грейд", "level": "T0", "status": "unconfirmed",
+                        "grade_status": "unconfirmed", "text": gs["text"]})
+        test = 0.0
+    elif b.test and t.get("mini"):  # экспресс-категория по мини-тесту живой демонстрации (app.jury_live)
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "partial",
             "text": f"Экспресс-категория {cat_title} по мини-тесту {b.test.created_at:%d.%m.%Y}: "
@@ -192,7 +250,8 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({"requirement": "Формат работы", "level": "T0", "status": "declared" if ok else "mismatch",
                         "text": "Заявленный формат подходит" if ok else "Заявлен другой формат работы"})
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
-             "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0}
+             "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0,
+             "grade_status": b.grade_status}
     if not req.get("stack_required"):
         # Нет обязательного стека — вес переносим на тест
         comps_w = dict(WEIGHTS, test=WEIGHTS["test"] + WEIGHTS["stack_required"], stack_required=0.0)
@@ -202,6 +261,11 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     return round(score, 4), comps, reasons
 
 
+def tier(b: Bundle) -> int:
+    """Ярус выдачи: 0 — подтверждённые и предварительные (последние — со штрафом в скоре), 1 — грейд не подтверждён."""
+    return GRADE_STATUS_ORDER[b.grade_status]
+
+
 def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
     """Фильтры уточнения. T0-фильтры (заявленный стек, формат, город, стаж) только сужают выдачу."""
     out = []
@@ -209,7 +273,7 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
         p = b.profile
         if f.get("fsp_only") and not b.achievements:
             continue
-        if f.get("confirmed_only") and b.provisional:  # без «Junior (предварительно)»
+        if f.get("confirmed_only") and (b.provisional or b.unconfirmed):  # только подтверждённый грейд
             continue
         if f.get("stack_t1") and not all(skill_confirmed(b.skills_t1.get(t)) for t in f["stack_t1"]):
             continue
@@ -233,7 +297,11 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> d
     recs = recommended_categories(req, counts, cats)
     cat_ids = filters.get("categories") or [r["id"] for r in recs if r["relation"] in ("exact", "direction", "all")]
     pool = visible_pool(db, category_ids=cat_ids)
-    bundles = list(load_bundles(db, [p.user_id for p in pool]).values())
+    ids = [p.user_id for p in pool]
+    if not filters.get("confirmed_only"):
+        # без подтверждённого грейда — по заявленной категории, отдельным ярусом ниже (видео №6: показывать, не скрывать)
+        ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids)]
+    bundles = list(load_bundles(db, ids).values())
     bundles = apply_filters(bundles, filters)
     scored = []
     for b in bundles:
@@ -241,18 +309,21 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> d
         if filters.get("min_score") and s < float(filters["min_score"]):
             continue
         scored.append((s, b, comps, reasons))
-    scored.sort(key=lambda x: (-x[0], -(x[1].profile.rating_score or 0), x[1].profile.public_ref or ""))
+    scored.sort(key=lambda x: (tier(x[1]), -x[0], -(x[1].profile.rating_score or 0), x[1].profile.public_ref or ""))
     results = []
     for rank, (s, b, comps, reasons) in enumerate(scored[:limit], start=1):
         results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
                         "reasons": reasons, "category_id": b.profile.current_category_id,
-                        "card": card(b, cats)})
-    prov = provisional_counts(db)
+                        "grade_status": b.grade_status, "card": card(b, cats)})
+    prov, unc = provisional_counts(db), unconfirmed_counts(db)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
+        r["unconfirmed"] = unc.get(r["id"], 0)
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": ALGORITHM_VERSION,
             "weights": WEIGHTS, "provisional_penalty": PROVISIONAL_PENALTY,
-            "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional)}
+            "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional),
+            "unconfirmed_matched": sum(1 for _, b, _, _ in scored if b.unconfirmed),
+            "confirmed_matched": sum(1 for _, b, _, _ in scored if b.grade_status == "confirmed")}
 
 
 def search(db: Session, *, direction=None, grade=None, category=None, stack: list[str] | None = None,
@@ -261,20 +332,29 @@ def search(db: Session, *, direction=None, grade=None, category=None, stack: lis
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     pool = visible_pool(db, direction=direction, grades=[grade] if grade else None,
                         category_ids=[category] if category else None)
-    bundles = list(load_bundles(db, [p.user_id for p in pool]).values())
+    ids = [p.user_id for p in pool]
+    if not confirmed_only:  # без подтверждённого грейда — по заявленному, ярусом ниже
+        ids += [p.user_id for p, _, _ in unconfirmed_pool(db, direction=direction, grades=[grade] if grade else None,
+                                                             category_ids=[category] if category else None)]
+    bundles = list(load_bundles(db, ids).values())
     f = {"fsp_only": fsp_only, "confirmed_only": confirmed_only}
     if stack:
         f["stack_t1" if stack_level == "t1" else "stack_any"] = stack
     bundles = apply_filters(bundles, f)
-    bundles.sort(key=lambda b: (-(b.profile.rating_score or 0), b.profile.public_ref or ""))
+    bundles.sort(key=lambda b: (tier(b), -(b.profile.rating_score or 0), b.profile.public_ref or ""))
     # Место в категории — по рейтингу среди видимых
     by_cat: dict[str, list[float]] = {}
     for p in visible_pool(db):
         by_cat.setdefault(p.current_category_id, []).append(p.rating_score or 0)
     items = []
     for b in bundles[offset: offset + limit]:
+        if b.unconfirmed:  # места в категории нет — категории нет
+            items.append(card(b, cats))
+            continue
         peers = by_cat.get(b.profile.current_category_id, [])
         rank = 1 + sum(1 for r in peers if r > (b.profile.rating_score or 0))
         items.append(card(b, cats, rank=rank, rank_total=len(peers)))
     return {"total": len(bundles), "items": items,
-            "provisional": sum(1 for b in bundles if b.provisional)}
+            "provisional": sum(1 for b in bundles if b.provisional),
+            "unconfirmed": sum(1 for b in bundles if b.unconfirmed),
+            "confirmed": sum(1 for b in bundles if b.grade_status == "confirmed")}

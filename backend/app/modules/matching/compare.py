@@ -279,6 +279,15 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         else:
             for k in ("category", "theta", "integrity"):
                 cells[k] = {"level": "none", "status": "missing", "text": "Нет результата теста"}
+            gs = c.get("status") or {}
+            if gs.get("status") == "unconfirmed":  # грейд не подтверждён: заявленное (T0) и исход последней попытки
+                cells["category"] = {"level": "T0", "status": "unconfirmed", "grade_status": "unconfirmed",
+                                     "text": gs.get("text") or "Грейд не подтверждён"}
+                at = gs.get("attempt") or {}
+                if at.get("theta") is not None:
+                    cells["theta"] = {"level": "T0", "status": "unconfirmed",
+                                      "text": f"Последняя попытка: θ = {_n(float(at['theta']), sign=True)} ± "
+                                              f"{_n(float(at.get('se') or 0))} — грейд не подтверждён, в скор не входит"}
         for zone in ("stack_required", "stack_desired"):
             for it in req.get(zone) or []:
                 cell, val = _stack_cell(b, it["tag"])
@@ -337,6 +346,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         hit = in_sel.get(p.public_ref)
         out_c.append({
             "ref": p.public_ref, "category": c.get("category"), "grade": g, "score": s, "components": comps,
+            "status": c.get("status"), "claimed": c.get("claimed"),
             "rank_in_selection": hit["rank"] if hit else None, "reasons": reasons, "cells": cells,
             "market_range": c.get("market_range"),
             "can_invite": until is None, "invite_available_at": until.isoformat() if until else None,

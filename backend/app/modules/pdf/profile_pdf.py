@@ -19,6 +19,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from app.core.config import get_settings
+from app.modules.catalog.seed_data import GRADES
 
 NIGHT = colors.HexColor("#310F53")
 BRAND = colors.HexColor("#FF0053")
@@ -78,9 +79,14 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
     title = contacts.get("full_name") if contacts and contacts.get("full_name") else f"Кандидат {card.get('ref')}"
     el.append(Paragraph(_esc(title), st["h1"]))
     cat = card.get("category") or {}
+    gs = card.get("status") or {}
     el.append(Paragraph(f"Категория: <b>{_esc(cat.get('title') or 'не присвоена')}</b>"
                         + (f" · место в категории {card['rank_in_category']} из {card['category_size']}"
-                           if card.get("rank_in_category") else ""), st["p"]))
+                           if card.get("rank_in_category") else "")
+                        + (f" · статус грейда: <b>{_esc(gs.get('title'))}</b>" if gs.get("title") else ""), st["p"]))
+    if gs.get("status") == "unconfirmed":  # единая модель статуса: заявленное из опроса — T0
+        el.append(Paragraph(_esc(gs.get("text") or "Грейд не подтверждён") + " (заявленное — T0, на категорию и "
+                            "ранжирование не влияет).", st["small"]))
     pv = card.get("provisional")
     if pv:
         el.append(Paragraph(
@@ -121,7 +127,11 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
             el.append(Paragraph("Навыки, подтверждённые заданиями: " + ", ".join(
                 f"{_esc(s['title'])} ({int((s.get('score') or 0) * 100)} %)" for s in skills), st["p"]))
     else:
-        el.append(Paragraph("Тест ещё не пройден.", st["p"]))
+        at = gs.get("attempt") or {}
+        el.append(Paragraph(
+            (f"Последняя попытка ({_esc(at.get('at'))}): тест на {_esc(GRADES.get(at.get('grade'), at.get('grade')))} "
+             f"не подтвердил грейд, θ = {at['theta']:+.2f} ± {(at.get('se') or 0):.2f}. Результат в скор не входит."
+             if at.get("theta") is not None else "Тест ещё не пройден."), st["p"]))
     if growth and growth.get("available") and audience == "candidate":
         el.extend(_growth_block(growth, st))
     probes = card.get("probes") or []

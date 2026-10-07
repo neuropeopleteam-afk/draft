@@ -31,8 +31,10 @@ SALARY_MAX_RATIO = 1.5
 
 
 def profile_by_ref(db: Session, ref: str) -> CandidateProfile:
+    """Видимый работодателю кандидат: с категорией или без подтверждённого грейда (опрос пройден) — статус
+    «не подтверждён» показывается в карточке, зонд и приглашение ему доступны."""
     p = db.scalar(select(CandidateProfile).where(CandidateProfile.public_ref == ref))
-    if p is None or not p.visible_to_employers or not p.current_category_id:
+    if p is None or not p.visible_to_employers or not (p.current_category_id or p.onboarding_completed_at):
         raise api_error(404, "candidate_not_found", "Кандидат не найден или скрыл профиль")
     return p
 
