@@ -1,0 +1,68 @@
+
+> spectrek-fsp-frontend@0.1.0 build
+> tsc --noEmit && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 87 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                  1.17 kB │ gzip:   0.66 kB
+dist/assets/montserrat-vietnamese-500-normal-DpeZlV_K.woff       7.25 kB
+dist/assets/montserrat-vietnamese-400-normal-BeEscFYY.woff       7.27 kB
+dist/assets/montserrat-vietnamese-600-normal-SJ-HTWuM.woff       7.30 kB
+dist/assets/montserrat-vietnamese-700-normal-DnwGT2D9.woff       7.30 kB
+dist/assets/montserrat-vietnamese-800-normal-Chy8GRiB.woff       7.33 kB
+dist/assets/montserrat-vietnamese-500-normal-NT-t8RG1.woff2      7.87 kB
+dist/assets/montserrat-vietnamese-400-normal-D4oHqQTd.woff2      7.90 kB
+dist/assets/montserrat-vietnamese-800-normal-BDwqwvSG.woff2      7.90 kB
+dist/assets/montserrat-vietnamese-600-normal-DKe6qT_E.woff2      7.90 kB
+dist/assets/montserrat-vietnamese-700-normal-C0x1De3p.woff2      7.90 kB
+dist/assets/montserrat-cyrillic-400-normal-jEs4Tk-Z.woff        10.91 kB
+dist/assets/montserrat-cyrillic-800-normal-B_mUCQ9O.woff        10.92 kB
+dist/assets/montserrat-cyrillic-700-normal-BvLYcGP1.woff        10.93 kB
+dist/assets/montserrat-cyrillic-600-normal-DUglwBrH.woff        10.98 kB
+dist/assets/montserrat-cyrillic-400-normal-BPq32Q8K.woff2       10.98 kB
+dist/assets/montserrat-cyrillic-500-normal-CyGtXmN9.woff        10.99 kB
+dist/assets/montserrat-cyrillic-600-normal-CQEPC0hM.woff2       11.12 kB
+dist/assets/montserrat-cyrillic-500-normal-T0SG181k.woff2       11.13 kB
+dist/assets/montserrat-cyrillic-700-normal-D-Pqjtdp.woff2       11.16 kB
+dist/assets/montserrat-cyrillic-800-normal-DDmpGQGC.woff2       11.18 kB
+dist/assets/montserrat-cyrillic-ext-400-normal-Xqov12YL.woff2   11.94 kB
+dist/assets/montserrat-cyrillic-ext-500-normal-11xBT7e1.woff2   11.96 kB
+dist/assets/montserrat-cyrillic-ext-800-normal-mB3PmEeV.woff    12.04 kB
+dist/assets/montserrat-cyrillic-ext-500-normal-DOzfAZ45.woff    12.06 kB
+dist/assets/montserrat-cyrillic-ext-600-normal-BtBW-rpm.woff2   12.06 kB
+dist/assets/montserrat-cyrillic-ext-700-normal-MyDreaeu.woff2   12.06 kB
+dist/assets/montserrat-cyrillic-ext-700-normal-D-Mk2xRJ.woff    12.08 kB
+dist/assets/montserrat-cyrillic-ext-600-normal-wReYPmz2.woff    12.08 kB
+dist/assets/montserrat-cyrillic-ext-400-normal-DRPPeomZ.woff    12.09 kB
+dist/assets/montserrat-cyrillic-ext-800-normal-GOAQXnVZ.woff2   12.14 kB
+dist/assets/montserrat-latin-600-normal-UVxSCcoG.woff2          18.69 kB
+dist/assets/montserrat-latin-500-normal-DRFEGfly.woff2          18.75 kB
+dist/assets/montserrat-latin-400-normal-BLhwKU8k.woff2          18.78 kB
+dist/assets/montserrat-latin-700-normal-BdjcYUrC.woff2          18.82 kB
+dist/assets/montserrat-latin-800-normal-axpkC1rd.woff2          19.01 kB
+dist/assets/montserrat-latin-600-normal-CdhFl4lI.woff           20.55 kB
+dist/assets/montserrat-latin-500-normal-Dok2oTci.woff           20.61 kB
+dist/assets/montserrat-latin-400-normal-xItZbAXg.woff           20.65 kB
+dist/assets/montserrat-latin-800-normal-C3dfDxXV.woff           20.66 kB
+dist/assets/montserrat-latin-700-normal-BWkrl476.woff           20.67 kB
+dist/assets/montserrat-latin-ext-400-normal-B8bwfy6Y.woff2      32.27 kB
+dist/assets/montserrat-latin-ext-500-normal-BKtbrd6n.woff2      32.29 kB
+dist/assets/montserrat-latin-ext-600-normal-DSkTqI9L.woff2      33.19 kB
+dist/assets/montserrat-latin-ext-700-normal-BOP2Nhf0.woff2      33.53 kB
+dist/assets/montserrat-latin-ext-800-normal-BBvmbyWk.woff2      33.62 kB
+dist/assets/montserrat-latin-ext-400-normal-BffdBkAA.woff       40.37 kB
+dist/assets/montserrat-latin-ext-500-normal-DWPqqZgs.woff       40.39 kB
+dist/assets/montserrat-latin-ext-600-normal-CSDhkhgS.woff       41.04 kB
+dist/assets/montserrat-latin-ext-700-normal-DdDFr05Z.woff       41.34 kB
+dist/assets/montserrat-latin-ext-800-normal-Wjq_OapB.woff       41.69 kB
+dist/assets/index-JZxSqPMm.css                                  57.50 kB │ gzip:  10.22 kB
+dist/assets/index-A3_HAok0.js                                  623.01 kB │ gzip: 195.02 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 12.11s
