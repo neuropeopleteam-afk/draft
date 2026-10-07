@@ -19,7 +19,7 @@ from app.core.enums import EvidenceLevel, FactSource
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile
 
@@ -44,7 +44,6 @@ DISCIPLINE_RELEVANCE = {
     "robotics": {"backend": 0.3, "frontend": 0.3, "data_ml": 0.5, "qa": 0.3, "security": 0.3},
     "uav": {"backend": 0.3, "frontend": 0.3, "data_ml": 0.5, "qa": 0.3, "security": 0.3},
 }
-GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
 
 
 def set_t0_facts(db: Session, user_id: uuid.UUID, source: FactSource, *, stack: list[str] | None = None,

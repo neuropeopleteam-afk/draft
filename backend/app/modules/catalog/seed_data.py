@@ -7,12 +7,46 @@ DIRECTIONS: dict[str, str] = {
     "qa": "QA",
     "security": "Информационная безопасность",
 }
+# Грейды снизу вверх. «Стажёр» (intern) — ниже Junior, для начинающих участников ФСП (решение владельца 07.10).
+# Единственный источник правды о наборе грейдов на стороне платформы: другие модули импортируют отсюда,
+# «ровно три грейда» нигде не предполагается.
 GRADES: dict[str, str] = {
+    "intern": "Стажёр",
     "junior": "Junior",
     "middle": "Middle",
     "senior": "Senior",
 }
-GRADE_LEVEL = {"junior": 1, "middle": 2, "senior": 3}
+GRADE_LEVEL = {"intern": 0, "junior": 1, "middle": 2, "senior": 3}
+GRADE_ORDER: tuple[str, ...] = tuple(GRADES)  # ("intern", "junior", "middle", "senior")
+# Пороги на шкале θ: θ ≥ cut[g] → не ниже грейда g. Шаг между грейдами — одна единица шкалы (как у Junior → Middle →
+# Senior); порог Стажёра −2,0 обоснован симуляцией на банке (app/modules/validation/intern_cut.py, /validation).
+GRADE_CUTS = {"intern": -2.0, "junior": -1.0, "middle": 0.0, "senior": 1.0}
+# Стартовая оценка θ адаптивного теста по заявленному грейду (середина полосы грейда, у Стажёра — чуть выше порога)
+GRADE_START_THETA = {"intern": -1.5, "junior": -0.5, "middle": 0.5, "senior": 1.3}
+# Подсказка грейда по стажу (лет): до полугода — Стажёр, до 1,5 — Junior, до 4,5 — Middle, дальше — Senior
+GRADE_BY_EXPERIENCE: tuple[tuple[float, str], ...] = ((0.5, "intern"), (1.5, "junior"), (4.5, "middle"))
+GRADE_EXPERIENCE_TEXT = {"intern": "без опыта или до полугода", "junior": "до 1,5 лет опыта", "middle": "1,5–4,5 года",
+                         "senior": "от 4,5 лет"}
+
+
+def grade_by_experience(years: float | None) -> str | None:
+    """Грейд-подсказка по стажу в годах (None — стаж неизвестен)."""
+    if years is None:
+        return None
+    for limit, g in GRADE_BY_EXPERIENCE:
+        if years < limit:
+            return g
+    return GRADE_ORDER[-1]
+
+
+def grade_above(grade: str) -> str | None:
+    i = GRADE_ORDER.index(grade)
+    return GRADE_ORDER[i + 1] if i + 1 < len(GRADE_ORDER) else None
+
+
+def grade_below(grade: str) -> str | None:
+    i = GRADE_ORDER.index(grade)
+    return GRADE_ORDER[i - 1] if i > 0 else None
 
 # id → (название, вид, направление | None — общий блок)
 STACK: dict[str, tuple[str, str, str | None]] = {

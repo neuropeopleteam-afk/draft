@@ -41,20 +41,21 @@ import numpy as np
 import assessment_bank
 from assessment_bank import generate, get_spec, load_specs
 from assessment_bank.metrics import normalize_output
-from assessment_bank.psychometrics import (CanaryDetector, CATConfig, CATSession, GradeScale, PoolItem, TimedResponse,
-                                           decide, pool_from_specs, prob)
+from assessment_bank.psychometrics import (CanaryDetector, CATConfig, CATSession, PoolItem, TimedResponse,
+                                           pool_from_specs, prob)
 from assessment_bank.registry import canary_published_seeds
 
 from app.modules.assessment import integrity
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
 from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
 from app.modules.assessment.grader import grade_open
+from app.modules.assessment.grades import GRADE_RU, cuts_tuple, decide_grade, scale as platform_scale, start_theta
+from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import to_stack_tags
 
 log = logging.getLogger("assessment")
 
 SEED_MIN, SEED_MAX = 10_000_000, 2**31 - 1
-GRADE_RU = {"none": "без грейда", "junior": "Junior", "middle": "Middle", "senior": "Senior"}
 ANSWER_KIND = {"find_bug": "line", "predict_output": "text", "choose_fix": "option", "mcq_concept": "option",
                "open_answer": "text"}
 MAX_TEXT = 20_000
@@ -117,7 +118,7 @@ class BankEngine:
         self.version = (man.get("content_hash") or "dev")[:8]
         self.name = f"bank-{self.version}"
         self.n_families = len(specs)
-        self.scale = GradeScale()
+        self.scale = platform_scale()  # пороги платформы: Стажёр, Junior, Middle, Senior
 
     # ------------------------------------------------------------------ настройки
     @staticmethod
@@ -145,6 +146,8 @@ class BankEngine:
         # субпулы на карантине (утечка) не выдаются. См. exposure.py.
         subpool = choose_subpool(cfg["subpools"], seed, previous_subpools,
                                  parse_quarantine(self._settings().assessment_subpool_quarantine))
+        if claimed_grade == "intern":  # лёгких семейств мало — тест Стажёра идёт без ротации субпулов (intern_pool.py)
+            subpool = None
         return {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": claimed_grade,
             "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
@@ -240,7 +243,7 @@ class BankEngine:
             if excl and len(excl) < len(clean_idx):
                 theta, se = (float(v) for v in sess.rescore(excl))
                 rescored, excluded = True, len(excl)
-        dec = decide(theta, se, claimed, self.scale)
+        dec = decide_grade(theta, se, claimed)
 
         scored = [i for i in done if not i["canary"]]
         pending = [i for i in scored if any(v is None for v in i["x"])]
@@ -311,7 +314,7 @@ class BankEngine:
         ext = state.get("ext")
         # сессии, начатые до 06.10 (в cfg нет новых ключей), доигрываются по прежним правилам остановки и выбора
         return CATConfig(min_items=c["min_items"], max_items=c["max_items"], se_target=c["se_target"],
-                         max_time_s=c["max_time_s"], cuts=tuple(self.scale.cuts[g] for g in GRADES),
+                         max_time_s=c["max_time_s"], cuts=cuts_tuple(), start_theta=start_theta(),
                          stop_rule=c.get("stop_rule", "se"), classify_z=float(c.get("classify_z", 1.0)),
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
@@ -330,9 +333,12 @@ class BankEngine:
         expo = exposure_control(state["direction"]) if cfg.get("exposure", "none") == "sympson_hetter" else None
         # карантин читается на каждом запросе: субпул, выведенный из ротации посреди сессии, не попадёт и в дотестирование
         blocked = parse_quarantine(self._settings().assessment_subpool_quarantine)
+        # Тест на Стажёра — только по лёгким семействам (сопоставление на стороне платформы, см. intern_pool.py);
+        # исключённые семейства не попадают ни в основную часть, ни в дотестирование
+        excl = intern_exclusions(pool, state["direction"]) if state["claimed_grade"] == "intern" else ()
         sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
                              state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
-                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked)
+                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl)
         lookup = sess.items
         for it in state["items"]:
             if it["done"] and it["family_id"] in lookup:

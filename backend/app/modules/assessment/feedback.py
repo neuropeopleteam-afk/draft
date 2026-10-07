@@ -29,15 +29,13 @@ from app.core.enums import NeedStatus, TestSessionStatus
 from app.modules.assessment.integrity import summary_for_employer
 from app.modules.assessment.models import TestSession
 from app.modules.catalog.constants import FSP_DISCIPLINES
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADE_ORDER, GRADES, STACK
 from app.modules.profiles.facts import DISCIPLINE_RELEVANCE, load_bundles
 
 STRONG, OK = 0.75, 0.5  # пороги статуса темы по доле набранных баллов
 REL_DELTA = 0.2  # «выше/ниже вашего уровня»: отклонение от ожидаемой по θ доли
 MIN_SOURCES_IN_GRADE = 3  # меньше потребностей в категории — спрос считается по направлению
 TOP_DEMAND = 10
-GRADE_CUTS = {"junior": -1.0, "middle": 0.0, "senior": 1.0}
-GRADE_ORDER = ["junior", "middle", "senior"]
 FSP_CALENDAR_URL = "https://fsp-russia.ru/calendar/"
 COMMON_TAGS = {"algorithms", "sql", "http", "git", "linux", "docker"}
 
