@@ -120,6 +120,7 @@ class Filters(BaseModel):
     city: str | None = Field(None, max_length=100)
     experience_min: float | None = Field(None, ge=0, le=30)
     min_score: float | None = Field(None, ge=0, le=1)
+    exclude_refs: list[str] | None = Field(None, max_length=200, description="Исключить отмеченных «не подходит» (Н2)")
 
 
 class SelectionIn(BaseModel):
