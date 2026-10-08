@@ -40,7 +40,7 @@ def test_jury_sandboxes_are_isolated(client):
     assert len(own_a) == 3 and len(own_b) == 3 and not own_a & own_b  # чужая песочница не видна (3 демо-кандидата)
     # подборка песочницы — только по её кандидатам
     need = next(n for n in client.get("/api/employer/needs", headers=H(ea["access_token"])).json()
-                if n["requirements"].get("direction") == "backend")
+                if n["requirements"].get("direction") == "backend" and n["requirements"].get("grade") == "middle")
     sel = client.get(f"/api/employer/needs/{need['id']}/selections/1", headers=H(ea["access_token"])).json()
     refs = {c["ref"] for c in sel["results"]}
     # подборка по умолчанию — категория потребности (backend.middle): два своих подтверждённых; «Junior
