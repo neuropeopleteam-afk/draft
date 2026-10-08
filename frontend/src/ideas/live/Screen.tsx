@@ -125,10 +125,10 @@ export default function LiveScreen() {
                 <img src={`${feed.qr_svg}?origin=${encodeURIComponent(window.location.origin)}`} alt={`QR-код: ${feed.url}`} className="mx-auto aspect-square w-full max-w-[320px] rounded-xl" />
                 <p className="mt-3 break-all font-mono text-lg font-bold text-brand-night">{feed.url.replace(/^https?:\/\//, "")}</p>
                 <p className="mt-1 text-sm text-brand-ink/70">Камера телефона → {feed.items} задания, без регистрации</p>
-                {open === "ok" && <p className="mt-2 text-xs font-semibold text-emerald-700">Адрес открывается без пароля стенда</p>}
+                {open === "ok" && <p className="mt-2 text-xs font-semibold text-emerald-700">Адрес открывается с телефона сразу</p>}
                 {open === "locked" && (
                   <p className="mt-2 rounded-lg bg-brand-blush/40 px-3 py-2 text-left text-xs text-brand-plum">
-                    Адрес пока за паролем стенда: телефону придётся ввести demo / Hakaton. Нужен фрагмент nginx
+                    Адрес пока не открывается с телефона без входа на стенд. Нужен фрагмент nginx
                     infra/nginx/fsp.neuropeople.pro.jury-live.conf.
                   </p>
                 )}
@@ -236,7 +236,7 @@ function Focus({ g }: { g: Guest }) {
         <div className="card p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <p className="text-sm font-bold text-brand-night">Подборка работодателя: {sel.need_title.replace("Живая демонстрация: ", "")}</p>
-            <p className="text-xs text-brand-ink/60">версия {sel.version} · {sel.total} {plural(sel.total, "кандидат", "кандидата", "кандидатов")} · {g.label} — место {sel.rank ?? "—"}</p>
+            <p className="text-xs text-brand-ink/60">версия {sel.version} · {sel.total} {plural(sel.total, "кандидат", "кандидата", "кандидатов")}{sel.rank != null && ` · ${g.label} — место ${sel.rank}`}</p>
           </div>
           <table className="mt-3 w-full text-sm">
             <thead className="text-left text-xs text-brand-ink/55">
@@ -263,12 +263,16 @@ function Focus({ g }: { g: Guest }) {
               ))}
             </tbody>
           </table>
-          <p className="mt-4 text-sm font-bold text-brand-night">Почему {g.label} на {sel.rank}-м месте</p>
-          <ul className="mt-2 grid gap-2 md:grid-cols-2">
-            {sel.reasons.map((x, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs leading-relaxed text-brand-ink/80"><Level level={x.level} /><span><b>{x.requirement}.</b> {ruText(x.text)}</span></li>
-            ))}
-          </ul>
+          {sel.rank != null && (
+            <>
+              <p className="mt-4 text-sm font-bold text-brand-night">Почему {g.label} на {sel.rank}-м месте</p>
+              <ul className="mt-2 grid gap-2 md:grid-cols-2">
+                {sel.reasons.map((x, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs leading-relaxed text-brand-ink/80"><Level level={x.level} /><span><b>{x.requirement}.</b> {ruText(x.text)}</span></li>
+                ))}
+              </ul>
+            </>
+          )}
         </div>
       )}
 

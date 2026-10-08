@@ -223,6 +223,29 @@ def c_plan() -> dict[str, list[str]]:
     return plan
 
 
+def c_plan_from_rows(rows: list[tuple]) -> dict[str, list[str]]:
+    """План C по сохранённому пакету (снимку), а не по текущему банку: после сборки пакета банк менялся (164 семейства),
+    и пересчитанный c_plan() с ключами пакета не пересекался. Ядро — строки grp == "core"; блоки слотов — по порядку
+    строк (build_c кладёт слот за слотом, внутри блока — в порядке выбора), числа — из C_PLAN."""
+    core: list[str] = []
+    rest: dict[str, list[str]] = {}
+    for kind, key, grp, hidden in rows:
+        if kind != "C":
+            continue
+        fid = key.split(":", 1)[1]
+        if grp == "core":
+            core.append(fid)
+        else:
+            rest.setdefault((hidden or {}).get("block") or grp, []).append(fid)
+    plan = {"core": core}
+    for slot, blocks in C_PLAN.items():
+        plan[slot] = []
+        for blk, n, _off in blocks:
+            plan[slot] += rest.get(blk, [])[:n]
+            rest[blk] = rest.get(blk, [])[n:]
+    return plan
+
+
 def build_c() -> list[dict]:
     params = _family_params()
     plan = c_plan()
@@ -298,7 +321,7 @@ def assignment_from_rows(rows: list[tuple], slot: str, team_size: int = 3, pack:
         b_keys.insert(min(len(b_keys), 5 + j * 9 + rnd.randint(0, 3)), c)
     if slot == "DEMO":
         b_keys = [k for k in plain[:6]]
-    plan = c_plan()
+    plan = c_plan_from_rows(rows)  # задания C — из сохранённого пакета (снимок), не из текущего банка
     c_rows = {k: g for kind, k, g, _ in rows if kind == "C"}
     if slot == "DEMO":
         fams = plan["core"][:4] + plan["E1"][:2]
