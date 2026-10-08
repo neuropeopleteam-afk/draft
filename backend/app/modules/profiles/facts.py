@@ -434,11 +434,13 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
     from app.modules.fsp.youth import employment_safety
 
     is_prov = b.provisional and cat is not None
+    mini_prov = bool(t and t.get("mini")) and cat is not None  # мини-тест QR: категория предварительная (Ф3)
     status = grade_status(b)
     cd, cg = b.claimed
     return {
         "ref": p.public_ref,
-        "category": {"id": cat.id, "title": prov.title(cat.title, is_prov), "provisional": is_prov} if cat else None,
+        "category": {"id": cat.id, "title": prov.title(cat.title, is_prov or mini_prov), "provisional": is_prov,
+                     "preliminary": mini_prov} if cat else None,
         # единая модель статуса: подтверждён / предварительно / не подтверждён (+ заявленное из опроса)
         "status": status,
         "claimed": ({"direction": cd, "grade": cg, "category_id": f"{cd}.{cg}",
