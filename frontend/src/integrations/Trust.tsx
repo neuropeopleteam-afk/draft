@@ -112,9 +112,9 @@ export function CompanyTrustCard({ hasInn }: { hasInn: boolean }) {
 }
 
 /** Индекс доверия в карточке приглашения у кандидата (с оценкой вилки этого предложения).
- * version меняется после ответа или жалобы — индекс перечитывается в открытом окне. */
-export function InvitationTrust({ invitationId, version = 0 }: { invitationId: string; version?: number }) {
-  const { data } = useApi<Trust>(`/candidate/invitations/${invitationId}/trust`, [invitationId, version]);
+ * version — признак изменения приглашения (статус, ответ, жалоба): индекс перечитывается в открытом окне. */
+export function InvitationTrust({ invitationId, version }: { invitationId: string; version?: string | number | null }) {
+  const { data } = useApi<Trust>(`/candidate/invitations/${invitationId}/trust`, [invitationId, version ?? ""]);
   if (!data) return <div className="h-24 animate-pulse rounded-2xl bg-brand-blush/30" />;
   return <TrustPanel t={data} companyLink />;
 }

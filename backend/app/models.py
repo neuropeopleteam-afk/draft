@@ -31,5 +31,6 @@ from app.cup.models import Cup, CupEntry  # noqa: E402,F401 — «Кубок р�
 from app.jury_live.models import LiveGuest, LiveRoom  # noqa: E402,F401 — живая демонстрация для жюри (идея 13)
 from app.modules.assignments.models import Assignment, AssignmentAttempt  # noqa: E402,F401 — задания работодателя (И7)
 from app.passport.models import GradePassport, PassportKey  # noqa: E402,F401 — подписанный паспорт грейда
+from app.modules.contact.models import ContactMessage, InvitationCounter  # noqa: E402,F401 — переписка, встречное (И4)
 
 metadata = Base.metadata

@@ -12,6 +12,7 @@ import Assessment, { TestRun } from "./pages/candidate/Assessment";
 import Category from "./pages/candidate/Category";
 import Feedback from "./pages/candidate/Feedback";
 import { Invitations, Probes } from "./pages/candidate/Contact";
+import { Messages } from "./pages/Messages";
 import CandidateOverview from "./pages/candidate/Overview";
 import Profile from "./pages/candidate/Profile";
 import { Fsp, Settings } from "./pages/candidate/Settings";
@@ -72,6 +73,7 @@ export default function App() {
         <Route path="feedback" element={<Feedback />} />
         <Route path="profile" element={<Profile />} />
         <Route path="invitations" element={<Invitations />} />
+        <Route path="messages" element={<Messages role="candidate" />} />
         <Route path="probes" element={<Probes />} />
         <Route path="fsp" element={<Fsp />} />
         <Route path="settings" element={<Settings />} />
@@ -95,6 +97,7 @@ export default function App() {
         <Route path="candidates/:ref" element={<CandidateDetail />} />
         <Route path="probes" element={<EmployerProbes />} />
         <Route path="invitations" element={<EmployerInvitations />} />
+        <Route path="messages" element={<Messages role="employer" />} />
         <Route path="vacancies" element={<EmployerVacancies />} />
         <Route path="ats" element={<EmployerAts />} />
         <Route path="app" element={<AppSection />} />

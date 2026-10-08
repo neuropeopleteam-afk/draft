@@ -390,6 +390,10 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
         "contacts": candidate_contacts(db, p.user_id) if revealed else None,
         "contacts_note": None if revealed else "Контакты откроются, когда кандидат примет ваше приглашение",
     })
+    if not revealed and any(i.contacts_revoked_at for i in inv):  # кандидат отозвал доступ (app.modules.contact)
+        out["contacts_revoked"] = True
+        out["contacts_note"] = "Кандидат отозвал доступ к контактам — карточка снова обезличена"
+    out["my_invitations"] = [{**x, "contacts_revoked": bool(i.contacts_revoked_at)} for x, i in zip(out["my_invitations"], inv)]
     return out
 
 

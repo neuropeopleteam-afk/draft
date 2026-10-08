@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 import app.models  # noqa: F401 — вся metadata: без неё внешние ключи на users.id без типа (SQLite отдаёт строки)
 from app.core.db import SessionLocal, get_engine, utcnow
 from app.integrations.vacancies.models import Vacancy
+from app.modules.auth.models import User  # noqa: F401 — без таблицы users тип FK created_by не разрешается (запуск модулем)
 from app.modules.profiles.models import Company
 
 # (индекс демо-компании, должность, категория, стек, от, до, формат, описание)
@@ -36,14 +37,15 @@ VACANCIES = [
      "Тест-дизайн и автотесты для медицинской информационной системы: API, pytest, Playwright, Allure."),
     (5, "Go-разработчик senior (маршрутизация)", "backend.senior", ["go", "postgresql", "kafka", "docker"], 310_000, 440_000, "remote",
      "Сервисы построения маршрутов и расчёта тарифов: Go, PostgreSQL, Kafka. Высокая нагрузка, on-call раз в месяц."),
-    (6, "Junior frontend-разработчик", "frontend.junior", ["react", "typescript"], 75_000, 120_000, "office",
+    (6, "Junior frontend-разработчик", "frontend.junior", ["react", "typescript"], 80_000, 120_000, "office",
      "Интерфейсы образовательной платформы. Обучение внутри команды, наставник, ревью каждого изменения."),
     (7, "ML-инженер (компьютерное зрение)", "data_ml.senior", ["python", "pandas"], 340_000, 480_000, "hybrid",
      "Модели контроля качества на производстве: CV, обучение и вывод моделей в эксплуатацию, MLOps."),
-    (8, "Senior frontend: «до 900 тыс. ₽, без опыта»", "frontend.senior", ["react", "typescript"], 500_000, 900_000, "remote",
+    # приманка: верх вилки и на руки (≈ 877 тыс. ₽ после НДФЛ) больше чем вдвое выше рынка frontend.senior (405 тыс. ₽)
+    (8, "Senior frontend: «до 1 млн ₽, без опыта»", "frontend.senior", ["react", "typescript"], 700_000, 1_050_000, "remote",
      "Срочно! Высокий доход с первого дня, опыт не важен, оформление после оплаты обучения. "
      "(Демо: намеренно неправдоподобная вилка — индекс доверия предупреждает кандидата.)"),
-    (9, "Junior QA (ручное тестирование)", "qa.junior", ["sql"], 65_000, 100_000, "office",
+    (9, "Junior QA (ручное тестирование)", "qa.junior", ["sql"], 70_000, 100_000, "office",
      "Ручное тестирование веб- и мобильных приложений заказчиков, тест-кейсы, баг-репорты, основы API-тестирования."),
 ]
 

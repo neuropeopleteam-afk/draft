@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, GradeStatusNote } from "../../components/GradeStatus";
-import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, range, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, ruText, signed, useApi } from "../../components/ui";
+import { MarketNote } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { Specializations } from "../../components/Specializations";
 import { PassportShare } from "../../passport/Share";
@@ -58,10 +59,10 @@ export default function Category() {
             <GradeBadge s={gs} />
           </div>
           {c.category_id ? (
-            <p className="mt-2 text-sm text-brand-ink/70">
-              {c.rank ? <>Место в категории: <b>{c.rank}</b> из {c.category_size}. </> : null}
-              Рынок категории: {range(c.market_range?.from, c.market_range?.to)}.
-            </p>
+            <div className="mt-2 space-y-1 text-sm text-brand-ink/70">
+              {c.rank ? <p>Место в категории: <b>{c.rank}</b> из {c.category_size}.</p> : null}
+              <MarketNote m={c.market_range} />
+            </div>
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTIONS[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADES[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
           {gs?.status === "unconfirmed" && <GradeStatusNote s={gs} className="mt-2" />}
           {gs?.status === "unconfirmed" && <p className="mt-1 text-xs text-brand-ink/65">Работодатели видят вас в поиске и подборках со статусом «грейд не подтверждён» — ниже всех подтверждённых. Категорию присваивает только тест.</p>}

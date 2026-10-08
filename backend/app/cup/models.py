@@ -40,6 +40,8 @@ class Cup(UUIDPk, Timestamps, Base):
     ends_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True))
     salary_from: Mapped[int]
     salary_to: Mapped[int]
+    # gross — до вычета НДФЛ, net — на руки (app.modules.contact.salary)
+    salary_basis: Mapped[str] = mapped_column(sa.String(8), default="gross", server_default="gross")
     invite_top_n: Mapped[int] = mapped_column(default=3)
     min_score: Mapped[float] = mapped_column(default=0.5)  # приглашение — только при балле не ниже порога
     position_title: Mapped[str] = mapped_column(sa.String(200))
