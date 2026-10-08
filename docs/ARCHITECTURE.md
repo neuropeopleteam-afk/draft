@@ -195,7 +195,7 @@ erDiagram
   или `python -m app.modules.auth reset-2fa --email …`. Служебные учётки создаёт `python -m app.modules.auth add-staff`.
 - Таблицы `user_two_factor`, `user_two_factor_recovery_codes` (миграция `tf01`). Код — `app/core/totp.py`,
   `app/modules/auth/twofa.py`, `twofa_router.py`; экраны — `frontend/src/pages/Security.tsx`; тесты — `tests/test_twofa.py`
-  и `e2e/tests/10-twofa.spec.ts`.
+  и `e2e/tests/12-twofa.spec.ts`.
 
 ## 7. Интеграция с ФСП ID (Keycloak) и реестром ФСП
 

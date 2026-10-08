@@ -77,7 +77,7 @@ test("кандидат: демо-вход → тест → результат �
   let markChecked = false;
   await test.step("камера по согласию: экран перед тестом, выбор «без камеры»", async () => {
     await page.getByRole("button", { name: /^Начать тест$/ }).click();
-    // И16: экран камеры — до создания сессии; без камеры тест доступен полностью (сам сценарий с камерой — 09-camera)
+    // И16: экран камеры — до создания сессии; без камеры тест доступен полностью (сам сценарий с камерой — 11-camera)
     await expect(page.getByRole("heading", { name: "Камера во время теста" })).toBeVisible();
     const main = page.getByRole("main");
     await expect(main.getByText(/Видео и снимки никуда не отправляются и не записываются/)).toBeVisible();
