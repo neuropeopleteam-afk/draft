@@ -113,19 +113,17 @@ def generate(seed: int):
     bad_val = limit + rng.randint(1, limit)
     head = _model(model, fld)
     original = _fn(c, "original", limit)
-    labels = {"correct": "Уведомление через transaction.on_commit с lambda",
-              "after_block": "Уведомление сразу после блока atomic",
-              "after_check": "Уведомление внутри atomic после проверки лимита",
-              "eager_call": "Уведомление через transaction.on_commit без lambda"}
+    # подписи нейтральные: способ отправки виден только в коде вариантов (подпись не должна подсказывать ответ)
+    label = "Заменить функцию на:"
     names = ["correct", "after_block", "after_check", "eager_call"]
     srcs = {n: _fn(c, n, limit) for n in names}
-    opts, key = make_options(rng, (labels["correct"], srcs["correct"]), [(labels[n], srcs[n]) for n in names[1:]])
-    by_text = {o.text: o.id for o in opts}
+    opts, key = make_options(rng, (label, srcs["correct"]), [(label, srcs[n]) for n in names[1:]])
+    by_code = {o.code: o.id for o in opts}
     code = head + original + "\n"
     checks = [Check(name="original_fails", runner="django", program=_harness(code, c, ok_val, bad_val),
                     expect="fail")]
     for n in names:
-        checks.append(Check(name=f"option:{by_text[labels[n]]}", runner="django",
+        checks.append(Check(name=f"option:{by_code[srcs[n]]}", runner="django",
                             program=_harness(head + srcs[n] + "\n", c, ok_val, bad_val),
                             expect="pass" if n == "correct" else "fail", embeds_display_code=False))
     stem = (f"Django, {ctx}: `{fn}` создаёт запись и отправляет уведомление `{notify}`. Если проверка "

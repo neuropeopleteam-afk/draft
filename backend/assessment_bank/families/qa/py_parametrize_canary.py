@@ -7,7 +7,7 @@ Python, он сверяется с исполнением показанного
 from __future__ import annotations
 
 from assessment_bank.families.qa._shims import PYTEST_SUMMARY_TAIL, pytest_program
-from assessment_bank.gen_utils import build_variant, make_rng
+from assessment_bank.gen_utils import build_variant, make_rng, plural
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "qa.pytest.parametrize_canary"
@@ -95,8 +95,8 @@ def generate(seed: int):
     stem = (f"Тесты функции `{sc['name']}` ({sc['ctx']}: {sc['rule']}). Сколько тестов pytest "
             f"пройдёт и сколько упадёт? Запишите ответ в виде `passed=N failed=M`.")
     ak = AnswerKey(kind="output", value=out,
-                   explanation=f"Первый тест — {len(pairs)} случаев, второй — "
-                               f"{len(t2_res)} (декартово произведение двух parametrize). "
+                   explanation=f"Первый тест — {len(pairs)} {plural(len(pairs), 'случай', 'случая', 'случаев')}, "
+                               f"второй — {len(t2_res)} (декартово произведение двух parametrize). "
                                "Падают случаи, где ожидание не совпадает с поведением функции.")
     checks = [Check(name="stdout", runner="python", expect="stdout_equals", expected_stdout=out,
                     program=pytest_program(code, PYTEST_SUMMARY_TAIL))]

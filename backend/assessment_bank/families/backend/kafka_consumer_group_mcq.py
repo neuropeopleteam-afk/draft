@@ -9,7 +9,7 @@ RangeAssignor Kafka (сортировка участников, P // C подр�
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, plural
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "backend.kafka.consumer_group_mcq"
@@ -77,9 +77,9 @@ def generate(seed: int):
             f"экземплярах; топик также читают группы {others_txt}. Все экземпляры работают, ребалансировка "
             f"завершена. Сколько экземпляров группы `{our}` простаивают без партиций и сколько раз всего "
             f"(по всем группам) будет обработано одно сообщение топика?")
-    why = (f"В группе каждую партицию читает ровно один потребитель: {P} партиций на {C} экземпляров — "
+    why = (f"В группе каждую партицию читает ровно один потребитель: {P} {plural(P, "партиция", "партиции", "партиций")} на {C} {plural(C, "экземпляр", "экземпляра", "экземпляров")} — "
            f"{idle} без партиций. Группы независимы: каждая получает все сообщения, поэтому сообщение "
-           f"обработают {G} группы — по одному разу в каждой. Масштабировать группу выше числа партиций "
+           f"обработают {G} {plural(G, "группа", "группы", "групп")} — по одному разу в каждой. Масштабировать группу выше числа партиций "
            f"бесполезно.")
     ak = AnswerKey(kind="option", value=key, explanation=why)
     return build_variant(FAMILY_ID, seed, stem=stem, options=opts, answer_key=ak, context=ctx,

@@ -97,10 +97,12 @@ def generate(seed: int):
                for o in opts]
     program = PROGRAM.format(lo=str(lo), hi=str(hi_eff), step=str(step), options=options)
     lo_t, hi_t = _fmt(lo, money), _fmt(hi, money)
+    # «от 21 года», но «от 14 лет»: единица при нижней границе стоит в родительном падеже
+    lo_unit = "года" if unit == "лет" and lo_i % 10 == 1 and lo_i % 100 != 11 else unit
     if kind == "closed":
         rule = f"допустимо значение от {lo_t} до {hi_t} {unit} включительно; вводятся целые числа"
     elif kind == "half":
-        rule = (f"допустимо значение от {lo_t} {unit} включительно до {hi_t} {unit}, не включая "
+        rule = (f"допустимо значение от {lo_t} {lo_unit} включительно до {hi_t} {unit}, не включая "
                 f"{hi_t}; вводятся целые числа")
     else:
         rule = (f"допустима сумма от {lo_t} до {hi_t} {unit} включительно; сумма вводится с "

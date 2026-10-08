@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, plural
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "common.net.cidr_mcq"
@@ -81,7 +81,7 @@ def q_member(rng):
     stem = "Фрагмент конфигурации nginx для служебного раздела. Запрос с какого адреса будет разрешён?"
     correct = i2ip(inside)
     others = [i2ip(x) for x in rng.sample(outs, 3)]
-    expl = (f"Сеть {i2ip(net)}/{p} — это {size} адресов: {i2ip(net)}–{i2ip(net + size - 1)}")
+    expl = (f"Сеть {i2ip(net)}/{p} — это {size} {plural(size, 'адрес', 'адреса', 'адресов')}: {i2ip(net)}–{i2ip(net + size - 1)}")
     chk = (f"net = ipaddress.ip_network('{i2ip(net)}/{p}')\n"
            f"cands = {json.dumps([correct] + others)}\n"
            "print([c for c in cands if ipaddress.ip_address(c) in net][0])\n")
@@ -97,7 +97,8 @@ def q_hosts(rng):
             "сети и широковещательный адрес не назначаются?")
     correct = str(n - 2)
     others = [str(n), str(n - 1), str(2 * n - 2) if rng.random() < 0.5 else str(n // 2 - 2)]
-    expl = (f"При /{p} на номер узла остаётся бит: {32 - p}; это 2^{32 - p} = {n} адресов, "
+    expl = (f"При /{p} на номер узла остаётся {32 - p} {plural(32 - p, 'бит', 'бита', 'бит')}: "
+            f"2^{32 - p} = {n} {plural(n, 'адрес', 'адреса', 'адресов')}, "
             f"минус адрес сети и широковещательный")
     chk = (f"net = ipaddress.ip_network('{i2ip(net)}/{p}')\n"
            "print(net.num_addresses - 2)\n")
@@ -119,7 +120,7 @@ def q_bounds(rng):
     others = [fmt(net, net + size), fmt(net_of(host, p + 1), net_of(host, p + 1) + half - 1),
               fmt(net_of(host, p - 1), net_of(host, p - 1) + 2 * size - 1)]
     others = [o for o in others if o != correct][:3]
-    expl = (f"Маска /{p} делит пространство на блоки по {size} адресов; адрес сети — начало "
+    expl = (f"Маска /{p} делит пространство на блоки по {size} {plural(size, 'адрес', 'адреса', 'адресов')}; адрес сети — начало "
             f"блока, broadcast — его последний адрес")
     chk = (f"net = ipaddress.ip_interface('{i2ip(host)}/{p}').network\n"
            "print(f'сеть {net.network_address}, broadcast {net.broadcast_address}')\n")

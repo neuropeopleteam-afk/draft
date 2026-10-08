@@ -99,7 +99,9 @@ def generate(seed: int):
     rows.sort()
     buggy = (f"SELECT {e}, {v}, MAX({ts}) AS {ts}\nFROM {T}\nGROUP BY {e}, {v}\nORDER BY {e};")
     correct = _q("good", T, e, v, ts)
-    opts, key = balanced_options(FAMILY_ID, seed, rng, (correct, correct), [(_q(d, T, e, v, ts),) * 2 for d in chosen])
+    # текст варианта — нейтральная подпись, сам запрос показывается один раз (в блоке кода)
+    label = "Заменить запрос на:"
+    opts, key = balanced_options(FAMILY_ID, seed, rng, (label, correct), [(label, _q(d, T, e, v, ts)) for d in chosen])
     num = isinstance(values[0], int)
     setup = (f"CREATE TABLE {T} (id INTEGER PRIMARY KEY, {e} INTEGER NOT NULL, "
              f"{v} {'INTEGER' if num else 'TEXT'} NOT NULL, {ts} TEXT NOT NULL);\n"

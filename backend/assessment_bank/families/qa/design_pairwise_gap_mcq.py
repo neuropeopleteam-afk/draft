@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import itertools
 
-from assessment_bank.gen_utils import build_variant, make_rng, text_table
+from assessment_bank.gen_utils import build_variant, make_rng, plural, text_table
 from assessment_bank.schema import AnswerKey, Check
 
 from ._qa_utils import balanced_options, check_lengths
@@ -132,7 +132,7 @@ def generate(seed: int):
     sizes = " × ".join(str(len(p[1])) for p in params) + f" = {total}"
     stem = (f"Тестируется {ctx}. Параметры конфигурации и их значения: "
             + "; ".join(f"{n} — {', '.join(v)}" for n, v in params)
-            + f" (полный перебор — {sizes} комбинаций). Тестировщик составил набор из {len(rows)} "
+            + f" (полный перебор — {sizes} {plural(total, "комбинация", "комбинации", "комбинаций")}). Тестировщик составил набор из {len(rows)} "
             f"тестов и утверждает, что он покрывает все пары значений (pairwise). Какая из пар "
             f"значений не встречается ни в одном тесте набора?")
     ak = AnswerKey(kind="option", value=key,
