@@ -113,6 +113,9 @@ export function CandidateDetail() {
   const { data: c, loading, error, reload } = useApi<any>(`/employer/candidates/${ref}?${qs.toString()}`);
   const [modal, setModal] = useState<"" | "probe" | "invite">("");
   const [msg, setMsg] = useState<string | null>(null);
+  // бюджет потребности — потолок вилки по умолчанию в зонде и приглашении
+  const needReq = useApi<any>(need ? `/employer/needs/${need}` : null).data?.requirements;
+  const needSalary = needReq ? { from: needReq.salary_from, to: needReq.salary_to, net: needReq.salary_net } : undefined;
   if (loading && !c) return <Loading />;
   if (error || !c) return <Alert>{error}</Alert>;
   return (
@@ -153,10 +156,10 @@ export function CandidateDetail() {
         </section>
       )}
       <Modal open={modal === "probe"} onClose={() => setModal("")} title="Зонд кандидату">
-        <ProbeForm refs={[c.ref]} needId={need ?? undefined} market={c.market_range} onDone={() => { setModal(""); void reload(); }} />
+        <ProbeForm refs={[c.ref]} needId={need ?? undefined} market={c.market_range} needSalary={needSalary} onDone={() => { setModal(""); void reload(); }} />
       </Modal>
       <Modal open={modal === "invite"} onClose={() => setModal("")} title="Приглашение-оффер">
-        <InviteForm cref={c.ref} needId={need} market={c.market_range} onDone={() => { setModal(""); setMsg("Приглашение отправлено. Кандидат получит письмо; контакты откроются после принятия."); void reload(); }} />
+        <InviteForm cref={c.ref} needId={need} market={c.market_range} needSalary={needSalary} onDone={() => { setModal(""); setMsg("Приглашение отправлено. Кандидат получит письмо; контакты откроются после принятия."); void reload(); }} />
       </Modal>
     </div>
   );
