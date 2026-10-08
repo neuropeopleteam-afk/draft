@@ -9,7 +9,7 @@ range len − overlap (теряет короткие документы), фра
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, make_rng, py_harness
+from assessment_bank.gen_utils import build_variant, make_rng, plural, py_harness
 from assessment_bank.schema import AnswerKey, Check
 
 from ._dm_utils import balanced_options
@@ -86,8 +86,8 @@ def generate(seed: int):
     for o in opts:
         checks.append(Check(name=f"option:{o.id}", runner="python", program=py_harness(o.code, tests),
                             embeds_display_code=False, expect="pass" if o.id == key else "fail"))
-    stem = (f"RAG-ассистент отвечает по корпусу «{ctx}». Документ разбивается на фрагменты по "
-            f"size = {size} токенов с перекрытием overlap = {overlap} токенов, фрагменты "
+    stem = (f"RAG-ассистент отвечает по корпусу «{ctx}». Документ разбивается на фрагменты "
+            f"с параметрами size = {size} и overlap = {overlap} (в токенах), фрагменты "
             f"индексируются для поиска. Пользователи жалуются, что ассистент не находит сведения "
             f"из конца длинных документов. Требования к нарезке: каждый токен входит хотя бы в "
             f"один фрагмент; соседние фрагменты перекрываются ровно на overlap токенов; последний "
@@ -105,7 +105,7 @@ def generate(seed: int):
            "step_len": "фрагменты длины step вместо size — перекрытия нет"}
     ak = AnswerKey(kind="option", value=key,
                    explanation=f"range(0, len − size, step) не доходит до конца: хвост документа "
-                               f"(для документа из {n_doc} токенов — последние {lost}) не попадает ни в один фрагмент. Верно — "
+                               f"(для документа из {n_doc} {plural(n_doc, 'токена', 'токенов', 'токенов')} — последние {lost}) не попадает ни в один фрагмент. Верно — "
                                "идти до len и остановиться, как только фрагмент дошёл до конца. "
                                "Ошибки дистракторов: " + "; ".join(why[d] for d in chosen) + ".")
     return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, options=opts, answer_key=ak,

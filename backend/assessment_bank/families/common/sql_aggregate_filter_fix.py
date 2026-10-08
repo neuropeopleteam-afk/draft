@@ -74,7 +74,9 @@ def generate(seed: int):
     buggy = (f"SELECT {subj}\nFROM {T}\nWHERE status = '{st}'\n  AND {dcol} >= '{y}-01-01' "
              f"AND {dcol} < '{y + 1}-01-01'\n  AND COUNT(*) >= {k}\nGROUP BY {subj}\nORDER BY {subj};")
     correct = _q("good", T, subj, dcol, st, k, y)
-    opts, key = make_options(rng, (correct, correct), [(_q(d, T, subj, dcol, st, k, y),) * 2 for d in chosen])
+    # текст варианта — нейтральная подпись, сам запрос показывается один раз (в блоке кода)
+    label = "Заменить запрос на:"
+    opts, key = make_options(rng, (label, correct), [(label, _q(d, T, subj, dcol, st, k, y)) for d in chosen])
     setup = (f"CREATE TABLE {T} (id INTEGER PRIMARY KEY, {subj} INTEGER NOT NULL, "
              f"status TEXT NOT NULL, {dcol} TEXT NOT NULL);\n"
              + sql_inserts(T, ["id", subj, "status", dcol], rows) + "\n")

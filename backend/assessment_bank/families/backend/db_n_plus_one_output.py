@@ -88,7 +88,7 @@ def generate(seed: int):
            "cache_per_item": f"кэш создаётся заново (`{{}}`) для каждой строки и не помогает: 1 + {n}",
            "prefetch_in": "1 запрос списка + 1 запрос с IN по всем id",
            "join": "один запрос с JOIN"}[strategy]
-    ak = AnswerKey(kind="output", value=out, explanation=f"Отобрано {n} строк; запросов: {why}.")
+    ak = AnswerKey(kind="output", value=out, explanation=f"Отобрано строк: {n}; запросов: {why}.")
     checks = [Check(name="stdout", runner="python", program=code, expect="stdout_equals",
                     expected_stdout=out)]
     return build_variant(FAMILY_ID, seed, stem=stem, code=code, answer_key=ak, context=ctx,

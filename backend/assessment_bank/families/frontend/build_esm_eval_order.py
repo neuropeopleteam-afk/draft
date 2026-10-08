@@ -19,7 +19,7 @@ POOL = [("config", "config", "{ apiBase: '/api' }"), ("api", "api", "{ get: () =
         ("logger", "log", "(m) => m"), ("store", "store", "{ state: {} }"),
         ("i18n", "t", "(k) => k"), ("analytics", "track", "() => {}"),
         ("theme", "theme", "{ dark: false }"), ("router", "router", "{ routes: [] }")]
-CTX = ["админ-панель", "личный кабинет", "лендинг", "дашборд аналитики", "PWA-приложение"]
+CTX = ["админ-панель", "личный кабинет", "лендинг", "дашборд аналитики", "PWA"]
 
 
 def _evaluate(mods, entry):

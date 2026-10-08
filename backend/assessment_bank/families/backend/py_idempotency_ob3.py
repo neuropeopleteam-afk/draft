@@ -12,7 +12,7 @@ from assessment_bank.schema import AnswerKey, Check
 FAMILY_ID = "backend.py.idempotency_ob3"
 
 PROVIDERS = [("ЮKassa-подобный эквайринг", "payment", "интернет-магазин"),
-             ("платёжный шлюз", "charge", "подписочный сервис"),
+             ("платёжный шлюз", "charge", "биллинг подписок"),
              ("агрегатор СБП", "transfer", "маркетплейс"),
              ("биллинг партнёра", "invoice", "B2B-платформа")]
 

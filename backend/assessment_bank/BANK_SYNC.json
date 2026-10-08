@@ -1,9 +1,9 @@
 {
   "source": "/home/user/workspace/spectrek/bank",
-  "commit": "1e44580",
+  "commit": "c4fd38c",
   "dirty_files": 0,
-  "content_hash": "57033ea404b8efae",
-  "synced_at": "2026-10-08T14:53:21+00:00",
+  "content_hash": "a086bd7ad2304eb0",
+  "synced_at": "2026-10-08T15:54:32+00:00",
   "n_families": 164,
   "by_direction": {
     "backend": {
@@ -85,7 +85,7 @@
       "n_families": 164,
       "n_variants_generated": 3280,
       "n_unique_variants": 3261,
-      "n_checks": 1359,
+      "n_checks": 1361,
       "n_checks_failed": 0,
       "status": {
         "PASS": 152,
@@ -109,7 +109,7 @@
         "open_answer": 11,
         "mcq_concept": 28
       },
-      "seconds": 131.9
+      "seconds": 92.1
     },
     "seeds": 20,
     "verify_seeds": 3

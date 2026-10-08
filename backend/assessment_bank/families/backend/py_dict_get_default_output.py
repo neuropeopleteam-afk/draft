@@ -8,7 +8,7 @@
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, make_rng
+from assessment_bank.gen_utils import build_variant, make_rng, plural
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "backend.py.dict_get_default_output"
@@ -51,7 +51,7 @@ def generate(seed: int):
     stem = (f"Python ({ctx}). Что напечатает программа? Запишите вывод построчно, как печатает `print` "
             f"(отсутствие значения печатается как `None`).")
     why = (f"В цикле `get(item, 0) + 1` создаёт счётчик для каждого встреченного ключа: {probe!r} встречается "
-           f"{counts[probe]} раз, разных ключей {len(counts)}. `get({missing!r}, {default})` возвращает умолчание "
+           f"{counts[probe]} {plural(counts[probe], "раз", "раза", "раз")}, разных ключей {len(counts)}. `get({missing!r}, {default})` возвращает умолчание "
            f"{default}, а `get({missing!r})` без умолчания — None; ни то, ни другое ключ в словарь не добавляет.")
     ak = AnswerKey(kind="output", value=expected, explanation=why)
     checks = [Check(name="run", runner="python", program=code, expect="stdout_equals", expected_stdout=expected)]

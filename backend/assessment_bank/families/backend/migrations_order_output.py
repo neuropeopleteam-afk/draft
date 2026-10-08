@@ -16,7 +16,7 @@ FAMILY_ID = "backend.migrations.order_output"
 TABLES = [("users", ["email", "phone", "city"]), ("orders", ["total", "status", "paid_at"]),
           ("products", ["price", "sku", "brand"]), ("payments", ["amount", "provider"]),
           ("tickets", ["priority", "assignee"]), ("invoices", ["due_date", "client_id"])]
-CONTEXTS = ["интернет-магазин", "CRM", "сервис бронирования", "биллинг", "служба поддержки",
+CONTEXTS = ["интернет-магазин", "CRM", "бронирование", "биллинг", "служба поддержки",
             "маркетплейс"]
 
 

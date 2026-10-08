@@ -17,7 +17,7 @@ from assessment_bank.schema import AnswerKey, Check
 FAMILY_ID = "backend.time.add_months_fix"
 
 CONTEXTS = [("next_charge_date", "start", "months", "дату следующего списания по подписке",
-             "подписочный сервис"),
+             "биллинг подписок"),
             ("installment_due", "issued", "months", "дату очередного платежа по рассрочке",
              "рассрочка"),
             ("license_until", "start", "months", "дату окончания лицензии", "продажа лицензий"),

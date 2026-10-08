@@ -11,7 +11,7 @@
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, changed_lines, make_rng
+from assessment_bank.gen_utils import build_variant, changed_lines, make_rng, plural
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "backend.kafka.partition_key_bug"
@@ -164,11 +164,11 @@ def generate(seed: int):
               Check(name="fixed_passes", runner="python", program=prelude + fixed + test, expect="pass",
                     embeds_display_code=False)]
     chain = " → ".join(statuses)
-    stem = (f"Kafka, {c}: события {ent} публикуются в топик `{topic}` ({n_partitions} партиций) и должны "
+    stem = (f"Kafka, {c}: события {ent} публикуются в топик `{topic}` ({n_partitions} {plural(n_partitions, "партиция", "партиции", "партиций")}) и должны "
             f"обрабатываться в порядке {chain}. Потребитель (одна группа, по экземпляру на партицию) иногда получает "
             f"`{statuses[-1]}` раньше `{statuses[1]}` для {same}. Укажите номер строки с ошибкой.")
     why = (f"Строка {key}: ключ сообщения — статус, а партиция выбирается хэшем ключа (murmur2), поэтому события "
-           f"одного {ent} попадают в разные партиции, и порядок между ними Kafka не гарантирует. Ключом должен быть "
+           f"{same} попадают в разные партиции, и порядок между ними Kafka не гарантирует. Ключом должен быть "
            f"`{id_field}`: все события {ent} — в одной партиции, порядок внутри неё сохраняется.")
     ak = AnswerKey(kind="line", value=key, explanation=why)
     return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=c,

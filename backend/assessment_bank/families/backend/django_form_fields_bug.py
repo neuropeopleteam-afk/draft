@@ -27,6 +27,14 @@ CONTEXTS = [("профиль пользователя", "Profile", "ProfileForm"
              "is_editor", "royalty")]
 
 
+# подписи первого поля формы — по смыслу поля (всегда четыре, чтобы не менять выбор по seed)
+LABELS = {"display_name": ["Имя", "Как вас показывать", "Публичное имя", "Отображаемое имя"],
+          "shop_name": ["Название", "Название магазина", "Как называется магазин", "Название витрины"],
+          "nickname": ["Имя", "Игровое имя", "Ник", "Псевдоним"],
+          "headline": ["Должность", "Заголовок", "Желаемая должность", "Заголовок резюме"],
+          "pen_name": ["Имя", "Псевдоним", "Литературный псевдоним", "Как вас подписывать"]}
+
+
 def _code(c, buggy: bool, meta_extra: list[str], meta_first: bool, doc: bool, sizes: tuple[int, int, int],
           clean: bool) -> tuple[str, int]:
     _ctx, model, form, fn, edit, flag, num = c
@@ -84,7 +92,7 @@ def generate(seed: int):
     c = rng.choice(CONTEXTS)
     ctx, model, form, fn, edit, flag, num = c
     sizes = (rng.choice([30, 40, 50, 64, 80]), rng.choice([200, 300, 500, 1000]), rng.choice([0, 1, 10]))
-    label = rng.choice(["Имя", "Как вас показывать", "Публичное имя", "Подпись"])
+    label = rng.choice(LABELS[edit[0]])
     extra_pool = [f'        labels = {{"{edit[0]}": "{label}"}}',
                   f'        help_texts = {{"{edit[1]}": "До {sizes[1]} символов"}}',
                   f'        widgets = {{"{edit[1]}": forms.Textarea(attrs={{"rows": 3}})}}']

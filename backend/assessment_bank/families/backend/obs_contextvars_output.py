@@ -17,7 +17,7 @@ FAMILY_ID = "backend.obs.contextvars_output"
 
 CHILDREN = [("audit", "аудит"), ("notify", "уведомления"), ("send_metric", "метрики"),
             ("publish_event", "события")]
-CONTEXTS = ["API заказов", "платёжный шлюз", "сервис профилей", "API поиска", "сервис доставки"]
+CONTEXTS = ["API заказов", "платёжный шлюз", "профили пользователей", "API поиска", "доставка"]
 HANDLE_STEPS = ["direct", "task", "thread", "executor"]
 
 

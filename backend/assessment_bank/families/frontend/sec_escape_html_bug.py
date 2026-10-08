@@ -84,6 +84,18 @@ def _generate(seed: int, family_id: str, subtypes):
     checks = [Check(name="buggy_fails", runner="node", program=js_harness(buggy, test), expect="fail"),
               Check(name="fixed_passes", runner="node", program=js_harness(fixed, test),
                     expect="pass", embeds_display_code=False)]
+    # Равноценная строка (calibration/panel_20261005_ext2: 18 из 45 ответов на raw_field — строка шаблона,
+    # 9 — ключ): значение поля можно экранировать и при подстановке в шаблон — это тоже правка одной строки.
+    alt_line, alt_fixed = None, None
+    if subtype == "raw_field":
+        tpl_line = good["tpl"]
+        alt_tpl = (f"  return `<li class=\"{css}\" data-{fa}=\"${{{esc_name}({fa})}}\">"
+                   f"<b>${{{esc_name}({fa})}}</b>: ${{{ft}}}</li>`;")
+        alt_line = buggy.splitlines().index(tpl_line) + 1
+        alt_fixed = "\n".join(alt_tpl if ln == tpl_line else ln for ln in buggy.splitlines())
+        assert changed_lines(buggy, alt_fixed) == {alt_line}
+        checks.append(Check(name=f"alt_fix:{alt_line}", runner="node", program=js_harness(alt_fixed, test),
+                            expect="pass", embeds_display_code=False))
     field_ru = "имени автора" if payload[0] == fa else "тексте"
     stem = (f"Функция `{fn}` ({ctx}) собирает HTML, который вставляется в страницу через "
             f"`innerHTML`. На проверке безопасности выяснилось, что при значении "
@@ -97,12 +109,15 @@ def _generate(seed: int, family_id: str, subtypes):
            "unquoted_attr": "значение атрибута без кавычек: пробел завершает значение, и "
                             "следующее слово становится новым атрибутом (onmouseover), "
                             "экранирование < > & \" этого не предотвращает"}
-    ak = AnswerKey(kind="line", value=key_line,
+    extra = (f" Засчитывается и строка {alt_line}: значение можно экранировать при подстановке в шаблон — "
+             f"это тоже исправление одной строки." if alt_line else "")
+    ak = AnswerKey(kind="line", value=key_line, accept=[str(alt_line)] if alt_line else [],
                    explanation=f"Строка {key_line}: {why[subtype]}. В реальном коде надёжнее "
-                               f"textContent или шаблонизатор с автоэкранированием.")
+                               f"textContent или шаблонизатор с автоэкранированием.{extra}")
     return build_variant(family_id, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="xss_escaping",
-                         params={"fixed_code": fixed, "subtype": subtype})
+                         params={"fixed_code": fixed, "subtype": subtype,
+                                 **({"alt_fixes": {str(alt_line): alt_fixed}} if alt_line else {})})
 
 
 
