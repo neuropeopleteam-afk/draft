@@ -39,7 +39,7 @@
 Изменяющие состояние маршруты, после которых другие проверки могут сломаться (сброс песочницы, завершение теста,
 отзыв согласия), перечислите в LAST — они выполняются в конце.
 Политики для маршрутов веток, ещё не влитых в integ (contact, passport, infra2, tasks, status, realdata, jury-test,
-integrity), уже добавлены — несуществующие маршруты тест пропускает молча (см. отчёт <внутренний документ>).
+integrity, proctor, 2fa), уже добавлены — несуществующие маршруты тест пропускает молча (см. отчёт <внутренний документ>).
 """
 from __future__ import annotations
 
@@ -113,6 +113,17 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/auth/token"): "open",
     ("POST", "/api/auth/verify-email"): "open",
     ("POST", "/api/auth/resend-code"): "open",
+    # второй фактор (feat/2fa, tf01): подключение/проверка/отключение/новые коды — любой вошедший (аноним 401; без тела 422);
+    # /verify — второй шаг входа без JWT (промежуточный токен в теле), поэтому открыт; /api/admin/2fa/* — только admin
+    ("GET", "/api/auth/2fa"): "auth",
+    ("POST", "/api/auth/2fa/setup"): "auth",
+    ("POST", "/api/auth/2fa/confirm"): "auth",
+    ("POST", "/api/auth/2fa/check"): "auth",
+    ("POST", "/api/auth/2fa/disable"): "auth",
+    ("POST", "/api/auth/2fa/recovery-codes"): "auth",
+    ("POST", "/api/auth/2fa/verify"): "open",
+    ("GET", "/api/admin/2fa/users"): "admin",
+    ("POST", "/api/admin/2fa/reset"): "admin",
     ("GET", "/api/fsp-id/config"): "open",
     ("POST", "/api/fsp-id/start"): "open",
     ("GET", "/api/fsp-id/callback"): "open404",  # без настроенного ФСП ID — 404
@@ -171,6 +182,17 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/assessment/grade-hint"): "candidate",  # feat/jury-test
     ("GET", "/api/assessment/sessions/{session_id}/result"): "candidate_own",
     ("POST", "/api/assessment/sessions/{session_id}/accept-lower"): "candidate_own",
+    # камера по согласию (feat/proctor, pc01): только кандидат; сессия — своя (чужая → 404); работодателю API нет,
+    # агрегат ФСП — аналитик и администратор (в песочнице жюри — персона «Федерация»)
+    ("GET", "/api/proctor/consent"): "candidate",
+    ("POST", "/api/proctor/consent"): "candidate",
+    ("DELETE", "/api/proctor/consent"): "candidate",
+    ("GET", "/api/proctor/me/sessions"): "candidate",
+    ("GET", "/api/proctor/sessions/{session_id}"): "candidate_own",
+    ("POST", "/api/proctor/sessions/{session_id}/start"): "candidate_own",
+    ("POST", "/api/proctor/sessions/{session_id}/events"): "candidate_own",
+    ("POST", "/api/proctor/sessions/{session_id}/stop"): "candidate_own",
+    ("GET", "/api/proctor/stats"): "fsp",
     # ---------------------------------------------------------------- кандидат: зонды, приглашения, кубки, отклики
     ("GET", "/api/candidate/probes"): "candidate",
     ("GET", "/api/candidate/probes/{probe_id}"): "candidate_own",
@@ -376,6 +398,7 @@ LAST: tuple[tuple[str, str], ...] = (
     ("POST", "/api/employer/cups/{cup_id}/finish"),
     ("POST", "/api/assessment/sessions/{session_id}/finish"),
     ("POST", "/api/assessment/sessions/{session_id}/accept-lower"),
+    ("DELETE", "/api/proctor/consent"),  # отзыв согласия останавливает камеру в открытых сессиях
     ("POST", "/api/jury/live/room/clear"),
     ("POST", "/api/jury/reset"),
     ("DELETE", "/api/jury/sandbox"),
