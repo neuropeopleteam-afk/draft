@@ -7,4 +7,5 @@ export const fspSections: Section[] = [
   { path: "funnel", title: "Воронки", description: "Соревнование → приглашение → принятие." },
   { path: "cups", title: "Кубки работодателей", description: "Кубки на платформе как мероприятия: участники, места, приглашения." },
   { path: "method", title: "Методика и выгрузки", description: "Правила обезличивания, источники, CSV." },
+  { path: "security", title: "Безопасность входа", description: "Второй фактор: код из приложения-аутентификатора (TOTP)." },
 ];

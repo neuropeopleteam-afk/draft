@@ -3,8 +3,9 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { AuthShell } from "../../components/AuthShell";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, dateOnly, Empty, errText, Loading, Seg, useApi, years } from "../../components/ui";
-import { api, tokenStore } from "../../lib/api";
+import { api, isChallenge, tokenStore, type AuthResult } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
+import { challengePath } from "../../lib/twofa";
 
 /* Экспертная разметка: A — пары «потребность — кандидат», B — ответы по рубрике, C — пороги грейдов (Ангофф).
    Всё вслепую: без рангов, баллов и меток системы. Каждая оценка сохраняется сразу, вернуться можно в любой момент. */
@@ -24,6 +25,7 @@ export const panelSections = [
   { path: "answers", title: "B · Ответы", description: "Оценка ответов по рубрике" },
   { path: "angoff", title: "C · Пороги грейдов", description: "Метод Ангоффа" },
   { path: "review", title: "Очередь проверки", description: "Ответы кандидатов на проверке" },
+  { path: "security", title: "Безопасность входа", description: "Второй фактор: код из приложения-аутентификатора" },
 ];
 
 function Bar({ done, total }: { done: number; total: number }) {
@@ -53,7 +55,8 @@ export function ExpertInvite() {
     (async () => {
       try {
         tokenStore.clear();
-        const r = await api<{ access_token: string }>("/expert-panel/enter", { body: { token }, auth: false });
+        const r = await api<AuthResult>("/expert-panel/enter", { body: { token }, auth: false });
+        if (isChallenge(r)) { navigate(challengePath(r, "/expert"), { replace: true }); return; }  // эксперт подключил код
         await signIn(r.access_token);
         navigate("/expert", { replace: true });
       } catch (e) { setErr(errText(e)); }

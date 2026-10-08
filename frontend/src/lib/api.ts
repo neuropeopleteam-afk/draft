@@ -3,6 +3,13 @@ export type Role = "candidate" | "employer" | "admin" | "expert" | "fsp_analyst"
 
 export interface UserOut { id: string; email: string; role: Role; is_email_verified: boolean; created_at: string }
 export interface TokenOut { access_token: string; token_type: string; expires_in: number; user: UserOut }
+/** Пароль (ссылка, один клик) принят, входа ещё нет: нужен код из приложения или обязательное подключение второго фактора. */
+export interface TwoFactorChallenge {
+  second_factor_required: true; pending_token: string; expires_in: number; setup_required: boolean; methods: string[];
+  email: string; role: Role; landing?: string | null; persona?: string | null; scenario?: string | null; shared?: boolean | null;
+}
+export type AuthResult = TokenOut | TwoFactorChallenge;
+export const isChallenge = (r: unknown): r is TwoFactorChallenge => !!r && typeof r === "object" && (r as any).second_factor_required === true;
 export interface RegisterOut { user_id: string; email: string; role: Role; email_verification_required: boolean; dev_verification_code: string | null }
 export interface CandidateProfile {
   full_name: string | null; phone: string | null; telegram: string | null; city: string | null;
@@ -89,10 +96,11 @@ async function fetchRetry(url: string, init: RequestInit, tries = 3, timeoutMs =
   }
 }
 
-export async function api<T>(path: string, opts: { method?: string; body?: unknown; auth?: boolean } = {}): Promise<T> {
+export async function api<T>(path: string, opts: { method?: string; body?: unknown; auth?: boolean; token?: string } = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
-  const token = tokenStore.get();
+  // token — явный токен вместо сохранённого (промежуточный токен второго фактора, lib/twofa.ts)
+  const token = opts.token ?? tokenStore.get();
   if (opts.auth !== false && token) headers.Authorization = `Bearer ${token}`;
   const method = opts.method ?? (opts.body !== undefined ? "POST" : "GET");
   const init: RequestInit = { method, headers, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined };

@@ -17,6 +17,7 @@ from app.core.deps import require_role
 from app.core.enums import UserRole
 from app.core.errors import api_error
 from app.modules.auth.models import User
+from app.modules.auth import twofa
 from app.modules.auth.service import issue_token
 from app.modules.experts import service
 
@@ -55,6 +56,8 @@ def _panelist(db: Session, user: User):
 @router.post("/enter", summary="Вход эксперта по персональной ссылке (без регистрации)")
 def enter(data: EnterIn, db: Session = Depends(get_db)):
     user, pan = service.enter(db, data.token)
+    if twofa.enabled(db, user):  # эксперт по желанию подключил приложение: ссылка + код
+        return twofa.challenge(user, None, code=pan.code, landing="/expert").model_dump()
     tok = issue_token(user)
     return {**tok.model_dump(), "code": pan.code, "landing": "/expert"}
 

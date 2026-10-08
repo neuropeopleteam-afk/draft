@@ -30,6 +30,8 @@ from app.modules.assignments.router import employer_router as assignments_employ
 from app.modules.assessment.expert_router import router as expert_router
 from app.modules.assessment.router import router as assessment_router
 from app.modules.auth.router import router as auth_router
+from app.modules.auth.twofa_router import admin_router as twofa_admin_router
+from app.modules.auth.twofa_router import router as twofa_router
 from app.modules.catalog.router import router as catalog_router
 from app.modules.contact import router as contact
 from app.modules.experts.router import router as expert_panel_router
@@ -52,7 +54,7 @@ STATIC_DIR = Path(__file__).parent / "static"
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 TAGS = [
-    {"name": "auth", "description": "Регистрация, подтверждение почты, вход (JWT)"},
+    {"name": "auth", "description": "Регистрация, подтверждение почты, вход (JWT), второй фактор (TOTP)"},
     {"name": "profiles", "description": "Профиль текущего пользователя: кандидат или работодатель"},
     {"name": "candidate", "description": "Кандидат: опрос, согласия 152-ФЗ, приватность, ФСП ID, резюме, PDF-профиль"},
     {"name": "assessment", "description": "Тест на грейд и экран «Категория и грейд» (правило 90 дней, демо-режим жюри)"},
@@ -107,7 +109,7 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
-    for r in (auth_router, profiles_router, candidate_router, legal_router, assessment_router,
+    for r in (auth_router, twofa_router, twofa_admin_router, profiles_router, candidate_router, legal_router, assessment_router,
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
               expert_router, expert_panel_router, jury_router, validation_router,
               assignments_employer_router, assignments_candidate_router, passport_router,

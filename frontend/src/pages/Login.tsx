@@ -2,8 +2,9 @@ import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthShell, FormError } from "../components/AuthShell";
 import { FspIdLogin } from "../integrations/FspId";
-import { api, ApiError, type TokenOut } from "../lib/api";
+import { api, ApiError, isChallenge, type AuthResult } from "../lib/api";
 import { cabinetPath, useAuth } from "../lib/auth";
+import { challengePath } from "../lib/twofa";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -18,7 +19,9 @@ export default function Login() {
     e.preventDefault();
     setError(null); setUnverified(false); setBusy(true);
     try {
-      const r = await api<TokenOut>("/auth/login", { auth: false, body: { email, password } });
+      const r = await api<AuthResult>("/auth/login", { auth: false, body: { email, password } });
+      // второй фактор: пароль принят, код — на отдельном экране (или обязательное подключение для admin/fsp_analyst)
+      if (isChallenge(r)) { navigate(challengePath(r, cabinetPath(r.role))); return; }
       const me = await signIn(r.access_token);
       navigate(cabinetPath(me.role), { replace: true });
     } catch (err) {

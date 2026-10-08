@@ -1,4 +1,5 @@
-import { api, ApiError, type TokenOut } from "./api";
+import { api, ApiError, isChallenge, type TokenOut, type TwoFactorChallenge } from "./api";
+import { challengePath } from "./twofa";
 
 export type Persona = "candidate" | "candidate_nofsp" | "candidate_junior" | "candidate_new" | "employer" | "expert" | "fsp";
 export const JURY_DOMAIN = "@jury.example.com";
@@ -15,6 +16,7 @@ export const scenario = {
   set: (s: string | null | undefined) => { if (s) localStorage.setItem(KEY_SCENARIO, s); },
 };
 type JuryTokenOut = TokenOut & { landing: string; scenario: string | null; shared: boolean; persona: Persona };
+type JuryLoginOut = JuryTokenOut | (TwoFactorChallenge & { landing: string; scenario: string | null; persona: Persona });
 
 const KEY_ON = "jury_guide";
 const KEY_HIDDEN = "jury_guide_hidden";
@@ -31,22 +33,32 @@ export const guide = {
 };
 
 /** Токен персоны своей песочницы (первый вход создаёт песочницу; лимит исчерпан — общее демо). */
-export async function juryToken(persona: Persona): Promise<JuryTokenOut> {
-  const r = await api<JuryTokenOut>("/jury/login", { method: "POST", body: { persona, scenario: scenario.get() ?? "new" }, auth: false });
+async function juryEnter(persona: Persona): Promise<JuryLoginOut> {
+  const r = await api<JuryLoginOut>("/jury/login", { method: "POST", body: { persona, scenario: scenario.get() ?? "new" }, auth: false });
   scenario.set(r.scenario);
   return r;
 }
 
-export async function juryLogin(persona: Persona, signIn: (t: string) => Promise<unknown>): Promise<string> {
-  const r = await juryToken(persona);
-  await signIn(r.access_token);
+export async function juryToken(persona: Persona): Promise<JuryTokenOut> {
+  const r = await juryEnter(persona);
+  // персоне включили второй фактор (раздел «Безопасность входа»): токен без кода не выдаётся
+  if (isChallenge(r)) throw new ApiError(401, "second_factor_required", "У этой демо-персоны включён второй фактор: войдите в один клик на главной и введите код");
+  return r;
+}
+
+/** Вход в один клик. Возвращает адрес: кабинет персоны (или next), а если эксперт жюри включил этой персоне
+ *  второй фактор — экран ввода кода (/login/2fa), после которого откроется тот же адрес. */
+export async function juryLogin(persona: Persona, signIn: (t: string) => Promise<unknown>, next?: string): Promise<string> {
+  const r = await juryEnter(persona);
   guide.enable();
   // проводник переходит к первому шагу этой роли, если текущий шаг — за другую
   if (STEPS[guide.step()]?.persona !== persona) {
     const i = STEPS.findIndex((s) => s.persona === persona);
     if (i >= 0) guide.setStep(i);
   }
-  return r.landing;
+  if (isChallenge(r)) return challengePath(r, next ?? r.landing);
+  await signIn(r.access_token);
+  return next ?? r.landing;
 }
 
 /** Сброс своей песочницы. Нужен токен демо-персоны: если вход не выполнен (или вход не жюри) — входим в свою песочницу. */
@@ -107,8 +119,10 @@ export const STEPS: GuideStep[] = [
     text: "Кубки в категории кандидата. «Маршрутизация заказов» идёт — можно записаться и решить пять заданий на время. В завершённом «Платёжном шлюзе» у Марии 2-е место: приглашение получил только победитель, а участие записано в паспорт ФСП как мероприятие платформы (T1, не реестр)." },
   { title: "Задание работодателя с автопроверкой", persona: "employer", path: "/employer/assignments", match: /^\/(employer|candidate)\/assignments/, cta: "Задания с автопроверкой",
     text: "По стеку потребности или вакансии система собирает 3–5 заданий банка той же сложности и с той же проверкой, что в тесте; ключи остаются на сервере. Задание уходит кандидату вместо зонда со свободным ответом, прикрепляется к вакансии (откликнувшийся проходит его, результат — рядом с откликом) или открывается для всех — тогда оно само приходит в ленту «Задания для вас» кандидатам с подходящим стеком, с push. Мария уже решила задание по требованиям (4 из 5): факт T1 по навыкам виден в подборке и в «почему»; Илье задание пришло после отклика на вакансию." },
-  { title: "Кабинет ФСП", persona: "fsp", path: "/fsp", match: /^\/fsp(\/|$)/, cta: "Войти как ФСП",
+  { title: "Кабинет ФСП", persona: "fsp", path: "/fsp", match: /^\/fsp(\/(?!security)|$)/, cta: "Войти как ФСП",
     text: "Третья роль — федерация. Обезличенная аналитика: спрос работодателей по категориям и навыкам, какие дисциплины и разряды ФСП ведут к приглашениям, реальные вилки из офферов против рынка, воронка «соревнование → приглашение». Группы меньше 5 человек скрыты, есть выгрузки CSV. Демо-копии жюри в аналитику не входят." },
+  { title: "Второй фактор входа", persona: "fsp", path: "/fsp/security", match: /^\/fsp\/security/, cta: "Открыть безопасность входа",
+    text: "Для администратора и аналитика ФСП с реальной учётной записью вход — пароль плюс код из приложения-аутентификатора (TOTP, RFC 6238; Яндекс Ключ, Google Authenticator и любое другое). Без подключённого приложения после пароля открывается только его подключение. У демо-учёток жюри второй фактор отключён, чтобы вход в один клик работал; подключите его здесь по QR и проверьте: тот же код второй раз не принимается, после 5 неверных — пауза, резервные коды одноразовые. Вход в один клик под этой персоной начнёт спрашивать код — только у вас; «Сбросить демо» снимает подключение." },
   { title: "Живая демонстрация: QR", persona: "employer", path: "/jury/live", match: /^\/jury\/live/, cta: "Открыть демонстрацию",
     text: "Отсканируйте QR телефоном: мини-тест из 3 заданий банка без регистрации (адаптивно, ключи не покидают сервер) → экспресс-категория → через несколько секунд приглашение с вилкой по рынку категории. Push приходит на телефон; на iPhone — после «На экран Домой», а без этого страница обновится сама со звуком. На этом экране видно, как результат появляется в подборке работодателя, почему кандидат на своём месте и когда ушло приглашение. Зал — свой у каждой копии демо; «Очистить зал» удаляет только его гостей." },
   { title: "Как мы проверяем себя", persona: null, path: "/validation", match: /^\/validation/, cta: "Открыть /validation",

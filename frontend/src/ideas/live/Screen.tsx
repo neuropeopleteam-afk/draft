@@ -1,7 +1,7 @@
 // Большой экран «Демонстрация для жюри»: QR зала, счётчики, подборка работодателя с гостем, «почему»,
 // момент приглашения и лента событий. Работодатель своей песочницы жюри; вход — в один клик автоматически.
 import { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Alert, Level, catTitle, errText, range, ruText } from "../../components/ui";
 import { api, ApiError } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
@@ -14,6 +14,7 @@ const sidOf = (email?: string | null) => (email && email.includes("+") ? email.s
 export default function LiveScreen() {
   const { me, signIn, loading } = useAuth();
   const loc = useLocation();
+  const navigate = useNavigate();
   const [feed, setFeed] = useState<Feed | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [focus, setFocus] = useState<{ n: number; until: number } | null>(null);
@@ -34,7 +35,7 @@ export default function LiveScreen() {
     const ok = personaOf(me?.email) === "employer" && sidOf(me?.email) && (!want || sidOf(me?.email) === want);
     if (ok) { setReady(true); return; }
     setReady(false);
-    juryLogin("employer", signIn).then(() => setReady(true)).catch((e) => setError(errText(e)));
+    juryLogin("employer", signIn, "/jury/live").then((to) => (to === "/jury/live" ? setReady(true) : navigate(to))).catch((e) => setError(errText(e)));
   }, [loading, me?.email]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -57,7 +58,7 @@ export default function LiveScreen() {
         if (stop) return;
         if (e instanceof ApiError && (e.status === 401 || e.status === 403)) {
           setReady(false);  // песочница пересоздана или вход сменился — войти заново
-          juryLogin("employer", signIn).then(() => { s.rev = null; setReady(true); }).catch((x) => setError(errText(x)));
+          juryLogin("employer", signIn, "/jury/live").then((to) => { if (to !== "/jury/live") { navigate(to); return; } s.rev = null; setReady(true); }).catch((x) => setError(errText(x)));
           return;
         }
         setError(errText(e));
