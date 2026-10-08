@@ -68,13 +68,13 @@ def add_notification(db: Session, user_id: uuid.UUID, kind: str, dedupe_key: str
         from sqlalchemy.dialects.postgresql import insert
     else:
         from sqlalchemy.dialects.sqlite import insert
-    nid = uuid.uuid4()
-    r = db.execute(insert(UserNotification.__table__).values(
-        id=nid, user_id=user_id, kind=kind, dedupe_key=dedupe_key, title=title[:255], body=body, url=url,
+    t = UserNotification.__table__
+    nid = db.execute(insert(t).values(
+        id=uuid.uuid4(), user_id=user_id, kind=kind, dedupe_key=dedupe_key, title=title[:255], body=body, url=url,
         payload=payload or {}, channels=channels, digest=digest, created_at=now or utcnow(),
         delivery="pending" if channels else "done",
-    ).on_conflict_do_nothing(index_elements=["user_id", "dedupe_key"]))
-    return db.get(UserNotification, nid) if r.rowcount == 1 else None
+    ).on_conflict_do_nothing(index_elements=["user_id", "dedupe_key"]).returning(t.c.id)).scalar_one_or_none()
+    return db.get(UserNotification, nid) if nid is not None else None
 
 
 # ------------------------------------------------------------------ отправка
