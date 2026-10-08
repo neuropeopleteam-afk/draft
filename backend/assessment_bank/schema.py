@@ -19,15 +19,17 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Direction = Literal["common", "backend", "frontend", "data_ml", "qa", "security"]
-Grade = Literal["junior", "middle", "senior"]
+# intern — грейд «Стажёр» ниже Junior: информационная метка для лёгких семейств (b ≲ −1); CAT её не использует
+Grade = Literal["intern", "junior", "middle", "senior"]
 Format = Literal[
     "find_bug", "predict_output", "choose_fix", "open_book_3step", "mcq_concept", "open_answer"
 ]
-Language = Literal["python", "javascript", "typescript", "sql", "bash", "text"]
-Runner = Literal["python", "node", "bash", "git", "sqlite"]
+Language = Literal[
+    "python", "javascript", "typescript", "sql", "bash", "text", "go", "java", "dockerfile", "yaml"]
+Runner = Literal["python", "node", "bash", "git", "sqlite", "go", "java", "django"]
 Verification = Literal["execution", "reference_table", "rubric_only"]
 
-GRADES: tuple[str, ...] = ("junior", "middle", "senior")
+GRADES: tuple[str, ...] = ("intern", "junior", "middle", "senior")
 FORMATS: tuple[str, ...] = (
     "find_bug", "predict_output", "choose_fix", "open_book_3step", "mcq_concept", "open_answer",
 )

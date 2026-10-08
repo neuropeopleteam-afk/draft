@@ -4,7 +4,8 @@
 pytest недоступен. ``PYTEST_SHIM`` реализует ровно то подмножество, которое используют
 семейства qa: ``pytest.fixture`` (scope function/module/session, yield-фикстуры, autouse),
 ``pytest.mark.parametrize`` (в том числе несколько декораторов подряд), ``pytest.mark.skip``,
-``pytest.raises`` и встроенную фикстуру ``monkeypatch`` (setattr/setitem/delitem).
+``pytest.raises``, ``pytest.approx`` для чисел (rel=1e-6, abs=1e-12) и встроенную фикстуру
+``monkeypatch`` (setattr/setitem/delitem).
 Порядок подготовки фикстур повторяет алгоритм pytest 8 (getfixtureclosure → сортировка по
 области видимости → рекурсивная подготовка зависимостей), завершение — в обратном порядке
 внутри области. Совпадение с настоящим pytest 8.3.3 проверено при разработке на всех
@@ -132,10 +133,32 @@ class _BkMonkeyPatch:
         self._undo.clear()
 
 
+_bk_abs = abs
+
+
+class _BkApprox:
+    """pytest.approx для чисел: допуск rel=1e-6, abs=1e-12 (умолчания pytest), как у ApproxScalar."""
+
+    def __init__(self, expected, rel=None, abs=None):
+        self.expected, self.rel, self.abs_ = expected, rel, abs
+
+    def __eq__(self, actual):
+        rel = 1e-6 if self.rel is None else self.rel
+        tol = max(rel * _bk_abs(self.expected), 1e-12 if self.abs_ is None else self.abs_)
+        return _bk_abs(actual - self.expected) <= tol
+
+    def __ne__(self, actual):
+        return not self.__eq__(actual)
+
+    def __repr__(self):
+        return f"{self.expected} ± tol"
+
+
 _bk_pytest = _bk_types.ModuleType("pytest")
 _bk_pytest.fixture = _bk_fixture
 _bk_pytest.mark = _BkMark()
 _bk_pytest.raises = _bk_raises
+_bk_pytest.approx = _BkApprox
 _bk_pytest.fail = lambda msg="": (_ for _ in ()).throw(_BkFailed(msg))
 _bk_sys.modules["pytest"] = _bk_pytest
 

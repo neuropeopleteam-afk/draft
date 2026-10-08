@@ -1,0 +1,25 @@
+family_id: backend.java.gc_reachability_mcq
+title: Java — достижимость объектов и сборка мусора
+direction: backend
+skills: [java, java_memory, java_gc]
+target_grades: [junior, middle]
+format: mcq_concept
+language: java
+invariants:
+  code_lines: [17, 25]
+  operations: [13, 21]
+  n_options: 4
+  extra:
+    subtype: reachability_count
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.1
+  a: 1.0
+  sigma_variant: 0.4
+  basis: "3–5 объектов и 4–8 переназначений ссылок; нужно пройти граф ссылок от локальных переменных; дистракторы — число обнулённых переменных, число объектов без своей переменной, ±1; сложность варианта зависит от длины цепочки → σ повышена; Junior/Middle"
+generator: assessment_bank.families_retired.backend.java_gc_reachability_mcq
+version: 1
+description: >
+  Сколько объектов доступны для сборки мусора в отмеченной точке. Ключ проверяется исполнением модели
+  достижимости (обход графа ссылок от локальных переменных через поля next).

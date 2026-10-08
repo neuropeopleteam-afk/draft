@@ -1,0 +1,25 @@
+family_id: backend.go.defer_recover_output
+title: defer, panic/recover и именованные результаты в Go
+direction: backend
+skills: [go, go_defer, panic_recover, error_handling]
+target_grades: [middle]
+format: predict_output
+language: go
+invariants:
+  code_lines: [27, 27]
+  operations: [21, 21]
+  extra:
+    subtype: named_results_recover
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.3
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "26 строк, два вызова (без паники и с паникой), 7–9 строк вывода; нужно знать LIFO отложенных вызовов, вычисление аргументов в момент defer, recover только в отложенной функции и изменение именованных результатов после return; Middle"
+generator: assessment_bank.families.backend.go_defer_recover_output
+version: 1
+description: >
+  Предсказать вывод программы на Go с defer в цикле, отложенной печатью с аргументом, отложенным
+  замыканием с recover и именованными результатами. Ключ — модель порядка отложенных вызовов,
+  сверка исполнением показанного кода.

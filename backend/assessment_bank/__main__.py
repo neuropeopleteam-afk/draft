@@ -58,7 +58,10 @@ def main(argv: list[str] | None = None) -> int:
         (out / "validation_report.md").write_text(report_markdown(res), encoding="utf-8")
         s = res["summary"]
         print(json.dumps(s, ensure_ascii=False, indent=2))
-        return 1 if s.get("n_fail", 0) else 0
+        # код выхода 1, если хоть одно семейство FAIL (считается и по n_fail, и по счётчику статусов —
+        # на случай отчёта, собранного старой версией)
+        n_fail = int(s.get("n_fail") or 0) or int(dict(s.get("status") or {}).get("FAIL", 0) or 0)
+        return 1 if n_fail else 0
     if a.cmd == "simulate":
         from .simulation import run_all
         run_all(n=a.n, seed=a.seed, out_dir=a.out)
