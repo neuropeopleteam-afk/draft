@@ -22,10 +22,12 @@ grade_second (вторая оценка спорных ответов): LLM_MODE
 """
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass, field, replace
 import json
 import logging
 import re
+import ssl
 import threading
 import time
 from typing import Callable
@@ -317,6 +319,16 @@ def _endpoint(provider: str, s: Settings) -> tuple[str, dict[str, str], dict]:
     return (s.llm_base_url or "").rstrip("/") + "/chat/completions", _headers(s), {}
 
 
+def _verify(provider: str, s: Settings) -> ssl.SSLContext | bool:
+    """TLS для ретранслятора с собственным сертификатом (LLM_RELAY_CA_FILE) — доверяем только ему; иначе — обычная проверка."""
+    if provider == "openrouter" and s.llm_relay_url:
+        if s.llm_relay_ca_file:
+            return ssl.create_default_context(cafile=s.llm_relay_ca_file)
+        if s.llm_relay_ca_pem_b64:
+            return ssl.create_default_context(cadata=base64.b64decode(s.llm_relay_ca_pem_b64).decode())
+    return True
+
+
 def _attempt(route: Route, messages: list[dict], *, temperature: float, max_tokens: int, want_json: bool,
              client: httpx.Client | None, validate: Callable[[object], bool] | None) -> LLMResult:
     s = get_settings()
@@ -329,7 +341,7 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
     t0 = time.monotonic()
     try:
         c = client or httpx.Client(timeout=httpx.Timeout(route.timeout_s, connect=min(5.0, route.timeout_s)),
-                                   transport=_TRANSPORT)
+                                   transport=_TRANSPORT, verify=_verify(route.provider, s))
         try:
             r = c.post(url, headers=headers, json=body)
         finally:
