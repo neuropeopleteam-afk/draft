@@ -209,7 +209,7 @@ function JuryBlock() {
           ))}
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { guide.enable(); guide.setStep(0); navigate("/register?role=candidate"); }}>
+          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { guide.enable(); guide.show(); guide.setStep(0); navigate("/register?role=candidate"); }}>
             Начать проводник с регистрации
           </button>
           <button className="font-semibold text-brand-plum underline-offset-2 hover:underline disabled:opacity-50" disabled={!!busy} onClick={reset}>
