@@ -5,8 +5,13 @@
   время вне вкладки), вставка текста (число вставок и символов). Клиенту доверять нельзя — поэтому сигналы
   клиента только понижают достоверность, но никогда её не повышают; отсутствие сигналов (ответы в обход
   интерфейса, через API) — тоже причина;
-* **сервер**: время ответа по часам сервера. «Аномально быстро» — быстрее max(5 с, 8 % рекомендуемого
-  времени задания); быстрый верный ответ — признак предзнания, быстрый неверный — угадывания;
+* **сервер**: время ответа по часам сервера относительно ожидаемого времени семейства на уровне кандидата и длины
+  текста задания (``fast_threshold_s``, Ф3 08.10; раньше — max(5 с, 8 % рекомендуемого времени), что ловило честный
+  быстрый проход опытного разработчика). Два порога: «мгновенно» (``instant_threshold_s``) — быстрее, чем текст
+  задания можно даже пробежать глазами; «быстро» — быстрее и доли ожидаемого времени семейства на уровне θ, и доли
+  времени беглого чтения. Быстрый верный ответ — признак предзнания, быстрый неверный — угадывания. В экспрессе и
+  в демо-режиме жюри (soft_fast) быстрые, но не мгновенные верные ответы без других сигналов достоверность не
+  понижают: работодатель видит мягкую пометку «стоит уточнить зондом»;
 * **оценщик открытых ответов**: ответ с инструкциями для модели (grader.injection_signals) не оценивается
   LLM, уходит эксперту и понижает достоверность;
 * **детектор предзнания** (``assessment_bank.psychometrics.CanaryDetector``): канарейки — намеренно
@@ -39,13 +44,28 @@
 from __future__ import annotations
 
 import logging
+import math
 from typing import Any, Callable
+
+from app.core.fmt import ru_num
 
 log = logging.getLogger("assessment.integrity")
 
 LEVEL_TITLES = {"high": "высокая", "medium": "средняя", "low": "низкая"}
-FAST_SHARE_OF_LIMIT = 0.08
-FAST_MIN_S = 5.0
+# Порог «быстро» (Ф3, 08.10): ожидаемое время семейства — как в модели времени банка (exp β = 0,45 · рекомендуемого
+# времени, pool_from_specs), на уровне кандидата короче в e^(0,3·(θ − b)) раз (|θ − b| ≤ 2: Senior на лёгком задании —
+# примерно вдвое быстрее); «быстро» — быстрее 12 % этого времени и половины времени беглого чтения текста задания.
+EXPECTED_SHARE_OF_LIMIT = 0.45
+SPEED_PER_LOGIT = 0.3
+SPEED_CLIP = 2.0
+FAST_SHARE_OF_EXPECTED = 0.12
+FAST_SHARE_OF_READ = 0.5
+# Беглое чтение: условие — 40 символов в секунду, код — 20; варианты ответа сравнивают, а не читают целиком — половина
+READ_CPS, CODE_CPS, OPTION_WEIGHT = 40.0, 20.0, 0.5
+# «Мгновенно» — быстрее пятой части времени беглого чтения (текст задания не прочитан), от 4 до 10 с
+INSTANT_SHARE_OF_READ, INSTANT_MIN_S, INSTANT_MAX_S = 0.2, 4.0, 10.0
+FAST_MIN_S = INSTANT_MIN_S
+SOFT_FAST_NOTE = "стоит уточнить зондом"
 MAX_SIGNAL = 10_000
 BASE_KEYS = ("focus_lost", "hidden_ms", "paste", "paste_chars", "copy")
 # Новые сигналы интерфейса (И9) — в словаре, только если клиент их прислал (старые клиенты и API не наказываются
@@ -110,15 +130,73 @@ def typing_flags(sig: dict | None, text_len: int) -> list[str]:
     return out
 
 
-def is_fast(time_s: float | None, time_limit_s: float) -> bool:
+def text_size(public: dict | None) -> tuple[int, int]:
+    """(символов условия и вариантов с весом, символов кода) открытой части задания — для порога «быстро»."""
+    pub = public or {}
+    opts = pub.get("options") or []
+    steps = pub.get("steps") or []
+    text = len(pub.get("stem") or "") + sum(len(s.get("prompt") or "") for s in steps if isinstance(s, dict))
+    text += OPTION_WEIGHT * sum(len(o.get("text") or "") + len(o.get("code") or "") for o in opts if isinstance(o, dict))
+    return int(text), len(pub.get("code") or "")
+
+
+def read_s(text_chars: float | None, code_chars: float | None) -> float | None:
+    """Время беглого чтения задания, с (None — длина текста неизвестна)."""
+    if text_chars is None and code_chars is None:
+        return None
+    return float(text_chars or 0) / READ_CPS + float(code_chars or 0) / CODE_CPS
+
+
+def instant_threshold_s(text_chars: float | None = None, code_chars: float | None = None) -> float:
+    r = read_s(text_chars, code_chars)
+    return INSTANT_MIN_S if r is None else min(INSTANT_MAX_S, max(INSTANT_MIN_S, INSTANT_SHARE_OF_READ * r))
+
+
+def expected_s(time_limit_s: float, theta: float | None = None, b: float | None = None) -> float:
+    """Ожидаемое время ответа на задание семейства для кандидата уровня θ (b — трудность семейства)."""
+    base = EXPECTED_SHARE_OF_LIMIT * float(time_limit_s)
+    if theta is None or b is None:
+        return base
+    return base * math.exp(-SPEED_PER_LOGIT * max(-SPEED_CLIP, min(SPEED_CLIP, float(theta) - float(b))))
+
+
+def fast_threshold_s(time_limit_s: float, *, text_chars: float | None = None, code_chars: float | None = None,
+                     theta: float | None = None, b: float | None = None) -> float:
+    """Порог «быстро»: быстрее доли ожидаемого времени семейства на уровне кандидата и доли беглого чтения текста,
+    но не ниже порога «мгновенно». Без длины текста — только по ожидаемому времени."""
+    by_expected = FAST_SHARE_OF_EXPECTED * expected_s(time_limit_s, theta, b)
+    r = read_s(text_chars, code_chars)
+    t = by_expected if r is None else min(by_expected, FAST_SHARE_OF_READ * r)
+    return max(instant_threshold_s(text_chars, code_chars), t)
+
+
+def is_fast(time_s: float | None, time_limit_s: float, *, text_chars: float | None = None,
+            code_chars: float | None = None, theta: float | None = None, b: float | None = None) -> bool:
     if time_s is None:
         return False
-    return float(time_s) < max(FAST_MIN_S, FAST_SHARE_OF_LIMIT * float(time_limit_s))
+    return float(time_s) < fast_threshold_s(time_limit_s, text_chars=text_chars, code_chars=code_chars, theta=theta, b=b)
 
 
-def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | None = None) -> dict:
+def is_instant(time_s: float | None, text_chars: float | None = None, code_chars: float | None = None) -> bool:
+    return time_s is not None and float(time_s) < instant_threshold_s(text_chars, code_chars)
+
+
+def _fast(i: dict, theta: float | None) -> bool:
+    return is_fast(i.get("time_s"), i["time_limit_s"], text_chars=i.get("text_chars"), code_chars=i.get("code_chars"),
+                   theta=theta, b=i.get("b"))
+
+
+def _instant(i: dict) -> bool:
+    return is_instant(i.get("time_s"), i.get("text_chars"), i.get("code_chars"))
+
+
+def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | None = None, *,
+           theta: float | None = None, soft_fast: bool = False) -> dict:
     """items — завершённые задания сессии: {format, canary, time_s, time_limit_s, score (0..1|None), signals,
-    injection, meta_claims, ai_mark_hit, fast_text, typing}; extra — сигналы сессии для внешних источников (SOURCES).
+    injection, meta_claims, ai_mark_hit, fast_text, typing, text_chars, code_chars, b}; extra — сигналы сессии для
+    внешних источников (SOURCES); theta — итоговая оценка уровня (для ожидаемого времени семейства); soft_fast —
+    экспресс или демо-режим жюри: быстрые (не мгновенные) верные ответы без других сигналов — мягкая пометка без
+    понижения достоверности.
 
     Возвращает {level, title, points, reasons[], signals{...}, sources[]}.
     """
@@ -128,11 +206,10 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
     n = len(scored)
     reasons: list[tuple[int, str, str]] = []  # (баллы, текст для работодателя, вид причины — KIND_TITLES)
 
-    fast_correct = [i for i in scored if is_fast(i["time_s"], i["time_limit_s"]) and (i.get("score") or 0) >= 0.5]
-    fast_wrong = [i for i in scored if is_fast(i["time_s"], i["time_limit_s"]) and i.get("score") is not None
-                  and i["score"] < 0.5]
-    canary_fast = [i for i in done if i.get("canary") and is_fast(i["time_s"], i["time_limit_s"])
-                   and (i.get("score") or 0) >= 0.5]
+    fast_correct = [i for i in scored if _fast(i, theta) and (i.get("score") or 0) >= 0.5]
+    instant_correct = [i for i in fast_correct if _instant(i)]
+    fast_wrong = [i for i in scored if _fast(i, theta) and i.get("score") is not None and i["score"] < 0.5]
+    canary_fast = [i for i in done if i.get("canary") and _fast(i, theta) and (i.get("score") or 0) >= 0.5]
 
     if pk.get("flagged"):
         reasons.append((3, "Детектор предзнания сработал: канарейки и время ответов похожи на знание ответов "
@@ -143,11 +220,6 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
         reasons.append((1, f"Канареечные задания (опубликованные варианты) решены аномально быстро: {len(canary_fast)}",
                         "assist"))
     if n:
-        share = len(fast_correct) / n
-        if share >= 0.25 and len(fast_correct) >= 2:
-            reasons.append((2, f"Аномально быстрые верные ответы: {len(fast_correct)} из {n}", "assist"))
-        elif len(fast_correct) >= 2 or (share >= 0.10 and fast_correct):
-            reasons.append((1, f"Аномально быстрые верные ответы: {len(fast_correct)} из {n}", "assist"))
         if len(fast_wrong) / n >= 0.3 and len(fast_wrong) >= 3:
             reasons.append((1, f"Много мгновенных неверных ответов ({len(fast_wrong)} из {n}) — похоже на угадывание",
                             "behavior"))
@@ -158,7 +230,7 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
     focus_total = sum((i["signals"].get("focus_lost") or 0) for i in with_sig)
     if len(focus_items) >= 5 or hidden_s >= 180:
         reasons.append((2, f"Уход со вкладки теста: {_n(len(focus_items), 'задание', 'задания', 'заданий')}, "
-                           f"{_n(focus_total, 'раз', 'раза', 'раз')}, вне вкладки {hidden_s / 60:.1f} мин", "behavior"))
+                           f"{_n(focus_total, 'раз', 'раза', 'раз')}, вне вкладки {ru_num(hidden_s / 60, 1)} мин", "behavior"))
     elif len(focus_items) >= 2 or hidden_s >= 30:
         reasons.append((1, f"Уход со вкладки теста: {_n(len(focus_items), 'задание', 'задания', 'заданий')}, "
                            f"{_n(focus_total, 'раз', 'раза', 'раз')}, вне вкладки {hidden_s:.0f} с", "behavior"))
@@ -190,6 +262,7 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
         reasons.extend(r)
         ext_signals.update(sig or {})
 
+    soft = _fast_reasons(reasons, fast_correct, instant_correct, n, soft_fast)
     points = sum(p for p, _, _ in reasons)
     level = "low" if points >= 3 else "medium" if points >= 1 else "high"
     ordered = sorted(reasons, key=lambda x: -x[0])
@@ -200,12 +273,35 @@ def assess(items: list[dict], preknowledge: dict | None = None, extra: dict | No
         # вид каждой причины (KIND_TITLES) — для общей формулировки кандидату (candidate_view, Р27)
         "kinds": [k for _, _, k in ordered] or ["none"],
         "signals": {"items": len(done), "scored": n, "fast_correct": len(fast_correct), "fast_wrong": len(fast_wrong),
+                    "instant_correct": len(instant_correct), "fast_soft": soft,
                     "canary_fast": len(canary_fast), "focus_lost_items": len(focus_items), "focus_lost_total": focus_total,
                     "hidden_s": round(hidden_s, 1), "paste_items": len(paste_items), "paste_chars": paste_chars,
                     "client_signals_items": len(with_sig), "preknowledge_flagged": bool(pk.get("flagged")),
                     "injection_items": len(inj), **ext_signals},
         "sources": [n for n, _ in SOURCES],
     }
+
+
+def _fast_reasons(reasons: list, fast_correct: list, instant_correct: list, n: int, soft_fast: bool) -> bool:
+    """Быстрые верные ответы → причина (добавляется в reasons). Считается последней: мягкий режим (экспресс, жюри)
+    действует, только если других сигналов нет. Возвращает True, если пометка мягкая (без баллов)."""
+    if not n or not fast_correct:
+        return False
+    share = len(fast_correct) / n
+    if soft_fast and not sum(p for p, _, _ in reasons):
+        if len(instant_correct) >= 2:  # мгновенные — текст задания не прочитан: помечаются и в мягком режиме
+            reasons.append((2 if len(instant_correct) / n >= 0.25 else 1,
+                            f"Мгновенные верные ответы: {len(instant_correct)} из {n}", "assist"))
+            return False
+        if len(fast_correct) >= 2 or share >= 0.10:
+            reasons.append((0, f"Быстрые верные ответы: {len(fast_correct)} из {n} — {SOFT_FAST_NOTE}", "none"))
+            return True
+        return False
+    if share >= 0.25 and len(fast_correct) >= 2:
+        reasons.append((2, f"Аномально быстрые верные ответы: {len(fast_correct)} из {n}", "assist"))
+    elif len(fast_correct) >= 2 or share >= 0.10:
+        reasons.append((1, f"Аномально быстрые верные ответы: {len(fast_correct)} из {n}", "assist"))
+    return False
 
 
 def summary_for_employer(integ: dict | None) -> dict | None:
@@ -236,6 +332,7 @@ CANDIDATE_NOTE = ("Оценку уровня и грейд пометка не �
 # Результаты, сохранённые до появления kinds (стенд до 07.10): вид причины — по началу текста
 _KIND_BY_PREFIX = (
     ("Детектор предзнания", "assist"), ("Канареечные задания", "assist"), ("Аномально быстрые верные", "assist"),
+    ("Мгновенные верные", "assist"), ("Быстрые верные", "none"),
     ("Вставка готового текста", "assist"), ("В развёрнутом ответе — невидимая метка", "assist"),
     ("Развёрнутый ответ появился быстрее", "assist"), ("Развёрнутый ответ в основном не набран", "assist"),
     ("Слишком ровный ритм", "assist"), ("В развёрнутом ответе — инструкции", "answer"),
