@@ -1,8 +1,22 @@
 {
-  "schema_version": 1,
-  "status": "partial_blocked_missing_sonnet_predictions",
+  "schema_version": 2,
+  "status": "complete_for_authorized_new_sonnet_run",
   "date": "2026-10-08",
   "task": "ТЖ Независимая проверка лишних тегов стека",
+  "comparison_run": {
+    "kind": "new_single_sonnet_run_authorized_by_headquarters_after_original_predictions_were_missing",
+    "original_run_reconstructed": false,
+    "date_utc": "2026-10-08T16:07:56Z",
+    "model": "anthropic/claude-sonnet-5.5",
+    "reasoning": "low",
+    "max_tokens": 2500,
+    "timeout_s": 25,
+    "concurrency": 3,
+    "llm_calls": 50,
+    "llm_replies_ok": 50,
+    "retries": 0,
+    "benchmark_key": "anthropic/claude-sonnet-5.5 (reasoning low, max_tokens 2500; new tags-judge run 2026-10-08)"
+  },
   "inputs": {
     "corpus": {
       "path": "docs/realdata/vacancies_50.json",
@@ -13,23 +27,29 @@
       "path": "docs/realdata/rules_predictions.json",
       "sha256": "a7e503e931285c4eec62a5c622007bcb98d2dcc08d1560cb2a35828855fa1e04"
     },
+    "sonnet_predictions": {
+      "path": "docs/llm/needs_sonnet_tags.json",
+      "sha256": "6568819164ebf7b96bfd644ecea27ceb398a3e920ab945d06265a6e3ff0a9128"
+    },
     "benchmark": {
+      "path": "docs/llm/needs_sonnet_rerun_bench.json",
+      "sha256": "2126b1042e497ca133d3638d113ade509d5be85db8f55a518a6478ef484f909e"
+    },
+    "original_benchmark": {
       "path": "docs/llm/needs_bench.json",
-      "sha256": "455ae737b8e32b4fcb777eab86e1fea24c3856407819d62c7331a03b10adf99e",
-      "model_key": "anthropic/claude-sonnet-5.5 (reasoning low, max_tokens 2500)"
+      "sha256": "455ae737b8e32b4fcb777eab86e1fea24c3856407819d62c7331a03b10adf99e"
     },
     "blind_input": {
-      "path": "docs/llm/extra_tags_judgement_blind_input.json",
-      "sha256": "c0ece76cc5e1968e2571a3d37202d4330dcb56db7256fd42f010466201861157"
+      "path": "docs/llm/extra_tags_judgement_blind_input_v2.json",
+      "sha256": "29686b282f2deacc0f23f739d9bb2be101ffbc0374ac5c0753a9ed7fc24dd2f6"
     },
     "frozen_verdicts": {
-      "path": "docs/llm/extra_tags_judgement_verdicts.json",
-      "sha256": "5712d70cbb406a518e15aab47bd9e3186d6e93a43903b9321db7c0d67b5d45d7"
+      "path": "docs/llm/extra_tags_judgement_verdicts_v2.json",
+      "sha256": "d81698ad1c26a8c264a6ab1c298c54decf1de79aebb879acf0f1f310cf994848"
     }
   },
   "reviewer": {
     "family": "OpenAI GPT",
-    "requested_model": "GPT 6.1 Sol",
     "model": "GPT 6.1 Sol",
     "runtime_model_id": "gpt_6_1_sol",
     "runtime_model_verified": true,
@@ -40,45 +60,71 @@
       "display_name": "GPT 6.1 Sol",
       "family": "OpenAI"
     },
-    "method": "Current GPT 6.1 Sol assistant evaluated neutral candidate-to-text pairs; no expert reviewers and no external model calls.",
     "disclaimer": "Проверка выполнена моделью другой семьи (GPT 6.1 Sol), не экспертами.",
-    "frozen_verdict_metadata_note": "Runtime identity was checked after the verdict file was frozen; its earlier unverified-identity metadata is preserved, with no judgement changes."
+    "expert_review": false
   },
   "blinding": {
-    "status": "partial_not_fully_blinded",
-    "no_per_candidate_provenance_in_review_input": true,
-    "no_per_candidate_extra_missing_label_in_review_input": true,
-    "source_labels_joined_after_verdict_file": true,
-    "limitations": [
-      "The task and missing prediction artifact reveal that available candidates come from the rules comparison.",
-      "The vac-001 rules example was seen before preparation of neutral input.",
-      "No claim of a fully blind rules-vs-Sonnet comparison is made."
-    ]
+    "method": "Both systems extra and missing pairs deduplicated and globally shuffled; review input has no source or disagreement-type columns.",
+    "no_source_labels_in_review_input": true,
+    "no_extra_missing_labels_in_review_input": true,
+    "global_shuffled_order": true,
+    "source_labels_joined_after_frozen_verdicts": true,
+    "prior_rules_phase_seen": true,
+    "strict_never_seen_system_outputs_claimed": false,
+    "limitation": "The same reviewer previously saw rules-only phase results. Current input is source-blinded, but this is not a fresh reviewer with no prior exposure."
   },
   "annotation_policy": {
-    "confirmation": "Direct wording or unambiguous equivalent; broad dictionary matches do not establish support.",
-    "mandatory": "Unqualified duties/requirements; alternative skills remain an alternative, not an assertion that all alternatives are mandatory.",
-    "desired": "Explicit optional/positive advantage wording.",
-    "aliases": "No automatic HTTP=REST, Linux=bash or asyncio=all asynchronous programming equivalence.",
-    "corrected_reference": "Union of original silver labels and confirmed observed extra tags, with original labels never removed.",
-    "quote_offset_unit": "Unicode code points; zero-based; start inclusive and end exclusive, matching Python text slicing.",
-    "priority_metric": "Required and desired are collapsed to set membership, as in the original benchmark.",
-    "unsupported_silver": "Unsupported missing silver tags are flagged, but retained in requested silver-plus reference.",
-    "scope": "Available disagreements only; not an exhaustive expert relabelling of all vacancy skills."
+    "confirmation": "Direct or unambiguous conceptual support; broad dictionary matches are not enough.",
+    "mandatory": "Ordinary duties, requirements and unqualified project stack; alternatives and contextual stack are not turned into personal must-haves.",
+    "desired": "Explicit positive optional wording.",
+    "corrected_reference": "One shared union of original silver and every confirmed observed extra pair from either system.",
+    "unsupported_silver": "Unsupported original missing labels are flagged but never removed.",
+    "aggregation": "micro; exact tag IDs per vacancy; required and desired collapsed to set membership.",
+    "quote_offset_unit": "Unicode code points; zero-based; start inclusive and end exclusive.",
+    "exhaustive_label_claimed": false,
+    "scope": "All disagreements observed for these two systems on this fixed corpus, not an exhaustive expert annotation of every skill."
   },
   "coverage": {
     "vacancies": 50,
-    "vacancies_with_available_disagreements": 29,
-    "available_candidate_pairs": 57,
+    "vacancies_with_disagreements": 32,
+    "unique_candidate_pairs": 77,
     "rules_extras_reviewed": 37,
     "rules_missing_reviewed": 20,
-    "sonnet_extras_reported": 59,
-    "sonnet_missing_reported": 5,
-    "sonnet_extra_pairs_available": 0,
-    "sonnet_missing_pairs_available": 0
+    "sonnet_extras_reviewed": 57,
+    "sonnet_missing_reviewed": 4,
+    "all_observed_disagreements_reviewed": true
   },
   "metrics": {
-    "aggregation": "micro; exact tag IDs per vacancy; required and desired combined",
+    "aggregation": "micro; exact tag IDs; required and desired combined",
+    "reference_before": 302,
+    "confirmed_reference_additions": 21,
+    "reference_after": 323,
+    "extras_attribution": {
+      "shared_rule_and_sonnet": {
+        "total": 37,
+        "verdict_counts": {
+          "подтверждён текстом (обязательный)": 13,
+          "подтверждён (желательный)": 2,
+          "не подтверждён": 22
+        }
+      },
+      "sonnet_only": {
+        "total": 20,
+        "verdict_counts": {
+          "подтверждён текстом (обязательный)": 6,
+          "подтверждён (желательный)": 0,
+          "не подтверждён": 14
+        }
+      },
+      "rules_only": {
+        "total": 0,
+        "verdict_counts": {
+          "подтверждён текстом (обязательный)": 0,
+          "подтверждён (желательный)": 0,
+          "не подтверждён": 0
+        }
+      }
+    },
     "rules": {
       "before": {
         "tp": 282,
@@ -93,14 +139,13 @@
       "after": {
         "tp": 297,
         "fp": 22,
-        "fn": 20,
+        "fn": 26,
         "predicted_tags": 319,
-        "reference_tags": 317,
+        "reference_tags": 323,
         "micro_precision": 0.9310344827586207,
-        "micro_recall": 0.9369085173501577,
-        "micro_f1": 0.9339622641509434
+        "micro_recall": 0.9195046439628483,
+        "micro_f1": 0.9252336448598131
       },
-      "after_reference_scope": "Partial silver-plus: available confirmed rules extras only. Not the full requested two-system corrected reference.",
       "confirmed_extras": 15,
       "extra_verdict_counts": {
         "подтверждён текстом (обязательный)": 13,
@@ -116,22 +161,54 @@
     },
     "rules_sonnet": {
       "before": {
-        "tp": 297,
-        "fp": 59,
-        "fn": 5,
-        "predicted_tags": 356,
+        "tp": 298,
+        "fp": 57,
+        "fn": 4,
+        "predicted_tags": 355,
         "reference_tags": 302,
-        "micro_precision": 0.8342696629213483,
-        "micro_recall": 0.9834437086092715,
-        "micro_f1": 0.9027355623100304
+        "micro_precision": 0.8394366197183099,
+        "micro_recall": 0.9867549668874173,
+        "micro_f1": 0.9071537290715372
       },
-      "after": null,
-      "confirmed_extras": null,
-      "unconfirmed_extras": null,
-      "reason": "The benchmark discards per-vacancy stack predictions; aggregate TP/FP/FN does not identify pairs."
+      "after": {
+        "tp": 319,
+        "fp": 36,
+        "fn": 4,
+        "predicted_tags": 355,
+        "reference_tags": 323,
+        "micro_precision": 0.8985915492957747,
+        "micro_recall": 0.9876160990712074,
+        "micro_f1": 0.9410029498525073
+      },
+      "confirmed_extras": 21,
+      "extra_verdict_counts": {
+        "подтверждён текстом (обязательный)": 19,
+        "подтверждён (желательный)": 2,
+        "не подтверждён": 36
+      },
+      "missing_verdict_counts": {
+        "подтверждён текстом (обязательный)": 1,
+        "подтверждён (желательный)": 0,
+        "не подтверждён": 3
+      },
+      "confirmed_missing": 1
+    }
+  },
+  "historical_original_sonnet_run": {
+    "source": "docs/llm/needs_bench.json",
+    "before": {
+      "tp": 297,
+      "fp": 59,
+      "fn": 5,
+      "predicted_tags": 356,
+      "reference_tags": 302,
+      "micro_precision": 0.8342696629213483,
+      "micro_recall": 0.9834437086092715,
+      "micro_f1": 0.9027355623100304
     },
-    "confirmed_reference_additions": 15,
-    "unknown_confirmed_sonnet_only_additions": null
+    "after": null,
+    "predictions_available": false,
+    "corrected_metrics_not_attributed_to_this_old_run": true
   },
   "vacancies": [
     {
@@ -146,7 +223,7 @@
         "kubernetes",
         "rest-api"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "docker",
         "go",
@@ -169,21 +246,39 @@
         "missing_vs_silver": [
           "rest-api"
         ],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "http"
         ],
-        "missing_vs_available_corrected": [
+        "missing_vs_corrected": [
           "rest-api"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "docker",
+          "go",
+          "grpc",
+          "http",
+          "kubernetes",
+          "rest-api",
+          "sql"
+        ],
+        "extra_vs_silver": [
+          "http",
+          "sql"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "http",
+          "sql"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-001::http",
-        "vac-001::rest-api"
+        "J016",
+        "J056",
+        "J067"
       ]
     },
     {
@@ -195,7 +290,7 @@
         "java",
         "statistics"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "algorithms",
         "java",
         "statistics"
@@ -211,18 +306,29 @@
           "linux"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "linux"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "algorithms",
+          "java",
+          "linux",
+          "statistics"
+        ],
+        "extra_vs_silver": [
+          "linux"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "linux"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-002::linux"
+        "J021"
       ]
     },
     {
@@ -241,7 +347,7 @@
         "redis",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "clickhouse",
         "docker",
@@ -268,13 +374,26 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "clickhouse",
+          "docker",
+          "git",
+          "go",
+          "php",
+          "postgresql",
+          "rabbitmq",
+          "redis",
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -287,7 +406,7 @@
         "postgresql",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "php",
         "postgresql",
         "sql"
@@ -300,13 +419,19 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "php",
+          "postgresql",
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -318,7 +443,7 @@
         "algorithms",
         "csharp"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "algorithms",
         "csharp"
       ],
@@ -329,13 +454,18 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "algorithms",
+          "csharp"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -356,7 +486,7 @@
         "rabbitmq",
         "rest-api"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "docker",
         "git",
@@ -385,13 +515,27 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "docker",
+          "git",
+          "go",
+          "java",
+          "kafka",
+          "kotlin",
+          "kubernetes",
+          "postgresql",
+          "rabbitmq",
+          "rest-api"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -405,7 +549,7 @@
         "javascript",
         "react"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "git",
         "html-css",
         "javascript",
@@ -420,13 +564,20 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "git",
+          "html-css",
+          "javascript",
+          "react"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -438,7 +589,7 @@
         "javascript",
         "react"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "javascript",
         "react"
       ],
@@ -449,13 +600,18 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "javascript",
+          "react"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -471,7 +627,7 @@
         "state-management",
         "typescript"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "frontend-testing",
         "git",
         "javascript",
@@ -490,13 +646,22 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "frontend-testing",
+          "git",
+          "javascript",
+          "react",
+          "state-management",
+          "typescript"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -513,7 +678,7 @@
         "typescript",
         "vue"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "frontend-testing",
         "html-css",
@@ -539,21 +704,34 @@
           "frontend-testing",
           "state-management"
         ],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": [
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
           "frontend-testing",
           "state-management"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "frontend-testing",
+          "html-css",
+          "javascript",
+          "rest-api",
+          "state-management",
+          "typescript",
+          "vue"
+        ],
+        "extra_vs_silver": [
+          "rest-api"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-010::rest-api",
-        "vac-010::frontend-testing",
-        "vac-010::state-management"
+        "J025",
+        "J032",
+        "J042"
       ]
     },
     {
@@ -569,7 +747,7 @@
         "react",
         "vue"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "a11y",
         "angular",
         "frontend-testing",
@@ -595,19 +773,37 @@
         "missing_vs_silver": [
           "javascript"
         ],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": [
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
           "javascript"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "a11y",
+          "angular",
+          "frontend-testing",
+          "html-css",
+          "javascript",
+          "playwright",
+          "react",
+          "vite-webpack",
+          "vue"
+        ],
+        "extra_vs_silver": [
+          "a11y",
+          "vite-webpack"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "vite-webpack"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-011::a11y",
-        "vac-011::javascript"
+        "J027",
+        "J066",
+        "J071"
       ]
     },
     {
@@ -620,8 +816,9 @@
         "python",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "algorithms",
+        "mlops",
         "nlp",
         "python",
         "sql",
@@ -639,16 +836,31 @@
           "statistics"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
+          "mlops"
+        ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "algorithms",
+          "mlops",
+          "nlp",
+          "python",
+          "sql",
+          "statistics"
+        ],
+        "extra_vs_silver": [
+          "mlops",
+          "statistics"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-012::statistics"
+        "J017",
+        "J068"
       ]
     },
     {
@@ -663,7 +875,7 @@
         "scikit-learn",
         "statistics"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "numpy",
         "pandas",
         "python",
@@ -682,13 +894,22 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "numpy",
+          "pandas",
+          "python",
+          "pytorch",
+          "scikit-learn",
+          "statistics"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -707,7 +928,7 @@
         "spark",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "airflow",
         "clickhouse",
         "git",
@@ -732,13 +953,25 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "airflow",
+          "clickhouse",
+          "git",
+          "java",
+          "kafka",
+          "postgresql",
+          "python",
+          "spark",
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -753,7 +986,7 @@
         "python",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "airflow",
         "git",
         "java",
@@ -776,19 +1009,34 @@
           "spark"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "spark"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "airflow",
+          "git",
+          "java",
+          "postgresql",
+          "python",
+          "spark",
+          "sql"
+        ],
+        "extra_vs_silver": [
+          "postgresql",
+          "spark"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "spark"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-015::postgresql",
-        "vac-015::spark"
+        "J037",
+        "J074"
       ]
     },
     {
@@ -800,9 +1048,11 @@
         "network-security",
         "siem-soc"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
+        "cryptography",
         "linux",
         "network-security",
+        "pentest",
         "siem-soc"
       ],
       "rules": {
@@ -816,18 +1066,38 @@
           "http"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "http"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": [
+          "cryptography",
+          "pentest"
+        ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "cryptography",
+          "http",
+          "linux",
+          "network-security",
+          "pentest",
+          "siem-soc"
+        ],
+        "extra_vs_silver": [
+          "cryptography",
+          "http",
+          "pentest"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "http"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-016::http"
+        "J009",
+        "J010",
+        "J011"
       ]
     },
     {
@@ -840,7 +1110,7 @@
         "kubernetes",
         "linux"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "clickhouse",
         "git",
@@ -863,21 +1133,38 @@
           "git"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "a11y",
           "docker"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "a11y",
+          "ci-cd",
+          "clickhouse",
+          "docker",
+          "git",
+          "kubernetes",
+          "linux"
+        ],
+        "extra_vs_silver": [
+          "a11y",
+          "docker",
+          "git"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "a11y",
+          "docker"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-017::a11y",
-        "vac-017::docker",
-        "vac-017::git"
+        "J044",
+        "J062",
+        "J077"
       ]
     },
     {
@@ -891,7 +1178,7 @@
         "linux",
         "python"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "git",
         "kubernetes",
@@ -911,18 +1198,31 @@
           "siem-soc"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "siem-soc"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "git",
+          "kubernetes",
+          "linux",
+          "python",
+          "siem-soc"
+        ],
+        "extra_vs_silver": [
+          "siem-soc"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "siem-soc"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-018::siem-soc"
+        "J026"
       ]
     },
     {
@@ -933,7 +1233,7 @@
         "kotlin",
         "rest-api"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "kotlin",
         "rest-api"
       ],
@@ -947,18 +1247,28 @@
           "http"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "http"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "http",
+          "kotlin",
+          "rest-api"
+        ],
+        "extra_vs_silver": [
+          "http"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "http"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-019::http"
+        "J024"
       ]
     },
     {
@@ -969,7 +1279,7 @@
         "git",
         "kotlin"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "git",
         "kotlin"
@@ -984,16 +1294,24 @@
           "ci-cd"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "git",
+          "kotlin"
+        ],
+        "extra_vs_silver": [
+          "ci-cd"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-020::ci-cd"
+        "J003"
       ]
     },
     {
@@ -1003,7 +1321,7 @@
       "silver_stack": [
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "sql"
       ],
       "rules": {
@@ -1012,13 +1330,17 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -1029,7 +1351,7 @@
       "silver_stack": [
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "sql"
       ],
       "rules": {
@@ -1038,13 +1360,17 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -1058,7 +1384,7 @@
         "javascript",
         "python"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "git",
         "http",
         "javascript",
@@ -1073,15 +1399,33 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "git",
+          "http",
+          "javascript",
+          "python",
+          "rest-api"
+        ],
+        "extra_vs_silver": [
+          "ci-cd",
+          "rest-api"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "ci-cd",
+          "rest-api"
+        ],
+        "missing_vs_corrected": []
       },
-      "judgement_ids": []
+      "judgement_ids": [
+        "J020",
+        "J069"
+      ]
     },
     {
       "vacancy_id": "vac-024",
@@ -1091,7 +1435,7 @@
         "http",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "http",
         "sql"
       ],
@@ -1102,13 +1446,18 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "http",
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -1128,7 +1477,7 @@
         "sql",
         "test-design"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "api-testing",
         "ci-cd",
         "git",
@@ -1164,26 +1513,57 @@
           "manual-testing",
           "rest-api"
         ],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "html-css",
           "http"
         ],
-        "missing_vs_available_corrected": [
+        "missing_vs_corrected": [
           "manual-testing",
           "rest-api"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "api-testing",
+          "ci-cd",
+          "git",
+          "html-css",
+          "http",
+          "java",
+          "kafka",
+          "kotlin",
+          "manual-testing",
+          "playwright",
+          "rabbitmq",
+          "rest-api",
+          "selenium",
+          "sql",
+          "test-design"
+        ],
+        "extra_vs_silver": [
+          "html-css",
+          "http",
+          "kafka",
+          "kotlin",
+          "rabbitmq"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "html-css",
+          "http",
+          "kafka",
+          "rabbitmq"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-025::html-css",
-        "vac-025::http",
-        "vac-025::kotlin",
-        "vac-025::manual-testing",
-        "vac-025::rest-api"
+        "J028",
+        "J052",
+        "J058",
+        "J061",
+        "J063",
+        "J070",
+        "J072"
       ]
     },
     {
@@ -1202,7 +1582,7 @@
         "sql",
         "test-design"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "allure",
         "api-testing",
         "ci-cd",
@@ -1233,23 +1613,41 @@
           "api-testing",
           "manual-testing"
         ],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "git"
         ],
-        "missing_vs_available_corrected": [
+        "missing_vs_corrected": [
           "api-testing",
           "manual-testing"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "allure",
+          "api-testing",
+          "ci-cd",
+          "git",
+          "http",
+          "java",
+          "manual-testing",
+          "rest-api",
+          "selenium",
+          "sql",
+          "test-design"
+        ],
+        "extra_vs_silver": [
+          "git"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "git"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-026::git",
-        "vac-026::api-testing",
-        "vac-026::manual-testing"
+        "J029",
+        "J035",
+        "J076"
       ]
     },
     {
@@ -1264,7 +1662,8 @@
         "sql",
         "test-design"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
+        "api-testing",
         "http",
         "java",
         "kafka",
@@ -1288,21 +1687,41 @@
           "kafka",
           "kubernetes"
         ],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": [
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
+          "api-testing",
           "kafka",
           "kubernetes"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "api-testing",
+          "http",
+          "java",
+          "rest-api",
+          "sql",
+          "test-design"
+        ],
+        "extra_vs_silver": [
+          "api-testing",
+          "http"
+        ],
+        "missing_vs_silver": [
+          "kafka",
+          "kubernetes"
+        ],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
+          "kafka",
+          "kubernetes"
+        ]
       },
       "judgement_ids": [
-        "vac-027::http",
-        "vac-027::kafka",
-        "vac-027::kubernetes"
+        "J006",
+        "J019",
+        "J031",
+        "J043"
       ]
     },
     {
@@ -1316,7 +1735,8 @@
         "sql",
         "test-design"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
+        "frontend-testing",
         "html-css",
         "java",
         "manual-testing",
@@ -1340,22 +1760,44 @@
         "missing_vs_silver": [
           "manual-testing"
         ],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "load-testing"
         ],
-        "missing_vs_available_corrected": [
+        "missing_vs_corrected": [
+          "frontend-testing",
           "manual-testing"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "frontend-testing",
+          "html-css",
+          "java",
+          "load-testing",
+          "selenium",
+          "sql",
+          "test-design"
+        ],
+        "extra_vs_silver": [
+          "frontend-testing",
+          "html-css",
+          "load-testing"
+        ],
+        "missing_vs_silver": [
+          "manual-testing"
+        ],
+        "extra_vs_corrected": [
+          "load-testing"
+        ],
+        "missing_vs_corrected": [
+          "manual-testing"
+        ]
       },
       "judgement_ids": [
-        "vac-028::html-css",
-        "vac-028::load-testing",
-        "vac-028::manual-testing"
+        "J034",
+        "J038",
+        "J039",
+        "J075"
       ]
     },
     {
@@ -1373,7 +1815,7 @@
         "sql",
         "test-design"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "api-testing",
         "ci-cd",
         "git",
@@ -1401,18 +1843,39 @@
           "http"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "http"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "api-testing",
+          "ci-cd",
+          "git",
+          "http",
+          "java",
+          "kafka",
+          "manual-testing",
+          "rabbitmq",
+          "rest-api",
+          "sql",
+          "test-design"
+        ],
+        "extra_vs_silver": [
+          "http",
+          "manual-testing"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "http",
+          "manual-testing"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-029::http"
+        "J005",
+        "J018"
       ]
     },
     {
@@ -1432,7 +1895,7 @@
         "sql",
         "test-design"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "api-testing",
         "ci-cd",
         "git",
@@ -1470,26 +1933,50 @@
           "manual-testing",
           "test-design"
         ],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "http",
           "linux"
         ],
-        "missing_vs_available_corrected": [
+        "missing_vs_corrected": [
           "manual-testing",
           "test-design"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "api-testing",
+          "ci-cd",
+          "git",
+          "http",
+          "java",
+          "kafka",
+          "kubernetes",
+          "linux",
+          "manual-testing",
+          "rabbitmq",
+          "redis",
+          "rest-api",
+          "sql",
+          "test-design"
+        ],
+        "extra_vs_silver": [
+          "api-testing",
+          "http",
+          "linux"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "http",
+          "linux"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-030::api-testing",
-        "vac-030::http",
-        "vac-030::linux",
-        "vac-030::manual-testing",
-        "vac-030::test-design"
+        "J002",
+        "J015",
+        "J050",
+        "J064",
+        "J065"
       ]
     },
     {
@@ -1516,7 +2003,7 @@
         "sql",
         "test-design"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "api-testing",
         "ci-cd",
         "clickhouse",
@@ -1566,22 +2053,50 @@
         "missing_vs_silver": [
           "manual-testing"
         ],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "asyncio"
         ],
-        "missing_vs_available_corrected": [
+        "missing_vs_corrected": [
           "manual-testing"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "api-testing",
+          "asyncio",
+          "ci-cd",
+          "clickhouse",
+          "cryptography",
+          "docker",
+          "git",
+          "go",
+          "http",
+          "kafka",
+          "kubernetes",
+          "linux",
+          "manual-testing",
+          "php",
+          "python",
+          "rabbitmq",
+          "redis",
+          "rest-api",
+          "sql",
+          "test-design"
+        ],
+        "extra_vs_silver": [
+          "asyncio",
+          "cryptography"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "asyncio"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-031::asyncio",
-        "vac-031::cryptography",
-        "vac-031::manual-testing"
+        "J013",
+        "J014",
+        "J023"
       ]
     },
     {
@@ -1603,7 +2118,7 @@
         "redis",
         "selenium"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "api-testing",
         "ci-cd",
         "clickhouse",
@@ -1643,22 +2158,49 @@
         "missing_vs_silver": [
           "api-testing"
         ],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "sql"
         ],
-        "missing_vs_available_corrected": [
+        "missing_vs_corrected": [
           "api-testing"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "api-testing",
+          "ci-cd",
+          "clickhouse",
+          "docker",
+          "git",
+          "go",
+          "http",
+          "kubernetes",
+          "linux",
+          "load-testing",
+          "php",
+          "pytest",
+          "python",
+          "redis",
+          "selenium",
+          "sql"
+        ],
+        "extra_vs_silver": [
+          "go",
+          "http",
+          "sql"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "http",
+          "sql"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-032::go",
-        "vac-032::sql",
-        "vac-032::api-testing"
+        "J001",
+        "J008",
+        "J046",
+        "J055"
       ]
     },
     {
@@ -1673,7 +2215,7 @@
         "redis",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "java",
         "kafka",
         "load-testing",
@@ -1692,13 +2234,22 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "java",
+          "kafka",
+          "load-testing",
+          "postgresql",
+          "redis",
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -1717,9 +2268,10 @@
         "python",
         "typescript"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "allure",
         "ci-cd",
+        "frontend-testing",
         "git",
         "html-css",
         "linux",
@@ -1743,18 +2295,35 @@
         "missing_vs_silver": [
           "manual-testing"
         ],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": [
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
+          "frontend-testing",
           "manual-testing"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "allure",
+          "ci-cd",
+          "frontend-testing",
+          "git",
+          "html-css",
+          "linux",
+          "manual-testing",
+          "playwright",
+          "python",
+          "typescript"
+        ],
+        "extra_vs_silver": [
+          "frontend-testing"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-034::manual-testing"
+        "J051",
+        "J054"
       ]
     },
     {
@@ -1772,7 +2341,7 @@
         "rest-api",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "http",
         "kafka",
         "kubernetes",
@@ -1797,13 +2366,25 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "http",
+          "kafka",
+          "kubernetes",
+          "linux",
+          "load-testing",
+          "python",
+          "rabbitmq",
+          "rest-api",
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -1817,7 +2398,7 @@
         "python",
         "typescript"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "javascript",
         "python",
@@ -1832,15 +2413,29 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "javascript",
+          "python",
+          "test-design",
+          "typescript"
+        ],
+        "extra_vs_silver": [
+          "test-design"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "test-design"
+        ],
+        "missing_vs_corrected": []
       },
-      "judgement_ids": []
+      "judgement_ids": [
+        "J047"
+      ]
     },
     {
       "vacancy_id": "vac-037",
@@ -1852,7 +2447,7 @@
         "javascript",
         "react"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "git",
         "html-css",
         "javascript",
@@ -1867,15 +2462,29 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "git",
+          "html-css",
+          "http",
+          "javascript",
+          "react"
+        ],
+        "extra_vs_silver": [
+          "http"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "http"
+        ],
+        "missing_vs_corrected": []
       },
-      "judgement_ids": []
+      "judgement_ids": [
+        "J012"
+      ]
     },
     {
       "vacancy_id": "vac-038",
@@ -1891,7 +2500,7 @@
         "typescript",
         "vue"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "git",
         "html-css",
         "javascript",
@@ -1919,20 +2528,39 @@
           "http"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "asyncio",
           "http"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "asyncio",
+          "git",
+          "html-css",
+          "http",
+          "javascript",
+          "react",
+          "rest-api",
+          "state-management",
+          "typescript",
+          "vue"
+        ],
+        "extra_vs_silver": [
+          "asyncio",
+          "http"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "asyncio",
+          "http"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-038::asyncio",
-        "vac-038::http"
+        "J004",
+        "J057"
       ]
     },
     {
@@ -1947,7 +2575,7 @@
         "state-management",
         "typescript"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "git",
         "html-css",
         "javascript",
@@ -1967,18 +2595,33 @@
         "missing_vs_silver": [
           "state-management"
         ],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": [
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
           "state-management"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "git",
+          "html-css",
+          "javascript",
+          "react",
+          "state-management",
+          "typescript",
+          "vite-webpack"
+        ],
+        "extra_vs_silver": [
+          "vite-webpack"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "vite-webpack"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-039::state-management"
+        "J041",
+        "J053"
       ]
     },
     {
@@ -1994,7 +2637,7 @@
         "typescript",
         "vite-webpack"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "a11y",
         "frontend-testing",
         "html-css",
@@ -2022,17 +2665,32 @@
           "rest-api"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "a11y",
+          "frontend-testing",
+          "html-css",
+          "javascript",
+          "react",
+          "rest-api",
+          "state-management",
+          "typescript",
+          "vite-webpack"
+        ],
+        "extra_vs_silver": [
+          "html-css",
+          "rest-api"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-040::html-css",
-        "vac-040::rest-api"
+        "J040",
+        "J048"
       ]
     },
     {
@@ -2046,7 +2704,7 @@
         "react",
         "state-management"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "frontend-testing",
         "nextjs",
@@ -2066,18 +2724,31 @@
           "git"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "git"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "frontend-testing",
+          "git",
+          "nextjs",
+          "react",
+          "state-management"
+        ],
+        "extra_vs_silver": [
+          "git"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "git"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-041::git"
+        "J022"
       ]
     },
     {
@@ -2099,7 +2770,7 @@
         "vite-webpack",
         "vue"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "clickhouse",
         "docker",
         "go",
@@ -2133,18 +2804,43 @@
         "missing_vs_silver": [
           "state-management"
         ],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": [
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
           "state-management"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "clickhouse",
+          "docker",
+          "frontend-testing",
+          "go",
+          "javascript",
+          "kubernetes",
+          "linux",
+          "php",
+          "redis",
+          "sql",
+          "typescript",
+          "vite-webpack",
+          "vue"
+        ],
+        "extra_vs_silver": [
+          "frontend-testing"
+        ],
+        "missing_vs_silver": [
+          "state-management"
+        ],
+        "extra_vs_corrected": [
+          "frontend-testing"
+        ],
+        "missing_vs_corrected": [
+          "state-management"
+        ]
       },
       "judgement_ids": [
-        "vac-042::state-management"
+        "J045",
+        "J073"
       ]
     },
     {
@@ -2164,7 +2860,7 @@
         "typescript",
         "vite-webpack"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "docker",
         "frontend-testing",
@@ -2193,13 +2889,27 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "docker",
+          "frontend-testing",
+          "git",
+          "javascript",
+          "kotlin",
+          "react",
+          "selenium",
+          "state-management",
+          "typescript",
+          "vite-webpack"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -2210,7 +2920,7 @@
       "silver_stack": [
         "siem-soc"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "network-security",
         "siem-soc"
       ],
@@ -2223,16 +2933,28 @@
           "network-security"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "network-security",
+          "siem-soc"
+        ],
+        "extra_vs_silver": [
+          "ci-cd",
+          "network-security"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "ci-cd"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-044::network-security"
+        "J036",
+        "J059"
       ]
     },
     {
@@ -2240,18 +2962,20 @@
       "title": "Эксперт по информационной безопасности/ Архитектор ИБ",
       "source_url": "https://career.habr.com/vacancies/1000112963",
       "silver_stack": [],
-      "corrected_stack_available_only": [],
+      "corrected_stack": [],
       "rules": {
         "predicted_stack": [],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -2268,7 +2992,7 @@
         "postgresql",
         "rest-api"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "csharp",
         "http",
@@ -2290,20 +3014,30 @@
           "ci-cd",
           "rest-api"
         ],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": [
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": [
           "ci-cd",
           "rest-api"
         ]
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "csharp",
+          "http",
+          "kafka",
+          "kubernetes",
+          "postgresql",
+          "rest-api"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-046::ci-cd",
-        "vac-046::rest-api"
+        "J007",
+        "J033"
       ]
     },
     {
@@ -2315,7 +3049,7 @@
         "javascript",
         "python"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "csharp",
         "javascript",
         "python"
@@ -2331,18 +3065,33 @@
           "nlp"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "nlp"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "csharp",
+          "javascript",
+          "nlp",
+          "python",
+          "rest-api"
+        ],
+        "extra_vs_silver": [
+          "nlp",
+          "rest-api"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "nlp",
+          "rest-api"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-047::nlp"
+        "J030",
+        "J049"
       ]
     },
     {
@@ -2357,7 +3106,7 @@
         "postgresql",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "docker",
         "java",
         "kafka",
@@ -2376,13 +3125,22 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "docker",
+          "java",
+          "kafka",
+          "kubernetes",
+          "postgresql",
+          "sql"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     },
@@ -2402,7 +3160,7 @@
         "rest-api",
         "sql"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "ci-cd",
         "docker",
         "git",
@@ -2432,18 +3190,36 @@
           "http"
         ],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [
+        "extra_vs_corrected": [
           "http"
         ],
-        "missing_vs_available_corrected": []
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "ci-cd",
+          "docker",
+          "git",
+          "http",
+          "java",
+          "kubernetes",
+          "linux",
+          "postgresql",
+          "rabbitmq",
+          "rest-api",
+          "sql"
+        ],
+        "extra_vs_silver": [
+          "http"
+        ],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [
+          "http"
+        ],
+        "missing_vs_corrected": []
       },
       "judgement_ids": [
-        "vac-049::http"
+        "J060"
       ]
     },
     {
@@ -2454,7 +3230,7 @@
         "csharp",
         "git"
       ],
-      "corrected_stack_available_only": [
+      "corrected_stack": [
         "csharp",
         "git"
       ],
@@ -2465,753 +3241,28 @@
         ],
         "extra_vs_silver": [],
         "missing_vs_silver": [],
-        "extra_vs_available_corrected": [],
-        "missing_vs_available_corrected": []
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "rules_sonnet": {
-        "predicted_stack": null,
-        "extra_vs_silver": null,
-        "missing_vs_silver": null
+        "predicted_stack": [
+          "csharp",
+          "git"
+        ],
+        "extra_vs_silver": [],
+        "missing_vs_silver": [],
+        "extra_vs_corrected": [],
+        "missing_vs_corrected": []
       },
       "judgement_ids": []
     }
   ],
   "judgements": [
     {
-      "candidate_id": "vac-001::http",
-      "vacancy_id": "vac-001",
-      "tag": "http",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Есть REST/gRPC API, но нет отдельного требования HTTP или описания HTTP-методов/заголовков/кодов; само слово REST не отождествляется с тегом http.",
-      "context_quote": "Опыт проектирования REST/gRPC API",
-      "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05",
-      "text_sha256": "c692b8d91792e0092cbf175dc88ab092ee2a969df22719ceb8008d3345243264",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-001::rest-api",
-      "vacancy_id": "vac-001",
-      "tag": "rest-api",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Опыт проектирования REST/gRPC API",
-      "quote_start": 1146,
-      "quote_end": 1179,
-      "reason": "REST API прямо указан в требованиях, отдельно от альтернативного протокола gRPC.",
-      "context_quote": null,
-      "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05",
-      "text_sha256": "c692b8d91792e0092cbf175dc88ab092ee2a969df22719ceb8008d3345243264",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-002::linux",
-      "vacancy_id": "vac-002",
-      "tag": "linux",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Желательны bash/grep и обработка текста, но ОС Linux не названа; навыки оболочки не равны требованию конкретной ОС.",
-      "context_quote": "Опыт работы с текстовой информацией: RegExp, bash, grep, эффективный поиск по файлам.",
-      "source_url": "https://hh.ru/vacancy/129355447",
-      "text_sha256": "3038f04bd71003c89cb3ffaadbd0106bbefd005ce1b94830eb5fce2646182633",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-010::rest-api",
-      "vacancy_id": "vac-010",
-      "tag": "rest-api",
-      "verdict": "подтверждён (желательный)",
-      "quote": "Будет плюсом:\nОпыт работы с SVG;\nОпыт работы с Swagger;",
-      "quote_start": 1002,
-      "quote_end": 1057,
-      "reason": "Swagger прямо указан как желательный инструмент работы с описанием REST API; это подтверждение API-контрактов, не HTTP как отдельной компетенции.",
-      "context_quote": null,
-      "source_url": "https://job.mts.ru/vacancy/580741711072857140",
-      "text_sha256": "e432a6a8d4d2a66f18e5e730023c04730f4cd0fd6383294757b8374b4ac54534",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-010::frontend-testing",
-      "vacancy_id": "vac-010",
-      "tag": "frontend-testing",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Обеспечивать качество кода: ревью, модульное тестирование, поддержка CI/CD-процессов;",
-      "quote_start": 570,
-      "quote_end": 655,
-      "reason": "Модульное тестирование входит в обязанности фронтенд-разработчика. Отдельное упоминание unit-тестирования как плюса не отменяет этой задачи.",
-      "context_quote": null,
-      "source_url": "https://job.mts.ru/vacancy/580741711072857140",
-      "text_sha256": "e432a6a8d4d2a66f18e5e730023c04730f4cd0fd6383294757b8374b4ac54534",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-010::state-management",
-      "vacancy_id": "vac-010",
-      "tag": "state-management",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Опыт работы с Pinia, Vue-Router;",
-      "quote_start": 888,
-      "quote_end": 920,
-      "reason": "Pinia — прямо названный инструмент управления состоянием; опыт с ним требуется, а не просто выведен из наличия Vue.",
-      "context_quote": null,
-      "source_url": "https://job.mts.ru/vacancy/580741711072857140",
-      "text_sha256": "e432a6a8d4d2a66f18e5e730023c04730f4cd0fd6383294757b8374b4ac54534",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-011::a11y",
-      "vacancy_id": "vac-011",
-      "tag": "a11y",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Умеешь повышать производительность интерфейсов, соблюдать семантику, учитывать доступность и базовые требования SEO;",
-      "quote_start": 996,
-      "quote_end": 1112,
-      "reason": "Доступность пользовательских интерфейсов прямо включена в ожидания от кандидата.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000161900",
-      "text_sha256": "d0644f469ed445cf7da6c0a984dda8b5f0fbdd6fa73398ceadadcdf01a342346",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-011::javascript",
-      "vacancy_id": "vac-011",
-      "tag": "javascript",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "JavaScript отдельно не назван; Vue/Nuxt могут использоваться с TypeScript. Язык не выводится автоматически из имени фреймворка.",
-      "context_quote": "Работать с Vue.js и Nuxt.js в качестве основного стека;",
-      "source_url": "https://career.habr.com/vacancies/1000161900",
-      "text_sha256": "d0644f469ed445cf7da6c0a984dda8b5f0fbdd6fa73398ceadadcdf01a342346",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-012::statistics",
-      "vacancy_id": "vac-012",
-      "tag": "statistics",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Уверенное понимание A/B-тестирования",
-      "quote_start": 1178,
-      "quote_end": 1214,
-      "reason": "A/B-тестирование — явно названная прикладная статистическая компетенция; не просто вывод из должности Data Scientist.",
-      "context_quote": null,
-      "source_url": "https://youngjunior.ru/data/jobs/31786",
-      "text_sha256": "ce0af30808fa6e216802ec03d0573665c67fb166e7ce5b9b494667bc7d2e1d17",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-015::postgresql",
-      "vacancy_id": "vac-015",
-      "tag": "postgresql",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Опыт работы с любой реляционной БД (Oracle, Postgres, MySQL, MsSQL, DB2 и т.п.).",
-      "quote_start": 539,
-      "quote_end": 619,
-      "reason": "Postgres прямо назван среди допустимых реляционных БД. Подтверждена альтернативная технология, не личный must-have именно PostgreSQL.",
-      "context_quote": null,
-      "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326",
-      "text_sha256": "9e51af49637bfdb19dafb133e10f8cdbb48a1c224d314b2dc91907ce5181f50e",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-015::spark",
-      "vacancy_id": "vac-015",
-      "tag": "spark",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Spark отсутствует; Hadoop, HDFS и Hive не являются указанием конкретно на Spark.",
-      "context_quote": "Представление о работе с Hadoop.",
-      "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326",
-      "text_sha256": "9e51af49637bfdb19dafb133e10f8cdbb48a1c224d314b2dc91907ce5181f50e",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-016::http",
-      "vacancy_id": "vac-016",
-      "tag": "http",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Названы сетевые основы TCP/IP/OSI, но не HTTP или веб-протоколы; более общий сетевой навык не доказывает конкретный протокол.",
-      "context_quote": "Понимание сетевых технологий (TCP/IP, OSI, маршрутизация) и ОС (Windows, Linux).",
-      "source_url": "https://hh.ru/vacancy/137706135",
-      "text_sha256": "f17481c06dc7398c9905b9d8b3ed741b2e0cbb09dfe6d5509a6a6b8590ec55fe",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-017::a11y",
-      "vacancy_id": "vac-017",
-      "tag": "a11y",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Речь о эксплуатационной доступности сервисов, не о accessibility пользовательских интерфейсов.",
-      "context_quote": "Использовать принципы Site Reliability Engineering для повышения отказоустойчивости и доступности сервисов;",
-      "source_url": "https://hh.ru/vacancy/127601108",
-      "text_sha256": "3df458ed5df9aefbe88c17458a290a5601c8bdb435f335e1d2b76799b66292ec",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-017::docker",
-      "vacancy_id": "vac-017",
-      "tag": "docker",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Docker не назван; Kubernetes и контейнерная инфраструктура не доказывают использование Docker.",
-      "context_quote": "Kubernetes | kubeadm + kubespray",
-      "source_url": "https://hh.ru/vacancy/127601108",
-      "text_sha256": "3df458ed5df9aefbe88c17458a290a5601c8bdb435f335e1d2b76799b66292ec",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-017::git",
-      "vacancy_id": "vac-017",
-      "tag": "git",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Имеете опыт построения GitOps-процессов с использованием систем управления конфигурациями и CD-инструментов;",
-      "quote_start": 2258,
-      "quote_end": 2366,
-      "reason": "GitOps прямо требует Git-ориентированного управления состоянием инфраструктуры. Это сильнее, чем одно имя GitLab CI; тег не означает перечень конкретных Git-команд.",
-      "context_quote": null,
-      "source_url": "https://hh.ru/vacancy/127601108",
-      "text_sha256": "3df458ed5df9aefbe88c17458a290a5601c8bdb435f335e1d2b76799b66292ec",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-018::siem-soc",
-      "vacancy_id": "vac-018",
-      "tag": "siem-soc",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "ELK используется для общего мониторинга и логирования; нет безопасности, SIEM или SOC. ELK сам по себе не подтверждает security-компетенцию.",
-      "context_quote": "Опыт работы с системами мониторинга и логирования: ELK, Zabbix, Prometheus, Grafana;",
-      "source_url": "https://hh.ru/vacancy/129957759",
-      "text_sha256": "d38c3df55eea1249a3d3a65a0b78c8034eb7a700c67c73652ec92aec7bfd24d5",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-019::http",
-      "vacancy_id": "vac-019",
-      "tag": "http",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Подтверждена интеграция REST API, но отдельная HTTP-компетенция не заявлена; автоматическая эквивалентность REST и http не применяется.",
-      "context_quote": "Интегрировать REST API и взаимодействовать с backend-разработчиками",
-      "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/",
-      "text_sha256": "9e57784bd5392468e9091ffb88873608bf00d054a3c58ca24dcfe11236409ff7",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-020::ci-cd",
-      "vacancy_id": "vac-020",
-      "tag": "ci-cd",
-      "verdict": "подтверждён (желательный)",
-      "quote": "**Будет плюсом:**\n\n- Опыт работы TeamCity и настройкой ее;",
-      "quote_start": 962,
-      "quote_end": 1020,
-      "reason": "Настройка прямо названной системы CI TeamCity желательна. Составной тег CI/CD подтверждается компонентом CI; отдельное знание CD не приписывается.",
-      "context_quote": null,
-      "source_url": "https://hh.ru/vacancy/135126969",
-      "text_sha256": "b9d3bf762b1f579ebc76eadd392e99b31965b02eb644689acf456697ea673e8b",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-025::html-css",
-      "vacancy_id": "vac-025",
-      "tag": "html-css",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Требуется использование DevTools для проверки вёрстки, но знание HTML/CSS или самостоятельная веб-вёрстка не заявлены. Не выводится язык из инструмента инспекции.",
-      "context_quote": "Умение использовать панель разработчика в Chrome (верстка, консоль, сеть)",
-      "source_url": "https://career.habr.com/vacancies/1000168882",
-      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-025::http",
-      "vacancy_id": "vac-025",
-      "tag": "http",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Есть REST, API и клиент-серверные приложения, но HTTP или его конкретная семантика отдельно не описаны.",
-      "context_quote": "Уверенные знания REST",
-      "source_url": "https://career.habr.com/vacancies/1000168882",
-      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-025::kotlin",
-      "vacancy_id": "vac-025",
-      "tag": "kotlin",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "# QA Automation (Java/Kotlin),Senior, удаленно, аутстафф",
-      "quote_start": 0,
-      "quote_end": 56,
-      "reason": "Kotlin прямо назван в заголовке роли как альтернатива Java. Это наличие технологии в вакансии, не обязательность обоих языков.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168882",
-      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-025::manual-testing",
-      "vacancy_id": "vac-025",
-      "tag": "manual-testing",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Проведение регрессионного тестирования, в том числе вручную",
-      "quote_start": 2307,
-      "quote_end": 2366,
-      "reason": "Ручное тестирование прямо входит в задачи; дополнительно указано соотношение ручного и авто 50/50.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168882",
-      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-025::rest-api",
-      "vacancy_id": "vac-025",
-      "tag": "rest-api",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Уверенные знания REST\n- Уверенные навыки тестирования API (использование инструментов для тестирования API, особенности тестирования API)",
-      "quote_start": 383,
-      "quote_end": 520,
-      "reason": "REST и тестирование API явно соседствуют в требованиях.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168882",
-      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-026::git",
-      "vacancy_id": "vac-026",
-      "tag": "git",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Желателен CI/CD с Jenkins/GitLab CI; владение Git как системой контроля версий отдельно не указано и не выводится из названия продукта.",
-      "context_quote": "Опыт работы с CI/CD (Jenkins, GitLab CI).",
-      "source_url": "https://career.habr.com/vacancies/1000168587",
-      "text_sha256": "f7f373390d482aefa8d11d7cd48acb994654366ce67f1a08160b86c574b1149f",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-026::api-testing",
-      "vacancy_id": "vac-026",
-      "tag": "api-testing",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "**Автоматизация тестирования REST API** (больше, чем UI).",
-      "quote_start": 1712,
-      "quote_end": 1769,
-      "reason": "API-тестирование прямо выделено как основной навык.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168587",
-      "text_sha256": "f7f373390d482aefa8d11d7cd48acb994654366ce67f1a08160b86c574b1149f",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-026::manual-testing",
-      "vacancy_id": "vac-026",
-      "tag": "manual-testing",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "**Опыт в ручном функциональном тестировании** (от 1 года).",
-      "quote_start": 1650,
-      "quote_end": 1708,
-      "reason": "Прямое обязательное требование к опыту ручного тестирования.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168587",
-      "text_sha256": "f7f373390d482aefa8d11d7cd48acb994654366ce67f1a08160b86c574b1149f",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-027::http",
-      "vacancy_id": "vac-027",
-      "tag": "http",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Глубокое понимание **REST API** (методы, коды ответов, авторизация, работа с JSON/XML).",
-      "quote_start": 2069,
-      "quote_end": 2156,
-      "reason": "Перечислены методы, коды ответов и авторизация REST API — конкретная семантика HTTP-взаимодействия, не только слово REST. Это смысловое, а не буквальное подтверждение; эксперт может оспорить границу.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168583",
-      "text_sha256": "7d4716148f208979ea009077b25173d165a8d247b13f142e1fdd7a45ecf61311",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-027::kafka",
-      "vacancy_id": "vac-027",
-      "tag": "kafka",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Kafka отсутствует в сохранённом тексте; микросервисная архитектура и блокчейн не подтверждают этот брокер. Возможный остаток исходной страницы не считается доказательством корпуса.",
-      "context_quote": "Проверка контрактов между Frontend и Backend, а также между микросервисами (REST API).",
-      "source_url": "https://career.habr.com/vacancies/1000168583",
-      "text_sha256": "7d4716148f208979ea009077b25173d165a8d247b13f142e1fdd7a45ecf61311",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-027::kubernetes",
-      "vacancy_id": "vac-027",
-      "tag": "kubernetes",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Kubernetes отсутствует в сохранённом тексте; тестовые среды и микросервисы не определяют конкретную платформу. Текст заканчивается незавершённым пунктом; внешняя страница не подменяет замороженный корпус.",
-      "context_quote": "Опыт настройки и конфигурирования тестовых сред (поднятие стендов, обновление конфигов).",
-      "source_url": "https://career.habr.com/vacancies/1000168583",
-      "text_sha256": "7d4716148f208979ea009077b25173d165a8d247b13f142e1fdd7a45ecf61311",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-028::html-css",
-      "vacancy_id": "vac-028",
-      "tag": "html-css",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "**Базовые знания:** Java (основы ООП), UML, XML, HTML (на уровне чтения/понимания).",
-      "quote_start": 1802,
-      "quote_end": 1885,
-      "reason": "HTML прямо требуется на уровне чтения/понимания. Подтверждён HTML-компонент составного тега, не отдельное знание CSS.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168581",
-      "text_sha256": "5874acabd75a2a53a640ce0b0c8221604805bfde46729cba9f78a032829ea723",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-028::load-testing",
-      "vacancy_id": "vac-028",
-      "tag": "load-testing",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Кандидат взаимодействует с отдельной командой нагрузочного тестирования; проведение нагрузочных тестов или соответствующий личный навык не требуется. Упоминание смежной команды не превращается в стек кандидата.",
-      "context_quote": "Взаимодействовать с командой ручного (РФТ) и нагрузочного (НТ) тестирования — уточнять кейсы, оценивать корректность и актуальность сценариев.",
-      "source_url": "https://career.habr.com/vacancies/1000168581",
-      "text_sha256": "5874acabd75a2a53a640ce0b0c8221604805bfde46729cba9f78a032829ea723",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-028::manual-testing",
-      "vacancy_id": "vac-028",
-      "tag": "manual-testing",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Ручное тестирование относится к смежной команде; личные обязанности кандидата описаны как автоматизация и взаимодействие. Общая теория тестирования не равна ручному выполнению тестов.",
-      "context_quote": "Взаимодействовать с командой ручного (РФТ) и нагрузочного (НТ) тестирования — уточнять кейсы, оценивать корректность и актуальность сценариев.",
-      "source_url": "https://career.habr.com/vacancies/1000168581",
-      "text_sha256": "5874acabd75a2a53a640ce0b0c8221604805bfde46729cba9f78a032829ea723",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-029::http",
-      "vacancy_id": "vac-029",
-      "tag": "http",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Указан Rest API, но отдельная HTTP-компетенция не названа и её конкретная семантика не описана.",
-      "context_quote": "Опыт работы с Rest API",
-      "source_url": "https://career.habr.com/vacancies/1000168926",
-      "text_sha256": "3b0bf033d8721030c60b742dace84341c33374b042530e1853730c4c11013716",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-030::api-testing",
-      "vacancy_id": "vac-030",
-      "tag": "api-testing",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Опыт работы с Rest API",
-      "quote_start": 473,
-      "quote_end": 495,
-      "reason": "В разделе ожиданий QA-кандидата явно указан опыт REST API; в том же списке есть SOAP UI и Postman. Контекст прямо связывает API с тестированием.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168850",
-      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-030::http",
-      "vacancy_id": "vac-030",
-      "tag": "http",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "REST API не автоматически превращается в отдельный тег http; протокол или HTTP-специфичные знания не заявлены.",
-      "context_quote": "Опыт работы с Rest API",
-      "source_url": "https://career.habr.com/vacancies/1000168850",
-      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-030::linux",
-      "vacancy_id": "vac-030",
-      "tag": "linux",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Bash назван как инструмент, но Linux/Unix не названы; конкретная ОС не выводится из оболочки.",
-      "context_quote": "Опыт работы с инструментами: SOAP UI, Postman, Jira, Confluence, Git, Visual Studio, VS Code, Bitbucket, Bash",
-      "source_url": "https://career.habr.com/vacancies/1000168850",
-      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-030::manual-testing",
-      "vacancy_id": "vac-030",
-      "tag": "manual-testing",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Функциональное тестирование может быть автоматизированным; в вакансии есть автотесты, но ручное тестирование отдельно не названо.",
-      "context_quote": "Проведение функционального тестирования",
-      "source_url": "https://career.habr.com/vacancies/1000168850",
-      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-030::test-design",
-      "vacancy_id": "vac-030",
-      "tag": "test-design",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Подготовка тестовой документации (сценарии, отчеты по тестированию)",
-      "quote_start": 76,
-      "quote_end": 143,
-      "reason": "Подготовка тестовых сценариев прямо входит в обязанности; это конкретная деятельность тест-дизайна, а не только общий опыт QA.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168850",
-      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-031::asyncio",
-      "vacancy_id": "vac-031",
-      "tag": "asyncio",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Асинхронное взаимодействие сервисов не доказывает применение библиотеки Python asyncio; сама библиотека не названа.",
-      "context_quote": "тестированием интеграций и асинхронного взаимодействия между сервисами;",
-      "source_url": "https://career.habr.com/vacancies/1000167801",
-      "text_sha256": "596d93daa390a4243bca06e5619038c14b1b3c11840d3dd2dfc3654b69dac295",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-031::cryptography",
-      "vacancy_id": "vac-031",
-      "tag": "cryptography",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "TLS/SSL и принципы шифрования;",
-      "quote_start": 1702,
-      "quote_end": 1732,
-      "reason": "Принципы шифрования прямо входят в ожидаемые сетевые знания; тег подтверждён основами, не экспертным уровнем криптографии.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000167801",
-      "text_sha256": "596d93daa390a4243bca06e5619038c14b1b3c11840d3dd2dfc3654b69dac295",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-031::manual-testing",
-      "vacancy_id": "vac-031",
-      "tag": "manual-testing",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "ручным тестированием backend и web-приложений;",
-      "quote_start": 195,
-      "quote_end": 241,
-      "reason": "Прямая формулировка обязанности ручного тестирования.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000167801",
-      "text_sha256": "596d93daa390a4243bca06e5619038c14b1b3c11840d3dd2dfc3654b69dac295",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-032::go",
+      "case_id": "J001",
       "vacancy_id": "vac-032",
-      "tag": "go",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Наш ключевой стек: ** PHP 8, Golang, Python, Mysql, Clickhouse, Redis, Docker, Kubernetes, Git, CI/CD, Linux.",
-      "quote_start": 576,
-      "quote_end": 685,
-      "reason": "Golang прямо назван в основном проектном стеке. Это контекст вакансии; личное знание Go отдельно не требуется, а автоматизация ведётся на Python.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000167800",
-      "text_sha256": "4c9d3956a397a2f7b4ee9777b7175cb4a016ecfe0e7ea58c3f8a9740076d4eb6",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-032::sql",
-      "vacancy_id": "vac-032",
-      "tag": "sql",
-      "verdict": "не подтверждён",
-      "quote": null,
-      "quote_start": null,
-      "quote_end": null,
-      "reason": "Упомянуты БД и их администрирование, но язык SQL или написание запросов не требуются. MySQL как продукт не автоматически равен отдельному навыку SQL.",
-      "context_quote": "Опыт администрирования тестовых сред (docker-compose, k8s) и баз данных (mysql, redis, clickhouse).",
-      "source_url": "https://career.habr.com/vacancies/1000167800",
-      "text_sha256": "4c9d3956a397a2f7b4ee9777b7175cb4a016ecfe0e7ea58c3f8a9740076d4eb6",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
+      "tag": "api-testing",
       "candidate_id": "vac-032::api-testing",
-      "vacancy_id": "vac-032",
-      "tag": "api-testing",
       "verdict": "подтверждён текстом (обязательный)",
       "quote": "Опыт разработки автотестов для API (python, pytest, requests);",
       "quote_start": 1244,
@@ -3222,30 +3273,50 @@
       "text_sha256": "4c9d3956a397a2f7b4ee9777b7175cb4a016ecfe0e7ea58c3f8a9740076d4eb6",
       "provenance": {
         "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "not_a_disagreement"
       }
     },
     {
-      "candidate_id": "vac-034::manual-testing",
-      "vacancy_id": "vac-034",
+      "case_id": "J002",
+      "vacancy_id": "vac-030",
       "tag": "manual-testing",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Ручное и автоматизированное тестирование WebUI-компонентов;",
-      "quote_start": 378,
-      "quote_end": 437,
-      "reason": "Ручное тестирование явно включено в предстоящие задачи.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168205",
-      "text_sha256": "d62d8e6d74d95481829784bbb53ba4152d82ec48a44895a39d4cf1bacddba98f",
+      "candidate_id": "vac-030::manual-testing",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Функциональное тестирование может быть автоматизированным; в вакансии есть автотесты, но ручное тестирование отдельно не названо.",
+      "context_quote": "Проведение функционального тестирования",
+      "source_url": "https://career.habr.com/vacancies/1000168850",
+      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
       "provenance": {
         "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "not_a_disagreement"
       }
     },
     {
-      "candidate_id": "vac-038::asyncio",
+      "case_id": "J003",
+      "vacancy_id": "vac-020",
+      "tag": "ci-cd",
+      "candidate_id": "vac-020::ci-cd",
+      "verdict": "подтверждён (желательный)",
+      "quote": "**Будет плюсом:**\n\n- Опыт работы TeamCity и настройкой ее;",
+      "quote_start": 962,
+      "quote_end": 1020,
+      "reason": "Настройка прямо названной системы CI TeamCity желательна. Составной тег CI/CD подтверждается компонентом CI; отдельное знание CD не приписывается.",
+      "context_quote": null,
+      "source_url": "https://hh.ru/vacancy/135126969",
+      "text_sha256": "b9d3bf762b1f579ebc76eadd392e99b31965b02eb644689acf456697ea673e8b",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J004",
       "vacancy_id": "vac-038",
       "tag": "asyncio",
+      "candidate_id": "vac-038::asyncio",
       "verdict": "не подтверждён",
       "quote": null,
       "quote_start": null,
@@ -3256,132 +3327,50 @@
       "text_sha256": "2e1adce989a0ca7efe0eb030d2fb1162eb6442c20ceed86363927c34c9d7f313",
       "provenance": {
         "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "extra"
       }
     },
     {
-      "candidate_id": "vac-038::http",
-      "vacancy_id": "vac-038",
+      "case_id": "J005",
+      "vacancy_id": "vac-029",
       "tag": "http",
+      "candidate_id": "vac-029::http",
       "verdict": "не подтверждён",
       "quote": null,
       "quote_start": null,
       "quote_end": null,
-      "reason": "Заявлены REST API/JSON, но отдельное HTTP-требование или семантика протокола не указаны.",
-      "context_quote": "понимание работы **REST API**, формат **JSON**",
-      "source_url": "https://career.habr.com/vacancies/1000168347",
-      "text_sha256": "2e1adce989a0ca7efe0eb030d2fb1162eb6442c20ceed86363927c34c9d7f313",
+      "reason": "Указан Rest API, но отдельная HTTP-компетенция не названа и её конкретная семантика не описана.",
+      "context_quote": "Опыт работы с Rest API",
+      "source_url": "https://career.habr.com/vacancies/1000168926",
+      "text_sha256": "3b0bf033d8721030c60b742dace84341c33374b042530e1853730c4c11013716",
       "provenance": {
         "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "extra"
       }
     },
     {
-      "candidate_id": "vac-039::state-management",
-      "vacancy_id": "vac-039",
-      "tag": "state-management",
-      "verdict": "подтверждён (желательный)",
-      "quote": "Будет плюсом, если ты знаком с React, TypeScript, работал с разными стейт-менеджерами и сборщиками.",
-      "quote_start": 116,
-      "quote_end": 215,
-      "reason": "Стейт-менеджеры прямо указаны в положительной опциональной формулировке.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000162215",
-      "text_sha256": "428d93ef7d755244f32cbe7babfda766f1189240157242592223386664196df6",
-      "provenance": {
-        "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-040::html-css",
-      "vacancy_id": "vac-040",
-      "tag": "html-css",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Много верстать: адаптивные, доступные интерфейсы, пиксель-перфект, сложные формы и состояния;",
-      "quote_start": 1252,
-      "quote_end": 1345,
-      "reason": "Самостоятельная адаптивная веб-вёрстка прямо входит в обязанности фронтенд-разработчика; это однозначная деятельность HTML/CSS, а не только инспекция DevTools.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000167632",
-      "text_sha256": "f747fa294753f7df49d2e48040693fc6e8c6a9b420ab99645abf683a63a8f75a",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-040::rest-api",
-      "vacancy_id": "vac-040",
-      "tag": "rest-api",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Понимание спецификации OpenAPI (генерация типов/клиентов);",
-      "quote_start": 1734,
-      "quote_end": 1792,
-      "reason": "Прямое требование к спецификации веб-API и генерации клиентов подтверждает API-контракты составного тега REST API.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000167632",
-      "text_sha256": "f747fa294753f7df49d2e48040693fc6e8c6a9b420ab99645abf683a63a8f75a",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-041::git",
-      "vacancy_id": "vac-041",
-      "tag": "git",
+      "case_id": "J006",
+      "vacancy_id": "vac-027",
+      "tag": "kubernetes",
+      "candidate_id": "vac-027::kubernetes",
       "verdict": "не подтверждён",
       "quote": null,
       "quote_start": null,
       "quote_end": null,
-      "reason": "Указан GitLab CI, но не работа с Git/системой контроля версий. Навык Git не извлекается автоматически из названия CI-продукта.",
-      "context_quote": "Опыт работы с gitlab CI",
-      "source_url": "https://career.habr.com/vacancies/1000167323",
-      "text_sha256": "3b378f963e454357ad3065bf360ee415ba61015a28795184401836d4c4de8033",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-042::state-management",
-      "vacancy_id": "vac-042",
-      "tag": "state-management",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "**Frontend-стек:** JavaScript, TypeScript, Vue.js, Pinia, Webpack Module Federation.",
-      "quote_start": 926,
-      "quote_end": 1010,
-      "reason": "Pinia прямо названа в фронтенд-стеке. Это подтверждение технологии проекта, а не персонального требования к конкретной библиотеке для руководителя.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168750",
-      "text_sha256": "fd4ddafcefc1c992d978172dcf93a2e811ea7922996ff622490082768bc3d054",
+      "reason": "Kubernetes отсутствует в сохранённом тексте; тестовые среды и микросервисы не определяют конкретную платформу. Текст заканчивается незавершённым пунктом; внешняя страница не подменяет замороженный корпус.",
+      "context_quote": "Опыт настройки и конфигурирования тестовых сред (поднятие стендов, обновление конфигов).",
+      "source_url": "https://career.habr.com/vacancies/1000168583",
+      "text_sha256": "7d4716148f208979ea009077b25173d165a8d247b13f142e1fdd7a45ecf61311",
       "provenance": {
         "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "missing"
       }
     },
     {
-      "candidate_id": "vac-044::network-security",
-      "vacancy_id": "vac-044",
-      "tag": "network-security",
-      "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Anti-DDoS, WAF, FW, Антивирус, Песочница, IPS, IDS, DLP, PAM, MDM, Защита баз данных.",
-      "quote_start": 2184,
-      "quote_end": 2269,
-      "reason": "Сетевые защитные средства Anti-DDoS/FW/IPS/IDS прямо названы в перечне средств ИБ, в которых кандидат должен разбираться.",
-      "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000162782",
-      "text_sha256": "e8d6862ab802f1ce60efc998a81fce6429820455d789360b85779118d4003c1b",
-      "provenance": {
-        "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
-      }
-    },
-    {
-      "candidate_id": "vac-046::ci-cd",
+      "case_id": "J007",
       "vacancy_id": "vac-046",
       "tag": "ci-cd",
+      "candidate_id": "vac-046::ci-cd",
       "verdict": "подтверждён текстом (обязательный)",
       "quote": "Опыт работы в среде непрерывной интеграции",
       "quote_start": 417,
@@ -3392,30 +3381,410 @@
       "text_sha256": "7cfe0e4e230ebb1ac61fda46d0bddc8c875c5654552de2b8bada538b2e9804b5",
       "provenance": {
         "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "not_a_disagreement"
       }
     },
     {
-      "candidate_id": "vac-046::rest-api",
-      "vacancy_id": "vac-046",
-      "tag": "rest-api",
+      "case_id": "J008",
+      "vacancy_id": "vac-032",
+      "tag": "sql",
+      "candidate_id": "vac-032::sql",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Упомянуты БД и их администрирование, но язык SQL или написание запросов не требуются. MySQL как продукт не автоматически равен отдельному навыку SQL.",
+      "context_quote": "Опыт администрирования тестовых сред (docker-compose, k8s) и баз данных (mysql, redis, clickhouse).",
+      "source_url": "https://career.habr.com/vacancies/1000167800",
+      "text_sha256": "4c9d3956a397a2f7b4ee9777b7175cb4a016ecfe0e7ea58c3f8a9740076d4eb6",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J009",
+      "vacancy_id": "vac-016",
+      "tag": "cryptography",
+      "candidate_id": "vac-016::cryptography",
       "verdict": "подтверждён текстом (обязательный)",
-      "quote": "Понимание протоколов и способов сетевой коммуникации, знание HTTP и REST.",
-      "quote_start": 531,
-      "quote_end": 604,
-      "reason": "REST прямо заявлен вместе с HTTP в требованиях к сетевой коммуникации.",
+      "quote": "Администрирование и настройка средств защиты информации (СЗИ): DLP, SIEM, межсетевые экраны (NGFW), антивирусная защита, СКЗИ/ЭЦП.",
+      "quote_start": 263,
+      "quote_end": 393,
+      "reason": "СКЗИ и ЭЦП прямо названы среди средств, которые необходимо администрировать и настраивать. Подтверждена прикладная работа с криптографической защитой, не экспертное знание математической криптографии.",
       "context_quote": null,
-      "source_url": "https://career.habr.com/vacancies/1000168883",
-      "text_sha256": "7cfe0e4e230ebb1ac61fda46d0bddc8c875c5654552de2b8bada538b2e9804b5",
+      "source_url": "https://hh.ru/vacancy/137706135",
+      "text_sha256": "f17481c06dc7398c9905b9d8b3ed741b2e0cbb09dfe6d5509a6a6b8590ec55fe",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J010",
+      "vacancy_id": "vac-016",
+      "tag": "pentest",
+      "candidate_id": "vac-016::pentest",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Обеспечение защиты сетевой инфраструктуры, проведение тестовых атак на сетевые ресурсы.",
+      "quote_start": 1055,
+      "quote_end": 1142,
+      "reason": "Проведение тестовых атак прямо входит в обязанности; это конкретная деятельность тестирования защищённости, не вывод из названия должности.",
+      "context_quote": null,
+      "source_url": "https://hh.ru/vacancy/137706135",
+      "text_sha256": "f17481c06dc7398c9905b9d8b3ed741b2e0cbb09dfe6d5509a6a6b8590ec55fe",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J011",
+      "vacancy_id": "vac-016",
+      "tag": "http",
+      "candidate_id": "vac-016::http",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Названы сетевые основы TCP/IP/OSI, но не HTTP или веб-протоколы; более общий сетевой навык не доказывает конкретный протокол.",
+      "context_quote": "Понимание сетевых технологий (TCP/IP, OSI, маршрутизация) и ОС (Windows, Linux).",
+      "source_url": "https://hh.ru/vacancy/137706135",
+      "text_sha256": "f17481c06dc7398c9905b9d8b3ed741b2e0cbb09dfe6d5509a6a6b8590ec55fe",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J012",
+      "vacancy_id": "vac-037",
+      "tag": "http",
+      "candidate_id": "vac-037::http",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Указан AJAX как веб-техника, но HTTP или конкретные знания методов/кодов/заголовков отдельно не заявлены. Та же консервативная политика, что для одного упоминания REST: протокольная компетенция не добавляется автоматически.",
+      "context_quote": "знать, что такое AJAX;",
+      "source_url": "https://career.habr.com/vacancies/1000167022",
+      "text_sha256": "d19d218568a3df9c26fb37949d4c6158984ab0cae9404ed01f9c835574bfb3f6",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J013",
+      "vacancy_id": "vac-031",
+      "tag": "cryptography",
+      "candidate_id": "vac-031::cryptography",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "TLS/SSL и принципы шифрования;",
+      "quote_start": 1702,
+      "quote_end": 1732,
+      "reason": "Принципы шифрования прямо входят в ожидаемые сетевые знания; тег подтверждён основами, не экспертным уровнем криптографии.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000167801",
+      "text_sha256": "596d93daa390a4243bca06e5619038c14b1b3c11840d3dd2dfc3654b69dac295",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J014",
+      "vacancy_id": "vac-031",
+      "tag": "manual-testing",
+      "candidate_id": "vac-031::manual-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "ручным тестированием backend и web-приложений;",
+      "quote_start": 195,
+      "quote_end": 241,
+      "reason": "Прямая формулировка обязанности ручного тестирования.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000167801",
+      "text_sha256": "596d93daa390a4243bca06e5619038c14b1b3c11840d3dd2dfc3654b69dac295",
       "provenance": {
         "rules": "missing",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "not_a_disagreement"
       }
     },
     {
-      "candidate_id": "vac-047::nlp",
+      "case_id": "J015",
+      "vacancy_id": "vac-030",
+      "tag": "linux",
+      "candidate_id": "vac-030::linux",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Bash назван как инструмент, но Linux/Unix не названы; конкретная ОС не выводится из оболочки.",
+      "context_quote": "Опыт работы с инструментами: SOAP UI, Postman, Jira, Confluence, Git, Visual Studio, VS Code, Bitbucket, Bash",
+      "source_url": "https://career.habr.com/vacancies/1000168850",
+      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J016",
+      "vacancy_id": "vac-001",
+      "tag": "http",
+      "candidate_id": "vac-001::http",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Есть REST/gRPC API, но нет отдельного требования HTTP или описания HTTP-методов/заголовков/кодов; само слово REST не отождествляется с тегом http.",
+      "context_quote": "Опыт проектирования REST/gRPC API",
+      "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05",
+      "text_sha256": "c692b8d91792e0092cbf175dc88ab092ee2a969df22719ceb8008d3345243264",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J017",
+      "vacancy_id": "vac-012",
+      "tag": "mlops",
+      "candidate_id": "vac-012::mlops",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Опыт end-to-end разработки ML-решений: от постановки задачи и работы с бизнесом до внедрения в production и поддержки моделей",
+      "quote_start": 758,
+      "quote_end": 883,
+      "reason": "Внедрение в production и последующая поддержка моделей явно включены в ожидаемый опыт. Подтверждён операционный компонент жизненного цикла ML, не подразумеваемый из должности Data Scientist.",
+      "context_quote": null,
+      "source_url": "https://youngjunior.ru/data/jobs/31786",
+      "text_sha256": "ce0af30808fa6e216802ec03d0573665c67fb166e7ce5b9b494667bc7d2e1d17",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J018",
+      "vacancy_id": "vac-029",
+      "tag": "manual-testing",
+      "candidate_id": "vac-029::manual-testing",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Названы виды тестирования и отдельные обязанности автоматизации, но ручное выполнение не указано. Функциональное/регрессионное тестирование может быть автоматизированным; применяется та же политика, что в vac-030.",
+      "context_quote": "Проводить функциональное, регрессионное и интеграционное тестирование",
+      "source_url": "https://career.habr.com/vacancies/1000168926",
+      "text_sha256": "3b0bf033d8721030c60b742dace84341c33374b042530e1853730c4c11013716",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J019",
+      "vacancy_id": "vac-027",
+      "tag": "api-testing",
+      "candidate_id": "vac-027::api-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Проверка контрактов между Frontend и Backend, а также между микросервисами (REST API).",
+      "quote_start": 957,
+      "quote_end": 1043,
+      "reason": "Прямая задача проверки API-контрактов; в требованиях дополнительно описаны методы, коды ответов, авторизация и JSON/XML.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168583",
+      "text_sha256": "7d4716148f208979ea009077b25173d165a8d247b13f142e1fdd7a45ecf61311",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J020",
+      "vacancy_id": "vac-023",
+      "tag": "rest-api",
+      "candidate_id": "vac-023::rest-api",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "HTTP-сервисы и форматы данных не определяют REST-архитектуру; REST/OpenAPI/Swagger не названы. Обратная автоматическая эквивалентность HTTP и REST тоже не применяется.",
+      "context_quote": "Навыки работы с XML, JSON, XDTO, XSD, XSLT, HTTP-сервисами;",
+      "source_url": "https://1c.ru/rus/firm1c/vacan/vacancy/93",
+      "text_sha256": "8d6312af7e19e5154b467bc6eedb34ed1cc49d43b8b15fe30f262e1e012f2751",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J021",
+      "vacancy_id": "vac-002",
+      "tag": "linux",
+      "candidate_id": "vac-002::linux",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Желательны bash/grep и обработка текста, но ОС Linux не названа; навыки оболочки не равны требованию конкретной ОС.",
+      "context_quote": "Опыт работы с текстовой информацией: RegExp, bash, grep, эффективный поиск по файлам.",
+      "source_url": "https://hh.ru/vacancy/129355447",
+      "text_sha256": "3038f04bd71003c89cb3ffaadbd0106bbefd005ce1b94830eb5fce2646182633",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J022",
+      "vacancy_id": "vac-041",
+      "tag": "git",
+      "candidate_id": "vac-041::git",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Указан GitLab CI, но не работа с Git/системой контроля версий. Навык Git не извлекается автоматически из названия CI-продукта.",
+      "context_quote": "Опыт работы с gitlab CI",
+      "source_url": "https://career.habr.com/vacancies/1000167323",
+      "text_sha256": "3b378f963e454357ad3065bf360ee415ba61015a28795184401836d4c4de8033",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J023",
+      "vacancy_id": "vac-031",
+      "tag": "asyncio",
+      "candidate_id": "vac-031::asyncio",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Асинхронное взаимодействие сервисов не доказывает применение библиотеки Python asyncio; сама библиотека не названа.",
+      "context_quote": "тестированием интеграций и асинхронного взаимодействия между сервисами;",
+      "source_url": "https://career.habr.com/vacancies/1000167801",
+      "text_sha256": "596d93daa390a4243bca06e5619038c14b1b3c11840d3dd2dfc3654b69dac295",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J024",
+      "vacancy_id": "vac-019",
+      "tag": "http",
+      "candidate_id": "vac-019::http",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Подтверждена интеграция REST API, но отдельная HTTP-компетенция не заявлена; автоматическая эквивалентность REST и http не применяется.",
+      "context_quote": "Интегрировать REST API и взаимодействовать с backend-разработчиками",
+      "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/",
+      "text_sha256": "9e57784bd5392468e9091ffb88873608bf00d054a3c58ca24dcfe11236409ff7",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J025",
+      "vacancy_id": "vac-010",
+      "tag": "frontend-testing",
+      "candidate_id": "vac-010::frontend-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Обеспечивать качество кода: ревью, модульное тестирование, поддержка CI/CD-процессов;",
+      "quote_start": 570,
+      "quote_end": 655,
+      "reason": "Модульное тестирование входит в обязанности фронтенд-разработчика. Отдельное упоминание unit-тестирования как плюса не отменяет этой задачи.",
+      "context_quote": null,
+      "source_url": "https://job.mts.ru/vacancy/580741711072857140",
+      "text_sha256": "e432a6a8d4d2a66f18e5e730023c04730f4cd0fd6383294757b8374b4ac54534",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J026",
+      "vacancy_id": "vac-018",
+      "tag": "siem-soc",
+      "candidate_id": "vac-018::siem-soc",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "ELK используется для общего мониторинга и логирования; нет безопасности, SIEM или SOC. ELK сам по себе не подтверждает security-компетенцию.",
+      "context_quote": "Опыт работы с системами мониторинга и логирования: ELK, Zabbix, Prometheus, Grafana;",
+      "source_url": "https://hh.ru/vacancy/129957759",
+      "text_sha256": "d38c3df55eea1249a3d3a65a0b78c8034eb7a700c67c73652ec92aec7bfd24d5",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J027",
+      "vacancy_id": "vac-011",
+      "tag": "javascript",
+      "candidate_id": "vac-011::javascript",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "JavaScript отдельно не назван; Vue/Nuxt могут использоваться с TypeScript. Язык не выводится автоматически из имени фреймворка.",
+      "context_quote": "Работать с Vue.js и Nuxt.js в качестве основного стека;",
+      "source_url": "https://career.habr.com/vacancies/1000161900",
+      "text_sha256": "d0644f469ed445cf7da6c0a984dda8b5f0fbdd6fa73398ceadadcdf01a342346",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J028",
+      "vacancy_id": "vac-025",
+      "tag": "kafka",
+      "candidate_id": "vac-025::kafka",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Требуется работа с брокерами вообще, но Kafka не назван. Конкретный продукт из класса инструментов не выводится.",
+      "context_quote": "Умение работать с брокерами сообщений",
+      "source_url": "https://career.habr.com/vacancies/1000168882",
+      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J029",
+      "vacancy_id": "vac-026",
+      "tag": "manual-testing",
+      "candidate_id": "vac-026::manual-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "**Опыт в ручном функциональном тестировании** (от 1 года).",
+      "quote_start": 1650,
+      "quote_end": 1708,
+      "reason": "Прямое обязательное требование к опыту ручного тестирования.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168587",
+      "text_sha256": "f7f373390d482aefa8d11d7cd48acb994654366ce67f1a08160b86c574b1149f",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J030",
       "vacancy_id": "vac-047",
       "tag": "nlp",
+      "candidate_id": "vac-047::nlp",
       "verdict": "не подтверждён",
       "quote": null,
       "quote_start": null,
@@ -3426,13 +3795,536 @@
       "text_sha256": "133e3b33289bf7030e37a12487c89ec43f6bd3946af019763380fa98a481632b",
       "provenance": {
         "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "extra"
       }
     },
     {
-      "candidate_id": "vac-049::http",
+      "case_id": "J031",
+      "vacancy_id": "vac-027",
+      "tag": "http",
+      "candidate_id": "vac-027::http",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Глубокое понимание **REST API** (методы, коды ответов, авторизация, работа с JSON/XML).",
+      "quote_start": 2069,
+      "quote_end": 2156,
+      "reason": "Перечислены методы, коды ответов и авторизация REST API — конкретная семантика HTTP-взаимодействия, не только слово REST. Это смысловое, а не буквальное подтверждение; эксперт может оспорить границу.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168583",
+      "text_sha256": "7d4716148f208979ea009077b25173d165a8d247b13f142e1fdd7a45ecf61311",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J032",
+      "vacancy_id": "vac-010",
+      "tag": "rest-api",
+      "candidate_id": "vac-010::rest-api",
+      "verdict": "подтверждён (желательный)",
+      "quote": "Будет плюсом:\nОпыт работы с SVG;\nОпыт работы с Swagger;",
+      "quote_start": 1002,
+      "quote_end": 1057,
+      "reason": "Swagger прямо указан как желательный инструмент работы с описанием REST API; это подтверждение API-контрактов, не HTTP как отдельной компетенции.",
+      "context_quote": null,
+      "source_url": "https://job.mts.ru/vacancy/580741711072857140",
+      "text_sha256": "e432a6a8d4d2a66f18e5e730023c04730f4cd0fd6383294757b8374b4ac54534",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J033",
+      "vacancy_id": "vac-046",
+      "tag": "rest-api",
+      "candidate_id": "vac-046::rest-api",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Понимание протоколов и способов сетевой коммуникации, знание HTTP и REST.",
+      "quote_start": 531,
+      "quote_end": 604,
+      "reason": "REST прямо заявлен вместе с HTTP в требованиях к сетевой коммуникации.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168883",
+      "text_sha256": "7cfe0e4e230ebb1ac61fda46d0bddc8c875c5654552de2b8bada538b2e9804b5",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J034",
+      "vacancy_id": "vac-028",
+      "tag": "html-css",
+      "candidate_id": "vac-028::html-css",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "**Базовые знания:** Java (основы ООП), UML, XML, HTML (на уровне чтения/понимания).",
+      "quote_start": 1802,
+      "quote_end": 1885,
+      "reason": "HTML прямо требуется на уровне чтения/понимания. Подтверждён HTML-компонент составного тега, не отдельное знание CSS.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168581",
+      "text_sha256": "5874acabd75a2a53a640ce0b0c8221604805bfde46729cba9f78a032829ea723",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J035",
+      "vacancy_id": "vac-026",
+      "tag": "api-testing",
+      "candidate_id": "vac-026::api-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "**Автоматизация тестирования REST API** (больше, чем UI).",
+      "quote_start": 1712,
+      "quote_end": 1769,
+      "reason": "API-тестирование прямо выделено как основной навык.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168587",
+      "text_sha256": "f7f373390d482aefa8d11d7cd48acb994654366ce67f1a08160b86c574b1149f",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J036",
+      "vacancy_id": "vac-044",
+      "tag": "ci-cd",
+      "candidate_id": "vac-044::ci-cd",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Названы основы DevOps, но непрерывная интеграция/доставка, пайплайны или конкретные CI/CD-инструменты не указаны. Общая практика не подтверждает каждую составляющую автоматически.",
+      "context_quote": "Понимать основы использования DevOps при организации процесса разработки и внедрения ПО.",
+      "source_url": "https://career.habr.com/vacancies/1000162782",
+      "text_sha256": "e8d6862ab802f1ce60efc998a81fce6429820455d789360b85779118d4003c1b",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J037",
+      "vacancy_id": "vac-015",
+      "tag": "postgresql",
+      "candidate_id": "vac-015::postgresql",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Опыт работы с любой реляционной БД (Oracle, Postgres, MySQL, MsSQL, DB2 и т.п.).",
+      "quote_start": 539,
+      "quote_end": 619,
+      "reason": "Postgres прямо назван среди допустимых реляционных БД. Подтверждена альтернативная технология, не личный must-have именно PostgreSQL.",
+      "context_quote": null,
+      "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326",
+      "text_sha256": "9e51af49637bfdb19dafb133e10f8cdbb48a1c224d314b2dc91907ce5181f50e",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J038",
+      "vacancy_id": "vac-028",
+      "tag": "manual-testing",
+      "candidate_id": "vac-028::manual-testing",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Ручное тестирование относится к смежной команде; личные обязанности кандидата описаны как автоматизация и взаимодействие. Общая теория тестирования не равна ручному выполнению тестов.",
+      "context_quote": "Взаимодействовать с командой ручного (РФТ) и нагрузочного (НТ) тестирования — уточнять кейсы, оценивать корректность и актуальность сценариев.",
+      "source_url": "https://career.habr.com/vacancies/1000168581",
+      "text_sha256": "5874acabd75a2a53a640ce0b0c8221604805bfde46729cba9f78a032829ea723",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "missing"
+      }
+    },
+    {
+      "case_id": "J039",
+      "vacancy_id": "vac-028",
+      "tag": "frontend-testing",
+      "candidate_id": "vac-028::frontend-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Разрабатывать и поддерживать автотесты, используя Selenium/Selenoid.",
+      "quote_start": 780,
+      "quote_end": 848,
+      "reason": "Прямо требуется разработка браузерных автотестов Selenium/Selenoid в проекте с веб-дашбордами. Это конкретное тестирование пользовательского интерфейса, а не только общий опыт QA.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168581",
+      "text_sha256": "5874acabd75a2a53a640ce0b0c8221604805bfde46729cba9f78a032829ea723",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J040",
+      "vacancy_id": "vac-040",
+      "tag": "html-css",
+      "candidate_id": "vac-040::html-css",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Много верстать: адаптивные, доступные интерфейсы, пиксель-перфект, сложные формы и состояния;",
+      "quote_start": 1252,
+      "quote_end": 1345,
+      "reason": "Самостоятельная адаптивная веб-вёрстка прямо входит в обязанности фронтенд-разработчика; это однозначная деятельность HTML/CSS, а не только инспекция DevTools.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000167632",
+      "text_sha256": "f747fa294753f7df49d2e48040693fc6e8c6a9b420ab99645abf683a63a8f75a",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J041",
+      "vacancy_id": "vac-039",
+      "tag": "state-management",
+      "candidate_id": "vac-039::state-management",
+      "verdict": "подтверждён (желательный)",
+      "quote": "Будет плюсом, если ты знаком с React, TypeScript, работал с разными стейт-менеджерами и сборщиками.",
+      "quote_start": 116,
+      "quote_end": 215,
+      "reason": "Стейт-менеджеры прямо указаны в положительной опциональной формулировке.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000162215",
+      "text_sha256": "428d93ef7d755244f32cbe7babfda766f1189240157242592223386664196df6",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J042",
+      "vacancy_id": "vac-010",
+      "tag": "state-management",
+      "candidate_id": "vac-010::state-management",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Опыт работы с Pinia, Vue-Router;",
+      "quote_start": 888,
+      "quote_end": 920,
+      "reason": "Pinia — прямо названный инструмент управления состоянием; опыт с ним требуется, а не просто выведен из наличия Vue.",
+      "context_quote": null,
+      "source_url": "https://job.mts.ru/vacancy/580741711072857140",
+      "text_sha256": "e432a6a8d4d2a66f18e5e730023c04730f4cd0fd6383294757b8374b4ac54534",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J043",
+      "vacancy_id": "vac-027",
+      "tag": "kafka",
+      "candidate_id": "vac-027::kafka",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Kafka отсутствует в сохранённом тексте; микросервисная архитектура и блокчейн не подтверждают этот брокер. Возможный остаток исходной страницы не считается доказательством корпуса.",
+      "context_quote": "Проверка контрактов между Frontend и Backend, а также между микросервисами (REST API).",
+      "source_url": "https://career.habr.com/vacancies/1000168583",
+      "text_sha256": "7d4716148f208979ea009077b25173d165a8d247b13f142e1fdd7a45ecf61311",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "missing"
+      }
+    },
+    {
+      "case_id": "J044",
+      "vacancy_id": "vac-017",
+      "tag": "git",
+      "candidate_id": "vac-017::git",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Имеете опыт построения GitOps-процессов с использованием систем управления конфигурациями и CD-инструментов;",
+      "quote_start": 2258,
+      "quote_end": 2366,
+      "reason": "GitOps прямо требует Git-ориентированного управления состоянием инфраструктуры. Это сильнее, чем одно имя GitLab CI; тег не означает перечень конкретных Git-команд.",
+      "context_quote": null,
+      "source_url": "https://hh.ru/vacancy/127601108",
+      "text_sha256": "3df458ed5df9aefbe88c17458a290a5601c8bdb435f335e1d2b76799b66292ec",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J045",
+      "vacancy_id": "vac-042",
+      "tag": "state-management",
+      "candidate_id": "vac-042::state-management",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "**Frontend-стек:** JavaScript, TypeScript, Vue.js, Pinia, Webpack Module Federation.",
+      "quote_start": 926,
+      "quote_end": 1010,
+      "reason": "Pinia прямо названа в фронтенд-стеке. Это подтверждение технологии проекта, а не персонального требования к конкретной библиотеке для руководителя.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168750",
+      "text_sha256": "fd4ddafcefc1c992d978172dcf93a2e811ea7922996ff622490082768bc3d054",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "missing"
+      }
+    },
+    {
+      "case_id": "J046",
+      "vacancy_id": "vac-032",
+      "tag": "http",
+      "candidate_id": "vac-032::http",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Общие сетевые протоколы и API-автотесты не называют HTTP или его конкретную семантику. Как и в других случаях, протокол не выводится автоматически из сетевой деятельности.",
+      "context_quote": "Уверенное знание Python и сетевых протоколов.",
+      "source_url": "https://career.habr.com/vacancies/1000167800",
+      "text_sha256": "4c9d3956a397a2f7b4ee9777b7175cb4a016ecfe0e7ea58c3f8a9740076d4eb6",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J047",
+      "vacancy_id": "vac-036",
+      "tag": "test-design",
+      "candidate_id": "vac-036::test-design",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Разработка автотестов и теория тестирования названы, но проектирование сценариев/тест-кейсов или техники тест-дизайна отдельно не заявлены. Отдельная компетенция не добавляется ко всей автоматизации по умолчанию.",
+      "context_quote": "Разрабатывать автотесты с использованием различных инструментов и фреймворков",
+      "source_url": "https://career.habr.com/vacancies/1000168214",
+      "text_sha256": "e1064a4e36ff7e7c0fab63fa7c47b49a3e249c9fc0c21622d3623e33618c24a3",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J048",
+      "vacancy_id": "vac-040",
+      "tag": "rest-api",
+      "candidate_id": "vac-040::rest-api",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Понимание спецификации OpenAPI (генерация типов/клиентов);",
+      "quote_start": 1734,
+      "quote_end": 1792,
+      "reason": "Прямое требование к спецификации веб-API и генерации клиентов подтверждает API-контракты составного тега REST API.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000167632",
+      "text_sha256": "f747fa294753f7df49d2e48040693fc6e8c6a9b420ab99645abf683a63a8f75a",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J049",
+      "vacancy_id": "vac-047",
+      "tag": "rest-api",
+      "candidate_id": "vac-047::rest-api",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "API-менеджмент и интеграции не задают конкретно REST; API-шлюз Gravitee также не ограничивает API одним протоколом. REST, OpenAPI или Swagger в тексте не указаны.",
+      "context_quote": "понимание архитектуры корпоративных интеграций и API-менеджмента;",
+      "source_url": "https://career.habr.com/vacancies/1000168727",
+      "text_sha256": "133e3b33289bf7030e37a12487c89ec43f6bd3946af019763380fa98a481632b",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J050",
+      "vacancy_id": "vac-030",
+      "tag": "http",
+      "candidate_id": "vac-030::http",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "REST API не автоматически превращается в отдельный тег http; протокол или HTTP-специфичные знания не заявлены.",
+      "context_quote": "Опыт работы с Rest API",
+      "source_url": "https://career.habr.com/vacancies/1000168850",
+      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J051",
+      "vacancy_id": "vac-034",
+      "tag": "manual-testing",
+      "candidate_id": "vac-034::manual-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Ручное и автоматизированное тестирование WebUI-компонентов;",
+      "quote_start": 378,
+      "quote_end": 437,
+      "reason": "Ручное тестирование явно включено в предстоящие задачи.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168205",
+      "text_sha256": "d62d8e6d74d95481829784bbb53ba4152d82ec48a44895a39d4cf1bacddba98f",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J052",
+      "vacancy_id": "vac-025",
+      "tag": "manual-testing",
+      "candidate_id": "vac-025::manual-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Проведение регрессионного тестирования, в том числе вручную",
+      "quote_start": 2307,
+      "quote_end": 2366,
+      "reason": "Ручное тестирование прямо входит в задачи; дополнительно указано соотношение ручного и авто 50/50.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168882",
+      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J053",
+      "vacancy_id": "vac-039",
+      "tag": "vite-webpack",
+      "candidate_id": "vac-039::vite-webpack",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Желателен опыт сборщиков вообще, но Vite/Webpack не названы. Конкретные продукты составного тега не выводятся из класса инструментов.",
+      "context_quote": "Будет плюсом, если ты знаком с React, TypeScript, работал с разными стейт-менеджерами и сборщиками.",
+      "source_url": "https://career.habr.com/vacancies/1000162215",
+      "text_sha256": "428d93ef7d755244f32cbe7babfda766f1189240157242592223386664196df6",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J054",
+      "vacancy_id": "vac-034",
+      "tag": "frontend-testing",
+      "candidate_id": "vac-034::frontend-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Ручное и автоматизированное тестирование WebUI-компонентов;",
+      "quote_start": 378,
+      "quote_end": 437,
+      "reason": "Тестирование веб-интерфейса прямо входит в задачи; отдельно требуются TypeScript и PlayWright.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168205",
+      "text_sha256": "d62d8e6d74d95481829784bbb53ba4152d82ec48a44895a39d4cf1bacddba98f",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J055",
+      "vacancy_id": "vac-032",
+      "tag": "go",
+      "candidate_id": "vac-032::go",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Наш ключевой стек: ** PHP 8, Golang, Python, Mysql, Clickhouse, Redis, Docker, Kubernetes, Git, CI/CD, Linux.",
+      "quote_start": 576,
+      "quote_end": 685,
+      "reason": "Golang прямо назван в основном проектном стеке. Это контекст вакансии; личное знание Go отдельно не требуется, а автоматизация ведётся на Python.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000167800",
+      "text_sha256": "4c9d3956a397a2f7b4ee9777b7175cb4a016ecfe0e7ea58c3f8a9740076d4eb6",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J056",
+      "vacancy_id": "vac-001",
+      "tag": "sql",
+      "candidate_id": "vac-001::sql",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Заявлена работа с БД, включая альтернативу NoSQL, но язык SQL или написание запросов не требуются. SQL не добавляется из любого упоминания реляционных БД.",
+      "context_quote": "Навыки работы с реляционными и/или NoSQL базами данных",
+      "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05",
+      "text_sha256": "c692b8d91792e0092cbf175dc88ab092ee2a969df22719ceb8008d3345243264",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J057",
+      "vacancy_id": "vac-038",
+      "tag": "http",
+      "candidate_id": "vac-038::http",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Заявлены REST API/JSON, но отдельное HTTP-требование или семантика протокола не указаны.",
+      "context_quote": "понимание работы **REST API**, формат **JSON**",
+      "source_url": "https://career.habr.com/vacancies/1000168347",
+      "text_sha256": "2e1adce989a0ca7efe0eb030d2fb1162eb6442c20ceed86363927c34c9d7f313",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J058",
+      "vacancy_id": "vac-025",
+      "tag": "kotlin",
+      "candidate_id": "vac-025::kotlin",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "# QA Automation (Java/Kotlin),Senior, удаленно, аутстафф",
+      "quote_start": 0,
+      "quote_end": 56,
+      "reason": "Kotlin прямо назван в заголовке роли как альтернатива Java. Это наличие технологии в вакансии, не обязательность обоих языков.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168882",
+      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J059",
+      "vacancy_id": "vac-044",
+      "tag": "network-security",
+      "candidate_id": "vac-044::network-security",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Anti-DDoS, WAF, FW, Антивирус, Песочница, IPS, IDS, DLP, PAM, MDM, Защита баз данных.",
+      "quote_start": 2184,
+      "quote_end": 2269,
+      "reason": "Сетевые защитные средства Anti-DDoS/FW/IPS/IDS прямо названы в перечне средств ИБ, в которых кандидат должен разбираться.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000162782",
+      "text_sha256": "e8d6862ab802f1ce60efc998a81fce6429820455d789360b85779118d4003c1b",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J060",
       "vacancy_id": "vac-049",
       "tag": "http",
+      "candidate_id": "vac-049::http",
       "verdict": "не подтверждён",
       "quote": null,
       "quote_start": null,
@@ -3443,37 +4335,333 @@
       "text_sha256": "fdcfe2410f2f6b691e80298adefe9ed0b2a119b8b6701b59e25d3fcca6021a47",
       "provenance": {
         "rules": "extra",
-        "rules_sonnet": "unknown_missing_prediction_artifact"
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J061",
+      "vacancy_id": "vac-025",
+      "tag": "rest-api",
+      "candidate_id": "vac-025::rest-api",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Уверенные знания REST\n- Уверенные навыки тестирования API (использование инструментов для тестирования API, особенности тестирования API)",
+      "quote_start": 383,
+      "quote_end": 520,
+      "reason": "REST и тестирование API явно соседствуют в требованиях.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168882",
+      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J062",
+      "vacancy_id": "vac-017",
+      "tag": "docker",
+      "candidate_id": "vac-017::docker",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Docker не назван; Kubernetes и контейнерная инфраструктура не доказывают использование Docker.",
+      "context_quote": "Kubernetes | kubeadm + kubespray",
+      "source_url": "https://hh.ru/vacancy/127601108",
+      "text_sha256": "3df458ed5df9aefbe88c17458a290a5601c8bdb435f335e1d2b76799b66292ec",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J063",
+      "vacancy_id": "vac-025",
+      "tag": "http",
+      "candidate_id": "vac-025::http",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Есть REST, API и клиент-серверные приложения, но HTTP или его конкретная семантика отдельно не описаны.",
+      "context_quote": "Уверенные знания REST",
+      "source_url": "https://career.habr.com/vacancies/1000168882",
+      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J064",
+      "vacancy_id": "vac-030",
+      "tag": "test-design",
+      "candidate_id": "vac-030::test-design",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Подготовка тестовой документации (сценарии, отчеты по тестированию)",
+      "quote_start": 76,
+      "quote_end": 143,
+      "reason": "Подготовка тестовых сценариев прямо входит в обязанности; это конкретная деятельность тест-дизайна, а не только общий опыт QA.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168850",
+      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J065",
+      "vacancy_id": "vac-030",
+      "tag": "api-testing",
+      "candidate_id": "vac-030::api-testing",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Опыт работы с Rest API",
+      "quote_start": 473,
+      "quote_end": 495,
+      "reason": "В разделе ожиданий QA-кандидата явно указан опыт REST API; в том же списке есть SOAP UI и Postman. Контекст прямо связывает API с тестированием.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000168850",
+      "text_sha256": "5c3977c7714488fdddaace4c4901e6aba46f0d078708e18a8d46059c832a55ac",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J066",
+      "vacancy_id": "vac-011",
+      "tag": "vite-webpack",
+      "candidate_id": "vac-011::vite-webpack",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Общие подходы к сборке заявлены, но Vite/Webpack или однозначное имя одного из этих инструментов отсутствуют.",
+      "context_quote": "Хорошо разбираешься в современных подходах к сборке и архитектуре приложений;",
+      "source_url": "https://career.habr.com/vacancies/1000161900",
+      "text_sha256": "d0644f469ed445cf7da6c0a984dda8b5f0fbdd6fa73398ceadadcdf01a342346",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J067",
+      "vacancy_id": "vac-001",
+      "tag": "rest-api",
+      "candidate_id": "vac-001::rest-api",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Опыт проектирования REST/gRPC API",
+      "quote_start": 1146,
+      "quote_end": 1179,
+      "reason": "REST API прямо указан в требованиях, отдельно от альтернативного протокола gRPC.",
+      "context_quote": null,
+      "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05",
+      "text_sha256": "c692b8d91792e0092cbf175dc88ab092ee2a969df22719ceb8008d3345243264",
+      "provenance": {
+        "rules": "missing",
+        "rules_sonnet": "not_a_disagreement"
+      }
+    },
+    {
+      "case_id": "J068",
+      "vacancy_id": "vac-012",
+      "tag": "statistics",
+      "candidate_id": "vac-012::statistics",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Уверенное понимание A/B-тестирования",
+      "quote_start": 1178,
+      "quote_end": 1214,
+      "reason": "A/B-тестирование — явно названная прикладная статистическая компетенция; не просто вывод из должности Data Scientist.",
+      "context_quote": null,
+      "source_url": "https://youngjunior.ru/data/jobs/31786",
+      "text_sha256": "ce0af30808fa6e216802ec03d0573665c67fb166e7ce5b9b494667bc7d2e1d17",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J069",
+      "vacancy_id": "vac-023",
+      "tag": "ci-cd",
+      "candidate_id": "vac-023::ci-cd",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "GitLab и DevOps указаны как желательный общий опыт, но CI/CD-пайплайны или непрерывная интеграция/доставка не названы; наличие GitLab не доказывает использование GitLab CI.",
+      "context_quote": "Опыт командной работы с 1С:EDT и GitLab, понимание принципов DevOps, современных трендов развития ПО;",
+      "source_url": "https://1c.ru/rus/firm1c/vacan/vacancy/93",
+      "text_sha256": "8d6312af7e19e5154b467bc6eedb34ed1cc49d43b8b15fe30f262e1e012f2751",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J070",
+      "vacancy_id": "vac-025",
+      "tag": "rabbitmq",
+      "candidate_id": "vac-025::rabbitmq",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Брокеры сообщений названы как класс, но RabbitMQ не указан. Применяется то же решение, что для Kafka в этой вакансии.",
+      "context_quote": "Умение работать с брокерами сообщений",
+      "source_url": "https://career.habr.com/vacancies/1000168882",
+      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J071",
+      "vacancy_id": "vac-011",
+      "tag": "a11y",
+      "candidate_id": "vac-011::a11y",
+      "verdict": "подтверждён текстом (обязательный)",
+      "quote": "Умеешь повышать производительность интерфейсов, соблюдать семантику, учитывать доступность и базовые требования SEO;",
+      "quote_start": 996,
+      "quote_end": 1112,
+      "reason": "Доступность пользовательских интерфейсов прямо включена в ожидания от кандидата.",
+      "context_quote": null,
+      "source_url": "https://career.habr.com/vacancies/1000161900",
+      "text_sha256": "d0644f469ed445cf7da6c0a984dda8b5f0fbdd6fa73398ceadadcdf01a342346",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J072",
+      "vacancy_id": "vac-025",
+      "tag": "html-css",
+      "candidate_id": "vac-025::html-css",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Требуется использование DevTools для проверки вёрстки, но знание HTML/CSS или самостоятельная веб-вёрстка не заявлены. Не выводится язык из инструмента инспекции.",
+      "context_quote": "Умение использовать панель разработчика в Chrome (верстка, консоль, сеть)",
+      "source_url": "https://career.habr.com/vacancies/1000168882",
+      "text_sha256": "786edca3ae3133d2333e9f1e5b6e5c615666f36345fc10c1b762df78572a2446",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J073",
+      "vacancy_id": "vac-042",
+      "tag": "frontend-testing",
+      "candidate_id": "vac-042::frontend-testing",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Названы управление фронтенд-разработкой, качество, code review и инженерные практики, но тестирование интерфейса или тестовые инструменты отдельно не указаны.",
+      "context_quote": "Повышать качество разработки и инженерных практик.",
+      "source_url": "https://career.habr.com/vacancies/1000168750",
+      "text_sha256": "fd4ddafcefc1c992d978172dcf93a2e811ea7922996ff622490082768bc3d054",
+      "provenance": {
+        "rules": "not_a_disagreement",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J074",
+      "vacancy_id": "vac-015",
+      "tag": "spark",
+      "candidate_id": "vac-015::spark",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Spark отсутствует; Hadoop, HDFS и Hive не являются указанием конкретно на Spark.",
+      "context_quote": "Представление о работе с Hadoop.",
+      "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326",
+      "text_sha256": "9e51af49637bfdb19dafb133e10f8cdbb48a1c224d314b2dc91907ce5181f50e",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J075",
+      "vacancy_id": "vac-028",
+      "tag": "load-testing",
+      "candidate_id": "vac-028::load-testing",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Кандидат взаимодействует с отдельной командой нагрузочного тестирования; проведение нагрузочных тестов или соответствующий личный навык не требуется. Упоминание смежной команды не превращается в стек кандидата.",
+      "context_quote": "Взаимодействовать с командой ручного (РФТ) и нагрузочного (НТ) тестирования — уточнять кейсы, оценивать корректность и актуальность сценариев.",
+      "source_url": "https://career.habr.com/vacancies/1000168581",
+      "text_sha256": "5874acabd75a2a53a640ce0b0c8221604805bfde46729cba9f78a032829ea723",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J076",
+      "vacancy_id": "vac-026",
+      "tag": "git",
+      "candidate_id": "vac-026::git",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Желателен CI/CD с Jenkins/GitLab CI; владение Git как системой контроля версий отдельно не указано и не выводится из названия продукта.",
+      "context_quote": "Опыт работы с CI/CD (Jenkins, GitLab CI).",
+      "source_url": "https://career.habr.com/vacancies/1000168587",
+      "text_sha256": "f7f373390d482aefa8d11d7cd48acb994654366ce67f1a08160b86c574b1149f",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
+      }
+    },
+    {
+      "case_id": "J077",
+      "vacancy_id": "vac-017",
+      "tag": "a11y",
+      "candidate_id": "vac-017::a11y",
+      "verdict": "не подтверждён",
+      "quote": null,
+      "quote_start": null,
+      "quote_end": null,
+      "reason": "Речь о эксплуатационной доступности сервисов, не о accessibility пользовательских интерфейсов.",
+      "context_quote": "Использовать принципы Site Reliability Engineering для повышения отказоустойчивости и доступности сервисов;",
+      "source_url": "https://hh.ru/vacancy/127601108",
+      "text_sha256": "3df458ed5df9aefbe88c17458a290a5601c8bdb435f335e1d2b76799b66292ec",
+      "provenance": {
+        "rules": "extra",
+        "rules_sonnet": "extra"
       }
     }
   ],
-  "blockers": [
-    {
-      "id": "missing_sonnet_predictions",
-      "evidence": {
-        "per_text_fields": [
-          "error",
-          "id",
-          "latency_ms",
-          "ok"
-        ],
-        "benchmark_writer": "tools/llm/bench_needs.py: run_model stores only id, ok, error, latency_ms in per_text."
-      },
-      "recovery_attempts": [
-        "Read committed benchmark and benchmark writer: original stack predictions were not persisted.",
-        "Checked relevant /tmp/r37 logs, temporary clone and workspace needs/sonnet/prediction JSON paths: no original Sonnet stack predictions found."
-      ],
-      "recovery": "Provide the original per-vacancy requirements or raw model replies from this exact run. If unavailable, authorize a separate new run with full prediction persistence; do not relabel it as the old run."
-    }
-  ],
   "checks": {
-    "unique_judgement_pairs": true,
-    "all_available_disagreements_reviewed": true,
+    "all_50_prediction_ids_and_text_hashes_match": true,
+    "one_sonnet_model_run_only": true,
+    "all_50_calls_max_tokens_2500_and_reasoning_low": true,
+    "original_counts_match_persisted_predictions": true,
+    "all_unique_disagreements_have_one_judgement": true,
     "all_confirmed_quotes_exact_substrings": true,
     "all_context_quotes_exact_substrings": true,
-    "original_rules_counts_match_benchmark": true,
-    "original_corpus_text_hashes_match": true,
+    "common_corrected_reference_for_both_systems": true,
     "no_silver_tags_removed": true,
-    "sonnet_after_not_fabricated": true
-  }
+    "original_sonnet_run_not_relabelled_as_new_run": true
+  },
+  "remaining_limitations": [
+    "Model judgement, not expert judgement.",
+    "Reviewer had prior exposure to rules-only phase; current shuffled input hides sources, but is not a fresh blind reviewer.",
+    "Conditional/alternative/project-context skills are preserved as tags, not asserted as personal must-haves.",
+    "No exhaustive search for skills missed by both systems; this is silver plus confirmed observed extras.",
+    "The original historical 59-extra/5-missing Sonnet run remains unavailable and is not reconstructed."
+  ]
 }
