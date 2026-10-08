@@ -70,8 +70,8 @@ class Settings(BaseSettings):
     llm_chain: str | None = None
     openrouter_api_key: str | None = None
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    # Ретранслятор (Cloudflare Worker): если задан, запросы OpenRouter идут на него с заголовком X-Relay-Token,
-    # Authorization с ключом OpenRouter передаётся как есть (ключ хранится только на сервере)
+    # Ретранслятор вне РФ (с сервера в РФ OpenRouter отвечает 403): если задан, запросы OpenRouter идут на него
+    # с заголовком X-Relay-Token, Authorization с ключом OpenRouter передаётся как есть
     llm_relay_url: str | None = None
     llm_relay_token: str | None = None
     # Модель на функцию: «модель» (для первого провайдера цепочки) или «провайдер=модель,провайдер=модель»;
