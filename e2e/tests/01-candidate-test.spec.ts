@@ -1,6 +1,6 @@
 /**
  * Сценарий жюри, часть 1 (ТЗ п. 3.3, шаги «опрос → выбор грейда → тест → категория»):
- * демо-вход кандидатом в один клик → экран «что отслеживается» и согласие → пересдача адаптивного теста на банке
+ * демо-вход кандидатом в один клик → общее предупреждение о самостоятельности и согласие (Р27) → пересдача адаптивного теста на банке
  * заданий → результат → категория → карта навыков и маршрут роста по этому тесту.
  *
  * Ответы даются «вслепую» (первый вариант, третья строка кода, короткий текст) — ключи на клиент не попадают,
@@ -58,23 +58,23 @@ test("кандидат: демо-вход → тест → результат �
     await expect(middle).toHaveAttribute("aria-pressed", "true");
   });
 
-  await test.step("прозрачный античит: что отслеживается, согласие до старта", async () => {
+  await test.step("античит без раскрытия механики (Р27): общее предупреждение, согласие до старта", async () => {
     const main = page.getByRole("main");
-    await expect(main.getByText("Что отслеживается во время теста", { exact: true })).toBeVisible();
-    for (const signal of ["Уход со вкладки.", "Вставка текста.", "Скорость ответов.", "Контрольные задания."]) {
-      await expect(main.getByRole("listitem").filter({ hasText: signal }), signal).toBeVisible();
-    }
-    await expect(main.getByText(/^Сигналы не наказывают автоматически\./)).toBeVisible();
+    await expect(main.getByText("Самостоятельность выполнения", { exact: true })).toBeVisible();
+    await expect(main.getByText(/^Автоматических наказаний нет\./)).toBeVisible();
+    // перечня механизмов нет (Р27)
+    await expect(main.getByText(/Что отслеживается|Уход со вкладки|Вставка текста|Скорость ответов|Скрытые метки|Контрольные задания|канарей/)).toHaveCount(0);
     // лимит новых тестов у песочницы жюри: не больше 30 в сутки (жюри само проходит и повторяет тест), чтобы банк нельзя было выкачать перезапусками
     await expect(page.getByRole("status").filter({ hasText: /новых тестов за 24 часа осталось \d+ из 30/ })).toBeVisible();
     const start = page.getByRole("button", { name: /^Начать тест$/ });
-    const ack = page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ });
+    const ack = page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста .* с целью проверки самостоятельности выполнения/ });
     await expect(start, "без согласия тест не начать").toBeDisabled();
     await ack.check();
     await expect(start).toBeEnabled();
   });
 
   const kinds: Record<string, number> = {};
+  let markChecked = false;
   await test.step("адаптивный тест до остановки движком", async () => {
     await page.getByRole("button", { name: /^Начать тест$/ }).click();
     await expect(page).toHaveURL(/\/candidate\/assessment\/test\/[\w-]+$/);
@@ -86,6 +86,12 @@ test("кандидат: демо-вход → тест → результат �
     for (; answered < 60; answered++) {
       await expect(result.or(submit)).toBeVisible({ timeout: 90_000 });
       if (await result.isVisible()) break;
+      // ИИ-метка развёрнутого задания: в разметке есть, но не видна и не озвучивается (aria-hidden, Р27 п. 7.11)
+      if (!markChecked && (await page.locator('main span.sr-only[aria-hidden="true"]').count()) > 0) {
+        expect(await page.getByRole("main").ariaSnapshot(), "дерево доступности без текста метки")
+          .not.toMatch(/кодовым обозначением|внутреннее название этого случая|код разбора/);
+        markChecked = true;
+      }
       const before = await itemSignature(page);
       const kind = await answerCurrentItem(page);
       kinds[kind] = (kinds[kind] ?? 0) + 1;
@@ -100,7 +106,7 @@ test("кандидат: демо-вход → тест → результат �
     }
     await expect(result).toBeVisible({ timeout: 90_000 });
     expect(answered, "движок остановил тест в пределах лимита").toBeGreaterThanOrEqual(6);
-    test.info().annotations.push({ type: "ответов", description: `${answered} ${JSON.stringify(kinds)}` });
+    test.info().annotations.push({ type: "ответов", description: `${answered} ${JSON.stringify(kinds)} · метка проверена: ${markChecked}` });
   });
 
   await test.step("результат теста", async () => {
@@ -108,6 +114,10 @@ test("кандидат: демо-вход → тест → результат �
     await expect(page.getByText(/^θ = [+−-]?\d/)).toBeVisible();
     await expect(page.getByText(/^\d+ из \d+$/).first()).toBeVisible();
     await expect(page.getByText(/^Оценено заданий: \d+/)).toBeVisible();
+    // кандидату — уровень достоверности и общая причина, без механики и контрольных заданий
+    await expect(page.getByTestId("result-integrity")).toContainText(/^Достоверность результата: (высокая|средняя|низкая)/);
+    const body = await page.locator("body").innerText();
+    expect(body).not.toMatch(/контрольн|канарей|\u2063|кодовым обозначением/i);
   });
 
   await test.step("категория и место в рейтинге", async () => {

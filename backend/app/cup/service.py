@@ -219,7 +219,7 @@ def submit(db: Session, cup: Cup, e: CupEntry, *, answers: dict | None = None, t
                            rubric=llm_rubric(cup), answer=body)
             e.grading = {"llm": g.to_dict()}
             if g.status == "scored" and g.score is not None:
-                e.score, e.score_method, e.status = g.score, "llm" if g.method == "llm" else "rule", "scored"
+                e.score, e.score_method, e.status = g.score, "llm" if g.method in ("llm", "llm2") else "rule", "scored"
     db.commit()
     return e
 

@@ -144,7 +144,8 @@ def _p_correct(it: dict, theta: float, part: int) -> float:
 
 
 def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, pending_left: int = 0,
-                  away_items: tuple[int, ...] = (), *, direction: str | None = None) -> dict:
+                  away_items: tuple[int, ...] = (), copy_items: tuple[int, ...] = (), *,
+                  direction: str | None = None) -> dict:
     """Проходит тест движком банка за «демо-респондента»: ответы по модели 2PL на уровне theta, время —
     обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений, кроме away_items — позиций, где
     «кандидат» уходил со вкладки (для демонстрации «достоверности результата»). Возвращает итог finish_session."""
@@ -163,7 +164,12 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
             ok = rng.random() < _p_correct(it, theta, step - 1)
             eng.answer(st, it["token"], _answer_for(it, step, ok, rng), None, step=step,
                        signals={"focus_lost": 1 if away and step == 1 else 0, "hidden_ms": 25_000 if away and step == 1 else 0,
-                                "paste": 0, "paste_chars": 0})
+                                "paste": 0, "paste_chars": 0,
+                                # лёгкий прокторинг (И9): тест во весь экран; copy_items — попытка скопировать задание
+                                "copy": 1 if it["position"] in copy_items and step == 1 else 0,
+                                "fs_ms": 60_000, "fs_out_ms": 0, "fs_exit": 0, "fs_na": 0})
+            if step < it["parts"] and str(step) in it["answers"]:  # шаги тоже занимают время (часы сервера)
+                it["answers"][str(step)]["at"] = it["issued_at"] + (time.time() - it["issued_at"]) * step / it["parts"]
     assessment._drain_outbox(db, ts)
     from sqlalchemy.orm.attributes import flag_modified
 
@@ -187,10 +193,10 @@ def _user(db: Session, persona: str, role: UserRole, sid: str = "") -> User:
 
 def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int,
                away_items: tuple[int, ...] = (), sid: str = "", claimed: str = "middle", experience: float = 3.5,
-               salary: int = 200_000, want: str = "category"):
+               salary: int = 200_000, want: str = "category", copy_items: tuple[int, ...] = ()):
     """Демо-кандидат жюри. want — какой исход теста нужен: category — любая категория (подтверждённая или
     предварительная), provisional — «Junior (предварительно)»; демо-респондент случаен, поэтому до 6 попыток
-    с разными seed, затем остаётся последний исход."""
+    с разными seed, затем остаётся последний исход. copy_items — позиции заданий с попыткой копирования (И9)."""
     u = _user(db, persona, UserRole.candidate, sid)
     stack = STACK if claimed != "junior" else STACK[:5]
     level = 3 if claimed != "junior" else 2
@@ -226,7 +232,7 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
     db.commit()
     res = {}
     for attempt in range(6):  # демо-респондент случаен: нужен заданный исход — иначе следующий seed
-        res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items)
+        res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items, copy_items)
         if want == "provisional" and res.get("category_provisional"):
             break
         if want == "category" and (res.get("confirmed") or res.get("category_id")):
@@ -353,8 +359,10 @@ def _create_jury(db: Session, sid: str) -> dict:
         extra_result = run_demo_test(db, p1.user_id, "junior", 1.6, 5301 + attempt, direction="frontend")
         if extra_result.get("confirmed"):
             break
-    # у Ильи — два ухода со вкладки во время теста: достоверность «средняя» (видно работодателю с причиной)
-    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid)
+    # у Ильи — два ухода со вкладки и попытка скопировать текст задания: достоверность «средняя» (видно
+    # работодателю и Илье с причинами)
+    u2, p2, r2 = _candidate(db, "candidate_nofsp", "Илья Сергеев", False, 0.95, 4201, 1, away_items=(4, 8), sid=sid,
+                            copy_items=(8,))
     # у порога Junior: тест не подтвердил грейд, но и не доказал уровень ниже — «Junior (предварительно)»
     _, p3, r3 = _candidate(db, "candidate_junior", "Артём Лебедев", False, -1.05, 5301, 0, sid=sid, claimed="junior",
                            experience=0.5, salary=80_000, want="provisional")

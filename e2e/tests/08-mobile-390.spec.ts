@@ -78,7 +78,7 @@ test("390 px: кандидат — опрос, экран задания, кат
   });
   await screen(page, "11-кандидат-опрос-и-тест", "/candidate/assessment");
   await test.step("экран задания теста", async () => {
-    await page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ }).check();
+    await page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста/ }).check();
     await page.getByRole("button", { name: /^(Начать|Продолжить) тест$/ }).click();
     await expect(page).toHaveURL(/\/candidate\/assessment\/test\/[\w-]+$/);
     await expect(page.getByRole("button", { name: /^Ответить/ })).toBeVisible({ timeout: 60_000 });
