@@ -141,7 +141,11 @@ def create_app() -> FastAPI:
 
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
                 "jury_mode_available": s.jury_mode_available, "demo_sandbox": s.demo_sandbox,
-                "llm": llm_status(), "assessment_engine": get_engine().name}
+                "llm": llm_status(), "assessment_engine": get_engine().name,
+                # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
+                "rules": {"grade_change_interval_days": s.grade_change_interval_days,
+                          "retake_same_grade_days": s.retake_same_grade_days,
+                          "invitation_cooldown_days": s.invitation_cooldown_days}}
 
     class HealthOut(BaseModel):
         status: str
