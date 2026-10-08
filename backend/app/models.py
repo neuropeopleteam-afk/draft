@@ -32,3 +32,4 @@ from app.jury_live.models import LiveGuest, LiveRoom  # noqa: E402,F401 — жи
 from app.modules.assignments.models import Assignment, AssignmentAttempt  # noqa: E402,F401 — задания работодателя (И7)
 
 metadata = Base.metadata
+from app.modules.mutual.models import CandidatePreference, OfferFitCheck, SelectionFeedback, SelectionShare, ShareReaction  # noqa: E402,F401 — взаимный подбор (Н9, Н2, Н3)
