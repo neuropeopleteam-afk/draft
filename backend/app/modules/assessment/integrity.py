@@ -271,6 +271,8 @@ def candidate_view(integ: dict | None) -> dict | None:
         return None
     level = integ.get("level") if integ.get("level") in LEVEL_TITLES else "high"
     out = {"level": level, "title": LEVEL_TITLES[level]}
+    if integ.get("camera"):  # итог камеры по согласию (И16) кандидат видит целиком — это его собственные данные
+        out["camera"] = integ["camera"]
     if level == "high":
         return {**out, "reasons": [CANDIDATE_HIGH]}
     order: list[str] = []

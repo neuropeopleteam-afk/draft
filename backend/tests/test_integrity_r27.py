@@ -30,7 +30,7 @@ from tests.test_day2_rules import H
 
 FRONT = Path(__file__).resolve().parents[2] / "frontend"
 ALLOWED_REASONS = set(integrity.KIND_TITLES.values()) | {integrity.CANDIDATE_HIGH}
-CANDIDATE_KEYS = {"level", "title", "reasons", "note"}
+CANDIDATE_KEYS = {"level", "title", "reasons", "note", "camera"}  # camera — итог камеры по согласию (И16), собственные данные кандидата
 
 # Текст ИИ-метки: невидимые разделители, начала шаблонов, слова (основы — кириллица и латиница)
 MARK_TEXT = [ai_mark.SEP, "кодовым обозначением", "внутреннее название этого случая", "журнале разборов",
@@ -117,7 +117,7 @@ def test_every_rule_has_kind_and_general_reason(items, kind):
     # старые результаты без kinds классифицируются по тексту так же
     assert [integrity.reason_kind(t) for t in r["reasons"]] == r["kinds"]
     v = integrity.candidate_view(r)
-    assert set(v) == CANDIDATE_KEYS and v["reasons"][0] == integrity.KIND_TITLES[kind]
+    assert set(v) == CANDIDATE_KEYS - {"camera"} and v["reasons"][0] == integrity.KIND_TITLES[kind]
     assert_candidate_safe(v, "candidate_view")
 
 
