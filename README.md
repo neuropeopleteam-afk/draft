@@ -77,7 +77,7 @@ CI (GitHub Actions, `.github/workflows`): `ci.yml` — бэкенд на SQLite 
 ## Демо-данные
 
 ```bash
-docker compose exec -T api python -m app.modules.demo.seed           # 150 кандидатов, 10 работодателей, 15 потребностей
+docker compose exec -T api python -m app.modules.demo.seed           # 500 кандидатов, 10 работодателей, 15 потребностей, 11 демо-вакансий
 docker compose exec -T api python -m app.modules.demo.seed --reset   # пересоздать
 docker compose exec -T api python -m app.modules.demo.seed --delete  # удалить только демо-записи
 docker compose exec -T api python -m app.integrations.vacancies.demo  # 11 демо-вакансий (одна — «приманка»); seed создаёт их сам
@@ -116,8 +116,7 @@ pip install -r requirements.txt -r requirements-dev.txt
 export DATABASE_URL=sqlite:///./dev.db DEV_MODE=true      # SQLite в каталоге backend; ключей LLM и почты нет
 export ATS_STUB_BASE_URL=http://127.0.0.1:8000            # тестовая ATS — часть самого API: адрес, по которому он достучится сам до себя
 python -m alembic upgrade head                            # схема (до 30 с на первом запуске)
-python -m app.modules.demo.seed                           # 150 кандидатов, 10 работодателей, 15 потребностей
-python -m app.integrations.vacancies.demo                 # 11 демо-вакансий (одна — «приманка»)
+python -m app.modules.demo.seed                           # 500 кандидатов, 10 работодателей, 15 потребностей, 11 демо-вакансий
 python -m app.cup.demo                                    # 6 демо-кубков
 uvicorn app.main:app --port 8000                          # API, http://localhost:8000/api/docs
 # второй терминал
