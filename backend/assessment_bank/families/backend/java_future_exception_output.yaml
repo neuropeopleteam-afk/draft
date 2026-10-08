@@ -1,0 +1,25 @@
+family_id: backend.java.future_exception_output
+title: Исключения в цепочке CompletableFuture — exceptionally, CompletionException, join
+direction: backend
+skills: [java, java_concurrency, completable_future, java_exceptions]
+target_grades: [middle, senior]
+format: predict_output
+language: java
+invariants:
+  code_lines: [31, 31]
+  operations: [24, 24]
+  extra:
+    subtype: exception_mid_chain
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 0.7
+  a: 1.1
+  sigma_variant: 0.4
+  basis: "31 строка, линейная цепочка из 4 стадий и вторая падающая задача; нужно знать пропуск стадий после исключения, обёртку CompletionException в exceptionally и join, продолжение цепочки после восстановления; путь (с исключением или без) задают данные → σ повышена; Middle/Senior"
+generator: assessment_bank.families.backend.java_future_exception_output
+version: 1
+description: >
+  Предсказать вывод программы на Java с цепочкой CompletableFuture: где исключение прерывает
+  цепочку, что получает exceptionally и что бросает join. Ключ — модель, сверка исполнением
+  показанного кода (javac + JVM).

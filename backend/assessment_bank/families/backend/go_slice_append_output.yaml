@@ -1,0 +1,26 @@
+family_id: backend.go.slice_append_output
+title: Срезы Go — append в пределах ёмкости и общий базовый массив
+direction: backend
+skills: [go, go_slices, memory_model]
+target_grades: [junior, middle]
+format: predict_output
+language: go
+invariants:
+  code_lines: [14, 14]
+  operations: [13, 13]
+  extra:
+    subtype: shared_backing_array
+    growth: none
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "14 строк, 4 изменения среза; нужно знать, что срез — окно над массивом (len/cap), append без роста ёмкости пишет в общий массив, индексная запись в «новом» срезе меняет исходный; три строки вывода; порядок двух операций варьируется; Junior/Middle"
+generator: assessment_bank.families.backend.go_slice_append_output
+version: 1
+description: >
+  Предсказать вывод программы на Go: append и индексная запись в срезах с общим базовым массивом
+  (ёмкость всегда больше длины — рост массива не участвует). Ключ — модель массива, сверка
+  исполнением показанного кода (go build -race).
