@@ -24,3 +24,18 @@ def theta_se(theta, se=None) -> str:
 def quoted(title: str | None) -> str:
     """Название в кавычках «…»; у факта кубка кавычки уже внутри («Кубок «Платёжный шлюз»») — без вторых."""
     return title if title and "«" in title else f"«{title or ''}»"
+
+
+def probe_title(title: str | None, verdict: str | None) -> str:
+    """Название факта зонда без повтора вердикта: «Кубок «X»: 2 место из 6» + «2 место из 6» → «Кубок «X»».
+
+    Новые факты кубка уже хранят место только в вердикте (cup/service.py); у фактов, созданных раньше, место
+    есть и в названии — при показе («название — вердикт») оно читалось дважды.
+    """
+    t = (title or "").strip()
+    v = (verdict or "").strip()
+    if t and v:
+        for sep in (": ", " — ", " – ", ", ", " "):
+            if t.endswith(sep + v):
+                return t[: -len(sep + v)].rstrip()
+    return t
