@@ -48,16 +48,93 @@ CITY_ALIASES["Санкт-Петербург"] += ["Saint Petersburg", "St. Peter
 CITY_ALIASES["Казань"] += ["Kazan"]
 
 
-def city_span(text: str, work_format: str | None) -> tuple[str | None, tuple[int, int] | None]:
-    """Only an explicit office/hybrid location, never residence inferred from any other mention."""
-    if work_format not in ("office", "hybrid"):
+# ---------------------------------------------------------------- условия: формат работы и город (Ф2)
+_FORMAT_RE = {
+    "remote": re.compile(r"удал[её]нн\w*|удал[её]нк\w*|remote\w*|дистанцион\w*|из дома|work from home|\bwfh\b", re.I),
+    "hybrid": re.compile(r"гибрид\w*|hybrid", re.I),
+    "office": re.compile(r"(?<![\w-])офис\w*|(?<![\w-])office\b|on-?site|на(?:\s|\u00a0)месте работодателя", re.I),
+}
+_NOT_FORMAT_AFTER = re.compile(r"^\w*\s+(?:пакет|приложен|программ|техник|мебел|365|suite)", re.I)
+_NOT_FORMAT_BEFORE = re.compile(r"(?:\bms|microsoft|\bback|бэк|фронт|front)[\s-]*$", re.I)
+_FMT_NEG_BEFORE = re.compile(r"(?:\bкроме|\bбез|\bисключая|\bexcept|\bno|\bnot|\bnon|\bне\s+(?:рассматрива\w*|предлага\w*)"
+                         r"|(?<!\w)не)\s*(?:(?:полн\w*|чист\w*|full|fully)\s+)?[«\"]?$", re.I)
+_FMT_NEG_AFTER = re.compile(r"^[»\"]?\s*(?:[—–-]\s*|:\s*)?(?:не\s+(?:рассматрива|предлага|подход|возможн|обсужда|вариант|"
+                        r"интересн|допуска)|нет\b|исключ|запрещ|невозможн|is not|not (?:possible|available|an option))",
+                        re.I)
+_HYBRID_DAYS = re.compile(r"(?:\d|один|два|две|три|четыре)\s*(?:дн\w*|раз\w*)\s+в\s+неделю[^.;\n]{0,30}(?:удал|офис|дома)"
+                          r"|(?:удал|офис|дома)\w*[^.;\n]{0,30}?(?:\d|один|два|две|три|четыре)\s*(?:дн\w*|раз\w*)\s+в\s+неделю",
+                          re.I)
+_ANY_FORMAT = re.compile(r"любой\s+формат|формат(?:\s+работы)?\s*(?:[:—–-]\s*)?(?:любой|не важен|неважен)|any format"
+                         r"|формат\s+на\s+(?:ваш|выбор)", re.I)
+
+
+def format_mentions(text: str) -> list[tuple[str, int, int, bool]]:
+    """Упоминания формата работы: (формат, начало, конец, отрицание) по порядку в тексте. «MS Office», «бэк-офис»,
+    «офисный пакет» — не формат; «без удалёнки», «кроме офиса», «удалёнка не рассматривается» — отрицание."""
+    out = []
+    for fmt, rx in _FORMAT_RE.items():
+        for m in rx.finditer(text):
+            s, e = m.span()
+            if fmt == "office" and (_NOT_FORMAT_AFTER.match(text[s:s + 40]) or _NOT_FORMAT_BEFORE.search(text[max(0, s - 12):s])):
+                continue
+            neg = bool(_FMT_NEG_BEFORE.search(text[max(0, s - 32):s]) or _FMT_NEG_AFTER.match(text[e:e + 40]))
+            out.append((fmt, s, e, neg))
+    out.sort(key=lambda x: x[1])
+    # «гибридный график с офисом», «гибрид (3 дня офис / 2 дня удалённо)» — офис и удалёнка здесь описывают гибрид
+    hyb = [(s, e) for f, s, e, _ in out if f == "hybrid"]
+    return [m for m in out if m[0] == "hybrid" or not any(
+        0 <= m[1] - he <= 45 and not re.search(r"[.;!?\n]", text[he:m[1]]) for _, he in hyb)]
+
+
+def parse_conditions(text: str) -> dict:
+    """Формат и город из текста потребности. Несколько допустимых форматов — объединение: «удалёнка или офис в Москве»
+    = {удалённо} ∪ {офис/гибрид, Москва} (город — только для офиса и гибрида). «Любой формат» без исключений или
+    формат не упомянут — условия нет; все три формата в тексте — условие показывается, но никого не скрывает. Возвращает work_format (первый допустимый по тексту), work_formats (если допустимых больше одного),
+    city и цитаты."""
+    mentions = format_mentions(text)
+    pos = list(dict.fromkeys(f for f, _, _, neg in mentions if not neg))
+    neg = {f for f, _, _, n in mentions if n} - set(pos)
+    any_m = _ANY_FORMAT.search(text)
+    if any_m and not neg:
+        return {"work_format": None, "work_formats": None, "city": None, "format_span": None, "city_span": None}
+    if any_m or (not pos and neg):
+        allowed = [f for f in (pos or []) + ["office", "hybrid", "remote"] if f not in neg]
+    else:
+        allowed = pos
+    allowed = list(dict.fromkeys(allowed))
+    if not any_m and _HYBRID_DAYS.search(text) and allowed:
+        allowed = ["hybrid", "office"]  # «офис, 2 дня в неделю удалённо» — это гибрид, а не «удалённо или офис»
+    if "remote" in allowed and "office" in allowed and "hybrid" not in allowed:
+        allowed.append("hybrid")  # удалённо или офис — гибрид между ними тоже подходит
+    city, city_pos = city_span(text, allowed)
+    spans = [(s, e) for f, s, e, n in mentions if f in allowed and not n]
+    if any_m and allowed:
+        spans.append(any_m.span())
+    span = None
+    if spans:
+        s0, e0 = min(spans)
+        ends = [e for s, e in spans if s - e0 <= 60]
+        span = (s0, max([e0, *ends]))
+    return {"work_format": allowed[0] if allowed else None,
+            "work_formats": allowed if len(allowed) > 1 else None,
+            "city": city, "format_span": span, "city_span": city_pos}
+
+
+def city_span(text: str, work_format) -> tuple[str | None, tuple[int, int] | None]:
+    """Only an explicit office/hybrid location, never residence inferred from any other mention. work_format — формат
+    или список допустимых форматов (Ф2: «удалёнка или офис в Москве» — город относится к офису)."""
+    formats = work_format if isinstance(work_format, (list, tuple, set)) else [work_format]
+    if not any(f in ("office", "hybrid") for f in formats):
         return None, None
+    best = None
     for city, aliases in CITY_ALIASES.items():
         for alias in aliases:
-            m = re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I)
-            if m and re.search(r"офис|гибрид|office|hybrid", text[max(0, m.start()-100):m.end()+80], re.I):
-                return city, m.span()
-    return None, None
+            for m in re.finditer(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I):
+                if re.search(r"офис|гибрид|office|hybrid|on-?site", text[max(0, m.start()-100):m.end()+80], re.I):
+                    if best is None or m.start() < best[1][0]:
+                        best = (city, m.span())
+                    break
+    return best if best else (None, None)
 
 
 def tag_directions() -> dict[str, str | None]:
@@ -426,17 +503,12 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
     for it in desired:
         it["weight"] = 0.3
 
-    wf = find_keys(text, WORK_FORMAT_KEYWORDS)
-    work_format = max(wf, key=wf.get) if wf else None
-    work_formats = None
-    if re.search(r"офис[^\n.!?]{0,45}или[^\n.!?]{0,20}гибрид|гибрид[^\n.!?]{0,45}или[^\n.!?]{0,20}офис",
-                 text, re.I):
-        work_formats = ["office", "hybrid"]
+    cond = parse_conditions(text)  # Ф2: объединение форматов, отрицания, «любой формат»
+    work_format, work_formats, city = cond["work_format"], cond["work_formats"], cond["city"]
     if work_format:
-        ev["work_format"] = _ev(text, find_key_span(text, WORK_FORMAT_KEYWORDS[work_format]))
-    city, city_pos = city_span(text, work_format)
+        ev["work_format"] = _ev(text, cond["format_span"])
     if city:
-        ev["city"] = _ev(text, city_pos)
+        ev["city"] = _ev(text, cond["city_span"])
     salary_from, salary_to, sal_span = parse_salary_span(text)
     if salary_from or salary_to:
         ev["salary"] = _ev(text, sal_span)
