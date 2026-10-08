@@ -8,6 +8,8 @@ import { api, apiDownload, type Catalog } from "../lib/api";
 import { SusPrompt } from "./Sus";
 import { TrustBadge, TrustPanel, type Trust, type TrustShort } from "./Trust";
 import { atsPushText } from "./Ats";
+import { AssignmentButton } from "../pages/assignments/Employer";  // задание к вакансии (И7)
+import { AttemptStatus, Skills } from "../pages/assignments/shared";
 
 export interface Vacancy {
   id: string; title: string; category_id: string | null; category_title: string | null; description: string;
@@ -17,6 +19,7 @@ export interface Vacancy {
   market_range: { from: number; to: number; median: number } | null;
   trust?: TrustShort | Trust; applications?: { total: number; new: number };
   my_application?: { id: string; status: string; status_title: string };
+  assignment?: { id: string; title: string; n_tasks: number; time_limit_min: number; stack_titles: string[] } | null;
 }
 const FORMAT: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 const APP_STATUS: Record<string, [string, string]> = {
@@ -125,6 +128,7 @@ function VacancyModal({ v, onClose, onApplied }: { v: Vacancy | null; onClose: (
           <p className="whitespace-pre-line text-brand-ink/80">{d.description}</p>
           {d.stack.length > 0 && <div className="flex flex-wrap gap-1.5">{d.stack.map((s) => <span key={s.tag} className="rounded-full bg-brand-blush/50 px-2.5 py-1 text-xs font-semibold text-brand-plum">{s.title}</span>)}</div>}
           <TrustPanel t={d.trust} />
+          {d.assignment && <Alert kind="info">К отклику прилагается задание с автопроверкой «{d.assignment.title}»: {d.assignment.n_tasks} заданий банка, {d.assignment.time_limit_min} мин. Оно придёт сразу после отклика, результат увидит работодатель.</Alert>}
           {d.my_application && d.my_application.status !== "withdrawn" ? (
             <>
               <Alert kind="ok">Отклик отправлен · статус: {d.my_application.status_title}. Компания видит ваши контакты.</Alert>
@@ -160,6 +164,7 @@ function MyApplications() {
             <AppStatus s={a.status} />
           </div>
           {a.employer_note && <p className="rounded-lg bg-[#F3F2FB] px-3 py-2 text-sm text-brand-night"><b>Ответ компании:</b> {a.employer_note}</p>}
+          {a.assignment && <p className="flex flex-wrap items-center gap-2 text-sm"><span className="text-brand-ink/65">Задание работодателя:</span><AttemptStatus a={a.assignment} />{a.assignment.status === "scored" ? <span className="font-semibold">{a.assignment.correct} из {a.assignment.total} верно</span> : ["offered", "in_progress"].includes(a.assignment.status) && <Link className="font-semibold text-brand hover:underline" to={`/candidate/assignments/${a.assignment.attempt_id}`}>Пройти задание</Link>}</p>}
           <Events items={a.events} />
           {["sent", "viewed"].includes(a.status) && <button className="btn-ghost" onClick={async () => { try { await api(`/candidate/applications/${a.id}/withdraw`, { method: "POST" }); void reload(); } catch (e) { setErr(errText(e)); } }}>Отозвать отклик</button>}
         </article>
@@ -200,6 +205,7 @@ export function EmployerVacancies() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button className="btn-primary" onClick={() => setApps(v)}>Отклики: {v.applications?.total ?? 0}{v.applications?.new ? ` (+${v.applications.new})` : ""}</button>
+                {v.assignment ? <Link className="btn-ghost" to={`/employer/assignments/${v.assignment.id}`}>Задание: {v.assignment.n_tasks} заданий</Link> : <AssignmentButton label="Задание к вакансии" init={{ vacancyId: v.id, mode: "vacancy" }} onDone={() => void reload()} />}
                 <button className="btn-ghost" onClick={() => setEdit({ id: v.id, title: v.title, category_id: v.category_id ?? "", description: v.description, stack: v.stack.map((s) => s.tag), salary_from: String(v.salary_from), salary_to: String(v.salary_to), work_format: v.work_format, city: v.city ?? "" })}>Изменить</button>
                 {v.status === "published" ? <button className="btn-ghost" onClick={() => setStatus(v, "close")}>Снять</button> : <button className="btn-ghost" onClick={() => setStatus(v, "publish")}>Опубликовать</button>}
               </div>
@@ -305,6 +311,12 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
                 {(a.card.fsp?.achievements ?? []).slice(0, 3).map((x: any, i: number) => <li key={i} className="flex items-center gap-2"><Level level="T2" /> {x.text}</li>)}
               </ul>
               {a.cover_letter && <p className="rounded-lg bg-[#F3F2FB] px-3 py-2 text-brand-night">«{a.cover_letter}»</p>}
+              {a.assignment && (
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-brand-night/10 px-3 py-2">
+                  <span className="text-brand-ink/65">Задание к вакансии:</span><AttemptStatus a={a.assignment} />
+                  {a.assignment.status === "scored" && <><Level level="T1" /><b>{a.assignment.correct} из {a.assignment.total}</b><Skills items={a.assignment.skills} compact /></>}
+                </div>
+              )}
               <div className="flex flex-wrap gap-2">
                 <Link to={`/employer/candidates/${a.card.ref}`} className="btn-ghost">Карточка</Link>
                 {a.status !== "withdrawn" && <><button className="btn-ghost" onClick={() => toAts(a)}>В ATS</button>

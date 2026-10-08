@@ -15,6 +15,7 @@ import uuid
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from app.core.db import as_aware
 from app.core.enums import EvidenceLevel, FactSource
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
@@ -217,6 +218,10 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | Non
     probe_directions.update({f"cup:{cid}": category.split(".")[0] for cid, category in db.execute(
         select(Cup.id, Cup.category_id).join(CupEntry, CupEntry.cup_id == Cup.id)
         .where(CupEntry.candidate_user_id.in_(user_ids)).distinct())})
+    from app.modules.assignments.models import Assignment, AssignmentAttempt
+    probe_directions.update({f"assignment:{aid}": d for aid, d in db.execute(
+        select(AssignmentAttempt.id, Assignment.direction_id).join(Assignment, Assignment.id == AssignmentAttempt.assignment_id)
+        .where(AssignmentAttempt.candidate_user_id.in_(user_ids))) if d})
     for f in db.scalars(select(CandidateFact).where(CandidateFact.user_id.in_(user_ids))
                         .order_by(CandidateFact.created_at)).all():
         b = out.get(f.user_id)
@@ -228,8 +233,10 @@ def load_bundles(db: Session, user_ids: list[uuid.UUID], *, direction: str | Non
             d = f.value.get("direction") or session_directions.get(f.source_ref) or f.key.split(".")[0]
             b.tests_by_direction[d] = f
         elif f.kind == "skill":
-            d = f.value.get("direction") or session_directions.get(f.source_ref) or b.profile.current_direction_id
-            b.skills_by_direction.setdefault(d, {})[f.key] = f
+            d = (f.value.get("direction") or session_directions.get(f.source_ref)
+                 or probe_directions.get(f.source_ref) or b.profile.current_direction_id)
+            sk = b.skills_by_direction.setdefault(d, {})
+            sk[f.key] = merge_skill(sk.get(f.key), f)  # тест + задания работодателя (И7) — одно слитое значение
         elif f.kind == "probe":
             d = f.value.get("direction") or probe_directions.get(f.source_ref) or b.profile.current_direction_id
             b.probes_by_direction.setdefault(d, []).append(f)
@@ -356,6 +363,51 @@ def verified_achievements(b: "Bundle") -> list:
 
 def skill_confirmed(f: CandidateFact | None) -> bool:
     return bool(f and f.value.get("score", 0) >= 0.5)
+
+
+def merge_skill(prev: CandidateFact | None, f: CandidateFact) -> CandidateFact:
+    """Несколько фактов T1 по одному навыку (тест платформы и задания работодателя, И7) — одно слитое значение:
+    верные и всего суммируются, score — доля; по источникам — в value["parts"]. Объект не в сессии — только чтение."""
+    if prev is None:
+        return f
+    parts: dict = dict(prev.value.get("parts") or {_origin(prev): _part(prev)})
+    parts[_origin(f)] = {k: (parts.get(_origin(f), {}).get(k, 0) + v) for k, v in _part(f).items()}
+    correct = sum(x["correct"] for x in parts.values())
+    total = sum(x["total"] for x in parts.values())
+    m = CandidateFact(user_id=f.user_id, kind="skill", key=f.key, title=f.title,
+                      value={**prev.value, **f.value, "correct": correct, "total": total,
+                             "score": round(correct / total, 4) if total else 0.0, "parts": parts},
+                      evidence_level=EvidenceLevel.T1, source=f.source, source_ref=getattr(f, "source_ref", None),
+                      weight=getattr(f, "weight", None))
+    pc, fc = getattr(prev, "created_at", None), getattr(f, "created_at", None)
+    m.created_at = max(as_aware(pc), as_aware(fc)) if pc and fc else fc
+    return m
+
+
+def _origin(f: CandidateFact) -> str:
+    """Источник факта по навыку: тест или задание работодателя (И7). Терпит лёгкие объекты бенчмарка без source_ref."""
+    ref = getattr(f, "source_ref", None) or ""
+    return (getattr(f, "value", None) or {}).get("origin") or ("assignment" if ref.startswith("assignment:") else "test")
+
+
+def _part(f: CandidateFact) -> dict:
+    v = getattr(f, "value", None) or {}
+    try:
+        return {"correct": float(v.get("correct") or 0), "total": float(v.get("total") or 0)}
+    except (TypeError, ValueError):
+        return {"correct": 0.0, "total": 0.0}
+
+
+def skill_evidence_text(f: CandidateFact) -> str:
+    """«Подтверждено заданиями теста: 2 из 3», с заданием работодателя — «… и заданием работодателя (3 из 3)»."""
+    v = getattr(f, "value", None) or {}
+    parts = v.get("parts") or {_origin(f): _part(f)}
+    names = {"test": "заданиями теста", "assignment": "заданием работодателя"}
+    if len(parts) == 1:
+        k, x = next(iter(parts.items()))
+        return f"Подтверждено {names.get(k, k)}: {fmt_count(x['correct'])} из {fmt_count(x['total'])}"
+    return "Подтверждено " + " и ".join(f"{names.get(k, k)} ({fmt_count(x['correct'])} из {fmt_count(x['total'])})"
+                                        for k, x in parts.items())
 
 
 
