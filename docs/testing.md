@@ -72,6 +72,17 @@ Actions (`.github/workflows/ci.yml`, `e2e.yml`) и теми же команда�
 
 - `test_auth.py`, `test_security_day3a.py`, `test_me.py`: регистрация с кодом, Argon2, блокировка после неверных
   кодов, ограничение перебора пароля, разделение ролей, эксперт жюри не администратор.
+- `test_access_matrix.py` (+ `route_walk.py`, `security_policy.py`): матрица прав. Тест обходит все маршруты FastAPI
+  (186 на 07.10, включая вложенные роутеры и статику) для 13 ролей — аноним, кандидат, работодатель своей и чужой
+  компании, админ, аналитик ФСП, эксперт, четыре персоны песочницы жюри A и две персоны песочницы B — и сверяет ответ с
+  именованной политикой маршрута (`open`, `auth`, `candidate_own`, `employer_ref`, `admin`, `expert`, `fsp`,
+  `jury_demo` и др.). Маршрут без политики роняет тест и печатает готовую строку для `POLICY`; новые ветки добавляют
+  строки (инструкция — в докстринге `security_policy.py`). Около 80 с, 2 418 запросов. Калибровка нашла настоящую
+  дыру: кубки, созданные через API работодателем песочницы, были видны кандидатам других песочниц.
+- `test_sandbox_isolation.py`: две песочницы жюри, общее демо, настоящие работодатель и кандидат — карточка кандидата,
+  PDF, сравнение, зонды и приглашения по `ref`, вакансии и кубки, созданные через API, не пересекаются; каждая
+  проверка проверена откатом правки (200 вместо 404). `test_security_day3a.py::test_k2…` берёт маршруты `/api/admin/*`
+  обходчиком, требует непустой список и проверяет их экспертом жюри и анонимом.
 - `test_integrations.py`: ФСП ID (OIDC + PKCE, проверка подписи id_token, согласие, паспорт T2), Хантфлоу,
   подпись вебхуков и защита от SSRF, push-уведомления, анкета SUS.
 - `test_cup.py`, `test_fsp_cabinet.py`: Кубок работодателя (автопроверка и рубрика, оценка вслепую, итоги,
@@ -166,6 +177,20 @@ E2E_BASE_URL=https://fsp.neuropeople.pro E2E_BASIC_USER=demo E2E_BASIC_PASSWORD=
 
 Линтер workflow: `actionlint` из корня репозитория.
 
+Проверки безопасности (те же, что в задании `security` CI; журнал последнего локального прогона —
+[docs/ci/security_run_0810.md](ci/security_run_0810.md)):
+
+```bash
+gitleaks git --no-banner --redact=100 --config .gitleaks.toml .          # секреты в истории, gitleaks 8.28.0
+gitleaks dir --no-banner --redact=100 --config .gitleaks.toml .          # секреты в рабочем дереве
+cd backend && python -m venv /tmp/app && /tmp/app/bin/pip install -r requirements.txt -r requirements-dev.txt
+pip-audit --strict --progress-spinner off --path /tmp/app/lib/python3.12/site-packages        # окружение с транзитивными
+pip-audit --strict --progress-spinner off --no-deps --disable-pip -r requirements.txt -r requirements-dev.txt
+pip-audit --strict --progress-spinner off --no-deps --disable-pip -r assessment_bank/BANK_requirements.txt
+cd ../frontend && npm audit --omit=dev --audit-level=high               # production-зависимости, порог high
+```
+
+
 ## CI в GitHub Actions
 
 `ci.yml` — на каждый push в main, pull request и вручную; задания идут параллельно:
@@ -173,6 +198,7 @@ E2E_BASE_URL=https://fsp.neuropeople.pro E2E_BASIC_USER=demo E2E_BASIC_PASSWORD=
 | Задание | Что делает |
 |---|---|
 | Workflow, скрипты, compose | actionlint 1.7.12, shellcheck, `docker compose config` (основной стек и fsp-id) |
+| Безопасность · секреты · уязвимости | gitleaks 8.28.0 по истории и дереву (исключения с обоснованием — `.gitleaks.toml`), pip-audit 2.9.0 (окружение бэкенда с транзитивными, пины requirements и банка заданий), `npm audit --omit=dev --audit-level=high`; SARIF-отчёты gitleaks — в артефактах, сводка npm audit по всем зависимостям — на странице запуска |
 | Бэкенд · SQLite · покрытие | pytest с покрытием; порог `fail_under = 80` в `backend/pyproject.toml`; JUnit, HTML-отчёт, значки — в артефактах, сводка — на странице запуска |
 | Бэкенд · PostgreSQL 16 | service-контейнер postgres:16-alpine; миграции вверх и вниз на чистой базе; те же тесты |
 | Банк заданий · валидатор | `tools/ci/check_bank.py`; отчёт JSON и Markdown в артефактах |

@@ -26,7 +26,7 @@ v.answer_key, v.rubric
 ```
 
 Зависимости (все с открытыми лицензиями): numpy 2.1.3 (BSD), scipy 1.14.1 (BSD),
-pydantic 2.9.2 (MIT), PyYAML 6.0.2 (MIT), pytest 8.3.3 (MIT). Для проверок ключей нужны
+pydantic 2.9.2 (MIT), PyYAML 6.0.2 (MIT), pytest 9.1.1 (MIT). Для проверок ключей нужны
 `node` (≥ 18), `bash`, `git`; `sqlite3` — из стандартной библиотеки Python.
 
 ## Формат банка
