@@ -335,9 +335,13 @@ def test_potok_applicant_body_matches_openapi_and_push(http):
     http.on("POST", r"/applicants\.json$", (200, {"id": 9001, "ajs_joins": [{"id": 77, "job": {"id": 410101},
                                                                              "stage": {"id": 4101011}}]}))
     http.on("POST", r"/ajs_joins/77/change_stage\.json$", (200, {"id": 77}))
+    # название этапа для карточки приглашения («Передано: Поток · этап «Интервью»») — из вакансии, если его нет в цели (Ф4)
+    http.on("GET", r"/jobs/410101\.json$", (200, {"id": 410101, "stages": [{"id": 4101011, "name": "Новые", "serial": 1},
+                                                                          {"id": 4101013, "name": "Интервью", "serial": 3}]}))
     link = LinkState()
     res = pt.PotokProvider(po_client()).push(prof.build(DOC), Target(410101, stage_id=4101013), link)
     assert res["external_id"] == 9001 and res["join_id"] == 77 and link.on_vacancy(410101)["stage_id"] == 4101013
+    assert res["stage_title"] == "Интервью"
     assert http.calls[0]["headers"]["Authorization"] == "Bearer tok-1"
     _schema_ok(http.calls[1]["json"], spec["/ajs_joins/{ajs_join_id}/change_stage.json"]["post"]["requestBody"])
 
