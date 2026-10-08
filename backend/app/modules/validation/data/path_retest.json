@@ -1,0 +1,4810 @@
+{
+ "signature": {
+  "world": "симуляция теста: 5 направлений × 500 кандидатов, семейств в банке: 164",
+  "seed": 20261006,
+  "config_hash": "dea13398a136",
+  "commit": "bb12871",
+  "bank": "57033ea404b8efae",
+  "n": 2500,
+  "command": "make path-retest",
+  "generated_at": "2026-10-08T15:58:26+00:00"
+ },
+ "quick": false,
+ "n_per_direction": 500,
+ "directions": [
+  "backend",
+  "frontend",
+  "data_ml",
+  "qa",
+  "security"
+ ],
+ "config": {
+  "app": {
+   "min_items": 8,
+   "max_items": 16,
+   "se_target": 0.35,
+   "max_minutes": 60,
+   "subpools": 2,
+   "exposure": true,
+   "max_per_format": {
+    "open_book_3step": 2,
+    "open_answer": 1
+   },
+   "stop_rule": "classification",
+   "classify_z": 1.28,
+   "select_at": "cut",
+   "time_weight": 0.0,
+   "ext_items": 6,
+   "ext_minutes": 20,
+   "ext_own_first": true,
+   "legacy_ext": 0,
+   "claim_prior": false,
+   "rotation": "subpool",
+   "cuts": [
+    -1.75,
+    -1.0,
+    0.0,
+    1.0
+   ],
+   "start_theta": {
+    "intern": -1.25,
+    "junior": -0.5,
+    "middle": 0.5,
+    "senior": 1.3
+   }
+  },
+  "n_per_direction": 500,
+  "directions": [
+   "backend",
+   "frontend",
+   "data_ml",
+   "qa",
+   "security"
+  ],
+  "p_follow_hint": 0.5,
+  "self_sd": 0.6,
+  "misspec": 0.5,
+  "border": 0.25,
+  "pilot_n": 1000,
+  "cuts": {
+   "intern": -1.75,
+   "junior": -1.0,
+   "middle": 0.0,
+   "senior": 1.0
+  },
+  "n_families": 164
+ },
+ "claimed": {
+  "intern": 460,
+  "junior": 812,
+  "middle": 787,
+  "senior": 441
+ },
+ "true_grades": {
+  "none": 98,
+  "intern": 284,
+  "junior": 877,
+  "middle": 874,
+  "senior": 367
+ },
+ "total": {
+  "path_grade": {
+   "n": 2500,
+   "exact": 0.758,
+   "within_1": 0.996,
+   "two_steps": 0.004,
+   "kappa_w": 0.841,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.827,
+    0.854
+   ],
+   "exact_ci": [
+    0.742,
+    0.774
+   ]
+  },
+  "icc_theta": 0.802,
+  "r_theta": 0.802,
+  "icc_theta_ci": [
+   0.787,
+   0.815
+  ],
+  "point_grade": {
+   "n": 2500,
+   "exact": 0.599,
+   "within_1": 0.985,
+   "two_steps": 0.015,
+   "kappa_w": 0.734,
+   "kappa_informative": true
+  },
+  "point_grade_ceiling": {
+   "exact": 0.579,
+   "within_1": 0.976,
+   "kappa_w": 0.781
+  },
+  "status_agreement": 0.716,
+  "overlap_all": {
+   "mean": 0.193,
+   "median": 0.0,
+   "any_share": 0.39,
+   "max": 1.0
+  },
+  "overlap_first": {
+   "mean": 0.19,
+   "median": 0.0,
+   "any_share": 0.386,
+   "max": 1.0
+  },
+  "truth": {
+   "n": 2500,
+   "exact": 0.573,
+   "exact_with_category": 0.573,
+   "over_share": 0.052,
+   "under_share": 0.355,
+   "no_category_share": 0.047,
+   "kappa_w_true": 0.754
+  },
+  "path": {
+   "status_share": {
+    "confirmed": 0.585,
+    "provisional": 0.087,
+    "accepted_lower": 0.281,
+    "none": 0.046
+   },
+   "sessions_per_path": 1.0,
+   "mean_items_per_session": 20.1,
+   "mean_items_per_path": 20.18,
+   "mean_time_min_per_path": 55.3,
+   "extension_share": 0.893,
+   "rescored_share": 0.001,
+   "provisional_intern_proved": 396,
+   "block_gap_flag_share": 0.055
+  },
+  "splits": {
+   "far_from_cut": {
+    "share": 0.518,
+    "n": 1295,
+    "exact": 0.744,
+    "within_1": 0.998,
+    "two_steps": 0.002,
+    "kappa_w": 0.856,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.838,
+     0.871
+    ],
+    "exact_ci": [
+     0.718,
+     0.766
+    ]
+   },
+   "near_cut": {
+    "share": 0.482,
+    "n": 1205,
+    "exact": 0.773,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.811,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.789,
+     0.832
+    ],
+    "exact_ci": [
+     0.748,
+     0.796
+    ]
+   },
+   "far_from_boundary": {
+    "share": 0.508,
+    "n": 1270,
+    "exact": 0.774,
+    "within_1": 0.997,
+    "two_steps": 0.003,
+    "kappa_w": 0.873,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.857,
+     0.888
+    ],
+    "exact_ci": [
+     0.75,
+     0.797
+    ]
+   },
+   "near_boundary": {
+    "share": 0.492,
+    "n": 1230,
+    "exact": 0.741,
+    "within_1": 0.995,
+    "two_steps": 0.005,
+    "kappa_w": 0.792,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.769,
+     0.814
+    ],
+    "exact_ci": [
+     0.714,
+     0.766
+    ]
+   },
+   "boundary_shift": 0.335,
+   "decided_both": {
+    "share": 0.802,
+    "n": 2006,
+    "exact": 0.756,
+    "within_1": 0.997,
+    "two_steps": 0.003,
+    "kappa_w": 0.811,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.792,
+     0.829
+    ],
+    "exact_ci": [
+     0.737,
+     0.774
+    ]
+   },
+   "undecided_any": {
+    "share": 0.198,
+    "n": 494,
+    "exact": 0.765,
+    "within_1": 0.992,
+    "two_steps": 0.008,
+    "kappa_w": 0.818,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.784,
+     0.851
+    ],
+    "exact_ci": [
+     0.725,
+     0.804
+    ]
+   }
+  }
+ },
+ "by_direction": {
+  "backend": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.762,
+    "within_1": 0.998,
+    "two_steps": 0.002,
+    "kappa_w": 0.808,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.77,
+     0.842
+    ],
+    "exact_ci": [
+     0.724,
+     0.798
+    ]
+   },
+   "icc_theta": 0.786,
+   "r_theta": 0.786,
+   "icc_theta_ci": [
+    0.753,
+    0.817
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.612,
+    "within_1": 0.982,
+    "two_steps": 0.018,
+    "kappa_w": 0.708,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.581,
+    "within_1": 0.978,
+    "kappa_w": 0.771
+   },
+   "status_agreement": 0.73,
+   "overlap_all": {
+    "mean": 0.16,
+    "median": 0.0,
+    "any_share": 0.258,
+    "max": 1.0
+   },
+   "overlap_first": {
+    "mean": 0.153,
+    "median": 0.0,
+    "any_share": 0.25,
+    "max": 1.0
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.552,
+    "exact_with_category": 0.549,
+    "over_share": 0.054,
+    "under_share": 0.386,
+    "no_category_share": 0.024,
+    "kappa_w_true": 0.688
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.56,
+     "provisional": 0.114,
+     "accepted_lower": 0.302,
+     "none": 0.024
+    },
+    "sessions_per_path": 1.01,
+    "mean_items_per_session": 20.56,
+    "mean_items_per_path": 20.77,
+    "mean_time_min_per_path": 57.1,
+    "extension_share": 0.913,
+    "rescored_share": 0.0,
+    "provisional_intern_proved": 104,
+    "block_gap_flag_share": 0.029
+   }
+  },
+  "frontend": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.76,
+    "within_1": 0.996,
+    "two_steps": 0.004,
+    "kappa_w": 0.832,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.796,
+     0.862
+    ],
+    "exact_ci": [
+     0.722,
+     0.796
+    ]
+   },
+   "icc_theta": 0.814,
+   "r_theta": 0.815,
+   "icc_theta_ci": [
+    0.782,
+    0.841
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.618,
+    "within_1": 0.996,
+    "two_steps": 0.004,
+    "kappa_w": 0.747,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.583,
+    "within_1": 0.978,
+    "kappa_w": 0.775
+   },
+   "status_agreement": 0.74,
+   "overlap_all": {
+    "mean": 0.185,
+    "median": 0.0,
+    "any_share": 0.344,
+    "max": 1.0
+   },
+   "overlap_first": {
+    "mean": 0.182,
+    "median": 0.0,
+    "any_share": 0.342,
+    "max": 1.0
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.562,
+    "exact_with_category": 0.559,
+    "over_share": 0.048,
+    "under_share": 0.376,
+    "no_category_share": 0.038,
+    "kappa_w_true": 0.732
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.597,
+     "provisional": 0.084,
+     "accepted_lower": 0.277,
+     "none": 0.042
+    },
+    "sessions_per_path": 1.0,
+    "mean_items_per_session": 20.17,
+    "mean_items_per_path": 20.25,
+    "mean_time_min_per_path": 56.0,
+    "extension_share": 0.91,
+    "rescored_share": 0.0,
+    "provisional_intern_proved": 74,
+    "block_gap_flag_share": 0.086
+   }
+  },
+  "data_ml": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.77,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.864,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.836,
+     0.888
+    ],
+    "exact_ci": [
+     0.734,
+     0.806
+    ]
+   },
+   "icc_theta": 0.796,
+   "r_theta": 0.796,
+   "icc_theta_ci": [
+    0.76,
+    0.825
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.56,
+    "within_1": 0.972,
+    "two_steps": 0.028,
+    "kappa_w": 0.729,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.573,
+    "within_1": 0.976,
+    "kappa_w": 0.786
+   },
+   "status_agreement": 0.702,
+   "overlap_all": {
+    "mean": 0.196,
+    "median": 0.0,
+    "any_share": 0.386,
+    "max": 1.0
+   },
+   "overlap_first": {
+    "mean": 0.194,
+    "median": 0.0,
+    "any_share": 0.384,
+    "max": 1.0
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.582,
+    "exact_with_category": 0.595,
+    "over_share": 0.038,
+    "under_share": 0.338,
+    "no_category_share": 0.072,
+    "kappa_w_true": 0.786
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.594,
+     "provisional": 0.086,
+     "accepted_lower": 0.254,
+     "none": 0.066
+    },
+    "sessions_per_path": 1.0,
+    "mean_items_per_session": 20.66,
+    "mean_items_per_path": 20.74,
+    "mean_time_min_per_path": 53.6,
+    "extension_share": 0.909,
+    "rescored_share": 0.002,
+    "provisional_intern_proved": 80,
+    "block_gap_flag_share": 0.036
+   }
+  },
+  "qa": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.77,
+    "within_1": 0.996,
+    "two_steps": 0.004,
+    "kappa_w": 0.857,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.829,
+     0.881
+    ],
+    "exact_ci": [
+     0.73,
+     0.806
+    ]
+   },
+   "icc_theta": 0.8,
+   "r_theta": 0.8,
+   "icc_theta_ci": [
+    0.768,
+    0.826
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.584,
+    "within_1": 0.982,
+    "two_steps": 0.018,
+    "kappa_w": 0.724,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.572,
+    "within_1": 0.974,
+    "kappa_w": 0.786
+   },
+   "status_agreement": 0.71,
+   "overlap_all": {
+    "mean": 0.242,
+    "median": 0.0,
+    "any_share": 0.486,
+    "max": 1.0
+   },
+   "overlap_first": {
+    "mean": 0.24,
+    "median": 0.0,
+    "any_share": 0.482,
+    "max": 1.0
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.59,
+    "exact_with_category": 0.589,
+    "over_share": 0.054,
+    "under_share": 0.336,
+    "no_category_share": 0.05,
+    "kappa_w_true": 0.787
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.597,
+     "provisional": 0.082,
+     "accepted_lower": 0.269,
+     "none": 0.052
+    },
+    "sessions_per_path": 1.0,
+    "mean_items_per_session": 19.77,
+    "mean_items_per_path": 19.83,
+    "mean_time_min_per_path": 53.6,
+    "extension_share": 0.859,
+    "rescored_share": 0.001,
+    "provisional_intern_proved": 73,
+    "block_gap_flag_share": 0.052
+   }
+  },
+  "security": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.726,
+    "within_1": 0.996,
+    "two_steps": 0.004,
+    "kappa_w": 0.831,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.797,
+     0.859
+    ],
+    "exact_ci": [
+     0.684,
+     0.764
+    ]
+   },
+   "icc_theta": 0.809,
+   "r_theta": 0.809,
+   "icc_theta_ci": [
+    0.778,
+    0.838
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.62,
+    "within_1": 0.992,
+    "two_steps": 0.008,
+    "kappa_w": 0.757,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.584,
+    "within_1": 0.977,
+    "kappa_w": 0.784
+   },
+   "status_agreement": 0.7,
+   "overlap_all": {
+    "mean": 0.18,
+    "median": 0.0,
+    "any_share": 0.474,
+    "max": 1.0
+   },
+   "overlap_first": {
+    "mean": 0.18,
+    "median": 0.0,
+    "any_share": 0.472,
+    "max": 1.0
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.578,
+    "exact_with_category": 0.575,
+    "over_share": 0.066,
+    "under_share": 0.338,
+    "no_category_share": 0.05,
+    "kappa_w_true": 0.761
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.576,
+     "provisional": 0.071,
+     "accepted_lower": 0.305,
+     "none": 0.048
+    },
+    "sessions_per_path": 1.0,
+    "mean_items_per_session": 19.31,
+    "mean_items_per_path": 19.33,
+    "mean_time_min_per_path": 56.0,
+    "extension_share": 0.872,
+    "rescored_share": 0.0,
+    "provisional_intern_proved": 65,
+    "block_gap_flag_share": 0.073
+   }
+  }
+ },
+ "by_claimed": {
+  "intern": {
+   "n": 460,
+   "exact": 0.774,
+   "within_1": 1.0,
+   "two_steps": 0.0,
+   "kappa_w": 0.394,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.297,
+    0.487
+   ],
+   "exact_ci": [
+    0.737,
+    0.811
+   ]
+  },
+  "junior": {
+   "n": 812,
+   "exact": 0.979,
+   "within_1": 0.995,
+   "two_steps": 0.005,
+   "kappa_w": 0.111,
+   "kappa_informative": false,
+   "kappa_w_ci": [
+    -0.011,
+    0.304
+   ],
+   "exact_ci": [
+    0.969,
+    0.988
+   ]
+  },
+  "middle": {
+   "n": 787,
+   "exact": 0.595,
+   "within_1": 0.994,
+   "two_steps": 0.006,
+   "kappa_w": 0.35,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.28,
+    0.411
+   ],
+   "exact_ci": [
+    0.56,
+    0.628
+   ]
+  },
+  "senior": {
+   "n": 441,
+   "exact": 0.624,
+   "within_1": 0.998,
+   "two_steps": 0.002,
+   "kappa_w": 0.555,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.487,
+    0.616
+   ],
+   "exact_ci": [
+    0.578,
+    0.667
+   ]
+  }
+ },
+ "transitions": [
+  [
+   62,
+   53,
+   2,
+   0,
+   0
+  ],
+  [
+   51,
+   306,
+   23,
+   1,
+   0
+  ],
+  [
+   2,
+   31,
+   1032,
+   178,
+   1
+  ],
+  [
+   0,
+   4,
+   155,
+   410,
+   44
+  ],
+  [
+   0,
+   0,
+   0,
+   61,
+   84
+  ]
+ ],
+ "block_gap": {
+  "direction": "backend",
+  "claimed": "middle",
+  "rule": {
+   "gap": 0.3,
+   "min_items": 4
+  },
+  "rows": [
+   {
+    "shift": 0.0,
+    "n": 150,
+    "flag_share": 0.127,
+    "confirmed_share": 0.507,
+    "confirmed_flagged_share": 0.092
+   },
+   {
+    "shift": 1.0,
+    "n": 150,
+    "flag_share": 0.46,
+    "confirmed_share": 0.173,
+    "confirmed_flagged_share": 0.385
+   },
+   {
+    "shift": 3.0,
+    "n": 150,
+    "flag_share": 0.913,
+    "confirmed_share": 0.033,
+    "confirmed_flagged_share": 0.8
+   }
+  ]
+ },
+ "discrimination": {
+  "n_pilot": 1000,
+  "n_families": 154,
+  "criteria": {
+   "weak_D": 0.2,
+   "weak_r_pb": 0.2,
+   "weak_r_pb_panel": 0.15
+  },
+  "summary": {
+   "D_mean": 0.472,
+   "D_median": 0.483,
+   "r_pb_mean": 0.414,
+   "r_pb_median": 0.406,
+   "share_D_ge_03": 1.0,
+   "share_D_02_03": 0.0,
+   "share_D_lt_02": 0.0,
+   "share_r_pb_gt_02": 1.0,
+   "n_weak": 19,
+   "n_weak_sim": 0,
+   "panel_n": 104,
+   "panel_corr": -0.252,
+   "panel_weak": 19,
+   "audit_rework_n": 15,
+   "audit_rework_and_weak": [
+    "common.db.tx_isolation_mcq",
+    "qa.load.percentile_merge_mcq"
+   ],
+   "audit_rework_panel_r_pb_mean": 0.347
+  },
+  "by_format": {
+   "choose_fix": {
+    "n": 27,
+    "D_mean": 0.499,
+    "r_pb_mean": 0.408
+   },
+   "find_bug": {
+    "n": 39,
+    "D_mean": 0.495,
+    "r_pb_mean": 0.407
+   },
+   "mcq_concept": {
+    "n": 27,
+    "D_mean": 0.485,
+    "r_pb_mean": 0.397
+   },
+   "open_answer": {
+    "n": 11,
+    "D_mean": 0.367,
+    "r_pb_mean": 0.328
+   },
+   "open_book_3step": {
+    "n": 19,
+    "D_mean": 0.42,
+    "r_pb_mean": 0.548
+   },
+   "predict_output": {
+    "n": 31,
+    "D_mean": 0.48,
+    "r_pb_mean": 0.393
+   }
+  },
+  "weak": [
+   {
+    "family_id": "qa.pytest.patch_arg_order",
+    "block": "qa",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.509,
+    "D": 0.515,
+    "r_pb": 0.419,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": -0.09,
+    "flags": [
+     "нет ступеньки по θ условий",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.sql.data_quality_output",
+    "block": "qa",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.463,
+    "D": 0.507,
+    "r_pb": 0.402,
+    "a": 1.0,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": -0.067,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "нет ступеньки по θ условий",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.this_binding",
+    "block": "frontend",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.407,
+    "D": 0.448,
+    "r_pb": 0.375,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": -0.003,
+    "flags": [
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.stats.ztest_fix",
+    "block": "data_ml",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.393,
+    "D": 0.511,
+    "r_pb": 0.404,
+    "a": 1.0,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.006,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "нет ступеньки по θ условий",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.py.preprocess_leakage",
+    "block": "data_ml",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.638,
+    "D": 0.507,
+    "r_pb": 0.435,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.018,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация",
+     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.db.tx_isolation_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.376,
+    "D": 0.482,
+    "r_pb": 0.396,
+    "a": 1.1,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.019,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": true
+   },
+   {
+    "family_id": "backend.queue.redelivery_mcq",
+    "block": "backend",
+    "format": "mcq_concept",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.463,
+    "D": 0.563,
+    "r_pb": 0.431,
+    "a": 1.0,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.025,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.load.percentile_merge_mcq",
+    "block": "qa",
+    "format": "mcq_concept",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.456,
+    "D": 0.496,
+    "r_pb": 0.399,
+    "a": 1.0,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.032,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "нет ступеньки по θ условий",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": true
+   },
+   {
+    "family_id": "security.auth.token_validation_ob3",
+    "block": "security",
+    "format": "open_book_3step",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.361,
+    "D": 0.456,
+    "r_pb": 0.582,
+    "a": 1.1,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.041,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "нет ступеньки по θ условий",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.microtask_order",
+    "block": "frontend",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.39,
+    "D": 0.485,
+    "r_pb": 0.414,
+    "a": 1.2,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.055,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.design.boundary_values_mcq",
+    "block": "qa",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.688,
+    "D": 0.515,
+    "r_pb": 0.436,
+    "a": 1.1,
+    "b": -0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.068,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.time.tz_report_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.365,
+    "D": 0.429,
+    "r_pb": 0.552,
+    "a": 1.0,
+    "b": 0.767,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.072,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "нет ступеньки по θ условий",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.access.owner_check_bug",
+    "block": "security",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.462,
+    "D": 0.5,
+    "r_pb": 0.394,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.073,
+    "flags": [
+     "нет ступеньки по θ условий",
+     "слабая дискриминация",
+     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.rate_limiter_ob3",
+    "block": "backend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.337,
+    "D": 0.394,
+    "r_pb": 0.518,
+    "a": 1.0,
+    "b": 0.767,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.127,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "отрицательная дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.ab.sample_size_mcq",
+    "block": "data_ml",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.385,
+    "D": 0.467,
+    "r_pb": 0.381,
+    "a": 1.0,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.128,
+    "flags": [
+     "много неразобранных ответов",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.history_count",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.498,
+    "D": 0.501,
+    "r_pb": 0.396,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.132,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.idempotency_ob3",
+    "block": "backend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.367,
+    "D": 0.423,
+    "r_pb": 0.552,
+    "a": 1.0,
+    "b": 0.733,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.138,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.mlops.psi_drift_ob3",
+    "block": "data_ml",
+    "format": "open_book_3step",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.316,
+    "D": 0.437,
+    "r_pb": 0.577,
+    "a": 1.0,
+    "b": 1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.142,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "много неразобранных ответов",
+     "нет ступеньки по θ условий",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.js.unawaited_assert",
+    "block": "qa",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.599,
+    "D": 0.533,
+    "r_pb": 0.431,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.143,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   }
+  ],
+  "families": [
+   {
+    "family_id": "backend.api.idempotency_key_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.358,
+    "D": 0.478,
+    "r_pb": 0.401,
+    "a": 1.1,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.498,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.api.query_params_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.653,
+    "D": 0.515,
+    "r_pb": 0.422,
+    "a": 1.1,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.429,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.async.missing_await_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.653,
+    "D": 0.407,
+    "r_pb": 0.372,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.434,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.cache.invalidation_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.494,
+    "D": 0.552,
+    "r_pb": 0.44,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.473,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.cache.key_params_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.469,
+    "D": 0.533,
+    "r_pb": 0.42,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.db.keyset_pagination_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.349,
+    "D": 0.511,
+    "r_pb": 0.413,
+    "a": 1.1,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.379,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.db.n_plus_one_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.454,
+    "D": 0.47,
+    "r_pb": 0.376,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.387,
+    "flags": [
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.db.overbooking_ob3",
+    "block": "backend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.318,
+    "D": 0.409,
+    "r_pb": 0.55,
+    "a": 1.0,
+    "b": 1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.233,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.db.transaction_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.434,
+    "D": 0.53,
+    "r_pb": 0.431,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.244,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.design.service_open",
+    "block": "backend",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.277,
+    "D": 0.367,
+    "r_pb": 0.321,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.django.form_fields_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.617,
+    "D": 0.522,
+    "r_pb": 0.427,
+    "a": 1.1,
+    "b": -0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.django.migration_default_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.669,
+    "D": 0.537,
+    "r_pb": 0.445,
+    "a": 1.1,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "backend.django.n_plus_one_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.48,
+    "D": 0.559,
+    "r_pb": 0.433,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.django.on_commit_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.33,
+    "D": 0.419,
+    "r_pb": 0.345,
+    "a": 1.1,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.django.signals_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.487,
+    "D": 0.541,
+    "r_pb": 0.423,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.go.context_background_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.421,
+    "D": 0.6,
+    "r_pb": 0.466,
+    "a": 1.2,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.go.defer_recover_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.42,
+    "D": 0.485,
+    "r_pb": 0.368,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.go.map_race_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.359,
+    "D": 0.511,
+    "r_pb": 0.439,
+    "a": 1.1,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.go.slice_append_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.531,
+    "D": 0.533,
+    "r_pb": 0.437,
+    "a": 1.1,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.java.future_exception_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.331,
+    "D": 0.459,
+    "r_pb": 0.392,
+    "a": 1.1,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.java.hashcode_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.597,
+    "D": 0.448,
+    "r_pb": 0.363,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.java.list_remove_loop_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.591,
+    "D": 0.504,
+    "r_pb": 0.398,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.java.stream_lazy_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.446,
+    "D": 0.53,
+    "r_pb": 0.418,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.java.string_equals_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.698,
+    "D": 0.485,
+    "r_pb": 0.406,
+    "a": 1.2,
+    "b": -1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.kafka.consumer_group_mcq",
+    "block": "backend",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.654,
+    "D": 0.411,
+    "r_pb": 0.347,
+    "a": 1.0,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.kafka.offset_commit_mcq",
+    "block": "backend",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.608,
+    "D": 0.507,
+    "r_pb": 0.416,
+    "a": 1.0,
+    "b": -0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "backend.kafka.outbox_relay_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.383,
+    "D": 0.544,
+    "r_pb": 0.441,
+    "a": 1.1,
+    "b": 0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "backend.kafka.partition_key_bug",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.565,
+    "D": 0.556,
+    "r_pb": 0.452,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.migrations.order_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.465,
+    "D": 0.581,
+    "r_pb": 0.435,
+    "a": 1.0,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.379,
+    "flags": [
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.obs.contextvars_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.311,
+    "D": 0.448,
+    "r_pb": 0.389,
+    "a": 1.0,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": null,
+    "flags": [
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.concurrency_mcq",
+    "block": "backend",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.422,
+    "D": 0.441,
+    "r_pb": 0.374,
+    "a": 1.0,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.336,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.design_open",
+    "block": "backend",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.269,
+    "D": 0.322,
+    "r_pb": 0.299,
+    "a": 0.9,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.dict_get_default_output",
+    "block": "backend",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.766,
+    "D": 0.333,
+    "r_pb": 0.322,
+    "a": 1.0,
+    "b": -1.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.idempotency_coarse_ob3",
+    "block": "backend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.309,
+    "D": 0.414,
+    "r_pb": 0.549,
+    "a": 1.0,
+    "b": 0.933,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.idempotency_ob3",
+    "block": "backend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.367,
+    "D": 0.423,
+    "r_pb": 0.552,
+    "a": 1.0,
+    "b": 0.733,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.138,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.money_rounding_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.414,
+    "D": 0.496,
+    "r_pb": 0.393,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.377,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.mutable_default",
+    "block": "backend",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.669,
+    "D": 0.522,
+    "r_pb": 0.414,
+    "a": 1.0,
+    "b": -0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.423,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.py.rate_limiter_ob3",
+    "block": "backend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.337,
+    "D": 0.394,
+    "r_pb": 0.518,
+    "a": 1.0,
+    "b": 0.767,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.127,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "отрицательная дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.queue.redelivery_mcq",
+    "block": "backend",
+    "format": "mcq_concept",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.463,
+    "D": 0.563,
+    "r_pb": 0.431,
+    "a": 1.0,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.025,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.reliability.retry_deadline_ob3",
+    "block": "backend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.325,
+    "D": 0.427,
+    "r_pb": 0.569,
+    "a": 1.0,
+    "b": 0.933,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.282,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.time.add_months_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.546,
+    "D": 0.507,
+    "r_pb": 0.413,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.412,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.alg.binary_search_bound",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.579,
+    "D": 0.513,
+    "r_pb": 0.413,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.171,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.alg.complexity_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.625,
+    "D": 0.472,
+    "r_pb": 0.391,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.364,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.alg.merge_intervals_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.397,
+    "D": 0.449,
+    "r_pb": 0.552,
+    "a": 1.0,
+    "b": 0.533,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.241,
+    "flags": [
+     "слабая дискриминация"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.conc.async_lost_update_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.37,
+    "D": 0.412,
+    "r_pb": 0.542,
+    "a": 1.0,
+    "b": 0.733,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.233,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.db.index_plan_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.392,
+    "D": 0.487,
+    "r_pb": 0.395,
+    "a": 1.1,
+    "b": 0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.335,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.db.tx_isolation_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.376,
+    "D": 0.482,
+    "r_pb": 0.396,
+    "a": 1.1,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.019,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.dist.fencing_token_bug",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.307,
+    "D": 0.459,
+    "r_pb": 0.398,
+    "a": 1.1,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.dist.outbox_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.296,
+    "D": 0.457,
+    "r_pb": 0.404,
+    "a": 1.1,
+    "b": 1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.docker.cache_order_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.633,
+    "D": 0.511,
+    "r_pb": 0.425,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.docker.compose_port_bug",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.595,
+    "D": 0.509,
+    "r_pb": 0.42,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.docker.layer_cache_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.562,
+    "D": 0.522,
+    "r_pb": 0.408,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.ds.lru_cache_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.491,
+    "D": 0.528,
+    "r_pb": 0.422,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.241,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.history_count",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.498,
+    "D": 0.501,
+    "r_pb": 0.396,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.132,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.move_commits_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.463,
+    "D": 0.539,
+    "r_pb": 0.433,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.undo_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.554,
+    "D": 0.516,
+    "r_pb": 0.415,
+    "a": 1.1,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.382,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.http.api_design_open",
+    "block": "common",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.292,
+    "D": 0.371,
+    "r_pb": 0.319,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.conditional_get",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.439,
+    "D": 0.504,
+    "r_pb": 0.405,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.235,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.retry_idempotent_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.616,
+    "D": 0.496,
+    "r_pb": 0.406,
+    "a": 1.1,
+    "b": -0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.279,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.status_codes",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.638,
+    "D": 0.435,
+    "r_pb": 0.361,
+    "a": 1.0,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.401,
+    "flags": [
+     "малые модели решают «в лоб»"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.linux.log_pipeline",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.561,
+    "D": 0.49,
+    "r_pb": 0.39,
+    "a": 1.0,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.229,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.linux.relative_path_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.773,
+    "D": 0.344,
+    "r_pb": 0.324,
+    "a": 1.0,
+    "b": -1.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.net.cidr_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.537,
+    "D": 0.481,
+    "r_pb": 0.376,
+    "a": 1.0,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.321,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.perf.fanout_tail_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.359,
+    "D": 0.488,
+    "r_pb": 0.409,
+    "a": 1.1,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.aggregate_filter_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.465,
+    "D": 0.527,
+    "r_pb": 0.418,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.251,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.count_nulls_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.77,
+    "D": 0.357,
+    "r_pb": 0.332,
+    "a": 1.0,
+    "b": -1.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.left_join_count",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.545,
+    "D": 0.551,
+    "r_pb": 0.44,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.419,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.not_in_null",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.461,
+    "D": 0.492,
+    "r_pb": 0.396,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.342,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.revenue_report_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.35,
+    "D": 0.43,
+    "r_pb": 0.559,
+    "a": 1.0,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.4,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.window_rank",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.334,
+    "D": 0.429,
+    "r_pb": 0.363,
+    "a": 1.0,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.202,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sys.reliability_open",
+    "block": "common",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.289,
+    "D": 0.404,
+    "r_pb": 0.351,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.time.tz_report_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.365,
+    "D": 0.429,
+    "r_pb": 0.552,
+    "a": 1.0,
+    "b": 0.767,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.072,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "нет ступеньки по θ условий",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.ab.sample_size_mcq",
+    "block": "data_ml",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.385,
+    "D": 0.467,
+    "r_pb": 0.381,
+    "a": 1.0,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.128,
+    "flags": [
+     "много неразобранных ответов",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.fe.onehot_serving_fix",
+    "block": "data_ml",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.447,
+    "D": 0.459,
+    "r_pb": 0.37,
+    "a": 1.0,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.369,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "data_ml.llm.chunking_fix",
+    "block": "data_ml",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.581,
+    "D": 0.493,
+    "r_pb": 0.376,
+    "a": 1.0,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.174,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.metrics.auc_pairwise_ties_bug",
+    "block": "data_ml",
+    "format": "find_bug",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.439,
+    "D": 0.519,
+    "r_pb": 0.404,
+    "a": 1.1,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.metrics.invariance_mcq",
+    "block": "data_ml",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.561,
+    "D": 0.496,
+    "r_pb": 0.382,
+    "a": 1.1,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.353,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.metrics.prf_bug",
+    "block": "data_ml",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.697,
+    "D": 0.474,
+    "r_pb": 0.412,
+    "a": 1.1,
+    "b": -0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.479,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.metrics.roc_auc_ties_bug",
+    "block": "data_ml",
+    "format": "find_bug",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.43,
+    "D": 0.567,
+    "r_pb": 0.45,
+    "a": 1.1,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.157,
+    "flags": [
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.ml.design_open",
+    "block": "data_ml",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.304,
+    "D": 0.422,
+    "r_pb": 0.359,
+    "a": 0.9,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.ml.early_stopping_output",
+    "block": "data_ml",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.556,
+    "D": 0.515,
+    "r_pb": 0.433,
+    "a": 1.0,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.2,
+    "flags": [
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.ml.group_kfold_ob3",
+    "block": "data_ml",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.351,
+    "D": 0.433,
+    "r_pb": 0.547,
+    "a": 1.0,
+    "b": 0.833,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.167,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.mlops.psi_drift_ob3",
+    "block": "data_ml",
+    "format": "open_book_3step",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.316,
+    "D": 0.437,
+    "r_pb": 0.577,
+    "a": 1.0,
+    "b": 1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.142,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "много неразобранных ответов",
+     "нет ступеньки по θ условий",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.py.iqr_outliers",
+    "block": "data_ml",
+    "format": "predict_output",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.611,
+    "D": 0.53,
+    "r_pb": 0.418,
+    "a": 1.0,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.266,
+    "flags": [
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.py.iterator_pipeline",
+    "block": "data_ml",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.524,
+    "D": 0.493,
+    "r_pb": 0.372,
+    "a": 1.0,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.321,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.py.missing_mean_bug",
+    "block": "data_ml",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.671,
+    "D": 0.448,
+    "r_pb": 0.368,
+    "a": 1.0,
+    "b": -0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.237,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.py.preprocess_leakage",
+    "block": "data_ml",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.638,
+    "D": 0.507,
+    "r_pb": 0.435,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.018,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация",
+     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.repro.rng_split_fix",
+    "block": "data_ml",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.425,
+    "D": 0.481,
+    "r_pb": 0.368,
+    "a": 1.0,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.504,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.sql.latest_record_fix",
+    "block": "data_ml",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.468,
+    "D": 0.607,
+    "r_pb": 0.477,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.413,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.sql.rolling_partition_bug",
+    "block": "data_ml",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.519,
+    "D": 0.626,
+    "r_pb": 0.483,
+    "a": 1.1,
+    "b": -0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.sql.rolling_window_bug",
+    "block": "data_ml",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.521,
+    "D": 0.493,
+    "r_pb": 0.393,
+    "a": 1.1,
+    "b": -0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.294,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.sql.window_output",
+    "block": "data_ml",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.581,
+    "D": 0.548,
+    "r_pb": 0.427,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.208,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.stats.mean_median_output",
+    "block": "data_ml",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.76,
+    "D": 0.419,
+    "r_pb": 0.376,
+    "a": 1.0,
+    "b": -1.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "data_ml.stats.ztest_fix",
+    "block": "data_ml",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.393,
+    "D": 0.511,
+    "r_pb": 0.404,
+    "a": 1.0,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.006,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "нет ступеньки по θ условий",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.a11y.accessible_name_mcq",
+    "block": "frontend",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.581,
+    "D": 0.47,
+    "r_pb": 0.391,
+    "a": 1.0,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.307,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.a11y.focus_trap_ob3",
+    "block": "frontend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.349,
+    "D": 0.432,
+    "r_pb": 0.538,
+    "a": 1.0,
+    "b": 0.733,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.172,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "frontend.arch.client_app_open",
+    "block": "frontend",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.265,
+    "D": 0.378,
+    "r_pb": 0.349,
+    "a": 0.9,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.build.esm_eval_order",
+    "block": "frontend",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.405,
+    "D": 0.504,
+    "r_pb": 0.426,
+    "a": 1.1,
+    "b": 0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.19,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.forms.int_validation_fix",
+    "block": "frontend",
+    "format": "choose_fix",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.611,
+    "D": 0.515,
+    "r_pb": 0.433,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.31,
+    "flags": [
+     "много неразобранных ответов"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.http.request_cache_ob3",
+    "block": "frontend",
+    "format": "open_book_3step",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.291,
+    "D": 0.374,
+    "r_pb": 0.525,
+    "a": 1.0,
+    "b": 1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.184,
+    "flags": [
+     "слабая дискриминация"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.abort_fetch_fix",
+    "block": "frontend",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.415,
+    "D": 0.452,
+    "r_pb": 0.39,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.401,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.async_foreach_fix",
+    "block": "frontend",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.476,
+    "D": 0.544,
+    "r_pb": 0.435,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.538,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.closure_var",
+    "block": "frontend",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.649,
+    "D": 0.47,
+    "r_pb": 0.398,
+    "a": 1.1,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.222,
+    "flags": [
+     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.debounce_ob3",
+    "block": "frontend",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.375,
+    "D": 0.417,
+    "r_pb": 0.55,
+    "a": 1.0,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.233,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.listener_leak_fix",
+    "block": "frontend",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.419,
+    "D": 0.53,
+    "r_pb": 0.442,
+    "a": 1.1,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.522,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "frontend.js.loose_equality_output",
+    "block": "frontend",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.742,
+    "D": 0.363,
+    "r_pb": 0.342,
+    "a": 1.0,
+    "b": -1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.memoize_selector_bug",
+    "block": "frontend",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.468,
+    "D": 0.493,
+    "r_pb": 0.398,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.321,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.microtask_order",
+    "block": "frontend",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.39,
+    "D": 0.485,
+    "r_pb": 0.414,
+    "a": 1.2,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.055,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.search_race_ob3",
+    "block": "frontend",
+    "format": "open_book_3step",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.297,
+    "D": 0.367,
+    "r_pb": 0.522,
+    "a": 1.0,
+    "b": 1.133,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.281,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.js.this_binding",
+    "block": "frontend",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.407,
+    "D": 0.448,
+    "r_pb": 0.375,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": -0.003,
+    "flags": [
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.react.state_batch_mcq",
+    "block": "frontend",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.489,
+    "D": 0.559,
+    "r_pb": 0.452,
+    "a": 1.2,
+    "b": -0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.226,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.sec.escape_html_bug",
+    "block": "frontend",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.534,
+    "D": 0.481,
+    "r_pb": 0.398,
+    "a": 1.1,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.326,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.sec.frontend_open",
+    "block": "frontend",
+    "format": "open_answer",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.325,
+    "D": 0.315,
+    "r_pb": 0.269,
+    "a": 0.9,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.sec.replace_global_bug",
+    "block": "frontend",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.456,
+    "D": 0.533,
+    "r_pb": 0.425,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.ts.nullish_mcq",
+    "block": "frontend",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.549,
+    "D": 0.567,
+    "r_pb": 0.449,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.157,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.ts.type_guard_bug",
+    "block": "frontend",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.439,
+    "D": 0.478,
+    "r_pb": 0.396,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.257,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.ts.typeof_null_guard_bug",
+    "block": "frontend",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.427,
+    "D": 0.485,
+    "r_pb": 0.416,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261005_ext2",
+    "r_pb_panel": null,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "frontend.web.perf_open",
+    "block": "frontend",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.293,
+    "D": 0.378,
+    "r_pb": 0.348,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.api.cursor_pagination_ob3",
+    "block": "qa",
+    "format": "open_book_3step",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.301,
+    "D": 0.415,
+    "r_pb": 0.544,
+    "a": 1.0,
+    "b": 1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.19,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.bash.smoke_masked_failure",
+    "block": "qa",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.434,
+    "D": 0.474,
+    "r_pb": 0.375,
+    "a": 1.0,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.189,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.bash.trace_logs_output",
+    "block": "qa",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.415,
+    "D": 0.511,
+    "r_pb": 0.417,
+    "a": 1.0,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.238,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.design.boundary_values_mcq",
+    "block": "qa",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.688,
+    "D": 0.515,
+    "r_pb": 0.436,
+    "a": 1.1,
+    "b": -0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.068,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.design.decision_table_bug",
+    "block": "qa",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.587,
+    "D": 0.474,
+    "r_pb": 0.382,
+    "a": 1.0,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.295,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.design.pairwise_gap_mcq",
+    "block": "qa",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.556,
+    "D": 0.422,
+    "r_pb": 0.335,
+    "a": 1.0,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.165,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.js.unawaited_assert",
+    "block": "qa",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.599,
+    "D": 0.533,
+    "r_pb": 0.431,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.143,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "слабая дискриминация"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.load.percentile_merge_mcq",
+    "block": "qa",
+    "format": "mcq_concept",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.456,
+    "D": 0.496,
+    "r_pb": 0.399,
+    "a": 1.0,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.032,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "нет ступеньки по θ условий",
+     "слабая дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": true
+   },
+   {
+    "family_id": "qa.load.slo_capacity_mcq",
+    "block": "qa",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.43,
+    "D": 0.515,
+    "r_pb": 0.413,
+    "a": 1.0,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.269,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.pytest.fixture_order",
+    "block": "qa",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.346,
+    "D": 0.437,
+    "r_pb": 0.354,
+    "a": 1.1,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.196,
+    "flags": [
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.pytest.float_assert_bug",
+    "block": "qa",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.723,
+    "D": 0.411,
+    "r_pb": 0.363,
+    "a": 1.0,
+    "b": -1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.pytest.patch_arg_order",
+    "block": "qa",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.509,
+    "D": 0.515,
+    "r_pb": 0.419,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": -0.09,
+    "flags": [
+     "нет ступеньки по θ условий",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.pytest.shared_state_ob3",
+    "block": "qa",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.37,
+    "D": 0.42,
+    "r_pb": 0.531,
+    "a": 1.0,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.162,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.pytest.vacuous_assert",
+    "block": "qa",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.66,
+    "D": 0.533,
+    "r_pb": 0.43,
+    "a": 1.0,
+    "b": -0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.338,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.regression.strategy_open",
+    "block": "qa",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.304,
+    "D": 0.396,
+    "r_pb": 0.335,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.sql.data_quality_output",
+    "block": "qa",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.463,
+    "D": 0.507,
+    "r_pb": 0.402,
+    "a": 1.0,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": -0.067,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "нет ступеньки по θ условий",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "qa.sql.reconciliation_fix",
+    "block": "qa",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.465,
+    "D": 0.548,
+    "r_pb": 0.434,
+    "a": 1.0,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.494,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "qa.triage.severity_priority_mcq",
+    "block": "qa",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.478,
+    "D": 0.485,
+    "r_pb": 0.39,
+    "a": 1.0,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.323,
+    "flags": [
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.access.owner_check_bug",
+    "block": "security",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.462,
+    "D": 0.5,
+    "r_pb": 0.394,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.073,
+    "flags": [
+     "нет ступеньки по θ условий",
+     "слабая дискриминация",
+     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.auth.password_storage_fix",
+    "block": "security",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.418,
+    "D": 0.526,
+    "r_pb": 0.423,
+    "a": 1.1,
+    "b": 0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.482,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.auth.token_validation_ob3",
+    "block": "security",
+    "format": "open_book_3step",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.361,
+    "D": 0.456,
+    "r_pb": 0.582,
+    "a": 1.1,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.041,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
+     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
+     "нет ступеньки по θ условий",
+     "отрицательная дискриминация",
+     "слишком трудное"
+    ],
+    "weak_panel": true,
+    "weak": true,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.config.secret_env_bug",
+    "block": "security",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.571,
+    "D": 0.467,
+    "r_pb": 0.367,
+    "a": 1.0,
+    "b": -0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.538,
+    "flags": [
+     "малые модели решают «в лоб»"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.crypto.aead_mcq",
+    "block": "security",
+    "format": "mcq_concept",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.292,
+    "D": 0.396,
+    "r_pb": 0.371,
+    "a": 1.0,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.566,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.crypto.nonce_lifecycle_bug",
+    "block": "security",
+    "format": "find_bug",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.328,
+    "D": 0.356,
+    "r_pb": 0.331,
+    "a": 1.0,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.447,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.design.threat_model_open",
+    "block": "security",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.235,
+    "D": 0.311,
+    "r_pb": 0.308,
+    "a": 1.0,
+    "b": 1.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.files.path_containment_ob3",
+    "block": "security",
+    "format": "open_book_3step",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.397,
+    "D": 0.436,
+    "r_pb": 0.56,
+    "a": 1.1,
+    "b": 0.533,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.304,
+    "flags": [
+     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.input.json_parser_bug",
+    "block": "security",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.656,
+    "D": 0.463,
+    "r_pb": 0.403,
+    "a": 1.0,
+    "b": -0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.423,
+    "flags": [
+     "малые модели решают «в лоб»"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.logging.password_in_log_bug",
+    "block": "security",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.746,
+    "D": 0.352,
+    "r_pb": 0.333,
+    "a": 1.0,
+    "b": -1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.monitor.log_monitor_output",
+    "block": "security",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.448,
+    "D": 0.533,
+    "r_pb": 0.422,
+    "a": 1.0,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.175,
+    "flags": [
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.response.incident_plan_open",
+    "block": "security",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.272,
+    "D": 0.37,
+    "r_pb": 0.347,
+    "a": 1.0,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.sql.parameter_fix",
+    "block": "security",
+    "format": "choose_fix",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.69,
+    "D": 0.407,
+    "r_pb": 0.365,
+    "a": 1.1,
+    "b": -0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.469,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.supply.dependency_patch_fix",
+    "block": "security",
+    "format": "choose_fix",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.337,
+    "D": 0.415,
+    "r_pb": 0.368,
+    "a": 1.1,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.515,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "security.triage.cvss_priority_output",
+    "block": "security",
+    "format": "predict_output",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.369,
+    "D": 0.426,
+    "r_pb": 0.361,
+    "a": 1.0,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.192,
+    "flags": [
+     "возможна неизоморфность (σ>0,5, χ² не знач.)",
+     "слишком трудное"
+    ],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "security.web.cookie_policy_mcq",
+    "block": "security",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.67,
+    "D": 0.404,
+    "r_pb": 0.357,
+    "a": 1.0,
+    "b": -0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.421,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "security.web.cors_csrf_mcq",
+    "block": "security",
+    "format": "mcq_concept",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.427,
+    "D": 0.496,
+    "r_pb": 0.399,
+    "a": 1.0,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.558,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "security.web.html_escape_fix",
+    "block": "security",
+    "format": "choose_fix",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.64,
+    "D": 0.47,
+    "r_pb": 0.389,
+    "a": 1.1,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "panel": "panel_20261006",
+    "r_pb_panel": 0.47,
+    "flags": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   }
+  ]
+ },
+ "procedure": [
+  "Опрос: стаж (θ = 0 → 1,5 года, θ = 1 → 4,5 года, шум 1 год) → подсказка грейда по стажу (как в продукте); самооценка — θ + N(0; 0,6). Заявленный грейд — подсказка (в половине случаев) или самооценка; ниже порога Стажёра — Стажёр.",
+  "Стек опроса фильтрует семейства (Go, Java, Django, Kafka, Docker — только тем, у кого тег есть).",
+  "Адаптивный тест платформы на банке: классификационная остановка, дотестирование у порога, контроль частоты, ротация субпулов по истории сессий; тест Стажёра — только лёгкие семейства, без ротации.",
+  "Детектор предзнания и пересчёт θ; решение: подтверждён при P ≥ 0,8, «Junior (предварительно)» при P от 0,10.",
+  "Не подтверждён: принять доказанный уровень ниже без нового теста (P ≥ 0,8), иначе один тест ступенью ниже, иначе без категории.",
+  "Повтор — вся процедура ещё раз: другой субпул, новые варианты, семейства прошлой сессии не в дотестировании."
+ ],
+ "caveat": "Синтетика: истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5, люди — модель ответов 2PL; проверяется механика всей процедуры, а не качество заданий на людях. «Предварительно» считается ступенью Junior. Дискриминативность — на симулированном пилоте с авторскими параметрами: она показывает замысел автора, а не поведение людей; r_pb панели моделей — независимая проверка на ответах моделей, шкала моделей не равна шкале людей.",
+ "other_reference": {
+  "source": "внешний репозиторий, docs/testing.md (05.10.2026)",
+  "kappa_w": 0.866,
+  "exact": 0.759,
+  "within_1": 0.998,
+  "r_theta_parallel": 0.874,
+  "borderline_exact": 0.663,
+  "far_exact": 0.826,
+  "length": 20,
+  "confirm_rule": "P ≥ 0,5",
+  "param_error": "b + N(0; 0,35), a · LogN(0; 0,2)",
+  "n": 1600,
+  "levels": 4,
+  "ci": null,
+  "icc": null
+ },
+ "seconds": 27.6
+}
