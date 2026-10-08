@@ -5,6 +5,7 @@ import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, Loading, Seg, Toggl
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { FeedbackSummary } from "./Feedback";
+import { MutualPrefs } from "../mutual/Candidate";  // интересы для взаимного подбора (Н9)
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
 interface Onb {
@@ -252,6 +253,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
               <Seg label="Формат работы" value={wf} onChange={setWf} options={data.options.work_formats} />
             </div>
             <div className="sm:col-span-2"><Toggle checked={reloc} onChange={setReloc} label="Готов к переезду" /></div>
+            <div className="sm:col-span-2"><MutualPrefs compact suggest={Object.keys(stack)} /></div>
           </div>
         )}
         {step === 3 && (

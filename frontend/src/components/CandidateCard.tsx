@@ -6,8 +6,8 @@ import { Specializations } from "./Specializations";
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
 /** Обезличенная карточка кандидата: подтверждённые факты (T1/T2) отдельно от самоописания (T0). */
-export function CandidateCard({ c, score, reasons, actions, compact = false }: {
-  c: any; score?: number; reasons?: any[]; actions?: ReactNode; compact?: boolean;
+export function CandidateCard({ c, score, reasons, actions, compact = false, mutual }: {
+  c: any; score?: number; reasons?: any[]; actions?: ReactNode; compact?: boolean; mutual?: ReactNode;  // mutual — взаимный подбор (Н9)
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
@@ -35,6 +35,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
           </div>
         )}
       </div>
+      {mutual}
 
       {c.specializations?.length > 1 && <div className="mt-4"><Specializations items={c.specializations} /></div>}
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
