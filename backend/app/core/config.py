@@ -91,7 +91,7 @@ class Settings(BaseSettings):
     llm_reasoning_parse_need: str = "low"
     llm_reasoning_resume: str = "low"
     llm_reasoning_grade: str = "default"
-    llm_reasoning_grade_second: str = "default"
+    llm_reasoning_grade_second: str = "low"  # Fable 5.1 по умолчанию рассуждает долго: ответ обрезался лимитом
     # Автомат-выключатель: после N ошибок подряд провайдер (с этой моделью) пропускается M секунд
     llm_breaker_failures: int = 3
     llm_breaker_cooldown_s: float = 60.0
@@ -104,6 +104,9 @@ class Settings(BaseSettings):
     # Вторая оценка при сомнении (grader.doubts): расхождение двух оценок больше порога — ответ эксперту
     llm_grading_second_opinion: bool = True
     llm_grading_disagree: float = 0.25
+    # Общий бюджет оценки одного ответа (первая + вторая оценка, с переходами по цепочке), с: ответ кандидата ждёт
+    # оценку синхронно, а proxy_read_timeout nginx — 60 с. Не хватило на вторую оценку — ответ «на проверке»
+    llm_grading_budget_s: float = 50.0
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"

@@ -112,6 +112,8 @@ make dev-frontend
 LLM: Yandex AI Studio (OpenAI-совместимый API, модели в РФ — данные не покидают РФ). Переменные `LLM_PROVIDER`,
 `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_FOLDER_ID`, `LLM_MODEL` задаются в файле `LLM_ENV_FILE`
 (на сервере `/opt/spectrek_fsp/secrets/llm.env`). Без них всё работает на словарях и правилах.
+Цепочка моделей — `LLM_CHAIN=openrouter,yandex` (Claude Sonnet 5.5 через OpenRouter → Yandex → правила), ключ
+OpenRouter и ретранслятор — в `OPENROUTER_ENV_FILE` и `LLM_RELAY_ENV_FILE`; подробно — [docs/LLM.md](docs/LLM.md).
 Движок теста — `ASSESSMENT_ENGINE` (`bank` — адаптивный тест на банке заданий; `stub` — запасная заглушка).
 Банк обновляется командой `python tools/sync_bank.py --commit` (из окружения банка: numpy, scipy, pydantic,
 PyYAML); скрипт выкладки вызывает её сам, так что новые семейства из `../bank` попадают на сервер автоматически.

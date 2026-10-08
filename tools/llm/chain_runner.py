@@ -36,6 +36,8 @@ def main() -> None:
     ap.add_argument("--conc", type=int, default=4)
     ap.add_argument("--timeout", type=float, default=120)
     ap.add_argument("--retries", type=int, default=2)
+    ap.add_argument("--func", default=None, help="функция продукта (grade, grade_second, …): усилие рассуждений по ней")
+    ap.add_argument("--max-tokens", type=int, default=0, help="переопределить max_tokens запросов (0 — как в файле)")
     a = ap.parse_args()
     prov = a.model.split("=", 1)[0]
     os.environ["LLM_CHAIN"] = prov
@@ -56,8 +58,9 @@ def main() -> None:
         t0 = time.time()
         res = None
         for attempt in range(a.retries + 1):
-            res = llm.chat(r["messages"], temperature=r.get("temperature", 0.0), max_tokens=r.get("max_tokens") or 1500,
-                           model=a.model, timeout_s=a.timeout)
+            res = llm.chat(r["messages"], temperature=r.get("temperature", 0.0),
+                           max_tokens=a.max_tokens or r.get("max_tokens") or 1500, model=a.model, func=a.func,
+                           timeout_s=a.timeout)
             if res.ok or (res.error or "").startswith(("http_400", "http_401", "http_403", "http_404")):
                 break
             time.sleep(3 * (attempt + 1))

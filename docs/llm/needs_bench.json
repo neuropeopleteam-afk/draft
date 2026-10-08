@@ -1,0 +1,5008 @@
+{
+  "corpus": "docs/realdata/vacancies_50.json",
+  "annotation": "silver (И8): не экспертная разметка",
+  "models": {
+    "anthropic/claude-sonnet-5.5 (reasoning default, max_tokens 1200)": {
+      "provider": "openrouter",
+      "model": "anthropic/claude-sonnet-5.5",
+      "label": "Claude Sonnet 5.5",
+      "calls": 50,
+      "ok": 48,
+      "errors": {
+        "invalid_json": 2
+      },
+      "latency_s": {
+        "median": 3.01,
+        "p90": 6.61,
+        "max": 8.68
+      },
+      "tokens": {
+        "prompt": 72446,
+        "completion": 22007
+      },
+      "cost_usd": 0.365,
+      "llm_rules": {
+        "fields": {
+          "direction": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "grade": {
+            "correct": 34,
+            "n": 39,
+            "accuracy": 0.8718
+          },
+          "experience_years_min": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "work_format": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "salary_from": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "salary_to": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          }
+        },
+        "grade_inferences_on_unspecified": 8,
+        "stack_micro_precision": 0.839,
+        "stack_micro_recall": 0.9834,
+        "stack_tp_fp_fn": [
+          297,
+          57,
+          5
+        ],
+        "quotes": 534,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": "remote",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ]
+      },
+      "llm_only": {
+        "fields": {
+          "direction": {
+            "correct": 42,
+            "n": 48,
+            "accuracy": 0.875
+          },
+          "grade": {
+            "correct": 31,
+            "n": 37,
+            "accuracy": 0.8378
+          },
+          "experience_years_min": {
+            "correct": 44,
+            "n": 48,
+            "accuracy": 0.9167
+          },
+          "work_format": {
+            "correct": 42,
+            "n": 48,
+            "accuracy": 0.875
+          },
+          "salary_from": {
+            "correct": 42,
+            "n": 48,
+            "accuracy": 0.875
+          },
+          "salary_to": {
+            "correct": 40,
+            "n": 48,
+            "accuracy": 0.8333
+          }
+        },
+        "grade_inferences_on_unspecified": 8,
+        "stack_micro_precision": 0.8794,
+        "stack_micro_recall": 0.7958,
+        "stack_tp_fp_fn": [
+          226,
+          31,
+          58
+        ],
+        "quotes": 404,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-001",
+            "field": "salary_from",
+            "expected": 258600,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-001",
+            "field": "salary_to",
+            "expected": 347400,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-004",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/124603073"
+          },
+          {
+            "id": "vac-005",
+            "field": "grade",
+            "expected": "senior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_from",
+            "expected": 256000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_to",
+            "expected": 280000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_from",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_to",
+            "expected": 300000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-008",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://spb.hh.ru/vacancy/120431692"
+          },
+          {
+            "id": "vac-011",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000161900"
+          },
+          {
+            "id": "vac-015",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_from",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_to",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-017",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/127601108"
+          },
+          {
+            "id": "vac-018",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/129957759"
+          },
+          {
+            "id": "vac-019",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_to",
+            "expected": 265000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-020",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/135126969"
+          },
+          {
+            "id": "vac-020",
+            "field": "experience_years_min",
+            "expected": 6,
+            "actual": 3.0,
+            "source_url": "https://hh.ru/vacancy/135126969"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_to",
+            "expected": 270000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-024",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137160769"
+          },
+          {
+            "id": "vac-025",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168882"
+          },
+          {
+            "id": "vac-027",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168583"
+          },
+          {
+            "id": "vac-033",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000166758"
+          },
+          {
+            "id": "vac-035",
+            "field": "experience_years_min",
+            "expected": 0.5,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168590"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-046",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168883"
+          },
+          {
+            "id": "vac-050",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ],
+        "n_with_reply": 48
+      },
+      "per_text": [
+        {
+          "id": "vac-001",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3344
+        },
+        {
+          "id": "vac-002",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2590
+        },
+        {
+          "id": "vac-003",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3312
+        },
+        {
+          "id": "vac-004",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2550
+        },
+        {
+          "id": "vac-005",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2276
+        },
+        {
+          "id": "vac-006",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3589
+        },
+        {
+          "id": "vac-007",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2562
+        },
+        {
+          "id": "vac-008",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6773
+        },
+        {
+          "id": "vac-009",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2459
+        },
+        {
+          "id": "vac-010",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2537
+        },
+        {
+          "id": "vac-011",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3034
+        },
+        {
+          "id": "vac-012",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2569
+        },
+        {
+          "id": "vac-013",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2996
+        },
+        {
+          "id": "vac-014",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 9434
+        },
+        {
+          "id": "vac-015",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8471
+        },
+        {
+          "id": "vac-016",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2944
+        },
+        {
+          "id": "vac-017",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3085
+        },
+        {
+          "id": "vac-018",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2400
+        },
+        {
+          "id": "vac-019",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2277
+        },
+        {
+          "id": "vac-020",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7342
+        },
+        {
+          "id": "vac-021",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2903
+        },
+        {
+          "id": "vac-022",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2095
+        },
+        {
+          "id": "vac-023",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6607
+        },
+        {
+          "id": "vac-024",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6005
+        },
+        {
+          "id": "vac-025",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4059
+        },
+        {
+          "id": "vac-026",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3505
+        },
+        {
+          "id": "vac-027",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2668
+        },
+        {
+          "id": "vac-028",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2863
+        },
+        {
+          "id": "vac-029",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 9429
+        },
+        {
+          "id": "vac-030",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4032
+        },
+        {
+          "id": "vac-031",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3383
+        },
+        {
+          "id": "vac-032",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3390
+        },
+        {
+          "id": "vac-033",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2780
+        },
+        {
+          "id": "vac-034",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3690
+        },
+        {
+          "id": "vac-035",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3058
+        },
+        {
+          "id": "vac-036",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2947
+        },
+        {
+          "id": "vac-037",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2169
+        },
+        {
+          "id": "vac-038",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4067
+        },
+        {
+          "id": "vac-039",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2924
+        },
+        {
+          "id": "vac-040",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3155
+        },
+        {
+          "id": "vac-041",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2464
+        },
+        {
+          "id": "vac-042",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6215
+        },
+        {
+          "id": "vac-043",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3292
+        },
+        {
+          "id": "vac-044",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5550
+        },
+        {
+          "id": "vac-045",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1793
+        },
+        {
+          "id": "vac-046",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7923
+        },
+        {
+          "id": "vac-047",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2540
+        },
+        {
+          "id": "vac-048",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8681
+        },
+        {
+          "id": "vac-049",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2909
+        },
+        {
+          "id": "vac-050",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2186
+        }
+      ],
+      "wall_total_s": 69.1,
+      "date": "2026-10-08",
+      "max_tokens": 1200,
+      "reasoning": "default",
+      "timeout_s": 25
+    },
+    "yandexgpt/latest (max_tokens 1200)": {
+      "provider": "yandex",
+      "model": "yandexgpt/latest",
+      "label": "YandexGPT",
+      "calls": 50,
+      "ok": 49,
+      "errors": {
+        "invalid_json": 1
+      },
+      "latency_s": {
+        "median": 7.39,
+        "p90": 10.56,
+        "max": 12.85
+      },
+      "tokens": {
+        "prompt": 44479,
+        "completion": 18241
+      },
+      "cost_usd": null,
+      "llm_rules": {
+        "fields": {
+          "direction": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "grade": {
+            "correct": 34,
+            "n": 39,
+            "accuracy": 0.8718
+          },
+          "experience_years_min": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "work_format": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "salary_from": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "salary_to": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          }
+        },
+        "grade_inferences_on_unspecified": 8,
+        "stack_micro_precision": 0.8487,
+        "stack_micro_recall": 0.947,
+        "stack_tp_fp_fn": [
+          286,
+          51,
+          16
+        ],
+        "quotes": 517,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": "remote",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ]
+      },
+      "llm_only": {
+        "fields": {
+          "direction": {
+            "correct": 39,
+            "n": 49,
+            "accuracy": 0.7959
+          },
+          "grade": {
+            "correct": 32,
+            "n": 38,
+            "accuracy": 0.8421
+          },
+          "experience_years_min": {
+            "correct": 41,
+            "n": 49,
+            "accuracy": 0.8367
+          },
+          "work_format": {
+            "correct": 41,
+            "n": 49,
+            "accuracy": 0.8367
+          },
+          "salary_from": {
+            "correct": 43,
+            "n": 49,
+            "accuracy": 0.8776
+          },
+          "salary_to": {
+            "correct": 41,
+            "n": 49,
+            "accuracy": 0.8367
+          }
+        },
+        "grade_inferences_on_unspecified": 6,
+        "stack_micro_precision": 0.9076,
+        "stack_micro_recall": 0.57,
+        "stack_tp_fp_fn": [
+          167,
+          17,
+          126
+        ],
+        "quotes": 326,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-001",
+            "field": "salary_from",
+            "expected": 258600,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-001",
+            "field": "salary_to",
+            "expected": 347400,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-002",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/129355447"
+          },
+          {
+            "id": "vac-003",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://spb.hh.ru/vacancy/136588900"
+          },
+          {
+            "id": "vac-004",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/124603073"
+          },
+          {
+            "id": "vac-005",
+            "field": "grade",
+            "expected": "senior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_from",
+            "expected": 256000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_to",
+            "expected": 280000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-006",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_from",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_to",
+            "expected": 300000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-008",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://spb.hh.ru/vacancy/120431692"
+          },
+          {
+            "id": "vac-011",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://career.habr.com/vacancies/1000161900"
+          },
+          {
+            "id": "vac-015",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "office",
+            "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326"
+          },
+          {
+            "id": "vac-016",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_from",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_to",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-017",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/127601108"
+          },
+          {
+            "id": "vac-018",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/129957759"
+          },
+          {
+            "id": "vac-018",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/129957759"
+          },
+          {
+            "id": "vac-019",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": "backend",
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_to",
+            "expected": 265000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-020",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": "backend",
+            "source_url": "https://hh.ru/vacancy/135126969"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_to",
+            "expected": 270000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-023",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://1c.ru/rus/firm1c/vacan/vacancy/93"
+          },
+          {
+            "id": "vac-024",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137160769"
+          },
+          {
+            "id": "vac-025",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168882"
+          },
+          {
+            "id": "vac-027",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168583"
+          },
+          {
+            "id": "vac-028",
+            "field": "experience_years_min",
+            "expected": 1.5,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168581"
+          },
+          {
+            "id": "vac-035",
+            "field": "experience_years_min",
+            "expected": 0.5,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168590"
+          },
+          {
+            "id": "vac-036",
+            "field": "experience_years_min",
+            "expected": 0.25,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168214"
+          },
+          {
+            "id": "vac-037",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-042",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168750"
+          },
+          {
+            "id": "vac-043",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000164478"
+          },
+          {
+            "id": "vac-046",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168883"
+          },
+          {
+            "id": "vac-049",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000164183"
+          },
+          {
+            "id": "vac-050",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ],
+        "n_with_reply": 49
+      },
+      "per_text": [
+        {
+          "id": "vac-001",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10168
+        },
+        {
+          "id": "vac-002",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6098
+        },
+        {
+          "id": "vac-003",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8900
+        },
+        {
+          "id": "vac-004",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7004
+        },
+        {
+          "id": "vac-005",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7207
+        },
+        {
+          "id": "vac-006",
+          "ok": true,
+          "error": null,
+          "latency_ms": 12854
+        },
+        {
+          "id": "vac-007",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6223
+        },
+        {
+          "id": "vac-008",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4664
+        },
+        {
+          "id": "vac-009",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7389
+        },
+        {
+          "id": "vac-010",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9088
+        },
+        {
+          "id": "vac-011",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9465
+        },
+        {
+          "id": "vac-012",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6627
+        },
+        {
+          "id": "vac-013",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7952
+        },
+        {
+          "id": "vac-014",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 10141
+        },
+        {
+          "id": "vac-015",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8438
+        },
+        {
+          "id": "vac-016",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5164
+        },
+        {
+          "id": "vac-017",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6850
+        },
+        {
+          "id": "vac-018",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7185
+        },
+        {
+          "id": "vac-019",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6290
+        },
+        {
+          "id": "vac-020",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9051
+        },
+        {
+          "id": "vac-021",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4895
+        },
+        {
+          "id": "vac-022",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4180
+        },
+        {
+          "id": "vac-023",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9611
+        },
+        {
+          "id": "vac-024",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4862
+        },
+        {
+          "id": "vac-025",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11106
+        },
+        {
+          "id": "vac-026",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8896
+        },
+        {
+          "id": "vac-027",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5880
+        },
+        {
+          "id": "vac-028",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6702
+        },
+        {
+          "id": "vac-029",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7804
+        },
+        {
+          "id": "vac-030",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8908
+        },
+        {
+          "id": "vac-031",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11310
+        },
+        {
+          "id": "vac-032",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11749
+        },
+        {
+          "id": "vac-033",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8606
+        },
+        {
+          "id": "vac-034",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8793
+        },
+        {
+          "id": "vac-035",
+          "ok": true,
+          "error": null,
+          "latency_ms": 12408
+        },
+        {
+          "id": "vac-036",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6150
+        },
+        {
+          "id": "vac-037",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5159
+        },
+        {
+          "id": "vac-038",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7591
+        },
+        {
+          "id": "vac-039",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7004
+        },
+        {
+          "id": "vac-040",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7798
+        },
+        {
+          "id": "vac-041",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7452
+        },
+        {
+          "id": "vac-042",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7367
+        },
+        {
+          "id": "vac-043",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5520
+        },
+        {
+          "id": "vac-044",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7138
+        },
+        {
+          "id": "vac-045",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5611
+        },
+        {
+          "id": "vac-046",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7535
+        },
+        {
+          "id": "vac-047",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7256
+        },
+        {
+          "id": "vac-048",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8127
+        },
+        {
+          "id": "vac-049",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10564
+        },
+        {
+          "id": "vac-050",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5132
+        }
+      ],
+      "wall_total_s": 133.4,
+      "date": "2026-10-08",
+      "max_tokens": 1200,
+      "reasoning": null,
+      "timeout_s": 25
+    },
+    "yandexgpt-5.1/latest (max_tokens 1200)": {
+      "provider": "yandex",
+      "model": "yandexgpt-5.1/latest",
+      "label": "yandexgpt-5.1",
+      "calls": 50,
+      "ok": 50,
+      "errors": {},
+      "latency_s": {
+        "median": 2.36,
+        "p90": 3.51,
+        "max": 4.97
+      },
+      "tokens": {
+        "prompt": 45319,
+        "completion": 19274
+      },
+      "cost_usd": null,
+      "llm_rules": {
+        "fields": {
+          "direction": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "grade": {
+            "correct": 34,
+            "n": 39,
+            "accuracy": 0.8718
+          },
+          "experience_years_min": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "work_format": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "salary_from": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "salary_to": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          }
+        },
+        "grade_inferences_on_unspecified": 9,
+        "stack_micro_precision": 0.8529,
+        "stack_micro_recall": 0.9603,
+        "stack_tp_fp_fn": [
+          290,
+          50,
+          12
+        ],
+        "quotes": 521,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": "remote",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ]
+      },
+      "llm_only": {
+        "fields": {
+          "direction": {
+            "correct": 42,
+            "n": 50,
+            "accuracy": 0.84
+          },
+          "grade": {
+            "correct": 32,
+            "n": 39,
+            "accuracy": 0.8205
+          },
+          "experience_years_min": {
+            "correct": 44,
+            "n": 50,
+            "accuracy": 0.88
+          },
+          "work_format": {
+            "correct": 43,
+            "n": 50,
+            "accuracy": 0.86
+          },
+          "salary_from": {
+            "correct": 44,
+            "n": 50,
+            "accuracy": 0.88
+          },
+          "salary_to": {
+            "correct": 42,
+            "n": 50,
+            "accuracy": 0.84
+          }
+        },
+        "grade_inferences_on_unspecified": 7,
+        "stack_micro_precision": 0.9126,
+        "stack_micro_recall": 0.6225,
+        "stack_tp_fp_fn": [
+          188,
+          18,
+          114
+        ],
+        "quotes": 357,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-001",
+            "field": "grade",
+            "expected": "senior",
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-001",
+            "field": "salary_from",
+            "expected": 258600,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-001",
+            "field": "salary_to",
+            "expected": 347400,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-003",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://spb.hh.ru/vacancy/136588900"
+          },
+          {
+            "id": "vac-005",
+            "field": "grade",
+            "expected": "senior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_from",
+            "expected": 256000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_to",
+            "expected": 280000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-006",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_from",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_to",
+            "expected": 300000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-008",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://spb.hh.ru/vacancy/120431692"
+          },
+          {
+            "id": "vac-011",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000161900"
+          },
+          {
+            "id": "vac-011",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://career.habr.com/vacancies/1000161900"
+          },
+          {
+            "id": "vac-015",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_from",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_to",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-019",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": "backend",
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_to",
+            "expected": 265000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-020",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": "backend",
+            "source_url": "https://hh.ru/vacancy/135126969"
+          },
+          {
+            "id": "vac-020",
+            "field": "experience_years_min",
+            "expected": 6,
+            "actual": 3.0,
+            "source_url": "https://hh.ru/vacancy/135126969"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_to",
+            "expected": 270000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-023",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://1c.ru/rus/firm1c/vacan/vacancy/93"
+          },
+          {
+            "id": "vac-024",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137160769"
+          },
+          {
+            "id": "vac-025",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168882"
+          },
+          {
+            "id": "vac-027",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168583"
+          },
+          {
+            "id": "vac-028",
+            "field": "experience_years_min",
+            "expected": 1.5,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168581"
+          },
+          {
+            "id": "vac-029",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168926"
+          },
+          {
+            "id": "vac-035",
+            "field": "experience_years_min",
+            "expected": 0.5,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168590"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-042",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168750"
+          },
+          {
+            "id": "vac-043",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000164478"
+          },
+          {
+            "id": "vac-046",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168883"
+          },
+          {
+            "id": "vac-048",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000167502"
+          },
+          {
+            "id": "vac-049",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000164183"
+          },
+          {
+            "id": "vac-050",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ],
+        "n_with_reply": 50
+      },
+      "per_text": [
+        {
+          "id": "vac-001",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2529
+        },
+        {
+          "id": "vac-002",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2298
+        },
+        {
+          "id": "vac-003",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2911
+        },
+        {
+          "id": "vac-004",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1774
+        },
+        {
+          "id": "vac-005",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2211
+        },
+        {
+          "id": "vac-006",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3117
+        },
+        {
+          "id": "vac-007",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1813
+        },
+        {
+          "id": "vac-008",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1723
+        },
+        {
+          "id": "vac-009",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3742
+        },
+        {
+          "id": "vac-010",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2782
+        },
+        {
+          "id": "vac-011",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2535
+        },
+        {
+          "id": "vac-012",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2038
+        },
+        {
+          "id": "vac-013",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2329
+        },
+        {
+          "id": "vac-014",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4484
+        },
+        {
+          "id": "vac-015",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2828
+        },
+        {
+          "id": "vac-016",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1975
+        },
+        {
+          "id": "vac-017",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2304
+        },
+        {
+          "id": "vac-018",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2204
+        },
+        {
+          "id": "vac-019",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2376
+        },
+        {
+          "id": "vac-020",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3373
+        },
+        {
+          "id": "vac-021",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2118
+        },
+        {
+          "id": "vac-022",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1431
+        },
+        {
+          "id": "vac-023",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2475
+        },
+        {
+          "id": "vac-024",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1596
+        },
+        {
+          "id": "vac-025",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3510
+        },
+        {
+          "id": "vac-026",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2685
+        },
+        {
+          "id": "vac-027",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2063
+        },
+        {
+          "id": "vac-028",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2382
+        },
+        {
+          "id": "vac-029",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2600
+        },
+        {
+          "id": "vac-030",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2805
+        },
+        {
+          "id": "vac-031",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4967
+        },
+        {
+          "id": "vac-032",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3393
+        },
+        {
+          "id": "vac-033",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2347
+        },
+        {
+          "id": "vac-034",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2875
+        },
+        {
+          "id": "vac-035",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2741
+        },
+        {
+          "id": "vac-036",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2155
+        },
+        {
+          "id": "vac-037",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2010
+        },
+        {
+          "id": "vac-038",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3643
+        },
+        {
+          "id": "vac-039",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3679
+        },
+        {
+          "id": "vac-040",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2607
+        },
+        {
+          "id": "vac-041",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2067
+        },
+        {
+          "id": "vac-042",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2312
+        },
+        {
+          "id": "vac-043",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2199
+        },
+        {
+          "id": "vac-044",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2073
+        },
+        {
+          "id": "vac-045",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1719
+        },
+        {
+          "id": "vac-046",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2521
+        },
+        {
+          "id": "vac-047",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1830
+        },
+        {
+          "id": "vac-048",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2162
+        },
+        {
+          "id": "vac-049",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3077
+        },
+        {
+          "id": "vac-050",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2039
+        }
+      ],
+      "wall_total_s": 44.3,
+      "date": "2026-10-08",
+      "max_tokens": 1200,
+      "reasoning": null,
+      "timeout_s": 25
+    },
+    "anthropic/claude-sonnet-5.5 (reasoning low, max_tokens 2500)": {
+      "provider": "openrouter",
+      "model": "anthropic/claude-sonnet-5.5",
+      "label": "Claude Sonnet 5.5",
+      "calls": 50,
+      "ok": 50,
+      "errors": {},
+      "latency_s": {
+        "median": 2.7,
+        "p90": 3.58,
+        "max": 3.96
+      },
+      "tokens": {
+        "prompt": 75390,
+        "completion": 18256
+      },
+      "cost_usd": 0.3333,
+      "llm_rules": {
+        "fields": {
+          "direction": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "grade": {
+            "correct": 34,
+            "n": 39,
+            "accuracy": 0.8718
+          },
+          "experience_years_min": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "work_format": {
+            "correct": 48,
+            "n": 50,
+            "accuracy": 0.96
+          },
+          "salary_from": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "salary_to": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          }
+        },
+        "grade_inferences_on_unspecified": 9,
+        "stack_micro_precision": 0.8343,
+        "stack_micro_recall": 0.9834,
+        "stack_tp_fp_fn": [
+          297,
+          59,
+          5
+        ],
+        "quotes": 538,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-014",
+            "field": "work_format",
+            "expected": null,
+            "actual": "remote",
+            "source_url": "https://quick-offer.ru/job/data-engineer-middle-81430"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": "remote",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ]
+      },
+      "llm_only": {
+        "fields": {
+          "direction": {
+            "correct": 44,
+            "n": 50,
+            "accuracy": 0.88
+          },
+          "grade": {
+            "correct": 33,
+            "n": 39,
+            "accuracy": 0.8462
+          },
+          "experience_years_min": {
+            "correct": 47,
+            "n": 50,
+            "accuracy": 0.94
+          },
+          "work_format": {
+            "correct": 43,
+            "n": 50,
+            "accuracy": 0.86
+          },
+          "salary_from": {
+            "correct": 44,
+            "n": 50,
+            "accuracy": 0.88
+          },
+          "salary_to": {
+            "correct": 42,
+            "n": 50,
+            "accuracy": 0.84
+          }
+        },
+        "grade_inferences_on_unspecified": 7,
+        "stack_micro_precision": 0.8764,
+        "stack_micro_recall": 0.798,
+        "stack_tp_fp_fn": [
+          241,
+          34,
+          61
+        ],
+        "quotes": 429,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-001",
+            "field": "salary_from",
+            "expected": 258600,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-001",
+            "field": "salary_to",
+            "expected": 347400,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-003",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://spb.hh.ru/vacancy/136588900"
+          },
+          {
+            "id": "vac-004",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/124603073"
+          },
+          {
+            "id": "vac-005",
+            "field": "grade",
+            "expected": "senior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_from",
+            "expected": 256000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_to",
+            "expected": 280000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_from",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_to",
+            "expected": 300000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-007",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-008",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://spb.hh.ru/vacancy/120431692"
+          },
+          {
+            "id": "vac-011",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000161900"
+          },
+          {
+            "id": "vac-014",
+            "field": "work_format",
+            "expected": null,
+            "actual": "remote",
+            "source_url": "https://quick-offer.ru/job/data-engineer-middle-81430"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_from",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_to",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-017",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/127601108"
+          },
+          {
+            "id": "vac-018",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/129957759"
+          },
+          {
+            "id": "vac-019",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_to",
+            "expected": 265000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-020",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/135126969"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_to",
+            "expected": 270000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-025",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168882"
+          },
+          {
+            "id": "vac-027",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168583"
+          },
+          {
+            "id": "vac-033",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000166758"
+          },
+          {
+            "id": "vac-035",
+            "field": "experience_years_min",
+            "expected": 0.5,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168590"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-046",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168883"
+          },
+          {
+            "id": "vac-050",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ],
+        "n_with_reply": 50
+      },
+      "per_text": [
+        {
+          "id": "vac-001",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2881
+        },
+        {
+          "id": "vac-002",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2417
+        },
+        {
+          "id": "vac-003",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3422
+        },
+        {
+          "id": "vac-004",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2656
+        },
+        {
+          "id": "vac-005",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2193
+        },
+        {
+          "id": "vac-006",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3589
+        },
+        {
+          "id": "vac-007",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2674
+        },
+        {
+          "id": "vac-008",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2327
+        },
+        {
+          "id": "vac-009",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2610
+        },
+        {
+          "id": "vac-010",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2721
+        },
+        {
+          "id": "vac-011",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3022
+        },
+        {
+          "id": "vac-012",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2818
+        },
+        {
+          "id": "vac-013",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2955
+        },
+        {
+          "id": "vac-014",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3429
+        },
+        {
+          "id": "vac-015",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2624
+        },
+        {
+          "id": "vac-016",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2916
+        },
+        {
+          "id": "vac-017",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2100
+        },
+        {
+          "id": "vac-018",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2254
+        },
+        {
+          "id": "vac-019",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2055
+        },
+        {
+          "id": "vac-020",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2182
+        },
+        {
+          "id": "vac-021",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1767
+        },
+        {
+          "id": "vac-022",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3034
+        },
+        {
+          "id": "vac-023",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2619
+        },
+        {
+          "id": "vac-024",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1995
+        },
+        {
+          "id": "vac-025",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3731
+        },
+        {
+          "id": "vac-026",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3823
+        },
+        {
+          "id": "vac-027",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2841
+        },
+        {
+          "id": "vac-028",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2676
+        },
+        {
+          "id": "vac-029",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3579
+        },
+        {
+          "id": "vac-030",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3739
+        },
+        {
+          "id": "vac-031",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3458
+        },
+        {
+          "id": "vac-032",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3957
+        },
+        {
+          "id": "vac-033",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2644
+        },
+        {
+          "id": "vac-034",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3213
+        },
+        {
+          "id": "vac-035",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3245
+        },
+        {
+          "id": "vac-036",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2644
+        },
+        {
+          "id": "vac-037",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2083
+        },
+        {
+          "id": "vac-038",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2921
+        },
+        {
+          "id": "vac-039",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2684
+        },
+        {
+          "id": "vac-040",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3171
+        },
+        {
+          "id": "vac-041",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2504
+        },
+        {
+          "id": "vac-042",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2065
+        },
+        {
+          "id": "vac-043",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3213
+        },
+        {
+          "id": "vac-044",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2074
+        },
+        {
+          "id": "vac-045",
+          "ok": true,
+          "error": null,
+          "latency_ms": 1725
+        },
+        {
+          "id": "vac-046",
+          "ok": true,
+          "error": null,
+          "latency_ms": 3136
+        },
+        {
+          "id": "vac-047",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2410
+        },
+        {
+          "id": "vac-048",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2648
+        },
+        {
+          "id": "vac-049",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2843
+        },
+        {
+          "id": "vac-050",
+          "ok": true,
+          "error": null,
+          "latency_ms": 2726
+        }
+      ],
+      "wall_total_s": 49.1,
+      "date": "2026-10-08",
+      "reasoning": "low",
+      "max_tokens": 2500,
+      "timeout_s": 25
+    },
+    "gpt-oss-120b/latest (max_tokens 2500)": {
+      "provider": "yandex",
+      "model": "gpt-oss-120b/latest",
+      "label": "gpt-oss-120b",
+      "calls": 50,
+      "ok": 49,
+      "errors": {
+        "timeout": 1
+      },
+      "latency_s": {
+        "median": 9.38,
+        "p90": 17.21,
+        "max": 22.0
+      },
+      "tokens": {
+        "prompt": 51315,
+        "completion": 53985
+      },
+      "cost_usd": null,
+      "llm_rules": {
+        "fields": {
+          "direction": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "grade": {
+            "correct": 34,
+            "n": 39,
+            "accuracy": 0.8718
+          },
+          "experience_years_min": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "work_format": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "salary_from": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "salary_to": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          }
+        },
+        "grade_inferences_on_unspecified": 9,
+        "stack_micro_precision": 0.8207,
+        "stack_micro_recall": 0.9702,
+        "stack_tp_fp_fn": [
+          293,
+          64,
+          9
+        ],
+        "quotes": 538,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": "remote",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ]
+      },
+      "llm_only": {
+        "fields": {
+          "direction": {
+            "correct": 45,
+            "n": 49,
+            "accuracy": 0.9184
+          },
+          "grade": {
+            "correct": 32,
+            "n": 38,
+            "accuracy": 0.8421
+          },
+          "experience_years_min": {
+            "correct": 44,
+            "n": 49,
+            "accuracy": 0.898
+          },
+          "work_format": {
+            "correct": 46,
+            "n": 49,
+            "accuracy": 0.9388
+          },
+          "salary_from": {
+            "correct": 43,
+            "n": 49,
+            "accuracy": 0.8776
+          },
+          "salary_to": {
+            "correct": 41,
+            "n": 49,
+            "accuracy": 0.8367
+          }
+        },
+        "grade_inferences_on_unspecified": 8,
+        "stack_micro_precision": 0.8694,
+        "stack_micro_recall": 0.7898,
+        "stack_tp_fp_fn": [
+          233,
+          35,
+          62
+        ],
+        "quotes": 422,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-001",
+            "field": "salary_from",
+            "expected": 258600,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-001",
+            "field": "salary_to",
+            "expected": 347400,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-005",
+            "field": "grade",
+            "expected": "senior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_from",
+            "expected": 256000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_to",
+            "expected": 280000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_from",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_to",
+            "expected": 300000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-008",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://spb.hh.ru/vacancy/120431692"
+          },
+          {
+            "id": "vac-011",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://career.habr.com/vacancies/1000161900"
+          },
+          {
+            "id": "vac-015",
+            "field": "direction",
+            "expected": "data_ml",
+            "actual": null,
+            "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326"
+          },
+          {
+            "id": "vac-015",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_from",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_to",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-019",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_to",
+            "expected": 265000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-022",
+            "field": "experience_years_min",
+            "expected": 1,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_to",
+            "expected": 270000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-025",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168882"
+          },
+          {
+            "id": "vac-027",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168583"
+          },
+          {
+            "id": "vac-028",
+            "field": "experience_years_min",
+            "expected": 1.5,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168581"
+          },
+          {
+            "id": "vac-035",
+            "field": "experience_years_min",
+            "expected": 0.5,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168590"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-043",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000164478"
+          },
+          {
+            "id": "vac-046",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168883"
+          },
+          {
+            "id": "vac-050",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "experience_years_min",
+            "expected": 0,
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ],
+        "n_with_reply": 49
+      },
+      "per_text": [
+        {
+          "id": "vac-001",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8029
+        },
+        {
+          "id": "vac-002",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6926
+        },
+        {
+          "id": "vac-003",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7369
+        },
+        {
+          "id": "vac-004",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5657
+        },
+        {
+          "id": "vac-005",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5642
+        },
+        {
+          "id": "vac-006",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6746
+        },
+        {
+          "id": "vac-007",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5473
+        },
+        {
+          "id": "vac-008",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5252
+        },
+        {
+          "id": "vac-009",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9379
+        },
+        {
+          "id": "vac-010",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10668
+        },
+        {
+          "id": "vac-011",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9675
+        },
+        {
+          "id": "vac-012",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8525
+        },
+        {
+          "id": "vac-013",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8938
+        },
+        {
+          "id": "vac-014",
+          "ok": true,
+          "error": null,
+          "latency_ms": 14366
+        },
+        {
+          "id": "vac-015",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7835
+        },
+        {
+          "id": "vac-016",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7733
+        },
+        {
+          "id": "vac-017",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7660
+        },
+        {
+          "id": "vac-018",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7378
+        },
+        {
+          "id": "vac-019",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5476
+        },
+        {
+          "id": "vac-020",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6534
+        },
+        {
+          "id": "vac-021",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4256
+        },
+        {
+          "id": "vac-022",
+          "ok": true,
+          "error": null,
+          "latency_ms": 4651
+        },
+        {
+          "id": "vac-023",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11864
+        },
+        {
+          "id": "vac-024",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5684
+        },
+        {
+          "id": "vac-025",
+          "ok": true,
+          "error": null,
+          "latency_ms": 15789
+        },
+        {
+          "id": "vac-026",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9947
+        },
+        {
+          "id": "vac-027",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8314
+        },
+        {
+          "id": "vac-028",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6243
+        },
+        {
+          "id": "vac-029",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11578
+        },
+        {
+          "id": "vac-030",
+          "ok": true,
+          "error": null,
+          "latency_ms": 14072
+        },
+        {
+          "id": "vac-031",
+          "ok": true,
+          "error": null,
+          "latency_ms": 14122
+        },
+        {
+          "id": "vac-032",
+          "ok": true,
+          "error": null,
+          "latency_ms": 12821
+        },
+        {
+          "id": "vac-033",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8598
+        },
+        {
+          "id": "vac-034",
+          "ok": true,
+          "error": null,
+          "latency_ms": 13705
+        },
+        {
+          "id": "vac-035",
+          "ok": true,
+          "error": null,
+          "latency_ms": 20432
+        },
+        {
+          "id": "vac-036",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10373
+        },
+        {
+          "id": "vac-037",
+          "ok": true,
+          "error": null,
+          "latency_ms": 16757
+        },
+        {
+          "id": "vac-038",
+          "ok": true,
+          "error": null,
+          "latency_ms": 17206
+        },
+        {
+          "id": "vac-039",
+          "ok": true,
+          "error": null,
+          "latency_ms": 15322
+        },
+        {
+          "id": "vac-040",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25293
+        },
+        {
+          "id": "vac-041",
+          "ok": true,
+          "error": null,
+          "latency_ms": 14596
+        },
+        {
+          "id": "vac-042",
+          "ok": true,
+          "error": null,
+          "latency_ms": 15704
+        },
+        {
+          "id": "vac-043",
+          "ok": true,
+          "error": null,
+          "latency_ms": 18775
+        },
+        {
+          "id": "vac-044",
+          "ok": true,
+          "error": null,
+          "latency_ms": 21999
+        },
+        {
+          "id": "vac-045",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8005
+        },
+        {
+          "id": "vac-046",
+          "ok": true,
+          "error": null,
+          "latency_ms": 16616
+        },
+        {
+          "id": "vac-047",
+          "ok": true,
+          "error": null,
+          "latency_ms": 15834
+        },
+        {
+          "id": "vac-048",
+          "ok": true,
+          "error": null,
+          "latency_ms": 19213
+        },
+        {
+          "id": "vac-049",
+          "ok": true,
+          "error": null,
+          "latency_ms": 17232
+        },
+        {
+          "id": "vac-050",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9330
+        }
+      ],
+      "wall_total_s": 189.9,
+      "date": "2026-10-08",
+      "reasoning": null,
+      "max_tokens": 2500,
+      "timeout_s": 25
+    },
+    "deepseek-v4.1-flash/latest (max_tokens 2500)": {
+      "provider": "yandex",
+      "model": "deepseek-v4.1-flash/latest",
+      "label": "deepseek-v4.1-flash",
+      "calls": 50,
+      "ok": 30,
+      "errors": {
+        "timeout": 19,
+        "invalid_reply": 1
+      },
+      "latency_s": {
+        "median": 14.94,
+        "p90": 22.79,
+        "max": 24.1
+      },
+      "tokens": {
+        "prompt": 32282,
+        "completion": 40563
+      },
+      "cost_usd": null,
+      "llm_rules": {
+        "fields": {
+          "direction": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "grade": {
+            "correct": 34,
+            "n": 39,
+            "accuracy": 0.8718
+          },
+          "experience_years_min": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "work_format": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "salary_from": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "salary_to": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          }
+        },
+        "grade_inferences_on_unspecified": 8,
+        "stack_micro_precision": 0.8669,
+        "stack_micro_recall": 0.9702,
+        "stack_tp_fp_fn": [
+          293,
+          45,
+          9
+        ],
+        "quotes": 518,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": "remote",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ]
+      },
+      "llm_only": {
+        "fields": {
+          "direction": {
+            "correct": 26,
+            "n": 30,
+            "accuracy": 0.8667
+          },
+          "grade": {
+            "correct": 18,
+            "n": 23,
+            "accuracy": 0.7826
+          },
+          "experience_years_min": {
+            "correct": 30,
+            "n": 30,
+            "accuracy": 1.0
+          },
+          "work_format": {
+            "correct": 30,
+            "n": 30,
+            "accuracy": 1.0
+          },
+          "salary_from": {
+            "correct": 24,
+            "n": 30,
+            "accuracy": 0.8
+          },
+          "salary_to": {
+            "correct": 23,
+            "n": 30,
+            "accuracy": 0.7667
+          }
+        },
+        "grade_inferences_on_unspecified": 4,
+        "stack_micro_precision": 0.9348,
+        "stack_micro_recall": 0.9053,
+        "stack_tp_fp_fn": [
+          172,
+          12,
+          18
+        ],
+        "quotes": 276,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-001",
+            "field": "salary_from",
+            "expected": 258600,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-001",
+            "field": "salary_to",
+            "expected": 347400,
+            "actual": null,
+            "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_from",
+            "expected": 256000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_to",
+            "expected": 280000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_from",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-006",
+            "field": "salary_to",
+            "expected": 300000,
+            "actual": null,
+            "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+          },
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_from",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-016",
+            "field": "salary_to",
+            "expected": 130000,
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137706135"
+          },
+          {
+            "id": "vac-018",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/129957759"
+          },
+          {
+            "id": "vac-019",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_to",
+            "expected": 265000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_to",
+            "expected": 270000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-024",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/137160769"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-042",
+            "field": "grade",
+            "expected": "senior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168750"
+          },
+          {
+            "id": "vac-046",
+            "field": "salary_to",
+            "expected": 200000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168883"
+          },
+          {
+            "id": "vac-050",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ],
+        "n_with_reply": 30
+      },
+      "per_text": [
+        {
+          "id": "vac-001",
+          "ok": true,
+          "error": null,
+          "latency_ms": 13244
+        },
+        {
+          "id": "vac-002",
+          "ok": true,
+          "error": null,
+          "latency_ms": 22793
+        },
+        {
+          "id": "vac-003",
+          "ok": true,
+          "error": null,
+          "latency_ms": 14339
+        },
+        {
+          "id": "vac-004",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25299
+        },
+        {
+          "id": "vac-005",
+          "ok": true,
+          "error": null,
+          "latency_ms": 23512
+        },
+        {
+          "id": "vac-006",
+          "ok": true,
+          "error": null,
+          "latency_ms": 16660
+        },
+        {
+          "id": "vac-007",
+          "ok": true,
+          "error": null,
+          "latency_ms": 16052
+        },
+        {
+          "id": "vac-008",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25290
+        },
+        {
+          "id": "vac-009",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25283
+        },
+        {
+          "id": "vac-010",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8833
+        },
+        {
+          "id": "vac-011",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25296
+        },
+        {
+          "id": "vac-012",
+          "ok": true,
+          "error": null,
+          "latency_ms": 14658
+        },
+        {
+          "id": "vac-013",
+          "ok": true,
+          "error": null,
+          "latency_ms": 15729
+        },
+        {
+          "id": "vac-014",
+          "ok": true,
+          "error": null,
+          "latency_ms": 14112
+        },
+        {
+          "id": "vac-015",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25288
+        },
+        {
+          "id": "vac-016",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7884
+        },
+        {
+          "id": "vac-017",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25290
+        },
+        {
+          "id": "vac-018",
+          "ok": true,
+          "error": null,
+          "latency_ms": 17457
+        },
+        {
+          "id": "vac-019",
+          "ok": true,
+          "error": null,
+          "latency_ms": 19116
+        },
+        {
+          "id": "vac-020",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25294
+        },
+        {
+          "id": "vac-021",
+          "ok": true,
+          "error": null,
+          "latency_ms": 9333
+        },
+        {
+          "id": "vac-022",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10900
+        },
+        {
+          "id": "vac-023",
+          "ok": false,
+          "error": "invalid_reply",
+          "latency_ms": 24366
+        },
+        {
+          "id": "vac-024",
+          "ok": true,
+          "error": null,
+          "latency_ms": 15455
+        },
+        {
+          "id": "vac-025",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25296
+        },
+        {
+          "id": "vac-026",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25296
+        },
+        {
+          "id": "vac-027",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25268
+        },
+        {
+          "id": "vac-028",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25448
+        },
+        {
+          "id": "vac-029",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25309
+        },
+        {
+          "id": "vac-030",
+          "ok": true,
+          "error": null,
+          "latency_ms": 20185
+        },
+        {
+          "id": "vac-031",
+          "ok": true,
+          "error": null,
+          "latency_ms": 16907
+        },
+        {
+          "id": "vac-032",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25275
+        },
+        {
+          "id": "vac-033",
+          "ok": true,
+          "error": null,
+          "latency_ms": 24098
+        },
+        {
+          "id": "vac-034",
+          "ok": true,
+          "error": null,
+          "latency_ms": 19825
+        },
+        {
+          "id": "vac-035",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25373
+        },
+        {
+          "id": "vac-036",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25300
+        },
+        {
+          "id": "vac-037",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25343
+        },
+        {
+          "id": "vac-038",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10690
+        },
+        {
+          "id": "vac-039",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10820
+        },
+        {
+          "id": "vac-040",
+          "ok": true,
+          "error": null,
+          "latency_ms": 15226
+        },
+        {
+          "id": "vac-041",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8154
+        },
+        {
+          "id": "vac-042",
+          "ok": true,
+          "error": null,
+          "latency_ms": 12655
+        },
+        {
+          "id": "vac-043",
+          "ok": true,
+          "error": null,
+          "latency_ms": 12219
+        },
+        {
+          "id": "vac-044",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10114
+        },
+        {
+          "id": "vac-045",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25281
+        },
+        {
+          "id": "vac-046",
+          "ok": true,
+          "error": null,
+          "latency_ms": 23211
+        },
+        {
+          "id": "vac-047",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25306
+        },
+        {
+          "id": "vac-048",
+          "ok": false,
+          "error": "timeout",
+          "latency_ms": 25352
+        },
+        {
+          "id": "vac-049",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7877
+        },
+        {
+          "id": "vac-050",
+          "ok": true,
+          "error": null,
+          "latency_ms": 18393
+        }
+      ],
+      "wall_total_s": 326.5,
+      "date": "2026-10-08",
+      "reasoning": null,
+      "max_tokens": 2500,
+      "timeout_s": 25
+    },
+    "qwen3.6-35b-a3b/latest (max_tokens 2500)": {
+      "provider": "yandex",
+      "model": "qwen3.6-35b-a3b/latest",
+      "label": "qwen3.6-35b-a3b",
+      "calls": 50,
+      "ok": 26,
+      "errors": {
+        "invalid_json": 24
+      },
+      "latency_s": {
+        "median": 7.69,
+        "p90": 11.37,
+        "max": 12.87
+      },
+      "tokens": {
+        "prompt": 26137,
+        "completion": 65000
+      },
+      "cost_usd": null,
+      "llm_rules": {
+        "fields": {
+          "direction": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "grade": {
+            "correct": 34,
+            "n": 39,
+            "accuracy": 0.8718
+          },
+          "experience_years_min": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "work_format": {
+            "correct": 49,
+            "n": 50,
+            "accuracy": 0.98
+          },
+          "salary_from": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          },
+          "salary_to": {
+            "correct": 50,
+            "n": 50,
+            "accuracy": 1.0
+          }
+        },
+        "grade_inferences_on_unspecified": 8,
+        "stack_micro_precision": 0.8716,
+        "stack_micro_recall": 0.9437,
+        "stack_tp_fp_fn": [
+          285,
+          42,
+          17
+        ],
+        "quotes": 507,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-007",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "experience_years_min",
+            "expected": null,
+            "actual": 0.0,
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "work_format",
+            "expected": "hybrid",
+            "actual": "remote",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-038",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000168347"
+          },
+          {
+            "id": "vac-039",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000162215"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ]
+      },
+      "llm_only": {
+        "fields": {
+          "direction": {
+            "correct": 22,
+            "n": 26,
+            "accuracy": 0.8462
+          },
+          "grade": {
+            "correct": 19,
+            "n": 22,
+            "accuracy": 0.8636
+          },
+          "experience_years_min": {
+            "correct": 23,
+            "n": 26,
+            "accuracy": 0.8846
+          },
+          "work_format": {
+            "correct": 23,
+            "n": 26,
+            "accuracy": 0.8846
+          },
+          "salary_from": {
+            "correct": 23,
+            "n": 26,
+            "accuracy": 0.8846
+          },
+          "salary_to": {
+            "correct": 23,
+            "n": 26,
+            "accuracy": 0.8846
+          }
+        },
+        "grade_inferences_on_unspecified": 4,
+        "stack_micro_precision": 0.91,
+        "stack_micro_recall": 0.7339,
+        "stack_tp_fp_fn": [
+          91,
+          9,
+          33
+        ],
+        "quotes": 186,
+        "invalid_quotes": 0,
+        "mismatches": [
+          {
+            "id": "vac-002",
+            "field": "direction",
+            "expected": "backend",
+            "actual": null,
+            "source_url": "https://hh.ru/vacancy/129355447"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_from",
+            "expected": 256000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-005",
+            "field": "salary_to",
+            "expected": 280000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168459"
+          },
+          {
+            "id": "vac-008",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://spb.hh.ru/vacancy/120431692"
+          },
+          {
+            "id": "vac-011",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": "hybrid",
+            "source_url": "https://career.habr.com/vacancies/1000161900"
+          },
+          {
+            "id": "vac-019",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-019",
+            "field": "salary_to",
+            "expected": 265000,
+            "actual": null,
+            "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/"
+          },
+          {
+            "id": "vac-020",
+            "field": "experience_years_min",
+            "expected": 6,
+            "actual": 3.0,
+            "source_url": "https://hh.ru/vacancy/135126969"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_from",
+            "expected": 250000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-022",
+            "field": "salary_to",
+            "expected": 270000,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168593"
+          },
+          {
+            "id": "vac-027",
+            "field": "experience_years_min",
+            "expected": 3,
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000168583"
+          },
+          {
+            "id": "vac-032",
+            "field": "direction",
+            "expected": "qa",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000167800"
+          },
+          {
+            "id": "vac-032",
+            "field": "grade",
+            "expected": "senior",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000167800"
+          },
+          {
+            "id": "vac-032",
+            "field": "work_format",
+            "expected": "remote",
+            "actual": null,
+            "source_url": "https://career.habr.com/vacancies/1000167800"
+          },
+          {
+            "id": "vac-037",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-037",
+            "field": "experience_years_min",
+            "expected": null,
+            "actual": 0.0,
+            "source_url": "https://career.habr.com/vacancies/1000167022"
+          },
+          {
+            "id": "vac-050",
+            "field": "direction",
+            "expected": "frontend",
+            "actual": null,
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          },
+          {
+            "id": "vac-050",
+            "field": "grade",
+            "expected": "junior",
+            "actual": "intern",
+            "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+          }
+        ],
+        "n_with_reply": 26
+      },
+      "per_text": [
+        {
+          "id": "vac-001",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 5695
+        },
+        {
+          "id": "vac-002",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6799
+        },
+        {
+          "id": "vac-003",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 6807
+        },
+        {
+          "id": "vac-004",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6254
+        },
+        {
+          "id": "vac-005",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6358
+        },
+        {
+          "id": "vac-006",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 6252
+        },
+        {
+          "id": "vac-007",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 8513
+        },
+        {
+          "id": "vac-008",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11201
+        },
+        {
+          "id": "vac-009",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 9630
+        },
+        {
+          "id": "vac-010",
+          "ok": true,
+          "error": null,
+          "latency_ms": 12868
+        },
+        {
+          "id": "vac-011",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11366
+        },
+        {
+          "id": "vac-012",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10958
+        },
+        {
+          "id": "vac-013",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10399
+        },
+        {
+          "id": "vac-014",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 10326
+        },
+        {
+          "id": "vac-015",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 10435
+        },
+        {
+          "id": "vac-016",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 10482
+        },
+        {
+          "id": "vac-017",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 8134
+        },
+        {
+          "id": "vac-018",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 10772
+        },
+        {
+          "id": "vac-019",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11913
+        },
+        {
+          "id": "vac-020",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7630
+        },
+        {
+          "id": "vac-021",
+          "ok": true,
+          "error": null,
+          "latency_ms": 12544
+        },
+        {
+          "id": "vac-022",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11199
+        },
+        {
+          "id": "vac-023",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 11293
+        },
+        {
+          "id": "vac-024",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5732
+        },
+        {
+          "id": "vac-025",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 6149
+        },
+        {
+          "id": "vac-026",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6279
+        },
+        {
+          "id": "vac-027",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10094
+        },
+        {
+          "id": "vac-028",
+          "ok": true,
+          "error": null,
+          "latency_ms": 10615
+        },
+        {
+          "id": "vac-029",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 10985
+        },
+        {
+          "id": "vac-030",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7249
+        },
+        {
+          "id": "vac-031",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 11033
+        },
+        {
+          "id": "vac-032",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5944
+        },
+        {
+          "id": "vac-033",
+          "ok": true,
+          "error": null,
+          "latency_ms": 11033
+        },
+        {
+          "id": "vac-034",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5855
+        },
+        {
+          "id": "vac-035",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 5796
+        },
+        {
+          "id": "vac-036",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7249
+        },
+        {
+          "id": "vac-037",
+          "ok": true,
+          "error": null,
+          "latency_ms": 7744
+        },
+        {
+          "id": "vac-038",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 5897
+        },
+        {
+          "id": "vac-039",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 8698
+        },
+        {
+          "id": "vac-040",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 6014
+        },
+        {
+          "id": "vac-041",
+          "ok": true,
+          "error": null,
+          "latency_ms": 5725
+        },
+        {
+          "id": "vac-042",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 11498
+        },
+        {
+          "id": "vac-043",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 6392
+        },
+        {
+          "id": "vac-044",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6401
+        },
+        {
+          "id": "vac-045",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 8998
+        },
+        {
+          "id": "vac-046",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 10346
+        },
+        {
+          "id": "vac-047",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 6152
+        },
+        {
+          "id": "vac-048",
+          "ok": true,
+          "error": null,
+          "latency_ms": 6796
+        },
+        {
+          "id": "vac-049",
+          "ok": false,
+          "error": "invalid_json",
+          "latency_ms": 10254
+        },
+        {
+          "id": "vac-050",
+          "ok": true,
+          "error": null,
+          "latency_ms": 8756
+        }
+      ],
+      "wall_total_s": 146.7,
+      "date": "2026-10-08",
+      "reasoning": null,
+      "max_tokens": 2500,
+      "timeout_s": 25
+    }
+  },
+  "rules_only": {
+    "fields": {
+      "direction": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      },
+      "grade": {
+        "correct": 34,
+        "n": 39,
+        "accuracy": 0.8718
+      },
+      "experience_years_min": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      },
+      "work_format": {
+        "correct": 49,
+        "n": 50,
+        "accuracy": 0.98
+      },
+      "salary_from": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      },
+      "salary_to": {
+        "correct": 50,
+        "n": 50,
+        "accuracy": 1.0
+      }
+    },
+    "grade_inferences_on_unspecified": 8,
+    "stack_micro_precision": 0.884,
+    "stack_micro_recall": 0.9338,
+    "stack_tp_fp_fn": [
+      282,
+      37,
+      20
+    ],
+    "quotes": 499,
+    "invalid_quotes": 0,
+    "mismatches": [
+      {
+        "id": "vac-007",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+      },
+      {
+        "id": "vac-037",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://career.habr.com/vacancies/1000167022"
+      },
+      {
+        "id": "vac-037",
+        "field": "work_format",
+        "expected": "hybrid",
+        "actual": "remote",
+        "source_url": "https://career.habr.com/vacancies/1000167022"
+      },
+      {
+        "id": "vac-038",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://career.habr.com/vacancies/1000168347"
+      },
+      {
+        "id": "vac-039",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://career.habr.com/vacancies/1000162215"
+      },
+      {
+        "id": "vac-050",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+      }
+    ]
+  },
+  "code_revision": "feat/llm-chain 085d6ee (+ рассуждения low и max_tokens 2500 для разбора)",
+  "how": "python tools/llm/bench_needs.py --models <провайдер=модель,…> --out docs/llm/needs_bench.json; одна попытка на текст, без перехода по цепочке, тайм-аут 25 с (LLM_TIMEOUT_S), 3 запроса параллельно; llm_rules — итог продукта (модель + правила, цитаты проверены), llm_only — только извлечённое моделью (считается по текстам, где модель ответила: n_with_reply)",
+  "note": "Разметка silver (И8): модель + ручная сверка, не экспертная. Грейд 34/39 у всех вариантов — правила ставят intern там, где разметка junior (5 вакансий), модель грейд не меняет."
+}
