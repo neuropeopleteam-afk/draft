@@ -12,12 +12,16 @@ def employment_safety(profile) -> dict:
     return {"minor": minor, "age_group": profile.age_group if minor else None,
             "parental_consent": bool(profile.parental_consent) if minor else None,
             "offer_allowed": not minor or (profile.age_group == "16-17" and profile.parental_consent),
-            "allowed_formats": ["internship", "light_work"] if minor else ["employment", "internship", "light_work"],
+            # «лёгкий труд» — условие для несовершеннолетних; для ИТ-вакансии взрослому кандидату не предлагается (Ф4)
+            "allowed_formats": ["internship", "light_work"] if minor else ["employment", "internship"],
             "warning": WARNING if minor else None}
 
 
 def check_offer(profile, terms: dict) -> None:
     if getattr(profile, "age_group", "18+") == "18+":
+        if terms.get("format") == "light_work":
+            raise api_error(422, "light_work_minor_only", "Формат «лёгкий труд» — только для кандидатов 16–17 лет. "
+                                                          "Для взрослого выберите «Работа» или «Стажировка»")
         return
     if profile.age_group == "14-15":
         raise api_error(422, "youth_offer_not_supported",
