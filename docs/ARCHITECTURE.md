@@ -325,6 +325,7 @@ PWA: `frontend/public/manifest.webmanifest`, `sw.js` (оболочка офла�
 | GET | `/api/me/card`, `/api/me/profile.pdf`, `/api/me/fsp`, POST `/api/me/fsp/link` | карточка, PDF-профиль, паспорт ФСП | 401, 403 |
 | POST | `/api/employer/needs/parse`, `/api/employer/needs` | потребность текстом → требования → подборка v1 | 401, 403, 422 |
 | GET/POST | `/api/employer/needs/{id}/selections[/{v}]` | версии подборок: категории, карточки, объяснения | 401, 403, 404, 422 |
+| GET | `/api/employer/needs/{id}/selections/{v}/what-if` | «Что если» (`matching/whatif.py`): сколько полностью подходят и какое требование отсекает больше всего подтверждённых; ослабление — новой версией ([docs/jury_match](jury_match/README.md)) | 401, 403, 404 |
 | GET | `/api/employer/needs/{id}/compare?refs=&refs=&version=` | сравнение 2–3 кандидатов по требованиям потребности, «почему A выше B» | 401, 403, 404, 422 |
 | GET | `/api/employer/candidates`, `/api/employer/candidates/{ref}[/profile.pdf]`, `/api/employer/categories` | поиск по базе, карточка, PDF | 401, 403, 404 |
 | POST/GET | `/api/employer/probes`, `/{id}/review`; `/api/candidate/probes`, `/{id}/answer`, `/{id}/decline` | зонды | 401, 403, 404, 409, 422 |
