@@ -34,11 +34,27 @@ from assessment_bank.psychometrics.grading import PROVISIONAL_LEVEL
 from assessment_bank.simulation import make_population, make_responder, make_truth
 
 from app.modules.assessment.exposure import AppCATSession, exposure_table
+from app.modules.assessment.grades import p_at_least
 from app.modules.assessment.provisional import CONFIRM_ATTEMPTS, CONFIRM_LEVEL
 from app.modules.validation import sim
+from app.modules.validation.signature import signature
 
 OUT = Path(__file__).resolve().parent / "data" / "junior_stability.json"
 SEED = 20261007
+P_BANDS = (0.10, 0.25, 0.40, 0.50, 0.65, 0.80)  # полосы P(θ ≥ порога Junior) у «предварительно» (консилиум 07.10, п. 4)
+HOW_TO_READ = ("«Junior (предварительно)» — не подтверждение: P(θ ≥ порога Junior) от 0,10 до 0,80. Чем ниже P, тем "
+               "чаще истинный уровень ниже порога (таблица полос). Работодатель видит статус и P; кандидат может "
+               "дотестироваться (до двух попыток) или принять доказанный уровень Стажёра без нового теста.")
+
+
+def p_bands(pairs: list[tuple[float, bool]]) -> list[dict]:
+    """Сколько «предварительно» в каждой полосе P и у скольких истинный θ ниже порога Junior."""
+    out = []
+    for lo, hi in zip(P_BANDS[:-1], P_BANDS[1:], strict=True):
+        sel = [b for p, b in pairs if lo <= p < hi]
+        out.append({"p_from": lo, "p_to": hi, "n": len(sel), "true_below": int(sum(sel)),
+                    "true_below_share": round(sum(sel) / len(sel), 3) if sel else None})
+    return out
 JUNIOR_CUT = -1.0
 
 
@@ -153,6 +169,8 @@ def direction_block(d: str, i: int, n: int, cfg: sim.AppConfig, pool, k_all: dic
                                                              and people[j].theta < JUNIOR_CUT),
                                  "mean_new_items": round(float(np.mean(new_items)), 1) if new_items else 0.0})
             block["confirm"] = {"n_provisional": len(idx), "attempts": attempts}
+            block["p_bands"] = p_bands([(p_at_least(results[j].theta, results[j].se, "junior"),
+                                         bool(people[j].theta < JUNIOR_CUT)) for j in idx])
         out["policies"][pid] = block
     return out
 
@@ -206,6 +224,15 @@ def run(n: int = 400, quick: bool = False, write: bool = True) -> dict:
                                                                     "still_provisional_true_below", "confirmed_true_below")},
                       "mean_new_items": round(float(np.mean([x[a]["mean_new_items"] for x in att])), 1)}
                      for a in range(CONFIRM_ATTEMPTS)]}
+    bands = [b["policies"]["app"]["p_bands"] for b in blocks]
+    rep["total"]["app"]["p_bands"] = [
+        {**bands[0][k], "n": sum(x[k]["n"] for x in bands), "true_below": sum(x[k]["true_below"] for x in bands),
+         "true_below_share": (round(sum(x[k]["true_below"] for x in bands) / sum(x[k]["n"] for x in bands), 3)
+                              if sum(x[k]["n"] for x in bands) else None)} for k in range(len(bands[0]))]
+    rep["how_to_read"] = HOW_TO_READ
+    rep["signature"] = signature(seed=SEED, config={"app": asdict(cfg), "n": n, "dirs": list(dirs), "rule": rep["rule"]},
+                                 world=f"симуляция теста: {len(dirs)} направлений × {n} человек, заявившие Junior",
+                                 command="make stability", n=n * len(dirs))
     rep["seconds"] = round(time.time() - t0, 1)
     rep["caveat"] = ("Синтетика: те же люди и те же сессии для «до» и «после», меняется только правило решения; "
                      "качество заданий на людях здесь не проверяется. Истинный уровень ниже порога определяется "
