@@ -48,7 +48,7 @@ def test_quick_run_structure(quick):
     assert sum(map(sum, quick["transitions"])) == 24
     st = t["path"]["status_share"]
     assert sum(st.values()) == pytest.approx(1.0, abs=0.01)
-    assert {"far_from_cut", "near_cut", "decided_both", "undecided_any"} <= set(t["splits"])
+    assert {"far_from_cut", "near_cut", "far_from_boundary", "near_boundary", "decided_both", "undecided_any"} <= set(t["splits"])
     sig = quick["signature"]
     assert sig["seed"] == pr.SEED and len(sig["config_hash"]) == 12 and sig["commit"]
     assert "seed 20261006" in short(sig)

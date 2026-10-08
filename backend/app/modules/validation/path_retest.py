@@ -491,7 +491,14 @@ def splits(cands, r1, r2, seed: int) -> dict:
         idx = np.flatnonzero(mask)
         return {"share": round(float(mask.mean()), 3),
                 **retest_block([cands[j] for j in idx], [r1[j] for j in idx], [r2[j] for j in idx], seed, ci=True)["path_grade"]}
+    # Граница решения сдвинута вверх от номинального порога: подтверждение и «уровень ниже» требуют P ≥ 0,8,
+    # то есть θ̂ ≥ порог + z(0,8) · SE. Расстояние до этой эффективной границы — честный разрез «уверенные / у порога».
+    se_med = float(np.median([r["tests"][0]["se"] for r in r1]))
+    shift = float(special.ndtri(0.8)) * se_med
+    dist_eff = nearest_cut_distance(th - shift)
     return {"far_from_cut": sub(dist >= BORDER), "near_cut": sub(dist < BORDER),
+            "far_from_boundary": sub(dist_eff >= BORDER), "near_boundary": sub(dist_eff < BORDER),
+            "boundary_shift": round(shift, 3),
             "decided_both": sub(sure), "undecided_any": sub(~sure)}
 
 
@@ -650,14 +657,18 @@ def markdown(rep: dict) -> str:
         "| Группа | Доля | Точно | ±1 | κw [95 % ДИ] |",
         "|---|---|---|---|---|",
     ]
-    names = {"far_from_cut": "Истинный θ дальше 0,25 от порога", "near_cut": "Истинный θ ближе 0,25 к порогу",
+    names = {"far_from_boundary": f"Истинный θ дальше 0,25 от границы решения (порог + {_f(t['splits']['boundary_shift'], 2)})",
+             "near_boundary": "Истинный θ ближе 0,25 к границе решения",
+             "far_from_cut": "Истинный θ дальше 0,25 от номинального порога", "near_cut": "Истинный θ ближе 0,25 к номинальному порогу",
              "decided_both": "Обе попытки — решение принято (подтверждён или принят ниже)",
              "undecided_any": "Хотя бы в одной — «предварительно» или без категории"}
     for key, title in names.items():
         s = t["splits"][key]
         L.append(f"| {title} | {_pc(s['share'])} | {_pc(s.get('exact'))} | {_pc(s.get('within_1'))} | "
                  f"{_f(s.get('kappa_w'))}{_ci_s(s.get('kappa_w_ci'))} |")
-    L += ["", "## По направлениям", "", "| Направление | n | Точно | ±1 | κw [95 % ДИ] | ICC θ | Повтор семейств | Грейд = истинный |",
+    L += ["", f"Граница решения выше номинального порога на z(0,8) · SE ≈ {_f(t['splits']['boundary_shift'], 2)}: подтверждение "
+          "и «уровень ниже» требуют P ≥ 0,8. Поэтому расхождения сосредоточены у этой границы, а разрез по номинальному "
+          "порогу их почти не разделяет.", "", "## По направлениям", "", "| Направление | n | Точно | ±1 | κw [95 % ДИ] | ICC θ | Повтор семейств | Грейд = истинный |",
           "|---|---|---|---|---|---|---|---|"]
     for d, b in rep["by_direction"].items():
         p = b["path_grade"]
@@ -665,7 +676,9 @@ def markdown(rep: dict) -> str:
                  f"{_f(b.get('icc_theta'))} | {_pc(b['overlap_all']['mean'])} | {_pc(b['truth']['exact'])} |")
     L += ["", "## По заявленному грейду", "", "| Заявлен | n | Точно | ±1 | κw [95 % ДИ] |", "|---|---|---|---|---|"]
     for g, p in rep["by_claimed"].items():
-        L.append(f"| {LEVEL_RU[g]} | {p['n']} | {_pc(p['exact'])} | {_pc(p['within_1'])} | {_f(p['kappa_w'])}{_ci_s(p.get('kappa_w_ci'))} |")
+        kw = (f"{_f(p['kappa_w'])}{_ci_s(p.get('kappa_w_ci'))}" if p.get("kappa_informative", True)
+              else "— (почти все в одной ступени, κ не информативна)")
+        L.append(f"| {LEVEL_RU[g]} | {p['n']} | {_pc(p['exact'])} | {_pc(p['within_1'])} | {kw} |")
     tr, ps = t["truth"], t["path"]
     L += ["", "## Путь и точность к истине (первая попытка)", "",
           f"- Итоговый грейд = истинный: {_pc(tr['exact'])}; среди получивших категорию — {_pc(tr['exact_with_category'])}; "
