@@ -388,12 +388,21 @@ server {
 
 ## 12. LLM-слой
 
-- Провайдер: **Yandex AI Studio** (`https://llm.api.cloud.yandex.net/v1`, OpenAI-совместимый API), модель
-  `yandexgpt/latest`; модели размещены в Yandex Cloud в РФ — данные не покидают РФ.
+Подробно — [docs/LLM.md](LLM.md): какая модель где и почему, цепочка, вторая оценка, ПДн, таблица «качество / время».
+
+- Цепочка провайдеров `LLM_CHAIN` (на сервере `openrouter,yandex`): Claude Sonnet 5.5 через OpenRouter (с сервера —
+  через ретранслятор `LLM_RELAY_URL`) → Yandex AI Studio → правила. Переход при ошибке сети, тайм-ауте,
+  HTTP ≠ 200, пустом или невалидном JSON; автомат-выключатель; модель и тайм-аут на функцию (`parse_need`, `resume`,
+  `grade`, `grade_second`). Вторая оценка спорных открытых ответов — Claude Fable 5.1. В OpenRouter уходит только
+  обезличенный текст (ПДн вырезаются до вызова), `data_collection = deny`. Без `LLM_CHAIN` — как раньше, один
+  провайдер `LLM_*`.
+- Провайдер `LLM_*`: **Yandex AI Studio** (`https://llm.api.cloud.yandex.net/v1`, OpenAI-совместимый API), модель
+  `yandexgpt/latest`; модели размещены в Yandex Cloud в РФ.
 - Клиент `app/modules/llm/client.py` провайдер-агностичный: `LLM_PROVIDER=yandex_ai_studio` добавляет заголовки
   `Authorization: Api-Key …` и `OpenAI-Project: <каталог>`; для любого другого OpenAI-совместимого — `Bearer`.
   Ответ моделей с рассуждениями читается и из `reasoning_content`. Таймаут 25 с (подключение 5 с), ключ в логи не пишется.
-- Секреты: `/opt/spectrek_fsp/secrets/llm.env` подключается как `env_file` сервиса api (`LLM_ENV_FILE`).
+- Секреты: `/opt/spectrek_fsp/secrets/llm.env` подключается как `env_file` сервиса api (`LLM_ENV_FILE`); так же
+  необязательные `openrouter.env` (`OPENROUTER_ENV_FILE`) и `llm_relay.env` (`LLM_RELAY_ENV_FILE`).
 - Перед отправкой текст проходит вырезание ПДн; в LLM уходит только обезличенный текст.
 - У каждой функции есть детерминированный путь без LLM: разбор потребности и резюме — словарь стек-тегов (алиасы
   RU/EN), правила для грейда, стажа, формата, вилки. LLM лишь дополняет результат (`method: llm+rules`), значения

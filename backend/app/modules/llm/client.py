@@ -22,7 +22,7 @@ grade_second (вторая оценка спорных ответов): LLM_MODE
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import json
 import logging
 import re
@@ -269,8 +269,27 @@ def _extract_json(text: str) -> dict | list | None:
             try:
                 return json.loads(text[i : j + 1])
             except json.JSONDecodeError:
-                continue
+                pass
+            if opener == "{":
+                found = _last_object(text, i)
+                if found is not None:
+                    return found
     return None
+
+
+def _last_object(text: str, i: int) -> dict | None:
+    """Несколько объектов верхнего уровня подряд («JSON … Поправка: … JSON») — последний целый объект.
+    Внутрь объектов не спускаемся: обрезанный ответ остаётся невалидным, и цепочка идёт к следующей модели."""
+    dec, found = json.JSONDecoder(), None
+    while i != -1:
+        try:
+            obj, end = dec.raw_decode(text, i)
+        except json.JSONDecodeError:
+            break
+        if isinstance(obj, dict):
+            found = obj
+        i = text.find("{", end)
+    return found
 
 
 def _headers(s: Settings) -> dict[str, str]:
@@ -362,13 +381,15 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
 def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 1200, want_json: bool = False,
          client: httpx.Client | None = None, model: str | None = None, timeout_s: float | None = None,
          func: str | None = None, provider: str | None = None,
-         validate: Callable[[object], bool] | None = None) -> LLMResult:
+         validate: Callable[[object], bool] | None = None, deadline: float | None = None) -> LLMResult:
     """Запрос по цепочке провайдеров функции func. Никогда не бросает исключений: при ошибке всех провайдеров
     ok=False и вызывающий идёт по правилам.
 
     model — явная модель (сравнение моделей на проверочных наборах): одна попытка без перехода по цепочке.
     validate — проверка разобранного ответа (JSON или текст); False — переход к следующему провайдеру.
-    latency_ms результата — суммарное время всех попыток (столько ждал пользователь)."""
+    latency_ms результата — суммарное время всех попыток (столько ждал пользователь).
+    deadline — момент time.monotonic(), к которому нужен ответ (общий бюджет вызывающего): тайм-аут попытки
+    урезается до остатка, при остатке меньше секунды следующие провайдеры не вызываются (ошибка deadline)."""
     rs = routes(func, model, provider, timeout_s)
     if not rs:
         return LLMResult(ok=False, error="not_configured", func=func)
@@ -376,6 +397,15 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
     total = 0
     last: LLMResult | None = None
     for r in rs:
+        if deadline is not None:
+            left = deadline - time.monotonic()
+            if left < 1.0:
+                attempts.append({"provider": r.provider, "model": short_model(r.model), "ok": False,
+                                 "error": "deadline", "latency_ms": 0})
+                last = LLMResult(ok=False, error="deadline")
+                break
+            if left < r.timeout_s:
+                r = replace(r, timeout_s=round(left, 1))
         if not breaker.allow(r.key):
             attempts.append({"provider": r.provider, "model": short_model(r.model), "ok": False,
                              "error": "circuit_open", "latency_ms": 0})
