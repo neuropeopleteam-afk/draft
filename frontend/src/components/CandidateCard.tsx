@@ -113,7 +113,7 @@ const INTEGRITY: Record<string, string> = {
 };
 
 /** Достоверность результата теста (античит): уровень и причины — решение остаётся за человеком. */
-export function Integrity({ v, compact = false }: { v: { level: string; title: string; reasons: string[]; note?: string }; compact?: boolean }) {
+export function Integrity({ v, compact = false }: { v: { level: string; title: string; reasons: string[]; note?: string; camera?: { mode: string; title: string; remarks: string[]; notes: string[] } | null }; compact?: boolean }) {
   return (
     <div className={`mt-2 rounded-lg px-2.5 py-1.5 text-xs ring-1 ${INTEGRITY[v.level] ?? INTEGRITY.medium}`}>
       <p className="font-semibold">Достоверность результата: {v.title}</p>
@@ -121,6 +121,8 @@ export function Integrity({ v, compact = false }: { v: { level: string; title: s
         <ul className="mt-0.5 list-disc space-y-0.5 pl-4">{v.reasons.slice(0, compact ? 1 : 3).map((r, i) => <li key={i}>{r}</li>)}</ul>
       ) : null}
       {v.note && !compact && <p className="mt-0.5 opacity-80">{v.note}</p>}{/* версия для самого кандидата (Р27) */}
+      {/* И16: итог камеры (по согласию кандидата) — только заголовок и до трёх замечаний; без камеры — нейтрально */}
+      {v.camera && <p className="mt-0.5 text-[11px] opacity-90" data-testid="camera-title">{v.camera.title}{!compact && v.camera.remarks.length ? `: ${v.camera.remarks.join("; ")}` : ""}{!compact && v.camera.notes.length ? ` · ${v.camera.notes.join("; ")}` : ""}</p>}
     </div>
   );
 }

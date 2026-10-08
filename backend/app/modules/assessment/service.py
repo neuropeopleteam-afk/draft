@@ -364,6 +364,9 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
         raise api_error(409, "test_not_complete", "Тест ещё не закончен: ответьте на текущее задание")
     profile = db.get(CandidateProfile, ts.user_id)
     res = (engine or get_engine(_engine_key(ts))).finish(ts.result["state"])
+    from app.modules.proctor.service import apply_to_result  # камера по согласию (И16): итог — в достоверность
+
+    apply_to_result(db, ts, res.details)
     now = utcnow()
     ts.status = TestSessionStatus.finished
     ts.finished_at = now

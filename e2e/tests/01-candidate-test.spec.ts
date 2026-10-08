@@ -75,8 +75,18 @@ test("кандидат: демо-вход → тест → результат �
 
   const kinds: Record<string, number> = {};
   let markChecked = false;
-  await test.step("адаптивный тест до остановки движком", async () => {
+  await test.step("камера по согласию: экран перед тестом, выбор «без камеры»", async () => {
     await page.getByRole("button", { name: /^Начать тест$/ }).click();
+    // И16: экран камеры — до создания сессии; без камеры тест доступен полностью (сам сценарий с камерой — 09-camera)
+    await expect(page.getByRole("heading", { name: "Камера во время теста" })).toBeVisible();
+    const main = page.getByRole("main");
+    await expect(main.getByText(/Видео и снимки никуда не отправляются и не записываются/)).toBeVisible();
+    await expect(main.getByText(/Камера не меняет оценку уровня и грейд/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Включить камеру" })).toBeVisible();
+    await page.getByRole("button", { name: "Пройти без камеры" }).click();
+  });
+
+  await test.step("адаптивный тест до остановки движком", async () => {
     await expect(page).toHaveURL(/\/candidate\/assessment\/test\/[\w-]+$/);
     await expect(page.getByText(/^Тест · Backend · Middle$/)).toBeVisible();
 
@@ -118,6 +128,8 @@ test("кандидат: демо-вход → тест → результат �
     await expect(page.getByTestId("result-integrity")).toContainText(/^Достоверность результата: (высокая|средняя|низкая)/);
     const body = await page.locator("body").innerText();
     expect(body).not.toMatch(/контрольн|канарей|\u2063|кодовым обозначением/i);
+    // И16: без камеры — нейтральная пометка, как её увидит работодатель
+    await expect(page.getByTestId("camera-report")).toContainText("Тест без камеры");
   });
 
   await test.step("категория и место в рейтинге", async () => {

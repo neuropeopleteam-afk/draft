@@ -12,6 +12,7 @@ export interface Meta {
     last?: Record<string, { provider: string | null; model: string | null; model_label: string | null; fallback: boolean }>;
   };
   operator: Record<string, string>;
+  proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
 }
 
 const Ctx = createContext<Meta | null>(null);

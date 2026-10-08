@@ -6,6 +6,7 @@ import { FspIdLinkButton } from "../../integrations/FspId";
 import { CupPassportEvents } from "../../ideas/cup/Candidate";
 import { useAuth } from "../../lib/auth";
 import { useMeta } from "../../lib/meta";
+import { CameraSettings } from "../../proctor/CameraReport";
 
 export function Fsp() {
   const { data, loading, error, reload } = useApi<any>("/me/fsp");
@@ -136,6 +137,7 @@ export function Settings() {
         </ul>
         {text && <div className="mt-4 rounded-xl bg-[#F3F2FB] p-4 text-xs leading-relaxed text-brand-ink/80"><p className="mb-2 font-semibold">{text.title}</p><p className="whitespace-pre-line">{text.text}</p></div>}
       </section>
+      <CameraSettings />
     </div>
   );
 }

@@ -145,7 +145,7 @@ def _p_correct(it: dict, theta: float, part: int) -> float:
 
 def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, pending_left: int = 0,
                   away_items: tuple[int, ...] = (), copy_items: tuple[int, ...] = (), *,
-                  direction: str | None = None) -> dict:
+                  direction: str | None = None, camera: bool = False) -> dict:
     """Проходит тест движком банка за «демо-респондента»: ответы по модели 2PL на уровне theta, время —
     обычное (40–90 % рекомендуемого), сигналы интерфейса без нарушений, кроме away_items — позиций, где
     «кандидат» уходил со вкладки (для демонстрации «достоверности результата»). Возвращает итог finish_session."""
@@ -175,6 +175,9 @@ def run_demo_test(db: Session, user_id, claimed: str, theta: float, seed: int, p
 
     flag_modified(ts, "result")
     db.commit()
+    from app.modules.proctor.service import seed_demo  # камера по согласию (И16): с камерой без замечаний / без камеры
+
+    seed_demo(db, ts, camera)
     return assessment.finish_session(db, ts, engine=eng)
 
 
@@ -193,10 +196,11 @@ def _user(db: Session, persona: str, role: UserRole, sid: str = "") -> User:
 
 def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: float, seed: int, pending_left: int,
                away_items: tuple[int, ...] = (), sid: str = "", claimed: str = "middle", experience: float = 3.5,
-               salary: int = 200_000, want: str = "category", copy_items: tuple[int, ...] = ()):
+               salary: int = 200_000, want: str = "category", copy_items: tuple[int, ...] = (), camera: bool = False):
     """Демо-кандидат жюри. want — какой исход теста нужен: category — любая категория (подтверждённая или
     предварительная), provisional — «Junior (предварительно)»; демо-респондент случаен, поэтому до 6 попыток
-    с разными seed, затем остаётся последний исход. copy_items — позиции заданий с попыткой копирования (И9)."""
+    с разными seed, затем остаётся последний исход. copy_items — позиции заданий с попыткой копирования (И9);
+    camera — тест с камерой по согласию (И16)."""
     u = _user(db, persona, UserRole.candidate, sid)
     stack = STACK if claimed != "junior" else STACK[:5]
     level = 3 if claimed != "junior" else 2
@@ -232,7 +236,8 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
     db.commit()
     res = {}
     for attempt in range(6):  # демо-респондент случаен: нужен заданный исход — иначе следующий seed
-        res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items, copy_items)
+        res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items, copy_items,
+                            camera=camera)
         if want == "provisional" and res.get("category_provisional"):
             break
         if want == "category" and (res.get("confirmed") or res.get("category_id")):
@@ -343,7 +348,8 @@ def create_jury(db: Session, sid: str = "") -> dict:
 
 def _create_jury(db: Session, sid: str) -> dict:
     t0 = time.time()
-    _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0, sid=sid)
+    # у Марии тест пройден с камерой по согласию (замечаний нет); у Ильи — «тест без камеры» (нейтрально)
+    _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0, sid=sid, camera=True)
     # Вторая специализация — реальный отдельный тест банка, не ручная пометка в профиле.
     from app.modules.profiles.specializations import ensure_specialization
     ensure_specialization(db, p1, "frontend")
@@ -356,7 +362,7 @@ def _create_jury(db: Session, sid: str) -> dict:
         db.add(SurveyStackTag(survey_id=sv.id, stack_tag_id=tag, self_level=2))
     db.commit()
     for attempt in range(6):
-        extra_result = run_demo_test(db, p1.user_id, "junior", 1.6, 5301 + attempt, direction="frontend")
+        extra_result = run_demo_test(db, p1.user_id, "junior", 1.6, 5301 + attempt, direction="frontend", camera=True)
         if extra_result.get("confirmed"):
             break
     # у Ильи — два ухода со вкладки и попытка скопировать текст задания: достоверность «средняя» (видно
