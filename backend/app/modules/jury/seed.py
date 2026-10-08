@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import contextvars
 from contextlib import contextmanager
-from datetime import date
+from datetime import date, timedelta
 import logging
 import time
 
@@ -34,7 +34,7 @@ import numpy as np
 from sqlalchemy import and_, delete, or_, select, text, update
 from sqlalchemy.orm import Session
 
-from app.core.db import utcnow
+from app.core.db import as_aware, utcnow
 from app.core.enums import FactSource, FspEventLevel, FspLinkSource, NeedStatus, UserRole, WorkFormat
 from app.modules.assessment import service as assessment
 from app.modules.assessment.bank_engine import BankEngine
@@ -549,6 +549,18 @@ def sandboxes(db: Session) -> dict[str, float]:
             t = max(x.timestamp() for x in (last, created) if x is not None) if (last or created) else 0.0
             out[sid] = max(out.get(sid, 0.0), t)
     return out
+
+
+def created_last_hour(db: Session) -> int:
+    """Сколько песочниц выдано за последний час (по учёткам работодателя песочниц: создание или выдача запасной).
+    Считается по БД — одинаково для всех воркеров uvicorn."""
+    since = utcnow() - timedelta(hours=1)
+    rows = db.execute(select(User.created_at, User.last_login_at).where(User.email.like(f"employer+%@{DOMAIN}"))).all()
+    n = 0
+    for created, last in rows:
+        if created is not None and as_aware(created) >= since:
+            n += 1
+    return n
 
 
 _SPARE: contextvars.ContextVar[bool] = contextvars.ContextVar("jury_spare", default=False)

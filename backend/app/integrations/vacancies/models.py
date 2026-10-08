@@ -54,3 +54,5 @@ class VacancyApplication(UUIDPk, Timestamps, Base):
     employer_note: Mapped[str | None] = mapped_column(sa.Text)
     viewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     responded_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    # Этап у работодателя по данным его ATS (обратный канал): {stage, title, stage_name, provider, at}
+    ats_stage: Mapped[dict | None]

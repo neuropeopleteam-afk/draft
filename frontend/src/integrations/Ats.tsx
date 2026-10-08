@@ -3,7 +3,7 @@
 // «Проверить подключение», выбор вакансии и этапа из ATS. Журнал передач со статусами, шагами и «Повторить».
 import { useEffect, useState } from "react";
 import { PageTitle } from "../components/CabinetLayout";
-import { Alert, Empty, Field, Loading, Seg, Toggle, dtt, errText, useApi } from "../components/ui";
+import { Alert, Empty, Field, Loading, Seg, Toggle, dtt, errText, num, useApi } from "../components/ui";
 import { api, apiDownload } from "../lib/api";
 
 interface Settings {
@@ -61,7 +61,7 @@ function recordLine(r: any): string {
     case "potok_applicant": return [`${p.last_name ?? ""} ${p.first_name ?? ""}`.trim(), ...(p.emails ?? []), ...(p.phones ?? []),
       (p.ajs_joins ?? []).map((j: any) => `«${j.job_name}», этап «${j.stage}»`).join(", ")].filter(Boolean).join(" · ");
     case "potok_join": return `«${p.job_name}», этап «${p.stage_name}»`;
-    case "potok_stage": return `«${p.job_name}» → «${p.stage_name}»`;
+    case "potok_stage": return `${p.by === "recruiter" ? "рекрутёр в «Потоке»: " : ""}«${p.job_name}» → «${p.stage_name}»`;
     default: return "";
   }
 }
@@ -155,6 +155,8 @@ export function EmployerAts() {
           </div>
         )}
       </section>
+
+      {byCode.potok?.enabled && <PotokStages demo={byCode.potok.mode === "demo"} onChanged={() => { void records.reload(); }} />}
 
       {anyDemo && (
         <section className="space-y-3">
@@ -355,6 +357,146 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
     </div>
   );
 }
+
+// ------------------------------------------------------------------ обратный канал: этапы из «Потока»
+
+interface StageEvent {
+  id: string; candidate_ref: string | null; stage_name: string | null; stage_type: string | null; active: boolean | null;
+  stage: string | null; stage_title: string | null; prev_stage_title: string | null; effect: string | null;
+  status: "ok" | "error"; error: string | null; created_at: string; invitation_id: string | null; application_id: string | null;
+}
+interface StageJournal {
+  poll_s: number; events: StageEvent[];
+  providers: { code: string; title: string; enabled: boolean; mode: string | null; synced_at: string | null; linked: number;
+    info: { checked?: number; changed?: number; errors?: number; error?: string | null; trigger?: string; ms?: number } }[];
+}
+interface PipelineRow { join_id: number; applicant: string; job_name: string; stage_id: number; stage_name: string; active: boolean; stages: { id: number; name: string; stage_type: string }[] }
+
+const STAGE_TONE: Record<string, string> = {
+  review: "bg-[#F3F2FB] text-brand-plum", interview: "bg-sky-50 text-sky-800", offer: "bg-amber-50 text-amber-800",
+  hired: "bg-emerald-50 text-emerald-700", rejected: "bg-brand-blush text-brand-plum",
+};
+
+type AtsStage = { stage: string; title: string; provider_title?: string; stage_name?: string | null; at?: string | null };
+
+/** Этап кандидата в ATS работодателя (обратный канал). Кандидату — обобщённо («у работодателя: интервью»),
+ *  работодателю — как в его ATS («Поток»: Интервью). */
+export function AtsStageBadge({ s, employer = false, className = "" }: { s?: AtsStage | null; employer?: boolean; className?: string }) {
+  if (!s) return null;
+  const ats = s.provider_title ?? "ATS";
+  return (
+    <span className={`inline-flex max-w-full items-center rounded-full px-2 py-0.5 text-xs font-semibold [overflow-wrap:anywhere] ${STAGE_TONE[s.stage] ?? STAGE_TONE.review} ${className}`}
+      title={`${employer ? "Этап" : "Этап у работодателя"} по данным ATS «${ats}»${s.at ? `, ${dtt(s.at)}` : ""}`}>
+      {employer ? <>«{ats}»: {s.stage_name || s.title}</> : <>Этап у работодателя: {s.title.toLowerCase()}</>}
+    </span>
+  );
+}
+
+function PotokStages({ demo, onChanged }: { demo: boolean; onChanged: () => void }) {
+  const j = useApi<StageJournal>("/employer/ats/stages");
+  const pipe = useApi<PipelineRow[]>(demo ? "/employer/ats/stub/potok/pipeline" : null);
+  const [msg, setMsg] = useState<Msg>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const p = j.data?.providers.find((x) => x.code === "potok");
+
+  async function sync(prefix = "") {
+    const r = await api<any>("/employer/ats/stages/sync", { method: "POST" });
+    setMsg(r.error ? { k: "error", t: `${prefix}Опрос «Потока»: ${r.error}` }
+      : { k: "ok", t: `${prefix}Платформа опросила API «Потока»: проверено ${num(r.checked, 0)}, изменений ${num(r.changed, 0)}.` });
+    void j.reload(); void pipe.reload(); onChanged();
+  }
+  async function syncNow() {
+    setMsg(null); setBusy("sync");
+    try { await sync(); } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(null); }
+  }
+  async function move(row: PipelineRow, stageId: number | null, decline = false) {
+    setMsg(null); setBusy(`${row.join_id}`);
+    try {
+      const r = await api<any>("/employer/ats/stub/potok/move", { method: "POST", body: { join_id: row.join_id, stage_id: stageId, decline } });
+      pipe.setData(r.pipeline);
+      const st = decline ? "кандидат отклонён" : `этап «${row.stages.find((x) => x.id === stageId)?.name ?? ""}»`;
+      await sync(`В «Потоке»: ${st}. `);
+    } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(null); }
+  }
+
+  if (j.loading || !j.data) return null;
+  const mins = Math.round(j.data.poll_s / 60);
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-bold text-brand-night">Этапы из «Потока»</h2>
+        <button className="btn-ghost px-3 py-1.5 text-sm" disabled={busy !== null || !p?.linked} onClick={syncNow}>{busy === "sync" ? "Опрашиваем…" : "Обновить этапы сейчас"}</button>
+      </div>
+      <p className="text-sm text-brand-ink/65">
+        Обратный канал: рекрутёр двигает кандидата по этапам в «Потоке», платформа читает этап через API v3{j.data.poll_s > 0 ? ` раз в ${num(mins, 0)} мин` : " по кнопке"} и
+        меняет этап у приглашения, а у отклика — и статус: интервью, оффер и выход на работу — «Приглашение на интервью», отказ — «Отказ». Кандидат видит этап у себя.
+        {p?.synced_at && <> Последний опрос: {dtt(p.synced_at)}, проверено {num(p.info.checked ?? 0, 0)}, изменений {num(p.info.changed ?? 0, 0)}{p.info.errors ? `, ошибок ${num(p.info.errors, 0)}` : ""}.</>}
+      </p>
+      {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
+      {demo && (
+        <div className="card space-y-3 border-brand-lavender/30 bg-[#FBFAFF]">
+          <p className="text-sm"><span className="font-semibold text-brand-night">Демо-«Поток»: вы — рекрутёр.</span> <span className="text-brand-ink/65">Переведите кандидата на этап, как в интерфейсе «Потока», — платформа узнает об этом опросом API, тем же кодом, что и у настоящего «Потока».</span></p>
+          {!pipe.data?.length ? <p className="text-sm text-brand-ink/65">Кандидатов в демо-«Потоке» пока нет: примите приглашение кандидатом или передайте отклик кнопкой «В ATS».</p> : (
+            <ul className="divide-y divide-brand-night/5">
+              {pipe.data.map((row) => (
+                <li key={row.join_id} className="space-y-2 py-2 first:pt-0 last:pb-0">
+                  <p className="text-sm"><span className="font-semibold text-brand-night">{row.applicant}</span> <span className="text-brand-ink/65">· «{row.job_name}» · {row.active ? `этап «${row.stage_name}»` : "отклонён"}</span></p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {row.stages.map((st) => (
+                      <button key={st.id} disabled={busy !== null || (row.active && st.id === row.stage_id)} onClick={() => move(row, st.id)}
+                        className={`rounded-full border px-2.5 py-1 text-xs font-semibold transition ${row.active && st.id === row.stage_id ? "border-brand-plum bg-brand-plum text-white" : "border-brand-night/15 text-brand-ink/75 hover:border-brand-plum hover:text-brand-plum"} disabled:cursor-default`}>
+                        {st.name}
+                      </button>
+                    ))}
+                    <button disabled={busy !== null || !row.active} onClick={() => move(row, null, true)}
+                      className="rounded-full border border-brand-night/15 px-2.5 py-1 text-xs font-semibold text-brand-plum hover:border-brand-plum disabled:opacity-50">Отклонить</button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+      {!j.data.events.length ? <Empty title="Изменений этапов пока не было" text={p?.linked ? "Появятся после опроса «Потока»." : "Появятся, когда кандидат будет передан в «Поток»."} /> : (<>
+        {/* телефон: карточки вместо таблицы */}
+        <ul className="card divide-y divide-brand-night/5 p-0 sm:hidden">
+          {j.data.events.map((e) => (
+            <li key={e.id} className="space-y-1 px-4 py-3 text-sm">
+              <p className="text-xs text-brand-ink/65">{dtt(e.created_at)} · <span className="font-semibold text-brand-night">{e.candidate_ref ?? "—"}</span></p>
+              {e.status === "error" ? <p className="text-xs text-brand-plum [overflow-wrap:anywhere]">{e.error}</p> : <>
+                <p><span className="text-brand-ink/65">В «Потоке»:</span> <span className="font-semibold text-brand-night">{e.active === false ? "отклонён" : e.stage_name ?? "—"}</span></p>
+                <p><span className="text-brand-ink/65">На платформе:</span> {e.prev_stage_title && <span className="text-xs text-brand-ink/65">{e.prev_stage_title} → </span>}{e.stage && <StageChip e={e} />}</p>
+                <p className="text-xs text-brand-ink/65">{e.effect}</p>
+              </>}
+            </li>
+          ))}
+        </ul>
+        <div className="card hidden overflow-x-auto p-0 sm:block">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-[#FBF8FC] text-xs uppercase tracking-wider text-brand-ink/65"><tr><th className="px-4 py-2">Когда</th><th>Кандидат</th><th>В «Потоке»</th><th>На платформе</th><th className="pr-4">Что изменилось</th></tr></thead>
+            <tbody className="divide-y divide-brand-night/5">
+              {j.data.events.map((e) => (
+                <tr key={e.id} className="align-top">
+                  <td className="whitespace-nowrap px-4 py-2">{dtt(e.created_at)}</td>
+                  <td className="whitespace-nowrap py-2 pr-3">{e.candidate_ref ?? "—"}</td>
+                  {e.status === "error" ? <td colSpan={3} className="py-2 pr-4 text-xs text-brand-plum">{e.error}</td> : <>
+                    <td className="py-2 pr-3">{e.active === false ? "отклонён" : e.stage_name ?? "—"}<div className="text-xs text-brand-ink/65">{e.stage_type}</div></td>
+                    <td className="whitespace-nowrap py-2 pr-3">{e.prev_stage_title && <span className="text-xs text-brand-ink/65">{e.prev_stage_title} → </span>}{e.stage && <StageChip e={e} />}</td>
+                    <td className="py-2 pr-4 text-xs text-brand-ink/65">{e.effect}</td>
+                  </>}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </>)}
+    </section>
+  );
+}
+
+const StageChip = ({ e }: { e: StageEvent }) => (
+  <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${STAGE_TONE[e.stage ?? ""] ?? STAGE_TONE.review}`}>{e.stage_title}</span>
+);
 
 const pushText = (r: any[]) => r.map((d) => `${d.target_title ?? TITLES[d.target] ?? d.target}: ${d.already_sent ? "уже передано ранее" : d.status === "ok" ? (d.result?.dedup ? "обновлено, без дубликата" : "передано") : d.error}`).join("; ");
 

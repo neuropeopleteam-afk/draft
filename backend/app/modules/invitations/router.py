@@ -114,6 +114,8 @@ def _probe_out(db: Session, p: Probe, side: str) -> dict:
 
 
 def _inv_out(db: Session, i: Invitation, side: str) -> dict:
+    from app.integrations.ats.stages import stage_out
+
     comp = db.get(Company, i.company_id)
     cand = db.get(CandidateProfile, i.candidate_user_id)
     out = {"id": str(i.id), "position_title": i.position_title, "offer_description": i.offer_description,
@@ -126,6 +128,7 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
            "company": {"name": comp.name, "industry": comp.industry, "website": comp.website, "city": comp.city}
            if comp else None}
     out["complaint"] = svc.complaint_out(svc.complaint_of(db, i), with_comment=side == "candidate")
+    out["ats_stage"] = stage_out(i.ats_stage, side)  # обратный канал: этап у работодателя по данным его ATS
     if side == "employer":
         out["candidate_ref"] = cand.public_ref
         out["candidate_category"] = cand.current_category_id

@@ -5,6 +5,7 @@ import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, num, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
@@ -281,6 +282,7 @@ export function Needs() {
               <h2 className="font-bold text-brand-night">Откуда взяты требования</h2>
               <span className="chip" title={llmNote(req.llm)}>{req.method === "rules" ? (req.llm?.reason && req.llm.reason !== "not_configured" ? "разбор по словарю: модель не ответила" : "разбор по словарю") : `разбор: словарь + ${req.llm?.model_label ?? "LLM"}, цитаты проверены`}</span>
             </div>
+            <LlmOff>LLM на этой установке не подключён: технологии, грейд и опыт найдены по словарю и правилам, формулировки вне словаря не распознаются — проверьте список и добавьте недостающее вручную.</LlmOff>
             <div className="rounded-xl bg-[#F7F6FB] p-4">
               <QuotedText text={parsed} marks={reqMarks(req, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
             </div>

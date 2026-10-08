@@ -222,6 +222,9 @@ def _app_out(db: Session, a: VacancyApplication, side: str, v: Vacancy | None = 
            "responded_at": a.responded_at.isoformat() if a.responded_at else None,
            "salary_from": v.salary_from, "salary_to": v.salary_to, **basis_out(v.salary_basis),
            "thread": application_thread_summary(db, a.id, side)}  # переписка по отклику (app.modules.contact)
+    from app.integrations.ats.stages import stage_out
+
+    out["ats_stage"] = stage_out(a.ats_stage, side)  # обратный канал: этап у работодателя по данным его ATS
     if side == "employer":
         out["employer_note"] = a.employer_note
         out["card"] = candidate_card_for(db, a.candidate_user_id, include_hidden=False)
