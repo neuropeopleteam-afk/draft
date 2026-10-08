@@ -56,6 +56,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
               {c.skills_confirmed.map((s: any) => <span key={s.tag} className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-brand-night">{s.title} {pct(s.score)}</span>)}
             </div>
           )}
+          {c.freshness?.text && <p className="mt-1 text-xs text-brand-ink/70" title="Свежесть не входит в формулу подбора: показывает, насколько давно проверены навыки">Свежесть: {c.freshness.title.toLowerCase()}. {c.freshness.text}</p>}
           {c.probes?.length > 0 && <p className="mt-2 text-xs text-brand-ink/70">Зонды: {c.probes.map((p: any) => `${p.title} — ${p.verdict}`).join("; ")}</p>}
         </div>
         <div className="rounded-xl bg-[#F3F2FB] p-3 text-sm">
