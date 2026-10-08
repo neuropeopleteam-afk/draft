@@ -90,7 +90,10 @@ test("потребность: ст. 64 → цитаты и предупрежд�
     await expect(table.getByRole("rowheader", { name: /(^|[^а-яё])(пол(а|у|ом|е)?(?![а-яё])|возраст|мужчин|внешност|дет[еи]й)/i })).toHaveCount(0);
 
     const why = main.getByRole("region", { name: "Почему один кандидат выше другого" });
-    const pairs = why.getByRole("listitem").filter({ hasText: /^C-[A-Z0-9]+ выше C-[A-Z0-9]+ на [\d,]+ балл[а-я]* из 100/ });
+    // пара — «A выше B на N баллов из 100» или, если разница меньше 0,5 балла, «A и B почти равны: разница N балла из 100 — решит зонд»
+    const pairs = why.getByRole("listitem").filter({
+      hasText: /^C-[A-Z0-9]+ (выше C-[A-Z0-9]+ на [\d,]+ балл[а-я]* из 100|и C-[A-Z0-9]+ почти равны: разница [\d,]+ балл[а-я]* из 100 — решит зонд)/,
+    });
     await expect(pairs).toHaveCount(2);
     await expect(main.getByRole("button", { name: "Зонд всем (3)" })).toBeVisible();
     await main.getByRole("link", { name: "К подборке" }).click();
