@@ -114,7 +114,8 @@ cd backend
 python3.12 -m venv .venv && . .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
 export DATABASE_URL=sqlite:///./dev.db DEV_MODE=true      # SQLite в каталоге backend; ключей LLM и почты нет
-python -m alembic upgrade head                            # схема (≈ 30 с на первом запуске)
+export ATS_STUB_BASE_URL=http://127.0.0.1:8000            # тестовая ATS — часть самого API: адрес, по которому он достучится сам до себя
+python -m alembic upgrade head                            # схема (до 30 с на первом запуске)
 python -m app.modules.demo.seed                           # 150 кандидатов, 10 работодателей, 15 потребностей
 python -m app.integrations.vacancies.demo                 # 11 демо-вакансий (одна — «приманка»)
 python -m app.cup.demo                                    # 6 демо-кубков
@@ -123,6 +124,8 @@ uvicorn app.main:app --port 8000                          # API, http://localhos
 cd frontend && npm install && npm run dev                 # интерфейс, http://localhost:5173 (/api → :8000)
 ```
 
+Без `ATS_STUB_BASE_URL` передача кандидата в демо-ATS идёт на `http://localhost:8080` и в журнале передач получается ошибка 502;
+задавайте переменную до демо-данных — адрес заглушки сохраняется в БД при их создании.
 Проверка: `curl -s localhost:8000/api/meta` — в ответе `"llm": {"configured": false, ...}`. На главной блок «Для экспертов
 жюри» входит в один клик за любую роль. Демо-данные нужны для подбора (кандидаты) и для кубков/вакансий.
 
