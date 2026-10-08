@@ -1,7 +1,7 @@
 """Оценка открытых ответов теста по рубрике банка (open_answer, шаг 3 open_book_3step).
 
-Основной путь — LLM (в продукте только российская модель: YandexGPT в Yandex AI Studio, LLM_GRADING_MODEL или
-LLM_MODEL). Модель получает задание, критерии рубрики с весами и эталоны сильного/среднего/слабого ответа и
+Основной путь — LLM по цепочке провайдеров llm/client.py (первая оценка — grade, вторая — grade_second; OpenRouter →
+YandexGPT, модель по функции LLM_MODEL_<ФУНКЦИЯ>, LLM_GRADING_MODEL или LLM_MODEL). Модель получает задание, критерии рубрики с весами и эталоны сильного/среднего/слабого ответа и
 возвращает по каждому критерию оценку 0 / 0,5 / 1 и дословную цитату из ответа, на которой она основана; итог —
 взвешенная сумма. Запасной путь без LLM — статус «на проверке» (pending): ответ сохраняется, в θ не входит, пока
 его не оценят (повторная попытка — при завершении теста; дальше — эксперт). Детерминированно, без LLM,
@@ -40,9 +40,10 @@ from dataclasses import asdict, dataclass, field
 import json
 import re
 import secrets
+import time
 
 from app.core.config import get_settings
-from app.modules.llm.client import chat, resolve_model
+from app.modules.llm.client import chat, model_label, resolve_model, short_model
 
 MIN_CHARS = 25  # короче — ответ по существу отсутствует, 0 баллов без LLM
 MAX_ANSWER = 6000
@@ -276,6 +277,8 @@ class GradeOutcome:
     level: str | None = None
     comment: str | None = None
     model: str | None = None
+    provider: str | None = None  # кто ответил (цепочка llm/client.py): openrouter | yandex
+    model_label: str | None = None  # имя модели для интерфейса: «Claude Sonnet 5.5»
     latency_ms: int = 0
     error: str | None = None
     redacted: list[str] = field(default_factory=list)
@@ -373,9 +376,12 @@ def parse_reply(data, rubric: dict, answer: str, *, version: str = PROMPT_VERSIO
     return out
 
 
-def doubts(p: dict, answer: str, rel: int) -> list[str]:
-    """Причины сомнения в первой оценке (→ вторая оценка). Чистая функция, пороги — в отчёте grader_check."""
+def doubts(p: dict, answer: str, rel: int, near: float = 0.05) -> list[str]:
+    """Причины сомнения в первой оценке (→ вторая оценка). Чистая функция, пороги — в отчёте grader_check
+    и docs/LLM.md (near — «у порога» |x − 0,5| ≤ near, LLM_GRADING_NEAR)."""
     out = []
+    if p["score"] is not None and abs(p["score"] - 0.5) <= near + 1e-9:
+        out.append("near_threshold")
     if p["unsupported"]:
         out.append("unsupported_quote")
     if p["no_quotes"]:
@@ -430,19 +436,27 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
     from app.modules.resume.pii import redact
 
     red = redact(body, use_ner=True)
-    use_model = model or s.llm_grading_model
+    # общий бюджет первой и второй оценки с переходами по цепочке: ответ кандидата ждёт оценку синхронно
+    deadline = time.monotonic() + s.llm_grading_budget_s
 
     def call(second: bool):
-        res = chat(build_messages(stem=stem, code=code, step_prompt=step_prompt, rubric=rubric, answer=red.text,
-                                  second=second),
-                   temperature=0.0, max_tokens=1500, want_json=True, model=use_model, timeout_s=s.llm_grading_timeout_s)
+        msgs = build_messages(stem=stem, code=code, step_prompt=step_prompt, rubric=rubric, answer=red.text,
+                              second=second)
+        if model:  # явная модель (сравнение моделей) — одна попытка, без цепочки
+            res = chat(msgs, temperature=0.0, max_tokens=3000, want_json=True, model=model,
+                       timeout_s=s.llm_grading_timeout_s)
+        else:  # цепочка: первая оценка — grade (Sonnet 5.5), вторая — grade_second (Fable 5.1), затем Yandex
+            res = chat(msgs, temperature=0.0, max_tokens=3000, want_json=True, deadline=deadline,
+                       func="grade_second" if second else "grade",
+                       validate=lambda d: parse_reply(d, rubric, red.text)["ok"])
         p = parse_reply(res.data if res.ok else None, rubric, red.text)
         if not res.ok:
             p["error"] = res.error or "invalid_json"
         return res, p
 
     res, p = call(False)
-    out = GradeOutcome(status="pending", method="llm", model=re.sub(r"^gpt://[^/]+/", "", resolve_model(use_model) or ""),
+    used = res.model or short_model(model or resolve_model(s.llm_grading_model) or "")
+    out = GradeOutcome(status="pending", method="llm", model=used, provider=res.provider, model_label=model_label(used),
                        latency_ms=res.latency_ms, redacted=sorted(red.found), prompt=PROMPT_VERSION, flags=meta_flags)
     if not p["ok"]:
         out.error = p["error"]
@@ -453,14 +467,15 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
         out.score, out.error, out.flags = None, "prompt_injection_suspected", meta_flags + ["llm_manipulation"]
         out.comment = "Модель-оценщик отметила в ответе попытку повлиять на оценку. Передан эксперту."
         return out
-    out.checks = doubts(p, red.text, relevance(red.text, stem, code, step_prompt, rubric))
+    out.checks = doubts(p, red.text, relevance(red.text, stem, code, step_prompt, rubric), s.llm_grading_near)
     if not out.checks or not s.llm_grading_second_opinion:
         out.status = "scored"
         return out
     res2, p2 = call(True)
     out.latency_ms += res2.latency_ms
     out.second = {k: p2.get(k) for k in ("score", "criteria", "level", "manipulation", "error")}
-    out.second["latency_ms"] = res2.latency_ms
+    out.second.update(latency_ms=res2.latency_ms, model=res2.model, provider=res2.provider,
+                      model_label=model_label(res2.model) if res2.model else None)
     if p2.get("ok"):
         out.scores.append(p2["score"])
     verdict, extra = combine(p, p2, rubric, s.llm_grading_disagree)

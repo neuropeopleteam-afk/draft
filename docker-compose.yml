@@ -48,6 +48,13 @@ services:
       # LLM_PROVIDER. Нет файла — всё работает на детерминированных правилах без LLM.
       - path: ${LLM_ENV_FILE:-./secrets/llm.env}
         required: false
+      # Цепочка LLM (docs/LLM.md): OPENROUTER_API_KEY, OPENROUTER_BASE_URL — основная модель через OpenRouter;
+      # LLM_RELAY_URL, LLM_RELAY_TOKEN — ретранслятор (с сервера в РФ OpenRouter отвечает 403). Порядок —
+      # LLM_CHAIN в .env (например openrouter,yandex). Нет файлов или LLM_CHAIN — один провайдер из llm.env.
+      - path: ${OPENROUTER_ENV_FILE:-./secrets/openrouter.env}
+        required: false
+      - path: ${LLM_RELAY_ENV_FILE:-./secrets/llm_relay.env}
+        required: false
       # Web Push: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT. Нет файла — push выключен, остальное работает.
       - path: ${VAPID_ENV_FILE:-./secrets/vapid.env}
         required: false

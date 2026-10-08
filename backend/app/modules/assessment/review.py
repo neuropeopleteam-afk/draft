@@ -71,6 +71,9 @@ def queue(db: Session, mode: str = "pending", demo_only: bool = False) -> dict:
                             "criteria": g.get("criteria") if by_llm else None,
                             "comment": g.get("comment") if by_llm else None, "error": g.get("error"),
                             "quotes": g.get("quotes") if by_llm else None, "scores": g.get("scores") or None,
+                            # кто оценил (цепочка llm/client.py) и вторая оценка спорного ответа — журнал проверки
+                            "model": g.get("model"), "model_label": g.get("model_label"),
+                            "checks": g.get("checks") or [], "second": g.get("second"),
                             # промпт-инъекция (grader.injection_signals): ответ в LLM не уходил, причина — эксперту
                             "flags": g.get("flags") or [],
                             "injection_note": g.get("comment") if g.get("error") == "prompt_injection_suspected" else None}
