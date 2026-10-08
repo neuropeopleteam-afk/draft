@@ -411,7 +411,7 @@ pip). Запускает systemd-таймер `spectrek-monitor.timer` раз в
 | QR без пароля (`jury`, при `MONITOR_CHECK_JURY_LIVE=1`) | `/j/monitor` требует пароль или не отвечает | фрагмент `infra/nginx/fsp.neuropeople.pro.jury-live.conf` подключён? (`grep jury_live /etc/nginx/sites-available/fsp.neuropeople.pro`) |
 | Yandex AI Studio (`llm`, раз в час) | ответ не 200: 401 — ключ, 403 — права каталога (`ai.languageModels.user`, так было 06.10), 429 — квота | ключ и каталог в `/opt/spectrek_fsp/secrets/llm.env`; пока не починено, продукт работает по запасному пути без LLM |
 | Диск (`disk`) | занято больше `MONITOR_DISK_MAX_PCT` (90 %) | `docker system df`, `docker image prune -f`, старые копии в `/opt/spectrek_fsp/backups` |
-| Контейнеры (`docker`) | api, db или web не запущен, OOM, память api > 90 % лимита (768 МБ) | `docker inspect -f '{{.State.OOMKilled}} {{.RestartCount}}' spectrek_fsp-api-1`, `docker stats --no-stream` |
+| Контейнеры (`docker`) | api, db или web не запущен, OOM, память api > 90 % лимита (1536 МБ с 08.10; было 768 МБ) | `docker inspect -f '{{.State.OOMKilled}} {{.RestartCount}}' spectrek_fsp-api-1`, `docker stats --no-stream` |
 | Резервная копия (`backup`) | нет `*.sql.gz` в `/opt/spectrek_fsp/backups/db` моложе 30 ч | cron резервного копирования, свободное место |
 
 Письмо (Postbox, API SESv2 `SendEmail`, подпись SigV4 своей реализацией) уходит после `MONITOR_FAILS` (2) неудач
