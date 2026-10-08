@@ -259,6 +259,11 @@ def live_need(db: Session, company: Company, employer: User, direction: str) -> 
     return n
 
 
+def _cat_title(res: dict) -> str:
+    """«Backend · Middle (предварительно)» — категория мини-теста всегда предварительная (и у старых итогов)."""
+    return res.get("category_title") or f"{category_title(res['category_id'])} (предварительно)"
+
+
 def _write_facts(db: Session, g: LiveGuest, res: dict) -> None:
     db.execute(delete(CandidateFact).where(CandidateFact.user_id == g.user_id, CandidateFact.source == FactSource.test))
     src = f"jury_live:{g.id}"
@@ -266,7 +271,9 @@ def _write_facts(db: Session, g: LiveGuest, res: dict) -> None:
         user_id=g.user_id, kind="test_result", key=f"{g.direction}.{res['grade']}",
         title=f"Мини-тест {g.direction} · {res['grade']}",
         value={"theta": res["theta"], "se": res["se"], "grade": res["grade"], "confirmed": True, "mini": True,
-               "correct": res["correct"], "answered": res["answered"], "engine": mini.ENGINE},
+               "correct": res["correct"], "answered": res["answered"], "engine": mini.ENGINE,
+               # 3 задания: категория предварительная и не выше Middle (grades.category_level, Ф3)
+               "preliminary": True, "mode": "mini"},
         evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=src))
     totals: dict[str, list[int]] = {}
     for it in res["items"]:
@@ -332,7 +339,7 @@ def finish(db: Session, room: LiveRoom, g: LiveGuest) -> list:
         inv = inv_svc.create_invitation(
             db, employer, company, p, position_title=title,
             offer_description=(f"Вы прошли мини-тест из 3 заданий банка и получили экспресс-категорию "
-                               f"{category_title(res['category_id'])} — подборка работодателя пересчиталась, вы на "
+                               f"{_cat_title(res)} — подборка работодателя пересчиталась, вы на "
                                f"{mine['rank']}-м месте из {sel['total_matched']}. {RULE} Это демо-компания: "
                                f"собеседования не будет, а путь приглашения — настоящий."),
             salary_from=lo, salary_to=hi, contact_method="Демо: ответ — кнопками на этой странице",
@@ -498,8 +505,10 @@ def guest_out(db: Session, g: LiveGuest, *, now: datetime, own: bool) -> dict:
         out["item"] = mini.public_item(g.state)
     if stage != "testing":
         r = g.result or {}
-        out["result"] = {k: r.get(k) for k in ("theta", "se", "grade", "category_id", "correct", "answered", "time_s")}
-        out["result"]["category_title"] = category_title(r.get("category_id")) if r.get("category_id") else None
+        out["result"] = {k: r.get(k) for k in ("theta", "se", "grade", "category_id", "correct", "answered", "time_s",
+                                                "ceiling", "capped")}
+        out["result"]["category_title"] = _cat_title(r) if r.get("category_id") else None
+        out["result"]["preliminary"] = bool(r.get("category_id"))
         out["result"]["skills"] = [{"tag": k, "title": STACK.get(k, (k,))[0], "score": v}
                                    for k, v in sorted((r.get("skills") or {}).items())]
     if stage in ("selected", "invited", "accepted", "declined") and g.selection:

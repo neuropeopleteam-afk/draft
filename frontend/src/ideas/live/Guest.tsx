@@ -320,7 +320,10 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
             {r.skills.map((s) => <span key={s.tag} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.score >= 0.5 ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>{s.title}</span>)}
           </div>
         )}
-        <p className="mt-2 text-xs leading-relaxed text-brand-ink/55">По 3 заданиям погрешность велика — это предварительная оценка. Полный тест (8–16 заданий) уточняет грейд.</p>
+        <p className="mt-2 text-xs leading-relaxed text-brand-ink/55">
+          {r?.capped ? "Ответы сильные, но за 3 задания категория — не выше Middle: Senior подтверждает полный тест (8–16 заданий) или экспресс (8–12). " : "За 3 задания категория — не выше Middle. "}
+          Погрешность велика — это предварительная оценка, полный тест уточняет грейд.
+        </p>
       </div>
 
       <ol className="card mt-4 space-y-4 p-4" aria-label="Что происходит у работодателя">
