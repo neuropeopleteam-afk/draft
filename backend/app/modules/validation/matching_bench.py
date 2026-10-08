@@ -42,6 +42,7 @@ from app.modules.profiles.facts import PROVISIONAL_PENALTY
 from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate, true_grade)
 from app.modules.validation.matching_eval import _tokens, keyword_score, selection_categories
 from app.modules.fsp.rating import VERSION as FSP_RATING_VERSION, POLICY as FSP_RATING_POLICY
+from app.modules.validation.signature import signature
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[3]
@@ -84,6 +85,13 @@ METHODS = {
     "grade_only": {"title": "Только грейд из теста", "kind": "ablation",
                    "text": "Фильтр по категории из теста, внутри категории — случайный порядок (20 перестановок)"},
     "no_fsp": {"title": "Без ФСП", "kind": "ablation", "text": "Скор платформы без бонуса ФСП (вес 0,10 → 0)"},
+    "no_theta": {"title": "Без θ теста в скоре", "kind": "ablation",
+                 "text": "Категория из теста остаётся, но вклад θ в скор обнулён (вес 0,45 → 0, вес стека на θ не "
+                         "переходит): внутри категории — стек, ФСП, зонды"},
+    "no_stack": {"title": "Без стека", "kind": "ablation",
+                 "text": "Обязательный и желательный стек не входят в скор (веса 0,35 и 0,05 → 0)"},
+    "no_tier": {"title": "Без яруса грейда", "kind": "ablation",
+                "text": "Нет первичной сортировки по категории потребности: все кандидаты с категорией — по одному скору"},
     "no_guard": {"title": "Без защиты от раздувания", "kind": "ablation",
                  "text": "Заявленные в резюме навыки (T0) засчитываются как подтверждённые тестом. В продукте "
                          "заявленное в скор не входит и помечено «заявлено — не влияет на ранжирование»"},
@@ -132,23 +140,26 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
     return out
 
 
-def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY) -> np.ndarray:
-    """Скор продукта по весам w (порядок COMP_KEYS); нет обязательного стека — его вес переходит на тест;
-    «Junior (предварительно)» — минус penalty (в продукте 0,05)."""
+def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY, transfer: bool = True) -> np.ndarray:
+    """Скор продукта по весам w (порядок COMP_KEYS); нет обязательного стека — его вес переходит на тест
+    (transfer=False — не переходит, для абляции «без θ»); «Junior (предварительно)» — минус penalty (в продукте 0,05)."""
     w_b = w.copy()
-    w_b[0] += w_b[1]
+    if transfer:
+        w_b[0] += w_b[1]
     w_b[1] = 0.0
     raw = np.where(sc["has_req"][:, None], sc["comps"] @ w, sc["comps"] @ w_b)
     return np.round(raw - penalty * sc["provisional"][None, :], 4)
 
 
 def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROVISIONAL_PENALTY, *,
-                    experimental: bool = False) -> np.ndarray:
+                    experimental: bool = False, transfer: bool = True, tier: bool = True) -> np.ndarray:
     """Порядок как в build_selection: категория → −скор (со штрафом «предварительно») → −рейтинг → public_ref;
     эксперимент «сначала без пробелов в обязательных навыках» (И8) включается только явно."""
-    s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w, penalty)
+    s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w, penalty, transfer)
     gaps = sc.get("mandatory_gaps", np.zeros_like(s)) if experimental else np.zeros_like(s)
-    return np.stack([np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], gaps[i], -sc["vis"][i]))
+    # без яруса (абляция): кандидаты с категорией — одним списком по скору, без категории — в конце (их не видно)
+    vis = sc["vis"] if tier else np.minimum(sc["vis"], 1)
+    return np.stack([np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], gaps[i], -vis[i]))
                      for i in range(len(s))])
 
 
@@ -263,6 +274,16 @@ def run_methods(world: World, reqs: list[dict], seed: int, methods: tuple[str, .
         w_nofsp = w.copy()
         w_nofsp[COMP_KEYS.index("fsp")] = 0.0
         orders["no_fsp"] = [platform_orders(sc, w_nofsp)]
+    if "no_theta" in methods:
+        w_nt = w.copy()
+        w_nt[COMP_KEYS.index("test")] = 0.0
+        orders["no_theta"] = [platform_orders(sc, w_nt, transfer=False)]
+    if "no_stack" in methods:
+        w_ns = w.copy()
+        w_ns[COMP_KEYS.index("stack_required")] = w_ns[COMP_KEYS.index("stack_desired")] = 0.0
+        orders["no_stack"] = [platform_orders(sc, w_ns)]
+    if "no_tier" in methods:
+        orders["no_tier"] = [platform_orders(sc, tier=False)]
     if "no_test" in methods:
         orders["no_test"] = [platform_orders(score_world(world, reqs, "t0_only"))]
     if "no_guard" in methods:
@@ -282,6 +303,20 @@ def run_methods(world: World, reqs: list[dict], seed: int, methods: tuple[str, .
         orders["random"] = _rand_orders(n, m, rng, lambda i: (), 20)
     return {"orders": {k: orders[k] for k in METHODS if k in orders}, "scored": sc,
             "cpu_seconds": round(time.process_time() - t0, 1)}
+
+
+ABLATIONS = ("no_theta", "no_stack", "no_fsp", "no_tier", "no_test", "bm25")
+
+
+def ablations(s: dict) -> list[dict]:
+    """Абляции подбора: метрика без компоненты и парная разница «полная формула − абляция» (95 % ДИ)."""
+    m, pm = s["metrics"], s["paired_platform_minus"]
+    out = [{"method": "platform", "p@5": m["platform"]["p@5"], "ndcg@10": m["platform"]["ndcg@10"]}]
+    for k in ABLATIONS:
+        if k in m:
+            out.append({"method": k, "p@5": m[k]["p@5"], "ndcg@10": m[k]["ndcg@10"],
+                        "diff_p@5": pm[k]["p@5"], "diff_ndcg@10": pm[k]["ndcg@10"]})
+    return out
 
 
 def summarize(world: World, run: dict, seed: int) -> dict:
@@ -627,6 +662,10 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "world2": {"seed": cfg2.seed, "metrics": s2["metrics"]},
         "heldout_weights": ho, "sensitivity": sens, "junior": junior,
         "score_rebuild_max_error": r["scored"]["max_rebuild_error"],
+        "ablations": ablations(s),
+        "signature": signature(seed=cfg.seed, config=cfg_d, n=cfg.n_needs * cfg.n_candidates,
+                               world=f"бенчмарк подбора: {cfg.n_needs} потребностей × {cfg.n_candidates} кандидатов",
+                               command="make bench" if not quick else "python -m app.modules.validation.matching_bench --quick"),
     }
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
@@ -789,6 +828,18 @@ def markdown(rep: dict) -> str:
     pm = rep["paired_platform_minus"]
     L += ["", "Разница «платформа − метод», nDCG@10 (парный бутстреп): "
           + "; ".join(f"{rep['methods'][k]['title']} {_cell(v['ndcg@10'])}" for k, v in pm.items()) + ".", ""]
+    if rep.get("ablations"):
+        L += ["## Абляции: что даёт каждая часть формулы", "",
+              "Одна и та же истина и тот же разбор потребностей; убирается одна компонента. Разница — «полная формула − "
+              "абляция», парный бутстреп по потребностям, 95 % ДИ.", "",
+              "| Вариант | p@5 | nDCG@10 | Δ p@5 | Δ nDCG@10 |", "|---|---|---|---|---|"]
+        for a in rep["ablations"]:
+            meta = rep["methods"][a["method"]]
+            L.append(f"| {meta['title']} | {_cell(a['p@5'])} | {_cell(a['ndcg@10'])} | "
+                     f"{_cell(a['diff_p@5']) if 'diff_p@5' in a else '—'} | "
+                     f"{_cell(a['diff_ndcg@10']) if 'diff_ndcg@10' in a else '—'} |")
+        L += ["", "Что убирается: " + "; ".join(f"{rep['methods'][a['method']]['title']} — {rep['methods'][a['method']]['text']}"
+                                                for a in rep["ablations"][1:]) + ".", ""]
     L += ["## Веса на отложенных данных", "", ho["method"], "",
           "| | Обучение | Отложенная половина | Второй мир |", "|---|---|---|---|",
           f"| Веса продукта: {_w(ho['weights_product'])} | {_f(ho['train']['product'])} | {_cell(ho['test']['product'])} | "
