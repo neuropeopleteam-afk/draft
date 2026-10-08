@@ -176,7 +176,9 @@ def _llm_on(monkeypatch, calls: list, reply: dict | None = None):
     def fake_chat(messages, **kw):
         calls.append(messages)
         r = LLMResult(ok=True)
-        r.data = reply or {"criteria": {"cause": 1, "fix": 0.5}, "level": "medium", "comment": "ок"}
+        r.data = reply or {"criteria": {"cause": {"score": 1, "quote": "Причина — гонка: два запроса читают остаток"},
+                                        "fix": {"score": 0.5, "quote": "Исправление — SELECT … FOR UPDATE"}},
+                           "level": "medium", "manipulation": False, "comment": "ок"}
         return r
 
     monkeypatch.setattr(grader, "chat", fake_chat)
@@ -200,9 +202,12 @@ def test_grader_messages_isolate_answer(monkeypatch):
                  "ЭТАЛОН-СЛАБЫЙ", "Транзакция без блокировки"):
         assert frag in sys1["content"] and frag not in usr1["content"]
     # маркеры случайные, на каждый вызов свои; внутри — ровно одна JSON-строка без «<<<»/«>>>»
-    m1 = re.fullmatch(r"(<<<ОТВЕТ_([0-9A-F]+)>>>)\n(.*)\n(<<<КОНЕЦ_\2>>>)", usr1["content"], re.S)
-    m2 = re.fullmatch(r"(<<<ОТВЕТ_([0-9A-F]+)>>>)\n(.*)\n(<<<КОНЕЦ_\2>>>)", usr2["content"], re.S)
-    assert m1 and m2 and m1.group(2) != m2.group(2)
+    # после маркера конца — напоминание правил (последнее слово в запросе — наше, а не кандидата)
+    from app.modules.assessment.grader import REMINDER
+
+    m1 = re.fullmatch(r"(<<<ОТВЕТ_([0-9A-F]+)>>>)\n(.*)\n(<<<КОНЕЦ_\2>>>)\n(.*)", usr1["content"], re.S)
+    m2 = re.fullmatch(r"(<<<ОТВЕТ_([0-9A-F]+)>>>)\n(.*)\n(<<<КОНЕЦ_\2>>>)\n(.*)", usr2["content"], re.S)
+    assert m1 and m2 and m1.group(2) != m2.group(2) and m1.group(5) == REMINDER
     assert m1.group(1) in sys1["content"] and m1.group(2) not in sys2["content"]
     inner = json.loads(m1.group(3))
     assert isinstance(inner, str) and "<<<" not in inner and ">>>" not in inner and "book(1)" in inner

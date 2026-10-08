@@ -5,13 +5,15 @@ import { sandboxId, type Persona } from "./stand";
 const TITLES: Record<Persona, string> = {
   candidate: "Кандидат с паспортом ФСП",
   candidate_nofsp: "Кандидат без ФСП",
+  candidate_junior: "Кандидат «Junior \\(предварительно\\)»",
   candidate_new: "Пройдите тест сами",
   employer: "Работодатель",
   expert: "Эксперт",
   fsp: "Федерация \\(ФСП\\)",
 };
 const LANDING: Record<Persona, RegExp> = {
-  candidate: /\/candidate$/, candidate_nofsp: /\/candidate$/, candidate_new: /\/candidate\/express$/, employer: /\/employer$/, expert: /\/expert$/,
+  candidate: /\/candidate$/, candidate_nofsp: /\/candidate$/, candidate_junior: /\/candidate(\/category)?$/, candidate_new: /\/candidate\/express$/,
+  employer: /\/employer$/, expert: /\/expert$/,
   fsp: /\/fsp(\/[a-z]*)?$/,
 };
 

@@ -197,3 +197,18 @@ def _stability() -> dict:
 @router.get("/junior-stability", summary="Стабильность статуса «Junior (предварительно)» (пересчёт: make stability)")
 def junior_stability():
     return _stability()
+
+
+GRADER = Path(__file__).resolve().parent / "data" / "grader_check.json"
+
+
+@lru_cache(maxsize=1)
+def _grader() -> dict:
+    if not GRADER.exists():
+        return {"missing": True}
+    return json.loads(GRADER.read_text(encoding="utf-8"))
+
+
+@router.get("/grader-check", summary="Оценщик открытых ответов на наборе панели 06.10: инъекции и завышение, до и после")
+def grader_check():
+    return _grader()

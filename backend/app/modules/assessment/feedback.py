@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import as_aware
 from app.core.enums import NeedStatus, TestSessionStatus
-from app.modules.assessment.integrity import summary_for_employer
+from app.modules.assessment.integrity import candidate_view
 from app.modules.assessment.models import TestSession
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADE_ORDER, GRADES, STACK
@@ -581,14 +581,14 @@ def build(db: Session, user_id: uuid.UUID, session_id: uuid.UUID | None = None) 
             "se": ts.theta_se if ts else None, "confirmed": er.get("confirmed") if ts else None,
             "finished_at": ts.finished_at.isoformat() if ts and ts.finished_at else None,
             "category_id": bundle.category_id,
-            # прозрачный античит: кандидат видит ту же «достоверность результата» и причины, что и работодатель
-            "integrity": summary_for_employer((er.get("details") or {}).get("integrity")),
+            # Р27: кандидату — уровень достоверности и общая причина; подробные причины видит работодатель
+            "integrity": candidate_view((er.get("details") or {}).get("integrity")),
         },
         "skill_map": {"topics": topics, "summary": summary,
                       "note": ("Темы — навыки заданий банка, сведённые к стеку справочника. Конкретные задания и "
                                "ключи не показываются. «Ожидаемо» — доля баллов, которую модель теста предсказывает "
                                "для вашего общего уровня θ: тема выше или ниже неё — ваша относительная сильная или "
-                               "слабая сторона. Контрольные задания-канарейки в карту не входят.")},
+                               "слабая сторона.")},
         "demand": demand,
         "route": _route(ts, er, p, by_tag, demand),
         "competitions": _competitions(db, direction, bundle.category_id, bundle, by_tag, demand),

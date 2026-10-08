@@ -3,6 +3,7 @@ import MatchingBench from "../components/MatchingBench";
 import { FspRatingValidation } from "../components/validation/FspRating";
 import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
+import GraderCheck from "../components/validation/GraderCheck";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
@@ -51,7 +52,7 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -117,6 +118,7 @@ function Report({ r }: { r: any }) {
       <MatchingBench />
 
       {r.experts && <ExpertsSection ex={r.experts} />}
+      <GraderCheck />
 
       <Section id="live" title="Живые данные платформы">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -433,11 +435,21 @@ function ExpertResults({ res, kind = "people" }: { res: any; kind?: string }) {
 
 /** panel — с чем сравнивается модель-оценщик, если разметка не людей («модельной панели»). */
 function LlmTable({ llm, note, panel }: { llm: any; note?: string; panel?: string }) {
+  const abs = llm.criterion === "absolute";
+  const th = llm.thresholds ?? {};
+  const inj = (x: any) => x.injection_ok == null ? "—" : x.injection_mode === "blocked" ? "не дошла до модели: фильтр, эксперту" : x.injection_ok ? "не повлияла" : "подняла балл";
+  const rule = abs
+    ? `Допустима, если κ с консенсусом не ниже ${num(th.kappa ?? 0.7)} и MAE по критериям не выше ${num(th.mae ?? 0.15)} (абсолютные пороги: межэкспертная κ здесь не мерило), разброс между прогонами не больше ${num(th.spread ?? 0.5)} балла и инструкция в контрольном ответе не подняла балл.`
+    : `Допустима, если согласие с ${panel ? "панелью" : "экспертами"} не хуже ${panel ? "согласия её прогонов" : "межэкспертного"} минус ${num(th.gap ?? 0.1)}, разброс между прогонами не больше ${num(th.spread ?? 0.5)} балла и инструкция в контрольном ответе не подняла балл.`;
   return (
     <>
-      <Table head={["Модель", "Прогонов", panel ? `κ с консенсусом ${panel}` : "κ с консенсусом экспертов", panel ? "κ с прогонами панели, среднее" : "κ с экспертами, среднее", panel ? "κ между прогонами панели" : "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
-        rows={llm.models.map((x: any) => [x.model, x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), x.injection_ok == null ? "—" : x.injection_ok ? "не повлияла" : "подняла балл", x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
-      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). ${panel ? `Сравнение — с консенсусом ${panel} (прогоны модели, не люди), поэтому вывод справочный. ` : ""}Допустима, если согласие с ${panel ? "панелью" : "экспертами"} не хуже ${panel ? "согласия её прогонов" : "межэкспертного"} минус 0,1, разброс между прогонами не больше 0,5 балла и инструкция в контрольном ответе не подняла балл. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
+      {llm.choice && (
+        <p className="mb-3 text-sm text-brand-ink/80"><span className="chip mr-2">Выбранный оценщик</span><b className="text-brand-night">{llm.choice}</b>{(() => { const c = llm.models.find((x: any) => x.model === llm.choice); return c ? ` · κ с консенсусом ${num(c.kappa_consensus)}, MAE ${num(c.mae_weighted)}, разброс прогонов ${num(c.run_spread)}${c.latency_ms_median ? `, задержка ${num(c.latency_ms_median / 1000, 1)} с` : ""}` : ""; })()}</p>
+      )}
+      {llm.caveat && <div className="mb-3"><Alert kind="info">{llm.caveat}</Alert></div>}
+      <Table head={["Модель", "Роль", "Прогонов", panel ? `κ с консенсусом ${panel}` : "κ с консенсусом экспертов", panel ? "κ с прогонами панели, среднее" : "κ с экспертами, среднее", panel ? "κ между прогонами панели" : "Межэкспертная κ", "MAE по критериям", "Разброс прогонов", "Инструкция в ответе", "Допустима"]}
+        rows={llm.models.map((x: any) => [x.model, x.product == null ? "—" : x.product ? "в продукте" : "эталон", x.runs, num(x.kappa_consensus), num(x.kappa_mean_with_experts), num(x.inter_expert_kappa), num(x.mae_weighted), num(x.run_spread), inj(x), x.admissible == null ? "—" : x.admissible ? "да" : "нет"])} />
+      <p className="mt-2 text-xs text-brand-ink/65">{note ?? `Балл модели 0–1 переводится в 0–3 (×3, округление). ${panel ? `Сравнение — с консенсусом ${panel} (прогоны модели, не люди), поэтому вывод справочный. ` : ""}${rule} В продукте — только российская модель; остальные — эталон для сравнения. ${llm.choice ? `Выбор: ${llm.choice}.` : "Допустимой модели пока нет."}`}</p>
     </>
   );
 }
