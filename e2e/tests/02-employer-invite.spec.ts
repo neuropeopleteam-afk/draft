@@ -138,6 +138,10 @@ test("кандидат принимает → работодатель види�
     await expect(dialog).toContainText("Демо жюри: Северный платёж");
     await expect(dialog).toContainText(/240\s?000.*280\s?000/);
     await expect(dialog.getByText("На чём основано приглашение")).toBeVisible();
+    // демо-работодатель жюри — правдоподобные демо-сведения с пометкой «демо», индекс высокий (Ф4)
+    await expect(dialog.getByText("Индекс доверия работодателя")).toBeVisible();
+    await expect(dialog).toContainText("Высокий");
+    await expect(dialog).toContainText("Сведения ФНС (демо)");
     await dialog.getByRole("button", { name: "Принять и открыть контакты" }).click();
     await expect(dialog.getByRole("status").filter({ hasText: "Вы приняли приглашение" })).toBeVisible();
     await page.context().close();
@@ -158,6 +162,16 @@ test("кандидат принимает → работодатель види�
     await expect(page.getByText("Кандидат принял ваше приглашение — контакты открыты.")).toBeVisible();
     await expect(page.getByText("Контакты", { exact: true })).toBeVisible();
     await expect(page.getByText(CANDIDATE_NAME).first()).toBeVisible();
+  });
+
+  await test.step("работодатель: в карточке приглашения — состояние по каждой ATS, этап «Потока»", async () => {
+    const page = emp;
+    await openSection(page, "Приглашения", /\/employer\/invitations$/);
+    const inv = page.locator("article").filter({ hasText: POSITION });
+    // не «уже передано ранее» четыре раза, а строка на систему: «Передано: Поток · этап «Новые»»
+    await expect(inv.getByText(/^Передано:/)).toHaveCount(4, { timeout: 60_000 });
+    await expect(inv.getByText(/^Передано: Поток · этап «Новые»/)).toBeVisible();
+    await expect(inv.getByText("уже передано ранее")).toHaveCount(0);
   });
 
   await test.step("работодатель: журнал передач в ATS после принятия", async () => {
