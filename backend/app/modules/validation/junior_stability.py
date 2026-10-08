@@ -231,7 +231,7 @@ def run(n: int = 400, quick: bool = False, write: bool = True) -> dict:
                               if sum(x[k]["n"] for x in bands) else None)} for k in range(len(bands[0]))]
     rep["how_to_read"] = HOW_TO_READ
     rep["signature"] = signature(seed=SEED, config={"app": asdict(cfg), "n": n, "dirs": list(dirs), "rule": rep["rule"]},
-                                 world=f"симуляция теста: {len(dirs)} направлений × {n} человек, заявившие Junior",
+                                 world=f"симуляция теста: {len(dirs)} направлений × {n} человек",
                                  command="make stability", n=n * len(dirs))
     rep["seconds"] = round(time.time() - t0, 1)
     rep["caveat"] = ("Синтетика: те же люди и те же сессии для «до» и «после», меняется только правило решения; "
