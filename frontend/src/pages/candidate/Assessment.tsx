@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, Loading, Seg, Toggle, catTitle, dt, errText, num, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, Loading, Seg, Toggle, catTitle, dt, errText, num, pct, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { FeedbackSummary } from "./Feedback";
@@ -22,8 +22,9 @@ interface Onb {
 const LEVELS = [{ v: 1, t: "знаком" }, { v: 2, t: "работал" }, { v: 3, t: "уверенно" }];
 const STEPS = ["Направление", "Стек", "Опыт и формат", "Видимость и согласие"];
 
-/** Опрос после регистрации → выбор грейда → тест. */
-export default function Assessment() {
+/** Опрос после регистрации → выбор грейда → тест. express — вход с главной «Пройдите тест сами» (жюри): режим
+ * экспресс выбран заранее, если он доступен (демо-режим). */
+export default function Assessment({ express = false }: { express?: boolean }) {
   const onb = useApi<Onb>("/me/onboarding");
   const status = useApi<any>("/assessment/status");
   const [q, setQ] = useSearchParams();
@@ -36,7 +37,58 @@ export default function Assessment() {
       {showSurvey ? (
         <Survey data={onb.data} onDone={() => { setEditing(false); setQ({}); void onb.reload(); void status.reload(); }} />
       ) : (
-        <GradeChoice status={status.data} onEditSurvey={() => setEditing(true)} />
+        <GradeChoice status={status.data} onEditSurvey={() => setEditing(true)} express={express} />
+      )}
+    </div>
+  );
+}
+
+type Mode = "full" | "express";
+/** Параметры экспресса по заявленному грейду (status.express.by_grade): Junior/Middle — 5–7 заданий, Senior — 8–12 (консилиум 07.10). */
+interface ExpressParams { min_items: number; max_items: number; item_time_s: number; max_minutes: number }
+const EXPRESS_DEFAULT: Record<string, ExpressParams> = {
+  junior: { min_items: 5, max_items: 7, item_time_s: 240, max_minutes: 20 }, middle: { min_items: 5, max_items: 7, item_time_s: 240, max_minutes: 20 },
+  senior: { min_items: 8, max_items: 12, item_time_s: 360, max_minutes: 45 },
+};
+function expressFor(status: any, grade: string): ExpressParams {
+  return status?.express?.by_grade?.[grade] ?? EXPRESS_DEFAULT[grade] ?? EXPRESS_DEFAULT.middle;
+}
+function modes(ex: ExpressParams, seniorMax: number): { id: Mode; title: string }[] {
+  const span = `${ex.min_items}–${ex.max_items} заданий`;
+  return [{ id: "full", title: "Полный тест · 8–16 заданий" }, { id: "express", title: ex.max_items >= seniorMax ? `Экспресс · ${span}` : `Экспресс · ${span} (за Senior — до ${seniorMax})` }];
+}
+
+interface Hint {
+  suggested: string | null; confidence: string; summary: string; note: string; has_resume: boolean;
+  signals: { source: string; title: string; grade: string | null; text: string }[];
+}
+
+/** Подсказка грейда по опросу, резюме и паспорту ФСП: по правилам, без LLM; необязательна — выбор за кандидатом. */
+function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; onPick: (g: string) => void }) {
+  const [open, setOpen] = useState(false);
+  if (!hint) return null;
+  return (
+    <div className="card mt-4 text-sm" data-testid="grade-hint">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Подсказка · необязательно</p>
+          <p className="mt-1 font-semibold text-brand-night">{hint.summary}</p>
+          <p className="mt-1 text-xs text-brand-ink/65">По опросу, резюме и паспорту ФСП, правилами без нейросети. {hint.note}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {hint.suggested && hint.suggested !== grade && <button type="button" className="btn-ghost" onClick={() => onPick(hint.suggested!)}>Выбрать {GRADES[hint.suggested]}</button>}
+          <button type="button" className="btn-ghost" onClick={() => setOpen((v) => !v)} aria-expanded={open}>{open ? "Скрыть объяснение" : "Почему так"}</button>
+        </div>
+      </div>
+      {open && (
+        <ul className="mt-3 grid gap-2 sm:grid-cols-3">
+          {hint.signals.map((x, i) => (
+            <li key={i} className="rounded-xl bg-brand-blush/25 p-3">
+              <p className="text-xs font-semibold text-brand-plum">{x.title}{x.grade ? ` → ${GRADES[x.grade]}` : ""}</p>
+              <p className="mt-1 text-xs leading-relaxed text-brand-ink/75">{x.text}</p>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
@@ -260,24 +312,35 @@ export function IntegrityNotice() {
   );
 }
 
-function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () => void }) {
+function GradeChoice({ status, onEditSurvey, express = false }: { status: any; onEditSurvey: () => void; express?: boolean }) {
   const navigate = useNavigate();
   const [q] = useSearchParams();
   const qGrade = q.get("grade");
   const [grade, setGrade] = useState<string>(qGrade && qGrade in GRADES ? qGrade : status?.claimed_grade ?? "middle");
   const [dir, setDir] = useState<string>(q.get("direction") ?? status?.survey_direction ?? "");
   const chosen = status?.specializations?.find((s: any) => s.direction === dir);
+  const expressOk = !!status?.express_available;
+  const [mode, setMode] = useState<Mode>(expressOk && (express || q.get("mode") === "express") ? "express" : "full");
+  const ex = expressFor(status, grade);
+  const exSenior = expressFor(status, "senior");
+  const hint = useApi<Hint>("/assessment/grade-hint");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [ack, setAck] = useState(false);
   const locked = (chosen?.lock_active ?? status?.lock_active) && !status?.sandbox_active;
-  const resume = !!(chosen ? chosen.active_session_id : status?.active_session_id) && (chosen ? chosen.active_grade : status?.active_grade) === grade;
+  const activeId = chosen ? chosen.active_session_id : status?.active_session_id;
+  const activeGrade = chosen ? chosen.active_grade : status?.active_grade;
+  const activeMode = (chosen ? chosen.active_mode : status?.active_mode) ?? "full";
+  const resume = !!activeId && activeGrade === grade && activeMode === mode;
   const quota = status?.sandbox_starts as { limit: number; used: number; left: number; next_at: string | null } | null;
+  // повтор на тот же грейд (и выше) после неподтверждённой попытки — через 30 дней; на грейд ниже — сразу
+  const retakeLocks = (status?.retake_locks ?? {}) as Record<string, string>;
+  const retakeLocked = !!retakeLocks[grade];
 
   async function start() {
     setError(null); setBusy(true);
     try {
-      const s = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: grade, direction: dir, integrity_ack: ack } });
+      const s = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: grade, direction: dir, integrity_ack: ack, mode } });
       navigate(`/candidate/assessment/test/${s.session_id}`);
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   }
@@ -303,18 +366,41 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
             className={`rounded-2xl border p-5 text-left transition-colors ${grade === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
             <p className="text-lg font-bold text-brand-night">{t}</p>
             <p className="mt-1 text-xs text-brand-ink/65">{GRADE_EXPERIENCE[id]}</p>
-            {status?.claimed_grade === id && <span className="chip mt-3">Подходит по стажу</span>}
+            <span className="mt-3 flex flex-wrap gap-1.5">
+              {!hint.data && status?.claimed_grade === id && <span className="chip">Подходит по стажу</span>}
+              {hint.data?.suggested === id && <span className="chip">Подсказка</span>}
+              {retakeLocks[id] && <span className="chip">Повтор с {dt(retakeLocks[id]).replace(/ г\.$/, "")}</span>}
+            </span>
           </button>
         ))}
       </div>
+      <GradeHint hint={hint.data ?? null} grade={grade} onPick={setGrade} />
+      {expressOk && (
+        <div className="card mt-4 text-sm" data-testid="mode-choice">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="font-semibold text-brand-night">Режим теста</p>
+            <Seg value={mode} onChange={setMode} options={modes(ex, exSenior.max_items)} label="Режим теста" />
+          </div>
+          <p className="mt-2 text-brand-ink/75">
+            {mode === "express"
+              ? (grade === "senior"
+                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без контрольных и дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ 80 %), интервал θ шире, чем у полного (погрешность ≈ 0,6 против ≈ 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
+                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без контрольных и дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но интервал θ заметно шире (погрешность ≈ 0,65 против ≈ 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
+              : "Полный адаптивный тест: 8–16 заданий, до 60 минут, с контрольными заданиями и дотестированием у порога. Именно он присваивает категорию живым кандидатам."}
+          </p>
+        </div>
+      )}
       <div className="card mt-6 space-y-3 text-sm text-brand-ink/75">
         <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам, обычно 8–16 заданий, до 60 минут. Если результат у самого порога грейда, будет ещё до 6 коротких заданий (до 20 минут) — чтобы грейд не зависел от случайности. Повторная попытка — из другого набора заданий.</p>
         <p>Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои; время ответов учитывается для защиты от утечек.</p>
-        <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней.</p>
+        <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней. Повторить тест на тот же грейд после неподтверждённой попытки можно через {status?.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу; если тест уверенно показал уровень ниже, его можно принять без нового теста.</p>
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
       <IntegrityNotice />
       {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTIONS[dir]} — с {dt(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
+      {retakeLocked && !locked && (
+        <div className="mt-4"><Alert kind="info">Повторить тест на {GRADES[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
+      )}
       {status?.sandbox_active && quota && (
         <div className="mt-4"><Alert kind="info">Демо-режим жюри: новых тестов за 24 часа осталось {quota.left} из {quota.limit}. Лимит не даёт выкачать банк заданий перезапусками; продолжение начатого теста его не тратит.</Alert></div>
       )}
@@ -326,7 +412,9 @@ function GradeChoice({ status, onEditSurvey }: { status: any; onEditSurvey: () =
         </label>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
-        <button className="btn-primary" onClick={start} disabled={busy || locked || (!resume && !ack)}>{busy ? "Готовим задания…" : resume ? "Продолжить тест" : "Начать тест"}</button>
+        <button className="btn-primary" onClick={start} disabled={busy || locked || retakeLocked || (!resume && !ack)}>
+          {busy ? "Готовим задания…" : resume ? "Продолжить тест" : mode === "express" ? "Начать экспресс-тест" : "Начать тест"}
+        </button>
         <button className="btn-ghost" onClick={onEditSurvey}>{status?.specializations?.length < 2 ? "Добавить второе направление" : "Изменить ответы опроса"}</button>
       </div>
     </>
@@ -388,7 +476,13 @@ export function TestRun() {
     const extra = c.awaySince ? Date.now() - c.awaySince : 0;
     return { focus_lost: c.focus_lost, hidden_ms: c.hidden_ms + extra, paste: c.paste, paste_chars: c.paste_chars };
   }
-  useEffect(() => { api<any>(`/assessment/sessions/${id}`).then(show).catch((e) => setError(errText(e))); }, [id]);
+  useEffect(() => {
+    api<any>(`/assessment/sessions/${id}`).then(async (x) => {
+      // завершённый тест (обновили страницу, вернулись из категории) — показываем итог, а не «сессия закрыта»
+      if (x?.status === "finished") { setS(x); setResult(await api<any>(`/assessment/sessions/${id}/result`)); return; }
+      show(x);
+    }).catch((e) => setError(errText(e)));
+  }, [id]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
 
   async function finish() {
@@ -500,14 +594,26 @@ export function TestRun() {
   );
 }
 
-function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
-  const title = r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
+function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
+  const [r, setR] = useState<any>(initial);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const { refresh } = useAuth();
+  // уровень ниже доказан уверенно (P ≥ 80 %) — кандидат принимает его одним действием, без нового теста
+  async function acceptLower() {
+    setBusy(true); setErr(null);
+    try { setR(await api<any>(`/assessment/sessions/${sessionId}/accept-lower`, { method: "POST" })); await refresh(); }
+    catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+  const title = r.accepted_lower ? `Принят уровень ${GRADES[r.accepted_lower] ?? r.accepted_lower}`
+    : r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
     : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
     : "Грейд не подтверждён";
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
-      {!r.confirmed && r.category_provisional && (
+      {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · интервал θ шире, чем у полного</span></div>}
+      {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
           Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от 80 %, «не доказанно ниже» — от 10 %).
           {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, зондом работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, зондом работодателя или кубком."}
@@ -527,6 +633,23 @@ function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; o
         </p>
       )}
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.</Alert></div>}
+      {r.accept_lower_available && r.accept_lower_grade && (
+        <div className="card mt-4 border-brand/30 bg-brand-blush/20 text-sm" data-testid="accept-lower">
+          <p className="font-semibold text-brand-night">Уровень {GRADES[r.accept_lower_grade]} доказан уверенно</p>
+          <p className="mt-1 text-brand-ink/75">
+            Тест не подтвердил {GRADES[r.claimed_grade]}, но вероятность уровня не ниже {GRADES[r.accept_lower_grade]} по этому же тесту — {pct(r.accept_lower_p)}.
+            Можно принять его одним действием без нового теста. Принудительно уровень не понижается: решение за вами.{" "}
+            {r.sandbox ? `В демо-режиме повторить тест на ${GRADES[r.claimed_grade]} можно сразу (у живого кандидата — через ${r.retake_same_grade_days ?? 30} дней).` : `Повторить тест на ${GRADES[r.claimed_grade]} можно через ${r.retake_same_grade_days ?? 30} дней.`}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <button className="btn-primary" onClick={acceptLower} disabled={busy}>{busy ? "Принимаем…" : `Принять уровень ${GRADES[r.accept_lower_grade]} без нового теста`}</button>
+          </div>
+        </div>
+      )}
+      {!r.confirmed && !r.accepted_lower && !r.accept_lower_available && !r.category_provisional && r.claimed_grade !== "intern" && (
+        <p className="mt-3 text-xs text-brand-ink/65">{r.sandbox ? "В демо-режиме повторить тест можно сразу; у живого кандидата" : "Повторить тест"} на {GRADES[r.claimed_grade]} {r.sandbox ? "— через" : "можно через"} {r.retake_same_grade_days ?? 30} дней; тест на грейд ниже — сразу, без зачёта попыток.</p>
+      )}
+      <div className="mt-3"><Alert>{err}</Alert></div>
       <FeedbackSummary sessionId={sessionId} />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>

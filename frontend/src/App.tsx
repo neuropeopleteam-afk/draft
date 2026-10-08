@@ -63,6 +63,8 @@ export default function App() {
       <Route path="/candidate" element={<CabinetLayout role="candidate" title="Кабинет кандидата" sections={candidateSections} />}>
         <Route index element={<CandidateOverview />} />
         <Route path="assessment" element={<Assessment />} />
+        {/* «Пройдите тест сами» (жюри): тот же экран выбора грейда с экспресс-режимом, выбранным заранее */}
+        <Route path="express" element={<Assessment express />} />
         <Route path="assessment/test/:id" element={<TestRun />} />
         <Route path="category" element={<Category />} />
         <Route path="feedback" element={<Feedback />} />

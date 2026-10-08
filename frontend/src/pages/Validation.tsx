@@ -20,7 +20,18 @@ const sgn = (v?: number | null) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}
 export default function Validation() {
   const { data: r, error, loading } = useApi<any>("/validation/report", []);
   useEffect(() => {
-    if (r && location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    if (!r || !location.hash) return;
+    const id = location.hash.slice(1);
+    let manual = false;
+    const stop = () => { manual = true; };
+    const EVENTS = ["wheel", "touchmove", "keydown"] as const;
+    for (const ev of EVENTS) window.addEventListener(ev, stop, { passive: true });
+    const go = () => { if (!manual) document.getElementById(id)?.scrollIntoView(); };
+    go();
+    // бенчмарк и экспертная разметка подгружаются отдельно и сдвигают якорь вниз — повторяем прокрутку, пока
+    // пользователь сам не начал листать
+    const timers = [400, 1200, 2500].map((ms) => setTimeout(go, ms));
+    return () => { timers.forEach(clearTimeout); for (const ev of EVENTS) window.removeEventListener(ev, stop); };
   }, [r]);
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
@@ -52,7 +63,7 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -128,8 +139,102 @@ function Report({ r }: { r: any }) {
         </div>
       </Section>
 
+      <SelfCheck opts={r.self_check} />
       <RedButton attacks={r.attacks ?? []} />
     </>
+  );
+}
+
+const GRADE_RU: Record<string, string> = { none: "без грейда", junior: "Junior", middle: "Middle", senior: "Senior" };
+const dist = (d?: Record<string, number>) => d ? Object.entries(d).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${GRADE_RU[k] ?? k}: ${v}`).join(" · ") : "—";
+
+/** «Проверьте сами»: синтетический кандидат заданного уровня или стратегии проходит N тестов на НАСТОЯЩЕМ движке
+ * банка (не симуляция): распределение грейдов, длина, время, согласие повторов. Ничего не записывается. */
+function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string; text: string }[]; max_n: number; directions: string[] } }) {
+  const { me, signIn } = useAuth();
+  const meta = useMeta();
+  const [f, setF] = useState({ strategy: "level_middle", theta: 0.5, direction: "backend", claimed_grade: "middle", n: 10, repeat: true, mode: "full" });
+  const [res, setRes] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const oneClick = !me && meta?.jury_mode_available !== false;
+  const strategies = opts?.strategies ?? [];
+  const maxN = opts?.max_n ?? 20;
+  async function run() {
+    setBusy(true); setErr(null);
+    try {
+      if (!me) await signIn((await juryToken("employer")).access_token);
+      setRes(await api<any>("/validation/self-check", { method: "POST", body: { ...f, n: Math.min(maxN, Math.max(1, f.n)), theta: f.strategy === "theta" ? f.theta : null } }));
+    } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+  const sel = "w-full rounded-lg border border-brand-night/15 bg-white px-2.5 py-2 text-sm";
+  const lab = "block text-xs font-semibold text-brand-plum";
+  return (
+    <Section id="self-check" title="Проверьте сами: синтетический кандидат на настоящем движке"
+      lead="В отличие от симуляции выше, здесь работает тот же движок банка, что и у живого кандидата: настоящие варианты заданий и ключи, адаптивный выбор, контрольные задания, дотестирование у порога и правило решения. Задайте уровень θ или стратегию ответов — получите распределение грейдов, длину теста, расчётное время и согласие двух попыток (вторая — из другого набора заданий). В базу ничего не пишется. Честные ограничения: развёрнутые ответы синтетический кандидат не пишет — их балл задаёт стратегия, а не оценщик; время расчётное, 40–90 % рекомендуемого.">
+      <div className="card" data-testid="self-check">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <label><span className={lab}>Стратегия ответов</span>
+            <select className={sel} value={f.strategy} onChange={(e) => setF({ ...f, strategy: e.target.value })}>{strategies.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}</select>
+            <span className="mt-1 block text-xs text-brand-ink/60">{strategies.find((x) => x.id === f.strategy)?.text}</span></label>
+          {f.strategy === "theta" && <label><span className={lab}>Уровень θ (от −3 до 3)</span>
+            <input className={sel} type="number" step="0.1" min={-3} max={3} value={f.theta} onChange={(e) => setF({ ...f, theta: Number(e.target.value) })} />
+            <span className="mt-1 block text-xs text-brand-ink/60">Пороги: Junior −1, Middle 0, Senior 1</span></label>}
+          <label><span className={lab}>Направление</span>
+            <select className={sel} value={f.direction} onChange={(e) => setF({ ...f, direction: e.target.value })}>{(opts?.directions ?? Object.keys(DIRECTIONS)).map((d) => <option key={d} value={d}>{DIRECTIONS[d] ?? d}</option>)}</select></label>
+          <label><span className={lab}>Заявленный грейд</span>
+            <select className={sel} value={f.claimed_grade} onChange={(e) => setF({ ...f, claimed_grade: e.target.value })}>{["junior", "middle", "senior"].map((g) => <option key={g} value={g}>{GRADE_RU[g]}</option>)}</select></label>
+          <label><span className={lab}>Кандидатов (до {maxN})</span>
+            <input className={sel} type="number" min={1} max={maxN} value={f.n} onChange={(e) => setF({ ...f, n: Number(e.target.value) })} /></label>
+          <label><span className={lab}>Режим теста</span>
+            <select className={sel} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}><option value="full">Полный · 8–16 заданий</option><option value="express">Экспресс · 5–7 заданий (Senior: 8–12)</option></select></label>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm text-brand-ink/80"><input type="checkbox" className="h-4 w-4 accent-brand" checked={f.repeat} onChange={(e) => setF({ ...f, repeat: e.target.checked })} />Повторить каждого (согласие попыток)</label>
+        </div>
+        {oneClick && <p className="mt-3 text-xs text-brand-ink/60">Запуск доступен после входа: по нажатию кнопки вы войдёте как демо-работодатель жюри (своя копия демо) и проверка сразу запустится.</p>}
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <button className="btn-primary" disabled={busy} onClick={run}>{busy ? "Проходим тесты…" : res ? "Запустить ещё раз" : "Запустить проверку"}</button>
+          <span className="text-xs text-brand-ink/60">Один расчёт за раз, не чаще 6 в минуту. Расчёт — секунды.</span>
+        </div>
+        {err && <div className="mt-4"><Alert>{err}</Alert></div>}
+        {res && (
+          <div className="mt-5 space-y-4" role="status" data-testid="self-check-result">
+            <div className="rounded-xl bg-brand-blush/25 p-4 text-sm">
+              {/* подпись честная: «В допуске выборки, разрыв N п. п.» — разрыв больше шума выборки, но в допуске модели (консилиум 07.10, 7.5) */}
+              <p data-testid="self-check-verdict" className={`inline-flex rounded-md px-2 py-0.5 text-xs font-bold ${!res.verdict?.ok ? "bg-brand text-white" : res.verdict?.kind === "tolerance" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-800"}`}>{res.verdict?.label ?? (res.verdict?.ok ? "Как и ожидалось" : "Расхождение с ожиданием")}</p>
+              <p className="mt-2 text-brand-ink/80"><span className="font-semibold text-brand-night">Ожидание: </span>{res.expected?.text}</p>
+              <p className="mt-1 text-brand-ink/80"><span className="font-semibold text-brand-night">Факт: </span>{res.verdict?.text}</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-4">
+              <Kpi label="Подтверждений" value={pct(res.confirm_rate)} hint={`${res.runs_total} прогонов · ${num(res.seconds, 1)} с`} />
+              <Kpi label="θ̂ среднее ± SE" value={`${sgn(res.theta_hat?.mean)} ± ${num(res.se?.mean)}`} hint={`разброс θ̂ между кандидатами: ${num(res.theta_hat?.sd)}`} />
+              <Kpi label="Заданий" value={num(res.n_items?.mean, 1)} hint={`от ${res.n_items?.min} до ${res.n_items?.max} · дотестирование у ${pct(res.extension_share)}`} />
+              <Kpi label="Расчётное время" value={`${num(res.time_min?.mean, 0)} мин`} hint={`от ${num(res.time_min?.min, 0)} до ${num(res.time_min?.max, 0)} мин`} />
+            </div>
+            <dl className="divide-y divide-brand-night/5 rounded-2xl bg-white text-sm ring-1 ring-brand-night/10">
+              {([
+                ["Присвоенный грейд", dist(res.assigned)], ["Точечный грейд по θ̂", dist(res.point_grade)],
+                ["Доля верных ответов", pct(res.correct_share)], ["Причины остановки", Object.entries(res.stops ?? {}).map(([k, v]) => `${k}: ${v}`).join(" · ")],
+                ...(res.retest ? [
+                  ["Повтор: решение совпало", pct(res.retest.decision_agreement)], ["Повтор: грейд точно / в пределах одного", `${pct(res.retest.grade_exact_agreement)} / ${pct(res.retest.grade_within_1)}`],
+                  ["Повтор: |Δθ| в среднем", `${num(res.retest.mean_abs_diff_theta)} при среднем SE ${num(res.retest.mean_se)}`],
+                ] : []),
+              ] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="grid gap-1 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] sm:gap-4">
+                  <dt className="font-medium text-brand-night">{k}</dt>
+                  <dd className="tabular-nums text-brand-ink/80">{v}</dd>
+                </div>
+              ))}
+            </dl>
+            {res.retest?.note && <p className="text-xs text-brand-ink/60">{res.retest.note}</p>}
+            <details className="text-sm">
+              <summary className="cursor-pointer font-semibold text-brand-plum">Все прогоны ({res.runs?.length})</summary>
+              <div className="mt-2"><Table head={["№", "θ̂", "SE", "Решение", "Точечный грейд", "Заданий", "Дотест.", "Минут", "Верных", "Остановка"]}
+                rows={(res.runs ?? []).map((x: any, i: number) => [String(i + 1), sgn(x.theta), num(x.se), x.confirmed ? "подтверждён" : "нет", GRADE_RU[x.point_grade] ?? x.point_grade, x.n_items, x.n_ext, num(x.time_min, 0), `${x.correct}/${x.answered}`, x.stop])} /></div>
+            </details>
+          </div>
+        )}
+      </div>
+    </Section>
   );
 }
 
