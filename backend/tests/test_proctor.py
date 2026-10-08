@@ -339,6 +339,9 @@ def test_permissions(client):
 def test_feature_flag_disables_camera(client, monkeypatch):
     from app.core.config import get_settings
 
+    # app создаётся один раз, а другие тесты сбрасывают кэш настроек: результат не должен зависеть от порядка —
+    # /api/meta и роутер камеры читают get_settings() в момент запроса, поэтому патчим свежий экземпляр
+    get_settings.cache_clear()
     monkeypatch.setattr(get_settings(), "proctor_camera_enabled", False)
     assert client.get("/api/meta").json()["proctor_camera"] is False
     t = _candidate(client)

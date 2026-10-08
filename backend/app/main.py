@@ -127,7 +127,7 @@ def create_app() -> FastAPI:
 
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
                 "jury_mode_available": s.jury_mode_available, "demo_sandbox": s.demo_sandbox,
-                "proctor_camera": s.proctor_camera_enabled,  # false — экран камеры перед тестом не показывается
+                "proctor_camera": get_settings().proctor_camera_enabled,  # на запросе (не замыкание s): флаг переключается без пересоздания app; false — экрана камеры нет
                 "llm": llm_status(), "assessment_engine": get_engine().name}
 
     class HealthOut(BaseModel):
