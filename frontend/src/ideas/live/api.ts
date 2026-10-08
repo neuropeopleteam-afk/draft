@@ -16,6 +16,7 @@ export interface Guest {
   stage: "testing" | "done" | "selected" | "invited" | "accepted" | "declined" | "no_category";
   answered: number; total: number; created_at: string; finished_at: string | null;
   item?: LiveItem | null;
+  invite_failed?: boolean;
   result: null | {
     theta: number; se: number; grade: string | null; category_id: string | null; category_title: string | null;
     correct: number; answered: number; time_s: number; skills: { tag: string; title: string; score: number }[];
