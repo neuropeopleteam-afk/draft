@@ -28,6 +28,8 @@ class Vacancy(UUIDPk, Timestamps, Base):
     stack: Mapped[list] = mapped_column(default=list)  # id стек-тегов справочника
     salary_from: Mapped[int]
     salary_to: Mapped[int]
+    # gross — до вычета НДФЛ, net — на руки (app.modules.contact.salary)
+    salary_basis: Mapped[str] = mapped_column(sa.String(8), default="gross", server_default="gross")
     work_format: Mapped[str] = mapped_column(sa.String(16), default="any")
     city: Mapped[str | None] = mapped_column(sa.String(100))
     status: Mapped[str] = mapped_column(sa.String(16), default="published")

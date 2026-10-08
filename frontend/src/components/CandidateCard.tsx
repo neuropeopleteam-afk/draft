@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { GradeBadge, GradeStatusNote } from "./GradeStatus";
-import { Level, num, pct, range, ruText, signed, years } from "./ui";
+import { Level, num, pct, ruText, signed, years } from "./ui";
 import { Specializations } from "./Specializations";
+import { MarketNote } from "./Salary";
 
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
@@ -98,7 +99,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
       )}
 
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        {c.market_range ? <p className="text-xs text-brand-ink/65">Рынок категории: {range(c.market_range.from, c.market_range.to)}</p> : <span />}
+        {c.market_range ? <MarketNote m={c.market_range} short /> : <span />}
         {actions}
       </div>
     </article>

@@ -118,10 +118,16 @@ export function CandidateDetail() {
   return (
     <div className="max-w-4xl space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <PageTitle title={`Кандидат ${c.ref}`} subtitle={c.contacts ? "Кандидат принял ваше приглашение — контакты открыты." : "Обезличенная карточка. Контакты откроются после принятия приглашения."} />
+        <PageTitle title={`Кандидат ${c.ref}`} subtitle={c.contacts ? "Кандидат принял ваше приглашение — контакты открыты." : c.contacts_revoked ? `Обезличенная карточка. ${c.contacts_note}.` : "Обезличенная карточка. Контакты откроются после принятия приглашения."} />
         <button className="btn-ghost" onClick={() => apiDownload(`/employer/candidates/${c.ref}/profile.pdf`, `profile-${c.ref}.pdf`)}>PDF-профиль</button>
       </div>
       {msg && <Alert kind="ok">{msg}</Alert>}
+      {c.contacts_revoked && !c.contacts && (
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
+          <p className="flex flex-wrap items-center gap-2 font-bold">Контакты скрыты <Status s="contacts_revoked" /></p>
+          <p className="mt-1 text-sm">{c.contacts_note}: имя, почта, телефон и PDF с контактами снова недоступны, передача в ATS закрыта. Переписка по приглашению — в формате «вопрос — ответ». Вернуть доступ может только кандидат.</p>
+        </section>
+      )}
       {c.contacts && (
         <section className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-emerald-900">
           <p className="font-bold">Контакты</p>
@@ -141,7 +147,7 @@ export function CandidateDetail() {
         <section className="card text-sm">
           <h2 className="font-bold text-brand-night">Ваши взаимодействия</h2>
           <ul className="mt-3 space-y-2">
-            {c.my_invitations.map((i: any) => <li key={i.id} className="flex items-center justify-between gap-3"><span>Приглашение «{i.position_title}» · {dt(i.created_at)}</span><Status s={i.status} /></li>)}
+            {c.my_invitations.map((i: any) => <li key={i.id} className="flex items-center justify-between gap-3"><span>Приглашение «{i.position_title}» · {dt(i.created_at)}</span><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} /></li>)}
             {c.my_probes.map((p: any) => <li key={p.id} className="flex items-center justify-between gap-3"><span>Зонд «{p.title}» · {dt(p.created_at)}</span><Status s={p.status} /></li>)}
           </ul>
         </section>

@@ -384,6 +384,8 @@ def _own_invitation(db: Session, company_id, inv_id) -> Invitation:
         raise api_error(404, "invitation_not_found", "Приглашение не найдено")
     if i.status != InvitationStatus.accepted:
         raise api_error(409, "not_accepted", "Передать в ATS можно только принятое приглашение — до этого контакты закрыты")
+    if i.contacts_revealed_at is None:  # кандидат отозвал доступ к контактам (app.modules.contact)
+        raise api_error(409, "contacts_revoked", "Кандидат отозвал доступ к контактам — передать в ATS нельзя")
     return i
 
 
