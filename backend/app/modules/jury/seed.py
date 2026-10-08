@@ -298,6 +298,10 @@ def delete_jury(db: Session, sid: str = "") -> int:
         live.delete_guests(db, list(db.scalars(select(User.id).where(User.email.like(live.guest_emails_like(sid)))).all()))
         live.bump_sid(db, sid)
     ids = db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all()
+    if sid:  # И25: подписки, лента уведомлений и смоделированные кандидаты песочницы
+        from app.modules.subs import demo as subs_demo
+
+        subs_demo.purge(db, sid, list(ids))
     if ids:  # участия её кандидатов в общих кубках платформы
         db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
     own = Company.created_by.in_(ids) if ids else Company.id.is_(None)

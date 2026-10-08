@@ -41,6 +41,8 @@ from app.modules.matching.router import router as employer_router
 from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
+from app.modules.subs import router as subs_api
+from app.modules.subs import runner as subs_runner
 from app.modules.validation.router import router as validation_router
 from app.modules.fsp.registry import router as fsp_registry_router
 
@@ -60,7 +62,7 @@ TAGS = [
     {"name": "legal", "description": "Тексты согласий и реквизиты оператора персональных данных"},
     {"name": "expert-panel", "description": "Экспертная разметка: вход по ссылке, пары, ответы, Ангофф"},
     {"name": "system", "description": "Служебные методы"},
-]
+] + subs_api.TAGS
 
 
 @asynccontextmanager
@@ -72,6 +74,8 @@ async def lifespan(_app: FastAPI):
         t.start()
     # Лента «Задания для вас»: раз в N дней предложить открытое задание работодателя (И7)
     assignments_feed.start_background(get_settings().assignments_feed_interval_s)
+    # Подписка на потребность и напоминания (И25, Н6): фоновый обход, под арендой в БД
+    subs_runner.start_background(get_settings().subs_tick_interval_s)
     yield
 
 
@@ -103,7 +107,8 @@ def create_app() -> FastAPI:
     for r in (auth_router, profiles_router, candidate_router, legal_router, assessment_router,
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
               expert_router, expert_panel_router, jury_router, validation_router,
-              assignments_employer_router, assignments_candidate_router):
+              assignments_employer_router, assignments_candidate_router,
+              subs_api.employer_router, subs_api.notify_router, subs_api.jury_router):
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
