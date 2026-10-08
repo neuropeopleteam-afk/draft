@@ -1,5 +1,6 @@
 """Временные учётки для нагрузочного теста (запуск внутри контейнера api):
-   python - setup N  → JSON {candidates:[{token}], employers:[{token, needs:[[need_id, version]]}], refs:[...]}
+   python - setup N  → JSON {candidates:[{token}], employers:[{token, needs:[[need_id, version]]}], analysts:[{token}],
+                        refs:[...]}
    python - cleanup  → удалить loadtest-*@demo.invalid
 Кандидаты нагрузочного теста скрыты от работодателей (visible_to_employers=False), помечены is_demo."""
 import json
@@ -55,6 +56,15 @@ def setup(n: int) -> dict:
                                .where(EmployerNeed.company_id == ep.company_id)).all() if ep else []
             out["employers"].append({"token": create_access_token(e.id, "employer", e.token_version)[0],
                                      "needs": [[str(a), b] for a, b in needs]})
+        # аналитик ФСП (кабинет ФСП) — временная учётка с тем же префиксом, удаляется cleanup
+        email = f"{PREFIX}fsp@demo.invalid"
+        a = db.scalar(select(User).where(User.email == email))
+        if a is None:
+            a = User(email=email, password_hash="!", role=UserRole.fsp_analyst, is_email_verified=True,
+                     email_verified_at=utcnow(), is_demo=True)
+            db.add(a)
+            db.flush()
+        out["analysts"] = [{"token": create_access_token(a.id, "fsp_analyst", a.token_version)[0]}]
         out["refs"] = [r for (r,) in db.execute(select(CandidateProfile.public_ref).join(User, User.id == CandidateProfile.user_id)
                                                  .where(User.is_demo.is_(True), CandidateProfile.visible_to_employers.is_(True),
                                                         CandidateProfile.current_category_id.is_not(None)).limit(150))]

@@ -94,7 +94,7 @@ def test_jury_sandbox_recreated_cap_and_rate_limit(client, monkeypatch):
         left = set(seed.sandboxes(db))
     assert left == {second, third}  # самая давняя удалена
     # лимит создания с адреса исчерпан — вход в один клик всё равно работает (общее демо)
-    monkeypatch.setattr(jr._new_ip, "limit", 0)
+    monkeypatch.setattr(get_settings(), "jury_new_sandboxes_per_ip_hour", 0)
     r = _login(client, "candidate", "new")
     assert r["shared"] and r["scenario"] is None and r["user"]["email"] == "candidate@jury.example.com"
 

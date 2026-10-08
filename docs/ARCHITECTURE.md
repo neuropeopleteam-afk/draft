@@ -386,6 +386,53 @@ server {
 `/robots.txt` с `Disallow: /`, `/api/` и файлы PWA без базовой авторизации, `/auth/` (Keycloak «ФСП ID») со своим входом,
 остальное — под базовой авторизацией (`auth_basic_user_file /etc/nginx/htpasswd_spectrek_fsp`). Доступ к стенду: demo / Hakaton.
 
+Живая демонстрация (QR) открывается с телефона эксперта без пароля: фрагмент `infra/nginx/fsp.neuropeople.pro.jury-live.conf`
+открывает `/j/<код>` (точное выражение — `/j`, `/j/`, `/j/a/b` остаются под паролем), `/assets/` (JS, CSS, шрифты) и
+`/recover.js`; `sw.js`, манифест, иконки и `/api/` уже открыты основным конфигом. Установка —
+`sudo bash infra/nginx/apply-public-snippets.sh`: копирует фрагменты (QR и, если есть, паспорта `/verify/<id>`) в
+`/etc/nginx/snippets/`, вставляет `include` перед защищённым `location / {`, `nginx -t` (при ошибке возвращает файл сайта и
+фрагменты), reload и проверка адресов; `--check` — только проверка. `/assets/` открывает только фрагмент QR — повтор
+`location ^~ /assets/` в другом фрагменте даёт `duplicate location`. Пароль стенда — ворота для загрузки страниц, а не
+защита данных: данные отдаёт только `/api` по JWT.
+
+### 11.1. Мониторинг стенда
+
+`infra/monitor/monitor.py` — одна проверка за запуск, только стандартная библиотека Python 3.10+ хоста (без boto3 и
+pip). Запускает systemd-таймер `spectrek-monitor.timer` раз в 5 минут; настройки — `/opt/spectrek_fsp/infra/monitor.env`
+(образец `infra/monitor/monitor.env.example`), ключи Postbox и Yandex AI Studio — из секретов приложения
+(`MONITOR_ENV_FILES`), в файл мониторинга не копируются. Состояние — `/var/lib/spectrek-monitor/state.json`.
+
+| Проверка | Что считается сбоем | Что делать |
+|---|---|---|
+| Сайт и API (`site`) | `GET /api/health` не 200 или `status != ok` | `docker compose ps`, `docker compose logs --tail 200 api`; БД — `docker compose logs db` |
+| Фронтенд (`web`) | `GET /` не 200 и не 401 (401 — пароль стенда, это норма) | `docker compose logs web`; `sudo nginx -t`, `systemctl status nginx` |
+| QR без пароля (`jury`, при `MONITOR_CHECK_JURY_LIVE=1`) | `/j/monitor` требует пароль или не отвечает | фрагмент `infra/nginx/fsp.neuropeople.pro.jury-live.conf` подключён? (`grep jury_live /etc/nginx/sites-available/fsp.neuropeople.pro`) |
+| Yandex AI Studio (`llm`, раз в час) | ответ не 200: 401 — ключ, 403 — права каталога (`ai.languageModels.user`, так было 06.10), 429 — квота | ключ и каталог в `/opt/spectrek_fsp/secrets/llm.env`; пока не починено, продукт работает по запасному пути без LLM |
+| Диск (`disk`) | занято больше `MONITOR_DISK_MAX_PCT` (90 %) | `docker system df`, `docker image prune -f`, старые копии в `/opt/spectrek_fsp/backups` |
+| Контейнеры (`docker`) | api, db или web не запущен, OOM, память api > 90 % лимита (768 МБ) | `docker inspect -f '{{.State.OOMKilled}} {{.RestartCount}}' spectrek_fsp-api-1`, `docker stats --no-stream` |
+| Резервная копия (`backup`) | нет `*.sql.gz` в `/opt/spectrek_fsp/backups/db` моложе 30 ч | cron резервного копирования, свободное место |
+
+Письмо (Postbox, API SESv2 `SendEmail`, подпись SigV4 своей реализацией) уходит после `MONITOR_FAILS` (2) неудач
+подряд — разовый тайм-аут не будит; напоминание — раз в `MONITOR_REMIND_H` (6) часов, пока сбой не прошёл; при
+восстановлении — письмо «восстановлено». Если Postbox письмо не принял, следующий запуск пробует снова. Пока
+`MONITOR_TO` пуст (почту даст владелец), письма выключены: текст письма один раз пишется в журнал, без повторов.
+
+```bash
+python3 infra/monitor/monitor.py --print       # все проверки сейчас, без писем и без записи состояния (MONITOR_TO не нужен)
+python3 infra/monitor/monitor.py --test-mail   # пробное письмо на MONITOR_TO (проверка ключей Postbox и адреса)
+journalctl -u spectrek-monitor.service -n 50   # итоги запусков таймера
+systemctl list-timers spectrek-monitor.timer   # когда следующий запуск
+```
+
+Установка на сервере (координатор):
+
+```bash
+sudo mkdir -p /opt/spectrek_fsp/infra
+sudo cp infra/monitor/monitor.env.example /opt/spectrek_fsp/infra/monitor.env && sudo chmod 600 /opt/spectrek_fsp/infra/monitor.env
+sudo cp infra/monitor/spectrek-monitor.service infra/monitor/spectrek-monitor.timer /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now spectrek-monitor.timer
+```
+
 ## 12. LLM-слой
 
 Подробно — [docs/LLM.md](LLM.md): какая модель где и почему, цепочка, вторая оценка, ПДн, таблица «качество / время».
@@ -420,6 +467,23 @@ server {
   инъекция — 0. `yandexgpt/latest`: medium 0,85 / 0,70 / 0,38, в среднем 1,9 с; `gpt-oss-120b/latest`: medium
   0,35 / 0,50 / 0,38, в среднем 3,6 с (до 6,8 с). Пока оставлен `yandexgpt/latest` (быстрее, ответ оценивается в
   момент отправки); `gpt-oss-120b` строже к средним ответам — кандидат на итоговый выбор после сверки с экспертами.
+
+### 12.1. Установка без LLM («чистая машина»)
+
+Свежий клон без ключей модели запускается по README (раздел «Чистая машина: без Docker, без ключей LLM») и работает целиком.
+Признак — `GET /api/meta` → `llm.configured = false` (ключей нет или `LLM_DISABLED=true`); фронтенд читает его в
+`lib/meta.tsx`, подписи — компонент `components/LlmOff.tsx` (до загрузки `/api/meta` не показывает ничего).
+
+| Функция с моделью | Запасной путь без LLM | Подпись в интерфейсе |
+|---|---|---|
+| Разбор потребности (`matching/need_parser.py`) | словарь технологий и правила, `method: rules`, `llm: {used: false, reason: not_configured}` | чип «разбор по словарю» и пояснение, что нераспознанное добавляют вручную |
+| Разбор резюме (`resume/extract.py`) | словари и правила, `method: rules`; ПДн вырезаются локально в любом случае | «разбор по словарям», пояснение под заголовком «Резюме PDF» |
+| Открытые ответы теста (`assessment/grader.py`) | статус «на проверке», очередь эксперта, результат «предварительный» | подсказка под полем ответа и в итоге теста |
+| Кубок по рубрике (`cup/service.py`) | решение остаётся «на оценке», баллы ставит работодатель | у работодателя — «LLM-оценщик не подключён: оцените решение сами» |
+| Оценка пакета разметки (`experts/llm_grade.py`) | `llm_not_configured`, ответы оценивает эксперт | сообщение на `/validation` |
+
+Подбор, ранжирование, объяснения, тест на банке заданий, приглашения, ATS, переписка и кубки с автопроверкой LLM не используют.
+Проверено тестами `tests/test_no_llm.py` и прогоном свежего клона (отчёт `reports_0710/infra.md`, раздел «Чистая машина»).
 
 ## 13. Подбор и ранжирование (match-v1)
 

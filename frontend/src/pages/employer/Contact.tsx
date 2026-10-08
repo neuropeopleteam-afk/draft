@@ -5,7 +5,7 @@ import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catT
 import { InlineThread } from "../../components/Chat";
 import { BasisSeg, MarketNote, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { api } from "../../lib/api";
-import { AtsInvitationActions } from "../../integrations/Ats";
+import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
 
 type Market = { from: number; to: number; median?: number | null } | null | undefined;
@@ -204,7 +204,7 @@ export function EmployerInvitations() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {i.counter && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Встречное ждёт решения</span>}
-              <Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
+              <AtsStageBadge s={i.ats_stage} employer /><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
             </div>
           </div>
           {i.contacts ? (
