@@ -108,7 +108,8 @@ def recompute(db: Session, ts: TestSession) -> dict:
     now = utcnow()
     before = (ts.result.get("engine_result") or {}).get("confirmed")
     keep_grade = ts.result_grade_id
-    outcome = service.apply_engine_result(db, ts, res, profile, now)
+    # after_review: паспорт грейда «предварительно» → «подтверждён» сразу после оценки эксперта (app/passport)
+    outcome = service.apply_engine_result(db, ts, res, profile, now, after_review=True)
     ts.result = {**ts.result, "recomputed_at": now.isoformat()}
     flag_modified(ts, "result")
     if not res.confirmed:

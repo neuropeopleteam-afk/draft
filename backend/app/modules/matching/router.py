@@ -404,6 +404,8 @@ def candidate_pdf(ref: str, user: User = Depends(employer), db: Session = Depend
     b = load_bundles(db, [p.user_id])[p.user_id]
     cats = {x.id: x for x in db.scalars(select(Category)).all()}
     contacts = candidate_contacts(db, p.user_id) if contacts_revealed(db, c.id, p.user_id) else None
-    pdf = render_profile(card(b, cats), contacts=contacts, audience="employer")
+    from app.passport.service import for_pdf
+
+    pdf = render_profile(card(b, cats), contacts=contacts, audience="employer", passport=for_pdf(db, p.user_id))
     return Response(pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="profile-{ref}.pdf"'})

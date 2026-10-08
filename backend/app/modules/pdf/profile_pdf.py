@@ -67,8 +67,9 @@ def _rub(v) -> str:
 
 
 def render_profile(card: dict, *, contacts: dict | None = None, audience: str = "candidate",
-                   growth: dict | None = None) -> bytes:
-    """growth — обратная связь после теста (assessment/feedback.py): только в версии для самого кандидата."""
+                   growth: dict | None = None, passport: dict | None = None) -> bytes:
+    """growth — обратная связь после теста (assessment/feedback.py): только в версии для самого кандидата.
+    passport — действующий подписанный паспорт грейда (app.passport.service.brief): QR-код и ссылка на проверку."""
     st = _styles()
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=A4, leftMargin=18 * mm, rightMargin=18 * mm, topMargin=16 * mm,
@@ -143,6 +144,8 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
             (f"Последняя попытка ({_esc(at.get('at'))}): тест на {_esc(GRADES.get(at.get('grade'), at.get('grade')))} "
              f"не подтвердил грейд, θ = {theta_se(at['theta'], at.get('se') or 0)}. Результат в скор не входит."
              if at.get("theta") is not None else "Тест ещё не пройден."), st["p"]))
+    if passport:
+        el.extend(_passport_block(passport, st))
     if growth and growth.get("available") and audience == "candidate":
         el.extend(_growth_block(growth, st))
     probes = card.get("probes") or []
@@ -191,6 +194,32 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
                         st["small"]))
     doc.build(el)
     return buf.getvalue()
+
+
+def _passport_block(pp: dict, st) -> list:
+    """QR-код и ссылка на публичную проверку подписанного паспорта грейда (/verify/<id>)."""
+    from reportlab.graphics.barcode.qr import QrCodeWidget
+    from reportlab.graphics.shapes import Drawing
+
+    w = QrCodeWidget(pp["url"], barLevel="M")
+    x0, y0, x1, y1 = w.getBounds()
+    size = 30 * mm
+    d = Drawing(size, size, transform=[size / (x1 - x0), 0, 0, size / (y1 - y0), 0, 0])
+    d.add(w)
+    until = (pp.get("valid_until") or "")[:10]
+    status = "подтверждён" if pp.get("grade_status") == "confirmed" else "предварительно"
+    text = [Paragraph("Подписанный паспорт грейда", st["h2"]),
+            Paragraph(f"Грейд и навыки T1, достижения ФСП T2 подписаны электронной подписью платформы (Ed25519). "
+                      f"Статус грейда: {status}. Действителен до {_esc(until)}, если не отозван.", st["p"]),
+            Spacer(1, 3),
+            Paragraph(f"Проверка: <b>{_esc(pp['url'])}</b>", st["p"]),
+            Paragraph("Страница проверки открывается без входа и показывает: действителен, отозван, истёк или подпись "
+                      "не сходится. Офлайн — tools/passport/verify.py по открытому ключу.", st["small"])]
+    if pp.get("test_key"):
+        text.append(Paragraph("Подписано тестовым ключом стенда разработки.", st["small"]))
+    t = Table([[d, text]], colWidths=[34 * mm, None])
+    t.setStyle(TableStyle([("VALIGN", (0, 0), (-1, -1), "TOP"), ("LEFTPADDING", (0, 0), (-1, -1), 0)]))
+    return [t]
 
 
 _STATUS = {"strong": "уверенно", "ok": "в целом освоено", "gap": "пробел", "pending": "на проверке"}
