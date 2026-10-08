@@ -335,7 +335,7 @@ def get_selection(need_id: uuid.UUID, version: int, user: User = Depends(employe
                         "требования — сколько подтверждённых оно отсекает и сколько полностью подходящих появится без "
                         "него (только подтверждённые). options[].apply — тело для POST …/selections: новая версия, "
                         "прежние сохраняются. Зарплата не отсекает: ожидания кандидатов скрыты и в подбор не входят. "
-                        "Кэш 2 минуты с отметкой свежести данных; порядок выдачи match-v1 не меняется.",
+                        "Кэш 2 минуты с отметкой свежести данных; порядок выдачи (ярусы обязательного, затем балл) не меняется.",
             responses={**AUTH, 404: err("Версия не найдена")})
 def selection_what_if(need_id: uuid.UUID, version: int, user: User = Depends(employer),
                       db: Session = Depends(get_db)) -> dict:
