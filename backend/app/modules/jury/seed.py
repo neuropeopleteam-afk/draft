@@ -385,7 +385,7 @@ def _create_jury(db: Session, sid: str) -> dict:
                       salary_from=240_000, salary_to=270_000, contact_method="Почта HR и звонок 20 минут",
                       need_id=needs[0].id, probe_id=None)
     cups = _jury_cups(db, sid, eu, c, p1)
-    tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2)  # задания работодателя с автопроверкой (И7)
+    tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2, p3)  # задания работодателя с автопроверкой (И7)
     _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
     # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
     ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
@@ -415,12 +415,12 @@ def _jury_cups(db: Session, sid: str, eu: User, c: Company, maria: CandidateProf
 
 
 def _jury_assignments(db: Session, sid: str, eu: User, c: Company, need, maria: CandidateProfile,
-                      ilya: CandidateProfile) -> list[str]:
+                      ilya: CandidateProfile, artem: CandidateProfile | None = None) -> list[str]:
     """Задания работодателя песочницы (И7, app.modules.assignments.demo); сбой не ломает сид жюри."""
     from app.modules.assignments.demo import seed_jury_assignments
 
     try:
-        return seed_jury_assignments(db, sid or scope.SHARED, eu, c, need, maria, ilya)
+        return seed_jury_assignments(db, sid or scope.SHARED, eu, c, need, maria, ilya, artem)
     except Exception:  # noqa: BLE001
         db.rollback()
         log.exception("jury: demo assignments failed")
