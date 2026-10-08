@@ -5,6 +5,7 @@ import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catT
 import { InlineThread } from "../../components/Chat";
 import { BasisSeg, MarketNote, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { api } from "../../lib/api";
+import { daysText, useRules } from "../../lib/meta";
 import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
 
@@ -102,6 +103,7 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: 
 export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }: { cref: string; needId?: string | null; probeId?: string | null; market: Market; needSalary?: NeedSalary; onDone: (inv: any) => void }) {
   const candidate = useApi<any>(`/employer/candidates/${cref}`);
   const safety = candidate.data?.employment_safety;
+  const rules = useRules();
   const [format, setFormat] = useState("employment");
   const [reduced, setReduced] = useState(false);
   const [ack, setAck] = useState(false);
@@ -132,7 +134,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       </select></Field>
       <Toggle checked={reduced} onChange={setReduced} label="Сокращённое рабочее время" />
       {safety?.minor && <Toggle checked={ack} onChange={setAck} label="Проверю документы и ограничения перед оформлением" />}
-      <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. Одно приглашение кандидату — не чаще раза в 30 дней. До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
+      <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. {rules ? `Одно приглашение кандидату — не чаще раза в ${daysText(rules.invitation_cooldown_days)}. ` : ""}До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
       <Alert>{err}</Alert>
       <button className="btn-primary" disabled={candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>Отправить приглашение</button>
       {candidate.error && <Alert>{candidate.error}</Alert>}
