@@ -5,6 +5,7 @@ import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catT
 import { api } from "../../lib/api";
 import { AtsInvitationActions } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
+import { OfferFitHint } from "../mutual/Employer";  // подсказка до отправки: подходит ли предложение кандидату (Н9)
 
 type Market = { from: number; to: number; median?: number } | null | undefined;
 
@@ -111,6 +112,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className="input min-h-[110px]" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" /></Field>
       <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className="input" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
       <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} market={market} />
+      <OfferFitHint cref={cref} needId={needId} from={Number(from) || undefined} to={Number(to) || undefined} />
       {safety?.minor && <Alert kind="info">{safety.warning} {!safety.offer_allowed && "Оффер недоступен: возраст 14–15 лет или ещё нет отметки согласия."}</Alert>}
       <Field label="Формат предложения" htmlFor="offer-format"><select id="offer-format" className="input" value={format} onChange={e => setFormat(e.target.value)}>
         <option value="employment" disabled={safety?.minor}>Работа</option><option value="internship">Стажировка</option><option value="light_work">Лёгкий труд</option>

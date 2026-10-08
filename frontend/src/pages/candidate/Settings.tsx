@@ -6,6 +6,7 @@ import { FspIdLinkButton } from "../../integrations/FspId";
 import { CupPassportEvents } from "../../ideas/cup/Candidate";
 import { useAuth } from "../../lib/auth";
 import { useMeta } from "../../lib/meta";
+import { MutualPrefs } from "../mutual/Candidate";  // интересы для взаимного подбора (Н9)
 
 export function Fsp() {
   const { data, loading, error, reload } = useApi<any>("/me/fsp");
@@ -115,6 +116,7 @@ export function Settings() {
           <button className="btn-primary" onClick={saveSalary}>Сохранить</button>
         </div>
       </section>
+      <MutualPrefs />
       <section className="card">
         <h2 className="font-bold text-brand-night">Согласия (152-ФЗ)</h2>
         <ul className="mt-3 space-y-3 text-sm">

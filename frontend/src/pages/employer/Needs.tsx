@@ -7,6 +7,7 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, T
 import { api } from "../../lib/api";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
+import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 
 interface Tag { id: string; title: string; direction_id: string | null }
@@ -322,6 +323,7 @@ export function Selection() {
   const last = need.data?.versions?.at(-1)?.version;
   const v = version ? Number(version) : last;
   const sel = useApi<any>(v ? `/employer/needs/${id}/selections/${v}` : null, [v]);
+  const mutual = useMutual(id, v);
   const tags = useTags();
   const [filters, setFilters] = useState<any>({});
   const [refineReq, setRefineReq] = useState<Req | null>(null);
@@ -453,9 +455,12 @@ export function Selection() {
               </div>
             </div>
             <p className="text-xs text-brand-ink/65">Отметьте 2–3 кандидатов, чтобы сравнить их рядом по требованиям потребности, или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>сравните первых трёх</Link>.</p>
+            {s.filters?.origin?.note && <Alert kind="info">v{s.version}: {s.filters.origin.note}</Alert>}
+            <MutualToolbar needId={id!} version={s.version} mutual={mutual} />
             <LevelLegend />
-            {!s.results.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или выберите соседнюю категорию." /> : s.results.map((r: any) => (
+            {!s.results.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или выберите соседнюю категорию." /> : mutual.sorted<any>(s.results).map((r: any) => (
               <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} compact
+                mutual={<MutualCardBlock needId={id!} version={s.version} cref={r.ref} mutual={mutual} />}
                 actions={
                   <div className="flex flex-wrap items-center gap-3">
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand" checked={picked.includes(r.ref)} onChange={() => setPicked(picked.includes(r.ref) ? picked.filter((x) => x !== r.ref) : [...picked, r.ref])} />выбрать</label>
