@@ -16,6 +16,7 @@ os.environ.setdefault("ASSESSMENT_ENGINE", "stub")  # правила — на б
 os.environ["LLM_DISABLED"] = "true"
 os.environ["JURY_SPARE_SANDBOXES"] = "0"  # фоновые песочницы мешали бы очистке БД между тестами; проверка — отдельно
 os.environ["ASSIGNMENTS_FEED_INTERVAL_S"] = "0"  # фоновая лента заданий — так же; её логика проверяется вызовом run_once
+os.environ["SUBS_TICK_INTERVAL_S"] = "0"  # фоновый обход подписок (И25) — так же; логика — вызовом runner.tick
 os.environ.pop("POSTBOX_ACCESS_KEY_ID", None)
 os.environ.pop("POSTBOX_SECRET_ACCESS_KEY", None)
 
