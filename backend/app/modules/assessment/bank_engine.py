@@ -28,6 +28,13 @@
 Время показа и ответа фиксирует сервер (для каждого шага), клиентское время сохраняется рядом —
 из серверного времени считается log T для модели времени детектора.
 
+Экспресс-режим (``mode="express"``, только демо-режим жюри): 5–7 коротких автопроверяемых заданий (без
+open_book_3step и open_answer, рекомендуемое время ≤ 4 мин), без канареек и дотестирования, ≈ 5 минут. Тот же
+банк, тот же адаптивный выбор, та же оценка θ и то же правило решения (P ≥ 0,8) — интервал θ шире, о чём честно
+сказано в результате; сессия помечена «экспресс» для кандидата и работодателя. Длина и лимит задания зависят от
+заявленного грейда (``express_params``): за Senior — 8–12 заданий с лимитом ≤ 6 мин, иначе крайняя категория не
+подтверждается даже при всех верных (потолок EAP за 7 заданий ≈ 1,4 при SE 0,7); порог доказательности один везде.
+
 Состояние — JSON в test_sessions.result["state"]; CATSession пересобирается из него на каждом запросе
 (детерминированно: ГСЧ выбора зависит от seed сессии и номера позиции). Пакет банка не изменяется.
 """
@@ -130,6 +137,18 @@ def _x_list(it: dict) -> list[float]:
     return [float("nan") if v is None else float(v) for v in it["x"]]
 
 
+def express_params(settings, claimed_grade: str | None) -> dict:
+    """Параметры экспресса по заявленному грейду: Junior/Middle — 5–7 заданий с лимитом ≤ 240 с; Senior — 8–12 с лимитом
+    ≤ 360 с (консилиум 07.10, решение 5). Одна точка правды для движка, статуса и дедлайна сессии."""
+    s = settings
+    if claimed_grade == "senior":
+        return {"min_items": s.assessment_express_senior_min_items, "max_items": s.assessment_express_senior_max_items,
+                "item_time_s": s.assessment_express_senior_item_time_s,
+                "max_minutes": s.assessment_express_senior_max_minutes}
+    return {"min_items": s.assessment_express_min_items, "max_items": s.assessment_express_max_items,
+            "item_time_s": s.assessment_express_item_time_s, "max_minutes": s.assessment_express_max_minutes}
+
+
 class BankEngine:
     def __init__(self) -> None:
         specs = load_specs()  # реестр семейств грузится сразу: ошибка — заметна при старте, а не на кандидате
@@ -159,15 +178,25 @@ class BankEngine:
                 "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer}}
 
     # ------------------------------------------------------------------ протокол
+    def _express_cfg(self, cfg: dict, claimed_grade: str) -> dict:
+        p = express_params(self._settings(), claimed_grade)
+        return {**cfg, "mode": "express", "min_items": p["min_items"], "max_items": p["max_items"],
+                "max_time_s": p["max_minutes"] * 60.0, "canary_positions": [], "ext_items": 0,
+                "max_item_time_s": float(p["item_time_s"]), "max_per_format": {"open_book_3step": 0, "open_answer": 0}}
+
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
               previous_subpools: list[int] | None = None, previous_families: list[str] | None = None,
-              confirm_from: dict | None = None) -> dict:
+              confirm_from: dict | None = None, mode: str = "full") -> dict:
         """confirm_from — состояние завершённой сессии с итогом «Junior (предварительно)»: новая сессия —
-        короткое дотестирование у порога Junior поверх её ответов (см. _start_confirm)."""
+        короткое дотестирование у порога Junior поверх её ответов (см. _start_confirm).
+        mode: full — обычный адаптивный тест; express — экспресс-тест для жюри (без канареек, короче);
+        confirm (дотестирование) задаётся через confirm_from."""
         if confirm_from is not None:
             return self._start_confirm(direction=direction, stack_tags=stack_tags, seed=seed, prev=confirm_from,
                                        previous_families=previous_families)
         cfg = self._base_cfg()
+        if mode == "express":
+            cfg = self._express_cfg(cfg, claimed_grade)
         # Ротация субпулов: первая попытка — по seed сессии, повторная — другой субпул (параллельная форма);
         # субпулы на карантине (утечка) не выдаются. См. exposure.py.
         subpool = choose_subpool(cfg["subpools"], seed, previous_subpools,
@@ -176,7 +205,7 @@ class BankEngine:
             subpool = None
         return {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": claimed_grade,
-            "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
+            "mode": mode, "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
             # семейства прошлой попытки не попадают в дотестирование (оно берёт задания и из другого субпула)
             "exclude_ext": sorted(set(previous_families or [])),
             "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
@@ -332,7 +361,9 @@ class BankEngine:
             "injection": any((g or {}).get("error") == "prompt_injection_suspected" for g in i.get("grading") or [])}
             for i in done], pk)
         details = {
-            "bank": self.manifest, "n_families_in_bank": self.n_families,
+            "bank": self.manifest, "n_families_in_bank": self.n_families, "mode": state.get("mode", "full"),
+            "length": {"min_items": state["cfg"]["min_items"], "max_items": state["cfg"]["max_items"],
+                       "max_item_time_s": state["cfg"].get("max_item_time_s")},
             "stop_reason": state.get("stop_reason") or sess.stop_reason or "finished_early",
             "n_scored": len(scored), "n_canaries": sum(1 for i in done if i["canary"]),
             "time_used_s": round(sum(i.get("time_s", 0) for i in done), 1),
@@ -388,6 +419,7 @@ class BankEngine:
         cuts = ((self.scale.cuts[c["cuts_only"]],) if c.get("cuts_only") else tuple(self.scale.cuts[g] for g in GRADES))
         return CATConfig(min_items=c["min_items"], max_items=c["max_items"], se_target=c["se_target"],
                          max_time_s=c["max_time_s"], cuts=cuts, start_theta=start_theta(),
+                         canary_positions=tuple(c.get("canary_positions", (2, 6, 10))),
                          stop_rule=c.get("stop_rule", "se"), classify_z=float(c.get("classify_z", 1.0)),
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
@@ -416,6 +448,7 @@ class BankEngine:
             excl.update(intern_exclusions(pool, state["direction"]))
         sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
                              state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
+                             max_item_time_s=cfg.get("max_item_time_s"),
                              exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl)
         lookup = sess.items
         for it in prior + state["items"]:
@@ -614,7 +647,7 @@ class BankEngine:
         ext = state.get("ext")
         if state.get("mode") == "confirm":
             return int(ext["n"] if ext else c.get("ext_items", 6))
-        n_can = 3  # позиции канареек 2, 6, 10
+        n_can = len(c.get("canary_positions", (2, 6, 10)))  # позиции канареек 2, 6, 10; экспресс — без них
         return c["max_items"] + n_can + (ext["n"] if ext else 0)
 
     def _public(self, state: dict, it: dict) -> ItemPublic:
@@ -667,4 +700,11 @@ class BankEngine:
                   "результат предварительный.")
         if details["preknowledge"]["rescored"]:
             s += " Часть ответов исключена из оценки как аномально быстрые и верные (детектор утечек)."
+        if details.get("mode") == "express":
+            s += (f" Экспресс-тест: {details.get('n_scored', 0)} коротких заданий без контрольных и дотестирования, "
+                  "поэтому интервал θ шире, чем у полного теста (8–16 заданий); правило решения то же — P ≥ 80 %.")
+            if claimed == "senior":
+                mx = (details.get("length") or {}).get("max_items", 12)
+                s += (f" За Senior экспресс длиннее (до {mx} заданий): крайняя категория подтверждается при почти всех верных "
+                      "ответах.")
         return s

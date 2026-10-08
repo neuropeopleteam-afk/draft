@@ -9,7 +9,7 @@ import { request, type APIRequestContext } from "@playwright/test";
 
 export const BASE_URL = (process.env.E2E_BASE_URL || "http://127.0.0.1:8140").replace(/\/$/, "");
 
-export type Persona = "candidate" | "candidate_nofsp" | "candidate_junior" | "employer" | "expert" | "fsp";
+export type Persona = "candidate" | "candidate_nofsp" | "candidate_junior" | "candidate_new" | "employer" | "expert" | "fsp";
 
 export async function apiContext(): Promise<APIRequestContext> {
   const user = process.env.E2E_BASIC_USER;
@@ -98,6 +98,19 @@ export async function resetSandbox(api: APIRequestContext, sid = sandboxId()): P
     throw new Error(`Сброс песочницы ${sid}: HTTP ${r.status()} ${await r.text()}`);
   }
   throw new Error("Сброс песочницы: пауза между сбросами не закончилась");
+}
+
+/** Удаление своей песочницы без пересоздания (DELETE /api/jury/sandbox): дешевле сброса — прогон убирает за собой
+ * так (reports_0610/e2e2.md, п. 9). Если учётки песочницы уже удалены по лимиту — делать нечего. */
+export async function deleteSandbox(api: APIRequestContext, sid = sandboxId()): Promise<Record<string, unknown>> {
+  let token: string;
+  try { token = await juryToken(api, "candidate", sid); }
+  catch (e) { return { ok: true, skipped: true, reason: String(e).slice(0, 200) }; }
+  const r = await api.delete("/api/jury/sandbox", { headers: { Authorization: `Bearer ${token}` }, timeout: 180_000 });
+  if (!r.ok()) throw new Error(`Удаление песочницы ${sid}: HTTP ${r.status()} ${await r.text()}`);
+  const out = await r.json();
+  if (out.scenario !== sid) throw new Error(`Удаление: ожидалась песочница ${sid}, ответ ${JSON.stringify(out).slice(0, 200)}`);
+  return out;
 }
 
 export async function apiGet<T = any>(api: APIRequestContext, path: string, token: string): Promise<T> {

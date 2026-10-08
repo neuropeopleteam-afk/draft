@@ -65,8 +65,8 @@ test("кандидат: демо-вход → тест → результат �
       await expect(main.getByRole("listitem").filter({ hasText: signal }), signal).toBeVisible();
     }
     await expect(main.getByText(/^Сигналы не наказывают автоматически\./)).toBeVisible();
-    // лимит новых тестов у песочницы жюри: не больше 5 в сутки, чтобы банк нельзя было выкачать перезапусками
-    await expect(page.getByRole("status").filter({ hasText: /новых тестов за 24 часа осталось \d+ из 5/ })).toBeVisible();
+    // лимит новых тестов у песочницы жюри: не больше 30 в сутки (жюри само проходит и повторяет тест), чтобы банк нельзя было выкачать перезапусками
+    await expect(page.getByRole("status").filter({ hasText: /новых тестов за 24 часа осталось \d+ из 30/ })).toBeVisible();
     const start = page.getByRole("button", { name: /^Начать тест$/ });
     const ack = page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ });
     await expect(start, "без согласия тест не начать").toBeDisabled();
@@ -119,7 +119,7 @@ test("кандидат: демо-вход → тест → результат �
     // грейд не понижается принудительно: категория остаётся «Backend · Middle» при любом исходе пересдачи
     await expect(card.getByText(/^Backend · (Middle|Senior)$/)).toBeVisible();
     await expect(card.getByText(/Место в категории:/)).toBeVisible();
-    await expect(card.getByText("Правило 90 дней")).toBeVisible();
+    await expect(card.getByText("Правила 90 и 30 дней")).toBeVisible();
   });
 
   await test.step("карта навыков и маршрут роста по этому тесту", async () => {

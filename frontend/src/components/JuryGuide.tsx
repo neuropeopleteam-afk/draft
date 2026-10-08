@@ -6,7 +6,7 @@ import { errText } from "./ui";
 
 const PERSONA_NAME: Record<string, string> = {
   candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", candidate_junior: "демо-кандидат Junior (предварительно)",
-  employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
+  candidate_new: "демо-кандидат без категории", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
 };
 const whoAmI = (email: string) => {
   const p = personaOf(email);

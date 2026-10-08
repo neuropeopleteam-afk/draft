@@ -44,6 +44,12 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
             : c.status?.attempt?.theta != null ? <p className="mt-1 text-brand-ink/65">последняя попытка на {c.status.attempt.grade_title ?? c.status.attempt.grade}: θ = {signed(c.status.attempt.theta)} ± {num(c.status.attempt.se)} — грейд не подтверждён, в скор не входит</p>
             : <p className="mt-1 text-brand-ink/65">нет результата</p>}
           {c.provisional && <p className="mt-1 text-xs text-brand-ink/70">P(уровень не ниже Junior) = {c.provisional.p_pct} % · подтверждение от {c.provisional.confirm_pct} %, «не доказанно ниже» от {c.provisional.level_pct} %{c.provisional.attempts ? ` · дотестирований ${c.provisional.attempts} из ${c.provisional.attempts_max}` : ""}</p>}
+          {t && (t.mode === "express" || t.accepted_lower) && (
+            <p className="mt-1 flex flex-wrap gap-1.5">
+              {t.mode === "express" && <span className="chip" title="Экспресс-тест: 5–7 коротких заданий (за Senior — 8–12), интервал θ шире, чем у полного теста">экспресс-тест</span>}
+              {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом (P ≥ 80 %) и принят кандидатом">принят уровень ниже</span>}
+            </p>
+          )}
           {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
           {c.skills_confirmed?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">

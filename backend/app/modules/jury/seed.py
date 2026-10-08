@@ -60,6 +60,9 @@ PERSONAS = [
     {"id": "candidate_junior", "role": "candidate", "title": "Кандидат «Junior (предварительно)»",
      "description": "Артём Лебедев · Backend · Junior (предварительно). Тест у порога Junior: грейд не подтверждён, но и "
                     "не доказанно ниже — вероятность уровня, короткое дотестирование у порога, статус у работодателя."},
+    {"id": "candidate_new", "role": "candidate", "title": "Пройдите тест сами",
+     "description": "Антон Лебедев · Backend · категории нет. Опрос и резюме есть, теста нет: экспресс-тест ≈ 5 минут "
+                    "или полный, подсказка грейда, путь до категории и подборки."},
     {"id": "employer", "role": "employer", "title": "Работодатель",
      "description": "«Северный платёж»: профиль компании, три потребности с цитатами и подборки с объяснениями, "
                     "сравнение кандидатов, фильтр ст. 64 ТК РФ."},
@@ -231,6 +234,56 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
     return u, p, res
 
 
+NEW_STACK = ["python", "fastapi", "postgresql", "sql", "git"]
+# Текст резюме персоны «Пройдите тест сами» — без ФИО и контактов (их вырезал бы загрузчик), только опыт и стек
+NEW_RESUME = (
+    "Backend-разработчик. Опыт коммерческой разработки 2 года.\n"
+    "2024 — настоящее время: разработчик, сервис онлайн-записи. Python, FastAPI, PostgreSQL, SQL, Git. "
+    "Писал REST API, миграции, покрывал код тестами, участвовал в код-ревью.\n"
+    "2023–2024: стажёр-разработчик, интернет-магазин. Python, Django, PostgreSQL.\n"
+    "Образование: бакалавр прикладной информатики. Участник регионального этапа чемпионата по программированию."
+)
+
+
+def _candidate_new(db: Session, sid: str = ""):
+    """Персона «Пройдите тест сами» (видео организаторов №5, №52): опрос пройден, резюме загружено, небольшой паспорт
+    ФСП (участие, без призовых мест), ТЕСТА НЕТ — эксперт жюри сам проходит экспресс- или полный тест, видит подсказку
+    грейда и путь до категории и подборки. Лёгкая: без прогона теста движком."""
+    from app.modules.profiles.models import CandidateResume
+    from app.modules.resume.extract import extract_rules
+
+    u = _user(db, "candidate_new", UserRole.candidate, sid)
+    p = CandidateProfile(user_id=u.id, full_name="Антон Лебедев", phone="+7 900 000-00-01", telegram="@jury_candidate_new",
+                         city="Нижний Новгород", work_format=WorkFormat.remote, relocation=False, experience_years=2.0,
+                         salary_min_hidden=150_000, privacy={}, visible_to_employers=True,
+                         public_ref=new_public_ref(db), onboarding_completed_at=utcnow(),
+                         roles=["developer"], headline="backend · без категории (демо жюри)", jury_mode=True)
+    db.add(p)
+    db.flush()
+    sv = SurveyResponse(user_id=u.id, direction_id="backend", claimed_grade_id="middle", experience_years=2.0,
+                        answers={"stack": {t: 2 for t in NEW_STACK}, "roles": ["developer"], "demo": True, "jury": True})
+    db.add(sv)
+    db.flush()
+    for t in NEW_STACK:
+        db.add(SurveyStackTag(survey_id=sv.id, stack_tag_id=t, self_level=2))
+    set_t0_facts(db, u.id, FactSource.self_report, stack=NEW_STACK, roles=["developer"], soft_skills=["teamwork"],
+                 experience_years=2.0)
+    fields = extract_rules(NEW_RESUME)
+    db.add(CandidateResume(user_id=u.id, filename="resume_demo.pdf", size_bytes=len(NEW_RESUME.encode()), page_count=1,
+                           text_redacted=NEW_RESUME, pii_summary={"demo": True}, extracted=fields,
+                           method=fields.get("method", "rules")))
+    pp = FspPassport(user_id=u.id, link_source=FspLinkSource.demo, synced_at=utcnow(), sport_rank=None,
+                     raw={"demo": True, "jury": True, "note": "демо-реестр хакатона"})
+    db.add(pp)
+    db.flush()
+    db.add(FspAchievement(passport_id=pp.id, discipline="algorithmic", event_level=FspEventLevel.regional,
+                          event_name="Региональный этап чемпионата по алгоритмическому программированию",
+                          event_date=date(2025, 3, 15), place=12, result_title="участник", verified=True,
+                          source_ref="demo-registry"))
+    db.commit()
+    return u, p
+
+
 def delete_jury(db: Session, sid: str = "") -> int:
     """Удаляет учётки и компанию одной песочницы (sid "" — общее демо). Чужие песочницы не трогает."""
     from app.integrations.ats.models import AtsSettings, AtsStubRecord
@@ -302,6 +355,7 @@ def _create_jury(db: Session, sid: str) -> dict:
     # у порога Junior: тест не подтвердил грейд, но и не доказал уровень ниже — «Junior (предварительно)»
     _, p3, r3 = _candidate(db, "candidate_junior", "Артём Лебедев", False, -1.05, 5301, 0, sid=sid, claimed="junior",
                            experience=0.5, salary=80_000, want="provisional")
+    _, p4 = _candidate_new(db, sid)  # «Пройдите тест сами»: без теста, категории нет — в подборки не попадает
     eu = _user(db, "employer", UserRole.employer, sid)
     c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург", website="https://example.invalid",
                 description="Платёжный сервис для малого бизнеса. Демо-компания для экспертов жюри.",
@@ -341,6 +395,7 @@ def _create_jury(db: Session, sid: str) -> dict:
                                 "pending": (r2.get("details") or {}).get("pending_review")},
             "candidate_junior": {"ref": p3.public_ref, "provisional": r3.get("category_provisional"),
                                  "theta": r3.get("theta"), "category_id": r3.get("category_id")},
+            "candidate_new": {"ref": p4.public_ref},
             "employer": {"company": c.name, "needs": len(needs), "cups": cups, "assignments": tasks},
             "expert": {"email": ex.email},
             "scenario": sid or None, "seconds": round(time.time() - t0, 1)}

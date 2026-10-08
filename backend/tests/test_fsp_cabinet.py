@@ -225,7 +225,7 @@ def test_jury_sandboxes_get_own_cups_and_shared_analytics(client, monkeypatch):
     # сброс песочницы A: её кубки — заново, у B — те же, сирот нет
     monkeypatch.setitem(jr._state, sa, 0.0)
     r = client.post("/api/jury/reset", headers=H(te))
-    assert r.status_code == 200 and r.json()["deleted_users"] == 6, r.text
+    assert r.status_code == 200 and r.json()["deleted_users"] == 7, r.text  # 7 персон песочницы
     assert set(r.json()["employer"]["cups"]) == {"Платёжный шлюз", "Вебхуки без дублей"}
     with SessionLocal() as db:
         new_a, again_b = _box(db, sa), _box(db, sb)
