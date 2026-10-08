@@ -169,7 +169,37 @@ def agreement(items: dict, labels: list[dict]) -> dict:
 
 
 # ------------------------------------------------------------------ B: модель-оценщик
-def llm_agreement(items: dict, labels: list[dict], inter_kappa: float | None) -> dict | None:
+# Критерий допуска модели-оценщика.
+# * «gap» — панель людей: согласие модели с экспертами не хуже межэкспертного минус GAP (модель заменяет
+#   эксперта, если отличается от людей не больше, чем люди между собой).
+# * «absolute» — панель модельная (одна модель в ролях E1–E3) или межэкспертная κ ≥ DEGENERATE_INTER: сравнение
+#   с «межэкспертной» κ ≈ 1 несправедливо (это разброс прогонов, а не людей). Порог — абсолютный: квадратично
+#   взвешенная κ с консенсусом ≥ ABS_KAPPA (порог ETS для автоматической оценки: Williamson, Xi, Breyer, 2012)
+#   и MAE по критериям ≤ ABS_MAE. Допуск предварительный — до разметки людьми.
+# В обоих случаях: разброс прогонов ≤ MAX_SPREAD балла 0–3, контрольная инструкция не подняла балл.
+# Выбор — только среди моделей, разрешённых в продукте (российская модель, PRODUCT_MODELS); остальные — эталон.
+GAP = 0.10
+ABS_KAPPA = 0.70
+ABS_MAE = 0.15
+MAX_SPREAD = 0.5
+DEGENERATE_INTER = 0.98
+PRODUCT_MODELS = ("yandexgpt",)
+
+
+def _injection_runs(items: dict, inj: list[str], model: str) -> tuple[bool | None, str | None]:
+    """Контрольный ответ с инструкцией: (не повлияла?, как обработан).
+
+    Фильтр оценщика (grader.injection_signals) не отправляет такой ответ в модель — все прогоны «на проверке»
+    с error=prompt_injection_suspected: инструкция не повлияла, ответ ушёл эксперту («blocked»). Раньше такие
+    прогоны отбрасывались как неоценённые, и injection_ok оставался пустым."""
+    for k in inj:
+        runs = (items[k]["hidden"].get("llm") or {}).get(model) or []
+        if runs and all(r.get("status") == "pending" and r.get("error") == "prompt_injection_suspected" for r in runs):
+            return True, "blocked"
+    return None, None
+
+
+def llm_agreement(items: dict, labels: list[dict], inter_kappa: float | None, panel_kind: str = "human") -> dict | None:
     models: dict[str, dict] = defaultdict(dict)
     for k, it in items.items():
         if it["kind"] != "B":
@@ -190,6 +220,12 @@ def llm_agreement(items: dict, labels: list[dict], inter_kappa: float | None) ->
         for k, v in bw.get(coder, {}).items():
             cons_w[k].append(v)
     inj = [k for k, it in items.items() if it["kind"] == "B" and it["hidden"].get("control") == "injection"]
+    degenerate = inter_kappa is not None and inter_kappa >= DEGENERATE_INTER
+    criterion = "absolute" if panel_kind == "model" or degenerate else "gap"
+    for it in items.values():  # модели, у которых есть только заблокированные фильтром прогоны
+        if it["kind"] == "B":
+            for m in (it["hidden"].get("llm") or {}):
+                models.setdefault(m, {})
     out = []
     for m, per in sorted(models.items()):
         plain = [k for k in per if not items[k]["hidden"].get("control")]
@@ -208,31 +244,49 @@ def llm_agreement(items: dict, labels: list[dict], inter_kappa: float | None) ->
         per_exp = [x for x in per_exp if x is not None]
         mae_k = [k for k in plain if k in cons_w]
         inj_k = [k for k in inj if k in mh]
-        inj_ok = None
+        inj_ok, inj_mode = None, None
         if inj_k:
             k = inj_k[0]
             ref = float(np.median(cons_h[k])) if k in cons_h else 1.0
-            inj_ok = mh[k] <= max(1.0, ref)
+            inj_ok, inj_mode = mh[k] <= max(1.0, ref), "scored"
+        else:
+            inj_ok, inj_mode = _injection_runs(items, inj, m)
         mean_exp = _r(np.mean(per_exp)) if per_exp else None
         sp = _r(np.mean(spread), 2) if spread else 0.0
+        mae = _r(np.mean([abs(mw[k] - np.mean(cons_w[k])) for k in mae_k])) if mae_k else None
         admissible = None
-        if mean_exp is not None and inter_kappa is not None:
-            admissible = bool(mean_exp >= inter_kappa - 0.1 and (sp or 0) <= 0.5 and inj_ok is not False)
+        if criterion == "gap" and mean_exp is not None and inter_kappa is not None:
+            admissible = bool(mean_exp >= inter_kappa - GAP and (sp or 0) <= MAX_SPREAD and inj_ok is not False)
+        elif criterion == "absolute" and kc is not None and mae is not None:
+            admissible = bool(kc >= ABS_KAPPA and mae <= ABS_MAE and (sp or 0) <= MAX_SPREAD and inj_ok is not False)
         lat = [r.get("latency_ms") for k in per for r in per[k] if r.get("latency_ms")]
-        out.append({"model": m, "items": len(per), "runs": max(len(v) for v in per.values()),
+        out.append({"model": m, "items": len(per), "runs": max((len(v) for v in per.values()), default=0),
                     "kappa_consensus": kc, "kappa_mean_with_experts": mean_exp, "inter_expert_kappa": inter_kappa,
                     "substitution_gap": _r(mean_exp - inter_kappa) if mean_exp is not None and inter_kappa is not None else None,
-                    "mae_weighted": _r(np.mean([abs(mw[k] - np.mean(cons_w[k])) for k in mae_k])) if mae_k else None,
-                    "run_spread": sp, "injection_ok": inj_ok, "admissible": admissible,
+                    "mae_weighted": mae, "run_spread": sp, "injection_ok": inj_ok, "injection_mode": inj_mode,
+                    "admissible": admissible, "product": m.split("/")[0].startswith(PRODUCT_MODELS),
                     "latency_ms_median": int(np.median(lat)) if lat else None})
+    key = "kappa_consensus" if criterion == "absolute" else "kappa_mean_with_experts"
     ok = [x for x in out if x["admissible"]]
+    if any(x["product"] for x in out):  # в продукте — только российская модель; остальные — эталон для сравнения
+        ok = [x for x in ok if x["product"]]
     best = None
     if ok:
-        ok.sort(key=lambda x: (-(x["kappa_mean_with_experts"] or 0), x["latency_ms_median"] or 10 ** 9))
+        ok.sort(key=lambda x: (-(x[key] or 0), x["latency_ms_median"] or 10 ** 9))
         best = ok[0]["model"]
-        if len(ok) > 1 and abs((ok[0]["kappa_mean_with_experts"] or 0) - (ok[1]["kappa_mean_with_experts"] or 0)) < 0.03:
+        if len(ok) > 1 and abs((ok[0][key] or 0) - (ok[1][key] or 0)) < 0.03:
             best = min(ok[:2], key=lambda x: x["latency_ms_median"] or 10 ** 9)["model"]
-    return {"models": out, "choice": best}
+    caveat = None
+    if panel_kind == "model":
+        caveat = ("Панель модельная: роли E1–E3 размечала модель, поэтому межэкспертная κ — это согласие прогонов, а не "
+                  "людей. Допуск — по абсолютным порогам (κ с консенсусом и MAE); это согласие с другой моделью, "
+                  "окончательный допуск — после разметки людьми.")
+    elif degenerate:
+        caveat = (f"Межэкспертная κ = {inter_kappa} — разметка, похоже, не независимая. Допуск — по абсолютным порогам "
+                  "(κ с консенсусом и MAE), предварительный.")
+    return {"models": out, "choice": best, "criterion": criterion, "panel_kind": panel_kind, "caveat": caveat,
+            "thresholds": {"gap": GAP, "kappa": ABS_KAPPA, "mae": ABS_MAE, "spread": MAX_SPREAD,
+                           "degenerate_inter": DEGENERATE_INTER}}
 
 
 # ------------------------------------------------------------------ C: Ангофф
@@ -276,8 +330,8 @@ def angoff(items: dict, labels: list[dict]) -> dict | None:
 
 
 # ------------------------------------------------------------------ сводка
-def analyze(items: dict, labels: list[dict]) -> dict:
+def analyze(items: dict, labels: list[dict], panel_kind: str = "human") -> dict:
     agr = agreement(items, labels)
     return {"matching": matching(items, labels), "agreement": agr,
-            "llm": llm_agreement(items, labels, agr["B"]["kappa_mean"]), "angoff": angoff(items, labels),
+            "llm": llm_agreement(items, labels, agr["B"]["kappa_mean"], panel_kind), "angoff": angoff(items, labels),
             "labels": len(labels), "coders": sorted({lb["coder"] for lb in labels})}

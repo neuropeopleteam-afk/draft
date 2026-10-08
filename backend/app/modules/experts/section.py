@@ -6,6 +6,7 @@ source — кто разметил: люди или языковая модел�
 """
 from __future__ import annotations
 
+import re
 import threading
 
 from sqlalchemy import func, select
@@ -40,6 +41,28 @@ def load(db: Session, pack: str = P.PACK, include_demo: bool = False) -> tuple[d
     labels = [{"coder": code, "key": by_id[lb.item_id], "value": lb.value} for lb, code in db.execute(q).all()
               if lb.item_id in by_id]
     return items, labels
+
+
+_MODEL_PROFILE = re.compile(r"\bмодел[ьиюей]\b|нейросет|\bllm\b|\bmodel\b|\bии\b|yandexgpt|\bgpt", re.IGNORECASE)
+
+
+def panel_kind(db: Session) -> str:
+    """Чья разметка: human — люди, model — модель в ролях E1–E3 (EXPERT_PANEL_KIND; auto — по профилям панели:
+    у всех экспертов в профиле указана модель). От этого зависит критерий допуска модели-оценщика (analysis)."""
+    from app.core.config import get_settings
+
+    kind = (get_settings().expert_panel_kind or "auto").lower()
+    if kind in ("human", "model"):
+        return kind
+    rows = db.execute(select(ExpertPanelist.profile, ExpertPanelist.source).where(ExpertPanelist.is_demo.is_(False))).all()
+    # источник разметки задан явно (fx01, `experts source … --model`) — он главнее догадки по профилю
+    if rows and all(src == "model" for _, src in rows):
+        return "model"
+    return kind_from_profiles([profile for profile, _ in rows])
+
+
+def kind_from_profiles(profiles: list[str | None]) -> str:
+    return "model" if profiles and all(p and _MODEL_PROFILE.search(p) for p in profiles) else "human"
 
 
 def _fingerprint(db: Session) -> tuple:
@@ -123,20 +146,21 @@ def section(db: Session) -> dict:
         P.ensure_pack(db)
     except Exception:  # noqa: BLE001 — раздел валидации не должен падать из-за сборки пакета
         db.rollback()
-    fp = _fingerprint(db)
+    kind = panel_kind(db)
+    fp = (*_fingerprint(db), kind)
     with _mx:
         hit = _cache.get("real")
         if hit and hit[0] == fp:
             return hit[1]
     items, labels = load(db)
     panel = service.panel_status(db)
-    res = A.analyze(items, labels) if labels else {"matching": None, "agreement": None, "llm": None, "angoff": None,
+    res = A.analyze(items, labels, kind) if labels else {"matching": None, "agreement": None, "llm": None, "angoff": None,
                                                     "labels": 0, "coders": []}
     llm_only = A.llm_agreement(items, [], None) if not labels else None
     src = service.source_summary(panel)
     if src and src["model_panel"]:
         res = model_panel_view(res)
-    out = {"pack": _pack_info(items) if items else None, "panel": panel, "source": src,
+    out = {"pack": _pack_info(items) if items else None, "panel": panel, "panel_kind": kind, "source": src,
            "model_panel": bool(src and src["model_panel"]), "status": _status(panel, res), **res,
            "llm_without_experts": llm_only, "synthetic_check": synthetic(items) if items else None,
            "current_cuts": {b: v for b, (_, v) in A.CURRENT_CUTS.items()}}

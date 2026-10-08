@@ -182,7 +182,11 @@ def test_express_api_only_in_sandbox_and_marked(client, bank):
         n += 1
         assert n <= 7
     res = client.post(f"/api/assessment/sessions/{sid}/finish", headers=H(t)).json()
-    assert res["mode"] == "express" and res["details"]["mode"] == "express" and res["details"]["n_canaries"] == 0
+    assert res["mode"] == "express" and res["details"]["mode"] == "express"
+    assert "n_canaries" not in res["details"]  # Р27: механика контрольных заданий кандидату не раскрывается
+    with SessionLocal() as db:  # в данных сессии (не в ответе) видно: экспресс идёт без контрольных заданий
+        er = db.get(TestSession, uuid.UUID(sid)).result["engine_result"]
+        assert er["details"]["n_canaries"] == 0
     assert res["confirmed"] and res["category_id"] == "backend.middle", res
     status = client.get("/api/assessment/status", headers=H(t)).json()
     assert status["sessions"][0]["mode"] == "express" and status["sandbox_starts"]["used"] == 1
