@@ -405,8 +405,9 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
         db.add(n)
         db.flush()
         sel = ranking.build_selection(db, req, {})
-        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={}, requirements=req,
-                                results=sel["results"], algorithm_version=sel["algorithm"], created_by=u.id))
+        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={"_meta": sel["meta"]},
+                                requirements=req, results=sel["results"], algorithm_version=sel["algorithm"],
+                                created_by=u.id))  # Ф2: снимок версии — открытие без пересчёта
     db.commit()
     fsp = db.scalar(select(func.count()).select_from(FspPassport).join(User, User.id == FspPassport.user_id)
                     .where(User.is_demo.is_(True)))

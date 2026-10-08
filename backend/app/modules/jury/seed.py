@@ -322,8 +322,9 @@ def _create_jury(db: Session, sid: str) -> dict:
         db.add(n)
         db.flush()
         sel = ranking.build_selection(db, req, {})
-        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={}, requirements=req,
-                                results=sel["results"], algorithm_version=sel["algorithm"], created_by=eu.id))
+        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={"_meta": sel["meta"]},
+                                requirements=req, results=sel["results"], algorithm_version=sel["algorithm"],
+                                created_by=eu.id))  # Ф2: снимок версии — открытие без пересчёта
         needs.append(n)
     db.commit()
     from app.modules.invitations.service import create_invitation
