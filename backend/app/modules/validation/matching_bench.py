@@ -599,6 +599,34 @@ def junior_section(cfg: BenchConfig, blocks: dict, main_world: World | None = No
                      "его эффект считает симуляция теста (раздел «Junior у порога» на /validation).")}
 
 
+def must_have_section(world: World, sc: dict, seed: int) -> dict:
+    """Ф2: «сначала покрывающие обязательное» на этом же мире — match-v1 (без ярусов) против ярусов; парный бутстреп
+    по потребностям. Покрытие обязательного в топ-5 — доля мест топ-5, где все обязательные подтверждены тестом (T1),
+    по потребностям с обязательными навыками."""
+    pn, cov = {}, {}
+    req = sc["has_req"]
+    for name, flag in (("before", False), ("after", True)):
+        o = platform_orders(sc, must_first=flag)
+        pn[name] = per_need(world.rel, o)
+        cov[name] = np.array([sc["must_full"][i, o[i, :5]].mean() if req[i] else np.nan for i in range(len(o))])
+    idx = boot_idx(len(world.needs), seed + 31)
+    ridx = boot_idx(int(req.sum()), seed + 37)
+    out = {"enabled_in_product": must_have.enabled(), "needs_with_required": int(req.sum())}
+    for name in ("before", "after"):
+        out[name] = {m: _ci(pn[name][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
+        out[name]["top5_all_required_t1"] = _ci(cov[name][req], ridx)
+    out["diff"] = {m: _ci(pn["after"][m] - pn["before"][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
+    out["diff"]["top5_all_required_t1"] = _ci(cov["after"][req] - cov["before"][req], ridx)
+    out["needs_changed_top5"] = int(sum(1 for i in range(len(world.needs))
+                                        if not np.array_equal(platform_orders({**sc, **_row(sc, i)}, must_first=False)[0, :5],
+                                                              platform_orders({**sc, **_row(sc, i)}, must_first=True)[0, :5])))
+    return out
+
+
+def _row(sc: dict, i: int) -> dict:
+    return {k: sc[k][i:i + 1] for k in ("comps", "has_req", "vis", "mandatory_gaps", "must_tier")}
+
+
 # ---------------------------------------------------------------- запуск
 
 def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None = None, write: bool = True) -> dict:
@@ -645,6 +673,7 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "world2": {"seed": cfg2.seed, "metrics": s2["metrics"]},
         "heldout_weights": ho, "sensitivity": sens, "junior": junior,
         "score_rebuild_max_error": r["scored"]["max_rebuild_error"],
+        "must_have": must_have_section(world, r["scored"], cfg.seed),
     }
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
@@ -816,6 +845,19 @@ def markdown(rep: dict) -> str:
           "", f"Подобранные − продукт: отложенная половина {_cell(ho['test']['tuned_minus_product'])}, второй мир "
           f"{_cell(ho['world2']['tuned_minus_product'])}. Веса продукта — {ho['product_rank_in_grid']}-е место из "
           f"{ho['grid_size']} на обучающей половине. {ho['decision']}", ""]
+    mh = rep.get("must_have")
+    if mh:
+        L += ["## Сначала покрывающие обязательное (Ф2)", "",
+              "Ярусы по числу обязательных навыков без подтверждения тестом (0, 1, ≥ 2; навык, не подтверждённый ни у "
+              "кого в категории, не считается), внутри яруса — прежний балл. Тот же мир, парный бутстреп по "
+              f"потребностям; в продукте правило {'включено' if mh['enabled_in_product'] else 'выключено'} "
+              "(MATCH_MUST_FIRST).", "",
+              "| | p@5 | nDCG@10 | MRR | Топ-5: всё обязательное подтверждено |", "|---|---|---|---|---|",
+              *[f"| {t} | " + " | ".join(_cell(mh[k][mt]) for mt in ("p@5", "ndcg@10", "mrr", "top5_all_required_t1"))
+                + " |" for k, t in (("before", "match-v1 (без ярусов)"), ("after", "match-v1.1 (ярусы)"),
+                                    ("diff", "Разница"))],
+              "", f"Топ-5 изменился у {mh['needs_changed_top5']} из {rep['world']['n_needs']} потребностей "
+                  f"(с обязательными навыками — {mh['needs_with_required']}).", ""]
     g = rep["groups"]
     fp = g["fsp"].get("platform", {})
     L += ["## Группы кандидатов", "",
