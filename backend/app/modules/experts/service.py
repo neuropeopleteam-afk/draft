@@ -82,6 +82,10 @@ def enter(db: Session, token: str) -> tuple[User, ExpertPanelist]:
 def panelist_for(db: Session, user: User, create_demo: bool = True) -> ExpertPanelist | None:
     """Эксперт панели для текущего пользователя. Демо-эксперт жюри получает демо-назначение (в метрики не входит)."""
     pan = db.scalar(select(ExpertPanelist).where(ExpertPanelist.user_id == user.id))
+    if pan is not None and pan.is_demo and create_demo and not (pan.assignment or {}).get("C") and P.ensure_pack(db):
+        # демо-эксперт, созданный до правки плана C («0 из 0»): задания C берём из сохранённого пакета
+        pan.assignment = {**(pan.assignment or {}), "C": P.assignment(db, "DEMO", pack=pan.pack)["C"]}
+        db.commit()
     if pan is not None or not create_demo:
         return pan
     if not (user.is_demo or user.role == UserRole.admin):
