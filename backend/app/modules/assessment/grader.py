@@ -38,6 +38,7 @@ from dataclasses import asdict, dataclass, field
 import json
 import re
 import secrets
+import time
 
 from app.core.config import get_settings
 from app.modules.llm.client import chat, model_label, resolve_model, routes, short_model
@@ -324,16 +325,18 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
     from app.modules.resume.pii import redact
 
     red = redact(text, use_ner=True)
+    # общий бюджет первой и второй оценки с переходами по цепочке: ответ кандидата ждёт оценку синхронно
+    deadline = time.monotonic() + s.llm_grading_budget_s
 
     def call(second: bool):
         msgs = build_messages(stem=stem, code=code, step_prompt=step_prompt, rubric=rubric, answer=red.text,
                               second=second)
         if model:  # явная модель (сравнение моделей) — одна попытка, без цепочки
-            res = chat(msgs, temperature=0.0, max_tokens=1500, want_json=True, model=model,
+            res = chat(msgs, temperature=0.0, max_tokens=3000, want_json=True, model=model,
                        timeout_s=s.llm_grading_timeout_s)
         else:
-            res = chat(msgs, temperature=0.0, max_tokens=1500, want_json=True,
-                       func="grade_second" if second else "grade",
+            res = chat(msgs, temperature=0.0, max_tokens=3000, want_json=True,
+                       func="grade_second" if second else "grade", deadline=deadline,
                        validate=lambda d: parse_reply(d, rubric)["ok"])
         p = parse_reply(res.data if res.ok else None, rubric)
         if not res.ok:

@@ -188,6 +188,41 @@ def test_breaker_is_per_model(monkeypatch, net):
     assert llm.chat(MSG, want_json=True, func="grade").provider == "openrouter"
 
 
+def test_deadline_limits_chain(monkeypatch, net):
+    """Общий бюджет вызывающего: тайм-аут попытки урезается до остатка, после бюджета провайдеры не вызываются."""
+    configure(monkeypatch, LLM_CHAIN="openrouter,yandex")
+    seen = []
+
+    def slow(req, body):
+        seen.append(req.extensions["timeout"]["read"])
+        raise httpx.ReadTimeout("slow", request=req)
+
+    net.on("or.test", None, slow)
+    net.on("ya.test", None, OK_JSON)
+    r = llm.chat(MSG, want_json=True, func="grade", deadline=llm.time.monotonic() + 5)
+    assert r.ok and r.provider == "yandex" and 4 <= seen[0] <= 5  # 40 с по настройке → остаток бюджета
+    n = len(net.calls)
+    r = llm.chat(MSG, want_json=True, func="grade", deadline=llm.time.monotonic() + 0.5)
+    assert not r.ok and r.error == "deadline" and len(net.calls) == n
+
+
+def test_grader_budget_skips_second_opinion(monkeypatch, net):
+    """Первая оценка съела бюджет — вторую не ждём, ответ «на проверке» (повтор при завершении теста)."""
+    configure(monkeypatch, LLM_CHAIN="openrouter", LLM_GRADING_BUDGET_S="3")
+    clock = [100.0]
+    monkeypatch.setattr(llm.time, "monotonic", lambda: clock[0])
+
+    def first(req, body):
+        clock[0] += 2.5
+        return _grade({"cause": 1, "fix": 0})(req, body)
+
+    net.on("or.test", SONNET, first)
+    net.on("or.test", FABLE, _grade({"cause": 1, "fix": 0}))
+    g = _go()
+    assert g.status == "pending" and g.error == "second_opinion_failed" and g.second["error"] == "deadline"
+    assert [c["model"] for c in net.calls] == [SONNET]
+
+
 # ------------------------------------------------------------------ ретранслятор и заголовки
 def test_relay_url_and_token(monkeypatch, net):
     configure(monkeypatch, LLM_CHAIN="openrouter", LLM_RELAY_URL=RELAY, LLM_RELAY_TOKEN=SECRET_RELAY)
@@ -229,8 +264,8 @@ def test_models_and_timeouts_per_function(monkeypatch, net):
 
 
 def test_reasoning_effort_per_function(monkeypatch, net):
-    """Рассуждения OpenRouter: разбор и резюме — low (быстрее, дешевле, ответ не обрезается), оценка — по умолчанию
-    модели; провайдеру yandex параметр не передаётся."""
+    """Рассуждения OpenRouter: разбор, резюме и вторая оценка — low (быстрее, дешевле, ответ не обрезается), первая
+    оценка — по умолчанию модели; default — параметр не передаётся; провайдеру yandex — никогда."""
     configure(monkeypatch, LLM_CHAIN="openrouter,yandex", LLM_REASONING_GRADE="medium", LLM_BREAKER_FAILURES="0")
     net.on("or.test", None, lambda req, body: httpx.Response(500))
     net.on("ya.test", None, OK_JSON)
@@ -238,7 +273,21 @@ def test_reasoning_effort_per_function(monkeypatch, net):
         llm.chat(MSG, want_json=True, func=func)
     sent = [(c["host"], c["body"].get("reasoning")) for c in net.calls]
     assert sent == [("or.test", {"effort": "low"}), ("ya.test", None), ("or.test", {"effort": "low"}), ("ya.test", None),
-                    ("or.test", {"effort": "medium"}), ("ya.test", None), ("or.test", None), ("ya.test", None)]
+                    ("or.test", {"effort": "medium"}), ("ya.test", None), ("or.test", {"effort": "low"}), ("ya.test", None)]
+    configure(monkeypatch, LLM_CHAIN="openrouter", LLM_REASONING_GRADE_SECOND="default")
+    llm.chat(MSG, want_json=True, func="grade_second")
+    assert "reasoning" not in net.calls[-1]["body"]
+
+
+def test_extract_json_tolerant():
+    ex = llm._extract_json
+    assert ex('```json\n{"a": 1}\n```') == {"a": 1}
+    # модель «поправила» свой ответ вторым объектом — берётся последний целый объект
+    assert ex('{"a": 1, "note": "x"}\n\nПоправка: поле note лишнее.\n{"a": 2}') == {"a": 2}
+    assert ex('Ответ: {"a": 1} — и пояснение без скобок') == {"a": 1}
+    # обрезанный ответ (лимит токенов) — невалиден, а не внутренний объект
+    assert ex('{"criteria": {"c1": {"score": 1, "quote": "x"}, "c2": {"score": 0.5, "quo') is None
+    assert ex("[1, 2]") == [1, 2] and ex("нет JSON") is None
 
 
 def test_model_labels():
