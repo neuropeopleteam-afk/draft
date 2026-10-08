@@ -49,7 +49,7 @@ function Body({ r }: { r: any }) {
       </p>
       <div className="mt-4"><Alert kind="info"><b>Честно: </b>{r.caveat}</Alert></div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-4">
+      <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
         <Kpi label="nDCG@10 платформы" value={n2(m.platform?.["ndcg@10"]?.mean)} hint={`95 % ДИ ${range(m.platform?.["ndcg@10"])} · BM25 ${n2(m.bm25?.["ndcg@10"]?.mean)}`} />
         <Kpi label="Доля подходящих в топ-5" value={pct(m.platform?.["p@5"]?.mean)} hint={`BM25 ${pct(m.bm25?.["p@5"]?.mean)} · случайно ${pct(m.random?.["p@5"]?.mean)}`} />
         <Kpi label="Вклад теста, nDCG@10" value={sgn(pm.no_test?.["ndcg@10"]?.mean)} hint={`против ранжирования по самоописанию, ДИ ${range(pm.no_test?.["ndcg@10"])}`} />
@@ -166,9 +166,9 @@ function Cell({ x, signed = false }: { x?: { mean: number; lo: number; hi: numbe
 
 function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
-    <div className="card">
+    <div className="card min-w-0 break-words p-4 sm:p-6">
       <p className="text-xs font-semibold uppercase tracking-[0.1em] text-brand-lavender">{label}</p>
-      <p className="mt-2 text-2xl font-extrabold text-brand-night">{value ?? "—"}</p>
+      <p className="mt-2 text-xl font-extrabold text-brand-night sm:text-2xl">{value ?? "—"}</p>
       {hint && <p className="mt-1 text-xs text-brand-ink/65">{hint}</p>}
     </div>
   );

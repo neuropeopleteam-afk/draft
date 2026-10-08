@@ -20,6 +20,7 @@ from __future__ import annotations
 from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
+from app.core.fmt import quoted, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
@@ -189,7 +190,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "partial",
             "text": f"Экспресс-категория {cat_title} по мини-тесту {b.test.created_at:%d.%m.%Y}: "
-                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}"
+                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {theta_se(t.get('theta', 0), t.get('se'))}"
                     " — предварительно, полный тест уточнит грейд",
         })
     elif b.test and b.provisional:
@@ -199,7 +200,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
             "requirement": "Специализация и грейд", "level": "T1", "status": "partial", "provisional": True,
             "text": f"Категория {cat_title} — предварительно: тест {b.test.created_at:%d.%m.%Y} не подтвердил грейд, "
                     f"но и не доказал уровень ниже (вероятность уровня не ниже Junior — {pct}, подтверждение — от 80 %; "
-                    f"θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}). В ранжировании −{PROVISIONAL_PENALTY:.2f}; "
+                    f"θ = {theta_se(t.get('theta', 0), t.get('se'))}). В ранжировании −{PROVISIONAL_PENALTY:.2f}; "
                     "можно подтвердить зондом",
         })
     elif b.test:
@@ -209,7 +210,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         reasons.append({
             "requirement": "Специализация и грейд", "level": "T1", "status": "confirmed",
             "text": f"Категория {cat_title} подтверждена тестом {b.test.created_at:%d.%m.%Y}{how}: "
-                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {t.get('theta', 0):+.2f} ± {t.get('se', 0):.2f}",
+                    f"{t.get('correct')} из {t.get('answered')} верно, θ = {theta_se(t.get('theta', 0), t.get('se'))}",
         })
     else:
         reasons.append({"requirement": "Специализация и грейд", "level": "none", "status": "missing",
@@ -272,7 +273,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     if b.probes_t1:
         best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))
         reasons.append({"requirement": "Зонд", "level": "T1", "status": "confirmed",
-                        "text": f"«{best.title}» — {best.value.get('verdict', 'оценено')}"})
+                        "text": f"{quoted(best.title)} — {best.value.get('verdict', 'оценено')}"})
     # Фильтровые требования (T0): показываем, но в скор не включаем
     wf = req.get("work_format")
     if wf:

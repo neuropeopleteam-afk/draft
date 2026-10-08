@@ -13,7 +13,8 @@
 
 У работодателя каждой копии — два своих кубка (app.cup.demo.seed_jury_cups): завершённый, где Мария этой копии на
 2-м месте (запись в паспорте ФСП; приглашение — только победителю, Марию работодатель приглашает в сценарии сам),
-и кубок с двумя решениями на оценке. Общее демо кубков
+и кубок с двумя решениями на оценке. У Марии на старте — приглашение от второй компании песочницы (COMPANY2) и
+общие демо-вакансии платформы (_maria_extras). Общее демо кубков
 и Кабинета ФСП (кубки демо-компаний, история приглашений) — одно на платформу: ensure_ideas.
 
 Песочницы (scope.py): у каждого эксперта жюри свой набор этих персон (почты ``candidate+<sid>@…``), чтобы жюри
@@ -52,6 +53,7 @@ log = logging.getLogger("jury")
 DOMAIN = scope.DOMAIN
 EMAILS = scope.emails("")  # общее демо; песочница — scope.emails(sid)
 COMPANY = "Демо жюри: Северный платёж"
+COMPANY2 = "Демо жюри: Логистика Онлайн"  # второй работодатель песочницы: приглашение Марии на старте (fx01)
 PERSONAS = [
     {"id": "candidate", "role": "candidate", "title": "Кандидат с паспортом ФСП",
      "description": "Мария Королёва · Backend · Middle и Frontend · Junior. Два отдельных теста, достижения ФСП (T2)."},
@@ -302,7 +304,8 @@ def delete_jury(db: Session, sid: str = "") -> int:
         db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
     own = Company.created_by.in_(ids) if ids else Company.id.is_(None)
     # компания без автора (автор удалён раньше) — только для общего демо, как было до песочниц
-    cond = and_(Company.name == COMPANY, Company.is_demo.is_(True), or_(own, and_(Company.created_by.is_(None), not sid)))
+    cond = and_(Company.name.in_([COMPANY, COMPANY2]), Company.is_demo.is_(True),
+                or_(own, and_(Company.created_by.is_(None), not sid)))
     keys = db.scalars(select(AtsSettings.stub_key).join(Company, Company.id == AtsSettings.company_id)
                       .where(cond, AtsSettings.stub_key.is_not(None))).all()
     if keys:  # «входящие» демо-ATS удаляемой демо-компании
@@ -386,6 +389,7 @@ def _create_jury(db: Session, sid: str) -> dict:
                       need_id=needs[0].id, probe_id=None)
     cups = _jury_cups(db, sid, eu, c, p1)
     tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2)  # задания работодателя с автопроверкой (И7)
+    _maria_extras(db, eu, p1)
     _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
     # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
     ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
@@ -425,6 +429,31 @@ def _jury_assignments(db: Session, sid: str, eu: User, c: Company, need, maria: 
         db.rollback()
         log.exception("jury: demo assignments failed")
         return []
+
+
+def _maria_extras(db: Session, eu: User, maria: CandidateProfile) -> None:
+    """Чтобы у Марии на старте были приглашение и вакансии (fx01): приглашение от второй компании песочницы
+    (COMPANY2 — не от «Северного платежа»: его приглашение Марии — шаг сценария, лимит 30 дней не мешает) и общие
+    демо-вакансии платформы (если их ещё не посеяли). Жалоба на это приглашение меняет индекс только COMPANY2
+    своей песочницы. Сбой не ломает сид жюри."""
+    from app.integrations.vacancies.demo import ensure as ensure_vacancies
+    from app.modules.invitations.service import create_invitation
+
+    try:
+        c2 = Company(name=COMPANY2, industry="Логистика", city="Казань", website="https://example.invalid",
+                     description="Сервис доставки для интернет-магазинов. Демо-компания для экспертов жюри.",
+                     contact_email=f"hr-logistics@{DOMAIN}", created_by=eu.id, is_demo=True)
+        db.add(c2)
+        db.flush()
+        create_invitation(db, eu, c2, maria, position_title="Python-разработчик (сервис маршрутов)",
+                          offer_description="Расчёт маршрутов и слотов доставки: FastAPI, PostgreSQL, Redis. "
+                                            "Гибрид в Казани или удалённо.",
+                          salary_from=230_000, salary_to=270_000, contact_method="Звонок HR 15 минут",
+                          need_id=None, probe_id=None)
+        ensure_vacancies(db)
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("jury: Maria extras failed")
 
 
 def ensure_ideas(db: Session) -> None:

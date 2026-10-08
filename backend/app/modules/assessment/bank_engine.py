@@ -58,6 +58,7 @@ from assessment_bank.psychometrics import (CanaryDetector, CATConfig, CATSession
                                            pool_from_specs, prob)
 from assessment_bank.registry import canary_published_seeds
 
+from app.core.fmt import theta_se
 from app.modules.assessment import integrity
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
 from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
@@ -673,17 +674,17 @@ class BankEngine:
             GRADES.index(k) if k in GRADES else -1))
         ps = "более 99 %" if p > 0.99 else ("менее 1 %" if p < 0.01 else f"{p * 100:.0f} %")
         if dec.confirmed:
-            s = f"Грейд {g} подтверждён: θ = {theta:+.2f} ± {se:.2f}, вероятность уровня не ниже {g} — {ps}."
+            s = f"Грейд {g} подтверждён: θ = {theta_se(theta, se)}, вероятность уровня не ниже {g} — {ps}."
             if dec.upgrade_available:
                 s += f" Результат уверенно выше порога — можно пройти тест на {GRADE_RU[GRADES[GRADES.index(claimed) + 1]]}."
         elif dec.provisional:
-            s = (f"Грейд {g} пока не подтверждён, но и уровень ниже порога не доказан: θ = {theta:+.2f} ± {se:.2f}, "
+            s = (f"Грейд {g} пока не подтверждён, но и уровень ниже порога не доказан: θ = {theta_se(theta, se)}, "
                  f"вероятность уровня не ниже {g} — {ps} (для подтверждения нужно ≥ 80 %, «не доказанно ниже» — "
                  "≥ 10 %). Категория Junior присвоена предварительно: работодатели видят её с пометкой «предварительно». "
                  "Подтвердить можно коротким дотестированием у порога (до 6 заданий, до 20 минут) или работой — "
                  "зондом работодателя или кубком.")
         else:
-            s = (f"Грейд {g} пока не подтверждён: θ = {theta:+.2f} ± {se:.2f}, вероятность уровня не ниже {g} — "
+            s = (f"Грейд {g} пока не подтверждён: θ = {theta_se(theta, se)}, вероятность уровня не ниже {g} — "
                  f"{ps} (нужно ≥ 80 %). Принудительного понижения нет")
             s += (f": можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower else
                   ": можно повторить после подготовки." if GRADES.index(claimed) == 0 else

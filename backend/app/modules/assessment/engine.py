@@ -16,6 +16,7 @@ from dataclasses import asdict, dataclass, field
 import math
 from typing import Any, Protocol
 
+from app.core.fmt import theta_se
 from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER  # единый набор грейдов платформы
 
 GRADES = GRADE_ORDER  # ("intern", "junior", "middle", "senior") — снизу вверх
@@ -313,11 +314,11 @@ def _explain(dec: dict, theta: float, se: float, claimed: str) -> str:
 
     i = GRADES.index(claimed)
     if dec["confirmed"]:
-        s = f"Грейд {TITLES[claimed]} подтверждён (θ = {theta:+.2f} ± {se:.2f})."
+        s = f"Грейд {TITLES[claimed]} подтверждён (θ = {theta_se(theta, se)})."
         if dec["upgrade_available"]:
             s += f" Результат уверенный — можно пройти тест на {TITLES[GRADES[i + 1]]}."
         return s
-    s = f"Грейд {TITLES[claimed]} пока не подтверждён (θ = {theta:+.2f} ± {se:.2f}). Принудительного понижения нет"
+    s = f"Грейд {TITLES[claimed]} пока не подтверждён (θ = {theta_se(theta, se)}). Принудительного понижения нет"
     s += (f": можно пройти тест на {TITLES[dec['retake_lower']]}." if dec["retake_lower"] else
           ": можно пройти тест ещё раз после подготовки.")
     if dec.get("provisional"):

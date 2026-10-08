@@ -9,14 +9,28 @@ export interface Meta {
 }
 
 const Ctx = createContext<Meta | null>(null);
+const defaultTitle = (m: Meta) => `${m.product_name} — подбор ИТ-специалистов · спецтрек ФСП`;
+let loaded: Meta | null = null;
+let ownTitle = false;  // экран задал свой заголовок (usePageTitle) — общий его не перезаписывает
 
 export function MetaProvider({ children }: { children: ReactNode }) {
   const [meta, setMeta] = useState<Meta | null>(null);
   useEffect(() => {
-    api<Meta>("/meta", { auth: false }).then((m) => { setMeta(m); document.title = `${m.product_name} — подбор ИТ-специалистов · спецтрек ФСП`; }).catch(() => setMeta(null));
+    api<Meta>("/meta", { auth: false }).then((m) => { loaded = m; setMeta(m); if (!ownTitle) document.title = defaultTitle(m); }).catch(() => setMeta(null));
   }, []);
   return <Ctx.Provider value={meta}>{children}</Ctx.Provider>;
 }
 
 export const useMeta = () => useContext(Ctx);
 export const useProductName = () => useContext(Ctx)?.product_name ?? "";
+
+/** Свой заголовок вкладки экрана: «Мини-тест · Встречный». Ответ /api/meta приходит позже — он его не затирает;
+ * при уходе с экрана возвращается общий заголовок. */
+export function usePageTitle(title: string) {
+  const product = useProductName();
+  useEffect(() => {
+    ownTitle = true;
+    document.title = product ? `${title} · ${product}` : title;
+    return () => { ownTitle = false; if (loaded) document.title = defaultTitle(loaded); };
+  }, [title, product]);
+}
