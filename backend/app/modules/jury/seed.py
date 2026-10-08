@@ -54,6 +54,7 @@ DOMAIN = scope.DOMAIN
 EMAILS = scope.emails("")  # общее демо; песочница — scope.emails(sid)
 COMPANY = "Демо жюри: Северный платёж"
 COMPANY2 = "Демо жюри: Логистика Онлайн"  # второй работодатель песочницы: приглашение Марии на старте (fx01)
+COMPANY3 = "Демо жюри: Быстрый заработок"  # «плохой» работодатель (Ф4): низкий индекс доверия, неправдоподобная вилка
 PERSONAS = [
     {"id": "candidate", "role": "candidate", "title": "Кандидат с паспортом ФСП",
      "description": "Мария Королёва · Backend · Middle и Frontend · Junior. Два отдельных теста, достижения ФСП (T2)."},
@@ -310,7 +311,7 @@ def delete_jury(db: Session, sid: str = "") -> int:
         db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
     own = Company.created_by.in_(ids) if ids else Company.id.is_(None)
     # компания без автора (автор удалён раньше) — только для общего демо, как было до песочниц
-    cond = and_(Company.name.in_([COMPANY, COMPANY2]), Company.is_demo.is_(True),
+    cond = and_(Company.name.in_([COMPANY, COMPANY2, COMPANY3]), Company.is_demo.is_(True),
                 or_(own, and_(Company.created_by.is_(None), not sid)))
     keys = db.scalars(select(AtsSettings.stub_key).join(Company, Company.id == AtsSettings.company_id)
                       .where(cond, AtsSettings.stub_key.is_not(None))).all()
@@ -368,7 +369,8 @@ def _create_jury(db: Session, sid: str) -> dict:
                            experience=0.5, salary=80_000, want="provisional")
     _, p4 = _candidate_new(db, sid)  # «Пройдите тест сами»: без теста, категории нет — в подборки не попадает
     eu = _user(db, "employer", UserRole.employer, sid)
-    c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург", website="https://example.invalid",
+    c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург",
+                website=f"https://severny-platezh.{DOMAIN}",  # сайт на домене почты: демо-сведения, высокий индекс (Ф4)
                 description="Платёжный сервис для малого бизнеса. Демо-компания для экспертов жюри.",
                 contact_email=f"hr@{DOMAIN}", created_by=eu.id, is_demo=True)
     db.add(c)
@@ -460,7 +462,7 @@ def _maria_extras(db: Session, eu: User, maria: CandidateProfile) -> None:
     from app.modules.invitations.service import create_invitation
 
     try:
-        c2 = Company(name=COMPANY2, industry="Логистика", city="Казань", website="https://example.invalid",
+        c2 = Company(name=COMPANY2, industry="Логистика", city="Казань", website=f"https://logistika-online.{DOMAIN}",
                      description="Сервис доставки для интернет-магазинов. Демо-компания для экспертов жюри.",
                      contact_email=f"hr-logistics@{DOMAIN}", created_by=eu.id, is_demo=True)
         db.add(c2)
@@ -469,6 +471,20 @@ def _maria_extras(db: Session, eu: User, maria: CandidateProfile) -> None:
                           offer_description="Расчёт маршрутов и слотов доставки: FastAPI, PostgreSQL, Redis. "
                                             "Гибрид в Казани или удалённо.",
                           salary_from=230_000, salary_to=270_000, contact_method="Звонок HR 15 минут",
+                          need_id=None, probe_id=None)
+        # «плохой» работодатель (Ф4): индекс доверия низкий — записи в реестре нет, почта на бесплатном сервисе,
+        # вилка втрое выше рынка. Приглашение видно в списке рядом с хорошими: функция показывает, как предупреждает
+        c3 = Company(name=COMPANY3, industry="Сетевой маркетинг", city="Москва", website="https://bystry-zarabotok.example.com",
+                     description="Демо-компания для экспертов жюри: неправдоподобное предложение, чтобы показать "
+                                 "предупреждение индекса доверия.",
+                     contact_email="bystry.zarabotok@gmail.com", created_by=eu.id, is_demo=True)
+        db.add(c3)
+        db.flush()
+        create_invitation(db, eu, c3, maria, position_title="Backend-разработчик: доход от 600 000 ₽, опыт не важен",
+                          offer_description="Срочно! Высокий доход с первого дня, оформление после оплаты обучения. "
+                                            "(Демо: намеренно неправдоподобная вилка и условия — индекс доверия "
+                                            "предупреждает кандидата.)",
+                          salary_from=600_000, salary_to=850_000, contact_method="Телеграм-чат менеджера",
                           need_id=None, probe_id=None)
         ensure_vacancies(db)
     except Exception:  # noqa: BLE001
