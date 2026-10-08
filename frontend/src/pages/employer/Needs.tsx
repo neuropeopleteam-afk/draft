@@ -369,7 +369,7 @@ export function Selection() {
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
-          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
+          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
             v{x.version} · {x.total}
           </Link>
         ))}

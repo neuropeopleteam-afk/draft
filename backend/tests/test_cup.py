@@ -100,7 +100,8 @@ def test_auto_cup_full_flow(client):
     assert emp["leaderboard"][0]["full_name"] == "Иван Петров"
     # место в кубке — факт T1 в карточке (как зонд)
     card = client.get(f"/api/employer/candidates/{top['candidate_ref']}", headers=H(te)).json()
-    assert any("Кубок" in p["title"] and p["verdict"] == "1 место из 2" for p in card["probes"])
+    assert any("Кубок" in p["title"] and "место" not in p["title"] and p["verdict"] == "1 место из 2"
+               for p in card["probes"])  # место — только в вердикте, не дважды
 
 
 def test_passport_entry_written_after_link(client):

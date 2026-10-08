@@ -12,6 +12,7 @@ import re
 
 import jwt
 
+from app.core.fmt import quoted, ru_num
 from app.integrations.settings import get_isettings
 
 PDF_LINK_DAYS = 180
@@ -129,9 +130,9 @@ def test_line(d: dict) -> str | None:
     t = d["test"]
     if not t:
         return None
-    s = f"Адаптивный тест: {t.get('correct')} из {t.get('answered')} верно, θ = {t['theta']:+.2f}"
+    s = f"Адаптивный тест: {t.get('correct')} из {t.get('answered')} верно, θ = {ru_num(t['theta'], sign=True)}"
     if t.get("se") is not None:
-        s += f" ± {t['se']:.2f}"
+        s += f" ± {ru_num(t['se'])}"
     if t.get("date"):
         s += f" ({t['date']})"
     integ = t.get("integrity") or {}
@@ -158,7 +159,7 @@ def sections(d: dict) -> list[tuple[str, list[str]]]:
     t1 = [x for x in [test_line(d)] if x]
     t1 += [f"Навык подтверждён заданиями: {s['title']}" + (f" ({round(s['score'] * 100)} %)" if s.get("score") is not None
                                                           else "") for s in d["skills"][:12]]
-    t1 += [f"Зонд работодателя «{x['title']}»: {x.get('verdict') or '—'}" for x in d["probes"][:5]]
+    t1 += [f"Зонд работодателя {quoted(x['title'])}: {x.get('verdict') or '—'}" for x in d["probes"][:5]]
     out.append(("Подтверждено (T1)", t1 or ["Подтверждений тестом пока нет"]))
     f = d["fsp"]
     if f["hidden"]:

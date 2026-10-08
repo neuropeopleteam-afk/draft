@@ -1,6 +1,7 @@
 """Раздел «Экспертная разметка» страницы /validation: статус панели, метрики по разметке, проверка на синтетике.
 
 Публичный: отдаёт только агрегаты и коды экспертов E1–E3, без имён, текстов оценок и служебных полей пакета.
+source — кто разметил: люди или языковая модель в ролях экспертов (подпись раздела, service.source_summary).
 Оценки демо-эксперта жюри (is_demo) в расчёт не входят.
 """
 from __future__ import annotations
@@ -46,7 +47,9 @@ def _fingerprint(db: Session) -> tuple:
     last = db.scalar(select(func.max(ExpertLabel.updated_at)))
     pans = db.scalar(select(func.count()).select_from(ExpertPanelist)) or 0
     items = db.scalar(select(func.count()).select_from(ExpertItem)) or 0
-    return n, str(last), pans, items
+    src = tuple(db.execute(select(ExpertPanelist.code, ExpertPanelist.source, ExpertPanelist.source_model,
+                                  ExpertPanelist.profile).order_by(ExpertPanelist.code)).all())  # подпись источника
+    return n, str(last), pans, items, src
 
 
 def _pack_info(items: dict) -> dict:
@@ -68,16 +71,42 @@ def _status(panel: list[dict], res: dict) -> dict:
     if not panel:
         return {"state": "waiting", "title": "Ожидает экспертов",
                 "text": "Приглашения ещё не отправлены. Метрики подбора выше посчитаны по разметке по правилам; "
-                        "после экспертной разметки здесь появятся те же метрики по оценкам людей, которые нанимают."}
+                        "после экспертной разметки здесь появятся те же метрики по экспертным оценкам."}
+    kinds = {p.get("source") or "people" for p in panel}
+    kind = kinds.pop() if len(kinds) == 1 else "mixed"
+    who, began = {"people": ("Экспертов", "Экспертов приступило"), "model": ("Ролей модели", "Прогонов модели начато"),
+                  }.get(kind, ("Участников", "Участников приступило"))
     if not started:
-        return {"state": "waiting", "title": "Ожидает экспертов",
-                "text": f"Приглашено экспертов: {len(panel)}. Разметка ещё не начата."}
+        return {"state": "waiting", "title": "Ожидает разметки",
+                "text": f"{who} в панели: {len(panel)}. Разметка ещё не начата."}
     ready = (m.get("needs_complete", 0) >= MIN_READY["A_needs"] and len(res.get("coders") or []) >= MIN_READY["coders"])
     return {"state": "ready" if ready else "partial",
             "title": "Разметка завершена" if ready else "Разметка идёт",
-            "text": (f"Экспертов приступило: {len(started)} из {len(panel)}. Потребностей размечено полностью: "
+            "text": (f"{began}: {len(started)} из {len(panel)}. Потребностей размечено полностью: "
                      f"{m.get('needs_complete', 0)} из {m.get('needs_total', len(P.A_NEEDS))}. "
                      + ("" if ready else "Цифры ниже предварительные — обновляются по мере разметки.")).strip()}
+
+
+MODEL_AGREEMENT = "согласие прогонов модели"
+MODEL_CAVEAT = "согласие завышено: прогоны одной модели коррелированы"
+MODEL_REFERENCE = "консенсус модельной панели"
+MODEL_ANGOFF = "справочно, модельная панель"
+
+
+def model_panel_view(res: dict) -> dict:
+    """Панель целиком из прогонов одной модели: высокое согласие — артефакт (прогоны коррелированы), а не
+    надёжность. Вердикт «надёжно» → нейтральный, рядом пояснение; модель-оценщик сравнивается с консенсусом
+    модельной панели; пороги Ангоффа — только справочно (текущие пороги не меняются)."""
+    agr = res.get("agreement") or {}
+    for blk in agr.values():
+        if isinstance(blk, dict) and blk.get("alpha_verdict"):
+            blk["alpha_verdict"] = MODEL_AGREEMENT
+    out = {**res, "agreement_caveat": MODEL_CAVEAT if agr else None}
+    if res.get("llm"):
+        out["llm"] = {**res["llm"], "reference": MODEL_REFERENCE}
+    if res.get("angoff"):
+        out["angoff"] = {**res["angoff"], "reference_only": True, "note": MODEL_ANGOFF}
+    return out
 
 
 def synthetic(items: dict) -> dict | None:
@@ -104,7 +133,11 @@ def section(db: Session) -> dict:
     res = A.analyze(items, labels) if labels else {"matching": None, "agreement": None, "llm": None, "angoff": None,
                                                     "labels": 0, "coders": []}
     llm_only = A.llm_agreement(items, [], None) if not labels else None
-    out = {"pack": _pack_info(items) if items else None, "panel": panel, "status": _status(panel, res), **res,
+    src = service.source_summary(panel)
+    if src and src["model_panel"]:
+        res = model_panel_view(res)
+    out = {"pack": _pack_info(items) if items else None, "panel": panel, "source": src,
+           "model_panel": bool(src and src["model_panel"]), "status": _status(panel, res), **res,
            "llm_without_experts": llm_only, "synthetic_check": synthetic(items) if items else None,
            "current_cuts": {b: v for b, (_, v) in A.CURRENT_CUTS.items()}}
     with _mx:
