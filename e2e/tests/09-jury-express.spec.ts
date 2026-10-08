@@ -48,6 +48,10 @@ test("жюри: экспресс-тест своими руками с подс�
 
   await test.step("5–7 заданий до остановки движком", async () => {
     await page.getByRole("button", { name: /^Начать экспресс-тест$/ }).click();
+    // И16: перед новым тестом — экран камеры (по согласию); экспресс-тест жюри — без камеры
+    const skip = page.getByRole("button", { name: "Пройти без камеры" });
+    await expect(skip.or(page.getByText(/Задание \d+ · отвечено \d+/))).toBeVisible({ timeout: 60_000 });
+    if (await skip.isVisible()) await skip.click();
     await expect(page).toHaveURL(/\/candidate\/assessment\/test\/[\w-]+$/);
     const main = page.getByRole("main");
     const result = page.getByRole("heading", { level: 1, name: /^(Грейд (не )?подтверждён|Принят уровень)/ });
