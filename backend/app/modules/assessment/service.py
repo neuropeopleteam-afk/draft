@@ -413,7 +413,8 @@ def store_confirmed(db, profile, specialization, ts, res, outcome, current):
     sync_primary(profile, specialization)
 
 
-def apply_engine_result(db: Session, ts: TestSession, res, profile: CandidateProfile, now) -> GradeOutcome:
+def apply_engine_result(db: Session, ts: TestSession, res, profile: CandidateProfile, now, *,
+                        after_review: bool = False) -> GradeOutcome:
     """Итог движка → история грейда, специализация направления, факты T1, рейтинг (завершение теста и пересчёт
     после проверки). Правила применяются к специализации направления теста (И14), не к глобальному профилю.
 
@@ -469,6 +470,13 @@ def apply_engine_result(db: Session, ts: TestSession, res, profile: CandidatePro
         _write_t1_facts(db, ts, res, extra)
         db.flush()
         refresh_rating(db, ts.user_id)
+        # подписанный паспорт грейда (app/passport): выпуск или перевыпуск по актуальному составу (при понижении старый
+        # отзывается; after_review — пересчёт той же сессии экспертом: «заменён после экспертной проверки»).
+        # Сбой ключа или сборки состава не роняет тест.
+        from app.passport.service import on_test_finished
+
+        on_test_finished(db, ts.user_id, ts, previous_grade=current, previous_direction=ts.direction_id,
+                         after_review=after_review)
     return outcome
 
 

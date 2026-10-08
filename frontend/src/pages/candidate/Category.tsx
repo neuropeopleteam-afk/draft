@@ -5,6 +5,7 @@ import { GradeBadge, GradeStatusNote } from "../../components/GradeStatus";
 import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, range, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { Specializations } from "../../components/Specializations";
+import { PassportShare } from "../../passport/Share";
 
 const REASON: Record<string, string> = {
   initial: "Первое присвоение", retest_up: "Пересдача на грейд выше", retest_down: "Пересдача на грейд ниже", sandbox: "Демо-режим жюри",
@@ -120,6 +121,7 @@ export default function Category() {
         <Link className="btn-ghost" to="/candidate/assessment?survey=1">{s.specializations?.length < 2 ? "Добавить второе направление" : "Изменить опрос"}</Link>
         {s.sessions.some((t: any) => t.status === "finished") && <Link className="btn-ghost" to="/candidate/feedback">Карта навыков и маршрут роста</Link>}
       </section>
+      {c.category_id && <PassportShare />}
       <div className="grid gap-6 md:grid-cols-2">
         <section className="card">
           <h2 className="font-bold text-brand-night">История грейда</h2>
