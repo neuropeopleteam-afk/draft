@@ -104,9 +104,12 @@ def parse_conditions(text: str) -> dict:
     allowed = list(dict.fromkeys(allowed))
     if not any_m and _HYBRID_DAYS.search(text) and allowed:
         allowed = ["hybrid", "office"]  # «офис, 2 дня в неделю удалённо» — это гибрид, а не «удалённо или офис»
+    alt_city = _city_or_remote(text, mentions) if allowed == ["remote"] else None
+    if alt_city:
+        allowed += ["office", "hybrid"]  # «Казань или удалённо» — на месте в Казани или удалённо
     if "remote" in allowed and "office" in allowed and "hybrid" not in allowed:
         allowed.append("hybrid")  # удалённо или офис — гибрид между ними тоже подходит
-    city, city_pos = city_span(text, allowed)
+    city, city_pos = alt_city or city_span(text, allowed)
     spans = [(s, e) for f, s, e, n in mentions if f in allowed and not n]
     if any_m and allowed:
         spans.append(any_m.span())
@@ -118,6 +121,19 @@ def parse_conditions(text: str) -> dict:
     return {"work_format": allowed[0] if allowed else None,
             "work_formats": allowed if len(allowed) > 1 else None,
             "city": city, "format_span": span, "city_span": city_pos}
+
+
+def _city_or_remote(text: str, mentions: list) -> tuple[str, tuple[int, int]] | None:
+    """«Казань или удалённо», «удалённо или Москва»: город — альтернатива удалёнке, то есть работа на месте."""
+    remote = [(s, e) for f, s, e, n in mentions if f == "remote" and not n]
+    for city, aliases in CITY_ALIASES.items():
+        for alias in aliases:
+            for m in re.finditer(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I):
+                for s, e in remote:
+                    gap = text[m.end():s] if m.end() <= s else text[e:m.start()] if e <= m.start() else None
+                    if gap is not None and re.fullmatch(r"[\s,]*(?:или|либо|or)\s+(?:в\s+|in\s+)?", gap, re.I):
+                        return city, m.span()
+    return None
 
 
 def city_span(text: str, work_format) -> tuple[str | None, tuple[int, int] | None]:
