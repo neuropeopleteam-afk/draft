@@ -31,7 +31,10 @@ def _bench_signature(b: dict) -> dict:
 
 
 def _p(v: float) -> str:
-    return f"{round(100 * v)}\u00a0%"
+    """Проценты: целые, но у долей между 99 и 100 % — с десятыми (99,6 % не округляется до 100 %)."""
+    x = 100 * v
+    txt = f"{x:.1f}".replace(".", ",") if 99 < x < 100 or 0 < x < 1 else str(round(x))
+    return f"{txt}\u00a0%"
 
 
 def headline() -> dict:
@@ -40,25 +43,20 @@ def headline() -> dict:
     if pr and not pr.get("quick"):
         t, sig = pr["total"], pr["signature"]
         pg = t["path_grade"]
-        cr = pr.get("other_reference") or {}
         items.append({
             "id": "path_kappa", "anchor": "path-retest", "value": pg["kappa_w"], "ci": pg.get("kappa_w_ci"),
             "format": "num3",
-            "title": "Повтор всего пути: κ с весами",
-            "text": (f"{pg['n']} синтетических кандидатов прошли весь путь дважды — опрос, заявленный грейд, адаптивный "
-                     f"тест, решение, уровень ниже. Итоговый грейд совпал у {_p(pg['exact'])}, расходится "
-                     f"больше чем на ступень у {_p(pg['two_steps'])}; во второй попытке "
-                     f"{_p(t['overlap_all']['mean'])} семейств уже встречались, варианты — новые."),
-            "note": "5 ступеней, подтверждение при P ≥ 0,8" + (f"; у Прототип А κ {str(cr['kappa_w']).replace('.', ',')} на 4 ступенях при P ≥ 0,5, без ДИ"
-                                                               if cr.get("kappa_w") else ""),
+            "title": "Повтор всего пути",
+            "text": (f"κ с весами: {pg['n']} кандидатов прошли опрос, тест и решение дважды. Грейд совпал у "
+                     f"{_p(pg['exact'])}, ±1 ступень — у {_p(pg['within_1'])}."),
+            "note": "5 ступеней, подтверждение при P ≥ 0,8; новые варианты заданий",
             "signature": sig})
         tr = t["truth"]
         items.append({
             "id": "over_share", "anchor": "path-retest", "value": tr["over_share"], "ci": None, "format": "pct",
             "title": "Грейд выше истинного",
-            "text": (f"Доля кандидатов, которым путь присвоил грейд выше истинного уровня. Ниже истинного — "
-                     f"{_p(tr['under_share'])}: правило осторожное, при сомнении — уровень ниже или "
-                     "«предварительно»."),
+            "text": (f"Ложное завышение грейда. Ниже истинного — {_p(tr['under_share'])}: при сомнении правило "
+                     "даёт уровень ниже."),
             "note": "истина известна только в симуляции", "signature": sig})
     if b and not b.get("missing"):
         sig = _bench_signature(b)
@@ -67,28 +65,27 @@ def headline() -> dict:
             d = pm["bm25"]["ndcg@10"]
             items.append({
                 "id": "bench_bm25", "anchor": "bench", "value": d["mean"], "ci": [d["lo"], d["hi"]], "format": "signed3",
-                "title": "Подбор лучше поиска по резюме",
+                "title": "Подбор лучше BM25",
                 "pair": [m["platform"]["ndcg@10"]["mean"], m["bm25"]["ndcg@10"]["mean"]],
-                "text": ("Разница nDCG@10 подбора платформы и BM25 по тексту резюме на бенчмарке со скрытой истиной "
-                         "(парный бутстреп по потребностям)."),
+                "text": "Прирост nDCG@10 к поиску по тексту резюме на бенчмарке со скрытой истиной.",
                 "note": "синтетический мир, не рынок", "signature": sig})
         if "no_test" in pm:
             d = pm["no_test"]["ndcg@10"]
             items.append({
                 "id": "bench_no_test", "anchor": "ablations", "value": d["mean"], "ci": [d["lo"], d["hi"]],
                 "format": "signed3", "title": "Вклад теста в подбор",
-                "text": "Насколько nDCG@10 падает, если ранжировать по самоописанию без результата теста (абляция).",
-                "note": "та же формула, тот же мир", "signature": sig})
+                "text": "Падение nDCG@10, если ранжировать по самоописанию без результата теста.",
+                "note": "абляция: та же формула, тот же мир", "signature": sig})
         inf = (b.get("groups") or {}).get("inflated") or {}
         if "platform" in inf and "bm25" in inf:
             items.append({
                 "id": "inflated", "anchor": "bench", "value": inf["platform"]["irrelevant_inflated_top10"], "ci": None,
                 "format": "pct", "compare": inf["bm25"]["irrelevant_inflated_top10"],
                 "title": "Раздутые резюме в топ-10",
-                "text": (f"Доля мест топ-10, занятых неподходящими кандидатами с раздутым резюме; у BM25 — "
-                         f"{_p(inf['bm25']['irrelevant_inflated_top10'])}. Заявленное в скор не входит."),
+                "text": (f"Неподходящие с раздутым резюме в топ-10; у BM25 — "
+                         f"{_p(inf['bm25']['irrelevant_inflated_top10'])}."),
                 "note": f"раздутых в популяции {_p(inf.get('population_share', 0))}", "signature": sig})
     return {"items": items, "missing": not items,
-            "how_to_read": ("Каждое число — из расчёта с подписью мира (seed, hash конфигурации, коммит). Сначала "
-                            "синтетика с доверительными интервалами, затем модельная разметка, затем демо-данные "
-                            "с оговоркой о циркулярности.")}
+            "how_to_read": ("Каждое число — из расчёта с подписью мира (seed, hash конфигурации, коммит), рядом — 95 % "
+                            "доверительный интервал. Ниже по странице: синтетика с интервалами, затем экспертная "
+                            "разметка, затем демо-данные с оговоркой о циркулярности.")}

@@ -44,8 +44,8 @@ export default function Validation() {
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night md:text-4xl">Как мы проверяем себя</h1>
         <p className="mt-3 max-w-3xl leading-relaxed text-brand-ink/75">
           Все цифры — как получились, без подгонки. Тест проверяется симуляцией на синтетических кандидатах
-          (параметры заданий — экспертная предкалибровка, пока нет калибровки на людях), подбор — на размеченных парах
-          «потребность — кандидат» из демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
+          (параметры заданий — экспертная предкалибровка, пока нет калибровки на людях), подбор — на бенчмарке со скрытой истиной,
+          затем на экспертной разметке и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
         </p>
         <Headline />
         <ClosedSet />
