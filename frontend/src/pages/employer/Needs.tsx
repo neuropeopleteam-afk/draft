@@ -7,6 +7,7 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, T
 import { api } from "../../lib/api";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
+import { WhatIf } from "../../components/WhatIf";
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -20,6 +21,27 @@ export interface Req {
   coverage?: { message: string; tested: string; not_tested: string };
   city?: string | null;
   work_formats?: string[] | null;
+  unknown_terms?: { term: string; evidence?: Ev | null }[]; excluded?: { tag: string; evidence?: Ev | null }[];
+  salary_note?: { text: string; evidence?: Ev | null } | null;
+}
+
+/** Что не попало в подбор и подсказки по требованиям (И18): честно, без блокировки. */
+function ReqNotes({ req, title }: { req: Req; title: (t: string) => string }) {
+  const tips: string[] = [];
+  if (!req.direction && !req.stack_required.length) tips.push("Направление и обязательный стек не определены — подбор идёт по всей базе. Укажите направление, грейд и 2–3 ключевые технологии.");
+  else if (!req.stack_required.length) tips.push("Обязательный стек не указан — кандидаты ранжируются по результату теста и ФСП. Добавьте 2–3 ключевые технологии.");
+  if (req.direction && !req.grade) tips.push("Грейд не указан — в подборке все грейды направления.");
+  if (req.stack_required.length >= 7) tips.push(`Обязательных навыков ${req.stack_required.length} — полностью подходящих может не найтись; часть можно перенести в желательные.`);
+  const unknown = req.unknown_terms ?? [], excluded = req.excluded ?? [];
+  if (!tips.length && !unknown.length && !excluded.length && !req.salary_note) return null;
+  return (
+    <ul className="space-y-1.5 rounded-lg bg-brand-blush/25 px-3 py-2 text-sm">
+      {unknown.length > 0 && <li><b className="font-semibold">Не учтено в подборе:</b> {unknown.map((u) => u.term).join(", ")} — этих технологий нет в справочнике платформы, тест их не проверяет. Проверьте зондом или на интервью.</li>}
+      {excluded.length > 0 && <li><b className="font-semibold">Исключено по тексту:</b> {excluded.map((x) => `${title(x.tag)}${x.evidence?.quote ? ` («${x.evidence.quote}»)` : ""}`).join(", ")}</li>}
+      {req.salary_note && <li>{req.salary_note.text}{req.salary_note.evidence?.quote ? ` («${req.salary_note.evidence.quote}»)` : ""}</li>}
+      {tips.map((t) => <li key={t}>{t}</li>)}
+    </ul>
+  );
 }
 
 const EXAMPLE = "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс. ₽";
@@ -167,6 +189,7 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <p className="mt-2">Проверяется: {req.coverage.tested}.</p>
         <p className="mt-1">Не проверяется: {req.coverage.not_tested}. Для этих навыков нужен отдельный зонд или интервью.</p>
       </Alert>}
+      <ReqNotes req={req} title={(t) => tags[t]?.title ?? t} />
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <p className="text-brand-ink/70">Проверено требований: <b>{total - pending}</b> из {total}. Наведите на требование — фрагмент подсветится в тексте.</p>
         {pending > 0 && <button type="button" className="text-sm font-semibold text-emerald-700 hover:underline" onClick={() => onChange(confirmAll(req))}>Подтвердить все</button>}
@@ -328,6 +351,7 @@ export function Selection() {
   const [probeOpen, setProbeOpen] = useState(false);
   const [focus, setFocus] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [wErr, setWErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (sel.data) { setFilters(sel.data.filters ?? {}); setPicked([]); } }, [sel.data]);
@@ -335,12 +359,24 @@ export function Selection() {
   async function refine() {
     setErr(null); setBusy(true);
     try {
-      const body: any = { parent_version: v, filters };
+      const { relaxation: _r, ...f } = filters;  // подпись «Что если» прежней версии не переносим
+      const body: any = { parent_version: v, filters: f };
       if (refineReq) body.requirements = reqBody(refineReq);
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload(); setRefineReq(null);
       navigate(`/employer/needs/${id}/v/${r.version}`);
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+
+  async function applyWhatIf(o: { requirements: any | null; filters: Record<string, unknown> }) {
+    setWErr(null); setBusy(true);
+    try {
+      const body: any = { parent_version: v, filters: o.filters };
+      if (o.requirements) body.requirements = reqBody(o.requirements);
+      const r = await api<any>(`/employer/needs/${id}/selections`, { body });
+      await need.reload();
+      navigate(`/employer/needs/${id}/v/${r.version}`);
+    } catch (e) { setWErr(errText(e)); } finally { setBusy(false); }
   }
 
   if (need.loading && !need.data) return <Loading />;
@@ -368,7 +404,7 @@ export function Selection() {
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
-          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
+          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} title={x.filters?.relaxation ? `из v${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
             v{x.version} · {x.total}
           </Link>
         ))}
@@ -441,7 +477,7 @@ export function Selection() {
             {refineReq && <section className="card"><h2 className="mb-4 font-bold text-brand-night">Требования для новой версии</h2><ReqEditor req={refineReq} onChange={setRefineReq} /></section>}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
+                <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
                 <StatusCounts confirmed={s.confirmed_matched} provisional={s.provisional_matched} unconfirmed={s.unconfirmed_matched} hiddenNote={!!s.filters?.confirmed_only} />
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -451,8 +487,11 @@ export function Selection() {
               </div>
             </div>
             <p className="text-xs text-brand-ink/65">Отметьте 2–3 кандидатов, чтобы сравнить их рядом по требованиям потребности, или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>сравните первых трёх</Link>.</p>
+            <WhatIf needId={id!} version={s.version} next={(last ?? 0) + 1} busy={busy} onApply={applyWhatIf} />
+            <Alert>{wErr}</Alert>
             <LevelLegend />
-            {!s.results.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или выберите соседнюю категорию." /> : s.results.map((r: any) => (
+            {!s.results.length ? <Empty title="Подходящих кандидатов нет"
+              text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : s.results.map((r: any) => (
               <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} compact
                 actions={
                   <div className="flex flex-wrap items-center gap-3">
