@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, Loading, Seg, Toggle, catTitle, dt, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
@@ -74,8 +74,8 @@ function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Подсказка · необязательно</p>
-          <p className="mt-1 font-semibold text-brand-night">{hint.summary}</p>
-          <p className="mt-1 text-xs text-brand-ink/65">По опросу, резюме и паспорту ФСП, правилами без нейросети. {hint.note}</p>
+          <p className="mt-1 font-semibold text-brand-night">{open || !hint.suggested ? hint.summary : `Похоже на ${GRADES[hint.suggested]}. Выбор за вами.`}</p>
+          {open && <p className="mt-1 text-xs text-brand-ink/65">По опросу, резюме и паспорту ФСП, правилами без нейросети. {hint.note}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
           {hint.suggested && hint.suggested !== grade && <button type="button" className="btn-ghost" onClick={() => onPick(hint.suggested!)}>Выбрать {GRADES[hint.suggested]}</button>}
@@ -302,10 +302,16 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
  *  механика описана для жюри (lib/jury.ts) и в docs/ANTIFRAUD.md. Версия текста — NOTICE_VERSION в integrity.py. */
 export function IntegrityNotice() {
   return (
-    <div className="card mt-4 space-y-3 text-sm text-brand-ink/75">
+    <div className="card mt-4 space-y-2 text-sm text-brand-ink/75">
       <p className="font-bold text-brand-night">Самостоятельность выполнения</p>
-      <p>Тест проходят самостоятельно: без помощи других людей и без готовых ответов нейросетей. Результат проверяется на самостоятельность выполнения и может получить пометку «достоверность результата»: высокая, средняя или низкая.</p>
-      <p><b className="text-brand-night">Автоматических наказаний нет.</b> Пометка не прерывает тест, не меняет оценку уровня и не отменяет грейд. Работодатель видит её рядом с категорией, решение по ней принимает человек. После теста уровень достоверности и общую причину пометки увидите и вы. Если по части ответов видно, что они были известны заранее, эти ответы не учитываются в оценке уровня — об этом будет сказано в результате.</p>
+      <p><b className="text-brand-night">Автоматических наказаний нет.</b> Оценку уровня пометка не меняет.</p>
+      <details>
+        <summary className="cursor-pointer font-semibold text-brand-plum">Подробнее</summary>
+        <div className="mt-2 space-y-3">
+          <p>Тест проходят самостоятельно: без помощи других людей и без готовых ответов нейросетей. Результат проверяется на самостоятельность выполнения и может получить пометку «достоверность результата»: высокая, средняя или низкая.</p>
+          <p>Пометка не прерывает тест, не меняет оценку уровня и не отменяет грейд. Работодатель видит её рядом с категорией, решение по ней принимает человек. После теста уровень достоверности и общую причину пометки увидите и вы. Если по части ответов видно, что они были известны заранее, эти ответы не учитываются в оценке уровня — об этом будет сказано в результате.</p>
+        </div>
+      </details>
     </div>
   );
 }
@@ -363,7 +369,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </div>
       )}
       {(chosen?.category_id ?? status?.current?.category_id) && (
-        <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}</b>. Подробности — в разделе <Link className="font-semibold underline" to="/candidate/category">«Категория и грейд»</Link>.</Alert>
+        <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}</b> · <Link className="font-semibold underline" to="/candidate/category">подробнее</Link></Alert>
       )}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Object.entries(GRADES).map(([id, t]) => (
@@ -386,35 +392,45 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
             <p className="font-semibold text-brand-night">Режим теста</p>
             <Seg value={mode} onChange={setMode} options={modes(ex, exSenior.max_items)} label="Режим теста" />
           </div>
+          <details className="mt-2"><summary className="cursor-pointer font-semibold text-brand-plum">Подробнее</summary>
           <p className="mt-2 text-brand-ink/75">
             {mode === "express"
               ? (grade === "senior"
                 ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ 80 %), интервал θ шире, чем у полного (погрешность ≈ 0,6 против ≈ 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
                 : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но интервал θ заметно шире (погрешность ≈ 0,65 против ≈ 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
               : "Полный адаптивный тест: 8–16 заданий, до 60 минут, с дотестированием у порога. Именно он присваивает категорию живым кандидатам."}
-          </p>
+          </p></details>
         </div>
       )}
-      <div className="card mt-6 space-y-3 text-sm text-brand-ink/75">
+      <details className="mt-4 text-sm">
+        <summary className="cursor-pointer text-brand-ink/75"><b className="text-brand-night">Как устроен тест:</b> адаптивный, 8–16 заданий, до 60 минут.</summary>
+      <div className="card mt-2 space-y-3 text-sm text-brand-ink/75">
         <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам, обычно 8–16 заданий, до 60 минут. Если результат у самого порога грейда, будет ещё до 6 коротких заданий (до 20 минут) — чтобы грейд не зависел от случайности. Повторная попытка — из другого набора заданий.</p>
         <p>Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои.</p>
         <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней. Повторить тест на тот же грейд после неподтверждённой попытки можно через {status?.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу; если тест уверенно показал уровень ниже, его можно принять без нового теста.</p>
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
+      </details>
       <IntegrityNotice />
-      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTIONS[dir]} — с {dt(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
+      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTIONS[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
       {retakeLocked && !locked && (
         <div className="mt-4"><Alert kind="info">Повторить тест на {GRADES[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
       )}
       {status?.sandbox_active && quota && (
-        <div className="mt-4"><Alert kind="info">Демо-режим жюри: новых тестов за 24 часа осталось {quota.left} из {quota.limit}. Лимит не даёт выкачать банк заданий перезапусками; продолжение начатого теста его не тратит.</Alert></div>
+        <div className="mt-4"><Alert kind="info"><span title="Лимит не даёт выкачать банк заданий перезапусками; продолжение начатого теста его не тратит.">Демо-режим: новых тестов за 24 часа осталось {quota.left} из {quota.limit}.</span></Alert></div>
       )}
       <div className="mt-4"><Alert>{error}</Alert></div>
       {!resume && (
         <label className="mt-4 flex cursor-pointer items-start gap-3 text-sm text-brand-ink/80">
           <input type="checkbox" className="mt-0.5 h-4 w-4 accent-brand" checked={ack} onChange={(e) => setAck(e.target.checked)} />
-          <span>Я ознакомлен(а) с условиями и даю согласие оператору платформы на обработку сведений о ходе прохождения теста (время ответов, действия в интерфейсе теста) с целью проверки самостоятельности выполнения и указания достоверности результата работодателям. Сведения хранятся вместе с результатом теста.</span>
+          <span>Я ознакомлен(а) и даю согласие оператору платформы на обработку сведений о ходе прохождения теста (время ответов, действия в интерфейсе) с целью проверки самостоятельности выполнения.</span>
         </label>
+      )}
+      {!resume && (
+        <details className="ml-7 mt-1 text-xs text-brand-ink/70">
+          <summary className="cursor-pointer font-semibold text-brand-plum">Условия</summary>
+          <p className="mt-1">Сведения о ходе теста (время ответов, действия в интерфейсе теста) обрабатываются с целью проверки самостоятельности выполнения и указания достоверности результата работодателям. Сведения хранятся вместе с результатом теста.</p>
+        </details>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={start} disabled={busy || locked || retakeLocked || (!resume && !ack)}>
