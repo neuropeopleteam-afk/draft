@@ -113,6 +113,7 @@ export function Integrity({ v, compact = false }: { v: { level: string; title: s
       {!compact || v.level !== "high" ? (
         <ul className="mt-0.5 list-disc space-y-0.5 pl-4">{v.reasons.slice(0, compact ? 1 : 3).map((r, i) => <li key={i}>{r}</li>)}</ul>
       ) : null}
+      {v.level !== "high" && <p className="mt-0.5 opacity-80">Не блокирует: на место в подборке не влияет, решение за вами — можно пригласить или проверить зондом.</p>}
     </div>
   );
 }
