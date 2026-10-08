@@ -37,6 +37,7 @@ from app.modules.profiles.facts import (
     skill_evidence_text,
     test_component,
 )
+from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
@@ -269,10 +270,14 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                         "text": f"{(integ.get('title') or '').capitalize()}: " + "; ".join((integ.get("reasons") or [])[:2]),
                         "integrity": lvl})
     probe = max((f.value.get("score", 0) for f in b.probes_t1), default=0.0)
-    if b.probes_t1:
-        best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))
+    own = [f for f in b.probes_t1 if not assignment_signal.is_assignment_fact(f)]  # задание работодателя — своя строка (К5)
+    if own:
+        best = max(own, key=lambda f: f.value.get("score", 0))
         reasons.append({"requirement": "Зонд", "level": "T1", "status": "confirmed",
                         "text": f"«{best.title}» — {best.value.get('verdict', 'оценено')}"})
+    sig = assignment_signal.reason_for(b.probes_t1)  # К5: адресное задание — одна строка, порядок match-v1 не меняет
+    if sig:
+        reasons.append(sig)
     # Фильтровые требования (T0): показываем, но в скор не включаем
     wf = req.get("work_format")
     if wf:

@@ -411,6 +411,13 @@ def skill_evidence_text(f: CandidateFact) -> str:
 
 
 
+def freshness_summary(skills: dict) -> dict | None:
+    from app.modules.profiles.freshness import summary
+
+    ok = {k: f for k, f in skills.items() if skill_confirmed(f)}  # как и «подтверждённые навыки» карточки: слабые не показываем
+    return summary(ok, limit=8) if ok else None
+
+
 def _uniq(facts: list) -> list:
     """Один факт на ключ: опрос и резюме могут заявить одно и то же (берём первый — из опроса)."""
     seen: set = set()
@@ -489,4 +496,5 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
                          "median": cat.market_salary_median} if cat else None,
         "is_demo": None,
         "employment_safety": employment_safety(p),
+        "freshness": freshness_summary(b.skills_t1),  # К5: когда подтверждены навыки T1 (порядок подбора не меняет)
     }
