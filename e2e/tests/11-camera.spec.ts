@@ -66,7 +66,8 @@ test("кандидат: согласие → камера в тесте → св
   await expect(page.getByRole("heading", { name: "Тест на грейд" })).toBeVisible();
 
   await test.step("экран камеры перед тестом: честный текст и две кнопки", async () => {
-    await page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ }).check();
+    // согласие перед тестом — по текущему тексту (Р27, как в 01 и 08)
+    await page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста/ }).check();
     await page.getByRole("button", { name: /^Начать тест$/ }).click();
     await expect(page.getByRole("heading", { name: "Камера во время теста" })).toBeVisible();
     const main = page.getByRole("main");
@@ -135,7 +136,7 @@ test("кандидат: браузер не дал доступ к камере 
   });
   await juryEnter(page, "candidate_nofsp");
   await openSection(page, "Опрос и тест", /\/candidate\/assessment$/);
-  await page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ }).check();
+  await page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста/ }).check();
   await page.getByRole("button", { name: /^Начать тест$/ }).click();
   await expect(page.getByRole("heading", { name: "Камера во время теста" })).toBeVisible();
   // согласие уже дано в прошлом сценарии — повторно не спрашивается, сразу запрос камеры
