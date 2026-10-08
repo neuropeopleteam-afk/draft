@@ -303,7 +303,8 @@ def finish(db: Session, room: LiveRoom, g: LiveGuest) -> list:
     employer, company = emp
     with scope.use(room.sid):
         need = live_need(db, company, employer, g.direction)
-        sel = ranking.build_selection(db, need.requirements, {}, limit=SELECTION_LIMIT)
+        # гость ищется по всей выдаче: в мире из 500 кандидатов его место может быть и за пределами первых 60
+        sel = ranking.build_selection(db, need.requirements, {}, limit=SELECTION_LIMIT, include_refs=(g.ref,))
     last = db.scalar(select(func.max(SelectionVersion.version)).where(SelectionVersion.need_id == need.id)) or 0
     db.add(SelectionVersion(need_id=need.id, version=last + 1, parent_version=last or None, filters={},
                             requirements=need.requirements, results=sel["results"],
@@ -322,18 +323,17 @@ def finish(db: Session, room: LiveRoom, g: LiveGuest) -> list:
     }
     g.selected_at = sel_at
     g.events = [*g.events, _ev("selected", sel_at, rank=g.selection["rank"], total=g.selection["total"])]
-    if mine is None:
-        g.stage = "selected"
-        return []
+    # приглашение — по правилу экрана: его получает каждый, кому мини-тест дал экспресс-категорию, где бы ни было место
     cat = db.get(Category, res["category_id"])
+    place = f", вы на {mine['rank']}-м месте из {sel['total_matched']}" if mine is not None else ""
     lo, hi = _market_offer(cat)
     title = f"{NEED_TEXTS[g.direction][0]} ({GRADES[res['grade']]})"
     try:
         inv = inv_svc.create_invitation(
             db, employer, company, p, position_title=title,
             offer_description=(f"Вы прошли мини-тест из 3 заданий банка и получили экспресс-категорию "
-                               f"{category_title(res['category_id'])} — подборка работодателя пересчиталась, вы на "
-                               f"{mine['rank']}-м месте из {sel['total_matched']}. {RULE} Это демо-компания: "
+                               f"{category_title(res['category_id'])} — подборка работодателя пересчиталась{place}. "
+                               f"{RULE} Это демо-компания: "
                                f"собеседования не будет, а путь приглашения — настоящий."),
             salary_from=lo, salary_to=hi, contact_method="Демо: ответ — кнопками на этой странице",
             need_id=need.id, probe_id=None)
@@ -478,6 +478,8 @@ def mark_viewed(db: Session, room: LiveRoom, g: LiveGuest) -> None:
 # ------------------------------------------------------------------ вывод
 def _event_text(e: dict) -> str:
     t = EVENT_TEXT.get(e["kind"], e["kind"])
+    if e["kind"] == "selected" and e.get("rank") is None:  # места нет — «на -м месте» не пишем
+        t = "подборка пересчитана: {total} кандидатов"
     try:
         return t.format(**{k: ("—" if v is None else v) for k, v in e.items()})
     except (KeyError, IndexError):
@@ -491,7 +493,7 @@ def guest_out(db: Session, g: LiveGuest, *, now: datetime, own: bool) -> dict:
     out = {"number": g.number, "label": f"Гость {g.number}", "ref": g.ref, "direction": g.direction,
            "direction_title": DIRECTIONS.get(g.direction), "stage": stage, "answered": answered,
            "total": mini.N_ITEMS, "created_at": _iso(g.created_at), "finished_at": _iso(g.finished_at),
-           "result": None, "selection": None, "invite": None}
+           "result": None, "selection": None, "invite": None, "invite_failed": g.stage == "selected"}
     if not own:
         out["id"] = str(g.id)
     if stage == "testing" and own:

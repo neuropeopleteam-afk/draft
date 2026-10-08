@@ -43,21 +43,30 @@ test("жюри: экспресс-тест своими руками с подс�
     await expect(mode.getByRole("radio", { name: /Экспресс/ })).toHaveAttribute("aria-checked", "true");
     await expect(mode).toContainText("интервал θ заметно шире");
     await expect(page.getByRole("status").filter({ hasText: /новых тестов за 24 часа осталось \d+ из 30/ })).toBeVisible();
-    await page.getByRole("checkbox", { name: /Я прочитал\(а\), что отслеживается во время теста/ }).check();
+    await page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста .* с целью проверки самостоятельности выполнения/ }).check();
   });
 
   await test.step("5–7 заданий до остановки движком", async () => {
     await page.getByRole("button", { name: /^Начать экспресс-тест$/ }).click();
     await expect(page).toHaveURL(/\/candidate\/assessment\/test\/[\w-]+$/);
     const main = page.getByRole("main");
+    const result = page.getByRole("heading", { level: 1, name: /^(Грейд (не )?подтверждён|Принят уровень)/ });
+    const head = main.getByText(/Задание \d+ · отвечено \d+/);
     for (let i = 0; i < 12; i++) {
-      if (await page.getByRole("heading", { level: 1, name: /^(Грейд (не )?подтверждён|Принят уровень)/ }).isVisible().catch(() => false)) break;
-      await expect(main.getByText(/Задание \d+ · отвечено \d+/)).toBeVisible();
+      if (await result.isVisible().catch(() => false)) break;
+      await expect(head).toBeVisible();
+      const before = await head.textContent();
       await answerBlind(page);
       await main.getByRole("button", { name: /^Ответить/ }).click();
-      await page.waitForTimeout(300);
+      // после ответа — либо следующее задание (счётчик «Задание N · отвечено M» изменился), либо результат теста;
+      // ждём это событие, а не фиксированную паузу: результат рисуется позже следующего задания
+      await expect.poll(async () => {
+        if (await result.isVisible().catch(() => false)) return "result";
+        const now = await head.textContent({ timeout: 1000 }).catch(() => null);
+        return now && now !== before ? "next" : "wait";
+      }, { message: "после ответа — следующее задание или результат", timeout: 60_000 }).not.toBe("wait");
     }
-    await expect(page.getByRole("heading", { level: 1, name: /^(Грейд (не )?подтверждён|Принят уровень)/ })).toBeVisible({ timeout: 60_000 });
+    await expect(result).toBeVisible({ timeout: 60_000 });
   });
 
   await test.step("результат помечен «экспресс»; переход к категории", async () => {

@@ -353,7 +353,8 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
     return out
 
 
-def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> dict:
+def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, include_refs: tuple = ()) -> dict:
+    """include_refs: кандидаты, которые идут в results со своим настоящим местом, даже ниже limit (QR-демо жюри)."""
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     counts = category_counts(db)
     recs = recommended_categories(req, counts, cats)
@@ -378,7 +379,9 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30) -> d
     # Keep the established order: tier (grade status) → score; mandatory T1 and T0 conditions are explicit filters.
     scored.sort(key=lambda x: (tier(x[1]), -x[0], -(x[1].rating or 0), x[1].profile.public_ref or ""))
     results = []
-    for rank, (s, b, comps, reasons) in enumerate(scored[:limit], start=1):
+    for rank, (s, b, comps, reasons) in enumerate(scored, start=1):
+        if rank > limit and b.profile.public_ref not in include_refs:
+            continue
         results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
                         "reasons": reasons, "category_id": b.category_id,
                         "grade_status": b.grade_status, "card": card(b, cats)})
