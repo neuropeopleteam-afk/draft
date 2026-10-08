@@ -10,11 +10,15 @@
 
     python tools/llm/bench_needs.py --models openrouter=anthropic/claude-sonnet-5.5,yandex=yandexgpt/latest \
         --out docs/llm/needs_bench.json [--conc 3]
+
+Для независимой проверки одного нового прогона: --predictions-out docs/llm/needs_sonnet_tags.json.
+Полные requirements и отдельные списки тегов сохраняются без ключей и тела запроса.
 """
 from __future__ import annotations
 
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -43,6 +47,7 @@ def _recording_chat_json(*a, **kw):
     """Как need_parser.chat_json, но запоминает ответ модели в потоке (для «llm_only» и задержки)."""
     res = _orig_chat_json(*a, **kw)
     _tl.res = res
+    _tl.call_kwargs = {k: kw.get(k) for k in ("func", "max_tokens")}
     return res
 
 
@@ -54,7 +59,7 @@ def _pct(xs, q):
     return xs[min(len(xs) - 1, int(round(q * (len(xs) - 1))))] if xs else None
 
 
-def run_model(spec: str, rows: list[dict], conc: int) -> dict:
+def run_model(spec: str, rows: list[dict], conc: int, predictions_out: Path | None = None) -> dict:
     prov, model = spec.split("=", 1)
     os.environ["LLM_CHAIN"] = prov
     os.environ["LLM_MODEL_PARSE_NEED"] = f"{prov}={model}"
@@ -64,6 +69,7 @@ def run_model(spec: str, rows: list[dict], conc: int) -> dict:
     def one(row):
         t0 = time.monotonic()
         _tl.res = None
+        _tl.call_kwargs = None
         req = NP.parse_need(row["text"])
         res = _tl.res
         llm_only = None
@@ -73,10 +79,13 @@ def run_model(spec: str, rows: list[dict], conc: int) -> dict:
             llm_only = NP._with_quotes_from_original(NP.normalize(r, method="llm"), row["text"])
         return {"id": row["id"], "requirements": req, "llm_only": llm_only, "wall_s": round(time.monotonic() - t0, 3),
                 "ok": bool(res and res.ok), "error": res.error if res else "no_call",
-                "latency_ms": res.latency_ms if res else None, "usage": res.usage if res else None}
+                "latency_ms": res.latency_ms if res else None, "usage": res.usage if res else None,
+                "call_settings": _tl.call_kwargs}
 
     with ThreadPoolExecutor(conc) as ex:
         out = list(ex.map(one, rows))
+    if predictions_out is not None:
+        save_predictions(predictions_out, prov, model, rows, out)
     ok = [o for o in out if o["ok"]]
     lat = [o["latency_ms"] / 1000 for o in ok if o["latency_ms"] is not None]
     usage = [o["usage"] or {} for o in out]
@@ -97,21 +106,59 @@ def run_model(spec: str, rows: list[dict], conc: int) -> dict:
             "per_text": [{k: o[k] for k in ("id", "ok", "error", "latency_ms")} for o in out]}
 
 
+def save_predictions(path: Path, provider: str, model: str, rows: list[dict], out: list[dict]) -> None:
+    """Persist auditable per-text stack without secrets or submitted request bodies."""
+    corpus = ROOT / "docs/realdata/vacancies_50.json"
+    result = {
+        "schema_version": 1,
+        "purpose": "Per-vacancy predictions for independent auditing; this is a separately recorded run.",
+        "date_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "provider": provider,
+        "model": model,
+        "reasoning": llm.reasoning_for("parse_need") if provider == "openrouter" else None,
+        "corpus": "docs/realdata/vacancies_50.json",
+        "corpus_sha256": hashlib.sha256(corpus.read_bytes()).hexdigest(),
+        "benchmark_script_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        "per_text": [
+            {
+                "id": o["id"],
+                "source_url": row["source_url"],
+                "text_sha256": row["text_sha256"],
+                "ok": o["ok"],
+                "error": o["error"],
+                "latency_ms": o["latency_ms"],
+                "call_settings": o["call_settings"],
+                "stack_required": [i["tag"] for i in o["requirements"]["stack_required"]],
+                "stack_desired": [i["tag"] for i in o["requirements"]["stack_desired"]],
+                "requirements": o["requirements"],
+                "llm_only": o["llm_only"],
+            }
+            for row, o in zip(rows, out)
+        ],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--models", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--conc", type=int, default=3)
     ap.add_argument("--tag", default="", help="подпись прогона в ключе результата (например, «reasoning low»)")
+    ap.add_argument("--predictions-out", type=Path, help="полная выдача одного нового прогона для аудита")
     a = ap.parse_args()
+    specs = a.models.split(",")
+    if a.predictions_out is not None and len(specs) != 1:
+        ap.error("--predictions-out разрешён только для одной модели, чтобы не перезаписать её выдачу")
     rows = json.loads((ROOT / "docs/realdata/vacancies_50.json").read_text())["vacancies"]
     path = Path(a.out)
     result = json.loads(path.read_text()) if path.exists() else {
         "corpus": "docs/realdata/vacancies_50.json", "annotation": "silver (И8): не экспертная разметка", "models": {}}
     result["rules_only"] = measure(rows, [NP.parse_need(r["text"], use_llm=False) for r in rows])
-    for spec in a.models.split(","):
+    for spec in specs:
         t0 = time.time()
-        r = run_model(spec, rows, a.conc)
+        r = run_model(spec, rows, a.conc, a.predictions_out)
         r["wall_total_s"] = round(time.time() - t0, 1)
         r["date"] = time.strftime("%Y-%m-%d")
         r["reasoning"] = llm.reasoning_for("parse_need") if r["provider"] == "openrouter" else None
