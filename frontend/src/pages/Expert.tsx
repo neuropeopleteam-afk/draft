@@ -58,6 +58,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
         <span className="chip">{FORMAT[it.format] ?? it.format}</span>
         <span className="text-brand-ink/65">Кандидат {it.candidate_ref ?? "—"} · {DIRECTIONS[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
         {it.session_status === "finished" && it.status === "pending" && <span className="chip bg-brand-blush text-brand-plum">результат предварительный</span>}
+        {it.llm?.second && <span className="chip bg-[#ECEAF8] text-brand-night" title={`Причины второй оценки: ${(it.llm.checks ?? []).join(", ")}`}>Две оценки: {it.llm.model_label ?? "LLM"} {num(it.llm.scores?.[0])} · {it.llm.second.model_label ?? "вторая"} {it.llm.second.score == null ? "—" : num(it.llm.second.score)}{it.llm.error === "graders_disagree" ? " — разошлись" : ""}</span>}
         {it.llm?.error === "prompt_injection_suspected" && <span className="chip bg-brand-night text-white" title={it.llm.injection_note ?? undefined}>Похоже на инструкции оценщику — LLM не вызывался</span>}
       </div>
       <p className="mt-3 whitespace-pre-line font-semibold leading-relaxed text-brand-night">{it.stem}</p>
@@ -99,7 +100,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
       {(res || mode === "reviewed") && (
         <div className="mt-3"><Alert kind="ok">
           {res?.review?.applied || it.method === "expert" ? "Оценка эксперта вошла в результат теста." : "Оценка сохранена рядом с оценкой LLM."}
-          {(res?.review?.llm_score ?? it.llm?.score) != null && ` Балл LLM: ${num(Number(res?.review?.llm_score ?? it.llm?.score))}.`}
+          {(res?.review?.llm_score ?? it.llm?.score) != null && ` Балл ${it.llm?.model_label ?? "LLM"}: ${num(Number(res?.review?.llm_score ?? it.llm?.score))}.`}
           {res?.recomputed && ` Результат пересчитан: θ = ${signed(res.theta)}, грейд ${res.confirmed ? "подтверждён" : "не подтверждён"}.`}
           {res && <button className="ml-2 font-semibold underline" onClick={onDone}>Обновить очередь</button>}
         </Alert></div>

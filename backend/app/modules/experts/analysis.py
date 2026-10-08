@@ -177,13 +177,14 @@ def agreement(items: dict, labels: list[dict]) -> dict:
 #   взвешенная κ с консенсусом ≥ ABS_KAPPA (порог ETS для автоматической оценки: Williamson, Xi, Breyer, 2012)
 #   и MAE по критериям ≤ ABS_MAE. Допуск предварительный — до разметки людьми.
 # В обоих случаях: разброс прогонов ≤ MAX_SPREAD балла 0–3, контрольная инструкция не подняла балл.
-# Выбор — только среди моделей, разрешённых в продукте (российская модель, PRODUCT_MODELS); остальные — эталон.
+# Выбор — только среди моделей, работающих в продукте (PRODUCT_MODELS: цепочка оценщика llm/client.py — Claude через
+#   OpenRouter и запасная YandexGPT; зарубежные облачные модели разрешены организаторами, VS.3); остальные — эталон.
 GAP = 0.10
 ABS_KAPPA = 0.70
 ABS_MAE = 0.15
 MAX_SPREAD = 0.5
 DEGENERATE_INTER = 0.98
-PRODUCT_MODELS = ("yandexgpt",)
+PRODUCT_MODELS = ("yandexgpt", "anthropic", "claude")
 
 
 def _injection_runs(items: dict, inj: list[str], model: str) -> tuple[bool | None, str | None]:
@@ -268,7 +269,7 @@ def llm_agreement(items: dict, labels: list[dict], inter_kappa: float | None, pa
                     "latency_ms_median": int(np.median(lat)) if lat else None})
     key = "kappa_consensus" if criterion == "absolute" else "kappa_mean_with_experts"
     ok = [x for x in out if x["admissible"]]
-    if any(x["product"] for x in out):  # в продукте — только российская модель; остальные — эталон для сравнения
+    if any(x["product"] for x in out):  # в продукте — модели цепочки оценщика; остальные — эталон для сравнения
         ok = [x for x in ok if x["product"]]
     best = None
     if ok:
