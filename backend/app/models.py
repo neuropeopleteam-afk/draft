@@ -30,5 +30,7 @@ from app.modules.experts.models import ExpertItem, ExpertLabel, ExpertPanelist  
 from app.cup.models import Cup, CupEntry  # noqa: E402,F401 — «Кубок работодателя» (идея 10)
 from app.jury_live.models import LiveGuest, LiveRoom  # noqa: E402,F401 — живая демонстрация для жюри (идея 13)
 from app.modules.assignments.models import Assignment, AssignmentAttempt  # noqa: E402,F401 — задания работодателя (И7)
+from app.modules.subs.models import NeedSubEntry, NeedSubscription, NotifyPrefs, SubsDirty, SubsState, UserNotification  # noqa: E402,F401 — подписки и напоминания (И25)
+import app.modules.subs.events  # noqa: E402,F401 — слушатель «кандидат изменился» (И25)
 
 metadata = Base.metadata
