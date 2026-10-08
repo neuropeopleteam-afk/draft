@@ -425,6 +425,7 @@ def test_jury_sandbox_has_contact_demo(client):
     # демо-кандидаты не из первой пятёрки подборок песочницы
     from app.modules.contact.demo import shared_candidates
     from app.modules.matching.models import EmployerNeed
+    from app.modules.profiles.models import CandidateProfile
 
     mine = {"Backend-разработчик (интеграции с банками)", "Python-разработчик (платёжный шлюз)",
             "Backend-разработчик (антифрод)"}
@@ -434,6 +435,10 @@ def test_jury_sandbox_has_contact_demo(client):
         ids = [uuid.UUID(n["id"]) for n in client.get("/api/employer/needs", headers=H(e)).json()]
         needs = db.scalars(select(EmployerNeed).where(EmployerNeed.id.in_(ids))).all()
         assert needs and {p.public_ref for p in shared_candidates(db, needs)} <= refs
+        # не из пула кубков песочницы (backend.middle): иначе приглашение «лучшим трём» упирается в лимит 30 дней
+        cats = {p.current_category_id for p in db.scalars(select(CandidateProfile).where(
+            CandidateProfile.public_ref.in_(refs))).all()}
+        assert cats and "backend.middle" not in cats
     for n in client.get("/api/employer/needs", headers=H(e)).json():
         top = client.get(f"/api/employer/needs/{n['id']}/selections/1", headers=H(e)).json()["results"][:5]
         assert not {c["ref"] for c in top} & refs
