@@ -102,6 +102,13 @@ const STATUS: Record<string, [string, string]> = {
   expired: ["Истекло", "bg-gray-100 text-gray-500"],
   submitted: ["Ответ получен", "bg-[#ECEAF8] text-brand-night"],
   reviewed: ["Оценено", "bg-emerald-50 text-emerald-700"],
+  // встречное предложение и доступ к контактам (app.modules.contact): события истории без смены статуса
+  counter_sent: ["Встречное предложение", "bg-amber-50 text-amber-800"],
+  counter_accepted: ["Встречное принято", "bg-emerald-50 text-emerald-700"],
+  counter_declined: ["Встречное отклонено", "bg-gray-100 text-gray-600"],
+  counter_withdrawn: ["Встречное закрыто", "bg-gray-100 text-gray-500"],
+  contacts_revoked: ["Доступ к контактам отозван", "bg-amber-50 text-amber-800"],
+  contacts_restored: ["Доступ к контактам возвращён", "bg-emerald-50 text-emerald-700"],
 };
 
 export function Status({ s }: { s: string }) {

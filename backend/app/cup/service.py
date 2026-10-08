@@ -109,6 +109,7 @@ def create_cup(db: Session, user: User, company: Company, data: dict) -> Cup:
               rubric={"criteria": normalize_rubric(data.get("rubric"))} if mode == "rubric" else None,
               task_families=families, time_limit_min=int(data.get("time_limit_min") or 15), starts_at=starts,
               ends_at=ends, salary_from=data["salary_from"], salary_to=data["salary_to"],
+              salary_basis=data.get("salary_basis") or "gross",
               invite_top_n=int(data.get("invite_top_n") or 3), min_score=float(data.get("min_score", 0.5)),
               position_title=data["position_title"].strip(), offer_description=data["offer_description"].strip(),
               contact_method=data["contact_method"].strip(), status="active", summary={},
@@ -408,7 +409,7 @@ def finalize(db: Session, cup: Cup, actor: User | None, *, early: bool = False) 
             inv = inv_svc.create_invitation(db, employer, company, prof, position_title=cup.position_title,
                                             offer_description=text[:5000], salary_from=cup.salary_from,
                                             salary_to=cup.salary_to, contact_method=cup.contact_method,
-                                            need_id=None, probe_id=None)
+                                            need_id=None, probe_id=None, salary_basis=cup.salary_basis or "gross")
         except Exception as ex:  # noqa: BLE001 — например, лимит «одно приглашение за 30 дней»
             db.rollback()
             e = db.get(CupEntry, e.id)

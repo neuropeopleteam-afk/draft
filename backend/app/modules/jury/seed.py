@@ -395,6 +395,7 @@ def _create_jury(db: Session, sid: str) -> dict:
                       offer_description="Команда платежей: FastAPI, PostgreSQL, Redis. Удалённо, гибкий график.",
                       salary_from=240_000, salary_to=270_000, contact_method="Почта HR и звонок 20 минут",
                       need_id=needs[0].id, probe_id=None)
+    _jury_contact(db, eu, c, p2, p1, needs)  # переписка и встречное предложение (app.modules.contact, И4)
     cups = _jury_cups(db, sid, eu, c, p1)
     tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2)  # задания работодателя с автопроверкой (И7)
     _maria_extras(db, eu, p1)
@@ -411,6 +412,17 @@ def _create_jury(db: Session, sid: str) -> dict:
             "employer": {"company": c.name, "needs": len(needs), "cups": cups, "assignments": tasks},
             "expert": {"email": ex.email},
             "scenario": sid or None, "seconds": round(time.time() - t0, 1)}
+
+
+def _jury_contact(db: Session, eu: User, c: Company, ilya: CandidateProfile, maria: CandidateProfile, needs) -> None:
+    """Демо переписки, встречного предложения и отзыва контактов. Сбой не должен ломать сид жюри."""
+    from app.modules.contact.demo import seed_jury_contact
+
+    try:
+        seed_jury_contact(db, eu, c, ilya, maria, needs)
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("jury: demo contact failed")
 
 
 def _jury_cups(db: Session, sid: str, eu: User, c: Company, maria: CandidateProfile) -> list[str]:

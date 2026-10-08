@@ -19,6 +19,7 @@ from app.core.enums import ProbeStatus
 from app.core.fmt import quoted
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTIONS, GRADE_LEVEL, GRADES, STACK, category_title
+from app.modules.contact.salary import to_net
 from app.modules.invitations.models import Invitation, Probe
 from app.modules.invitations.service import cooldown_until, profile_by_ref
 from app.modules.matching import ranking
@@ -57,11 +58,13 @@ def _market_cell(cat: Category | None, req: dict) -> dict:
     if cat is None or not (cat.market_salary_from or cat.market_salary_to):
         return {"level": "market", "status": "neutral", "text": "Нет данных о рынке категории"}
     lo, hi, med = cat.market_salary_from, cat.market_salary_to, cat.market_salary_median
-    text = f"Рынок {cat.title}: {_rub(lo)} – {_rub(hi)}" + (f", медиана {_rub(med)}" if med else "")
+    # рынок — на руки (калькулятор Хабр Карьеры, docs/SALARY_SOURCES.md); вилка потребности сравнивается в том же
+    # основании: до вычета НДФЛ по умолчанию, «на руки» — если так сказано в тексте (need_parser.salary_net)
+    text = f"Рынок {cat.title}: {_rub(lo)} – {_rub(hi)} на руки" + (f", медиана {_rub(med)}" if med else "")
     sf, st = req.get("salary_from"), req.get("salary_to")
     status = "neutral"
     if sf or st:
-        top = st or sf
+        top = to_net(st or sf, "net" if req.get("salary_net") else "gross")
         if top and lo and top < lo:
             status, note = "mismatch", "верх вашей вилки ниже рынка категории — возможен отказ"
         elif med and top and top < med:
@@ -226,7 +229,8 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         {"key": "market", "group": "Рынок", "title": "Ожидания по рынку категории",
          "requirement": _salary_req(req.get("salary_from"), req.get("salary_to")),
          "quote": ((req.get("evidence") or {}).get("salary") or {}).get("quote"),
-         "hint": "Рыночный диапазон категории кандидата; его скрытый минимум не показывается никогда"},
+         "hint": "Рыночный диапазон категории кандидата на руки (калькулятор Хабр Карьеры, 25–75-й перцентиль, "
+                 "05.10.2026); скрытый минимум кандидата не показывается никогда"},
     ]
 
     out_c: list[dict] = []

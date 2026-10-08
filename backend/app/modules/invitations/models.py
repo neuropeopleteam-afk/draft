@@ -29,6 +29,8 @@ class Probe(UUIDPk, Timestamps, Base):
     task_text: Mapped[str] = mapped_column(sa.Text)
     salary_from: Mapped[int]
     salary_to: Mapped[int]
+    # gross — до вычета НДФЛ, net — на руки (app.modules.contact.salary)
+    salary_basis: Mapped[str] = mapped_column(sa.String(8), default="gross", server_default="gross")
     time_limit_s: Mapped[int] = mapped_column(default=900)
     status: Mapped[ProbeStatus] = mapped_column(str_enum(ProbeStatus, "probe_status"), default=ProbeStatus.sent)
     # solution — прислать решение; approach — описать подход; any — на выбор кандидата
@@ -61,6 +63,8 @@ class Invitation(UUIDPk, Timestamps, Base):
     offer_description: Mapped[str] = mapped_column(sa.Text)
     salary_from: Mapped[int]
     salary_to: Mapped[int]
+    # gross — до вычета НДФЛ, net — на руки (app.modules.contact.salary)
+    salary_basis: Mapped[str] = mapped_column(sa.String(8), default="gross", server_default="gross")
     contact_method: Mapped[str] = mapped_column(sa.String(255))  # способ связи со стороны работодателя
     employment_terms: Mapped[dict | None]
     # Подтверждённые факты (T1/T2), на которые опирается приглашение — «приглашение-доказательство».
@@ -71,6 +75,8 @@ class Invitation(UUIDPk, Timestamps, Base):
     viewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     responded_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     contacts_revealed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    # Кандидат отозвал доступ к контактам после принятия: contacts_revealed_at сброшен, карточка снова обезличена
+    contacts_revoked_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     decline_reason: Mapped[str | None] = mapped_column(sa.Text)
     expires_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
@@ -86,6 +92,9 @@ class InvitationEvent(UUIDPk, Base):
     to_status: Mapped[InvitationStatus] = mapped_column(str_enum(InvitationStatus, "invitation_to_status"))
     actor_user_id: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("users.id", ondelete="SET NULL"))
     note: Mapped[str | None] = mapped_column(sa.Text)
+    # Событие без смены статуса (from = to): встречное предложение, отзыв и возврат доступа к контактам
+    # (app.modules.contact). None — обычная смена статуса.
+    kind: Mapped[str | None] = mapped_column(sa.String(32))
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
 
 

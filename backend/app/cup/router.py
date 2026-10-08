@@ -20,6 +20,7 @@ from app.cup.models import Cup, CupEntry
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import category_title
+from app.modules.contact.salary import basis_out, basis_title
 from app.modules.invitations import service as inv_svc
 from app.modules.invitations.models import Invitation
 from app.modules.jury import scope as jury_scope
@@ -58,6 +59,7 @@ class CupIn(BaseModel):
     duration_days: int | None = Field(None, ge=1, le=30, description="Если ends_at не задан")
     salary_from: int = Field(gt=0, le=10_000_000, description="Вилка «от», ₽ — обязательно")
     salary_to: int = Field(gt=0, le=10_000_000, description="Вилка «до», ₽ — обязательно")
+    salary_basis: Literal["gross", "net"] = Field("gross", description="gross — до вычета НДФЛ, net — на руки")
     invite_top_n: int = Field(3, ge=1, le=10, description="Сколько лучших получат приглашение")
     min_score: float = Field(0.5, ge=0, le=1, description="Порог балла для приглашения, 0..1")
     position_title: str = Field(min_length=3, max_length=200)
@@ -112,7 +114,8 @@ def cup_out(db: Session, cup: Cup, side: str) -> dict:
         "mode": cup.mode, "mode_title": svc.MODES.get(cup.mode, cup.mode), "phase": svc.phase(cup), "status": cup.status,
         "starts_at": _iso(cup.starts_at), "ends_at": _iso(cup.ends_at),
         "time_limit_min": cup.time_limit_min, "n_tasks": len(cup.task_families or []),
-        "salary_from": cup.salary_from, "salary_to": cup.salary_to, "invite_top_n": cup.invite_top_n,
+        "salary_from": cup.salary_from, "salary_to": cup.salary_to, **basis_out(cup.salary_basis),
+        "invite_top_n": cup.invite_top_n,
         "min_score_pct": _pct(cup.min_score), "position_title": cup.position_title,
         "offer_description": cup.offer_description, "contact_method": cup.contact_method,
         "rubric": [{"id": c["id"], "title": c["title"], "weight": c["weight"]} for c in svc.rubric_of(cup)]
@@ -210,7 +213,7 @@ def notify_invited(bg: BackgroundTasks, db: Session, cup: Cup, inv_ids: list[uui
         bg.add_task(notify, cu.email, f"Приглашение по итогам кубка «{cup.title}»",
                     [f"Компания {comp.name if comp else ''} приглашает вас на позицию «{cup.position_title}» "
                      f"по итогам Кубка работодателя.",
-                     f"Вилка зарплаты: {_rub(cup.salary_from)} – {_rub(cup.salary_to)}.",
+                     f"Вилка зарплаты: {_rub(cup.salary_from)} – {_rub(cup.salary_to)} {basis_title(cup.salary_basis)}.",
                      "Ваши контакты работодатель увидит, только если вы примете приглашение."],
                     is_demo=cu.is_demo, link_path="/candidate/invitations")
         bg.add_task(integration_events.invitation_sent, iid)
@@ -334,7 +337,7 @@ def _cand_view(db: Session, cup: Cup, user: User) -> dict:
     e = svc.entry_of(db, cup.id, user.id)
     p = db.get(CandidateProfile, user.id)
     return {**cup_out(db, cup, "candidate"), "my_entry": entry_out(db, cup, e),
-            "below_my_minimum": inv_svc.below_minimum(p, cup.salary_to) if p else False,
+            "below_my_minimum": inv_svc.below_minimum(p, cup.salary_to, cup.salary_basis) if p else False,
             "can_join": e is None and svc.phase(cup) in ("upcoming", "active") and p is not None
             and p.current_category_id == cup.category_id,
             "profile_visible": bool(p and p.visible_to_employers),
@@ -356,7 +359,7 @@ def cand_cups(bg: BackgroundTasks, user: User = Depends(candidate), db: Session 
         e = svc.entry_of(db, cup.id, user.id)
         items.append({**cup_out(db, cup, "candidate"), "my_status": e.status if e else None,
                       "my_place": e.place if e else None,
-                      "below_my_minimum": inv_svc.below_minimum(p, cup.salary_to) if p else False})
+                      "below_my_minimum": inv_svc.below_minimum(p, cup.salary_to, cup.salary_basis) if p else False})
     return {"category_id": cat, "category_title": category_title(cat) if cat else None, "items": items}
 
 
