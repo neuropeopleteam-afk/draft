@@ -6,6 +6,7 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
 import { FeedbackSummary } from "./Feedback";
+import { useLlmOff } from "../../components/LlmOff";
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
 interface Onb {
@@ -452,6 +453,7 @@ const EMPTY_SIG = { focus_lost: 0, hidden_ms: 0, paste: 0, paste_chars: 0, copy:
 const EMPTY_TYPING = { len: 0, typed: 0, inserted: 0, dropped: 0, deleted: 0, keys: 0, active_ms: 0, last: 0, n: 0, mean: 0, m2: 0 };
 
 export function TestRun() {
+  const llmOff = useLlmOff();
   const { id } = useParams();
   const navigate = useNavigate();
   const { refresh } = useAuth();
@@ -646,7 +648,7 @@ export function TestRun() {
         )}
         {isText && (
           <div className="mt-5"><Field label={it.format === "predict_output" ? "Вывод программы" : "Ваш ответ"} htmlFor="ans"
-            hint={it.format === "predict_output" ? "Ровно то, что напечатает программа; пробелы в конце строк и пустые строки по краям не важны." : "Ответ оценивается по рубрике (критерии с весами). Не указывайте ФИО и контакты — они вырезаются перед оценкой."}>
+            hint={it.format === "predict_output" ? "Ровно то, что напечатает программа; пробелы в конце строк и пустые строки по краям не важны." : llmOff ? "Ответ оценивается по рубрике (критерии с весами). LLM-оценщик на этой установке не подключён — ответ проверит эксперт, до этого результат предварительный. Не указывайте ФИО и контакты." : "Ответ оценивается по рубрике (критерии с весами). Не указывайте ФИО и контакты — они вырезаются перед оценкой."}>
             <textarea id="ans" className={`input min-h-[8rem] ${it.format === "predict_output" ? "font-mono text-[13px]" : ""}`} rows={it.format === "predict_output" ? 5 : 9}
               value={(value as string) ?? ""} onChange={(e) => setValue(e.target.value)} onPaste={onPaste} onInput={onInput} onKeyDown={onKeyDown}
               spellCheck={it.format !== "predict_output"} />
@@ -673,6 +675,7 @@ export function TestRun() {
 
 function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
   const [r, setR] = useState<any>(initial);
+  const llmOff = useLlmOff();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const { refresh } = useAuth();
@@ -709,7 +712,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
           {r.details.time_used_s ? ` · время: ${Math.round(r.details.time_used_s / 60)} мин` : ""}
         </p>
       )}
-      {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.</Alert></div>}
+      {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " LLM-оценщик не подключён: ответы проверяет эксперт." : ""}</Alert></div>}
       {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={r.integrity} /></div>}
       {r.accept_lower_available && r.accept_lower_grade && (
         <div className="card mt-4 border-brand/30 bg-brand-blush/20 text-sm" data-testid="accept-lower">

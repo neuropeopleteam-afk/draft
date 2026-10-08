@@ -107,6 +107,9 @@ class AtsConnection(Timestamps, Base):
     last_check_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     last_check_ok: Mapped[bool | None]
     last_check_info: Mapped[dict] = mapped_column(default=dict)
+    # Обратный канал: последний опрос этапов кандидатов в ATS (раз в ATS_STAGE_POLL_S; воркер берёт строку CAS-ом)
+    stages_synced_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    stages_sync_info: Mapped[dict] = mapped_column(default=dict)
 
 
 class AtsLink(UUIDPk, Timestamps, Base):
@@ -126,3 +129,33 @@ class AtsLink(UUIDPk, Timestamps, Base):
     # Вакансии ATS, на которые кандидат уже добавлен: [{"id": 123, "join_id": 456}]
     vacancies: Mapped[list] = mapped_column(default=list)
     lock_until: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+
+
+class AtsStageEvent(UUIDPk, Base):
+    """Журнал обратного канала: этап кандидата в ATS изменился → что поменялось на платформе. Без ПДн."""
+
+    __tablename__ = "ats_stage_events"
+    __table_args__ = (
+        sa.CheckConstraint("status IN ('ok', 'error')", name="status"),
+        sa.Index("ix_ats_stage_events_company_created", "company_id", "created_at"),
+    )
+
+    company_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("companies.id", ondelete="CASCADE"))
+    provider: Mapped[str] = mapped_column(sa.String(16))
+    candidate_user_id: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("users.id", ondelete="CASCADE"))
+    invitation_id: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("invitations.id", ondelete="SET NULL"))
+    application_id: Mapped[uuid.UUID | None] = mapped_column(
+        sa.ForeignKey("vacancy_applications.id", ondelete="SET NULL"))
+    external_id: Mapped[str | None] = mapped_column(sa.String(64))  # id кандидата в ATS
+    job_id: Mapped[int | None] = mapped_column(sa.BigInteger)
+    join_id: Mapped[int | None] = mapped_column(sa.BigInteger)
+    stage_id: Mapped[int | None] = mapped_column(sa.BigInteger)
+    stage_name: Mapped[str | None] = mapped_column(sa.String(255))
+    stage_type: Mapped[str | None] = mapped_column(sa.String(64))
+    active: Mapped[bool | None]
+    stage: Mapped[str | None] = mapped_column(sa.String(16))  # этап на платформе: stages.PLATFORM_STAGES
+    prev_stage: Mapped[str | None] = mapped_column(sa.String(16))
+    effect: Mapped[str | None] = mapped_column(sa.String(255))  # что изменилось на платформе
+    status: Mapped[str] = mapped_column(sa.String(8), default="ok")
+    error: Mapped[str | None] = mapped_column(sa.String(500))
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)

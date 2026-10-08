@@ -1,12 +1,18 @@
-"""Нагрузочный тест «спокойного режима»: 50 одновременных пользователей по основным операциям.
+"""Нагрузочный тест «спокойного режима»: десятки одновременных пользователей по основным операциям.
 
-Запуск (учётки — временные, создаются tools/loadtest/lt_accounts.py внутри контейнера api):
+Учётки — временные, создаются tools/loadtest/lt_accounts.py внутри контейнера api (команды — tools/loadtest/run_stand.sh):
     LT_TOKENS=/tmp/lt_tokens.json locust -f tools/loadtest/locustfile.py --host https://fsp.neuropeople.pro \
         --headless -u 50 -r 5 -t 4m --csv docs/loadtest/run
 
-30 работодателей: подборка (версия подборки потребности), карточка кандидата, поиск по базе, категории.
-20 кандидатов: тест — начать сессию, получить задание, ответить (только задания с выбором варианта или строки:
-открытые ответы не отправляются, чтобы не нагружать LLM-оценку), статус категории.
+Работодатели (вес 3): подборка (версия подборки потребности), карточка кандидата, поиск по базе, категории с рынком,
+список потребностей, свои вакансии с откликами, приглашения, журнал передач в ATS и этапов из «Потока» (07.10),
+кубки компании.
+Кандидаты (вес 2): тест — начать сессию, получить задание, ответить (только задания с выбором варианта или строки:
+открытые ответы не отправляются, чтобы не нагружать LLM-оценку), статус категории; каталог вакансий, свои
+приглашения и отклики, кубки.
+Аналитик ФСП (вес 1): кабинет ФСП (обзор, спрос, воронка, зарплаты) и страница валидации — тяжёлые агрегаты по базе.
+Не нагружаются: вход жюри (создаёт песочницы — у него свой лимит 40 в час с адреса), разбор текста потребности
+и резюме через LLM, живая демонстрация по QR (разовые действия, не поток запросов).
 Пауза между действиями 1–3 с — поведение человека, не стресс-тест.
 """
 from __future__ import annotations
@@ -21,6 +27,7 @@ from locust import HttpUser, between, task
 DATA = json.load(open(os.environ.get("LT_TOKENS", "/tmp/lt_tokens.json")))
 _cand = itertools.cycle(DATA["candidates"])
 _emp = itertools.cycle(DATA["employers"])
+_fsp = itertools.cycle(DATA.get("analysts") or [{"token": ""}])
 REFS = DATA["refs"]
 DIRS = ["backend", "frontend", "data_ml", "qa", "security"]
 GRADES = ["junior", "middle", "senior"]
@@ -64,6 +71,27 @@ class Employer(HttpUser):
     @task(1)
     def categories(self):
         self.client.get("/api/employer/categories", name="категории с рынком")
+
+    @task(1)
+    def needs(self):
+        self.client.get("/api/employer/needs", name="потребности: список")
+
+    @task(1)
+    def vacancies(self):
+        self.client.get("/api/employer/vacancies", name="вакансии компании")
+
+    @task(1)
+    def invitations(self):
+        self.client.get("/api/employer/invitations", name="приглашения работодателя")
+
+    @task(1)
+    def ats(self):
+        self.client.get("/api/employer/ats/deliveries", name="ATS: журнал передач")
+        self.client.get("/api/employer/ats/stages", name="ATS: этапы из «Потока»")
+
+    @task(1)
+    def cups(self):
+        self.client.get("/api/employer/cups", name="кубки компании")
 
 
 class Candidate(HttpUser):
@@ -120,3 +148,33 @@ class Candidate(HttpUser):
     @task(1)
     def status(self):
         self.client.get("/api/assessment/status", name="тест: статус категории")
+
+    @task(1)
+    def vacancies(self):
+        self.client.get("/api/vacancies", params={"direction": random.choice(DIRS)}, name="вакансии: каталог")
+
+    @task(1)
+    def inbox(self):
+        self.client.get("/api/candidate/invitations", name="приглашения кандидата")
+        self.client.get("/api/candidate/applications", name="отклики кандидата")
+
+    @task(1)
+    def cups(self):
+        self.client.get("/api/candidate/cups", name="кубки кандидата")
+
+
+class FspAnalyst(HttpUser):
+    weight = 1
+    wait_time = between(2, 5)
+
+    def on_start(self):
+        self.client.headers["Authorization"] = f"Bearer {next(_fsp)['token']}"
+
+    @task(3)
+    def cabinet(self):
+        sec = random.choice(["overview", "demand", "funnel", "salaries", "fsp-effect"])
+        self.client.get(f"/api/fsp-cabinet/{sec}", name=f"кабинет ФСП: {sec}")
+
+    @task(1)
+    def validation(self):
+        self.client.get("/api/validation/report", name="валидация: отчёт")

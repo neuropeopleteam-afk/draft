@@ -14,6 +14,7 @@ os.environ["JWT_SECRET"] = "test-secret-not-for-prod-0123456789abcdef"
 os.environ["MAIL_BACKEND"] = "dev"
 os.environ.setdefault("ASSESSMENT_ENGINE", "stub")  # правила — на быстрой заглушке; банк — tests/test_bank_engine.py
 os.environ["LLM_DISABLED"] = "true"
+os.environ["ATS_STAGE_POLL_S"] = "0"  # фоновый опрос этапов ATS — вызовами в тестах (stages.sync_due)
 os.environ["JURY_SPARE_SANDBOXES"] = "0"  # фоновые песочницы мешали бы очистке БД между тестами; проверка — отдельно
 os.environ["ASSIGNMENTS_FEED_INTERVAL_S"] = "0"  # фоновая лента заданий — так же; её логика проверяется вызовом run_once
 os.environ.pop("POSTBOX_ACCESS_KEY_ID", None)

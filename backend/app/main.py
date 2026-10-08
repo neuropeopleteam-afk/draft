@@ -75,6 +75,10 @@ async def lifespan(_app: FastAPI):
         t.start()
     # Лента «Задания для вас»: раз в N дней предложить открытое задание работодателя (И7)
     assignments_feed.start_background(get_settings().assignments_feed_interval_s)
+    # Обратный канал ATS: опрос этапов кандидатов в «Потоке» (ATS_STAGE_POLL_S; 0 — выключено)
+    from app.integrations.ats.stages import start_poller
+
+    start_poller()
     yield
 
 

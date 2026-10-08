@@ -8,6 +8,7 @@ import { api } from "../../lib/api";
 import { SusPrompt } from "../../integrations/Sus";
 import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
 import { EmploymentTermsText } from "../../integrations/Youth";
+import { AtsStageBadge } from "../../integrations/Ats";
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -59,7 +60,7 @@ export function Invitations() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {i.thread?.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {i.thread.unread}</span>}
-                  <TrustBadge t={trust[i.id]} compact /><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
+                  <TrustBadge t={trust[i.id]} compact /><AtsStageBadge s={i.ats_stage} /><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
                 </div>
               </button>
             </li>
@@ -69,7 +70,7 @@ export function Invitations() {
       <Modal open={!!open} onClose={() => setOpen(null)} title={open?.position_title ?? ""}>
         {open && (
           <div className="space-y-4 text-sm">
-            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><span className="text-brand-ink/65">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span></div>
+            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><AtsStageBadge s={open.ats_stage} /><span className="text-brand-ink/65">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span></div>
             <SalaryLine big from={open.salary_from} to={open.salary_to} basis={open.salary_basis} />
             {open.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Работодатель этот минимум не видит.</Alert>}
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>
