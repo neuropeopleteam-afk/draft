@@ -541,7 +541,7 @@ def run(n: int = 500, quick: bool = False, write: bool = True, pilot_n: int = 10
                  "cuts": dict(GRADE_CUTS), "n_families": len(pool)}
     rep = {
         "signature": signature(seed=SEED, config=world_cfg, n=len(all_c),
-                               world=f"симуляция теста: {len(dirs)} направлений × {n} кандидатов, банк {len(pool)} семейств",
+                               world=f"симуляция теста: {len(dirs)} направлений × {n} кандидатов, семейств в банке: {len(pool)}",
                                command="make path-retest" if not quick else "python -m app.modules.validation.path_retest --quick"),
         "quick": quick, "n_per_direction": n, "directions": list(dirs), "config": world_cfg,
         "claimed": {g: int(claimed.get(g, 0)) for g in GRADE_ORDER},
