@@ -13,7 +13,7 @@
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, changed_lines, make_rng, sql_inserts, text_table
+from assessment_bank.gen_utils import build_variant, changed_lines, make_rng, plural, sql_inserts, text_table
 from assessment_bank.schema import AnswerKey, Check
 
 from ._dm_utils import sql_py_program
@@ -109,15 +109,16 @@ def _generate(seed: int, family_id: str, subtypes):
                     expect="fail"),
               Check(name="fixed_passes", runner="python", program=sql_py_program(fixed, setup, exp),
                     expect="pass", embeds_display_code=False)]
-    agg_text = "сумму" if agg == "SUM" else "среднее"
+    agg_text = "скользящую сумму" if agg == "SUM" else "скользящее среднее"
     stem = (f"Таблица `{T}({obj}, {day}, {val})` ({ctx}) содержит по одной строке на объект и "
             f"день, дни идут без пропусков. Для модели прогноза нужен признак `{alias}` — "
-            f"скользящее {agg_text} показателя «{what}» за последние {k} дней, включая текущий, "
+            f"{agg_text} показателя «{what}» за последние {k} {plural(k, 'день', 'дня', 'дней')}, включая текущий, "
             f"отдельно для каждого `{obj}`. Пример строк:\n"
             f"{text_table([obj, day, val], rows[:3])}\n"
             f"Признак получился неверным. Укажите номер строки запроса с ошибкой.")
-    why = {"frame_off_by_one": f"`{k} PRECEDING AND CURRENT ROW` — это {k + 1} строк; для {k} "
-                               f"дней нужно `{k - 1} PRECEDING`",
+    why = {"frame_off_by_one": f"`{k} PRECEDING AND CURRENT ROW` — это {k + 1} "
+                               f"{plural(k + 1, 'строка', 'строки', 'строк')}; для {k} "
+                               f"{plural(k, 'дня', 'дней', 'дней')} нужно `{k - 1} PRECEDING`",
            "no_partition": f"без `PARTITION BY {obj}` окно захватывает дни соседнего объекта",
            "future_frame": "окно смотрит вперёд (`FOLLOWING`): в признак попадают будущие дни — "
                            "это и неверно, и утечка"}[sub]

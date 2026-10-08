@@ -21,7 +21,7 @@ CONTEXTS = [
      "MULTIPLIERS", {"standard": 1, "express": 2, "night": 3}, "стоимость доставки по тарифу"),
     ("оператор связи", "get_fee", "set_monthly_fee", "fee", "plan_id", "period", "MONTHS",
      {"month": 1, "quarter": 3, "year": 12}, "плату за тариф за период"),
-    ("сервис аренды", "get_rent", "set_daily_rent", "rent", "flat_id", "term", "DAYS",
+    ("аренда жилья", "get_rent", "set_daily_rent", "rent", "flat_id", "term", "DAYS",
      {"day": 1, "week": 7, "month": 30}, "стоимость аренды за срок"),
 ]
 SUBTYPES = ["key_missing_param", "invalidate_constant", "invalidate_wrong_arg"]

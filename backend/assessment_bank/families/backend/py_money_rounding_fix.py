@@ -12,7 +12,7 @@ Q = Decimal("0.01")
 CONTEXTS = [
     ("apply_discount", "percent", "цену со скидкой {p} %", "discount", "100 - percent", "интернет-магазин"),
     ("add_vat", "rate", "цену с НДС {p} %", "vat", "100 + rate", "бухгалтерия"),
-    ("commission", "percent", "комиссию {p} % от суммы", "fee", "percent", "платёжный сервис"),
+    ("commission", "percent", "комиссию {p} % от суммы", "fee", "percent", "платёжная система"),
     ("cashback", "percent", "кешбэк {p} % от покупки", "cashback", "percent", "банк"),
 ]
 

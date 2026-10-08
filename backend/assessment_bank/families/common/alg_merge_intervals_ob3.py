@@ -256,8 +256,8 @@ def generate(seed: int):
                      f"        if {res} and start {op_ok} {res}[-1][0]:",
                      f"        if {res} and end {op_ok} {res}[-1][1]:"]
     rng.shuffle(bad_fixes)
-    fix_opts = [(f"Заменить строку {ln} на: {good.strip()}", good)] + \
-               [(f"Заменить строку {ln} на: {b.strip()}", b) for b in bad_fixes]
+    # текст — подпись, сама строка кода показывается один раз (в блоке кода)
+    fix_opts = [(f"Заменить строку {ln} на:", good)] + [(f"Заменить строку {ln} на:", b) for b in bad_fixes]
     opts2, key2 = make_options(rng, fix_opts[0], fix_opts[1:], step=2)
 
     cases = [repro] + clean + [

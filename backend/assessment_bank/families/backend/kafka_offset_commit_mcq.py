@@ -9,7 +9,7 @@ poll()» (чтение после пачки, потеря k..N). Один по�
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, plural
 from assessment_bank.schema import AnswerKey, Check
 
 FAMILY_ID = "backend.kafka.offset_commit_mcq"
@@ -75,10 +75,10 @@ def generate(seed: int):
     stem = (f"Kafka, {ctx}: потребитель группы `{group}` читает партицию {partition} топика `{topic}` с "
             f"`enable.auto.commit=false`. Последний зафиксированный offset — {committed}. `poll()` вернул {n} "
             f"сообщений (offset {committed}–{committed + n - 1}); потребитель обрабатывает их по одному "
-            f"(обработка — запись в базу) и после всей пачки вызывает `commitSync()`. Обработав {k} сообщений, "
+            f"(обработка — запись в базу) и после всей пачки вызывает `commitSync()`. Обработав {k} {plural(k, "сообщение", "сообщения", "сообщений")}, "
             f"процесс упал. Что произойдёт после перезапуска потребителя?")
     why = (f"Коммит не состоялся, поэтому зафиксированным остаётся offset {committed}: чтение начнётся с него, "
-           f"и первые {k} сообщений (offset {committed}–{committed + k - 1}), уже записанные в базу, будут "
+           f"и первые {k} {plural(k, "сообщение", "сообщения", "сообщений")} (offset {committed}–{committed + k - 1}), уже записанные в базу, будут "
            f"обработаны второй раз — это гарантия at-least-once, обработчик должен быть идемпотентным. "
            f"Коммита «после каждого сообщения» не было, а poll() сам по себе offset не фиксирует.")
     ak = AnswerKey(kind="option", value=key, explanation=why)

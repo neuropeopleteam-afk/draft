@@ -13,6 +13,7 @@ def generate(seed: int):
     ctx = rng.choice(CONTEXTS)
     tenants = rng.choice([5, 15, 40, 100])
     count = rng.choice([200, 1000, 5000, 12000])
+    count = max(count, tenants * 10)  # не меньше десяти документов на организацию
     retention = rng.choice([7, 14, 30, 90])
     asset = rng.choice(["личные заметки", "черновики заявок", "внутренние отчёты", "документы курсов"])
     condition = rng.choice(["совместный просмотр внутри организации разрешён только редакторам",

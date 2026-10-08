@@ -16,7 +16,7 @@
 """
 from __future__ import annotations
 
-from assessment_bank.gen_utils import build_variant, make_options, make_rng
+from assessment_bank.gen_utils import build_variant, make_options, make_rng, plural
 from assessment_bank.schema import AnswerKey, Check
 from ._support import CONTEXTS, SOURCES
 
@@ -64,7 +64,7 @@ def generate(seed: int):
             f"данных, общим для {k} экземпляров сервиса. Nonce — 96 бит, каждый экземпляр генерирует "
             f"его случайно (CSPRNG) для каждой записи; координации между экземплярами нет. Каждый "
             f"экземпляр шифрует до {_fmt(r)} записей в секунду круглосуточно; каждую запись затем "
-            f"читают (расшифровывают) в среднем {x} раз(а). Какой наибольший период ротации ключа "
+            f"читают (расшифровывают) в среднем {x} {plural(x, 'раз', 'раза', 'раз')}. Какой наибольший период ротации ключа "
             f"(целое число суток) соблюдает ограничение NIST SP 800-38D для случайных nonce?")
     opt_days = {o.id: int(o.text.split("раз в ")[1].split(" сут")[0].replace("\u202f", ""))
                 for o in opts}

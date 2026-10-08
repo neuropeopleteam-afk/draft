@@ -19,8 +19,12 @@ CONTEXTS = [("книжный магазин", "Book", "price", ("Author", "autho
             ("поддержка", "Ticket", "priority", ("Agent", "agent"), ("Customer", "customer")),
             ("кинотеатр", "Session", "seats", ("Movie", "movie"), ("Hall", "hall")),
             ("склад", "Batch", "qty", ("Supplier", "supplier"), ("Warehouse", "warehouse"))]
-NAMES_A = ["Ivanov", "Petrova", "Smirnov", "Orlova", "Kuznetsov"]
-NAMES_B = ["North", "South", "Central", "East"]
+# значения связанных таблиц — по смыслу модели (имена A, имена B); берутся первые n_a и n_b
+NAMES = {"Author": ["Ivanov", "Petrova", "Smirnov"], "Publisher": ["Orion", "Atlas"],
+         "Courier": ["Ivanov", "Petrova", "Smirnov"], "Depot": ["North", "South"],
+         "Agent": ["Ivanov", "Petrova", "Smirnov"], "Customer": ["Acme", "Borealis"],
+         "Movie": ["Aurora", "Meridian", "Horizon"], "Hall": ["Red", "Blue"],
+         "Supplier": ["Alfa", "Beta", "Gamma"], "Warehouse": ["North", "South"]}
 
 
 def generate(seed: int):
@@ -39,8 +43,8 @@ def generate(seed: int):
         n_pass = sum(1 for r in rows if r[1] >= thr)
     sel = rng.choice(["a", "b"])
     sel_f = fa if sel == "a" else fb
-    a_names = NAMES_A[:n_a]
-    b_names = NAMES_B[:n_b]
+    a_names = NAMES[ma][:n_a]
+    b_names = NAMES[mb][:n_b]
     code = "\n".join([
         "from django.db import connection, models",
         "from django.test.utils import CaptureQueriesContext",
@@ -95,7 +99,7 @@ def generate(seed: int):
             f"программа: число строк отчёта и число SQL-запросов внутри `report()`? Ответ — два числа через "
             f"пробел, как печатает программа.")
     other = fb if sel == "a" else fa
-    why = (f"После фильтра {fld} ≥ {thr} остаётся {n_pass} строк. select_related(\"{sel_f}\") подтягивает "
+    why = (f"После фильтра {fld} ≥ {thr} остаётся строк: {n_pass}. select_related(\"{sel_f}\") подтягивает "
            f"связь JOIN в том же запросе, а `{other}` загружается отдельным запросом для каждой строки: "
            f"Django не делит объекты между строками, даже если значение совпадает. Итого 1 + {n_pass}.")
     ak = AnswerKey(kind="output", value=expected, explanation=why)

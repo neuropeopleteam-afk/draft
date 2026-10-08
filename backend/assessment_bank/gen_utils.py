@@ -25,6 +25,14 @@ def make_rng(family_id: str, seed: int, salt: str = "") -> random.Random:
     return random.Random(int.from_bytes(digest[:8], "big"))
 
 
+def plural(n: int, one: str, few: str, many: str) -> str:
+    """Форма существительного после числительного: plural(2, «партиция», «партиции», «партиций»)."""
+    n = abs(int(n))
+    if 11 <= n % 100 <= 14:
+        return many
+    return one if n % 10 == 1 else few if 2 <= n % 10 <= 4 else many
+
+
 def dedent(s: str) -> str:
     return textwrap.dedent(s).strip("\n")
 
