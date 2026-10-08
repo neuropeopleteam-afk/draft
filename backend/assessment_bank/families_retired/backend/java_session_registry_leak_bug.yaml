@@ -1,0 +1,25 @@
+family_id: backend.java.session_registry_leak_bug
+title: Java — утечка памяти через долгоживущую коллекцию
+direction: backend
+skills: [java, java_memory, java_collections]
+target_grades: [junior, middle]
+format: find_bug
+language: java
+invariants:
+  code_lines: [35, 43]
+  operations: [26, 32]
+  defect_type: collection_leak_get_not_remove
+  extra:
+    subtype: get_instead_of_remove
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.1
+  sigma_variant: 0.25
+  basis: "Два класса, 35–43 значащие строки; симптом дан (OOM, объекты с флагом false удерживаются полем реестра); нужно понимать, что достижимые от долгоживущей коллекции объекты GC не собирает, и найти get вместо remove; Junior/Middle"
+generator: assessment_bank.families_retired.backend.java_session_registry_leak_bug
+version: 1
+description: >
+  Найти строку, из-за которой закрытые объекты остаются в Map реестра и не собираются GC. Проверка
+  исполнением (javac + JVM): после открытия и закрытия N объектов реестр должен быть пуст.

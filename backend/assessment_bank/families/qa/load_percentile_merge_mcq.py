@@ -6,8 +6,12 @@
 как histogram_quantile: сначала сложить гистограммы узлов, затем найти интервал, где
 находится 95-й перцентиль, и линейно интерполировать внутри него. Перцентили нельзя
 усреднять: у маленького медленного узла такой же вес, как у большого быстрого.
-Дистракторы — среднее p95 узлов, максимум p95 узлов, среднее p95, взвешенное по числу
-запросов, медиана p95 узлов. Ключ проверяется исполнением расчёта по показанной таблице.
+Версия 2: варианты ответа — методы, а не числа (панель 06.10: числовой вариант требовал
+многошаговой арифметики по 8 интервалам, b ≈ 1,9–2,5 при слабой дискриминации, а состав
+дистракторов 3 из 4 делал варианты неизоморфными). Состав фиксирован: среднее p95 узлов,
+взвешенное по числу запросов среднее, максимум. Ключ проверяется исполнением: по показанной
+таблице считается перцентиль общей выборки, и только метод ключа с ним совпадает, остальные
+отличаются не меньше чем на 15 %.
 """
 from __future__ import annotations
 
@@ -25,6 +29,7 @@ SERVICES = ["API каталога", "сервис авторизации", "API 
 PROGRAM = '''BOUNDS = {bounds!r}
 NODES = {nodes!r}   # имя -> число запросов по интервалам (0, 50], (50, 100], ...
 P = {p!r}
+METHODS = {methods!r}   # буква варианта -> метод
 
 
 def quantile(counts, p):
@@ -38,9 +43,17 @@ def quantile(counts, p):
     raise ValueError("перцентиль в последнем интервале")
 
 
+# эталон: перцентиль общей выборки — по общей гистограмме всех запросов
 merged = [sum(col) for col in zip(*NODES.values())]
-value = quantile(merged, P)
-print(f"около {{round(value / 5) * 5}} мс")
+truth = quantile(merged, P)
+per = {{n: quantile(c, P) for n, c in NODES.items()}}
+tot = {{n: sum(c) for n, c in NODES.items()}}
+value = {{"merge": truth,
+         "mean": sum(per.values()) / len(per),
+         "weighted": sum(per[n] * tot[n] for n in per) / sum(tot.values()),
+         "max": max(per.values())}}
+ok = [letter for letter, m in METHODS.items() if abs(value[m] - truth) / truth < 0.01]
+print(ok[0] if len(ok) == 1 else "AMBIGUOUS")
 '''
 
 
@@ -93,49 +106,49 @@ def generate(seed: int):
             continue
         vals = list(per.values())
         tot = {nm: sum(c) for nm, c in nodes.items()}
-        srt = sorted(vals)
         cand = {"mean": sum(vals) / k, "max": max(vals),
-                "weighted": sum(per[n] * tot[n] for n in names) / sum(tot.values()),
-                "median": (srt[k // 2] if k % 2 else (srt[k // 2 - 1] + srt[k // 2]) / 2)}
-        cand = {n: v for n, v in cand.items()
-                if abs(v - good) / good >= 0.15 and _fmt(v) != _fmt(good)}
-        if len(cand) < 3:
-            continue
-        chosen = rng.sample(sorted(cand), 3)
-        vs = sorted([good] + [cand[c] for c in chosen])
-        if all(b / a >= 1.15 for a, b in zip(vs, vs[1:])):
+                "weighted": sum(per[n] * tot[n] for n in names) / sum(tot.values())}
+        # все три метода-дистрактора должны давать заметно иной результат, чем перцентиль общей выборки
+        if all(abs(v - good) / good >= 0.15 for v in cand.values()):
             break
     else:
         raise RuntimeError("не удалось подобрать гистограммы")
-    opts, key = balanced_options(FAMILY_ID, seed, rng, (_fmt(good), None),
-                                 [(_fmt(cand[c]), None) for c in chosen])
-    head = ["Узел"] + ["≤50"] + [f"{a}–{b}" for a, b in zip(BOUNDS, BOUNDS[1:])] + ["Всего", f"p{int(p * 100)}, мс"]
+    pct = int(p * 100)
+    chosen = ["mean", "weighted", "max"]
+    label = {"good": f"Сложить гистограммы узлов по интервалам и взять p{pct} по суммарной гистограмме",
+             "mean": f"Взять среднее арифметическое p{pct} узлов",
+             "weighted": f"Взять среднее p{pct} узлов, взвешенное по числу запросов узла",
+             "max": f"Взять максимальный p{pct} среди узлов"}
+    opts, key = balanced_options(FAMILY_ID, seed, rng, (label["good"], None),
+                                 [(label[c], None) for c in chosen])
+    by_text = {o.text: o.id for o in opts}
+    methods = {by_text[label["good"]]: "merge", **{by_text[label[c]]: c for c in chosen}}
+    head = ["Узел"] + ["≤50"] + [f"{a}–{b}" for a, b in zip(BOUNDS, BOUNDS[1:])] + ["Всего", f"p{pct}, мс"]
     rows = [[nm] + [ru_num(x) for x in nodes[nm]] + [ru_num(sum(nodes[nm])), ru_num(int(round(per[nm])))]
             for nm in names]
     table = text_table(head, rows)
-    pct = int(p * 100)
     shown = round(sum(per.values()) / k)
     stem = (f"Нагрузочный тест: {svc} работает на {k} узлах за балансировщиком. Каждый узел "
             f"отдаёт гистограмму времени ответа — число запросов по интервалам, мс (таблица ниже, "
             f"запросов дольше 2000 мс нет); p{pct} узла посчитан по его гистограмме с линейной "
             f"интерполяцией внутри интервала, как в histogram_quantile. На дашборде p{pct} "
-            f"сервиса показан как среднее p{pct} узлов — {ru_num(shown)} мс. Чему равен p{pct} по "
-            f"всем запросам сервиса, если считать тем же методом?")
-    why = {"mean": f"среднее p{pct} узлов — перцентили нельзя усреднять",
-           "max": f"максимум p{pct} узлов — это хвост маленького медленного узла",
-           "weighted": f"взвешенное по числу запросов среднее p{pct} — всё равно усреднение "
-                       f"перцентилей, а не перцентиль общей выборки",
-           "median": f"медиана p{pct} узлов — тоже не перцентиль общей выборки"}
+            f"сервиса показан как среднее p{pct} узлов — {ru_num(shown)} мс. Как получить p{pct} по "
+            f"всем запросам сервиса (тем же методом интерполяции)?")
+    why = {"mean": f"среднее p{pct} узлов — перцентили нельзя усреднять: маленький медленный узел весит "
+                   f"столько же, сколько большой быстрый",
+           "max": f"максимум p{pct} узлов — это хвост одного маленького узла, а не {pct}-й перцентиль всех запросов",
+           "weighted": f"взвешенное среднее p{pct} — всё равно усреднение перцентилей, а не перцентиль общей выборки"}
     ak = AnswerKey(kind="option", value=key,
-                   explanation=(f"Сначала гистограммы узлов складываются по интервалам "
-                                f"(sum by (le)), затем по общей гистограмме находится интервал с "
-                                f"{pct}-м перцентилем и выполняется интерполяция: ≈ {good:.0f} мс. "
+                   explanation=(f"Перцентиль общей выборки получается только из общей гистограммы: гистограммы "
+                                f"узлов складываются по интервалам (sum by (le)), затем по сумме находится интервал "
+                                f"с {pct}-м перцентилем и выполняется интерполяция — здесь ≈ {good:.0f} мс. "
                                 f"Дистракторы: " + "; ".join(why[c] for c in chosen) + "."))
-    checks = [Check(name="merge", runner="python", expect="stdout_equals", expected_stdout=_fmt(good),
-                    program=PROGRAM.format(bounds=BOUNDS, nodes=nodes, p=p),
+    checks = [Check(name="merge", runner="python", expect="stdout_equals", expected_stdout=key,
+                    program=PROGRAM.format(bounds=BOUNDS, nodes=nodes, p=p, methods=methods),
                     embeds_display_code=False)]
     return build_variant(FAMILY_ID, seed, stem=stem, code=table, options=opts, answer_key=ak,
                          context=svc, verification="execution", checks=checks, language="text",
-                         display_code_note="Программа складывает те же гистограммы и считает "
-                                           "перцентиль с интерполяцией.",
-                         params={"k": k, "p": p, "distractors": chosen})
+                         display_code_note="Программа складывает те же гистограммы, считает перцентиль общей "
+                                           "выборки и сверяет с ним каждый метод из вариантов: верный совпадает, "
+                                           "остальные отличаются не меньше чем на 15 %.",
+                         params={"k": k, "p": p, "distractors": chosen, "good": round(good)})
