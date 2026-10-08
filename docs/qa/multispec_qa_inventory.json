@@ -14,5 +14,5 @@
     "Попытка выбрать третье направление: понятная ошибка, подтверждения не удалены"
   ],
   "automated_backend": "backend/tests/test_multispec.py",
-  "evidence_directory": "qa_multispec/"
+  "evidence_directory": "docs/qa/multispec/"
 }
