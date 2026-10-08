@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/jury";
+import { GUIDE_EVENT, guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/jury";
 import { errText } from "./ui";
 
 const PERSONA_NAME: Record<string, string> = {
@@ -13,20 +13,27 @@ const whoAmI = (email: string) => {
   return p ? `${PERSONA_NAME[p]} · ${email.includes("+") ? "своя копия демо" : "общее демо"}` : email;
 };
 
-/** На телефоне проводник (кнопка или панель) идёт во всю ширину низа экрана — под него резервируется место внизу
- * страницы, чтобы последние кнопки и строки можно было прокрутить выше него. */
-function useReserveBottom(el: HTMLElement | null) {
+/** Проводник не должен закрывать кнопки страницы: на телефоне (кнопка или панель во всю ширину низа) место резервируется
+ * внизу страницы, на широком экране (≥ 1280 px) у открытой панели — справа (поля body), чтобы последние кнопки и
+ * строки можно было прокрутить выше панели и левее неё. */
+function useReserveSpace(el: HTMLElement | null, side: boolean) {
   useEffect(() => {
     const phone = window.matchMedia("(max-width: 639px)");
-    const clear = () => document.body.style.removeProperty("padding-bottom");
+    const wide = window.matchMedia("(min-width: 1280px)");
+    const clear = () => { document.body.style.removeProperty("padding-bottom"); document.body.style.removeProperty("padding-right"); };
     if (!el) return clear;
-    const set = () => (phone.matches ? document.body.style.setProperty("padding-bottom", `${el.offsetHeight + 16}px`) : clear());
+    const set = () => {
+      clear();
+      if (phone.matches) document.body.style.setProperty("padding-bottom", `${el.offsetHeight + 16}px`);
+      else if (side && wide.matches) document.body.style.setProperty("padding-right", `${el.offsetWidth + 24}px`);
+    };
     const ro = new ResizeObserver(set);
     ro.observe(el);
     phone.addEventListener("change", set);
+    wide.addEventListener("change", set);
     set();
-    return () => { ro.disconnect(); phone.removeEventListener("change", set); clear(); };
-  }, [el]);
+    return () => { ro.disconnect(); phone.removeEventListener("change", set); wide.removeEventListener("change", set); clear(); };
+  }, [el, side]);
 }
 
 /** Пошаговый проводник для экспертов жюри по сквозному сценарию (п. 3.3 ТЗ). Можно скрыть. */
@@ -39,8 +46,15 @@ export function JuryGuide() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [box, setBox] = useState<HTMLElement | null>(null);
-  useReserveBottom(box);
+  useReserveSpace(box, !hidden);
   const active = guide.on() || isJury(me?.email);
+  // «Показать проводник» с главной и «Скрыть» в другой вкладке — состояние берём из хранилища
+  useEffect(() => {
+    const sync = () => setHidden(guide.hidden());
+    window.addEventListener(GUIDE_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => { window.removeEventListener(GUIDE_EVENT, sync); window.removeEventListener("storage", sync); };
+  }, []);
 
   // Шаг по текущему адресу: проводник «узнаёт» экран, на котором вы находитесь. Если адресу отвечают несколько
   // шагов (например, «Категория» у разных демо-кандидатов), берётся шаг текущей персоны.
@@ -57,7 +71,7 @@ export function JuryGuide() {
   if (hidden) {
     return (
       <button ref={setBox} className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm"
-        onClick={() => { guide.show(); setHidden(false); }} aria-label="Показать проводник для жюри">
+        onClick={() => guide.show()} aria-label="Показать проводник для жюри">
         <span className="sm:hidden">Проводник · {step + 1}/{STEPS.length}</span>
         <span className="hidden sm:inline">Проводник жюри · шаг {step + 1}/{STEPS.length}</span>
       </button>
@@ -89,7 +103,7 @@ export function JuryGuide() {
       aria-label="Проводник для экспертов жюри">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>
-        <button className="rounded px-2 py-1 text-sm text-white/75 hover:text-white" onClick={() => { guide.hide(); setHidden(true); }} aria-label="Скрыть проводник">Скрыть</button>
+        <button className="rounded px-2 py-1 text-sm text-white/75 hover:text-white" onClick={() => guide.hide()} aria-label="Скрыть проводник">Скрыть</button>
       </div>
       <div className="mt-2 flex gap-1" aria-hidden>
         {STEPS.map((_, i) => <span key={i} className={`h-1 flex-1 rounded-full ${i < step ? "bg-brand-soft" : i === step ? "bg-white" : "bg-white/20"}`} />)}
