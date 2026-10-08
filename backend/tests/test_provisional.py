@@ -87,6 +87,19 @@ def _junior(client, theta, email="jun@example.com"):
     return t, res
 
 
+def _age_sessions(email: str, days: int = 31) -> None:
+    """Сдвигает завершённые сессии кандидата в прошлое: правило 30 дней после неподтверждённой попытки (И2) истекло."""
+    from app.modules.assessment.models import TestSession
+    from app.modules.auth.models import User
+
+    with SessionLocal() as db:
+        uid = db.scalar(select(User.id).where(User.email == email))
+        for ts in db.scalars(select(TestSession).where(TestSession.user_id == uid, TestSession.finished_at.is_not(None))):
+            ts.finished_at = ts.finished_at - timedelta(days=days)
+            ts.started_at = ts.started_at - timedelta(days=days)
+        db.commit()
+
+
 def _profile(email):
     from app.modules.auth.models import User
     from app.modules.profiles.models import CandidateProfile
@@ -128,6 +141,11 @@ def test_api_provisional_assigned_visible_and_confirmed(client, theta):
     card = client.get("/api/employer/candidates", params={"category": "backend.junior"}, headers=H(e)).json()["items"][0]
     assert card["provisional"]["p_pct"] == 0 and card["provisional"]["reason"] == "below"
 
+    # неподтверждённая полная попытка на Junior закрывает полный повтор на 30 дней (И2; консилиум 07.10, 7.3б) —
+    # сам исход «предварительно» повтор не закрывает (7.3а)
+    r = client.post("/api/assessment/sessions", json={"claimed_grade": "junior"}, headers=H(t))
+    assert r.status_code == 409 and r.json()["detail"]["code"] == "retake_cooldown"
+    _age_sessions("jun@example.com")
     # подтверждение — не смена грейда: причина confirmed, грейд тот же, 90 дней — от даты попадания в категорию
     theta["v"] = (-0.5, 0.3)
     res = pass_test(client, t, "junior")
@@ -313,3 +331,32 @@ def test_api_confirm_mode_with_bank(client, monkeypatch):
         assert ts.result["state"]["prior"] and (as_aware(ts.deadline_at) - utcnow()) <= timedelta(minutes=31)
     st = client.get("/api/assessment/status", headers=H(t)).json()
     assert st["provisional"]["attempts_left"] == 1 and st["active_mode"] == "confirm"
+
+
+# ---------------------------------------------------------------- консилиум 07.10, п. 7.3 (слияние И1 × И2 × И13)
+
+def test_provisional_accept_lower_intern_and_no_retake_lock(client, theta):
+    """(в) у «Junior (предварительно)» доказанный Стажёр принимается без нового теста — предварительный грейд
+    сравнивается как отсутствие категории; (а) исход «предварительно» не закрывает повтор на 30 дней."""
+    theta["v"] = (-1.3, 0.3)  # P(θ ≥ −1,0) ≈ 16 % → предварительно; P(θ ≥ −1,75) ≈ 93 % → Стажёр доказан
+    t, res = _junior(client, theta)
+    assert res["provisional"] and res["category_provisional"] and res["category_id"] == "backend.junior"
+    assert res["accept_lower_available"] and res["accept_lower_grade"] == "intern" and res["accept_lower_p"] >= 0.8
+    st = client.get("/api/assessment/status", headers=H(t)).json()
+    assert st["retake_locks"] == {}  # (а): «предварительно» — не неудача, повтор на Junior открыт
+    sid = res["session_id"]
+    r = client.get(f"/api/assessment/sessions/{sid}/result", headers=H(t))
+    assert r.status_code == 200 and r.json()["accept_lower_grade"] == "intern"
+    r = client.post(f"/api/assessment/sessions/{sid}/accept-lower", headers=H(t))
+    assert r.status_code == 200, r.text
+    out = r.json()
+    assert out["accepted_lower"] == "intern" and out["category_id"] == "backend.intern" and out["grade_changed"]
+    assert out["category_status"] == "confirmed" and not out["accept_lower_available"]
+    st = client.get("/api/assessment/status", headers=H(t)).json()
+    assert st["current"]["category_id"] == "backend.intern" and not st["current"]["provisional"]
+    assert st["provisional"] is None and st["grade_history"][0]["to"] == "intern"
+    # работодатель: категория Стажёра подтверждена, «предварительно» в Junior больше нет
+    e = employer(client)
+    assert client.get("/api/employer/candidates", params={"category": "backend.junior"}, headers=H(e)).json()["total"] == 0
+    r = client.get("/api/employer/candidates", params={"category": "backend.intern"}, headers=H(e)).json()
+    assert r["total"] == 1 and not r["items"][0]["category"]["provisional"]

@@ -18,6 +18,7 @@ from sqlalchemy import or_
 
 DOMAIN = "jury.example.com"
 PERSONA_LOCAL = {"candidate": "candidate", "candidate_nofsp": "candidate-nofsp", "candidate_junior": "candidate-junior",
+                 "candidate_new": "candidate-new",
                  "employer": "employer", "expert": "expert", "fsp": "fsp-analyst"}
 SID_RE = re.compile(r"^[a-z0-9]{10}$")
 CLAIM = "jsc"

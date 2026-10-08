@@ -34,12 +34,11 @@ _mx = threading.Lock()
 _new_ip = SlidingWindow(12, 3600)
 _new_all = SlidingWindow(60, 3600)
 LANDING = {"candidate": "/candidate", "candidate_nofsp": "/candidate", "candidate_junior": "/candidate/category",
-           "employer": "/employer", "expert": "/expert",
-           "fsp": "/fsp"}
+           "candidate_new": "/candidate/express", "employer": "/employer", "expert": "/expert", "fsp": "/fsp"}
 
 
 class LoginIn(BaseModel):
-    persona: Literal["candidate", "candidate_nofsp", "candidate_junior", "employer", "expert", "fsp"]
+    persona: Literal["candidate", "candidate_nofsp", "candidate_junior", "candidate_new", "employer", "expert", "fsp"]
     scenario: str | None = Field(None, pattern=r"^(new|[a-z0-9]{10})$",
                                  description="new — создать свою песочницу; id — продолжить свою; пусто — общее демо")
 
@@ -162,3 +161,23 @@ def reset(request: Request, user: User = Depends(get_current_user), db: Session 
             _state.clear()
     out = seed.reset(db, sid)
     return {"ok": True, **out, **_token(db, sid, persona)}
+
+
+@router.delete("/sandbox", summary="Удалить СВОЮ песочницу жюри (токен демо-персоны песочницы)",
+               description="Удаляет все учётки, компанию, кубки и гостей живой демонстрации своей песочницы без "
+                           "пересоздания — дешевле сброса; e2e-прогон убирает за собой так. Общее демо не удаляется.",
+               responses={401: err("Не выполнен вход"), 403: err("Только для демо-персон своей песочницы")})
+def delete_sandbox(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    _available()
+    persona, sid = scope.parse(user.email)
+    if persona is None or not user.is_demo:
+        raise api_error(403, "jury_only", "Удалить песочницу может только демо-персона жюри")
+    if not sid:
+        raise api_error(403, "jury_shared", "Общее демо не удаляется — оно одно на всех экспертов жюри")
+    t0 = time.time()
+    with seed._lock(db):
+        n = seed.delete_jury(db, sid)
+    with _mx:
+        _state.pop(sid, None)
+    log.info("jury: песочница %s удалена по запросу (%d учёток)", sid, n)
+    return {"ok": True, "scenario": sid, "deleted_users": n, "seconds": round(time.time() - t0, 1)}
