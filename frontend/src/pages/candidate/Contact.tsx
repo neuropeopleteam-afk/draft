@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, errText, range, useApi } from "../../components/ui";
+import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, errText, range, ruText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { SusPrompt } from "../../integrations/Sus";
 import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
@@ -17,13 +17,14 @@ export function Invitations() {
   const [cReason, setCReason] = useState<"salary" | "role" | "spam" | "other">("salary");
   const [cComment, setCComment] = useState("");
   const [err, setErr] = useState<string | null>(null);
-  const trust = useInvitationsTrust();
+  const [trustV, setTrustV] = useState(0);  // ответ и жалоба меняют индекс доверия — перечитать в открытом окне
+  const trust = useInvitationsTrust(trustV);
 
   async function complain() {
     setErr(null);
     try {
       setOpen(await api<any>(`/candidate/invitations/${open.id}/complaint`, { body: { reason: cReason, comment: cComment || null } }));
-      setComplaining(false); void reload();
+      setComplaining(false); setTrustV((v) => v + 1); void reload();
     } catch (e) { setErr(errText(e)); }
   }
   async function view(i: any) {
@@ -34,7 +35,7 @@ export function Invitations() {
     setErr(null);
     try {
       const r = await api<any>(`/candidate/invitations/${open.id}/${kind}`, { body: kind === "decline" ? { reason: reason || null } : {} });
-      setOpen(r); void reload();
+      setOpen(r); setTrustV((v) => v + 1); void reload();
     } catch (e) { setErr(errText(e)); }
   }
 
@@ -68,11 +69,11 @@ export function Invitations() {
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>
             <EmploymentTermsText terms={open.employment_terms} />
             <p><b>Способ связи:</b> {open.contact_method}</p>
-            <InvitationTrust invitationId={open.id} />
+            <InvitationTrust invitationId={open.id} version={trustV} />
             {open.evidence?.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-night">На чём основано приглашение</p>
-                <ul className="mt-2 space-y-1.5">{open.evidence.map((e: any, k: number) => <li key={k} className="flex items-start gap-2"><Level level={e.level} /><span>{e.text}</span></li>)}</ul>
+                <ul className="mt-2 space-y-1.5">{open.evidence.map((e: any, k: number) => <li key={k} className="flex items-start gap-2"><Level level={e.level} /><span>{ruText(e.text)}</span></li>)}</ul>
               </div>
             )}
             <div><p className="mb-2 font-semibold text-brand-night">История</p><History items={open.history} /></div>

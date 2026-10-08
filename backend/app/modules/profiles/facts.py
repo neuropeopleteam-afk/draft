@@ -17,6 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import as_aware
 from app.core.enums import EvidenceLevel, FactSource
+from app.core.fmt import theta_se
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
@@ -321,7 +322,7 @@ def grade_status(b: "Bundle") -> dict:
                           "direction": la.direction_id, "theta": la.theta,
                           "se": la.theta_se, "at": la.finished_at.date().isoformat() if la.finished_at else None}
         how = (f"тест на {GRADES.get(la.claimed_grade_id, la.claimed_grade_id)} не подтвердил грейд"
-               + (f" (θ = {la.theta:+.2f} ± {la.theta_se:.2f})" if la.theta is not None and la.theta_se is not None else ""))
+               + (f" (θ = {theta_se(la.theta, la.theta_se)})" if la.theta is not None and la.theta_se is not None else ""))
     else:
         how = "тест не пройден"
     out["text"] = (f"Грейд не подтверждён (заявлен {GRADES.get(g, g) if g else '—'}): {how}. "

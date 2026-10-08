@@ -220,7 +220,11 @@ def salary_factor(db: Session, company: Company, cats: dict[str, Category]) -> t
 
 
 def acceptance_factor(db: Session, company: Company) -> dict:
-    rows = db.scalars(select(Invitation.status).where(Invitation.company_id == company.id)).all()
+    """Доля принятых среди отвеченных приглашений. Отклонённое жалобой не считается: у жалобы свой штраф, а иначе
+    жалоба могла не снизить индекс — третий ответ переводит долю из «мало ответов» (5 баллов) в посчитанную."""
+    complained = select(InvitationComplaint.invitation_id).where(InvitationComplaint.company_id == company.id)
+    rows = db.scalars(select(Invitation.status).where(Invitation.company_id == company.id,
+                                                      Invitation.id.not_in(complained))).all()
     acc = sum(1 for s in rows if s == InvitationStatus.accepted)
     dec = sum(1 for s in rows if s == InvitationStatus.declined)
     n = acc + dec

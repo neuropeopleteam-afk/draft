@@ -43,7 +43,7 @@ export function SusSurvey({ context = "e2e", onDone, intro }: { context?: string
               {SCALE.map((s, k) => (
                 <button key={k} type="button" role="radio" aria-checked={ans[i] === k + 1} title={s}
                   onClick={() => setAns((prev) => prev.map((a, j) => (j === i ? k + 1 : a)))}
-                  className={`rounded-lg py-2 text-sm font-bold transition-colors ${ans[i] === k + 1 ? "bg-brand text-white" : "bg-brand-blush/40 text-brand-plum hover:bg-brand-blush"}`}>
+                  className={`rounded-lg py-2 text-sm font-bold transition-colors ${ans[i] === k + 1 ? "bg-brand-strong text-white" : "bg-brand-blush/40 text-brand-plum hover:bg-brand-blush"}`}>
                   {k + 1}
                 </button>
               ))}

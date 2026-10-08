@@ -3,7 +3,7 @@
  * задании (A — пара «потребность — кандидат», B — ответ по рубрике, C — порог грейда по Ангоффу) → прогресс
  * в обзоре. Карточки обезличены: ни имён, ни места в выдаче, ни баллов системы.
  */
-import { expect, productIssue, test } from "../lib/fixtures";
+import { expect, test } from "../lib/fixtures";
 import { juryEnter } from "../lib/ui";
 
 test("эксперт: инструкция → оценка в заданиях A, B, C → прогресс сохранён", async ({ page }) => {
@@ -28,8 +28,8 @@ test("эксперт: инструкция → оценка в заданиях 
     await expect(main.getByText("Потребность 1", { exact: true })).toBeVisible();
     // обезличено: ни имён, ни места и баллов подборки
     await expect(main.getByText(/Мария Королёва|Илья Сергеев|место \d+ из|из 100/)).toHaveCount(0);
-    await productIssue("кабинет эксперта: дата теста в карточке пары в формате ГГГГ-ММ-ДД (в остальном интерфейсе — «6 октября 2026 г.»)",
-      async () => (await main.getByText(/^Тест: оценка уровня .*\d{4}-\d{2}-\d{2}$/).count()) > 0);
+    // дата теста — как во всём интерфейсе («6 октября 2026 г.»), не ГГГГ-ММ-ДД
+    await expect(main.getByText(/^Тест: оценка уровня .*\d{4}-\d{2}-\d{2}$/)).toHaveCount(0);
     // выбор оценки сохраняет её и сразу открывает следующую пару
     await main.getByRole("radiogroup", { name: "Соответствие" }).getByRole("radio", { name: /^2 — с оговорками/ }).click();
     await expect(main.getByText(/^2 из \d+ · оценено 1/)).toBeVisible({ timeout: 30_000 });

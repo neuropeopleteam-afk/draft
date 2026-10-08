@@ -80,7 +80,7 @@ CI (GitHub Actions, `.github/workflows`): `ci.yml` — бэкенд на SQLite 
 docker compose exec -T api python -m app.modules.demo.seed           # 150 кандидатов, 10 работодателей, 15 потребностей
 docker compose exec -T api python -m app.modules.demo.seed --reset   # пересоздать
 docker compose exec -T api python -m app.modules.demo.seed --delete  # удалить только демо-записи
-docker compose exec -T api python -m app.integrations.vacancies.demo  # 11 демо-вакансий (одна — «приманка»)
+docker compose exec -T api python -m app.integrations.vacancies.demo  # 11 демо-вакансий (одна — «приманка»); seed создаёт их сам
 ```
 
 Демо-записи помечены `is_demo` (адреса `*@demo.invalid`, компании «Демо: …», паспорта ФСП из демо-реестра);

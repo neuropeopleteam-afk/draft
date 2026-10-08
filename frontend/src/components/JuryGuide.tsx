@@ -13,6 +13,22 @@ const whoAmI = (email: string) => {
   return p ? `${PERSONA_NAME[p]} · ${email.includes("+") ? "своя копия демо" : "общее демо"}` : email;
 };
 
+/** На телефоне проводник (кнопка или панель) идёт во всю ширину низа экрана — под него резервируется место внизу
+ * страницы, чтобы последние кнопки и строки можно было прокрутить выше него. */
+function useReserveBottom(el: HTMLElement | null) {
+  useEffect(() => {
+    const phone = window.matchMedia("(max-width: 639px)");
+    const clear = () => document.body.style.removeProperty("padding-bottom");
+    if (!el) return clear;
+    const set = () => (phone.matches ? document.body.style.setProperty("padding-bottom", `${el.offsetHeight + 16}px`) : clear());
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    phone.addEventListener("change", set);
+    set();
+    return () => { ro.disconnect(); phone.removeEventListener("change", set); clear(); };
+  }, [el]);
+}
+
 /** Пошаговый проводник для экспертов жюри по сквозному сценарию (п. 3.3 ТЗ). Можно скрыть. */
 export function JuryGuide() {
   const { me, signIn } = useAuth();
@@ -22,6 +38,8 @@ export function JuryGuide() {
   const [hidden, setHidden] = useState(guide.hidden());
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [box, setBox] = useState<HTMLElement | null>(null);
+  useReserveBottom(box);
   const active = guide.on() || isJury(me?.email);
 
   // Шаг по текущему адресу: проводник «узнаёт» экран, на котором вы находитесь. Если адресу отвечают несколько
@@ -38,9 +56,10 @@ export function JuryGuide() {
   if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/")) return null;
   if (hidden) {
     return (
-      <button className="fixed bottom-4 right-4 z-40 rounded-full bg-brand-night px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-brand-plum"
+      <button ref={setBox} className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm"
         onClick={() => { guide.show(); setHidden(false); }} aria-label="Показать проводник для жюри">
-        Проводник жюри · шаг {step + 1}/{STEPS.length}
+        <span className="sm:hidden">Проводник · {step + 1}/{STEPS.length}</span>
+        <span className="hidden sm:inline">Проводник жюри · шаг {step + 1}/{STEPS.length}</span>
       </button>
     );
   }
@@ -66,7 +85,7 @@ export function JuryGuide() {
   }
 
   return (
-    <aside className="fixed bottom-4 right-4 z-40 max-h-[calc(100vh-6rem)] w-[min(24rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-4 text-white shadow-2xl ring-1 ring-white/10"
+    <aside ref={setBox} className="fixed inset-x-2 bottom-2 z-40 max-h-[min(55vh,26rem)] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-3.5 text-white shadow-2xl ring-1 ring-white/10 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-h-[calc(100vh-6rem)] sm:w-[min(24rem,calc(100vw-2rem))] sm:p-4"
       aria-label="Проводник для экспертов жюри">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>
@@ -82,8 +101,8 @@ export function JuryGuide() {
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20 disabled:opacity-40" disabled={step === 0 || busy} onClick={() => go(step - 1)}>Назад</button>
         {!here || needLogin
-          ? <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step)}>{busy ? "Входим…" : needLogin || !s.cta.startsWith("Войти") ? s.cta : "Открыть экран"}</button>
-          : step < STEPS.length - 1 && <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft" disabled={busy} onClick={() => go(step + 1)}>{busy ? "Входим…" : `Дальше: ${STEPS[step + 1].title}`}</button>}
+          ? <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(step)}>{busy ? "Входим…" : needLogin || !s.cta.startsWith("Войти") ? s.cta : "Открыть экран"}</button>
+          : step < STEPS.length - 1 && <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(step + 1)}>{busy ? "Входим…" : `Дальше: ${STEPS[step + 1].title}`}</button>}
         <button className="ml-auto text-xs font-semibold text-white/70 underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={reset}>Сбросить своё демо</button>
       </div>
     </aside>

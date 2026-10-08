@@ -271,7 +271,7 @@ export function FspEffect() {
         return (
           <>
             <DemoNote rep={rep} />
-            <div className="grid gap-3 sm:grid-cols-3 md:gap-5">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5 [&>*:last-child]:col-span-2 sm:[&>*:last-child]:col-span-1">
               <Stat label="С ФСП (T2)" value={fpct(fsp.invite_rate)} hint={`приглашены ${fk(fsp.invited)} из ${fk(fsp.candidates)}`} />
               <Stat label="Без истории ФСП" value={fpct(nofsp.invite_rate)} hint={`приглашены ${fk(nofsp.invited)} из ${fk(nofsp.candidates)} · без штрафа`} />
               <Stat label="Отношение" value={fx(fsp.lift_vs_no_fsp)} hint={`с поправкой на категорию ${fx(fsp.adjusted_ratio)} к ожидаемому`} />

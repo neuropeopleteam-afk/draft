@@ -55,7 +55,9 @@ DEMAND_STATUS_TITLES = {"confirmed": "подтверждён тестом (T1)",
 
 # Темы для семейств, навыки которых не сводятся к стек-тегам справочника
 _EXTRA_TOPICS = [({"networking", "cidr", "ipv4", "routing"}, "networking", "Сети и адресация"),
-                 ({"web_security", "xss", "csp"}, "web-security", "Безопасность веб-клиента")]
+                 ({"web_security", "xss", "csp"}, "web-security", "Безопасность веб-клиента"),
+                 ({"performance", "latency", "capacity_planning"}, "system-performance", "Производительность систем")]
+OTHER_TOPIC_TITLE = "Прочие темы"  # задание без стек-тега и без темы из _EXTRA_TOPICS (тег "other")
 
 # Аспекты темы — навыки семейств банка по-русски. Навык без названия здесь в аспекты не выводится
 # (обычно это сама тема: python, sql, javascript …).
@@ -83,6 +85,8 @@ ASPECT_TITLES: dict[str, str] = {
     "contextvars": "contextvars", "event_loop": "цикл событий", "messaging": "очереди сообщений", "queues": "очереди",
     "at_least_once": "доставка «хотя бы один раз»", "payments": "платежи", "billing": "биллинг", "money": "денежные суммы",
     "decimal": "Decimal", "numeric_precision": "точность вычислений", "distributed_systems": "распределённые системы",
+    "latency": "задержки и хвосты распределения", "capacity_planning": "планирование мощности",
+    "probability": "вероятности",
     "reliability": "надёжность", "consistency": "согласованность", "cache_invalidation": "инвалидация кэша",
     "error_handling": "обработка ошибок", "system_design": "проектирование систем", "architecture": "архитектура",
     "observability": "наблюдаемость", "tracing": "трассировка", "logging": "логирование", "monitoring": "мониторинг",
@@ -198,6 +202,8 @@ def _title(tag: str) -> str:
     for _, t, title in _EXTRA_TOPICS:
         if t == tag:
             return title
+    if tag == "other":
+        return OTHER_TOPIC_TITLE
     return STACK.get(tag, (tag,))[0]
 
 
@@ -274,7 +280,7 @@ def _topics_from_session(ts: TestSession) -> list[dict] | None:
                 own = to_stack_tags(it.get("block") or "common", [sk])
                 if (own[0] if own else tags[0]) != tag:
                     continue
-                if sk in ASPECT_TITLES and ASPECT_TITLES[sk].lower() != _title(tag).lower():
+                if sk in ASPECT_TITLES and ASPECT_TITLES[sk].lower() not in _title(tag).lower():
                     a = d["aspects"][sk]
                     a[0] += 1
                     if score is not None:

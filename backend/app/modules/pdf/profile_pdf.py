@@ -19,6 +19,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from app.core.config import get_settings
+from app.core.fmt import theta_se
 from app.modules.catalog.seed_data import GRADES
 
 NIGHT = colors.HexColor("#310F53")
@@ -107,7 +108,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
         el.append(Paragraph("Основная и дополнительная специализации", st["h2"]))
         for s in specializations:
             proof = "подтверждено отдельным тестом · T1" if s.get("confirmed_by") == "test" else "ожидает подтверждения"
-            metrics = ((f"; θ = {s['theta']:+.2f} ± {s['se']:.2f}").replace(".", ",").replace("-", "−")
+            metrics = (f"; θ = {theta_se(s['theta'], s['se'])}"
                        if s.get("theta") is not None and s.get("se") is not None else "")
             el.append(Paragraph(
                 f"<b>{_esc(s.get('category_title') or s['direction_title'])}</b> — "
@@ -127,7 +128,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
             ["Грейд", _esc(card.get("grade_title"))],
             *([["Уровень доказанности", f"предварительно: P(уровень ≥ Junior) = {_esc(pv.get('p_pct', '—'))} %"]]
               if pv else []),
-            ["Оценка уровня θ", f"{t['theta']:+.2f} ± {t['se']:.2f}" if t.get("theta") is not None else "—"],
+            ["Оценка уровня θ", theta_se(t['theta'], t['se']) if t.get("theta") is not None else "—"],
             ["Верных ответов", f"{t.get('correct')} из {t.get('answered')}"],
             ["Дата", _esc(t.get("date"))],
         ], st))
@@ -140,7 +141,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
         at = gs.get("attempt") or {}
         el.append(Paragraph(
             (f"Последняя попытка ({_esc(at.get('at'))}): тест на {_esc(GRADES.get(at.get('grade'), at.get('grade')))} "
-             f"не подтвердил грейд, θ = {at['theta']:+.2f} ± {(at.get('se') or 0):.2f}. Результат в скор не входит."
+             f"не подтвердил грейд, θ = {theta_se(at['theta'], at.get('se') or 0)}. Результат в скор не входит."
              if at.get("theta") is not None else "Тест ещё не пройден."), st["p"]))
     if growth and growth.get("available") and audience == "candidate":
         el.extend(_growth_block(growth, st))

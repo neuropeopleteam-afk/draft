@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AuthShell } from "../../components/AuthShell";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, errText, Loading, Seg, useApi, years } from "../../components/ui";
+import { Alert, dateOnly, Empty, errText, Loading, Seg, useApi, years } from "../../components/ui";
 import { api, tokenStore } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 
@@ -260,9 +260,9 @@ export function ExpertPairs() {
           <section className="card space-y-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <span className="chip">{c.category ?? "категория не присвоена"}</span>
-              {c.integrity && <span className={`chip ${c.integrity.level === "low" ? "bg-brand text-white" : ""}`}>Достоверность: {c.integrity.title ?? c.integrity.level}</span>}
+              {c.integrity && <span className={`chip ${c.integrity.level === "low" ? "bg-brand-strong text-white" : ""}`}>Достоверность: {c.integrity.title ?? c.integrity.level}</span>}
             </div>
-            {c.test && <p className="text-brand-ink/80">Тест: оценка уровня θ = {fmt(c.test.theta)} ± {fmt(c.test.se)}, верно {c.test.correct} из {c.test.answered}{c.test.date ? `, ${c.test.date}` : ""}</p>}
+            {c.test && <p className="text-brand-ink/80">Тест: оценка уровня θ = {fmt(c.test.theta)} ± {fmt(c.test.se)}, верно {c.test.correct} из {c.test.answered}{c.test.date ? `, ${dateOnly(c.test.date)}` : ""}</p>}
             {c.integrity?.reasons?.length > 0 && <p className="text-xs text-brand-ink/65">{c.integrity.reasons.join("; ")}</p>}
             <div>
               <p className="font-semibold text-brand-night">Подтверждено тестом</p>

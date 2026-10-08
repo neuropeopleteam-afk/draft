@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 export const PHASE: Record<string, [string, string]> = {
   upcoming: ["Скоро старт", "bg-[#ECEAF8] text-brand-night"],
-  active: ["Идёт", "bg-brand text-white"],
+  active: ["Идёт", "bg-brand-strong text-white"],
   judging: ["Подведение итогов", "bg-brand-blush text-brand-plum"],
   finished: ["Завершён", "bg-emerald-50 text-emerald-700"],
   cancelled: ["Отменён", "bg-gray-100 text-gray-500"],
