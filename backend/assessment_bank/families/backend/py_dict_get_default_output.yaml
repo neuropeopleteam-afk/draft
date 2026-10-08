@@ -1,0 +1,24 @@
+family_id: backend.py.dict_get_default_output
+title: Python — dict.get со значением по умолчанию
+direction: backend
+skills: [python, python_collections]
+target_grades: [intern, junior]
+format: predict_output
+language: python
+invariants:
+  code_lines: [8, 8]
+  operations: [8, 8]
+  extra:
+    subtype: dict_get_default
+time_limit_s: 120
+canary: false
+prior_difficulty:
+  b: -1.5
+  a: 1.0
+  sigma_variant: 0.15
+  basis: "Словарь-счётчик из 6–9 элементов и четыре print; одна ловушка — get отсутствующего ключа возвращает умолчание или None и ключ не добавляет; у порога Junior, грейд «Стажёр»"
+generator: assessment_bank.families.backend.py_dict_get_default_output
+version: 1
+description: >
+  Лёгкое семейство у порога Junior: вывод программы со словарём-счётчиком и dict.get. Исполняется Python;
+  ключ — независимый подсчёт.

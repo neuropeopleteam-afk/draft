@@ -9,7 +9,10 @@
   - javascript/typescript: число «значимых» строк — без строк из одних скобок,
     комментариев, объявлений interface/type;
   - sql: число предложений (SELECT, FROM, JOIN, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT, WITH);
-  - bash: число команд (разделители — перевод строки, |, &&, ;) без определения функций.
+  - bash: число команд (разделители — перевод строки, |, &&, ;) без определения функций;
+  - go/java: как javascript — «значимые» строки без строк из одних скобок и комментариев;
+  - dockerfile: число инструкций (FROM, RUN, COPY, …; продолжения строк «\\» — одна инструкция);
+  - yaml: число строк с ключом или элементом списка.
 """
 from __future__ import annotations
 
@@ -17,7 +20,7 @@ import ast
 import re
 
 _COMMENT_PREFIX = {"python": "#", "bash": "#", "sql": "--", "javascript": "//",
-                   "typescript": "//"}
+                   "typescript": "//", "go": "//", "java": "//", "dockerfile": "#", "yaml": "#"}
 
 
 def count_code_lines(code: str | None, language: str) -> int:
@@ -97,9 +100,42 @@ def _bash_ops(code: str) -> int:
     return n
 
 
+_DOCKER_INSTR = re.compile(r"^(FROM|RUN|CMD|LABEL|EXPOSE|ENV|ADD|COPY|ENTRYPOINT|VOLUME|USER|WORKDIR|ARG|"
+                           r"ONBUILD|STOPSIGNAL|HEALTHCHECK|SHELL)\b", re.IGNORECASE)
+
+
+def _docker_ops(code: str) -> int:
+    n, cont = 0, False
+    for line in code.splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        if not cont and _DOCKER_INSTR.match(s):
+            n += 1
+        cont = s.endswith("\\")
+    return n
+
+
+def _yaml_ops(code: str) -> int:
+    n = 0
+    for line in code.splitlines():
+        s = line.strip()
+        if not s or s.startswith("#"):
+            continue
+        if s.startswith("- ") or re.match(r"^[\w.\-\"']+\s*:", s):
+            n += 1
+    return n
+
+
 def count_operations(code: str | None, language: str) -> int:
     if not code:
         return 0
+    if language in ("go", "java"):
+        return _js_ops(code)
+    if language == "dockerfile":
+        return _docker_ops(code)
+    if language == "yaml":
+        return _yaml_ops(code)
     if language == "python":
         return _py_ops(code)
     if language in ("javascript", "typescript"):

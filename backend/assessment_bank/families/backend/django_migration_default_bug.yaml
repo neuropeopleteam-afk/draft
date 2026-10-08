@@ -1,0 +1,25 @@
+family_id: backend.django.migration_default_bug
+title: Django — default=timezone.now() и константа в миграции
+direction: backend
+skills: [django, django_migrations, django_orm, python]
+target_grades: [junior, middle]
+format: find_bug
+language: python
+invariants:
+  code_lines: [8, 10]
+  operations: [4, 6]
+  defect_type: default_called_at_import
+  extra:
+    subtype: callable_called_in_default
+time_limit_s: 200
+canary: false
+prior_difficulty:
+  b: -0.7
+  a: 1.1
+  sigma_variant: 0.2
+  basis: "Модель из 4–6 полей; симптом дан (константа datetime в миграции, новая миграция при каждом makemigrations); нужно знать разницу между значением и вызываемым объектом в default; ловушки auto_now/auto_now_add/default=date.today/default=list — верные строки; Junior/Middle"
+generator: assessment_bank.families.backend.django_migration_default_bug
+version: 1
+description: >
+  Найти поле модели, у которого значение по умолчанию вычислено при импорте. Проверка исполнением
+  настоящего Django: две записи с паузой получают разные значения, default поля — вызываемый объект.
