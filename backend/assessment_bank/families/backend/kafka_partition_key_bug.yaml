@@ -1,0 +1,26 @@
+family_id: backend.kafka.partition_key_bug
+title: Kafka — ключ сообщения и порядок событий внутри партиции
+direction: backend
+skills: [kafka, kafka_partitions, python]
+target_grades: [junior, middle]
+format: find_bug
+language: python
+invariants:
+  code_lines: [15, 17]
+  operations: [3, 3]
+  defect_type: wrong_partition_key
+  extra:
+    subtype: key_by_status
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.3
+  a: 1.1
+  sigma_variant: 0.25
+  basis: "15–17 строк: продюсер с 3–5 настройками (строки-ловушки acks, linger_ms, retries) и функция публикации; симптом дан (события одного объекта не по порядку); нужно знать, что порядок гарантируется внутри партиции, а партиция выбирается по ключу; Junior/Middle"
+generator: assessment_bank.families.backend.kafka_partition_key_bug
+version: 1
+description: >
+  Найти строку, из-за которой события одного объекта расходятся по разным партициям. Проверка исполнением:
+  подменный KafkaProducer считает партицию алгоритмом murmur2 Kafka; дефектный код раскладывает события
+  одного объекта по нескольким партициям, исправленный — по одной.

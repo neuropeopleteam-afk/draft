@@ -1,0 +1,27 @@
+family_id: backend.django.on_commit_fix
+title: Транзакции Django — побочный эффект до коммита и transaction.on_commit
+direction: backend
+skills: [django, django_transactions, transactions, python]
+target_grades: [middle, senior]
+format: choose_fix
+language: python
+invariants:
+  code_lines: [14, 14]
+  operations: [10, 10]
+  n_options: 4
+  defect_type: side_effect_in_transaction
+  extra:
+    distractors: [after_block, after_check, eager_call]
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.1
+  sigma_variant: 0.2
+  basis: "Четыре варианта одной функции (10–11 строк); два дистрактора верны в автокоммите и ломаются только при внешней транзакции (вложенный atomic — savepoint), один отличается от верного отсутствием lambda; состав дистракторов фиксирован, варьируются контекст и лимит; Middle/Senior"
+generator: assessment_bank.families.backend.django_on_commit_fix
+version: 1
+description: >
+  Уведомление внутри transaction.atomic уходит и при откате. Выбрать исправление, верное и внутри
+  внешней транзакции. Проверка исполнением настоящего Django: успешный вызов, откат по проверке,
+  откат внешней транзакции.

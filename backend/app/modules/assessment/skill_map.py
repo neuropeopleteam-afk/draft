@@ -23,6 +23,11 @@ _GLOBAL: dict[str, str] = {
     "python": "python", "asyncio": "asyncio", "concurrency": "asyncio", "race_conditions": "asyncio",
     "javascript": "javascript", "typescript": "typescript", "react": "react",
     "pytest": "pytest", "statistics": "statistics", "mlops": "mlops", "cryptography": "cryptography",
+    # технологические семейства банка (06.10): Docker — общий блок, остальные — backend
+    "docker": "docker", "dockerfile": "docker", "docker_compose": "docker", "docker_build_cache": "docker",
+    "docker_networking": "docker", "docker_volumes": "docker",
+    # лёгкие семейства у порога Junior (07.10)
+    "sql_aggregates": "sql", "sql_null": "sql", "filesystem": "linux",
 }
 
 _BY_DIRECTION: dict[str, dict[str, str]] = {
@@ -33,6 +38,17 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "reliability": "rest-api", "caching": "redis", "decimal": "python", "money": "python",
         "numeric_precision": "python", "dict": "python", "functions": "python", "state": "python",
         "sorting": "python", "algorithms": "python", "testing": "pytest",
+        # технологические семейства банка (06.10); «concurrency»/«race_conditions» в них не используются
+        "go": "go", "go_slices": "go", "go_defer": "go", "panic_recover": "go", "goroutines": "go",
+        "go_channels": "go", "data_races": "go", "sync_mutex": "go", "go_context": "go",
+        "java": "java", "java_collections": "java", "equals_hashcode": "java", "java_streams": "java",
+        "java_concurrency": "java", "completable_future": "java", "java_exceptions": "java",
+        "django": "django", "django_orm": "django", "django_forms": "django", "django_transactions": "django",
+        "kafka": "kafka", "kafka_consumer_groups": "kafka", "kafka_partitions": "kafka",
+        "kafka_delivery": "kafka", "kafka_offsets": "kafka", "kafka_outbox": "kafka",
+        # семейства 07.10: Django — миграции и сигналы, Java — память и GC, Python — коллекции
+        "django_signals": "django", "django_migrations": "django", "java_memory": "java", "java_gc": "java",
+        "python_collections": "python",
     },
     "frontend": {
         "arrays": "javascript", "async_await": "javascript", "closures": "javascript", "operators": "javascript",
@@ -41,6 +57,7 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "testing": "frontend-testing", "accessibility": "a11y", "aria": "a11y", "screen_readers": "a11y",
         "focus_management": "a11y", "keyboard": "a11y", "html": "html-css",
         "state_management": "state-management", "bundlers": "vite-webpack", "build": "vite-webpack",
+        "js_types": "javascript",
     },
     "data_ml": {
         "ab_testing": "statistics", "hypothesis_testing": "statistics", "p_value": "statistics",
@@ -57,6 +74,7 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "data_drift": "mlops", "psi": "mlops", "ml_systems": "mlops",
         "llm": "nlp", "rag": "nlp", "chunking": "nlp", "ranking": "nlp",
         "time_series": "pandas", "slowly_changing_data": "sql", "window_functions": "sql",
+        "descriptive_stats": "statistics",
     },
     "qa": {
         "test_review": "test-design", "false_positive": "test-design", "defect_localization": "test-design",
@@ -89,6 +107,7 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
         "security_logging": "siem-soc", "vulnerability_triage": "siem-soc", "cvss": "siem-soc",
         "risk_prioritization": "siem-soc", "prioritization": "siem-soc", "evidence_preservation": "forensics",
         "recovery": "siem-soc", "communication": "siem-soc", "data_minimization": "owasp",
+        "secrets_handling": "owasp",
     },
 }
 
@@ -102,3 +121,19 @@ def to_stack_tags(direction: str, skills: list[str]) -> list[str]:
         if tag and tag not in out:
             out.append(tag)
     return out
+
+
+# Технологические теги (07.10, решение Р2): семейства с такими навыками выдаются только кандидату, у которого тег
+# есть в заявленном стеке опроса (T0). Иначе Python-бэкендер получал бы задания по Go и Java, и это занижало бы θ.
+# Заявленный стек выбирает вопросы, но в ранжировании не участвует (решение 06.10: T0 не учитывается).
+STACK_GATED: frozenset[str] = frozenset({"go", "java", "django", "kafka", "docker"})
+
+
+def stack_gate(direction: str, skills: list[str]) -> frozenset[str]:
+    """Стек-теги, без которых семейство кандидату не выдаётся (подмножество STACK_GATED; пусто — семейство для всех)."""
+    return frozenset(t for t in to_stack_tags(direction, skills) if t in STACK_GATED)
+
+
+def allowed_for_stack(direction: str, skills: list[str], stack: list[str] | set[str] | None) -> bool:
+    """Можно ли выдать семейство кандидату с заявленным стеком ``stack`` (нет стека — только общие семейства)."""
+    return stack_gate(direction, skills) <= set(stack or ())

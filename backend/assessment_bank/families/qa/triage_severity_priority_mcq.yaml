@@ -8,16 +8,16 @@ language: text
 invariants:
   n_options: 4
   extra:
-    quadrants: [HL, LH, HH, LL]
+    quadrants: [HL, LH]
 time_limit_s: 120
 canary: false
 prior_difficulty:
-  b: -0.6
+  b: 0.1
   a: 1.0
-  sigma_variant: 0.4
-  basis: "Классификация по определениям ISTQB по описанию дефекта; квадранты «высокая/высокий» и «низкая/низкий» лёгкие, а «высокая серьёзность — низкий приоритет» и «низкая серьёзность — высокий приоритет» требуют разделять влияние и срочность — отсюда высокая σ (Junior/Middle)"
+  sigma_variant: 0.25
+  basis: "Версия 2: только квадранты, где серьёзность и приоритет расходятся (HL, LH) — нужно разделять влияние на систему и срочность для бизнеса; по панели 06.10 p(HL) ≈ 0,2, p(LH) ≈ 0,55, HH/LL исключены как заметно более лёгкие (Junior/Middle)"
 generator: assessment_bank.families.qa.triage_severity_priority_mcq
-version: 1
+version: 2
 description: >
   Описание дефекта с сигналами влияния и срочности; нужно выбрать квадрант «серьёзность ×
   приоритет». Ключ — экспертная классификация по глоссарию ISTQB.

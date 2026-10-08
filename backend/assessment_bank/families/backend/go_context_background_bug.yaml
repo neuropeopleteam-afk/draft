@@ -1,0 +1,26 @@
+family_id: backend.go.context_background_bug
+title: context.Background() во внутреннем вызове — тайм-аут и отмена не доходят
+direction: backend
+skills: [go, go_context, cancellation, timeouts]
+target_grades: [middle, senior]
+format: find_bug
+language: go
+invariants:
+  code_lines: [30, 33]
+  operations: [23, 26]
+  defect_type: context_detached
+  extra:
+    subtype: background_in_call
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.4
+  a: 1.2
+  sigma_variant: 0.25
+  basis: "30–33 строки, две функции; WithTimeout и defer cancel написаны верно, дефект — context.Background()/TODO() во внутреннем вызове; симптом дан (тайм-аут не срабатывает, горутины висят); нужно знать дерево контекстов и распространение отмены; Middle/Senior"
+generator: assessment_bank.families.backend.go_context_background_bug
+version: 1
+description: >
+  Найти строку, где цепочка контекстов разорвана: во внутренний вызов передан новый корневой
+  контекст. Проверка исполнением: с тайм-аутом 10–30 мс дефектный код ждёт медленный вызов, исправленный
+  прерывается с context.DeadlineExceeded.

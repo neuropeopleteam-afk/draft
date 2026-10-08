@@ -1,0 +1,24 @@
+family_id: backend.django.n_plus_one_output
+title: Django ORM — select_related для одной связи и N+1 для другой
+direction: backend
+skills: [django, django_orm, n_plus_one, python]
+target_grades: [middle]
+format: predict_output
+language: python
+invariants:
+  code_lines: [21, 21]
+  operations: [15, 15]
+  extra:
+    subtype: partial_select_related
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.2
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "21 строка, три модели, queryset с filter и select_related для одной из двух связей, 5–8 строк данных в таблице; нужно посчитать строки после фильтра и понять, что вторая связь грузится запросом на каждую строку (объекты не делятся между строками); Middle"
+generator: assessment_bank.families.backend.django_n_plus_one_output
+version: 1
+description: >
+  Предсказать число строк отчёта и число SQL-запросов Django ORM. Исполняется настоящий Django
+  (SQLite в памяти, CaptureQueriesContext); ключ — модель «1 + строки после фильтра».
