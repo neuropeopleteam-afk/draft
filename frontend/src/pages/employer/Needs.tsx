@@ -7,6 +7,7 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, T
 import { api } from "../../lib/api";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
+import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -448,6 +449,7 @@ export function Selection() {
                 <button className="btn-ghost" disabled={picked.length < 2 || picked.length > 3} title="Отметьте 2–3 кандидатов"
                   onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
                 <button className="btn-primary" disabled={!picked.length} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
+                <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
               </div>
             </div>
             <p className="text-xs text-brand-ink/65">Отметьте 2–3 кандидатов, чтобы сравнить их рядом по требованиям потребности, или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>сравните первых трёх</Link>.</p>

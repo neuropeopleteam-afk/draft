@@ -34,6 +34,7 @@ from app.modules.profiles.facts import (
     grade_status,
     load_bundles,
     skill_confirmed,
+    skill_evidence_text,
     test_component,
 )
 from app.modules.jury import scope as jury_scope
@@ -232,7 +233,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
             if skill_confirmed(f):
                 got += w * f.value.get("score", 0)
                 reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "confirmed", "weight": w,
-                                "text": f"Подтверждено заданиями теста: {fmt_count(f.value.get('correct'))} из {fmt_count(f.value.get('total'))}"})
+                                "text": skill_evidence_text(f)})  # тест и задания работодателя (И7)
             elif tag in b.stack_t0:
                 reasons.append({"requirement": f"{label}: {title}", "level": "T0", "status": "declared", "weight": w,
                                 "text": "Заявлено кандидатом — не влияет на ранжирование, можно проверить зондом"})
