@@ -17,7 +17,9 @@ from tests.test_infra_0610 import _login
 
 def test_meta_says_llm_is_off(client):
     llm = client.get("/api/meta").json()["llm"]
-    assert llm == {"configured": False, "provider": None, "model": None}
+    # цепочка провайдеров (Р37) добавляет chain/functions/breaker — главное: не настроено, провайдер и модель не выдуманы
+    assert {k: llm[k] for k in ("configured", "provider", "model")} == {"configured": False, "provider": None, "model": None}
+    assert all(not p["configured"] for p in llm["chain"])
 
 
 def test_fresh_clone_settings_have_no_llm_without_keys():
@@ -37,7 +39,8 @@ def test_need_parse_works_by_rules_and_says_so(client):
     r = client.post("/api/employer/needs/parse", json={"text": text}, headers=H(e))
     assert r.status_code == 200, r.text
     req = r.json()
-    assert req["method"] == "rules" and req["llm"] == {"used": False, "reason": "not_configured"}
+    assert req["method"] == "rules" and (req["llm"]["used"], req["llm"]["reason"]) == (False, "not_configured")
+    assert req["llm"].get("attempts", []) == []  # ни одного обращения к провайдерам цепочки
     assert req["direction"] == "backend" and req["grade"] == "middle"
     tags = {i["tag"] for i in req["stack_required"]}
     assert {"python", "fastapi", "postgresql"} <= tags
@@ -52,7 +55,8 @@ def test_resume_is_parsed_by_rules_without_llm(client):
     r = client.post("/api/me/resume", files={"file": ("cv.pdf", pdf, "application/pdf")}, headers=H(c))
     assert r.status_code == 201, r.text
     d = r.json()
-    assert d["method"] == "rules" and d["extracted"]["llm"] == {"used": False, "reason": "not_configured"}
+    llm = d["extracted"]["llm"]
+    assert d["method"] == "rules" and (llm["used"], llm["reason"], llm.get("attempts", [])) == (False, "not_configured", [])
     assert {"python", "fastapi", "postgresql"} <= {s["tag"] for s in d["extracted"]["stack"]}
     assert "anna.smirnova" not in str(d["text_preview"])  # ПДн вырезаны локально, модели они и не нужны
 
