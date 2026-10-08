@@ -59,6 +59,9 @@ stability: ## Стабильность статуса «Junior (предвари
 path-retest: ## Test–retest всего пути кандидата (5 × 500, дважды) и D / r_pb семейств → data/path_retest.json (≈ 3 мин CPU)
 	cd backend && python -m app.modules.validation.path_retest
 
+fsp-regression: ## Парное сравнение рейтинга ФСП v1/v2 на мире бенчмарка (tools/fsp_rating_regression.py, ≈ 1 мин)
+	cd backend && python ../tools/fsp_rating_regression.py
+
 dev-backend: ## Локальный backend с автоперезагрузкой (SQLite)
 	cd backend && DATABASE_URL=sqlite:///./dev.db DEV_MODE=true alembic upgrade head && \
 	  DATABASE_URL=sqlite:///./dev.db DEV_MODE=true uvicorn app.main:app --reload --port 8000
@@ -67,7 +70,7 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
-.PHONY: bench bench-quick stability intern-cut path-retest
+.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest
 
 # подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
 GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)
