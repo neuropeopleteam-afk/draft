@@ -161,6 +161,23 @@ def test_mark_seen_clears_new_and_counts(client, day_hours):
     assert client.get("/api/employer/subscriptions", headers=H(te)).json()["new_total"] == 0
 
 
+def test_new_version_shows_new_candidate_in_snapshot(client, day_hours):
+    te, need = setup(client)
+    subscribe(client, te, need)
+    ref = my_ref(client, candidate_with_category(client, "b@example.com"))
+    tick(T1)
+    v1 = client.get(f"/api/employer/needs/{need['id']}/selections/1", headers=H(te)).json()
+    assert ref not in [r["ref"] for r in v1["results"]]  # версия — снимок на момент создания
+    r = client.post(f"/api/employer/needs/{need['id']}/subscription/new-version", json={}, headers=H(te))
+    assert r.status_code == 201 and r.json() == {"version": 2, "parent_version": 1}
+    v2 = client.get(f"/api/employer/needs/{need['id']}/selections/2", headers=H(te)).json()
+    assert ref in [x["ref"] for x in v2["results"]]
+    s = client.get(f"/api/employer/needs/{need['id']}/subscription", headers=H(te)).json()
+    assert s["new_refs"] == [ref]  # условия те же — отметка «новый» сохраняется, пока не просмотрели
+    other = employer(client, "other@corp.ru", "ООО Другая")
+    assert client.post(f"/api/employer/needs/{need['id']}/subscription/new-version", json={}, headers=H(other)).status_code == 404
+
+
 def test_disabled_subscription_is_silent_and_reenable_rebases(client, day_hours, mails):
     te, need = setup(client)
     subscribe(client, te, need)
@@ -173,6 +190,22 @@ def test_disabled_subscription_is_silent_and_reenable_rebases(client, day_hours,
     on = subscribe(client, te, need)
     assert on["new_count"] == 0 and on["in_top"] == 2
     assert tick(T1_EVE)["entered"] == 0 and notes("hr@corp.ru") == []
+
+
+@pytest.mark.parametrize("away_days, expect_new", [(2, False), (8, True)])
+def test_return_to_top_is_new_only_after_a_week(client, day_hours, away_days, expect_new):
+    te, need = setup(client)
+    subscribe(client, te, need)
+    candidate_with_category(client, "b@example.com")
+    tick(T1)
+    with SessionLocal() as db:  # кандидат b был в топе, вышел и снова вошёл
+        e = db.scalar(select(NeedSubEntry).where(NeedSubEntry.is_new.is_(True)))
+        e.in_top, e.is_new, e.left_at, e.seen_at = False, False, T1 - timedelta(days=away_days), T1
+        db.commit()
+    st = tick(T1_EVE, force=True)
+    assert (st["entered"] == 1) is expect_new
+    with SessionLocal() as db:
+        assert db.scalar(select(func.count()).select_from(NeedSubEntry).where(NeedSubEntry.is_new.is_(True))) == int(expect_new)
 
 
 def test_weekly_digest_not_before_seven_days(client, day_hours, mails):
@@ -504,3 +537,22 @@ def test_simulate_limit_and_cleanup_on_delete(client, monkeypatch):
         assert db.scalar(select(func.count()).select_from(User).where(User.email.like(demo.sim_like(sid)))) == 0
         assert db.scalar(select(func.count()).select_from(NeedSubscription)) == 0
         assert db.scalar(select(func.count()).select_from(UserNotification)) == 0
+
+
+def test_fast_forward_reminders_only_in_sandbox(client, monkeypatch):
+    token, sid = sandbox_employer(client)
+    assert client.post("/api/jury/subs/fast-forward", json={"days": 5}, headers=H(token)).status_code == 200
+    r = client.post("/api/jury/subs/fast-forward", json={"days": 5}, headers=H(token))
+    assert r.status_code == 200 and sum(r.json()["created"].values()) == 0  # второй раз — ничего нового
+    assert client.post("/api/jury/subs/fast-forward", json={"days": 7}, headers=H(token)).status_code == 422
+    with SessionLocal() as db:
+        kinds = {k for (k,) in db.execute(select(UserNotification.kind)).all()}
+        # приглашение Илье без ответа (кандидату) и отклик без решения (работодателю) — создаются в песочнице
+        assert "inv_unanswered" in kinds
+        newest = db.scalar(select(func.max(UserNotification.created_at)))
+    from app.core.db import as_aware
+
+    assert newest is not None and as_aware(newest) <= utcnow() + timedelta(minutes=1)  # время записи — настоящее, не «перемотанное»
+    te, _ = setup(client)
+    r = client.post("/api/jury/subs/fast-forward", json={"days": 5}, headers=H(te))
+    assert r.status_code == 403 and r.json()["detail"]["code"] == "jury_sandbox_only"

@@ -20,8 +20,8 @@ from app.core.deps import get_current_user, require_role
 from app.core.enums import UserRole
 from app.core.errors import api_error, err
 from app.modules.auth.models import User
-from app.modules.matching.models import EmployerNeed
-from app.modules.matching.router import _own_need, my_company
+from app.modules.matching.models import EmployerNeed, SelectionVersion
+from app.modules.matching.router import _make_version, _own_need, my_company
 from app.modules.subs import delivery, demo, runner, service
 from app.modules.subs.models import NeedSubscription, UserNotification
 
@@ -107,6 +107,18 @@ def check_now(need_id: uuid.UUID, user: User = Depends(employer), db: Session = 
     return service.sub_out(db, n, service.get_sub(db, n.id))
 
 
+@employer_router.post("/needs/{need_id}/subscription/new-version", status_code=201,
+                      summary="Обновить подборку: новая версия с теми же условиями, что у слежения",
+                      description="Версии подборки — снимки: кандидат, вошедший в топ-10 позже, виден в новой версии "
+                                  "с отметкой «новый». Прежние версии сохраняются.", responses=AUTH)
+def new_version(need_id: uuid.UUID, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    n = _own(db, user, need_id)
+    req, filters = service.definition_of(db, n)
+    last = db.scalar(select(func.max(SelectionVersion.version)).where(SelectionVersion.need_id == n.id))
+    v = _make_version(db, n, user, dict(filters), last, req)
+    return {"version": v.version, "parent_version": v.parent_version}
+
+
 # ------------------------------------------------------------------ уведомления кабинета
 class PrefsIn(BaseModel):
     push_enabled: bool | None = None
@@ -180,3 +192,15 @@ class SimulateIn(BaseModel):
                              429: err("Слишком часто")})
 def simulate(data: SimulateIn | None = None, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     return demo.simulate(db, user, data.need_id if data else None)
+
+
+class FastForwardIn(BaseModel):
+    days: Literal[5, 29] = Field(5, description="5 — приглашение без ответа 3 дня и отклик без решения 5 дней; 29 — до конца срока ответа сутки")
+
+
+@jury_router.post("/fast-forward", summary="Перемотать время: показать напоминания Н6 в песочнице жюри",
+                  description="Считает напоминания так, будто прошло 5 или 29 дней: кандидату — приглашение без ответа и "
+                              "за сутки до конца срока, работодателю — отклик без решения (в дайджесте). Только песочница.",
+                  responses={**AUTH, 422: err("Недопустимое число дней"), 429: err("Слишком часто")})
+def fast_forward(data: FastForwardIn | None = None, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    return demo.fast_forward(db, user, data.days if data else 5)

@@ -33,14 +33,16 @@ def _wants(db: Session, user: User | None) -> bool:
     return user is not None and not is_synthetic(user.email) and prefs_of(db, user.id).reminders_enabled
 
 
-def invitations_to_candidate(db: Session, now: datetime) -> dict:
+def invitations_to_candidate(db: Session, now: datetime, only: set | None = None) -> dict:
     s = get_settings()
     n3 = nexp = 0
     after, before = now - timedelta(days=WINDOW_DAYS), now - timedelta(days=s.reminder_invite_days)
     q = (select(Invitation, Company.name).join(Company, Company.id == Invitation.company_id)
          .where(Invitation.status.in_(OPEN), Invitation.created_at <= before, Invitation.created_at > after,
-                or_(Invitation.expires_at.is_(None), Invitation.expires_at > now)).limit(BATCH))
-    for inv, company in db.execute(q).all():
+                or_(Invitation.expires_at.is_(None), Invitation.expires_at > now)))
+    if only is not None:
+        q = q.where(Invitation.candidate_user_id.in_(only))
+    for inv, company in db.execute(q.limit(BATCH)).all():
         u = db.get(User, inv.candidate_user_id)
         if not _wants(db, u):
             continue
@@ -52,8 +54,10 @@ def invitations_to_candidate(db: Session, now: datetime) -> dict:
     horizon = now + timedelta(hours=s.reminder_expiry_hours)
     q = (select(Invitation, Company.name).join(Company, Company.id == Invitation.company_id)
          .where(Invitation.status.in_(OPEN), Invitation.expires_at.is_not(None), Invitation.expires_at > now,
-                Invitation.expires_at <= horizon).limit(BATCH))
-    for inv, company in db.execute(q).all():
+                Invitation.expires_at <= horizon))
+    if only is not None:
+        q = q.where(Invitation.candidate_user_id.in_(only))
+    for inv, company in db.execute(q.limit(BATCH)).all():
         u = db.get(User, inv.candidate_user_id)
         if not _wants(db, u):
             continue
@@ -64,12 +68,14 @@ def invitations_to_candidate(db: Session, now: datetime) -> dict:
     return {"inv_unanswered": n3, "inv_expiring": nexp}
 
 
-def expire_invitations(db: Session, now: datetime) -> dict:
+def expire_invitations(db: Session, now: datetime, only: set | None = None) -> dict:
     """Срок ответа истёк: статус «Истекло» и строка работодателю в дайджест."""
     n = 0
     q = select(Invitation).where(Invitation.status.in_(OPEN), Invitation.expires_at.is_not(None),
-                                 Invitation.expires_at <= now).limit(BATCH)
-    for inv in db.scalars(q).all():
+                                 Invitation.expires_at <= now)
+    if only is not None:
+        q = q.where(Invitation.candidate_user_id.in_(only))
+    for inv in db.scalars(q.limit(BATCH)).all():
         prev = inv.status
         inv.status = InvitationStatus.expired
         db.add(InvitationEvent(invitation_id=inv.id, from_status=prev, to_status=InvitationStatus.expired,
@@ -85,14 +91,16 @@ def expire_invitations(db: Session, now: datetime) -> dict:
     return {"inv_expired": n}
 
 
-def stale_applications(db: Session, now: datetime) -> dict:
+def stale_applications(db: Session, now: datetime, only: set | None = None) -> dict:
     s = get_settings()
     n = 0
     before, after = now - timedelta(days=s.reminder_application_days), now - timedelta(days=30)
     q = (select(VacancyApplication, Vacancy).join(Vacancy, Vacancy.id == VacancyApplication.vacancy_id)
          .where(VacancyApplication.status.in_(("sent", "viewed")), VacancyApplication.created_at <= before,
-                VacancyApplication.created_at > after, Vacancy.status != "closed").limit(BATCH))
-    for app, vac in db.execute(q).all():
+                VacancyApplication.created_at > after, Vacancy.status != "closed"))
+    if only is not None:
+        q = q.where(Vacancy.created_by.in_(only))
+    for app, vac in db.execute(q.limit(BATCH)).all():
         uid = vac.created_by or db.scalar(select(EmployerProfile.user_id).where(EmployerProfile.company_id == vac.company_id)
                                           .order_by(EmployerProfile.created_at).limit(1))
         eu = db.get(User, uid) if uid else None
@@ -108,11 +116,12 @@ def stale_applications(db: Session, now: datetime) -> dict:
     return {"app_stale": n}
 
 
-def run(db: Session, now: datetime) -> dict:
+def run(db: Session, now: datetime, only: set | None = None) -> dict:
+    """only — ограничить пользователями (песочница жюри: «перемотать время»)."""
     out: dict = {}
     for step in (invitations_to_candidate, expire_invitations, stale_applications):
         try:
-            out.update(step(db, now))
+            out.update(step(db, now, only))
         except Exception:  # noqa: BLE001 — один сбой не останавливает остальные напоминания
             db.rollback()
             log.exception("subs: напоминания, шаг %s", step.__name__)
