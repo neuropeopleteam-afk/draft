@@ -352,7 +352,7 @@ export function ExpertAnswers() {
                 <p key={k} className="mt-2 text-brand-ink/80"><b>{{ strong: "Сильный", medium: "Средний", weak: "Слабый" }[k]}:</b> {it.rubric[k]}</p>))}
             </details>
           )}
-          <fieldset className="space-y-3" disabled={l.saving}>
+          <fieldset className="min-w-0 space-y-3" disabled={l.saving}>
             <legend className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Критерии рубрики</legend>
             {crit.map((c) => (
               <div key={c.id} className="rounded-xl border border-brand-night/10 p-3">
