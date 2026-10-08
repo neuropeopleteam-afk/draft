@@ -20,7 +20,7 @@ from __future__ import annotations
 from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
-from app.core.fmt import quoted, theta_se
+from app.core.fmt import probe_title, quoted, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
@@ -273,7 +273,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     if b.probes_t1:
         best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))
         reasons.append({"requirement": "Зонд", "level": "T1", "status": "confirmed",
-                        "text": f"{quoted(best.title)} — {best.value.get('verdict', 'оценено')}"})
+                        "text": f"{quoted(probe_title(best.title, best.value.get('verdict')))} — {best.value.get('verdict', 'оценено')}"})
     # Фильтровые требования (T0): показываем, но в скор не включаем
     wf = req.get("work_format")
     if wf:
