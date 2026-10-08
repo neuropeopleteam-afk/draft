@@ -1,0 +1,25 @@
+family_id: common.docker.compose_port_bug
+title: docker-compose — опубликованный порт вместо порта контейнера внутри сети
+direction: common
+skills: [docker, docker_compose, docker_networking]
+target_grades: [junior, middle]
+format: find_bug
+language: yaml
+invariants:
+  code_lines: [17, 25]
+  operations: [17, 25]
+  defect_type: published_port_in_network
+  extra:
+    subtype: host_port_for_service_address
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.4
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "17–25 строк YAML, три сервиса; симптом дан (connection refused между контейнерами при работающем доступе с хоста); нужно знать смысл левой и правой части ports; ловушка — healthcheck с localhost и портом контейнера (верная строка); Junior/Middle"
+generator: assessment_bank.families.common.docker_compose_port_bug
+version: 1
+description: >
+  Найти строку docker-compose.yml, где сервис обращается к соседу по опубликованному порту хоста вместо
+  порта контейнера. Проверка исполнением модели сети compose: разбор показанного YAML и проверка адресов.

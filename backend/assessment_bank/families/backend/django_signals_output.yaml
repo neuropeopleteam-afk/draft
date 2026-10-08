@@ -1,0 +1,24 @@
+family_id: backend.django.signals_output
+title: Django — какие операции ORM посылают post_save
+direction: backend
+skills: [django, django_signals, django_orm, python]
+target_grades: [junior, middle]
+format: predict_output
+language: python
+invariants:
+  code_lines: [16, 23]
+  operations: [10, 17]
+  extra:
+    subtype: post_save_sources
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.0
+  a: 1.1
+  sigma_variant: 0.4
+  basis: "Модель, приёмник post_save и 5–7 операций ORM; нужно знать, какие из них проходят через save() (create, save, get_or_create новой записи) и какие обходят его (update, bulk_create, delete); число ловушек в варианте меняется → σ повышена; Junior/Middle"
+generator: assessment_bank.families.backend.django_signals_output
+version: 1
+description: >
+  Приёмник post_save и последовательность операций ORM; записать содержимое журнала. Исполняется
+  настоящий Django на SQLite в памяти; ключ — независимая модель операций.
