@@ -23,6 +23,10 @@ from app.integrations import TAGS as INTEGRATION_TAGS
 from app.integrations import include_routers as include_integration_routers
 from app.ideas import TAGS as IDEAS_TAGS
 from app.ideas import include_routers as include_ideas_routers
+from app.modules.assignments import feed as assignments_feed
+from app.modules.assignments.router import TAGS as ASSIGNMENTS_TAGS
+from app.modules.assignments.router import candidate_router as assignments_candidate_router
+from app.modules.assignments.router import employer_router as assignments_employer_router
 from app.modules.assessment.expert_router import router as expert_router
 from app.modules.assessment.router import router as assessment_router
 from app.modules.auth.router import router as auth_router
@@ -66,6 +70,8 @@ async def lifespan(_app: FastAPI):
         t = threading.Timer(5.0, make_spare)
         t.daemon = True
         t.start()
+    # Лента «Задания для вас»: раз в N дней предложить открытое задание работодателя (И7)
+    assignments_feed.start_background(get_settings().assignments_feed_interval_s)
     yield
 
 
@@ -80,7 +86,7 @@ def create_app() -> FastAPI:
             "кандидата по категории «направление · грейд» и приглашает с зарплатой.\n\n"
             "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
         ),
-        openapi_tags=TAGS + INTEGRATION_TAGS + IDEAS_TAGS,
+        openapi_tags=TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS,
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -96,7 +102,8 @@ def create_app() -> FastAPI:
     )
     for r in (auth_router, profiles_router, candidate_router, legal_router, assessment_router,
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
-              expert_router, expert_panel_router, jury_router, validation_router):
+              expert_router, expert_panel_router, jury_router, validation_router,
+              assignments_employer_router, assignments_candidate_router):
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)

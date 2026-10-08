@@ -136,6 +136,7 @@ export function EmployerProbes() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Зонды" subtitle="Короткие задачи с вилкой зарплаты до раскрытия контактов. Оценка ответа становится фактом T1 в профиле кандидата." />
+      <p className="text-sm text-brand-ink/70">Рядом с зондом со свободным ответом — <Link className="font-semibold text-brand hover:underline" to="/employer/assignments">задания с автопроверкой</Link>: 3–5 заданий банка по стеку потребности, проверяет система.</p>
       <Alert>{err}</Alert>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Зондов пока нет" text="Отметьте кандидатов в подборке и отправьте им короткую задачу." action={<Link to="/employer/needs" className="btn-primary">К подборкам</Link>} />
