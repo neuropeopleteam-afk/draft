@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-08T15:35:40+00:00",
+ "generated_at": "2026-10-08T15:57:39+00:00",
  "n_per_direction": 400,
  "quick": false,
  "seed": 20261007,
@@ -107,7 +107,44 @@
         "mean_new_items": 4.8
        }
       ]
-     }
+     },
+     "p_bands": [
+      {
+       "p_from": 0.1,
+       "p_to": 0.25,
+       "n": 19,
+       "true_below": 16,
+       "true_below_share": 0.842
+      },
+      {
+       "p_from": 0.25,
+       "p_to": 0.4,
+       "n": 7,
+       "true_below": 5,
+       "true_below_share": 0.714
+      },
+      {
+       "p_from": 0.4,
+       "p_to": 0.5,
+       "n": 8,
+       "true_below": 6,
+       "true_below_share": 0.75
+      },
+      {
+       "p_from": 0.5,
+       "p_to": 0.65,
+       "n": 14,
+       "true_below": 10,
+       "true_below_share": 0.714
+      },
+      {
+       "p_from": 0.65,
+       "p_to": 0.8,
+       "n": 19,
+       "true_below": 8,
+       "true_below_share": 0.421
+      }
+     ]
     },
     "legacy_sim": {
      "before": {
@@ -213,7 +250,44 @@
         "mean_new_items": 5.2
        }
       ]
-     }
+     },
+     "p_bands": [
+      {
+       "p_from": 0.1,
+       "p_to": 0.25,
+       "n": 12,
+       "true_below": 9,
+       "true_below_share": 0.75
+      },
+      {
+       "p_from": 0.25,
+       "p_to": 0.4,
+       "n": 15,
+       "true_below": 13,
+       "true_below_share": 0.867
+      },
+      {
+       "p_from": 0.4,
+       "p_to": 0.5,
+       "n": 11,
+       "true_below": 6,
+       "true_below_share": 0.545
+      },
+      {
+       "p_from": 0.5,
+       "p_to": 0.65,
+       "n": 7,
+       "true_below": 4,
+       "true_below_share": 0.571
+      },
+      {
+       "p_from": 0.65,
+       "p_to": 0.8,
+       "n": 24,
+       "true_below": 11,
+       "true_below_share": 0.458
+      }
+     ]
     },
     "legacy_sim": {
      "before": {
@@ -319,7 +393,44 @@
         "mean_new_items": 5.2
        }
       ]
-     }
+     },
+     "p_bands": [
+      {
+       "p_from": 0.1,
+       "p_to": 0.25,
+       "n": 8,
+       "true_below": 7,
+       "true_below_share": 0.875
+      },
+      {
+       "p_from": 0.25,
+       "p_to": 0.4,
+       "n": 16,
+       "true_below": 13,
+       "true_below_share": 0.812
+      },
+      {
+       "p_from": 0.4,
+       "p_to": 0.5,
+       "n": 14,
+       "true_below": 9,
+       "true_below_share": 0.643
+      },
+      {
+       "p_from": 0.5,
+       "p_to": 0.65,
+       "n": 20,
+       "true_below": 7,
+       "true_below_share": 0.35
+      },
+      {
+       "p_from": 0.65,
+       "p_to": 0.8,
+       "n": 13,
+       "true_below": 3,
+       "true_below_share": 0.231
+      }
+     ]
     },
     "legacy_sim": {
      "before": {
@@ -425,7 +536,44 @@
         "mean_new_items": 4.3
        }
       ]
-     }
+     },
+     "p_bands": [
+      {
+       "p_from": 0.1,
+       "p_to": 0.25,
+       "n": 15,
+       "true_below": 14,
+       "true_below_share": 0.933
+      },
+      {
+       "p_from": 0.25,
+       "p_to": 0.4,
+       "n": 9,
+       "true_below": 8,
+       "true_below_share": 0.889
+      },
+      {
+       "p_from": 0.4,
+       "p_to": 0.5,
+       "n": 4,
+       "true_below": 1,
+       "true_below_share": 0.25
+      },
+      {
+       "p_from": 0.5,
+       "p_to": 0.65,
+       "n": 14,
+       "true_below": 6,
+       "true_below_share": 0.429
+      },
+      {
+       "p_from": 0.65,
+       "p_to": 0.8,
+       "n": 14,
+       "true_below": 3,
+       "true_below_share": 0.214
+      }
+     ]
     },
     "legacy_sim": {
      "before": {
@@ -531,7 +679,44 @@
         "mean_new_items": 5.0
        }
       ]
-     }
+     },
+     "p_bands": [
+      {
+       "p_from": 0.1,
+       "p_to": 0.25,
+       "n": 13,
+       "true_below": 11,
+       "true_below_share": 0.846
+      },
+      {
+       "p_from": 0.25,
+       "p_to": 0.4,
+       "n": 17,
+       "true_below": 14,
+       "true_below_share": 0.824
+      },
+      {
+       "p_from": 0.4,
+       "p_to": 0.5,
+       "n": 14,
+       "true_below": 9,
+       "true_below_share": 0.643
+      },
+      {
+       "p_from": 0.5,
+       "p_to": 0.65,
+       "n": 11,
+       "true_below": 3,
+       "true_below_share": 0.273
+      },
+      {
+       "p_from": 0.65,
+       "p_to": 0.8,
+       "n": 23,
+       "true_below": 7,
+       "true_below_share": 0.304
+      }
+     ]
     },
     "legacy_sim": {
      "before": {
@@ -636,7 +821,44 @@
       "mean_new_items": 4.9
      }
     ]
-   }
+   },
+   "p_bands": [
+    {
+     "p_from": 0.1,
+     "p_to": 0.25,
+     "n": 67,
+     "true_below": 57,
+     "true_below_share": 0.851
+    },
+    {
+     "p_from": 0.25,
+     "p_to": 0.4,
+     "n": 64,
+     "true_below": 53,
+     "true_below_share": 0.828
+    },
+    {
+     "p_from": 0.4,
+     "p_to": 0.5,
+     "n": 51,
+     "true_below": 31,
+     "true_below_share": 0.608
+    },
+    {
+     "p_from": 0.5,
+     "p_to": 0.65,
+     "n": 66,
+     "true_below": 30,
+     "true_below_share": 0.455
+    },
+    {
+     "p_from": 0.65,
+     "p_to": 0.8,
+     "n": 93,
+     "true_below": 32,
+     "true_below_share": 0.344
+    }
+   ]
   },
   "legacy_sim": {
    "before": {
@@ -679,6 +901,17 @@
    }
   }
  },
- "seconds": 18.7,
+ "how_to_read": "«Junior (предварительно)» — не подтверждение: P(θ ≥ порога Junior) от 0,10 до 0,80. Чем ниже P, тем чаще истинный уровень ниже порога (таблица полос). Работодатель видит статус и P; кандидат может дотестироваться (до двух попыток) или принять доказанный уровень Стажёра без нового теста.",
+ "signature": {
+  "world": "симуляция теста: 5 направлений × 400 человек",
+  "seed": 20261007,
+  "config_hash": "955555bf2820",
+  "commit": "bb12871",
+  "bank": "57033ea404b8efae",
+  "n": 2000,
+  "command": "make stability",
+  "generated_at": "2026-10-08T15:57:59+00:00"
+ },
+ "seconds": 19.9,
  "caveat": "Синтетика: те же люди и те же сессии для «до» и «после», меняется только правило решения; качество заданий на людях здесь не проверяется. Истинный уровень ниже порога определяется по θ истинному, а не по θ̂."
 }
