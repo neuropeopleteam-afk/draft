@@ -4,6 +4,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Empty, Field, GRADES, Loading, Modal, Seg, Stat, Status, catTitle, dt, dtt, errText, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { ENTRY, MODE_SHORT, Phase, mins } from "../shared";
+import { LlmOff } from "../../components/LlmOff";
 
 type Mode = "auto" | "rubric" | "employer";
 const CATEGORIES = Object.keys(DIRECTIONS).flatMap((d) => Object.keys(GRADES).map((g) => `${d}.${g}`));
@@ -331,6 +332,7 @@ function Solution({ s, cup, onScore }: { s: any; cup: any; onScore: (b: unknown)
       </div>
       <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-brand-ink/85">{s.text}</p>
       {(s.redacted?.length > 0 || s.has_link) && <p className="mt-2 text-xs text-brand-ink/65">{s.redacted?.length ? "Вырезаны ПДн. " : ""}{s.has_link ? "Ссылка скрыта до приглашения." : ""}</p>}
+      {s.llm?.status !== "scored" && s.status === "submitted" && cup.mode === "rubric" && <LlmOff className="mt-2 text-xs text-brand-ink/65">LLM-оценщик не подключён: оцените решение по рубрике сами.</LlmOff>}
       {s.llm?.status === "scored" && <Alert kind="info">LLM: {Math.round((s.llm.score ?? 0) * 100)} % — {s.llm.comment}</Alert>}
       {editable && (
         <div className="mt-4 flex flex-wrap items-end gap-4 border-t border-brand-night/5 pt-4">

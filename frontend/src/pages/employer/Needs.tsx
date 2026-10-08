@@ -4,6 +4,7 @@ import { CandidateCard } from "../../components/CandidateCard";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
 
@@ -261,6 +262,7 @@ export function Needs() {
               <h2 className="font-bold text-brand-night">Откуда взяты требования</h2>
               <span className="chip">{req.method === "rules" ? "разбор по словарю" : "разбор: словарь + LLM, цитаты проверены"}</span>
             </div>
+            <LlmOff>LLM на этой установке не подключён: технологии, грейд и опыт найдены по словарю и правилам, формулировки вне словаря не распознаются — проверьте список и добавьте недостающее вручную.</LlmOff>
             <div className="rounded-xl bg-[#F7F6FB] p-4">
               <QuotedText text={parsed} marks={reqMarks(req, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
             </div>

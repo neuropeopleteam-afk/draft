@@ -5,6 +5,7 @@ import { Alert, DIRECTIONS, Field, GRADES, Loading, Seg, Toggle, catTitle, dt, e
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { FeedbackSummary } from "./Feedback";
+import { useLlmOff } from "../../components/LlmOff";
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
 interface Onb {
@@ -304,6 +305,7 @@ function fmtTime(sec: number) {
 }
 
 export function TestRun() {
+  const llmOff = useLlmOff();
   const { id } = useParams();
   const navigate = useNavigate();
   const { refresh } = useAuth();
@@ -429,7 +431,7 @@ export function TestRun() {
         )}
         {isText && (
           <div className="mt-5"><Field label={it.format === "predict_output" ? "Вывод программы" : "Ваш ответ"} htmlFor="ans"
-            hint={it.format === "predict_output" ? "Ровно то, что напечатает программа; пробелы в конце строк и пустые строки по краям не важны." : "Ответ оценивается по рубрике (критерии с весами). Не указывайте ФИО и контакты — они вырезаются перед оценкой."}>
+            hint={it.format === "predict_output" ? "Ровно то, что напечатает программа; пробелы в конце строк и пустые строки по краям не важны." : llmOff ? "Ответ оценивается по рубрике (критерии с весами). LLM-оценщик на этой установке не подключён — ответ проверит эксперт, до этого результат предварительный. Не указывайте ФИО и контакты." : "Ответ оценивается по рубрике (критерии с весами). Не указывайте ФИО и контакты — они вырезаются перед оценкой."}>
             <textarea id="ans" className={`input min-h-[8rem] ${it.format === "predict_output" ? "font-mono text-[13px]" : ""}`} rows={it.format === "predict_output" ? 5 : 9}
               value={(value as string) ?? ""} onChange={(e) => setValue(e.target.value)} onPaste={onPaste} spellCheck={it.format !== "predict_output"} />
           </Field></div>
@@ -454,6 +456,7 @@ export function TestRun() {
 }
 
 function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
+  const llmOff = useLlmOff();
   return (
     <div className="max-w-2xl">
       <PageTitle title={r.confirmed ? "Грейд подтверждён" : "Грейд не подтверждён"} subtitle={r.message} />
@@ -470,7 +473,7 @@ function TestResult({ r, sessionId, onCategory }: { r: any; sessionId: string; o
           {r.details.time_used_s ? ` · время: ${Math.round(r.details.time_used_s / 60)} мин` : ""}
         </p>
       )}
-      {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.</Alert></div>}
+      {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " LLM-оценщик не подключён: ответы проверяет эксперт." : ""}</Alert></div>}
       <FeedbackSummary sessionId={sessionId} />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
