@@ -487,7 +487,10 @@ def ats_profile_pdf(token: str, db: Session = Depends(get_db)) -> Response:
     cats = {x.id: x for x in db.scalars(select(Category)).all()}
     revealed = contacts_revealed(db, company_id, cand_id) or _applied(db, company_id, cand_id)
     contacts = candidate_contacts(db, cand_id) if revealed else None
-    pdf = render_profile(card(bundles[cand_id], cats), contacts=contacts, audience="employer")
+    from app.passport.service import for_pdf
+
+    pdf = render_profile(card(bundles[cand_id], cats), contacts=contacts, audience="employer",
+                         passport=for_pdf(db, cand_id))
     return Response(pdf, media_type="application/pdf",
                     headers={"Content-Disposition": f'inline; filename="profile-{cp.public_ref}.pdf"',
                              "Cache-Control": "private, max-age=300"})

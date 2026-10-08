@@ -7,6 +7,7 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, S
 import { apiDownload } from "../../lib/api";
 import { InviteForm, ProbeForm } from "./Contact";
 import { useTags } from "./Needs";
+import { PassportEmployerBadge } from "../../passport/Share";
 
 const PAGE = 20;
 
@@ -134,6 +135,7 @@ export function CandidateDetail() {
             <button className="btn-primary" disabled={!c.can_invite} onClick={() => setModal("invite")}>Пригласить</button>
           </div>
         } />
+      <PassportEmployerBadge refId={c.ref} />
       {!c.can_invite && <Alert kind="info">Приглашение этому кандидату уже отправлялось. Следующее — с {dt(c.invite_available_at)} (не чаще раза в {c.invitation_cooldown_days} дней).</Alert>}
       {(c.my_invitations.length > 0 || c.my_probes.length > 0) && (
         <section className="card text-sm">
