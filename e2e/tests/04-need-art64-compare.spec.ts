@@ -86,8 +86,9 @@ test("потребность: ст. 64 → цитаты и предупрежд�
     for (const tag of ["Python", "Django", "PostgreSQL"]) {
       await expect(table.getByRole("rowheader", { name: new RegExp(`^${tag} · вес [\\d,]+ «${tag}»`) }), tag).toBeVisible();
     }
-    // пол, возраст и внешность в сравнение не попали
-    await expect(table.getByRole("rowheader", { name: /пол|возраст|мужчин|внешност|дет[еи]й/i })).toHaveCount(0);
+    // пол, возраст и внешность в сравнение не попали («пол» — целым словом: подсказка строки «Оба направления»
+    // содержит «дополнительное»)
+    await expect(table.getByRole("rowheader", { name: /(^|[^а-яё])(пол(а|у|ом|е)?(?![а-яё])|возраст|мужчин|внешност|дет[еи]й)/i })).toHaveCount(0);
 
     const why = main.getByRole("region", { name: "Почему один кандидат выше другого" });
     const pairs = why.getByRole("listitem").filter({ hasText: /^C-[A-Z0-9]+ выше C-[A-Z0-9]+ на [\d,]+ балл[а-я]* из 100/ });
