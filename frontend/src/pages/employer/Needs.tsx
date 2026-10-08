@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { CandidateCard } from "../../components/CandidateCard";
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, range, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, num, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
@@ -70,12 +70,19 @@ const STATUS_CHIP: Record<ItemStatus, [string, string]> = {
   manual: ["вручную", "bg-brand-blush text-brand-plum"],
 };
 
+// Кто разобрал текст: модель, которая фактически ответила, или правила (запасная модель — если основная не ответила)
+function llmNote(llm: any): string | undefined {
+  if (!llm) return undefined;
+  if (llm.used) return `Ответила модель ${llm.model_label ?? llm.model}${llm.fallback ? " (запасная: основная не ответила)" : ""}, ${num(llm.latency_ms / 1000)} с`;
+  return llm.reason && llm.reason !== "not_configured" ? "Модели не ответили — разбор по словарю технологий и правилам" : undefined;
+}
+
 function Quote({ ev }: { ev?: Ev | null }) {
   if (!ev) return <p className="mt-0.5 text-xs text-brand-ink/65">нет цитаты — добавлено вручную</p>;
   return (
     <p className="mt-0.5 text-xs text-brand-ink/65" title={ev.context}>
       <span className="rounded bg-brand-blush/60 px-1 text-brand-night">«{ev.quote}»</span>
-      <span className="text-brand-ink/65"> · {ev.source === "llm" ? "LLM, цитата найдена в тексте" : ev.basis === "stack" ? "по технологиям" : ev.basis === "experience" ? "по опыту" : "словарь"}</span>
+      <span className="text-brand-ink/65"> · {ev.source === "llm" ? `${ev.model ?? "LLM"}, цитата найдена в тексте` : ev.basis === "stack" ? "по технологиям" : ev.basis === "experience" ? "по опыту" : "словарь"}</span>
     </p>
   );
 }
@@ -271,7 +278,7 @@ export function Needs() {
           <>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-brand-night/10 pt-4">
               <h2 className="font-bold text-brand-night">Откуда взяты требования</h2>
-              <span className="chip">{req.method === "rules" ? "разбор по словарю" : "разбор: словарь + LLM, цитаты проверены"}</span>
+              <span className="chip" title={llmNote(req.llm)}>{req.method === "rules" ? (req.llm?.reason && req.llm.reason !== "not_configured" ? "разбор по словарю: модель не ответила" : "разбор по словарю") : `разбор: словарь + ${req.llm?.model_label ?? "LLM"}, цитаты проверены`}</span>
             </div>
             <div className="rounded-xl bg-[#F7F6FB] p-4">
               <QuotedText text={parsed} marks={reqMarks(req, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />

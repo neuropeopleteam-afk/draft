@@ -40,6 +40,9 @@ def _bank_sessions(db: Session, limit: int = 400, demo_only: bool = False) -> li
     return [t for t in rows if str((t.result or {}).get("engine", "")).startswith("bank")]
 
 
+LLM_METHODS = ("llm", "llm2")
+
+
 def queue(db: Session, mode: str = "pending", demo_only: bool = False) -> dict:
     """mode: pending — ждут оценки; llm — оценены LLM (выборочная проверка вслепую); reviewed — проверены экспертом."""
     eng = get_engine("bank")
@@ -52,7 +55,7 @@ def queue(db: Session, mode: str = "pending", demo_only: bool = False) -> dict:
                 kind = "reviewed"
             elif r["status"] == "pending":
                 kind = "pending"
-            elif r["method"] == "llm":
+            elif r["method"] in LLM_METHODS:  # llm2 — среднее двух оценок (grader: вторая оценка при сомнении)
                 kind = "llm"
             else:  # оценено правилом (пустой/короткий ответ) или демо-экспертом — не для выборочной проверки LLM
                 continue
@@ -63,9 +66,14 @@ def queue(db: Session, mode: str = "pending", demo_only: bool = False) -> dict:
             if mode == "llm":  # вслепую: балл и комментарий LLM не показываем до оценки эксперта
                 r["score"], r["method"] = None, "llm"
             else:
-                r["llm"] = {"score": g.get("score") if g.get("method") == "llm" else (g.get("expert") or {}).get("llm_score"),
-                            "criteria": g.get("criteria") if g.get("method") == "llm" else None,
-                            "comment": g.get("comment") if g.get("method") == "llm" else None, "error": g.get("error"),
+                by_llm = g.get("method") in LLM_METHODS
+                r["llm"] = {"score": g.get("score") if by_llm else (g.get("expert") or {}).get("llm_score"),
+                            "criteria": g.get("criteria") if by_llm else None,
+                            "comment": g.get("comment") if by_llm else None, "error": g.get("error"),
+                            "scores": g.get("scores") or None,
+                            # кто оценил (цепочка llm/client.py) и вторая оценка спорного ответа — журнал проверки
+                            "model": g.get("model"), "model_label": g.get("model_label"),
+                            "checks": g.get("checks") or [], "second": g.get("second"),
                             # промпт-инъекция (grader.injection_signals): ответ в LLM не уходил, причина — эксперту
                             "flags": g.get("flags") or [],
                             "injection_note": g.get("comment") if g.get("error") == "prompt_injection_suspected" else None}

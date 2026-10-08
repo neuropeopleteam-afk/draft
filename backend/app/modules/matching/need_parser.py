@@ -549,10 +549,13 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
 def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade: str | None) -> dict:
     from app.modules.resume.pii import redact
 
-    clean_text = redact(masked, use_ner=False).text  # контакты из текста вакансии тоже не уходят наружу
-    res = chat_json(LLM_SYSTEM.replace("{tags}", ", ".join(sorted(tag_directions()))), clean_text[:6000])
+    # Контакты и ФИО контактного лица из текста вакансии тоже не уходят наружу: NER — только имена из 2+ слов
+    # (одиночные «Гибрид», «Андроид» NER принимает за имена), плюс имя после «HR:», «рекрутер —» и т. п.
+    clean_text = redact(masked, use_ner=True, ner_min_tokens=2, contact_cues=True).text
+    res = chat_json(LLM_SYSTEM.replace("{tags}", ", ".join(sorted(tag_directions()))), clean_text[:6000],
+                    func="parse_need", validate=lambda d: isinstance(d, dict), max_tokens=2500)
     if not res.ok or not isinstance(res.data, dict):
-        rules["llm"] = {"used": False, "reason": res.error}
+        rules["llm"] = {"used": False, "reason": res.error, "attempts": res.attempts}
         return rules
     raw, dropped = _llm_requirements(res.data, masked)
     llm = normalize(raw, method="llm")
@@ -582,5 +585,11 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
             ev[key] = llm["evidence"][key]
     merged["evidence"] = ev
     merged["method"] = "llm+rules"
-    merged["llm"] = {"used": True, "latency_ms": res.latency_ms, "dropped_without_quote": dropped}
+    for e in [*ev.values(), *(i.get("evidence") for i in merged["stack_required"] + merged["stack_desired"])]:
+        if e and e.get("source") == "llm" and res.label:
+            e["model"] = res.label  # подпись у цитаты: какая модель её нашла
+    # Кто фактически ответил (цепочка провайдеров llm/client.py) — подпись в интерфейсе
+    merged["llm"] = {"used": True, "latency_ms": res.latency_ms, "dropped_without_quote": dropped,
+                     "provider": res.provider, "model": res.model, "model_label": res.label,
+                     "fallback": len(res.attempts) > 1}
     return merged

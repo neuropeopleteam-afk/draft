@@ -161,9 +161,10 @@ def extract(text_redacted: str, use_llm: bool = True) -> dict:
         return out
     prompt = (LLM_SYSTEM.replace("{tags}", ", ".join(STACK)).replace("{roles}", ", ".join(ROLES))
               .replace("{soft}", ", ".join(SOFT_SKILLS)))
-    res = chat_json(prompt, text_redacted[:8000])
+    res = chat_json(prompt, text_redacted[:8000], func="resume", validate=lambda d: isinstance(d, dict),
+                    max_tokens=2000)
     if not res.ok or not isinstance(res.data, dict):
-        out["llm"] = {"used": False, "reason": res.error}
+        out["llm"] = {"used": False, "reason": res.error, "attempts": res.attempts}
         return out
     d = res.data
     have = {s["tag"] for s in out["stack"]}
@@ -182,5 +183,6 @@ def extract(text_redacted: str, use_llm: bool = True) -> dict:
     if out["experience_years"] is None and isinstance(d.get("experience_years"), (int, float)):
         out["experience_years"] = float(d["experience_years"])
     out["method"] = "llm+rules"
-    out["llm"] = {"used": True, "latency_ms": res.latency_ms}
+    out["llm"] = {"used": True, "latency_ms": res.latency_ms, "provider": res.provider, "model": res.model,
+                  "model_label": res.label, "fallback": len(res.attempts) > 1}
     return out
