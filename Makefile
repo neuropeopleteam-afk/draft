@@ -88,7 +88,7 @@ e2e: ## Сквозные сценарии жюри против локально
 	cd e2e && npm ci --no-audit --no-fund && npx playwright install chromium && \
 	  E2E_BASE_URL=http://127.0.0.1:$${WEB_PORT:-8140} npx playwright test
 
-e2e-stand: ## Те же сценарии против стенда (E2E_BASIC_PASSWORD — пароль из раздела «Доступ к стенду»)
+e2e-stand: ## Те же сценарии против стенда (E2E_BASIC_PASSWORD — пароль из материалов сдачи)
 	cd e2e && E2E_BASE_URL=$${E2E_BASE_URL:-https://fsp.neuropeople.pro} E2E_BASIC_USER=$${E2E_BASIC_USER:-demo} \
 	  npx playwright test
 

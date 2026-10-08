@@ -187,7 +187,7 @@ function JuryBlock() {
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-brand-ink/75">
               Выберите роль — регистрация, опрос и тест у демо-учёток уже пройдены; у «Пройдите тест сами» теста нет — его проходите вы.
               У каждого эксперта своя копия демо: ваши действия и сброс не видны другим. Проводник ведёт по сценарию: регистрация → тест → категория → поиск работодателем → контакт.
-              <span className="font-semibold text-brand-night"> Доступ к стенду: demo / ***.</span>
+              <span className="font-semibold text-brand-night"> Логин и пароль стенда — в материалах сдачи.</span>
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
