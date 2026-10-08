@@ -384,9 +384,11 @@ server {
 
 Полный рабочий файл сайта (без секретов) — `infra/nginx/fsp.neuropeople.pro.conf.example`: редирект на HTTPS,
 `/robots.txt` с `Disallow: /`, `/api/` и файлы PWA без базовой авторизации, `/auth/` (Keycloak «ФСП ID») со своим входом,
-остальное — под базовой авторизацией (`auth_basic_user_file /etc/nginx/htpasswd_spectrek_fsp`). Доступ к стенду: demo / ***.
+остальное — под базовой авторизацией (`auth_basic_user_file /etc/nginx/htpasswd_spectrek_fsp`). Логин и пароль стенда — в материалах сдачи, в репозитории их нет.
 
-Живая демонстрация (QR) открывается с телефона эксперта без пароля: фрагмент `infra/nginx/fsp.neuropeople.pro.jury-live.conf`
+Живая демонстрация (QR): место гостя считается по всей выдаче потребности (в мире из 500 кандидатов оно бывает ниже 60-го,
+`ranking.build_selection(include_refs=…)`), а приглашение уходит каждому, кому мини-тест дал экспресс-категорию, независимо от места.
+Она открывается с телефона эксперта без пароля: фрагмент `infra/nginx/fsp.neuropeople.pro.jury-live.conf`
 открывает `/j/<код>` (точное выражение — `/j`, `/j/`, `/j/a/b` остаются под паролем), `/assets/` (JS, CSS, шрифты) и
 `/recover.js`; `sw.js`, манифест, иконки и `/api/` уже открыты основным конфигом. Установка —
 `sudo bash infra/nginx/apply-public-snippets.sh`: копирует фрагменты (QR и, если есть, паспорта `/verify/<id>`) в
