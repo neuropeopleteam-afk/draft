@@ -58,6 +58,7 @@ def test_readme_demo_commands_on_fresh_sqlite(tmp_path):
         return r.stdout
 
     run("-m", "alembic", "upgrade", "head")
-    assert "'candidates': 500" in run("-m", "app.modules.demo.seed")  # 500 — расширение демо (И8, feat/fixes)
-    assert '"created": 11' in run("-m", "app.integrations.vacancies.demo")
+    out = run("-m", "app.modules.demo.seed")
+    assert "'candidates': 500" in out and "'created': 11" in out  # 500 — демо И8; вакансии seed создаёт сам
+    assert '"created": 0' in run("-m", "app.integrations.vacancies.demo")  # повторный запуск — ничего не дублирует
     assert "cups" in run("-m", "app.cup.demo")
