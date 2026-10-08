@@ -12,6 +12,7 @@ export default function EmployerOverview() {
   const needs = useApi<any[]>("/employer/needs");
   const inv = useApi<any[]>("/employer/invitations");
   const probes = useApi<any[]>("/employer/probes");
+  const subs = useApi<any>("/employer/subscriptions");
   const accepted = inv.data?.filter((i) => i.status === "accepted").length ?? 0;
   const steps = [
     { done: !!company?.description, title: "Заполните профиль компании", text: "Кандидат увидит его в приглашении.", to: "company" },
@@ -22,10 +23,11 @@ export default function EmployerOverview() {
   return (
     <div className="max-w-4xl">
       <PageTitle title={company?.name ?? "Кабинет работодателя"} subtitle="Найдите проверенных кандидатов по категории и выйдите на контакт первым." />
-      <div className="mt-8 grid gap-5 md:grid-cols-3">
+      <div className="mt-8 grid gap-5 md:grid-cols-4">
         <Stat label="Потребности" value={needs.data?.length ?? "…"} />
         <Stat label="Приглашения" value={inv.data?.length ?? "…"} hint={inv.data ? `принято: ${accepted}` : undefined} />
         <Stat label="Зонды" value={probes.data?.length ?? "…"} hint={probes.data ? `ждут оценки: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
+        <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `слежу за потребностями: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
       </div>
       <section className="card mt-8">
         <h2 className="text-lg font-bold text-brand-night">С чего начать</h2>

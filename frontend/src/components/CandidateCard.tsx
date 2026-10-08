@@ -6,8 +6,8 @@ import { Specializations } from "./Specializations";
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
 /** Обезличенная карточка кандидата: подтверждённые факты (T1/T2) отдельно от самоописания (T0). */
-export function CandidateCard({ c, score, reasons, actions, compact = false }: {
-  c: any; score?: number; reasons?: any[]; actions?: ReactNode; compact?: boolean;
+export function CandidateCard({ c, score, reasons, actions, compact = false, badge }: {
+  c: any; score?: number; reasons?: any[]; actions?: ReactNode; compact?: boolean; badge?: ReactNode;
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
@@ -19,6 +19,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
             <GradeBadge s={c.status} claimed={c.claimed} />
+            {badge}
           </div>
           <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
           {c.confirmed_by && <p className="mt-1 text-xs text-brand-ink/70">Грейд был предварительным и подтверждён {c.confirmed_by.title}{c.confirmed_by.ref_title ? ` («${c.confirmed_by.ref_title}»)` : ""}</p>}
