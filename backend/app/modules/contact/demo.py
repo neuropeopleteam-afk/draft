@@ -12,7 +12,10 @@
   (vacancies.router.list_vacancies), поэтому общий список вакансий не засоряется копиями.
 
 Общие демо-кандидаты выбираются детерминированно: backend, видимые работодателям, не из первой пятёрки подборок
-песочницы — чтобы сравнение кандидатов и приглашение из подборки в путеводителе не упирались в «уже приглашён».
+песочницы — чтобы сравнение кандидатов и приглашение из подборки в путеводителе не упирались в «уже приглашён» —
+и не из «backend.middle»: все десять участвуют в кубках песочницы (app.cup.demo.seed_jury_cups), а приглашение
+по итогам кубка той же компании упёрлось бы в лимит «одно приглашение за 30 дней» (на PostgreSQL порядок по
+public_ref другой, чем на SQLite, и пересечение выпадало бы случайно).
 Приглашения компании жюри не попадают в аналитику ФСП (fsp.analytics исключает «Демо жюри…»); при сбросе
 песочницы удаляются вместе с компанией (ON DELETE CASCADE), вакансия и отклик Марии — вместе с компанией.
 """
@@ -36,6 +39,7 @@ from app.modules.matching.models import SelectionVersion
 from app.modules.profiles.models import CandidateProfile, Company
 
 DEMO_VACANCY = "Backend-разработчик (платёжные сервисы)"
+CUP_POOL_CATEGORY = "backend.middle"  # кубки песочницы берут всех десять демо-кандидатов этой категории
 
 
 def _msg(db: Session, *, inv: Invitation | None = None, app: VacancyApplication | None = None, user_id, side: str,
@@ -77,7 +81,8 @@ def shared_candidates(db: Session, needs: list, k: int = 3) -> list[CandidatePro
     rows = db.scalars(
         select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
         .where(User.email.like("demo-candidate-%@demo.invalid"), CandidateProfile.visible_to_employers.is_(True),
-               CandidateProfile.current_category_id.like("backend.%"))
+               CandidateProfile.current_category_id.like("backend.%"),
+               CandidateProfile.current_category_id != CUP_POOL_CATEGORY)
         .order_by(CandidateProfile.public_ref)).all()
     return [p for p in rows if p.public_ref not in top][:k]
 
