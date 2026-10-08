@@ -649,7 +649,7 @@ export function TestRun() {
         {it.step_prompt && <p className="mt-5 select-none whitespace-pre-line rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night"><Rich text={it.step_prompt} /></p>}
         {isLine && <p className="mt-3 text-sm text-brand-ink/70">{value ? `Выбрана строка ${value}.` : "Нажмите на строку, в которой дефект."}</p>}
         {it.answer_kind === "option" && it.options && (
-          <fieldset className="mt-5 select-none space-y-2">
+          <fieldset className="mt-5 min-w-0 select-none space-y-2">
             <legend className="sr-only">Варианты ответа</legend>
             {it.options.map((o: Opt) => (
               <label key={o.id} className={`flex cursor-pointer items-start gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${value === o.id ? "border-brand bg-brand-blush/30" : "border-brand-night/10 hover:border-brand/40"}`}>

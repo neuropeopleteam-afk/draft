@@ -77,7 +77,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
           {it.rubric.scoring_notes && <p className="mt-2 text-xs text-brand-ink/65">{it.rubric.scoring_notes}</p>}
         </details>
       )}
-      <fieldset className="mt-4 space-y-3" disabled={!!done}>
+      <fieldset className="mt-4 min-w-0 space-y-3" disabled={!!done}>
         <legend className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Критерии рубрики</legend>
         {crit.map((c) => (
           <div key={c.id} className="rounded-xl border border-brand-night/10 p-3">
