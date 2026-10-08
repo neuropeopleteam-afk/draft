@@ -69,8 +69,10 @@ function Body({ r }: { r: any }) {
         <K label="Семейства второй попытки уже были" value={pct(t.overlap_all?.mean)} hint={<>хотя бы одно — у {pct(t.overlap_all?.any_share)}; варианты при этом новые</>} />
       </div>
       <h3 className="mt-6 font-bold text-brand-night">Уверенные и у порога</h3>
+      <p className="mt-1 max-w-4xl text-sm text-brand-ink/70">Граница решения выше номинального порога на z(0,8)·SE ≈ {num(sp.boundary_shift, 2)}: и подтверждение, и «уровень ниже» требуют P{NB}≥{NB}0,8. Поэтому «у порога» считается от этой границы; разрез по номинальному порогу — для сравнения.</p>
       <div className="mt-2"><T caption="Совпадение итогового грейда по группам" head={["Группа", "Доля", "Точно", "±1", "κ, 95 % ДИ"]} rows={[
-        split("Истинный θ дальше 0,25 от порога", sp.far_from_cut), split("Истинный θ ближе 0,25 к порогу", sp.near_cut),
+        split("Дальше 0,25 от границы решения", sp.far_from_boundary), split("Ближе 0,25 к границе решения", sp.near_boundary),
+        split("Дальше 0,25 от номинального порога", sp.far_from_cut), split("Ближе 0,25 к номинальному порогу", sp.near_cut),
         split("Обе попытки: решение принято", sp.decided_both), split("Хотя бы раз «предварительно» или без категории", sp.undecided_any)]} /></div>
       <h3 className="mt-6 font-bold text-brand-night">По направлениям</h3>
       <div className="mt-2"><T caption="Повтор всего пути по направлениям" head={["Направление", "n", "Точно", "±1", "κ, 95 % ДИ", "ICC θ̂", "Повтор семейств", "Грейд = истинный"]} min="44rem"
