@@ -198,6 +198,8 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
                              previous_subpools=prev, previous_families=last_families, mode=mode)
     else:
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
+    # демо-режим жюри: быстрые верные ответы без других сигналов — мягкая пометка, не понижение достоверности (Ф3)
+    state["sandbox"] = bool(sandbox)
     # Адаптивный тест банка: до 60 минут (лимит CATConfig) + запас на дотестирование у порога (не меньше 30 минут,
     # как раньше); экспресс — 20 минут (за Senior — длиннее, см. express_params); дотестирование — его лимит + запас;
     # заглушка — 30 минут
