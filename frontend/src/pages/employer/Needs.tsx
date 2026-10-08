@@ -8,6 +8,7 @@ import { api } from "../../lib/api";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
+import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // подписка на потребность (И25)
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -225,6 +226,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
 
 export function Needs() {
   const { data, loading, error } = useApi<any[]>("/employer/needs");
+  const subs = useApi<{ items: { need_id: string; enabled: boolean; new_count: number }[] }>("/employer/subscriptions");
+  const watch = Object.fromEntries((subs.data?.items ?? []).filter((x) => x.enabled).map((x) => [x.need_id, x.new_count]));
   const navigate = useNavigate();
   const loc = useLocation();
   const tags = useTags();
@@ -301,7 +304,10 @@ export function Needs() {
                     <p className="font-bold text-brand-night">{n.title}</p>
                     <p className="text-sm text-brand-ink/65">{n.requirements.direction ? catTitle(`${n.requirements.direction}.${n.requirements.grade ?? ""}`) : "направление не указано"} · версий подборки: {n.versions.length} · {dtt(n.created_at)}</p>
                   </div>
-                  <span className="text-sm font-semibold text-brand">Открыть</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-brand">
+                    {n.id in watch && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${watch[n.id] ? "bg-brand text-white" : "bg-brand-blush text-brand-plum"}`}>Слежу · новых: {watch[n.id]}</span>}
+                    Открыть
+                  </span>
                 </Link>
               </li>
             ))}
@@ -323,6 +329,7 @@ export function Selection() {
   const v = version ? Number(version) : last;
   const sel = useApi<any>(v ? `/employer/needs/${id}/selections/${v}` : null, [v]);
   const tags = useTags();
+  const sub = useSub(id);
   const [filters, setFilters] = useState<any>({});
   const [refineReq, setRefineReq] = useState<Req | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
@@ -374,6 +381,7 @@ export function Selection() {
           </Link>
         ))}
       </div>
+      {id && <SubscriptionPanel needId={id} sub={sub} versionNo={last} onNewVersion={async (n) => { await need.reload(); navigate(`/employer/needs/${id}/v/${n}`); }} />}
       {!s ? <Loading /> : (
         <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
           <aside className="space-y-4">
@@ -456,6 +464,7 @@ export function Selection() {
             <LevelLegend />
             {!s.results.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или выберите соседнюю категорию." /> : s.results.map((r: any) => (
               <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} compact
+                badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
                 actions={
                   <div className="flex flex-wrap items-center gap-3">
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand" checked={picked.includes(r.ref)} onChange={() => setPicked(picked.includes(r.ref) ? picked.filter((x) => x !== r.ref) : [...picked, r.ref])} />выбрать</label>
