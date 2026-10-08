@@ -19,7 +19,9 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
-            <GradeBadge s={c.status} claimed={c.claimed} />
+            {/* мини-тест QR (3 задания): категория предварительная — не «Грейд подтверждён» (Ф3) */}
+            {c.category?.preliminary ? <span className="chip" title="Мини-тест из 3 заданий: категория не выше Middle, полный тест уточнит грейд">по мини-тесту</span>
+              : <GradeBadge s={c.status} claimed={c.claimed} />}
           </div>
           <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
           {c.confirmed_by && <p className="mt-1 text-xs text-brand-ink/70">Грейд был предварительным и подтверждён {c.confirmed_by.title}{c.confirmed_by.ref_title ? ` («${c.confirmed_by.ref_title}»)` : ""}</p>}
