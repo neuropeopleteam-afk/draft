@@ -31,16 +31,26 @@ SALARY_MAX_RATIO = 1.5
 
 
 def profile_by_ref(db: Session, ref: str) -> CandidateProfile:
-    """Видимый работодателю кандидат: с категорией (основного или дополнительного направления, в том числе
-    «предварительно») или без подтверждённого грейда (опрос пройден) — статус «не подтверждён» показывается в карточке,
-    зонд и приглашение ему доступны."""
+    """Кандидат по обезличенному ref для работодателя: карточка, PDF, сравнение, зонд, приглашение, паспорт, задания.
+
+    Видимость та же, что у поиска и подборок: профиль открыт, учётка активна, есть категория (основного или
+    дополнительного направления, в том числе «предварительно») или опрос пройден без подтверждённого грейда (статус
+    «не подтверждён» показывается в карточке, зонд и приглашение доступны), и кандидат виден в песочнице текущего
+    запроса (jury_scope.visible: кандидат чужой песочницы жюри — и для другой песочницы, и для общего демо, и для
+    настоящего работодателя не существует). Иначе прямая ссылка по ref обходила бы фильтр списков. Все причины — один
+    и тот же 404, чтобы по ответу нельзя было узнать о существовании кандидата.
+    """
+    from app.modules.jury import scope as jury_scope
     from app.modules.profiles.models import CandidateSpecialization
 
-    p = db.scalar(select(CandidateProfile).where(CandidateProfile.public_ref == ref))
+    row = db.execute(select(CandidateProfile, User.email, User.is_active).join(User, User.id == CandidateProfile.user_id)
+                     .where(CandidateProfile.public_ref == ref)).first()
+    p, email, active = row if row else (None, None, False)
     has_category = p and (p.current_category_id or db.scalar(select(CandidateSpecialization.category_id).where(
         CandidateSpecialization.user_id == p.user_id, CandidateSpecialization.category_id.is_not(None),
         CandidateSpecialization.status.in_(["confirmed", "provisional"])).limit(1)))
-    if p is None or not p.visible_to_employers or not (has_category or p.onboarding_completed_at):
+    if (p is None or not active or not p.visible_to_employers or not (has_category or p.onboarding_completed_at)
+            or not jury_scope.visible(email)):
         raise api_error(404, "candidate_not_found", "Кандидат не найден или скрыл профиль")
     return p
 
