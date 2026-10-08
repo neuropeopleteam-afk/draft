@@ -30,11 +30,17 @@ def password_needs_rehash(password_hash: str) -> bool:
     return _ph.check_needs_rehash(password_hash)
 
 
+# Типы токенов второго фактора (поле ``typ``). Обычный токен доступа поля ``typ`` не имеет; токены с ``typ`` принимают
+# только эндпоинты /api/auth/2fa/* — в кабинет по ним не войти (app/core/deps.py).
+TOKEN_TYPE_2FA_PENDING = "2fa"  # пароль (или ссылка) принят, ждём код
+TOKEN_TYPE_2FA_SETUP = "2fa_setup"  # вход разрешён только для обязательного подключения второго фактора
+
+
 def create_access_token(user_id: uuid.UUID, role: str, token_version: int = 0,
-                        extra: dict | None = None) -> tuple[str, int]:
+                        extra: dict | None = None, ttl_minutes: int | None = None) -> tuple[str, int]:
     s = get_settings()
     now = utcnow()
-    ttl = timedelta(minutes=s.jwt_ttl_minutes)
+    ttl = timedelta(minutes=ttl_minutes if ttl_minutes is not None else s.jwt_ttl_minutes)
     payload = {
         **(extra or {}),  # например, jsc — песочница жюри (app/modules/jury/scope.py); стандартные поля не перекрывает
         "sub": str(user_id),

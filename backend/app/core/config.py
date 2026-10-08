@@ -38,6 +38,24 @@ class Settings(BaseSettings):
     email_code_max_attempts: int = 5
     email_code_resend_seconds: int = 60
 
+    # Второй фактор входа (TOTP, RFC 6238; app/modules/auth/twofa.py). Обязателен для перечисленных ролей с реальной
+    # учётной записью (не демо-песочница жюри, не вход эксперта по ссылке); остальным — по желанию.
+    twofa_required_roles: str = "admin,fsp_analyst"
+    # Имя издателя в приложении-аутентификаторе; пусто — product_name
+    twofa_issuer: str | None = None
+    # Ключ шифрования секретов TOTP в БД; пусто — производный от JWT_SECRET
+    twofa_secret_key: str | None = None
+    twofa_max_fails: int = 5  # неверных кодов подряд до блокировки
+    twofa_lock_minutes: int = 15
+    twofa_pending_ttl_minutes: int = 5  # пароль принят, ждём код
+    twofa_setup_ttl_minutes: int = 15  # обязательное подключение при первом входе
+    twofa_window_steps: int = 1  # допуск рассинхронизации часов: ±1 шаг по 30 с
+    twofa_recovery_codes: int = 10
+
+    @property
+    def twofa_required_role_set(self) -> set[str]:
+        return {r.strip() for r in self.twofa_required_roles.split(",") if r.strip()}
+
     # Бизнес-правила из брифа
     grade_change_interval_days: int = 90
     # Неподтверждённый тест на грейд G: повтор на G (и выше) — не раньше чем через N дней; на грейд ниже — сразу,

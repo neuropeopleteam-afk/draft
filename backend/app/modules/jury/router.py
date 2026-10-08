@@ -22,6 +22,7 @@ from app.core.deps import get_current_user
 from app.core.errors import api_error, err
 from app.core.ratelimit import SlidingWindow, client_ip
 from app.modules.auth.models import User
+from app.modules.auth import twofa
 from app.modules.auth.service import issue_token
 from app.modules.jury import scope, seed
 
@@ -52,11 +53,15 @@ def _token(db: Session, sid: str, persona: str) -> dict:
     user = db.scalar(select(User).where(User.email == scope.emails(sid)[persona]))
     if user is None:
         raise api_error(503, "jury_not_ready", "Демо-учётки жюри ещё создаются, повторите через несколько секунд")
+    ctx = {"persona": persona, "landing": LANDING[persona], "scenario": sid or None, "shared": not sid}
+    if twofa.enabled(db, user):
+        # Эксперт жюри сам подключил TOTP этой персоне (проверка «по-настоящему»): один клик → код из приложения.
+        # Другие персоны и песочницы не затронуты; «Сбросить демо» пересоздаёт учётки и снимает подключение.
+        return twofa.challenge(user, {scope.CLAIM: sid} if sid else None, **ctx).model_dump()
     user.last_login_at = utcnow()
     db.commit()
     tok = issue_token(user, {scope.CLAIM: sid} if sid else None)
-    return {**tok.model_dump(), "persona": persona, "landing": LANDING[persona], "scenario": sid or None,
-            "shared": not sid}
+    return {**tok.model_dump(), **ctx}
 
 
 def _new_sandbox(db: Session, request: Request, sid: str | None = None) -> str | None:
