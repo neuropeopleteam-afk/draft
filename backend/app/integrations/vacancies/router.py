@@ -199,7 +199,7 @@ def _app_out(db: Session, a: VacancyApplication, side: str, v: Vacancy | None = 
         c = db.get(Company, v.company_id)
         out["company"] = {"id": str(c.id), "name": c.name}
         out["employer_note"] = a.employer_note if a.status in ("accepted", "rejected") else None
-    out["assignment"] = assignments.attempt_for_application(db, a)  # И7: результат задания рядом с откликом
+    out["assignment"] = assignments.attempt_for_application(db, a, side)  # И7: результат задания рядом с откликом
     return out
 
 
