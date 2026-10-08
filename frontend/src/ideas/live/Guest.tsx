@@ -325,10 +325,10 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
 
       <ol className="card mt-4 space-y-4 p-4" aria-label="Что происходит у работодателя">
         <Step done title="Категория присвоена, факты записаны в профиль (T1)" active={false} />
-        <Step done={selected} active={!selected} title={selected && sel ? `В подборке работодателя: место ${sel.rank ?? "—"} из ${sel.total}` : "Работодатель пересчитывает подборку…"}>
+        <Step done={selected} active={!selected} title={selected && sel ? (sel.rank != null ? `В подборке работодателя: место ${sel.rank} из ${sel.total}` : `Подборка работодателя пересчитана, кандидатов: ${sel.total}`) : "Работодатель пересчитывает подборку…"}>
           {selected && sel ? <>Потребность «{sel.need_title.replace("Живая демонстрация: ", "")}», версия подборки {sel.version}</> : null}
         </Step>
-        <Step done={invited} active={selected && !invited} title={invited ? "Приглашение отправлено" : selected ? "Работодатель отправляет приглашение…" : "Приглашение"}>
+        <Step done={invited} active={selected && !invited} title={invited ? "Приглашение отправлено" : selected && g.invite_failed ? "Приглашение не отправлено — скажите об этом докладчику" : selected ? "Работодатель отправляет приглашение…" : "Приглашение"}>
           {invited && inv ? (inv.push?.delivered ? "Push доставлен на этот телефон" : push.on ? "Push отправлен на этот телефон" : "Без push: страница обновилась сама") : null}
         </Step>
       </ol>
