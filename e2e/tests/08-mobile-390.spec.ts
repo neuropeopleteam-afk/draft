@@ -78,8 +78,16 @@ test("390 px: кандидат — опрос, экран задания, кат
   });
   await screen(page, "11-кандидат-опрос-и-тест", "/candidate/assessment");
   await test.step("экран задания теста", async () => {
-    await page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста/ }).check();
+    const ack = page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста/ });
+    if (await ack.isVisible()) await ack.check();  // при продолжении начатого теста согласия нет
     await page.getByRole("button", { name: /^(Начать|Продолжить) тест$/ }).click();
+    // И16: перед новым тестом — экран камеры (по согласию); при продолжении начатого теста его нет
+    const skip = page.getByRole("button", { name: "Пройти без камеры" });
+    await expect(skip.or(page.getByRole("button", { name: /^Ответить/ }))).toBeVisible({ timeout: 60_000 });
+    if (await skip.isVisible()) {
+      await screen(page, "11b-кандидат-камера-перед-тестом", undefined, page.getByRole("heading", { name: "Камера во время теста" }));
+      await skip.click();
+    }
     await expect(page).toHaveURL(/\/candidate\/assessment\/test\/[\w-]+$/);
     await expect(page.getByRole("button", { name: /^Ответить/ })).toBeVisible({ timeout: 60_000 });
   });

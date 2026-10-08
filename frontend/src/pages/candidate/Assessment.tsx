@@ -5,6 +5,11 @@ import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, Loading, Seg, Toggl
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
+import { useMeta } from "../../lib/meta";
+import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
+import { CameraIndicator } from "../../proctor/CameraIndicator";
+import { CameraReport } from "../../proctor/CameraReport";
+import { camera } from "../../proctor/controller";
 import { FeedbackSummary } from "./Feedback";
 import { useLlmOff } from "../../components/LlmOff";
 
@@ -340,15 +345,21 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
   // повтор на тот же грейд (и выше) после неподтверждённой попытки — через 30 дней; на грейд ниже — сразу
   const retakeLocks = (status?.retake_locks ?? {}) as Record<string, string>;
   const retakeLocked = !!retakeLocks[grade];
+  // И16: экран камеры (по согласию) — до создания сессии, т. к. первое задание выдаётся при её создании; при выключенном флаге экрана нет
+  const meta = useMeta();
+  const [cam, setCam] = useState(false);
 
-  async function start() {
+  async function start(camMode?: CamMode, reason?: string | null) {
+    if (!camMode && !resume && meta?.proctor_camera) { setCam(true); return; }
     enterFullscreen();
     setError(null); setBusy(true);
     try {
       const s = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: grade, direction: dir, integrity_ack: ack, mode } });
+      if (camMode) await startProctor(s.session_id, camMode, reason).catch(() => undefined); // ошибка камеры не прерывает тест
       navigate(`/candidate/assessment/test/${s.session_id}`);
     } catch (e) { setError(errText(e)); } finally { setBusy(false); }
   }
+  if (cam) return <CameraConsent onDone={start} onBack={() => setCam(false)} busy={busy} error={error} />;
 
   return (
     <>
@@ -417,7 +428,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </label>
       )}
       <div className="mt-6 flex flex-wrap gap-3">
-        <button className="btn-primary" onClick={start} disabled={busy || locked || retakeLocked || (!resume && !ack)}>
+        <button className="btn-primary" onClick={() => start()} disabled={busy || locked || retakeLocked || (!resume && !ack)}>
           {busy ? "Готовим задания…" : resume ? "Продолжить тест" : mode === "express" ? "Начать экспресс-тест" : "Начать тест"}
         </button>
         <button className="btn-ghost" onClick={onEditSurvey}>{status?.specializations?.length < 2 ? "Добавить второе направление" : "Изменить ответы опроса"}</button>
@@ -551,11 +562,16 @@ export function TestRun() {
     }).catch((e) => setError(errText(e)));
   }, [id]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  // И16: камера (если включена на экране перед тестом) — события режутся по заданиям; уход со страницы выключает камеру
+  useEffect(() => { camera.enterTest(id!); return () => camera.leaveTest(); }, [id]);
+  useEffect(() => { camera.setItem(s?.item?.item_id ?? null); }, [s?.item?.item_id]);
 
   async function finish() {
     setBusy(true); setError(null);
     try {
+      await camera.flush({ final: true });  // И16: последние события камеры — до завершения
       setResult(await api<any>(`/assessment/sessions/${id}/finish`, { method: "POST" }));
+      camera.detach();
       if (document.fullscreenElement) document.exitFullscreen().catch(() => undefined);
       await refresh();
     }
@@ -607,6 +623,7 @@ export function TestRun() {
           {left >= 0 ? `Рекомендуемое время: ${fmtTime(left)}` : `Сверх рекомендуемого: ${fmtTime(-left)}`}
         </span>
       </div>
+      <CameraIndicator sessionId={id!} />
       {fsOk && !fsOn && (
         <div className="mt-4"><Alert kind="info">
           Тест рассчитан на полноэкранный режим.
@@ -714,6 +731,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       )}
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " LLM-оценщик не подключён: ответы проверяет эксперт." : ""}</Alert></div>}
       {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={r.integrity} /></div>}
+      <CameraReport sessionId={sessionId} />
       {r.accept_lower_available && r.accept_lower_grade && (
         <div className="card mt-4 border-brand/30 bg-brand-blush/20 text-sm" data-testid="accept-lower">
           <p className="font-semibold text-brand-night">Уровень {GRADES[r.accept_lower_grade]} доказан уверенно</p>

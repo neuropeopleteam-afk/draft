@@ -6,6 +6,7 @@ import { Alert, DIRECTIONS, GRADES, Loading, Seg, Stat, dt, errText, range, useA
 import { apiDownload } from "../../lib/api";
 import { BarList, Donut, Funnel, Heatmap, Legend, PairBars, RangeChart, StackBar, fk, fpct, ftr, fx, type Stage } from "../charts";
 import { MODE_SHORT, Phase } from "../shared";
+import { CameraStats } from "../../proctor/CameraStats";
 
 type Rep = any;
 interface Ctx { rep: Rep | null; loading: boolean; error: string | null; days: string; setDays: (d: string) => void }
@@ -98,6 +99,7 @@ const dirSum = (rows: any[], key: string) => DIRS.map((d) => ({ ...d, v: rows.fi
 // ------------------------------------------------------------------ обзор
 
 export function FspOverview() {
+  const { days } = useRep();
   return (
     <div className="max-w-6xl space-y-6">
       <Head title="Кабинет ФСП" subtitle="Обезличенная аналитика платформы для федерации: чего ждут работодатели, как соревнования ФСП влияют на приглашения, какие зарплаты предлагают на деле." />
@@ -152,6 +154,7 @@ export function FspOverview() {
                   }))} />
               </Card>
             </div>
+            <CameraStats days={days === "all" ? null : Number(days)} />
           </>
         );
       }}</Body>
