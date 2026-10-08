@@ -151,3 +151,32 @@ def purge(db: Session, sid: str, owner_ids: list) -> None:
         db.execute(delete(NotifyPrefs).where(NotifyPrefs.user_id.in_(both)))
         db.execute(delete(SubsDirty).where(SubsDirty.user_id.in_(both)))
     live.delete_guests(db, sim_ids)
+
+
+FAST_FORWARD_DAYS = {5: "без ответа 3 дня и отклик без решения 5 дней", 29: "до конца срока ответа остались сутки"}
+
+
+def fast_forward(db: Session, user: User, days: int) -> dict:
+    """«Перемотать время» в песочнице жюри: напоминания Н6 считаются так, будто прошло days дней (5 или 29).
+    Уведомления создаются с настоящим временем, приглашения и отклики не меняются."""
+    from datetime import timedelta
+
+    from sqlalchemy import update
+
+    from app.modules.subs import delivery, reminders
+
+    persona, sid = scope.parse(user.email)
+    if persona != "employer" or not sid or not user.is_demo:
+        raise api_error(403, "jury_sandbox_only", "Кнопка работает только в вашей песочнице жюри (демо-работодатель)")
+    if days not in FAST_FORWARD_DAYS:
+        raise api_error(422, "bad_days", "Доступно: 5 или 29 дней")
+    hit(_limit, sid, "subs_sim_rate", "Слишком часто, подождите немного")
+    people = set(db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all())
+    vnow = utcnow() + timedelta(days=days, hours=1)
+    out = reminders.run(db, vnow, people)
+    delivery.run_digests(db, vnow, force=True, user_ids=list(people))
+    delivery.dispatch(db, vnow, user_ids=list(people))
+    db.execute(update(UserNotification).where(UserNotification.user_id.in_(people), UserNotification.created_at >= vnow - timedelta(seconds=1))
+               .values(created_at=utcnow()))
+    db.commit()
+    return {"days": days, "why": FAST_FORWARD_DAYS[days], "created": out}
