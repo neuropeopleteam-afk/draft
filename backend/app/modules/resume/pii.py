@@ -21,8 +21,10 @@ log = logging.getLogger("resume.pii")
 
 PATTERNS: list[tuple[str, re.Pattern, str]] = [
     ("email", re.compile(r"[\w.+\-]+@[\w\-]+(?:\.[\w\-]+)+", re.I), "[почта]"),
-    ("url_messenger", re.compile(r"(?:https?://)?(?:t\.me|telegram\.me|wa\.me|vk\.com|vk\.ru|ok\.ru|instagram\.com|"
-                                 r"facebook\.com|linkedin\.com/in|hh\.ru/resume|career\.habr\.com|github\.com|gitlab\.com)"
+    ("url_messenger", re.compile(r"(?:https?://)?(?:www\.)?(?:t\.me|telegram\.me|wa\.me|vk\.com|vk\.ru|ok\.ru|instagram\.com|"
+                                 r"facebook\.com|linkedin\.com/in|hh\.ru/resume|career\.habr\.com|github\.com|gitlab\.com|"
+                                 r"habr\.com/(?:ru/|en/)?users|leetcode\.com/(?:u/)?|stackoverflow\.com/users|kaggle\.com|"
+                                 r"codeforces\.com/profile|gitflic\.ru|x\.com|twitter\.com|behance\.net|dribbble\.com)"
                                  r"/[\w\-./?=&%]+", re.I), "[ссылка]"),
     ("phone", re.compile(r"(?<!\d)(?:\+7|8|\+\d{1,3})[\s\-\u00a0(]*\d{3}[\s\-\u00a0)]*\d{3}[\s\-\u00a0]*\d{2}[\s\-\u00a0]*\d{2}(?!\d)"),
      "[телефон]"),
@@ -34,6 +36,10 @@ PATTERNS: list[tuple[str, re.Pattern, str]] = [
     ("inn", re.compile(r"(?:инн\s*:?\s*)\d{10,12}", re.I), "[инн]"),
 ]
 LABEL_HINTS = re.compile(r"^(?:фио|имя|name|кандидат)\s*[:\-]\s*", re.I)
+# Текст вакансии: имя контактного лица после подсказки («HR: Ольга», «рекрутер — Пётр Сидоров»)
+CONTACT_CUE = re.compile(r"(?:(?<=\s)|^)(?i:контактное\s+лицо|контакт|hr(?:-менеджер|-партн[её]р)?|рекрутер|"
+                         r"менеджер\s+по\s+подбору|нанимающий\s+менеджер|пишите|звоните|обращаться\s+к)\b"
+                         r"\s*[:—–\-]?\s*([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ][а-яё]+){0,2})(?![\w-])", re.M)
 
 
 @dataclass
@@ -98,7 +104,10 @@ _NAME_LINE = re.compile(r"^\s*([А-ЯЁ][а-яё]+(?:-[А-ЯЁ][а-яё]+)?\s+[�
 _NAME_LINE_EN = re.compile(r"^\s*([A-Z][a-z]+\s+[A-Z][a-z]+)\s*$")
 
 
-def redact(text: str, use_ner: bool = True) -> Redaction:
+def redact(text: str, use_ner: bool = True, ner_min_tokens: int = 1, contact_cues: bool = False) -> Redaction:
+    """ner_min_tokens=2 — имена NER только из двух и более слов («Иванова Мария»): в текстах вакансий одиночные
+    слова с заглавной («Гибрид», «Андроид») NER часто принимает за имена. contact_cues — имя после подсказки
+    контакта («HR: Ольга»)."""
     found: dict[str, list[str]] = {}
     out = text
     for kind, pat, placeholder in PATTERNS:
@@ -113,8 +122,15 @@ def redact(text: str, use_ner: bool = True) -> Redaction:
         persons = _ner_persons(out)
         ner_used = _ner is not None
         for s, e, val in sorted(persons, key=lambda x: -x[0]):
+            if len(val.split()) < ner_min_tokens:
+                continue
             names.append(val)
             out = out[:s] + "[ФИО]" + out[e:]
+    if contact_cues:
+        for m in reversed(list(CONTACT_CUE.finditer(out))):
+            val = m.group(1).strip()
+            names.append(val)
+            out = out[:m.start(1)] + "[ФИО]" + out[m.end(1):]
     # Эвристика: первая непустая строка резюме вида «Фамилия Имя [Отчество]» или «ФИО: …»
     lines = out.split("\n")
     for i, line in enumerate(lines[:6]):

@@ -1,7 +1,7 @@
 import { Fragment, type ReactNode } from "react";
 
 /** Цитата: фрагмент текста работодателя, на основании которого извлечено требование. */
-export interface Ev { start?: number; end?: number; quote: string; context?: string; source?: "rules" | "llm"; basis?: string }
+export interface Ev { start?: number; end?: number; quote: string; context?: string; source?: "rules" | "llm"; basis?: string; model?: string }
 /** Находка фильтра ст. 64 ТК РФ. */
 export interface BiasHit { category: string; title: string; start: number; end: number; quote: string; law: string; suggestion?: string }
 export interface Mark { key: string; start: number; end: number; kind: "req" | "bias"; label: string }
