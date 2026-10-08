@@ -225,7 +225,7 @@ def test_jury_login_reset_and_expert(client, monkeypatch):
     # работодатель: потребности и подборки, у кандидата без ФСП — входящее приглашение
     e = client.post("/api/jury/login", json={"persona": "employer"}).json()["access_token"]
     needs = client.get("/api/employer/needs", headers=H(e)).json()
-    assert len(needs if isinstance(needs, list) else needs.get("items", [])) == 3
+    assert len(needs if isinstance(needs, list) else needs.get("items", [])) == 4  # 4-я — демо «Что если» (И18)
     assert sum(1 for n in needs if n["requirements"].get("bias")) == 1  # потребность для показа фильтра ст. 64 ТК РФ
     # эксперт: в очереди есть ответ «на проверке»
     x = client.post("/api/jury/login", json={"persona": "expert"}).json()["access_token"]
