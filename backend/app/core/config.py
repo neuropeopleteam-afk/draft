@@ -74,6 +74,10 @@ class Settings(BaseSettings):
     # с заголовком X-Relay-Token, Authorization с ключом OpenRouter передаётся как есть
     llm_relay_url: str | None = None
     llm_relay_token: str | None = None
+    # Собственный сертификат ретранслятора (самоподписанный, IP в SAN): путь к PEM — проверка TLS по нему, а не по certifi
+    llm_relay_ca_file: str | None = None
+    # То же содержимым (PEM в base64) — удобно для env_file в docker compose без монтирования файла
+    llm_relay_ca_pem_b64: str | None = None
     # Модель на функцию: «модель» (для первого провайдера цепочки) или «провайдер=модель,провайдер=модель»;
     # пусто — по умолчанию (openrouter: Sonnet 5.5, вторая оценка — Fable 5.1; yandex: LLM_MODEL / LLM_GRADING_MODEL)
     llm_model_parse_need: str | None = None
