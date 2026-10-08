@@ -188,6 +188,9 @@ def test_office_only_need_hides_remote_and_other_city(client):
     ("Удалённо или гибридный график с офисом в Москве", "remote", ["remote", "hybrid"], "Москва"),
     ("Работаем в офисе в Москве, 2 дня в неделю удалённо", "hybrid", ["hybrid", "office"], "Москва"),
     ("Офис или удалёнка", "office", ["office", "remote", "hybrid"], None),
+    ("Казань или удалённо", "remote", ["remote", "office", "hybrid"], "Казань"),
+    ("Удалённо или в Москве", "remote", ["remote", "office", "hybrid"], "Москва"),
+    ("Удалённо из Москвы", "remote", None, None),
 ])
 def test_conditions_parser_phrasings(text, fmt, fmts, city):
     r = parse_need("Backend middle: Python. " + text, use_llm=False)
