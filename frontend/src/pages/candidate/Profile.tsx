@@ -73,7 +73,7 @@ export default function Profile() {
         </div>
         {resume.loading && !r ? <div className="mt-4"><Loading /></div> : r ? (
           <div className="mt-5 space-y-4">
-            <p className="text-sm text-brand-ink/65">{r.filename} · {r.pages} стр. · {r.created_at ? dtt(r.created_at) : "только что"} · {r.method === "rules" ? "разбор по словарям" : "разбор: словари + LLM"}</p>
+            <p className="text-sm text-brand-ink/65">{r.filename} · {r.pages} стр. · {r.created_at ? dtt(r.created_at) : "только что"} · {r.method === "rules" ? "разбор по словарям" : `разбор: словари + ${r.extracted?.llm?.model_label ?? "LLM"}`}</p>
             <div className="rounded-xl bg-[#F3F2FB] p-4 text-sm">
               <p className="font-semibold text-brand-night">Вырезано до обработки</p>
               <p className="mt-1 text-brand-ink/70">

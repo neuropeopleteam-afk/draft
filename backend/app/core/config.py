@@ -67,6 +67,43 @@ class Settings(BaseSettings):
     llm_model: str | None = None
     llm_timeout_s: float = 25.0
     llm_disabled: bool = False
+    # Цепочка провайдеров (docs/LLM.md): порядок через запятую, например «openrouter,yandex»; пусто — один
+    # провайдер из LLM_* (поведение прежнее). yandex — провайдер из LLM_* (Yandex AI Studio или иной совместимый),
+    # openrouter — OpenRouter (ключ на сервере, /opt/spectrek_fsp/secrets/openrouter.env). Последний рубеж — правила.
+    llm_chain: str | None = None
+    openrouter_api_key: str | None = None
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # Ретранслятор вне РФ (с сервера в РФ OpenRouter отвечает 403): если задан, запросы OpenRouter идут на него
+    # с заголовком X-Relay-Token, Authorization с ключом OpenRouter передаётся как есть
+    llm_relay_url: str | None = None
+    llm_relay_token: str | None = None
+    # Собственный сертификат ретранслятора (самоподписанный, IP в SAN): путь к PEM — проверка TLS по нему, а не по certifi
+    llm_relay_ca_file: str | None = None
+    # То же содержимым (PEM в base64) — удобно для env_file в docker compose без монтирования файла
+    llm_relay_ca_pem_b64: str | None = None
+    # Модель на функцию: «модель» (для первого провайдера цепочки) или «провайдер=модель,провайдер=модель»;
+    # пусто — по умолчанию (openrouter: Sonnet 5.5, вторая оценка — Fable 5.1; yandex: LLM_MODEL / LLM_GRADING_MODEL)
+    llm_model_parse_need: str | None = None
+    llm_model_resume: str | None = None
+    llm_model_grade: str | None = None
+    llm_model_grade_second: str | None = None
+    # Тайм-аут одной попытки на функцию, с; пусто — LLM_TIMEOUT_S (разбор, резюме) и LLM_GRADING_TIMEOUT_S (оценка)
+    llm_timeout_parse_need: float | None = None
+    llm_timeout_resume: float | None = None
+    llm_timeout_grade: float | None = None
+    llm_timeout_grade_second: float | None = None
+    # Рассуждения моделей OpenRouter на функцию (у Sonnet 5.5 их нельзя выключить): low | medium | high | default
+    # (параметр не передаётся). Разбор и резюме — low: извлечению рассуждения не нужны, а ответ в 2 раза дешевле и
+    # не обрезается лимитом токенов (docs/LLM.md, «качество / время»)
+    llm_reasoning_parse_need: str = "low"
+    llm_reasoning_resume: str = "low"
+    llm_reasoning_grade: str = "default"
+    llm_reasoning_grade_second: str = "low"  # Fable 5.1 по умолчанию рассуждает долго: ответ обрезался лимитом
+    # Автомат-выключатель: после N ошибок подряд провайдер (с этой моделью) пропускается M секунд
+    llm_breaker_failures: int = 3
+    llm_breaker_cooldown_s: float = 60.0
+    # Вторая оценка спорных ответов (grade_second, docs/LLM.md): «близко к порогу» — |балл − 0,5| ≤ LLM_GRADING_NEAR
+    llm_grading_near: float = 0.05
     # Модель для оценки открытых ответов теста по рубрике (короткое имя или gpt://…); пусто — LLM_MODEL.
     # Окончательный выбор — по согласию с экспертами на проверочном наборе (docs/ARCHITECTURE.md, раздел 8).
     llm_grading_model: str | None = None
@@ -77,6 +114,9 @@ class Settings(BaseSettings):
     # Чья экспертная разметка пакета (раздел «Экспертная разметка» /validation): human | model | auto (по профилям).
     # model — критерий допуска модели-оценщика абсолютный (κ с консенсусом и MAE), а не разрыв с межэкспертной κ.
     expert_panel_kind: str = "auto"
+    # Общий бюджет оценки одного ответа (первая + вторая оценка, с переходами по цепочке), с: ответ кандидата ждёт
+    # оценку синхронно, а proxy_read_timeout nginx — 60 с. Не хватило на вторую оценку — ответ «на проверке»
+    llm_grading_budget_s: float = 50.0
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"
@@ -177,7 +217,22 @@ class Settings(BaseSettings):
 
     @property
     def llm_configured(self) -> bool:
-        return bool(self.llm_base_url and self.llm_api_key and self.llm_model and not self.llm_disabled)
+        """Хотя бы один провайдер цепочки настроен и LLM не выключен."""
+        if self.llm_disabled:
+            return False
+        return any(self.llm_provider_configured(p) for p in self.llm_chain_list)
+
+    @property
+    def llm_chain_list(self) -> list[str]:
+        items = [p.strip().lower() for p in (self.llm_chain or "").split(",") if p.strip()]
+        return list(dict.fromkeys(items)) or ["yandex"]
+
+    def llm_provider_configured(self, name: str) -> bool:
+        if name == "yandex":
+            return bool(self.llm_base_url and self.llm_api_key and self.llm_model)
+        if name == "openrouter":
+            return bool(self.openrouter_api_key and (self.llm_relay_url or self.openrouter_base_url))
+        return False
 
     @property
     def cors_origin_list(self) -> list[str]:
