@@ -16,6 +16,7 @@ from app.core.config import get_settings
 from app.core.db import as_aware, utcnow
 from app.core.enums import EvidenceLevel, FactSource, GradeChangeReason, TestSessionStatus
 from app.core.errors import api_error
+from app.modules.assessment import second_opinion as second_op
 from app.modules.assessment.bank_engine import express_params
 from app.modules.assessment.engine import get_engine
 from app.modules.assessment.integrity import NOTICE_VERSION, candidate_view
@@ -347,10 +348,13 @@ def submit_answer(db: Session, ts: TestSession, item_id: str, answer, time_spent
     if not fb.accepted:
         raise api_error(422, "answer_rejected", "Ответ не принят: задание уже отвечено, шаг не текущий "
                                                 "или ответ не подходит к формату задания")
+    second_todo = []
     if _engine_key(ts) == "bank":
         _drain_outbox(db, ts)
+        second_todo = second_op.take_new(state)  # И27: вторая оценка спорных ответов — в фоне, после commit
     flag_modified(ts, "result")
     db.commit()
+    second_op.schedule(ts.id, second_todo)
     return fb
 
 
@@ -396,9 +400,12 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
                                                      "extension", "pending_review", "n_families_in_bank", "mode")},
         "integrity": candidate_view((res.details or {}).get("integrity")),
     }
+    second_todo = second_op.take_new(ts.result["state"]) if _engine_key(ts) == "bank" else []
+    result["second_opinions"] = second_op.summary(ts.result["state"])  # И27: итог не ждёт вторую оценку
     ts.result = {**ts.result, "outcome": {**ts.result["outcome"], **result}}
     flag_modified(ts, "result")
     db.commit()
+    second_op.schedule(ts.id, second_todo)
     return result
 
 
@@ -516,6 +523,7 @@ def result(db: Session, ts: TestSession) -> dict:
     er = ts.result.get("engine_result") or {}
     out = dict(ts.result.get("outcome") or {})
     out.update(_accept_lower_fields(ts, specialization, er))
+    out["second_opinions"] = second_op.summary(ts.result.get("state") or {})  # И27: текущее состояние фона
     out.update({"current_grade": specialization.grade_id, "category_id": specialization.category_id,
                 "category_status": specialization.status, "mode": _mode(ts),
                 "sandbox": is_sandbox(profile), "retake_same_grade_days": get_settings().retake_same_grade_days,

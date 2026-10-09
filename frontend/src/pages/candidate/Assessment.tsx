@@ -730,6 +730,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         </p>
       )}
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " LLM-оценщик не подключён: ответы проверяет эксперт." : ""}</Alert></div>}
+      {/* И27: вторая оценка спорных ответов идёт в фоне — итог её не ждёт */}
+      {(r.second_opinions?.pending > 0 || r.second_opinions?.revised > 0) && <p className="mt-2 text-xs text-brand-ink/65" data-testid="second-opinions">{r.second_opinions.pending > 0 ? `Вторая оценка спорных ответов: ${r.second_opinions.pending} — выполняется в фоне, итог теста её не ждёт; если оценки разойдутся, ответ проверит эксперт. ` : ""}{r.second_opinions.revised > 0 ? `Пересмотрено второй моделью: ${r.second_opinions.revised}${r.second_opinions.disputed ? `, передано эксперту: ${r.second_opinions.disputed}` : ""}.` : ""}</p>}
       {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={r.integrity} /></div>}
       <CameraReport sessionId={sessionId} />
       {r.accept_lower_available && r.accept_lower_grade && (

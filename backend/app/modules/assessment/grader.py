@@ -409,11 +409,65 @@ def combine(first: dict, second: dict, rubric: dict, disagree: float = DISAGREE)
     return "scored", {"criteria": crit, "score": round(sum(c["weight"] * crit[c["id"]] for c in rubric["criteria"]), 3)}
 
 
+def _call(*, stem: str, code: str | None, step_prompt: str | None, rubric: dict, text: str, second: bool,
+          model: str | None, deadline: float | None, s) -> tuple:
+    """Один вызов модели-оценщика (первая или вторая оценка) → (LLMResult, разобранный ответ)."""
+    msgs = build_messages(stem=stem, code=code, step_prompt=step_prompt, rubric=rubric, answer=text, second=second)
+    if model:  # явная модель (сравнение моделей) — одна попытка, без цепочки
+        res = chat(msgs, temperature=0.0, max_tokens=3000, want_json=True, model=model,
+                   timeout_s=s.llm_grading_timeout_s)
+    else:  # цепочка: первая оценка — grade (Sonnet 5.5), вторая — grade_second (Fable 5.1), затем Yandex
+        res = chat(msgs, temperature=0.0, max_tokens=3000, want_json=True, deadline=deadline,
+                   func="grade_second" if second else "grade",
+                   validate=lambda d: parse_reply(d, rubric, text)["ok"])
+    p = parse_reply(res.data if res.ok else None, rubric, text)
+    if not res.ok:
+        p["error"] = res.error or "invalid_json"
+    return res, p
+
+
+SECOND_LABEL = "пересмотрено второй моделью"
+
+
+def second_opinion(*, stem: str, code: str | None, step_prompt: str | None, rubric: dict, answer: str,
+                   first: dict) -> dict:
+    """И27: вторая оценка спорного ответа в фоне (grade_open с second_async). Никогда не бросает исключений.
+
+    first — первая оценка (to_dict GradeOutcome: score, criteria). Итог: verdict agree (оценки близки, combined —
+    среднее по критериям), disagree (разошлись — эксперт), manipulation (вторая модель увидела попытку повлиять на
+    оценку — эксперт), failed (вторая оценка не получена — эксперт). Тот же текст ответа без скрытых меток и ПДн."""
+    s = get_settings()
+    out = {"status": "done", "label": SECOND_LABEL, "revised_at": time.time()}
+    try:
+        text = re.sub("\u2063[^\u2063]*\u2063", "", answer or "").replace("\u2063", "").strip()
+        body, _ = strip_meta(text)
+        from app.modules.resume.pii import redact
+
+        red = redact(body, use_ner=True)
+        res2, p2 = _call(stem=stem, code=code, step_prompt=step_prompt, rubric=rubric, text=red.text, second=True,
+                         model=None, deadline=time.monotonic() + s.llm_grading_budget_s, s=s)
+        out.update({k: p2.get(k) for k in ("score", "criteria", "level", "manipulation", "error")})
+        out.update(latency_ms=res2.latency_ms, model=res2.model, provider=res2.provider,
+                   model_label=model_label(res2.model) if res2.model else None)
+        verdict, extra = combine(first, p2, rubric, s.llm_grading_disagree)
+    except Exception as e:  # noqa: BLE001 — фоновая задача: ошибка = «вторая оценка не получена»
+        out["error"] = type(e).__name__
+        verdict, extra = "expert", {"error": "second_opinion_failed"}
+    if verdict == "scored":
+        out["verdict"], out["combined"] = "agree", extra
+    else:
+        out["verdict"] = {"graders_disagree": "disagree", "prompt_injection_suspected": "manipulation"}.get(
+            extra["error"], "failed")
+    return out
+
+
 def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: dict | None, answer: str,
-               use_llm: bool = True, model: str | None = None) -> GradeOutcome:
+               use_llm: bool = True, model: str | None = None, second_async: bool = False) -> GradeOutcome:
     """Оценка одного открытого ответа. Никогда не бросает исключений.
 
-    model — явная модель (сравнение моделей-оценщиков на экспертной разметке); по умолчанию LLM_GRADING_MODEL."""
+    model — явная модель (сравнение моделей-оценщиков на экспертной разметке); по умолчанию LLM_GRADING_MODEL.
+    second_async (И27, LLM_GRADING_SECOND_ASYNC) — при сомнении вторая оценка не ждётся: status=scored по первой
+    оценке, second={"status": "pending"}; вызывающий запускает second_opinion в фоне и дописывает результат."""
     # Скрытые фрагменты текста задания (ИИ-метка, ai_mark) в оценщик не уходят — если ответ вставлен вместе с ними
     text = re.sub("\u2063[^\u2063]*\u2063", "", answer or "").replace("\u2063", "").strip()
     if len(re.sub(r"\s+", " ", text)) < MIN_CHARS:
@@ -440,19 +494,8 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
     deadline = time.monotonic() + s.llm_grading_budget_s
 
     def call(second: bool):
-        msgs = build_messages(stem=stem, code=code, step_prompt=step_prompt, rubric=rubric, answer=red.text,
-                              second=second)
-        if model:  # явная модель (сравнение моделей) — одна попытка, без цепочки
-            res = chat(msgs, temperature=0.0, max_tokens=3000, want_json=True, model=model,
-                       timeout_s=s.llm_grading_timeout_s)
-        else:  # цепочка: первая оценка — grade (Sonnet 5.5), вторая — grade_second (Fable 5.1), затем Yandex
-            res = chat(msgs, temperature=0.0, max_tokens=3000, want_json=True, deadline=deadline,
-                       func="grade_second" if second else "grade",
-                       validate=lambda d: parse_reply(d, rubric, red.text)["ok"])
-        p = parse_reply(res.data if res.ok else None, rubric, red.text)
-        if not res.ok:
-            p["error"] = res.error or "invalid_json"
-        return res, p
+        return _call(stem=stem, code=code, step_prompt=step_prompt, rubric=rubric, text=red.text, second=second,
+                     model=model, deadline=deadline, s=s)
 
     res, p = call(False)
     used = res.model or short_model(model or resolve_model(s.llm_grading_model) or "")
@@ -470,6 +513,9 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
     out.checks = doubts(p, red.text, relevance(red.text, stem, code, step_prompt, rubric), s.llm_grading_near)
     if not out.checks or not s.llm_grading_second_opinion:
         out.status = "scored"
+        return out
+    if second_async and not model:  # И27: итог не ждёт вторую оценку (≈ 9,5 с), она дописывается в фоне
+        out.status, out.second = "scored", {"status": "pending", "checks": list(out.checks)}
         return out
     res2, p2 = call(True)
     out.latency_ms += res2.latency_ms
