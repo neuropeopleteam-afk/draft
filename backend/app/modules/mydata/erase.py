@@ -56,9 +56,10 @@ log = logging.getLogger("mydata.erase")
 SPECIAL = {"users", "candidate_profiles", "employer_profiles"}
 # Двусторонние записи работодателя — обезличиваются (тексты кандидата стираются), строки остаются.
 KEEP = {"probes", "invitations", "invitation_complaints", "invitation_counters", "vacancy_applications",
-        "invitation_events"}
-# Таблицы, которые чистятся отдельными правилами ниже (SET NULL / переписка)
-HANDLED = {"contact_messages", "grade_passports", "sus_responses"}
+        "invitation_events",
+        "hiring_interviews", "hiring_offers", "hiring_outcomes"}  # этапы найма (Н8): история работодателя, тексты кандидата стираются
+# Таблицы, которые чистятся отдельными правилами ниже (SET NULL / переписка); статистика прохождения (У1) — отвязка от учётки
+HANDLED = {"contact_messages", "grade_passports", "sus_responses", "study_participants"}
 
 # Понятные названия категорий для кандидата (по таблицам); остальное — «Прочие данные учётной записи»
 LABELS: dict[str, str] = {
@@ -268,6 +269,20 @@ def _anonymize_bilateral(db: Session, uid: uuid.UUID) -> dict[str, int]:
         update(InvitationCounter).where(InvitationCounter.candidate_user_id == uid).values(comment=None)).rowcount
     out["Жалобы на приглашения"] = db.execute(
         update(InvitationComplaint).where(InvitationComplaint.candidate_user_id == uid).values(comment=None)).rowcount
+    # этапы найма (Н8): собеседования, офферы и исход остаются у работодателя как история; тексты кандидата стираются
+    from app.modules.hiring.models import HiringInterview, HiringOffer, HiringOutcome
+
+    out["Собеседования (этапы найма)"] = db.execute(
+        update(HiringInterview).where(HiringInterview.candidate_user_id == uid).values(candidate_note=None)).rowcount
+    offers = db.scalars(select(HiringOffer).where(HiringOffer.candidate_user_id == uid)).all()
+    for o in offers:
+        o.decline_reason = None
+        if o.counters:
+            o.counters = [{**c, "comment": None} for c in o.counters]  # встречные предложения: сумма остаётся, комментарий — нет
+            flag_modified(o, "counters")
+    out["Офферы (этапы найма)"] = len(offers)
+    out["Исход найма"] = db.scalar(select(func.count()).select_from(HiringOutcome)
+                                    .where(HiringOutcome.candidate_user_id == uid)) or 0
     return {k: v for k, v in out.items() if v}
 
 
@@ -306,6 +321,12 @@ def erase(db: Session, user: User, *, reason: str = "user_request") -> Result:
     sus = db.execute(update(SusResponse).where(SusResponse.user_id == uid).values(user_id=None, comment=None)).rowcount
     if sus:
         anonymized["Оценка удобства (SUS) — без привязки и комментария"] = sus
+    # 4а. статистика прохождения (У1): записи остаются для сводных чисел, связь с учётной записью снимается
+    from app.modules.study.models import StudyParticipant
+
+    study_n = db.execute(update(StudyParticipant).where(StudyParticipant.user_id == uid).values(user_id=None)).rowcount
+    if study_n:
+        anonymized["Статистика прохождения — без привязки к учётной записи"] = study_n
     # 5. всё остальное по схеме БД — от листьев к корню
     owned = owned_tables(uid)
     for t in reversed(metadata.sorted_tables):

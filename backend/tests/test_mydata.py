@@ -249,7 +249,9 @@ def test_delete_erases_personal_data_and_anonymizes_employer_records(client, wor
     left = _row_counts(uid)
     assert set(left) <= {"users.id", "candidate_profiles.user_id", "invitations.candidate_user_id", "probes.candidate_user_id",
                          "invitation_complaints.candidate_user_id", "invitation_counters.candidate_user_id",
-                         "vacancy_applications.candidate_user_id", "invitation_events.actor_user_id"}, left
+                         "vacancy_applications.candidate_user_id", "invitation_events.actor_user_id",
+                         "hiring_interviews.candidate_user_id", "hiring_offers.candidate_user_id",
+                         "hiring_outcomes.candidate_user_id"}, left
     # 3. надгробие: профиль без личных данных, ref сохранён
     with SessionLocal() as db:
         p = db.get(CandidateProfile, uid)
@@ -547,7 +549,55 @@ def test_every_new_owned_table_is_classified():
             "candidate_interest_events", "survey_stack_tags"} <= owned
     assert not (owned & erase.KEEP) and not (owned & erase.SPECIAL)
     assert erase.KEEP == {"probes", "invitations", "invitation_complaints", "invitation_counters", "vacancy_applications",
-                          "invitation_events"}
+                          "invitation_events", "hiring_interviews", "hiring_offers", "hiring_outcomes"}
+    # внутренние записи работодателя не выгружаются кандидату (строка подборки Р27, проверка «подойдёт ли предложение» Н9)
+    from app.modules.mydata import export
+
+    assert export.EMPLOYER_INTERNAL == {"need_sub_entries", "offer_fit_checks"}
+    assert export.EMPLOYER_INTERNAL <= owned  # но при удалении учётной записи стираются каскадом
+
+
+def test_delete_keeps_hiring_history_without_candidate_texts(client, world):
+    """Этапы найма (Н8) после удаления кандидата остаются у работодателя как история, но без текстов кандидата:
+    комментарий к слотам, причина отказа от оффера и комментарии к встречным суммам стираются; статистика прохождения (У1)
+    отвязывается от учётной записи."""
+    from datetime import date
+
+    from app.modules.hiring.models import HiringInterview, HiringOffer, HiringOutcome
+    from app.modules.invitations.models import Invitation
+    from app.modules.study.models import StudyParticipant
+
+    tc, inv = world["tc"], world["inv"]
+    uid = _uid("cand@example.com")
+    now = utcnow()
+    with SessionLocal() as db:
+        i = db.get(Invitation, uuid.UUID(inv["id"]))
+        db.add(HiringInterview(invitation_id=i.id, company_id=i.company_id, candidate_user_id=uid, title="Техническое",
+                               slots=[], status="reschedule", candidate_note="Иван Петров, удобно после 18:00, +7 900 111-22-33"))
+        db.add(HiringOffer(invitation_id=i.id, company_id=i.company_id, candidate_user_id=uid, salary=250_000,
+                           start_date=date(2026, 11, 2), respond_until=now + timedelta(days=5), status="declined",
+                           comment="Ждём вас в команде", decline_reason="Иван Петров: принял другой оффер",
+                           counters=[{"id": "ab12", "salary": 300_000, "salary_basis": "gross", "comment": "Иван Петров хочет 300",
+                                      "status": "declined", "at": now.isoformat(), "decided_at": None, "note": None}]))
+        db.add(HiringOutcome(invitation_id=i.id, company_id=i.company_id, candidate_user_id=uid, outcome="declined",
+                             note="Кандидат выбрал другую компанию", created_at=now))
+        db.add(StudyParticipant(user_id=uid, role="candidate"))
+        db.commit()
+    r = _delete(client, tc)
+    assert r.status_code == 200, r.text
+    out = r.json()["anonymized"]
+    assert out["Собеседования (этапы найма)"] == 1 and out["Офферы (этапы найма)"] == 1 and out["Исход найма"] == 1
+    assert out["Статистика прохождения — без привязки к учётной записи"] == 1
+    with SessionLocal() as db:
+        hi = db.scalars(select(HiringInterview).where(HiringInterview.candidate_user_id == uid)).one()
+        ho = db.scalars(select(HiringOffer).where(HiringOffer.candidate_user_id == uid)).one()
+        hx = db.scalars(select(HiringOutcome).where(HiringOutcome.candidate_user_id == uid)).one()
+        assert hi.candidate_note is None and hi.title == "Техническое"
+        assert ho.decline_reason is None and ho.comment == "Ждём вас в команде" and ho.salary == 250_000
+        assert ho.counters[0]["comment"] is None and ho.counters[0]["salary"] == 300_000
+        assert hx.outcome == "declined" and hx.note == "Кандидат выбрал другую компанию"
+        assert db.scalar(select(func.count()).select_from(StudyParticipant).where(StudyParticipant.user_id == uid)) == 0
+        assert db.scalar(select(func.count()).select_from(StudyParticipant)) >= 1
 
 
 # ------------------------------------------------------------------ работодатель после удаления кандидата
