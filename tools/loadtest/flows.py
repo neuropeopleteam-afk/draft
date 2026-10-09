@@ -54,3 +54,51 @@ def invitation_body(ref: str, need_id: str) -> dict:
     return {"candidate_ref": ref, "need_id": need_id, "position_title": "Разработчик (нагрузочный тест)",
             "offer_description": "Нагрузочный тест песочницы жюри: приглашение без реального оффера.",
             "salary_from": 150000, "salary_to": 220000, "contact_method": "Чат платформы"}
+
+
+# Открытый ответ для задания с LLM-оценкой (нагрузка: оценщик по рубрике отвечает за разумное время). Не эталон.
+OPEN_ANSWER = ("Сначала воспроизведу проблему на минимальном примере и добавлю тест. Затем проверю граничные случаи: "
+               "пустой ввод, большие объёмы, конкурентный доступ. Исправление — с замером до и после и ревью.")
+
+
+def need_text_variant(i: int) -> str:
+    """Новый текст для разбора моделью (кэш И27 не срабатывает): базовый текст + номер команды. Без ПДн."""
+    return f"{NEED_TEXTS[i % len(NEED_TEXTS)]} Команда {i + 1} из нагрузочного теста."
+
+
+def resume_docx(i: int = 0) -> bytes:
+    """Минимальный DOCX резюме модельного кандидата (stdlib zipfile): без настоящих ФИО и контактов."""
+    import io
+    import zipfile
+    from xml.sax.saxutils import escape
+
+    lines = ["Резюме модельного кандидата (модель, не человек)", "Backend-разработчик, Python",
+             f"Опыт: {2 + i % 4} года", "Навыки: Python, FastAPI, PostgreSQL, Docker, Redis, pytest",
+             "Проекты: платёжный сервис, очередь задач на Celery, миграции Alembic",
+             "Образование: бакалавр, прикладная информатика"]
+    body = "".join(f"<w:p><w:r><w:t>{escape(x)}</w:t></w:r></w:p>" for x in lines)
+    ns = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+    files = {
+        "[Content_Types].xml": '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/'
+        'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.'
+        'relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/'
+        'document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+        '</Types>',
+        "_rels/.rels": '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/'
+        'package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/'
+        '2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>',
+        "word/document.xml": f'<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="{ns}"><w:body>{body}'
+        '</w:body></w:document>',
+    }
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, data in files.items():
+            z.writestr(name, data)
+    return buf.getvalue()
+
+
+ATTACKS = ["inflate_keywords", "rename", "demographics", "fake_fsp", "remove_fsp", "leak_bank"]
+
+
+def attack_body(attack_id: str) -> dict:
+    return {"leak_share": 0.2} if attack_id == "leak_bank" else {}
