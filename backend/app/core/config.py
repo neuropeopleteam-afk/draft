@@ -135,6 +135,9 @@ class Settings(BaseSettings):
     llm_reasoning_grade: str = "default"
     llm_reasoning_grade_second: str = "low"  # Fable 5.1 по умолчанию рассуждает долго: ответ обрезался лимитом
     # Автомат-выключатель: после N ошибок подряд провайдер (с этой моделью) пропускается M секунд
+    # Я2: JSON-схема ответа (structured output) и для Yandex AI Studio — у запроса-дельты разбора потребности
+    # (Completions API AI Studio принимает response_format json_schema); HTTP 400 — повтор без схемы, как у OpenRouter
+    llm_yandex_json_schema: bool = False
     llm_breaker_failures: int = 3
     llm_breaker_cooldown_s: float = 60.0
     # Вторая оценка спорных ответов (grade_second, docs/LLM.md): «близко к порогу» — |балл − 0,5| ≤ LLM_GRADING_NEAR

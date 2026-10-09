@@ -53,6 +53,31 @@ def test_ru_only_need_delta_fenced_reply(monkeypatch, net):
     assert "response_format" not in c["body"] and "reasoning" not in c["body"]  # у Yandex — без схемы и рассуждений
 
 
+def test_ru_only_need_delta_json_schema_flag(monkeypatch, net):
+    """LLM_YANDEX_JSON_SCHEMA=true — схема дельты уходит и в Yandex AI Studio; не принял (HTTP 400) — повтор без схемы."""
+    from app.modules.matching.need_parser import parse_need
+
+    configure(monkeypatch, **RU, LLM_YANDEX_JSON_SCHEMA="true")
+    good = {"stack_required": [{"tag": "grpc", "weight": 0.7, "quote": "межсервисное взаимодействие"}],
+            "stack_desired": [], "confirm": [], "remove": [], "unknown_required": []}
+
+    def ya(req, body):
+        if "response_format" in body:
+            return __import__("httpx").Response(400, json={"error": {"message": "schema not supported"}})
+        return reply(json.dumps(good), body["model"])
+
+    net.on("ya.test", None, ya)
+    r = parse_need(NEED_TEXT)
+    assert r["llm"]["used"] and any(i["tag"] == "grpc" for i in r["stack_required"])
+    first, second = net.calls
+    assert first["body"]["response_format"]["type"] == "json_schema" and "response_format" not in second["body"]
+    net.calls.clear()
+    net.on("ya.test", None, lambda req, body: reply(json.dumps(good), body["model"]))  # схема принята — один вызов
+    parse_need(NEED_TEXT + " ")
+    (c,) = net.calls
+    assert c["body"]["response_format"]["json_schema"]["name"] == "need_delta"
+
+
 def test_ru_only_grade_second_same_model_independent_call(monkeypatch, net):
     from app.modules.assessment.grader import grade_open
 
