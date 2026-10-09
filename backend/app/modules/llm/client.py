@@ -6,6 +6,9 @@
                 Yandex AI Studio: «Authorization: Api-Key <ключ>» и «OpenAI-Project: <каталог>».
   openrouter  — OpenRouter (OPENROUTER_API_KEY, OPENROUTER_BASE_URL); если задан LLM_RELAY_URL — запросы идут
                 на ретранслятор с заголовком X-Relay-Token, ключ OpenRouter передаётся в Authorization как есть.
+  local       — открытая модель на этой машине (профиль docker compose llm-local: llama.cpp server на CPU) или любой
+                OpenAI-совместимый сервер: LLM_LOCAL_BASE_URL, LLM_LOCAL_MODEL, LLM_LOCAL_API_KEY (если нужен),
+                LLM_LOCAL_TIMEOUT_S. JSON — через response_format (грамматика llama.cpp), рассуждения Qwen3.x выключены.
 
 Порядок — LLM_CHAIN (например «openrouter,yandex»); без него — один провайдер из LLM_*, как раньше.
 Модель и тайм-аут — на функцию: parse_need (разбор потребности), resume (резюме), grade (оценка ответа),
@@ -39,7 +42,7 @@ from app.core.config import Settings, get_settings
 log = logging.getLogger("llm")
 
 FUNCTIONS = ("parse_need", "resume", "grade", "grade_second")
-PROVIDERS = ("openrouter", "yandex")
+PROVIDERS = ("openrouter", "yandex", "local")
 # Решение владельца (08.10): основная модель — Claude Sonnet 5.5, вторая оценка спорных ответов — Claude Fable 5.1
 OPENROUTER_DEFAULTS = {"parse_need": "anthropic/claude-sonnet-5.5", "resume": "anthropic/claude-sonnet-5.5",
                        "grade": "anthropic/claude-sonnet-5.5", "grade_second": "anthropic/claude-fable-5.1"}
@@ -67,7 +70,7 @@ class LLMResult:
 
     @property
     def label(self) -> str | None:
-        return model_label(self.model) if self.model else None
+        return route_label(self.provider, self.model) if self.model else None
 
     def info(self) -> dict:
         """Сводка для сохранения рядом с результатом (без текста ответа)."""
@@ -98,11 +101,20 @@ _LABELS = {"yandexgpt": "YandexGPT", "yandexgpt-lite": "YandexGPT Lite", "gpt-os
 
 
 def model_label(model: str | None) -> str:
-    """Человекочитаемое имя для интерфейса: anthropic/claude-sonnet-5.5 → Claude Sonnet 5.5; yandexgpt/latest → YandexGPT."""
+    """Человекочитаемое имя для интерфейса: anthropic/claude-sonnet-5.5 → Claude Sonnet 5.5; yandexgpt/latest → YandexGPT;
+    qwen/qwen3.5-9b и qwen3.5-9b → Qwen3.5 9B."""
     m = short_model(model)
     if not m:
         return ""
     m = m.split(":")[0]  # суффиксы OpenRouter (:batch, :free)
+    q = re.match(r"^(?:qwen/)?qwen([\d.]*)-?(.*)$", m, re.I)
+    if q and "/" not in q.group(2):  # открытые веса Qwen (OpenRouter qwen/…, алиас локального сервера)
+        ver, parts = q.group(1), [p for p in q.group(2).split("-") if p and p.lower() != "gguf"]
+        if not ver and parts and re.fullmatch(r"\d+(?:\.\d+)*", parts[0]):
+            ver = parts.pop(0)  # qwen-2.5-7b-instruct → Qwen2.5 7B Instruct
+        rest = [p.upper() if re.fullmatch(r"\d+(?:\.\d+)?[bm]|a\d+b|q\d\w*|iq\d\w*", p, re.I) else p.capitalize()
+                for p in parts]
+        return " ".join([f"Qwen{ver}", *rest])
     if m.startswith("anthropic/"):
         name = m.split("/", 1)[1]
         parts = name.split("-")
@@ -111,6 +123,12 @@ def model_label(model: str | None) -> str:
     if branch in ("latest", "rc", "deprecated") or m.startswith("yandexgpt"):
         return _LABELS.get(head, head)
     return m.split("/", 1)[-1]
+
+
+def route_label(provider: str | None, model: str | None) -> str:
+    """Подпись модели с местом запуска: у провайдера local — «Qwen3.5 9B (локально)» (открытые веса на этой машине)."""
+    label = model_label(model)
+    return f"{label} (локально)" if label and provider == "local" else label
 
 
 def _guess_provider(model: str) -> str:
@@ -158,6 +176,8 @@ def model_for(func: str | None, provider: str, s: Settings | None = None) -> str
             m = OPENROUTER_DEFAULTS.get(f or "parse_need")
         elif provider == "yandex":
             m = (s.llm_grading_model or s.llm_model) if f in ("grade", "grade_second") else s.llm_model
+        elif provider == "local":
+            m = s.llm_local_model
     if not m:
         return None
     return resolve_model(m) if provider == "yandex" else m
@@ -185,13 +205,15 @@ def routes(func: str | None = None, model: str | None = None, provider: str | No
     if s.llm_disabled:
         return []
     t = float(timeout_s or timeout_for(func, s))
+    # CPU медленнее облака: у local свой тайм-аут попытки (явный timeout_s вызывающего важнее)
+    tl = float(timeout_s or s.llm_local_timeout_s or t)
     if model:
         spec = parse_spec(model)
         prov, m = next(iter(spec.items())) if spec else (None, model)
         prov = provider or prov or _guess_provider(m)
         if not s.llm_provider_configured(prov):
             return []
-        return [Route(prov, resolve_model(m) if prov == "yandex" else m, t,
+        return [Route(prov, resolve_model(m) if prov == "yandex" else m, tl if prov == "local" else t,
                       reasoning_for(func, s) if prov == "openrouter" else None)]
     out = []
     for p in ([provider] if provider else s.llm_chain_list):
@@ -199,7 +221,7 @@ def routes(func: str | None = None, model: str | None = None, provider: str | No
             continue
         m = model_for(func, p, s)
         if m:
-            out.append(Route(p, m, t, reasoning_for(func, s) if p == "openrouter" else None))
+            out.append(Route(p, m, tl if p == "local" else t, reasoning_for(func, s) if p == "openrouter" else None))
     return out
 
 
@@ -260,6 +282,9 @@ def reset_state() -> None:
 
 
 # ------------------------------------------------------------------ один запрос к одному провайдеру
+_THINK = re.compile(r"^\s*<think>.*?</think>\s*", re.S)
+
+
 def _extract_json(text: str) -> dict | list | None:
     text = text.strip()
     m = re.search(r"```(?:json)?\s*(.*?)```", text, re.S)
@@ -316,7 +341,30 @@ def _endpoint(provider: str, s: Settings) -> tuple[str, dict[str, str], dict]:
             if s.llm_relay_token:
                 h["X-Relay-Token"] = s.llm_relay_token
         return base.rstrip("/") + "/chat/completions", h, dict(OPENROUTER_BODY)
+    if provider == "local":
+        h = {"Content-Type": "application/json"}
+        if s.llm_local_api_key:
+            h["Authorization"] = f"Bearer {s.llm_local_api_key}"
+        return (s.llm_local_base_url or "").rstrip("/") + "/chat/completions", h, _local_body(s)
     return (s.llm_base_url or "").rstrip("/") + "/chat/completions", _headers(s), {}
+
+
+def _local_body(s: Settings) -> dict:
+    """Поля тела запроса провайдера local: без рассуждений (Qwen3.x думает по умолчанию — на CPU это минуты) и
+    доп. поля LLM_LOCAL_EXTRA_BODY (JSON-объект; невалидный — игнорируется с предупреждением)."""
+    body: dict = {}
+    if s.llm_local_no_think:
+        body["chat_template_kwargs"] = {"enable_thinking": False}
+    if s.llm_local_extra_body:
+        try:
+            extra = json.loads(s.llm_local_extra_body)
+        except json.JSONDecodeError:
+            extra = None
+        if isinstance(extra, dict):
+            body.update(extra)
+        else:
+            log.warning("LLM local: LLM_LOCAL_EXTRA_BODY — не JSON-объект, пропущено")
+    return body
 
 
 def _verify(provider: str, s: Settings) -> ssl.SSLContext | bool:
@@ -337,6 +385,8 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
             **extra}
     if route.reasoning:
         body["reasoning"] = {"effort": route.reasoning}
+    if want_json and route.provider == "local" and s.llm_local_json_mode:
+        body["response_format"] = {"type": "json_object"}
     name = short_model(route.model)
     t0 = time.monotonic()
     try:
@@ -360,6 +410,8 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
             return res
         msg = (payload.get("choices") or [{}])[0].get("message") or {}
         text = msg.get("content") or msg.get("reasoning_content") or ""
+        # открытые модели без разбора рассуждений сервером: «<think>…</think>» перед ответом
+        text = _THINK.sub("", text) if "</think>" in text else text
         res.text, res.usage = text, payload.get("usage")
         res.model_reported = short_model(str(payload.get("model") or "")) or None  # без каталога Yandex Cloud
         if not text.strip():
@@ -460,13 +512,16 @@ def status() -> dict:
     s = get_settings()
     configured = s.llm_configured
     chain = [{"provider": p, "configured": s.llm_provider_configured(p) and not s.llm_disabled,
-              "relay": bool(p == "openrouter" and s.llm_relay_url)} for p in s.llm_chain_list]
+              "relay": bool(p == "openrouter" and s.llm_relay_url), **({"local": True} if p == "local" else {})}
+             for p in s.llm_chain_list]
     funcs = {}
     for f in FUNCTIONS:
         rs = routes(f)
         funcs[f] = {"models": [{"provider": r.provider, "model": short_model(r.model),
-                                "label": model_label(r.model)} for r in rs],
+                                "label": route_label(r.provider, r.model)} for r in rs],
                     "timeout_s": timeout_for(f, s)}
+        if any(r.provider == "local" for r in rs):
+            funcs[f]["local_timeout_s"] = next(r.timeout_s for r in rs if r.provider == "local")
     first = funcs["parse_need"]["models"][0] if configured and funcs["parse_need"]["models"] else None
     with _last_lock:
         last = {k: dict(v) for k, v in _last.items()}
