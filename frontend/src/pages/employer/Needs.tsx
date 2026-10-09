@@ -168,6 +168,7 @@ function Row({ id, label, status, ev, focus, onFocus, onConfirm, onDelete, child
 export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChange: (r: Req) => void; focus?: string | null; onFocus?: (k: string | null) => void }) {
   const tags = useTags();
   const [add, setAdd] = useState("");
+  const [tune, setTune] = useState(false);  // Ф6 (В5): веса навыков — по запросу
   const list = Object.values(tags).filter((t) => !req.direction || !t.direction_id || t.direction_id === req.direction);
   const used = new Set([...req.stack_required, ...req.stack_desired].map((x) => x.tag));
   const edited = (x: StackItem): StackItem => ({ ...x, status: itemStatus(x) === "manual" ? "manual" : "edited" });
@@ -199,10 +200,13 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
       onConfirm={() => setItem(zone, x.tag, (y) => ({ ...y, status: itemStatus(y) === "confirmed" ? (y.evidence ? "extracted" : "manual") : "confirmed" }))}
       onDelete={() => onChange({ ...req, [zone]: req[zone].filter((y) => y.tag !== x.tag) } as Req)}>
       <b className="font-semibold text-brand-night">{tags[x.tag]?.title ?? x.tag}</b>
-      <select aria-label={`Вес: ${tags[x.tag]?.title ?? x.tag}`} value={x.weight} className="rounded-lg border border-brand-night/15 bg-white px-1.5 py-0.5 text-xs focus:outline-none"
-        onChange={(e) => setItem(zone, x.tag, (y) => edited({ ...y, weight: Number(e.target.value) }))}>
-        {[...new Set([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, x.weight])].sort((p, q) => q - p).map((w) => <option key={w} value={w}>вес {w.toLocaleString("ru-RU")}</option>)}
-      </select>
+      {/* Ф6 (В5): десятичный вес — только по «Настроить веса» */}
+      {tune ? (
+        <select aria-label={`Вес: ${tags[x.tag]?.title ?? x.tag}`} value={x.weight} className="rounded-lg border border-brand-night/15 bg-white px-1.5 py-0.5 text-xs focus:outline-none"
+          onChange={(e) => setItem(zone, x.tag, (y) => edited({ ...y, weight: Number(e.target.value) }))}>
+          {[...new Set([1, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, x.weight])].sort((p, q) => q - p).map((w) => <option key={w} value={w}>вес {w.toLocaleString("ru-RU")}</option>)}
+        </select>
+      ) : null}
       <button type="button" className="text-xs text-brand-plum hover:underline" onClick={() => move(x.tag, zone === "stack_required" ? "stack_desired" : "stack_required")}>
         {zone === "stack_required" ? "→ в желательные" : "→ в обязательные"}
       </button>
@@ -237,6 +241,10 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
       <ul className="space-y-2">{sRow("city", "Город присутствия",
         <input aria-label="Город присутствия" className="input max-w-xs" placeholder="для офиса и гибрида" value={req.city ?? ""}
           onChange={(e) => setScalar("city", { city: e.target.value || null })} />)}</ul>
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-ink/65">
+        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}</p>
+        <button type="button" className="font-semibold text-brand-plum hover:underline" aria-expanded={tune} onClick={() => setTune((v) => !v)}>{tune ? "Скрыть веса" : "Настроить веса"}</button>
+      </div>
       <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
       <div><p className="label">Желательный стек</p>{req.stack_desired.length ? <ul className="space-y-2">{stackRows("stack_desired")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
       <div className="flex flex-wrap items-end gap-3">
