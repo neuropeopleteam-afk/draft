@@ -849,8 +849,9 @@ def _unknown_from_model(text: str, items, known: set[str], taken: list[tuple[int
             continue
         term = re.sub(r"\s+", " ", str(u.get("term") or "")).strip()[:80]
         ev = u.get("evidence") if isinstance(u.get("evidence"), dict) else {}
-        if not term or term.lower() in known or find_stack(term) or ev.get("source") != "llm":
-            continue
+        low = term.lower()
+        if not term or any(k in low or low in k for k in known) or find_stack(term) or ev.get("source") != "llm":
+            continue  # «1С:Предприятие» при найденном словарём «1С» — то же требование
         span = _locate(text, term) or _locate(text, ev.get("quote"))
         if span is None or any(s < span[1] and span[0] < e for s, e in stack_spans):
             continue
