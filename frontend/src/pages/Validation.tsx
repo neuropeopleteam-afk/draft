@@ -5,6 +5,7 @@ import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
 import LlmModels from "../components/validation/LlmModels";
+import RetestLive from "../components/validation/RetestLive";  // И26: доля повторов заданий между попытками
 import Headline from "../components/validation/Headline";
 import PathRetest, { CalibrationCard } from "../components/validation/PathRetest";
 import LiveUsers from "../components/validation/LiveUsers";
@@ -59,9 +60,14 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["headline", "5 чисел"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["headline", "5 чисел"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
+
+      {/* И26: стабильность при повторе и доля повторов заданий — выше по странице (жюри проверяет повтор руками) */}
+      <RetestSection sim={sim} />
+      <RetestLive />
+      <PathRetest />
 
       <Section id="bank" title="Банк заданий и калибровка">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -87,8 +93,6 @@ function Report({ r }: { r: any }) {
         <SimConditions sim={sim} kind="test" />
       </Section>
 
-      <RetestSection sim={sim} />
-      <PathRetest />
       <JuniorStability />
       <InternCutSection ic={r.intern_cut} />
       <OtherConditions sim={sim} />

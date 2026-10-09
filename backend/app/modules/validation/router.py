@@ -248,3 +248,11 @@ def llm_models():
     if not LLM_MODELS.exists():
         return {"missing": True}
     return json.loads(LLM_MODELS.read_text(encoding="utf-8"))
+
+
+# --- И26: доля повторов заданий между попытками (живая по базе + синтетика; пересчёт: attempts_repeat.py) ---
+@router.get("/attempts-repeat", summary="Доля повторов заданий между попытками теста: по базе и синтетика (модель)")
+def attempts_repeat(db: Session = Depends(get_db)):
+    from app.modules.validation import attempts_repeat as ar
+
+    return {"synthetic": ar.load(), "live": ar.live(db)}

@@ -52,6 +52,7 @@ class AppConfig:
     ext_minutes: int = 20
     ext_own_first: bool = True
     legacy_ext: int = 0            # > 0 — механика до 06.10 (LegacyExtSession), ext_items не используется
+    retake_seen: bool = True       # повтор: семейства прошлых попыток не берутся нигде (И26, 09.10); False — как до 09.10
     claim_prior: bool = False      # абляция: EAP с априорным распределением по заявленному грейду
     rotation: str = "subpool"      # subpool — параллельные формы-субпулы; exclude_last — весь банк без семейств прошлой попытки
     cuts: tuple = field(default_factory=cuts_tuple)              # пороги грейдов платформы (со Стажёром), как в bank_engine
@@ -69,8 +70,8 @@ class AppConfig:
 BASELINE_DAY2 = AppConfig(max_items=20, max_minutes=90, subpools=1, exposure=False, max_per_format={},
                           stop_rule="se", select_at="theta", ext_items=0, ext_own_first=False)
 # Механика до 06.10: в продукте (дотестирование 3 заданиями у порога заявленного грейда) и как её считала симуляция
-LEGACY = AppConfig(stop_rule="se", select_at="theta", ext_items=0, legacy_ext=3, ext_own_first=False)
-LEGACY_SIM = AppConfig(stop_rule="se", select_at="theta", ext_items=0, ext_own_first=False)
+LEGACY = AppConfig(stop_rule="se", select_at="theta", ext_items=0, legacy_ext=3, ext_own_first=False, retake_seen=False)
+LEGACY_SIM = AppConfig(stop_rule="se", select_at="theta", ext_items=0, ext_own_first=False, retake_seen=False)
 
 
 def app_config_from_settings() -> AppConfig:
@@ -176,8 +177,8 @@ class ClaimPriorSession(AppCATSession):
 
 
 def run_session(pool, direction, responder, cfg: AppConfig, exposure: ExposureControl | None, claimed: str,
-                subpool: int | None, rng: np.random.Generator, *, exclude_ext=(), blocked_subpools=(), exclude=()
-                ) -> tuple[AppCATSession, object]:
+                subpool: int | None, rng: np.random.Generator, *, exclude_ext=(), blocked_subpools=(), exclude=(),
+                seen: dict[str, int] | None = None) -> tuple[AppCATSession, object]:
     # ExposureControl передаётся всегда (счётчик частоты показа); отбор Sympson — Hetter включает cfg.cat().exposure
     kw = {"max_per_format": cfg.max_per_format}
     if cfg.legacy_ext:
@@ -185,6 +186,8 @@ def run_session(pool, direction, responder, cfg: AppConfig, exposure: ExposureCo
     else:
         cls = ClaimPriorSession if cfg.claim_prior else AppCATSession
         kw.update(exclude_ext=exclude_ext, blocked_subpools=blocked_subpools, exclude=exclude)
+        if seen:  # И26: семейства всех прошлых попыток с «возрастом» — как bank_engine (seen)
+            kw["seen"] = seen
         if cfg.rotation == "exclude_last":
             subpool = None
     sess = cls(pool, direction, cfg.cat(), exposure, claimed, subpool, rng, **kw)
@@ -210,9 +213,11 @@ def run_population(pool, truth, people: list[Person], direction: str, cfg: AppCo
                    k: dict | None = None, r_max: float = 0.3, subpools: list[int | None] | None = None,
                    leak: LeakModel | None = None, detector: CanaryDetector | None = None,
                    counter: ExposureControl | None = None, exclude: list[set] | None = None,
-                   blocked_subpools: set[int] | None = None, leaked_subpools: set[int] | None = None) -> list[dict]:
+                   blocked_subpools: set[int] | None = None, leaked_subpools: set[int] | None = None,
+                   seen: list[dict] | None = None) -> list[dict]:
     """Прогон популяции. counter — общий ExposureControl для подсчёта частоты показа по сессиям;
-    exclude — семейства прошлой попытки каждого кандидата (в дотестирование не попадают)."""
+    exclude — семейства прошлой попытки каждого кандидата (в дотестирование не попадают);
+    seen — семейства всех прошлых попыток кандидата с «возрастом» (протокол продукта с 09.10, И26)."""
     out = []
     for i, p in enumerate(people):
         if subpools is not None:
@@ -226,8 +231,9 @@ def run_population(pool, truth, people: list[Person], direction: str, cfg: AppCo
                      else make_responder(p, truth, leak))
         prev = exclude[i] if exclude else ()
         sess, res = run_session(pool, direction, responder, cfg, expo, p.claimed, sp, rng,
-                                exclude_ext=prev, blocked_subpools=blocked_subpools or (),
-                                exclude=prev if cfg.rotation == "exclude_last" else ())
+                                exclude_ext=() if seen and seen[i] else prev, blocked_subpools=blocked_subpools or (),
+                                exclude=prev if cfg.rotation == "exclude_last" else (),
+                                seen=seen[i] if seen else None)
         d = decide(res.theta, res.se, p.claimed)
         rec = {"theta": res.theta, "se": res.se, "n_items": res.n_items, "time_s": res.time_used_s,
                "confirmed": d.confirmed, "stop": res.stop_reason, "subpool": sp, "n_ext": sess.n_ext,
@@ -402,12 +408,14 @@ def retest_metrics(people, r1: list[dict], r2: list[dict]) -> dict:
 
 def retest(pool, truth, people, direction, cfg: AppConfig, rng, k) -> dict:
     """Повторное прохождение на другом субпуле (параллельная форма) и других вариантах. Во второй попытке
-    семейства первой не попадают в дотестирование (как в продукте: previous_families)."""
+    семейства первой не берутся ни в основную часть, ни в дотестирование (как в продукте с 09.10, И26: seen);
+    у механики «до» (legacy_ext) — прежнее исключение только из дотестирования."""
     n = len(people)
     r1 = run_population(pool, truth, people, direction, cfg, rng, k=k, subpools=[0] * n)
     excl = [set(r["families"]) for r in r1]
+    seen = [{f: 0 for f in r["families"]} for r in r1] if cfg.retake_seen and not cfg.legacy_ext else None
     r2 = run_population(pool, truth, people, direction, cfg, rng, k=k, subpools=[1 % max(cfg.subpools, 1)] * n,
-                        exclude=excl)
+                        exclude=excl, seen=seen)
     return retest_metrics(people, r1, r2)
 
 
