@@ -7,6 +7,7 @@ import { CupPassportEvents } from "../../ideas/cup/Candidate";
 import { useAuth } from "../../lib/auth";
 import { useMeta } from "../../lib/meta";
 import { CameraSettings } from "../../proctor/CameraReport";
+import { MutualPrefs } from "../mutual/Candidate";  // интересы для взаимного подбора (Н9)
 
 export function Fsp() {
   const { data, loading, error, reload } = useApi<any>("/me/fsp");
@@ -103,7 +104,7 @@ export function Settings() {
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card">
         <h2 className="font-bold text-brand-night">Поля обезличенной карточки</h2>
-        <p className="mt-1 text-sm text-brand-ink/65">Имя, почта, телефон и минимум зарплаты не показываются никогда. Контакты — только после принятия приглашения.</p>
+        <p className="mt-1 text-sm text-brand-ink/65">Имя, почта, телефон и сумма минимума зарплаты не показываются никогда. Контакты — только после принятия приглашения. По умолчанию работодатель видит лишь «вилка в ожиданиях / ниже ожиданий» — это выключается ниже, в «Интересах».</p>
         <div className="mt-3 divide-y divide-brand-night/5">
           {onb.data?.options.privacy_fields.map((f: any) => <Toggle key={f.id} label={f.title} checked={privacy[f.id] ?? true} onChange={(v) => savePrivacy({ ...privacy, [f.id]: v })} />)}
         </div>
@@ -116,6 +117,7 @@ export function Settings() {
           <button className="btn-primary" onClick={saveSalary}>Сохранить</button>
         </div>
       </section>
+      <MutualPrefs />
       <section className="card">
         <h2 className="font-bold text-brand-night">Согласия (152-ФЗ)</h2>
         <ul className="mt-3 space-y-3 text-sm">

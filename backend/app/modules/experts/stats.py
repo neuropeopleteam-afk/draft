@@ -45,6 +45,27 @@ def boot_ci(values: Sequence[float], stat: Callable[[np.ndarray], float] = np.me
     return {"mean": round(est, 3), "lo": round(float(lo), 3), "hi": round(float(hi), 3), "n": int(len(v))}
 
 
+def cluster_boot_ci(groups: Sequence[Sequence[float]], n: int = BOOT, seed: int = SEED, alpha: float = 0.05) -> dict:
+    """Перцентильный ДИ бутстрепа по кластерам (потребностям): кластер — все единицы одной потребности (например, она же
+    в пакетах v1 и v2), повторная выборка — кластерами, статистика — среднее по всем единицам выборки. При одной единице
+    в кластере совпадает с boot_ci (те же случайные индексы)."""
+    gs = [np.asarray([x for x in g if x is not None], dtype=float) for g in groups]
+    gs = [g for g in gs if len(g)]
+    if not gs:
+        return {"mean": None, "lo": None, "hi": None, "n": 0, "clusters": 0}
+    sums = np.array([g.sum() for g in gs])
+    cnt = np.array([len(g) for g in gs], dtype=float)
+    est = float(sums.sum() / cnt.sum())
+    if len(gs) == 1:
+        return {"mean": round(est, 3), "lo": None, "hi": None, "n": int(cnt.sum()), "clusters": 1}
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(gs), size=(n, len(gs)))
+    bs = sums[idx].sum(axis=1) / cnt[idx].sum(axis=1)
+    lo, hi = np.quantile(bs, [alpha / 2, 1 - alpha / 2])
+    return {"mean": round(est, 3), "lo": round(float(lo), 3), "hi": round(float(hi), 3), "n": int(cnt.sum()),
+            "clusters": len(gs)}
+
+
 def wilcoxon_p(diffs: Sequence[float]) -> float | None:
     d = [x for x in diffs if x is not None and abs(x) > 1e-12]
     if len(d) < 5:
