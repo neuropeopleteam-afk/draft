@@ -215,7 +215,8 @@ def test_public_corpus_no_crash_and_all_quotes_grounded(row):
         if field == "grade" and expected is None:
             continue  # grade inferred from experience is not an explicit textual grade
         if row["id"] == "vac-037" and field == "work_format":
-            assert req[field] == "remote"  # known training-vs-job ambiguity, not hidden as success
+            # было «remote» (обучение удалённо ≠ формат работы); Ф2: разбор упоминаний даёт офис/гибрид в Москве
+            assert req[field] in row["acceptable"][field] and req["city"] == "Москва"
         else:
             acceptable = row.get("acceptable", {}).get(field, [expected])
             if field == "grade" and "junior" in acceptable:

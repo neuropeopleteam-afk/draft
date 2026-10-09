@@ -63,6 +63,9 @@ bench-quick: ## Быстрая проверка бенчмарка 40 × 400 б�
 stability: ## Стабильность статуса «Junior (предварительно)» на симуляции теста: до/после, дотестирование (≈ 2 мин)
 	cd backend && python -m app.modules.validation.junior_stability
 
+path-retest: ## Test–retest всего пути кандидата (5 × 500, дважды) и D / r_pb семейств → data/path_retest.json (≈ 3 мин CPU)
+	cd backend && python -m app.modules.validation.path_retest
+
 fsp-regression: ## Парное сравнение рейтинга ФСП v1/v2 на мире бенчмарка (tools/fsp_rating_regression.py, ≈ 1 мин)
 	cd backend && python ../tools/fsp_rating_regression.py
 
@@ -74,7 +77,11 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up llm-local llm-local-logs down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
-.PHONY: bench bench-quick stability intern-cut fsp-regression
+.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest
+
+# подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
+GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)
+export GIT_COMMIT
 
 # --- Проверки CI на своей машине: те же команды, что в .github/workflows (docs/testing.md) ---
 PY ?= python
