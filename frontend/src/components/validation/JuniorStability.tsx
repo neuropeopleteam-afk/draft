@@ -8,6 +8,7 @@ import { ScrollX } from "../A11y";
 const pct = (v?: number | null) => (v == null ? "—" : `${Math.round(v * 100)}\u00A0%`);
 const intRu = (v?: number | null) => (v == null ? "—" : v.toLocaleString("ru-RU"));
 const n1 = (v?: number | null) => (v == null ? "—" : v.toFixed(1).replace(".", ","));
+const n2 = (v?: number | null) => (v == null ? "—" : v.toFixed(2).replace(".", ","));
 
 export default function JuniorStability() {
   const { data: r, error, loading } = useApi<any>("/validation/junior-stability", []);
@@ -65,6 +66,15 @@ function Body({ r }: { r: any }) {
         Доли ошибок — от соответствующей группы по истинному уровню (ниже порога / не ниже).
       </p>
 
+      {app.p_bands?.length ? (
+        <div id="provisional-bands">
+          <h3 className="mt-8 text-base font-bold text-brand-night">Как читать «предварительно»: полосы вероятности</h3>
+          {r.how_to_read && <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">{r.how_to_read}</p>}
+          <Table head={["P(θ ≥ порога Junior)", "Предварительных", "Из них истинный уровень ниже порога"]}
+            rows={app.p_bands.map((x: any) => [`${n2(x.p_from)} – ${n2(x.p_to)}`, intRu(x.n), x.n ? `${intRu(x.true_below)} (${pct(x.true_below_share)})` : "—"])} />
+        </div>
+      ) : null}
+
       {c.attempts?.length ? (
         <>
           <h3 className="mt-8 text-base font-bold text-brand-night">Дотестирование предварительных ({intRu(c.n_provisional)} кандидатов, до {r.rule?.confirm_attempts} попыток по {r.rule?.confirm_ext_items} коротких заданий)</h3>
@@ -83,7 +93,7 @@ function Body({ r }: { r: any }) {
             rows={dirs.map(([d, v]) => { const p = v.policies?.app ?? {}; const l = p.confirm?.attempts?.[p.confirm.attempts.length - 1]; return [DIRECTIONS[d] ?? d, intRu(p.after?.n_claimed_junior), `${intRu(p.after?.provisional)} (${pct(p.after?.share?.provisional)})`, `${intRu(p.after?.false_provisional)} (${pct(p.after?.false_provisional_share)})`, `${intRu(p.before?.false_rejected)} → ${intRu(p.after?.false_rejected)}`, l ? `${intRu(l.still_provisional)} из ${intRu(p.confirm?.n_provisional)}` : "—"]; })} />
         </div>
         <p className="mt-3 text-brand-ink/70">
-          Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make stability</code> ({intRu(r.seconds)} с), seed {r.seed}; отчёт построен {r.generated_at?.slice(0, 10).split("-").reverse().join(".")}. Данные: backend/app/modules/validation/data/junior_stability.json.
+          Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make stability</code> ({intRu(r.seconds)} с), seed {r.seed}{r.signature ? <>, конфигурация <code>{r.signature.config_hash}</code>, коммит <code>{r.signature.commit}</code></> : null}; отчёт построен {r.generated_at?.slice(0, 10).split("-").reverse().join(".")}. Данные: backend/app/modules/validation/data/junior_stability.json.
         </p>
       </details>
     </>

@@ -1,4 +1,5 @@
 // Живая демонстрация для жюри (идея 13): API зала, гостя и экрана, сигналы на телефоне.
+import { num as uiNum, signed } from "../../components/ui";
 import { ApiError, apiUrl } from "../../lib/api";
 
 export interface Opt { id: string; text: string; code?: string | null }
@@ -19,6 +20,7 @@ export interface Guest {
   invite_failed?: boolean;
   result: null | {
     theta: number; se: number; grade: string | null; category_id: string | null; category_title: string | null;
+    preliminary?: boolean; ceiling?: string; capped?: boolean;
     correct: number; answered: number; time_s: number; skills: { tag: string; title: string; score: number }[];
   };
   selection: null | {
@@ -85,8 +87,9 @@ export const STAGE_TITLE: Record<string, string> = {
 };
 export const time = (s?: string | null) =>
   s ? new Date(s).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "—";
-export const num = (v?: number | null, d = 2) => (v === null || v === undefined ? "—" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d).replace(".", ","));
-export const plain = (v?: number | null, d = 2) => (v === null || v === undefined ? "—" : v.toFixed(d).replace(".", ","));
+// θ и погрешность — теми же num/signed, что экран итога теста и карточка (ui.tsx): одно округление, «+1,40 ± 0,72»
+export const num = (v?: number | null, d = 2) => signed(v, d);
+export const plain = (v?: number | null, d = 2) => uiNum(v, d);
 
 // ------------------------------------------------------------------ сигнал о приглашении без push
 let ctx: AudioContext | null = null;
