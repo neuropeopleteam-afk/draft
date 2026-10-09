@@ -18,4 +18,4 @@ HIRING_REMIND_POLL_S=0`, `alembic upgrade head`, `python -m app.modules.demo.see
 (`VITE_API_PROXY=http://127.0.0.1:8134`), затем из каталога `e2e/`:
 `flock /tmp/spectrek_browser.lock node ../tools/hiring/shots.mjs` (каталог снимков — `OUT`, по умолчанию `/tmp/hiring/shots`).
 
-Правила и API — `docs/ARCHITECTURE.md` §14.4, передача этапов в ATS — `docs/ATS.md` §12.
+Правила и API — `docs/ARCHITECTURE.md` §14.5, передача этапов в ATS — `docs/ATS.md` §12.
