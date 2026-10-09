@@ -52,6 +52,8 @@ class CandidateProfile(Timestamps, Base):
     age_group: Mapped[str] = mapped_column(sa.String(8), default="18+", server_default="18+")
     parental_consent: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     parental_consent_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    # Учётная запись удалена кандидатом (md01): запись остаётся обезличенной — только public_ref для истории работодателей
+    deleted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
 
 class CandidateSpecialization(Timestamps, Base):
