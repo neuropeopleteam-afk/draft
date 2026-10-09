@@ -6,8 +6,14 @@
 и аналитика ФСП не искажаются. Следующее задание — по максимуму информации Фишера в текущей оценке θ (случайно
 из трёх лучших, чтобы у соседей по залу были разные задания), оценка θ — EAP с априорным N(0, 1), как в полном тесте.
 
+Три задания — три разных сюжета (Ф3, 08.10): кроме уже выданного семейства не выдаётся и другое семейство того же
+сюжета (``same_plot``: тот же тип дефекта или та же тема семейства с общим предметным навыком — например, две
+задачи cache-aside, два XSS-экранирования, два ROC-AUC с ничьими).
+
 Ключи хранятся только в state гостя на сервере; наружу — условие, код и варианты (public_view банка). Правильность
 по отдельным заданиям не возвращается до конца теста, итог — число верных из 3, θ ± SE и экспресс-категория.
+Категория — то же отображение θ → категория, что у полного теста и экспресса (``grades.category_level``): наивысший
+грейд с P(θ ≥ порога) ≥ 0,8, за 3 задания — не выше Middle и всегда «предварительно».
 """
 from __future__ import annotations
 
@@ -22,9 +28,11 @@ from assessment_bank import generate, get_spec
 from assessment_bank.psychometrics import PoolItem
 from assessment_bank.psychometrics.irt import estimate_theta
 
+from app.core.fmt import theta_round
 from app.modules.assessment.bank_engine import SEED_MAX, SEED_MIN, BankEngine, _finite, _pool
-from app.modules.assessment.grades import point_grade
+from app.modules.assessment.grades import category_level
 from app.modules.assessment.skill_map import to_stack_tags
+from app.modules.catalog.seed_data import category_title
 
 N_ITEMS = 3
 FORMATS = ("mcq_concept", "choose_fix", "find_bug")
@@ -52,9 +60,31 @@ def new_state(direction: str) -> dict:
     return st
 
 
+# Навыки-«языки» и общие слова — не сюжет: две задачи на Python ещё не повтор
+GENERIC_SKILLS = frozenset({"python", "javascript", "typescript", "sql", "java", "go", "bash", "http", "api",
+                            "secure_code_review", "test_design", "test_review"})
+
+
+@lru_cache(maxsize=512)
+def _plot(family_id: str) -> tuple[str, str | None, frozenset[str]]:
+    """(тема семейства — второй сегмент family_id, тип дефекта, предметные навыки)."""
+    spec = get_spec(family_id)
+    parts = family_id.split(".")
+    return (parts[1] if len(parts) > 2 else family_id, spec.invariants.defect_type,
+            frozenset(spec.skills) - GENERIC_SKILLS)
+
+
+def same_plot(a: str, b: str) -> bool:
+    """Один сюжет: то же семейство, тот же тип дефекта или та же тема с общим предметным навыком."""
+    if a == b:
+        return True
+    (ta, da, sa), (tb, db, sb) = _plot(a), _plot(b)
+    return bool(da and da == db) or (ta == tb and bool(sa & sb))
+
+
 def _issue(st: dict) -> dict | None:
-    used = {it["family_id"] for it in st["items"]}
-    cands = [p for p in pool(st["direction"]) if p.family_id not in used]
+    used = [it["family_id"] for it in st["items"]]
+    cands = [p for p in pool(st["direction"]) if not any(same_plot(p.family_id, u) for u in used)]
     if not cands:
         return None
     target = float(st["theta"])
@@ -124,22 +154,28 @@ def finished(st: dict) -> bool:
 
 
 def result(st: dict) -> dict:
-    """Итог мини-теста. Грейд — точечный по θ (пороги платформы, со Стажёром), с честной пометкой «экспресс»."""
+    """Итог мини-теста. Категория — общим отображением θ → категория (grades.category_level): наивысший грейд,
+    доказанный с P ≥ 0,8, за 3 задания — не выше Middle и с пометкой «предварительно» (полный тест уточняет)."""
     done = [i for i in st["items"] if i["done"]]
     theta, se = float(st["theta"]), float(st["se"])
-    g = point_grade(theta)
-    # Без единого верного ответа категории нет: при 3 заданиях θ (EAP) с априорным N(0; 1) у самых лёгких заданий
-    # может остаться у порога Junior, но доказательства уровня нет
+    lvl = category_level(theta, se, n_items=len(done))
+    g = lvl.grade
+    # Без единого верного ответа категории нет: доказательства уровня нет, даже если θ (EAP) с априорным N(0; 1)
+    # у самых лёгких заданий осталась у порога
     if not any(float(i["x"][0]) > 0 for i in done):
         g = "none"
     grade = None if g == "none" else g
+    theta, se = theta_round(theta, se)  # одно округление θ и погрешности (fmt.theta_round): телефон, зал, подборка
     skills: dict[str, list[float]] = {}
     for i in done:
         for tag in i.get("skills") or []:
             skills.setdefault(tag, []).append(float(i["x"][0]))
     return _finite({
-        "engine": ENGINE, "theta": round(theta, 2), "se": round(se, 2), "grade": grade,
+        "engine": ENGINE, "theta": theta, "se": se, "grade": grade,
         "category_id": f"{st['direction']}.{grade}" if grade else None,
+        "category_title": f"{category_title(st['direction'] + '.' + grade)} (предварительно)" if grade else None,
+        "preliminary": bool(grade), "ceiling": lvl.ceiling, "capped": bool(grade) and lvl.capped,
+        "p_grade": lvl.p if grade else None,
         "correct": int(sum(float(i["x"][0]) for i in done)), "answered": len(done),
         "time_s": round(sum(float(i["answers"]["1"]["time_s"]) for i in done), 1),
         "items": [{"position": i["position"], "format": i["format"], "correct": bool(i["x"][0]),
