@@ -19,8 +19,8 @@ export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: numbe
   );
 }
 
-export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge }: {
-  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode;
+export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge, mutual }: {
+  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9)
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
@@ -50,6 +50,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
           </div>
         )}
       </div>
+      {mutual}
 
       {c.specializations?.length > 1 && <div className="mt-4"><Specializations items={c.specializations} /></div>}
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
@@ -71,6 +72,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
               {c.skills_confirmed.map((s: any) => <span key={s.tag} className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-brand-night">{s.title} {pct(s.score)}</span>)}
             </div>
           )}
+          {c.freshness?.text && <p className="mt-1 text-xs text-brand-ink/70" title="Свежесть не входит в формулу подбора: показывает, насколько давно проверены навыки">Свежесть: {c.freshness.title.toLowerCase()}. {c.freshness.text}</p>}
           {c.probes?.length > 0 && <p className="mt-2 text-xs text-brand-ink/70">Зонды: {c.probes.map((p: any) => `${p.title} — ${p.verdict}`).join("; ")}</p>}
         </div>
         <div className="rounded-xl bg-[#F3F2FB] p-3 text-sm">
