@@ -99,3 +99,16 @@ DESCRIPTIONS: dict[str, str] = {
                                      "Значения в малых группах скрываются (`null`) по порогу `k`.",
     "GET /api/validation/headline": "Ключевые показатели валидации теста для жюри: значение с 95 %-м доверительным интервалом и подписью расчёта (команда, коммит, конфигурация).",
 }
+
+
+# Ответы-файлы: «МЕТОД /путь» → (тип содержимого, схема, описание ответа). Подменяют общий JSON-ответ FastAPI.
+_BIN = {"type": "string", "format": "binary"}
+_TXT = {"type": "string"}
+FILE_RESPONSES: dict[str, tuple[str, dict, str]] = {
+    "GET /api/fsp-cabinet/export/{section}.csv": ("text/csv", _TXT, "Таблица раздела в CSV (UTF-8 с BOM, разделитель — запятая): только агрегаты."),
+    "GET /api/jury/live/j/{code}/qr.svg": ("image/svg+xml", _TXT, "QR-код ссылки на мини-тест зала в SVG."),
+    "GET /api/jury/live/j/{code}/qr.png": ("image/png", _BIN, "QR-код ссылки на мини-тест зала в PNG."),
+    "GET /api/jury/live/j/{code}/manifest.webmanifest": ("application/manifest+json", {"type": "object"},
+                                                           "Манифест веб-приложения (PWA) зала: с главного экрана телефона сразу открывается мини-тест."),
+    "GET /api/passport/{pid}/qr.svg": ("image/svg+xml", _TXT, "QR-код ссылки на проверку паспорта в SVG."),
+}

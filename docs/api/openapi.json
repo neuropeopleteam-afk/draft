@@ -33311,11 +33311,13 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
-                "schema": {}
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
               }
             },
-            "description": "Успешный ответ."
+            "description": "Таблица раздела в CSV (UTF-8 с BOM, разделитель — запятая): только агрегаты."
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -35039,11 +35041,13 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
-                "schema": {}
+              "application/manifest+json": {
+                "schema": {
+                  "type": "object"
+                }
               }
             },
-            "description": "Успешный ответ."
+            "description": "Манифест веб-приложения (PWA) зала: с главного экрана телефона сразу открывается мини-тест."
           },
           "404": {
             "content": {
@@ -35330,11 +35334,14 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
-                "schema": {}
+              "image/png": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
               }
             },
-            "description": "Успешный ответ."
+            "description": "QR-код ссылки на мини-тест зала в PNG."
           },
           "404": {
             "content": {
@@ -35387,11 +35394,13 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
-                "schema": {}
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string"
+                }
               }
             },
-            "description": "Успешный ответ."
+            "description": "QR-код ссылки на мини-тест зала в SVG."
           },
           "404": {
             "content": {
@@ -40356,7 +40365,14 @@
         ],
         "responses": {
           "200": {
-            "description": "Успешный ответ."
+            "content": {
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "QR-код ссылки на проверку паспорта в SVG."
           },
           "404": {
             "content": {
