@@ -240,6 +240,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/employer/candidates/{ref}/passport"): ("employer_ref", {"employer": OK404, "employer_other": OK404,
                                                                              "jury_employer": OK404}),  # feat/passport
     ("POST", "/api/employer/needs/parse"): "employer",
+    ("POST", "/api/employer/needs/file"): "employer",  # Ф5: текст потребности из файла вакансии
     ("GET", "/api/employer/needs"): "employer",
     ("POST", "/api/employer/needs"): "employer",
     ("GET", "/api/employer/needs/{need_id}"): "employer_own",

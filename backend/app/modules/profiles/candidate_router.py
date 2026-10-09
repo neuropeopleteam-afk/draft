@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import re
-import threading
 from typing import Literal
 
 from fastapi import APIRouter, Depends, File, UploadFile
@@ -32,9 +31,8 @@ from app.modules.profiles.specializations import ensure_specialization
 
 router = APIRouter(prefix="/api/me", tags=["candidate"])
 # Резюме: попытки (в т. ч. неудачные) — не больше 10 в час на пользователя; одновременно — один разбор на воркер
-# (процесс разбора ~40 МБ, предел 256 МБ — укладывается в лимит памяти api в docker-compose.yml)
+# (общий с файлами вакансий семафор resume.files.parse_slots: процесс разбора ~40 МБ, предел 256 МБ)
 _resume_attempts = SlidingWindow(10, 3600)
-_resume_slots = threading.BoundedSemaphore(1)
 legal_router = APIRouter(prefix="/api/legal", tags=["legal"])
 AUTH = {401: err("Не выполнен вход"), 403: err("Только для кандидата")}
 candidate = require_role(UserRole.candidate)
@@ -372,22 +370,26 @@ def link_fsp(data: FspLinkIn, user: User = Depends(candidate), db: Session = Dep
             "message": "ФСП ID сохранён. Достижения подтянутся из реестра после подключения ФСП ID."}
 
 
-# ------------------------------------------------------------------ резюме PDF
+# ------------------------------------------------------------------ резюме PDF или DOCX
 
 @router.post(
     "/resume", status_code=201,
-    summary="Загрузить PDF-резюме: текст → вырезание ФИО и контактов локально → поля (T0)",
-    description="ФИО и контакты вырезаются на сервере (Natasha + регулярные выражения) до любой отправки текста в "
-                "LLM. Исходный файл не сохраняется. Найденные контакты возвращаются только кандидату в этом ответе — "
-                "чтобы он мог перенести их в профиль.",
-    responses={**AUTH, 413: err("Файл больше 5 МБ"), 415: err("Нужен PDF"),
-               422: err("Не удалось извлечь текст, больше 20 страниц или разбор дольше 10 с"),
-               429: err("Слишком много загрузок"), 503: err("Сервер занят разбором других резюме")},
+    summary="Загрузить резюме PDF или DOCX: текст → вырезание ФИО и контактов локально → поля (T0)",
+    description="Тип файла определяется по содержимому, не по имени. PDF и DOCX разбираются в отдельном процессе с "
+                "тайм-аутом и лимитом памяти; DOCX — только stdlib (zipfile + expat), с защитой от zip-бомб и DTD, "
+                "документы с макросами отклоняются. ФИО и контакты вырезаются на сервере (Natasha + регулярные "
+                "выражения) до любой отправки текста в LLM. Исходный файл не сохраняется. Найденные контакты "
+                "возвращаются только кандидату в этом ответе — чтобы он мог перенести их в профиль. Извлечённые поля — "
+                "самоописание (T0, «заявлено, не подтверждено»): в профиль попадают только по «Добавить в профиль».",
+    responses={**AUTH, 413: err("Файл больше 5 МБ"), 415: err("Нужен PDF или DOCX (или DOCX с макросами)"),
+               422: err("Не удалось извлечь текст, больше 20 страниц, zip-бомба или разбор дольше 10 с"),
+               429: err("Слишком много загрузок"), 503: err("Сервер занят разбором других файлов")},
 )
 def upload_resume(file: UploadFile = File(...), user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     # Обычная функция (не async): FastAPI выполняет её в пуле потоков — разбор, NER и LLM не блокируют цикл событий
-    # воркера. Сам PDF разбирается в отдельном процессе с тайм-аутом и лимитом памяти (pdf_to_text_safe).
-    from app.modules.resume.extract import PdfError, extract, pdf_to_text_safe
+    # воркера. Сам файл разбирается в отдельном процессе с тайм-аутом и лимитом памяти (resume/files.py).
+    from app.modules.resume.extract import extract
+    from app.modules.resume.files import FileTextError, clean_text, file_to_text, no_text_error, safe_filename
     from app.modules.resume.pii import redact
 
     s = get_settings()
@@ -398,30 +400,19 @@ def upload_resume(file: UploadFile = File(...), user: User = Depends(candidate),
     if recent >= s.resume_uploads_per_hour:
         raise api_error(429, "resume_rate", f"Не больше {s.resume_uploads_per_hour} загрузок резюме в час. Повторите позже")
     data = file.file.read(s.resume_max_bytes + 1)
-    if len(data) > s.resume_max_bytes:
-        raise api_error(413, "file_too_large", "Файл больше 5 МБ")
-    if not data.startswith(b"%PDF"):
-        raise api_error(415, "not_pdf", "Нужен файл PDF")
-    if not _resume_slots.acquire(timeout=15):  # разбор длится секунды (тайм-аут 10 с) — очередь дождётся
-        raise api_error(503, "resume_busy", "Сервер разбирает другие резюме, повторите через минуту")
     try:
-        text, pages = pdf_to_text_safe(data, s.resume_max_pages, s.resume_parse_timeout_s, s.resume_parse_memory_mb)
-    except PdfError as e:
-        if e.code == "too_many_pages":
-            raise api_error(422, "pdf_too_many_pages",
-                            f"В PDF {e.pages} страниц — резюме должно быть не длиннее {s.resume_max_pages}") from None
-        if e.code == "timeout":
-            raise api_error(422, "pdf_timeout", "PDF слишком сложный: разбор не уложился в отведённое время") from None
-        raise api_error(422, "pdf_unreadable", "Не удалось прочитать PDF") from None
-    finally:
-        _resume_slots.release()
-    if len(text.strip()) < 30:
-        raise api_error(422, "pdf_no_text", "В PDF нет текстового слоя (скан). Заполните профиль вручную")
+        ft = file_to_text(data, ("pdf", "docx"), max_bytes=s.resume_max_bytes, max_pages=s.resume_max_pages,
+                          timeout_s=s.resume_parse_timeout_s, memory_mb=s.resume_parse_memory_mb)
+        text, pages = clean_text(ft.text), ft.pages or 0  # у DOCX страниц нет: 0
+        if len(text.strip()) < 30:
+            raise no_text_error(ft.kind)
+    except FileTextError as e:
+        raise api_error(e.status, e.code, e.message) from None
     red = redact(text)
     fields = extract(red.text)
-    r = CandidateResume(user_id=user.id, filename=(file.filename or "resume.pdf")[:255], size_bytes=len(data),
-                        page_count=pages, text_redacted=red.text, pii_summary={**red.summary, "ner": red.ner_used},
-                        extracted=fields, method=fields.get("method", "rules"))
+    r = CandidateResume(user_id=user.id, filename=safe_filename(file.filename, f"resume.{ft.kind}"),
+                        size_bytes=len(data), page_count=pages, text_redacted=red.text,
+                        pii_summary={**red.summary, "ner": red.ner_used}, extracted=fields, method=fields.get("method", "rules"))
     db.add(r)
     db.commit()
     found = red.found
@@ -436,7 +427,7 @@ def upload_resume(file: UploadFile = File(...), user: User = Depends(candidate),
         },
         "extracted": fields,
         "text_preview": red.text[:1500],
-        "evidence_level": "T0",
+        "evidence_level": "T0", "kind": ft.kind,
     }
 
 
@@ -448,7 +439,8 @@ def last_resume(user: User = Depends(candidate), db: Session = Depends(get_db)) 
         return None
     return {"id": str(r.id), "filename": r.filename, "pages": r.page_count, "method": r.method,
             "pii_summary": r.pii_summary, "extracted": r.extracted, "text_preview": r.text_redacted[:1500],
-            "created_at": r.created_at.isoformat(), "evidence_level": "T0"}
+            "created_at": r.created_at.isoformat(), "evidence_level": "T0",
+            "kind": "pdf" if r.page_count else "docx"}  # PDF всегда с числом страниц, у DOCX — 0
 
 
 class ApplyIn(BaseModel):

@@ -36,7 +36,7 @@ export default function Profile() {
   }
 
   async function applyResume(id: string) {
-    try { await api(`/me/resume/${id}/apply`, { body: {} }); await card.reload(); setMsg({ k: "ok", t: "Поля резюме добавлены в профиль как самоописание (T0)." }); }
+    try { await api(`/me/resume/${id}/apply`, { body: {} }); await card.reload(); setMsg({ k: "ok", t: "Поля резюме добавлены в профиль как заявленные (T0): работодатель видит их с пометкой «указано кандидатом, не проверено». Подтверждает навыки тест (T1)." }); }
     catch (e) { setMsg({ k: "error", t: errText(e) }); }
   }
 
@@ -64,18 +64,18 @@ export default function Profile() {
       <section className="card">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h2 className="font-bold text-brand-night">Резюме PDF</h2>
-            <p className="mt-1 max-w-xl text-sm text-brand-ink/65">Извлечём стек, роли, стаж и софт-скиллы. ФИО и контакты вырезаются на нашем сервере до любой обработки моделью; исходный файл не хранится.</p>
+            <h2 className="font-bold text-brand-night">Резюме PDF или DOCX</h2>
+            <p className="mt-1 max-w-xl text-sm text-brand-ink/65">Извлечём стек, роли, стаж и софт-скиллы — как заявленные (T0), не подтверждённые тестом. ФИО и контакты вырезаются на нашем сервере до любой обработки моделью; исходный файл не хранится. До 5 МБ.</p>
             <LlmOff className="mt-1 max-w-xl text-xs text-brand-ink/65">LLM на этой установке не подключён: резюме разбирается по словарям и правилам, нераспознанное добавьте вручную.</LlmOff>
           </div>
           <label className={`btn-primary cursor-pointer ${busy ? "pointer-events-none opacity-60" : ""}`}>
-            {busy ? "Распознаём…" : "Загрузить PDF"}
-            <input ref={fileRef} type="file" accept="application/pdf" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
+            {busy ? "Распознаём…" : "Загрузить PDF или DOCX"}
+            <input ref={fileRef} type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" className="sr-only" onChange={(e) => onFile(e.target.files?.[0])} />
           </label>
         </div>
         {resume.loading && !r ? <div className="mt-4"><Loading /></div> : r ? (
           <div className="mt-5 space-y-4">
-            <p className="text-sm text-brand-ink/65">{r.filename} · {r.pages} стр. · {r.created_at ? dtt(r.created_at) : "только что"} · {r.method === "rules" ? "разбор по словарям" : `разбор: словари + ${r.extracted?.llm?.model_label ?? "LLM"}`}</p>
+            <p className="break-words text-sm text-brand-ink/65">{r.filename} · {r.pages ? `${r.pages} стр.` : "DOCX"} · {r.created_at ? dtt(r.created_at) : "только что"} · {r.method === "rules" ? "разбор по словарям" : `разбор: словари + ${r.extracted?.llm?.model_label ?? "LLM"}`}</p>
             <div className="rounded-xl bg-[#F3F2FB] p-4 text-sm">
               <p className="font-semibold text-brand-night">Вырезано до обработки</p>
               <p className="mt-1 text-brand-ink/70">
