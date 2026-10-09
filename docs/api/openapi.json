@@ -49,6 +49,554 @@
         "title": "AdminTwoFactorResetIn",
         "type": "object"
       },
+      "AssessmentResultOut": {
+        "additionalProperties": true,
+        "description": "Итог теста: оценка способности, грейд, вероятности по уровням и пояснение.",
+        "properties": {
+          "accept_lower_available": {
+            "title": "Accept Lower Available",
+            "type": "boolean"
+          },
+          "accept_lower_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Lower Grade"
+          },
+          "accept_lower_p": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accept Lower P"
+          },
+          "accepted_lower": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Lower"
+          },
+          "answered": {
+            "title": "Answered",
+            "type": "integer"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "category_provisional": {
+            "title": "Category Provisional",
+            "type": "boolean"
+          },
+          "category_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Status"
+          },
+          "changed": {
+            "title": "Changed",
+            "type": "boolean"
+          },
+          "claimed_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed Grade"
+          },
+          "confirmed": {
+            "description": "Подтверждён ли заявленный грейд",
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "correct": {
+            "title": "Correct",
+            "type": "integer"
+          },
+          "current_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Grade"
+          },
+          "details": {
+            "additionalProperties": true,
+            "description": "Причина остановки, число зачтённых заданий, время, ручная проверка",
+            "title": "Details",
+            "type": "object"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "explanation": {
+            "description": "Объяснение результата человеческим языком",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Присвоенный грейд: junior, middle, senior (или none)",
+            "title": "Grade"
+          },
+          "grade_changed": {
+            "title": "Grade Changed",
+            "type": "boolean"
+          },
+          "integrity": {
+            "additionalProperties": true,
+            "description": "Честность прохождения: level, title, camera, reasons",
+            "title": "Integrity",
+            "type": "object"
+          },
+          "is_primary": {
+            "title": "Is Primary",
+            "type": "boolean"
+          },
+          "locked_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Locked Until"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "mode": {
+            "description": "Режим теста: full, express, …",
+            "title": "Mode",
+            "type": "string"
+          },
+          "p_claimed": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P Claimed"
+          },
+          "point_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Point Grade"
+          },
+          "probabilities": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Вероятность каждого уровня: none, intern, junior, middle, senior",
+            "title": "Probabilities",
+            "type": "object"
+          },
+          "provisional": {
+            "title": "Provisional",
+            "type": "boolean"
+          },
+          "provisional_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provisional Reason"
+          },
+          "retake_lower": {
+            "title": "Retake Lower"
+          },
+          "retake_same_grade_days": {
+            "title": "Retake Same Grade Days",
+            "type": "integer"
+          },
+          "sandbox": {
+            "title": "Sandbox",
+            "type": "boolean"
+          },
+          "se": {
+            "description": "Стандартная ошибка оценки",
+            "title": "Se",
+            "type": "number"
+          },
+          "second_opinions": {
+            "additionalProperties": true,
+            "description": "Повторные проверки ответов: pending, revised, disputed, lost",
+            "title": "Second Opinions",
+            "type": "object"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status_changed": {
+            "title": "Status Changed",
+            "type": "boolean"
+          },
+          "theta": {
+            "description": "Оценка способности (шкала IRT)",
+            "title": "Theta",
+            "type": "number"
+          },
+          "upgrade_available": {
+            "title": "Upgrade Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "session_id",
+          "grade",
+          "point_grade",
+          "claimed_grade",
+          "confirmed",
+          "provisional",
+          "changed",
+          "status_changed",
+          "grade_changed",
+          "upgrade_available",
+          "theta",
+          "se",
+          "probabilities",
+          "p_claimed",
+          "correct",
+          "answered",
+          "message",
+          "explanation",
+          "direction",
+          "current_grade",
+          "category_id",
+          "is_primary",
+          "category_status",
+          "category_provisional",
+          "provisional_reason",
+          "engine",
+          "mode",
+          "locked_until",
+          "accept_lower_available",
+          "accept_lower_grade",
+          "accept_lower_p",
+          "accepted_lower",
+          "retake_lower",
+          "retake_same_grade_days",
+          "sandbox",
+          "details",
+          "integrity",
+          "second_opinions"
+        ],
+        "title": "AssessmentResultOut",
+        "type": "object"
+      },
+      "AssessmentStatusOut": {
+        "additionalProperties": true,
+        "description": "Состояние оценки кандидата: текущая категория, ограничения повтора, незавершённая сессия, история.",
+        "properties": {
+          "active_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Grade"
+          },
+          "active_mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Mode"
+          },
+          "active_session_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active Session Id"
+          },
+          "can_retest_now": {
+            "title": "Can Retest Now",
+            "type": "boolean"
+          },
+          "claimed_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed Grade"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confirmed By"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текущая категория: direction, grade, category_id, rating_score, rank, market_range",
+            "title": "Current"
+          },
+          "engine": {
+            "title": "Engine",
+            "type": "string"
+          },
+          "express": {
+            "additionalProperties": true,
+            "description": "Параметры экспресс-теста: min_items, max_items, by_grade",
+            "title": "Express",
+            "type": "object"
+          },
+          "express_available": {
+            "title": "Express Available",
+            "type": "boolean"
+          },
+          "grade_change_interval_days": {
+            "title": "Grade Change Interval Days",
+            "type": "integer"
+          },
+          "grade_history": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Grade History",
+            "type": "array"
+          },
+          "grade_status": {
+            "$ref": "#/components/schemas/GradeStatusOut"
+          },
+          "jury_mode": {
+            "title": "Jury Mode",
+            "type": "boolean"
+          },
+          "jury_mode_allowed": {
+            "title": "Jury Mode Allowed",
+            "type": "boolean"
+          },
+          "jury_mode_available": {
+            "title": "Jury Mode Available",
+            "type": "boolean"
+          },
+          "lock_active": {
+            "title": "Lock Active",
+            "type": "boolean"
+          },
+          "locked_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "До какой даты закрыта смена грейда (ISO 8601)",
+            "title": "Locked Until"
+          },
+          "onboarding_completed": {
+            "title": "Onboarding Completed",
+            "type": "boolean"
+          },
+          "provisional": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provisional"
+          },
+          "retake_locks": {
+            "additionalProperties": true,
+            "title": "Retake Locks",
+            "type": "object"
+          },
+          "retake_same_grade_days": {
+            "title": "Retake Same Grade Days",
+            "type": "integer"
+          },
+          "sandbox_active": {
+            "title": "Sandbox Active",
+            "type": "boolean"
+          },
+          "sandbox_starts": {
+            "additionalProperties": true,
+            "description": "Лимит запусков в режиме жюри: limit, used, left, next_at",
+            "title": "Sandbox Starts",
+            "type": "object"
+          },
+          "selected_direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Selected Direction"
+          },
+          "sessions": {
+            "description": "Последние сессии теста",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Sessions",
+            "type": "array"
+          },
+          "specializations": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Specializations",
+            "type": "array"
+          },
+          "survey_direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Survey Direction"
+          },
+          "surveys": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Surveys",
+            "type": "array"
+          }
+        },
+        "required": [
+          "onboarding_completed",
+          "survey_direction",
+          "claimed_grade",
+          "current",
+          "specializations",
+          "selected_direction",
+          "locked_until",
+          "lock_active",
+          "can_retest_now",
+          "jury_mode",
+          "jury_mode_available",
+          "jury_mode_allowed",
+          "sandbox_active",
+          "sandbox_starts",
+          "grade_change_interval_days",
+          "retake_same_grade_days",
+          "retake_locks",
+          "express_available",
+          "express",
+          "active_session_id",
+          "active_grade",
+          "active_mode",
+          "provisional",
+          "grade_status",
+          "confirmed_by",
+          "engine",
+          "sessions",
+          "grade_history",
+          "surveys"
+        ],
+        "title": "AssessmentStatusOut",
+        "type": "object"
+      },
       "AssignmentIn": {
         "properties": {
           "approach_prompt": {
@@ -262,6 +810,88 @@
         "title": "AttackIn",
         "type": "object"
       },
+      "AttemptsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "attempts": {
+            "description": "Попытки теста по направлению",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "can_retake_now": {
+            "title": "Can Retake Now",
+            "type": "boolean"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Сравнение первой и второй попыток: first, second, overlap, delta, changes",
+            "title": "Comparison"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "direction_title": {
+            "title": "Direction Title",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "retake_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retake Grade"
+          },
+          "retake_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retake Reason"
+          },
+          "sandbox": {
+            "title": "Sandbox",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "direction",
+          "direction_title",
+          "attempts",
+          "comparison",
+          "sandbox",
+          "retake_grade",
+          "can_retake_now",
+          "retake_reason",
+          "note"
+        ],
+        "title": "AttemptsOut",
+        "type": "object"
+      },
       "Body_need_from_file_api_employer_needs_file_post": {
         "properties": {
           "file": {
@@ -347,6 +977,575 @@
           "file"
         ],
         "title": "Body_upload_resume_api_me_resume_post",
+        "type": "object"
+      },
+      "CandidateCardOut": {
+        "additionalProperties": true,
+        "description": "Карточка кандидата, как её видит сам кандидат: категория, подтверждённые навыки, ФСП, свежесть подтверждений.",
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Size"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "claimed": {
+            "title": "Claimed"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Чем подтверждён грейд (test, fsp, …)",
+            "title": "Confirmed By"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "direction_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction Title"
+          },
+          "directions": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Справочник направлений: код → название (только в карточке кандидата)",
+            "title": "Directions"
+          },
+          "employment_safety": {
+            "additionalProperties": true,
+            "description": "Ограничения для несовершеннолетних: допустимые форматы, согласие родителей",
+            "title": "Employment Safety",
+            "type": "object"
+          },
+          "experience_years": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experience Years"
+          },
+          "freshness": {
+            "additionalProperties": true,
+            "description": "Свежесть подтверждений навыков: доли свежих/стареющих/устаревших",
+            "title": "Freshness",
+            "type": "object"
+          },
+          "fsp": {
+            "additionalProperties": true,
+            "description": "Связка с ФСП: linked, level (T2), source, strength, achievements",
+            "title": "Fsp",
+            "type": "object"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "grade_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Title"
+          },
+          "is_demo": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Demo"
+          },
+          "market_range": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Вилка рынка по категории: from, to, median",
+            "title": "Market Range"
+          },
+          "probes": {
+            "description": "Зонды (задания работодателей), которые кандидат выполнил",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Probes",
+            "type": "array"
+          },
+          "provisional": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provisional"
+          },
+          "rank_in_category": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank In Category"
+          },
+          "rating_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Рейтинг внутри категории, 0…1",
+            "title": "Rating Score"
+          },
+          "ref": {
+            "description": "Обезличенный идентификатор кандидата в выдаче (C-XXXXXX)",
+            "title": "Ref",
+            "type": "string"
+          },
+          "relocation": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relocation"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          },
+          "skills_confirmed": {
+            "description": "Подтверждённые навыки с уровнем доказательства T0–T2",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Skills Confirmed",
+            "type": "array"
+          },
+          "soft_skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Soft Skills",
+            "type": "array"
+          },
+          "specializations": {
+            "description": "Все категории кандидата; одна — основная (is_primary)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Specializations",
+            "type": "array"
+          },
+          "stack_declared": {
+            "description": "Заявленный стек (уровень T0)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stack Declared",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GradeStatusOut"
+          },
+          "test": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Итог последнего теста: уровень, theta, se, верных ответов, честность",
+            "title": "Test"
+          },
+          "work_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "office, hybrid, remote, any",
+            "title": "Work Format"
+          }
+        },
+        "required": [
+          "ref",
+          "category",
+          "status",
+          "claimed",
+          "direction",
+          "direction_title",
+          "grade",
+          "grade_title",
+          "provisional",
+          "confirmed_by",
+          "rating_score",
+          "specializations",
+          "rank_in_category",
+          "category_size",
+          "test",
+          "skills_confirmed",
+          "probes",
+          "fsp",
+          "stack_declared",
+          "roles",
+          "soft_skills",
+          "experience_years",
+          "work_format",
+          "city",
+          "relocation",
+          "market_range",
+          "is_demo",
+          "employment_safety",
+          "freshness"
+        ],
+        "title": "CandidateCardOut",
+        "type": "object"
+      },
+      "CandidateInvitationOut": {
+        "additionalProperties": true,
+        "properties": {
+          "ats_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ats Stage"
+          },
+          "below_my_minimum": {
+            "description": "Вилка ниже минимума, указанного кандидатом",
+            "title": "Below My Minimum",
+            "type": "boolean"
+          },
+          "company": {
+            "additionalProperties": true,
+            "description": "name, industry, website, city",
+            "title": "Company",
+            "type": "object"
+          },
+          "complaint": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Complaint"
+          },
+          "contact_method": {
+            "title": "Contact Method",
+            "type": "string"
+          },
+          "contacts_revoked": {
+            "title": "Contacts Revoked",
+            "type": "boolean"
+          },
+          "contacts_revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacts Revoked At"
+          },
+          "counter": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текущее встречное предложение кандидата",
+            "title": "Counter"
+          },
+          "counters": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Counters",
+            "type": "array"
+          },
+          "counters_left": {
+            "title": "Counters Left",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decline Reason"
+          },
+          "employment_terms": {
+            "additionalProperties": true,
+            "description": "format, reduced_time, employer_acknowledged",
+            "title": "Employment Terms",
+            "type": "object"
+          },
+          "evidence": {
+            "description": "Чем подтверждён кандидат для этой позиции (T0–T2)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "hiring": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Этап найма после принятия: stage, title, line, todo",
+            "title": "Hiring"
+          },
+          "history": {
+            "description": "Смены статусов: at, by, status, note",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "offer_description": {
+            "title": "Offer Description",
+            "type": "string"
+          },
+          "position_title": {
+            "title": "Position Title",
+            "type": "string"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "salary_basis": {
+            "description": "gross или net",
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_basis_title": {
+            "title": "Salary Basis Title",
+            "type": "string"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "status": {
+            "description": "sent, viewed, accepted, declined, withdrawn, expired",
+            "title": "Status",
+            "type": "string"
+          },
+          "thread": {
+            "additionalProperties": true,
+            "description": "Переписка: total, unread",
+            "title": "Thread",
+            "type": "object"
+          },
+          "viewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Viewed At"
+          }
+        },
+        "required": [
+          "id",
+          "position_title",
+          "offer_description",
+          "employment_terms",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_basis_title",
+          "contact_method",
+          "evidence",
+          "status",
+          "decline_reason",
+          "created_at",
+          "viewed_at",
+          "responded_at",
+          "history",
+          "company",
+          "complaint",
+          "ats_stage",
+          "counter",
+          "counters",
+          "counters_left",
+          "contacts_revoked",
+          "contacts_revoked_at",
+          "thread",
+          "hiring",
+          "below_my_minimum"
+        ],
+        "title": "CandidateInvitationOut",
         "type": "object"
       },
       "CandidateProfileOut": {
@@ -772,6 +1971,46 @@
         "title": "CandidateProfileUpdate",
         "type": "object"
       },
+      "CandidateSearchOut": {
+        "additionalProperties": true,
+        "description": "Поиск кандидатов в общем пуле: карточки и счётчики по статусу подтверждения.",
+        "properties": {
+          "confirmed": {
+            "title": "Confirmed",
+            "type": "integer"
+          },
+          "items": {
+            "description": "Короткие карточки кандидатов (как в выдаче подбора)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "provisional": {
+            "title": "Provisional",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "unconfirmed": {
+            "title": "Unconfirmed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "items",
+          "provisional",
+          "unconfirmed",
+          "confirmed"
+        ],
+        "title": "CandidateSearchOut",
+        "type": "object"
+      },
       "CatalogOut": {
         "properties": {
           "categories": {
@@ -901,6 +2140,37 @@
           "market_salary_to"
         ],
         "title": "CategoryOut",
+        "type": "object"
+      },
+      "CategoryRefOut": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "description": "Идентификатор категории «направление.грейд», например backend.middle",
+            "title": "Id",
+            "type": "string"
+          },
+          "preliminary": {
+            "title": "Preliminary",
+            "type": "boolean"
+          },
+          "provisional": {
+            "description": "Категория предварительная (Junior без подтверждения)",
+            "title": "Provisional",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "provisional",
+          "preliminary"
+        ],
+        "title": "CategoryRefOut",
         "type": "object"
       },
       "ChooseIn": {
@@ -1309,6 +2579,43 @@
         "title": "ConnectionIn",
         "type": "object"
       },
+      "ConsentOut": {
+        "additionalProperties": true,
+        "properties": {
+          "granted_at": {
+            "title": "Granted At",
+            "type": "string"
+          },
+          "kind": {
+            "description": "processing, publication, contacts, …",
+            "title": "Kind",
+            "type": "string"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "granted_at",
+          "revoked_at"
+        ],
+        "title": "ConsentOut",
+        "type": "object"
+      },
       "CriterionIn": {
         "properties": {
           "title": {
@@ -1626,6 +2933,732 @@
           "sort_order"
         ],
         "title": "DirectionOut",
+        "type": "object"
+      },
+      "EmployerCandidateCardOut": {
+        "additionalProperties": true,
+        "description": "Карточка кандидата для работодателя: то же + возможность пригласить и история контактов с этим кандидатом.",
+        "properties": {
+          "can_invite": {
+            "title": "Can Invite",
+            "type": "boolean"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "category_size": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Size"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "claimed": {
+            "title": "Claimed"
+          },
+          "confirmed_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Чем подтверждён грейд (test, fsp, …)",
+            "title": "Confirmed By"
+          },
+          "contacts": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Контакты — только после принятия приглашения, иначе null",
+            "title": "Contacts"
+          },
+          "contacts_note": {
+            "title": "Contacts Note",
+            "type": "string"
+          },
+          "contacts_revoked": {
+            "title": "Contacts Revoked",
+            "type": "boolean"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "direction_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction Title"
+          },
+          "directions": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Справочник направлений: код → название (только в карточке кандидата)",
+            "title": "Directions"
+          },
+          "employment_safety": {
+            "additionalProperties": true,
+            "description": "Ограничения для несовершеннолетних: допустимые форматы, согласие родителей",
+            "title": "Employment Safety",
+            "type": "object"
+          },
+          "experience_years": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experience Years"
+          },
+          "freshness": {
+            "additionalProperties": true,
+            "description": "Свежесть подтверждений навыков: доли свежих/стареющих/устаревших",
+            "title": "Freshness",
+            "type": "object"
+          },
+          "fsp": {
+            "additionalProperties": true,
+            "description": "Связка с ФСП: linked, level (T2), source, strength, achievements",
+            "title": "Fsp",
+            "type": "object"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "grade_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Title"
+          },
+          "invitation_cooldown_days": {
+            "title": "Invitation Cooldown Days",
+            "type": "integer"
+          },
+          "invite_available_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Когда можно пригласить снова (пауза между приглашениями)",
+            "title": "Invite Available At"
+          },
+          "is_demo": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Demo"
+          },
+          "market_range": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Вилка рынка по категории: from, to, median",
+            "title": "Market Range"
+          },
+          "my_invitations": {
+            "description": "Приглашения этой компании этому кандидату",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "My Invitations",
+            "type": "array"
+          },
+          "my_probes": {
+            "description": "Зонды этой компании этому кандидату",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "My Probes",
+            "type": "array"
+          },
+          "probes": {
+            "description": "Зонды (задания работодателей), которые кандидат выполнил",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Probes",
+            "type": "array"
+          },
+          "provisional": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provisional"
+          },
+          "rank_in_category": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank In Category"
+          },
+          "rating_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Рейтинг внутри категории, 0…1",
+            "title": "Rating Score"
+          },
+          "ref": {
+            "description": "Обезличенный идентификатор кандидата в выдаче (C-XXXXXX)",
+            "title": "Ref",
+            "type": "string"
+          },
+          "relocation": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relocation"
+          },
+          "roles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roles",
+            "type": "array"
+          },
+          "skills_confirmed": {
+            "description": "Подтверждённые навыки с уровнем доказательства T0–T2",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Skills Confirmed",
+            "type": "array"
+          },
+          "soft_skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Soft Skills",
+            "type": "array"
+          },
+          "specializations": {
+            "description": "Все категории кандидата; одна — основная (is_primary)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Specializations",
+            "type": "array"
+          },
+          "stack_declared": {
+            "description": "Заявленный стек (уровень T0)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stack Declared",
+            "type": "array"
+          },
+          "status": {
+            "$ref": "#/components/schemas/GradeStatusOut"
+          },
+          "test": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Итог последнего теста: уровень, theta, se, верных ответов, честность",
+            "title": "Test"
+          },
+          "work_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "office, hybrid, remote, any",
+            "title": "Work Format"
+          }
+        },
+        "required": [
+          "ref",
+          "category",
+          "status",
+          "claimed",
+          "direction",
+          "direction_title",
+          "grade",
+          "grade_title",
+          "provisional",
+          "confirmed_by",
+          "rating_score",
+          "specializations",
+          "rank_in_category",
+          "category_size",
+          "test",
+          "skills_confirmed",
+          "probes",
+          "fsp",
+          "stack_declared",
+          "roles",
+          "soft_skills",
+          "experience_years",
+          "work_format",
+          "city",
+          "relocation",
+          "market_range",
+          "is_demo",
+          "employment_safety",
+          "freshness",
+          "can_invite",
+          "invite_available_at",
+          "invitation_cooldown_days",
+          "my_invitations",
+          "my_probes",
+          "contacts",
+          "contacts_note",
+          "contacts_revoked"
+        ],
+        "title": "EmployerCandidateCardOut",
+        "type": "object"
+      },
+      "EmployerCategoryOut": {
+        "additionalProperties": true,
+        "properties": {
+          "count": {
+            "description": "Кандидатов в категории",
+            "title": "Count",
+            "type": "integer"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "grade": {
+            "title": "Grade",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "market_range": {
+            "additionalProperties": true,
+            "title": "Market Range",
+            "type": "object"
+          },
+          "provisional": {
+            "title": "Provisional",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "unconfirmed": {
+            "title": "Unconfirmed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "direction",
+          "grade",
+          "count",
+          "provisional",
+          "unconfirmed",
+          "market_range"
+        ],
+        "title": "EmployerCategoryOut",
+        "type": "object"
+      },
+      "EmployerInvitationOut": {
+        "additionalProperties": true,
+        "properties": {
+          "ats_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ats Stage"
+          },
+          "ats_transfers": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Ats Transfers",
+            "type": "array"
+          },
+          "candidate_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Category"
+          },
+          "candidate_deleted": {
+            "title": "Candidate Deleted",
+            "type": "boolean"
+          },
+          "candidate_ref": {
+            "title": "Candidate Ref",
+            "type": "string"
+          },
+          "company": {
+            "additionalProperties": true,
+            "description": "name, industry, website, city",
+            "title": "Company",
+            "type": "object"
+          },
+          "complaint": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Complaint"
+          },
+          "contact_method": {
+            "title": "Contact Method",
+            "type": "string"
+          },
+          "contacts": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Контакты кандидата — только после принятия и пока не отозваны",
+            "title": "Contacts"
+          },
+          "contacts_revoked": {
+            "title": "Contacts Revoked",
+            "type": "boolean"
+          },
+          "contacts_revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contacts Revoked At"
+          },
+          "counter": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текущее встречное предложение кандидата",
+            "title": "Counter"
+          },
+          "counters": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Counters",
+            "type": "array"
+          },
+          "counters_left": {
+            "title": "Counters Left",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decline Reason"
+          },
+          "employment_terms": {
+            "additionalProperties": true,
+            "description": "format, reduced_time, employer_acknowledged",
+            "title": "Employment Terms",
+            "type": "object"
+          },
+          "evidence": {
+            "description": "Чем подтверждён кандидат для этой позиции (T0–T2)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "hiring": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Этап найма после принятия: stage, title, line, todo",
+            "title": "Hiring"
+          },
+          "history": {
+            "description": "Смены статусов: at, by, status, note",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "offer_description": {
+            "title": "Offer Description",
+            "type": "string"
+          },
+          "position_title": {
+            "title": "Position Title",
+            "type": "string"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "salary_basis": {
+            "description": "gross или net",
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_basis_title": {
+            "title": "Salary Basis Title",
+            "type": "string"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "status": {
+            "description": "sent, viewed, accepted, declined, withdrawn, expired",
+            "title": "Status",
+            "type": "string"
+          },
+          "thread": {
+            "additionalProperties": true,
+            "description": "Переписка: total, unread",
+            "title": "Thread",
+            "type": "object"
+          },
+          "viewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Viewed At"
+          }
+        },
+        "required": [
+          "id",
+          "position_title",
+          "offer_description",
+          "employment_terms",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_basis_title",
+          "contact_method",
+          "evidence",
+          "status",
+          "decline_reason",
+          "created_at",
+          "viewed_at",
+          "responded_at",
+          "history",
+          "company",
+          "complaint",
+          "ats_stage",
+          "counter",
+          "counters",
+          "counters_left",
+          "contacts_revoked",
+          "contacts_revoked_at",
+          "thread",
+          "hiring",
+          "candidate_ref",
+          "candidate_category",
+          "candidate_deleted",
+          "contacts",
+          "ats_transfers"
+        ],
+        "title": "EmployerInvitationOut",
         "type": "object"
       },
       "EmployerOut": {
@@ -2182,6 +4215,190 @@
         "title": "FspLinkIn",
         "type": "object"
       },
+      "FspOverviewOut": {
+        "additionalProperties": true,
+        "description": "Обзор для кабинета ФСП. Значения в группах меньше порога k скрываются (null), чтобы нельзя было узнать отдельного человека.",
+        "properties": {
+          "acceptance_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acceptance Rate"
+          },
+          "accepted_candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Candidates"
+          },
+          "answered_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answered Rate"
+          },
+          "candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates"
+          },
+          "candidates_fsp": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidates Fsp"
+          },
+          "companies_active": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Companies Active"
+          },
+          "cup_participants": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cup Participants"
+          },
+          "cups": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cups"
+          },
+          "demo_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Demo Share"
+          },
+          "fsp_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsp Share"
+          },
+          "invitations": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitations"
+          },
+          "invited_candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invited Candidates"
+          },
+          "k": {
+            "description": "Порог скрытия малых групп",
+            "title": "K",
+            "type": "integer"
+          },
+          "needs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Needs"
+          },
+          "period_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Days"
+          }
+        },
+        "required": [
+          "candidates",
+          "candidates_fsp",
+          "fsp_share",
+          "companies_active",
+          "needs",
+          "invitations",
+          "invited_candidates",
+          "accepted_candidates",
+          "acceptance_rate",
+          "answered_rate",
+          "cups",
+          "cup_participants",
+          "k",
+          "period_days",
+          "demo_share"
+        ],
+        "title": "FspOverviewOut",
+        "type": "object"
+      },
       "FspStatusOut": {
         "properties": {
           "achievements_count": {
@@ -2238,6 +4455,146 @@
           "description"
         ],
         "title": "GradeOut",
+        "type": "object"
+      },
+      "GradeStatusOut": {
+        "additionalProperties": true,
+        "properties": {
+          "attempt": {
+            "description": "Сведения о последней неподтверждённой попытке, если была",
+            "title": "Attempt"
+          },
+          "claimed_category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed Category Id"
+          },
+          "claimed_direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed Direction"
+          },
+          "claimed_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Заявленный кандидатом грейд, если тест ещё не подтвердил",
+            "title": "Claimed Grade"
+          },
+          "claimed_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Claimed Title"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Грейд: junior, middle, senior",
+            "title": "Grade"
+          },
+          "grade_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Title"
+          },
+          "p_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Вероятность заявленного грейда по тесту, %",
+            "title": "P Pct"
+          },
+          "status": {
+            "description": "confirmed — подтверждён тестом, provisional — предварительно, unconfirmed — не подтверждён",
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "description": "Пояснение статуса человеческим языком",
+            "title": "Text",
+            "type": "string"
+          },
+          "tier": {
+            "description": "Ярус в выдаче: 0 — подтверждён или предварительно, 1 — не подтверждён",
+            "title": "Tier",
+            "type": "integer"
+          },
+          "title": {
+            "description": "Подпись статуса для интерфейса",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "title",
+          "tier",
+          "grade",
+          "grade_title",
+          "direction",
+          "claimed_grade",
+          "claimed_direction",
+          "claimed_category_id",
+          "claimed_title",
+          "attempt",
+          "p_pct",
+          "text"
+        ],
+        "title": "GradeStatusOut",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -2720,6 +5077,107 @@
         "title": "JuryIn",
         "type": "object"
       },
+      "JuryLoginOut": {
+        "additionalProperties": true,
+        "description": "Вход жюри в демо-песочницу под выбранной ролью. Токен — обычный JWT демо-учётки.",
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "expires_in": {
+            "description": "Срок жизни токена, секунд",
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "landing": {
+            "description": "Куда направить пользователя в интерфейсе",
+            "title": "Landing",
+            "type": "string"
+          },
+          "persona": {
+            "description": "candidate, employer, expert, fsp, …",
+            "title": "Persona",
+            "type": "string"
+          },
+          "scenario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Идентификатор песочницы; передайте его при входе под другой ролью в ту же песочницу",
+            "title": "Scenario"
+          },
+          "shared": {
+            "title": "Shared",
+            "type": "boolean"
+          },
+          "token_type": {
+            "description": "bearer",
+            "title": "Token Type",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserBriefOut"
+          }
+        },
+        "required": [
+          "access_token",
+          "token_type",
+          "expires_in",
+          "user",
+          "persona",
+          "landing",
+          "scenario",
+          "shared",
+          "created"
+        ],
+        "title": "JuryLoginOut",
+        "type": "object"
+      },
+      "JuryStatusOut": {
+        "additionalProperties": true,
+        "properties": {
+          "available": {
+            "description": "Включён ли режим жюри",
+            "title": "Available",
+            "type": "boolean"
+          },
+          "personas": {
+            "description": "Доступные роли и сценарии",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Personas",
+            "type": "array"
+          },
+          "reset_cooldown_s": {
+            "title": "Reset Cooldown S",
+            "type": "integer"
+          },
+          "sandboxes": {
+            "title": "Sandboxes",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "available",
+          "personas",
+          "reset_cooldown_s",
+          "sandboxes"
+        ],
+        "title": "JuryStatusOut",
+        "type": "object"
+      },
       "Keys": {
         "properties": {
           "auth": {
@@ -2918,6 +5376,201 @@
         "title": "MessageIn",
         "type": "object"
       },
+      "MetaOut": {
+        "additionalProperties": true,
+        "description": "Сведения о платформе: версия, оператор данных, режимы стенда и правила, общие для интерфейса.",
+        "properties": {
+          "assessment_engine": {
+            "description": "Движок оценки (адаптивный тест)",
+            "title": "Assessment Engine",
+            "type": "string"
+          },
+          "demo_sandbox": {
+            "description": "Работает ли стенд на демо-данных",
+            "title": "Demo Sandbox",
+            "type": "boolean"
+          },
+          "jury_mode_available": {
+            "description": "Включён ли режим жюри (песочницы с демо-ролями)",
+            "title": "Jury Mode Available",
+            "type": "boolean"
+          },
+          "llm": {
+            "additionalProperties": true,
+            "description": "Состояние языковой модели: настроена ли, цепочка провайдеров, последний вызов",
+            "title": "Llm",
+            "type": "object"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/OperatorOut"
+          },
+          "proctor_camera": {
+            "description": "Доступен ли контроль честности по камере",
+            "title": "Proctor Camera",
+            "type": "boolean"
+          },
+          "product_name": {
+            "description": "Название продукта",
+            "title": "Product Name",
+            "type": "string"
+          },
+          "rules": {
+            "additionalProperties": true,
+            "description": "Правила платформы в днях: grade_change_interval_days, retake_same_grade_days, invitation_cooldown_days",
+            "title": "Rules",
+            "type": "object"
+          },
+          "version": {
+            "description": "Версия сборки",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_name",
+          "version",
+          "operator",
+          "jury_mode_available",
+          "demo_sandbox",
+          "proctor_camera",
+          "llm",
+          "assessment_engine",
+          "rules"
+        ],
+        "title": "MetaOut",
+        "type": "object"
+      },
+      "MyDataOut": {
+        "additionalProperties": true,
+        "properties": {
+          "backups": {
+            "title": "Backups",
+            "type": "string"
+          },
+          "consent_version": {
+            "title": "Consent Version",
+            "type": "string"
+          },
+          "consents": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Consents",
+            "type": "array"
+          },
+          "contacts_open_to": {
+            "description": "Кому открыты контакты",
+            "items": {},
+            "title": "Contacts Open To",
+            "type": "array"
+          },
+          "delete": {
+            "additionalProperties": true,
+            "description": "Условия удаления учётной записи",
+            "title": "Delete",
+            "type": "object"
+          },
+          "interest": {
+            "additionalProperties": true,
+            "description": "Сколько работодателей смотрели профиль, подборок, зондов",
+            "title": "Interest",
+            "type": "object"
+          },
+          "not_in_our_power": {
+            "description": "Что платформа удалить не может (копии у третьих лиц)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Not In Our Power",
+            "type": "array"
+          },
+          "operator": {
+            "additionalProperties": true,
+            "title": "Operator",
+            "type": "object"
+          },
+          "retention": {
+            "description": "Сроки хранения",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Retention",
+            "type": "array"
+          },
+          "stored": {
+            "description": "Что хранится о пользователе",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stored",
+            "type": "array"
+          }
+        },
+        "required": [
+          "stored",
+          "interest",
+          "consents",
+          "contacts_open_to",
+          "delete",
+          "retention",
+          "backups",
+          "not_in_our_power",
+          "operator",
+          "consent_version"
+        ],
+        "title": "MyDataOut",
+        "type": "object"
+      },
+      "NeedFileOut": {
+        "additionalProperties": true,
+        "properties": {
+          "chars": {
+            "title": "Chars",
+            "type": "integer"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "kind_title": {
+            "title": "Kind Title",
+            "type": "string"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "text": {
+            "description": "Текст, извлечённый из файла",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "filename",
+          "kind",
+          "kind_title",
+          "pages",
+          "chars"
+        ],
+        "title": "NeedFileOut",
+        "type": "object"
+      },
       "NeedIn": {
         "properties": {
           "requirements": {
@@ -2954,6 +5607,55 @@
           "text"
         ],
         "title": "NeedIn",
+        "type": "object"
+      },
+      "NeedOut": {
+        "additionalProperties": true,
+        "description": "Потребность работодателя: исходный текст, разобранные требования и версии подбора.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "raw_text": {
+            "description": "Исходный текст потребности",
+            "title": "Raw Text",
+            "type": "string"
+          },
+          "requirements": {
+            "$ref": "#/components/schemas/NeedRequirementsOut"
+          },
+          "status": {
+            "description": "draft, active, closed",
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/NeedVersionOut"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "raw_text",
+          "requirements",
+          "status",
+          "created_at",
+          "versions"
+        ],
+        "title": "NeedOut",
         "type": "object"
       },
       "NeedPatch": {
@@ -2998,6 +5700,352 @@
           }
         },
         "title": "NeedPatch",
+        "type": "object"
+      },
+      "NeedRequirementsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "bias": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Предупреждения о возможной дискриминации в формулировках",
+            "title": "Bias"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "evidence": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Откуда взято каждое требование: фрагмент текста, уверенность",
+            "title": "Evidence"
+          },
+          "excluded": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Excluded"
+          },
+          "experience_years_min": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experience Years Min"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "llm": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Использовалась ли языковая модель и почему нет",
+            "title": "Llm"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Как разобран текст: rules (правила) или llm",
+            "title": "Method"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Review"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_net": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "true — вилка на руки, false — до вычета НДФЛ",
+            "title": "Salary Net"
+          },
+          "salary_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary Note"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "stack_desired": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stack Desired",
+            "type": "array"
+          },
+          "stack_required": {
+            "description": "Обязательный стек: name, level, … (разбор текста потребности)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stack Required",
+            "type": "array"
+          },
+          "suggested_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Suggested Text"
+          },
+          "unknown_terms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Термины, которые не удалось сопоставить со справочником",
+            "title": "Unknown Terms"
+          },
+          "work_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work Format"
+          },
+          "work_formats": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Work Formats"
+          }
+        },
+        "required": [
+          "direction",
+          "grade",
+          "stack_required",
+          "stack_desired",
+          "experience_years_min",
+          "work_format",
+          "work_formats",
+          "city",
+          "salary_from",
+          "salary_to",
+          "salary_net"
+        ],
+        "title": "NeedRequirementsOut",
+        "type": "object"
+      },
+      "NeedVersionOut": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "filters": {
+            "additionalProperties": true,
+            "title": "Filters",
+            "type": "object"
+          },
+          "parent_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "От какой версии получена (уточнение, «похожие»)",
+            "title": "Parent Version"
+          },
+          "total": {
+            "description": "Сколько кандидатов в версии",
+            "title": "Total",
+            "type": "integer"
+          },
+          "version": {
+            "description": "Номер версии подбора",
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "parent_version",
+          "created_at",
+          "filters",
+          "total"
+        ],
+        "title": "NeedVersionOut",
+        "type": "object"
+      },
+      "NotificationsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "prefs": {
+            "additionalProperties": true,
+            "description": "push_enabled, email_enabled, reminders_enabled",
+            "title": "Prefs",
+            "type": "object"
+          },
+          "quiet": {
+            "additionalProperties": true,
+            "description": "Тихие часы: from, to (часы суток)",
+            "title": "Quiet",
+            "type": "object"
+          },
+          "unread": {
+            "title": "Unread",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "unread",
+          "prefs",
+          "quiet"
+        ],
+        "title": "NotificationsOut",
         "type": "object"
       },
       "ObservedIn": {
@@ -3290,6 +6338,139 @@
         "title": "OnboardingIn",
         "type": "object"
       },
+      "OnboardingOut": {
+        "additionalProperties": true,
+        "properties": {
+          "answers": {
+            "additionalProperties": true,
+            "description": "Ответы опроса: направление, стек, опыт, формат работы, город, приватность",
+            "title": "Answers",
+            "type": "object"
+          },
+          "completed": {
+            "title": "Completed",
+            "type": "boolean"
+          },
+          "consent_publication_text": {
+            "additionalProperties": true,
+            "description": "Текст согласия на публикацию профиля и оператор",
+            "title": "Consent Publication Text",
+            "type": "object"
+          },
+          "options": {
+            "additionalProperties": true,
+            "description": "Варианты ответов для формы",
+            "title": "Options",
+            "type": "object"
+          }
+        },
+        "required": [
+          "completed",
+          "answers",
+          "options",
+          "consent_publication_text"
+        ],
+        "title": "OnboardingOut",
+        "type": "object"
+      },
+      "OnboardingSavedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "saved": {
+            "title": "Saved",
+            "type": "boolean"
+          },
+          "suggested_grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested Grade"
+          },
+          "survey_id": {
+            "title": "Survey Id",
+            "type": "string"
+          },
+          "visible_to_employers": {
+            "title": "Visible To Employers",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "saved",
+          "survey_id",
+          "suggested_grade",
+          "visible_to_employers"
+        ],
+        "title": "OnboardingSavedOut",
+        "type": "object"
+      },
+      "OperatorOut": {
+        "additionalProperties": true,
+        "properties": {
+          "actual_address": {
+            "title": "Actual Address",
+            "type": "string"
+          },
+          "director": {
+            "title": "Director",
+            "type": "string"
+          },
+          "email": {
+            "description": "Почта для обращений по персональным данным",
+            "title": "Email",
+            "type": "string"
+          },
+          "full_name": {
+            "description": "Полное наименование оператора персональных данных",
+            "title": "Full Name",
+            "type": "string"
+          },
+          "inn": {
+            "title": "Inn",
+            "type": "string"
+          },
+          "kpp": {
+            "title": "Kpp",
+            "type": "string"
+          },
+          "legal_address": {
+            "title": "Legal Address",
+            "type": "string"
+          },
+          "ogrn": {
+            "title": "Ogrn",
+            "type": "string"
+          },
+          "short_name": {
+            "title": "Short Name",
+            "type": "string"
+          },
+          "storage": {
+            "description": "Где хранятся данные (юрисдикция, площадка)",
+            "title": "Storage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name",
+          "short_name",
+          "inn",
+          "kpp",
+          "ogrn",
+          "legal_address",
+          "actual_address",
+          "email",
+          "director",
+          "storage"
+        ],
+        "title": "OperatorOut",
+        "type": "object"
+      },
       "OptionOut": {
         "properties": {
           "code": {
@@ -3426,6 +6607,50 @@
         "title": "ParseIn",
         "type": "object"
       },
+      "PassportStateOut": {
+        "additionalProperties": true,
+        "description": "Цифровой паспорт навыков: действующий документ с подписью, право на выпуск и история выпусков.",
+        "properties": {
+          "active": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Действующий паспорт: passport, document, signature, status, keys, verify_url",
+            "title": "Active"
+          },
+          "eligible": {
+            "description": "Может ли пользователь выпустить паспорт",
+            "title": "Eligible",
+            "type": "boolean"
+          },
+          "history": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "History",
+            "type": "array"
+          },
+          "opted_out": {
+            "title": "Opted Out",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "active",
+          "eligible",
+          "opted_out",
+          "history"
+        ],
+        "title": "PassportStateOut",
+        "type": "object"
+      },
       "PrivacyIn": {
         "properties": {
           "privacy": {
@@ -3476,6 +6701,35 @@
           "text"
         ],
         "title": "ProbeAnswerIn",
+        "type": "object"
+      },
+      "ProbeCreateOut": {
+        "additionalProperties": true,
+        "properties": {
+          "created": {
+            "description": "Созданные зонды",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Created",
+            "type": "array"
+          },
+          "skipped": {
+            "description": "Кандидаты, которым зонд не отправлен, и причина",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Skipped",
+            "type": "array"
+          }
+        },
+        "required": [
+          "created",
+          "skipped"
+        ],
+        "title": "ProbeCreateOut",
         "type": "object"
       },
       "ProbeIn": {
@@ -3564,6 +6818,130 @@
           "task_text"
         ],
         "title": "ProbeIn",
+        "type": "object"
+      },
+      "ProbeOut": {
+        "additionalProperties": true,
+        "description": "Зонд — короткое задание работодателя кандидату.",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "answer_mode": {
+            "title": "Answer Mode",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "deadline_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline At"
+          },
+          "events": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "review": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "status": {
+            "description": "sent, viewed, submitted, reviewed, declined, expired",
+            "title": "Status",
+            "type": "string"
+          },
+          "task_text": {
+            "title": "Task Text",
+            "type": "string"
+          },
+          "time_limit_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Limit Min"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "task_text",
+          "answer_mode",
+          "salary_from",
+          "salary_to",
+          "time_limit_min",
+          "status",
+          "events",
+          "answer",
+          "review",
+          "created_at",
+          "deadline_at"
+        ],
+        "title": "ProbeOut",
         "type": "object"
       },
       "ProposeIn": {
@@ -4360,6 +7738,77 @@
         "title": "RespondIn",
         "type": "object"
       },
+      "ResumeOut": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "evidence_level": {
+            "title": "Evidence Level",
+            "type": "string"
+          },
+          "extracted": {
+            "additionalProperties": true,
+            "description": "Извлечённые факты: стек, роли, опыт, подсказки по направлению и грейду",
+            "title": "Extracted",
+            "type": "object"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "method": {
+            "description": "Как извлечён текст",
+            "title": "Method",
+            "type": "string"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "pii_summary": {
+            "additionalProperties": true,
+            "description": "Сколько персональных данных найдено и обезличено",
+            "title": "Pii Summary",
+            "type": "object"
+          },
+          "text_preview": {
+            "title": "Text Preview",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "pages",
+          "method",
+          "pii_summary",
+          "extracted",
+          "text_preview",
+          "created_at",
+          "evidence_level",
+          "kind"
+        ],
+        "title": "ResumeOut",
+        "type": "object"
+      },
       "RevokeIn": {
         "properties": {
           "reason": {
@@ -4472,6 +7921,130 @@
           }
         },
         "title": "SelectionIn",
+        "type": "object"
+      },
+      "SelectionOut": {
+        "additionalProperties": true,
+        "description": "Подбор кандидатов под потребность: условия, веса, категории и ранжированные результаты с причинами.",
+        "properties": {
+          "algorithm": {
+            "description": "Версия алгоритма подбора, например match-v1.1",
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "categories": {
+            "description": "Категории в выдаче: id, title, count, relation, market_range",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "conditions": {
+            "additionalProperties": true,
+            "description": "Применённые условия (формат работы, город, вилка) и сколько скрыто ими",
+            "title": "Conditions",
+            "type": "object"
+          },
+          "confirmed_matched": {
+            "title": "Confirmed Matched",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "filters": {
+            "additionalProperties": true,
+            "title": "Filters",
+            "type": "object"
+          },
+          "levels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Уровни доказательства: T2 — реестр ФСП, T1 — тест или зонд, T0 — заявлено",
+            "title": "Levels",
+            "type": "object"
+          },
+          "must_first": {
+            "description": "Обязательные требования учитываются раньше желательных",
+            "title": "Must First",
+            "type": "boolean"
+          },
+          "parent_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Version"
+          },
+          "provisional_matched": {
+            "title": "Provisional Matched",
+            "type": "integer"
+          },
+          "provisional_penalty": {
+            "title": "Provisional Penalty",
+            "type": "number"
+          },
+          "requirements": {
+            "$ref": "#/components/schemas/NeedRequirementsOut"
+          },
+          "results": {
+            "description": "Кандидаты по убыванию score: ref, rank, score, components, reasons, must, card",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "unconfirmed_matched": {
+            "title": "Unconfirmed Matched",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "Веса компонентов оценки: test, stack_required, stack_desired, fsp, probe",
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "required": [
+          "version",
+          "parent_version",
+          "created_at",
+          "filters",
+          "requirements",
+          "algorithm",
+          "conditions",
+          "must_first",
+          "weights",
+          "levels",
+          "provisional_penalty",
+          "categories",
+          "total",
+          "results",
+          "confirmed_matched",
+          "provisional_matched",
+          "unconfirmed_matched"
+        ],
+        "title": "SelectionOut",
         "type": "object"
       },
       "SelfCheckIn": {
@@ -5757,6 +9330,40 @@
         "title": "Upload",
         "type": "object"
       },
+      "UserBriefOut": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_email_verified": {
+            "title": "Is Email Verified",
+            "type": "boolean"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "role",
+          "is_email_verified",
+          "created_at"
+        ],
+        "title": "UserBriefOut",
+        "type": "object"
+      },
       "UserOut": {
         "properties": {
           "created_at": {
@@ -6055,6 +9662,35 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "ValidationHeadlineOut": {
+        "additionalProperties": true,
+        "properties": {
+          "how_to_read": {
+            "title": "How To Read",
+            "type": "string"
+          },
+          "items": {
+            "description": "Ключевые показатели валидации: название, значение, порог, статус",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "missing": {
+            "title": "Missing",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items",
+          "missing",
+          "how_to_read"
+        ],
+        "title": "ValidationHeadlineOut",
         "type": "object"
       },
       "VerifyEmailIn": {
@@ -7591,9 +11227,7 @@
                   "sandbox": true
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Attempts Api Assessment Attempts Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AttemptsOut"
                 }
               }
             },
@@ -8483,9 +12117,7 @@
                   "upgrade_available": false
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Finish Api Assessment Sessions  Session Id  Finish Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssessmentResultOut"
                 }
               }
             },
@@ -8649,9 +12281,7 @@
                   "upgrade_available": false
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Result Api Assessment Sessions  Session Id  Result Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssessmentResultOut"
                 }
               }
             },
@@ -8924,9 +12554,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Status Api Assessment Status Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssessmentStatusOut"
                 }
               }
             },
@@ -13321,10 +16949,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/CandidateInvitationOut"
                   },
-                  "title": "Response Cand Invitations Api Candidate Invitations Get",
                   "type": "array"
                 }
               }
@@ -13514,9 +17140,7 @@
                   "viewed_at": "2026-10-09T14:20:37.334079+00:00"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cand Invitation Api Candidate Invitations  Inv Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateInvitationOut"
                 }
               }
             },
@@ -13657,9 +17281,7 @@
                   "viewed_at": "2026-10-09T14:20:37.334079"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Accept Api Candidate Invitations  Inv Id  Accept Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateInvitationOut"
                 }
               }
             },
@@ -13848,9 +17470,7 @@
                   "viewed_at": "2026-10-09T14:20:37.334079"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Complain Api Candidate Invitations  Inv Id  Complaint Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateInvitationOut"
                 }
               }
             },
@@ -14114,9 +17734,7 @@
                   "viewed_at": "2026-10-09T14:20:37.334079"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Revoke Api Candidate Invitations  Inv Id  Contacts Revoke Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateInvitationOut"
                 }
               }
             },
@@ -15477,10 +19095,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/ProbeOut"
                   },
-                  "title": "Response Cand Probes Api Candidate Probes Get",
                   "type": "array"
                 }
               }
@@ -15561,9 +19177,7 @@
                   "title": "Короткая задача"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cand Probe Api Candidate Probes  Probe Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProbeOut"
                 }
               }
             },
@@ -15687,9 +19301,7 @@
                   "title": "Короткая задача"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Answer Probe Api Candidate Probes  Probe Id  Answer Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProbeOut"
                 }
               }
             },
@@ -19679,9 +23291,7 @@
                   "unconfirmed": 1
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Search Candidates Api Employer Candidates Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateSearchOut"
                 }
               }
             },
@@ -20032,9 +23642,7 @@
                   "work_format": "remote"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Candidate Detail Api Employer Candidates  Ref  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EmployerCandidateCardOut"
                 }
               }
             },
@@ -20541,10 +24149,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/EmployerCategoryOut"
                   },
-                  "title": "Response Categories Api Employer Categories Get",
                   "type": "array"
                 }
               }
@@ -21762,10 +25368,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/EmployerInvitationOut"
                   },
-                  "title": "Response My Invitations Api Employer Invitations Get",
                   "type": "array"
                 }
               }
@@ -21894,9 +25498,7 @@
                   "viewed_at": null
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Send Invitation Api Employer Invitations Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EmployerInvitationOut"
                 }
               }
             },
@@ -23525,10 +27127,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/NeedOut"
                   },
-                  "title": "Response List Needs Api Employer Needs Get",
                   "type": "array"
                 }
               }
@@ -23686,9 +27286,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Create Need Api Employer Needs Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NeedOut"
                 }
               }
             },
@@ -23768,9 +27366,7 @@
                   "truncated": false
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Need From File Api Employer Needs File Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NeedFileOut"
                 }
               }
             },
@@ -23975,9 +27571,7 @@
                   "work_formats": null
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Parse Api Employer Needs Parse Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NeedRequirementsOut"
                 }
               }
             },
@@ -24222,9 +27816,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Need Api Employer Needs  Need Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NeedOut"
                 }
               }
             },
@@ -24419,9 +28011,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Patch Need Api Employer Needs  Need Id  Patch",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NeedOut"
                 }
               }
             },
@@ -25284,9 +28874,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response New Selection Api Employer Needs  Need Id  Selections Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SelectionOut"
                 }
               }
             },
@@ -25658,9 +29246,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Selection Api Employer Needs  Need Id  Selections  Version  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SelectionOut"
                 }
               }
             },
@@ -26395,7 +29981,9 @@
                     "test": 0.45
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SelectionOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -27462,10 +31050,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/ProbeOut"
                   },
-                  "title": "Response My Probes Api Employer Probes Get",
                   "type": "array"
                 }
               }
@@ -27558,9 +31144,7 @@
                   "skipped": []
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Send Probes Api Employer Probes Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProbeCreateOut"
                 }
               }
             },
@@ -27711,9 +31295,7 @@
                   "title": "Короткая задача"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Review Api Employer Probes  Probe Id  Review Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProbeOut"
                 }
               }
             },
@@ -30203,9 +33785,7 @@
                   "period_days": null
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Overview Api Fsp Cabinet Overview Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspOverviewOut"
                 }
               }
             },
@@ -32415,7 +35995,9 @@
                     "role": "candidate"
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/JuryLoginOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -32775,7 +36357,9 @@
                   "reset_cooldown_s": 20,
                   "sandboxes": true
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/JuryStatusOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -33532,9 +37116,7 @@
                   "work_format": "remote"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response My Card Api Me Card Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateCardOut"
                 }
               }
             },
@@ -33675,10 +37257,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/ConsentOut"
                   },
-                  "title": "Response My Consents Api Me Consents Get",
                   "type": "array"
                 }
               }
@@ -33923,9 +37503,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response My Data Api Me Data Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/MyDataOut"
                 }
               }
             },
@@ -34999,9 +38577,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Onboarding Api Me Onboarding Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OnboardingOut"
                 }
               }
             },
@@ -35070,9 +38646,7 @@
                   "visible_to_employers": true
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Save Onboarding Api Me Onboarding Put",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OnboardingSavedOut"
                 }
               }
             },
@@ -35233,9 +38807,7 @@
                   "opted_out": false
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response My Passport Api Me Passport Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PassportStateOut"
                 }
               }
             },
@@ -35370,9 +38942,7 @@
                   "opted_out": false
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Reissue Mine Api Me Passport Reissue Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PassportStateOut"
                 }
               }
             },
@@ -35448,9 +39018,7 @@
                   "opted_out": true
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Revoke Mine Api Me Passport Revoke Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PassportStateOut"
                 }
               }
             },
@@ -35672,16 +39240,7 @@
                   "text_preview": "[ФИО]\nBackend-разработчик\nPython, PostgreSQL, FastAPI\nОпыт 3 года"
                 },
                 "schema": {
-                  "anyOf": [
-                    {
-                      "additionalProperties": true,
-                      "type": "object"
-                    },
-                    {
-                      "type": "null"
-                    }
-                  ],
-                  "title": "Response Last Resume Api Me Resume Get"
+                  "$ref": "#/components/schemas/ResumeOut"
                 }
               }
             },
@@ -36335,9 +39894,7 @@
                   "version": "0.2.0"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Meta Api Meta Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/MetaOut"
                 }
               }
             },
@@ -36421,9 +39978,7 @@
                   "unread": 4
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Feed Api Notifications Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NotificationsOut"
                 }
               }
             },
@@ -40669,7 +44224,9 @@
                   ],
                   "missing": false
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationHeadlineOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
