@@ -39,8 +39,8 @@ function useReserveSpace(el: HTMLElement | null, side: boolean) {
   }, [el, side]);
 }
 
-// Ф6 (В8): свёрнутый проводник в кабинете — не плавающая кнопка над содержимым, а кнопка в шапке (< 768 px) или внизу
-// бокового меню (≥ 768 px). Вне кабинета (главная, /validation, регистрация) — плавающая кнопка, как раньше.
+// Ф6 (В8): свёрнутый проводник в кабинете — не плавающая кнопка над содержимым, а кнопка в шапке на месте подписи роли
+// (< 768 px) или внизу бокового меню (≥ 768 px). Вне кабинета (главная, /validation, регистрация) — плавающая кнопка, как раньше.
 type SlotKey = "header" | "sidebar";
 const slots: Record<SlotKey, HTMLElement | null> = { header: null, sidebar: null };
 const slotSubs = new Set<() => void>();
@@ -48,7 +48,7 @@ const slotRef = (k: SlotKey) => (el: HTMLElement | null) => { if (slots[k] !== e
 const SLOT_REFS = { header: slotRef("header"), sidebar: slotRef("sidebar") };
 /** Место для свёрнутого проводника — ставит CabinetLayout. */
 export function GuideSlot({ where }: { where: SlotKey }) {
-  return <span ref={SLOT_REFS[where]} className={where === "header" ? "contents" : "block"} />;
+  return <span ref={SLOT_REFS[where]} className={where === "header" ? "peer contents" : "block"} />;
 }
 function useMedia(q: string) {
   const [m, setM] = useState(() => window.matchMedia(q).matches);
@@ -108,7 +108,7 @@ export function JuryGuide() {
       <button type="button" onClick={() => guide.show()} aria-label="Показать проводник для жюри" title="Проводник для экспертов жюри"
         className={slot === slots.sidebar
           ? "mb-3 w-full rounded-xl bg-brand-night px-3 py-2 text-left text-sm font-semibold text-white hover:bg-brand-plum"
-          : "shrink-0 whitespace-nowrap rounded-full bg-brand-night px-2.5 py-1 text-xs font-semibold text-white hover:bg-brand-plum"}>
+          : "ml-auto shrink-0 whitespace-nowrap rounded-full bg-brand-night px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-plum"}>
         {slot === slots.sidebar ? `Проводник жюри · шаг ${step + 1}/${STEPS.length}` : `Проводник ${step + 1}/${STEPS.length}`}
       </button>, slot);
     return (
