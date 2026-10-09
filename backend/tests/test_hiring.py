@@ -456,3 +456,46 @@ def test_migration_hr01_up_and_down(tmp_path):
     command.downgrade(cfg, ScriptDirectory.from_config(cfg).get_revision("hr01").down_revision)
     assert not {"hiring_interviews", "hiring_offers", "hiring_outcomes"} & set(
         inspect(create_engine(url)).get_table_names())
+
+
+# ------------------------------------------------------------------ демо в песочнице жюри
+
+def test_jury_sandbox_hiring_path_in_a_minute(client, ats_http):  # noqa: F811
+    import time
+
+    from app.modules.demo.seed import seed
+    from app.modules.hiring.demo import SCHEDULED_TITLE
+
+    with SessionLocal() as db:
+        seed(db)
+        db.commit()
+    r = client.post("/api/jury/login", json={"persona": "employer", "scenario": "new"})
+    assert r.status_code == 200, r.text
+    te, sid = r.json()["access_token"], r.json()["scenario"]
+    invs = client.get("/api/employer/invitations", headers=H(te)).json()
+    pre = next(i for i in invs if i["position_title"] == SCHEDULED_TITLE)
+    assert pre["hiring"]["stage"] == "interview" and "11:00 МСК" in pre["hiring"]["line"]
+    assert [e["status"] for e in pre["history"]][-2:] == ["interview_proposed", "interview_scheduled"]
+
+    t0 = time.monotonic()
+    tc = client.post("/api/jury/login", json={"persona": "candidate_nofsp", "scenario": sid}).json()["access_token"]
+    inv = next(i for i in client.get("/api/candidate/invitations", headers=H(tc)).json()
+               if i["position_title"] == "Backend-разработчик (платежи)")["id"]
+    assert client.post(f"{C(inv)}/accept", headers=H(tc)).status_code < 300
+    st = client.get(f"{E(inv)}/hiring", headers=H(te)).json()
+    assert st["rules"]["demo_done_anytime"] and st["presets"]["slots"][0]["place"].startswith("https://")
+    iv = client.post(f"{E(inv)}/interviews", json={"slots": st["presets"]["slots"]}, headers=H(te)).json()["interview"]
+    assert client.post(f"{C(inv)}/interviews/{iv['id']}/choose", json={"slot_id": iv["slots"][0]["id"]},
+                       headers=H(tc)).status_code == 200
+    assert client.post(f"{E(inv)}/interviews/{iv['id']}/done", json={}, headers=H(te)).status_code == 200
+    of = st["presets"]["offer"]
+    assert client.post(f"{E(inv)}/offer", json=of, headers=H(te)).status_code == 201
+    assert client.post(f"{C(inv)}/offer/accept", headers=H(tc)).status_code == 200
+    r = client.post(f"{E(inv)}/outcome", json={"outcome": "hired"}, headers=H(te))
+    assert r.status_code == 200
+    assert time.monotonic() - t0 < 60
+    st = client.get(f"{E(inv)}/hiring", headers=H(te)).json()
+    got = {a["target"]: (a["status"], a["stage_title"]) for a in st["ats"]}
+    assert got["potok"] == ("ok", "Вышел на работу"), got
+    cand = next(i for i in client.get("/api/candidate/invitations", headers=H(tc)).json() if i["id"] == inv)
+    assert cand["hiring"]["stage"] == "hired" and cand["ats_stage"]["title"] == "Вышел на работу"
