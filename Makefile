@@ -14,8 +14,15 @@ up: env ## Собрать и запустить стек (db, api, web)
 	$(COMPOSE) up -d --build
 	@echo "Сайт: http://127.0.0.1:$${WEB_PORT:-8140}  API-документация: http://127.0.0.1:$${WEB_PORT:-8140}/api/docs"
 
+llm-local: env ## Стек + открытая модель Qwen на CPU без ключей (профиль llm-local; первый старт скачивает модель 5,7 ГБ)
+	LLM_LOCAL_ENV_FILE=./infra/llm-local/llm-local.env $(COMPOSE) --profile llm-local up -d --build
+	@echo "Сайт: http://127.0.0.1:$${WEB_PORT:-8140}  Модель: make llm-local-logs (готова, когда /health отвечает ok)"
+
+llm-local-logs: ## Ход загрузки и ответы открытой модели (сервис llm-local)
+	$(COMPOSE) --profile llm-local logs -f --tail=50 llm-local
+
 down: ## Остановить стек (данные БД сохраняются)
-	$(COMPOSE) down
+	$(COMPOSE) --profile llm-local down
 
 ps: ## Состояние контейнеров
 	$(COMPOSE) ps
@@ -66,7 +73,7 @@ dev-backend: ## Локальный backend с автоперезагрузкой
 dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
-.PHONY: help env up down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
+.PHONY: help env up llm-local llm-local-logs down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
 .PHONY: bench bench-quick stability intern-cut fsp-regression
 
 # --- Проверки CI на своей машине: те же команды, что в .github/workflows (docs/testing.md) ---

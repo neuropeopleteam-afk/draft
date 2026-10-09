@@ -147,11 +147,14 @@ def main():
     ap.add_argument("--conc", type=int, default=3)
     ap.add_argument("--tag", default="", help="подпись прогона в ключе результата (например, «reasoning low»)")
     ap.add_argument("--predictions-out", type=Path, help="полная выдача одного нового прогона для аудита")
+    ap.add_argument("--limit", type=int, default=0, help="только первые N вакансий корпуса (замер на CPU: 10–20)")
     a = ap.parse_args()
     specs = a.models.split(",")
     if a.predictions_out is not None and len(specs) != 1:
         ap.error("--predictions-out разрешён только для одной модели, чтобы не перезаписать её выдачу")
     rows = json.loads((ROOT / "docs/realdata/vacancies_50.json").read_text())["vacancies"]
+    if a.limit:
+        rows = rows[: a.limit]
     path = Path(a.out)
     result = json.loads(path.read_text()) if path.exists() else {
         "corpus": "docs/realdata/vacancies_50.json", "annotation": "silver (И8): не экспертная разметка", "models": {}}
@@ -162,6 +165,13 @@ def main():
         r["wall_total_s"] = round(time.time() - t0, 1)
         r["date"] = time.strftime("%Y-%m-%d")
         r["reasoning"] = llm.reasoning_for("parse_need") if r["provider"] == "openrouter" else None
+        if r["provider"] == "local":  # где на самом деле работала модель: свой сервер (CPU) или облачный совместимый API
+            s = get_settings()
+            r["local"] = {"server": "openrouter" if "openrouter.ai" in (s.llm_local_base_url or "") else "self-hosted",
+                          "json_mode": s.llm_local_json_mode, "no_think": s.llm_local_no_think,
+                          "extra_body_keys": sorted(json.loads(s.llm_local_extra_body or "{}"))}
+        if a.limit:
+            r["limit"] = a.limit
         result["models"][r["model"] + (f" ({a.tag})" if a.tag else "")] = r
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(result, ensure_ascii=False, indent=2))
