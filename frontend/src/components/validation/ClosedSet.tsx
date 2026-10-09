@@ -14,6 +14,8 @@ export default function ClosedSet() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [filename, setFilename] = useState("");
+  // Ф6 (В10): форма свёрнута — сначала доказательства («5 чисел» выше), затем свои данные по кнопке; по #closed-set — раскрыта
+  const [open, setOpen] = useState(() => window.location.hash === "#closed-set");
   const body = { content, format, k };
   const authenticate = async () => {
     if (!isJury(me?.email) || !["employer", "admin"].includes(me?.role ?? "")) {
@@ -46,7 +48,16 @@ export default function ClosedSet() {
   return (
     <section id="closed-set" className="mt-12 rounded-2xl border border-brand-night/10 bg-white p-5 md:p-7">
       <p className="text-xs font-semibold uppercase tracking-wider text-brand-plum">Проверка на ваших данных</p>
-      <h2 className="mt-2 text-xl font-bold text-brand-night">Закрытый набор жюри</h2>
+      <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 basis-72">
+          <h2 className="text-xl font-bold text-brand-night">Закрытый набор жюри</h2>
+          <p className="mt-1 text-sm leading-relaxed text-brand-ink/70">Свои анонимные потребности и профили (до 50 и 500) — выдача и p@k/nDCG@k на них; данные живут только в памяти запроса.</p>
+        </div>
+        <button type="button" className="btn-ghost" aria-expanded={open} aria-controls="closed-set-form" onClick={() => setOpen((v) => !v)}>
+          {open ? "Свернуть" : "Проверить на своих данных"}
+        </button>
+      </div>
+      {open && <div id="closed-set-form">
       <p className="mt-3 text-sm leading-relaxed text-brand-ink/75">
         Загрузите анонимные потребности, профили и, при наличии, метки релевантности от 0 до 3.
         До 50 потребностей и 500 профилей. Данные существуют только в памяти вашего запроса:
@@ -119,6 +130,7 @@ export default function ClosedSet() {
             </li>)}
           </ol>
         </details>)}
+      </div>}
       </div>}
     </section>
   );
