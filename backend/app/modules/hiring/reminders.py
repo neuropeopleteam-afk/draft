@@ -40,6 +40,8 @@ def remind_due(db: Session) -> int:
         if got != 1:  # другой воркер уже напомнил
             continue
         inv = db.get(Invitation, iv.invitation_id)
+        if inv is None:  # приглашение удалено (SQLite без каскада в тестах)
+            continue
         when = f"{msk(iv.starts_at)} · {FORMATS.get(iv.format or '', '').lower()}"
         try:
             cu = db.get(User, iv.candidate_user_id)

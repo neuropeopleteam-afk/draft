@@ -402,6 +402,9 @@ def _create_jury(db: Session, sid: str) -> dict:
                       salary_from=240_000, salary_to=270_000, contact_method="Почта HR и звонок 20 минут",
                       need_id=needs[0].id, probe_id=None)
     _jury_contact(db, eu, c, p2, p1, needs)  # переписка и встречное предложение (app.modules.contact, И4)
+    from app.modules.hiring.demo import seed_jury_hiring
+
+    seed_jury_hiring(db, c)  # найм: назначенное собеседование у принятого приглашения (Н8); сбой не ломает сид
     cups = _jury_cups(db, sid, eu, c, p1)
     tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2)  # задания работодателя с автопроверкой (И7)
     _maria_extras(db, eu, p1)
