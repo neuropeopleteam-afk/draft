@@ -53,7 +53,7 @@ def _text(pair: tuple[int, int]) -> str:
         return f"Чтение с offset {start}; повторно не обработается ни одно сообщение"
     word = "сообщение" if dup % 10 == 1 and dup % 100 != 11 else (
         "сообщения" if 2 <= dup % 10 <= 4 and not 12 <= dup % 100 <= 14 else "сообщений")
-    return f"Чтение с offset {start}; повторно обработаются {dup} {word}"
+    return f"Чтение с offset {start}; повторно обработаются {dup} {word} из пачки"
 
 
 def generate(seed: int):
