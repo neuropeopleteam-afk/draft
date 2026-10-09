@@ -65,7 +65,7 @@ export default function Profile() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-bold text-brand-night">Резюме PDF</h2>
-            <p className="mt-1 max-w-xl text-sm text-brand-ink/65">Извлечём стек, роли, стаж и софт-скиллы. ФИО и контакты вырезаются на нашем сервере до любой обработки моделью; исходный файл не хранится.</p>
+            <p className="mt-1 max-w-xl text-sm text-brand-ink/65">Извлечём стек, роли, стаж и софт-скиллы. ФИО, контакты, адрес, дата рождения и возраст вырезаются на нашем сервере до обработки моделью (город остаётся для подбора); исходный файл не хранится.</p>
             <LlmOff className="mt-1 max-w-xl text-xs text-brand-ink/65">LLM на этой установке не подключён: резюме разбирается по словарям и правилам, нераспознанное добавьте вручную.</LlmOff>
           </div>
           <label className={`btn-primary cursor-pointer ${busy ? "pointer-events-none opacity-60" : ""}`}>
