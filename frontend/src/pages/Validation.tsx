@@ -7,6 +7,7 @@ import GraderCheck from "../components/validation/GraderCheck";
 import LlmModels from "../components/validation/LlmModels";
 import RetestLive from "../components/validation/RetestLive";  // И26: доля повторов заданий между попытками
 import Headline from "../components/validation/Headline";
+import { ProvenanceLine, Snapshots } from "../components/validation/Provenance";  // Я8: происхождение чисел, снимки расчётов
 import PathRetest, { CalibrationCard } from "../components/validation/PathRetest";
 import LiveUsers from "../components/validation/LiveUsers";
 import Ablations from "../components/validation/Ablations";
@@ -42,6 +43,7 @@ export default function Validation() {
           затем на экспертной разметке и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
         </p>
         <Headline />
+        <Snapshots />
         <ClosedSet />
         {loading ? <div className="mt-8"><Loading /></div> : error ? <div className="mt-8"><Alert>{error}</Alert></div> : r?.missing
           ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div>
@@ -63,7 +65,7 @@ function Report({ r }: { r: any }) {
   const rdate = r.generated_at ? d10(r.generated_at) : "";
   const world = `${r.n_per_direction ?? "—"} синтетических кандидатов на направление × ${dirs.length}, банк ${rp.bank_n_families ?? "—"} семейств (коммит банка ${rp.bank_commit ?? "—"}), отчёт ${rdate || "—"}`;
   return (
-    <AsOf.Provider value={{ date: rdate, world }}>
+    <AsOf.Provider value={{ date: rdate, world, prov: pv.stamp }}>
       <p className="mt-4 text-xs text-brand-ink/65" data-testid="report-signature">Отчёт симуляции построен {dtt(r.generated_at)} · {r.n_per_direction} синтетических кандидатов на направление · {num(r.seconds, 0)} с · банк расчёта: {rp.bank_n_families ?? "—"} семейств, коммит {rp.bank_commit ?? "—"}{pv.code_commit && pv.code_commit !== "unknown" ? ` · код стенда ${pv.code_commit}` : ""}</p>
       {bn.n_families != null && !rp.same_bank && <div className="mt-3"><Alert kind="info" ><b>Числа отчёта — на банке от {rp.bank_synced_at ? d10(rp.bank_synced_at) : rdate}.</b> Сейчас в банке {bn.n_families} семейств (синхронизирован {bn.synced_at ? d10(bn.synced_at) : "—"}, коммит {bn.commit ?? "—"}); полная симуляция теста на нём не пересчитывалась (make validate), поэтому таблицы ниже подписаны датой отчёта. Блоки «5 чисел» и «Весь путь дважды» посчитаны отдельно — их мир указан в подписи.</Alert></div>}
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
@@ -136,6 +138,7 @@ function Report({ r }: { r: any }) {
       <GraderCheck />
 
       <Section id="matching" title="Подбор на демо-данных: разметка правилами" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>
+        <ProvenanceLine p={pv.demo} className="mb-2" />
         <div className="mb-3"><Alert kind="info"><b>Не доказательство. </b>Метки здесь построены правилами и частично повторяют фильтр категории платформы — оценка циркулярна. Доказательство качества подбора — бенчмарк со скрытой истиной и абляции выше, затем разметка моделью; этот блок показывает только, что подборка на демо-данных работает.</Alert></div>
         <Table head={["Способ", "precision@5", "nDCG@5", "nDCG@10", "Внутри категории: nDCG@3"]}
           rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["BM25 по тексту резюме и потребности", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
