@@ -203,12 +203,13 @@ def run_once(db: Session | None = None) -> int:
         users = db.scalars(select(User).where(User.role == UserRole.candidate, User.is_active.is_(True),
                                               User.last_login_at.is_not(None), User.last_login_at >= since)).all()
         for u in users:
+            uid = u.id  # до try: после сбоя flush объекты сессии протухают, и обращение к u.id до отката — PendingRollbackError
             try:
                 if offer_if_due(db, u) is not None:
                     n += 1
             except Exception:  # noqa: BLE001
-                log.exception("лента заданий: кандидат %s", u.id)
-                db.rollback()
+                db.rollback()  # сначала откат — сессия снова рабочая, обход продолжается со следующего кандидата
+                log.exception("лента заданий: кандидат %s", uid)
     finally:
         if own:
             db.close()
@@ -240,9 +241,12 @@ def start_background(interval_s: int = 3600) -> threading.Thread | None:
         return None
 
     def loop() -> None:
+        import random
         import time
 
-        time.sleep(min(60, interval_s))
+        # разброс старта: у api два воркера uvicorn, каждый со своим потоком — иначе их обходы идут секунда в секунду
+        # и соревнуются за одну и ту же пару (задание, кандидат); гонка и так безопасна (SAVEPOINT в service.offer)
+        time.sleep(min(60, interval_s) + random.uniform(0, min(120, interval_s / 4)))
         while True:
             try:
                 n = run_once()

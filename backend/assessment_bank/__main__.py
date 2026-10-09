@@ -27,6 +27,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--n", type=int, default=1000)
     p.add_argument("--seed", type=int, default=20261005)
     p.add_argument("--out", default="reports")
+    p.add_argument("--worlds", type=int, default=10,
+                   help="разброс prior_cat/calibrated_cat по стольким независимым мирам (0 — без него)")
+    p.add_argument("--jobs", type=int, default=1, help="процессов для миров")
     p = sub.add_parser("canary-leak", help="выгрузить опубликованные канарейки (демо утечки)")
     p.add_argument("--out", default="reports/canary_leak.json")
     a = ap.parse_args(argv)
@@ -64,7 +67,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1 if n_fail else 0
     if a.cmd == "simulate":
         from .simulation import run_all
-        run_all(n=a.n, seed=a.seed, out_dir=a.out)
+        run_all(n=a.n, seed=a.seed, out_dir=a.out, worlds=a.worlds, jobs=a.jobs)
         print(f"отчёт: {Path(a.out) / 'simulation_report.md'}")
         return 0
     if a.cmd == "canary-leak":

@@ -6,6 +6,7 @@ import logging
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.db import as_aware, utcnow
@@ -144,12 +145,16 @@ def active_for_vacancy(db: Session, vacancy_id) -> Assignment | None:
 
 # ------------------------------------------------------------------ выдача кандидату
 
+def existing_attempt(db: Session, assignment_id: uuid.UUID, candidate_user_id: uuid.UUID) -> AssignmentAttempt | None:
+    """Попытка пары (задание, кандидат) — одна на пару (uq_assignment_attempts_pair)."""
+    return db.scalar(select(AssignmentAttempt).where(AssignmentAttempt.assignment_id == assignment_id,
+                                                     AssignmentAttempt.candidate_user_id == candidate_user_id))
+
+
 def offer(db: Session, a: Assignment, cand: User, source: str, *, application_id=None,
           send: bool = True, why_days: int | None = None) -> AssignmentAttempt | None:
     """Предложить задание кандидату (одна попытка на задание). Уведомление — письмо и push."""
-    ex = db.scalar(select(AssignmentAttempt).where(AssignmentAttempt.assignment_id == a.id,
-                                                   AssignmentAttempt.candidate_user_id == cand.id))
-    if ex is not None:
+    if existing_attempt(db, a.id, cand.id) is not None:
         return None
     at = AssignmentAttempt(assignment_id=a.id, candidate_user_id=cand.id, source=source,
                            application_id=application_id, status="offered", offered_at=utcnow())
@@ -157,8 +162,17 @@ def offer(db: Session, a: Assignment, cand: User, source: str, *, application_id
         at.why = why_mod.build(db, a, cand, source, frequency_days=why_days)
     except Exception:  # noqa: BLE001
         log.exception("причина предложения не определена")
-    db.add(at)
-    db.flush()
+    try:
+        # Вставка под SAVEPOINT: та же пара могла появиться параллельно (второй воркер uvicorn ведёт свой фоновый обход
+        # ленты, обращение к ленте идёт одновременно с обходом). Уникальный индекс uq_assignment_attempts_pair — арбитр:
+        # проигравший откатывает только точку сохранения, транзакция и сессия остаются рабочими (стенд 09.10: UniqueViolation →
+        # PendingRollbackError в фоновом обходе).
+        with db.begin_nested():
+            db.add(at)
+            db.flush()
+    except IntegrityError:
+        log.info("задание %s уже предложено кандидату %s параллельно — повторная вставка пропущена", a.id, cand.id)
+        return None
     if send:
         company = db.get(Company, a.company_id)
         path = f"/candidate/assignments/{at.id}"
