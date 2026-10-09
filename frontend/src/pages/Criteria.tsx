@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, errText, Loading, NB, num, pct, signed, useApi } from "../components/ui";
-import { api } from "../lib/api";
+import { api, ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { juryLogin, type Persona } from "../lib/jury";
 import { usePageTitle } from "../lib/meta";
@@ -42,7 +42,7 @@ function GoLink({ g, personas, dark = false }: { g: Go; personas: Record<string,
     ? "bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20"
     : g.as ? "bg-brand-night text-white hover:bg-brand-plum" : "bg-white text-brand-night ring-1 ring-brand-night/15 hover:ring-brand/50";
   const inner = <>{g.label}{who && <span className={dark ? "font-medium text-white/65" : "font-medium text-white/70"}>{` · ${who}`}</span>}</>;
-  const props = { className: `inline-flex max-w-full items-center rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold leading-snug transition-colors [overflow-wrap:anywhere] ${cls}`,
+  const props = { className: `inline-block max-w-full rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold leading-snug transition-colors [overflow-wrap:anywhere] ${cls}`,
     "data-criteria-link": g.to, title: who ? `Вход в один клик в вашу копию демо: ${who}` : undefined };
   // /api/… — не экран SPA: обычная ссылка (документация API, статус сервиса)
   return g.to.startsWith("/api/") ? <a href={g.to} {...props}>{inner}</a> : <Link to={goHref(g)} {...props}>{inner}</Link>;
@@ -179,18 +179,25 @@ export function JuryGo() {
     const as = sp.get("as") as Persona, to = safePath(sp.get("to")), need = sp.get("need");
     if (!PERSONAS.has(as) || !to) { setErr("Ссылка неполная: нет роли или экрана."); return; }
     let off = false;
+    const enter = async () => {
+      let dest = await juryLogin(as, signIn, to);
+      if (need && dest === to) {
+        const needs = await api<{ id: string; title: string; raw_text: string }[]>("/employer/needs");
+        const q = need.toLowerCase();
+        const n = needs.find((x) => `${x.title} ${x.raw_text}`.toLowerCase().includes(q));
+        const hash = to.includes("#") ? to.slice(to.indexOf("#")) : "";
+        if (n) dest = `/employer/needs/${n.id}${hash}`;
+      }
+      if (!off) navigate(dest, { replace: true });
+    };
     (async () => {
-      try {
-        let dest = await juryLogin(as, signIn, to);
-        if (need && dest === to) {
-          const needs = await api<{ id: string; title: string; raw_text: string }[]>("/employer/needs");
-          const q = need.toLowerCase();
-          const n = needs.find((x) => `${x.title} ${x.raw_text}`.toLowerCase().includes(q));
-          const hash = to.includes("#") ? to.slice(to.indexOf("#")) : "";
-          if (n) dest = `/employer/needs/${n.id}${hash}`;
-        }
-        if (!off) navigate(dest, { replace: true });
-      } catch (e) { if (!off) setErr(errText(e)); }
+      try { await enter(); }
+      catch (e) {
+        // сбой сервера на входе (5xx) — одна повторная попытка, дальше честное сообщение
+        if (!(e instanceof ApiError && e.status >= 500)) { if (!off) setErr(errText(e)); return; }
+        await new Promise((r) => setTimeout(r, 1500));
+        try { if (!off) await enter(); } catch (e2) { if (!off) setErr(errText(e2)); }
+      }
     })();
     return () => { off = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -200,7 +207,8 @@ export function JuryGo() {
         <>
           <p className="max-w-sm text-sm text-brand-ink/80">{err}</p>
           <div className="flex flex-wrap justify-center gap-3">
-            <Link to="/#jury" className="btn-primary">Демо-учётки на главной</Link>
+            <button type="button" className="btn-primary" onClick={() => location.reload()}>Повторить</button>
+            <Link to="/#jury" className="btn-ghost">Демо-учётки на главной</Link>
             <Link to="/criteria" className="btn-ghost">К критериям ТЗ</Link>
           </div>
         </>
