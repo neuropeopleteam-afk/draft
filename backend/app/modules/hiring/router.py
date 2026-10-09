@@ -90,9 +90,11 @@ class OutcomeIn(BaseModel):
     note: str | None = Field(None, max_length=1000)
 
 
-def _tell(bg: BackgroundTasks, u: User | None, subject: str, lines: list[str], path: str, push: str, tag: str) -> None:
+def _tell(bg: BackgroundTasks, db: Session, u: User | None, subject: str, lines: list[str], path: str, push: str,
+          tag: str) -> None:
     if u is None:
         return
+    svc.cabinet_note(db, u.id, "hiring", f"{tag}-{uuid.uuid4().hex[:12]}", subject, "\n".join(lines), path)
     bg.add_task(notify_user, u.id, subject, push[:160], path, tag)
     bg.add_task(notify, u.email, subject, lines, is_demo=u.is_demo, link_path=path)
 
@@ -114,12 +116,12 @@ def _emp_out(db: Session, inv) -> dict:
 
 
 def _to_candidate(bg, db, inv, subject: str, lines: list[str], push: str) -> None:
-    _tell(bg, db.get(User, inv.candidate_user_id), subject, lines, "/candidate/invitations",
+    _tell(bg, db, db.get(User, inv.candidate_user_id), subject, lines, "/candidate/invitations",
           f"«{inv.position_title}»: {push}", f"hire-{inv.id}")
 
 
 def _to_employer(bg, db, inv, subject: str, lines: list[str], push: str) -> None:
-    _tell(bg, _employer_of(db, inv), subject, lines, "/employer/invitations", f"«{inv.position_title}»: {push}",
+    _tell(bg, db, _employer_of(db, inv), subject, lines, "/employer/invitations", f"«{inv.position_title}»: {push}",
           f"hire-{inv.id}")
 
 
