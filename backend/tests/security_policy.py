@@ -182,6 +182,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/assessment/sessions/{session_id}/answers"): "candidate_own",
     ("POST", "/api/assessment/sessions/{session_id}/finish"): "candidate_own",
     ("GET", "/api/assessment/feedback"): "candidate",
+    ("GET", "/api/assessment/attempts"): "candidate",  # feat/attempts (И26): свои попытки; чужие a/b — 404
     ("GET", "/api/assessment/grade-hint"): "candidate",  # feat/jury-test
     ("GET", "/api/assessment/sessions/{session_id}/result"): "candidate_own",
     ("POST", "/api/assessment/sessions/{session_id}/accept-lower"): "candidate_own",
@@ -235,6 +236,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/employer/candidates"): "employer",
     ("GET", "/api/employer/candidates/{ref}"): "employer_ref",
     ("GET", "/api/employer/candidates/{ref}/profile.pdf"): "employer_ref",
+    ("GET", "/api/employer/candidates/{ref}/attempts"): "employer_ref",  # feat/attempts (И26)
     ("GET", "/api/employer/candidates/{ref}/passport"): ("employer_ref", {"employer": OK404, "employer_other": OK404,
                                                                              "jury_employer": OK404}),  # feat/passport
     ("POST", "/api/employer/needs/parse"): "employer",
