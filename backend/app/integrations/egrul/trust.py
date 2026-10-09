@@ -14,6 +14,9 @@
 | Жалобы кандидатов на приглашения | штраф до −25 | нереальная вилка, не та роль, спам — за 180 дней |
 
 Ликвидированная компания или ИНН, которого нет в реестре, — индекс не выше 10 («низкий»).
+Демо-компании без ИНН (app.integrations.egrul.demo): правдоподобные демо-сведения ФНС с пометкой «демо» (30+15+5 за
+реестр; сайт-заглушка .invalid не учитывается, а почта на корпоративном домене считается совпавшей) — индекс высокий;
+«плохая» демо-компания (BAD_NAMES) — записи в реестре нет, индекс не выше 10. В ответе API — demo: true.
 Если ФНС не ответила (капча, сбой) — признак «не удалось проверить», индекс помечается как предварительный.
 Мало данных по поведению (меньше 3 ответов) — нейтрально: половина баллов, без штрафа.
 Жалобы: −5 за каждого пожаловавшегося кандидата (не больше −25); три и больше жалоб на 30 % приглашений и
@@ -31,6 +34,8 @@ from sqlalchemy.orm import Session
 
 from app.core.db import as_aware, utcnow
 from app.core.enums import InvitationStatus, ProbeStatus
+from app.core.fmt import ru_num
+from app.integrations.egrul import demo as demo_mod
 from app.integrations.egrul.client import age_years, check_inn
 from app.integrations.egrul.models import RegistryCheck
 from app.integrations.vacancies.models import Vacancy, VacancyApplication
@@ -118,13 +123,30 @@ def salary_check(salary_from: int, salary_to: int, cat: Category | None,
     return "ok", f"вилка {_rub(salary_from)} – {_rub(salary_to)}{note} в разумных пределах ({rng})"
 
 
-def registry_factors(chk: RegistryCheck | None, company: Company) -> tuple[list[dict], dict, bool, bool]:
-    """Признаки ЕГРЮЛ → (факторы, сводка, предварительный ли индекс, критичный ли провал)."""
-    if company.is_demo and not company.inn:
-        f = [_factor("registry", "Сведения ФНС", "unknown", 0, 30, "демо-компания: проверка в ФНС не выполнялась"),
+def _demo_registry_factors(company: Company) -> tuple[list[dict], dict, bool, bool]:
+    """Демо-компания без ИНН: правдоподобные демо-сведения (с пометкой «демо») или сценарий «плохой» компании."""
+    if demo_mod.is_bad(company):
+        f = [_factor("registry", "Сведения ФНС", "bad", 0, 30,
+                     "демо-сценарий «плохой» компании: по ИНН нет записи в ЕГРЮЛ/ЕГРИП"),
              _factor("age", "Возраст компании", "unknown", 0, 15, "нет сведений ФНС"),
              _factor("name", "Название совпадает с ЕГРЮЛ", "unknown", 0, 5, "нет сведений ФНС")]
-        return f, {"status": "demo"}, True, False
+        return f, {"status": "demo_not_found", "demo": True, "note": demo_mod.DEMO_NOTE}, False, True
+    d = demo_mod.registry_data(company)
+    age = age_years(d["registered_at"])
+    d["age_years"] = age
+    reg = d["registered_at"]
+    f = [_factor("registry", "Сведения ФНС (демо)", "ok", 30, 30,
+                 f"демо-проверка: «{company.name}» значится действующей — {demo_mod.DEMO_NOTE}"),
+         _factor("age", "Возраст компании", "ok", 15 if (age or 0) >= 3 else 10, 15,
+                 f"зарегистрирована {reg[8:10]}.{reg[5:7]}.{reg[:4]} ({ru_num(age, 1)} г.) — демо-дата"),
+         _factor("name", "Название совпадает с ЕГРЮЛ", "ok", 5, 5, f"«{company.name}» совпадает с демо-сведениями")]
+    return f, d, False, False
+
+
+def registry_factors(chk: RegistryCheck | None, company: Company) -> tuple[list[dict], dict, bool, bool]:
+    """Признаки ЕГРЮЛ → (факторы, сводка, предварительный ли индекс, критичный ли провал)."""
+    if demo_mod.is_demo_company(company):
+        return _demo_registry_factors(company)
     if not company.inn:
         f = [_factor("registry", "Сведения ФНС", "warn", 0, 30, "работодатель не указал ИНН"),
              _factor("age", "Возраст компании", "unknown", 0, 15, "нет ИНН — дата регистрации неизвестна"),
@@ -168,7 +190,7 @@ def registry_factors(chk: RegistryCheck | None, company: Company) -> tuple[list[
         pts = 15 if age >= 3 else 10 if age >= 1 else 5 if age >= 0.25 else 0
         st = "ok" if age >= 1 else "warn"
         when = f"зарегистрирована {d['registered_at'][8:10]}.{d['registered_at'][5:7]}.{d['registered_at'][:4]}"
-        txt = f"{when} ({age:g} г.)" if age >= 1 else f"{when} — компании меньше года"
+        txt = f"{when} ({ru_num(age, 1)} г.)" if age >= 1 else f"{when} — компании меньше года"
         out.append(_factor("age", "Возраст компании", st, pts, 15, txt))
     if names_match(company.name, [d.get("name"), d.get("short_name")]):
         out.append(_factor("name", "Название совпадает с ЕГРЮЛ", "ok", 5, 5, f"«{company.name}» совпадает с реестром"))
@@ -180,6 +202,9 @@ def registry_factors(chk: RegistryCheck | None, company: Company) -> tuple[list[
 
 def email_factor(db: Session, company: Company) -> dict:
     site = _domain_of_site(company.website)
+    demo = demo_mod.is_demo_company(company)
+    if demo and site and site.endswith(".invalid"):  # заглушка сайта демо-компании: сайта «нет»
+        site = None
     emails = [u.email for u in db.scalars(select(User).join(EmployerProfile, EmployerProfile.user_id == User.id)
                                           .where(EmployerProfile.company_id == company.id)).all()]
     if company.contact_email:
@@ -188,6 +213,11 @@ def email_factor(db: Session, company: Company) -> dict:
     if not domains:
         return _factor("email", "Корпоративная почта", "unknown", 0, 15, "почта работодателя не указана")
     corp = [d for d in domains if d not in FREE_MAIL]
+    if demo and not site and corp and not demo_mod.is_bad(company):  # у демо-компании сайт — домен её почты
+        return _factor("email", "Корпоративная почта", "ok", 15, 15, f"почта работодателя на домене {corp[0]} (демо)")
+    if demo and not site and demo_mod.is_bad(company):
+        return _factor("email", "Корпоративная почта", "warn", 0, 15,
+                       "демо-сценарий «плохой» компании: почта не на домене сайта, сверить не с чем")
     if not site:
         if corp:
             return _factor("email", "Корпоративная почта", "warn", 7, 15,
@@ -343,6 +373,7 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
     return {
         "company_id": str(company.id), "company_name": company.name, "score": score, "level": level,
         "level_title": title, "preliminary": preliminary, "critical": critical,
+        "demo": demo_mod.is_demo_company(company),  # сведения ФНС — демо (пометка «демо» в интерфейсе)
         "factors": factors, "registry": registry, "offer_salary": offer,
         "salary_checks": salary_checks[:10],
         "summary": (reasons_bad[0]["text"] if reasons_bad else (reasons_ok[0]["text"] if reasons_ok else "")),
@@ -352,4 +383,4 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
 
 
 def short(t: dict) -> dict:
-    return {k: t[k] for k in ("score", "level", "level_title", "preliminary", "critical", "summary", "offer_salary")}
+    return {k: t.get(k) for k in ("score", "level", "level_title", "preliminary", "critical", "summary", "offer_salary", "demo")}
