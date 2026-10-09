@@ -201,8 +201,15 @@ class Settings(BaseSettings):
     jury_spare_sandboxes: int = 1
     # Задания работодателя (И7): лента «Задания для вас» — предложение раз в N дней; фоновый обход раз в M секунд
     # (0 — выключен, тогда только лениво при обращении кандидата и из консоли python -m app.modules.assignments.feed)
-    assignments_feed_days: int = 3
+    # К5: по умолчанию раз в неделю (7), не больше assignments_feed_monthly_limit предложений за 30 дней, напоминание
+    # кандидату через assignments_remind_days дней (до двух раз), предложение без ответа истекает через
+    # assignments_offer_ttl_days; работодателю — напоминание об оценке по рубрике через assignments_review_remind_days
+    assignments_feed_days: int = 7
     assignments_feed_interval_s: int = 3600
+    assignments_feed_monthly_limit: int = 4
+    assignments_remind_days: int = 2
+    assignments_offer_ttl_days: int = 14
+    assignments_review_remind_days: int = 3
     # Живая демонстрация (QR → мини-тест на телефоне → автоприглашение, app/jury_live): пауза перед появлением в
     # подборке и перед приглашением (с; в тестах 0) и лимиты мини-тестов (гостей) в час — с адреса, на зал, всего
     jury_live_select_delay_s: float = 1.5
@@ -210,6 +217,23 @@ class Settings(BaseSettings):
     jury_live_guests_per_ip_hour: int = 20
     jury_live_guests_per_room_hour: int = 60
     jury_live_guests_total_hour: int = 200
+
+    # Подписка на потребность и напоминания (И25, Н6; app/modules/subs): фоновый обход раз в N секунд (0 — выключен:
+    # тесты и консольный запуск python -m app.modules.subs.runner). Топ-N подписки, не чаще одного пересчёта в
+    # subs_min_recompute_s секунд, страховочный полный пересчёт раз в subs_full_refresh_h часов, «новый» живёт
+    # subs_new_ttl_days дней. Тихие часы (по Москве, UTC+3) — только для живых пользователей: push и письма ждут утра.
+    subs_tick_interval_s: int = 300
+    subs_top_n: int = 10
+    subs_min_recompute_s: int = 60
+    subs_full_refresh_h: int = 24
+    subs_new_ttl_days: int = 14
+    subs_quiet_from: int = 22
+    subs_quiet_to: int = 8
+    subs_digest_hour: int = 9
+    subs_tz_offset_h: int = 3
+    reminder_invite_days: int = 3
+    reminder_expiry_hours: int = 24
+    reminder_application_days: int = 5
 
     # Резюме: максимальный размер PDF, разбор — в отдельном процессе с тайм-аутом и лимитом памяти
     resume_max_bytes: int = 5 * 1024 * 1024

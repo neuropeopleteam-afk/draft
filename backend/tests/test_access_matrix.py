@@ -209,6 +209,7 @@ def params_for(key: tuple[str, str], side: Side) -> dict[str, object]:
         "format": "json", "attack_id": "nope", "pid": "x" * 16, "kind": "processing",
         # ветки, ещё не влитые: объектов этих типов в мире нет — при слиянии добавьте их в build_side
         "aid": str(uuid.uuid4()), "atid": str(uuid.uuid4()), "delivery_id": str(uuid.uuid4()),
+        "share_id": str(uuid.uuid4()),  # ссылка руководителю (Н3)
     }
     p["code"] = side.ids.get("live_code", "nope") if path.startswith("/api/jury/live/") else "potok"
     p.update(PARAM_OVERRIDES.get(key, {}))
@@ -257,6 +258,8 @@ def body_for(key: tuple[str, str], side: Side) -> dict | None:
         ("POST", "/api/candidate/cups/{cup_id}/submit"): {"answers": {}},
         ("POST", "/api/candidate/assignments/{atid}/submit"): {"answers": {}},
         ("POST", "/api/employer/assignments/{aid}/send"): {"candidate_refs": [ref]},
+        ("POST", "/api/employer/assignments/{aid}/attempts/{atid}/review"): {"scores": {}},  # К5
+        ("PUT", "/api/candidate/assignments/prefs"): {"frequency_days": 7},
         ("POST", "/api/assessment/sessions"): {"claimed_grade": "middle"},
         ("POST", "/api/assessment/sessions/{session_id}/answers"): {"item_id": "x", "answer": "A"},
         ("POST", "/api/proctor/sessions/{session_id}/start"): {"mode": "declined"},
@@ -286,6 +289,20 @@ def body_for(key: tuple[str, str], side: Side) -> dict | None:
         ("POST", "/api/jury/login"): {"persona": "candidate"},
         ("POST", "/api/jury/live/j/{code}/start"): {},
         ("POST", "/api/fsp-id/start"): {},
+        ("PUT", "/api/employer/needs/{need_id}/subscription"): {"enabled": False},  # И25
+        ("POST", "/api/employer/needs/{need_id}/subscription/seen"): {},
+        ("POST", "/api/notifications/read"): {"ids": []},
+        ("PUT", "/api/notifications/prefs"): {},
+        ("POST", "/api/jury/subs/simulate"): {},
+        ("POST", "/api/jury/subs/fast-forward"): {"days": 5},
+        ("PUT", "/api/employer/needs/{need_id}/feedback"): {"ref": ref, "version": 1, "verdict": "unfit", "reason": "other"},  # Н2
+        ("POST", "/api/employer/needs/{need_id}/selections/{version}/refine"): {},
+        ("POST", "/api/employer/needs/{need_id}/selections/{version}/similar"): {"ref": ref},
+        ("POST", "/api/employer/needs/{need_id}/shares"): {},
+        ("POST", "/api/employer/needs/{need_id}/shares/{share_id}/revoke"): {},
+        ("POST", "/api/employer/mutual/offer-check"): {"candidate_ref": ref, "salary_to": 200_000},
+        ("PUT", "/api/candidate/preferences"): {},
+        ("POST", "/api/share/{token}/reactions"): {"ref": "K-000001", "verdict": "no"},
     }
     return bodies.get(key)
 

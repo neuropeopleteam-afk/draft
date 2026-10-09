@@ -7,8 +7,20 @@ import { MarketNote } from "./Salary";
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
 /** Обезличенная карточка кандидата: подтверждённые факты (T1/T2) отдельно от самоописания (T0). */
-export function CandidateCard({ c, score, reasons, actions, compact = false }: {
-  c: any; score?: number; reasons?: any[]; actions?: ReactNode; compact?: boolean;
+/** Ф2: шапка «Не хватает обязательного: …» — обязательные навыки без подтверждения тестом (T1), до трёх названий. */
+export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: number; missing_total?: number; required_total?: number; tier?: number } | null }) {
+  if (!m || !m.required_total) return null;
+  if (!m.missing_total) return <p className="mt-1 text-sm font-semibold text-emerald-800">Всё обязательное подтверждено тестом: {m.required_total} из {m.required_total}</p>;
+  const more = m.missing_more ? ` и ещё ${m.missing_more}` : "";
+  return (
+    <p className="mt-1 max-w-2xl text-sm font-semibold text-amber-900" title="Тест не подтвердил эти навыки (проверены ниже порога, только заявлены или не проверялись). Это не «не умеет» — можно проверить зондом. В подборке такие кандидаты идут ниже тех, у кого всё обязательное подтверждено.">
+      Не хватает обязательного: {(m.missing ?? []).join(", ")}{more}
+    </p>
+  );
+}
+
+export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge, mutual }: {
+  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9)
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
@@ -19,8 +31,12 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
-            <GradeBadge s={c.status} claimed={c.claimed} />
+            {/* мини-тест QR (3 задания): категория предварительная — не «Грейд подтверждён» (Ф3) */}
+            {c.category?.preliminary ? <span className="chip" title="Мини-тест из 3 заданий: категория не выше Middle, полный тест уточнит грейд">по мини-тесту</span>
+              : <GradeBadge s={c.status} claimed={c.claimed} />}
+            {badge}
           </div>
+          <MustLine m={must} />
           <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
           {c.confirmed_by && <p className="mt-1 text-xs text-brand-ink/70">Грейд был предварительным и подтверждён {c.confirmed_by.title}{c.confirmed_by.ref_title ? ` («${c.confirmed_by.ref_title}»)` : ""}</p>}
           <p className="mt-0.5 text-sm text-brand-ink/65">
@@ -36,6 +52,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
           </div>
         )}
       </div>
+      {mutual}
 
       {c.specializations?.length > 1 && <div className="mt-4"><Specializations items={c.specializations} /></div>}
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
@@ -45,9 +62,10 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
             : c.status?.attempt?.theta != null ? <p className="mt-1 text-brand-ink/65">последняя попытка на {c.status.attempt.grade_title ?? c.status.attempt.grade}: θ = {signed(c.status.attempt.theta)} ± {num(c.status.attempt.se)} — грейд не подтверждён, в скор не входит</p>
             : <p className="mt-1 text-brand-ink/65">нет результата</p>}
           {c.provisional && <p className="mt-1 text-xs text-brand-ink/70">P(уровень не ниже Junior) = {c.provisional.p_pct} % · подтверждение от {c.provisional.confirm_pct} %, «не доказанно ниже» от {c.provisional.level_pct} %{c.provisional.attempts ? ` · дотестирований ${c.provisional.attempts} из ${c.provisional.attempts_max}` : ""}</p>}
-          {t && (t.mode === "express" || t.accepted_lower) && (
+          {t && (t.mode === "express" || t.mode === "mini" || t.accepted_lower) && (
             <p className="mt-1 flex flex-wrap gap-1.5">
               {t.mode === "express" && <span className="chip" title="Экспресс-тест: 5–7 коротких заданий (за Senior — 8–12), интервал θ шире, чем у полного теста">экспресс-тест</span>}
+              {t.mode === "mini" && <span className="chip" title="Мини-тест из 3 заданий: категория предварительная и не выше Middle, полный тест уточнит грейд">мини-тест · предварительно</span>}
               {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом (P ≥ 80 %) и принят кандидатом">принят уровень ниже</span>}
             </p>
           )}
@@ -57,6 +75,7 @@ export function CandidateCard({ c, score, reasons, actions, compact = false }: {
               {c.skills_confirmed.map((s: any) => <span key={s.tag} className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-brand-night">{s.title} {pct(s.score)}</span>)}
             </div>
           )}
+          {c.freshness?.text && <p className="mt-1 text-xs text-brand-ink/70" title="Свежесть не входит в формулу подбора: показывает, насколько давно проверены навыки">Свежесть: {c.freshness.title.toLowerCase()}. {c.freshness.text}</p>}
           {c.probes?.length > 0 && <p className="mt-2 text-xs text-brand-ink/70">Зонды: {c.probes.map((p: any) => `${p.title} — ${p.verdict}`).join("; ")}</p>}
         </div>
         <div className="rounded-xl bg-[#F3F2FB] p-3 text-sm">
@@ -123,6 +142,7 @@ export function Integrity({ v, compact = false }: { v: { level: string; title: s
       {v.note && !compact && <p className="mt-0.5 opacity-80">{v.note}</p>}{/* версия для самого кандидата (Р27) */}
       {/* И16: итог камеры (по согласию кандидата) — только заголовок и до трёх замечаний; без камеры — нейтрально */}
       {v.camera && <p className="mt-0.5 text-[11px] opacity-90" data-testid="camera-title">{v.camera.title}{!compact && v.camera.remarks.length ? `: ${v.camera.remarks.join("; ")}` : ""}{!compact && v.camera.notes.length ? ` · ${v.camera.notes.join("; ")}` : ""}</p>}
+      {v.level !== "high" && <p className="mt-0.5 opacity-80">Не блокирует: на место в подборке не влияет, решение за вами — можно пригласить или проверить зондом.</p>}
     </div>
   );
 }
