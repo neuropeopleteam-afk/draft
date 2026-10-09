@@ -31,7 +31,7 @@ import logging
 import time
 
 import numpy as np
-from sqlalchemy import and_, delete, or_, select, text, update
+from sqlalchemy import and_, delete, false, or_, select, text, update
 from sqlalchemy.orm import Session
 
 from app.core.db import as_aware, utcnow
@@ -310,7 +310,9 @@ def delete_jury(db: Session, sid: str = "") -> int:
 
         live.delete_guests(db, list(db.scalars(select(User.id).where(User.email.like(live.guest_emails_like(sid)))).all()))
         live.bump_sid(db, sid)
-    ids = db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all()
+    # учётка, удалённая кандидатом сама («Мои данные»): почта обезличена, но «+sid@домен» сохранён — убираем вместе
+    gone = User.email.like(f"deleted-%+{sid}@{scope.DOMAIN}") if sid else false()
+    ids = db.scalars(select(User.id).where(or_(User.email.in_(list(scope.emails(sid).values())), gone))).all()
     if ids:  # участия её кандидатов в общих кубках платформы
         db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
     own = Company.created_by.in_(ids) if ids else Company.id.is_(None)
@@ -405,6 +407,9 @@ def _create_jury(db: Session, sid: str) -> dict:
     cups = _jury_cups(db, sid, eu, c, p1)
     tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2)  # задания работодателя с автопроверкой (И7)
     _maria_extras(db, eu, p1)
+    from app.modules.mydata.demo import seed_jury_interest  # «Мои данные»: отметка интереса у персон жюри (md01)
+
+    seed_jury_interest(db, eu, c, p1, p2, p3)
     _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
     # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
     ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
