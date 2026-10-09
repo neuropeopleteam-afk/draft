@@ -182,10 +182,12 @@ class CandidateTester(JuryUser):
         while item and guard < 30:
             guard += 1
             time.sleep(random.uniform(2, 5))  # «читает задание»
-            kind = item.get("answer_kind", "option")
-            if kind == "text":  # в экспресс-тесте открытых заданий нет; если появилось — не отправляем (LLM)
-                return
-            if kind == "line":
+            kind, fmt = item.get("answer_kind", "option"), item.get("format")
+            if fmt == "open_answer" or (fmt == "open_book_3step" and kind == "text"):
+                return  # оценивает LLM по рубрике — не отправляем (в экспресс-тесте таких заданий нет)
+            if kind == "text":  # predict_output: вывод программы, сверка с ключом после нормализации, без LLM
+                ans = random.choice(["0", "1", "2", "None", "True", "[1, 2, 3]", "3"])
+            elif kind == "line":
                 ans = random.randint(1, max(1, len((item.get("code") or "x").splitlines())))
             else:
                 ans = random.choice([o["id"] for o in item.get("options") or [{"id": "A"}]])
