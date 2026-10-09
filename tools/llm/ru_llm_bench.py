@@ -40,7 +40,7 @@ sys.path.insert(0, str(ROOT / "tools" / "fastparse"))
 os.environ.setdefault("LLM_DISABLED", "false")
 os.environ["LLM_BREAKER_FAILURES"] = "0"
 
-FUNCS = ("needs_delta", "needs_full", "needs_jury", "resume", "grade")
+FUNCS = ("needs_delta", "needs_full", "needs_jury", "resume", "grade")  # + needs_delta_schema (только для yandex)
 # Цена за 1000 токенов (вход, выход). Yandex AI Studio, синхронный режим, с НДС (aistudio.yandex.ru/ru/docs/ai-studio/pricing,
 # 09.10.2026); OpenRouter — поле usage.cost ответа (фактическая цена запроса, $).
 PRICE_RUB_PER_1K = {"yandexgpt-5.1": (0.8, 0.8), "yandexgpt": (1.2, 1.2), "yandexgpt-lite": (0.2, 0.2)}
@@ -217,7 +217,8 @@ def _chat_batch(spec: str, req_path: Path, out_path: Path, func: str, conc: int,
     fout.close()
 
 
-def run_grade(spec: str, conc: int, wdir: Path, limit_per_group: int = 0) -> dict:
+def run_grade(spec: str, conc: int, wdir: Path, limit_per_group: int = 0, second: str | None = None) -> dict:
+    """second — модель второй оценки (по умолчанию та же; путь продукта для openrouter — Claude Fable 5.1)."""
     from app.modules.validation import grader_check as GC
 
     _set_model(spec, ("grade", "grade_second"))
@@ -227,11 +228,11 @@ def run_grade(spec: str, conc: int, wdir: Path, limit_per_group: int = 0) -> dic
         GC.build("v2", str(g / "v2_1.jsonl"), limit_per_group)
     _chat_batch(spec, g / "v2_1.jsonl", g / "v2_1_out.jsonl", "grade", conc, 40)
     GC.second(str(g / "v2_1.jsonl"), str(g / "v2_1_out.jsonl"), str(g / "v2_2.jsonl"))
-    _chat_batch(spec, g / "v2_2.jsonl", g / "v2_2_out.jsonl", "grade_second", conc, 40)
-    return grade_summary(spec, wdir)
+    _chat_batch(second or spec, g / "v2_2.jsonl", g / "v2_2_out.jsonl", "grade_second", conc, 40)
+    return grade_summary(spec, wdir, second)
 
 
-def grade_summary(spec: str, wdir: Path) -> dict:
+def grade_summary(spec: str, wdir: Path, second: str | None = None) -> dict:
     sys.path.insert(0, str(ROOT / "tools" / "llm"))
     import grader_summary as GS
     from app.modules.assessment import grader as G
@@ -240,7 +241,9 @@ def grade_summary(spec: str, wdir: Path) -> dict:
 
     g = wdir / "g"
     label = spec.split("=", 1)[1]
-    summ = GS.summarize(str(g), label, f"{label} (та же модель: независимый вызов, обратный порядок критериев)",
+    second_label = (second.split("=", 1)[1] + " (независимый вызов, обратный порядок критериев)" if second and second != spec
+                    else f"{label} (та же модель: независимый вызов, обратный порядок критериев)")
+    summ = GS.summarize(str(g), label, second_label,
                         "ru_llm_bench grade", "Эталон сравнения — gpt-oss-120b (модель, не эксперты).")
     # формат ответа: доля ответов, которые продукт принял бы (parse_reply ok), отдельно от ошибок сети
     items, rows = GC.load()
@@ -270,7 +273,7 @@ def grade_summary(spec: str, wdir: Path) -> dict:
                                     "p95": round(pct(lat, 0.95), 2) if lat else None},
                       "tokens": {"prompt": pt, "completion": ct}, "cost_usd": round(cost, 4) if cost else None}
     summ["format"] = fmt
-    return {"spec": spec, "func": "grade", "date": time.strftime("%Y-%m-%d"), "summary": summ}
+    return {"spec": spec, "second": second or spec, "func": "grade", "date": time.strftime("%Y-%m-%d"), "summary": summ}
 
 
 # ------------------------------------------------------------------ запуск
@@ -286,6 +289,13 @@ def cmd_run(a) -> None:
         t0 = time.time()
         if f == "needs_delta":
             r = run_needs(a.model, a.conc, full=False)
+        elif f == "needs_delta_schema":  # Я2 п.4: та же дельта с JSON-схемой и у Yandex (LLM_YANDEX_JSON_SCHEMA)
+            os.environ["LLM_YANDEX_JSON_SCHEMA"] = "true"
+            try:
+                r = run_needs(a.model, a.conc, full=False)
+            finally:
+                os.environ.pop("LLM_YANDEX_JSON_SCHEMA", None)
+            r["func"] = f
         elif f == "needs_full":
             r = run_needs(a.model, a.conc, full=True)
         elif f == "needs_jury":
@@ -293,7 +303,7 @@ def cmd_run(a) -> None:
         elif f == "resume":
             r = run_resume(a.model, a.conc)
         elif f == "grade":
-            r = run_grade(a.model, a.conc, wdir, a.limit_per_group)
+            r = run_grade(a.model, a.conc, wdir, a.limit_per_group, a.second_model or None)
         else:
             raise SystemExit(f"неизвестная функция {f}")
         r["wall_s"] = round(time.time() - t0, 1)
@@ -318,6 +328,8 @@ def main() -> None:
     r.add_argument("--funcs", default="", help="через запятую: " + ",".join(FUNCS))
     r.add_argument("--conc", type=int, default=4)
     r.add_argument("--force", action="store_true")
+    r.add_argument("--second-model", default="", help="модель второй оценки (путь продукта openrouter: "
+                   "openrouter=anthropic/claude-fable-5.1); пусто — та же, что первая (режим LLM_CHAIN=yandex)")
     r.add_argument("--limit-per-group", type=int, default=0, help="оценщик: не больше N ответов на группу (проба)")
     s = sub.add_parser("summary")
     s.add_argument("--dir", required=True)
