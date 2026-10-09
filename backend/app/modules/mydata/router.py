@@ -104,7 +104,8 @@ def overview(db: Session, user: User) -> dict:
         {"key": "resumes", "title": "Резюме", "count": _count(db, CandidateResume, CandidateResume.user_id == uid),
          "what": "текст резюме без ФИО и контактов и извлечённые поля; исходный файл не сохраняется"},
         {"key": "tests", "title": "Попытки теста и ответы", "count": n_tests,
-         "what": f"{_count(db, TestAnswer, TestAnswer.session_id.in_(select(TestSession.id).where(TestSession.user_id == uid)))} ответов, "
+         "what": "ваши ответы (сейчас — "
+                 f"{_count(db, TestAnswer, TestAnswer.session_id.in_(select(TestSession.id).where(TestSession.user_id == uid)))}), "
                  "время, итог и достоверность результата"},
         {"key": "grade_history", "title": "История грейда", "count": _count(db, GradeHistory, GradeHistory.user_id == uid),
          "what": "смены грейда и их причины"},
