@@ -99,7 +99,7 @@ def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, 
     ev = []
     if b.test:
         t = b.test.value
-        what = ("Экспресс-категория {} по мини-тесту" if t.get("mini") else "Категория {} подтверждена тестом")
+        what = ("Экспресс-категория {} (предварительно) по мини-тесту" if t.get("mini") else "Категория {} подтверждена тестом")
         ev.append({"level": "T1", "kind": "test",
                    "text": f"{what.format(category_title(b.category_id))}: {t.get('correct')} из "
                            f"{t.get('answered')} верно, θ = {theta_se(t.get('theta', 0), t.get('se', 0))}"})
