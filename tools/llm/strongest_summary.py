@@ -204,7 +204,7 @@ def build(wdir: Path) -> dict:
             if j:
                 mid = j["spec"].split("=", 1)[1]
                 break
-        if mid:
+        if mid and mid != "anthropic/claude-sonnet-5.5":  # Sonnet: старые функции — полный прогон 09.10 (SONNET_DIR)
             models.append((mid, d))
     sonnet = "anthropic/claude-sonnet-5.5"
     sample_ids = {json.loads(x)["req_id"] for x in open(next(d for _, d in models) / "g" / "v2_1.jsonl")} if models else set()
@@ -293,7 +293,241 @@ def build(wdir: Path) -> dict:
          "sample": {"needs_delta": len(ref), "needs_jury": 15, "resume": len(gold), "grade": len(sample_ids)},
          "conditions": CONDITIONS, "pending": PENDING, "probes": probes, "not_measured": NOT_MEASURED}
     d["recommendation"] = recommend(d)
+    dirs = {mid: [dd] for mid, dd in models}
+    dirs[sonnet] = [SONNET_DIR, wdir / B.slug("openrouter=" + sonnet)]
+    for mid in list(dirs):
+        if mid not in meta:
+            p = prices["models"].get(mid) or {}
+            meta[mid] = {"name": p.get("name") or mid, "family": FAMILY.get(mid.split("/")[0], mid.split("/")[0]),
+                         "open_weights": p.get("hugging_face_id"), "in_usd_per_m": p.get("in_usd_per_m"),
+                         "out_usd_per_m": p.get("out_usd_per_m"), "stand": mid == sonnet, "variant": None}
+    fv = functions_view(dirs, grade_in, {k: list(v["corrected_stack"]) for k, v in ref.items()}, gold, sample_ids,
+                        d["models"])
+    d.update(fv)
+    d["title"] = "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)"
     return d
+
+
+# ------------------------------------------------------------------ функции продукта: качество прежде всего
+W = {"quality": 0.5, "reliability": 0.25, "latency": 0.15, "price": 0.10}
+FUNC_RU = {"parse_need": "Разбор потребности", "resume": "Разбор резюме", "grade": "Оценка развёрнутых ответов"}
+
+
+def _pick(dl: list[Path], name: str, base_ok_min: int | None = None):
+    """Первый существующий файл name среди каталогов модели; для разбора — вариант без рассуждений
+    (<name>__noreason*.json), если в основном прогоне отказов больше 1 из 15 (рассуждения съели лимит ответа)."""
+    base = next((_load(x / f"{name}.json") for x in dl if (x / f"{name}.json").exists()), None)
+    if base_ok_min is not None:
+        bad = base is None or sum(1 for x in base["per_text"] if x.get("ok")) < base_ok_min * len(base["per_text"])
+        if bad:
+            for x in dl:
+                for vf in sorted(x.glob(f"{name}__noreason*.json")):
+                    v = _load(vf)
+                    if len(v["per_text"]) >= len((base or v)["per_text"]):
+                        return v, "без рассуждений"
+    return base, "как в продукте"
+
+
+def _calls_of(per: list[dict] | None) -> list[dict]:
+    return [{"ok": bool(x.get("ok")), "error": x.get("error"), "cost": x.get("cost_usd") or 0,
+             "latency_s": (x["latency_ms"] / 1000 if x.get("latency_ms") is not None else None)}
+            for x in per or [] if x.get("called")]
+
+
+def _grade_raw(path: Path, strip_rep: bool = False) -> tuple[dict, list[dict]]:
+    """Ответы оценщика: {req_id: [баллы]} (первая попытка на каждый вход/повтор) и вызовы для надёжности."""
+    from app.modules.assessment import grader as G
+    from app.modules.validation import grader_check as GC
+
+    items, rows = GC.load()
+    by = {r["id"]: r for r in rows}
+    first: dict[str, dict] = {}
+    for line in (open(path, encoding="utf-8") if path.exists() else []):
+        o = json.loads(line)
+        first.setdefault(o["req_id"], o)
+    scores: dict[str, list] = {}
+    calls = []
+    for key, o in first.items():
+        rid = key.split("@@", 1)[0] if strip_rep else key
+        r = by.get(rid)
+        if not r:
+            continue
+        lat = float(o.get("latency_call") or o.get("latency") or 0)
+        if o.get("error") and o["error"] not in RS.FORMAT_ERRORS:
+            calls.append({"ok": False, "error": o["error"], "latency_s": lat, "cost": o.get("cost") or 0})
+            continue
+        ans = GC._redacted(G.strip_meta(r["answer"].strip())[0])
+        p = GC._parse(o if not o.get("error") else None, items[r["item"]]["rubric"], ans, "v2")
+        ok = bool(p.get("ok"))
+        calls.append({"ok": ok, "error": None if ok else (o.get("error") or "invalid_reply"), "latency_s": lat,
+                      "cost": o.get("cost") or 0})
+        if ok:
+            scores.setdefault(rid, []).append(p["score"])
+    return scores, calls
+
+
+def _judge_rows(dl: list[Path]) -> list[dict]:
+    from app.modules.llm.client import _extract_json
+
+    out = []
+    for x in dl:
+        for jf in sorted((x / "g").glob("judge__*_out.jsonl")) if (x / "g").exists() else []:
+            jname = jf.name[len("judge__"):-len("_out.jsonl")]
+            seen = set()
+            for line in open(jf, encoding="utf-8"):
+                o = json.loads(line)
+                if o["req_id"] in seen or o.get("error"):
+                    continue
+                seen.add(o["req_id"])
+                d = _extract_json(o.get("text") or "")
+                if isinstance(d, dict):
+                    try:
+                        out.append({"consistency": max(0, min(2, float(d["consistency"]))),
+                                    "grounded": max(0, min(2, float(d.get("grounded", 0)))),
+                                    "fair": max(0, min(2, float(d.get("fair", 0)))),
+                                    "russian": max(1, min(5, float(d["russian"]))), "_judge": jname})
+                    except (KeyError, TypeError, ValueError):
+                        pass
+    return out
+
+
+def _ref_for(m: str, grade_in: dict, judges: list[str]) -> tuple[dict, str]:
+    present = [j for j in judges if j in grade_in]
+    pool = [j for j in present if j != m]
+    if len(pool) >= 2:
+        note = "среднее " + " и ".join(pool) + (" (без самой модели)" if m in present else "")
+    else:
+        pool = [o for o in grade_in if o != m]
+        note = "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)"
+    ref = {}
+    ids = set().union(*[set(grade_in[o][0]) for o in pool]) if pool else set()
+    for rid in ids:
+        v = [grade_in[o][0][rid]["score"] for o in pool if rid in grade_in[o][0]]
+        if len(v) >= min(2, len(pool)):
+            ref[rid] = st.mean(v)
+    return ref, note
+
+
+def _norm_price(vals: dict[str, float]) -> dict[str, float]:
+    import math
+    xs = [v for v in vals.values() if v]
+    if not xs:
+        return {k: 1.0 for k in vals}
+    lo, hi = math.log10(min(xs)), math.log10(max(xs))
+    return {k: (1.0 if not v or hi == lo else round(1 - (math.log10(v) - lo) / (hi - lo), 3)) for k, v in vals.items()}
+
+
+def functions_view(dirs: dict[str, list[Path]], grade_in: dict, corrected: dict, gold: dict, sample_ids: set,
+                   meta: dict) -> dict:
+    import ru_llm_bench as B
+    import strongest_quality as Q
+    from app.modules.matching import need_parser as NP
+
+    vac = B._vacancies()
+    vac_exp = Q.vac_expected(vac)
+    texts = {v["id"]: v["text"] for v in vac}
+    out: dict[str, dict] = {"parse_need": {}, "resume": {}, "grade": {}}
+    for m, dl in dirs.items():
+        nd, cfg = _pick(dl, "needs_delta", 14 / 15)
+        if cfg == "без рассуждений":  # вся функция разбора — в той же настройке, если вариант есть
+            nh = _pick(dl, "needs_hard", 1.01)[0]
+            nj = _pick(dl, "needs_jury", 1.01)[0]
+        else:
+            nh, nj = _pick(dl, "needs_hard")[0], _pick(dl, "needs_jury")[0]
+        if nd or nh:
+            calls = _calls_of((nd or {}).get("per_text")) + _calls_of((nh or {}).get("per_text")) + \
+                _calls_of((nj or {}).get("per_text"))
+            out["parse_need"][m] = {
+                "config": cfg, "complete": bool(nd and nh and nj),
+                "quality": Q.parse_need_quality((nd or {}).get("per_text"), (nh or {}).get("per_text"), corrected,
+                                                vac_exp, texts),
+                "reliability": Q.reliability(calls, Q.BUDGET_S["parse_need"]),
+                "usd_per_1k": round(sum(c["cost"] for c in calls) / len(calls) * 1000, 2) if calls else None}
+        rs, _ = _pick(dl, "resume")
+        rp, _ = _pick(dl, "resume_pii")
+        if rs or rp:
+            calls = _calls_of((rs or {}).get("per_text")) + _calls_of((rp or {}).get("per_text"))
+            out["resume"][m] = {
+                "config": "как в продукте", "complete": bool(rs and rp),
+                "quality": Q.resume_quality((rs or {}).get("per_text"), gold, (rp or {}).get("per_text")),
+                "reliability": Q.reliability(calls, Q.BUDGET_S["resume"]),
+                "usd_per_1k": round(sum(c["cost"] for c in calls) / len(calls) * 1000, 2) if calls else None}
+        if m in grade_in:
+            gdir = next((x / "g" for x in dl if (x / "g" / "v2_1_out.jsonl").exists()), None)
+            src = (gdir / "_sample_out.jsonl") if gdir and (gdir / "_sample_out.jsonl").exists() and m.startswith(
+                "anthropic/claude-sonnet") else (gdir / "v2_1_out.jsonl" if gdir else None)
+            _, calls = _grade_raw(src) if src else ({}, [])
+            stab_p = next((x / "g" / "stab_out.jsonl" for x in dl if (x / "g" / "stab_out.jsonl").exists()), None)
+            stab_sc, stab_calls = _grade_raw(stab_p, strip_rep=True) if stab_p else ({}, [])
+            stab = {rid: [grade_in[m][0][rid]["score"]] + v for rid, v in stab_sc.items() if rid in grade_in[m][0]}
+            ref, note = _ref_for(m, grade_in, JUDGES)
+            allc = calls + stab_calls
+            out["grade"][m] = {
+                "config": "как в продукте", "complete": bool(stab_p) and bool(_judge_rows(dl)), "reference": note,
+                "quality": Q.grade_quality(grade_in[m][0], ref, stab, _judge_rows(dl)),
+                "reliability": Q.reliability(allc, Q.BUDGET_S["grade"]),
+                "usd_per_1k": round(sum(c["cost"] for c in allc) / len(allc) * 1000, 2) if allc else None}
+    # правила (без LLM) — та же мера качества, где применимо
+    H = Q.hard_rows()
+    rules_hard = [{"id": r["id"], "ok": True, "requirements": NP.parse_need(r["text"], use_llm=False)} for r in H.values()]
+    rn = _load(RULES_DIR / "needs.json")
+    rules_delta = [{"id": x["id"], "ok": True, **x} for x in (rn or {}).get("per_text", []) if x["id"] in corrected]
+    rr = _load(RULES_DIR / "resume.json")
+    import json as _j
+    P = _j.loads(Q.PII.read_text(encoding="utf-8"))["rows"]
+    from app.modules.resume import extract as RX
+    from app.modules.resume.pii import redact
+    rules_pii = []
+    for r in P:
+        red = redact(r["text"], use_ner=True).text
+        rules_pii.append({"id": r["id"], **B._resume_pred(RX.extract(red, use_llm=False)),
+                          "pii_sent": [x for x in r["pii"] if x.lower() in red.lower()]})
+    rules = {"parse_need": {"quality": Q.parse_need_quality(rules_delta, rules_hard, corrected, vac_exp, texts, True)},
+             "resume": {"quality": Q.resume_quality((rr or {}).get("per_text"), gold, rules_pii, True)}}
+    # сводная оценка: качество 0,5 · надёжность 0,25 · задержка 0,15 · цена 0,10 (качество — к лучшей модели)
+    choice = {}
+    for f, cells in out.items():
+        best_q = max([c["quality"]["index"]["value"] or 0 for c in cells.values()] or [1]) or 1
+        pr = _norm_price({m: c["usd_per_1k"] for m, c in cells.items()})
+        for m, c in cells.items():
+            r = c["reliability"]
+            qn = (c["quality"]["index"]["value"] or 0) / best_q
+            rel = r["ok_share"]["value"] or 0
+            lat = max(0.0, 1 - (r["p95_s"] or r["budget_s"]) / r["budget_s"])
+            c["score"] = {"total": round(W["quality"] * qn + W["reliability"] * rel + W["latency"] * lat +
+                                         W["price"] * pr[m], 3),
+                          "quality": round(qn, 3), "reliability": round(rel, 3), "latency": round(lat, 3),
+                          "price": pr[m]}
+            # «в пределах стенда»: p95 не больше тайм-аута функции и отказов (пустые, формат, сеть) не больше 10 %
+            c["within_budget"] = bool(r["calls"]) and (r["p95_s"] or 999) <= r["budget_s"] and rel >= 0.9
+        ok = [m for m, c in cells.items() if c["within_budget"]]
+        by_q = sorted(ok, key=lambda m: -(cells[m]["quality"]["index"]["value"] or 0))
+        by_total = sorted(cells, key=lambda m: -cells[m]["score"]["total"])
+        if not by_q:
+            continue
+        main = by_q[0]
+        ci = cells[main]["quality"]["index"]["ci90"] or [0, 1]
+        fam = meta.get(main, {}).get("family")
+        choice[f] = {
+            "strongest_within_latency": main,
+            "within_noise": [m for m in by_q[1:] if (cells[m]["quality"]["index"]["ci90"] or [0, 0])[1] >= ci[0]],
+            "reserve_other_family": next((m for m in by_q[1:] if meta.get(m, {}).get("family") != fam), None),
+            "best_open": next((m for m in by_q if meta.get(m, {}).get("open_weights")), None),
+            "best_total": by_total[0], "ranked_quality": by_q, "ranked_total": by_total,
+            "excluded_latency_or_fails": [m for m in cells if m not in ok],
+            "then": "правила"}
+    # согласие эталона между собой (пары сильнейших, честные ответы выборки)
+    agree = []
+    pres = [j for j in JUDGES if j in grade_in]
+    for i, a in enumerate(pres):
+        for b in pres[i + 1:]:
+            pairs = [(grade_in[a][0][k]["score"], grade_in[b][0][k]["score"]) for k in grade_in[a][0]
+                     if k in grade_in[b][0] and grade_in[a][0][k]["group"] in Q.HONEST]
+            agree.append({"a": a, "b": b, "n": len(pairs),
+                          "mae": Q.metric(lambda d: Q.mean(abs(x - y) for x, y in d), pairs),
+                          "kappa_w": Q.metric(Q.kappa_w, pairs)})
+    return {"functions": out, "functions_rules": rules, "choice": choice, "judges_agreement": agree,
+            "weights": W, "budget_s": Q.BUDGET_S}
 
 
 CONDITIONS = [

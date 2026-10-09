@@ -1,8 +1,26 @@
 {
- "title": "Сильнейшие модели: замер по функциям (малая выборка)",
+ "title": "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)",
  "date": "2026-10-09",
- "code_sha": "ba4b149",
+ "code_sha": "4ee5240",
  "models": {
+  "deepseek/deepseek-v4-pro-0813": {
+   "name": "DeepSeek: DeepSeek V4 Pro 0813",
+   "family": "DeepSeek",
+   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "in_usd_per_m": 0.66,
+   "out_usd_per_m": 1.98,
+   "stand": false,
+   "variant": null
+  },
+  "moonshotai/kimi-k3": {
+   "name": "MoonshotAI: Kimi K3",
+   "family": "Moonshot",
+   "open_weights": "moonshotai/Kimi-K3",
+   "in_usd_per_m": 0.5,
+   "out_usd_per_m": 12.0,
+   "stand": false,
+   "variant": null
+  },
   "anthropic/claude-sonnet-5.5": {
    "name": "Anthropic: Claude Sonnet 5.5",
    "family": "Anthropic",
@@ -10,6 +28,15 @@
    "in_usd_per_m": 2.0,
    "out_usd_per_m": 10.0,
    "stand": true,
+   "variant": null
+  },
+  "qwen/qwen3.8-2.4t-a95b": {
+   "name": "Qwen: Qwen3.8 2.4T A95B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-2.4T-A95B",
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 6.0,
+   "stand": false,
    "variant": null
   },
   "qwen/qwen3.8-27b@noreason15": {
@@ -27,6 +54,24 @@
     "limit": 15
    }
   },
+  "z-ai/glm-5.3": {
+   "name": "Z.ai: GLM 5.3",
+   "family": "Zhipu (Z.ai)",
+   "open_weights": "zai-org/GLM-5.3",
+   "in_usd_per_m": 0.04,
+   "out_usd_per_m": 3.6,
+   "stand": false,
+   "variant": null
+  },
+  "qwen/qwen3.8-27b": {
+   "name": "Qwen: Qwen3.8 27B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
+   "stand": false,
+   "variant": null
+  },
   "qwen/qwen3.5-9b@i24": {
    "name": "qwen/qwen3.5-9b",
    "family": "Alibaba Qwen",
@@ -40,32 +85,20 @@
     "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"
    }
   },
-  "qwen/qwen3.8-27b": {
-   "name": "Qwen: Qwen3.8 27B",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.8-27B",
-   "in_usd_per_m": 0.425,
-   "out_usd_per_m": 2.55,
-   "stand": false,
-   "variant": null
-  },
-  "z-ai/glm-5.3": {
-   "name": "Z.ai: GLM 5.3",
-   "family": "Zhipu (Z.ai)",
-   "open_weights": "zai-org/GLM-5.3",
-   "in_usd_per_m": 0.04,
-   "out_usd_per_m": 3.6,
-   "stand": false,
-   "variant": null
-  },
-  "deepseek/deepseek-v4-pro-0813": {
+  "deepseek/deepseek-v4-pro-0813@noreason15": {
    "name": "DeepSeek: DeepSeek V4 Pro 0813",
    "family": "DeepSeek",
    "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
    "in_usd_per_m": 0.66,
    "out_usd_per_m": 1.98,
    "stand": false,
-   "variant": null
+   "variant": {
+    "base": "deepseek/deepseek-v4-pro-0813",
+    "name": "noreason15",
+    "max_tokens": 900,
+    "reasoning_effort": "none",
+    "limit": 15
+   }
   }
  },
  "cells": {
@@ -136,6 +169,72 @@
      "rub_per_1k_calls": 283.6
     }
    },
+   "moonshotai/kimi-k3": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 3.68,
+    "p95_s": 11.33,
+    "tokens": {
+     "prompt": 40379,
+     "completion": 4654
+    },
+    "cost_usd": 0.1562,
+    "quality": {
+     "f1": 0.9412,
+     "p": 0.9072,
+     "r": 0.9778,
+     "f1_silver": 0.9121,
+     "p_silver": 0.8557,
+     "r_silver": 0.9765,
+     "n": 15,
+     "ci90": [
+      0.903,
+      0.969
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 10.41,
+     "rub_per_1k_calls": 889.5
+    }
+   },
+   "qwen/qwen3.8-2.4t-a95b": {
+    "n": 15,
+    "calls": 15,
+    "ok": 8,
+    "format_fail": 7,
+    "transport_fail": 0,
+    "errors": {
+     "empty": 7
+    },
+    "p50_s": 3.36,
+    "p95_s": 24.05,
+    "tokens": {
+     "prompt": 8911,
+     "completion": 4268
+    },
+    "cost_usd": 0.0434,
+    "quality": {
+     "f1": 0.9503,
+     "p": 0.9451,
+     "r": 0.9556,
+     "f1_silver": 0.9318,
+     "p_silver": 0.9011,
+     "r_silver": 0.9647,
+     "n": 15,
+     "ci90": [
+      0.913,
+      0.979
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 2.89,
+     "rub_per_1k_calls": 247.1
+    }
+   },
    "qwen/qwen3.8-27b": {
     "n": 15,
     "calls": 15,
@@ -201,6 +300,44 @@
     "price": {
      "usd_per_1k_calls": 2.25,
      "rub_per_1k_calls": 192.5
+    }
+   },
+   "deepseek/deepseek-v4-pro-0813@noreason15": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 1.8,
+    "p95_s": 9.49,
+    "tokens": {
+     "prompt": 24713,
+     "completion": 5136
+    },
+    "cost_usd": 0.0191,
+    "quality": {
+     "f1": 0.9062,
+     "p": 0.8529,
+     "r": 0.9667,
+     "f1_silver": 0.8877,
+     "p_silver": 0.8137,
+     "r_silver": 0.9765,
+     "n": 15,
+     "ci90": [
+      0.841,
+      0.955
+     ]
+    },
+    "variant": {
+     "name": "noreason15",
+     "max_tokens": 900,
+     "reasoning_effort": "none",
+     "limit": 15
+    },
+    "price": {
+     "usd_per_1k_calls": 1.27,
+     "rub_per_1k_calls": 108.8
     }
    },
    "qwen/qwen3.8-27b@noreason15": {
@@ -305,7 +442,7 @@
     "cost_usd": 0.15,
     "quality": {
      "jaccard": 1.0,
-     "n": 14,
+     "n": 15,
      "ci90": [
       1.0,
       1.0
@@ -344,6 +481,62 @@
     "price": {
      "usd_per_1k_calls": 1.41,
      "rub_per_1k_calls": 120.2
+    }
+   },
+   "moonshotai/kimi-k3": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 1.7,
+    "p95_s": 4.11,
+    "tokens": {
+     "prompt": 30820,
+     "completion": 1557
+    },
+    "cost_usd": 0.079,
+    "quality": {
+     "jaccard": 1.0,
+     "n": 15,
+     "ci90": [
+      1.0,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 5.27,
+     "rub_per_1k_calls": 449.9
+    }
+   },
+   "qwen/qwen3.8-2.4t-a95b": {
+    "n": 15,
+    "calls": 15,
+    "ok": 14,
+    "format_fail": 1,
+    "transport_fail": 0,
+    "errors": {
+     "empty": 1
+    },
+    "p50_s": 2.39,
+    "p95_s": 10.06,
+    "tokens": {
+     "prompt": 9640,
+     "completion": 5554
+    },
+    "cost_usd": 0.0506,
+    "quality": {
+     "jaccard": 0.988,
+     "n": 14,
+     "ci90": [
+      0.964,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 3.37,
+     "rub_per_1k_calls": 288.2
     }
    },
    "qwen/qwen3.8-27b": {
@@ -391,7 +584,7 @@
     "cost_usd": 0.0153,
     "quality": {
      "jaccard": 1.0,
-     "n": 14,
+     "n": 15,
      "ci90": [
       1.0,
       1.0
@@ -488,6 +681,80 @@
     "price": {
      "usd_per_1k_calls": 2.51,
      "rub_per_1k_calls": 214.4
+    }
+   },
+   "moonshotai/kimi-k3": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 2.09,
+    "p95_s": 5.03,
+    "tokens": {
+     "prompt": 10951,
+     "completion": 2470
+    },
+    "cost_usd": 0.0585,
+    "quality": {
+     "stack_p": 0.9557,
+     "stack_r": 0.9934,
+     "stack_f1": 0.9742,
+     "tp_fp_fn": [
+      151,
+      7,
+      1
+     ],
+     "roles_p": 0.897,
+     "roles_r": 0.963,
+     "experience_ok": 20,
+     "n": 20,
+     "ci90": [
+      0.961,
+      0.987
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 2.93,
+     "rub_per_1k_calls": 249.9
+    }
+   },
+   "qwen/qwen3.8-2.4t-a95b": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 3.05,
+    "p95_s": 7.92,
+    "tokens": {
+     "prompt": 9203,
+     "completion": 8731
+    },
+    "cost_usd": 0.0686,
+    "quality": {
+     "stack_p": 0.956,
+     "stack_r": 1.0,
+     "stack_f1": 0.9775,
+     "tp_fp_fn": [
+      152,
+      7,
+      0
+     ],
+     "roles_p": 0.931,
+     "roles_r": 1.0,
+     "experience_ok": 19,
+     "n": 20,
+     "ci90": [
+      0.965,
+      0.991
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 3.43,
+     "rub_per_1k_calls": 293.0
     }
    },
    "qwen/qwen3.8-27b": {
@@ -596,11 +863,11 @@
     "p95_s": 4.52,
     "cost_usd": 0.3687,
     "quality": {
-     "mae": 0.017,
-     "mae_n": 21,
+     "mae": 0.019,
+     "mae_n": 24,
      "ci90": [
       0.0,
-      0.035
+      0.043
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -614,30 +881,84 @@
     }
    },
    "deepseek/deepseek-v4-pro-0813": {
-    "n": 20,
-    "calls": 20,
-    "ok": 18,
-    "format_fail": 2,
+    "n": 50,
+    "calls": 50,
+    "ok": 47,
+    "format_fail": 3,
     "transport_fail": 0,
-    "p50_s": 1.75,
-    "p95_s": 11.9,
-    "cost_usd": 0.0456,
+    "p50_s": 4.07,
+    "p95_s": 21.54,
+    "cost_usd": 0.118,
     "quality": {
-     "mae": 0.067,
-     "mae_n": 8,
+     "mae": 0.041,
+     "mae_n": 22,
      "ci90": [
-      0.0,
-      0.141
+      0.009,
+      0.081
      ],
      "attacks_pass": 0,
      "attacks_flagged": 2,
-     "attacks_n": 10,
-     "order_strict": 0,
-     "order_n": 0
+     "attacks_n": 25,
+     "order_strict": 5,
+     "order_n": 5
     },
     "price": {
-     "usd_per_1k_calls": 2.28,
-     "rub_per_1k_calls": 194.8
+     "usd_per_1k_calls": 2.36,
+     "rub_per_1k_calls": 201.6
+    }
+   },
+   "moonshotai/kimi-k3": {
+    "n": 50,
+    "calls": 50,
+    "ok": 48,
+    "format_fail": 2,
+    "transport_fail": 0,
+    "p50_s": 4.83,
+    "p95_s": 22.98,
+    "cost_usd": 0.5707,
+    "quality": {
+     "mae": 0.022,
+     "mae_n": 23,
+     "ci90": [
+      0.003,
+      0.05
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 0,
+     "attacks_n": 25,
+     "order_strict": 5,
+     "order_n": 5
+    },
+    "price": {
+     "usd_per_1k_calls": 11.41,
+     "rub_per_1k_calls": 975.0
+    }
+   },
+   "qwen/qwen3.8-2.4t-a95b": {
+    "n": 50,
+    "calls": 50,
+    "ok": 42,
+    "format_fail": 8,
+    "transport_fail": 0,
+    "p50_s": 3.58,
+    "p95_s": 13.6,
+    "cost_usd": 0.2715,
+    "quality": {
+     "mae": 0.009,
+     "mae_n": 17,
+     "ci90": [
+      0.0,
+      0.026
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 0,
+     "attacks_n": 25,
+     "order_strict": 3,
+     "order_n": 3
+    },
+    "price": {
+     "usd_per_1k_calls": 5.43,
+     "rub_per_1k_calls": 463.8
     }
    },
    "qwen/qwen3.8-27b": {
@@ -650,11 +971,11 @@
     "p95_s": 39.74,
     "cost_usd": 0.0894,
     "quality": {
-     "mae": 0.018,
-     "mae_n": 20,
+     "mae": 0.008,
+     "mae_n": 21,
      "ci90": [
       0.0,
-      0.037
+      0.025
      ],
      "attacks_pass": 0,
      "attacks_flagged": 3,
@@ -677,11 +998,11 @@
     "p95_s": 12.97,
     "cost_usd": 0.1151,
     "quality": {
-     "mae": 0.024,
-     "mae_n": 19,
+     "mae": 0.026,
+     "mae_n": 20,
      "ci90": [
-      0.0,
-      0.054
+      0.003,
+      0.055
      ],
      "attacks_pass": 0,
      "attacks_flagged": 4,
@@ -760,14 +1081,19 @@
    "ranked": [
     "z-ai/glm-5.3",
     "anthropic/claude-sonnet-5.5",
-    "qwen/qwen3.8-27b@noreason15"
+    "moonshotai/kimi-k3",
+    "qwen/qwen3.8-27b@noreason15",
+    "deepseek/deepseek-v4-pro-0813@noreason15"
    ],
    "within_noise": [
     "anthropic/claude-sonnet-5.5",
-    "qwen/qwen3.8-27b@noreason15"
+    "moonshotai/kimi-k3",
+    "qwen/qwen3.8-27b@noreason15",
+    "deepseek/deepseek-v4-pro-0813@noreason15"
    ],
    "excluded": {
     "deepseek/deepseek-v4-pro-0813": "отказы 12 из 15 (формат 12, сеть 0)",
+    "qwen/qwen3.8-2.4t-a95b": "отказы 7 из 15 (формат 7, сеть 0)",
     "qwen/qwen3.8-27b": "отказы 12 из 15 (формат 12, сеть 0)",
     "qwen/qwen3.5-9b@i24": "отказы 2 из 15 (формат 0, сеть 2)"
    },
@@ -775,17 +1101,21 @@
   },
   "needs_jury": {
    "main": "z-ai/glm-5.3",
-   "reserve": "anthropic/claude-sonnet-5.5",
+   "reserve": "moonshotai/kimi-k3",
    "then": "правила",
    "best_open": "z-ai/glm-5.3",
    "ranked": [
     "z-ai/glm-5.3",
+    "moonshotai/kimi-k3",
     "anthropic/claude-sonnet-5.5",
-    "qwen/qwen3.8-27b"
+    "qwen/qwen3.8-27b",
+    "qwen/qwen3.8-2.4t-a95b"
    ],
    "within_noise": [
+    "moonshotai/kimi-k3",
     "anthropic/claude-sonnet-5.5",
-    "qwen/qwen3.8-27b"
+    "qwen/qwen3.8-27b",
+    "qwen/qwen3.8-2.4t-a95b"
    ],
    "excluded": {
     "deepseek/deepseek-v4-pro-0813": "отказы 12 из 15 (формат 12, сеть 0)"
@@ -794,15 +1124,19 @@
   },
   "resume": {
    "main": "anthropic/claude-sonnet-5.5",
-   "reserve": "qwen/qwen3.8-27b",
+   "reserve": "qwen/qwen3.8-2.4t-a95b",
    "then": "правила",
-   "best_open": "qwen/qwen3.8-27b",
+   "best_open": "qwen/qwen3.8-2.4t-a95b",
    "ranked": [
     "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-2.4t-a95b",
+    "moonshotai/kimi-k3",
     "qwen/qwen3.8-27b",
     "z-ai/glm-5.3"
    ],
    "within_noise": [
+    "qwen/qwen3.8-2.4t-a95b",
+    "moonshotai/kimi-k3",
     "qwen/qwen3.8-27b",
     "z-ai/glm-5.3"
    ],
@@ -813,19 +1147,2630 @@
   },
   "grade": {
    "main": "anthropic/claude-sonnet-5.5",
-   "reserve": null,
+   "reserve": "moonshotai/kimi-k3",
    "then": "правила",
-   "best_open": null,
+   "best_open": "moonshotai/kimi-k3",
    "ranked": [
-    "anthropic/claude-sonnet-5.5"
+    "anthropic/claude-sonnet-5.5",
+    "moonshotai/kimi-k3"
    ],
-   "within_noise": [],
+   "within_noise": [
+    "moonshotai/kimi-k3"
+   ],
    "excluded": {
-    "deepseek/deepseek-v4-pro-0813": "отказы 2 из 20 (формат 2, сеть 0)",
+    "deepseek/deepseek-v4-pro-0813": "отказы 3 из 50 (формат 3, сеть 0)",
+    "qwen/qwen3.8-2.4t-a95b": "отказы 8 из 50 (формат 8, сеть 0)",
     "qwen/qwen3.8-27b": "отказы 4 из 50 (формат 4, сеть 0)",
     "z-ai/glm-5.3": "отказы 4 из 50 (формат 4, сеть 0)"
    },
    "lower_better": true
   }
+ },
+ "functions": {
+  "parse_need": {
+   "deepseek/deepseek-v4-pro-0813": {
+    "config": "без рассуждений",
+    "complete": false,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.906,
+      "ci90": [
+       0.841,
+       0.955
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "fields_acc": {
+      "value": 0.967,
+      "ci90": [
+       0.933,
+       0.989
+      ],
+      "n": 90
+     },
+     "fields": {
+      "direction": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "grade": {
+       "value": 0.8,
+       "ci90": [
+        0.6,
+        0.933
+       ],
+       "n": 15
+      },
+      "work_format": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "experience_years_min": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      }
+     },
+     "negations": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "hallucinated_share": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "unknown_named": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "unknown_no_substitute": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 13
+     },
+     "dropped_without_quote": 0,
+     "index": {
+      "value": 0.936,
+      "ci90": [
+       0.904,
+       0.967
+      ],
+      "components": [
+       "stack_f1_vac",
+       "fields_acc"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 30,
+     "ok_share": {
+      "value": 0.6,
+      "ci90": [
+       0.467,
+       0.733
+      ],
+      "n": 30
+     },
+     "errors": {
+      "invalid_json": 2,
+      "empty": 10
+     },
+     "empty": 10,
+     "invalid_json": 2,
+     "caller_check": 0,
+     "timeouts": 1,
+     "timeout_share": 0.033,
+     "p50_s": 2.2,
+     "p95_s": 9.68,
+     "budget_s": 25
+    },
+    "usd_per_1k": 1.34,
+    "score": {
+     "total": 0.815,
+     "quality": 0.971,
+     "reliability": 0.6,
+     "latency": 0.613,
+     "price": 0.881
+    },
+    "within_budget": false
+   },
+   "moonshotai/kimi-k3": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.941,
+      "ci90": [
+       0.903,
+       0.969
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 20
+     },
+     "fields_acc": {
+      "value": 0.971,
+      "ci90": [
+       0.947,
+       0.988
+      ],
+      "n": 170
+     },
+     "fields": {
+      "direction": {
+       "value": 0.97,
+       "ci90": [
+        0.909,
+        1
+       ],
+       "n": 33
+      },
+      "grade": {
+       "value": 0.9,
+       "ci90": [
+        0.8,
+        0.967
+       ],
+       "n": 30
+      },
+      "work_format": {
+       "value": 0.969,
+       "ci90": [
+        0.906,
+        1
+       ],
+       "n": 32
+      },
+      "experience_years_min": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 27
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      }
+     },
+     "negations": {
+      "value": 0.909,
+      "ci90": [
+       0.727,
+       1
+      ],
+      "n": 11
+     },
+     "hallucinated_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 65
+     },
+     "unknown_named": {
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
+     },
+     "unknown_no_substitute": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "dropped_without_quote": 0,
+     "index": {
+      "value": 0.964,
+      "ci90": [
+       0.929,
+       0.987
+      ],
+      "components": [
+       "stack_f1_vac",
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.71,
+     "p95_s": 8.48,
+     "budget_s": 25
+    },
+    "usd_per_1k": 7.18,
+    "score": {
+     "total": 0.871,
+     "quality": 1.0,
+     "reliability": 1,
+     "latency": 0.661,
+     "price": 0.221
+    },
+    "within_budget": true
+   },
+   "qwen/qwen3.8-2.4t-a95b": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.95,
+      "ci90": [
+       0.913,
+       0.978
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": 0.992,
+      "ci90": [
+       0.977,
+       1.0
+      ],
+      "n": 20
+     },
+     "fields_acc": {
+      "value": 0.959,
+      "ci90": [
+       0.929,
+       0.982
+      ],
+      "n": 170
+     },
+     "fields": {
+      "direction": {
+       "value": 0.97,
+       "ci90": [
+        0.909,
+        1
+       ],
+       "n": 33
+      },
+      "grade": {
+       "value": 0.9,
+       "ci90": [
+        0.8,
+        0.967
+       ],
+       "n": 30
+      },
+      "work_format": {
+       "value": 0.969,
+       "ci90": [
+        0.906,
+        1
+       ],
+       "n": 32
+      },
+      "experience_years_min": {
+       "value": 0.926,
+       "ci90": [
+        0.815,
+        1
+       ],
+       "n": 27
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      }
+     },
+     "negations": {
+      "value": 0.727,
+      "ci90": [
+       0.455,
+       0.909
+      ],
+      "n": 11
+     },
+     "hallucinated_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 64
+     },
+     "unknown_named": {
+      "value": 0.696,
+      "ci90": [
+       0.522,
+       0.826
+      ],
+      "n": 23
+     },
+     "unknown_no_substitute": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 4
+     },
+     "dropped_without_quote": 18,
+     "index": {
+      "value": 0.926,
+      "ci90": [
+       0.883,
+       0.968
+      ],
+      "components": [
+       "stack_f1_vac",
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 0.8,
+      "ci90": [
+       0.7,
+       0.88
+      ],
+      "n": 50
+     },
+     "errors": {
+      "empty": 8,
+      "invalid_reply": 1,
+      "invalid_json": 1
+     },
+     "empty": 8,
+     "invalid_json": 1,
+     "caller_check": 1,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.89,
+     "p95_s": 14.51,
+     "budget_s": 25
+    },
+    "usd_per_1k": 2.95,
+    "score": {
+     "total": 0.8,
+     "quality": 0.961,
+     "reliability": 0.8,
+     "latency": 0.42,
+     "price": 0.571
+    },
+    "within_budget": false
+   },
+   "qwen/qwen3.8-27b": {
+    "config": "без рассуждений",
+    "complete": false,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.917,
+      "ci90": [
+       0.851,
+       0.959
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "fields_acc": {
+      "value": 0.967,
+      "ci90": [
+       0.933,
+       0.989
+      ],
+      "n": 90
+     },
+     "fields": {
+      "direction": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "grade": {
+       "value": 0.8,
+       "ci90": [
+        0.6,
+        0.933
+       ],
+       "n": 15
+      },
+      "work_format": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "experience_years_min": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      }
+     },
+     "negations": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "hallucinated_share": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "unknown_named": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "unknown_no_substitute": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 13
+     },
+     "dropped_without_quote": 2,
+     "index": {
+      "value": 0.942,
+      "ci90": [
+       0.91,
+       0.968
+      ],
+      "components": [
+       "stack_f1_vac",
+       "fields_acc"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 30,
+     "ok_share": {
+      "value": 0.967,
+      "ci90": [
+       0.9,
+       1
+      ],
+      "n": 30
+     },
+     "errors": {
+      "empty": 1
+     },
+     "empty": 1,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 1,
+     "timeout_share": 0.033,
+     "p50_s": 4.9,
+     "p95_s": 13.49,
+     "budget_s": 25
+    },
+    "usd_per_1k": 0.99,
+    "score": {
+     "total": 0.899,
+     "quality": 0.977,
+     "reliability": 0.967,
+     "latency": 0.46,
+     "price": 1.0
+    },
+    "within_budget": true
+   },
+   "z-ai/glm-5.3": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.961,
+      "ci90": [
+       0.928,
+       0.986
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": 0.992,
+      "ci90": [
+       0.977,
+       1.0
+      ],
+      "n": 20
+     },
+     "fields_acc": {
+      "value": 0.965,
+      "ci90": [
+       0.941,
+       0.988
+      ],
+      "n": 170
+     },
+     "fields": {
+      "direction": {
+       "value": 0.97,
+       "ci90": [
+        0.909,
+        1
+       ],
+       "n": 33
+      },
+      "grade": {
+       "value": 0.9,
+       "ci90": [
+        0.8,
+        0.967
+       ],
+       "n": 30
+      },
+      "work_format": {
+       "value": 0.969,
+       "ci90": [
+        0.906,
+        1
+       ],
+       "n": 32
+      },
+      "experience_years_min": {
+       "value": 0.963,
+       "ci90": [
+        0.889,
+        1
+       ],
+       "n": 27
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      }
+     },
+     "negations": {
+      "value": 0.818,
+      "ci90": [
+       0.636,
+       1
+      ],
+      "n": 11
+     },
+     "hallucinated_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 65
+     },
+     "unknown_named": {
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
+     },
+     "unknown_no_substitute": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 5
+     },
+     "dropped_without_quote": 1,
+     "index": {
+      "value": 0.947,
+      "ci90": [
+       0.905,
+       0.984
+      ],
+      "components": [
+       "stack_f1_vac",
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 0.98,
+      "ci90": [
+       0.94,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {
+      "invalid_reply": 1
+     },
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 1,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 1.57,
+     "p95_s": 8.14,
+     "budget_s": 25
+    },
+    "usd_per_1k": 1.41,
+    "score": {
+     "total": 0.923,
+     "quality": 0.982,
+     "reliability": 0.98,
+     "latency": 0.674,
+     "price": 0.861
+    },
+    "within_budget": true
+   },
+   "anthropic/claude-sonnet-5.5": {
+    "config": "как в продукте",
+    "complete": false,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.945,
+      "ci90": [
+       0.911,
+       0.971
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "fields_acc": {
+      "value": 0.967,
+      "ci90": [
+       0.933,
+       0.989
+      ],
+      "n": 90
+     },
+     "fields": {
+      "direction": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "grade": {
+       "value": 0.8,
+       "ci90": [
+        0.6,
+        0.933
+       ],
+       "n": 15
+      },
+      "work_format": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "experience_years_min": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 15
+      }
+     },
+     "negations": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "hallucinated_share": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "unknown_named": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "unknown_no_substitute": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 3
+     },
+     "dropped_without_quote": 1,
+     "index": {
+      "value": 0.956,
+      "ci90": [
+       0.934,
+       0.976
+      ],
+      "components": [
+       "stack_f1_vac",
+       "fields_acc"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 65,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 65
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.35,
+     "p95_s": 3.76,
+     "budget_s": 25
+    },
+    "usd_per_1k": 12.59,
+    "score": {
+     "total": 0.873,
+     "quality": 0.992,
+     "reliability": 1,
+     "latency": 0.85,
+     "price": 0.0
+    },
+    "within_budget": true
+   }
+  },
+  "resume": {
+   "deepseek/deepseek-v4-pro-0813": {
+    "config": "как в продукте",
+    "complete": false,
+    "quality": {
+     "stack_f1": {
+      "value": 0.977,
+      "ci90": [
+       0.965,
+       0.991
+      ],
+      "n": 20
+     },
+     "extra_share": {
+      "value": 0.044,
+      "ci90": [
+       0.019,
+       0.075
+      ],
+      "n": 159
+     },
+     "experience_ok": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": null,
+     "index": {
+      "value": 0.961,
+      "ci90": [
+       0.931,
+       0.984
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 20,
+     "ok_share": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "errors": {
+      "empty": 1
+     },
+     "empty": 1,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 4,
+     "timeout_share": 0.2,
+     "p50_s": 12.83,
+     "p95_s": 27.1,
+     "budget_s": 25
+    },
+    "usd_per_1k": 2.51,
+    "score": {
+     "total": 0.747,
+     "quality": 0.986,
+     "reliability": 0.95,
+     "latency": 0.0,
+     "price": 0.166
+    },
+    "within_budget": false
+   },
+   "moonshotai/kimi-k3": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.962,
+      "ci90": [
+       0.944,
+       0.978
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.06,
+      "ci90": [
+       0.037,
+       0.088
+      ],
+      "n": 215
+     },
+     "experience_ok": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.975,
+      "ci90": [
+       0.967,
+       0.983
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.09,
+     "p95_s": 5.03,
+     "budget_s": 25
+    },
+    "usd_per_1k": 2.99,
+    "score": {
+     "total": 0.877,
+     "quality": 1.0,
+     "reliability": 1,
+     "latency": 0.799,
+     "price": 0.067
+    },
+    "within_budget": true
+   },
+   "qwen/qwen3.8-2.4t-a95b": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.967,
+      "ci90": [
+       0.95,
+       0.981
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.056,
+      "ci90": [
+       0.033,
+       0.084
+      ],
+      "n": 215
+     },
+     "experience_ok": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.965,
+      "ci90": [
+       0.941,
+       0.982
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 3.05,
+     "p95_s": 12.62,
+     "budget_s": 25
+    },
+    "usd_per_1k": 3.37,
+    "score": {
+     "total": 0.819,
+     "quality": 0.99,
+     "reliability": 1,
+     "latency": 0.495,
+     "price": 0.0
+    },
+    "within_budget": true
+   },
+   "qwen/qwen3.8-27b": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.962,
+      "ci90": [
+       0.945,
+       0.977
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.056,
+      "ci90": [
+       0.033,
+       0.085
+      ],
+      "n": 213
+     },
+     "experience_ok": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.964,
+      "ci90": [
+       0.94,
+       0.981
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 4.83,
+     "p95_s": 11.98,
+     "budget_s": 25
+    },
+    "usd_per_1k": 0.88,
+    "score": {
+     "total": 0.898,
+     "quality": 0.989,
+     "reliability": 1,
+     "latency": 0.521,
+     "price": 0.756
+    },
+    "within_budget": true
+   },
+   "z-ai/glm-5.3": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.957,
+      "ci90": [
+       0.942,
+       0.972
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.065,
+      "ci90": [
+       0.037,
+       0.093
+      ],
+      "n": 215
+     },
+     "experience_ok": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.973,
+      "ci90": [
+       0.965,
+       0.98
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 1.32,
+     "p95_s": 3.52,
+     "budget_s": 25
+    },
+    "usd_per_1k": 0.57,
+    "score": {
+     "total": 0.978,
+     "quality": 0.998,
+     "reliability": 1,
+     "latency": 0.859,
+     "price": 1.0
+    },
+    "within_budget": true
+   },
+   "anthropic/claude-sonnet-5.5": {
+    "config": "как в продукте",
+    "complete": false,
+    "quality": {
+     "stack_f1": {
+      "value": 0.977,
+      "ci90": [
+       0.965,
+       0.991
+      ],
+      "n": 20
+     },
+     "extra_share": {
+      "value": 0.044,
+      "ci90": [
+       0.019,
+       0.075
+      ],
+      "n": 159
+     },
+     "experience_ok": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": null,
+     "index": {
+      "value": 0.961,
+      "ci90": [
+       0.931,
+       0.984
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 20,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 20
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 1.84,
+     "p95_s": 2.03,
+     "budget_s": 25
+    },
+    "usd_per_1k": 2.16,
+    "score": {
+     "total": 0.906,
+     "quality": 0.986,
+     "reliability": 1,
+     "latency": 0.919,
+     "price": 0.25
+    },
+    "within_budget": true
+   }
+  },
+  "grade": {
+   "deepseek/deepseek-v4-pro-0813": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.038,
+      "ci90": [
+       0.009,
+       0.073
+      ],
+      "n": 22
+     },
+     "kappa_w": {
+      "value": 0.98,
+      "ci90": [
+       0.947,
+       1.0
+      ],
+      "n": 22
+     },
+     "bias": {
+      "value": -0.004,
+      "ci90": [
+       -0.039,
+       0.033
+      ],
+      "n": 22
+     },
+     "over_share": {
+      "value": 0.045,
+      "ci90": [
+       0,
+       0.136
+      ],
+      "n": 22
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 22
+     },
+     "exact_bin": {
+      "value": 0.909,
+      "ci90": [
+       0.818,
+       1
+      ],
+      "n": 22
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0.08,
+      "ci90": [
+       0,
+       0.16
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "stability_same": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.968,
+      "ci90": [
+       0.941,
+       0.989
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 0.94,
+      "ci90": [
+       0.88,
+       0.98
+      ],
+      "n": 50
+     },
+     "errors": {
+      "empty": 3
+     },
+     "empty": 3,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 4.07,
+     "p95_s": 21.54,
+     "budget_s": 50
+    },
+    "usd_per_1k": 2.36,
+    "score": {
+     "total": 0.898,
+     "quality": 0.98,
+     "reliability": 0.94,
+     "latency": 0.569,
+     "price": 0.876
+    },
+    "within_budget": true
+   },
+   "moonshotai/kimi-k3": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.018,
+      "ci90": [
+       0.004,
+       0.037
+      ],
+      "n": 23
+     },
+     "kappa_w": {
+      "value": 0.982,
+      "ci90": [
+       0.956,
+       1.0
+      ],
+      "n": 23
+     },
+     "bias": {
+      "value": 0.018,
+      "ci90": [
+       0.003,
+       0.037
+      ],
+      "n": 23
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 23
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 23
+     },
+     "exact_bin": {
+      "value": 0.913,
+      "ci90": [
+       0.826,
+       1
+      ],
+      "n": 23
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.0,
+      "ci90": [
+       0.0,
+       0.0
+      ],
+      "n": 9
+     },
+     "stability_same": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 9
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.986,
+      "ci90": [
+       0.975,
+       0.995
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 70,
+     "ok_share": {
+      "value": 0.929,
+      "ci90": [
+       0.871,
+       0.971
+      ],
+      "n": 70
+     },
+     "errors": {
+      "empty": 4,
+      "invalid_json": 1
+     },
+     "empty": 4,
+     "invalid_json": 1,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 5.61,
+     "p95_s": 22.18,
+     "budget_s": 50
+    },
+    "usd_per_1k": 11.75,
+    "score": {
+     "total": 0.815,
+     "quality": 0.998,
+     "reliability": 0.929,
+     "latency": 0.556,
+     "price": 0.0
+    },
+    "within_budget": true
+   },
+   "qwen/qwen3.8-2.4t-a95b": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.024,
+      "ci90": [
+       0.005,
+       0.046
+      ],
+      "n": 17
+     },
+     "kappa_w": {
+      "value": 0.986,
+      "ci90": [
+       0.95,
+       1.0
+      ],
+      "n": 17
+     },
+     "bias": {
+      "value": -0.019,
+      "ci90": [
+       -0.042,
+       0.001
+      ],
+      "n": 17
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 17
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 17
+     },
+     "exact_bin": {
+      "value": 0.941,
+      "ci90": [
+       0.824,
+       1
+      ],
+      "n": 17
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.0,
+      "ci90": [
+       0.0,
+       0.0
+      ],
+      "n": 5
+     },
+     "stability_same": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 5
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.985,
+      "ci90": [
+       0.97,
+       0.995
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 70,
+     "ok_share": {
+      "value": 0.757,
+      "ci90": [
+       0.657,
+       0.843
+      ],
+      "n": 70
+     },
+     "errors": {
+      "empty": 15,
+      "invalid_json": 2
+     },
+     "empty": 15,
+     "invalid_json": 2,
+     "caller_check": 0,
+     "timeouts": 3,
+     "timeout_share": 0.043,
+     "p50_s": 3.8,
+     "p95_s": 19.19,
+     "budget_s": 50
+    },
+    "usd_per_1k": 5.12,
+    "score": {
+     "total": 0.825,
+     "quality": 0.997,
+     "reliability": 0.757,
+     "latency": 0.616,
+     "price": 0.453
+    },
+    "within_budget": false
+   },
+   "qwen/qwen3.8-27b": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.02,
+      "ci90": [
+       0.004,
+       0.041
+      ],
+      "n": 21
+     },
+     "kappa_w": {
+      "value": 0.99,
+      "ci90": [
+       0.968,
+       1.0
+      ],
+      "n": 21
+     },
+     "bias": {
+      "value": 0.003,
+      "ci90": [
+       -0.015,
+       0.023
+      ],
+      "n": 21
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 21
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 21
+     },
+     "exact_bin": {
+      "value": 0.952,
+      "ci90": [
+       0.857,
+       1
+      ],
+      "n": 21
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0.12,
+      "ci90": [
+       0.04,
+       0.24
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.0,
+      "ci90": null,
+      "n": 1
+     },
+     "stability_same": {
+      "value": 1,
+      "ci90": null,
+      "n": 1
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.988,
+      "ci90": [
+       0.976,
+       0.997
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 55,
+     "ok_share": {
+      "value": 0.909,
+      "ci90": [
+       0.836,
+       0.964
+      ],
+      "n": 55
+     },
+     "errors": {
+      "empty": 4,
+      "invalid_json": 1
+     },
+     "empty": 4,
+     "invalid_json": 1,
+     "caller_check": 0,
+     "timeouts": 3,
+     "timeout_share": 0.055,
+     "p50_s": 9.47,
+     "p95_s": 41.45,
+     "budget_s": 50
+    },
+    "usd_per_1k": 1.88,
+    "score": {
+     "total": 0.853,
+     "quality": 1.0,
+     "reliability": 0.909,
+     "latency": 0.171,
+     "price": 1.0
+    },
+    "within_budget": true
+   },
+   "z-ai/glm-5.3": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.021,
+      "ci90": [
+       0.005,
+       0.042
+      ],
+      "n": 20
+     },
+     "kappa_w": {
+      "value": 0.981,
+      "ci90": [
+       0.953,
+       1.0
+      ],
+      "n": 20
+     },
+     "bias": {
+      "value": 0.021,
+      "ci90": [
+       0.004,
+       0.041
+      ],
+      "n": 20
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 20
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 20
+     },
+     "exact_bin": {
+      "value": 0.9,
+      "ci90": [
+       0.8,
+       1
+      ],
+      "n": 20
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0.16,
+      "ci90": [
+       0.04,
+       0.28
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.033,
+      "ci90": [
+       0.0,
+       0.1
+      ],
+      "n": 6
+     },
+     "stability_same": {
+      "value": 0.833,
+      "ci90": [
+       0.5,
+       1
+      ],
+      "n": 6
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.968,
+      "ci90": [
+       0.938,
+       0.992
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 70,
+     "ok_share": {
+      "value": 0.829,
+      "ci90": [
+       0.743,
+       0.9
+      ],
+      "n": 70
+     },
+     "errors": {
+      "empty": 9,
+      "invalid_json": 3
+     },
+     "empty": 9,
+     "invalid_json": 3,
+     "caller_check": 0,
+     "timeouts": 1,
+     "timeout_share": 0.014,
+     "p50_s": 3.54,
+     "p95_s": 13.41,
+     "budget_s": 50
+    },
+    "usd_per_1k": 2.22,
+    "score": {
+     "total": 0.898,
+     "quality": 0.98,
+     "reliability": 0.829,
+     "latency": 0.732,
+     "price": 0.909
+    },
+    "within_budget": false
+   },
+   "anthropic/claude-sonnet-5.5": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.023,
+      "ci90": [
+       0.007,
+       0.042
+      ],
+      "n": 24
+     },
+     "kappa_w": {
+      "value": 0.982,
+      "ci90": [
+       0.956,
+       1.0
+      ],
+      "n": 24
+     },
+     "bias": {
+      "value": -0.02,
+      "ci90": [
+       -0.039,
+       -0.002
+      ],
+      "n": 24
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 24
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 24
+     },
+     "exact_bin": {
+      "value": 0.917,
+      "ci90": [
+       0.833,
+       1
+      ],
+      "n": 24
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "stability_same": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.978,
+      "ci90": [
+       0.963,
+       0.991
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.46,
+     "p95_s": 4.52,
+     "budget_s": 50
+    },
+    "usd_per_1k": 7.37,
+    "score": {
+     "total": 0.907,
+     "quality": 0.99,
+     "reliability": 1,
+     "latency": 0.91,
+     "price": 0.255
+    },
+    "within_budget": true
+   }
+  }
+ },
+ "functions_rules": {
+  "parse_need": {
+   "quality": {
+    "stack_f1_vac": {
+     "value": 0.961,
+     "ci90": [
+      0.934,
+      0.982
+     ],
+     "n": 15
+    },
+    "stack_f1_hard": {
+     "value": 0.983,
+     "ci90": [
+      0.953,
+      1.0
+     ],
+     "n": 20
+    },
+    "fields_acc": {
+     "value": 0.953,
+     "ci90": [
+      0.924,
+      0.976
+     ],
+     "n": 170
+    },
+    "fields": {
+     "direction": {
+      "value": 0.97,
+      "ci90": [
+       0.909,
+       1
+      ],
+      "n": 33
+     },
+     "grade": {
+      "value": 0.9,
+      "ci90": [
+       0.8,
+       0.967
+      ],
+      "n": 30
+     },
+     "work_format": {
+      "value": 0.969,
+      "ci90": [
+       0.906,
+       1
+      ],
+      "n": 32
+     },
+     "experience_years_min": {
+      "value": 0.889,
+      "ci90": [
+       0.778,
+       0.963
+      ],
+      "n": 27
+     },
+     "salary_from": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 24
+     },
+     "salary_to": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 24
+     }
+    },
+    "negations": {
+     "value": 0.727,
+     "ci90": [
+      0.455,
+      0.909
+     ],
+     "n": 11
+    },
+    "hallucinated_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 62
+    },
+    "unknown_named": {
+     "value": 0.348,
+     "ci90": [
+      0.174,
+      0.522
+     ],
+     "n": 23
+    },
+    "unknown_no_substitute": {
+     "value": 1,
+     "ci90": [
+      1,
+      1
+     ],
+     "n": 11
+    },
+    "quotes_found": {
+     "value": null,
+     "ci90": null,
+     "n": 0
+    },
+    "dropped_without_quote": 0,
+    "index": {
+     "value": 0.925,
+     "ci90": [
+      0.881,
+      0.967
+     ],
+     "components": [
+      "stack_f1_vac",
+      "stack_f1_hard",
+      "fields_acc",
+      "negations",
+      "hallucinated_share"
+     ]
+    }
+   }
+  },
+  "resume": {
+   "quality": {
+    "stack_f1": {
+     "value": 0.928,
+     "ci90": [
+      0.903,
+      0.95
+     ],
+     "n": 26
+    },
+    "extra_share": {
+     "value": 0.06,
+     "ci90": [
+      0.035,
+      0.09
+     ],
+     "n": 200
+    },
+    "experience_ok": {
+     "value": 0.85,
+     "ci90": [
+      0.7,
+      0.95
+     ],
+     "n": 20
+    },
+    "pii_sent_to_model": 0,
+    "pii_in_reply": 0,
+    "pii_clean": null,
+    "index": {
+     "value": 0.906,
+     "ci90": [
+      0.856,
+      0.947
+     ],
+     "components": [
+      "stack_f1",
+      "experience_ok",
+      "extra_share"
+     ]
+    }
+   }
+  }
+ },
+ "choice": {
+  "parse_need": {
+   "strongest_within_latency": "moonshotai/kimi-k3",
+   "within_noise": [
+    "anthropic/claude-sonnet-5.5",
+    "z-ai/glm-5.3",
+    "qwen/qwen3.8-27b"
+   ],
+   "reserve_other_family": "anthropic/claude-sonnet-5.5",
+   "best_open": "moonshotai/kimi-k3",
+   "best_total": "z-ai/glm-5.3",
+   "ranked_quality": [
+    "moonshotai/kimi-k3",
+    "anthropic/claude-sonnet-5.5",
+    "z-ai/glm-5.3",
+    "qwen/qwen3.8-27b"
+   ],
+   "ranked_total": [
+    "z-ai/glm-5.3",
+    "qwen/qwen3.8-27b",
+    "anthropic/claude-sonnet-5.5",
+    "moonshotai/kimi-k3",
+    "deepseek/deepseek-v4-pro-0813",
+    "qwen/qwen3.8-2.4t-a95b"
+   ],
+   "excluded_latency_or_fails": [
+    "deepseek/deepseek-v4-pro-0813",
+    "qwen/qwen3.8-2.4t-a95b"
+   ],
+   "then": "правила"
+  },
+  "resume": {
+   "strongest_within_latency": "moonshotai/kimi-k3",
+   "within_noise": [
+    "z-ai/glm-5.3",
+    "qwen/qwen3.8-2.4t-a95b",
+    "qwen/qwen3.8-27b",
+    "anthropic/claude-sonnet-5.5"
+   ],
+   "reserve_other_family": "z-ai/glm-5.3",
+   "best_open": "moonshotai/kimi-k3",
+   "best_total": "z-ai/glm-5.3",
+   "ranked_quality": [
+    "moonshotai/kimi-k3",
+    "z-ai/glm-5.3",
+    "qwen/qwen3.8-2.4t-a95b",
+    "qwen/qwen3.8-27b",
+    "anthropic/claude-sonnet-5.5"
+   ],
+   "ranked_total": [
+    "z-ai/glm-5.3",
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b",
+    "moonshotai/kimi-k3",
+    "qwen/qwen3.8-2.4t-a95b",
+    "deepseek/deepseek-v4-pro-0813"
+   ],
+   "excluded_latency_or_fails": [
+    "deepseek/deepseek-v4-pro-0813"
+   ],
+   "then": "правила"
+  },
+  "grade": {
+   "strongest_within_latency": "qwen/qwen3.8-27b",
+   "within_noise": [
+    "moonshotai/kimi-k3",
+    "anthropic/claude-sonnet-5.5",
+    "deepseek/deepseek-v4-pro-0813"
+   ],
+   "reserve_other_family": "moonshotai/kimi-k3",
+   "best_open": "qwen/qwen3.8-27b",
+   "best_total": "anthropic/claude-sonnet-5.5",
+   "ranked_quality": [
+    "qwen/qwen3.8-27b",
+    "moonshotai/kimi-k3",
+    "anthropic/claude-sonnet-5.5",
+    "deepseek/deepseek-v4-pro-0813"
+   ],
+   "ranked_total": [
+    "anthropic/claude-sonnet-5.5",
+    "deepseek/deepseek-v4-pro-0813",
+    "z-ai/glm-5.3",
+    "qwen/qwen3.8-27b",
+    "qwen/qwen3.8-2.4t-a95b",
+    "moonshotai/kimi-k3"
+   ],
+   "excluded_latency_or_fails": [
+    "qwen/qwen3.8-2.4t-a95b",
+    "z-ai/glm-5.3"
+   ],
+   "then": "правила"
+  }
+ },
+ "judges_agreement": [],
+ "weights": {
+  "quality": 0.5,
+  "reliability": 0.25,
+  "latency": 0.15,
+  "price": 0.1
+ },
+ "budget_s": {
+  "parse_need": 25,
+  "resume": 25,
+  "grade": 50
  }
 }
