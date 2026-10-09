@@ -697,6 +697,31 @@ def must_have_section(world: World, sc: dict, seed: int) -> dict:
     return out
 
 
+def core_skill_section(world: World, sc: dict, seed: int) -> dict:
+    """Я1: признак «ядро роли» (основной язык / фреймворк / специализация) на этом же мире — продукт без признака
+    против продукта с признаком (политика core_skill.POLICY), парный бутстреп по потребностям; доля мест топ-5,
+    занятых кандидатами без ядра (по потребностям, где признак действует)."""
+    pn, absent = {}, {}
+    active = sc["core_absent"].any(1)
+    for name, flag in (("before", False), ("after", True)):
+        o = platform_orders(sc, core=flag)
+        pn[name] = per_need(world.rel, o)
+        absent[name] = np.array([sc["core_absent"][i, o[i, :5]].mean() if active[i] else np.nan for i in range(len(o))])
+    idx = boot_idx(len(world.needs), seed + 41)
+    aidx = boot_idx(max(int(active.sum()), 1), seed + 43)
+    out = {"enabled_in_product": core_skill.enabled(), "policy": core_skill.POLICY,
+           "needs_with_core": int((sc["core_state"] >= 0).any(1).sum()), "needs_active": int(active.sum())}
+    for name in ("before", "after"):
+        out[name] = {m: _ci(pn[name][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
+        out[name]["top5_core_absent"] = _ci(absent[name][active], aidx) if active.any() else None
+    out["diff"] = {m: _ci(pn["after"][m] - pn["before"][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
+    out["diff"]["top5_core_absent"] = (_ci(absent["after"][active] - absent["before"][active], aidx)
+                                       if active.any() else None)
+    out["diff_active_needs"] = {m: round(float((pn["after"][m] - pn["before"][m])[active].mean()), 4)
+                                for m in ("p@5", "ndcg@10")} if active.any() else None
+    return out
+
+
 def _row(sc: dict, i: int) -> dict:
     return {k: sc[k][i:i + 1] for k in ("comps", "has_req", "vis", "mandatory_gaps", "must_tier", "core_absent")}
 
@@ -748,6 +773,7 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "heldout_weights": ho, "sensitivity": sens, "junior": junior,
         "score_rebuild_max_error": r["scored"]["max_rebuild_error"],
         "must_have": must_have_section(world, r["scored"], cfg.seed),
+        "core_skill": core_skill_section(world, r["scored"], cfg.seed),
         "ablations": ablations(s),
         "signature": signature(seed=cfg.seed, config=cfg_d, n=cfg.n_needs * cfg.n_candidates,
                                world=f"бенчмарк подбора: {cfg.n_needs} потребностей × {cfg.n_candidates} кандидатов",
@@ -954,6 +980,20 @@ def markdown(rep: dict) -> str:
                                     ("diff", "Разница"))],
               "", f"Топ-5 изменился у {mh['needs_changed_top5']} из {rep['world']['n_needs']} потребностей "
                   f"(с обязательными навыками — {mh['needs_with_required']}).", ""]
+    cs = rep.get("core_skill")
+    if cs:
+        L += ["## Ядро роли: основной язык, фреймворк, специализация (Я1)", "",
+              "Ядро — из обязательных навыков потребности правилами и словарём направлений (Backend, QA, ИБ — основной "
+              "язык; Frontend — React/Vue/Angular; Data/ML — CV/NLP, иначе PyTorch). Кандидат без ядра (не заявлено и не "
+              "подтверждено тестом) — смежное направление: остаётся в выдаче, но идёт ниже кандидатов с ядром "
+              f"(политика {cs['policy']}). Тот же мир, парный бутстреп по потребностям; ядро есть у "
+              f"{cs['needs_with_core']} из {rep['world']['n_needs']} потребностей, признак действует у {cs['needs_active']}; "
+              f"в продукте признак {'включён' if cs['enabled_in_product'] else 'выключен'} (RANK_CORE_SKILL).", "",
+              "| | p@5 | nDCG@10 | MRR | Топ-5: доля без ядра роли |", "|---|---|---|---|---|",
+              *[f"| {t} | " + " | ".join(_cell(cs[k][mt]) if cs[k].get(mt) else "—"
+                                       for mt in ("p@5", "ndcg@10", "mrr", "top5_core_absent")) + " |"
+                for k, t in (("before", "Без признака (продукт match-v1.1)"), ("after", "С признаком «ядро роли»"),
+                             ("diff", "Разница"))], ""]
     g = rep["groups"]
     fp = g["fsp"].get("platform", {})
     L += ["## Группы кандидатов", "",
