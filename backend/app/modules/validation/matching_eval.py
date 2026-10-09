@@ -216,7 +216,9 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_or
             plat = [plat[:n_in][i] for i in pos] + plat[n_in:]
         order = {
             "platform": plat,
-            "platform_no_fsp": sorted(cand, key=lambda b: (in_cat(b), must_priority(b), -no_fsp(b), b.profile.public_ref or "")),
+            "platform_no_fsp": sorted(cand, key=lambda b: (in_cat(b), *core_skill.sort_key(
+                0, must_priority(b), no_fsp(b), core_t[b.profile.user_id], "within" if policy == "cap" else policy),
+                b.profile.public_ref or "")),
             "bm25": sorted(cand, key=lambda b: (-bm25.score(b.profile.user_id, text), bm_rng.random())),
             "keywords": sorted(cand, key=lambda b: (-keyword_score(b, req), kw_rng.random())),
         }
