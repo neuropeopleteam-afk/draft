@@ -1,0 +1,311 @@
+{
+ "bank_tasks_code": {
+  "chars": 1320544,
+  "placeholders_before": {
+   "[ник]": 6,
+   "[почта]": 23
+  },
+  "placeholders_after": {
+   "[почта]": 23
+  }
+ },
+ "vacancies": {
+  "n": 50,
+  "redacted_by_type_before": {},
+  "redacted_by_type_after": {},
+  "texts_changed": 0,
+  "new_cuts": [],
+  "parse_rules": {
+   "исходный текст (путь без LLM)": {
+    "stack_P": 0.885,
+    "stack_R": 0.94,
+    "direction": 44,
+    "experience_years_min": 50,
+    "work_format": 46,
+    "salary_from": 50,
+    "salary_to": 50,
+    "city_same_as_original": 50
+   },
+   "текст для модели — до (integ 4cfc9fa)": {
+    "stack_P": 0.885,
+    "stack_R": 0.94,
+    "direction": 44,
+    "experience_years_min": 50,
+    "work_format": 46,
+    "salary_from": 50,
+    "salary_to": 50,
+    "city_same_as_original": 50
+   },
+   "текст для модели — после (fix/pii-mask)": {
+    "stack_P": 0.885,
+    "stack_R": 0.94,
+    "direction": 44,
+    "experience_years_min": 50,
+    "work_format": 46,
+    "salary_from": 50,
+    "salary_to": 50,
+    "city_same_as_original": 50
+   }
+  }
+ },
+ "resumes_synthetic": [
+  {
+   "head": "Смирнова Анна Викторовна",
+   "exp_original": 7.2,
+   "exp_before": 7.2,
+   "exp_after": 7.2,
+   "stack_before": [
+    "react",
+    "typescript",
+    "nextjs"
+   ],
+   "stack_after": [
+    "react",
+    "typescript",
+    "nextjs"
+   ],
+   "direction_before": "frontend",
+   "direction_after": "frontend",
+   "leaks_after": [
+    "[ФИО]",
+    "[ФИО]",
+    "[адрес]",
+    "[возраст]",
+    "[дата рождения]",
+    "[пол]",
+    "[почта]",
+    "[телефон]"
+   ]
+  },
+  {
+   "head": "Ivan Petrov",
+   "exp_original": 10.6,
+   "exp_before": 10.6,
+   "exp_after": 10.6,
+   "stack_before": [
+    "java",
+    "kafka",
+    "postgresql"
+   ],
+   "stack_after": [
+    "java",
+    "kafka",
+    "postgresql"
+   ],
+   "direction_before": "backend",
+   "direction_after": "backend",
+   "leaks_after": [
+    "[ФИО]",
+    "[ФИО]",
+    "[адрес]",
+    "[возраст]",
+    "[дата]",
+    "[пол]",
+    "[почта]",
+    "[ссылка]",
+    "[телефон]"
+   ]
+  },
+  {
+   "head": "Кузнецов Дмитрий Олегович",
+   "exp_original": null,
+   "exp_before": null,
+   "exp_after": null,
+   "stack_before": [
+    "python",
+    "pytest",
+    "selenium",
+    "playwright",
+    "allure"
+   ],
+   "stack_after": [
+    "python",
+    "pytest",
+    "selenium",
+    "playwright",
+    "allure"
+   ],
+   "direction_before": "qa",
+   "direction_after": "qa",
+   "leaks_after": [
+    "[ФИО]",
+    "[ФИО]",
+    "[адрес]",
+    "[возраст]",
+    "[дата рождения]",
+    "[ник]",
+    "[телефон]"
+   ]
+  },
+  {
+   "head": "PETROVA MARIA",
+   "exp_original": 3.0,
+   "exp_before": 3.0,
+   "exp_after": 3.0,
+   "stack_before": [
+    "python",
+    "pandas",
+    "pytorch",
+    "sql",
+    "airflow"
+   ],
+   "stack_after": [
+    "python",
+    "pandas",
+    "pytorch",
+    "sql",
+    "airflow"
+   ],
+   "direction_before": "data_ml",
+   "direction_after": "data_ml",
+   "leaks_after": [
+    "[ФИО]",
+    "[адрес]",
+    "[адрес]",
+    "[возраст]",
+    "[почта]"
+   ]
+  },
+  {
+   "head": "Смирнова Анна Викторовна",
+   "exp_original": 7.2,
+   "exp_before": 7.2,
+   "exp_after": 7.2,
+   "stack_before": [
+    "react",
+    "typescript",
+    "nextjs"
+   ],
+   "stack_after": [
+    "react",
+    "typescript",
+    "nextjs"
+   ],
+   "direction_before": "frontend",
+   "direction_after": "frontend",
+   "leaks_after": [
+    "[ФИО]",
+    "[возраст]",
+    "[дата рождения]",
+    "[дата]",
+    "[пол]"
+   ]
+  },
+  {
+   "head": "Ivan Petrov",
+   "exp_original": 8.0,
+   "exp_before": 8.0,
+   "exp_after": 8.0,
+   "stack_before": [
+    "java",
+    "kafka",
+    "postgresql"
+   ],
+   "stack_after": [
+    "java",
+    "kafka",
+    "postgresql"
+   ],
+   "direction_before": "backend",
+   "direction_after": "backend",
+   "leaks_after": [
+    "[ФИО]",
+    "[ФИО]",
+    "[адрес]",
+    "[возраст]",
+    "[дата]",
+    "[пол]",
+    "[почта]",
+    "[телефон]"
+   ]
+  },
+  {
+   "head": "Кузнецов Дмитрий",
+   "exp_original": 5.4,
+   "exp_before": 5.4,
+   "exp_after": 5.4,
+   "stack_before": [
+    "python",
+    "pytest",
+    "selenium",
+    "playwright",
+    "allure",
+    "docker"
+   ],
+   "stack_after": [
+    "python",
+    "pytest",
+    "selenium",
+    "playwright",
+    "allure",
+    "docker"
+   ],
+   "direction_before": "qa",
+   "direction_after": "qa",
+   "leaks_after": [
+    "[ФИО]",
+    "[адрес]",
+    "[возраст]"
+   ]
+  },
+  {
+   "head": "Petrova Maria Sergeevna",
+   "exp_original": 3.0,
+   "exp_before": 3.0,
+   "exp_after": 3.0,
+   "stack_before": [
+    "python",
+    "pandas",
+    "scikit-learn",
+    "pytorch",
+    "sql",
+    "airflow"
+   ],
+   "stack_after": [
+    "python",
+    "pandas",
+    "scikit-learn",
+    "pytorch",
+    "sql",
+    "airflow"
+   ],
+   "direction_before": "data_ml",
+   "direction_after": "data_ml",
+   "leaks_after": [
+    "[ФИО]",
+    "[адрес]",
+    "[адрес]",
+    "[дата рождения]"
+   ]
+  },
+  {
+   "head": "Backend-разработчик. Опыт коммерческой р",
+   "exp_original": 2.0,
+   "exp_before": 2.0,
+   "exp_after": 2.0,
+   "stack_before": [
+    "python",
+    "fastapi",
+    "postgresql",
+    "sql",
+    "git",
+    "http",
+    "rest-api",
+    "django"
+   ],
+   "stack_after": [
+    "python",
+    "fastapi",
+    "postgresql",
+    "sql",
+    "git",
+    "http",
+    "rest-api",
+    "django"
+   ],
+   "direction_before": "backend",
+   "direction_after": "backend",
+   "leaks_after": []
+  }
+ ]
+}
