@@ -59,7 +59,8 @@ def _pct(xs, q):
     return xs[min(len(xs) - 1, int(round(q * (len(xs) - 1))))] if xs else None
 
 
-def run_model(spec: str, rows: list[dict], conc: int, predictions_out: Path | None = None) -> dict:
+def run_model(spec: str, rows: list[dict], conc: int, predictions_out: Path | None = None,
+              retry_429: int = 0) -> dict:
     prov, model = spec.split("=", 1)
     os.environ["LLM_CHAIN"] = prov
     os.environ["LLM_MODEL_PARSE_NEED"] = f"{prov}={model}"
@@ -68,10 +69,16 @@ def run_model(spec: str, rows: list[dict], conc: int, predictions_out: Path | No
 
     def one(row):
         t0 = time.monotonic()
-        _tl.res = None
-        _tl.call_kwargs = None
-        req = NP.parse_need(row["text"])
-        res = _tl.res
+        for attempt in range(retry_429 + 1):
+            _tl.res = None
+            _tl.call_kwargs = None
+            req = NP.parse_need(row["text"])
+            res = _tl.res
+            # 429 — лимит частоты у облачного провайдера (не качество модели): повтор с паузой, если разрешён
+            if not (res is not None and res.error == "http_429" and attempt < retry_429):
+                break
+            time.sleep(5 * (attempt + 1))
+        retries = attempt
         llm_only = None
         if res is not None and res.ok and isinstance(res.data, dict):
             masked = NP.bias_filter.mask(row["text"], NP.bias_filter.find_bias(row["text"]))
@@ -80,7 +87,7 @@ def run_model(spec: str, rows: list[dict], conc: int, predictions_out: Path | No
         return {"id": row["id"], "requirements": req, "llm_only": llm_only, "wall_s": round(time.monotonic() - t0, 3),
                 "ok": bool(res and res.ok), "error": res.error if res else "no_call",
                 "latency_ms": res.latency_ms if res else None, "usage": res.usage if res else None,
-                "call_settings": _tl.call_kwargs}
+                "call_settings": _tl.call_kwargs, "retries_429": retries}
 
     with ThreadPoolExecutor(conc) as ex:
         out = list(ex.map(one, rows))
@@ -103,6 +110,7 @@ def run_model(spec: str, rows: list[dict], conc: int, predictions_out: Path | No
             "cost_usd": round(cost, 4) if cost else None,
             "llm_rules": measure(rows, [o["requirements"] for o in out]),
             "llm_only": {**measure(rows, [o["llm_only"] for o in out]), "n_with_reply": len(ok)},
+            "retries_429": sum(o["retries_429"] for o in out),
             "per_text": [{k: o[k] for k in ("id", "ok", "error", "latency_ms")} for o in out]}
 
 
@@ -147,21 +155,33 @@ def main():
     ap.add_argument("--conc", type=int, default=3)
     ap.add_argument("--tag", default="", help="подпись прогона в ключе результата (например, «reasoning low»)")
     ap.add_argument("--predictions-out", type=Path, help="полная выдача одного нового прогона для аудита")
+    ap.add_argument("--limit", type=int, default=0, help="только первые N вакансий корпуса (замер на CPU: 10–20)")
+    ap.add_argument("--retry-429", type=int, default=0,
+                    help="повторов при HTTP 429 (лимит частоты облачного провайдера); 0 — одна попытка, как раньше")
     a = ap.parse_args()
     specs = a.models.split(",")
     if a.predictions_out is not None and len(specs) != 1:
         ap.error("--predictions-out разрешён только для одной модели, чтобы не перезаписать её выдачу")
     rows = json.loads((ROOT / "docs/realdata/vacancies_50.json").read_text())["vacancies"]
+    if a.limit:
+        rows = rows[: a.limit]
     path = Path(a.out)
     result = json.loads(path.read_text()) if path.exists() else {
         "corpus": "docs/realdata/vacancies_50.json", "annotation": "silver (И8): не экспертная разметка", "models": {}}
     result["rules_only"] = measure(rows, [NP.parse_need(r["text"], use_llm=False) for r in rows])
     for spec in specs:
         t0 = time.time()
-        r = run_model(spec, rows, a.conc, a.predictions_out)
+        r = run_model(spec, rows, a.conc, a.predictions_out, a.retry_429)
         r["wall_total_s"] = round(time.time() - t0, 1)
         r["date"] = time.strftime("%Y-%m-%d")
         r["reasoning"] = llm.reasoning_for("parse_need") if r["provider"] == "openrouter" else None
+        if r["provider"] == "local":  # где на самом деле работала модель: свой сервер (CPU) или облачный совместимый API
+            s = get_settings()
+            r["local"] = {"server": "openrouter" if "openrouter.ai" in (s.llm_local_base_url or "") else "self-hosted",
+                          "json_mode": s.llm_local_json_mode, "no_think": s.llm_local_no_think,
+                          "extra_body_keys": sorted(json.loads(s.llm_local_extra_body or "{}"))}
+        if a.limit:
+            r["limit"] = a.limit
         result["models"][r["model"] + (f" ({a.tag})" if a.tag else "")] = r
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(result, ensure_ascii=False, indent=2))

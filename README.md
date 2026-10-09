@@ -161,6 +161,10 @@ LLM: цепочка провайдеров `LLM_CHAIN=openrouter,yandex` — Cla
 переменные Yandex (`LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_FOLDER_ID`, `LLM_MODEL`) — в `LLM_ENV_FILE`
 (на сервере `/opt/spectrek_fsp/secrets/llm.env`). Модели по функциям и настройка — [docs/LLM.md](docs/LLM.md).
 Персональные данные вырезаются из текста до обращения к любой модели.
+Без ключей и без зарубежных API — своя открытая модель на CPU одной командой `make llm-local`: сервис `llm-local`
+(llama.cpp server, Qwen3.5-9B Q4_K_M скачивается при первом старте, около 6,6 ГиБ памяти) и `LLM_CHAIN=local`;
+открытые ответы теста оценивает Qwen, разбор вакансий и резюме остаётся за правилами (замер и выбор —
+[docs/LLM.md, раздел 9](docs/LLM.md)). Без профиля ничего не меняется.
 Движок теста — `ASSESSMENT_ENGINE` (`bank` — адаптивный тест на банке заданий; `stub` — запасная заглушка).
 Банк обновляется командой `python tools/sync_bank.py --commit` (из окружения банка: numpy, scipy, pydantic,
 PyYAML); скрипт выкладки вызывает её сам, так что новые семейства из `../bank` попадают на сервер автоматически.

@@ -102,6 +102,20 @@ class Settings(BaseSettings):
     llm_relay_ca_file: str | None = None
     # То же содержимым (PEM в base64) — удобно для env_file в docker compose без монтирования файла
     llm_relay_ca_pem_b64: str | None = None
+    # Открытая модель на этой машине (docs/LLM.md, раздел 9; профиль docker compose llm-local — llama.cpp server на CPU):
+    # провайдер local — любой OpenAI-совместимый сервер (llama.cpp, Ollama, vLLM). Включается только через LLM_CHAIN
+    # («local» или «openrouter,local»); без него поведение прежнее. Ключ нужен, только если сервер его требует.
+    llm_local_base_url: str | None = None
+    llm_local_model: str | None = None
+    llm_local_api_key: str | None = None
+    # Тайм-аут попытки local, с (CPU медленнее облака); пусто — как у функции. Общий бюджет оценки и дедлайн — те же
+    llm_local_timeout_s: float | None = None
+    # response_format = json_object при want_json (у llama.cpp — грамматика: ответ всегда разбираемый JSON)
+    llm_local_json_mode: bool = True
+    # chat_template_kwargs.enable_thinking = false: Qwen3.x по умолчанию рассуждает, на CPU это минуты
+    llm_local_no_think: bool = True
+    # Доп. поля тела запроса (JSON-объект) — например, для сравнения тех же весов через облачный совместимый API
+    llm_local_extra_body: str | None = None
     # Модель на функцию: «модель» (для первого провайдера цепочки) или «провайдер=модель,провайдер=модель»;
     # пусто — по умолчанию (openrouter: Sonnet 5.5, вторая оценка — Fable 5.1; yandex: LLM_MODEL / LLM_GRADING_MODEL)
     llm_model_parse_need: str | None = None
@@ -290,6 +304,8 @@ class Settings(BaseSettings):
             return bool(self.llm_base_url and self.llm_api_key and self.llm_model)
         if name == "openrouter":
             return bool(self.openrouter_api_key and (self.llm_relay_url or self.openrouter_base_url))
+        if name == "local":
+            return bool(self.llm_local_base_url and self.llm_local_model)
         return False
 
     @property
