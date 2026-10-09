@@ -49,6 +49,21 @@ FORMAT_ERRORS = ("invalid_json", "invalid_reply", "empty", "schema_rejected")
 _tl = threading.local()
 
 
+# учёт расходов процесса (usage.cost OpenRouter) и потолок: превысили — оставшиеся входы пропускаются (budget_skip)
+SPEND = {"usd": 0.0, "cap": None}
+_spend_lock = threading.Lock()
+
+
+def _over_cap() -> bool:
+    return SPEND["cap"] is not None and SPEND["usd"] >= SPEND["cap"]
+
+
+def _add_cost(res) -> None:
+    c = (getattr(res, "usage", None) or {}).get("cost") or 0
+    with _spend_lock:
+        SPEND["usd"] += float(c)
+
+
 def slug(spec: str) -> str:
     return re.sub(r"[^a-zA-Z0-9.]+", "_", spec).strip("_")
 
@@ -77,6 +92,7 @@ def _recorder(module):
     def rec(*a, **kw):
         res = orig(*a, **kw)
         _tl.res = res
+        _add_cost(res)
         return res
 
     module.chat_json = rec
@@ -114,15 +130,18 @@ def _tags(req: dict) -> dict:
             "desired": sorted(i["tag"] for i in req.get("stack_desired") or [])}
 
 
-def run_needs(spec: str, conc: int, full: bool, jury: bool = False) -> dict:
+def run_needs(spec: str, conc: int, full: bool, jury: bool = False, limit: int = 0) -> dict:
     from app.modules.matching import need_parser as NP
 
     _set_model(spec, ("parse_need",))
     orig = _recorder(NP)
     try:
         rows = [{"id": i, "kind": k, "text": t} for i, k, t in _jury_texts()] if jury else _vacancies()
+        rows = rows[:limit] if limit else rows
 
         def one(row):
+            if _over_cap():
+                return {"id": row["id"], "called": False, "skipped": "budget"}
             _tl.res = None
             t0 = time.monotonic()
             req = NP.parse_need(row["text"], full=full)
@@ -158,7 +177,7 @@ def _resume_pred(o: dict) -> dict:
             "llm_stack": sorted(s["tag"] for s in o["stack"] if s.get("by") == "llm")}
 
 
-def run_resume(spec: str, conc: int) -> dict:
+def run_resume(spec: str, conc: int, limit: int = 0) -> dict:
     from app.modules.resume import extract as RX
     from app.modules.resume.pii import redact
 
@@ -166,13 +185,15 @@ def run_resume(spec: str, conc: int) -> dict:
     orig = _recorder(RX)
     try:
         def one(row):
+            if _over_cap():
+                return {"id": row["id"], "called": False, "skipped": "budget"}
             _tl.res = None
             red = redact(row["text"], use_ner=True).text
             o = RX.extract(red, use_llm=True)
             return {"id": row["id"], **_call_info(_tl.res), "used": bool((o.get("llm") or {}).get("used")),
                     **_resume_pred(o)}
 
-        out = _pool(one, _resumes(), conc)
+        out = _pool(one, _resumes()[:limit] if limit else _resumes(), conc)
     finally:
         RX.chat_json = orig
     return {"spec": spec, "func": "resume", "date": time.strftime("%Y-%m-%d"), "per_text": out}
@@ -200,9 +221,12 @@ def _chat_batch(spec: str, req_path: Path, out_path: Path, func: str, conc: int,
     fout = open(out_path, "a", encoding="utf-8")
 
     def one(r):
+        if _over_cap():
+            return  # потолок расходов: вход не запрашивается (докачка — повторным запуском)
         t0 = time.time()
         res = llm.chat(r["messages"], temperature=r.get("temperature", 0.0), max_tokens=3000, model=spec, func=func,
                        timeout_s=timeout, want_json=True)
+        _add_cost(res)
         u = res.usage or {}
         o = {"req_id": r["req_id"], "model": res.model or spec.split("=", 1)[1], "provider": res.provider,
              "text": res.text, "pt": u.get("prompt_tokens"), "ct": u.get("completion_tokens"), "cost": u.get("cost"),
@@ -217,7 +241,8 @@ def _chat_batch(spec: str, req_path: Path, out_path: Path, func: str, conc: int,
     fout.close()
 
 
-def run_grade(spec: str, conc: int, wdir: Path, limit_per_group: int = 0, second: str | None = None) -> dict:
+def run_grade(spec: str, conc: int, wdir: Path, limit_per_group: int = 0, second: str | None = None,
+              timeout: float = 40, with_second: bool = True) -> dict:
     """second — модель второй оценки (по умолчанию та же; путь продукта для openrouter — Claude Fable 5.1)."""
     from app.modules.validation import grader_check as GC
 
@@ -226,9 +251,10 @@ def run_grade(spec: str, conc: int, wdir: Path, limit_per_group: int = 0, second
     g.mkdir(parents=True, exist_ok=True)
     if not (g / "v2_1.jsonl").exists():
         GC.build("v2", str(g / "v2_1.jsonl"), limit_per_group)
-    _chat_batch(spec, g / "v2_1.jsonl", g / "v2_1_out.jsonl", "grade", conc, 40)
+    _chat_batch(spec, g / "v2_1.jsonl", g / "v2_1_out.jsonl", "grade", conc, timeout)
     GC.second(str(g / "v2_1.jsonl"), str(g / "v2_1_out.jsonl"), str(g / "v2_2.jsonl"))
-    _chat_batch(second or spec, g / "v2_2.jsonl", g / "v2_2_out.jsonl", "grade_second", conc, 40)
+    if with_second:
+        _chat_batch(second or spec, g / "v2_2.jsonl", g / "v2_2_out.jsonl", "grade_second", conc, timeout)
     return grade_summary(spec, wdir, second)
 
 
