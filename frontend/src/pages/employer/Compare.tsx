@@ -123,8 +123,8 @@ export function Compare() {
           {groups.map((g) => (
             <div key={g.group} role="rowgroup" className="contents">
               <div role="row" className="contents">
-                <div className="sticky left-0 z-10 border-b border-brand-night/10 bg-white px-4 pb-1 pt-4 text-xs font-bold uppercase tracking-[0.12em] text-brand-lavender">{g.group}</div>
-                {cs.map((c) => <div key={c.ref} className="border-b border-l border-brand-night/10 bg-white" />)}
+                <div role="rowheader" className="sticky left-0 z-10 border-b border-brand-night/10 bg-white px-4 pb-1 pt-4 text-xs font-bold uppercase tracking-[0.12em] text-brand-lavender">{g.group}</div>
+                {cs.map((c) => <div key={c.ref} role="cell" className="border-b border-l border-brand-night/10 bg-white" />)}
               </div>
               {g.rows.map((r) => (
                 <div key={r.key} role="row" className="contents">
