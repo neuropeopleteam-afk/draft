@@ -69,12 +69,25 @@ test("390 px: главная и «Как мы проверяем себя»", as
 test("390 px: кандидат — опрос, экран задания, категория, карта навыков", async ({ page }) => {
   await juryEnter(page, "candidate");
   await screen(page, "10-кандидат-кабинет");
-  await test.step("390 px: свёрнутый проводник не закрывает низ страницы", async () => {
+  await test.step("390 px: свёрнутый проводник — в шапке кабинета, не над содержимым (Ф6 В8)", async () => {
     const pill = page.getByRole("button", { name: "Показать проводник для жюри" });
     await expect(pill).toBeVisible();
-    const h = (await pill.boundingBox())?.height ?? 0;
+    // кнопка в потоке шапки (не fixed) и в её первой строке — содержимое страницы она не перекрывает
+    expect(await pill.evaluate((el) => {
+      for (let e: HTMLElement | null = el as HTMLElement; e; e = e.parentElement) if (getComputedStyle(e).position === "fixed") return "fixed";
+      return "static";
+    }), "кнопка проводника не плавает над страницей").toBe("static");
+    const box = await pill.boundingBox();
+    expect(box && box.y + box.height <= 64, "кнопка — в строке шапки").toBe(true);
+    // открытая панель — с местом под ней внизу страницы; закрытие запоминается
+    await pill.click();
+    const panel = page.getByRole("complementary", { name: "Проводник для экспертов жюри" });
+    await expect(panel).toBeVisible();
+    const h = (await panel.boundingBox())?.height ?? 0;
     await expect.poll(() => page.evaluate(() => parseFloat(getComputedStyle(document.body).paddingBottom) || 0),
       { message: "место под проводником внизу страницы" }).toBeGreaterThanOrEqual(h);
+    await panel.getByRole("button", { name: "Скрыть проводник" }).click();
+    await expect(pill).toBeVisible();
   });
   await screen(page, "11-кандидат-опрос-и-тест", "/candidate/assessment");
   await test.step("экран задания теста", async () => {
