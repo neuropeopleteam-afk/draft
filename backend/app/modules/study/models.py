@@ -1,13 +1,13 @@
-"""Проверка с живыми пользователями: участник, события пути, ответы анкеты.
+"""Проверка с живыми пользователями: участник (обезличенно), события пути, ответы анкеты.
 
-* StudyParticipant — приглашение (одна строка = один человек). В базе только SHA-256 кода-ссылки; имени и почты здесь
-  нет. user_id — служебная связь с учётной записью, чтобы брать факты пути из платформы; при удалении учётной записи
-  становится NULL (ответы остаются обезличенными). label — «К-01», «Р-03»: по нему команда узнаёт ссылку, не зная имени.
-  source — откуда участник (freelance_paid — приглашён через фриланс-биржу, оплачено; team — знакомые команды, без оплаты):
-  подпись публичного блока строится по нему. is_test — репетиция команды: в публичные цифры не входит. withdrawn_at — отозванное согласие: события и ответы
-  удалены, строка остаётся, чтобы код нельзя было использовать повторно.
+* StudyParticipant — одна учётная запись, у которой включена обезличенная статистика прохождения (показано уведомление
+  о ней). Имени, почты и IP здесь нет. user_id — служебная связь с учётной записью, чтобы брать факты пути из платформы
+  (время опроса, теста, потребности); при удалении учётной записи становится NULL, цифры остаются обезличенными.
+  declined_at — человек нажал «Не участвовать»: события и ответы удалены, статистика у него больше не собирается
+  (строка остаётся только как отметка отказа).
 * StudyEvent — обезличенное событие: view (нормализованный путь экрана), error (код и статус ошибки). Без тел запросов.
-* StudyAnswer — анкета после пути (одна на участника): SUS (10 пунктов), оценки топ-5, доверие к грейду, комментарий.
+* StudyAnswer — необязательная анкета после пути (одна на участника): SUS (10 пунктов), оценки топ-5, доверие к
+  грейду, «что мешало».
 """
 from __future__ import annotations
 
@@ -23,29 +23,14 @@ from app.core.db import Base, Timestamps, UUIDPk, utcnow
 class StudyParticipant(UUIDPk, Timestamps, Base):
     __tablename__ = "study_participants"
 
-    code_hash: Mapped[str] = mapped_column(sa.String(64), unique=True)
-    role: Mapped[str] = mapped_column(sa.String(16))  # candidate | employer
-    label: Mapped[str] = mapped_column(sa.String(16))
-    batch: Mapped[str] = mapped_column(sa.String(64), default="", server_default="")
-    mode: Mapped[str] = mapped_column(sa.String(16), default="quick", server_default="quick")  # quick | register
-    source: Mapped[str] = mapped_column(sa.String(16), default="freelance_paid", server_default="freelance_paid")
-    is_test: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
-    is_active: Mapped[bool] = mapped_column(default=True, server_default=sa.true())
     user_id: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("users.id", ondelete="SET NULL"), unique=True)
-    opened_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
-    consent_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
-    consent_version: Mapped[str | None] = mapped_column(sa.String(32))
-    started_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))  # согласие дано, путь начат
-    joined_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))  # учётная запись привязана
+    role: Mapped[str] = mapped_column(sa.String(16))  # candidate | employer
+    enrolled_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)  # показано уведомление, сбор начат
     last_seen_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
-    withdrawn_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    prompted_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))  # анкета показана (один раз)
+    declined_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
-    __table_args__ = (
-        sa.CheckConstraint("role IN ('candidate', 'employer')", name="role"),
-        sa.CheckConstraint("mode IN ('register', 'quick')", name="mode"),
-        sa.CheckConstraint("source IN ('freelance_paid', 'team')", name="source"),
-        sa.Index("ix_study_participants_batch", "batch"),
-    )
+    __table_args__ = (sa.CheckConstraint("role IN ('candidate', 'employer')", name="role"),)
 
 
 class StudyEvent(UUIDPk, Base):
