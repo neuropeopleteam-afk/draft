@@ -28,7 +28,8 @@ from sqlalchemy.orm import Session
 
 from app.modules.catalog.seed_data import GRADE_LEVEL
 from app.modules.matching.need_parser import parse_need
-from app.modules.matching.ranking import ALGORITHM_VERSION, WEIGHTS, requirement_priority, score_candidate
+from app.modules.matching import must_have
+from app.modules.matching.ranking import ALGORITHM_VERSION, MUST_ALGORITHM, WEIGHTS, score_candidate
 from app.modules.profiles.facts import Bundle, load_bundles
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 
@@ -49,8 +50,12 @@ def label(b: Bundle, req: dict) -> int:
         rel = 3
     if cov < 0.5:
         rel = min(rel, 1)
-    wf = req.get("work_format")
-    if wf in ("office", "remote") and p.work_format.value in ("office", "remote") and p.work_format.value != wf:
+    # формат несовместим: офис ↔ удалённо; гибрид среди допустимых — совместим с обоими (Ф2: список форматов)
+    from app.modules.matching.ranking import need_conditions
+
+    fmts = need_conditions(req)["work_formats"] or []
+    if (fmts and "hybrid" not in fmts and p.work_format.value in ("office", "remote")
+            and p.work_format.value not in fmts):
         rel -= 1
     return max(0, rel)
 
@@ -145,7 +150,12 @@ METHODS = ("platform", "platform_no_fsp", "bm25", "keywords", "random")
 EVAL_GRADES = ("junior", "middle", "senior")
 
 
-def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_order: bool = True) -> dict:
+def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_order: bool | None = None,
+             must_first: bool | None = None) -> dict:
+    """must_first — ярусы обязательного (Ф2; по умолчанию — как в продукте, флаг MATCH_MUST_FIRST);
+    baseline_order=True — прежний порядок match-v1 (для сравнения до/после)."""
+    if must_first is None:
+        must_first = must_have.enabled() if baseline_order is None else not baseline_order
     rnd = random.Random(seed)
     # Набор кандидатов для разметки зафиксирован до появления грейда «Стажёр» и статуса «предварительно»: стажёры и
     # предварительные в размеченные пары не входят, иначе изменился бы состав уже размеченных экспертами пар
@@ -169,6 +179,10 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_or
         # внутри — скор; кандидаты вне категорий в подборку не попадают (здесь — в конец списка)
         cats_ok = selection_categories(req)
         sc = {b.profile.user_id: score_candidate(b, req) for b in cand}
+        # ярус обязательного — как в build_selection: доступность навыка — по всему пулу категорий потребности
+        pool_cat = [b for b in bundles if cats_ok is None or b.profile.current_category_id in cats_ok]
+        avail = must_have.available(pool_cat, req)
+        must_t = {b.profile.user_id: must_have.assess(b, req, avail)["tier"] for b in cand}
 
         def in_cat(b):
             return 0 if (cats_ok is None or b.profile.current_category_id in cats_ok) else 1
@@ -178,7 +192,7 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_or
             return s0 - WEIGHTS["fsp"] * comps["fsp"]
 
         def must_priority(b):
-            return 0 if baseline_order else requirement_priority(b, req)
+            return must_t[b.profile.user_id] if must_first else 0
 
         kw_rng, bm_rng = random.Random(seed + qi), random.Random(seed + 1000 + qi)
         order = {
@@ -225,7 +239,7 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_or
     summary = {m: {k: round(sum(v) / len(v), 3) for k, v in agg[m].items()} for m in agg}
     summary["within_category_ndcg@3"] = {k: round(sum(v) / len(v), 3) if v else None for k, v in within.items()}
     summary["within_category_needs"] = len(within["platform"])
-    return {"algorithm": ALGORITHM_VERSION if baseline_order else "experiment-mandatory-gaps",
+    return {"algorithm": MUST_ALGORITHM if must_first else ALGORITHM_VERSION,
             "n_needs": len(needs), "n_pool": len(bundles), "set_size": K_SET, "n_pairs": len(pairs),
             "relevant_share": round(sum(1 for p in pairs if p["label"] >= 2) / max(len(pairs), 1), 3),
             "methods": {"platform": "Подборка платформы", "platform_no_fsp": "Платформа без бонуса ФСП",
