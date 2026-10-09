@@ -77,7 +77,7 @@ export default function LiveUsers({ data: d }: { data: any }) {
       <p className="mt-1 text-sm text-brand-ink/70">Медиана по завершившим путь; шаг, уже пройденный к моменту включения сбора, не считается. «Бросили» — нет действий не менее 30 минут до конца пути.</p>
       <div className="mt-2 grid gap-3 md:grid-cols-2">
         {roles.map((r) => (
-          <T key={r} caption={`Шаги пути: ${ROLE[r]}`} min="18rem" head={[ROLE[r], "Медиана", "Остановились"]}
+          <T key={r} caption={`Шаги пути: ${ROLE[r]}`} min="18rem" head={[ROLE[r], "Медиана", "Бросили"]}
             rows={stepKeys(r).map((k) => [steps(r)[k], d.time?.step_median_s?.[k] != null ? `${fmtMin(d.time.step_median_s[k])}${NB}мин` : "—", share.stopped_at?.[k] ?? 0])} />
         ))}
       </div>
@@ -95,7 +95,7 @@ export default function LiveUsers({ data: d }: { data: any }) {
         <K label="Ошибки интерфейса" value={`${err?.participants ?? 0} из ${err?.of ?? 0}`}
           hint={`у скольких людей были ошибки · серверных: ${err?.server ?? 0}`} />
       </div>
-      <p className="mt-2 text-xs text-brand-ink/65">SUS и P@5 дали только те, кто заполнил необязательную анкету; кандидаты в подборке демонстрационные, профили смоделированы. Доверительные интервалы — по малой выборке, ширина честная, а не красивая.</p>
+      <p className="mt-2 text-xs text-brand-ink/65">SUS и P@5 дали только те, кто заполнил необязательную анкету; кандидаты в подборке демонстрационные, профили смоделированы. При малой выборке интервалы широкие: это и есть реальная неопределённость.</p>
 
       {Object.keys(d.blockers ?? {}).length > 0 && (
         <>
