@@ -40,6 +40,8 @@ import { fspSections } from "./ideas/fsp/sections";
 import LiveGuest from "./ideas/live/Guest";
 import LiveScreen from "./ideas/live/Screen";
 import PassportVerify from "./passport/VerifyPage";
+import Criteria, { JuryGo } from "./pages/Criteria";  // К1: проверка по критериям ТЗ
+import { HashScroll } from "./lib/hashScroll";
 
 export default function App() {
   return (
@@ -47,6 +49,8 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/validation" element={<Validation />} />
+      <Route path="/criteria" element={<Criteria />} />
+      <Route path="/jury/go" element={<JuryGo />} />
       <Route path="/jury/live" element={<LiveScreen />} />
       <Route path="/j/:code" element={<LiveGuest />} />
       <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
@@ -127,6 +131,7 @@ export default function App() {
       <Route path="*" element={<NotFound />} />
     </Routes>
     <JuryGuide />
+    <HashScroll />
     </>
   );
 }
