@@ -28,7 +28,7 @@ export function WhatIf({ needId, version, next, busy, onApply }: {
   );
   if (!d.shown) {
     return (
-      <div className="flex flex-wrap items-end justify-between gap-2">
+      <div id="what-if" className="flex scroll-mt-20 flex-wrap items-end justify-between gap-2">
         {strictLine}
         {d.strict_apply && (
           <button type="button" className="text-sm font-semibold text-brand hover:underline" disabled={busy}
@@ -41,7 +41,7 @@ export function WhatIf({ needId, version, next, busy, onApply }: {
   }
   const top = d.cuts[0];
   return (
-    <section className="card space-y-3 border-brand/30" aria-label="Что если ослабить требование">
+    <section id="what-if" className="card scroll-mt-20 space-y-3 border-brand/30" aria-label="Что если ослабить требование">
       <div>
         <h2 className="text-sm font-bold text-brand-night">
           {d.strict ? `Полностью подходят только ${num(d.strict, 0)} — что если ослабить одно требование` : "Полностью подходящих нет — что если ослабить требование"}
