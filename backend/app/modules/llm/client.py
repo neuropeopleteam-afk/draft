@@ -96,8 +96,8 @@ def short_model(model: str | None) -> str:
     return re.sub(r"^gpt://[^/]+/", "", model or "")
 
 
-_LABELS = {"yandexgpt": "YandexGPT", "yandexgpt-lite": "YandexGPT Lite", "gpt-oss-120b": "gpt-oss-120b",
-           "gpt-oss-20b": "gpt-oss-20b"}
+_LABELS = {"yandexgpt": "YandexGPT", "yandexgpt-lite": "YandexGPT Lite", "yandexgpt-5.1": "YandexGPT 5.1",
+           "gpt-oss-120b": "gpt-oss-120b", "gpt-oss-20b": "gpt-oss-20b"}  # Я2: «YandexGPT 5.1» на чипах режима LLM_CHAIN=yandex
 
 
 def model_label(model: str | None) -> str:
