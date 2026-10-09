@@ -76,7 +76,7 @@ export default function ClosedSet() {
               try { setContent(await file.text()); setFormat(file.name.toLowerCase().endsWith(".csv") ? "csv" : "json"); setFilename(file.name); }
               catch { setError("Не удалось прочитать файл"); }
             }} />
-          {filename && <p className="mt-1 break-all text-xs font-normal text-brand-ink/60">{filename}</p>}
+          {filename && <p className="mt-1 break-all text-xs font-normal text-brand-ink/65">{filename}</p>}
         </label>
         <label className="text-sm font-semibold text-brand-night">Размер топа k
           <input aria-label="Размер топа k" type="number" min={1} max={50} value={k}

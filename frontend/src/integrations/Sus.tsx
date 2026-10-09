@@ -83,7 +83,7 @@ export function SusPage() {
   const [sp] = useSearchParams();
   const context = ["e2e", "jury", "pilot", "other"].includes(sp.get("context") ?? "") ? sp.get("context")! : "other";
   return (
-    <div className="min-h-screen bg-[#FBF8FC] px-6 py-10">
+    <main id="main" className="min-h-screen bg-[#FBF8FC] px-6 py-10">
       <div className="mx-auto max-w-2xl space-y-6">
         <Link to="/"><Logo /></Link>
         <div>
@@ -93,7 +93,7 @@ export function SusPage() {
         <div className="card"><SusSurvey context={context} /></div>
         <SusSummaryCard />
       </div>
-    </div>
+    </main>
   );
 }
 

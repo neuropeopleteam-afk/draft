@@ -399,11 +399,11 @@ export function Selection() {
                         }} />
                       <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{REL[c.relation]} · рынок {range(c.market_range?.from, c.market_range?.to)} на руки</span></span>
                     </label>
-                    <span className="chip" title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, предварительно ${c.provisional}` : ""}${c.unconfirmed ? `, заявили без подтверждения ${c.unconfirmed}` : ""}`}>{c.count}{c.unconfirmed ? <span className="text-brand-ink/50"> +{c.unconfirmed}</span> : null}</span>
+                    <span className="chip" title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, предварительно ${c.provisional}` : ""}${c.unconfirmed ? `, заявили без подтверждения ${c.unconfirmed}` : ""}`}>{c.count}{c.unconfirmed ? <span className="text-brand-ink/65"> +{c.unconfirmed}</span> : null}</span>
                   </li>
                 ))}
               </ul>
-              {s.categories.some((c: any) => c.unconfirmed) && <p className="mt-2 text-xs text-brand-ink/50">+n — заявили категорию, грейд не подтверждён: в подборке ниже всех подтверждённых</p>}
+              {s.categories.some((c: any) => c.unconfirmed) && <p className="mt-2 text-xs text-brand-ink/65">+n — заявили категорию, грейд не подтверждён: в подборке ниже всех подтверждённых</p>}
             </section>
             <section className="card space-y-3">
               <h2 className="text-sm font-bold text-brand-night">Уточнить</h2>
@@ -475,6 +475,8 @@ export function Selection() {
           </div>
         </div>
       )}
+      {/* А11: обновление подборки (новая версия, пересчёт) — экранному диктору; последним элементом, чтобы не сдвигать space-y */}
+      <p className="sr-only" role="status" aria-live="polite">{busy ? "Пересчитываем подборку" : s ? `Подборка v${s.version}: кандидатов ${s.total}` : ""}</p>
       <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Зонд для ${picked.length} канд.`}>
         <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={() => { setProbeOpen(false); setPicked([]); }} />
       </Modal>

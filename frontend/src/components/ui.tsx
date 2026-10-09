@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { ApiError, api } from "../lib/api";
 
 /** Неразрывный пробел: между числом и «₽»/«%», внутри «220 000». */
@@ -184,15 +184,29 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
   );
 }
 
+/** Элементы окна, на которые попадает Tab (видимые и не выключенные). */
+const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+/** Tab и Shift+Tab ходят по кругу внутри окна (aria-modal): фокус не уходит на страницу под затемнением. */
+function trapTab(e: KeyboardEvent, box: HTMLElement | null) {
+  if (e.key !== "Tab" || !box) return;
+  const items = [...box.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((x) => x.getClientRects().length > 0);
+  if (!items.length) { e.preventDefault(); box.focus(); return; }
+  const first = items[0], last = items[items.length - 1], a = document.activeElement;
+  if (!box.contains(a)) { e.preventDefault(); first.focus(); }
+  else if (e.shiftKey && (a === first || a === box)) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && a === last) { e.preventDefault(); first.focus(); }
+}
+
 export function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const close = useRef(onClose);
   close.current = onClose;
+  const titleId = useId();
   // Только при открытии/закрытии (onClose часто новая функция на каждый рендер — фокус не должен прыгать)
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
-    const h = (e: KeyboardEvent) => e.key === "Escape" && close.current();
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") close.current(); else trapTab(e, box.current); };
     window.addEventListener("keydown", h);
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";  // фон под окном не прокручивается
@@ -202,10 +216,10 @@ export function Modal({ open, onClose, title, children }: { open: boolean; onClo
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-brand-night/40 p-0 md:items-center md:p-6" onClick={onClose}>
-      <div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} onClick={(e) => e.stopPropagation()}
+      <div ref={box} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} onClick={(e) => e.stopPropagation()}
         className="max-h-[92vh] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-t-2xl bg-white p-5 shadow-xl outline-none sm:p-6 md:rounded-2xl">
         <div className="mb-4 flex items-start justify-between gap-4">
-          <h2 className="text-lg font-bold text-brand-night">{title}</h2>
+          <h2 id={titleId} className="text-lg font-bold text-brand-night">{title}</h2>
           <button onClick={onClose} className="-mr-1 -mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-brand-ink/65 hover:bg-brand-blush/50 hover:text-brand-night" aria-label="Закрыть">
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>

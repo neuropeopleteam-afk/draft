@@ -68,11 +68,11 @@ export function Search() {
               <ul className="grid grid-cols-1 gap-0.5">{cats.data.filter((c) => !direction || c.direction === direction).map((c) => (
                 <li key={c.id} className="flex justify-between gap-2"><span>{c.title}</span>
                   <span title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, предварительно ${c.provisional}` : ""}${c.unconfirmed ? `, грейд не подтверждён ${c.unconfirmed}` : ""}`}>
-                    {c.count}{c.unconfirmed ? <span className="text-brand-ink/50"> +{c.unconfirmed}</span> : null}
+                    {c.count}{c.unconfirmed ? <span className="text-brand-ink/65"> +{c.unconfirmed}</span> : null}
                   </span>
                 </li>
               ))}</ul>
-              <p className="mt-1 text-brand-ink/50">+n — заявили категорию, грейд не подтверждён</p>
+              <p className="mt-1 text-brand-ink/65">+n — заявили категорию, грейд не подтверждён</p>
             </div>
           )}
         </aside>

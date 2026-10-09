@@ -13,6 +13,8 @@
   body { @apply bg-white text-brand-ink font-sans; overflow-wrap: break-word; }
   h1, h2, h3 { text-wrap: balance; }
   :focus-visible { @apply outline-none ring-2 ring-brand ring-offset-2; }
+  /* Программный фокус (пропуск навигации, новое задание теста, окно): без кольца вокруг всего блока */
+  main[tabindex="-1"]:focus-visible, h1[tabindex="-1"]:focus-visible, h2[tabindex="-1"]:focus-visible, [role="dialog"][tabindex="-1"]:focus-visible { @apply ring-0 ring-offset-0; }
   /* Флажки и переключатели — в цвет бренда и крупнее системных 13 px */
   input[type="checkbox"], input[type="radio"] { accent-color: #FF0053; width: 1rem; height: 1rem; flex-shrink: 0; }
   /* Таблицы: числа в столбцах одинаковой ширины */

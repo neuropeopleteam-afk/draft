@@ -28,10 +28,10 @@ export const panelSections = [
   { path: "security", title: "Безопасность входа", description: "Второй фактор: код из приложения-аутентификатора" },
 ];
 
-function Bar({ done, total }: { done: number; total: number }) {
+function Bar({ done, total, label = "Размечено" }: { done: number; total: number; label?: string }) {
   const pct = total ? Math.round((done / total) * 100) : 0;
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-brand-blush/50" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+    <div className="h-2 w-full overflow-hidden rounded-full bg-brand-blush/50" role="progressbar" aria-label={label} aria-valuetext={`${done} из ${total}`} aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
       <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${pct}%` }} />
     </div>
   );
@@ -183,10 +183,10 @@ function Shell({ title, subtitle, l, children, guide }: { title: string; subtitl
           <span className="text-brand-ink/65" aria-live="polite">{l.saving ? "Сохраняю…" : l.savedAt ? "Сохранено" : "Оценка сохраняется сразу"}</span>
         </div>
         <Bar done={l.done} total={l.items.length} />
-        <div className="flex flex-wrap gap-1" aria-label="Переход к объекту">
+        <div className="flex flex-wrap" role="group" aria-label="Переход к объекту">
           {l.items.map((x, i) => (
-            <button key={x.id} type="button" onClick={() => l.go(i)} title={`${i + 1}${x.label ? " · оценено" : ""}`} aria-label={`Объект ${i + 1}${x.label ? ", оценено" : ""}`}
-              className={`h-3 w-3 rounded-sm ${i === l.idx ? "ring-2 ring-brand ring-offset-1" : ""} ${x.label ? "bg-brand-plum" : "bg-brand-blush"}`} />
+            <button key={x.id} type="button" onClick={() => l.go(i)} title={`${i + 1}${x.label ? " · оценено" : ""}`} aria-label={`Объект ${i + 1}${x.label ? ", оценено" : ""}`} aria-current={i === l.idx ? "step" : undefined}
+              className="flex h-6 w-6 items-center justify-center rounded"><span aria-hidden="true" className={`h-3 w-3 rounded-sm ${i === l.idx ? "ring-2 ring-brand ring-offset-1" : ""} ${x.label ? "bg-brand-plum" : "bg-brand-blush"}`} /></button>
           ))}
         </div>
       </div>
@@ -339,7 +339,7 @@ export function ExpertAnswers() {
         <article className="card space-y-4">
           <div className="flex flex-wrap gap-2 text-xs"><span className="chip">{it.family_title}</span>{it.step_prompt && <span className="chip">Открытая книга, шаг 3 — объяснение</span>}</div>
           <p className="whitespace-pre-line font-semibold leading-relaxed text-brand-night">{it.stem}</p>
-          {it.code && <pre className="max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{it.code}</code></pre>}
+          {it.code && <pre tabIndex={0} aria-label="Код задания" className="max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{it.code}</code></pre>}
           {it.step_prompt && <p className="rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night">{it.step_prompt}</p>}
           <div>
             <Label>Ответ кандидата</Label>
@@ -415,7 +415,7 @@ export function ExpertAngoff() {
         <article className="card space-y-4">
           <div className="flex flex-wrap gap-2 text-xs"><span className="chip">{it.block_title}</span><span className="chip">{it.format_title}</span><span className="text-brand-ink/65">{it.title} · лимит {Math.round((it.time_limit_s ?? 0) / 60) || 1} мин</span></div>
           <p className="whitespace-pre-line font-semibold leading-relaxed text-brand-night">{it.stem}</p>
-          {it.code && <pre className="max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{numbered(it.code, it.format === "find_bug")}</code></pre>}
+          {it.code && <pre tabIndex={0} aria-label="Код задания" className="max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{numbered(it.code, it.format === "find_bug")}</code></pre>}
           <Task it={it} />
           {open && it.rubric?.criteria && (
             <div className="rounded-xl bg-[#F3F2FB] p-3 text-sm"><p className="font-semibold text-brand-night">Критерии рубрики</p>
