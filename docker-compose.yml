@@ -59,6 +59,11 @@ services:
         required: false
       - path: ${LLM_RELAY_ENV_FILE:-./secrets/llm_relay.env}
         required: false
+      # Открытая модель на этой машине (профиль llm-local ниже, docs/LLM.md, раздел 9): LLM_CHAIN=local и тайм-ауты CPU.
+      # Подключается командой make llm-local (LLM_LOCAL_ENV_FILE=./infra/llm-local/llm-local.env); без неё файла нет —
+      # ничего не меняется.
+      - path: ${LLM_LOCAL_ENV_FILE:-./secrets/llm_local.env}
+        required: false
       # Web Push: VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT. Нет файла — push выключен, остальное работает.
       - path: ${VAPID_ENV_FILE:-./secrets/vapid.env}
         required: false
@@ -82,6 +87,9 @@ services:
       # Демо-ATS (заглушки Talantix, «Поток», Хантфлоу, вебхук) api вызывает сам у себя — напрямую, без адреса сайта
       # (localhost:8140 изнутри контейнера недоступен). В настройках компании и в интерфейсе — публичный адрес.
       ATS_STUB_BASE_URL: ${ATS_STUB_BASE_URL:-http://127.0.0.1:8000}
+      # Адрес и имя модели сервиса llm-local; провайдер local используется, только если он есть в LLM_CHAIN
+      LLM_LOCAL_BASE_URL: ${LLM_LOCAL_BASE_URL:-http://llm-local:8080/v1}
+      LLM_LOCAL_MODEL: ${LLM_LOCAL_MODEL:-qwen3.5-9b}
     depends_on:
       db:
         condition: service_healthy
@@ -140,5 +148,55 @@ services:
       start_period: 90s
     mem_limit: 576m
 
+  # Открытая модель для машины без GPU и без доступа к зарубежным API (docs/LLM.md, раздел 9): llama.cpp server —
+  # OpenAI-совместимый API на CPU, модель Qwen3.5-9B (Q4_K_M, 5,7 ГБ) скачивается с Hugging Face при первом старте в том
+  # llm_models (в репозитории её нет). Включение одной командой: make llm-local. Без профиля llm-local сервис не
+  # запускается и api работает как раньше. Рассуждения выключены (--reasoning off): на CPU они стоят минуты.
+  # Замер 09.10 (8 vCPU, docs/llm/needs_cpu_qwen.json): память процесса 6,0–6,6 ГиБ (веса читаются в память целиком,
+  # --load-mode none; кэш подсказок ограничен 512 МБ), разбор вакансии — медиана 29 с. Для машины 8 ГБ —
+  # LLM_LOCAL_HF_REPO=unsloth/Qwen3.5-4B-GGUF:Q4_K_M, LLM_LOCAL_MODEL=qwen3.5-4b, LLM_LOCAL_MEM_LIMIT=4g (2,7 ГБ).
+  # Потоков — по числу доступных ядер (nproc), а не всех ядер хоста: --threads -1 на 8 vCPU сервера проверок взял 192.
+  llm-local:
+    profiles: ["llm-local"]
+    image: ${LLM_LOCAL_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-b11515}
+    restart: unless-stopped
+    environment:
+      LLAMA_CACHE: /models
+      LLM_THREADS: ${LLM_LOCAL_THREADS:-}
+    entrypoint: ["/bin/sh", "-c", 'exec /app/llama-server --threads "$${LLM_THREADS:-$$(nproc)}" "$$@"', "llama-server"]
+    command:
+      - --hf-repo
+      - ${LLM_LOCAL_HF_REPO:-unsloth/Qwen3.5-9B-GGUF:Q4_K_M}
+      - --no-mmproj
+      - --alias
+      - ${LLM_LOCAL_MODEL:-qwen3.5-9b}
+      - --ctx-size
+      - ${LLM_LOCAL_CTX:-16384}
+      - --parallel
+      - ${LLM_LOCAL_PARALLEL:-2}
+      - --cache-ram
+      - ${LLM_LOCAL_CACHE_RAM:-512}
+      - --load-mode
+      - none
+      - --reasoning
+      - "off"
+      - --no-webui
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8080"
+    volumes:
+      - llm_models:/models
+    ports:
+      - "127.0.0.1:${LLM_LOCAL_PORT:-8143}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30m  # первая загрузка модели
+    mem_limit: ${LLM_LOCAL_MEM_LIMIT:-8g}
+
 volumes:
   db_data:
+  llm_models:

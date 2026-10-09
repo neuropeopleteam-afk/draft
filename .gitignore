@@ -2,6 +2,8 @@
 .env
 *.env
 !.env.example
+# настройки профиля llm-local без секретов (docs/LLM.md, раздел 9)
+!infra/llm-local/llm-local.env
 secrets/
 # python
 __pycache__/
