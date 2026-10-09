@@ -251,13 +251,18 @@ def test_bank_retake_has_no_repeated_families(client, bank):
         v = [attempt_view(x) for x in rows]
     assert len(v) == 3 and all(x["engine"] == "bank" and x["n_items"] >= 5 for x in v)
     c12 = compare(v[0], v[1])
-    assert c12["overlap"]["repeated_families"] == 0 and c12["overlap"]["repeated_variants"] == 0
+    # повтор — другой субпул: семейства почти не повторяются (дотестирование первой попытки может взять семейство
+    # второго субпула — в синтетике так в ~7 % пар, одно семейство), варианты — новые всегда
+    assert c12["overlap"]["share_families"] <= 0.15 and c12["overlap"]["repeated_variants"] == 0
     assert v[0]["subpool"] != v[1]["subpool"]
     # третья попытка исключает семейства только прошлой (второй) попытки
-    assert compare(v[1], v[2])["overlap"]["repeated_families"] == 0
+    c23 = compare(v[1], v[2])
+    assert c23["overlap"]["share_families"] <= 0.15 and c23["overlap"]["repeated_variants"] == 0
+    assert v[2]["subpool"] == v[0]["subpool"]  # субпулов два: третья попытка — в субпуле первой
     d = client.get("/api/assessment/attempts", headers=H(t)).json()
     assert len(d["attempts"]) == 3 and d["comparison"]["second"]["id"] == d["attempts"][2]["id"]
-    assert "Повторов нет" in next(x["text"] for x in d["comparison"]["changes"] if x["id"] == "overlap")
+    ov = next(x["text"] for x in d["comparison"]["changes"] if x["id"] == "overlap")
+    assert ("Повторов нет" in ov) == (d["comparison"]["overlap"]["repeated_families"] == 0)
 
 
 # ------------------------------------------------------------------ демо-персона жюри: готовая пара
@@ -270,7 +275,8 @@ def test_jury_persona_has_ready_pair_for_candidate_and_employer(client):
     assert len(d["attempts"]) >= 2 and d["comparison"] is not None
     assert d["sandbox"] and d["can_retake_now"] and d["retake_grade"] == "middle"
     c = d["comparison"]
-    assert c["overlap"]["engine"] == "bank" and c["overlap"]["repeated_families"] == 0
+    assert c["overlap"]["engine"] == "bank" and c["overlap"]["share_families"] <= 0.15
+    assert c["overlap"]["repeated_variants"] == 0
     assert c["second"]["status"] == "confirmed" and c["second"]["is_sandbox"]
     # грейд Марии после пары — по-прежнему Backend · Middle
     st = client.get("/api/assessment/status?direction=backend", headers=H(t)).json()
@@ -282,3 +288,37 @@ def test_jury_persona_has_ready_pair_for_candidate_and_employer(client):
     # кандидат песочницы не существует для работодателя другой песочницы
     other = client.post("/api/jury/login", json={"persona": "employer", "scenario": "new"}).json()["access_token"]
     assert client.get(f"/api/employer/candidates/{ref}/attempts", headers=H(other)).status_code == 404
+
+
+# ------------------------------------------------------------------ /validation: доля повторов
+
+def test_validation_attempts_repeat_live_and_synthetic(client, bank):
+    from app.modules.auth.models import User
+    from app.modules.jury.seed import run_demo_test
+    from app.modules.validation.attempts_repeat import pair_stats
+
+    assert pair_stats([({"a", "b"}, {"b", "c"}), ({"x"}, {"y", "z"})]) == {
+        "n_pairs": 2, "share_families": 0.25, "share_pairs_with_repeat": 0.5, "mean_repeated": 0.5, "max_share": 0.5}
+    r = client.get("/api/validation/attempts-repeat")
+    assert r.status_code == 200
+    d = r.json()
+    syn = d["synthetic"]
+    # сохранённая синтетика: подпись мира и условия, три пары попыток, варианты — новые по построению
+    assert syn["signature"]["seed"] == 20261006 and syn["signature"]["config_hash"] and syn["signature"]["world"]
+    assert set(syn["pairs"]) == {"second_vs_first", "third_vs_second", "third_vs_first"}
+    assert syn["pairs"]["second_vs_first"]["share_families"] < 0.05  # параллельная форма
+    assert syn["pairs"]["third_vs_first"]["share_families"] > 0.3  # третья попытка — снова субпул первой (честно)
+    assert syn["variants"]["share"] == 0.0 and syn["config"]["subpools"] == 2
+    assert d["live"]["n_pairs"] == 0 and "по базе" in d["live"]["conditions"]
+    # живая строка: две попытки банка одного человека
+    t = register_and_verify(client, email="live-repeat@example.com")
+    client.put("/api/me/onboarding", json=ONBOARDING, headers=H(t))
+    make_demo("live-repeat@example.com")
+    client.put("/api/me/jury-mode", json={"enabled": True}, headers=H(t))
+    with SessionLocal() as db:
+        uid = db.scalar(select(User.id).where(User.email == "live-repeat@example.com"))
+        run_demo_test(db, uid, "middle", 0.8, 8801)
+        run_demo_test(db, uid, "middle", 0.8, 8802)
+    live = client.get("/api/validation/attempts-repeat").json()["live"]
+    assert live["n_pairs"] == 1 and live["n_people"] == 1 and live["families"]["share_families"] <= 0.15
+    assert live["variants"]["share_families"] == 0.0
