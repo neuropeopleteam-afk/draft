@@ -1,0 +1,565 @@
+{
+ "what": "Стек Qwen3.5-9B + правила (OpenRouter bf16, прогон 2) против исправленной разметки аудита 08.10 (раздел 8 docs/LLM.md)",
+ "date": "2026-10-09",
+ "predictions": "docs/llm/needs_qwen_tags.json",
+ "reference": "docs/llm/extra_tags_judgement.json: corrected_stack (302 silver + 21 подтверждённая пара = 323)",
+ "metrics": {
+  "silver": {
+   "tp": 291,
+   "fp": 76,
+   "fn": 11,
+   "precision": 0.7929,
+   "recall": 0.9636,
+   "f1": 0.87
+  },
+  "corrected_lower_bound": {
+   "tp": 308,
+   "fp": 59,
+   "fn": 15,
+   "precision": 0.8392,
+   "recall": 0.9536,
+   "f1": 0.8928
+  },
+  "corrected_upper_bound": {
+   "tp": 339,
+   "fp": 28,
+   "fn": 15,
+   "precision": 0.9237,
+   "recall": 0.9576,
+   "f1": 0.9404
+  },
+  "rules_only_corrected": {
+   "tp": 297,
+   "fp": 22,
+   "fn": 26,
+   "predicted_tags": 319,
+   "reference_tags": 323,
+   "micro_precision": 0.9310344827586207,
+   "micro_recall": 0.9195046439628483,
+   "micro_f1": 0.9252336448598131
+  },
+  "rules_sonnet_corrected": {
+   "tp": 319,
+   "fp": 36,
+   "fn": 4,
+   "predicted_tags": 355,
+   "reference_tags": 323,
+   "micro_precision": 0.8985915492957747,
+   "micro_recall": 0.9876160990712074,
+   "micro_f1": 0.9410029498525073
+  }
+ },
+ "extras_vs_silver": {
+  "confirmed_by_audit": 17,
+  "judged_not_confirmed": 28,
+  "not_in_audit": 31
+ },
+ "how": "Аудит проверял только пары, предложенные правилами и Sonnet; 31 лишняя пара Qwen в него не входила. Нижняя граница считает их ошибками, верхняя — верными; решение по ним — эксперту (список not_in_audit, цитаты — ответ модели).",
+ "not_in_audit": [
+  {
+   "candidate_id": "vac-001::pytest",
+   "source": "llm",
+   "quote": "Опыт написания unit- и интеграционных тестов",
+   "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+  },
+  {
+   "candidate_id": "vac-001::python",
+   "source": "llm",
+   "quote": "Писать чистый, поддерживаемый и тестируемый код",
+   "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05"
+  },
+  {
+   "candidate_id": "vac-003::frontend-testing",
+   "source": "llm",
+   "quote": "Умеете писать тесты (PHPUnit)",
+   "source_url": "https://spb.hh.ru/vacancy/136588900"
+  },
+  {
+   "candidate_id": "vac-006::algorithms",
+   "source": "llm",
+   "quote": "высоконагруженными системами",
+   "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+  },
+  {
+   "candidate_id": "vac-006::frontend-testing",
+   "source": "llm",
+   "quote": "написания тестов",
+   "source_url": "https://getmatch.ru/vacancies/13890-backend-developer-go-java-kotlin"
+  },
+  {
+   "candidate_id": "vac-011::nlp",
+   "source": "llm",
+   "quote": "визуализации данных (GSAP, Three.js, Lottie, CSS/SVG, Chart.js)",
+   "source_url": "https://career.habr.com/vacancies/1000161900"
+  },
+  {
+   "candidate_id": "vac-011::rest-api",
+   "source": "llm",
+   "quote": "Взаимодействовать с командой",
+   "source_url": "https://career.habr.com/vacancies/1000161900"
+  },
+  {
+   "candidate_id": "vac-011::state-management",
+   "source": "llm",
+   "quote": "современных подходах к сборке и архитектуре приложений",
+   "source_url": "https://career.habr.com/vacancies/1000161900"
+  },
+  {
+   "candidate_id": "vac-013::algorithms",
+   "source": "llm",
+   "quote": "строим продвинутые модели",
+   "source_url": "https://www.rabota.ru/vacancy/54243075/"
+  },
+  {
+   "candidate_id": "vac-013::cv",
+   "source": "llm",
+   "quote": "скоринговые, рисковые и конверсионные модели",
+   "source_url": "https://www.rabota.ru/vacancy/54243075/"
+  },
+  {
+   "candidate_id": "vac-013::mlops",
+   "source": "llm",
+   "quote": "доведения до продакшена",
+   "source_url": "https://www.rabota.ru/vacancy/54243075/"
+  },
+  {
+   "candidate_id": "vac-013::sql",
+   "source": "llm",
+   "quote": "SQLAlchemy",
+   "source_url": "https://www.rabota.ru/vacancy/54243075/"
+  },
+  {
+   "candidate_id": "vac-014::numpy",
+   "source": "llm",
+   "quote": "стеке технологий Lakehouse",
+   "source_url": "https://quick-offer.ru/job/data-engineer-middle-81430"
+  },
+  {
+   "candidate_id": "vac-014::pandas",
+   "source": "llm",
+   "quote": "стеке технологий Lakehouse",
+   "source_url": "https://quick-offer.ru/job/data-engineer-middle-81430"
+  },
+  {
+   "candidate_id": "vac-014::scikit-learn",
+   "source": "llm",
+   "quote": "Общее представление о стеке технологий Lakehouse",
+   "source_url": "https://quick-offer.ru/job/data-engineer-middle-81430"
+  },
+  {
+   "candidate_id": "vac-018::docker",
+   "source": "llm",
+   "quote": "Предстоит создавать и поддерживать кластера Kubernetes",
+   "source_url": "https://hh.ru/vacancy/129957759"
+  },
+  {
+   "candidate_id": "vac-023::algorithms",
+   "source": "llm",
+   "quote": "обработки больших объемов данных",
+   "source_url": "https://1c.ru/rus/firm1c/vacan/vacancy/93"
+  },
+  {
+   "candidate_id": "vac-023::docker",
+   "source": "llm",
+   "quote": "принципов DevOps",
+   "source_url": "https://1c.ru/rus/firm1c/vacan/vacancy/93"
+  },
+  {
+   "candidate_id": "vac-023::mlops",
+   "source": "llm",
+   "quote": "принципов DevOps",
+   "source_url": "https://1c.ru/rus/firm1c/vacan/vacancy/93"
+  },
+  {
+   "candidate_id": "vac-027::manual-testing",
+   "source": "llm",
+   "quote": "Функциональное тестирование сложных сценариев",
+   "source_url": "https://career.habr.com/vacancies/1000168583"
+  },
+  {
+   "candidate_id": "vac-033::algorithms",
+   "source": "llm",
+   "quote": "Опыт диагностики и разбора проблем производительности",
+   "source_url": "https://career.habr.com/vacancies/1000166758"
+  },
+  {
+   "candidate_id": "vac-036::frontend-testing",
+   "source": "llm",
+   "quote": "разработки автотестов",
+   "source_url": "https://career.habr.com/vacancies/1000168214"
+  },
+  {
+   "candidate_id": "vac-040::nlp",
+   "source": "llm",
+   "quote": "Понимание подходов интернационализации",
+   "source_url": "https://career.habr.com/vacancies/1000167632"
+  },
+  {
+   "candidate_id": "vac-041::tailwind",
+   "source": "llm",
+   "quote": "Выбор оптимальных технологий",
+   "source_url": "https://career.habr.com/vacancies/1000167323"
+  },
+  {
+   "candidate_id": "vac-042::algorithms",
+   "source": "llm",
+   "quote": "особенностей работы браузеров",
+   "source_url": "https://career.habr.com/vacancies/1000168750"
+  },
+  {
+   "candidate_id": "vac-042::ci-cd",
+   "source": "llm",
+   "quote": "инженерные процессы",
+   "source_url": "https://career.habr.com/vacancies/1000168750"
+  },
+  {
+   "candidate_id": "vac-043::algorithms",
+   "source": "llm",
+   "quote": "базовые принципы разработки ПО",
+   "source_url": "https://career.habr.com/vacancies/1000164478"
+  },
+  {
+   "candidate_id": "vac-043::test-design",
+   "source": "llm",
+   "quote": "Тестировать свой код",
+   "source_url": "https://career.habr.com/vacancies/1000164478"
+  },
+  {
+   "candidate_id": "vac-046::algorithms",
+   "source": "llm",
+   "quote": "Умение планировать и управлять потоком задач",
+   "source_url": "https://career.habr.com/vacancies/1000168883"
+  },
+  {
+   "candidate_id": "vac-047::algorithms",
+   "source": "llm",
+   "quote": "принципов проектирования сервисов",
+   "source_url": "https://career.habr.com/vacancies/1000168727"
+  },
+  {
+   "candidate_id": "vac-050::algorithms",
+   "source": "llm",
+   "quote": "Понимание основ ООП",
+   "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
+  }
+ ],
+ "judged_not_confirmed": [
+  {
+   "candidate_id": "vac-001::http",
+   "source": "rules",
+   "quote": "REST",
+   "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-001::sql",
+   "source": "llm",
+   "quote": "Навыки работы с реляционными и/или NoSQL базами данных",
+   "source_url": "https://h.careers/job/5059b901-4d19-4468-9397-6f3907318d05",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-002::linux",
+   "source": "rules",
+   "quote": "bash",
+   "source_url": "https://hh.ru/vacancy/129355447",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-015::spark",
+   "source": "rules",
+   "quote": "Hadoop",
+   "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-016::http",
+   "source": "rules",
+   "quote": "TCP/IP",
+   "source_url": "https://hh.ru/vacancy/137706135",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-017::a11y",
+   "source": "rules",
+   "quote": "доступност",
+   "source_url": "https://hh.ru/vacancy/127601108",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-017::docker",
+   "source": "rules",
+   "quote": "контейнер",
+   "source_url": "https://hh.ru/vacancy/127601108",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-018::siem-soc",
+   "source": "rules",
+   "quote": "ELK",
+   "source_url": "https://hh.ru/vacancy/129957759",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-019::http",
+   "source": "rules",
+   "quote": "REST",
+   "source_url": "https://talent-move.ru/jobs/android-developer-kotlin-250k-265k-ru-260926-277816/",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-023::rest-api",
+   "source": "llm",
+   "quote": "HTTP-сервисами",
+   "source_url": "https://1c.ru/rus/firm1c/vacan/vacancy/93",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-025::html-css",
+   "source": "rules",
+   "quote": "верстк",
+   "source_url": "https://career.habr.com/vacancies/1000168882",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-025::http",
+   "source": "rules",
+   "quote": "REST",
+   "source_url": "https://career.habr.com/vacancies/1000168882",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-025::rabbitmq",
+   "source": "llm",
+   "quote": "брокерами сообщений",
+   "source_url": "https://career.habr.com/vacancies/1000168882",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-026::git",
+   "source": "rules",
+   "quote": "GitLab",
+   "source_url": "https://career.habr.com/vacancies/1000168587",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-028::load-testing",
+   "source": "rules",
+   "quote": "нагрузочн",
+   "source_url": "https://career.habr.com/vacancies/1000168581",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-029::http",
+   "source": "rules",
+   "quote": "Rest",
+   "source_url": "https://career.habr.com/vacancies/1000168926",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-029::manual-testing",
+   "source": "llm",
+   "quote": "Тестировать мобильное приложение",
+   "source_url": "https://career.habr.com/vacancies/1000168926",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-030::http",
+   "source": "rules",
+   "quote": "Rest",
+   "source_url": "https://career.habr.com/vacancies/1000168850",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-030::linux",
+   "source": "rules",
+   "quote": "Bash",
+   "source_url": "https://career.habr.com/vacancies/1000168850",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-031::asyncio",
+   "source": "rules",
+   "quote": "асинхрон",
+   "source_url": "https://career.habr.com/vacancies/1000167801",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-032::sql",
+   "source": "rules",
+   "quote": "Mysql",
+   "source_url": "https://career.habr.com/vacancies/1000167800",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-038::asyncio",
+   "source": "rules",
+   "quote": "асинхрон",
+   "source_url": "https://career.habr.com/vacancies/1000168347",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-038::http",
+   "source": "rules",
+   "quote": "REST",
+   "source_url": "https://career.habr.com/vacancies/1000168347",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-039::vite-webpack",
+   "source": "llm",
+   "quote": "работал с разными стейт-менеджерами и сборщиками",
+   "source_url": "https://career.habr.com/vacancies/1000162215",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-041::git",
+   "source": "rules",
+   "quote": "gitlab",
+   "source_url": "https://career.habr.com/vacancies/1000167323",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-042::frontend-testing",
+   "source": "llm",
+   "quote": "Повышать качество разработки",
+   "source_url": "https://career.habr.com/vacancies/1000168750",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-047::nlp",
+   "source": "rules",
+   "quote": "LLM",
+   "source_url": "https://career.habr.com/vacancies/1000168727",
+   "verdict": "не подтверждён"
+  },
+  {
+   "candidate_id": "vac-049::http",
+   "source": "rules",
+   "quote": "REST",
+   "source_url": "https://career.habr.com/vacancies/1000164183",
+   "verdict": "не подтверждён"
+  }
+ ],
+ "confirmed": [
+  {
+   "candidate_id": "vac-010::rest-api",
+   "source": "rules",
+   "quote": "Swagger",
+   "source_url": "https://job.mts.ru/vacancy/580741711072857140",
+   "verdict": "подтверждён (желательный)"
+  },
+  {
+   "candidate_id": "vac-011::a11y",
+   "source": "rules",
+   "quote": "доступност",
+   "source_url": "https://career.habr.com/vacancies/1000161900",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-012::statistics",
+   "source": "rules",
+   "quote": "A/B",
+   "source_url": "https://youngjunior.ru/data/jobs/31786",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-015::postgresql",
+   "source": "rules",
+   "quote": "Postgres",
+   "source_url": "https://quick-offer.ru/job/data-engineer-middle-e-commerce-62326",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-016::cryptography",
+   "source": "llm",
+   "quote": "СКЗИ/ЭЦП",
+   "source_url": "https://hh.ru/vacancy/137706135",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-017::git",
+   "source": "rules",
+   "quote": "Gitlab",
+   "source_url": "https://hh.ru/vacancy/127601108",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-020::ci-cd",
+   "source": "rules",
+   "quote": "TeamCity",
+   "source_url": "https://hh.ru/vacancy/135126969",
+   "verdict": "подтверждён (желательный)"
+  },
+  {
+   "candidate_id": "vac-025::kotlin",
+   "source": "rules",
+   "quote": "Kotlin",
+   "source_url": "https://career.habr.com/vacancies/1000168882",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-027::api-testing",
+   "source": "llm",
+   "quote": "Проверка контрактов между Frontend и Backend",
+   "source_url": "https://career.habr.com/vacancies/1000168583",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-027::http",
+   "source": "rules",
+   "quote": "REST",
+   "source_url": "https://career.habr.com/vacancies/1000168583",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-028::html-css",
+   "source": "rules",
+   "quote": "HTML",
+   "source_url": "https://career.habr.com/vacancies/1000168581",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-030::api-testing",
+   "source": "rules",
+   "quote": "Postman",
+   "source_url": "https://career.habr.com/vacancies/1000168850",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-031::cryptography",
+   "source": "rules",
+   "quote": "TLS",
+   "source_url": "https://career.habr.com/vacancies/1000167801",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-032::go",
+   "source": "rules",
+   "quote": "Golang",
+   "source_url": "https://career.habr.com/vacancies/1000167800",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-040::html-css",
+   "source": "rules",
+   "quote": "вёрстк",
+   "source_url": "https://career.habr.com/vacancies/1000167632",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-040::rest-api",
+   "source": "rules",
+   "quote": "OpenAPI",
+   "source_url": "https://career.habr.com/vacancies/1000167632",
+   "verdict": "подтверждён текстом (обязательный)"
+  },
+  {
+   "candidate_id": "vac-044::network-security",
+   "source": "rules",
+   "quote": "IPS",
+   "source_url": "https://career.habr.com/vacancies/1000162782",
+   "verdict": "подтверждён текстом (обязательный)"
+  }
+ ]
+}
