@@ -12,7 +12,7 @@
   "version": "fsp-v2",
   "policy": "Все дисциплины и типы мероприятий равны. Победитель — 1; призёр — 0,85; финалист — 0,60; участник — 0,15. Лучший результат даёт 80 % силы паспорта; остальные соревнования — до 20 % с убывающей отдачей. Первые 12 месяцев вес полный, далее плавно снижается, но не ниже 70 %. Только подтверждённые результаты (T2)."
  },
- "generated_at": "2026-10-09T13:54:11+00:00",
+ "generated_at": "2026-10-09T14:51:35+00:00",
  "command": "make bench",
  "config": {
   "seed": 20261006,
@@ -1531,6 +1531,162 @@
   },
   "needs_changed_top5": 97
  },
+ "core_skill": {
+  "enabled_in_product": false,
+  "policy": "group",
+  "needs_with_core": 54,
+  "needs_active": 54,
+  "before": {
+   "p@5": {
+    "mean": 0.764,
+    "lo": 0.728,
+    "hi": 0.799
+   },
+   "ndcg@10": {
+    "mean": 0.561,
+    "lo": 0.536,
+    "hi": 0.587
+   },
+   "mrr": {
+    "mean": 0.878,
+    "lo": 0.842,
+    "hi": 0.91
+   },
+   "top5_core_absent": {
+    "mean": 0.211,
+    "lo": 0.133,
+    "hi": 0.289
+   }
+  },
+  "after": {
+   "p@5": {
+    "mean": 0.776,
+    "lo": 0.74,
+    "hi": 0.811
+   },
+   "ndcg@10": {
+    "mean": 0.573,
+    "lo": 0.547,
+    "hi": 0.599
+   },
+   "mrr": {
+    "mean": 0.888,
+    "lo": 0.855,
+    "hi": 0.92
+   },
+   "top5_core_absent": {
+    "mean": 0.0,
+    "lo": 0.0,
+    "hi": 0.0
+   }
+  },
+  "diff": {
+   "p@5": {
+    "mean": 0.012,
+    "lo": 0.002,
+    "hi": 0.023
+   },
+   "ndcg@10": {
+    "mean": 0.012,
+    "lo": 0.006,
+    "hi": 0.019
+   },
+   "mrr": {
+    "mean": 0.01,
+    "lo": 0.0,
+    "hi": 0.023
+   },
+   "top5_core_absent": {
+    "mean": -0.211,
+    "lo": -0.289,
+    "hi": -0.133
+   }
+  },
+  "diff_active_needs": {
+   "p@5": 0.0444,
+   "ndcg@10": 0.0439
+  }
+ },
+ "guard": {
+  "source": "docs/realdata/ranking_guard_500.json",
+  "command": "python tools/realdata/ranking_guard.py",
+  "demo_500": {
+   "before": {
+    "p@5": 0.84,
+    "ndcg@5": 0.834,
+    "ndcg@10": 0.893
+   },
+   "after": {
+    "p@5": 0.84,
+    "ndcg@5": 0.859,
+    "ndcg@10": 0.915
+   },
+   "core_on": {
+    "p@5": 0.88,
+    "ndcg@5": 0.903,
+    "ndcg@10": 0.924
+   }
+  },
+  "hidden_truth_500": {
+   "before": {
+    "p@5": 0.712,
+    "ndcg@10": 0.5728,
+    "mrr": 0.8223
+   },
+   "after": {
+    "p@5": 0.704,
+    "ndcg@10": 0.5706,
+    "mrr": 0.8383
+   },
+   "core_on": {
+    "p@5": 0.716,
+    "ndcg@10": 0.5804,
+    "mrr": 0.8483
+   }
+  },
+  "n_pool": 479,
+  "n_needs": 15,
+  "hidden_config": {
+   "n_needs": 50,
+   "n_candidates": 500
+  },
+  "expert_v1_core": {
+   "n_needs": 10,
+   "n_pairs": 109,
+   "raters": "E1, E2, E3 (медиана), модель, не люди",
+   "off": {
+    "p@5": 0.66,
+    "ndcg@5": 0.86,
+    "ndcg@10": 0.928
+   },
+   "group": {
+    "p@5": 0.66,
+    "ndcg@5": 0.864,
+    "ndcg@10": 0.932
+   },
+   "diff": {
+    "p@5": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    },
+    "ndcg@10": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.011,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    }
+   },
+   "source": "docs/core_skill/metrics.json"
+  }
+ },
  "ablations": [
   {
    "method": "platform",
@@ -1688,11 +1844,11 @@
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
   "config_hash": "19255e3a8b95",
-  "commit": "ae87c00",
+  "commit": "4fb4a2f",
   "bank": "76c4164b6ce83743",
   "n": 400000,
   "command": "make bench",
-  "generated_at": "2026-10-09T13:54:11+00:00"
+  "generated_at": "2026-10-09T14:51:42+00:00"
  },
- "seconds": 65.5
+ "seconds": 595.6
 }
