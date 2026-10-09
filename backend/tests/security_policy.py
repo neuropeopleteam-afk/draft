@@ -225,6 +225,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/candidate/assignments/{atid}/start"): "candidate_own404",
     ("POST", "/api/candidate/assignments/{atid}/submit"): "candidate_own404",
     ("POST", "/api/candidate/assignments/{atid}/decline"): "candidate_own404",
+    ("PUT", "/api/candidate/assignments/prefs"): "candidate",  # К5 расписание ленты
+    ("POST", "/api/candidate/assignments/demo/next-week"): ("candidate", {"candidate": 403}),  # К5: только песочница жюри
     # ---------------------------------------------------------------- вакансии (публичный список для вошедших)
     ("GET", "/api/vacancies"): "auth",
     ("GET", "/api/vacancies/{vid}"): "vacancy",
@@ -245,6 +247,21 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/employer/needs/{need_id}/selections"): "employer_own",
     ("GET", "/api/employer/needs/{need_id}/selections/{version}"): "employer_own",
     ("GET", "/api/employer/needs/{need_id}/selections/{version}/what-if"): "employer_own",  # И18 «Что если»
+    # взаимный подбор, отзывы, ссылка руководителю (Н9, Н2, Н3 — feat/mutual)
+    ("GET", "/api/employer/needs/{need_id}/selections/{version}/mutual"): "employer_own",
+    ("PUT", "/api/employer/needs/{need_id}/feedback"): "employer_own",
+    ("DELETE", "/api/employer/needs/{need_id}/feedback/{ref}"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/selections/{version}/refine"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/selections/{version}/similar"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/shares"): "employer_own",
+    ("GET", "/api/employer/needs/{need_id}/shares"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/shares/{share_id}/revoke"): "employer_own404",  # ссылки в мире теста нет
+    ("POST", "/api/employer/mutual/offer-check"): "employer_ref",
+    ("GET", "/api/candidate/preferences"): "candidate",
+    ("PUT", "/api/candidate/preferences"): "candidate",
+    ("GET", "/api/candidate/invitations/{inv_id}/why"): "candidate_own404",
+    ("GET", "/api/share/{token}"): "open404",
+    ("POST", "/api/share/{token}/reactions"): "open404",
     ("GET", "/api/employer/needs/{need_id}/compare"): "employer_own",
     ("GET", "/api/employer/probes"): "employer",
     ("POST", "/api/employer/probes"): "employer_ref",
@@ -279,6 +296,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/employer/assignments/{aid}"): "employer_own404",  # задание в мире теста не создаётся
     ("POST", "/api/employer/assignments/{aid}/send"): "employer_own404",
     ("POST", "/api/employer/assignments/{aid}/close"): "employer_own404",
+    ("POST", "/api/employer/assignments/{aid}/attempts/{atid}/review"): "employer_own404",  # К5 рубрика
     # ATS компании: настройки и журнал — только работодатель своей компании (объекты по id — журнал передач)
     ("GET", "/api/employer/ats/settings"): "employer",
     ("PUT", "/api/employer/ats/settings"): "employer",
