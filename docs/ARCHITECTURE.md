@@ -86,12 +86,12 @@ flowchart LR
 
 | Компонент | Технология | Память (лимит) | Порт |
 |---|---|---|---|
-| web | nginx 1.27 + статика Vite | 96 МБ | 127.0.0.1:8140 → 80 |
-| api | Python 3.12, FastAPI, uvicorn (2 воркера), Natasha, ReportLab | 896 МБ | 127.0.0.1:8141 → 8000 |
-| db | PostgreSQL 16 (shared_buffers 128 МБ) | 512 МБ | только внутренняя сеть compose |
-| keycloak (выкл.) | Keycloak 26, `start-dev` | 768 МБ | 127.0.0.1:8142 (профиль `keycloak`) |
+| web | nginx 1.27 + статика Vite | 32 МиБ | 127.0.0.1:8140 → 80 |
+| api | Python 3.12, FastAPI, uvicorn (2 воркера), Natasha, ReportLab | 1536 МиБ | 127.0.0.1:8141 → 8000 |
+| db | PostgreSQL 16 (shared_buffers 128 МБ) | 320 МиБ | только внутренняя сеть compose |
+| keycloak (демо «ФСП ID», профиль `fsp-id`, по умолчанию выкл.) | Keycloak 26.4 | 576 МиБ | 127.0.0.1:8142 |
 
-Итого лимиты стека: 96 + 896 + 512 = 1504 МБ ≈ 1,5 ГБ (фактически api ≈ 170 МБ, Natasha загружается лениво).
+Итого лимиты стека: 32 + 1536 + 320 = 1888 МиБ без Keycloak, 2464 МиБ с ним (актуальные лимиты — в `docker-compose.yml` и в начале README; расчёт и замеры — `docs/LOAD_TEST.md`; обычное потребление api 457–508 МиБ, Natasha загружается лениво).
 
 Миграции Alembic применяются при старте контейнера api. OpenAPI: `/api/docs` (Swagger UI), `/api/redoc`,
 `/api/openapi.json`; файлы Swagger UI 5.33.1 и ReDoc 2.5.4 раздаются с нашего сервера (`/api/static/apidocs`),
