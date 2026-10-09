@@ -78,9 +78,9 @@ export const probeSentText = (r: any) => r?.created?.length
   ? `Зонд отправлен: ${r.created.length} ${plural(r.created.length, "кандидату", "кандидатам", "кандидатам")}. Ответ появится в разделе «Зонды»; контакты не раскрываются.`
   : null;
 
-export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: (res?: any) => void }) {
-  const [title, setTitle] = useState("");
-  const [task, setTask] = useState("");
+export function ProbeForm({ refs, needId, market, needSalary, onDone, init }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: (res?: any) => void; init?: { title?: string; task?: string } | null }) {
+  const [title, setTitle] = useState(init?.title ?? "");  // Я10: заготовка вопроса на навык, который тест не проверяет
+  const [task, setTask] = useState(init?.task ?? "");
   const [mode, setMode] = useState<"any" | "solution" | "approach">("any");
   const [mins, setMins] = useState("30");
   const [from, setFrom] = useState(() => defaultRange(market, needSalary)[0]);
