@@ -124,11 +124,10 @@ else
 fi
 
 step "4. Даты коммитов (крайний срок $DEADLINE)"
-LAST=$(git log -1 --format=%cI "$BRANCH"); FIRST=$(git log --reverse --format=%cI "$BRANCH" | head -1)
-ok "первый коммит: $FIRST; последний: $LAST"
-if [ "$(date -d "$LAST" +%s)" -le "$(date -d "$DEADLINE" +%s)" ]; then ok "последний коммит не позже срока"; else bad "последний коммит ПОЗЖЕ срока $DEADLINE"; fi
-FUTURE=$(git log --format=%cI "$BRANCH" | while read -r d; do [ "$(date -d "$d" +%s)" -gt "$(date -d "$DEADLINE" +%s)" ] && echo x; done | wc -l)
-[ "$FUTURE" = 0 ] && ok "коммитов позже срока: 0" || bad "коммитов позже срока: $FUTURE"
+MIN_T=$(git log --format=%ct "$BRANCH" | sort -n | sed -n 1p); MAX_T=$(git log --format=%ct "$BRANCH" | sort -n | tail -n 1)
+DEADLINE_T=$(date -d "$DEADLINE" +%s)
+ok "первый коммит: $(date -u -d "@$MIN_T" +%Y-%m-%dT%H:%M:%SZ); последний: $(date -u -d "@$MAX_T" +%Y-%m-%dT%H:%M:%SZ)"
+if [ "$MAX_T" -le "$DEADLINE_T" ]; then ok "ни один коммит не позже срока"; else bad "есть коммиты ПОЗЖЕ срока $DEADLINE"; fi
 
 step "5. Удалённый репозиторий: $(hide_url "$REMOTE")"
 if REFS=$(git ls-remote --heads --tags "$REMOTE" 2>/dev/null); then
