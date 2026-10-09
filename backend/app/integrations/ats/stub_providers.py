@@ -332,12 +332,32 @@ def _pt_type(t: str) -> str:
     return _PT_TYPES.get(t, t)
 
 
+# Поля вакансии «Потока», которых нет у Talantix: описание (HTML), опыт и график (справочники как в hh.ru), навыки —
+# как в ответе настоящего GET /jobs.json (проверено 09.10.2026); по ним работает импорт вакансий (И23)
+PT_JOB_DETAILS = {
+    410101: {"description": "<p>Ищем Middle Backend-разработчика в команду платёжной платформы.</p>"
+                            "<p><b>Требования:</b> Python, FastAPI, PostgreSQL, Redis; будет плюсом Kafka.</p>"
+                            "<p>Обязанности: API платежей, интеграции с банками, код-ревью.</p>",
+             "experience_type": "between3And6", "schedule_type": "fullDay", "key_skills": ["Python", "FastAPI"]},
+    410102: {"description": "<p>Python-разработчик в команду интеграций: обмен с партнёрами по REST и очередям.</p>"
+                            "<ul><li>Python, Django, PostgreSQL</li><li>Docker, Git</li></ul>",
+             "experience_type": "between1And3", "schedule_type": "remote", "key_skills": []},
+    410103: {"description": "<p>Frontend-разработчик уровня Middle: React, TypeScript, личный кабинет клиента.</p>",
+             "experience_type": "between3And6", "schedule_type": "fullDay", "key_skills": ["React", "TypeScript"]},
+    410104: {"description": "<p>Аналитик данных: SQL, Python, дашборды для продуктовых команд.</p>",
+             "experience_type": "between1And3", "schedule_type": "fullDay", "key_skills": ["SQL"]},
+}
+_AREA_ID = {a["name"]: a["id"] for a in AREAS}
+
+
 def _pt_job(j: dict) -> dict:
     return {"id": j["id"], "name": j["title"], "state_id": "closed" if j["status"] != "ACTIVE" else "opened",
             "archived": j["status"] != "ACTIVE", "company_department": {"id": j["id"] // 100, "name": j["department"]},
             "salary_from": j["salary"]["from"], "salary_to": j["salary"]["to"], "currency_type": "RUR",
-            "city": j["city"], "stages": [{"id": s["id"], "name": s["name"], "serial": s["position"],
-                                           "stage_type": _pt_type(s["stage_type"])} for s in j["stages"]]}
+            "city": _AREA_ID.get(j["city"], j["city"]), "employment_type": "full",
+            **PT_JOB_DETAILS.get(j["id"], {"description": "", "key_skills": []}),
+            "stages": [{"id": s["id"], "name": s["name"], "serial": s["position"],
+                        "stage_type": _pt_type(s["stage_type"])} for s in j["stages"]]}
 
 
 def _stage_obj(j: dict, stage_type: str = "sourced") -> dict:
