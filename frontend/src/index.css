@@ -26,6 +26,8 @@
 @layer components {
   .btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
   .btn-primary { @apply btn bg-brand-strong text-white hover:bg-brand-deep; }  /* белый на #E0004C — 4,9 : 1 (AA) */
+  /* недоступная главная кнопка — серая, без розового: не читается как активная (Ф4) */
+  .btn-primary:disabled { @apply bg-brand-night/10 text-brand-ink/55 opacity-100 hover:bg-brand-night/10; }
   .btn-light { @apply btn bg-white text-brand-night hover:bg-brand-blush; }
   .btn-ghost { @apply btn border border-brand-night/15 text-brand-night hover:bg-brand-blush/50; }
   .input { @apply w-full rounded-xl border border-brand-night/15 bg-white px-4 py-3 text-sm text-brand-ink placeholder:text-brand-ink/50 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 disabled:cursor-not-allowed disabled:bg-gray-50; }

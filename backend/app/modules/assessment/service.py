@@ -24,7 +24,7 @@ from app.modules.assessment.models import (GradeHistory, SandboxTestStart, Surve
 from app.modules.auth.models import User
 from app.modules.assessment.rules import (GRADE_LEVEL, GradeOutcome, accept_lower_allowed, apply_result,
                                           check_can_start, retake_locks)
-from app.modules.catalog.seed_data import GRADES, STACK
+from app.modules.catalog.seed_data import GRADES, tag_title
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile
 from app.modules.profiles.models import CandidateSpecialization
@@ -611,7 +611,7 @@ def _write_t1_facts(db: Session, ts: TestSession, res, extra: dict | None = None
     ))
     for tag, s in res.skills.items():
         db.add(CandidateFact(
-            user_id=ts.user_id, kind="skill", key=tag, title=STACK.get(tag, (tag,))[0],
+            user_id=ts.user_id, kind="skill", key=tag, title=tag_title(tag),
             value={"direction": ts.direction_id, "score": s["score"], "correct": s["correct"], "total": s["total"]},
             evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=f"test_session:{ts.id}",
         ))

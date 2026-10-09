@@ -17,11 +17,11 @@ from sqlalchemy.orm import Session
 
 from app.core.db import as_aware
 from app.core.enums import EvidenceLevel, FactSource
-from app.core.fmt import theta_se
+from app.core.fmt import probe_title, theta_se
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK, category_title
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK, category_title, tag_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
@@ -472,10 +472,10 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "mode": t.get("mode", "full"), "accepted_lower": bool(t.get("accepted_lower")), "grade": t.get("grade"),
         } if t else None,
         "skills_confirmed": [
-            {"tag": k, "title": STACK.get(k, (k,))[0], "score": f.value.get("score"), "level": "T1"}
+            {"tag": k, "title": tag_title(k), "score": f.value.get("score"), "level": "T1"}
             for k, f in sorted(b.skills_t1.items()) if skill_confirmed(f)
         ],
-        "probes": [{"title": f.title, "score": f.value.get("score"), "verdict": f.value.get("verdict"), "level": "T1"}
+        "probes": [{"title": probe_title(f.title, f.value.get("verdict")), "score": f.value.get("score"), "verdict": f.value.get("verdict"), "level": "T1"}
                    for f in b.probes_t1],
         "fsp": ({
             "linked": b.passport is not None, "level": "T2" if verified_achievements(b) else None,
