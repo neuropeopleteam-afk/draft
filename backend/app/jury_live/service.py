@@ -51,16 +51,19 @@ SELECTION_LIMIT = 60
 GUEST_PREFIX = "guest-"
 NEED_PREFIX = "Живая демонстрация: "
 NEED_TEXTS = {
-    "backend": ("Backend-разработчик", "Backend-разработчик в команду платежей: обязательно Python, SQL и REST API, "
-                                       "желательно PostgreSQL, Redis и FastAPI. Удалённо."),
-    "frontend": ("Frontend-разработчик", "Frontend-разработчик для личного кабинета: обязательно JavaScript, TypeScript "
-                                         "и React, желательно HTML/CSS и доступность (a11y). Удалённо."),
-    "data_ml": ("Data/ML-инженер", "Data/ML-инженер в команду антифрода: обязательно Python, pandas и SQL, желательно "
+    # Ф2 × живая демонстрация: обязательным — то, что мини-тест из 3 заданий реально подтверждает (по пулу mini.py:
+    # backend — Python, frontend — JavaScript, data_ml — Python, qa — тест-дизайн, security — OWASP); остальное — желательно,
+    # иначе у гостя на проекторе почти всегда ярус «не хватает обязательного»
+    "backend": ("Backend-разработчик", "Backend-разработчик в команду платежей: обязательно Python, желательно SQL, "
+                                       "REST API, PostgreSQL, Redis и FastAPI. Удалённо."),
+    "frontend": ("Frontend-разработчик", "Frontend-разработчик для личного кабинета: обязательно JavaScript, желательно "
+                                         "TypeScript, React, HTML/CSS и доступность (a11y). Удалённо."),
+    "data_ml": ("Data/ML-инженер", "Data/ML-инженер в команду антифрода: обязательно Python, желательно pandas, SQL, "
                                    "scikit-learn и статистика. Удалённо."),
-    "qa": ("QA-инженер", "QA-инженер в команду платежей: обязательно тест-дизайн, Python и pytest, желательно SQL и "
+    "qa": ("QA-инженер", "QA-инженер в команду платежей: обязательно тест-дизайн, желательно Python, pytest, SQL и "
                          "нагрузочное тестирование. Удалённо."),
-    "security": ("AppSec-специалист", "Специалист по информационной безопасности (AppSec): обязательно OWASP, сетевая "
-                                      "безопасность и Python, желательно криптография и SQL. Удалённо."),
+    "security": ("AppSec-специалист", "Специалист по информационной безопасности (AppSec): обязательно OWASP, желательно "
+                                      "сетевая безопасность, Python, криптография и SQL. Удалённо."),
 }
 RULE = ("Правило демо-работодателя на защите: приглашение получает каждый, кому мини-тест дал экспресс-категорию; "
         "вилка — по рынку этой категории. Полный тест (8–16 заданий) уточняет грейд.")
@@ -259,6 +262,11 @@ def live_need(db: Session, company: Company, employer: User, direction: str) -> 
     return n
 
 
+def _cat_title(res: dict) -> str:
+    """«Backend · Middle (предварительно)» — категория мини-теста всегда предварительная (и у старых итогов)."""
+    return res.get("category_title") or f"{category_title(res['category_id'])} (предварительно)"
+
+
 def _write_facts(db: Session, g: LiveGuest, res: dict) -> None:
     db.execute(delete(CandidateFact).where(CandidateFact.user_id == g.user_id, CandidateFact.source == FactSource.test))
     src = f"jury_live:{g.id}"
@@ -266,7 +274,9 @@ def _write_facts(db: Session, g: LiveGuest, res: dict) -> None:
         user_id=g.user_id, kind="test_result", key=f"{g.direction}.{res['grade']}",
         title=f"Мини-тест {g.direction} · {res['grade']}",
         value={"theta": res["theta"], "se": res["se"], "grade": res["grade"], "confirmed": True, "mini": True,
-               "correct": res["correct"], "answered": res["answered"], "engine": mini.ENGINE},
+               "correct": res["correct"], "answered": res["answered"], "engine": mini.ENGINE,
+               # 3 задания: категория предварительная и не выше Middle (grades.category_level, Ф3)
+               "preliminary": True, "mode": "mini"},
         evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=src))
     totals: dict[str, list[int]] = {}
     for it in res["items"]:
@@ -311,8 +321,9 @@ def finish(db: Session, room: LiveRoom, g: LiveGuest) -> list:
                             algorithm_version=sel["algorithm"], created_by=employer.id))
     labels = dict(db.execute(select(LiveGuest.ref, LiveGuest.number).where(LiveGuest.room_id == room.id)).all())
     mine = next((r for r in sel["results"] if r["ref"] == g.ref), None)
-    top = [_row(r, labels, g.ref) for r in sel["results"][:8]]
-    if mine is not None and mine["rank"] > 8:
+    first = sel["results"][:8]
+    top = [_row(r, labels, g.ref) for r in first]
+    if mine is not None and all(r["ref"] != g.ref for r in first):  # свой ряд — один раз, даже при узком окне
         top.append(_row(mine, labels, g.ref))
     sel_at = now + timedelta(seconds=s.jury_live_select_delay_s)
     g.selection = {
@@ -332,7 +343,7 @@ def finish(db: Session, room: LiveRoom, g: LiveGuest) -> list:
         inv = inv_svc.create_invitation(
             db, employer, company, p, position_title=title,
             offer_description=(f"Вы прошли мини-тест из 3 заданий банка и получили экспресс-категорию "
-                               f"{category_title(res['category_id'])} — подборка работодателя пересчиталась{place}. "
+                               f"{_cat_title(res)} — подборка работодателя пересчиталась{place}. "
                                f"{RULE} Это демо-компания: "
                                f"собеседования не будет, а путь приглашения — настоящий."),
             salary_from=lo, salary_to=hi, contact_method="Демо: ответ — кнопками на этой странице",
@@ -500,8 +511,10 @@ def guest_out(db: Session, g: LiveGuest, *, now: datetime, own: bool) -> dict:
         out["item"] = mini.public_item(g.state)
     if stage != "testing":
         r = g.result or {}
-        out["result"] = {k: r.get(k) for k in ("theta", "se", "grade", "category_id", "correct", "answered", "time_s")}
-        out["result"]["category_title"] = category_title(r.get("category_id")) if r.get("category_id") else None
+        out["result"] = {k: r.get(k) for k in ("theta", "se", "grade", "category_id", "correct", "answered", "time_s",
+                                                "ceiling", "capped")}
+        out["result"]["category_title"] = _cat_title(r) if r.get("category_id") else None
+        out["result"]["preliminary"] = bool(r.get("category_id"))
         out["result"]["skills"] = [{"tag": k, "title": STACK.get(k, (k,))[0], "score": v}
                                    for k, v in sorted((r.get("skills") or {}).items())]
     if stage in ("selected", "invited", "accepted", "declined") and g.selection:
