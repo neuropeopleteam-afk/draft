@@ -1128,8 +1128,21 @@
         "status": "extracted"
       },
       {
-        "tag": "ci-cd",
+        "tag": "state-management",
         "weight": 0.7,
+        "evidence": {
+          "quote": "Pinia",
+          "start": 200,
+          "end": 205,
+          "context": "Наш стек: Vue3, SCSS, Pinia, Vue-router, TanStack Query.",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
+        "tag": "ci-cd",
+        "weight": 0.6,
         "evidence": {
           "quote": "CI/CD",
           "start": 639,
@@ -5575,8 +5588,21 @@
         "status": "extracted"
       },
       {
-        "tag": "vite-webpack",
+        "tag": "state-management",
         "weight": 0.7,
+        "evidence": {
+          "quote": "Pinia",
+          "start": 977,
+          "end": 982,
+          "context": "js, Pinia, Webpack Module Federation.",
+          "source": "rules",
+          "basis": "neutral"
+        },
+        "status": "extracted"
+      },
+      {
+        "tag": "vite-webpack",
+        "weight": 0.6,
         "evidence": {
           "quote": "Webpack",
           "start": 984,

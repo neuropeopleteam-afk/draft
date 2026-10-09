@@ -235,12 +235,17 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                 got += w * f.value.get("score", 0)
                 reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "confirmed", "weight": w,
                                 "text": skill_evidence_text(f)})  # тест и задания работодателя (И7)
+            elif f is not None:  # И18: тест проверял навык, порог не набран — это не «нет данных» (как в сравнении)
+                reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "mismatch", "weight": w,
+                                "text": f"Проверено заданиями: {fmt_count(f.value.get('correct'))} из "
+                                        f"{fmt_count(f.value.get('total'))} — ниже порога подтверждения"})
             elif tag in b.stack_t0:
                 reasons.append({"requirement": f"{label}: {title}", "level": "T0", "status": "declared", "weight": w,
                                 "text": "Заявлено кандидатом — не влияет на ранжирование, можно проверить зондом"})
             else:
                 reasons.append({"requirement": f"{label}: {title}", "level": "none", "status": "missing", "weight": w,
-                                "text": "Нет данных"})
+                                "text": "Не подтверждено: тест кандидата этот навык не проверял, в профиле он не заявлен — "
+                                        "можно проверить зондом"})
         return got / total
 
     sreq = stack_part(req.get("stack_required") or [], "Обязательно")
@@ -254,8 +259,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         rating = details(verified)
         reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
                         "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")
-                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}. "
-                        + rating["policy"]})
+                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}"})  # формула — в карточке (И18)
     else:
         # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
         extra = len(b.achievements)
@@ -267,7 +271,9 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         lvl = integ.get("level")
         reasons.append({"requirement": "Достоверность результата теста", "level": "T1",
                         "status": {"high": "confirmed", "medium": "partial"}.get(lvl, "mismatch"),
-                        "text": f"{(integ.get('title') or '').capitalize()}: " + "; ".join((integ.get("reasons") or [])[:2]),
+                        "text": f"{(integ.get('title') or '').capitalize()}: " + "; ".join((integ.get("reasons") or [])[:2])
+                        + ("" if lvl == "high" else ". Не блокирует: на место в подборке не влияет, решение за вами — "
+                                                    "можно пригласить или проверить зондом"),
                         "integrity": lvl})
     probe = max((f.value.get("score", 0) for f in b.probes_t1), default=0.0)
     if b.probes_t1:
