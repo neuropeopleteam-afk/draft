@@ -18,7 +18,7 @@ from app.core.db import SessionLocal, utcnow
 from app.integrations.push.service import send_to_user
 from app.modules.auth.models import User
 from app.modules.hiring.models import HiringInterview
-from app.modules.hiring.service import FORMATS, REMIND_BEFORE, msk
+from app.modules.hiring.service import FORMATS, REMIND_BEFORE, cabinet_note, msk
 from app.modules.invitations.models import Invitation
 from app.modules.notifications.mailer import notify
 
@@ -53,7 +53,11 @@ def remind_due(db: Session) -> int:
                         f"Ссылка или адрес: {iv.place}" if iv.place else "Формат и детали — в кабинете.",
                         "Если время не подходит, попросите другое в кабинете, в разделе «Приглашения»."],
                        is_demo=cu.is_demo, link_path="/candidate/invitations")
+            cabinet_note(db, iv.candidate_user_id, "hiring_reminder", f"hire-remind-{iv.id}", "Скоро собеседование",
+                         f"«{inv.position_title}»: {when}", "/candidate/invitations")
             if inv.employer_user_id:
+                cabinet_note(db, inv.employer_user_id, "hiring_reminder", f"hire-remind-{iv.id}", "Скоро собеседование",
+                             f"«{inv.position_title}»: {when}", "/employer/invitations")
                 send_to_user(db, inv.employer_user_id, "Скоро собеседование", f"«{inv.position_title}»: {when}",
                              "/employer/invitations", f"hire-remind-{iv.id}")
             sent += 1

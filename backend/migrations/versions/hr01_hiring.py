@@ -1,7 +1,7 @@
 """Найм после принятия приглашения: собеседование (слоты), оффер со встречным, исход найма (поток Н8)
 
 Revision ID: hr01
-Revises: pc01
+Revises: tk02
 Create Date: 2026-10-09
 
 Только новые таблицы; существующие не меняются. Строки удаляются каскадом вместе с приглашением (и компанией).
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision: str = "hr01"
-down_revision: str | None = "pc01"
+down_revision: str | None = "tk02"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

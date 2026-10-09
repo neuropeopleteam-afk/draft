@@ -251,7 +251,7 @@ export function Probes() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Задания от работодателей" subtitle="Зонд — короткая задача с вилкой зарплаты. Ответ решением или подходом; оценка работодателя становится подтверждённым фактом (T1)." />
+      <PageTitle title="Зонды работодателей" subtitle="Зонд — короткая задача с вилкой зарплаты. Ответ решением или подходом; оценка работодателя становится подтверждённым фактом (T1)." />
       <p className="text-sm text-brand-ink/70">Задания с автопроверкой — лично, к откликам и по вашему стеку — в разделе <Link className="font-semibold text-brand hover:underline" to="/candidate/assignments">«Задания для вас»</Link>.</p>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Заданий пока нет" text="Работодатели могут прислать короткую задачу до приглашения. Контакты при этом не раскрываются." />
