@@ -68,25 +68,52 @@ def _limits(memory_mb: int, cpu_s: int):
     return apply
 
 
+def _run_worker(script: Path, args: list[str], data: bytes, timeout_s: float, memory_mb: int) -> dict | None:
+    """Запуск изолированного процесса разбора (python -I, лимиты памяти и CPU, пустое окружение).
+
+    None — тайм-аут; {"error": "unreadable"} — процесс убит по лимиту или упал; иначе — его JSON-ответ.
+    """
+    try:
+        res = subprocess.run([sys.executable, "-I", str(script), *args], input=data, capture_output=True,
+                             timeout=timeout_s, preexec_fn=_limits(memory_mb, int(timeout_s) + 2),
+                             env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LANG": "C.UTF-8"})
+    except subprocess.TimeoutExpired:
+        return None
+    try:
+        return json.loads(res.stdout.decode("utf-8").strip().splitlines()[-1])
+    except (ValueError, IndexError, UnicodeDecodeError):
+        return {"error": "unreadable"}  # процесс убит по лимиту памяти/CPU или упал
+
+
 def pdf_to_text_safe(data: bytes, max_pages: int = 20, timeout_s: float = 10.0, memory_mb: int = 512) -> tuple[str, int]:
     """Разбор PDF в отдельном процессе: тайм-аут, лимит памяти и CPU, отказ при > max_pages страниц до разбора.
 
     Ошибки — PdfError с кодом: too_many_pages | timeout | unreadable. Воркер API не блокируется и не падает
     от «тяжёлого» или вредоносного PDF: процесс разбора убивается по тайм-ауту.
     """
-    try:
-        res = subprocess.run([sys.executable, "-I", str(_WORKER), str(max_pages)], input=data, capture_output=True,
-                             timeout=timeout_s, preexec_fn=_limits(memory_mb, int(timeout_s) + 2),
-                             env={"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LANG": "C.UTF-8"})
-    except subprocess.TimeoutExpired:
-        raise PdfError("timeout") from None
-    try:
-        out = json.loads(res.stdout.decode("utf-8").strip().splitlines()[-1])
-    except (ValueError, IndexError, UnicodeDecodeError):
-        raise PdfError("unreadable") from None  # процесс убит по лимиту памяти/CPU или упал
+    out = _run_worker(_WORKER, [str(max_pages)], data, timeout_s, memory_mb)
+    if out is None:
+        raise PdfError("timeout")
     if out.get("error"):
         raise PdfError(out["error"], out.get("pages"))
     return out.get("text") or "", int(out.get("pages") or 0)
+
+
+_DOCX_WORKER = Path(__file__).with_name("docx_worker.py")
+
+
+def docx_to_text_safe(data: bytes, timeout_s: float = 10.0, memory_mb: int = 256) -> str:
+    """Разбор DOCX (stdlib: zipfile + expat) тем же способом, что PDF: отдельный процесс, тайм-аут, лимиты.
+
+    Ошибки — PdfError с кодом из docx_text.DocxError (not_docx | macros | encrypted | zip_bomb | dtd | unreadable)
+    или timeout. Макросы не исполняются никогда: читается только XML основной части документа.
+    """
+    out = _run_worker(_DOCX_WORKER, [], data, timeout_s, memory_mb)
+    if out is None:
+        raise PdfError("timeout")
+    if out.get("error"):
+        raise PdfError(out["error"])
+    return out.get("text") or ""
 
 
 def experience_years(text: str, today: date | None = None) -> float | None:
