@@ -21,10 +21,11 @@ def test_qr_guest_gets_place_and_invite_in_world_of_500(client, _fast_live, monk
     """Гость после мини-теста получает приглашение и своё настоящее место, даже если оно ниже окна подборки
     (на стенде Backend: из 139 — гость не попадал в топ-60, и приглашения не было).
     После Ф2 условия живой потребности («Удалённо») применяются сразу, и в мире из 500 в выдаче остаётся около 60
-    удалённых кандидатов направления — окно сужено до 10, чтобы место гостя гарантированно оказалось за его пределами."""
+    удалённых кандидатов направления, а после Ф3 × Ф2 гость с подтверждённым обязательным навыком (Python / JavaScript)
+    идёт ярусом выше — окно сужено до 3, чтобы место гостя гарантированно оказалось за его пределами."""
     from app.jury_live import service as S
 
-    monkeypatch.setattr(S, "SELECTION_LIMIT", 10)
+    monkeypatch.setattr(S, "SELECTION_LIMIT", 3)
     from app.jury_live.models import LiveGuest
     from app.modules.demo.seed import seed
     from app.modules.matching.models import SelectionVersion

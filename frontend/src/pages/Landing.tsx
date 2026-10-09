@@ -4,12 +4,20 @@ import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { errText } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { guide, juryLogin, juryReset, type Persona } from "../lib/jury";
+import { daysText, useRules } from "../lib/meta";
 
-const candidateSteps = [
+type Rules = NonNullable<ReturnType<typeof useRules>>;
+
+// Сроки правил — из настроек через /api/meta (useRules), а не числами в тексте: одно правило на главной и в тесте
+const gradeRule = (r: Rules | null) => r
+  ? `Грейд не понижается принудительно. Смена подтверждённого грейда — не чаще раза в ${daysText(r.grade_change_interval_days)}; повтор на тот же грейд после неподтверждённой попытки — через ${daysText(r.retake_same_grade_days)}, на грейд ниже — сразу.`
+  : "Грейд не понижается принудительно; тест на грейд ниже можно пройти сразу.";
+
+const candidateSteps = (r: Rules | null) => [
   ["Регистрация", "Почта с подтверждением и согласие на обработку данных — без резюме на первом шаге."],
   ["Опрос", "Направление, стек и опыт. Затем вы сами выбираете предполагаемый грейд."],
   ["Тест на грейд", "Задачи с кодом из семейств шаблонов: у каждого свой вариант, сложность сопоставима."],
-  ["Категория и рейтинг", "Например, «Backend · Middle». Грейд не понижается принудительно, пересдача — раз в 90 дней."],
+  ["Категория и рейтинг", `Например, «Backend · Middle». ${gradeRule(r)}`],
   ["Приглашения с зарплатой", "Компания пишет первой и сразу называет вилку. Принять или отклонить — решаете вы."],
 ];
 
@@ -28,6 +36,7 @@ const evidence = [
 ];
 
 export default function Landing() {
+  const rules = useRules();
   return (
     <div className="min-h-screen">
       <SiteHeader dark />
@@ -86,7 +95,7 @@ export default function Landing() {
         </p>
 
         <div className="mt-12 grid gap-8 lg:grid-cols-2">
-          <StepList id="candidates" title="Кандидату" accent="bg-brand" steps={candidateSteps} cta={["/register?role=candidate", "Зарегистрироваться как кандидат"]} />
+          <StepList id="candidates" title="Кандидату" accent="bg-brand" steps={candidateSteps(rules)} cta={["/register?role=candidate", "Зарегистрироваться как кандидат"]} />
           <StepList id="employers" title="Работодателю" accent="bg-brand-plum" steps={employerSteps} cta={["/register?role=employer", "Зарегистрировать компанию"]} />
         </div>
       </section>
@@ -114,7 +123,7 @@ export default function Landing() {
         <div className="grid gap-5 md:grid-cols-3">
           <Rule title="Зарплата — сразу" text="Вилка «от–до» в рублях обязательна в каждом приглашении. Условия известны до начала общения." />
           <Rule title="Контакты — с согласия" text="Работодатель видит обезличенный профиль. Имя и контакты открываются, только когда кандидат принял приглашение." />
-          <Rule title="Без спама" text="Не больше одного приглашения кандидату от одной компании за 30 дней. Минимальная зарплата кандидата скрыта." />
+          <Rule title="Без спама" text={`${rules ? `Не больше одного приглашения кандидату от одной компании за ${daysText(rules.invitation_cooldown_days)}.` : "Повторные приглашения от одной компании ограничены сроком."} Минимальная зарплата кандидата скрыта.`} />
         </div>
       </section>
 
@@ -211,7 +220,7 @@ function JuryBlock() {
           ))}
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { guide.enable(); guide.setStep(0); navigate("/register?role=candidate"); }}>
+          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { guide.enable(); guide.show(); guide.setStep(0); navigate("/register?role=candidate"); }}>
             Начать проводник с регистрации
           </button>
           <button className="font-semibold text-brand-plum underline-offset-2 hover:underline disabled:opacity-50" disabled={!!busy} onClick={reset}>
