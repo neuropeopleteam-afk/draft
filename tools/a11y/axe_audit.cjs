@@ -5,6 +5,7 @@
 //   curl -sSL -o /tmp/axe.min.js https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js
 //   BASE=http://127.0.0.1:5138 AXE=/tmp/axe.min.js OUT=/tmp/a11y/after node tools/a11y/axe_audit.cjs
 //
+// APPEND=1 — дописать результаты к прежнему OUT/axe.json (проход частями).
 // Итог — OUT/axe.json (по экранам: число нарушений по степеням, правила, примеры узлов) и OUT/axe_summary.md.
 // Степени axe: critical, serious, moderate, minor. «Нарушение» = правило × экран (узлы считаются отдельно).
 // SHOTS=1 — дополнительно снимки ключевых экранов в OUT/shots. ONLY=landing,selection — только эти экраны.
@@ -186,6 +187,7 @@ async function runAxe(page) {
           for (const k of Object.keys(contexts)) delete contexts[k];
           continue;
         }
+        if (SHOTS) await page.screenshot({ path: path.join(OUT, "shots", `${s.id}_${w}_error.png`) }).catch(() => null);
         results.push({ screen: s.id, viewport: `${w}`, error: String(e).slice(0, 300) });
         console.log(`${w} ${s.id}: ОШИБКА ${String(e).slice(0, 200)}`);
         break;
@@ -195,7 +197,14 @@ async function runAxe(page) {
     for (const p of Object.values(contexts)) await p.context().close().catch(() => null);
   }
   await browser.close();
-  fs.writeFileSync(path.join(OUT, "axe.json"), JSON.stringify({ base: BASE, at: new Date().toISOString(), results }, null, 2));
+  // APPEND=1: дописать к прежнему OUT/axe.json (проход частями — замок браузера не дольше 5 минут за раз)
+  const prevFile = path.join(OUT, "axe.json");
+  if (process.env.APPEND && fs.existsSync(prevFile)) {
+    const fresh = new Set(results.map((r) => `${r.screen}@${r.viewport}`));
+    const old = JSON.parse(fs.readFileSync(prevFile, "utf8")).results.filter((r) => !fresh.has(`${r.screen}@${r.viewport}`));
+    results.unshift(...old);
+  }
+  fs.writeFileSync(prevFile, JSON.stringify({ base: BASE, at: new Date().toISOString(), results }, null, 2));
   // сводка: по степеням (правило × экран × ширина) и по правилам
   const tot = Object.fromEntries(IMPACTS.map((i) => [i, 0]));
   const byRule = {};
