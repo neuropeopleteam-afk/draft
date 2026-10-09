@@ -17,8 +17,9 @@ export default function EmployerOverview() {
   const steps = [
     { done: !!company?.description, title: "Заполните профиль компании", text: "Кандидат увидит его в приглашении.", to: "company" },
     { done: !!needs.data?.length, title: "Опишите потребность", text: "Текстом, как в обычной вакансии, — требования структурируем автоматически.", to: "needs" },
-    { done: !!probes.data?.length, title: "Отправьте зонд", text: "Короткая задача с вилкой зарплаты — свежий сигнал до приглашения.", to: "needs" },
-    { done: !!inv.data?.length, title: "Пригласите кандидата", text: "С вилкой «от–до» в рублях. Контакты откроются после согласия кандидата.", to: "search" },
+    // Ф6 (Н9): главный путь — приглашение с вилкой из подборки; зонд — необязательный шаг, не барьер к контакту
+    { done: !!inv.data?.length, title: "Пригласите кандидата из подборки", text: "Кнопка «Пригласить» в карточке: вилка «от–до» в рублях, контакты откроются после согласия кандидата.", to: "needs" },
+    { done: !!probes.data?.length, title: "Зонд — по желанию", text: "Необязательно: короткая задача с вилкой зарплаты, если нужен свежий сигнал по навыку до приглашения.", to: "probes", optional: true },
   ];
   return (
     <div className="max-w-4xl">
@@ -34,9 +35,9 @@ export default function EmployerOverview() {
         <ol className="mt-5 space-y-4">
           {steps.map((s, i) => (
             <li key={s.title} className="flex items-start gap-4">
-              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${s.done ? "bg-brand-strong text-white" : "bg-brand-plum text-white"}`}>{s.done ? "✓" : i + 1}</span>
+              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${s.done ? "bg-brand-strong text-white" : "optional" in s ? "bg-brand-blush text-brand-plum" : "bg-brand-plum text-white"}`}>{s.done ? "✓" : "optional" in s ? "+" : i + 1}</span>
               <div className="flex-1">
-                <p className="font-semibold">{s.title}</p>
+                <p className="font-semibold">{s.title}{"optional" in s && <span className="ml-2 chip">необязательно</span>}</p>
                 <p className="text-sm text-brand-ink/65">{s.text}</p>
               </div>
               <Link to={s.to} className="text-sm font-semibold text-brand hover:text-brand-soft">Перейти</Link>
