@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+import logging
 from typing import Literal
 import uuid
 
@@ -27,6 +28,7 @@ from app.modules.matching.router import my_company
 from app.modules.notifications.mailer import notify
 from app.modules.profiles.models import CandidateProfile, Company
 
+log = logging.getLogger(__name__)
 employer_router = APIRouter(prefix="/api/employer", tags=["employer-contact"])
 candidate_router = APIRouter(prefix="/api/candidate", tags=["candidate-contact"])
 employer = require_role(UserRole.employer)
@@ -114,6 +116,17 @@ def _probe_out(db: Session, p: Probe, side: str) -> dict:
     return out
 
 
+def _ats_transfers(db: Session, i: Invitation) -> list[dict]:
+    from app.integrations.ats.service import invitation_transfers
+
+    try:
+        return invitation_transfers(db, i.company_id, i)
+    except Exception:  # noqa: BLE001 — состояние ATS не должно ломать список приглашений
+        db.rollback()
+        log.exception("ats transfers failed")
+        return []
+
+
 def _inv_out(db: Session, i: Invitation, side: str) -> dict:
     from app.integrations.ats.stages import stage_out
 
@@ -135,6 +148,7 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
         out["candidate_category"] = cand.current_category_id
         out["candidate_deleted"] = cand.deleted_at is not None  # кандидат удалил учётную запись («Мои данные»)
         out["contacts"] = svc.candidate_contacts(db, i.candidate_user_id) if i.contacts_revealed_at else None
+        out["ats_transfers"] = _ats_transfers(db, i)  # состояние по каждой ATS: передано / ошибка / не передавалось
     else:
         out["below_my_minimum"] = svc.below_minimum(cand, i.salary_to, i.salary_basis)
     out.update(contact_svc.invitation_extras(db, i, side))  # НДФЛ, встречное, доступ к контактам, переписка

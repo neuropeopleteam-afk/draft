@@ -29,7 +29,7 @@ from app.core.enums import NeedStatus, TestSessionStatus
 from app.modules.assessment.integrity import candidate_view
 from app.modules.assessment.models import TestSession
 from app.modules.catalog.constants import FSP_DISCIPLINES
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADE_ORDER, GRADES, STACK
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADE_ORDER, GRADES, STACK, tag_title
 from app.modules.profiles.facts import load_bundles
 
 # Только рекомендации для тренировки навыков, не вес соревнований и не рейтинг ФСП.
@@ -57,7 +57,6 @@ DEMAND_STATUS_TITLES = {"confirmed": "подтверждён тестом (T1)",
 _EXTRA_TOPICS = [({"networking", "cidr", "ipv4", "routing"}, "networking", "Сети и адресация"),
                  ({"web_security", "xss", "csp"}, "web-security", "Безопасность веб-клиента"),
                  ({"performance", "latency", "capacity_planning"}, "system-performance", "Производительность систем")]
-OTHER_TOPIC_TITLE = "Прочие темы"  # задание без стек-тега и без темы из _EXTRA_TOPICS (тег "other")
 
 # Аспекты темы — навыки семейств банка по-русски. Навык без названия здесь в аспекты не выводится
 # (обычно это сама тема: python, sql, javascript …).
@@ -202,9 +201,7 @@ def _title(tag: str) -> str:
     for _, t, title in _EXTRA_TOPICS:
         if t == tag:
             return title
-    if tag == "other":
-        return OTHER_TOPIC_TITLE
-    return STACK.get(tag, (tag,))[0]
+    return tag_title(tag)  # «other» → «Прочие темы» (задание без стек-тега и без темы из _EXTRA_TOPICS)
 
 
 def _status(score: float | None) -> str:

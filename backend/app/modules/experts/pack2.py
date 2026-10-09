@@ -187,10 +187,18 @@ def match_order(db: Session, req: dict, demo: dict) -> list:
     cat_ids = [r["id"] for r in recs if r["relation"] in ("exact", "direction", "all")]
     ids = [p.user_id for p in ranking.visible_pool(db, category_ids=cat_ids) if p.user_id in demo]
     ids += [p.user_id for p, _, _ in ranking.unconfirmed_pool(db, category_ids=cat_ids) if p.user_id in demo]
+    # Ф2 (волна 3): условия потребности (формат, город) применяются по умолчанию, порядок — ярус статуса грейда →
+    # ярус обязательного (must_have) → балл → рейтинг → ref, как в ranking.build_selection
+    from app.modules.matching import must_have
+
     bundles = ranking.apply_filters(list(load_bundles(db, ids, direction=req.get("direction"),
-                                                      category_ids=cat_ids).values()), {})
+                                                      category_ids=cat_ids).values()),
+                                    ranking.condition_filters(req, {}))
     scored = [(ranking.score_candidate(b, req)[0], b) for b in bundles]
-    scored.sort(key=lambda x: (ranking.tier(x[1]), -x[0], -(x[1].rating or 0), x[1].profile.public_ref or ""))
+    levels = must_have.declared_levels(db, [b.profile.user_id for _, b in scored]) if must_have.declared_counts() else {}
+    must = must_have.tiers_for([b for _, b in scored], req, levels)
+    scored.sort(key=lambda x: (ranking.tier(x[1]), must[x[1].profile.user_id]["tier"], -x[0], -(x[1].rating or 0),
+                               x[1].profile.public_ref or ""))
     return scored
 
 
