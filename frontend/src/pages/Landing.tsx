@@ -55,6 +55,7 @@ export default function Landing() {
               <span><span className="font-semibold text-white">Готовые демо-учётки: вход в один клик</span><span className="hidden text-white/70 sm:inline"> — кандидат, работодатель, эксперт, ФСП</span></span>
               <svg viewBox="0 0 20 20" className="h-4 w-4 shrink-0 text-brand-blush transition-transform group-hover:translate-y-0.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M10 4v12m0 0l-5-5m5 5l5-5" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
+            <Link to="/criteria" className="mt-3 flex w-fit text-sm font-semibold text-brand-blush underline-offset-2 hover:underline">Проверить по критериям ТЗ →</Link>
           </div>
 
           <div className="hidden self-end rounded-3xl bg-white/[0.06] p-6 ring-1 ring-white/10 backdrop-blur sm:block" role="figure" aria-label="Пример приглашения">
@@ -191,6 +192,7 @@ function JuryBlock() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link to="/criteria" className="btn bg-brand-night text-white hover:bg-brand-plum">Проверить по критериям ТЗ</Link>
             <Link to="/jury/live" className="btn-primary">Демонстрация для жюри: QR</Link>
             <Link to="/validation" className="btn-ghost">Как мы проверяем себя</Link>
             <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
