@@ -59,6 +59,14 @@ ADDRESS_PATTERNS: list[re.Pattern] = [
                rf"переулок|улица)(?![\w]){_TAIL}"),
     # «Дмитровское шоссе, 9», «Новый проезд 3» — полные слова «шоссе/проезд/площадь» только с номером дома
     re.compile(rf"(?<![\w\-]){_ADJ}{_SP}+(?i:шоссе|проезд|площадь|аллея|тупик){_SP}*,?{_SP}*{_HOUSE}(?:{_SP}*,?{_SP}*{_UNIT})*"),
+    # латиницей: «ul. Tverskaya, 7, apt. 15», «Tverskaya Street 7», «221 Baker Street» — только с номером дома
+    re.compile(r"(?<![\w.])(?i:ul\.|ulitsa|prospekt|pr-t|pereulok|per\.|naberezhnaya|nab\.|shosse|bulvar)[ \t]*[A-Z][a-z]+"
+               r"(?:[ \t]+[A-Z][a-z]+)?[ \t]*,?[ \t]*(?:(?i:d\.?|dom)[ \t]*)?\d{1,4}[a-zA-Z]?(?:[-/]\d{1,4})?(?!\d)"
+               r"(?:[ \t]*,?[ \t]*(?i:apt\.?|kv\.?|of\.?|office|bldg\.?|korp\.?|suite|str\.?)[ \t]*\d{1,4}[a-zA-Z]?)*"),
+    re.compile(r"(?<![\w.])(?:\d{1,5}[a-zA-Z]?[ \t]+(?:[A-Z][a-z]+[ \t]+)?[A-Z][a-z]+[ \t]+(?:Street|Avenue|Road|Lane|Boulevard|"
+               r"Prospekt|Ulitsa|St\.|Ave\.|Rd\.|Blvd\.?)(?![\w])|(?:[A-Z][a-z]+[ \t]+)?[A-Z][a-z]+[ \t]+(?:Street|Avenue|Road|"
+               r"Lane|Boulevard|Prospekt|Ulitsa)[ \t]*,?[ \t]*\d{1,4}[a-zA-Z]?(?:[-/]\d{1,4})?(?![\d\w]))"
+               r"(?:[ \t]*,?[ \t]*(?i:apt\.?|suite|office|kv\.?)[ \t]*\d{1,4}[a-zA-Z]?)*"),
     # «д. 5, кв. 3» без улицы — только вместе с корпусом/квартирой/офисом
     re.compile(rf"(?<![\w.])(?i:д\.|дом){_SP}*\d{{1,4}}(?:[а-я](?![а-яё]))?(?:/\d{{1,4}})?(?:{_SP}*,?{_SP}*{_UNIT})+"),
 ]
@@ -393,6 +401,8 @@ def redact(text: str, use_ner: bool = True, ner_min_tokens: int = 1, contact_cue
         for s, e, val in sorted(persons, key=lambda x: -x[0]):
             if len(val.split()) < ner_min_tokens or _not_name(val) or "[" in val:
                 continue
+            if len(val.split()) == 1 and not (_first_name(val) or _SURNAME_RU.search(val) or NM.SURNAME_LAT.search(val)):
+                continue  # одно слово без признаков имени («Автотесты:», «Гибрид») — NER ошибся, разбор не портим
             names.append(val)
             out = out[:s] + "[ФИО]" + out[e:]
     if contact_cues:
