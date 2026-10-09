@@ -175,6 +175,11 @@ def diff(base: dict, merged: dict) -> list[dict]:
         if base.get(k) is None and merged.get(k) is not None:
             out.append({"id": f"set:{k}", "kind": "set_scalar", "auto": True, "field": k, "value": merged[k],
                         "evidence": m_ev.get(k)})
+    known = {u.get("term") for u in base.get("unknown_terms") or []}
+    for u in merged.get("unknown_terms") or []:  # вне справочника, найдено моделью: заметка, в подбор не входит
+        if (u.get("evidence") or {}).get("source") == "llm" and u.get("term") not in known:
+            out.append({"id": f"unknown:{u['term']}", "kind": "note_unknown", "auto": True, "name": u["term"],
+                        "evidence": u.get("evidence")})
     for s in merged.get("llm_suggest") or []:
         out.append({"id": f"suggest:{s['field']}", "kind": "suggest_scalar", "auto": False, **s})
     for r in merged.get("llm_remove") or []:

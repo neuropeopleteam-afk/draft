@@ -400,11 +400,15 @@ _NEG_BEFORE = re.compile(r"(?:\bбез|\bне\s+(?:нужен|нужна|нуж�
                          r"(?:опыт\w*\s+|знани\w*\s+)?(?:работы\s+)?(?:с\s+|на\s+)?$", re.I)
 
 
+_NEG_BUT_PLUS = re.compile(r"^\s*,?\s*(?:но|однако|а)\s+(?:будет\s+)?(?:плюс|желательн|приветству|преимуществ)", re.I)
+
+
 def negated_tags(text: str, spans: dict[str, tuple[int, int]]) -> dict[str, tuple[int, int]]:
-    """Технологии, про которые сказано «не нужен», «без …», «не требуется …» → фрагмент с отрицанием (И18)."""
+    """Технологии, про которые сказано «не нужен», «без …», «не требуется …» → фрагмент с отрицанием (И18).
+    «Докер не обязателен, но плюс» — не отрицание, а «желательно» (И27, Н1)."""
     out = {}
     for tag, (s, e) in spans.items():
-        if m := _NEG_AFTER.search(text[e:e + 60]):
+        if (m := _NEG_AFTER.search(text[e:e + 60])) and not _NEG_BUT_PLUS.match(text[e + m.end():e + m.end() + 40]):
             out[tag] = (s, e + m.end())
         elif m := _NEG_BEFORE.search(text[max(0, s - 45):s]):
             out[tag] = (max(0, s - 45) + m.start(), e)
@@ -433,6 +437,26 @@ def _mixed_zones(start: int, sent: str, default: str) -> list[tuple[int, int, st
     return out
 
 
+_DIR_NEG_BEFORE = re.compile(r"(?:\bбез|\bкроме|\bне\s+(?:нужен|нужна|нужно|требуется|ищем))\s+(?:\w+\s+)?$", re.I)
+
+
+def negated_directions(text: str) -> str:
+    """Текст для голосования направления: ключевые слова направления под отрицанием («фронтенд не нужен», «без
+    фронтенда») заменены пробелами (позиции сохраняются) — отрицание не выбирает профессию (И27, Н1)."""
+    low, out = text.lower(), list(text)
+    for words in DIRECTION_KEYWORDS.values():
+        for w in words:
+            for m in re.finditer(re.escape(w), low):
+                s, e = m.start(), m.end()
+                while e < len(text) and text[e].isalpha():
+                    e += 1
+                neg = _NEG_AFTER.search(text[e:e + 60])
+                if neg and not _NEG_BUT_PLUS.match(text[e + neg.end():e + neg.end() + 40]) \
+                        or _DIR_NEG_BEFORE.search(text[max(0, s - 30):s]):
+                    out[s:e] = " " * (e - s)
+    return "".join(out)
+
+
 def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | None = None) -> dict:
     """Детерминированный разбор. Возвращает требования в каноническом виде (см. normalize) с цитатами.
 
@@ -455,15 +479,16 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
                 return k
         return "neutral"
 
-    # Направление: ключевые слова (вес 3) + голоса стек-тегов (вес 1)
-    dk = find_keys(text, DIRECTION_KEYWORDS)
+    # Направление: ключевые слова (вес 3) + голоса стек-тегов (вес 1); слова под отрицанием не голосуют
+    dtext = negated_directions(text)
+    dk = find_keys(dtext, DIRECTION_KEYWORDS)
     votes = {d: 3 * n for d, n in dk.items()}
     for t in tags:
         d = dirs.get(t)
         if d:
             votes[d] = votes.get(d, 0) + 1
     # Some public texts start with an introductory line and put the role on the next line.
-    head = text[:200].split(":", 1)[0]
+    head = dtext[:200].split(":", 1)[0]
     title_dirs = find_keys(head, DIRECTION_KEYWORDS)
     if "qa" in title_dirs:
         title_dirs = {"qa": title_dirs["qa"]}
@@ -481,7 +506,7 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
         if direction in title_dirs and find_key_span(head, DIRECTION_KEYWORDS[direction]):
             ev["direction"] = _ev(text, find_key_span(head, DIRECTION_KEYWORDS[direction]), basis="title")
         elif direction in dk:
-            ev["direction"] = _ev(text, find_key_span(text, DIRECTION_KEYWORDS[direction]), basis="keyword")
+            ev["direction"] = _ev(text, find_key_span(dtext, DIRECTION_KEYWORDS[direction]), basis="keyword")
         else:  # направление выведено по технологиям — цитата первой из них
             first = min((sp for t, sp in spans.items() if dirs.get(t) == direction), default=None)
             ev["direction"] = _ev(text, first, basis="stack")
@@ -659,7 +684,10 @@ DELTA_SYSTEM = (
     "Сленг, опечатки и английские названия сопоставляй с идентификаторами (кафка → kafka, k8s → kubernetes, "
     "постгрес → postgresql). confirm — теги из «уже найдено», которые по тексту действительно требуются. remove — "
     "теги из «уже найдено», которые по тексту НЕ требуются (отрицание, пример, другая роль): reason — коротко, "
-    "quote — фрагмент. direction, grade, experience_years_min, work_format — только если словарь не нашёл (нет в "
+    "quote — фрагмент. unknown_required — обязательные требования (технологии, платформы, инструменты), которых НЕТ "
+    "среди идентификаторов: term — название, quote — фрагмент; известное списку сюда не пиши. Тег к фрагменту, который "
+    "словарь уже сопоставил с другим тегом (REST → http), не добавляй. "
+    "direction, grade, experience_years_min, work_format — только если словарь не нашёл (нет в "
     "«уже найдено») или ошибся, иначе null; quotes — дословные фрагменты для них. Без цитаты требование не указывай. "
     "Не извлекай требования к полу, возрасту, внешности, национальности, семье, религии и месту жительства. "
     "Идентификаторы тегов: {tags}."
@@ -675,7 +703,7 @@ def delta_schema() -> dict:
     opt = lambda values: {"anyOf": [{"type": "string", "enum": list(values)}, {"type": "null"}]}  # noqa: E731
     qs = ("direction", "grade", "experience_years_min", "work_format")
     schema = {"type": "object", "additionalProperties": False,
-              "required": ["stack_required", "stack_desired", "confirm", "remove", *qs, "quotes"],
+              "required": ["stack_required", "stack_desired", "confirm", "remove", "unknown_required", *qs, "quotes"],
               "properties": {
                   "stack_required": {"type": "array", "items": item},
                   "stack_desired": {"type": "array", "items": item},
@@ -684,6 +712,9 @@ def delta_schema() -> dict:
                       "type": "object", "additionalProperties": False, "required": ["tag", "reason", "quote"],
                       "properties": {"tag": {"type": "string", "enum": tags}, "reason": {"type": "string"},
                                      "quote": {"type": "string"}}}},
+                  "unknown_required": {"type": "array", "items": {
+                      "type": "object", "additionalProperties": False, "required": ["term", "quote"],
+                      "properties": {"term": {"type": "string"}, "quote": {"type": "string"}}}},
                   "direction": opt(DIRECTIONS), "grade": opt(GRADES),
                   "experience_years_min": {"anyOf": [{"type": "number"}, {"type": "null"}]},
                   "work_format": opt(("office", "hybrid", "remote")),
@@ -719,7 +750,8 @@ def _call_llm(clean_text: str, rules: dict, full: bool = False):
                      validate=lambda d: isinstance(d, dict), response_format=delta_schema())
 
 
-def _llm_review(merged: dict, rules: dict, llm: dict, raw: dict, masked: str, hints: dict, label: str | None) -> None:
+def _llm_review(merged: dict, rules: dict, llm: dict, raw: dict, masked: str, hints: dict, label: str | None,
+                replaced: set[str] = frozenset()) -> None:
     """И27: происхождение и предложения модели. Тег словаря, который модель подтвердила (confirm или тот же тег в
     ответе) — evidence.confirmed_by; «убрать тег» и несогласие со значением словаря — только предложения
     (llm_remove, llm_suggest), сами по себе в требования не попадают."""
@@ -731,7 +763,8 @@ def _llm_review(merged: dict, rules: dict, llm: dict, raw: dict, masked: str, hi
             i["evidence"] = {**i["evidence"], "confirmed_by": label}
     remove = []
     for x in raw.get("remove") or []:
-        if isinstance(x, dict) and x.get("tag") in rule_tags and x["tag"] not in confirmed:
+        # «убрать http» вместе с rest-api к тому же фрагменту «REST» — замена тега словаря, а не отрицание (Н4)
+        if isinstance(x, dict) and x.get("tag") in rule_tags and x["tag"] not in confirmed and x["tag"] not in replaced:
             span = _locate(masked, x.get("quote"))
             remove.append({"tag": x["tag"], "reason": str(x.get("reason") or "")[:200],
                            "evidence": _ev(masked, span, source="llm") if span else None})
@@ -806,12 +839,36 @@ def _with_quotes_from_original(req: dict, text: str) -> dict:
     return req
 
 
-def text_notes(text: str, req: dict) -> dict:
+def _unknown_from_model(text: str, items, known: set[str], taken: list[tuple[int, int]] = ()) -> list[dict]:
+    """Требования вне справочника, которые назвала модель (И27, Н2): только с цитатой, найденной в тексте; термин,
+    который словарь знает как тег, сюда не попадает. Сохраняются при записи потребности (источник llm)."""
+    out = []
+    stack_spans = list(find_stack_spans(text).values()) + list(taken)  # теги словаря и уже найденное вне его
+    for u in items or []:
+        if not isinstance(u, dict):
+            continue
+        term = re.sub(r"\s+", " ", str(u.get("term") or "")).strip()[:80]
+        ev = u.get("evidence") if isinstance(u.get("evidence"), dict) else {}
+        if not term or term.lower() in known or find_stack(term) or ev.get("source") != "llm":
+            continue
+        span = _locate(text, term) or _locate(text, ev.get("quote"))
+        if span is None or any(s < span[1] and span[0] < e for s, e in stack_spans):
+            continue
+        known.add(term.lower())
+        model = str(ev.get("model") or "")[:60]
+        out.append({"term": term, "evidence": {**_ev(text, span, "llm"), **({"model": model} if model else {})}})
+    return out[:8]
+
+
+def text_notes(text: str, req: dict, extra: list | None = None) -> dict:
     """Что из текста не попало в подбор, — честно (И18): технологии вне справочника, исключённые отрицанием, вилка
-    не в рублях. Считается по тексту и итоговым требованиям; в ранжирование не входит."""
+    не в рублях. Считается по тексту и итоговым требованиям; в ранжирование не входит. extra — требования вне
+    справочника, найденные моделью (И27): «вне справочника — проверить вручную», не теряются при сохранении."""
     masked = bias_filter.mask(text, bias_filter.find_bias(text))
     unknown = [{"term": name, "evidence": _ev(text, sp)}
                for name, sp in sorted(find_unsupported_spans(masked).items(), key=lambda kv: kv[1][0])][:12]
+    unknown += _unknown_from_model(text, extra, {u["term"].lower() for u in unknown},
+                                   [(u["evidence"]["start"], u["evidence"]["end"]) for u in unknown if u.get("evidence")])
     used = {i["tag"] for i in (req.get("stack_required") or []) + (req.get("stack_desired") or [])}
     excluded = [x for x in (req.get("excluded") or []) if isinstance(x, dict) and x.get("tag") in STACK
                 and x["tag"] not in used]
@@ -836,7 +893,7 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
     for x in rules.get("excluded") or []:
         x["evidence"] = _ev(text, (x["evidence"]["start"], x["evidence"]["end"])) if x.get("evidence") else None
     merged["excluded"] = rules.get("excluded") or []
-    merged.update(text_notes(text, merged))
+    merged.update(text_notes(text, merged, extra=merged.pop("unknown_llm", None)))
     merged["bias"] = bias_filter.suggestions(found, merged)
     merged["suggested_text"] = bias_filter.rewrite(text, found, merged)
     from app.modules.matching.coverage import coverage
@@ -848,6 +905,18 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
             merged["direction"] = cov["nearest_direction"]
             merged["evidence"]["direction"] = cov["evidence"]
     return merged
+
+
+def _same_fragment(masked: str, item: dict, rules: dict) -> set[str]:
+    """Новый тег модели, чья цитата накрывает фрагмент, уже сопоставленный словарём с другим тегом, а сам тег в цитате
+    словарём не находится («проектирование REST» → rest-api при REST → http): это тот же фрагмент, не второе
+    требование (И27, Н4). Возвращает теги словаря под цитатой (пусто — тег самостоятельный)."""
+    ev = item.get("evidence") or {}
+    s, e = ev.get("start"), ev.get("end")
+    if s is None or e is None or item["tag"] in find_stack_spans(masked[s:e]):
+        return set()
+    return {i["tag"] for i in rules["stack_required"] + rules["stack_desired"]
+            if (r := i.get("evidence") or {}).get("start") is not None and r["start"] < e and s < r["end"]}
 
 
 def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade: str | None,
@@ -864,6 +933,8 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
     raw, dropped = _llm_requirements(res.data, masked)
     llm = normalize(raw, method="llm")
     merged = dict(rules)
+    replaced: set[str] = set()
+    same_fragment = 0
     ev = dict(rules.get("evidence") or {})
     # LLM уточняет направление/грейд, только если правила не справились или подсказки нет
     for key, hint in (("direction", hint_direction), ("grade", hint_grade)):
@@ -876,6 +947,11 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
         by_tag.update({i["tag"]: ("desired", i) for i in rules["stack_desired"]})
         for zone, items in (("required", llm["stack_required"]), ("desired", llm["stack_desired"])):
             for i in items:
+                over = _same_fragment(masked, i, rules) if i["tag"] not in by_tag else set()
+                if over:  # Н4: «REST» словарь уже сопоставил с http — rest-api к тому же фрагменту не дублируем
+                    replaced |= over
+                    same_fragment += 1
+                    continue
                 if i["tag"] in by_tag:
                     z, cur = by_tag[i["tag"]]
                     by_tag[i["tag"]] = (z, {**cur, "weight": round((cur["weight"] + i["weight"]) / 2, 2)})
@@ -896,9 +972,14 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
     for e in [*ev.values(), *(i.get("evidence") for i in merged["stack_required"] + merged["stack_desired"])]:
         if e and e.get("source") == "llm" and res.label:
             e["model"] = res.label  # подпись у цитаты: какая модель её нашла
-    _llm_review(merged, rules, llm, res.data, masked, {"direction": hint_direction, "grade": hint_grade}, res.label)
+    _llm_review(merged, rules, llm, res.data, masked, {"direction": hint_direction, "grade": hint_grade}, res.label,
+                replaced)
+    merged["unknown_llm"] = [{"term": x.get("term"), "evidence": {"quote": x.get("quote"), "source": "llm",
+                                                                  "model": res.label}}
+                             for x in (res.data.get("unknown_required") or [])[:12] if isinstance(x, dict)]
     # Кто фактически ответил (цепочка провайдеров llm/client.py) — подпись в интерфейсе
     merged["llm"] = {"used": True, "latency_ms": res.latency_ms, "dropped_without_quote": dropped,
+                     "same_fragment": same_fragment,
                      "provider": res.provider, "model": res.model, "model_label": res.label,
                      "fallback": len(res.attempts) > 1}
     return merged
