@@ -21,6 +21,8 @@ import { candidateSections } from "./pages/candidate/sections";
 import { EmployerInvitations, EmployerProbes } from "./pages/employer/Contact";
 import { Compare, CompareLanding } from "./pages/employer/Compare";
 import { Needs, Selection } from "./pages/employer/Needs";
+import { MutualEntry } from "./pages/mutual/Employer";  // взаимный подбор, ссылка руководителю (Н9, Н2, Н3)
+import { SharePage } from "./pages/mutual/Share";
 import EmployerOverview, { Company } from "./pages/employer/Overview";
 import { CandidateDetail, Search } from "./pages/employer/Search";
 import { employerSections } from "./pages/employer/sections";
@@ -58,6 +60,7 @@ export default function App() {
         <Route path="security" element={<TwoFactorSettings />} />
       </Route>
       <Route path="/expert-invite/:token" element={<ExpertInvite />} />
+      <Route path="/share/:token" element={<SharePage />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/verify/:id" element={<PassportVerify />} />
@@ -96,6 +99,7 @@ export default function App() {
         <Route path="needs" element={<Needs />} />
         <Route path="needs/:id" element={<Selection />} />
         <Route path="needs/:id/v/:version" element={<Selection />} />
+        <Route path="mutual" element={<MutualEntry />} />
         <Route path="needs/:id/compare" element={<Compare />} />
         <Route path="compare" element={<CompareLanding />} />
         <Route path="search" element={<Search />} />

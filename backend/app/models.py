@@ -38,3 +38,4 @@ from app.modules.subs.models import NeedSubEntry, NeedSubscription, NotifyPrefs,
 import app.modules.subs.events  # noqa: E402,F401 — слушатель «кандидат изменился» (И25)
 
 metadata = Base.metadata
+from app.modules.mutual.models import CandidatePreference, OfferFitCheck, SelectionFeedback, SelectionShare, ShareReaction  # noqa: E402,F401 — взаимный подбор (Н9, Н2, Н3)

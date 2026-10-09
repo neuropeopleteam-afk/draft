@@ -43,6 +43,7 @@ from app.modules.jury.router import router as jury_router
 from app.modules.jury.scope import JuryScopeMiddleware
 from app.modules.matching.router import router as employer_router
 from app.modules.proctor.router import router as proctor_router
+from app.modules.mutual import router as mutual  # взаимный подбор, отзывы, ссылка руководителю (Н9, Н2, Н3)
 from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
@@ -106,7 +107,8 @@ def create_app() -> FastAPI:
             "кандидата по категории «направление · грейд» и приглашает с зарплатой.\n\n"
             "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
         ),
-        openapi_tags=TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS,
+        openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
+                      + mutual.TAGS),
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -126,7 +128,8 @@ def create_app() -> FastAPI:
               assignments_employer_router, assignments_candidate_router, passport_router,
               contact.router, contact.candidate_router, contact.employer_router,  # переписка, встречное (И4)
               hiring.router, hiring.candidate_router, hiring.employer_router,  # найм (Н8)
-              subs_api.employer_router, subs_api.notify_router, subs_api.jury_router):  # подписка, уведомления (И25)
+              subs_api.employer_router, subs_api.notify_router, subs_api.jury_router,  # подписка, уведомления (И25)
+              mutual.employer_router, mutual.candidate_router, mutual.public_router):  # взаимный подбор (Н9, Н2, Н3)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
