@@ -259,6 +259,17 @@ def llm_models():
     return json.loads(LLM_MODELS.read_text(encoding="utf-8"))
 
 
+# --- Я2: режим «только российская модель» — все LLM-функции на YandexGPT против Sonnet и правил (tools/llm/ru_llm_bench.py) ---
+RU_LLM = Path(__file__).resolve().parent / "data" / "ru_llm.json"
+
+
+@router.get("/ru-llm", summary="Режим «только российская модель»: YandexGPT 5.1 против Claude Sonnet 5.5 и правил на одних входах")
+def ru_llm():
+    if not RU_LLM.exists():
+        return {"missing": True}
+    return json.loads(RU_LLM.read_text(encoding="utf-8"))
+
+
 # --- И26: доля повторов заданий между попытками (живая по базе + синтетика; пересчёт: attempts_repeat.py) ---
 @router.get("/attempts-repeat", summary="Доля повторов заданий между попытками теста: по базе и синтетика (модель)")
 def attempts_repeat(db: Session = Depends(get_db)):
