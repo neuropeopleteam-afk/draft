@@ -26,6 +26,14 @@ export function dateOnly(v?: string | null): string {
   if (!m) return dt(v ?? undefined);
   return new Date(+m[1], +m[2] - 1, +m[3]).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
 }
+/** Дата в конце предложения: точку после «г.» ставит само предложение — «…с 8 октября 2026 г.» без «г..». */
+export const dtEnd = (s?: string | null) => dt(s).replace(/\.$/, "");
+export const dateOnlyEnd = (v?: string | null) => dateOnly(v).replace(/\.$/, "");
+/** Склонение по числу: plural(1, "кандидат", "кандидата", "кандидатов") → «кандидат». */
+export const plural = (n: number, one: string, few: string, many: string) => {
+  const a = Math.abs(n) % 100, b = a % 10;
+  return a > 10 && a < 20 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many;
+};
 export const dtt = (s?: string | null) => (s ? new Date(s).toLocaleString("ru-RU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : "—");
 export const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Не удалось связаться с сервером");
 

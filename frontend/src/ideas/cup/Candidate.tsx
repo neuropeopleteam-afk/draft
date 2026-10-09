@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, Level, Loading, Modal, Status, dt, dtt, errText, useApi } from "../../components/ui";
+import { Alert, Empty, Field, Level, Loading, Modal, Status, dt, dtEnd, dtt, errText, useApi } from "../../components/ui";
 import { salaryText } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { CodeBlock, Countdown, ENTRY, MODE_SHORT, Phase, mins } from "../shared";
@@ -113,7 +113,7 @@ export function CandidateCup() {
             {e?.status === "joined" && <button className="btn-ghost" disabled={busy} onClick={() => act("leave")}>Отменить запись</button>}
           </div>
           {!c.profile_visible && (c.can_join || e?.status === "joined") && <p className="text-xs text-brand-plum">Чтобы получить приглашение по итогам, включите публикацию профиля в <Link className="underline" to="/candidate/settings">настройках</Link>.</p>}
-          {e?.status === "joined" && c.phase === "upcoming" && <p className="text-sm text-brand-ink/70">Вы записаны. Решение откроется {dt(c.starts_at)}.</p>}
+          {e?.status === "joined" && c.phase === "upcoming" && <p className="text-sm text-brand-ink/70">Вы записаны. Решение откроется {dtEnd(c.starts_at)}.</p>}
         </section>
       )}
       {solving && (

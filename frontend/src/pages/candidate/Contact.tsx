@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, errText, rub, ruText, useApi } from "../../components/ui";
+import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, dtEnd, errText, rub, ruText, useApi } from "../../components/ui";
 import { Thread } from "../../components/Chat";
 import { BasisSeg, SalaryLine, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { api } from "../../lib/api";
@@ -209,7 +209,7 @@ function ContactsAccess({ inv, onDone }: { inv: any; onDone: (r: any) => void })
   }
   if (inv.contacts_revoked) return (
     <div className="space-y-2">
-      <Alert kind="info">Вы отозвали доступ к контактам {dt(inv.contacts_revoked_at)}. Работодатель снова видит обезличенную карточку, переписка — в формате «вопрос — ответ».</Alert>
+      <Alert kind="info">Вы отозвали доступ к контактам {dtEnd(inv.contacts_revoked_at)}. Работодатель снова видит обезличенную карточку, переписка — в формате «вопрос — ответ».</Alert>
       <button className="btn-ghost" onClick={() => go("restore")}>Вернуть доступ к контактам</button>
       <Alert>{err}</Alert>
     </div>
