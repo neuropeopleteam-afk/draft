@@ -69,7 +69,7 @@ export default function Attempts() {
               <p className="text-xs text-brand-ink/65 sm:col-span-2">По умолчанию — две последние попытки; порядок — по времени завершения.</p>
             </section>
           )}
-          {cmp && <section className="card"><AttemptsCompare cmp={cmp} /></section>}
+          {cmp && <section className="card"><AttemptsCompare cmp={cmp} level={2} /></section>}
           {retakeBox}
         </>
       )}

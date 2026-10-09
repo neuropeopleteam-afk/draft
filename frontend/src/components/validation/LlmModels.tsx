@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { num, pct, useApi } from "../ui";
+import { ScrollX } from "../A11y";
 
 /** /validation#experts: какая модель где — облачные модели, открытая Qwen на CPU и правила на одних и тех же наборах
  * (backend: app/modules/validation/data/llm_models.json ← tools/llm/llm_models_table.py, подробно — docs/LLM.md). */
@@ -40,7 +41,7 @@ export default function LlmModels() {
 
 function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+    <ScrollX label={`Таблица: ${head.join(", ")}`} className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[44rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
           <tr>{head.map((h, i) => <th key={i} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
@@ -53,6 +54,6 @@ function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollX>
   );
 }
