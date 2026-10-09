@@ -146,3 +146,78 @@ export const STEPS: GuideStep[] = [
   { title: "Как мы проверяем себя", persona: null, path: "/validation", match: /^\/validation/, cta: "Открыть /validation",
     text: "Метрики теста и подбора — в том числе бенчмарк на 400 000 пар со скрытой истиной, — как они получились, обоснование порога грейда «Стажёр» симуляцией, статус экспертной разметки с проверкой расчёта на синтетике и «Красная кнопка»: атаки, которые вы запускаете сами — раздуть резюме, сменить имя, сменить пол, возраст и имя у всех кандидатов (выдача не меняется), добавить фальшивый значок ФСП, «слить» часть банка." },
 ];
+
+// ── Я9 «Проверка за 12 минут»: короткий режим проводника (большой справочник STEPS остаётся). У шага — что он
+// проверяет и какой критерий раздела 6 ТЗ, ориентир времени. Режим по умолчанию — короткий; выбор запоминается.
+export type GuideMode = "quick" | "full";
+const KEY_MODE = "jury_guide_mode", KEY_QSTEP = "jury_quick_step", KEY_T0 = "jury_quick_t0", KEY_NEED = "jury_quick_need";
+export const QUICK_MINUTES = 12;
+export const quick = {
+  mode: (): GuideMode => (localStorage.getItem(KEY_MODE) === "full" ? "full" : "quick"),
+  setMode: (m: GuideMode) => { localStorage.setItem(KEY_MODE, m); notify(); },
+  step: () => Math.min(Number(localStorage.getItem(KEY_QSTEP) ?? "0") || 0, QUICK.length - 1),
+  setStep: (n: number) => { localStorage.setItem(KEY_QSTEP, String(n)); },
+  /** начало прохода (мс) — таймер-ориентир; null — ещё не начат */
+  t0: () => Number(localStorage.getItem(KEY_T0)) || null,
+  touch: () => { if (!localStorage.getItem(KEY_T0)) localStorage.setItem(KEY_T0, String(Date.now())); },
+  restart: () => { localStorage.setItem(KEY_MODE, "quick"); localStorage.setItem(KEY_QSTEP, "0"); localStorage.setItem(KEY_T0, String(Date.now())); localStorage.removeItem(KEY_NEED); notify(); },
+  /** потребность, которую эксперт открыл последней: на неё ведут шаги подборки, сравнения и приглашения */
+  need: () => localStorage.getItem(KEY_NEED),
+  setNeed: (id: string) => localStorage.setItem(KEY_NEED, id),
+};
+export interface QuickStep extends GuideStep { checks: string; crit: string; min: number }
+const C1 = "1. Новая механика подбора · 35 %", C2 = "2. Тестирование и категоризация · 25 %";
+export const QUICK: QuickStep[] = [
+  { title: "Своя потребность своими словами", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs\/?$/, cta: "Войти как работодатель", min: 2,
+    text: "Опишите, кого ищете, обычным текстом или возьмите заготовку и поправьте. «Разобрать требования»: у каждого требования — цитата из текста, отрицания уходят в «исключено». Подтвердите и нажмите «Сохранить и показать подборку».",
+    checks: "разбор свободного текста: стек, грейд, формат, вилку, отрицания, незнакомые технологии", crit: `${C1} — «работодатель описывает потребность и получает подборку»` },
+  { title: "Первые три кандидата и почему они", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs\/[^/]+(?:\/v\/\d+)?\/?$/, cta: "Открыть подборку", min: 2,
+    text: "У первых трёх — балл, «обязательное: N из M» и «почему здесь»: только подтверждённые факты — тест (T1) и достижения ФСП (T2). Чего не хватает, сказано прямо; «Подробно у всех» раскрывает остальных.",
+    checks: "обоснованность ранжирования и объяснимость выдачи", crit: C1 },
+  { title: "Сравнение трёх рядом", persona: "employer", path: "/employer/compare", match: /^\/employer\/(compare|needs\/[^/]+\/compare)/, cta: "Сравнить первых трёх", min: 1,
+    text: "Три кандидата рядом по требованиям вашей потребности: что подтверждено и чем, θ ± погрешность и вероятность нужного грейда, достоверность теста. Лучшее в строке подсвечено, кандидаты обезличены.",
+    checks: "понятность выбора: кого пригласить и почему", crit: `${C1}; 3. Интерфейс · 10 %` },
+  { title: "Приглашение с зарплатой", persona: "employer", path: "/employer/needs", match: /^\/employer\/(needs\/[^/]+(?:\/v\/\d+|\/compare)?|candidates\/[^/]+)\/?$/, cta: "К подборке", min: 1.5,
+    text: "Инициатива у работодателя: «Пригласить» в карточке или в сравнении, вилка «от–до» в рублях обязательна, кандидат видит её до ответа. Контакты кандидата пока скрыты.",
+    checks: "выход на контакт по инициативе работодателя, а не отклик на вакансию", crit: C1 },
+  { title: "Ответ кандидата", persona: "candidate_nofsp", path: "/candidate/invitations", match: /^\/candidate\/invitations/, cta: "Войти как кандидат", min: 1.5,
+    text: "Кандидат видит компанию, вилку, индекс доверия и «Почему вас выбрали». «Принять» открывает работодателю контакты — только тогда; можно отклонить, предложить свою вилку или пожаловаться.",
+    checks: "практичность механики для обеих сторон: контакты — только с согласия кандидата", crit: C1 },
+  { title: "Экспресс-тест · краткий режим жюри", persona: "candidate_new", path: "/candidate/express", match: /^\/candidate\/(express|assessment)/, cta: "Войти и пройти экспресс-тест", min: 3,
+    text: "Краткий режим жюри: 5–7 коротких заданий настоящего банка, около 5 минут, результат помечен «экспресс», интервал шире. Это не полный тест (8–16 заданий и дотестирование, до 80 минут) — его проходят живые кандидаты, он там же переключателем.",
+    checks: "адаптивный тест: грейд — по навыкам, а не по стажу", crit: C2 },
+  { title: "Результат и категория", persona: "candidate_new", path: "/candidate/category", match: /^\/candidate\/category/, cta: "Открыть категорию", min: 0.5,
+    text: "Категория «направление · грейд» — только по сданному тесту: θ ± погрешность, вероятность уровня и статус (подтверждён, предварительно, не подтверждён). Не подтвердился — категория не понижается, уровень ниже можно принять.",
+    checks: "корректность категоризации по стеку, специализации и тесту", crit: C2 },
+  { title: "Доказательства одной кнопкой", persona: null, path: "/criteria", match: /^\/(criteria|validation)/, cta: "Открыть доказательства", min: 0.5,
+    text: "/criteria — каждый подпункт раздела 6 ТЗ: что сделать, что увидите, чем доказано, ограничение. /validation — метрики с подписью мира (синтетика и модельная разметка, людей нет), повтор теста и «Красная кнопка».",
+    checks: "процедуру валидации, её результаты и честные ограничения", crit: `${C2}; ${C1} — доля релевантных в топе; 5. Документация · 6 %` },
+];
+/** Заготовки своей потребности (шаг 1): отрицание, нестандартный стек, роль вне каталога. Эксперт правит текст сам. */
+export const NEED_PRESETS = [
+  { label: "Python, с отрицанием", text: "Ищем Python-разработчика middle: FastAPI, PostgreSQL, Docker. Django не нужен, PHP не нужен. Желательно Redis. Удалённо, 200–260 тыс. ₽" },
+  { label: "Go и ClickHouse, Казань", text: "Go-разработчик senior: Kafka, ClickHouse, gRPC и Kubernetes; Rust будет плюсом. Гибрид в Казани, 320–400 тыс. ₽" },
+  { label: "DevOps — вне каталога", text: "DevOps-инженер middle: Linux, Docker, CI/CD, Kubernetes, Terraform и мониторинг на Prometheus. Удалённо, 250–300 тыс. ₽" },
+];
+const KEY_PRESET = "jury_need_preset", PRESET_EVENT = "jury-need-preset";
+/** Заготовка → поле «Кого вы ищете» (Needs.tsx): ждёт в sessionStorage, если экран ещё не открыт. */
+export const needPreset = {
+  put: (t: string) => { sessionStorage.setItem(KEY_PRESET, t); window.dispatchEvent(new Event(PRESET_EVENT)); },
+  listen: (on: (t: string) => void) => {
+    const take = () => { const t = sessionStorage.getItem(KEY_PRESET); if (t) { sessionStorage.removeItem(KEY_PRESET); on(t); } };
+    take();
+    window.addEventListener(PRESET_EVENT, take);
+    return () => window.removeEventListener(PRESET_EVENT, take);
+  },
+};
+/** Демо-кандидаты своей копии в подборке (GET /api/jury/quick): кого пригласить, чтобы ответить за него самому. */
+export interface QuickPersona { persona: Persona; name: string; ref: string; rank: number | null; can_invite: boolean;
+  invitation: { id: string; status: string; need_id: string | null; created_at: string } | null }
+export const quickInfo = (need: string | null) =>
+  api<{ need: { id: string; title: string; total: number } | null; personas: QuickPersona[] }>(`/jury/quick${need ? `?need=${need}` : ""}`);
+/** «Проверка за 12 минут» с начала: вход работодателем своей копии демо → «Потребности». */
+export async function startQuick(signIn: (t: string) => Promise<unknown>): Promise<string> {
+  quick.restart();
+  guide.show();
+  return juryLogin("employer", signIn, "/employer/needs");
+}
