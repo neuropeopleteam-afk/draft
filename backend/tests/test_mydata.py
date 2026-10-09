@@ -533,3 +533,42 @@ def test_every_new_owned_table_is_classified():
     assert not (owned & erase.KEEP) and not (owned & erase.SPECIAL)
     assert erase.KEEP == {"probes", "invitations", "invitation_complaints", "invitation_counters", "vacancy_applications",
                           "invitation_events"}
+
+
+# ------------------------------------------------------------------ работодатель после удаления кандидата
+
+def test_employer_side_survives_deleted_candidate(client, world):
+    """Работодатель после удаления кандидата: приглашение «принято» без контактов, переписка закрыта, отклик снят,
+    списки без ошибок; контактов-обезличенной-почты нет нигде."""
+    from app.modules.contact.models import ContactMessage
+    from app.integrations.vacancies.models import VacancyApplication
+
+    tc, te, inv = world["tc"], world["te"], world["inv"]
+    vac = {"title": "Backend-разработчик (удаление)", "description": "Вакансия для проверки удаления кандидата: сервис платежей.",
+           "stack": ["python"], "salary_from": 200_000, "salary_to": 260_000, "work_format": "remote", "publish": True}
+    v = client.post("/api/employer/vacancies", json=vac, headers=H(te)).json()
+    r = client.post(f"/api/vacancies/{v['id']}/apply", json={"consent_contacts": True, "cover_letter": "Я Иван Петров, пишите на cand@example.com"},
+                    headers=H(tc))
+    assert r.status_code == 201, r.text
+    assert client.post(f"/api/candidate/invitations/{inv['id']}/accept", headers=H(tc)).status_code == 200
+    mine = client.get("/api/employer/invitations", headers=H(te)).json()
+    assert any(x.get("contacts") for x in mine)  # до удаления контакты открыты
+
+    assert _delete(client, tc).status_code == 200
+
+    lst = client.get("/api/employer/invitations", headers=H(te)).json()
+    row = next(x for x in lst if x["id"] == inv["id"])
+    assert row["status"] == "accepted" and row["candidate_deleted"] is True and row["contacts"] is None
+    assert "deleted.invalid" not in json.dumps(lst, ensure_ascii=False)
+    apps = client.get(f"/api/employer/vacancies/{v['id']}/applications", headers=H(te)).json()
+    assert apps[0]["status"] == "withdrawn" and apps[0]["cover_letter"] is None
+    assert "deleted.invalid" not in json.dumps(apps, ensure_ascii=False)
+    # писать некому: переписка закрыта
+    r = client.post(f"/api/messages/invitation/{inv['id']}", json={"body": "Добрый день, на связи?"}, headers=H(te))
+    assert r.status_code == 409 and r.json()["detail"]["code"] == "thread_closed"
+    th = client.get(f"/api/messages/invitation/{inv['id']}", headers=H(te)).json()
+    assert th["messages"] == [] and "удалил" in (th.get("reason") or "")
+    with SessionLocal() as db:
+        assert db.scalar(select(func.count()).select_from(ContactMessage)) == 0
+        a = db.scalars(select(VacancyApplication)).one()
+        assert a.cover_letter is None

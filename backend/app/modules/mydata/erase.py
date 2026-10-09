@@ -237,8 +237,13 @@ def _anonymize_bilateral(db: Session, uid: uuid.UUID) -> dict[str, int]:
     out: dict[str, int] = {}
     inv_ids = select(Invitation.id).where(Invitation.candidate_user_id == uid)
     app_ids = select(VacancyApplication.id).where(VacancyApplication.candidate_user_id == uid)
-    out["Приглашения работодателей"] = db.execute(
-        update(Invitation).where(Invitation.candidate_user_id == uid).values(evidence=[], decline_reason=None)).rowcount
+    now = utcnow()
+    invs = db.scalars(select(Invitation).where(Invitation.candidate_user_id == uid)).all()
+    for i in invs:
+        i.evidence, i.decline_reason = [], None
+        if i.contacts_revealed_at is not None:  # контакты закрыты: у работодателя не должно «светиться» обезличенное
+            i.contacts_revealed_at, i.contacts_revoked_at = None, now
+    out["Приглашения работодателей"] = len(invs)
     db.execute(update(InvitationEvent).where(InvitationEvent.invitation_id.in_(inv_ids),
                                              InvitationEvent.actor_user_id == uid).values(note=None))
     probes = db.scalars(select(Probe).where(Probe.candidate_user_id == uid)).all()
@@ -249,6 +254,10 @@ def _anonymize_bilateral(db: Session, uid: uuid.UUID) -> dict[str, int]:
     apps = db.scalars(select(VacancyApplication).where(VacancyApplication.candidate_user_id == uid)).all()
     for a in apps:
         a.cover_letter = None
+        if a.status in ("sent", "viewed", "accepted"):  # отклик снят: кандидата больше нет
+            a.status = "withdrawn"
+            a.events = [*(a.events or []), {"status": "withdrawn", "at": now.isoformat(), "by": "candidate", "note": None}]
+            flag_modified(a, "events")
     _scrub_events(apps, by="candidate")
     out["Отклики на вакансии"] = len(apps)
     out["Встречные предложения"] = db.execute(

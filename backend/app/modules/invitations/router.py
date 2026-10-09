@@ -108,6 +108,7 @@ def _probe_out(db: Session, p: Probe, side: str) -> dict:
     if side == "employer":
         out["candidate_ref"] = cand.public_ref
         out["candidate_category"] = cand.current_category_id
+        out["candidate_deleted"] = cand.deleted_at is not None
     else:
         out["below_my_minimum"] = svc.below_minimum(cand, p.salary_to, p.salary_basis)
     return out
@@ -132,6 +133,7 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
     if side == "employer":
         out["candidate_ref"] = cand.public_ref
         out["candidate_category"] = cand.current_category_id
+        out["candidate_deleted"] = cand.deleted_at is not None  # кандидат удалил учётную запись («Мои данные»)
         out["contacts"] = svc.candidate_contacts(db, i.candidate_user_id) if i.contacts_revealed_at else None
     else:
         out["below_my_minimum"] = svc.below_minimum(cand, i.salary_to, i.salary_basis)
