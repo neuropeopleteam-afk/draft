@@ -28,7 +28,8 @@ from app.modules.invitations.service import (
 from app.modules.matching import ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
 from app.modules.matching import compare as compare_mod
-from app.modules.matching.need_parser import bias_report, normalize, parse_need
+from app.modules.matching.need_parser import bias_report, normalize, parse_need, text_notes
+from app.modules.matching import whatif
 from app.modules.profiles.facts import card, load_bundles
 from app.modules.profiles.models import Company, EmployerProfile
 
@@ -120,6 +121,7 @@ class Filters(BaseModel):
     city: str | None = Field(None, max_length=100)
     experience_min: float | None = Field(None, ge=0, le=30)
     min_score: float | None = Field(None, ge=0, le=1)
+    relaxation: str | None = Field(None, max_length=160, description="Подпись версии, созданной из «Что если» (И18)")
 
 
 class SelectionIn(BaseModel):
@@ -142,6 +144,7 @@ def _req_dict(r: Requirements | dict, text: str) -> dict:
     cov = coverage(text)
     if cov:
         req["coverage"] = cov
+    req.update(text_notes(text, req))  # И18: вне справочника, исключённое отрицанием, вилка не в рублях
     return req
 
 
@@ -299,6 +302,24 @@ def get_selection(need_id: uuid.UUID, version: int, user: User = Depends(employe
     if v is None:
         raise api_error(404, "version_not_found", "Версия подборки не найдена")
     return _version_out(db, v)
+
+
+@router.get("/needs/{need_id}/selections/{version}/what-if",
+            summary="«Что если»: какое требование отсекает больше всего подтверждённых кандидатов",
+            description="Полностью подходят — грейд подтверждён (без «предварительно» и «не подтверждён»), каждый "
+                        "обязательный навык подтверждён тестом (T1), заявленные формат и город подходят. Для каждого "
+                        "требования — сколько подтверждённых оно отсекает и сколько полностью подходящих появится без "
+                        "него (только подтверждённые). options[].apply — тело для POST …/selections: новая версия, "
+                        "прежние сохраняются. Зарплата не отсекает: ожидания кандидатов скрыты и в подбор не входят. "
+                        "Кэш 2 минуты с отметкой свежести данных; порядок выдачи match-v1 не меняется.",
+            responses={**AUTH, 404: err("Версия не найдена")})
+def selection_what_if(need_id: uuid.UUID, version: int, user: User = Depends(employer),
+                      db: Session = Depends(get_db)) -> dict:
+    n = _own_need(db, my_company(db, user), need_id)
+    v = db.scalar(select(SelectionVersion).where(SelectionVersion.need_id == n.id, SelectionVersion.version == version))
+    if v is None:
+        raise api_error(404, "version_not_found", "Версия подборки не найдена")
+    return whatif.what_if(db, v.requirements, v.filters or {})
 
 
 @router.get("/needs/{need_id}/compare", summary="Сравнение 2–3 кандидатов рядом по требованиям потребности",
