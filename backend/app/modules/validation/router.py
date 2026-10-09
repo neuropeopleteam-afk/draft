@@ -89,7 +89,9 @@ def _live(db: Session) -> dict:
 def report(db: Session = Depends(get_db)):
     from app.modules.experts.section import section as experts_section
 
-    return {**_report(), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db),
+    from app.modules.validation.provenance import provenance  # Ф6 (Н7): подписи банка/отчёта/калибровки
+
+    return {**_report(), "provenance": provenance(_report()), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db),
             "intern_cut": _intern_cut(),
             "self_check": {"strategies": selfcheck.STRATEGIES, "max_n": selfcheck.MAX_N,
                            "directions": list(selfcheck.DIRECTIONS)}}
@@ -188,6 +190,13 @@ def path_retest():
     d = json.loads(PATH_RETEST.read_text(encoding="utf-8"))
     d.get("discrimination", {}).pop("families", None)  # полный список — в JSON репозитория, на страницу — слабые
     return d
+
+
+@router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
+def test_length_route():
+    from app.modules.validation.provenance import length_info  # Ф6 (Н8)
+
+    return length_info(_report())
 
 
 @router.get("/headline", summary="Первый экран /validation: 5 чисел с ДИ и подписью мира")

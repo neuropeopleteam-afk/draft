@@ -11,7 +11,7 @@ import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { InternCutSection } from "../components/validation/InternCutBlock";
-import { CompetitorConditions, ExposureNote, LeakShareTable, RetestSection, SimConditions } from "../components/validation/StabilityBlocks";
+import { AsOf, CompetitorConditions, ExposureNote, LeakShareTable, RetestSection, SimConditions } from "../components/validation/StabilityBlocks";
 import { useAuth } from "../lib/auth";
 import { juryToken } from "../lib/jury";
 import { useHashScroll } from "../lib/hashScroll";
@@ -19,6 +19,7 @@ import { useMeta } from "../lib/meta";
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
+const d10 = (v?: string | null) => (v ? new Date(v).toLocaleDateString("ru-RU") : "");  // Ф6 (Н7): 06.10.2026
 const sgn = (v?: number | null) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2).replace(".", ",")}`);
 
 /** «Как мы проверяем себя»: метрики теста, банка и подбора — как получились — и «Красная кнопка» жюри. */
@@ -52,9 +53,14 @@ function Report({ r }: { r: any }) {
   const dirs = Object.keys(sim.directions ?? {});
   const m = r.matching ?? {};
   const live = r.live ?? {};
+  // Ф6 (Н7): подписи из одного источника (provenance): дата отчёта, банк расчёта и банк сейчас, калибровка — модели
+  const pv = r.provenance ?? {}, bn = pv.bank_now ?? {}, rp = pv.report ?? {}, cal = pv.calibration ?? {};
+  const rdate = r.generated_at ? d10(r.generated_at) : "";
+  const world = `${r.n_per_direction ?? "—"} синтетических кандидатов на направление × ${dirs.length}, банк ${rp.bank_n_families ?? "—"} семейств (коммит банка ${rp.bank_commit ?? "—"}), отчёт ${rdate || "—"}`;
   return (
-    <>
-      <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
+    <AsOf.Provider value={{ date: rdate, world }}>
+      <p className="mt-4 text-xs text-brand-ink/65" data-testid="report-signature">Отчёт симуляции построен {dtt(r.generated_at)} · {r.n_per_direction} синтетических кандидатов на направление · {num(r.seconds, 0)} с · банк расчёта: {rp.bank_n_families ?? "—"} семейств, коммит {rp.bank_commit ?? "—"}{pv.code_commit && pv.code_commit !== "unknown" ? ` · код стенда ${pv.code_commit}` : ""}</p>
+      {bn.n_families != null && !rp.same_bank && <div className="mt-3"><Alert kind="info" ><b>Числа отчёта — на банке от {rp.bank_synced_at ? d10(rp.bank_synced_at) : rdate}.</b> Сейчас в банке {bn.n_families} семейств (синхронизирован {bn.synced_at ? d10(bn.synced_at) : "—"}, коммит {bn.commit ?? "—"}); полная симуляция теста на нём не пересчитывалась (make validate), поэтому таблицы ниже подписаны датой отчёта. Блоки «5 чисел» и «Весь путь дважды» посчитаны отдельно — их мир указан в подписи.</Alert></div>}
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
         {[["headline", "5 чисел"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["matching", "Демо-500"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
@@ -62,15 +68,18 @@ function Report({ r }: { r: any }) {
 
       <Section id="bank" title="Банк заданий и калибровка">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-          <Kpi label="Семейств заданий" value={r.bank?.n_families} hint={`версия ${r.bank?.content_hash ?? "—"}`} />
+          <Kpi label="Семейств в банке сейчас" value={bn.n_families ?? r.bank?.n_families} hint={bn.n_families != null ? `синхронизирован ${bn.synced_at ? d10(bn.synced_at) : "—"}, версия ${bn.content_hash ?? "—"}` : `версия ${r.bank?.content_hash ?? "—"}`} />
           <Kpi label="Вариантов проверено" value={r.bank?.validator?.n_variants_generated} hint={`${r.bank?.validator?.n_unique_variants} уникальных · 20 seed на семейство`} />
           <Kpi label="Проверок ключей и инвариантов" value={r.bank?.validator?.n_checks} hint={`ошибок: ${r.bank?.validator?.n_checks_failed}`} />
           <Kpi label="Семейства без замечаний" value={`${r.bank?.validator?.status?.PASS ?? "—"} / ${r.bank?.n_families}`} hint={`с предупреждениями качества: ${r.bank?.validator?.status?.WARN ?? 0}`} />
         </div>
+        {!rp.same_bank && bn.n_families != null && <p className="mt-2 text-xs text-brand-ink/65">Проверки валидатора (варианты, ключи, замечания) — из отчёта {rdate}, на банке {r.bank?.n_families} семейств (коммит {r.bank?.commit ?? "—"}).</p>}
         <p className="mt-3 text-sm text-brand-ink/70">{r.bank?.note}</p>
         <div className="mt-4"><Alert kind="info">
           <b>Калибровка: </b>
-          {r.calibration?.status === "ready" ? `готова (${r.calibration.panel}, семейств: ${r.calibration.n_families}).` : r.calibration?.note}
+          {r.calibration?.status === "ready"
+            ? `предварительная, на панели моделей (${r.calibration.panel}) — ${cal.n_families ?? r.calibration.n_families} из ${cal.of_families ?? r.bank?.n_families} семейств банка; людей в ней нет, в решение по грейду её параметры не переносятся. Решение принимается по экспертной предкалибровке; калибровка на людях — после пилота.`
+            : r.calibration?.note}
         </Alert></div>
       </Section>
       <CalibrationCard />
@@ -140,7 +149,7 @@ function Report({ r }: { r: any }) {
 
       <SelfCheck opts={r.self_check} />
       <RedButton attacks={r.attacks ?? []} />
-    </>
+    </AsOf.Provider>
   );
 }
 
@@ -433,7 +442,7 @@ function ExpertResults({ res, kind = "people" }: { res: any; kind?: string }) {
           <h3 className="text-base font-bold text-brand-night">Пороги грейдов: Ангофф против текущих{res.angoff.reference_only ? ` — ${res.angoff.note}` : ""}</h3>
           {res.angoff.reference_only && <p className="mt-1 text-sm font-semibold text-brand-plum">Справочно, модельная панель: доли решивших оценены прогонами модели, текущие пороги не меняются.</p>}
           <p className="mt-1 text-sm text-brand-ink/70">Для каждого {model ? "прогона" : "эксперта"} и границы — θ, при котором ожидаемая доля решивших по модели теста (2PL, параметры заданий) совпадает с его оценками; порог — среднее по {model ? "прогонам" : "экспертам"}. Оценок: {res.angoff.judgements}, {model ? "прогонов" : "экспертов"}: {res.angoff.coders}.</p>
-          <div className="mt-3"><Table head={["Граница", "Сейчас θ", "Ангофф θ ± SE", "Разница", T.per, "Разброс по семействам", "Сдвиг доли кандидатов", "Вывод"]}
+          <div className="mt-3"><Table head={["Граница", "Порог в продукте θ", "Ангофф θ ± SE", "Разница", T.per, "Разброс по семействам", "Сдвиг доли кандидатов", "Вывод"]}
             rows={res.angoff.boundaries.map((b: any) => [b.title, num(b.current), `${num(b.angoff)}${b.se != null ? ` ± ${num(b.se)}` : ""}`, sgn(b.delta), (b.per_expert ?? []).map((x: number) => num(x)).join(" · "), num(b.family_sd), pct(b.population_shift, 1),
               res.angoff.reference_only ? "справочно, модельная панель" : b.replace_suggested == null ? "нужно 2+ эксперта" : b.replace_suggested ? "предложить новый порог" : "оставить текущий"])} /></div>
           <p className="mt-2 text-xs text-brand-ink/65">{res.angoff.reference_only ? "Для экспертов-людей «предложить новый порог» — когда разница больше стандартной ошибки среднего; для модельной панели вывод не делается." : "«Предложить новый порог» — когда разница больше стандартной ошибки среднего по экспертам."} Сдвиг доли — сколько кандидатов при стандартном нормальном распределении уровня сменили бы грейд. Порог меняет владелец после разбора, автоматически не меняется.</p>
