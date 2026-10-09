@@ -388,6 +388,8 @@ def _document_error(op: dict, status: int, codes: dict[str, str]) -> None:
         resp["content"]["application/json"]["example"] = example
 
 
+from app.core.api_docs_text import DESCRIPTIONS  # noqa: E402
+
 EXAMPLES_FILE = Path(__file__).with_name("api_examples.json")
 
 
@@ -482,6 +484,8 @@ def enrich(app: FastAPI, spec: dict) -> dict:
                 _attach_examples(op, examples[f"{method.upper()} {path}"])
             line = access_line(ctx, op)
             base = (op.get("description") or "").rstrip()
+            if not base:  # авторского описания у обработчика нет — берём из таблицы api_docs_text.py
+                base = DESCRIPTIONS.get(f"{method.upper()} {path}", "")
             op["description"] = f"{base}\n\n{line}" if base else line
     return spec
 

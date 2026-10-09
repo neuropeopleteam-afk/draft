@@ -11918,7 +11918,7 @@
     },
     "/api/assessment/sessions/{session_id}/answers": {
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Принимает ответ на текущее задание и возвращает следующее; когда движок решил остановиться, задания нет — вызовите `/finish`.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "answer_api_assessment_sessions__session_id__answers_post",
         "parameters": [
           {
@@ -12185,7 +12185,7 @@
     },
     "/api/assessment/sessions/{session_id}/result": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Итог завершённого теста (тот же формат, что у `/finish`): можно открывать повторно.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "get_result_api_assessment_sessions__session_id__result_get",
         "parameters": [
           {
@@ -12349,7 +12349,7 @@
     },
     "/api/assessment/status": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Где кандидат находится в оценке: текущие категории, правило смены грейда, ограничения повтора, незавершённая сессия теста, история тестов и опросов.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "get_status_api_assessment_status_get",
         "parameters": [
           {
@@ -14175,7 +14175,7 @@
     },
     "/api/auth/2fa/confirm": {
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "description": "Подтверждает первый код из приложения: второй фактор включается, в ответе выдаются резервные коды (показываются один раз).\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
         "operationId": "confirm_api_auth_2fa_confirm_post",
         "requestBody": {
           "content": {
@@ -14451,7 +14451,7 @@
     },
     "/api/auth/2fa/setup": {
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "description": "Начало подключения приложения-аутентификатора: QR-код и ключ для ручного ввода. Перевыпуск ключа при уже подключённом втором факторе требует текущий код.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
         "operationId": "setup_api_auth_2fa_setup_post",
         "requestBody": {
           "content": {
@@ -14552,7 +14552,7 @@
     },
     "/api/auth/2fa/verify": {
       "post": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Второй шаг входа: промежуточный токен из `/api/auth/login` и код из приложения-аутентификатора (или резервный код вида XXXX-XXXX). При успехе — токен доступа. Токен в заголовок не нужен.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "verify_api_auth_2fa_verify_post",
         "requestBody": {
           "content": {
@@ -14629,7 +14629,7 @@
     },
     "/api/auth/login": {
       "post": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Вход по почте и паролю. Ответ — токен доступа (JWT): передавайте его в заголовке `Authorization: Bearer <токен>`. Если у учётной записи включён второй фактор, вместо токена приходит `second_factor_required` и промежуточный `pending_token` — завершите вход через `POST /api/auth/2fa/verify`.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "login_api_auth_login_post",
         "requestBody": {
           "content": {
@@ -14727,7 +14727,7 @@
     },
     "/api/auth/register": {
       "post": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Создаёт учётную запись кандидата или работодателя (`role`) и отправляет на почту шестизначный код. Пароль — не короче 8 символов, буквы и цифры; нужно согласие на обработку персональных данных (`consent_processing`). Токен на этом шаге не выдаётся: сначала `POST /api/auth/verify-email`.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "register_api_auth_register_post",
         "requestBody": {
           "content": {
@@ -14791,7 +14791,7 @@
     },
     "/api/auth/resend-code": {
       "post": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Отправляет код подтверждения ещё раз; чаще раза в минуту нельзя (429 `too_frequent`).\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "resend_code_api_auth_resend_code_post",
         "requestBody": {
           "content": {
@@ -14849,7 +14849,7 @@
     },
     "/api/auth/token": {
       "post": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "То же, что `/api/auth/login`, но в форме OAuth2 (`username` — почта, `password`): для кнопки Authorize в Swagger UI. Для учётных записей со вторым фактором отвечает 403 `second_factor_required` — войдите через `/api/auth/login`.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "token_api_auth_token_post",
         "requestBody": {
           "content": {
@@ -14939,7 +14939,7 @@
     },
     "/api/auth/verify-email": {
       "post": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Подтверждает почту кодом из письма и сразу выдаёт токен доступа (`access_token`) — повторно входить не нужно. Число попыток ограничено (429 `too_many_attempts`).\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "verify_email_api_auth_verify_email_post",
         "requestBody": {
           "content": {
@@ -16863,7 +16863,7 @@
     },
     "/api/candidate/invitations": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Входящие приглашения кандидата со статусами и условиями. Контакты работодателя видны после принятия.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "cand_invitations_api_candidate_invitations_get",
         "responses": {
           "200": {
@@ -17192,7 +17192,7 @@
     },
     "/api/candidate/invitations/{inv_id}/accept": {
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Принимает приглашение: работодатель получает доступ к контактам кандидата. Позже доступ можно отозвать — `POST /api/candidate/invitations/{inv_id}/contacts/revoke`.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "accept_api_candidate_invitations__inv_id__accept_post",
         "parameters": [
           {
@@ -17907,7 +17907,7 @@
     },
     "/api/candidate/invitations/{inv_id}/decline": {
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Отклоняет приглашение; причину можно не указывать.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "decline_api_candidate_invitations__inv_id__decline_post",
         "parameters": [
           {
@@ -19033,7 +19033,7 @@
     },
     "/api/candidate/probes": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Зонды, присланные кандидату: задание, срок, вилка и статус.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "cand_probes_api_candidate_probes_get",
         "responses": {
           "200": {
@@ -19229,7 +19229,7 @@
     },
     "/api/candidate/probes/{probe_id}/answer": {
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Ответ на зонд — решение или описание подхода (формат задаёт `answer_mode` зонда).\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "answer_probe_api_candidate_probes__probe_id__answer_post",
         "parameters": [
           {
@@ -19474,7 +19474,7 @@
     },
     "/api/catalog": {
       "get": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Справочник направлений, грейдов и категорий («направление.грейд»), по которому строятся тест и подбор. Без входа.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "get_catalog_api_catalog_get",
         "responses": {
           "200": {
@@ -19578,7 +19578,7 @@
     },
     "/api/catalog/stack-tags": {
       "get": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Словарь технологий (стек-тегов), которые понимают опрос, разбор потребностей и резюме. Без входа.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "get_stack_tags_api_catalog_stack_tags_get",
         "parameters": [
           {
@@ -23084,7 +23084,7 @@
     },
     "/api/employer/candidates": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Поиск кандидатов в общем пуле: фильтры по направлению, грейду, категории, стеку (`stack`, `stack_level`), связке с ФСП и подтверждённости; постранично (`limit`, `offset`). Кандидаты, скрывшие профиль, не показываются.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "search_candidates_api_employer_candidates_get",
         "parameters": [
           {
@@ -23343,7 +23343,7 @@
     },
     "/api/employer/candidates/{ref}": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Карточка кандидата по обезличенному `ref`: факты с уровнями доказательства, история контактов с этой компанией. Контакты видны только после принятия приглашения.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "candidate_detail_api_employer_candidates__ref__get",
         "parameters": [
           {
@@ -25270,7 +25270,7 @@
     },
     "/api/employer/invitations": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Приглашения компании и их статусы (отправлено, просмотрено, принято, отклонено, отозвано, истекло).\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "my_invitations_api_employer_invitations_get",
         "responses": {
           "200": {
@@ -27011,7 +27011,7 @@
     },
     "/api/employer/needs": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Потребности компании с версиями подбора.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "list_needs_api_employer_needs_get",
         "responses": {
           "200": {
@@ -27169,7 +27169,7 @@
         ]
       },
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Создаёт потребность из текста вакансии: разбирает требования (направление, грейд, стек, опыт, формат, вилка) и сразу строит первую версию подбора. Нужен профиль компании (иначе 409 `company_required`). Предпросмотр без сохранения — `POST /api/employer/needs/parse`.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "create_need_api_employer_needs_post",
         "requestBody": {
           "content": {
@@ -27700,7 +27700,7 @@
     },
     "/api/employer/needs/{need_id}": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Потребность, разобранные требования и список версий подбора.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "get_need_api_employer_needs__need_id__get",
         "parameters": [
           {
@@ -28569,7 +28569,7 @@
     },
     "/api/employer/needs/{need_id}/selections": {
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Строит новую версию подбора: можно уточнить фильтры или требования, прежние версии сохраняются. Результат — кандидаты по убыванию оценки с причинами и уровнями доказательства.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "new_selection_api_employer_needs__need_id__selections_post",
         "parameters": [
           {
@@ -28942,7 +28942,7 @@
     },
     "/api/employer/needs/{need_id}/selections/{version}": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Версия подбора целиком: условия, веса, категории и результаты.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "get_selection_api_employer_needs__need_id__selections__version__get",
         "parameters": [
           {
@@ -31092,7 +31092,7 @@
         ]
       },
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Отправляет зонд — короткое задание — выбранным кандидатам. Вилка обязательна. В ответе — созданные зонды и кандидаты, которым зонд не отправлен, с причиной.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "send_probes_api_employer_probes_post",
         "requestBody": {
           "content": {
@@ -31218,7 +31218,7 @@
     },
     "/api/employer/probes/{probe_id}/review": {
       "post": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "description": "Оценка работодателем ответа кандидата на зонд: вердикт по ответу. В ответе — зонд с ответом кандидата и итоговым статусом.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
         "operationId": "review_api_employer_probes__probe_id__review_post",
         "parameters": [
           {
@@ -33739,7 +33739,7 @@
     },
     "/api/fsp-cabinet/overview": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "description": "Обзор для кабинета ФСП: число кандидатов, компаний, потребностей и приглашений, доля принятий. Значения в малых группах скрываются (`null`) по порогу `k`.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
         "operationId": "overview_api_fsp_cabinet_overview_get",
         "parameters": [
           {
@@ -35959,7 +35959,7 @@
     },
     "/api/jury/login": {
       "post": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Вход в один клик под демо-персоной (кандидат, работодатель, эксперт, ФСП). Для своей песочницы передайте `scenario=new`; для входа под другой ролью в ту же песочницу — её идентификатор из ответа. Токен — обычный JWT демо-учётки.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "login_api_jury_login_post",
         "requestBody": {
           "content": {
@@ -36326,7 +36326,7 @@
     },
     "/api/jury/status": {
       "get": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Доступен ли режим жюри, какие персоны можно выбрать и когда можно сбросить песочницу.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "status_api_jury_status_get",
         "responses": {
           "200": {
@@ -36884,7 +36884,7 @@
     },
     "/api/me/card": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Карточка кандидата в том виде, в каком её видят работодатели: без имени и контактов, с обезличенным `ref`, категорией, подтверждёнными навыками и уровнями доказательства (T0 — заявлено, T1 — подтверждено тестом или зондом, T2 — подтверждено реестром ФСП).\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "my_card_api_me_card_get",
         "responses": {
           "200": {
@@ -37424,7 +37424,7 @@
     },
     "/api/me/data": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Раздел «Мои данные»: что о пользователе хранится, согласия, кому открыты контакты, сроки хранения и правила удаления.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "my_data_api_me_data_get",
         "responses": {
           "200": {
@@ -38473,7 +38473,7 @@
     },
     "/api/me/onboarding": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Последние ответы опроса, варианты ответов для формы и текст согласия на публикацию профиля.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "get_onboarding_api_me_onboarding_get",
         "responses": {
           "200": {
@@ -38601,7 +38601,7 @@
         ]
       },
       "put": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Сохраняет опрос кандидата: направление, стек, опыт, роли, формат работы, город, готовность к переезду, минимальную зарплату и настройки приватности. Каждое сохранение — новая запись в истории опросов. Опрос нужен, чтобы начать тест.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "save_onboarding_api_me_onboarding_put",
         "requestBody": {
           "content": {
@@ -38698,7 +38698,7 @@
     },
     "/api/me/passport": {
       "get": {
-        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "description": "Цифровой паспорт навыков кандидата: действующий подписанный документ, право на выпуск и история. Работодатель и проверяющий могут проверить подпись без входа — `POST /api/passport/verify`.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
         "operationId": "my_passport_api_me_passport_get",
         "responses": {
           "200": {
@@ -39830,7 +39830,7 @@
     },
     "/api/meta": {
       "get": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Сведения о платформе для интерфейса и проверяющих: версия сборки, оператор персональных данных, включён ли режим жюри и демо-песочница, доступна ли камера, состояние языковой модели и движка теста, правила в днях (смена грейда, повтор того же грейда, пауза между приглашениями). Без входа.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "meta_api_meta_get",
         "responses": {
           "200": {
@@ -40207,7 +40207,7 @@
     },
     "/api/passport/verify": {
       "post": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Проверяет файл паспорта: подпись по ключу `kid` (ключи — `GET /api/passport/keys`) и совпадение с реестром. Без входа, число проверок ограничено (429).\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "verify_file_api_passport_verify_post",
         "requestBody": {
           "content": {
@@ -40280,7 +40280,7 @@
     },
     "/api/passport/{pid}": {
       "get": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Публичная страница паспорта: подписанный документ, подпись и статус по реестру (действует, отозван). Без входа.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "get_passport_api_passport__pid__get",
         "parameters": [
           {
@@ -44169,7 +44169,7 @@
     },
     "/api/validation/headline": {
       "get": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Ключевые показатели валидации теста для жюри: значение с 95 %-м доверительным интервалом и подписью расчёта (команда, коммит, конфигурация).\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "validation_headline_api_validation_headline_get",
         "responses": {
           "200": {
