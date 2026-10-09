@@ -938,8 +938,8 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
 
     # Контакты и ФИО контактного лица из текста вакансии тоже не уходят наружу: NER — только имена из 2+ слов
     # (одиночные «Гибрид», «Андроид» NER принимает за имена), плюс имя после «HR:», «рекрутер —» и т. п.
-    clean_text = redact(masked, use_ner=True, ner_min_tokens=2, contact_cues=True).text
-    res = _call_llm(clean_text, rules, full)
+    clean_text = redact(masked, use_ner=True, ner_min_tokens=2, contact_cues=True, header=False).text  # П1: шапка не ищется
+    res = _call_llm(clean_text, rules, full)  # И27: вызов модели вынесен (кэш, фон)
     if not res.ok or not isinstance(res.data, dict):
         rules["llm"] = {"used": False, "reason": res.error, "attempts": res.attempts}
         return rules

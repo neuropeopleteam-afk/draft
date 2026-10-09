@@ -489,7 +489,7 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
         return GradeOutcome(status="pending", method="none", error="llm_not_configured", flags=meta_flags)
     from app.modules.resume.pii import redact
 
-    red = redact(body, use_ner=True)
+    red = redact(body, use_ner=True, header=False)  # шапки резюме в ответе нет: даты в коде ответа не трогаем
     # общий бюджет первой и второй оценки с переходами по цепочке: ответ кандидата ждёт оценку синхронно
     deadline = time.monotonic() + s.llm_grading_budget_s
 
