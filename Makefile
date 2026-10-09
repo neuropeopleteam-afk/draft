@@ -39,13 +39,13 @@ test-local: ## Тесты backend без Docker (нужен Python 3.12+ и за
 	cd backend && python -m pytest
 
 validate: ## Пересчёт метрик /validation: K Sympson — Hetter, банк, симуляция теста (до/после), повтор, утечка, подбор (≈ 15–20 мин)
-	cd backend && python ../tools/calibrate_exposure.py && python -m app.modules.validation
+	cd backend && python ../tools/calibrate_exposure.py && python -m app.modules.validation && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
 
 validate-docker: ## То же в контейнере api (без пересчёта K Sympson — Hetter)
 	$(COMPOSE) run --rm --no-deps api python -m app.modules.validation
 
 bench: ## Бенчмарк подбора со скрытой истиной: 200 × 2000, абляции, веса на отложенных данных (≈ 1 мин CPU)
-	cd backend && python -m app.modules.validation.matching_bench
+	cd backend && python -m app.modules.validation.matching_bench && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
 
 intern-cut: ## Порог грейда «Стажёр»: симуляция теста при 4 порогах-кандидатах, с лёгкими семействами и без (≈ 2 мин CPU)
 	cd backend && python -m app.modules.validation.intern_cut
@@ -57,7 +57,10 @@ stability: ## Стабильность статуса «Junior (предвари
 	cd backend && python -m app.modules.validation.junior_stability
 
 path-retest: ## Test–retest всего пути кандидата (5 × 500, дважды) и D / r_pb семейств → data/path_retest.json (≈ 3 мин CPU)
-	cd backend && python -m app.modules.validation.path_retest
+	cd backend && python -m app.modules.validation.path_retest && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
+
+criteria-doc: ## docs/CRITERIA.md «Критерий ТЗ → что показываем → чем доказано» из того же источника, что /criteria
+	cd backend && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
 
 fsp-regression: ## Парное сравнение рейтинга ФСП v1/v2 на мире бенчмарка (tools/fsp_rating_regression.py, ≈ 1 мин)
 	cd backend && python ../tools/fsp_rating_regression.py
