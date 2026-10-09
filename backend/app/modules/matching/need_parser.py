@@ -540,10 +540,12 @@ def apply_list_weights(text: str, required: list[dict], desired: list[dict]) -> 
 
     order = sorted({g for it in required if (g := group(it)) is not None})
     rank = {g: i for i, g in enumerate(order)}
+    import os
+    common = os.environ.get("NEED_LIST_COMMON", "0") == "1"  # TMP A/B
     for it in required:
         g = group(it)
         if g is not None:
-            it["weight"] = round(max(0.6, 1.0 - 0.1 * rank[g]), 2)
+            it["weight"] = round(max(0.6, 1.0 - 0.1 * rank[g]) * (0.8 if common and it["tag"] in COMMON_TAGS else 1.0), 2)
     for it in desired:
         if group(it) is not None:
             it["weight"] = 0.3
@@ -1065,10 +1067,6 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
             ev[key] = llm["evidence"][key]
     if list_weights_on():  # Я11 (С3-3): вес — по перечислению, не среднее словаря и модели
         apply_list_weights(masked, merged["stack_required"], merged["stack_desired"])
-    neg_formats = parse_conditions(masked)["formats_excluded"]
-    if merged.get("work_format") in neg_formats and rules.get("work_format") is None:
-        merged["work_format"] = None  # «удалёнка не предусмотрена»: модель не возвращает исключённый текстом формат
-        ev.pop("work_format", None)
     excluded = {x["tag"] for x in rules.get("excluded") or []}
     if excluded:  # «Angular не нужен»: тег, исключённый отрицанием в тексте, LLM обратно не добавляет (И18)
         merged["stack_required"] = [i for i in merged["stack_required"] if i["tag"] not in excluded]
