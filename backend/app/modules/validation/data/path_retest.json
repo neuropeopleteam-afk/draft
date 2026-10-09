@@ -1,13 +1,13 @@
 {
  "signature": {
-  "world": "симуляция теста: 5 направлений × 500 кандидатов, семейств в банке: 164",
+  "world": "симуляция теста: 5 направлений × 500 кандидатов, семейств в банке: 165",
   "seed": 20261006,
-  "config_hash": "dea13398a136",
-  "commit": "bb12871",
-  "bank": "57033ea404b8efae",
+  "config_hash": "a5797d8d33e4",
+  "commit": "03b9a22",
+  "bank": "180791bef2a67b72",
   "n": 2500,
   "command": "make path-retest",
-  "generated_at": "2026-10-08T15:58:26+00:00"
+  "generated_at": "2026-10-09T10:40:49+00:00"
  },
  "quick": false,
  "n_per_direction": 500,
@@ -72,197 +72,197 @@
    "middle": 0.0,
    "senior": 1.0
   },
-  "n_families": 164
+  "n_families": 165
  },
  "claimed": {
-  "intern": 460,
-  "junior": 812,
-  "middle": 787,
-  "senior": 441
+  "intern": 456,
+  "junior": 825,
+  "middle": 804,
+  "senior": 415
  },
  "true_grades": {
-  "none": 98,
-  "intern": 284,
-  "junior": 877,
-  "middle": 874,
-  "senior": 367
+  "none": 89,
+  "intern": 301,
+  "junior": 894,
+  "middle": 843,
+  "senior": 373
  },
  "total": {
   "path_grade": {
    "n": 2500,
-   "exact": 0.758,
-   "within_1": 0.996,
-   "two_steps": 0.004,
-   "kappa_w": 0.841,
+   "exact": 0.764,
+   "within_1": 0.992,
+   "two_steps": 0.008,
+   "kappa_w": 0.839,
    "kappa_informative": true,
    "kappa_w_ci": [
-    0.827,
-    0.854
+    0.824,
+    0.853
    ],
    "exact_ci": [
-    0.742,
-    0.774
+    0.748,
+    0.781
    ]
   },
-  "icc_theta": 0.802,
-  "r_theta": 0.802,
+  "icc_theta": 0.806,
+  "r_theta": 0.807,
   "icc_theta_ci": [
-   0.787,
-   0.815
+   0.792,
+   0.82
   ],
   "point_grade": {
    "n": 2500,
-   "exact": 0.599,
-   "within_1": 0.985,
-   "two_steps": 0.015,
-   "kappa_w": 0.734,
+   "exact": 0.591,
+   "within_1": 0.981,
+   "two_steps": 0.019,
+   "kappa_w": 0.728,
    "kappa_informative": true
   },
   "point_grade_ceiling": {
-   "exact": 0.579,
+   "exact": 0.574,
    "within_1": 0.976,
-   "kappa_w": 0.781
+   "kappa_w": 0.777
   },
-  "status_agreement": 0.716,
+  "status_agreement": 0.721,
   "overlap_all": {
-   "mean": 0.193,
+   "mean": 0.194,
    "median": 0.0,
-   "any_share": 0.39,
+   "any_share": 0.414,
    "max": 1.0
   },
   "overlap_first": {
-   "mean": 0.19,
+   "mean": 0.191,
    "median": 0.0,
-   "any_share": 0.386,
+   "any_share": 0.411,
    "max": 1.0
   },
   "truth": {
    "n": 2500,
-   "exact": 0.573,
-   "exact_with_category": 0.573,
-   "over_share": 0.052,
-   "under_share": 0.355,
-   "no_category_share": 0.047,
-   "kappa_w_true": 0.754
+   "exact": 0.574,
+   "exact_with_category": 0.577,
+   "over_share": 0.051,
+   "under_share": 0.348,
+   "no_category_share": 0.054,
+   "kappa_w_true": 0.757
   },
   "path": {
    "status_share": {
-    "confirmed": 0.585,
-    "provisional": 0.087,
-    "accepted_lower": 0.281,
-    "none": 0.046
+    "confirmed": 0.582,
+    "provisional": 0.097,
+    "accepted_lower": 0.271,
+    "none": 0.05
    },
-   "sessions_per_path": 1.0,
-   "mean_items_per_session": 20.1,
-   "mean_items_per_path": 20.18,
-   "mean_time_min_per_path": 55.3,
-   "extension_share": 0.893,
-   "rescored_share": 0.001,
-   "provisional_intern_proved": 396,
-   "block_gap_flag_share": 0.055
+   "sessions_per_path": 1.01,
+   "mean_items_per_session": 19.92,
+   "mean_items_per_path": 20.03,
+   "mean_time_min_per_path": 56.0,
+   "extension_share": 0.894,
+   "rescored_share": 0.002,
+   "provisional_intern_proved": 457,
+   "block_gap_flag_share": 0.054
   },
   "splits": {
    "far_from_cut": {
-    "share": 0.518,
-    "n": 1295,
-    "exact": 0.744,
-    "within_1": 0.998,
-    "two_steps": 0.002,
-    "kappa_w": 0.856,
+    "share": 0.504,
+    "n": 1260,
+    "exact": 0.747,
+    "within_1": 0.995,
+    "two_steps": 0.005,
+    "kappa_w": 0.854,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.838,
+     0.836,
      0.871
     ],
     "exact_ci": [
-     0.718,
-     0.766
+     0.721,
+     0.77
     ]
    },
    "near_cut": {
-    "share": 0.482,
-    "n": 1205,
-    "exact": 0.773,
-    "within_1": 0.994,
-    "two_steps": 0.006,
-    "kappa_w": 0.811,
+    "share": 0.496,
+    "n": 1240,
+    "exact": 0.781,
+    "within_1": 0.989,
+    "two_steps": 0.011,
+    "kappa_w": 0.813,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.789,
-     0.832
+     0.788,
+     0.836
     ],
     "exact_ci": [
-     0.748,
-     0.796
+     0.758,
+     0.805
     ]
    },
    "far_from_boundary": {
-    "share": 0.508,
-    "n": 1270,
-    "exact": 0.774,
-    "within_1": 0.997,
-    "two_steps": 0.003,
-    "kappa_w": 0.873,
+    "share": 0.501,
+    "n": 1252,
+    "exact": 0.784,
+    "within_1": 0.992,
+    "two_steps": 0.008,
+    "kappa_w": 0.868,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.857,
-     0.888
+     0.85,
+     0.886
     ],
     "exact_ci": [
-     0.75,
-     0.797
+     0.761,
+     0.807
     ]
    },
    "near_boundary": {
-    "share": 0.492,
-    "n": 1230,
-    "exact": 0.741,
-    "within_1": 0.995,
-    "two_steps": 0.005,
-    "kappa_w": 0.792,
+    "share": 0.499,
+    "n": 1248,
+    "exact": 0.744,
+    "within_1": 0.992,
+    "two_steps": 0.008,
+    "kappa_w": 0.798,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.769,
-     0.814
+     0.775,
+     0.819
     ],
     "exact_ci": [
-     0.714,
-     0.766
+     0.72,
+     0.768
     ]
    },
-   "boundary_shift": 0.335,
+   "boundary_shift": 0.337,
    "decided_both": {
-    "share": 0.802,
-    "n": 2006,
-    "exact": 0.756,
-    "within_1": 0.997,
-    "two_steps": 0.003,
-    "kappa_w": 0.811,
+    "share": 0.786,
+    "n": 1965,
+    "exact": 0.758,
+    "within_1": 0.992,
+    "two_steps": 0.008,
+    "kappa_w": 0.802,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.792,
-     0.829
+     0.783,
+     0.822
     ],
     "exact_ci": [
-     0.737,
-     0.774
+     0.739,
+     0.777
     ]
    },
    "undecided_any": {
-    "share": 0.198,
-    "n": 494,
-    "exact": 0.765,
-    "within_1": 0.992,
-    "two_steps": 0.008,
-    "kappa_w": 0.818,
+    "share": 0.214,
+    "n": 535,
+    "exact": 0.785,
+    "within_1": 0.993,
+    "two_steps": 0.007,
+    "kappa_w": 0.834,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.784,
-     0.851
+     0.803,
+     0.863
     ],
     "exact_ci": [
-     0.725,
-     0.804
+     0.75,
+     0.819
     ]
    }
   }
@@ -271,480 +271,480 @@
   "backend": {
    "path_grade": {
     "n": 500,
-    "exact": 0.762,
-    "within_1": 0.998,
-    "two_steps": 0.002,
-    "kappa_w": 0.808,
+    "exact": 0.764,
+    "within_1": 0.988,
+    "two_steps": 0.012,
+    "kappa_w": 0.812,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.77,
-     0.842
+     0.772,
+     0.846
     ],
     "exact_ci": [
-     0.724,
-     0.798
+     0.726,
+     0.8
     ]
    },
-   "icc_theta": 0.786,
-   "r_theta": 0.786,
+   "icc_theta": 0.792,
+   "r_theta": 0.792,
    "icc_theta_ci": [
-    0.753,
-    0.817
+    0.757,
+    0.821
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.612,
-    "within_1": 0.982,
-    "two_steps": 0.018,
-    "kappa_w": 0.708,
+    "exact": 0.598,
+    "within_1": 0.98,
+    "two_steps": 0.02,
+    "kappa_w": 0.716,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.581,
-    "within_1": 0.978,
-    "kappa_w": 0.771
+    "exact": 0.575,
+    "within_1": 0.977,
+    "kappa_w": 0.766
    },
-   "status_agreement": 0.73,
+   "status_agreement": 0.724,
    "overlap_all": {
-    "mean": 0.16,
+    "mean": 0.165,
     "median": 0.0,
     "any_share": 0.258,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.153,
+    "mean": 0.159,
     "median": 0.0,
-    "any_share": 0.25,
+    "any_share": 0.254,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.552,
-    "exact_with_category": 0.549,
-    "over_share": 0.054,
-    "under_share": 0.386,
-    "no_category_share": 0.024,
-    "kappa_w_true": 0.688
+    "exact": 0.564,
+    "exact_with_category": 0.562,
+    "over_share": 0.052,
+    "under_share": 0.366,
+    "no_category_share": 0.046,
+    "kappa_w_true": 0.722
    },
    "path": {
     "status_share": {
-     "confirmed": 0.56,
-     "provisional": 0.114,
-     "accepted_lower": 0.302,
-     "none": 0.024
+     "confirmed": 0.548,
+     "provisional": 0.124,
+     "accepted_lower": 0.286,
+     "none": 0.042
     },
     "sessions_per_path": 1.01,
-    "mean_items_per_session": 20.56,
-    "mean_items_per_path": 20.77,
-    "mean_time_min_per_path": 57.1,
-    "extension_share": 0.913,
-    "rescored_share": 0.0,
-    "provisional_intern_proved": 104,
-    "block_gap_flag_share": 0.029
+    "mean_items_per_session": 20.16,
+    "mean_items_per_path": 20.38,
+    "mean_time_min_per_path": 58.5,
+    "extension_share": 0.915,
+    "rescored_share": 0.004,
+    "provisional_intern_proved": 115,
+    "block_gap_flag_share": 0.027
    }
   },
   "frontend": {
    "path_grade": {
     "n": 500,
-    "exact": 0.76,
-    "within_1": 0.996,
-    "two_steps": 0.004,
-    "kappa_w": 0.832,
+    "exact": 0.776,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.856,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.796,
-     0.862
+     0.823,
+     0.884
     ],
     "exact_ci": [
-     0.722,
-     0.796
+     0.738,
+     0.812
     ]
    },
-   "icc_theta": 0.814,
-   "r_theta": 0.815,
+   "icc_theta": 0.81,
+   "r_theta": 0.811,
    "icc_theta_ci": [
-    0.782,
-    0.841
+    0.779,
+    0.836
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.618,
-    "within_1": 0.996,
-    "two_steps": 0.004,
-    "kappa_w": 0.747,
+    "exact": 0.596,
+    "within_1": 0.976,
+    "two_steps": 0.024,
+    "kappa_w": 0.735,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.583,
-    "within_1": 0.978,
-    "kappa_w": 0.775
+    "exact": 0.578,
+    "within_1": 0.976,
+    "kappa_w": 0.777
    },
-   "status_agreement": 0.74,
+   "status_agreement": 0.75,
    "overlap_all": {
-    "mean": 0.185,
+    "mean": 0.193,
     "median": 0.0,
-    "any_share": 0.344,
+    "any_share": 0.304,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.182,
+    "mean": 0.189,
     "median": 0.0,
-    "any_share": 0.342,
+    "any_share": 0.3,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.562,
-    "exact_with_category": 0.559,
-    "over_share": 0.048,
-    "under_share": 0.376,
-    "no_category_share": 0.038,
-    "kappa_w_true": 0.732
+    "exact": 0.57,
+    "exact_with_category": 0.572,
+    "over_share": 0.044,
+    "under_share": 0.36,
+    "no_category_share": 0.056,
+    "kappa_w_true": 0.767
    },
    "path": {
     "status_share": {
-     "confirmed": 0.597,
+     "confirmed": 0.615,
      "provisional": 0.084,
-     "accepted_lower": 0.277,
-     "none": 0.042
+     "accepted_lower": 0.248,
+     "none": 0.053
     },
-    "sessions_per_path": 1.0,
-    "mean_items_per_session": 20.17,
-    "mean_items_per_path": 20.25,
-    "mean_time_min_per_path": 56.0,
-    "extension_share": 0.91,
+    "sessions_per_path": 1.01,
+    "mean_items_per_session": 19.8,
+    "mean_items_per_path": 19.98,
+    "mean_time_min_per_path": 56.8,
+    "extension_share": 0.892,
     "rescored_share": 0.0,
-    "provisional_intern_proved": 74,
-    "block_gap_flag_share": 0.086
+    "provisional_intern_proved": 78,
+    "block_gap_flag_share": 0.091
    }
   },
   "data_ml": {
    "path_grade": {
     "n": 500,
-    "exact": 0.77,
-    "within_1": 0.994,
-    "two_steps": 0.006,
-    "kappa_w": 0.864,
+    "exact": 0.714,
+    "within_1": 0.99,
+    "two_steps": 0.01,
+    "kappa_w": 0.818,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.836,
-     0.888
+     0.783,
+     0.848
     ],
     "exact_ci": [
-     0.734,
-     0.806
+     0.674,
+     0.754
     ]
    },
-   "icc_theta": 0.796,
-   "r_theta": 0.796,
+   "icc_theta": 0.792,
+   "r_theta": 0.794,
    "icc_theta_ci": [
-    0.76,
-    0.825
+    0.759,
+    0.821
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.56,
-    "within_1": 0.972,
-    "two_steps": 0.028,
-    "kappa_w": 0.729,
+    "exact": 0.55,
+    "within_1": 0.984,
+    "two_steps": 0.016,
+    "kappa_w": 0.727,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.573,
-    "within_1": 0.976,
-    "kappa_w": 0.786
+    "exact": 0.571,
+    "within_1": 0.975,
+    "kappa_w": 0.782
    },
-   "status_agreement": 0.702,
+   "status_agreement": 0.668,
    "overlap_all": {
-    "mean": 0.196,
+    "mean": 0.198,
     "median": 0.0,
-    "any_share": 0.386,
+    "any_share": 0.388,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.194,
+    "mean": 0.196,
     "median": 0.0,
-    "any_share": 0.384,
+    "any_share": 0.388,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.582,
-    "exact_with_category": 0.595,
-    "over_share": 0.038,
-    "under_share": 0.338,
-    "no_category_share": 0.072,
-    "kappa_w_true": 0.786
+    "exact": 0.526,
+    "exact_with_category": 0.538,
+    "over_share": 0.042,
+    "under_share": 0.384,
+    "no_category_share": 0.078,
+    "kappa_w_true": 0.745
    },
    "path": {
     "status_share": {
-     "confirmed": 0.594,
-     "provisional": 0.086,
-     "accepted_lower": 0.254,
+     "confirmed": 0.558,
+     "provisional": 0.101,
+     "accepted_lower": 0.275,
      "none": 0.066
     },
     "sessions_per_path": 1.0,
-    "mean_items_per_session": 20.66,
-    "mean_items_per_path": 20.74,
-    "mean_time_min_per_path": 53.6,
-    "extension_share": 0.909,
-    "rescored_share": 0.002,
-    "provisional_intern_proved": 80,
-    "block_gap_flag_share": 0.036
+    "mean_items_per_session": 20.64,
+    "mean_items_per_path": 20.72,
+    "mean_time_min_per_path": 54.5,
+    "extension_share": 0.921,
+    "rescored_share": 0.0,
+    "provisional_intern_proved": 95,
+    "block_gap_flag_share": 0.038
    }
   },
   "qa": {
    "path_grade": {
     "n": 500,
-    "exact": 0.77,
-    "within_1": 0.996,
-    "two_steps": 0.004,
-    "kappa_w": 0.857,
+    "exact": 0.802,
+    "within_1": 0.998,
+    "two_steps": 0.002,
+    "kappa_w": 0.886,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.829,
-     0.881
+     0.861,
+     0.908
     ],
     "exact_ci": [
-     0.73,
-     0.806
+     0.766,
+     0.836
     ]
    },
-   "icc_theta": 0.8,
-   "r_theta": 0.8,
+   "icc_theta": 0.824,
+   "r_theta": 0.825,
    "icc_theta_ci": [
-    0.768,
-    0.826
+    0.794,
+    0.85
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.584,
-    "within_1": 0.982,
-    "two_steps": 0.018,
-    "kappa_w": 0.724,
+    "exact": 0.612,
+    "within_1": 0.976,
+    "two_steps": 0.024,
+    "kappa_w": 0.737,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.572,
-    "within_1": 0.974,
-    "kappa_w": 0.786
+    "exact": 0.574,
+    "within_1": 0.975,
+    "kappa_w": 0.791
    },
-   "status_agreement": 0.71,
+   "status_agreement": 0.758,
    "overlap_all": {
-    "mean": 0.242,
-    "median": 0.0,
-    "any_share": 0.486,
+    "mean": 0.249,
+    "median": 0.05,
+    "any_share": 0.582,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.24,
-    "median": 0.0,
-    "any_share": 0.482,
+    "mean": 0.249,
+    "median": 0.05,
+    "any_share": 0.582,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.59,
-    "exact_with_category": 0.589,
-    "over_share": 0.054,
-    "under_share": 0.336,
-    "no_category_share": 0.05,
-    "kappa_w_true": 0.787
+    "exact": 0.612,
+    "exact_with_category": 0.613,
+    "over_share": 0.044,
+    "under_share": 0.318,
+    "no_category_share": 0.064,
+    "kappa_w_true": 0.801
    },
    "path": {
     "status_share": {
-     "confirmed": 0.597,
-     "provisional": 0.082,
-     "accepted_lower": 0.269,
-     "none": 0.052
+     "confirmed": 0.627,
+     "provisional": 0.065,
+     "accepted_lower": 0.251,
+     "none": 0.057
     },
     "sessions_per_path": 1.0,
-    "mean_items_per_session": 19.77,
-    "mean_items_per_path": 19.83,
-    "mean_time_min_per_path": 53.6,
-    "extension_share": 0.859,
-    "rescored_share": 0.001,
-    "provisional_intern_proved": 73,
-    "block_gap_flag_share": 0.052
+    "mean_items_per_session": 19.55,
+    "mean_items_per_path": 19.57,
+    "mean_time_min_per_path": 54.1,
+    "extension_share": 0.849,
+    "rescored_share": 0.003,
+    "provisional_intern_proved": 65,
+    "block_gap_flag_share": 0.048
    }
   },
   "security": {
    "path_grade": {
     "n": 500,
-    "exact": 0.726,
-    "within_1": 0.996,
-    "two_steps": 0.004,
-    "kappa_w": 0.831,
+    "exact": 0.764,
+    "within_1": 0.99,
+    "two_steps": 0.01,
+    "kappa_w": 0.811,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.797,
-     0.859
+     0.769,
+     0.846
     ],
     "exact_ci": [
-     0.684,
-     0.764
+     0.728,
+     0.8
     ]
    },
-   "icc_theta": 0.809,
-   "r_theta": 0.809,
+   "icc_theta": 0.813,
+   "r_theta": 0.813,
    "icc_theta_ci": [
-    0.778,
-    0.838
+    0.779,
+    0.84
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.62,
-    "within_1": 0.992,
-    "two_steps": 0.008,
-    "kappa_w": 0.757,
+    "exact": 0.6,
+    "within_1": 0.99,
+    "two_steps": 0.01,
+    "kappa_w": 0.719,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.584,
-    "within_1": 0.977,
-    "kappa_w": 0.784
+    "exact": 0.572,
+    "within_1": 0.975,
+    "kappa_w": 0.763
    },
-   "status_agreement": 0.7,
+   "status_agreement": 0.704,
    "overlap_all": {
-    "mean": 0.18,
-    "median": 0.0,
-    "any_share": 0.474,
+    "mean": 0.166,
+    "median": 0.048,
+    "any_share": 0.536,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.18,
-    "median": 0.0,
-    "any_share": 0.472,
+    "mean": 0.164,
+    "median": 0.047,
+    "any_share": 0.532,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.578,
-    "exact_with_category": 0.575,
-    "over_share": 0.066,
-    "under_share": 0.338,
-    "no_category_share": 0.05,
-    "kappa_w_true": 0.761
+    "exact": 0.596,
+    "exact_with_category": 0.601,
+    "over_share": 0.074,
+    "under_share": 0.314,
+    "no_category_share": 0.028,
+    "kappa_w_true": 0.74
    },
    "path": {
     "status_share": {
-     "confirmed": 0.576,
-     "provisional": 0.071,
-     "accepted_lower": 0.305,
-     "none": 0.048
+     "confirmed": 0.562,
+     "provisional": 0.11,
+     "accepted_lower": 0.295,
+     "none": 0.033
     },
     "sessions_per_path": 1.0,
-    "mean_items_per_session": 19.31,
-    "mean_items_per_path": 19.33,
-    "mean_time_min_per_path": 56.0,
-    "extension_share": 0.872,
-    "rescored_share": 0.0,
-    "provisional_intern_proved": 65,
-    "block_gap_flag_share": 0.073
+    "mean_items_per_session": 19.44,
+    "mean_items_per_path": 19.5,
+    "mean_time_min_per_path": 56.4,
+    "extension_share": 0.891,
+    "rescored_share": 0.003,
+    "provisional_intern_proved": 104,
+    "block_gap_flag_share": 0.068
    }
   }
  },
  "by_claimed": {
   "intern": {
-   "n": 460,
-   "exact": 0.774,
+   "n": 456,
+   "exact": 0.787,
    "within_1": 1.0,
    "two_steps": 0.0,
-   "kappa_w": 0.394,
+   "kappa_w": 0.458,
    "kappa_informative": true,
    "kappa_w_ci": [
-    0.297,
-    0.487
+    0.369,
+    0.552
    ],
    "exact_ci": [
-    0.737,
-    0.811
+    0.752,
+    0.825
    ]
   },
   "junior": {
-   "n": 812,
-   "exact": 0.979,
-   "within_1": 0.995,
-   "two_steps": 0.005,
-   "kappa_w": 0.111,
+   "n": 825,
+   "exact": 0.976,
+   "within_1": 0.996,
+   "two_steps": 0.004,
+   "kappa_w": 0.347,
    "kappa_informative": false,
    "kappa_w_ci": [
-    -0.011,
-    0.304
+    -0.01,
+    0.61
    ],
    "exact_ci": [
-    0.969,
-    0.988
+    0.966,
+    0.985
    ]
   },
   "middle": {
-   "n": 787,
-   "exact": 0.595,
-   "within_1": 0.994,
-   "two_steps": 0.006,
-   "kappa_w": 0.35,
+   "n": 804,
+   "exact": 0.609,
+   "within_1": 0.985,
+   "two_steps": 0.015,
+   "kappa_w": 0.392,
    "kappa_informative": true,
    "kappa_w_ci": [
-    0.28,
-    0.411
+    0.329,
+    0.448
    ],
    "exact_ci": [
-    0.56,
-    0.628
+    0.575,
+    0.642
    ]
   },
   "senior": {
-   "n": 441,
-   "exact": 0.624,
-   "within_1": 0.998,
-   "two_steps": 0.002,
-   "kappa_w": 0.555,
+   "n": 415,
+   "exact": 0.617,
+   "within_1": 0.988,
+   "two_steps": 0.012,
+   "kappa_w": 0.481,
    "kappa_informative": true,
    "kappa_w_ci": [
-    0.487,
-    0.616
+    0.402,
+    0.555
    ],
    "exact_ci": [
-    0.578,
-    0.667
+    0.571,
+    0.665
    ]
   }
  },
  "transitions": [
   [
+   74,
    62,
-   53,
-   2,
+   0,
    0,
    0
   ],
   [
-   51,
-   306,
-   23,
-   1,
+   37,
+   294,
+   44,
+   6,
    0
   ],
   [
-   2,
-   31,
-   1032,
-   178,
-   1
-  ],
-  [
-   0,
    4,
-   155,
-   410,
-   44
+   30,
+   1021,
+   139,
+   2
+  ],
+  [
+   0,
+   6,
+   160,
+   445,
+   46
   ],
   [
    0,
    0,
-   0,
-   61,
-   84
+   2,
+   52,
+   76
   ]
  ],
  "block_gap": {
@@ -758,60 +758,57 @@
    {
     "shift": 0.0,
     "n": 150,
-    "flag_share": 0.127,
-    "confirmed_share": 0.507,
-    "confirmed_flagged_share": 0.092
+    "flag_share": 0.067,
+    "confirmed_share": 0.573,
+    "confirmed_flagged_share": 0.058
    },
    {
     "shift": 1.0,
     "n": 150,
-    "flag_share": 0.46,
-    "confirmed_share": 0.173,
-    "confirmed_flagged_share": 0.385
+    "flag_share": 0.367,
+    "confirmed_share": 0.24,
+    "confirmed_flagged_share": 0.306
    },
    {
     "shift": 3.0,
     "n": 150,
-    "flag_share": 0.913,
-    "confirmed_share": 0.033,
-    "confirmed_flagged_share": 0.8
+    "flag_share": 0.953,
+    "confirmed_share": 0.08,
+    "confirmed_flagged_share": 0.917
    }
   ]
  },
  "discrimination": {
   "n_pilot": 1000,
-  "n_families": 154,
+  "n_families": 155,
   "criteria": {
    "weak_D": 0.2,
    "weak_r_pb": 0.2,
    "weak_r_pb_panel": 0.15
   },
   "summary": {
-   "D_mean": 0.472,
-   "D_median": 0.483,
-   "r_pb_mean": 0.414,
-   "r_pb_median": 0.406,
+   "D_mean": 0.47,
+   "D_median": 0.478,
+   "r_pb_mean": 0.413,
+   "r_pb_median": 0.407,
    "share_D_ge_03": 1.0,
    "share_D_02_03": 0.0,
    "share_D_lt_02": 0.0,
    "share_r_pb_gt_02": 1.0,
-   "n_weak": 19,
+   "n_weak": 0,
    "n_weak_sim": 0,
-   "panel_n": 104,
-   "panel_corr": -0.252,
-   "panel_weak": 19,
+   "panel_n": 0,
+   "panel_corr": null,
+   "panel_weak": 0,
    "audit_rework_n": 15,
-   "audit_rework_and_weak": [
-    "common.db.tx_isolation_mcq",
-    "qa.load.percentile_merge_mcq"
-   ],
-   "audit_rework_panel_r_pb_mean": 0.347
+   "audit_rework_and_weak": [],
+   "audit_rework_panel_r_pb_mean": null
   },
   "by_format": {
    "choose_fix": {
-    "n": 27,
-    "D_mean": 0.499,
-    "r_pb_mean": 0.408
+    "n": 28,
+    "D_mean": 0.486,
+    "r_pb_mean": 0.402
    },
    "find_bug": {
     "n": 39,
@@ -820,519 +817,26 @@
    },
    "mcq_concept": {
     "n": 27,
-    "D_mean": 0.485,
+    "D_mean": 0.49,
     "r_pb_mean": 0.397
    },
    "open_answer": {
     "n": 11,
-    "D_mean": 0.367,
-    "r_pb_mean": 0.328
+    "D_mean": 0.37,
+    "r_pb_mean": 0.331
    },
    "open_book_3step": {
     "n": 19,
-    "D_mean": 0.42,
-    "r_pb_mean": 0.548
+    "D_mean": 0.423,
+    "r_pb_mean": 0.551
    },
    "predict_output": {
     "n": 31,
-    "D_mean": 0.48,
-    "r_pb_mean": 0.393
+    "D_mean": 0.469,
+    "r_pb_mean": 0.389
    }
   },
-  "weak": [
-   {
-    "family_id": "qa.pytest.patch_arg_order",
-    "block": "qa",
-    "format": "find_bug",
-    "grades": [
-     "middle"
-    ],
-    "p": 0.509,
-    "D": 0.515,
-    "r_pb": 0.419,
-    "a": 1.1,
-    "b": 0.1,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": -0.09,
-    "flags": [
-     "нет ступеньки по θ условий",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "qa.sql.data_quality_output",
-    "block": "qa",
-    "format": "predict_output",
-    "grades": [
-     "middle"
-    ],
-    "p": 0.463,
-    "D": 0.507,
-    "r_pb": 0.402,
-    "a": 1.0,
-    "b": 0.2,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": -0.067,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "нет ступеньки по θ условий",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "frontend.js.this_binding",
-    "block": "frontend",
-    "format": "predict_output",
-    "grades": [
-     "junior",
-     "middle"
-    ],
-    "p": 0.407,
-    "D": 0.448,
-    "r_pb": 0.375,
-    "a": 1.1,
-    "b": 0.3,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": -0.003,
-    "flags": [
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "data_ml.stats.ztest_fix",
-    "block": "data_ml",
-    "format": "choose_fix",
-    "grades": [
-     "middle",
-     "senior"
-    ],
-    "p": 0.393,
-    "D": 0.511,
-    "r_pb": 0.404,
-    "a": 1.0,
-    "b": 0.6,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.006,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "нет ступеньки по θ условий",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "data_ml.py.preprocess_leakage",
-    "block": "data_ml",
-    "format": "find_bug",
-    "grades": [
-     "junior",
-     "middle"
-    ],
-    "p": 0.638,
-    "D": 0.507,
-    "r_pb": 0.435,
-    "a": 1.1,
-    "b": -0.6,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.018,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация",
-     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "common.db.tx_isolation_mcq",
-    "block": "common",
-    "format": "mcq_concept",
-    "grades": [
-     "middle",
-     "senior"
-    ],
-    "p": 0.376,
-    "D": 0.482,
-    "r_pb": 0.396,
-    "a": 1.1,
-    "b": 0.6,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.019,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": true
-   },
-   {
-    "family_id": "backend.queue.redelivery_mcq",
-    "block": "backend",
-    "format": "mcq_concept",
-    "grades": [
-     "middle"
-    ],
-    "p": 0.463,
-    "D": 0.563,
-    "r_pb": 0.431,
-    "a": 1.0,
-    "b": 0.2,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.025,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "qa.load.percentile_merge_mcq",
-    "block": "qa",
-    "format": "mcq_concept",
-    "grades": [
-     "senior"
-    ],
-    "p": 0.456,
-    "D": 0.496,
-    "r_pb": 0.399,
-    "a": 1.0,
-    "b": 0.3,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.032,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "нет ступеньки по θ условий",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": true
-   },
-   {
-    "family_id": "security.auth.token_validation_ob3",
-    "block": "security",
-    "format": "open_book_3step",
-    "grades": [
-     "middle"
-    ],
-    "p": 0.361,
-    "D": 0.456,
-    "r_pb": 0.582,
-    "a": 1.1,
-    "b": 0.7,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.041,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "нет ступеньки по θ условий",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "frontend.js.microtask_order",
-    "block": "frontend",
-    "format": "mcq_concept",
-    "grades": [
-     "middle",
-     "senior"
-    ],
-    "p": 0.39,
-    "D": 0.485,
-    "r_pb": 0.414,
-    "a": 1.2,
-    "b": 0.6,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.055,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "qa.design.boundary_values_mcq",
-    "block": "qa",
-    "format": "mcq_concept",
-    "grades": [
-     "junior"
-    ],
-    "p": 0.688,
-    "D": 0.515,
-    "r_pb": 0.436,
-    "a": 1.1,
-    "b": -0.9,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.068,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "common.time.tz_report_ob3",
-    "block": "common",
-    "format": "open_book_3step",
-    "grades": [
-     "middle",
-     "senior"
-    ],
-    "p": 0.365,
-    "D": 0.429,
-    "r_pb": 0.552,
-    "a": 1.0,
-    "b": 0.767,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.072,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "нет ступеньки по θ условий",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "security.access.owner_check_bug",
-    "block": "security",
-    "format": "find_bug",
-    "grades": [
-     "middle"
-    ],
-    "p": 0.462,
-    "D": 0.5,
-    "r_pb": 0.394,
-    "a": 1.1,
-    "b": 0.0,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.073,
-    "flags": [
-     "нет ступеньки по θ условий",
-     "слабая дискриминация",
-     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "backend.py.rate_limiter_ob3",
-    "block": "backend",
-    "format": "open_book_3step",
-    "grades": [
-     "middle",
-     "senior"
-    ],
-    "p": 0.337,
-    "D": 0.394,
-    "r_pb": 0.518,
-    "a": 1.0,
-    "b": 0.767,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.127,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "отрицательная дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "data_ml.ab.sample_size_mcq",
-    "block": "data_ml",
-    "format": "mcq_concept",
-    "grades": [
-     "middle",
-     "senior"
-    ],
-    "p": 0.385,
-    "D": 0.467,
-    "r_pb": 0.381,
-    "a": 1.0,
-    "b": 0.7,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.128,
-    "flags": [
-     "много неразобранных ответов",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "common.git.history_count",
-    "block": "common",
-    "format": "predict_output",
-    "grades": [
-     "junior",
-     "middle"
-    ],
-    "p": 0.498,
-    "D": 0.501,
-    "r_pb": 0.396,
-    "a": 1.1,
-    "b": 0.0,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.132,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "backend.py.idempotency_ob3",
-    "block": "backend",
-    "format": "open_book_3step",
-    "grades": [
-     "middle",
-     "senior"
-    ],
-    "p": 0.367,
-    "D": 0.423,
-    "r_pb": 0.552,
-    "a": 1.0,
-    "b": 0.733,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.138,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "data_ml.mlops.psi_drift_ob3",
-    "block": "data_ml",
-    "format": "open_book_3step",
-    "grades": [
-     "senior"
-    ],
-    "p": 0.316,
-    "D": 0.437,
-    "r_pb": 0.577,
-    "a": 1.0,
-    "b": 1.0,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.142,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "много неразобранных ответов",
-     "нет ступеньки по θ условий",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   },
-   {
-    "family_id": "qa.js.unawaited_assert",
-    "block": "qa",
-    "format": "find_bug",
-    "grades": [
-     "junior",
-     "middle"
-    ],
-    "p": 0.599,
-    "D": 0.533,
-    "r_pb": 0.431,
-    "a": 1.1,
-    "b": -0.4,
-    "weak_sim": false,
-    "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.143,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
-    "audit_rework": false
-   }
-  ],
+  "weak": [],
   "families": [
    {
     "family_id": "backend.api.idempotency_key_fix",
@@ -1344,14 +848,11 @@
     ],
     "p": 0.358,
     "D": 0.478,
-    "r_pb": 0.401,
+    "r_pb": 0.391,
     "a": 1.1,
     "b": 0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.498,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1364,17 +865,12 @@
      "junior"
     ],
     "p": 0.653,
-    "D": 0.515,
-    "r_pb": 0.422,
+    "D": 0.5,
+    "r_pb": 0.43,
     "a": 1.1,
     "b": -0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.429,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1387,15 +883,12 @@
      "junior"
     ],
     "p": 0.653,
-    "D": 0.407,
-    "r_pb": 0.372,
+    "D": 0.463,
+    "r_pb": 0.387,
     "a": 1.1,
     "b": -0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.434,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1408,17 +901,12 @@
      "middle"
     ],
     "p": 0.494,
-    "D": 0.552,
-    "r_pb": 0.44,
+    "D": 0.544,
+    "r_pb": 0.428,
     "a": 1.1,
     "b": 0.0,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.473,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1431,15 +919,12 @@
      "middle"
     ],
     "p": 0.469,
-    "D": 0.533,
-    "r_pb": 0.42,
+    "D": 0.537,
+    "r_pb": 0.425,
     "a": 1.1,
     "b": 0.0,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1453,15 +938,12 @@
      "senior"
     ],
     "p": 0.349,
-    "D": 0.511,
-    "r_pb": 0.413,
+    "D": 0.481,
+    "r_pb": 0.423,
     "a": 1.1,
     "b": 0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.379,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1474,17 +956,12 @@
      "middle"
     ],
     "p": 0.454,
-    "D": 0.47,
-    "r_pb": 0.376,
+    "D": 0.422,
+    "r_pb": 0.374,
     "a": 1.1,
     "b": 0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.387,
-    "flags": [
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1498,19 +975,12 @@
      "senior"
     ],
     "p": 0.318,
-    "D": 0.409,
-    "r_pb": 0.55,
+    "D": 0.395,
+    "r_pb": 0.541,
     "a": 1.0,
     "b": 1.0,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.233,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1523,15 +993,12 @@
      "middle"
     ],
     "p": 0.434,
-    "D": 0.53,
-    "r_pb": 0.431,
+    "D": 0.507,
+    "r_pb": 0.428,
     "a": 1.1,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.244,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1544,8 +1011,8 @@
      "senior"
     ],
     "p": 0.277,
-    "D": 0.367,
-    "r_pb": 0.321,
+    "D": 0.356,
+    "r_pb": 0.328,
     "a": 0.9,
     "b": 1.2,
     "weak_sim": false,
@@ -1563,8 +1030,8 @@
      "middle"
     ],
     "p": 0.617,
-    "D": 0.522,
-    "r_pb": 0.427,
+    "D": 0.526,
+    "r_pb": 0.433,
     "a": 1.1,
     "b": -0.5,
     "weak_sim": false,
@@ -1582,7 +1049,7 @@
      "middle"
     ],
     "p": 0.669,
-    "D": 0.537,
+    "D": 0.511,
     "r_pb": 0.445,
     "a": 1.1,
     "b": -0.7,
@@ -1600,8 +1067,8 @@
      "middle"
     ],
     "p": 0.48,
-    "D": 0.559,
-    "r_pb": 0.433,
+    "D": 0.511,
+    "r_pb": 0.426,
     "a": 1.1,
     "b": 0.2,
     "weak_sim": false,
@@ -1619,8 +1086,8 @@
      "senior"
     ],
     "p": 0.33,
-    "D": 0.419,
-    "r_pb": 0.345,
+    "D": 0.404,
+    "r_pb": 0.36,
     "a": 1.1,
     "b": 0.8,
     "weak_sim": false,
@@ -1638,8 +1105,8 @@
      "middle"
     ],
     "p": 0.487,
-    "D": 0.541,
-    "r_pb": 0.423,
+    "D": 0.493,
+    "r_pb": 0.405,
     "a": 1.1,
     "b": 0.0,
     "weak_sim": false,
@@ -1657,8 +1124,8 @@
      "senior"
     ],
     "p": 0.421,
-    "D": 0.6,
-    "r_pb": 0.466,
+    "D": 0.563,
+    "r_pb": 0.467,
     "a": 1.2,
     "b": 0.4,
     "weak_sim": false,
@@ -1675,8 +1142,8 @@
      "middle"
     ],
     "p": 0.42,
-    "D": 0.485,
-    "r_pb": 0.368,
+    "D": 0.459,
+    "r_pb": 0.372,
     "a": 1.1,
     "b": 0.3,
     "weak_sim": false,
@@ -1694,8 +1161,8 @@
      "senior"
     ],
     "p": 0.359,
-    "D": 0.511,
-    "r_pb": 0.439,
+    "D": 0.5,
+    "r_pb": 0.454,
     "a": 1.1,
     "b": 0.6,
     "weak_sim": false,
@@ -1713,7 +1180,7 @@
      "middle"
     ],
     "p": 0.531,
-    "D": 0.533,
+    "D": 0.519,
     "r_pb": 0.437,
     "a": 1.1,
     "b": -0.2,
@@ -1732,8 +1199,8 @@
      "senior"
     ],
     "p": 0.331,
-    "D": 0.459,
-    "r_pb": 0.392,
+    "D": 0.467,
+    "r_pb": 0.393,
     "a": 1.1,
     "b": 0.7,
     "weak_sim": false,
@@ -1751,8 +1218,8 @@
      "middle"
     ],
     "p": 0.597,
-    "D": 0.448,
-    "r_pb": 0.363,
+    "D": 0.396,
+    "r_pb": 0.357,
     "a": 1.1,
     "b": -0.4,
     "weak_sim": false,
@@ -1770,10 +1237,29 @@
      "middle"
     ],
     "p": 0.591,
-    "D": 0.504,
-    "r_pb": 0.398,
+    "D": 0.489,
+    "r_pb": 0.403,
     "a": 1.1,
     "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "backend.java.session_registry_leak_fix",
+    "block": "backend",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.486,
+    "D": 0.478,
+    "r_pb": 0.374,
+    "a": 1.0,
+    "b": 0.0,
     "weak_sim": false,
     "reasons": [],
     "weak_panel": false,
@@ -1787,9 +1273,9 @@
     "grades": [
      "middle"
     ],
-    "p": 0.446,
-    "D": 0.53,
-    "r_pb": 0.418,
+    "p": 0.45,
+    "D": 0.544,
+    "r_pb": 0.427,
     "a": 1.1,
     "b": 0.2,
     "weak_sim": false,
@@ -1806,9 +1292,9 @@
      "intern",
      "junior"
     ],
-    "p": 0.698,
-    "D": 0.485,
-    "r_pb": 0.406,
+    "p": 0.739,
+    "D": 0.415,
+    "r_pb": 0.384,
     "a": 1.2,
     "b": -1.0,
     "weak_sim": false,
@@ -1824,9 +1310,9 @@
     "grades": [
      "junior"
     ],
-    "p": 0.654,
-    "D": 0.411,
-    "r_pb": 0.347,
+    "p": 0.64,
+    "D": 0.448,
+    "r_pb": 0.4,
     "a": 1.0,
     "b": -0.7,
     "weak_sim": false,
@@ -1843,9 +1329,9 @@
      "junior",
      "middle"
     ],
-    "p": 0.608,
-    "D": 0.507,
-    "r_pb": 0.416,
+    "p": 0.579,
+    "D": 0.5,
+    "r_pb": 0.41,
     "a": 1.0,
     "b": -0.5,
     "weak_sim": false,
@@ -1862,9 +1348,9 @@
      "middle",
      "senior"
     ],
-    "p": 0.383,
-    "D": 0.544,
-    "r_pb": 0.441,
+    "p": 0.405,
+    "D": 0.511,
+    "r_pb": 0.429,
     "a": 1.1,
     "b": 0.5,
     "weak_sim": false,
@@ -1881,9 +1367,9 @@
      "junior",
      "middle"
     ],
-    "p": 0.565,
-    "D": 0.556,
-    "r_pb": 0.452,
+    "p": 0.576,
+    "D": 0.544,
+    "r_pb": 0.433,
     "a": 1.1,
     "b": -0.3,
     "weak_sim": false,
@@ -1900,18 +1386,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.465,
-    "D": 0.581,
-    "r_pb": 0.435,
+    "p": 0.443,
+    "D": 0.474,
+    "r_pb": 0.383,
     "a": 1.0,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.379,
-    "flags": [
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1923,18 +1404,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.311,
-    "D": 0.448,
-    "r_pb": 0.389,
+    "p": 0.308,
+    "D": 0.363,
+    "r_pb": 0.339,
     "a": 1.0,
     "b": 0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": null,
-    "flags": [
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1947,18 +1423,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.422,
-    "D": 0.441,
-    "r_pb": 0.374,
+    "p": 0.419,
+    "D": 0.467,
+    "r_pb": 0.376,
     "a": 1.0,
     "b": 0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.336,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -1970,9 +1441,9 @@
     "grades": [
      "senior"
     ],
-    "p": 0.269,
-    "D": 0.322,
-    "r_pb": 0.299,
+    "p": 0.271,
+    "D": 0.315,
+    "r_pb": 0.278,
     "a": 0.9,
     "b": 1.3,
     "weak_sim": false,
@@ -1989,9 +1460,9 @@
      "intern",
      "junior"
     ],
-    "p": 0.766,
-    "D": 0.333,
-    "r_pb": 0.322,
+    "p": 0.792,
+    "D": 0.344,
+    "r_pb": 0.344,
     "a": 1.0,
     "b": -1.5,
     "weak_sim": false,
@@ -2008,20 +1479,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.309,
-    "D": 0.414,
-    "r_pb": 0.549,
+    "p": 0.321,
+    "D": 0.41,
+    "r_pb": 0.57,
     "a": 1.0,
     "b": 0.933,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2034,22 +1498,15 @@
      "middle",
      "senior"
     ],
-    "p": 0.367,
-    "D": 0.423,
-    "r_pb": 0.552,
+    "p": 0.357,
+    "D": 0.402,
+    "r_pb": 0.53,
     "a": 1.0,
     "b": 0.733,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.138,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -2059,16 +1516,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.414,
-    "D": 0.496,
-    "r_pb": 0.393,
+    "p": 0.416,
+    "D": 0.474,
+    "r_pb": 0.397,
     "a": 1.1,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.377,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2080,18 +1534,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.669,
-    "D": 0.522,
-    "r_pb": 0.414,
+    "p": 0.664,
+    "D": 0.419,
+    "r_pb": 0.346,
     "a": 1.0,
     "b": -0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.423,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2104,21 +1553,15 @@
      "middle",
      "senior"
     ],
-    "p": 0.337,
-    "D": 0.394,
-    "r_pb": 0.518,
+    "p": 0.362,
+    "D": 0.443,
+    "r_pb": 0.569,
     "a": 1.0,
     "b": 0.767,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.127,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "отрицательная дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -2128,22 +1571,15 @@
     "grades": [
      "middle"
     ],
-    "p": 0.463,
-    "D": 0.563,
-    "r_pb": 0.431,
+    "p": 0.467,
+    "D": 0.448,
+    "r_pb": 0.376,
     "a": 1.0,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.025,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -2154,20 +1590,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.325,
-    "D": 0.427,
-    "r_pb": 0.569,
+    "p": 0.314,
+    "D": 0.438,
+    "r_pb": 0.573,
     "a": 1.0,
     "b": 0.933,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.282,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2180,16 +1609,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.546,
-    "D": 0.507,
-    "r_pb": 0.413,
+    "p": 0.568,
+    "D": 0.552,
+    "r_pb": 0.439,
     "a": 1.1,
     "b": -0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.412,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2202,18 +1628,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.579,
-    "D": 0.513,
-    "r_pb": 0.413,
+    "p": 0.564,
+    "D": 0.535,
+    "r_pb": 0.428,
     "a": 1.1,
     "b": -0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.171,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2225,18 +1646,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.625,
-    "D": 0.472,
-    "r_pb": 0.391,
+    "p": 0.628,
+    "D": 0.498,
+    "r_pb": 0.411,
     "a": 1.1,
     "b": -0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.364,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2249,18 +1665,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.397,
-    "D": 0.449,
+    "p": 0.401,
+    "D": 0.435,
     "r_pb": 0.552,
     "a": 1.0,
     "b": 0.533,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.241,
-    "flags": [
-     "слабая дискриминация"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2273,18 +1684,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.37,
-    "D": 0.412,
-    "r_pb": 0.542,
+    "p": 0.36,
+    "D": 0.422,
+    "r_pb": 0.545,
     "a": 1.0,
     "b": 0.733,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.233,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2297,18 +1703,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.392,
-    "D": 0.487,
-    "r_pb": 0.395,
+    "p": 0.398,
+    "D": 0.5,
+    "r_pb": 0.41,
     "a": 1.1,
     "b": 0.5,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.335,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -2321,21 +1722,15 @@
      "middle",
      "senior"
     ],
-    "p": 0.376,
-    "D": 0.482,
-    "r_pb": 0.396,
+    "p": 0.361,
+    "D": 0.475,
+    "r_pb": 0.4,
     "a": 1.1,
     "b": 0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.019,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": true
    },
    {
@@ -2345,16 +1740,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.307,
-    "D": 0.459,
-    "r_pb": 0.398,
+    "p": 0.318,
+    "D": 0.473,
+    "r_pb": 0.414,
     "a": 1.1,
     "b": 0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2366,16 +1758,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.296,
-    "D": 0.457,
-    "r_pb": 0.404,
+    "p": 0.293,
+    "D": 0.443,
+    "r_pb": 0.398,
     "a": 1.1,
     "b": 1.0,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2388,9 +1777,9 @@
      "junior",
      "middle"
     ],
-    "p": 0.633,
-    "D": 0.511,
-    "r_pb": 0.425,
+    "p": 0.635,
+    "D": 0.473,
+    "r_pb": 0.384,
     "a": 1.1,
     "b": -0.6,
     "weak_sim": false,
@@ -2407,9 +1796,9 @@
      "junior",
      "middle"
     ],
-    "p": 0.595,
-    "D": 0.509,
-    "r_pb": 0.42,
+    "p": 0.579,
+    "D": 0.504,
+    "r_pb": 0.404,
     "a": 1.1,
     "b": -0.4,
     "weak_sim": false,
@@ -2426,9 +1815,9 @@
      "junior",
      "middle"
     ],
-    "p": 0.562,
-    "D": 0.522,
-    "r_pb": 0.408,
+    "p": 0.57,
+    "D": 0.499,
+    "r_pb": 0.4,
     "a": 1.1,
     "b": -0.3,
     "weak_sim": false,
@@ -2444,18 +1833,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.491,
-    "D": 0.528,
-    "r_pb": 0.422,
+    "p": 0.469,
+    "D": 0.524,
+    "r_pb": 0.42,
     "a": 1.1,
     "b": 0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.241,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2468,22 +1852,15 @@
      "junior",
      "middle"
     ],
-    "p": 0.498,
-    "D": 0.501,
-    "r_pb": 0.396,
+    "p": 0.506,
+    "D": 0.537,
+    "r_pb": 0.427,
     "a": 1.1,
     "b": 0.0,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.132,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -2494,19 +1871,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.463,
-    "D": 0.539,
-    "r_pb": 0.433,
+    "p": 0.458,
+    "D": 0.521,
+    "r_pb": 0.416,
     "a": 1.1,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "слабая дискриминация"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2519,18 +1890,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.554,
-    "D": 0.516,
-    "r_pb": 0.415,
+    "p": 0.538,
+    "D": 0.541,
+    "r_pb": 0.421,
     "a": 1.1,
     "b": -0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.382,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -2542,9 +1908,9 @@
     "grades": [
      "senior"
     ],
-    "p": 0.292,
-    "D": 0.371,
-    "r_pb": 0.319,
+    "p": 0.284,
+    "D": 0.37,
+    "r_pb": 0.336,
     "a": 0.9,
     "b": 1.2,
     "weak_sim": false,
@@ -2560,19 +1926,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.439,
-    "D": 0.504,
-    "r_pb": 0.405,
+    "p": 0.437,
+    "D": 0.57,
+    "r_pb": 0.448,
     "a": 1.1,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.235,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2584,18 +1944,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.616,
-    "D": 0.496,
-    "r_pb": 0.406,
+    "p": 0.597,
+    "D": 0.506,
+    "r_pb": 0.415,
     "a": 1.1,
     "b": -0.5,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.279,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2609,17 +1964,12 @@
      "middle"
     ],
     "p": 0.638,
-    "D": 0.435,
+    "D": 0.449,
     "r_pb": 0.361,
     "a": 1.0,
     "b": -0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.401,
-    "flags": [
-     "малые модели решают «в лоб»"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2632,18 +1982,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.561,
-    "D": 0.49,
-    "r_pb": 0.39,
+    "p": 0.56,
+    "D": 0.483,
+    "r_pb": 0.387,
     "a": 1.0,
     "b": -0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.229,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2656,9 +2001,9 @@
      "intern",
      "junior"
     ],
-    "p": 0.773,
-    "D": 0.344,
-    "r_pb": 0.324,
+    "p": 0.776,
+    "D": 0.361,
+    "r_pb": 0.341,
     "a": 1.0,
     "b": -1.5,
     "weak_sim": false,
@@ -2675,18 +2020,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.537,
-    "D": 0.481,
-    "r_pb": 0.376,
+    "p": 0.544,
+    "D": 0.494,
+    "r_pb": 0.397,
     "a": 1.0,
     "b": -0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.321,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2698,19 +2038,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.359,
-    "D": 0.488,
-    "r_pb": 0.409,
+    "p": 0.349,
+    "D": 0.481,
+    "r_pb": 0.407,
     "a": 1.1,
     "b": 0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2722,18 +2056,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.465,
-    "D": 0.527,
-    "r_pb": 0.418,
+    "p": 0.466,
+    "D": 0.55,
+    "r_pb": 0.437,
     "a": 1.1,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.251,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2746,9 +2075,9 @@
      "intern",
      "junior"
     ],
-    "p": 0.77,
-    "D": 0.357,
-    "r_pb": 0.332,
+    "p": 0.763,
+    "D": 0.366,
+    "r_pb": 0.338,
     "a": 1.0,
     "b": -1.4,
     "weak_sim": false,
@@ -2765,19 +2094,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.545,
-    "D": 0.551,
-    "r_pb": 0.44,
+    "p": 0.551,
+    "D": 0.545,
+    "r_pb": 0.43,
     "a": 1.2,
     "b": -0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.419,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2789,18 +2112,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.461,
-    "D": 0.492,
-    "r_pb": 0.396,
+    "p": 0.458,
+    "D": 0.513,
+    "r_pb": 0.404,
     "a": 1.1,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.342,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2813,18 +2131,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.35,
-    "D": 0.43,
-    "r_pb": 0.559,
+    "p": 0.354,
+    "D": 0.437,
+    "r_pb": 0.566,
     "a": 1.0,
     "b": 0.8,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.4,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2836,19 +2149,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.334,
-    "D": 0.429,
-    "r_pb": 0.363,
+    "p": 0.321,
+    "D": 0.388,
+    "r_pb": 0.348,
     "a": 1.0,
     "b": 0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.202,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2860,9 +2167,9 @@
     "grades": [
      "senior"
     ],
-    "p": 0.289,
-    "D": 0.404,
-    "r_pb": 0.351,
+    "p": 0.285,
+    "D": 0.344,
+    "r_pb": 0.304,
     "a": 0.9,
     "b": 1.2,
     "weak_sim": false,
@@ -2879,24 +2186,15 @@
      "middle",
      "senior"
     ],
-    "p": 0.365,
-    "D": 0.429,
-    "r_pb": 0.552,
+    "p": 0.359,
+    "D": 0.432,
+    "r_pb": 0.549,
     "a": 1.0,
     "b": 0.767,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.072,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "нет ступеньки по θ условий",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -2907,21 +2205,15 @@
      "middle",
      "senior"
     ],
-    "p": 0.385,
-    "D": 0.467,
-    "r_pb": 0.381,
+    "p": 0.387,
+    "D": 0.374,
+    "r_pb": 0.322,
     "a": 1.0,
     "b": 0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.128,
-    "flags": [
-     "много неразобранных ответов",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -2932,18 +2224,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.447,
-    "D": 0.459,
-    "r_pb": 0.37,
+    "p": 0.455,
+    "D": 0.467,
+    "r_pb": 0.358,
     "a": 1.0,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.369,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -2956,18 +2243,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.581,
-    "D": 0.493,
-    "r_pb": 0.376,
+    "p": 0.554,
+    "D": 0.5,
+    "r_pb": 0.407,
     "a": 1.0,
     "b": -0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.174,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -2980,18 +2262,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.439,
-    "D": 0.519,
-    "r_pb": 0.404,
+    "p": 0.429,
+    "D": 0.552,
+    "r_pb": 0.424,
     "a": 1.1,
     "b": 0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3004,18 +2281,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.561,
-    "D": 0.496,
-    "r_pb": 0.382,
+    "p": 0.533,
+    "D": 0.53,
+    "r_pb": 0.425,
     "a": 1.1,
     "b": -0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.353,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3027,16 +2299,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.697,
-    "D": 0.474,
-    "r_pb": 0.412,
+    "p": 0.695,
+    "D": 0.496,
+    "r_pb": 0.441,
     "a": 1.1,
     "b": -0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.479,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3049,18 +2318,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.43,
-    "D": 0.567,
-    "r_pb": 0.45,
+    "p": 0.403,
+    "D": 0.526,
+    "r_pb": 0.418,
     "a": 1.1,
     "b": 0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.157,
-    "flags": [
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3072,9 +2336,9 @@
     "grades": [
      "senior"
     ],
-    "p": 0.304,
-    "D": 0.422,
-    "r_pb": 0.359,
+    "p": 0.27,
+    "D": 0.344,
+    "r_pb": 0.319,
     "a": 0.9,
     "b": 1.3,
     "weak_sim": false,
@@ -3091,18 +2355,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.556,
-    "D": 0.515,
-    "r_pb": 0.433,
+    "p": 0.563,
+    "D": 0.533,
+    "r_pb": 0.424,
     "a": 1.0,
     "b": -0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.2,
-    "flags": [
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3115,21 +2374,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.351,
-    "D": 0.433,
-    "r_pb": 0.547,
+    "p": 0.338,
+    "D": 0.428,
+    "r_pb": 0.545,
     "a": 1.0,
     "b": 0.833,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.167,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3141,25 +2392,15 @@
     "grades": [
      "senior"
     ],
-    "p": 0.316,
-    "D": 0.437,
-    "r_pb": 0.577,
+    "p": 0.306,
+    "D": 0.406,
+    "r_pb": 0.541,
     "a": 1.0,
     "b": 1.0,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.142,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "много неразобранных ответов",
-     "нет ступеньки по θ условий",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -3169,18 +2410,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.611,
-    "D": 0.53,
-    "r_pb": 0.418,
+    "p": 0.629,
+    "D": 0.437,
+    "r_pb": 0.37,
     "a": 1.0,
     "b": -0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.266,
-    "flags": [
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3193,19 +2429,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.524,
-    "D": 0.493,
-    "r_pb": 0.372,
+    "p": 0.498,
+    "D": 0.452,
+    "r_pb": 0.362,
     "a": 1.0,
     "b": 0.0,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.321,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3217,16 +2447,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.671,
-    "D": 0.448,
-    "r_pb": 0.368,
+    "p": 0.669,
+    "D": 0.496,
+    "r_pb": 0.417,
     "a": 1.0,
     "b": -0.8,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.237,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3239,22 +2466,15 @@
      "junior",
      "middle"
     ],
-    "p": 0.638,
-    "D": 0.507,
-    "r_pb": 0.435,
+    "p": 0.614,
+    "D": 0.57,
+    "r_pb": 0.454,
     "a": 1.1,
     "b": -0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.018,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация",
-     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -3265,16 +2485,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.425,
-    "D": 0.481,
-    "r_pb": 0.368,
+    "p": 0.427,
+    "D": 0.444,
+    "r_pb": 0.363,
     "a": 1.0,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.504,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3286,18 +2503,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.468,
-    "D": 0.607,
-    "r_pb": 0.477,
+    "p": 0.455,
+    "D": 0.504,
+    "r_pb": 0.402,
     "a": 1.1,
     "b": 0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.413,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3309,16 +2521,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.519,
-    "D": 0.626,
-    "r_pb": 0.483,
+    "p": 0.512,
+    "D": 0.519,
+    "r_pb": 0.407,
     "a": 1.1,
     "b": -0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3330,18 +2539,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.521,
-    "D": 0.493,
-    "r_pb": 0.393,
+    "p": 0.516,
+    "D": 0.515,
+    "r_pb": 0.408,
     "a": 1.1,
     "b": -0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.294,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3354,19 +2558,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.581,
-    "D": 0.548,
-    "r_pb": 0.427,
+    "p": 0.577,
+    "D": 0.481,
+    "r_pb": 0.397,
     "a": 1.1,
     "b": -0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.208,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3379,9 +2577,9 @@
      "intern",
      "junior"
     ],
-    "p": 0.76,
-    "D": 0.419,
-    "r_pb": 0.376,
+    "p": 0.775,
+    "D": 0.378,
+    "r_pb": 0.335,
     "a": 1.0,
     "b": -1.4,
     "weak_sim": false,
@@ -3398,23 +2596,15 @@
      "middle",
      "senior"
     ],
-    "p": 0.393,
-    "D": 0.511,
-    "r_pb": 0.404,
+    "p": 0.382,
+    "D": 0.485,
+    "r_pb": 0.408,
     "a": 1.0,
     "b": 0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.006,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "нет ступеньки по θ условий",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -3424,18 +2614,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.581,
-    "D": 0.47,
-    "r_pb": 0.391,
+    "p": 0.576,
+    "D": 0.452,
+    "r_pb": 0.378,
     "a": 1.0,
     "b": -0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.307,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3448,21 +2633,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.349,
-    "D": 0.432,
-    "r_pb": 0.538,
+    "p": 0.364,
+    "D": 0.441,
+    "r_pb": 0.55,
     "a": 1.0,
     "b": 0.733,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.172,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -3474,9 +2651,9 @@
     "grades": [
      "senior"
     ],
-    "p": 0.265,
-    "D": 0.378,
-    "r_pb": 0.349,
+    "p": 0.284,
+    "D": 0.404,
+    "r_pb": 0.35,
     "a": 0.9,
     "b": 1.3,
     "weak_sim": false,
@@ -3493,19 +2670,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.405,
-    "D": 0.504,
-    "r_pb": 0.426,
+    "p": 0.406,
+    "D": 0.574,
+    "r_pb": 0.452,
     "a": 1.1,
     "b": 0.5,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.19,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3517,18 +2688,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.611,
-    "D": 0.515,
-    "r_pb": 0.433,
+    "p": 0.616,
+    "D": 0.493,
+    "r_pb": 0.398,
     "a": 1.1,
     "b": -0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.31,
-    "flags": [
-     "много неразобранных ответов"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3541,17 +2707,12 @@
      "senior"
     ],
     "p": 0.291,
-    "D": 0.374,
-    "r_pb": 0.525,
+    "D": 0.385,
+    "r_pb": 0.524,
     "a": 1.0,
     "b": 1.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.184,
-    "flags": [
-     "слабая дискриминация"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3563,18 +2724,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.415,
-    "D": 0.452,
-    "r_pb": 0.39,
+    "p": 0.442,
+    "D": 0.504,
+    "r_pb": 0.399,
     "a": 1.1,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.401,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3586,16 +2742,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.476,
-    "D": 0.544,
-    "r_pb": 0.435,
+    "p": 0.494,
+    "D": 0.541,
+    "r_pb": 0.421,
     "a": 1.1,
     "b": 0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.538,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3607,18 +2760,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.649,
-    "D": 0.47,
-    "r_pb": 0.398,
+    "p": 0.682,
+    "D": 0.493,
+    "r_pb": 0.417,
     "a": 1.1,
     "b": -0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.222,
-    "flags": [
-     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3631,20 +2779,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.375,
-    "D": 0.417,
-    "r_pb": 0.55,
+    "p": 0.393,
+    "D": 0.432,
+    "r_pb": 0.527,
     "a": 1.0,
     "b": 0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.233,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3657,16 +2798,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.419,
-    "D": 0.53,
-    "r_pb": 0.442,
+    "p": 0.427,
+    "D": 0.511,
+    "r_pb": 0.403,
     "a": 1.1,
     "b": 0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.522,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -3679,9 +2817,9 @@
      "intern",
      "junior"
     ],
-    "p": 0.742,
-    "D": 0.363,
-    "r_pb": 0.342,
+    "p": 0.76,
+    "D": 0.389,
+    "r_pb": 0.341,
     "a": 1.0,
     "b": -1.3,
     "weak_sim": false,
@@ -3697,16 +2835,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.468,
-    "D": 0.493,
-    "r_pb": 0.398,
+    "p": 0.463,
+    "D": 0.552,
+    "r_pb": 0.437,
     "a": 1.1,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.321,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3719,22 +2854,15 @@
      "middle",
      "senior"
     ],
-    "p": 0.39,
-    "D": 0.485,
-    "r_pb": 0.414,
+    "p": 0.36,
+    "D": 0.507,
+    "r_pb": 0.418,
     "a": 1.2,
     "b": 0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.055,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -3745,17 +2873,12 @@
      "senior"
     ],
     "p": 0.297,
-    "D": 0.367,
-    "r_pb": 0.522,
+    "D": 0.384,
+    "r_pb": 0.528,
     "a": 1.0,
     "b": 1.133,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.281,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3768,21 +2891,15 @@
      "junior",
      "middle"
     ],
-    "p": 0.407,
-    "D": 0.448,
-    "r_pb": 0.375,
+    "p": 0.41,
+    "D": 0.43,
+    "r_pb": 0.352,
     "a": 1.1,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": -0.003,
-    "flags": [
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -3793,16 +2910,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.489,
-    "D": 0.559,
-    "r_pb": 0.452,
+    "p": 0.513,
+    "D": 0.57,
+    "r_pb": 0.421,
     "a": 1.2,
     "b": -0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.226,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3814,18 +2928,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.534,
-    "D": 0.481,
-    "r_pb": 0.398,
+    "p": 0.55,
+    "D": 0.533,
+    "r_pb": 0.434,
     "a": 1.1,
     "b": -0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.326,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3838,9 +2947,9 @@
      "middle",
      "senior"
     ],
-    "p": 0.325,
-    "D": 0.315,
-    "r_pb": 0.269,
+    "p": 0.357,
+    "D": 0.407,
+    "r_pb": 0.322,
     "a": 0.9,
     "b": 0.9,
     "weak_sim": false,
@@ -3856,19 +2965,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.456,
-    "D": 0.533,
-    "r_pb": 0.425,
+    "p": 0.468,
+    "D": 0.515,
+    "r_pb": 0.409,
     "a": 1.1,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3881,19 +2984,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.549,
-    "D": 0.567,
-    "r_pb": 0.449,
+    "p": 0.555,
+    "D": 0.563,
+    "r_pb": 0.452,
     "a": 1.2,
     "b": -0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.157,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3905,18 +3002,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.439,
-    "D": 0.478,
-    "r_pb": 0.396,
+    "p": 0.429,
+    "D": 0.463,
+    "r_pb": 0.377,
     "a": 1.1,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.257,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3928,16 +3020,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.427,
-    "D": 0.485,
-    "r_pb": 0.416,
+    "p": 0.456,
+    "D": 0.526,
+    "r_pb": 0.411,
     "a": 1.1,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261005_ext2",
-    "r_pb_panel": null,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3949,9 +3038,9 @@
     "grades": [
      "senior"
     ],
-    "p": 0.293,
-    "D": 0.378,
-    "r_pb": 0.348,
+    "p": 0.269,
+    "D": 0.459,
+    "r_pb": 0.411,
     "a": 0.9,
     "b": 1.2,
     "weak_sim": false,
@@ -3967,20 +3056,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.301,
+    "p": 0.279,
     "D": 0.415,
-    "r_pb": 0.544,
+    "r_pb": 0.552,
     "a": 1.0,
     "b": 1.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.19,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -3992,18 +3074,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.434,
-    "D": 0.474,
-    "r_pb": 0.375,
+    "p": 0.437,
+    "D": 0.5,
+    "r_pb": 0.396,
     "a": 1.0,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.189,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4015,18 +3092,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.415,
-    "D": 0.511,
-    "r_pb": 0.417,
+    "p": 0.441,
+    "D": 0.478,
+    "r_pb": 0.372,
     "a": 1.0,
     "b": 0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.238,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4038,22 +3110,15 @@
     "grades": [
      "junior"
     ],
-    "p": 0.688,
-    "D": 0.515,
-    "r_pb": 0.436,
+    "p": 0.681,
+    "D": 0.478,
+    "r_pb": 0.399,
     "a": 1.1,
     "b": -0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.068,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -4064,18 +3129,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.587,
-    "D": 0.474,
-    "r_pb": 0.382,
+    "p": 0.57,
+    "D": 0.433,
+    "r_pb": 0.348,
     "a": 1.0,
     "b": -0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.295,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4088,18 +3148,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.556,
-    "D": 0.422,
-    "r_pb": 0.335,
+    "p": 0.558,
+    "D": 0.611,
+    "r_pb": 0.454,
     "a": 1.0,
     "b": -0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.165,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4112,21 +3167,15 @@
      "junior",
      "middle"
     ],
-    "p": 0.599,
-    "D": 0.533,
-    "r_pb": 0.431,
+    "p": 0.574,
+    "D": 0.57,
+    "r_pb": 0.429,
     "a": 1.1,
     "b": -0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.143,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "слабая дискриминация"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -4136,24 +3185,15 @@
     "grades": [
      "senior"
     ],
-    "p": 0.456,
-    "D": 0.496,
-    "r_pb": 0.399,
+    "p": 0.43,
+    "D": 0.463,
+    "r_pb": 0.361,
     "a": 1.0,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.032,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "нет ступеньки по θ условий",
-     "слабая дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": true
    },
    {
@@ -4164,18 +3204,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.43,
-    "D": 0.515,
-    "r_pb": 0.413,
+    "p": 0.442,
+    "D": 0.511,
+    "r_pb": 0.387,
     "a": 1.0,
     "b": 0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.269,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4188,18 +3223,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.346,
-    "D": 0.437,
-    "r_pb": 0.354,
+    "p": 0.318,
+    "D": 0.448,
+    "r_pb": 0.363,
     "a": 1.1,
     "b": 0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.196,
-    "flags": [
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4212,9 +3242,9 @@
      "intern",
      "junior"
     ],
-    "p": 0.723,
-    "D": 0.411,
-    "r_pb": 0.363,
+    "p": 0.744,
+    "D": 0.426,
+    "r_pb": 0.392,
     "a": 1.0,
     "b": -1.2,
     "weak_sim": false,
@@ -4230,22 +3260,15 @@
     "grades": [
      "middle"
     ],
-    "p": 0.509,
-    "D": 0.515,
-    "r_pb": 0.419,
+    "p": 0.49,
+    "D": 0.6,
+    "r_pb": 0.467,
     "a": 1.1,
     "b": 0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": -0.09,
-    "flags": [
-     "нет ступеньки по θ условий",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -4256,21 +3279,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.37,
-    "D": 0.42,
-    "r_pb": 0.531,
+    "p": 0.361,
+    "D": 0.419,
+    "r_pb": 0.532,
     "a": 1.0,
     "b": 0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.162,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4282,18 +3297,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.66,
-    "D": 0.533,
-    "r_pb": 0.43,
+    "p": 0.653,
+    "D": 0.463,
+    "r_pb": 0.392,
     "a": 1.0,
     "b": -0.8,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.338,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4305,9 +3315,9 @@
     "grades": [
      "senior"
     ],
-    "p": 0.304,
-    "D": 0.396,
-    "r_pb": 0.335,
+    "p": 0.286,
+    "D": 0.319,
+    "r_pb": 0.285,
     "a": 0.9,
     "b": 1.2,
     "weak_sim": false,
@@ -4323,23 +3333,15 @@
     "grades": [
      "middle"
     ],
-    "p": 0.463,
-    "D": 0.507,
-    "r_pb": 0.402,
+    "p": 0.479,
+    "D": 0.522,
+    "r_pb": 0.401,
     "a": 1.0,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": -0.067,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "нет ступеньки по θ условий",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -4350,16 +3352,13 @@
      "middle",
      "senior"
     ],
-    "p": 0.465,
-    "D": 0.548,
-    "r_pb": 0.434,
+    "p": 0.422,
+    "D": 0.493,
+    "r_pb": 0.378,
     "a": 1.0,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.494,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -4372,18 +3371,13 @@
      "junior",
      "middle"
     ],
-    "p": 0.478,
+    "p": 0.482,
     "D": 0.485,
-    "r_pb": 0.39,
+    "r_pb": 0.374,
     "a": 1.0,
     "b": 0.1,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.323,
-    "flags": [
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4395,22 +3389,15 @@
     "grades": [
      "middle"
     ],
-    "p": 0.462,
-    "D": 0.5,
-    "r_pb": 0.394,
+    "p": 0.505,
+    "D": 0.515,
+    "r_pb": 0.42,
     "a": 1.1,
     "b": 0.0,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.073,
-    "flags": [
-     "нет ступеньки по θ условий",
-     "слабая дискриминация",
-     "спорная строка дефекта (≥40 % ответов ≥7B — соседняя)"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -4420,16 +3407,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.418,
-    "D": 0.526,
-    "r_pb": 0.423,
+    "p": 0.416,
+    "D": 0.47,
+    "r_pb": 0.399,
     "a": 1.1,
     "b": 0.4,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.482,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4441,24 +3425,15 @@
     "grades": [
      "middle"
     ],
-    "p": 0.361,
-    "D": 0.456,
-    "r_pb": 0.582,
+    "p": 0.353,
+    "D": 0.462,
+    "r_pb": 0.592,
     "a": 1.1,
     "b": 0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.041,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)",
-     "варианты неизоморфны (σ>0,5 и χ² p<0,01)",
-     "нет ступеньки по θ условий",
-     "отрицательная дискриминация",
-     "слишком трудное"
-    ],
-    "weak_panel": true,
-    "weak": true,
+    "weak_panel": false,
+    "weak": false,
     "audit_rework": false
    },
    {
@@ -4468,18 +3443,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.571,
-    "D": 0.467,
-    "r_pb": 0.367,
+    "p": 0.621,
+    "D": 0.507,
+    "r_pb": 0.412,
     "a": 1.0,
     "b": -0.5,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.538,
-    "flags": [
-     "малые модели решают «в лоб»"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4491,16 +3461,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.292,
-    "D": 0.396,
-    "r_pb": 0.371,
+    "p": 0.32,
+    "D": 0.378,
+    "r_pb": 0.332,
     "a": 1.0,
     "b": 0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.566,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4512,16 +3479,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.328,
-    "D": 0.356,
-    "r_pb": 0.331,
+    "p": 0.35,
+    "D": 0.411,
+    "r_pb": 0.35,
     "a": 1.0,
     "b": 0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.447,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4534,8 +3498,8 @@
      "senior"
     ],
     "p": 0.235,
-    "D": 0.311,
-    "r_pb": 0.308,
+    "D": 0.381,
+    "r_pb": 0.371,
     "a": 1.0,
     "b": 1.4,
     "weak_sim": false,
@@ -4551,18 +3515,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.397,
-    "D": 0.436,
-    "r_pb": 0.56,
+    "p": 0.387,
+    "D": 0.453,
+    "r_pb": 0.578,
     "a": 1.1,
     "b": 0.533,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.304,
-    "flags": [
-     "qcoder-32b-awq ниже угадывания (ловушка или формулировка)"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4574,18 +3533,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.656,
-    "D": 0.463,
-    "r_pb": 0.403,
+    "p": 0.657,
+    "D": 0.37,
+    "r_pb": 0.328,
     "a": 1.0,
     "b": -0.8,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.423,
-    "flags": [
-     "малые модели решают «в лоб»"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4598,9 +3552,9 @@
      "intern",
      "junior"
     ],
-    "p": 0.746,
-    "D": 0.352,
-    "r_pb": 0.333,
+    "p": 0.716,
+    "D": 0.33,
+    "r_pb": 0.301,
     "a": 1.0,
     "b": -1.3,
     "weak_sim": false,
@@ -4616,18 +3570,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.448,
-    "D": 0.533,
-    "r_pb": 0.422,
+    "p": 0.476,
+    "D": 0.563,
+    "r_pb": 0.443,
     "a": 1.0,
     "b": 0.2,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.175,
-    "flags": [
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4639,9 +3588,9 @@
     "grades": [
      "senior"
     ],
-    "p": 0.272,
-    "D": 0.37,
-    "r_pb": 0.347,
+    "p": 0.268,
+    "D": 0.367,
+    "r_pb": 0.342,
     "a": 1.0,
     "b": 1.2,
     "weak_sim": false,
@@ -4657,16 +3606,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.69,
+    "p": 0.698,
     "D": 0.407,
-    "r_pb": 0.365,
+    "r_pb": 0.367,
     "a": 1.1,
     "b": -0.9,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.469,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4678,16 +3624,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.337,
-    "D": 0.415,
-    "r_pb": 0.368,
+    "p": 0.328,
+    "D": 0.444,
+    "r_pb": 0.392,
     "a": 1.1,
     "b": 0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.515,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -4699,19 +3642,13 @@
     "grades": [
      "senior"
     ],
-    "p": 0.369,
-    "D": 0.426,
-    "r_pb": 0.361,
+    "p": 0.387,
+    "D": 0.515,
+    "r_pb": 0.418,
     "a": 1.0,
     "b": 0.6,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.192,
-    "flags": [
-     "возможна неизоморфность (σ>0,5, χ² не знач.)",
-     "слишком трудное"
-    ],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4723,16 +3660,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.67,
-    "D": 0.404,
-    "r_pb": 0.357,
+    "p": 0.677,
+    "D": 0.478,
+    "r_pb": 0.395,
     "a": 1.0,
     "b": -0.8,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.421,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -4744,16 +3678,13 @@
     "grades": [
      "middle"
     ],
-    "p": 0.427,
+    "p": 0.433,
     "D": 0.496,
-    "r_pb": 0.399,
+    "r_pb": 0.412,
     "a": 1.0,
     "b": 0.3,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.558,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": true
@@ -4765,16 +3696,13 @@
     "grades": [
      "junior"
     ],
-    "p": 0.64,
-    "D": 0.47,
-    "r_pb": 0.389,
+    "p": 0.636,
+    "D": 0.489,
+    "r_pb": 0.418,
     "a": 1.1,
     "b": -0.7,
     "weak_sim": false,
     "reasons": [],
-    "panel": "panel_20261006",
-    "r_pb_panel": 0.47,
-    "flags": [],
     "weak_panel": false,
     "weak": false,
     "audit_rework": false
@@ -4806,5 +3734,5 @@
   "ci": null,
   "icc": null
  },
- "seconds": 27.6
+ "seconds": 23.8
 }
