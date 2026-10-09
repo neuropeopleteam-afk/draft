@@ -31,7 +31,9 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
-            <GradeBadge s={c.status} claimed={c.claimed} />
+            {/* мини-тест QR (3 задания): категория предварительная — не «Грейд подтверждён» (Ф3) */}
+            {c.category?.preliminary ? <span className="chip" title="Мини-тест из 3 заданий: категория не выше Middle, полный тест уточнит грейд">по мини-тесту</span>
+              : <GradeBadge s={c.status} claimed={c.claimed} />}
             {badge}
           </div>
           <MustLine m={must} />
@@ -60,9 +62,10 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
             : c.status?.attempt?.theta != null ? <p className="mt-1 text-brand-ink/65">последняя попытка на {c.status.attempt.grade_title ?? c.status.attempt.grade}: θ = {signed(c.status.attempt.theta)} ± {num(c.status.attempt.se)} — грейд не подтверждён, в скор не входит</p>
             : <p className="mt-1 text-brand-ink/65">нет результата</p>}
           {c.provisional && <p className="mt-1 text-xs text-brand-ink/70">P(уровень не ниже Junior) = {c.provisional.p_pct} % · подтверждение от {c.provisional.confirm_pct} %, «не доказанно ниже» от {c.provisional.level_pct} %{c.provisional.attempts ? ` · дотестирований ${c.provisional.attempts} из ${c.provisional.attempts_max}` : ""}</p>}
-          {t && (t.mode === "express" || t.accepted_lower) && (
+          {t && (t.mode === "express" || t.mode === "mini" || t.accepted_lower) && (
             <p className="mt-1 flex flex-wrap gap-1.5">
               {t.mode === "express" && <span className="chip" title="Экспресс-тест: 5–7 коротких заданий (за Senior — 8–12), интервал θ шире, чем у полного теста">экспресс-тест</span>}
+              {t.mode === "mini" && <span className="chip" title="Мини-тест из 3 заданий: категория предварительная и не выше Middle, полный тест уточнит грейд">мини-тест · предварительно</span>}
               {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом (P ≥ 80 %) и принят кандидатом">принят уровень ниже</span>}
             </p>
           )}

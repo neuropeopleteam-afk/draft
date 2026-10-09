@@ -422,6 +422,11 @@ def test_all_demo_targets_get_hiring_stage(client, ats_http):  # noqa: F811
     assert hook["signature_valid"] and hook["payload"]["stage"] == "interview" and hook["payload"]["candidate_ref"]
     assert "Иван" not in str(hook["payload"]) and "111-22-33" not in str(hook["payload"])  # без ПДн
     assert any(r["kind"] == "talantix_transfer" for r in recs)
+    # карточка приглашения (ats_transfers, Ф4): «Передано: Поток · этап «Интервью»» и этап найма у Talantix
+    row = next(i for i in client.get("/api/employer/invitations", headers=H(te)).json() if i["id"] == inv)
+    tr = {x["target"]: x for x in row["ats_transfers"]}
+    assert tr["potok"]["state"] == "sent" and tr["potok"]["stage"]["name"] == "Интервью", tr["potok"]
+    assert tr["talantix"]["stage"]["name"] == "Интервью" and tr["talantix"]["stage"]["stage"] == "interview"
 
 
 def test_ats_failure_does_not_block_hiring(client, monkeypatch):
