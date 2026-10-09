@@ -2,6 +2,7 @@
 // У каждой системы — режим «Демо» (заглушка повторяет её API) или «Реальный» (токены владельца аккаунта),
 // «Проверить подключение», выбор вакансии и этапа из ATS. Журнал передач со статусами, шагами и «Повторить».
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageTitle } from "../components/CabinetLayout";
 import { Alert, Empty, Field, Loading, Seg, Toggle, dtt, errText, num, useApi } from "../components/ui";
 import { api, apiDownload } from "../lib/api";
@@ -498,26 +499,87 @@ const StageChip = ({ e }: { e: StageEvent }) => (
   <span className={`whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold ${STAGE_TONE[e.stage ?? ""] ?? STAGE_TONE.review}`}>{e.stage_title}</span>
 );
 
-const pushText = (r: any[]) => r.map((d) => `${d.target_title ?? TITLES[d.target] ?? d.target}: ${d.already_sent ? "уже передано ранее" : d.status === "ok" ? (d.result?.dedup ? "обновлено, без дубликата" : "передано") : d.error}`).join("; ");
+const pushText = (r: any[]) => {
+  // «уже передано ранее» ×4 одной строкой — не повторяем: сводка по системам, кому отправили, а кому нет
+  const done = r.filter((d) => d.already_sent), fresh = r.filter((d) => !d.already_sent);
+  const name = (d: any) => d.target_title ?? TITLES[d.target] ?? d.target;
+  const parts = fresh.map((d) => `${name(d)}: ${d.status === "ok" ? (d.result?.dedup ? "обновлено, без дубликата" : "передано") : d.error}`);
+  if (done.length) parts.push(`${done.map(name).join(", ")}: передано раньше, повтор не нужен`);
+  return parts.join("; ");
+};
 
-/** Кнопки у принятого приглашения (страница «Приглашения» работодателя). */
-export function AtsInvitationActions({ invitationId, status, candidateRef }: { invitationId: string; status: string; candidateRef?: string }) {
+/** Состояние передачи принятого приглашения по одной ATS (ответ работодательского API приглашений, поле ats_transfers). */
+export interface AtsTransfer {
+  target: string; title: string; state: "sent" | "pending" | "error" | "not_sent"; enabled: boolean; at: string | null;
+  auto: boolean; error: string | null; attempts: number;
+  stage: { stage: string; title: string; name: string; at?: string | null; synced: boolean } | null;
+}
+
+/** Карточка приглашения у работодателя: по строке на каждую подключённую ATS — «Передано: Поток · этап «Новые»» /
+ *  «Не передавалось» / ошибка — и кнопки действий по системам (вместо одной «В ATS» с ответом «уже передано» ×4). */
+export function AtsInvitationActions({ invitationId, status, candidateRef, transfers, onChanged }: {
+  invitationId: string; status: string; candidateRef?: string; transfers?: AtsTransfer[]; onChanged?: () => void;
+}) {
   const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
   if (status !== "accepted") return null;
-  async function push() {
-    setMsg(null); setBusy(true);
-    try { const r = await api<any[]>("/employer/ats/push", { body: { invitation_id: invitationId } }); setMsg({ k: r.every((d) => d.status === "ok") ? "ok" : "error", t: pushText(r) || "Нет подключённых ATS" }); }
-    catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(false); }
+  const list = transfers ?? [];
+  const todo = list.filter((x) => x.enabled && (x.state === "not_sent" || x.state === "error"));
+  async function run(key: string, body: Record<string, unknown>) {
+    setMsg(null); setBusy(key);
+    try {
+      const r = await api<any[]>("/employer/ats/push", { body: { invitation_id: invitationId, ...body } });
+      setMsg({ k: r.every((d) => d.status === "ok") ? "ok" : "error", t: pushText(r) || "Нет подключённых ATS" });
+      onChanged?.();
+    } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(null); }
+  }
+  async function syncStage() {
+    setMsg(null); setBusy("sync");
+    try {
+      const r = await api<any>("/employer/ats/stages/sync", { method: "POST" });
+      setMsg(r.error ? { k: "error", t: `Опрос «Потока»: ${r.error}` } : { k: "ok", t: `Этапы из «Потока» обновлены: проверено ${num(r.checked, 0)}, изменений ${num(r.changed, 0)}.` });
+      onChanged?.();
+    } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(null); }
   }
   return (
-    <div className="space-y-2">
+    <section className="space-y-2" aria-label="Передача в ATS">
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Передача в ATS</p>
+      {!list.length ? (
+        <p className="text-brand-ink/70">ATS не подключена: принятого кандидата можно выгрузить в JSON или <Link className="font-semibold text-brand hover:underline" to="/employer/ats">подключить систему</Link>.</p>
+      ) : (
+        <ul className="space-y-2">
+          {list.map((x) => (
+            <li key={x.target} className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#F3F2FB] px-3 py-2" data-testid={`ats-transfer-${x.target}`}>
+              <div className="min-w-0 [overflow-wrap:anywhere]">
+                {x.state === "sent" ? (
+                  <p><b className="text-emerald-700">Передано:</b> {x.title}{x.stage ? ` · этап «${x.stage.name}»` : ""}
+                    <span className="text-brand-ink/65"> · {dtt(x.at)}{x.auto ? ", автоматически при принятии" : ""}</span></p>
+                ) : x.state === "pending" ? <p><b>{x.title}:</b> передаётся…</p>
+                  : x.state === "error" ? <p><b className="text-brand-plum">{x.title}:</b> не передано — {x.error ?? "ошибка ATS"}</p>
+                    : <p><b>{x.title}:</b> <span className="text-brand-ink/70">не передавалось{x.enabled ? "" : " (ATS отключена)"}</span></p>}
+                {x.target === "potok" && x.state === "sent" && (
+                  <p className="mt-0.5 text-xs text-brand-ink/65">
+                    {x.stage?.synced
+                      ? `Этап читается из «Потока» обратным каналом: сейчас «${x.stage.title.toLowerCase()}», обновлено ${dtt(x.stage.at)}.`
+                      : "Этап обновится по обратному каналу «Потока»: платформа опрашивает его периодически и по кнопке «Обновить этап»."}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {x.state === "sent" && x.enabled && <button className="btn-ghost !px-3 !py-1.5 !text-xs" disabled={!!busy} onClick={() => run(x.target, { target: x.target, force: true })}>{busy === x.target ? "Обновляем…" : "Обновить в ATS"}</button>}
+                {x.target === "potok" && x.state === "sent" && <button className="btn-ghost !px-3 !py-1.5 !text-xs" disabled={!!busy} onClick={syncStage}>{busy === "sync" ? "Опрашиваем…" : "Обновить этап"}</button>}
+                {(x.state === "not_sent" || x.state === "error") && x.enabled && <button className="btn-ghost !px-3 !py-1.5 !text-xs" disabled={!!busy} onClick={() => run(x.target, { target: x.target })}>{busy === x.target ? "Передаём…" : x.state === "error" ? "Повторить" : "Передать"}</button>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
       <div className="flex flex-wrap gap-2">
-        <button className="btn-ghost" disabled={busy} onClick={push}>{busy ? "Передаём…" : "В ATS"}</button>
+        {todo.length > 1 && <button className="btn-ghost" disabled={!!busy} onClick={() => run("all", {})}>{busy === "all" ? "Передаём…" : `Передать во все (${todo.length})`}</button>}
         <button className="btn-ghost" onClick={() => apiDownload(`/employer/invitations/${invitationId}/export.json`, `candidate-${candidateRef ?? invitationId}.json`)}>Экспорт JSON</button>
       </div>
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
-    </div>
+    </section>
   );
 }
 
