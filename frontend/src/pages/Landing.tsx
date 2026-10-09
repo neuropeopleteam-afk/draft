@@ -171,6 +171,8 @@ const JURY: { id: Persona; title: string; text: string }[] = [
   { id: "fsp", title: "Федерация (ФСП)", text: "Кабинет ФСП: спрос работодателей, эффект соревнований на приглашения, зарплаты из офферов. Только агрегаты." },
 ];
 
+const MAIN_ROLES: Persona[] = ["candidate", "employer", "candidate_new"];
+
 function JuryBlock() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -207,8 +209,9 @@ function JuryBlock() {
             <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
           </div>
         </div>
+        {/* Ф6 (В1): три основных входа карточками, остальные роли — компактным рядом (те же кнопки, описание в подсказке и ниже) */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {JURY.map((p) => (
+          {JURY.filter((p) => MAIN_ROLES.includes(p.id)).map((p) => (
             <button key={p.id} onClick={() => enter(p.id)} disabled={!!busy}
               aria-label={`Войти как: ${p.title}`}
               className="card flex h-full flex-col items-start border-transparent p-5 text-left transition-shadow hover:shadow-md hover:ring-2 hover:ring-brand/40 focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-60 sm:p-5">
@@ -218,6 +221,23 @@ function JuryBlock() {
               <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-semibold text-brand">{busy === p.id ? "Входим…" : <>Войти<span aria-hidden="true">→</span></>}</span>
             </button>
           ))}
+        </div>
+        <div className="mt-4 rounded-2xl bg-white/70 p-4 ring-1 ring-brand-night/10" data-testid="jury-more-roles">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="mr-1 font-semibold text-brand-night">Ещё роли:</span>
+            {JURY.filter((p) => !MAIN_ROLES.includes(p.id)).map((p) => (
+              <button key={p.id} onClick={() => enter(p.id)} disabled={!!busy} title={p.text}
+                aria-label={`Войти как: ${p.title}`} className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-60">
+                {busy === p.id ? "Входим…" : p.title}
+              </button>
+            ))}
+          </div>
+          <details className="mt-2 text-xs text-brand-ink/70">
+            <summary className="cursor-pointer font-semibold text-brand-plum">Что в этих ролях</summary>
+            <ul className="mt-2 space-y-1.5">
+              {JURY.filter((p) => !MAIN_ROLES.includes(p.id)).map((p) => <li key={p.id}><b className="text-brand-night">{p.title}.</b> {p.text}</li>)}
+            </ul>
+          </details>
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
           <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { guide.enable(); guide.show(); guide.setStep(0); navigate("/register?role=candidate"); }}>

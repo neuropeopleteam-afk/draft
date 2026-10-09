@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { GUIDE_EVENT, guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/jury";
@@ -7,16 +8,17 @@ import { errText } from "./ui";
 
 const PERSONA_NAME: Record<string, string> = {
   candidate: "демо-кандидат с ФСП", candidate_nofsp: "демо-кандидат без ФСП", candidate_junior: "демо-кандидат Junior (предварительно)",
-  candidate_new: "демо-кандидат без категории", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
+  candidate_new: "демо-кандидат «Пройдите тест сами»", employer: "демо-работодатель", expert: "демо-эксперт", fsp: "демо-аналитик ФСП",
 };
 const whoAmI = (email: string) => {
   const p = personaOf(email);
   return p ? `${PERSONA_NAME[p]} · ${email.includes("+") ? "своя копия демо" : "общее демо"}` : email;
 };
 
-/** Проводник не должен закрывать кнопки страницы: на телефоне (кнопка или панель во всю ширину низа) место резервируется
- * внизу страницы, на широком экране (≥ 1280 px) у открытой панели — справа (поля body), чтобы последние кнопки и
- * строки можно было прокрутить выше панели и левее неё. */
+/** Проводник не должен закрывать кнопки страницы: у открытой панели на широком экране (≥ 1280 px) место резервируется
+ * справа (поля body), на остальных — внизу страницы, чтобы последние кнопки и строки можно было прокрутить выше панели
+ * и левее неё (Ф4). Ф6: и на 640–1279 px; высота панели до 36vh (на телефоне до 38vh) — кнопка в середине видимой области (под шапкой, scroll-padding 6rem)
+ * никогда не оказывается под панелью. */
 function useReserveSpace(el: HTMLElement | null, side: boolean) {
   useEffect(() => {
     const phone = window.matchMedia("(max-width: 639px)");
@@ -25,8 +27,8 @@ function useReserveSpace(el: HTMLElement | null, side: boolean) {
     if (!el) return clear;
     const set = () => {
       clear();
-      if (phone.matches) document.body.style.setProperty("padding-bottom", `${el.offsetHeight + 16}px`);
-      else if (side && wide.matches) document.body.style.setProperty("padding-right", `${el.offsetWidth + 24}px`);
+      if (side && wide.matches && !phone.matches) document.body.style.setProperty("padding-right", `${el.offsetWidth + 24}px`);
+      else document.body.style.setProperty("padding-bottom", `${el.offsetHeight + 16}px`);
     };
     const ro = new ResizeObserver(set);
     ro.observe(el);
@@ -35,6 +37,34 @@ function useReserveSpace(el: HTMLElement | null, side: boolean) {
     set();
     return () => { ro.disconnect(); phone.removeEventListener("change", set); wide.removeEventListener("change", set); clear(); };
   }, [el, side]);
+}
+
+// Ф6 (В8): свёрнутый проводник в кабинете — не плавающая кнопка над содержимым, а кнопка в шапке на месте подписи роли
+// (< 768 px) или внизу бокового меню (≥ 768 px). Вне кабинета (главная, /validation, регистрация) — плавающая кнопка, как раньше.
+type SlotKey = "header" | "sidebar";
+const slots: Record<SlotKey, HTMLElement | null> = { header: null, sidebar: null };
+const slotSubs = new Set<() => void>();
+const slotRef = (k: SlotKey) => (el: HTMLElement | null) => { if (slots[k] !== el) { slots[k] = el; slotSubs.forEach((f) => f()); } };
+const SLOT_REFS = { header: slotRef("header"), sidebar: slotRef("sidebar") };
+/** Место для свёрнутого проводника — ставит CabinetLayout. */
+export function GuideSlot({ where }: { where: SlotKey }) {
+  return <span ref={SLOT_REFS[where]} className={where === "header" ? "peer contents" : "block"} />;
+}
+function useMedia(q: string) {
+  const [m, setM] = useState(() => window.matchMedia(q).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(q);
+    const f = () => setM(mq.matches);
+    mq.addEventListener("change", f); f();
+    return () => mq.removeEventListener("change", f);
+  }, [q]);
+  return m;
+}
+function useSlot(): HTMLElement | null {
+  const md = useMedia("(min-width: 768px)");
+  const [, bump] = useState(0);
+  useEffect(() => { const f = () => bump((n) => n + 1); slotSubs.add(f); return () => { slotSubs.delete(f); }; }, []);
+  return slots[md ? "sidebar" : "header"];
 }
 
 /** Пошаговый проводник для экспертов жюри по сквозному сценарию (п. 3.3 ТЗ). Можно скрыть. */
@@ -48,6 +78,7 @@ export function JuryGuide() {
   const [msg, setMsg] = useState<string | null>(null);
   const [box, setBox] = useState<HTMLElement | null>(null);
   useReserveSpace(box, !hidden);
+  const slot = useSlot();
   const [sim, setSim] = useState<any>(null);  // результат «смоделировать нового кандидата» (И25)
   const [ff, setFf] = useState<string | null>(null);  // «перемотать время»: напоминания Н6
   const active = guide.on() || isJury(me?.email);
@@ -73,6 +104,13 @@ export function JuryGuide() {
   // экран кода второго фактора (/login/2fa) — тоже: на телефоне панель перекрывала бы форму
   if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa") return null;
   if (hidden) {
+    if (slot) return createPortal(
+      <button type="button" onClick={() => guide.show()} aria-label="Показать проводник для жюри" title="Проводник для экспертов жюри"
+        className={slot === slots.sidebar
+          ? "mb-3 w-full rounded-xl bg-brand-night px-3 py-2 text-left text-sm font-semibold text-white hover:bg-brand-plum"
+          : "ml-auto shrink-0 whitespace-nowrap rounded-full bg-brand-night px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-plum"}>
+        {slot === slots.sidebar ? `Проводник жюри · шаг ${step + 1}/${STEPS.length}` : `Проводник ${step + 1}/${STEPS.length}`}
+      </button>, slot);
     return (
       <button ref={setBox} className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm"
         onClick={() => guide.show()} aria-label="Показать проводник для жюри">
@@ -119,7 +157,7 @@ export function JuryGuide() {
   }
 
   return (
-    <aside ref={setBox} className="fixed inset-x-2 bottom-2 z-40 max-h-[min(55vh,26rem)] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-3.5 text-white shadow-2xl ring-1 ring-white/10 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-h-[calc(100vh-6rem)] sm:w-[min(24rem,calc(100vw-2rem))] sm:p-4"
+    <aside ref={setBox} className="fixed inset-x-2 bottom-2 z-40 max-h-[min(38vh,24rem)] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-3.5 text-white shadow-2xl ring-1 ring-white/10 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-h-[min(36vh,22rem)] xl:max-h-[calc(100vh-6rem)] sm:w-[min(24rem,calc(100vw-2rem))] sm:p-4"
       aria-label="Проводник для экспертов жюри">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>

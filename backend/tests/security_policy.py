@@ -396,6 +396,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
     ("GET", "/api/validation/attempts-repeat"): "open",  # feat/attempts (И26)
+    ("GET", "/api/validation/test-length"): "open",  # Ф6 (Н8): длина теста на экране старта
     ("POST", "/api/validation/self-check"): "auth",  # feat/jury-test
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",

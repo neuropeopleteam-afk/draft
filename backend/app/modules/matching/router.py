@@ -17,7 +17,7 @@ from app.core.errors import api_error, err
 from app.core.ratelimit import SlidingWindow, hit
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import GRADES
+from app.modules.catalog.seed_data import GRADES, tag_title
 from app.modules.invitations.models import Invitation, Probe
 from app.modules.invitations.service import (
     INVITATION_COOLDOWN_DAYS,
@@ -175,13 +175,21 @@ def _own_need(db: Session, company: Company, need_id: uuid.UUID) -> EmployerNeed
 
 
 def _need_title(req: dict) -> str:
-    cats = []
-    if req.get("direction"):
-        cats.append({"backend": "Backend", "frontend": "Frontend", "data_ml": "Data/ML", "qa": "QA",
-                     "security": "ИБ"}[req["direction"]])
-    if req.get("grade"):
-        cats.append(GRADES[req["grade"]])
-    return " · ".join(cats) or "Потребность"
+    """Автоимя потребности. Ф6 (В9): не только категория — разные тексты не сливаются в одно «Backend · Middle»:
+    категория + до трёх главных обязательных навыков (по весу), а у профессии вне справочника (coverage) — её название
+    и ближайшая категория, по которой идёт подбор."""
+    direction = {"backend": "Backend", "frontend": "Frontend", "data_ml": "Data/ML", "qa": "QA",
+                 "security": "ИБ"}.get(req.get("direction") or "")
+    grade = GRADES.get(req.get("grade") or "")
+    cov = req.get("coverage") or {}
+    if cov.get("title"):
+        head = " · ".join(x for x in (cov["title"], grade) if x)
+        return f"{head} (ближайшая категория — {direction})" if direction else head
+    base = " · ".join(x for x in (direction, grade) if x)
+    items = sorted(req.get("stack_required") or [], key=lambda i: -float(i.get("weight") or 0))[:3] \
+        or sorted(req.get("stack_desired") or [], key=lambda i: -float(i.get("weight") or 0))[:2]
+    skills = ", ".join(tag_title(i["tag"]) for i in items if i.get("tag"))
+    return " — ".join(x for x in (base, skills) if x) or "Потребность"
 
 
 def _make_version(db: Session, need: EmployerNeed, user: User, filters: dict, parent: int | None,
