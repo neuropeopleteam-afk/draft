@@ -4,6 +4,9 @@ import { FspRatingValidation } from "../components/validation/FspRating";
 import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
+import Headline from "../components/validation/Headline";
+import PathRetest, { CalibrationCard } from "../components/validation/PathRetest";
+import Ablations from "../components/validation/Ablations";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
@@ -31,9 +34,10 @@ export default function Validation() {
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night md:text-4xl">Как мы проверяем себя</h1>
         <p className="mt-3 max-w-3xl leading-relaxed text-brand-ink/75">
           Все цифры — как получились, без подгонки. Тест проверяется симуляцией на синтетических кандидатах
-          (параметры заданий — экспертная предкалибровка, пока нет калибровки на людях), подбор — на размеченных парах
-          «потребность — кандидат» из демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
+          (параметры заданий — экспертная предкалибровка, пока нет калибровки на людях), подбор — на бенчмарке со скрытой истиной,
+          затем на экспертной разметке и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
         </p>
+        <Headline />
         <ClosedSet />
         {loading ? <div className="mt-8"><Loading /></div> : error ? <div className="mt-8"><Alert>{error}</Alert></div> : r?.missing
           ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div>
@@ -53,7 +57,7 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["headline", "5 чисел"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["matching", "Демо-500"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -70,6 +74,7 @@ function Report({ r }: { r: any }) {
           {r.calibration?.status === "ready" ? `готова (${r.calibration.panel}, семейств: ${r.calibration.n_families}).` : r.calibration?.note}
         </Alert></div>
       </Section>
+      <CalibrationCard />
 
       <Section id="test" title="Тест: точность оценки и решения по грейду (симуляция)"
         lead={`Конфигурация платформы: ${sim.config?.min_items}–${sim.config?.max_items} заданий, до ${sim.config?.max_minutes} мин, ${sim.config?.subpools} субпула, контроль частоты Sympson — Hetter, open book не больше ${sim.config?.max_per_format?.open_book_3step}. Сравнение — с конфигурацией дня 2 (до 20 заданий, 90 мин, без контроля частоты и ротации). ${sim.population ?? ""}`}>
@@ -81,6 +86,7 @@ function Report({ r }: { r: any }) {
       </Section>
 
       <RetestSection sim={sim} />
+      <PathRetest />
       <JuniorStability />
       <InternCutSection ic={r.intern_cut} />
       <OtherConditions sim={sim} />
@@ -107,7 +113,14 @@ function Report({ r }: { r: any }) {
         <LeakShareTable sim={sim} />
       </Section>
 
-      <Section id="matching" title="Качество подбора" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>
+      <MatchingBench />
+      <Ablations />
+
+      {r.experts && <ExpertsSection ex={r.experts} />}
+      <GraderCheck />
+
+      <Section id="matching" title="Подбор на демо-данных: разметка правилами" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>
+        <div className="mb-3"><Alert kind="info"><b>Не доказательство. </b>Метки здесь построены правилами и частично повторяют фильтр категории платформы — оценка циркулярна. Доказательство качества подбора — бенчмарк со скрытой истиной и абляции выше, затем разметка моделью; этот блок показывает только, что подборка на демо-данных работает.</Alert></div>
         <Table head={["Способ", "precision@5", "nDCG@5", "nDCG@10", "Внутри категории: nDCG@3"]}
           rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["BM25 по тексту резюме и потребности", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
             [t, num(m.summary?.["p@5"]?.[k]), num(m.summary?.["ndcg@5"]?.[k]), num(m.summary?.["ndcg@10"]?.[k]), num(m.summary?.["within_category_ndcg@3"]?.[k])])} />
@@ -116,10 +129,6 @@ function Report({ r }: { r: any }) {
         <p className="mt-1 text-xs text-brand-ink/65">Пары и метки: docs/validation/matching_pairs.json</p>
         <FspRatingValidation />
       </Section>
-      <MatchingBench />
-
-      {r.experts && <ExpertsSection ex={r.experts} />}
-      <GraderCheck />
 
       <Section id="live" title="Живые данные платформы">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -356,6 +365,7 @@ function ExpertsSection({ ex }: { ex: any }) {
       {ex.labels > 0 ? <ExpertResults res={ex} kind={modelPanel ? "model" : src?.kind} /> : (
         <p className="mt-4 text-sm text-brand-ink/70">Пока оценок нет, ниже — проверка расчёта на синтетической разметке: те же формулы, заложенная истина, сверка.</p>
       )}
+      {ex.packs?.v2_labeled && <PacksBlock p={ex.packs} />}
       {!ex.llm && ex.llm_without_experts && <div className="mt-4"><LlmTable llm={ex.llm_without_experts} note="Оценки моделей получены, согласие появится после разметки ответов экспертами." /></div>}
       {ex.synthetic_check && (
         <details className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10">
@@ -430,6 +440,35 @@ function ExpertResults({ res, kind = "people" }: { res: any; kind?: string }) {
           <p className="mt-2 text-xs text-brand-ink/65">{res.angoff.reference_only ? "Для экспертов-людей «предложить новый порог» — когда разница больше стандартной ошибки среднего; для модельной панели вывод не делается." : "«Предложить новый порог» — когда разница больше стандартной ошибки среднего по экспертам."} Сдвиг доли — сколько кандидатов при стандартном нормальном распределении уровня сменили бы грейд. Порог меняет владелец после разбора, автоматически не меняется.</p>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Блок A по пакетам v1, v2 и вместе: P@5 и nDCG@10 match-v1 против BM25 с 95 % ДИ, согласие (Р33). */
+const PACK_T: [string, string][] = [["v1", "v1"], ["v2", "v2"], ["all", "v1 + v2"]];
+function PacksBlock({ p }: { p: any }) {
+  const pk = p.packs ?? {};
+  const info = p.pack2 ?? {};
+  const all = pk.all?.summary;
+  const d = (x?: any) => (x?.mean == null ? "—" : `${sgn(x.mean)} [${sgn(x.lo)}; ${sgn(x.hi)}]`);
+  return (
+    <div className="mt-6" data-testid="experts-packs">
+      <h3 className="text-base font-bold text-brand-night">Подбор по экспертной разметке: пакеты v1 и v2</h3>
+      {p.caption && <div className="mt-2" data-testid="experts-packs-caption"><Alert kind="info">{p.caption}</Alert></div>}
+      <p className="mt-2 text-sm text-brand-ink/70">Пакет v2: {info.A_pairs_new} новых пар по {info.A_needs} потребностям ({info.plan}). {info.A_pairs_from_v1 ? `Ещё ${info.A_pairs_from_v1} пар совпали с v1 по снимку карточки — их эталон взят из оценок v1. ` : ""}Метрики считаются по снимку пакета: места и ранги сохранены при сборке и не зависят от пересоздания демо-данных.</p>
+      <div className="mt-3"><Table head={["Пакет", "Метрика", "match-v1", "BM25", "Разность [95 % ДИ]", "p"]}
+        rows={PACK_T.filter(([k]) => pk[k]?.summary).flatMap(([k, t]) => (["p@5", "ndcg@10"] as const).map((m) => {
+          const s = pk[k].summary[m];
+          return [t, m === "p@5" ? "P@5" : "nDCG@10", num(s.platform.mean), num(s.bm25.mean), d(s.diff), pv(s.diff.wilcoxon_p)];
+        }))} /></div>
+      <div className="mt-3"><Table head={["Пакет", "Потребностей", "Пар · оценок", "Согласие: каппа · альфа"]}
+        rows={PACK_T.filter(([k]) => pk[k]).map(([k, t]) => {
+          const r = pk[k];
+          const ag = r.agreement;
+          return [t, `${r.needs_complete} из ${r.needs_total}`, `${r.pairs} · ${r.labels}`, ag ? `${num(ag.kappa_mean)} · ${num(ag.alpha)}` : "—"];
+        })} /></div>
+      {all && <p className="mt-2 text-sm text-brand-ink/75">Чувствительность к неразмеченным: при допущении TREC «неразмеченные кандидаты нерелевантны» разность v1 + v2 — P@5 {d(all["p@5"].diff_trec)}, nDCG@10 {d(all["ndcg@10"].diff_trec)}. Истинная разность — между этой оценкой и консервативной в таблице.</p>}
+      <p className="mt-1 text-xs text-brand-ink/65">Эталон пары — медиана оценок, релевантна от 2. Топ-5 match-v1 размечен полностью. BM25 упорядочивает только размеченные пары пула своей потребности (сжатый список); в v2 из его собственного топ-5 размечено {pct(pk.v2?.bm25_top5_coverage)}, а пул собран по подборке match-v1 — категорийный фильтр BM25 засчитан даром, поэтому разность в таблице консервативна. ДИ — бутстреп по потребностям (одна и та же потребность в v1 и v2 — один кластер), p — знаковый критерий Уилкоксона. Каппа — квадратично взвешенная каппа Коэна, среднее по парам оценщиков; альфа — порядковая альфа Криппендорфа.</p>
     </div>
   );
 }

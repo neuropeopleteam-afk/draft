@@ -6,7 +6,7 @@
   заданным уровнем), паспорт ФСП из демо-реестра (T2); демо-режим жюри включён — правило 90 дней снято;
 * candidate_nofsp — Илья Сергеев, Backend · Middle, тот же путь, но без истории ФСП (нейтральное состояние);
   один развёрнутый ответ оставлен «на проверке» — для экрана эксперта; есть входящее приглашение с вилкой;
-* employer — HR компании «Демо жюри: Северный платёж»: профиль, три потребности текстом (третья — с
+* employer — HR компании «Демо жюри: Северный платёж»: профиль, четыре потребности текстом (третья — с
   дискриминационными фразами для показа фильтра ст. 64 ТК РФ), подборки с версиями;
 * expert — эксперт (роль admin): очередь развёрнутых ответов, оценка по рубрике;
 * fsp — аналитик ФСП (роль fsp_analyst): Кабинет ФСП — обезличенная аналитика платформы (общая, без копий жюри).
@@ -54,6 +54,7 @@ DOMAIN = scope.DOMAIN
 EMAILS = scope.emails("")  # общее демо; песочница — scope.emails(sid)
 COMPANY = "Демо жюри: Северный платёж"
 COMPANY2 = "Демо жюри: Логистика Онлайн"  # второй работодатель песочницы: приглашение Марии на старте (fx01)
+COMPANY3 = "Демо жюри: Быстрый заработок"  # «плохой» работодатель (Ф4): низкий индекс доверия, неправдоподобная вилка
 PERSONAS = [
     {"id": "candidate", "role": "candidate", "title": "Кандидат с паспортом ФСП",
      "description": "Мария Королёва · Backend · Middle и Frontend · Junior. Два отдельных теста, достижения ФСП (T2)."},
@@ -66,7 +67,7 @@ PERSONAS = [
      "description": "Антон Лебедев · Backend · категории нет. Опрос и резюме есть, теста нет: экспресс-тест ≈ 5 минут "
                     "или полный, подсказка грейда, путь до категории и подборки."},
     {"id": "employer", "role": "employer", "title": "Работодатель",
-     "description": "«Северный платёж»: профиль компании, три потребности с цитатами и подборки с объяснениями, "
+     "description": "«Северный платёж»: профиль компании, четыре потребности с цитатами и подборки с объяснениями, "
                     "сравнение кандидатов, фильтр ст. 64 ТК РФ."},
     {"id": "expert", "role": "expert", "title": "Эксперт",
      "description": "Проверка развёрнутых ответов по рубрике: очередь «на проверке» и выборочная проверка LLM."},
@@ -79,9 +80,12 @@ NEEDS = [
     "Frontend-разработчик middle для личного кабинета: React, TypeScript, HTML/CSS обязательно; "
     "желательно тестирование фронтенда. Гибрид, Санкт-Петербург, от 200 до 250 тыс.",
     # Демонстрация фильтра ст. 64 ТК РФ: фразы про пол, возраст, внешность и детей подсвечены, в требования
-    # и в ранжирование не попадают, предложен текст через навыки
+    # и в ранжирование не попадают, предложен текст через навыки. «Офис в Москве или удалённо»: условия потребности
+    # применяются сразу (Ф2) — персоны песочницы (удалённо, Москва) должны проходить условия своих демо-потребностей
     "Python-разработчик middle в отдел интеграций: только мужчины до 35 лет, славянской внешности, без детей, "
-    "в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве, 180–240 тыс.",
+    "в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве или удалённо, 180–240 тыс.",
+    # И18: подборка мала — «Что если» показывает, какое требование отсекает больше всего подтверждённых
+    "Backend-разработчик senior для платёжного шлюза: обязательно PostgreSQL, Kafka и Linux. Удалённо, от 350 тыс. ₽.",
 ]
 STACK = ["python", "fastapi", "postgresql", "redis", "docker", "sql", "git", "linux"]
 
@@ -311,11 +315,15 @@ def delete_jury(db: Session, sid: str = "") -> int:
         live.delete_guests(db, list(db.scalars(select(User.id).where(User.email.like(live.guest_emails_like(sid)))).all()))
         live.bump_sid(db, sid)
     ids = db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all()
+    if sid:  # И25: подписки, лента уведомлений и смоделированные кандидаты песочницы
+        from app.modules.subs import demo as subs_demo
+
+        subs_demo.purge(db, sid, list(ids))
     if ids:  # участия её кандидатов в общих кубках платформы
         db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
     own = Company.created_by.in_(ids) if ids else Company.id.is_(None)
     # компания без автора (автор удалён раньше) — только для общего демо, как было до песочниц
-    cond = and_(Company.name.in_([COMPANY, COMPANY2]), Company.is_demo.is_(True),
+    cond = and_(Company.name.in_([COMPANY, COMPANY2, COMPANY3]), Company.is_demo.is_(True),
                 or_(own, and_(Company.created_by.is_(None), not sid)))
     keys = db.scalars(select(AtsSettings.stub_key).join(Company, Company.id == AtsSettings.company_id)
                       .where(cond, AtsSettings.stub_key.is_not(None))).all()
@@ -374,7 +382,8 @@ def _create_jury(db: Session, sid: str) -> dict:
                            experience=0.5, salary=80_000, want="provisional")
     _, p4 = _candidate_new(db, sid)  # «Пройдите тест сами»: без теста, категории нет — в подборки не попадает
     eu = _user(db, "employer", UserRole.employer, sid)
-    c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург", website="https://example.invalid",
+    c = Company(name=COMPANY, industry="Финансовые технологии", city="Санкт-Петербург",
+                website=f"https://severny-platezh.{DOMAIN}",  # сайт на домене почты: демо-сведения, высокий индекс (Ф4)
                 description="Платёжный сервис для малого бизнеса. Демо-компания для экспертов жюри.",
                 contact_email=f"hr@{DOMAIN}", created_by=eu.id, is_demo=True)
     db.add(c)
@@ -391,8 +400,9 @@ def _create_jury(db: Session, sid: str) -> dict:
         db.add(n)
         db.flush()
         sel = ranking.build_selection(db, req, {})
-        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={}, requirements=req,
-                                results=sel["results"], algorithm_version=sel["algorithm"], created_by=eu.id))
+        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={"_meta": sel["meta"]},
+                                requirements=req, results=sel["results"], algorithm_version=sel["algorithm"],
+                                created_by=eu.id))  # Ф2: снимок версии — открытие без пересчёта
         needs.append(n)
     db.commit()
     from app.modules.invitations.service import create_invitation
@@ -403,8 +413,10 @@ def _create_jury(db: Session, sid: str) -> dict:
                       need_id=needs[0].id, probe_id=None)
     _jury_contact(db, eu, c, p2, p1, needs)  # переписка и встречное предложение (app.modules.contact, И4)
     cups = _jury_cups(db, sid, eu, c, p1)
-    tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2)  # задания работодателя с автопроверкой (И7)
+    tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2, p3)  # задания работодателя с автопроверкой (И7)
     _maria_extras(db, eu, p1)
+    from app.modules.mutual.demo import seed_jury_mutual  # взаимный подбор, отзывы, ссылка руководителю (Н9, Н2, Н3)
+    seed_jury_mutual(db, eu, needs, p1, p2, p3)
     _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
     # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
     ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
@@ -445,12 +457,12 @@ def _jury_cups(db: Session, sid: str, eu: User, c: Company, maria: CandidateProf
 
 
 def _jury_assignments(db: Session, sid: str, eu: User, c: Company, need, maria: CandidateProfile,
-                      ilya: CandidateProfile) -> list[str]:
+                      ilya: CandidateProfile, artem: CandidateProfile | None = None) -> list[str]:
     """Задания работодателя песочницы (И7, app.modules.assignments.demo); сбой не ломает сид жюри."""
     from app.modules.assignments.demo import seed_jury_assignments
 
     try:
-        return seed_jury_assignments(db, sid or scope.SHARED, eu, c, need, maria, ilya)
+        return seed_jury_assignments(db, sid or scope.SHARED, eu, c, need, maria, ilya, artem)
     except Exception:  # noqa: BLE001
         db.rollback()
         log.exception("jury: demo assignments failed")
@@ -466,7 +478,7 @@ def _maria_extras(db: Session, eu: User, maria: CandidateProfile) -> None:
     from app.modules.invitations.service import create_invitation
 
     try:
-        c2 = Company(name=COMPANY2, industry="Логистика", city="Казань", website="https://example.invalid",
+        c2 = Company(name=COMPANY2, industry="Логистика", city="Казань", website=f"https://logistika-online.{DOMAIN}",
                      description="Сервис доставки для интернет-магазинов. Демо-компания для экспертов жюри.",
                      contact_email=f"hr-logistics@{DOMAIN}", created_by=eu.id, is_demo=True)
         db.add(c2)
@@ -475,6 +487,20 @@ def _maria_extras(db: Session, eu: User, maria: CandidateProfile) -> None:
                           offer_description="Расчёт маршрутов и слотов доставки: FastAPI, PostgreSQL, Redis. "
                                             "Гибрид в Казани или удалённо.",
                           salary_from=230_000, salary_to=270_000, contact_method="Звонок HR 15 минут",
+                          need_id=None, probe_id=None)
+        # «плохой» работодатель (Ф4): индекс доверия низкий — записи в реестре нет, почта на бесплатном сервисе,
+        # вилка втрое выше рынка. Приглашение видно в списке рядом с хорошими: функция показывает, как предупреждает
+        c3 = Company(name=COMPANY3, industry="Сетевой маркетинг", city="Москва", website="https://bystry-zarabotok.example.com",
+                     description="Демо-компания для экспертов жюри: неправдоподобное предложение, чтобы показать "
+                                 "предупреждение индекса доверия.",
+                     contact_email="bystry.zarabotok@gmail.com", created_by=eu.id, is_demo=True)
+        db.add(c3)
+        db.flush()
+        create_invitation(db, eu, c3, maria, position_title="Backend-разработчик: доход от 600 000 ₽, опыт не важен",
+                          offer_description="Срочно! Высокий доход с первого дня, оформление после оплаты обучения. "
+                                            "(Демо: намеренно неправдоподобная вилка и условия — индекс доверия "
+                                            "предупреждает кандидата.)",
+                          salary_from=600_000, salary_to=850_000, contact_method="Телеграм-чат менеджера",
                           need_id=None, probe_id=None)
         ensure_vacancies(db)
     except Exception:  # noqa: BLE001

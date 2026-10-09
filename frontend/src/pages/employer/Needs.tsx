@@ -8,7 +8,10 @@ import { api } from "../../lib/api";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
+import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
+import { WhatIf } from "../../components/WhatIf";
+import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // подписка на потребность (И25)
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -22,10 +25,31 @@ export interface Req {
   coverage?: { message: string; tested: string; not_tested: string };
   city?: string | null;
   work_formats?: string[] | null;
+  unknown_terms?: { term: string; evidence?: Ev | null }[]; excluded?: { tag: string; evidence?: Ev | null }[];
+  salary_note?: { text: string; evidence?: Ev | null } | null;
+}
+
+/** Что не попало в подбор и подсказки по требованиям (И18): честно, без блокировки. */
+function ReqNotes({ req, title }: { req: Req; title: (t: string) => string }) {
+  const tips: string[] = [];
+  if (!req.direction && !req.stack_required.length) tips.push("Направление и обязательный стек не определены — подбор идёт по всей базе. Укажите направление, грейд и 2–3 ключевые технологии.");
+  else if (!req.stack_required.length) tips.push("Обязательный стек не указан — кандидаты ранжируются по результату теста и ФСП. Добавьте 2–3 ключевые технологии.");
+  if (req.direction && !req.grade) tips.push("Грейд не указан — в подборке все грейды направления.");
+  if (req.stack_required.length >= 7) tips.push(`Обязательных навыков ${req.stack_required.length} — полностью подходящих может не найтись; часть можно перенести в желательные.`);
+  const unknown = req.unknown_terms ?? [], excluded = req.excluded ?? [];
+  if (!tips.length && !unknown.length && !excluded.length && !req.salary_note) return null;
+  return (
+    <ul className="space-y-1.5 rounded-lg bg-brand-blush/25 px-3 py-2 text-sm">
+      {unknown.length > 0 && <li><b className="font-semibold">Не учтено в подборе:</b> {unknown.map((u) => u.term).join(", ")} — этих технологий нет в справочнике платформы, тест их не проверяет. Проверьте зондом или на интервью.</li>}
+      {excluded.length > 0 && <li><b className="font-semibold">Исключено по тексту:</b> {excluded.map((x) => `${title(x.tag)}${x.evidence?.quote ? ` («${x.evidence.quote}»)` : ""}`).join(", ")}</li>}
+      {req.salary_note && <li>{req.salary_note.text}{req.salary_note.evidence?.quote ? ` («${req.salary_note.evidence.quote}»)` : ""}</li>}
+      {tips.map((t) => <li key={t}>{t}</li>)}
+    </ul>
+  );
 }
 
 const EXAMPLE = "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс. ₽";
-const EXAMPLE_BIAS = "Python-разработчик middle в отдел интеграций: только мужчины до 35 лет, славянской внешности, без детей, в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве, 180–240 тыс.";
+const EXAMPLE_BIAS = "Python-разработчик middle в отдел интеграций: только мужчины до 35 лет, славянской внешности, без детей, в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве или удалённо, 180–240 тыс.";
 
 export function useTags() {
   const [tags, setTags] = useState<Tag[]>([]);
@@ -37,6 +61,22 @@ export function useTags() {
 }
 
 type Zone = "stack_required" | "stack_desired";
+/** Ф2: допустимые форматы потребности — объединение: «удалённо или офис/гибрид (Москва)». */
+const FORMAT_OPTIONS: [string, string, string[] | null][] = [
+  ["", "любой", null], ["remote", "Удалённо", ["remote"]], ["hybrid", "Гибрид", ["hybrid"]], ["office", "Офис", ["office"]],
+  ["office_hybrid", "Офис или гибрид", ["office", "hybrid"]], ["remote_hybrid", "Удалённо или гибрид", ["remote", "hybrid"]],
+  ["remote_onsite", "Удалённо или офис/гибрид", ["remote", "office", "hybrid"]],
+];
+export function formatKey(formats?: string[] | null, single?: string | null): string {
+  const f = formats?.length ? formats : single ? [single] : [];
+  const set = [...new Set(f)].sort().join(",");
+  return FORMAT_OPTIONS.find(([, , v]) => (v ?? []).slice().sort().join(",") === set)?.[0] ?? "";
+}
+function formatValue(key: string): { work_format: string | null; work_formats: string[] | null } {
+  const v = FORMAT_OPTIONS.find(([k]) => k === key)?.[2] ?? null;
+  return { work_format: v?.[0] ?? null, work_formats: v && v.length > 1 ? v : null };
+}
+
 const SCALARS = ["direction", "grade", "experience_years_min", "work_format", "salary", "city"] as const;
 type Scalar = typeof SCALARS[number];
 const present = (req: Req, k: Scalar) => (k === "salary" ? !!(req.salary_from || req.salary_to) : req[k] != null);
@@ -176,6 +216,7 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <p className="mt-2">Проверяется: {req.coverage.tested}.</p>
         <p className="mt-1">Не проверяется: {req.coverage.not_tested}. Для этих навыков нужен отдельный зонд или интервью.</p>
       </Alert>}
+      <ReqNotes req={req} title={(t) => tags[t]?.title ?? t} />
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <p className="text-brand-ink/70">Проверено требований: <b>{total - pending}</b> из {total}. Наведите на требование — фрагмент подсветится в тексте.</p>
         {pending > 0 && <button type="button" className="text-sm font-semibold text-emerald-700 hover:underline" onClick={() => onChange(confirmAll(req))}>Подтвердить все</button>}
@@ -194,7 +235,7 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         </ul>
       </div>
       <ul className="space-y-2">{sRow("city", "Город присутствия",
-        <input aria-label="Город присутствия" className="input max-w-xs" value={req.city ?? ""}
+        <input aria-label="Город присутствия" className="input max-w-xs" placeholder="для офиса и гибрида" value={req.city ?? ""}
           onChange={(e) => setScalar("city", { city: e.target.value || null })} />)}</ul>
       <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
       <div><p className="label">Желательный стек</p>{req.stack_desired.length ? <ul className="space-y-2">{stackRows("stack_desired")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
@@ -213,9 +254,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <p className="label">Условия (фильтры, в скор не входят)</p>
         <ul className="space-y-2">
           {sRow("work_format", "Формат работы", (
-            <select aria-label="Формат работы" className={sel} value={req.work_formats?.length === 2 ? "office_hybrid" : req.work_format ?? ""} onChange={(e) => setScalar("work_format", { work_format: e.target.value === "office_hybrid" ? "hybrid" : e.target.value || null, work_formats: e.target.value === "office_hybrid" ? ["office", "hybrid"] : null })}>
-              <option value="office_hybrid">Офис или гибрид</option>
-              <option value="">любой</option><option value="remote">Удалённо</option><option value="hybrid">Гибрид</option><option value="office">Офис</option>
+            <select aria-label="Формат работы" className={sel} value={formatKey(req.work_formats, req.work_format)} onChange={(e) => setScalar("work_format", formatValue(e.target.value))}>
+              {FORMAT_OPTIONS.map(([k, t]) => <option key={k} value={k}>{t}</option>)}
             </select>))}
           {sRow("experience_years_min", "Опыт от, лет", (
             <input aria-label="Опыт от, лет" type="number" min={0} className={`${sel} w-24`} value={req.experience_years_min ?? ""} onChange={(e) => setScalar("experience_years_min", { experience_years_min: e.target.value ? Number(e.target.value) : null })} />))}
@@ -233,6 +273,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
 
 export function Needs() {
   const { data, loading, error } = useApi<any[]>("/employer/needs");
+  const subs = useApi<{ items: { need_id: string; enabled: boolean; new_count: number }[] }>("/employer/subscriptions");
+  const watch = Object.fromEntries((subs.data?.items ?? []).filter((x) => x.enabled).map((x) => [x.need_id, x.new_count]));
   const navigate = useNavigate();
   const loc = useLocation();
   const tags = useTags();
@@ -310,7 +352,10 @@ export function Needs() {
                     <p className="font-bold text-brand-night">{n.title}</p>
                     <p className="text-sm text-brand-ink/65">{n.requirements.direction ? catTitle(`${n.requirements.direction}.${n.requirements.grade ?? ""}`) : "направление не указано"} · версий подборки: {n.versions.length} · {dtt(n.created_at)}</p>
                   </div>
-                  <span className="text-sm font-semibold text-brand">Открыть</span>
+                  <span className="flex flex-wrap items-center gap-2 text-sm font-semibold text-brand">
+                    {n.id in watch && <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${watch[n.id] ? "bg-brand-strong text-white" : "bg-brand-blush text-brand-plum"}`}>Слежу · новых: {watch[n.id]}</span>}
+                    Открыть
+                  </span>
                 </Link>
               </li>
             ))}
@@ -318,6 +363,23 @@ export function Needs() {
         )}
       </section>
     </div>
+  );
+}
+
+/** Ф2: чип условий потребности: что применено, сколько скрыто, отмена одним кликом. */
+function Conditions({ c, busy, onToggle }: { c?: any; busy: boolean; onToggle: (off: boolean) => void }) {
+  if (!c || (!c.text && !c.off)) return null;
+  if (c.off) return (
+    <p className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+      <span className="chip">Условия потребности не применены — показаны все</span>
+      {c.from_need && <button type="button" disabled={busy} className="font-semibold text-brand hover:underline" onClick={() => onToggle(false)}>Применить условия</button>}
+    </p>
+  );
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-2 text-sm">
+      <span className="chip" title="Формат и город — заявленные кандидатом (T0): только сужают подборку, баллов не добавляют">Условия: {c.text}{c.hidden ? ` · скрыто условиями: ${c.hidden}` : ""}</span>
+      {c.hidden > 0 && <button type="button" disabled={busy} className="font-semibold text-brand hover:underline" onClick={() => onToggle(true)}>Показать всех</button>}
+    </p>
   );
 }
 
@@ -331,13 +393,16 @@ export function Selection() {
   const last = need.data?.versions?.at(-1)?.version;
   const v = version ? Number(version) : last;
   const sel = useApi<any>(v ? `/employer/needs/${id}/selections/${v}` : null, [v]);
+  const mutual = useMutual(id, v);
   const tags = useTags();
+  const sub = useSub(id);
   const [filters, setFilters] = useState<any>({});
   const [refineReq, setRefineReq] = useState<Req | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [probeOpen, setProbeOpen] = useState(false);
   const [focus, setFocus] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const [wErr, setWErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { if (sel.data) { setFilters(sel.data.filters ?? {}); setPicked([]); } }, [sel.data]);
@@ -345,10 +410,34 @@ export function Selection() {
   async function refine() {
     setErr(null); setBusy(true);
     try {
-      const body: any = { parent_version: v, filters };
+      const { relaxation: _r, ...f } = filters;  // подпись «Что если» прежней версии не переносим
+      const body: any = { parent_version: v, filters: f };
       if (refineReq) body.requirements = reqBody(refineReq);
       const r = await api<any>(`/employer/needs/${id}/selections`, { body });
       await need.reload(); setRefineReq(null);
+      navigate(`/employer/needs/${id}/v/${r.version}`);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+
+  async function applyWhatIf(o: { requirements: any | null; filters: Record<string, unknown> }) {
+    setWErr(null); setBusy(true);
+    try {
+      const body: any = { parent_version: v, filters: o.filters };
+      if (o.requirements) body.requirements = reqBody(o.requirements);
+      const r = await api<any>(`/employer/needs/${id}/selections`, { body });
+      await need.reload();
+      navigate(`/employer/needs/${id}/v/${r.version}`);
+    } catch (e) { setWErr(errText(e)); } finally { setBusy(false); }
+  }
+
+  /** Ф2: условия потребности применены по умолчанию; один клик — новая версия без них (или снова с ними). */
+  async function toggleConditions(off: boolean) {
+    setErr(null); setBusy(true);
+    try {
+      const { relaxation: _r, ...f } = (sel.data?.filters ?? {}) as any;
+      const body: any = { parent_version: v, filters: { ...f, conditions_off: off || undefined } };
+      const r = await api<any>(`/employer/needs/${id}/selections`, { body });
+      await need.reload();
       navigate(`/employer/needs/${id}/v/${r.version}`);
     } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
@@ -358,6 +447,7 @@ export function Selection() {
   const s = sel.data;
   const reqOf: Req | undefined = s?.requirements ?? need.data.requirements;
   const reqTags = s ? [...(s.requirements.stack_required ?? []), ...(s.requirements.stack_desired ?? [])].map((x: any) => x.tag) : [];
+  const condOn = !!s?.conditions && !s.conditions.off && !!s.conditions.text;
   const toggleArr = (k: string, t: string) => { const cur: string[] = filters[k] ?? []; setFilters({ ...filters, [k]: cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t] }); };
 
   return (
@@ -378,11 +468,12 @@ export function Selection() {
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
-          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
+          <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} title={x.filters?.relaxation ? `из v${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
             v{x.version} · {x.total}
           </Link>
         ))}
       </div>
+      {id && <SubscriptionPanel needId={id} sub={sub} versionNo={last} onNewVersion={async (n) => { await need.reload(); navigate(`/employer/needs/${id}/v/${n}`); }} />}
       {!s ? <Loading /> : (
         <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
           <aside className="space-y-4">
@@ -426,20 +517,12 @@ export function Selection() {
                 </div>
               )}
               <Field label="Формат (заявленный, T0)" htmlFor="fwf">
-                <select id="fwf" className="input" value={filters.work_formats?.length === 2 ? "office_hybrid" : filters.work_format ?? ""} onChange={(e) => setFilters({ ...filters, work_format: e.target.value === "office_hybrid" ? undefined : e.target.value || undefined, work_formats: e.target.value === "office_hybrid" ? ["office", "hybrid"] : undefined })}>
-                  <option value="">любой</option><option value="remote">Удалённо</option><option value="hybrid">Гибрид</option><option value="office">Офис</option>
-                  <option value="office_hybrid">Офис или гибрид</option>
+                <select id="fwf" className="input" value={formatKey(filters.work_formats, filters.work_format)} onChange={(e) => { const x = formatValue(e.target.value); setFilters({ ...filters, work_format: x.work_formats ? undefined : x.work_format || undefined, work_formats: x.work_formats || undefined }); }}>
+                  {FORMAT_OPTIONS.map(([k, t]) => <option key={k} value={k}>{k === "" && condOn ? `как в потребности: ${s.conditions?.text ?? "любой"}` : t}</option>)}
                 </select>
               </Field>
-              <Field label="Город (или готов к переезду)" htmlFor="fcity"><input id="fcity" className="input" value={filters.city ?? ""} onChange={(e) => setFilters({ ...filters, city: e.target.value || undefined })} /></Field>
-              {(s.requirements.city || s.requirements.work_format) && (
-                <button type="button" className="text-left text-sm font-semibold text-brand hover:underline"
-                  onClick={() => setFilters({ ...filters, city: s.requirements.city || undefined,
-                    work_format: s.requirements.work_formats?.length ? undefined : s.requirements.work_format || undefined,
-                    work_formats: s.requirements.work_formats || undefined })}>
-                  Подставить город и формат из потребности
-                </button>
-              )}
+              <Field label="Город (или готов к переезду)" htmlFor="fcity"><input id="fcity" className="input" placeholder={condOn && s.conditions?.applied?.city ? `как в потребности: ${s.conditions.applied.city}` : undefined} value={filters.city ?? ""} onChange={(e) => setFilters({ ...filters, city: e.target.value || undefined })} /></Field>
+              <p className="text-xs text-brand-ink/65">{condOn ? "Формат и город из потребности уже применены к подборке; здесь их можно заменить." : "Условия потребности в этой версии не применены — показаны все."}</p>
               <Field label="Стаж от, лет (T0)" htmlFor="fexp"><input id="fexp" type="number" min={0} className="input" value={filters.experience_min ?? ""} onChange={(e) => setFilters({ ...filters, experience_min: e.target.value ? Number(e.target.value) : undefined })} /></Field>
               <button type="button" className="text-sm font-semibold text-brand hover:underline" onClick={() => setRefineReq(refineReq ? null : s.requirements)}>{refineReq ? "Не менять требования" : "Изменить требования"}</button>
               <Alert>{err}</Alert>
@@ -451,20 +534,31 @@ export function Selection() {
             {refineReq && <section className="card"><h2 className="mb-4 font-bold text-brand-night">Требования для новой версии</h2><ReqEditor req={refineReq} onChange={setRefineReq} /></section>}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
+                <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
                 <StatusCounts confirmed={s.confirmed_matched} provisional={s.provisional_matched} unconfirmed={s.unconfirmed_matched} hiddenNote={!!s.filters?.confirmed_only} />
+                <Conditions c={s.conditions} busy={busy} onToggle={toggleConditions} />
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <button className="btn-ghost" disabled={picked.length < 2 || picked.length > 3} title="Отметьте 2–3 кандидатов"
                   onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
-                <button className="btn-primary" disabled={!picked.length} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
+                <button className="btn-primary" disabled={!picked.length} title={picked.length ? undefined : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
                 <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
               </div>
             </div>
             <p className="text-xs text-brand-ink/65">Отметьте 2–3 кандидатов, чтобы сравнить их рядом по требованиям потребности, или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>сравните первых трёх</Link>.</p>
+            <WhatIf needId={id!} version={s.version} next={(last ?? 0) + 1} busy={busy} onApply={applyWhatIf} />
+            <Alert>{wErr}</Alert>
+            {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
+              Порядок: сначала кандидаты, у которых всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и зонды поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+            </p>}
+            {s.filters?.origin?.note && <Alert kind="info">v{s.version}: {s.filters.origin.note}</Alert>}
+            <MutualToolbar needId={id!} version={s.version} mutual={mutual} />
             <LevelLegend />
-            {!s.results.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры или выберите соседнюю категорию." /> : s.results.map((r: any) => (
-              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} compact
+            {!s.results.length ? <Empty title="Подходящих кандидатов нет"
+              text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : mutual.sorted<any>(s.results).map((r: any) => (
+              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} compact
+                badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
+                mutual={<MutualCardBlock needId={id!} version={s.version} cref={r.ref} mutual={mutual} />}
                 actions={
                   <div className="flex flex-wrap items-center gap-3">
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand" checked={picked.includes(r.ref)} onChange={() => setPicked(picked.includes(r.ref) ? picked.filter((x) => x !== r.ref) : [...picked, r.ref])} />выбрать</label>
