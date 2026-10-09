@@ -10,6 +10,7 @@ import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrat
 import { EmploymentTermsText } from "../../integrations/Youth";
 import { AtsStageBadge } from "../../integrations/Ats";
 import { CandidateHiring, HiringChip, HiringReminders } from "../../components/Hiring";
+import { WhyChosen } from "../mutual/Candidate";  // почему меня выбрали (Н9)
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -79,6 +80,7 @@ export function Invitations() {
             <EmploymentTermsText terms={open.employment_terms} />
             <p><b>Способ связи:</b> {open.contact_method}</p>
             <InvitationTrust invitationId={open.id} version={`${trustV}:${open.status}:${open.complaint?.at ?? ""}`} />
+            <WhyChosen invitationId={open.id} />
             {open.evidence?.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-night">На чём основано приглашение</p>

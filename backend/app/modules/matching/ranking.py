@@ -393,6 +393,8 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
     out = []
     for b in bundles:
         p = b.profile
+        if f.get("exclude_refs") and p.public_ref in f["exclude_refs"]:  # отзыв «не подходит» (Н2, modules/mutual)
+            continue
         if f.get("fsp_only") and not b.achievements:
             continue
         if f.get("confirmed_only") and (b.provisional or b.unconfirmed):  # только подтверждённый грейд

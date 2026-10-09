@@ -210,6 +210,7 @@ def params_for(key: tuple[str, str], side: Side) -> dict[str, object]:
         # ветки, ещё не влитые: объектов этих типов в мире нет — при слиянии добавьте их в build_side
         "aid": str(uuid.uuid4()), "atid": str(uuid.uuid4()), "delivery_id": str(uuid.uuid4()),
         "iid": str(uuid.uuid4()),  # собеседование (feat/hiring) в мире не создаётся
+        "share_id": str(uuid.uuid4()),  # ссылка руководителю (Н3)
     }
     p["code"] = side.ids.get("live_code", "nope") if path.startswith("/api/jury/live/") else "potok"
     p.update(PARAM_OVERRIDES.get(key, {}))
@@ -311,6 +312,14 @@ def body_for(key: tuple[str, str], side: Side) -> dict | None:
         ("PUT", "/api/notifications/prefs"): {},
         ("POST", "/api/jury/subs/simulate"): {},
         ("POST", "/api/jury/subs/fast-forward"): {"days": 5},
+        ("PUT", "/api/employer/needs/{need_id}/feedback"): {"ref": ref, "version": 1, "verdict": "unfit", "reason": "other"},  # Н2
+        ("POST", "/api/employer/needs/{need_id}/selections/{version}/refine"): {},
+        ("POST", "/api/employer/needs/{need_id}/selections/{version}/similar"): {"ref": ref},
+        ("POST", "/api/employer/needs/{need_id}/shares"): {},
+        ("POST", "/api/employer/needs/{need_id}/shares/{share_id}/revoke"): {},
+        ("POST", "/api/employer/mutual/offer-check"): {"candidate_ref": ref, "salary_to": 200_000},
+        ("PUT", "/api/candidate/preferences"): {},
+        ("POST", "/api/share/{token}/reactions"): {"ref": "K-000001", "verdict": "no"},
     }
     return bodies.get(key)
 
