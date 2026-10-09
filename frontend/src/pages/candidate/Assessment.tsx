@@ -718,6 +718,7 @@ export function TestRun() {
 function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
   const [r, setR] = useState<any>(initial);
   const llmOff = useLlmOff();
+  const meta = useMeta();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const { refresh } = useAuth();
@@ -755,7 +756,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         </p>
       )}
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " LLM-оценщик не подключён: ответы проверяет эксперт." : ""}</Alert></div>}
-      {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={r.integrity} /></div>}
+      {/* Ф6 (В2): итог камеры — один раз, в блоке камеры ниже (в пометке достоверности не повторяется) */}
+      {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={meta?.proctor_camera === false ? r.integrity : { ...r.integrity, camera: null }} /></div>}
       <CameraReport sessionId={sessionId} />
       {r.accept_lower_available && r.accept_lower_grade && (
         <div className="card mt-4 border-brand/30 bg-brand-blush/20 text-sm" data-testid="accept-lower">
@@ -774,10 +776,9 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <p className="mt-3 text-xs text-brand-ink/65">{r.sandbox ? "В демо-режиме повторить тест можно сразу; у живого кандидата" : "Повторить тест"} на {GRADES[r.claimed_grade]} {r.sandbox ? "— через" : "можно через"} {r.retake_same_grade_days ?? 30} дней; тест на грейд ниже — сразу, без зачёта попыток.</p>
       )}
       <div className="mt-3"><Alert>{err}</Alert></div>
-      <FeedbackSummary sessionId={sessionId} />
+      <FeedbackSummary sessionId={sessionId} fallbackLink />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
-        <Link className="btn-ghost" to={`/candidate/feedback?session=${sessionId}`}>Карта навыков и маршрут роста</Link>
       </div>
     </div>
   );
