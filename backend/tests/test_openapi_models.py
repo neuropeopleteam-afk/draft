@@ -12,7 +12,7 @@ from pydantic import TypeAdapter, ValidationError
 import pytest
 
 from app.core import api_docs
-from app.core.api_docs_text import DESCRIPTIONS
+from app.core.api_docs_text import DESCRIPTIONS, FILE_RESPONSES
 from app.core.api_models import RESPONSE_TYPES
 from tests.test_openapi_file import _load
 
@@ -91,3 +91,11 @@ def test_authored_descriptions_match_operations_and_reach_the_schema(spec):
         assert text.strip() and len(text) >= 40 or key == "GET /api/health", key
         # текст попал в схему, если у обработчика нет своего описания (иначе остаётся авторский docstring)
         assert ops[key].get("description"), key
+
+
+def test_file_responses_are_documented_with_their_media_type(spec):
+    for key, (media, _schema, _text) in FILE_RESPONSES.items():
+        method, path = key.split(" ", 1)
+        op = spec["paths"][path][method.lower()]
+        ok = next(c for c in op["responses"] if c.startswith("2"))
+        assert list(op["responses"][ok]["content"]) == [media], key
