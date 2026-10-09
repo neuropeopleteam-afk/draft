@@ -152,8 +152,9 @@ cd frontend && npm install && npm run dev                 # интерфейс, 
 ключи Postbox, ключ LLM) в репозиторий не попадают.
 
 LLM: цепочка провайдеров `LLM_CHAIN=openrouter,yandex` — Claude Sonnet 5.5 через OpenRouter (зарубежные облачные
-модели разрешены организаторами), запасная — Yandex AI Studio (OpenAI-совместимый API, модели в РФ), без ответа
-обеих — словари и правила. Ключ OpenRouter и ретранслятор — в `OPENROUTER_ENV_FILE` и `LLM_RELAY_ENV_FILE`;
+модели разрешены организаторами), запасная — YandexGPT (Yandex AI Studio, OpenAI-совместимый API), без ответа
+обеих — словари и правила. Данные хранятся на сервере в Москве; в модель уходит только текст для разбора с вырезанными
+контактами (то же — в `/api/meta` → `operator.storage`). Ключ OpenRouter и ретранслятор — в `OPENROUTER_ENV_FILE` и `LLM_RELAY_ENV_FILE`;
 переменные Yandex (`LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_FOLDER_ID`, `LLM_MODEL`) — в `LLM_ENV_FILE`
 (на сервере `/opt/spectrek_fsp/secrets/llm.env`). Модели по функциям и настройка — [docs/LLM.md](docs/LLM.md).
 Персональные данные вырезаются из текста до обращения к любой модели.
