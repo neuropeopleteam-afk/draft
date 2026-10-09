@@ -250,8 +250,80 @@ def write_summary(wdir: Path, out: Path) -> dict:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(text, encoding="utf-8")
     DATA_COPY.write_text(text, encoding="utf-8")  # то же для /api/validation/ru-llm (docs/ в образ api не входит)
+    write_md(d, ROOT / "docs" / "LLM.md")  # таблица раздела 11 — из того же JSON
     print(f"→ {out}, {DATA_COPY}")
     return d
+
+
+# ------------------------------------------------------------------ таблица для docs/LLM.md (раздел 11)
+MD_BEGIN, MD_END = "<!-- ru_llm:begin (tools/llm/ru_llm_summary.py) -->", "<!-- ru_llm:end -->"
+
+
+def _n(v, d=3):
+    return "—" if v is None else f"{v:.{d}f}".replace(".", ",")
+
+
+def _cell_md(fkey: str, c: dict, model: str) -> str:
+    if not c or c.get("status") != "done":
+        return "ещё не замерено"
+    q = c.get("quality") or {}
+    if fkey in ("needs_delta", "needs_full"):
+        out = f"F1 {_n(q['stack_f1'])} (P {_n(q['stack_p'])} / R {_n(q['stack_r'])}); опыт {q['experience']}/{q['n']}"
+    elif fkey == "needs_jury":
+        out = f"совпало с Sonnet {q['same_as_sonnet']}/{q['n']}"
+    elif fkey == "resume":
+        out = (f"F1 {_n(q['stack_f1'])} (P {_n(q['stack_p'])} / R {_n(q['stack_r'])}); стаж ±0,5 года "
+               f"{q['experience_ok']}/{q['n']}")
+    elif fkey == "grade":
+        if q.get("mae_b") is None:
+            return "все развёрнутые ответы — эксперту"
+        out = (f"MAE A / B {_n(q['mae_a'])} / {_n(q['mae_b'])}; атаки {q['attacks_pass']}/{q['attacks_n']}; порядок "
+               f"{q['order_strict']}/{q['order_n']}; эксперту {_n(q['expert_honest'] * 100, 1)} % честных; вторая оценка "
+               f"{q['second_calls']} ({_n(q['second_share'] * 100, 1)} %), расходится {q['second_disagree']}")
+    else:
+        out = "—"
+    if model == "rules":
+        return out
+    fails = (c.get("format_fail") or 0) + (c.get("transport_fail") or 0)
+    out += f"; ответила {c['ok']}/{c['n']}"
+    if fails:
+        out += f" (формат {c.get('format_fail') or 0}, сеть {c.get('transport_fail') or 0})"
+    out += f"; p50 / p95 {_n(c.get('p50_s'), 2)} / {_n(c.get('p95_s'), 2)} с"
+    pr = c.get("price") or {}
+    if pr.get("rub_per_1k_calls") is not None:
+        out += f"; ≈ {_n(pr['rub_per_1k_calls'], 0)} ₽ / 1000 вызовов"
+    sv = c.get("schema_variant")
+    if sv:
+        out += (f". С JSON-схемой (LLM_YANDEX_JSON_SCHEMA): F1 {_n(sv['quality']['stack_f1'])}, ответила {sv['ok']}/{sv['n']}, "
+                f"формат {sv['format_fail']}, схему отклонил {sv['schema_rejected']}, p50 {_n(sv.get('p50_s'), 2)} с")
+    return out
+
+
+def md_table(d: dict) -> str:
+    names = [m["label"] for m in d["models"]]
+    lines = [MD_BEGIN, "", f"Замер {d['date']}, код `{d['code_sha']}` (данные — `docs/realdata/ru_llm.json`).", "",
+             "| Функция и набор | " + " | ".join(names) + " |", "|---|" + "---|" * len(names)]
+    for f in d["functions"]:
+        cells = [_cell_md(f["key"], f["rows"].get(m["key"]), m["key"]) for m in d["models"]]
+        lines.append(f"| **{f['title']}** — {f['set']} | " + " | ".join(cells) + " |")
+    if d.get("pending_note"):
+        lines += ["", d["pending_note"]]
+    ref = d.get("ref_0810")
+    if ref:
+        x = ref["needs_full"]
+        lines += ["", f"Прежний замер — {ref['label']}: ответила {x['ok']}/{x['n']}, медиана {_n(x['p50_s'], 2)} с, "
+                      f"F1 {_n(x['stack_f1'])} (P {_n(x['stack_p'])} / R {_n(x['stack_r'])}); {x['source']}."]
+    lines += ["", MD_END]
+    return "\n".join(lines)
+
+
+def write_md(d: dict, path: Path) -> None:
+    text = path.read_text(encoding="utf-8")
+    if MD_BEGIN not in text:
+        return
+    head, rest = text.split(MD_BEGIN, 1)
+    _, tail = rest.split(MD_END, 1)
+    path.write_text(head + md_table(d) + tail, encoding="utf-8")
 
 
 INVENTORY = [
