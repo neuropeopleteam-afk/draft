@@ -9,7 +9,7 @@
 `resume/docx_text.py` (DOCX на stdlib), `resume/docx_worker.py` и `resume/pdf_worker.py` (изолированные процессы),
 `resume/extract.py` (`pdf_to_text_safe`, `docx_to_text_safe`), маршруты — `matching/router.py` (`/needs/file`) и
 `profiles/candidate_router.py` (`/me/resume`). Интерфейс — `frontend/src/pages/employer/NeedFile.tsx` (кнопка и
-подпись), `Needs.tsx` (четыре строки), `candidate/Profile.tsx`. Тесты — `backend/tests/test_file_parse.py` (38).
+подпись), `Needs.tsx` (четыре строки), `candidate/Profile.tsx`. Тесты — `backend/tests/test_file_parse.py` (41; DOCX из pandoc и LibreOffice — `tests/fixtures_fileparse/`).
 
 ## Как это выглядит
 
@@ -76,7 +76,9 @@ FastAPI, Django, HTTP, PostgreSQL, Docker, Git; желательно Redis, Kafk
 
 ## Текст из файла
 
-- DOCX: абзацы — строки; пункты списков (`w:numPr` у абзаца или у стиля, с наследованием `basedOn`) — «- …»;
+- DOCX: абзацы — строки; пункты списков (`w:numPr` с `numId` ≠ 0 у абзаца или у стиля, с наследованием `basedOn`) —
+  «- …»; заголовки (`w:outlineLvl`, стили heading/Title) — не пункты, даже с нумерацией (у LibreOffice она у каждого
+  заголовка);
   строки таблиц — «ячейка | ячейка»; `w:tab`, `w:br` — табуляция и перевод строки; удалённый текст правки
   (`w:delText`), коды полей (`w:instrText`) и дубль надписи в `mc:Fallback` пропускаются; поддержан Strict OOXML.
 - PDF: `pypdf`, как у резюме. Маркеры «•», «▪», символ Wingdings — в «- ».
