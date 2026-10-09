@@ -63,7 +63,7 @@ function Steps({ stage, outcome }: { stage: string; outcome?: any }) {
         const done = !closed ? k < cur : false;
         const now = closed ? k === 2 : k === cur;
         const c = done ? "border-emerald-200 bg-emerald-50 text-emerald-800" : now ? (closed ? "border-gray-200 bg-gray-100 text-gray-700" : "border-brand/30 bg-brand-blush text-brand-night")
-          : "border-brand-night/10 bg-white text-brand-ink/55";
+          : "border-brand-night/10 bg-white text-brand-ink/65";
         return <li key={t} className={`min-w-0 rounded-lg border px-2 py-1.5 font-semibold ${c}`} aria-current={now ? "step" : undefined}><span className="hidden truncate sm:block">{k + 1}. {t}</span><span className="block truncate sm:hidden">{short[k]}</span></li>;
       })}
     </ol>
@@ -203,7 +203,7 @@ export function EmployerHiring({ inv, onChange }: { inv: any; onChange?: () => v
             <button className="btn-ghost !py-2" disabled={busy} onClick={() => setForm("slots")}>Перенести</button>
             <button className="btn-ghost !py-2" disabled={busy} onClick={() => go(`interviews/${iv.id}/cancel`)}>Отменить</button>
           </div>
-          {st.rules?.demo_done_anytime && <p className="text-xs text-brand-ink/60">Демо-компания: отметить «прошло» можно до начала, чтобы пройти путь за минуту.</p>}
+          {st.rules?.demo_done_anytime && <p className="text-xs text-brand-ink/65">Демо-компания: отметить «прошло» можно до начала, чтобы пройти путь за минуту.</p>}
         </div>
       )}
       {form === "slots" ? <SlotsForm st={st} busy={busy} onSubmit={(b) => act("interviews", b).then((ok) => { if (ok) setForm(""); return ok; })} onCancel={() => setForm("")} />

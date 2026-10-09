@@ -118,7 +118,7 @@ export function WhyChosen({ invitationId }: { invitationId: string }) {
         const items = w.matched.filter((x) => f(x.status, x.level));
         return items.length ? (
           <div key={t}>
-            <p className="text-sm font-semibold text-brand-night">{t} <span className="font-normal text-brand-ink/60">— {hint}</span></p>
+            <p className="text-sm font-semibold text-brand-night">{t} <span className="font-normal text-brand-ink/65">— {hint}</span></p>
             <ul className="mt-1 space-y-0.5 text-sm text-brand-ink/80">{items.map((x) => <li key={x.requirement}>{x.requirement.replace(/^(Обязательно|Желательно): /, "")}{x.requirement.startsWith("Желательно") ? " (желательно)" : ""}: <span className="text-brand-ink/65">{x.text}</span></li>)}</ul>
           </div>
         ) : null;

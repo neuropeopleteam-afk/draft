@@ -89,7 +89,7 @@ export function AttemptsCompare({ cmp, audience = "candidate" }: { cmp: Comparis
             </li>
           ))}
         </ul>
-        <p className="mt-2 text-xs text-brand-ink/60">
+        <p className="mt-2 text-xs text-brand-ink/65">
           {audience === "employer"
             ? "Сравнение — по данным сессий теста (θ на общей шкале банка). Контрольные задания и тексты заданий не раскрываются. Кандидат может скрыть этот блок в настройках приватности."
             : "Контрольные задания в подсчёт повторов не входят и не раскрываются. Работодатель видит это сравнение в вашей карточке, если вы не скрыли его в настройках приватности."}
@@ -106,7 +106,7 @@ export function EmployerAttempts({ refId, direction }: { refId: string; directio
   if (!data) return null;
   if (!data.available) {
     return data.reason === "hidden_by_candidate"
-      ? <p className="text-xs text-brand-ink/60">Сравнение попыток теста кандидат скрыл.</p> : null;
+      ? <p className="text-xs text-brand-ink/65">Сравнение попыток теста кандидат скрыл.</p> : null;
   }
   return (
     <section className="card space-y-3" aria-label="Две попытки теста рядом">

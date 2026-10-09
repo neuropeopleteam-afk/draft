@@ -40,7 +40,7 @@ export default function PassportVerify() {
           <span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Проверка паспорта грейда</span>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
+      <main id="main" className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
         {notFound && (
           <section className="card">
             <h1 className="text-xl font-bold text-brand-night">Паспорт не найден</h1>
