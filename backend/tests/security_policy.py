@@ -244,6 +244,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("PATCH", "/api/employer/needs/{need_id}"): "employer_own",
     ("POST", "/api/employer/needs/{need_id}/selections"): "employer_own",
     ("GET", "/api/employer/needs/{need_id}/selections/{version}"): "employer_own",
+    ("GET", "/api/employer/needs/{need_id}/selections/{version}/what-if"): "employer_own",  # И18 «Что если»
     ("GET", "/api/employer/needs/{need_id}/compare"): "employer_own",
     ("GET", "/api/employer/probes"): "employer",
     ("POST", "/api/employer/probes"): "employer_ref",
