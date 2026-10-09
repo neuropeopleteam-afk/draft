@@ -344,6 +344,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/validation/attacks/{attack_id}"): "auth404",  # attack_id=nope: вход проверяется, атаки нет
     ("GET", "/api/validation/junior-stability"): "open",  # feat/status
     ("GET", "/api/validation/grader-check"): "open",  # feat/integrity
+    ("GET", "/api/validation/attempts-repeat"): "open",  # feat/attempts (И26)
     ("POST", "/api/validation/self-check"): "auth",  # feat/jury-test
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",
