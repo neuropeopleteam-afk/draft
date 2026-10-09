@@ -43,7 +43,7 @@ CITY_ALIASES = {
     "Иннополис": ["Иннополис", "Иннополисе"], "Пермь": ["Пермь", "Перми"],
 }
 # Английские и разговорные написания (И18): «hybrid Moscow», «офис в Питере», «СПб»
-CITY_ALIASES["Москва"] += ["Moscow"]
+CITY_ALIASES["Москва"] += ["Moscow", "Мск"]  # «офис в мск»; «по МСК» (часовой пояс) — не город, см. _city_matches
 CITY_ALIASES["Санкт-Петербург"] += ["Saint Petersburg", "St. Petersburg", "СПб", "Питер", "Питере"]
 CITY_ALIASES["Казань"] += ["Kazan"]
 
@@ -123,12 +123,23 @@ def parse_conditions(text: str) -> dict:
             "city": city, "format_span": span, "city_span": city_pos}
 
 
+_TZ_BEFORE = re.compile(r"(?:\b(?:по|до|с)|\bврем\w*|\bчас\w*|\bграфик\w*|\d)[\s(]*$", re.I)
+
+
+def _city_matches(text: str, alias: str):
+    """Упоминания города; «мск» после «по», «времени», «график» или часа («10–19 по МСК») — часовой пояс, не город."""
+    for m in re.finditer(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I):
+        if alias == "Мск" and _TZ_BEFORE.search(text[max(0, m.start() - 20):m.start()]):
+            continue
+        yield m
+
+
 def _city_or_remote(text: str, mentions: list) -> tuple[str, tuple[int, int]] | None:
     """«Казань или удалённо», «удалённо или Москва»: город — альтернатива удалёнке, то есть работа на месте."""
     remote = [(s, e) for f, s, e, n in mentions if f == "remote" and not n]
     for city, aliases in CITY_ALIASES.items():
         for alias in aliases:
-            for m in re.finditer(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I):
+            for m in _city_matches(text, alias):
                 for s, e in remote:
                     gap = text[m.end():s] if m.end() <= s else text[e:m.start()] if e <= m.start() else None
                     if gap is not None and re.fullmatch(r"[\s,]*(?:или|либо|or)\s+(?:в\s+|in\s+)?", gap, re.I):
@@ -145,7 +156,7 @@ def city_span(text: str, work_format) -> tuple[str | None, tuple[int, int] | Non
     best = None
     for city, aliases in CITY_ALIASES.items():
         for alias in aliases:
-            for m in re.finditer(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I):
+            for m in _city_matches(text, alias):
                 if re.search(r"офис|гибрид|office|hybrid|on-?site", text[max(0, m.start()-100):m.end()+80], re.I):
                     if best is None or m.start() < best[1][0]:
                         best = (city, m.span())
@@ -961,8 +972,10 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
         merged["stack_required"] = [i for z, i in by_tag.values() if z == "required"]
         merged["stack_desired"] = [i for z, i in by_tag.values() if z == "desired"]
     for key in ("experience_years_min", "work_format"):
-        merged[key] = rules[key] or llm[key]
-        if not rules[key] and llm[key] and llm["evidence"].get(key):
+        # «Опыт работы: не требуется» — 0, а не «пусто»: значение словаря (в т. ч. 0) модель не перезаписывает,
+        # её несогласие — предложение (llm_suggest); модель заполняет только то, чего словарь не нашёл (None)
+        merged[key] = rules[key] if rules[key] is not None else llm[key]
+        if rules[key] is None and llm[key] is not None and llm["evidence"].get(key):
             ev[key] = llm["evidence"][key]
     excluded = {x["tag"] for x in rules.get("excluded") or []}
     if excluded:  # «Angular не нужен»: тег, исключённый отрицанием в тексте, LLM обратно не добавляет (И18)
