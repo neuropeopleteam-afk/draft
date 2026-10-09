@@ -7,6 +7,7 @@ import { BasisSeg, MarketNote, otherBasis, salaryText, type Basis } from "../../
 import { api } from "../../lib/api";
 import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
+import { EmployerHiring, HiringChip, HiringReminders } from "../../components/Hiring";
 
 type Market = { from: number; to: number; median?: number | null } | null | undefined;
 /** Вилка из потребности: разбор текста отдаёт и основание («на руки» — salary_net), need_parser. */
@@ -193,6 +194,7 @@ export function EmployerInvitations() {
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Приглашения" subtitle="Статусы и история по каждому приглашению. Контакты кандидата открываются после принятия; до этого — переписка «вопрос — ответ» и встречное предложение кандидата." />
       <Alert>{err}</Alert>
+      <HiringReminders />
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Приглашений пока нет" text="Откройте карточку кандидата из подборки или поиска и отправьте приглашение с вилкой." />
       ) : data.map((i) => (
@@ -204,7 +206,7 @@ export function EmployerInvitations() {
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {i.counter && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Встречное ждёт решения</span>}
-              <AtsStageBadge s={i.ats_stage} employer /><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
+              <HiringChip h={i.hiring} /><AtsStageBadge s={i.ats_stage} employer /><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
             </div>
           </div>
           {i.contacts ? (
@@ -218,6 +220,7 @@ export function EmployerInvitations() {
           <EmploymentTermsText terms={i.employment_terms} />
           <CounterDecision inv={i} onDone={reload} />
           <AtsInvitationActions invitationId={i.id} status={i.contacts_revoked ? "contacts_revoked" : i.status} candidateRef={i.candidate_ref} />
+          <EmployerHiring inv={i} onChange={reload} />
           {i.complaint ? (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Жалоба кандидата: <b>{i.complaint.reason_title.toLowerCase()}</b>. Жалобы снижают индекс доверия компании — его видят кандидаты.</p>
           ) : i.decline_reason && <p className="text-brand-ink/70">Причина отказа: «{i.decline_reason}»</p>}

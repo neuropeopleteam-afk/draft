@@ -9,6 +9,7 @@ import { SusPrompt } from "../../integrations/Sus";
 import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
 import { EmploymentTermsText } from "../../integrations/Youth";
 import { AtsStageBadge } from "../../integrations/Ats";
+import { CandidateHiring, HiringChip, HiringReminders } from "../../components/Hiring";
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -45,6 +46,7 @@ export function Invitations() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Приглашения" subtitle="Работодатель видит ваши контакты только после того, как вы примете приглашение." />
+      <HiringReminders />
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Приглашений пока нет" text="Когда работодатель пригласит вас с вилкой зарплаты, приглашение появится здесь и придёт письмом." />
       ) : (
@@ -60,7 +62,7 @@ export function Invitations() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   {i.thread?.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {i.thread.unread}</span>}
-                  <TrustBadge t={trust[i.id]} compact /><AtsStageBadge s={i.ats_stage} /><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
+                  <TrustBadge t={trust[i.id]} compact /><HiringChip h={i.hiring} /><AtsStageBadge s={i.ats_stage} /><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
                 </div>
               </button>
             </li>
@@ -123,6 +125,7 @@ export function Invitations() {
               <button type="button" className="text-sm font-semibold text-brand-plum hover:underline" onClick={() => setComplaining(true)}>Пожаловаться: нереальная вилка, не та роль, спам</button>
             )}
             {open.status === "accepted" && !open.contacts_revoked && <Alert kind="ok">Вы приняли приглашение. Работодатель видит ваши контакты и свяжется с вами.</Alert>}
+            {open.status === "accepted" && <CandidateHiring inv={open} onChange={() => { void api<any>(`/candidate/invitations/${open.id}`).then(setOpen).catch(() => undefined); void reload(); }} />}
             {open.status === "accepted" && <ContactsAccess inv={open} onDone={(r) => { setOpen(r); void reload(); }} />}
             {open.status === "accepted" && <SusPrompt context="e2e" />}
           </div>
