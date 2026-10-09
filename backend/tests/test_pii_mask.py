@@ -262,3 +262,10 @@ def test_single_name_false_positives(text):
     for w in ("Гибрид", "Андроид", "Android", "Kotlin", "Jetpack", "Telegram", "Владимир", "Вера"):
         assert text.count(w) == r.text.count(w), (w, r.text)
     assert "[имя]" not in r.text
+
+
+def test_code_decorators_are_not_nicknames():
+    code = "@Override\npublic String toString() {}\n@patch('x.y')\ndef test(): ...\n@contextmanager\nПишите @real_nick_42"
+    r = _answer(code)
+    assert "@Override" in r.text and "@patch" in r.text and "@contextmanager" in r.text
+    assert "real_nick_42" not in r.text and r.summary.get("telegram") == 1

@@ -71,6 +71,13 @@ ADDRESS_PATTERNS: list[re.Pattern] = [
     re.compile(rf"(?<![\w.])(?i:д\.|дом){_SP}*\d{{1,4}}(?:[а-я](?![а-яё]))?(?:/\d{{1,4}})?(?:{_SP}*,?{_SP}*{_UNIT})+"),
 ]
 
+# Декораторы и аннотации в коде ответа («@Override», «@patch») — не ники
+_DECORATORS = (r"(?:Override|Autowired|Test|Bean|Component|Service|Entity|Column|Transactional|RestController|Controller|"
+               r"GetMapping|PostMapping|RequestMapping|SpringBootApplication|Deprecated|FunctionalInterface|Injectable|"
+               r"NgModule|Input|Output|property|staticmethod|classmethod|dataclass|abstractmethod|lru_cache|cache|cached_property|"
+               r"wraps|contextmanager|asynccontextmanager|patch|fixture|pytest|mock|app|router|login_required|receiver|"
+               r"total_ordering|overload|override|validator|field_validator|model_validator|root_validator|Get|Post|Put|"
+               r"Delete|Patch|Module|Query|Param|Body|Mapper|Data|Getter|Setter|Builder|Slf4j|Value|Configuration)")
 PATTERNS: list[tuple[str, re.Pattern, str]] = [
     ("email", re.compile(r"[\w.+\-]+@[\w\-]+(?:\.[\w\-]+)+", re.I), "[почта]"),
     ("url_messenger", re.compile(r"(?:https?://)?(?:www\.)?(?:t\.me|telegram\.me|wa\.me|vk\.com|vk\.ru|ok\.ru|instagram\.com|"
@@ -80,7 +87,7 @@ PATTERNS: list[tuple[str, re.Pattern, str]] = [
                                  r"/[\w\-./?=&%]+", re.I), "[ссылка]"),
     ("phone", re.compile(r"(?<!\d)(?:\+7|8|\+\d{1,3})[\s\-\u00a0(]*\d{3}[\s\-\u00a0)]*\d{3}[\s\-\u00a0]*\d{2}[\s\-\u00a0]*\d{2}(?!\d)"),
      "[телефон]"),
-    ("telegram", re.compile(r"(?:(?<=\s)|^|(?<=[(:,]))@[A-Za-z][\w]{3,31}\b"), "[ник]"),
+    ("telegram", re.compile(r"(?:(?<=\s)|^|(?<=[(:,]))@(?!" + _DECORATORS + r"\b)[A-Za-z][\w]{3,31}\b"), "[ник]"),
     ("birthdate", re.compile(rf"(?:дата{_SP}+рождения|родил(?:ся|ась)|д\.{_SP}?р\.|date{_SP}+of{_SP}+birth|birth{_SP}*date|"
                               rf"birthday|born|dob)\s*:?\s*(?:{_DATE_WORD}|{_DATE_NUM})", re.I), "[дата рождения]"),
     ("snils", re.compile(r"\b\d{3}-\d{3}-\d{3}[\s-]\d{2}\b"), "[снилс]"),
