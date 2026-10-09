@@ -8,6 +8,7 @@ import { api } from "../../lib/api";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
+import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
 import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // подписка на потребность (И25)
@@ -392,6 +393,7 @@ export function Selection() {
   const last = need.data?.versions?.at(-1)?.version;
   const v = version ? Number(version) : last;
   const sel = useApi<any>(v ? `/employer/needs/${id}/selections/${v}` : null, [v]);
+  const mutual = useMutual(id, v);
   const tags = useTags();
   const sub = useSub(id);
   const [filters, setFilters] = useState<any>({});
@@ -539,7 +541,7 @@ export function Selection() {
               <div className="flex flex-wrap items-center gap-2">
                 <button className="btn-ghost" disabled={picked.length < 2 || picked.length > 3} title="Отметьте 2–3 кандидатов"
                   onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
-                <button className="btn-primary" disabled={!picked.length} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
+                <button className="btn-primary" disabled={!picked.length} title={picked.length ? undefined : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
                 <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
               </div>
             </div>
@@ -549,11 +551,14 @@ export function Selection() {
             {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
               Порядок: сначала кандидаты, у которых всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и зонды поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
             </p>}
+            {s.filters?.origin?.note && <Alert kind="info">v{s.version}: {s.filters.origin.note}</Alert>}
+            <MutualToolbar needId={id!} version={s.version} mutual={mutual} />
             <LevelLegend />
             {!s.results.length ? <Empty title="Подходящих кандидатов нет"
-              text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : s.results.map((r: any) => (
+              text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : mutual.sorted<any>(s.results).map((r: any) => (
               <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} compact
                 badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
+                mutual={<MutualCardBlock needId={id!} version={s.version} cref={r.ref} mutual={mutual} />}
                 actions={
                   <div className="flex flex-wrap items-center gap-3">
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand" checked={picked.includes(r.ref)} onChange={() => setPicked(picked.includes(r.ref) ? picked.filter((x) => x !== r.ref) : [...picked, r.ref])} />выбрать</label>

@@ -82,7 +82,8 @@ def shared_candidates(db: Session, needs: list, k: int = 3) -> list[CandidatePro
         select(CandidateProfile).join(User, User.id == CandidateProfile.user_id)
         .where(User.email.like("demo-candidate-%@demo.invalid"), CandidateProfile.visible_to_employers.is_(True),
                CandidateProfile.current_category_id.like("backend.%"),
-               CandidateProfile.current_category_id != CUP_POOL_CATEGORY)
+               CandidateProfile.current_category_id != CUP_POOL_CATEGORY,
+               CandidateProfile.current_category_id.not_like("%.intern"))  # вилка 230–290 тыс. стажёру — вне рынка (Ф4)
         .order_by(CandidateProfile.public_ref)).all()
     return [p for p in rows if p.public_ref not in top][:k]
 

@@ -6,7 +6,7 @@
 запрос (INNER JOIN и ``<>``) теряет два класса расхождений: пропавшие записи и NULL против
 значения (``NULL <> 'x'`` даёт NULL, а не TRUE). Правильный вариант — LEFT JOIN и
 null-безопасное сравнение ``IS DISTINCT FROM``. Дистракторы: LEFT JOIN, но ``<>``; INNER JOIN
-с IS DISTINCT FROM; только NOT IN (одни пропавшие); AND вместо OR между полями. Данные
+с IS DISTINCT FROM; NOT IN без сверки второго поля; AND вместо OR между полями. Данные
 генерируются так, что каждый дистрактор на них ошибается; все запросы исполняются в sqlite.
 """
 from __future__ import annotations
@@ -66,8 +66,10 @@ def _q_raw(kind, s, d, a, b):
                 f"WHERE §s.{a} IS DISTINCT FROM §d.{a}\n   OR §s.{b} IS DISTINCT FROM §d.{b}\n"
                 f"ORDER BY §s.id;")
     if kind == "not_in":
-        return (f"SELECT §s.id\nFROM {s} AS §s\nWHERE §s.id NOT IN (\n    SELECT §d.id FROM {d} AS §d\n)\n"
-                f"ORDER BY §s.id;")
+        # версия 2 (08.10): раньше запрос искал только пропавшие записи и был вдвое короче остальных;
+        # теперь он ещё сверяет первое поле, но не второе
+        return (f"SELECT §s.id\nFROM {s} AS §s\nWHERE §s.id NOT IN (SELECT §d.id FROM {d} AS §d)\n"
+                f"   OR §s.id IN (\n    SELECT §d.id FROM {d} AS §d WHERE §d.{a} <> §s.{a}\n)\nORDER BY §s.id;")
     if kind == "and_fields":
         return (f"SELECT §s.id\nFROM {s} AS §s\nLEFT JOIN {d} AS §d ON §d.id = §s.id\n"
                 f"WHERE §d.id IS NULL\n   OR (§s.{a} IS DISTINCT FROM §d.{a}\n"
@@ -148,7 +150,7 @@ def generate(seed: int):
                        "расхождение «NULL против значения» теряется",
            "inner_distinct": "сравнение null-безопасное, но INNER JOIN отбрасывает записи, "
                              "которых нет в хранилище",
-           "not_in": "находит только пропавшие записи, расхождения значений не ищет",
+           "not_in": f"находит пропавшие записи и расхождения в `{a}`, но поле `{b}` не сверяет",
            "and_fields": "AND между полями требует, чтобы отличались оба поля сразу"}
     ak = AnswerKey(kind="option", value=key,
                    explanation=(f"Нужны LEFT JOIN (чтобы увидеть записи, которых нет в хранилище) "

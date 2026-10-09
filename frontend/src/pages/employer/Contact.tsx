@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, rub, useApi } from "../../components/ui";
+import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
 import { InlineThread } from "../../components/Chat";
 import { BasisSeg, MarketNote, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { api } from "../../lib/api";
+import { daysText, useRules } from "../../lib/meta";
 import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
+import { OfferFitHint } from "../mutual/Employer";  // подсказка до отправки: подходит ли предложение кандидату (Н9)
 
 type Market = { from: number; to: number; median?: number | null } | null | undefined;
 /** Вилка из потребности: разбор текста отдаёт и основание («на руки» — salary_net), need_parser. */
@@ -42,13 +44,25 @@ export const SALARY_MAX_RATIO = 1.5;
 const maxTo = (from: string | number) => Math.floor((Number(from) * SALARY_MAX_RATIO) / 1000) * 1000;
 const round5k = (v: number) => Math.round(v / 5000) * 5000;
 
-/** Вилка по умолчанию: из потребности, иначе вокруг медианы рынка категории — в пределах допустимой ширины. */
+/** Вилка по умолчанию: из потребности; иначе вокруг медианы рынка категории — в пределах допустимой ширины и
+ *  не выше бюджета потребности («до» потребности — потолок: кандидату не предлагаем больше, чем заложено). */
 export function defaultRange(market: Market, need?: { from?: number | null; to?: number | null } | null): [string, string] {
+  const cap = need?.to || null;
   if (need?.from && need?.to && need.to <= need.from * SALARY_MAX_RATIO) return [String(need.from), String(need.to)];
-  if (!market) return ["", ""];
-  const mid = market.median ?? (market.from + market.to) / 2;
-  const lo = Math.max(market.from, round5k(mid * 0.9));
-  return [String(lo), String(Math.min(maxTo(lo), Math.max(lo, round5k(mid * 1.25))))];
+  let lo = 0, hi = 0;
+  if (market) {
+    const mid = market.median ?? (market.from + market.to) / 2;
+    lo = Math.max(market.from, round5k(mid * 0.9));
+    hi = Math.min(maxTo(lo), Math.max(lo, round5k(mid * 1.25)));
+  } else if (cap) { hi = cap; lo = need?.from ?? round5k(cap / 1.25); }
+  if (!lo || !hi) return ["", ""];
+  if (cap) {
+    hi = Math.min(hi, cap);
+    if (need?.from) lo = Math.max(lo, need.from);
+    lo = Math.min(lo, hi);
+    if (hi > maxTo(lo)) lo = Math.min(hi, Math.ceil(hi / SALARY_MAX_RATIO / 1000) * 1000);  // не шире, чем разрешает правило 1,5
+  }
+  return [String(lo), String(hi)];
 }
 
 function salaryError(from: string, to: string) {
@@ -78,7 +92,9 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: 
   }
   if (res) return (
     <div className="space-y-3 text-sm">
-      <Alert kind="ok">Зонд отправлен: {res.created.length}. Кандидаты получат уведомление; контакты не раскрываются.</Alert>
+      {res.created.length > 0
+        ? <Alert kind="ok">Зонд отправлен: {res.created.length} {plural(res.created.length, "кандидату", "кандидатам", "кандидатам")}. {res.created.length === 1 ? "Кандидат получит" : "Кандидаты получат"} уведомление; контакты не раскрываются.</Alert>
+        : <Alert kind="info">Зонд никому не отправлен: причины ниже.</Alert>}
       {res.skipped.length > 0 && <Alert kind="info">Пропущено: {res.skipped.map((s: any) => `${s.ref} — ${s.reason}`).join("; ")}</Alert>}
       <button className="btn-primary" onClick={onDone}>Готово</button>
     </div>
@@ -99,10 +115,16 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: 
   );
 }
 
+const FORMAT_TITLES: Record<string, string> = { employment: "Работа", internship: "Стажировка", light_work: "Лёгкий труд (для 16–17 лет)" };
+
 export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }: { cref: string; needId?: string | null; probeId?: string | null; market: Market; needSalary?: NeedSalary; onDone: (inv: any) => void }) {
   const candidate = useApi<any>(`/employer/candidates/${cref}`);
   const safety = candidate.data?.employment_safety;
+  const rules = useRules();
+  // форматы — от возраста кандидата: взрослому — работа и стажировка, «лёгкий труд» только для 16–17 лет (backend/modules/fsp/youth.py)
+  const formats: string[] = safety?.allowed_formats ?? ["employment", "internship"];
   const [format, setFormat] = useState("employment");
+  useEffect(() => { if (safety && !formats.includes(format)) setFormat(formats[0]); }, [safety]);  // eslint-disable-line react-hooks/exhaustive-deps
   const [reduced, setReduced] = useState(false);
   const [ack, setAck] = useState(false);
   const [title, setTitle] = useState("");
@@ -126,13 +148,14 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className="input min-h-[110px]" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" /></Field>
       <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className="input" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
       <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} basis={basis} setBasis={setBasis} market={market} />
+      <OfferFitHint cref={cref} needId={needId} from={Number(from) || undefined} to={Number(to) || undefined} basis={basis} />
       {safety?.minor && <Alert kind="info">{safety.warning} {!safety.offer_allowed && "Оффер недоступен: возраст 14–15 лет или ещё нет отметки согласия."}</Alert>}
       <Field label="Формат предложения" htmlFor="offer-format"><select id="offer-format" className="input" value={format} onChange={e => setFormat(e.target.value)}>
-        <option value="employment" disabled={safety?.minor}>Работа</option><option value="internship">Стажировка</option><option value="light_work">Лёгкий труд</option>
+        {formats.map((f) => <option key={f} value={f}>{FORMAT_TITLES[f] ?? f}</option>)}
       </select></Field>
       <Toggle checked={reduced} onChange={setReduced} label="Сокращённое рабочее время" />
       {safety?.minor && <Toggle checked={ack} onChange={setAck} label="Проверю документы и ограничения перед оформлением" />}
-      <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. Одно приглашение кандидату — не чаще раза в 30 дней. До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
+      <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. {rules ? `Одно приглашение кандидату — не чаще раза в ${daysText(rules.invitation_cooldown_days)}. ` : ""}До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
       <Alert>{err}</Alert>
       <button className="btn-primary" disabled={candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>Отправить приглашение</button>
       {candidate.error && <Alert>{candidate.error}</Alert>}
@@ -217,7 +240,7 @@ export function EmployerInvitations() {
           ) : <p className="text-brand-ink/65">Контакты откроются после принятия приглашения.</p>}
           <EmploymentTermsText terms={i.employment_terms} />
           <CounterDecision inv={i} onDone={reload} />
-          <AtsInvitationActions invitationId={i.id} status={i.contacts_revoked ? "contacts_revoked" : i.status} candidateRef={i.candidate_ref} />
+          <AtsInvitationActions invitationId={i.id} status={i.contacts_revoked ? "contacts_revoked" : i.status} candidateRef={i.candidate_ref} transfers={i.ats_transfers} onChanged={reload} />
           {i.complaint ? (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Жалоба кандидата: <b>{i.complaint.reason_title.toLowerCase()}</b>. Жалобы снижают индекс доверия компании — его видят кандидаты.</p>
           ) : i.decline_reason && <p className="text-brand-ink/70">Причина отказа: «{i.decline_reason}»</p>}
