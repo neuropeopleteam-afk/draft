@@ -8,6 +8,7 @@ import { apiDownload } from "../../lib/api";
 import { InviteForm, ProbeForm } from "./Contact";
 import { useTags } from "./Needs";
 import { PassportEmployerBadge } from "../../passport/Share";
+import { EmployerAttempts } from "../../components/AttemptsCompare";
 
 const PAGE = 20;
 
@@ -142,6 +143,7 @@ export function CandidateDetail() {
           </div>
         } />
       <PassportEmployerBadge refId={c.ref} />
+      <EmployerAttempts refId={c.ref} direction={c.direction ?? direction} />
       {!c.can_invite && <Alert kind="info">Приглашение этому кандидату уже отправлялось. Следующее — с {dt(c.invite_available_at)} (не чаще раза в {c.invitation_cooldown_days} дней).</Alert>}
       {(c.my_invitations.length > 0 || c.my_probes.length > 0) && (
         <section className="card text-sm">
