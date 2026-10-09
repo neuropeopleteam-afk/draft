@@ -38,6 +38,7 @@ from app.modules.profiles.facts import (
     skill_evidence_text,
     test_component,
 )
+from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
 from app.modules.matching import must_have
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
@@ -282,10 +283,14 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                                                     "можно пригласить или проверить зондом"),
                         "integrity": lvl})
     probe = max((f.value.get("score", 0) for f in b.probes_t1), default=0.0)
-    if b.probes_t1:
-        best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))
+    own = [f for f in b.probes_t1 if not assignment_signal.is_assignment_fact(f)]  # задание работодателя — своя строка (К5)
+    if own:
+        best = max(own, key=lambda f: f.value.get("score", 0))
         reasons.append({"requirement": "Зонд", "level": "T1", "status": "confirmed",
                         "text": f"{quoted(best.title)} — {best.value.get('verdict', 'оценено')}"})
+    sig = assignment_signal.reason_for(b.probes_t1)  # К5: адресное задание — одна строка, порядок match-v1 не меняет
+    if sig:
+        reasons.append(sig)
     # Фильтровые требования (T0): показываем, но в скор не включаем
     cond = need_conditions(req)
     allowed = cond["work_formats"]
@@ -388,6 +393,8 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
     out = []
     for b in bundles:
         p = b.profile
+        if f.get("exclude_refs") and p.public_ref in f["exclude_refs"]:  # отзыв «не подходит» (Н2, modules/mutual)
+            continue
         if f.get("fsp_only") and not b.achievements:
             continue
         if f.get("confirmed_only") and (b.provisional or b.unconfirmed):  # только подтверждённый грейд

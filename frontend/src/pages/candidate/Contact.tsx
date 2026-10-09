@@ -9,6 +9,7 @@ import { SusPrompt } from "../../integrations/Sus";
 import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
 import { EmploymentTermsText } from "../../integrations/Youth";
 import { AtsStageBadge } from "../../integrations/Ats";
+import { WhyChosen } from "../mutual/Candidate";  // почему меня выбрали (Н9)
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -77,6 +78,7 @@ export function Invitations() {
             <EmploymentTermsText terms={open.employment_terms} />
             <p><b>Способ связи:</b> {open.contact_method}</p>
             <InvitationTrust invitationId={open.id} version={`${trustV}:${open.status}:${open.complaint?.at ?? ""}`} />
+            <WhyChosen invitationId={open.id} />
             {open.evidence?.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-night">На чём основано приглашение</p>
@@ -248,7 +250,7 @@ export function Probes() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Задания от работодателей" subtitle="Зонд — короткая задача с вилкой зарплаты. Ответ решением или подходом; оценка работодателя становится подтверждённым фактом (T1)." />
+      <PageTitle title="Зонды работодателей" subtitle="Зонд — короткая задача с вилкой зарплаты. Ответ решением или подходом; оценка работодателя становится подтверждённым фактом (T1)." />
       <p className="text-sm text-brand-ink/70">Задания с автопроверкой — лично, к откликам и по вашему стеку — в разделе <Link className="font-semibold text-brand hover:underline" to="/candidate/assignments">«Задания для вас»</Link>.</p>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Заданий пока нет" text="Работодатели могут прислать короткую задачу до приглашения. Контакты при этом не раскрываются." />

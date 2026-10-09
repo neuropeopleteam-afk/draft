@@ -40,7 +40,9 @@ def create_invite(db: Session, code: str, *, slot: str | None = None, team_size:
     if not P.ensure_pack(db):
         raise api_error(409, "pack_not_ready", "Пакет разметки не собран: нет демо-данных (make seed)")
     token = secrets.token_urlsafe(24)
-    pan = db.scalar(select(ExpertPanelist).where(ExpertPanelist.code == code, ExpertPanelist.is_demo.is_(False)))
+    # приглашение по ссылке — только в пакет v1 (роли v2 размечают офлайн файлами, pack2 import)
+    pan = db.scalar(select(ExpertPanelist).where(ExpertPanelist.code == code, ExpertPanelist.is_demo.is_(False),
+                                                 ExpertPanelist.pack == P.PACK))
     if pan is None:
         u = User(email=f"{code.lower()}-{secrets.token_hex(4)}@{INVITE_DOMAIN}",
                  password_hash=hash_password(secrets.token_urlsafe(24)), role=UserRole.expert,
@@ -232,16 +234,17 @@ _RUNS = {1: "одном прогоне", 2: "двух независимых п�
 
 
 def set_source(db: Session, codes: list[str], source: str, model: str | None = None,
-               roles: list[str] | None = None) -> list[str]:
+               roles: list[str] | None = None, pack: str = P.PACK) -> list[str]:
     """Кто размечает под кодами панели: люди или языковая модель (model — её название, обязательно для model).
-    roles — роли модели по порядку кодов («тимлид Backend», …): пишутся в profile и видны в подписи на /validation."""
+    roles — роли модели по порядку кодов («тимлид Backend», …): пишутся в profile и видны в подписи на /validation.
+    pack — пакет, к которому относятся коды (у v1 и v2 свои участники панели)."""
     if source not in SOURCES:
         raise api_error(422, "bad_source", "Источник разметки — people или model")
     if source == "model" and not (model or "").strip():
         raise api_error(422, "model_required", "Для разметки моделью укажите название модели")
     codes = [c.strip().upper() for c in codes if c.strip()]
     role_of = dict(zip(codes, [r.strip() for r in roles or []]))
-    pans = db.scalars(select(ExpertPanelist).where(ExpertPanelist.code.in_(codes),
+    pans = db.scalars(select(ExpertPanelist).where(ExpertPanelist.code.in_(codes), ExpertPanelist.pack == pack,
                                                    ExpertPanelist.is_demo.is_(False))).all()
     for pan in pans:
         pan.source = source
@@ -285,10 +288,10 @@ def source_summary(panel: list[dict]) -> dict | None:
             "model_panel": model_panel, "caption": caption}
 
 
-def panel_status(db: Session) -> list[dict]:
-    """Обезличенный статус панели для /validation: коды, назначено, сделано, последняя активность (без имён)."""
+def panel_status(db: Session, pack: str = P.PACK) -> list[dict]:
+    """Обезличенный статус панели пакета для /validation: коды, назначено, сделано, последняя активность (без имён)."""
     out = []
-    for pan in db.scalars(select(ExpertPanelist).where(ExpertPanelist.is_demo.is_(False))
+    for pan in db.scalars(select(ExpertPanelist).where(ExpertPanelist.is_demo.is_(False), ExpertPanelist.pack == pack)
                           .order_by(ExpertPanelist.code)).all():
         pr = progress(db, pan)
         out.append({"code": pan.code, "active": pan.is_active, "started": any(v["done"] for v in pr.values()),
