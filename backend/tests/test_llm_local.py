@@ -204,6 +204,39 @@ def test_local_model_per_function_and_explicit(monkeypatch, net):
     assert llm.routes("grade_second")[0].model == "qwen3.5-9b"
 
 
+def test_function_off_goes_without_llm(monkeypatch, net):
+    """LLM_MODEL_<FUNC>=off — функция без модели (сразу правила / эксперт), остальные функции — через модель."""
+    from app.modules.matching import need_parser as NP
+
+    configure(monkeypatch, LLM_MODEL_PARSE_NEED="off", LLM_MODEL_RESUME="local=off")
+    assert llm.routes("parse_need") == [] and llm.routes("resume") == []
+    assert llm.routes("grade")[0].model == "qwen3.5-9b" and llm.routes("grade_second")[0].model == "qwen3.5-9b"
+    net.on("llm-local.test", lambda req, body: (_ for _ in ()).throw(AssertionError("parse_need не должен звать модель")))
+    req = NP.parse_need("Ищем Python-разработчика: Django, PostgreSQL, Docker. Опыт от 3 лет.")
+    assert req["method"] == "rules" and req["llm"] == {"used": False, "reason": "not_configured", "attempts": []}
+    assert not net.calls
+    assert llm.status()["functions"]["parse_need"]["models"] == []
+    # «off» действует и для облачной цепочки; модель с подстрокой off в имени не выключает функцию
+    configure(monkeypatch, LLM_CHAIN="openrouter", OPENROUTER_API_KEY="k", LLM_MODEL_PARSE_NEED="off",
+              LLM_MODEL_GRADE="openrouter=vendor/offline-model")
+    assert llm.routes("parse_need") == [] and llm.routes("grade")[0].model == "vendor/offline-model"
+
+
+def test_llm_local_env_file_profile(monkeypatch, net):
+    """Файл, который подключает make llm-local: цепочка local; разбор вакансии и резюме — правила (замер в
+    docs/LLM.md, раздел 9), оценка открытых ответов и вторая оценка — Qwen; бюджет укладывается в 60 с nginx."""
+    env = {}
+    for line in (ROOT / "infra/llm-local/llm-local.env").read_text(encoding="utf-8").splitlines():
+        if line.strip() and not line.lstrip().startswith("#"):
+            k, _, v = line.partition("=")
+            env[k.strip()] = v.strip()
+    configure(monkeypatch, **env)
+    assert llm.routes("parse_need") == [] and llm.routes("resume") == []
+    (g,) = llm.routes("grade")
+    assert (g.provider, g.model) == ("local", "qwen3.5-9b") and g.timeout_s <= 50
+    assert float(env["LLM_GRADING_BUDGET_S"]) < 60
+
+
 # ------------------------------------------------------------------ подписи и /api/meta
 @pytest.mark.parametrize("model,label", [
     ("qwen3.5-9b", "Qwen3.5 9B"), ("qwen/qwen3.5-9b", "Qwen3.5 9B"), ("qwen3.5-4b", "Qwen3.5 4B"),
