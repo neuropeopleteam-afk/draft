@@ -20,7 +20,7 @@ prior_difficulty:
   sigma_variant: 0.3
   basis: "Запрос сверки из 5 строк; нужно увидеть сразу два дефекта (INNER JOIN теряет пропавшие записи, `<>` с NULL даёт NULL). Дистракторы исправляют только один из дефектов или ломают логику полей; IS DISTINCT FROM знаком не всем (Middle/Senior)"
 generator: assessment_bank.families.qa.sql_reconciliation_fix
-version: 1
+version: 2
 description: >
   Запрос сверки источника и DWH через INNER JOIN и `<>` не видит пропавших записей и
   расхождений «NULL против значения». Нужно выбрать запрос с LEFT JOIN и IS DISTINCT FROM.

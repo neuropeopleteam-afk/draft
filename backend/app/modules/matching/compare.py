@@ -16,7 +16,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.core.enums import ProbeStatus
-from app.core.fmt import quoted
+from app.core.fmt import probe_title, quoted, ru_num
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTIONS, GRADE_LEVEL, GRADES, STACK, category_title
 from app.modules.contact.salary import to_net
@@ -33,8 +33,7 @@ WF_TITLES = {"office": "офис", "hybrid": "гибрид", "remote": "удал
 
 
 def _n(x: float, d: int = 2, sign: bool = False) -> str:
-    s = f"{x:+.{d}f}" if sign else f"{x:.{d}f}"
-    return s.replace(".", ",").replace("-", "−")
+    return ru_num(x, d, sign)  # одно округление и формат с интерфейсом (app.core.fmt, Ф3)
 
 
 def _rub(v: int | None) -> str:
@@ -342,7 +341,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         if b.probes_t1:
             best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))
             cells["probe"] = {"level": "T1", "status": "confirmed",
-                              "text": f"{quoted(best.title)} — {best.value.get('verdict', 'оценено')}"
+                              "text": f"{quoted(probe_title(best.title, best.value.get('verdict')))} — {best.value.get('verdict', 'оценено')}"
                                       + (f"; всего зондов: {len(b.probes_t1)}" if len(b.probes_t1) > 1 else ""),
                               "value": float(best.value.get("score", 0))}
         else:

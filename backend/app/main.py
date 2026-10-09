@@ -154,7 +154,11 @@ def create_app() -> FastAPI:
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
                 "jury_mode_available": s.jury_mode_available, "demo_sandbox": s.demo_sandbox,
                 "proctor_camera": get_settings().proctor_camera_enabled,  # на запросе (не замыкание s): флаг переключается без пересоздания app; false — экрана камеры нет
-                "llm": llm_status(), "assessment_engine": get_engine().name}
+                "llm": llm_status(), "assessment_engine": get_engine().name,
+                # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
+                "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,  # на запросе, как proctor_camera
+                          "retake_same_grade_days": get_settings().retake_same_grade_days,
+                          "invitation_cooldown_days": get_settings().invitation_cooldown_days}}
 
     class HealthOut(BaseModel):
         status: str
