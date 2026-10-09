@@ -1,15 +1,44 @@
 {
  "title": "Сильнейшие модели: замер по функциям (малая выборка)",
  "date": "2026-10-09",
- "code_sha": "df4f9f3",
+ "code_sha": "ba4b149",
  "models": {
-  "z-ai/glm-5.3": {
-   "name": "Z.ai: GLM 5.3",
-   "family": "Zhipu (Z.ai)",
-   "open_weights": "zai-org/GLM-5.3",
-   "in_usd_per_m": 0.04,
-   "out_usd_per_m": 3.6,
-   "stand": false
+  "anthropic/claude-sonnet-5.5": {
+   "name": "Anthropic: Claude Sonnet 5.5",
+   "family": "Anthropic",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "stand": true,
+   "variant": null
+  },
+  "qwen/qwen3.8-27b@noreason15": {
+   "name": "Qwen: Qwen3.8 27B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
+   "stand": false,
+   "variant": {
+    "base": "qwen/qwen3.8-27b",
+    "name": "noreason15",
+    "max_tokens": 900,
+    "reasoning_effort": "none",
+    "limit": 15
+   }
+  },
+  "qwen/qwen3.5-9b@i24": {
+   "name": "qwen/qwen3.5-9b",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.5-9B",
+   "in_usd_per_m": null,
+   "out_usd_per_m": null,
+   "stand": false,
+   "variant": {
+    "base": "qwen/qwen3.5-9b",
+    "name": "i24",
+    "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"
+   }
   },
   "qwen/qwen3.8-27b": {
    "name": "Qwen: Qwen3.8 27B",
@@ -17,15 +46,26 @@
    "open_weights": "Qwen/Qwen3.8-27B",
    "in_usd_per_m": 0.425,
    "out_usd_per_m": 2.55,
-   "stand": false
+   "stand": false,
+   "variant": null
   },
-  "anthropic/claude-sonnet-5.5": {
-   "name": "Anthropic: Claude Sonnet 5.5",
-   "family": "Anthropic",
-   "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 10.0,
-   "stand": true
+  "z-ai/glm-5.3": {
+   "name": "Z.ai: GLM 5.3",
+   "family": "Zhipu (Z.ai)",
+   "open_weights": "zai-org/GLM-5.3",
+   "in_usd_per_m": 0.04,
+   "out_usd_per_m": 3.6,
+   "stand": false,
+   "variant": null
+  },
+  "deepseek/deepseek-v4-pro-0813": {
+   "name": "DeepSeek: DeepSeek V4 Pro 0813",
+   "family": "DeepSeek",
+   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "in_usd_per_m": 0.66,
+   "out_usd_per_m": 1.98,
+   "stand": false,
+   "variant": null
   }
  },
  "cells": {
@@ -60,6 +100,40 @@
     "price": {
      "usd_per_1k_calls": 12.93,
      "rub_per_1k_calls": 1104.8
+    }
+   },
+   "deepseek/deepseek-v4-pro-0813": {
+    "n": 15,
+    "calls": 15,
+    "ok": 3,
+    "format_fail": 12,
+    "transport_fail": 0,
+    "errors": {
+     "empty": 12
+    },
+    "p50_s": 24.04,
+    "p95_s": 26.78,
+    "tokens": {
+     "prompt": 3750,
+     "completion": 12250
+    },
+    "cost_usd": 0.0498,
+    "quality": {
+     "f1": 0.9609,
+     "p": 0.9663,
+     "r": 0.9556,
+     "f1_silver": 0.9425,
+     "p_silver": 0.9213,
+     "r_silver": 0.9647,
+     "n": 15,
+     "ci90": [
+      0.934,
+      0.982
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 3.32,
+     "rub_per_1k_calls": 283.6
     }
    },
    "qwen/qwen3.8-27b": {
@@ -129,6 +203,75 @@
      "rub_per_1k_calls": 192.5
     }
    },
+   "qwen/qwen3.8-27b@noreason15": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 2.87,
+    "p95_s": 8.39,
+    "tokens": {
+     "prompt": 19219,
+     "completion": 4879
+    },
+    "cost_usd": 0.0125,
+    "quality": {
+     "f1": 0.9167,
+     "p": 0.8627,
+     "r": 0.9778,
+     "f1_silver": 0.8877,
+     "p_silver": 0.8137,
+     "r_silver": 0.9765,
+     "n": 15,
+     "ci90": [
+      0.851,
+      0.959
+     ]
+    },
+    "variant": {
+     "name": "noreason15",
+     "max_tokens": 900,
+     "reasoning_effort": "none",
+     "limit": 15
+    },
+    "price": {
+     "usd_per_1k_calls": 0.83,
+     "rub_per_1k_calls": 71.2
+    }
+   },
+   "qwen/qwen3.5-9b@i24": {
+    "n": 15,
+    "calls": 15,
+    "ok": 13,
+    "format_fail": 0,
+    "transport_fail": 2,
+    "errors": {
+     "http_429": 2
+    },
+    "p50_s": 4.29,
+    "p95_s": 5.47,
+    "tokens": {
+     "prompt": 0,
+     "completion": 0
+    },
+    "cost_usd": null,
+    "quality": {
+     "f1": 0.8934,
+     "p": 0.8224,
+     "r": 0.9778,
+     "f1_silver": 0.875,
+     "p_silver": 0.785,
+     "r_silver": 0.9882,
+     "n": 15,
+     "ci90": [
+      0.858,
+      0.929
+     ]
+    },
+    "price": {}
+   },
    "rules": {
     "quality": {
      "f1": 0.9609,
@@ -171,6 +314,36 @@
     "price": {
      "usd_per_1k_calls": 10.0,
      "rub_per_1k_calls": 854.2
+    }
+   },
+   "deepseek/deepseek-v4-pro-0813": {
+    "n": 15,
+    "calls": 15,
+    "ok": 3,
+    "format_fail": 12,
+    "transport_fail": 0,
+    "errors": {
+     "invalid_json": 2,
+     "empty": 10
+    },
+    "p50_s": 4.99,
+    "p95_s": 13.9,
+    "tokens": {
+     "prompt": 5638,
+     "completion": 4304
+    },
+    "cost_usd": 0.0211,
+    "quality": {
+     "jaccard": 1.0,
+     "n": 3,
+     "ci90": [
+      1.0,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 1.41,
+     "rub_per_1k_calls": 120.2
     }
    },
    "qwen/qwen3.8-27b": {
@@ -276,6 +449,45 @@
     "price": {
      "usd_per_1k_calls": 2.16,
      "rub_per_1k_calls": 184.5
+    }
+   },
+   "deepseek/deepseek-v4-pro-0813": {
+    "n": 20,
+    "calls": 20,
+    "ok": 19,
+    "format_fail": 1,
+    "transport_fail": 0,
+    "errors": {
+     "empty": 1
+    },
+    "p50_s": 12.83,
+    "p95_s": 27.1,
+    "tokens": {
+     "prompt": 8437,
+     "completion": 19545
+    },
+    "cost_usd": 0.0502,
+    "quality": {
+     "stack_p": 0.956,
+     "stack_r": 1.0,
+     "stack_f1": 0.9775,
+     "tp_fp_fn": [
+      152,
+      7,
+      0
+     ],
+     "roles_p": 0.889,
+     "roles_r": 0.889,
+     "experience_ok": 19,
+     "n": 20,
+     "ci90": [
+      0.965,
+      0.991
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 2.51,
+     "rub_per_1k_calls": 214.4
     }
    },
    "qwen/qwen3.8-27b": {
@@ -384,11 +596,11 @@
     "p95_s": 4.52,
     "cost_usd": 0.3687,
     "quality": {
-     "mae": 0.008,
-     "mae_n": 18,
+     "mae": 0.017,
+     "mae_n": 21,
      "ci90": [
       0.0,
-      0.018
+      0.035
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -401,6 +613,33 @@
      "rub_per_1k_calls": 629.9
     }
    },
+   "deepseek/deepseek-v4-pro-0813": {
+    "n": 20,
+    "calls": 20,
+    "ok": 18,
+    "format_fail": 2,
+    "transport_fail": 0,
+    "p50_s": 1.75,
+    "p95_s": 11.9,
+    "cost_usd": 0.0456,
+    "quality": {
+     "mae": 0.067,
+     "mae_n": 8,
+     "ci90": [
+      0.0,
+      0.141
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 2,
+     "attacks_n": 10,
+     "order_strict": 0,
+     "order_n": 0
+    },
+    "price": {
+     "usd_per_1k_calls": 2.28,
+     "rub_per_1k_calls": 194.8
+    }
+   },
    "qwen/qwen3.8-27b": {
     "n": 50,
     "calls": 50,
@@ -411,11 +650,11 @@
     "p95_s": 39.74,
     "cost_usd": 0.0894,
     "quality": {
-     "mae": 0.013,
-     "mae_n": 18,
+     "mae": 0.018,
+     "mae_n": 20,
      "ci90": [
       0.0,
-      0.033
+      0.037
      ],
      "attacks_pass": 0,
      "attacks_flagged": 3,
@@ -438,11 +677,11 @@
     "p95_s": 12.97,
     "cost_usd": 0.1151,
     "quality": {
-     "mae": 0.012,
-     "mae_n": 18,
+     "mae": 0.024,
+     "mae_n": 19,
      "ci90": [
       0.0,
-      0.026
+      0.054
      ],
      "attacks_pass": 0,
      "attacks_flagged": 4,
@@ -474,6 +713,44 @@
   "Цена — фактическая (usage.cost OpenRouter) на 1000 вызовов функции; рубли — по курсу ЦБ РФ на 09.10.2026."
  ],
  "pending": "Дорогие модели (Claude Fable 5.1, GPT-6 Astra Pro, Claude Opus 5.5) — после пополнения баланса; до этого эталон оценщика — медиана остальных моделей замера.",
+ "probes": [
+  {
+   "model": "qwen/qwen3.8-27b",
+   "name": "mt3000",
+   "max_tokens": 3000,
+   "reasoning_effort": "low",
+   "limit": 5,
+   "ok": 4,
+   "calls": 5,
+   "errors": {
+    "invalid_json": 1
+   },
+   "p50_s": 15.44,
+   "p95_s": 18.45
+  },
+  {
+   "model": "qwen/qwen3.8-27b",
+   "name": "noreason",
+   "max_tokens": 900,
+   "reasoning_effort": "none",
+   "limit": 5,
+   "ok": 5,
+   "calls": 5,
+   "errors": {},
+   "p50_s": 5.54,
+   "p95_s": 11.69
+  }
+ ],
+ "not_measured": [
+  {
+   "model": "YandexGPT 5.1",
+   "why": "не цель после смены задачи 09.10 (решение штаба); ключ Yandex AI Studio в песочницу не передан. Прежний замер 08.10 — docs/LLM.md, разделы 6 и 11"
+  },
+  {
+   "model": "Объяснения подборки, «почему», ранжирование, категория",
+   "why": "модель не вызывается — правила"
+  }
+ ],
  "recommendation": {
   "needs_delta": {
    "main": "z-ai/glm-5.3",
@@ -482,13 +759,17 @@
    "best_open": "z-ai/glm-5.3",
    "ranked": [
     "z-ai/glm-5.3",
-    "anthropic/claude-sonnet-5.5"
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b@noreason15"
    ],
    "within_noise": [
-    "anthropic/claude-sonnet-5.5"
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b@noreason15"
    ],
    "excluded": {
-    "qwen/qwen3.8-27b": "отказы 12 из 15 (формат 12, сеть 0)"
+    "deepseek/deepseek-v4-pro-0813": "отказы 12 из 15 (формат 12, сеть 0)",
+    "qwen/qwen3.8-27b": "отказы 12 из 15 (формат 12, сеть 0)",
+    "qwen/qwen3.5-9b@i24": "отказы 2 из 15 (формат 0, сеть 2)"
    },
    "lower_better": false
   },
@@ -506,7 +787,9 @@
     "anthropic/claude-sonnet-5.5",
     "qwen/qwen3.8-27b"
    ],
-   "excluded": {},
+   "excluded": {
+    "deepseek/deepseek-v4-pro-0813": "отказы 12 из 15 (формат 12, сеть 0)"
+   },
    "lower_better": false
   },
   "resume": {
@@ -523,7 +806,9 @@
     "qwen/qwen3.8-27b",
     "z-ai/glm-5.3"
    ],
-   "excluded": {},
+   "excluded": {
+    "deepseek/deepseek-v4-pro-0813": "p95 27.1 с > 25 с"
+   },
    "lower_better": false
   },
   "grade": {
@@ -536,6 +821,7 @@
    ],
    "within_noise": [],
    "excluded": {
+    "deepseek/deepseek-v4-pro-0813": "отказы 2 из 20 (формат 2, сеть 0)",
     "qwen/qwen3.8-27b": "отказы 4 из 50 (формат 4, сеть 0)",
     "z-ai/glm-5.3": "отказы 4 из 50 (формат 4, сеть 0)"
    },

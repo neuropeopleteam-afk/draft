@@ -127,7 +127,7 @@ class Settings(BaseSettings):
     llm_timeout_resume: float | None = None
     llm_timeout_grade: float | None = None
     llm_timeout_grade_second: float | None = None
-    # Рассуждения моделей OpenRouter на функцию (у Sonnet 5.5 их нельзя выключить): low | medium | high | default
+    # Рассуждения моделей OpenRouter на функцию (у Sonnet 5.5 их нельзя выключить): none | minimal | low | medium | high | default
     # (параметр не передаётся). Разбор и резюме — low: извлечению рассуждения не нужны, а ответ в 2 раза дешевле и
     # не обрезается лимитом токенов (docs/LLM.md, «качество / время»)
     llm_reasoning_parse_need: str = "low"
