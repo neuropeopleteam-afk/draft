@@ -58,12 +58,13 @@ from assessment_bank.psychometrics import (CanaryDetector, CATConfig, CATSession
                                            pool_from_specs, prob)
 from assessment_bank.registry import canary_published_seeds
 
-from app.core.fmt import theta_se
+from app.core.fmt import theta_round, theta_se
 from app.modules.assessment import ai_mark, integrity
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
 from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
 from app.modules.assessment.grader import grade_open
-from app.modules.assessment.grades import GRADE_RU, cuts_tuple, decide_grade, scale as platform_scale, start_theta
+from app.modules.assessment.grades import (GRADE_RU, category_level, cuts_tuple, decide_grade, scale as platform_scale,
+                                           start_theta)
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import stack_gate, to_stack_tags
 
@@ -342,9 +343,10 @@ class BankEngine:
             if excl and len(excl) < len(clean_idx):
                 theta, se = (float(v) for v in sess.rescore(excl))
                 rescored, excluded = True, len(excl)
-        dec = decide_grade(theta, se, claimed)
-
         scored = [i for i in done if not i["canary"]]
+        # потолок категории по длине теста и погрешности — то же отображение θ → категория, что у мини-теста (grades)
+        dec = decide_grade(theta, se, claimed, n_items=len(scored))
+
         new_scored = [i for i in state["items"] if i["done"] and not i["canary"]]
         pending = [i for i in scored if any(v is None for v in i["x"])]
         answered = [i for i in scored if any(v is not None for v in i["x"])]
@@ -367,8 +369,12 @@ class BankEngine:
             "signals": i.get("signals"),
             "injection": any((g or {}).get("error") == "prompt_injection_suspected" for g in i.get("grading") or []),
             "meta_claims": any("meta_claims" in ((g or {}).get("flags") or []) for g in i.get("grading") or []),
-            "ai_mark_hit": bool(i.get("ai_mark_hit")), "fast_text": bool(i.get("fast_text")), "typing": i.get("typing")}
-            for i in done], pk, extra=state.get("integrity_extra") or {})  # extra — сигналы сессии внешних модулей
+            "ai_mark_hit": bool(i.get("ai_mark_hit")), "fast_text": bool(i.get("fast_text")), "typing": i.get("typing"),
+            # порог «быстро» — от ожидаемого времени семейства на уровне θ и длины текста задания (Ф3)
+            **dict(zip(("text_chars", "code_chars"), integrity.text_size(i.get("public")))),
+            "b": float(np.mean((i.get("pool") or {}).get("b") or [0.0]))}
+            for i in done], pk, extra=state.get("integrity_extra") or {},  # extra — сигналы сессии внешних модулей
+            theta=theta, soft_fast=state.get("mode") == "express" or bool(state.get("sandbox")))
         details = {
             "bank": self.manifest, "n_families_in_bank": self.n_families, "mode": state.get("mode", "full"),
             "length": {"min_items": state["cfg"]["min_items"], "max_items": state["cfg"]["max_items"],
@@ -405,11 +411,16 @@ class BankEngine:
                         for i in scored if i["format"] in ("open_answer", "open_book_3step")],
         }
         retake = dec.retake_lower
+        lvl = category_level(theta, se, len(scored))
+        details["category_level"] = {"grade": lvl.grade, "ceiling": lvl.ceiling, "capped": lvl.capped,
+                                     "claimed_above_ceiling": GRADES.index(claimed) > GRADES.index(lvl.ceiling)}
+        # θ и погрешность округляются один раз (fmt.theta_round): итог, факты, подборка и приглашение — одинаково
+        theta_r, se_r = theta_round(theta, se)
         return EngineResult(
-            engine=self.name, theta=round(theta, 3), se=round(se, 3), claimed_grade=claimed,
+            engine=self.name, theta=theta_r, se=se_r, claimed_grade=claimed,
             point_grade=dec.point_grade, confirmed=dec.confirmed, upgrade_available=dec.upgrade_available,
             retake_lower=retake, probabilities=dec.probabilities, answered=len(answered), correct=correct,
-            skills=skills, explanation=self._explain(dec, theta, se, claimed, details), details=_finite(details),
+            skills=skills, explanation=self._explain(dec, theta_r, se_r, claimed, details), details=_finite(details),
             provisional=dec.provisional, provisional_reason=dec.provisional_reason, p_claimed=dec.p_claimed,
         )
 
@@ -709,6 +720,10 @@ class BankEngine:
             s += (f": можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower else
                   ": можно повторить после подготовки." if GRADES.index(claimed) == 0 else
                   ": можно пройти тест на грейд ниже или повторить после подготовки.")
+        cl = details.get("category_level") or {}
+        if cl.get("claimed_above_ceiling") and not dec.confirmed:
+            s += (f" Тест из {details.get('n_scored', 0)} заданий с такой погрешностью подтверждает категорию не выше "
+                  f"{GRADE_RU[cl['ceiling']]}: {g} подтверждает более длинный тест.")
         cf = details.get("confirm")
         if cf:
             s += (f" Дотестирование у порога Junior: к ответам прошлой попытки ({cf['prior_items']}) добавлено "

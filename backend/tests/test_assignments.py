@@ -77,7 +77,7 @@ def test_preview_by_need_and_probe_full_flow(client):
     pv = pv.json()
     assert pv["direction"] == "backend" and pv["grade"] == "middle" and 3 <= len(pv["families"]) <= 5
     assert {"python", "fastapi", "postgresql", "redis"} <= set(pv["stack"])
-    # честно: покрытие и «чего в банке нет» — разбиение стека без потерь (после синхронизации банка 164 семейства
+    # честно: покрытие и «чего в банке нет» — разбиение стека без потерь (после синхронизации банка 165 семейств
     # kafka уже покрыт — состав missing не фиксируем)
     cov = pv["coverage"]
     assert "python" in cov["covered"] and not (set(cov["covered"]) & set(cov["missing"]))

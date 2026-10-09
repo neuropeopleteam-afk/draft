@@ -28,7 +28,7 @@ OUTSIDE = "адресная строка"
 
 KIND_LINES = {
     "good": ["  const last = items.length - 1;", "  if (event.shiftKey && i <= 0) return items[last];",
-             "  if (!event.shiftKey && (i === -1 || i === last)) return items[0];"],
+             "  if (!event.shiftKey && (i < 0 || i === last)) return items[0];"],
     "strict_first": ["  const last = items.length - 1;", "  if (event.shiftKey && i === 0) return items[last];",
                      "  if (!event.shiftKey && i === last) return items[0];"],
     "off_by_one": ["  const last = items.length;", "  if (event.shiftKey && i <= 0) return items[last];",
@@ -230,7 +230,7 @@ CONDITIONS = {
 
 def _key_text(start, keys, items):
     k = ", ".join("Shift+Tab" if s else "Tab" for s in keys)
-    where = ("на контейнере окна (сразу после открытия)" if start == CONTAINER else f"на «{start}»")
+    where = ("на контейнере окна" if start == CONTAINER else f"на «{start}»")
     return f"Фокус {where}, нажать: {k}"
 
 
