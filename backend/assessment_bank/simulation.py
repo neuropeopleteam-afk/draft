@@ -17,11 +17,22 @@
 * projected_bank  — синтетический банк ~120 семейств: эффективность адаптивного теста,
                     частота показа без контроля и с Sympson–Hetter;
 * fixed_form      — линейная форма той же длины для сравнения.
+
+Случайные числа (с 09.10): у каждой части мира свой поток, выведенный из seed и имени —
+истина каждого семейства (по family_id), популяция, пилот и каждый кандидат в каждом сценарии.
+Раньше весь прогон шёл одним генератором по порядку, и добавление одного семейства backend
+перетасовывало «истину» всех следующих семейств и все популяции frontend: отчёты разных версий
+банка сравнивали разные случайные миры. Разброс по мирам (worlds > 0) — отдельная таблица.
 """
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 import time
+import zlib
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -32,10 +43,30 @@ from .psychometrics import (CATConfig, CanaryDetector, GradeScale, PoolItem, Tim
                             calibrate_sympson_hetter, decide, estimate_theta, fit_hierarchy,
                             fit_mml, pool_from_specs, prob, run_cat)
 from .psychometrics.grading import GRADE_ORDER
+from .gen_utils import plural
 from .registry import load_specs
 
 SCALE = GradeScale()
 DIRECTIONS = ("backend", "frontend")
+
+
+# --------------------------------------------------------------------------- потоки случайных чисел
+def _key_ints(keys) -> list[int]:
+    out: list[int] = []
+    for k in keys:
+        if isinstance(k, (tuple, list)):
+            out += _key_ints(k)
+        elif isinstance(k, (int, np.integer)) and not isinstance(k, bool):
+            out.append(int(k) & 0xFFFFFFFFFFFFFFFF)
+        else:
+            out.append(zlib.crc32(str(k).encode("utf-8")))
+    return out
+
+
+def stream(*keys) -> np.random.Generator:
+    """Независимый воспроизводимый поток по ключу (seed, имена…): не зависит от того, сколько
+    случайных чисел израсходовали другие части прогона."""
+    return np.random.default_rng(_key_ints(keys))
 
 
 # --------------------------------------------------------------------------- истина
@@ -50,11 +81,18 @@ class TrueFamily:
     alpha_time: float = 1.6
 
 
-def make_truth(pool: list[PoolItem], rng: np.random.Generator, misspec: float = 0.5
-               ) -> dict[str, TrueFamily]:
-    """Истинные параметры = предкалибровка + систематическая ошибка эксперта."""
+def make_truth(pool: list[PoolItem], rng: np.random.Generator | None, misspec: float = 0.5, *,
+               seed=None) -> dict[str, TrueFamily]:
+    """Истинные параметры = предкалибровка + систематическая ошибка эксперта.
+
+    seed=None — прежнее поведение (один генератор rng по порядку пула). seed задан — истина
+    каждого семейства из своего потока stream(seed, "truth", family_id): добавление или вывод
+    одного семейства не меняет истину остальных.
+    """
     out = {}
     for it in pool:
+        if seed is not None:
+            rng = stream(seed, "truth", it.family_id)
         shift = rng.normal(0, misspec)
         mu = it.b + shift + rng.normal(0, 0.15, size=len(it.b))
         a = it.a * np.exp(rng.normal(0, 0.25))
@@ -159,12 +197,15 @@ def _session_record(sess, res, person: Person) -> dict:
 
 def run_population(pool, truth, people, direction, cfg, rng, subpools=None, exposure=None,
                    leak: LeakModel | None = None, detector: CanaryDetector | None = None,
-                   keep_sessions: bool = False):
+                   keep_sessions: bool = False, *, person_key=None):
+    """person_key задан — у k-го кандидата свой поток stream(person_key, k) (общие случайные
+    числа: сценарии с одним ключом сравниваются на одних и тех же «бросках»)."""
     results, sessions = [], []
     for k, p in enumerate(people):
         sp = subpools[k] if subpools is not None else None
+        r = stream(person_key, k) if person_key is not None else rng
         sess, res = run_cat(pool, direction, make_responder(p, truth, leak), cfg, exposure,
-                            p.claimed, sp, rng)
+                            p.claimed, sp, r)
         rec = _session_record(sess, res, p)
         if detector is not None:
             rec.update(_apply_detector(sess, res, p, detector))
@@ -202,19 +243,38 @@ def _apply_detector(sess, res, person: Person, det: CanaryDetector) -> dict:
 
 
 # --------------------------------------------------------------------------- калибровка
-def simulate_pilot(pool, truth, n, rng, n_variants=30):
-    """Пилот: фиксированная форма из всех некарантинных семейств, случайные варианты."""
+def simulate_pilot(pool, truth, n, rng, n_variants=30, *, key=None):
+    """Пилот: фиксированная форма из всех некарантинных семейств, случайные варианты.
+
+    key задан — θ участников из stream(key, "theta"), варианты и ответы по семейству — из
+    stream(key, family_id): набор семейств не сдвигает случайные числа остальных."""
     person, item, variant, x = [], [], [], []
-    deltas = {it.family_id: rng.normal(0, truth[it.family_id].sigma, n_variants) for it in pool}
-    thetas = rng.normal(size=n)
+    if key is None:
+        deltas = {it.family_id: rng.normal(0, truth[it.family_id].sigma, n_variants) for it in pool}
+        thetas = rng.normal(size=n)
+        draws = None
+    else:
+        thetas = stream(key, "theta").normal(size=n)
+        deltas, draws = {}, {}
+        for it in pool:
+            if it.canary:
+                continue
+            r = stream(key, it.family_id)
+            deltas[it.family_id] = r.normal(0, truth[it.family_id].sigma, n_variants)
+            draws[it.family_id] = (r.integers(n_variants, size=n),
+                                   r.random((n, len(truth[it.family_id].mu))))
     for pi, th in enumerate(thetas):
         for it in pool:
             if it.canary:
                 continue
             tf = truth[it.family_id]
-            v = int(rng.integers(n_variants))
+            if draws is None:
+                v = int(rng.integers(n_variants))
+                u = rng.random(len(tf.mu))
+            else:
+                v, u = int(draws[it.family_id][0][pi]), draws[it.family_id][1][pi]
             p = prob(th, tf.a, tf.mu + deltas[it.family_id][v])
-            xs = (rng.random(len(p)) < p).astype(float)
+            xs = (u < p).astype(float)
             for part, xv in enumerate(xs):
                 person.append(pi)
                 item.append(f"{it.family_id}#{part}")
@@ -289,17 +349,20 @@ def assign_subpools(pool, n_subpools):
 
 
 # --------------------------------------------------------------------------- линейная форма
-def fixed_form(pool, truth, people, direction, rng, n_items):
+def fixed_form(pool, truth, people, direction, rng, n_items, *, key=None):
+    """key задан — форма из stream(key, "form"), ответы k-го кандидата из stream(key, k)."""
     scored = [i for i in pool if not i.canary and i.block in ("common", direction)]
-    form = list(rng.choice(len(scored), size=min(n_items, len(scored)), replace=False))
+    form_rng = stream(key, "form") if key is not None else rng
+    form = list(form_rng.choice(len(scored), size=min(n_items, len(scored)), replace=False))
     res = []
-    for p in people:
+    for k, p in enumerate(people):
         xs, aa, bb = [], [], []
         resp = make_responder(p, truth)
+        r = stream(key, k) if key is not None else rng
         t = 0.0
         for j in form:
             it = scored[j]
-            x, lt = resp(it, rng)
+            x, lt = resp(it, r)
             xs.append(x)
             aa.append(it.a_eff)
             bb.append(it.b)
@@ -312,15 +375,85 @@ def fixed_form(pool, truth, people, direction, rng, n_items):
 
 
 # --------------------------------------------------------------------------- главный прогон
+def _calibrate(specs, base_pool, truth, direction, key, n_pilot: int = 300):
+    """Пилот N = n_pilot → иерархическая 2PL → пул с калиброванными параметрами (и качество калибровки)."""
+    dir_pool = [i for i in base_pool if i.block in ("common", direction)]
+    P, I, V, X = simulate_pilot(dir_pool, truth, n_pilot, None, key=(key, f"pilot{n_pilot}"))
+    hres = fit_hierarchy(P, I, V, X, model="2pl")
+    params = calibrated_params(hres, dir_pool)
+    cal_pool = pool_from_specs(list(specs.values()), params=params, n_subpools=2)
+    return cal_pool, hres, dir_pool
+
+
+WORLD_METRICS = ("r_theta", "rmse", "bias", "mean_items", "grade_exact", "decision_accuracy",
+                 "false_confirm_rate", "false_reject_rate")
+
+
+def _world(args) -> dict:
+    """Один «мир»: своя истина, популяция и пилот; prior_cat и calibrated_cat по обоим направлениям."""
+    seed, w, n = args
+    wk = (seed, "world", w)
+    specs = load_specs()
+    base_pool = pool_from_specs(specs.values(), n_subpools=2)
+    truth = make_truth(base_pool, None, seed=wk)
+    cfg = CATConfig()
+    out = {}
+    for d in DIRECTIONS:
+        people = make_population(n, stream(wk, d, "people"))
+        res, _ = run_population(base_pool, truth, people, d, cfg, None, person_key=(wk, d, "cat"))
+        prior = summarize(people, res)
+        cal_pool, hres, _ = _calibrate(specs, base_pool, truth, d, (wk, d))
+        res, _ = run_population(cal_pool, truth, people, d, cfg, None, person_key=(wk, d, "cat"))
+        cal = summarize(people, res)
+        out[d] = {"prior_cat": {k: prior[k] for k in WORLD_METRICS},
+                  "calibrated_cat": {k: cal[k] for k in WORLD_METRICS},
+                  "calibration_rmse_b": calibration_quality(hres, truth)["rmse_b"]}
+    return out
+
+
+def _world_subprocess(args) -> dict:
+    """Мир в отдельном процессе Python (без multiprocessing: на сервере проверок /dev/shm закрыт на запись)."""
+    code = ("import json, sys; from assessment_bank.simulation import _world; "
+            "print(json.dumps(_world(tuple(json.loads(sys.argv[1])))))")
+    root = str(Path(__file__).resolve().parent.parent)
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join(p for p in (root, os.environ.get("PYTHONPATH")) if p)}
+    r = subprocess.run([sys.executable, "-c", code, json.dumps(list(args))], capture_output=True, text=True,
+                       env=env, check=True)
+    return json.loads(r.stdout.strip().splitlines()[-1])
+
+
+def world_spread(seed: int, n: int, worlds: int, jobs: int = 1, main: dict | None = None) -> dict:
+    """Разброс метрик prior_cat и calibrated_cat по `worlds` независимым мирам (тот же банк, тот же N).
+    jobs > 1 — миры в отдельных процессах; результат тот же, что при jobs = 1 (у мира свои потоки)."""
+    args = [(seed, w, n) for w in range(1, worlds + 1)]
+    if jobs > 1:
+        with ThreadPoolExecutor(max_workers=jobs) as ex:
+            ws = list(ex.map(_world_subprocess, args))
+    else:
+        ws = [_world(a) for a in args]
+    out: dict = {"worlds": worlds, "n_per_world": n, "per_world": ws, "summary": {}}
+    for d in DIRECTIONS:
+        for sc in ("prior_cat", "calibrated_cat"):
+            S = out["summary"].setdefault(d, {}).setdefault(sc, {})
+            for m in WORLD_METRICS:
+                v = np.array([w[d][sc][m] for w in ws], dtype=float)
+                S[m] = {"mean": round(float(v.mean()), 3), "sd": round(float(v.std(ddof=1)), 3) if len(v) > 1 else 0.0,
+                        "min": round(float(v.min()), 3), "max": round(float(v.max()), 3)}
+                if main is not None:
+                    S[m]["main_world"] = main[d][sc][m]
+    return out
+
+
 def run_all(n: int = 1000, seed: int = 20261005, out_dir: str | None = None,
-            progress: bool = True) -> dict:
+            progress: bool = True, worlds: int = 0, jobs: int = 1) -> dict:
+    """Главный прогон. Все случайные числа — из потоков stream(seed, …) (см. описание модуля);
+    worlds > 0 — дополнительно разброс prior_cat/calibrated_cat по стольким независимым мирам."""
     t0 = time.time()
-    rng = np.random.default_rng(seed)
     specs = load_specs()
     log = (lambda *a: print(*a, flush=True)) if progress else (lambda *a: None)
-    report: dict = {"seed": seed, "n_per_scenario": n, "bank": {}, "scenarios": {}}
+    report: dict = {"seed": seed, "n_per_scenario": n, "rng": "keyed-v1", "bank": {}, "scenarios": {}}
     base_pool = pool_from_specs(specs.values(), n_subpools=2)
-    truth = make_truth(base_pool, rng)
+    truth = make_truth(base_pool, None, seed=seed)
     report["bank"] = {"families": len(base_pool),
                       "scored_by_direction": {d: sum(1 for i in base_pool if not i.canary and
                                                      i.block in ("common", d)) for d in DIRECTIONS},
@@ -329,27 +462,26 @@ def run_all(n: int = 1000, seed: int = 20261005, out_dir: str | None = None,
     cfg = CATConfig()
     for direction in DIRECTIONS:
         R = report["scenarios"].setdefault(direction, {})
-        people = make_population(n, rng)
+        K = (seed, direction)
+        people = make_population(n, stream(K, "people"))
         # 1. предкалибровка
-        res, _ = run_population(base_pool, truth, people, direction, cfg, rng)
+        res, _ = run_population(base_pool, truth, people, direction, cfg, None, person_key=(K, "cat"))
         R["prior_cat"] = summarize(people, res)
         log(direction, "prior_cat", R["prior_cat"])
         # 2. пилот и калибровка
-        dir_pool = [i for i in base_pool if i.block in ("common", direction)]
-        P, I, V, X = simulate_pilot(dir_pool, truth, 300, rng)
-        hres = fit_hierarchy(P, I, V, X, model="2pl")
+        cal_pool, hres, dir_pool = _calibrate(specs, base_pool, truth, direction, K)
         R["calibration_2pl_n300"] = calibration_quality(hres, truth)
-        P20, I20, V20, X20 = simulate_pilot(dir_pool, truth, 20, rng)
+        P20, I20, V20, X20 = simulate_pilot(dir_pool, truth, 20, None, key=(K, "pilot20"))
         h20 = fit_hierarchy(P20, I20, V20, X20, model="rasch")
         R["calibration_rasch_n20"] = calibration_quality(h20, truth)
-        params = calibrated_params(hres, dir_pool)
-        cal_pool = pool_from_specs([s for s in specs.values()], params=params, n_subpools=2)
-        res, _ = run_population(cal_pool, truth, people, direction, cfg, rng)
+        res, _ = run_population(cal_pool, truth, people, direction, cfg, None, person_key=(K, "cat"))
         R["calibrated_cat"] = summarize(people, res)
         log(direction, "calibrated_cat", R["calibrated_cat"])
         # 3. test-retest на разных субпулах и вариантах
-        r1, _ = run_population(cal_pool, truth, people, direction, cfg, rng, subpools=[0] * n)
-        r2, _ = run_population(cal_pool, truth, people, direction, cfg, rng, subpools=[1] * n)
+        r1, _ = run_population(cal_pool, truth, people, direction, cfg, None, subpools=[0] * n,
+                               person_key=(K, "retest", 0))
+        r2, _ = run_population(cal_pool, truth, people, direction, cfg, None, subpools=[1] * n,
+                               person_key=(K, "retest", 1))
         t1, t2 = np.array([r["theta"] for r in r1]), np.array([r["theta"] for r in r2])
         g1, g2 = _grade_idx(t1), _grade_idx(t2)
         c1, c2 = np.array([r["confirmed"] for r in r1]), np.array([r["confirmed"] for r in r2])
@@ -362,10 +494,11 @@ def run_all(n: int = 1000, seed: int = 20261005, out_dir: str | None = None,
             "subpool_0": summarize(people, r1), "subpool_1": summarize(people, r2)}
         log(direction, "retest", {k: v for k, v in R["test_retest_subpools"].items() if "subpool" not in k})
         # 4. утечка 30 % + канарейки, 25 % кандидатов используют утечку
-        cheaters = make_population(n, rng, cheater_share=0.25)
+        cheaters = make_population(n, stream(K, "cheaters"), cheater_share=0.25)
         honest_people = [p for p in cheaters if not p.cheater]
         det0 = CanaryDetector()
-        res_h, _ = run_population(cal_pool, truth, honest_people, direction, cfg, rng, detector=det0)
+        res_h, _ = run_population(cal_pool, truth, honest_people, direction, cfg, None, detector=det0,
+                                  person_key=(K, "leak_threshold"))
         thr = CanaryDetector.calibrate_threshold(np.array([r["combined"] for r in res_h]), 0.01)
         det = CanaryDetector(threshold=thr)
         leak = LeakModel(p_hit_scored=0.30)
@@ -380,18 +513,24 @@ def run_all(n: int = 1000, seed: int = 20261005, out_dir: str | None = None,
                                   "note": "rotation: утёкший субпул выведен из ротации, "
                                           "кандидатам выдаётся другой; канарейки остаются "
                                           "опубликованными по замыслу"})
-        base_res, _ = run_population(cal_pool, truth, cheaters, direction, cfg, rng)
+        base_res, _ = run_population(cal_pool, truth, cheaters, direction, cfg, None, person_key=(K, "leak"))
         L["no_leak_reference"] = _leak_summary(cheaters, base_res)
         for name, kw in variants.items():
-            res, _ = run_population(cal_pool, truth, cheaters, direction, cfg, rng, **kw)
+            res, _ = run_population(cal_pool, truth, cheaters, direction, cfg, None, person_key=(K, "leak"), **kw)
             L[name] = _leak_summary(cheaters, res)
             log(direction, name, L[name])
         # 5. линейная форма той же длины, что средний адаптивный тест
         n_fixed = int(round(R["calibrated_cat"]["mean_items"]))
-        R["fixed_form_same_length"] = summarize(people, fixed_form(cal_pool, truth, people,
-                                                                   direction, rng, n_fixed))
+        R["fixed_form_same_length"] = summarize(people, fixed_form(cal_pool, truth, people, direction, None,
+                                                                   n_fixed, key=(K, "fixed_form")))
     # 6. синтетический банк ~120 семейств
-    report["scenarios"]["projected_bank"] = _projected(n, rng, log)
+    report["scenarios"]["projected_bank"] = _projected(n, stream(seed, "projected"), log)
+    # 7. разброс по мирам
+    if worlds > 0:
+        main = {d: {sc: report["scenarios"][d][sc] for sc in ("prior_cat", "calibrated_cat")} for d in DIRECTIONS}
+        report["world_spread"] = world_spread(seed, n, worlds, jobs, main)
+        log("world_spread", {d: {sc: report["world_spread"]["summary"][d][sc]["decision_accuracy"]
+                                 for sc in ("prior_cat", "calibrated_cat")} for d in DIRECTIONS})
     report["elapsed_s"] = round(time.time() - t0, 1)
     if out_dir:
         out = Path(out_dir)
@@ -484,6 +623,10 @@ def report_markdown(rep: dict) -> str:
          f"Банк: {rep['bank']['families']} семейств, канареек {rep['bank']['canaries']}; оцениваемых "
          f"семейств на направление: {rep['bank']['scored_by_direction']}. Предкалибровка против "
          f"истины: r(b) = {rep['bank']['r_b_prior']}, RMSE(b) = {rep['bank']['rmse_b_prior']}.", ""]
+    if rep.get("rng") == "keyed-v1":
+        L += ["Случайные числа — потоки по ключу (seed, семейство / сценарий / кандидат): истина семейства не "
+              "зависит от состава банка, prior_cat и calibrated_cat идут на одних и тех же кандидатах и бросках. "
+              "Таблицы ниже — один мир (этот seed); разброс по независимым мирам — в конце отчёта.", ""]
     hdr = ("| Сценарий | r(θ̂,θ) | RMSE | SE | покрытие 95 % | заданий | грейд точно | ±1 | решение верно | "
            "ложн. подтв. | ложн. отказ | мин |")
     sep = "|" + "---|" * 12
@@ -525,5 +668,24 @@ def report_markdown(rep: dict) -> str:
     L += ["", "| Контроль показа | макс. частота | средняя | не используется | доля > 0,3 |", "|---|---|---|---|---|"]
     for name, s in P["exposure"].items():
         L.append(f"| {name} | {s['max_exposure']} | {s['mean_exposure']} | {s['share_unused']} | {s['share_over_0.3']} |")
+    W = rep.get("world_spread")
+    if W:
+        nw = W["worlds"]
+        L += ["", f"## Разброс по мирам ({nw} {plural(nw, 'независимый мир', 'независимых мира', 'независимых миров')}, "
+                  f"N = {W['n_per_world']} в каждом)", "",
+              "В каждом мире — своя истина параметров (тот же сдвиг σ = 0,5 относительно предкалибровки), своя "
+              "популяция и свой пилот N = 300; банк и правила те же. «Мир seed» — значение основного мира из таблиц "
+              "выше. Разница между версиями банка в одном мире, меньшая примерно двух SD, — разброс миров, а не "
+              "свойство банка.", "",
+              "| Направление | Сценарий | Метрика | мир seed | среднее | SD | мин | макс |", "|" + "---|" * 8]
+        names = {"decision_accuracy": "решение верно", "false_reject_rate": "ложн. отказ",
+                 "false_confirm_rate": "ложн. подтв.", "bias": "смещение θ̂", "r_theta": "r(θ̂,θ)",
+                 "mean_items": "заданий"}
+        for d in DIRECTIONS:
+            for sc in ("prior_cat", "calibrated_cat"):
+                for m, title in names.items():
+                    v = W["summary"][d][sc][m]
+                    L.append(f"| {d} | {sc} | {title} | {v.get('main_world', '—')} | {v['mean']} | {v['sd']} | "
+                             f"{v['min']} | {v['max']} |")
     L += ["", f"Время прогона: {rep['elapsed_s']} с.", ""]
     return "\n".join(L)
