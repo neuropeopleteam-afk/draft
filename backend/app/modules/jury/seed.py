@@ -413,6 +413,8 @@ def _create_jury(db: Session, sid: str) -> dict:
     cups = _jury_cups(db, sid, eu, c, p1)
     tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2, p3)  # задания работодателя с автопроверкой (И7)
     _maria_extras(db, eu, p1)
+    from app.modules.mutual.demo import seed_jury_mutual  # взаимный подбор, отзывы, ссылка руководителю (Н9, Н2, Н3)
+    seed_jury_mutual(db, eu, needs, p1, p2, p3)
     _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
     # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
     ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
