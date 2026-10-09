@@ -37,7 +37,13 @@ RULES = [
 BAD_NAMES = re.compile(r"(^|/)(\.env|id_rsa[^/]*|HANDOVER[^/]*|TZ_[^/]*|[^/]+\.(pem|key|p12|pfx))$")
 # ни вендорные, ни сгенерированные файлы не проверяем построчно
 SKIP = re.compile(r"(^|/)(package-lock\.json|static/apidocs/|public/vendor/|.*\.(png|jpg|jpeg|gif|svg|ico|wasm|tflite|gz|pdf|docx|y4m|woff2?))$")
-IGNORE_SELF = {"tools/publish/check_public_tree.py", "tools/publish/scan_history_values.py"}
+# Утилиты (Л13) читают экспертные разметки и отчёты вне репозитория: в README они перечислены как не запускаемые на чистом клоне.
+# Пути к этим внешним входам оставлены намеренно; остальные правила для этих файлов действуют.
+ALLOW = {
+    "tools/must_have/evaluate.py": {"путь рабочего места", "ссылка на внутренний отчёт или передачу дел"},
+    "tools/realdata/audit_expert_ranking.py": {"путь рабочего места", "ссылка на внутренний отчёт или передачу дел"},
+}
+IGNORE_SELF = {"tools/publish/check_public_tree.py", "tools/publish/scan_history_values.py", "tools/publish/test_publish_tools.py"}
 MAX_BYTES = 20 * 1024 * 1024
 
 
@@ -107,7 +113,7 @@ def main() -> int:
                 if not IP_OK.match(m.group(1)):
                     add("публичный IPv4-адрес", n, i)
             for rule, rx in RULES:
-                if rx.search(line):
+                if rx.search(line) and rule not in ALLOW.get(n, ()):
                     add(rule, n, i)
     for v in viol[: a.max_lines]:
         print(v)
