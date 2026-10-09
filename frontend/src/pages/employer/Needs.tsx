@@ -7,7 +7,7 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, T
 import { api } from "../../lib/api";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
-import { ProbeForm } from "./Contact";
+import { InviteForm, ProbeForm } from "./Contact";
 import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
@@ -400,6 +400,9 @@ export function Selection() {
   const [refineReq, setRefineReq] = useState<Req | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [probeOpen, setProbeOpen] = useState(false);
+  const [invite, setInvite] = useState<any>(null);  // Ф6 (Н9): приглашение с вилкой прямо из подборки
+  const [invited, setInvited] = useState<string | null>(null);
+  const [expandAll, setExpandAll] = useState(false);
   const [focus, setFocus] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [wErr, setWErr] = useState<string | null>(null);
@@ -541,7 +544,7 @@ export function Selection() {
               <div className="flex flex-wrap items-center gap-2">
                 <button className="btn-ghost" disabled={picked.length < 2 || picked.length > 3} title="Отметьте 2–3 кандидатов"
                   onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
-                <button className="btn-primary" disabled={!picked.length} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length})</button>
+                <button className="btn-ghost" disabled={!picked.length} title="Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" onClick={() => setProbeOpen(true)}>Зонд выбранным, необязательно ({picked.length})</button>
                 <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
               </div>
             </div>
@@ -554,21 +557,33 @@ export function Selection() {
             {s.filters?.origin?.note && <Alert kind="info">v{s.version}: {s.filters.origin.note}</Alert>}
             <MutualToolbar needId={id!} version={s.version} mutual={mutual} />
             <LevelLegend />
+            {/* Ф6 (Н3, Н9): что значит балл и какие условия жёсткие; карточки короткие, детали — по клику */}
+            {s.results.length > 0 && <div className="flex flex-wrap items-start justify-between gap-2 rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75" data-testid="score-legend">
+              <p className="min-w-0 flex-1 basis-72"><b className="font-semibold text-brand-night">Как читать балл.</b> Соответствие из 100 — доля требований, подтверждённых тестом (обязательные весят больше). Обязательные навыки — мягкое условие: без подтверждения кандидат остаётся в подборке с пометкой «не хватает обязательного»{s.must_first ? " и идёт ниже" : ""}. Формат и город — жёсткое: не прошедшие скрыты. Первая карточка раскрыта, остальные коротко — «Подробнее» в карточке. Главный шаг — «Пригласить» с вилкой; зонд — по желанию.</p>
+              <button type="button" className="font-semibold text-brand hover:underline" aria-pressed={expandAll} onClick={() => setExpandAll(!expandAll)}>{expandAll ? "Коротко у всех" : "Подробно у всех"}</button>
+            </div>}
+            {invited && <Alert kind="ok">{invited}</Alert>}
             {!s.results.length ? <Empty title="Подходящих кандидатов нет"
-              text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : mutual.sorted<any>(s.results).map((r: any) => (
-              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} compact
+              text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : mutual.sorted<any>(s.results).map((r: any, i: number) => (
+              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} compact collapsible expanded={expandAll || i === 0}
                 badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
                 mutual={<MutualCardBlock needId={id!} version={s.version} cref={r.ref} mutual={mutual} />}
                 actions={
                   <div className="flex flex-wrap items-center gap-3">
                     <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand" checked={picked.includes(r.ref)} onChange={() => setPicked(picked.includes(r.ref) ? picked.filter((x) => x !== r.ref) : [...picked, r.ref])} />выбрать</label>
                     <Link className="btn-ghost !py-2" to={`/employer/candidates/${r.ref}?need=${id}`}>Открыть</Link>
+                    <button type="button" className="btn-primary !py-2" onClick={() => { setInvited(null); setInvite(r); }}>Пригласить</button>
                   </div>
                 } />
             ))}
           </div>
         </div>
       )}
+      <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение кандидату ${invite?.ref ?? ""}`}>
+        {invite && <InviteForm cref={invite.ref} needId={id} market={invite.card?.market_range ?? s?.categories?.find((c: any) => c.relation === "exact")?.market_range}
+          needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }}
+          onDone={() => { setInvited(`Приглашение ${invite.ref} отправлено. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`); setInvite(null); }} />}
+      </Modal>
       <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Зонд для ${picked.length} канд.`}>
         <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={() => { setProbeOpen(false); setPicked([]); }} />
       </Modal>
