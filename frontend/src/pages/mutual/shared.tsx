@@ -15,7 +15,7 @@ export const STATUS_TEXT: Record<FitStatus, string> = {
   ok: "совпадает", partial: "частично", bad: "не совпадает", unknown: "нет данных", hidden: "скрыто кандидатом", limited: "лимит",
 };
 const STATUS_STYLE: Record<FitStatus, string> = {
-  ok: "text-emerald-800", partial: "text-amber-900", bad: "text-brand-plum", unknown: "text-brand-ink/60", hidden: "text-brand-ink/60", limited: "text-brand-ink/60",
+  ok: "text-emerald-800", partial: "text-amber-900", bad: "text-brand-plum", unknown: "text-brand-ink/65", hidden: "text-brand-ink/65", limited: "text-brand-ink/65",
 };
 
 export function FitBadge({ fit, short = false }: { fit: Fit; short?: boolean }) {
