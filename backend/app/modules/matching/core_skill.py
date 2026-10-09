@@ -186,6 +186,20 @@ def assess_pool(bundles: list[Bundle], req: dict, on: bool | None = None) -> dic
     return out
 
 
+def describe(b: Bundle, req: dict, active: bool = True, on: bool | None = None) -> dict | None:
+    """Одна карточка без пула (карточка кандидата из подборки, сравнение): состояние и тексты; active — действует ли
+    признак в подборке (по умолчанию да: пул неизвестен). None — у потребности нет ядра."""
+    on = enabled() if on is None else on
+    core = role_core(req)
+    if not core:
+        return None
+    st = state(b, core)
+    return {"kind": core["kind"], "label": core["label"], "title": core["title"], "tags": core["tags"],
+            "state": st["state"], "via": _title(st["via"]) if st.get("via") else None, "implied": bool(st.get("implied")),
+            "tested_low": bool(st.get("tested_low")), "active": active, "text": text(core, st, active, on),
+            "key": int(on and active and st["state"] == "absent"), "headline": headline(core, st)}
+
+
 def headline(core: dict, st: dict) -> str:
     """Короткая строка для шапки карточки и сравнения: «Основной язык роли — Go: не заявлен»."""
     word = {"confirmed": "подтверждён тестом", "declared": "заявлен, тестом не подтверждён",

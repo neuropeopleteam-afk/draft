@@ -151,11 +151,16 @@ EVAL_GRADES = ("junior", "middle", "senior")
 
 
 def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_order: bool | None = None,
-             must_first: bool | None = None) -> dict:
+             must_first: bool | None = None, core: bool | None = None, core_policy: str | None = None) -> dict:
     """must_first — ярусы обязательного (Ф2; по умолчанию — как в продукте, флаг MATCH_MUST_FIRST);
-    baseline_order=True — прежний порядок match-v1 (для сравнения до/после)."""
+    baseline_order=True — прежний порядок match-v1 (для сравнения до/после); core — признак «ядро роли» (Я1, по
+    умолчанию флаг RANK_CORE_SKILL), core_policy — политика (по умолчанию core_skill.POLICY)."""
+    from app.modules.matching import core_skill
+
     if must_first is None:
         must_first = must_have.enabled() if baseline_order is None else not baseline_order
+    core = core_skill.enabled() if core is None else core
+    policy = core_policy or core_skill.POLICY
     rnd = random.Random(seed)
     # Набор кандидатов для разметки зафиксирован до появления грейда «Стажёр» и статуса «предварительно»: стажёры и
     # предварительные в размеченные пары не входят, иначе изменился бы состав уже размеченных экспертами пар
@@ -183,6 +188,10 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_or
         pool_cat = [b for b in bundles if cats_ok is None or b.profile.current_category_id in cats_ok]
         avail = must_have.available(pool_cat, req)
         must_t = {b.profile.user_id: must_have.assess(b, req, avail)["tier"] for b in cand}
+        # Я1: ядро роли — доступность (заявлено или подтверждено хоть у кого-то) — по тому же пулу категорий
+        rc = core_skill.role_core(req) if core else None
+        core_on = bool(rc) and core_skill.available(pool_cat, rc)
+        core_t = {b.profile.user_id: int(core_on and core_skill.state(b, rc)["state"] == "absent") for b in cand}
 
         def in_cat(b):
             return 0 if (cats_ok is None or b.profile.current_category_id in cats_ok) else 1
@@ -195,9 +204,18 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_or
             return must_t[b.profile.user_id] if must_first else 0
 
         kw_rng, bm_rng = random.Random(seed + qi), random.Random(seed + 1000 + qi)
+        def plat_key(b):
+            uid = b.profile.user_id
+            return (in_cat(b), *core_skill.sort_key(0, must_priority(b), sc[uid][0], core_t[uid], policy),
+                    -(b.profile.rating_score or 0), b.profile.public_ref or "")
+
+        plat = sorted(cand, key=plat_key)
+        if core_on and policy == "cap":
+            n_in = sum(1 for b in plat if in_cat(b) == 0)
+            pos = core_skill.cap_positions([bool(core_t[b.profile.user_id]) for b in plat[:n_in]])
+            plat = [plat[:n_in][i] for i in pos] + plat[n_in:]
         order = {
-            "platform": sorted(cand, key=lambda b: (in_cat(b), must_priority(b), -sc[b.profile.user_id][0], -(b.profile.rating_score or 0),
-                                                    b.profile.public_ref or "")),
+            "platform": plat,
             "platform_no_fsp": sorted(cand, key=lambda b: (in_cat(b), must_priority(b), -no_fsp(b), b.profile.public_ref or "")),
             "bm25": sorted(cand, key=lambda b: (-bm25.score(b.profile.user_id, text), bm_rng.random())),
             "keywords": sorted(cand, key=lambda b: (-keyword_score(b, req), kw_rng.random())),

@@ -37,7 +37,7 @@ import numpy as np
 
 from app.modules.catalog.seed_data import GRADE_ORDER
 from app.modules.matching.need_parser import parse_need
-from app.modules.matching import must_have
+from app.modules.matching import core_skill, must_have
 from app.modules.matching.ranking import WEIGHTS, algorithm, requirement_priority, score_candidate
 from app.modules.profiles.facts import PROVISIONAL_PENALTY
 from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate, true_grade)
@@ -144,6 +144,18 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
             a = must_have.assess(b, r, avail)
             out["must_tier"][i, j] = a["tier"]
             out["must_full"][i, j] = a["missing_total"] == 0
+    # Я1: ядро роли (основной язык / фреймворк / специализация) — состояние у кандидата: −1 ядра нет, 0 подтверждено,
+    # 1 заявлено, 2 отсутствует; core_absent — «отсутствует» и признак действует (ядро заявлено хоть у кого-то в пуле)
+    out["core_state"] = np.full((n, m), -1, dtype=np.int8)
+    out["core_absent"] = np.zeros((n, m), dtype=np.int8)
+    for i, r in enumerate(reqs):
+        core = core_skill.role_core(r)
+        if not core:
+            continue
+        st = np.array([core_skill.STATE_ORDER[core_skill.state(b, core)["state"]] for b in bundles], dtype=np.int8)
+        out["core_state"][i] = st
+        if ((st < 2) & (out["vis"][i] == 2)).any():
+            out["core_absent"][i] = (st == 2).astype(np.int8)
     rebuilt = weighted(out, np.array([WEIGHTS[k] for k in COMP_KEYS]))
     out["max_rebuild_error"] = float(np.abs(rebuilt - prod).max()) if n else 0.0
     assert out["max_rebuild_error"] < 1e-3, "скор из компонент не совпал с ranking.score_candidate"
@@ -163,10 +175,12 @@ def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY, tran
 
 def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROVISIONAL_PENALTY, *,
                     experimental: bool = False, must_first: bool | None = None, transfer: bool = True,
-                    tier: bool = True) -> np.ndarray:
-    """Порядок как в build_selection: категория → ярус обязательного (Ф2, флаг MATCH_MUST_FIRST) → −скор (со штрафом
-    «предварительно») → −рейтинг → public_ref. experimental — прежний эксперимент И8 (число пробелов без ярусов);
-    transfer=False и tier=False — абляции ВЛ («без θ» без переноса веса, «без яруса грейда»)."""
+                    tier: bool = True, core: bool | None = None, core_policy: str | None = None) -> np.ndarray:
+    """Порядок как в build_selection: категория → [ядро роли, Я1] → ярус обязательного (Ф2, флаг MATCH_MUST_FIRST) →
+    −скор (со штрафом «предварительно») → −рейтинг → public_ref. experimental — прежний эксперимент И8 (число пробелов
+    без ярусов); transfer=False и tier=False — абляции ВЛ («без θ» без переноса веса, «без яруса грейда»).
+    core — признак «ядро роли» (по умолчанию флаг RANK_CORE_SKILL), core_policy — group / within / cap / penalty
+    (по умолчанию core_skill.POLICY)."""
     s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w, penalty, transfer)
     must_first = must_have.enabled() if must_first is None else must_first
     if experimental:
@@ -175,10 +189,28 @@ def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROV
         gaps = sc.get("must_tier", np.zeros_like(s))
     else:
         gaps = np.zeros_like(s)
+    core = core_skill.enabled() if core is None else core
+    policy = core_policy or core_skill.POLICY
+    absent = sc.get("core_absent") if core else None
+    if absent is None:
+        absent = np.zeros(s.shape, dtype=np.int8)
+    zero = np.zeros(s.shape[1], dtype=np.int8)
+    if policy == "penalty":
+        s = s - core_skill.PENALTY * absent
     # без яруса (абляция): кандидаты с категорией — одним списком по скору, без категории — в конце (их не видно)
     vis = sc["vis"] if tier else np.minimum(sc["vis"], 1)
-    return np.stack([np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], gaps[i], -vis[i]))
-                     for i in range(len(s))])
+    rows = []
+    for i in range(len(s)):
+        grp = absent[i] if policy == "group" else zero
+        inner = absent[i] if policy == "within" else zero
+        o = np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], inner, gaps[i], grp, -vis[i]))
+        if policy == "cap" and absent[i].any():
+            top = vis[i][o] == vis[i][o[0]]  # потолок места — внутри первого яруса (категория потребности)
+            n_top = int(top.sum())
+            pos = core_skill.cap_positions(list(absent[i][o[:n_top]].astype(bool)))
+            o = np.concatenate([o[:n_top][pos], o[n_top:]])
+        rows.append(o)
+    return np.stack(rows)
 
 
 class BM25Matrix:
@@ -368,7 +400,12 @@ def fast_ndcg10(sc: dict, rel: np.ndarray, rows: np.ndarray, w: np.ndarray, idea
     рейтинг (как в продукте; разбиение оставшихся ничьих по public_ref здесь не воспроизводится)."""
     sub = {"comps": sc["comps"][rows], "has_req": sc["has_req"][rows], "provisional": sc["provisional"]}
     tier = sc["must_tier"][rows] if must_have.enabled() and "must_tier" in sc else 0  # ярус обязательного (Ф2)
-    key = sc["vis"][rows] * 10.0 - tier * 3.0 + weighted(sub, w) + sc["rating"][None, :] * 1e-6
+    # Я1: ядро роли (флаг RANK_CORE_SKILL); потолок места (cap) здесь приближён группой
+    core = sc["core_absent"][rows] if core_skill.enabled() and "core_absent" in sc else 0
+    pol = core_skill.POLICY
+    s = weighted(sub, w) - (core_skill.PENALTY * core if pol == "penalty" else 0)
+    key = (sc["vis"][rows] * 100.0 - (core * 10.0 if pol in ("group", "cap") else 0) - tier * 3.0
+           - (core * 1.5 if pol == "within" else 0) + s + sc["rating"][None, :] * 1e-6)
     top = np.argpartition(-key, 10, axis=1)[:, :10]
     kt = np.take_along_axis(key, top, axis=1)
     top = np.take_along_axis(top, np.argsort(-kt, axis=1), axis=1)
@@ -394,7 +431,7 @@ def heldout(world: World, run: dict, world2: World, run2: dict, seed: int) -> di
     def full(sc_, rel_, rows, w):
         o = platform_orders({**sc_, "comps": sc_["comps"][rows], "has_req": sc_["has_req"][rows],
                              "vis": sc_["vis"][rows], "mandatory_gaps": sc_["mandatory_gaps"][rows],
-                             "must_tier": sc_["must_tier"][rows]}, w)
+                             "must_tier": sc_["must_tier"][rows], "core_absent": sc_["core_absent"][rows]}, w)
         return per_need(rel_[rows], o)["ndcg@10"]
 
     t_prod, t_best = full(sc, rel, test, w_prod), full(sc, rel, test, best)
@@ -661,7 +698,7 @@ def must_have_section(world: World, sc: dict, seed: int) -> dict:
 
 
 def _row(sc: dict, i: int) -> dict:
-    return {k: sc[k][i:i + 1] for k in ("comps", "has_req", "vis", "mandatory_gaps", "must_tier")}
+    return {k: sc[k][i:i + 1] for k in ("comps", "has_req", "vis", "mandatory_gaps", "must_tier", "core_absent")}
 
 
 # ---------------------------------------------------------------- запуск
