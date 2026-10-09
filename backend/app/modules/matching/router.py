@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Literal
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, File, Query, UploadFile
 from fastapi.responses import Response
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
@@ -14,6 +14,7 @@ from app.core.db import get_db
 from app.core.deps import require_role
 from app.core.enums import NeedStatus, UserRole
 from app.core.errors import api_error, err
+from app.core.ratelimit import SlidingWindow, hit
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADES
@@ -228,6 +229,43 @@ def _need_out(db: Session, n: EmployerNeed) -> dict:
              responses=AUTH)
 def parse(data: ParseIn, user: User = Depends(employer)) -> dict:
     return parse_need(data.text, data.direction, data.grade)
+
+
+# Ф5: текст потребности из файла вакансии (PDF, DOCX, TXT) → тот же разбор /needs/parse на клиенте
+_need_file_attempts = SlidingWindow(30, 3600)
+
+
+@router.post("/needs/file", summary="Текст потребности из файла вакансии (PDF, DOCX, TXT), без сохранения",
+             description="Тип определяется по содержимому, не по имени. PDF и DOCX разбираются в отдельном процессе с "
+                         "тайм-аутом и лимитом памяти (DOCX — stdlib: zipfile + expat, защита от zip-бомб и DTD, файлы "
+                         "с макросами отклоняются), TXT — UTF-8/UTF-16/CP1251. Ответ — текст для поля «Кого вы ищете»: "
+                         "работодатель видит и правит его, разбор — обычный POST /needs/parse (контакты вырезаются до "
+                         "LLM). Файл не сохраняется. Длиннее предела поля — обрезается по абзацу, truncated = true.",
+             responses={**AUTH, 413: err("Файл больше 5 МБ"), 415: err("Нужен PDF, DOCX или TXT; DOCX с макросами"),
+                        422: err("Не удалось извлечь текст: повреждён, скан, zip-бомба, больше 20 страниц"),
+                        429: err("Слишком много загрузок"), 503: err("Сервер занят разбором других файлов")})
+def need_from_file(file: UploadFile = File(...), user: User = Depends(employer)) -> dict:
+    from app.core.config import get_settings
+    from app.modules.resume.files import (
+        KIND_TITLES, FileTextError, clean_text, clip, file_to_text, no_text_error, safe_filename,
+    )
+
+    s = get_settings()
+    hit(_need_file_attempts, str(user.id), "need_file_rate", "Слишком много загрузок файлов")
+    limit = next(m.max_length for m in ParseIn.model_fields["text"].metadata if getattr(m, "max_length", None))
+    try:
+        ft = file_to_text(file.file.read(s.resume_max_bytes + 1), ("pdf", "docx", "txt"), max_bytes=s.resume_max_bytes,
+                          max_pages=s.resume_max_pages, timeout_s=s.resume_parse_timeout_s,
+                          memory_mb=s.resume_parse_memory_mb)
+        text = clean_text(ft.text, headings=True)
+        if len(text) < 30:
+            raise no_text_error(ft.kind)
+    except FileTextError as e:
+        raise api_error(e.status, e.code, e.message) from None
+    clipped, truncated = clip(text, limit)
+    return {"text": clipped, "filename": safe_filename(file.filename, f"vacancy.{ft.kind}"), "kind": ft.kind,
+            "kind_title": KIND_TITLES[ft.kind], "pages": ft.pages, "chars": len(clipped), "chars_total": len(text),
+            "truncated": truncated, "limit": limit}
 
 
 @router.post("/needs", status_code=201, summary="Создать потребность и первую версию подборки", responses=AUTH)
