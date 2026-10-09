@@ -71,7 +71,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
     <article className={`card !p-4 sm:!p-5 ${active ? "ring-2 ring-brand/40" : ""}`} data-testid="candidate-card" data-compact="true" aria-label={`Кандидат ${r.ref}, место ${rank}`}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender"><span className="text-brand-ink/65">№{rank} · </span>Кандидат {r.ref}</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender"><span className="text-brand-ink/65">№{rank} · </span><span>Кандидат {r.ref}</span></p>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
             <GradeBadge s={c.status} claimed={c.claimed} />
