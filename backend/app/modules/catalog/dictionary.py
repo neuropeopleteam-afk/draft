@@ -15,7 +15,7 @@ STACK_ALIASES: dict[str, list[str]] = {
     "docker": ["docker", "контейнер", "docker-compose", "докер"],
     "kubernetes": ["kubernetes", "k8s", "кубер"],
     "python": ["python", "питон", "python3", "пайтон"],
-    "fastapi": ["fastapi", "fast api"],
+    "fastapi": ["fastapi", "fast api", "фаст апи", "фастапи"],  # «фаст апи» — сленг (И27, Н1)
     "django": ["django", "drf", "django rest", "джанго"],
     "flask": ["flask"],
     "asyncio": ["asyncio", "async/await", "асинхрон", "aiohttp"],
@@ -92,6 +92,7 @@ UNSUPPORTED_TECH: dict[str, list[str]] = {
     "Cobalt Strike": ["cobalt strike"], "Metasploit": ["metasploit"], "OSCP": ["oscp"], "Wireshark": ["wireshark"],
     "BPMN": ["bpmn"], "UML": ["uml"], "Figma": ["figma"], "Unity": ["unity"], "Unreal": ["unreal"],
     "Android": ["android"], "iOS": ["ios"], "Kotlin Multiplatform": ["kmp"], "Jetpack Compose": ["jetpack compose"],
+    "1С": ["1с", "1c"],  # «1С:Предприятие» — вне справочника, не терять (И27, Н2)
 }
 
 # Короткие синонимы ищем только как отдельное слово в типичном написании (иначе много ложных срабатываний)
@@ -101,7 +102,7 @@ SHORT_TAG = {"go ": "go", "ts": "typescript", "js": "javascript", "soc": "siem-s
              "ips": "network-security", "api": "rest-api", "elk": "siem-soc", "k6": "load-testing"}
 
 DIRECTION_KEYWORDS: dict[str, list[str]] = {
-    "backend": ["backend", "бэкенд", "бекенд", "back-end", "серверн", "api-сервис", "микросервис"],
+    "backend": ["backend", "бэкенд", "бекенд", "back-end", "серверн", "api-сервис", "микросервис", "бэк ", "бек "],
     "frontend": ["frontend", "фронтенд", "front-end", "фронт", "клиентская часть", "интерфейс", "spa"],
     "data_ml": ["data scien", "machine learning", "машинн", "ml-", "ml ", "data/ml", "аналитик данных", "дата-сайент",
                 "модел", "нейросет", "data engineer"],
@@ -160,7 +161,7 @@ WORK_FORMAT_KEYWORDS = {
 REQUIRED_CUES = ["требован", "обязательн", "необходим", "must", "нужно", "нужен", "нужна", "нужны", "ожидаем", "опыт работы с",
                  "уверенн", "знание", "умение", "владение"]
 DESIRED_CUES = ["будет плюсом", "плюсом", "желательн", "nice to have", "приветству", "преимуществ", "хорошо, если",
-                "было бы здорово", "дополнительно", "немного"]
+                "было бы здорово", "дополнительно", "немного", "но плюс"]  # «докер не обязателен, но плюс» (И27)
 
 
 def _alias_regex(alias: str) -> re.Pattern:
