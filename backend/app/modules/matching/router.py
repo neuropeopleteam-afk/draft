@@ -65,6 +65,12 @@ class Evidence(BaseModel):
 ReviewStatus = Literal["extracted", "confirmed", "edited"]
 
 
+class UnknownTerm(BaseModel):
+    """Требование вне справочника («вне справочника — проверить вручную», И27): в подбор не входит, не теряется."""
+    term: str = Field(max_length=80)
+    evidence: Evidence | None = None
+
+
 class StackReq(BaseModel):
     tag: str
     weight: float = Field(1.0, ge=0.05, le=1.0)
@@ -86,6 +92,8 @@ class Requirements(BaseModel):
     salary_to: int | None = Field(None, gt=0)
     evidence: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary", "city"], Evidence | None] | None = None
     review: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary", "city"], ReviewStatus] | None = None
+    unknown_terms: list[UnknownTerm] | None = Field(None, max_length=20, description="Вне справочника: сохраняются "
+                                                    "найденные моделью (source=llm) с цитатой из текста")
 
     @model_validator(mode="after")
     def _range(self):
@@ -152,7 +160,8 @@ def _req_dict(r: Requirements | dict, text: str) -> dict:
     cov = coverage(text)
     if cov:
         req["coverage"] = cov
-    req.update(text_notes(text, req))  # И18: вне справочника, исключённое отрицанием, вилка не в рублях
+    # И18: вне справочника, исключённое отрицанием, вилка не в рублях; И27: найденное моделью вне справочника
+    req.update(text_notes(text, req, extra=d.get("unknown_terms")))
     return req
 
 

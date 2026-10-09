@@ -9,7 +9,7 @@ import type { Ev } from "../../components/Quotes";
 import type { Req, StackItem } from "./Needs";
 
 export interface DeltaItem {
-  id: string; kind: "add_tag" | "set_scalar" | "confirm_tag" | "suggest_scalar" | "remove_tag"; auto: boolean;
+  id: string; kind: "add_tag" | "set_scalar" | "confirm_tag" | "suggest_scalar" | "remove_tag" | "note_unknown"; auto: boolean;
   zone?: "required" | "desired" | null; tag?: string; name?: string; weight?: number; evidence?: (Ev & { confirmed_by?: string }) | null;
   field?: "direction" | "grade" | "experience_years_min" | "work_format"; value?: any; current?: any; reason?: string; by?: string;
 }
@@ -40,6 +40,7 @@ export function deltaText(d: DeltaItem): string {
   if (d.kind === "add_tag") return `${d.zone === "desired" ? "желательно" : "обязательно"}: ${d.name ?? d.tag}`;
   if (d.kind === "remove_tag") return `убрать «${d.name ?? d.tag}»${d.reason ? ` — ${d.reason}` : ""}`;
   if (d.kind === "set_scalar") return `${FIELD[d.field!]}: ${valueText(d.field, d.value)}`;
+  if (d.kind === "note_unknown") return `вне справочника — проверить вручную: ${d.name}`;
   if (d.kind === "suggest_scalar") return `${FIELD[d.field!]}: ${valueText(d.field, d.value)} вместо «${valueText(d.field, d.current)}»`;
   return `подтверждено: ${d.name ?? d.tag}`;
 }
@@ -56,6 +57,10 @@ export function applyDelta(req: Req, d: DeltaItem): Req {
   }
   if (d.kind === "remove_tag") {
     return { ...req, stack_required: req.stack_required.filter((x) => x.tag !== d.tag), stack_desired: req.stack_desired.filter((x) => x.tag !== d.tag) };
+  }
+  if (d.kind === "note_unknown") {  // заметка «вне справочника», в подбор не входит — применяется всегда
+    const rest = (req.unknown_terms ?? []).filter((u) => u.term !== d.name);
+    return { ...req, unknown_terms: [...rest, { term: d.name ?? "", evidence: d.evidence ?? null }] };
   }
   if (d.kind === "confirm_tag") {
     const mark = (x: StackItem) => (x.tag === d.tag && x.evidence ? { ...x, evidence: { ...x.evidence, confirmed_by: d.by ?? (x.evidence as any).confirmed_by } } : x);
@@ -81,10 +86,11 @@ export function useFastParse(setReq: (f: (r: Req | null) => Req | null) => void)
 
   const finish = useCallback((g: number, res: any, delta: DeltaItem[], llm: any, phase: Phase) => {
     if (g !== gen.current) return;
-    const offers = delta.filter((d) => d.kind !== "confirm_tag" && (!d.auto || dirty.current));
-    const applied = delta.filter((d) => d.auto && (d.kind === "confirm_tag" || !dirty.current));
+    const always = (d: DeltaItem) => d.kind === "confirm_tag" || d.kind === "note_unknown";  // не меняют подбор
+    const offers = delta.filter((d) => !always(d) && (!d.auto || dirty.current));
+    const applied = delta.filter((d) => d.auto && (always(d) || !dirty.current));
     if (!dirty.current) setReq(() => ({ ...res, llm }));
-    else setReq((r) => (r ? delta.filter((d) => d.kind === "confirm_tag").reduce(applyDelta, r) : r));
+    else setReq((r) => (r ? delta.filter(always).reduce(applyDelta, r) : r));
     setSt({ phase, llm, applied, offers, edited: dirty.current });
   }, [setReq]);
 

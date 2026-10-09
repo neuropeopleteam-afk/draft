@@ -23,7 +23,7 @@ export interface Req {
   salary_from: number | null; salary_to: number | null; method?: string;
   evidence?: Record<string, Ev | null>; review?: Record<string, string>;
   bias?: BiasHit[]; suggested_text?: string | null; llm?: any; salary_net?: boolean | null;
-  coverage?: { message: string; tested: string; not_tested: string };
+  coverage?: { message: string; tested: string; not_tested: string; title?: string };
   city?: string | null;
   work_formats?: string[] | null;
   unknown_terms?: { term: string; evidence?: Ev | null }[]; excluded?: { tag: string; evidence?: Ev | null }[];
@@ -41,7 +41,7 @@ function ReqNotes({ req, title }: { req: Req; title: (t: string) => string }) {
   if (!tips.length && !unknown.length && !excluded.length && !req.salary_note) return null;
   return (
     <ul className="space-y-1.5 rounded-lg bg-brand-blush/25 px-3 py-2 text-sm">
-      {unknown.length > 0 && <li><b className="font-semibold">Не учтено в подборе:</b> {unknown.map((u) => u.term).join(", ")} — этих технологий нет в справочнике платформы, тест их не проверяет. Проверьте зондом или на интервью.</li>}
+      {unknown.length > 0 && <li data-testid="unknown-terms"><b className="font-semibold">Вне справочника — проверить вручную:</b> {unknown.map((u) => u.term + (u.evidence?.source === "llm" ? ` (${(u.evidence as any).model ?? "модель"})` : "")).join(", ")} — в подбор не входят: тест платформы их не проверяет. Проверьте зондом или на интервью.</li>}
       {excluded.length > 0 && <li><b className="font-semibold">Исключено по тексту:</b> {excluded.map((x) => `${title(x.tag)}${x.evidence?.quote ? ` («${x.evidence.quote}»)` : ""}`).join(", ")}</li>}
       {req.salary_note && <li>{req.salary_note.text}{req.salary_note.evidence?.quote ? ` («${req.salary_note.evidence.quote}»)` : ""}</li>}
       {tips.map((t) => <li key={t}>{t}</li>)}
@@ -445,6 +445,8 @@ export function Selection() {
   if (need.error || !need.data) return <Alert>{need.error}</Alert>;
   const s = sel.data;
   const reqOf: Req | undefined = s?.requirements ?? need.data.requirements;
+  const cov = reqOf?.coverage ?? need.data.requirements?.coverage;
+  const relText = (r: string) => (r === "exact" && cov ? `ближайшая категория — частичное соответствие (${cov.title ?? "роль"} нет в каталоге)` : REL[r]);
   const reqTags = s ? [...(s.requirements.stack_required ?? []), ...(s.requirements.stack_desired ?? [])].map((x: any) => x.tag) : [];
   const condOn = !!s?.conditions && !s.conditions.off && !!s.conditions.text;
   const toggleArr = (k: string, t: string) => { const cur: string[] = filters[k] ?? []; setFilters({ ...filters, [k]: cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t] }); };
@@ -463,6 +465,9 @@ export function Selection() {
         <QuotedText text={need.data.raw_text} marks={reqMarks(reqOf, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
         <BiasPanel bias={reqOf?.bias ?? []} suggested={reqOf?.suggested_text} rewriteLabel="Создать потребность из исправленного текста"
           onRewrite={(t) => navigate("/employer/needs", { state: { text: t } })} focus={focus} onFocus={setFocus} />
+        {/* И27, Н2: частичное соответствие и требования вне справочника видны и в каждой версии подборки */}
+        {cov && <p className="rounded-lg bg-brand-blush/25 px-3 py-2 text-sm" data-testid="sel-coverage"><b className="font-semibold">{cov.message}</b> Не проверяется: {cov.not_tested}.</p>}
+        {reqOf && <ReqNotes req={{ ...reqOf, unknown_terms: reqOf.unknown_terms ?? need.data.requirements?.unknown_terms }} title={(t) => tags[t]?.title ?? t} />}
       </section>
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-brand-ink/65">Версии подборки:</span>
@@ -487,7 +492,7 @@ export function Selection() {
                           const base: string[] = filters.categories ?? s.categories.filter((x: any) => ["exact", "direction", "all"].includes(x.relation)).map((x: any) => x.id);
                           setFilters({ ...filters, categories: base.includes(c.id) ? base.filter((y) => y !== c.id) : [...base, c.id] });
                         }} />
-                      <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{REL[c.relation]} · рынок {range(c.market_range?.from, c.market_range?.to)} на руки</span></span>
+                      <span><b className="font-semibold">{c.title}</b><span className="block text-xs text-brand-ink/65">{relText(c.relation)} · рынок {range(c.market_range?.from, c.market_range?.to)} на руки</span></span>
                     </label>
                     <span className="chip" title={`подтверждённых ${c.count - (c.provisional ?? 0)}${c.provisional ? `, предварительно ${c.provisional}` : ""}${c.unconfirmed ? `, заявили без подтверждения ${c.unconfirmed}` : ""}`}>{c.count}{c.unconfirmed ? <span className="text-brand-ink/50"> +{c.unconfirmed}</span> : null}</span>
                   </li>
