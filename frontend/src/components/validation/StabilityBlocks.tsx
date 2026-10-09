@@ -1,5 +1,6 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { DIRECTIONS } from "../ui";
+import { ScrollX } from "../A11y";
 
 /* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в условиях конкурентов»
    и атаку утечкой по доле слитых вариантов. Данные — simulation из validation/report.json (make validate). */
@@ -28,7 +29,7 @@ function H3({ children }: { children: ReactNode }) {
 
 function Table({ head, rows, strong = [] }: { head: string[]; rows: ReactNode[][]; strong?: number[] }) {
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+    <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
           <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
@@ -41,7 +42,7 @@ function Table({ head, rows, strong = [] }: { head: string[]; rows: ReactNode[][
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollX>
   );
 }
 
