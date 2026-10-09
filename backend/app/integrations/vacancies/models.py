@@ -18,6 +18,8 @@ class Vacancy(UUIDPk, Timestamps, Base):
         sa.CheckConstraint("salary_from > 0 AND salary_from <= salary_to", name="salary_range"),
         sa.CheckConstraint("status IN ('draft', 'published', 'closed')", name="status"),
         sa.Index("ix_vacancies_status_published", "status", "published_at"),
+        # И23: импорт из ATS — одна вакансия ATS = одна вакансия платформы (повторный импорт обновляет, не дублирует)
+        sa.Index("uq_vacancies_company_source_external", "company_id", "source", "external_id", unique=True),
     )
 
     company_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("companies.id", ondelete="CASCADE"), index=True)
@@ -35,6 +37,13 @@ class Vacancy(UUIDPk, Timestamps, Base):
     status: Mapped[str] = mapped_column(sa.String(16), default="published")
     published_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
     is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
+    # Импорт из ATS (И23, app/integrations/vacancies/ats_import.py): source = 'potok' и id вакансии в «Потоке»;
+    # ручные вакансии — NULL. imported_at = updated_at сразу после импорта: правка работодателем позже — повторный
+    # импорт её не перетирает
+    source: Mapped[str | None] = mapped_column(sa.String(16))
+    external_id: Mapped[str | None] = mapped_column(sa.String(64))
+    external_url: Mapped[str | None] = mapped_column(sa.String(500))
+    imported_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
 
 
 class VacancyApplication(UUIDPk, Timestamps, Base):
