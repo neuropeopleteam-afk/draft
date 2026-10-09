@@ -20,7 +20,7 @@ from __future__ import annotations
 from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
-from app.core.fmt import probe_title, quoted, theta_se
+from app.core.fmt import probe_title, quoted, ru_num, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
@@ -265,7 +265,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         rating = details(verified)
         reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
                         "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")
-                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}"})  # формула — в карточке (И18)
+                        + f". Сила ФСП {ru_num(fsp, 3)}, соревнований: {rating['competitions']}"})  # формула — в карточке (И18, Ф6 В5)
     else:
         # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
         extra = len(b.achievements)
