@@ -1,12 +1,13 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { DIRECTIONS } from "../ui";
 import { ScrollX } from "../A11y";
+import { ProvenanceLine, type Prov } from "./Provenance";
 
 /* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в других условиях»
    и атаку утечкой по доле слитых вариантов. Данные — simulation из validation/report.json (make validate). */
 
 /** Ф6 (Н7): вместо «сейчас» — дата отчёта и мир, на котором он посчитан (задаёт Validation.tsx из provenance). */
-export const AsOf = createContext<{ date: string; world: string }>({ date: "", world: "" });
+export const AsOf = createContext<{ date: string; world: string; prov?: Prov | null }>({ date: "", world: "" });  // Я8: prov — строка происхождения
 const useNow = () => { const a = useContext(AsOf); return a.date ? `отчёт ${a.date}` : "текущая механика"; };
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
@@ -52,6 +53,7 @@ export function Conditions({ children }: { children: ReactNode }) {
   return (
     <p className="mt-2 rounded-xl bg-[#F3F2FB] px-3 py-2 text-xs leading-relaxed text-brand-night/80">
       <b>Условия: </b>{children}{a.world && <span className="block text-brand-night/65">Мир: {a.world}</span>}
+      {a.prov && <ProvenanceLine p={a.prov} className="mt-1" />}
     </p>
   );
 }

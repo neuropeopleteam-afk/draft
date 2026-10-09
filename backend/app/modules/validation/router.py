@@ -89,9 +89,11 @@ def _live(db: Session) -> dict:
 def report(db: Session = Depends(get_db)):
     from app.modules.experts.section import section as experts_section
 
-    from app.modules.validation.provenance import provenance  # Ф6 (Н7): подписи банка/отчёта/калибровки
+    from app.modules.validation.provenance import experts_stamp, provenance  # Ф6 (Н7), Я8: подписи и происхождение
 
-    return {**_report(), "provenance": provenance(_report()), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db),
+    ex = experts_section(db)
+    return {**_report(), "provenance": {**provenance(_report()), "experts": experts_stamp(ex)}, "live": _live(db),
+            "attacks": attacks.ATTACKS, "experts": ex,
             "intern_cut": _intern_cut(),
             "self_check": {"strategies": selfcheck.STRATEGIES, "max_n": selfcheck.MAX_N,
                            "directions": list(selfcheck.DIRECTIONS)}}
@@ -177,7 +179,10 @@ def _bench() -> dict:
 
 @router.get("/matching-bench", summary="Бенчмарк подбора со скрытой истиной (пересчёт: make bench)")
 def matching_bench():
-    return _bench()
+    from app.modules.validation.provenance import stamp  # Я8
+
+    b = _bench()
+    return b if b.get("missing") else {**b, "provenance": stamp("bench", b)}
 
 
 PATH_RETEST = Path(__file__).resolve().parent / "data" / "path_retest.json"
@@ -189,7 +194,10 @@ def path_retest():
         return {"missing": True}
     d = json.loads(PATH_RETEST.read_text(encoding="utf-8"))
     d.get("discrimination", {}).pop("families", None)  # полный список — в JSON репозитория, на страницу — слабые
-    return d
+    from app.modules.validation.headline import retest_vs_truth  # Я8: точность к истине рядом с κ
+    from app.modules.validation.provenance import stamp
+
+    return {**d, "vs_truth": retest_vs_truth(d), "provenance": stamp("path", d)}
 
 
 @router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
@@ -197,6 +205,13 @@ def test_length_route():
     from app.modules.validation.provenance import length_info  # Ф6 (Н8)
 
     return length_info(_report())
+
+
+@router.get("/provenance", summary="Происхождение чисел /validation: синтетика/модель/люди, дата, SHA, банк, команда")
+def validation_provenance():
+    from app.modules.validation.provenance import snapshots  # Я8: снимки расчётов, текущий банк и код
+
+    return snapshots()
 
 
 @router.get("/headline", summary="Первый экран /validation: 5 чисел с ДИ и подписью мира")
@@ -231,7 +246,10 @@ def _stability() -> dict:
 
 @router.get("/junior-stability", summary="Стабильность статуса «Junior (предварительно)» (пересчёт: make stability)")
 def junior_stability():
-    return _stability()
+    from app.modules.validation.provenance import stamp  # Я8
+
+    s = _stability()
+    return s if s.get("missing") else {**s, "provenance": stamp("stability", s)}
 
 
 GRADER = Path(__file__).resolve().parent / "data" / "grader_check.json"
