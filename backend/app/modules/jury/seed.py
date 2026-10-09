@@ -314,6 +314,10 @@ def delete_jury(db: Session, sid: str = "") -> int:
         live.delete_guests(db, list(db.scalars(select(User.id).where(User.email.like(live.guest_emails_like(sid)))).all()))
         live.bump_sid(db, sid)
     ids = db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all()
+    if sid:  # И25: подписки, лента уведомлений и смоделированные кандидаты песочницы
+        from app.modules.subs import demo as subs_demo
+
+        subs_demo.purge(db, sid, list(ids))
     if ids:  # участия её кандидатов в общих кубках платформы
         db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
     own = Company.created_by.in_(ids) if ids else Company.id.is_(None)
@@ -410,7 +414,7 @@ def _create_jury(db: Session, sid: str) -> dict:
 
     seed_jury_hiring(db, c)  # найм: назначенное собеседование у принятого приглашения (Н8); сбой не ломает сид
     cups = _jury_cups(db, sid, eu, c, p1)
-    tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2)  # задания работодателя с автопроверкой (И7)
+    tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2, p3)  # задания работодателя с автопроверкой (И7)
     _maria_extras(db, eu, p1)
     _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
     # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
@@ -452,12 +456,12 @@ def _jury_cups(db: Session, sid: str, eu: User, c: Company, maria: CandidateProf
 
 
 def _jury_assignments(db: Session, sid: str, eu: User, c: Company, need, maria: CandidateProfile,
-                      ilya: CandidateProfile) -> list[str]:
+                      ilya: CandidateProfile, artem: CandidateProfile | None = None) -> list[str]:
     """Задания работодателя песочницы (И7, app.modules.assignments.demo); сбой не ломает сид жюри."""
     from app.modules.assignments.demo import seed_jury_assignments
 
     try:
-        return seed_jury_assignments(db, sid or scope.SHARED, eu, c, need, maria, ilya)
+        return seed_jury_assignments(db, sid or scope.SHARED, eu, c, need, maria, ilya, artem)
     except Exception:  # noqa: BLE001
         db.rollback()
         log.exception("jury: demo assignments failed")

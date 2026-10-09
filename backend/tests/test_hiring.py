@@ -185,6 +185,11 @@ def test_interview_reminder_once(client, monkeypatch):
         assert reminders.remind_due(db) == 1
         assert reminders.remind_due(db) == 0  # один раз
     assert sent == [("Скоро собеседование", "/candidate/invitations"), ("Скоро собеседование", "/employer/invitations")]
+    # то же — в «Уведомлениях» кабинета (И25) у обеих сторон, один раз; шаги найма — там же («Найм»)
+    feed = client.get("/api/notifications", headers=H(tc)).json()["items"]
+    assert [n["kind"] for n in feed].count("hiring_reminder") == 1 and "hiring" in {n["kind"] for n in feed}
+    feed_e = client.get("/api/notifications", headers=H(te)).json()["items"]
+    assert [n["title"] for n in feed_e if n["kind"] == "hiring_reminder"] == ["Скоро собеседование"]
 
 
 def test_demo_company_marks_done_before_start(client):

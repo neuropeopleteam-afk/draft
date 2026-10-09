@@ -18,6 +18,7 @@ os.environ["ATS_STAGE_POLL_S"] = "0"  # фоновый опрос этапов A
 os.environ["JURY_SPARE_SANDBOXES"] = "0"  # фоновые песочницы мешали бы очистке БД между тестами; проверка — отдельно
 os.environ["HIRING_REMIND_POLL_S"] = "0"  # напоминания о собеседованиях — вызовом reminders.remind_due
 os.environ["ASSIGNMENTS_FEED_INTERVAL_S"] = "0"  # фоновая лента заданий — так же; её логика проверяется вызовом run_once
+os.environ["SUBS_TICK_INTERVAL_S"] = "0"  # фоновый обход подписок (И25) — так же; логика — вызовом runner.tick
 os.environ.pop("POSTBOX_ACCESS_KEY_ID", None)
 os.environ.pop("POSTBOX_SECRET_ACCESS_KEY", None)
 

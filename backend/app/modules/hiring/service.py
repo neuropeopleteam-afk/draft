@@ -33,6 +33,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time as dtime, timedelta, timezone
+import logging
 import re
 import secrets
 import uuid
@@ -646,3 +647,16 @@ def accepted_invitations(db: Session, *, candidate_id: uuid.UUID | None = None,
 def count_hired(db: Session, company_id: uuid.UUID) -> int:
     return db.scalar(select(func.count()).select_from(HiringOutcome).where(HiringOutcome.company_id == company_id,
                                                                            HiringOutcome.outcome == "hired")) or 0
+
+
+def cabinet_note(db: Session, user_id, kind: str, key: str, title: str, body: str, url: str) -> None:
+    """Запись в «Уведомления» кабинета (app.modules.subs, И25): то же, что ушло в push и письмо. Отправку делает найм
+    сам (channels=[]), лента только показывает. Сбой не ломает шаг найма."""
+    try:
+        from app.modules.subs.delivery import add_notification
+
+        add_notification(db, user_id, kind, key[:160], title, body, url, channels=[])
+        db.commit()
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        logging.getLogger(__name__).exception("hiring: cabinet notification failed")

@@ -274,6 +274,8 @@ def body_for(key: tuple[str, str], side: Side) -> dict | None:
         ("POST", "/api/candidate/cups/{cup_id}/submit"): {"answers": {}},
         ("POST", "/api/candidate/assignments/{atid}/submit"): {"answers": {}},
         ("POST", "/api/employer/assignments/{aid}/send"): {"candidate_refs": [ref]},
+        ("POST", "/api/employer/assignments/{aid}/attempts/{atid}/review"): {"scores": {}},  # К5
+        ("PUT", "/api/candidate/assignments/prefs"): {"frequency_days": 7},
         ("POST", "/api/assessment/sessions"): {"claimed_grade": "middle"},
         ("POST", "/api/assessment/sessions/{session_id}/answers"): {"item_id": "x", "answer": "A"},
         ("POST", "/api/proctor/sessions/{session_id}/start"): {"mode": "declined"},
@@ -303,6 +305,12 @@ def body_for(key: tuple[str, str], side: Side) -> dict | None:
         ("POST", "/api/jury/login"): {"persona": "candidate"},
         ("POST", "/api/jury/live/j/{code}/start"): {},
         ("POST", "/api/fsp-id/start"): {},
+        ("PUT", "/api/employer/needs/{need_id}/subscription"): {"enabled": False},  # И25
+        ("POST", "/api/employer/needs/{need_id}/subscription/seen"): {},
+        ("POST", "/api/notifications/read"): {"ids": []},
+        ("PUT", "/api/notifications/prefs"): {},
+        ("POST", "/api/jury/subs/simulate"): {},
+        ("POST", "/api/jury/subs/fast-forward"): {"days": 5},
     }
     return bodies.get(key)
 
