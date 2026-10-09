@@ -77,7 +77,9 @@ class Settings(BaseSettings):
 
     # LLM: любой OpenAI-совместимый провайдер. Значения — только из env-файла на сервере
     # (/opt/spectrek_fsp/secrets/llm.env). Без них все функции работают по правилам и словарям.
-    # Выбран Yandex AI Studio (модели и данные в РФ): заголовки «Authorization: Api-Key …» и «OpenAI-Project».
+    # Запасной провайдер — Yandex AI Studio (YandexGPT): заголовки «Authorization: Api-Key …» и «OpenAI-Project».
+    # Основная модель — Claude Sonnet 5.5 через OpenRouter (LLM_CHAIN, разрешено организаторами); данные хранятся
+    # на сервере в Москве, в модель уходит только обезличенный текст (docs/LLM.md).
     llm_provider: str = Field(default="openai_compatible", description="openai_compatible | yandex_ai_studio")
     llm_base_url: str | None = None
     llm_api_key: str | None = None
