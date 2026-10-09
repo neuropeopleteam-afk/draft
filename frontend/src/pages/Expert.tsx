@@ -62,7 +62,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
         {it.llm?.error === "prompt_injection_suspected" && <span className="chip bg-brand-night text-white" title={it.llm.injection_note ?? undefined}>Похоже на инструкции оценщику — LLM не вызывался</span>}
       </div>
       <p className="mt-3 whitespace-pre-line font-semibold leading-relaxed text-brand-night">{it.stem}</p>
-      {it.code && <pre className="mt-3 max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{it.code}</code></pre>}
+      {it.code && <pre tabIndex={0} aria-label="Код задания" className="mt-3 max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]"><code>{it.code}</code></pre>}
       {it.step_prompt && <p className="mt-3 rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night">{it.step_prompt}</p>}
       {it.llm?.injection_note && <div className="mt-3"><Alert kind="info">{it.llm.injection_note} Оцените ответ по рубрике как обычно: попытка повлиять на оценщика уже учтена в «достоверности результата».</Alert></div>}
       <div className="mt-4">

@@ -388,3 +388,15 @@ def test_delete_own_sandbox(client):
     t2 = register_and_verify(client, email="live@example.com")
     assert client.delete("/api/jury/sandbox", headers=H(t2)).status_code == 403
     assert client.delete("/api/jury/sandbox").status_code == 401
+
+
+# ------------------------------------------------------------------ М4 (волна 4): «Проверьте сами» с повтором на шкале со Стажёром
+def test_self_check_repeat_handles_intern_point_grade():
+    """Повтор в «Проверьте сами» падал KeyError: 'intern', когда точечная оценка одной из попыток — Стажёр (И13): словарь
+    индексов грейдов знал только none/junior/middle/senior. Низкая θ у Junior даёт «intern» почти наверняка (seed фиксирован)."""
+    from app.modules.validation import selfcheck as sc
+
+    out = sc.run(strategy="theta", theta=-2.5, direction="backend", claimed="junior", n=4, repeat=True, mode="full", seed=11)
+    rt = out["retest"]
+    assert set(out["point_grade"]) & {"intern", "none"}, out["point_grade"]
+    assert 0.0 <= rt["grade_exact_agreement"] <= 1.0 and 0.0 <= rt["grade_within_1"] <= 1.0
