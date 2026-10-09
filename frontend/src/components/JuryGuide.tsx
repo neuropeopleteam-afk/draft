@@ -16,8 +16,9 @@ const whoAmI = (email: string) => {
 };
 
 /** Проводник не должен закрывать кнопки страницы: у открытой панели на широком экране (≥ 1280 px) место резервируется
- * справа (поля body), на остальных — внизу страницы (на 640–1279 px панель ещё и ниже по высоте), чтобы последние
- * кнопки и строки можно было прокрутить выше панели и левее неё (Ф4; Ф6 — и на 640–1279 px). */
+ * справа (поля body), на остальных — внизу страницы, чтобы последние кнопки и строки можно было прокрутить выше панели
+ * и левее неё (Ф4). Ф6: и на 640–1279 px; высота панели до 36vh (на телефоне до 38vh) — кнопка в середине видимой области (под шапкой, scroll-padding 6rem)
+ * никогда не оказывается под панелью. */
 function useReserveSpace(el: HTMLElement | null, side: boolean) {
   useEffect(() => {
     const phone = window.matchMedia("(max-width: 639px)");
@@ -156,7 +157,7 @@ export function JuryGuide() {
   }
 
   return (
-    <aside ref={setBox} className="fixed inset-x-2 bottom-2 z-40 max-h-[min(55vh,26rem)] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-3.5 text-white shadow-2xl ring-1 ring-white/10 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-h-[min(50vh,28rem)] xl:max-h-[calc(100vh-6rem)] sm:w-[min(24rem,calc(100vw-2rem))] sm:p-4"
+    <aside ref={setBox} className="fixed inset-x-2 bottom-2 z-40 max-h-[min(38vh,24rem)] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-3.5 text-white shadow-2xl ring-1 ring-white/10 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-h-[min(36vh,22rem)] xl:max-h-[calc(100vh-6rem)] sm:w-[min(24rem,calc(100vw-2rem))] sm:p-4"
       aria-label="Проводник для экспертов жюри">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>
