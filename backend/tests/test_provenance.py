@@ -138,3 +138,14 @@ def test_experts_heading_names_model_panel_and_role(client):
         set_source(db, ["E1", "E2", "E3"], "people")
         s = source_summary(panel_status(db))
         assert s["heading"] == "Экспертная разметка людьми" and s["role_note"] is None
+
+
+def test_test_retest_doc_has_same_phrase():
+    """Я8 п. 3: docs/validation/TEST_RETEST.md — из генератора, та же фраза «повтор ≠ точность», что на /validation."""
+    from app.modules.validation import path_retest as P
+
+    rep = json.loads(P.OUT.read_text(encoding="utf-8"))
+    md = P.DOCS_MD.read_text(encoding="utf-8")
+    assert md == P.markdown(rep)
+    v = retest_vs_truth(rep)
+    assert v["lead"] in md and v["cost"] in md
