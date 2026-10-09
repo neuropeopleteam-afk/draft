@@ -1,7 +1,10 @@
 """Команды проверки с живыми пользователями (на сервере: docker compose exec api python -m app.modules.study …).
 
-    python -m app.modules.study invite --role candidate --n 5 [--batch 10.10] [--quick] [--test] [--base-url https://…]
-        выпустить ссылки; код печатается один раз (в базе — только хеш). --quick: вход по ссылке без регистрации;
+    python -m app.modules.study invite --role candidate --n 5 [--batch 10.10] [--source freelance_paid|team]
+                                       [--register] [--test] [--base-url https://…]
+        выпустить ссылки; код печатается один раз (в базе — только хеш). По умолчанию вход по ссылке создаёт
+        временную учётку без регистрации по почте (путь ≤ 25 минут); --register: участник регистрируется сам;
+        --source: freelance_paid — оплаченные участники с бирж (по умолчанию), team — знакомые команды;
         --test: репетиция команды (в публичные цифры не входит).
     python -m app.modules.study status          # кто начал, на каком шаге, сколько ответило (метки, без имён)
     python -m app.modules.study report [--texts] [--json]   # служебная сводка; --texts — комментарии (очищены от контактов)
@@ -31,8 +34,8 @@ def _fmt_s(v) -> str:
 def cmd_invite(a) -> int:
     with SessionLocal() as db:
         try:
-            out = service.create_invites(db, a.role, a.n, batch=a.batch, mode="quick" if a.quick else "register",
-                                         is_test=a.test, base_url=a.base_url)
+            out = service.create_invites(db, a.role, a.n, batch=a.batch, mode="register" if a.register else "quick",
+                                         is_test=a.test, base_url=a.base_url, source=a.source)
         except HTTPException as e:
             print(e.detail["message"], file=sys.stderr)
             return 2
@@ -40,7 +43,8 @@ def cmd_invite(a) -> int:
         print(json.dumps(out, ensure_ascii=False, indent=2))
         return 0
     print(f"Выпущено ссылок: {len(out)} · роль: {texts.ROLE_TITLE[a.role]} · "
-          f"{'вход по ссылке, без регистрации' if a.quick else 'с регистрацией'}{' · РЕПЕТИЦИЯ' if a.test else ''}")
+          f"{'с регистрацией по почте' if a.register else 'вход по ссылке, без регистрации'} · "
+          f"{texts.SOURCES[a.source]}{' · РЕПЕТИЦИЯ' if a.test else ''}")
     print("Ссылки показаны один раз: в базе только хеш. Потеряли — выпустите новые.\n")
     for x in out:
         print(f"{x['label']}\t{x['url']}")
@@ -108,7 +112,9 @@ def main(argv: list[str] | None = None) -> int:
     inv.add_argument("--role", required=True, choices=texts.ROLES)
     inv.add_argument("--n", type=int, required=True)
     inv.add_argument("--batch", default="")
-    inv.add_argument("--quick", action="store_true")
+    inv.add_argument("--register", action="store_true", help="участник регистрируется по почте сам (по умолчанию — вход по ссылке)")
+    inv.add_argument("--quick", action="store_true", help="по умолчанию (оставлено для совместимости)")
+    inv.add_argument("--source", choices=sorted(texts.SOURCES), default=texts.DEFAULT_SOURCE)
     inv.add_argument("--test", action="store_true")
     inv.add_argument("--base-url")
     inv.add_argument("--json", action="store_true")
