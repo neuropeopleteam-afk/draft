@@ -409,7 +409,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
             className={`rounded-2xl border p-5 text-left transition-colors ${grade === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
             <p className="text-lg font-bold text-brand-night">{t}</p>
             <p className="mt-1 text-xs leading-relaxed text-brand-ink/80">{GRADE_SKILLS[id]}</p>
-            <p className="mt-1.5 text-xs text-brand-ink/55">Стаж: {GRADE_EXPERIENCE[id]} — ориентир, не условие</p>
+            <p className="mt-1.5 text-xs text-brand-ink/65">Стаж: {GRADE_EXPERIENCE[id]} — ориентир, не условие</p>
             <span className="mt-3 flex flex-wrap gap-1.5">
               {!hint.data && status?.claimed_grade === id && <span className="chip">Подсказка по стажу из опроса</span>}
               {hint.data?.suggested === id && <span className="chip">Подсказка</span>}

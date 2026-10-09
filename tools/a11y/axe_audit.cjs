@@ -90,6 +90,13 @@ function screens(ctx) {
     { id: "expert_answers", persona: "expert", path: "/expert/answers" },
     { id: "expert_angoff", persona: "expert", path: "/expert/angoff" },
     { id: "expert_review", persona: "expert", path: "/expert/review" },
+    // волна 4 (М4): новые страницы веток К1, У1, Д3, И26, Н8
+    { id: "criteria", persona: null, path: "/criteria" },
+    { id: "jury_go", persona: null, path: "/jury/go" },
+    { id: "study", persona: "candidate", path: "/study" },
+    { id: "cand_mydata", persona: "candidate", path: "/candidate/mydata" },
+    { id: "cand_attempts", persona: "candidate", path: "/candidate/attempts" },
+    { id: "emp_hiring", persona: "employer", path: "/employer/invitations" },  // с блоком «Найм» (Н8)
   ].filter((s) => !ONLY.length || ONLY.includes(s.id));
 }
 
