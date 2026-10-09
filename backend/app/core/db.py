@@ -74,7 +74,9 @@ def init_engine(url: str | None = None) -> Engine:
     url = url or get_settings().database_url
     kwargs: dict = {"pool_pre_ping": True}
     if url.startswith("sqlite"):
-        kwargs = {"connect_args": {"check_same_thread": False}}
+        # timeout — ожидание снятия блокировки файла (по умолчанию 5 с): фоновые потоки (подготовка песочницы жюри,
+        # лента заданий, подписки) пишут параллельно с запросами, и локальный стенд на SQLite ловил «database is locked»
+        kwargs = {"connect_args": {"check_same_thread": False, "timeout": 30}}
     _engine = create_engine(url, **kwargs)
     SessionLocal.configure(bind=_engine)
     return _engine
