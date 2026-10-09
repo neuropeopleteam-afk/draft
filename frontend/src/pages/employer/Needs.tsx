@@ -544,7 +544,7 @@ export function Selection() {
               <div className="flex flex-wrap items-center gap-2">
                 <button className="btn-ghost" disabled={picked.length < 2 || picked.length > 3} title="Отметьте 2–3 кандидатов"
                   onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
-                <button className="btn-ghost" disabled={!picked.length} title="Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" onClick={() => setProbeOpen(true)}>Зонд выбранным, необязательно ({picked.length})</button>
+                <button className="btn-ghost" disabled={!picked.length} title={picked.length ? "Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length}) · необязательно</button>
                 <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
               </div>
             </div>

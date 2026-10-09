@@ -20,7 +20,7 @@ from __future__ import annotations
 from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
-from app.core.fmt import quoted, theta_se
+from app.core.fmt import probe_title, quoted, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
@@ -286,7 +286,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     if own:
         best = max(own, key=lambda f: f.value.get("score", 0))
         reasons.append({"requirement": "Зонд", "level": "T1", "status": "confirmed",
-                        "text": f"{quoted(best.title)} — {best.value.get('verdict', 'оценено')}"})
+                        "text": f"{quoted(probe_title(best.title, best.value.get('verdict')))} — {best.value.get('verdict', 'оценено')}"})
     sig = assignment_signal.reason_for(b.probes_t1)  # К5: адресное задание — одна строка, порядок match-v1 не меняет
     if sig:
         reasons.append(sig)
