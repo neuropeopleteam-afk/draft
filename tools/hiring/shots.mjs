@@ -82,6 +82,10 @@ try {
   report.push("ats: " + JSON.stringify(st.ats.map((a) => [a.target, a.status, a.stage_title])));
   const ci = (await api("/candidate/invitations", null, tc)).find((i) => i.id === inv.id);
   report.push("candidate sees: " + JSON.stringify({ hiring: ci.hiring?.stage, ats_stage: ci.ats_stage?.title }));
+  const notes = (await api("/notifications", null, tc)).items.filter((n) => n.kind === "hiring").map((n) => n.title);
+  report.push("candidate notifications (hiring): " + notes.length + " · " + notes.slice(0, 2).join(" | "));
+  const pre = (await api("/employer/invitations", null, te)).find((i) => i.position_title === "Python-разработчик (платёжный шлюз)");
+  report.push("seeded interview: " + (pre?.hiring?.line ?? "нет"));
 } catch (err) {
   report.push("ОШИБКА: " + String(err).slice(0, 600));
 } finally {
