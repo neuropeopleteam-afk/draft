@@ -87,7 +87,7 @@ export default function Criteria() {
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
       <SiteHeader />
-      <main className="mx-auto max-w-content px-4 py-10 sm:px-6">
+      <main id="main" className="mx-auto max-w-content px-4 py-10 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night md:text-4xl">Проверьте нас по критериям ТЗ</h1>
         {loading ? <div className="mt-8"><Loading /></div> : error || !data ? <div className="mt-8"><Alert>{error ?? "Нет данных"}</Alert></div> : <Body d={data} />}
@@ -202,7 +202,9 @@ export function JuryGo() {
     return () => { off = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center" role="status">
+    <main id="main" className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+      <h1 className="sr-only">Вход в копию демо для жюри</h1>
+      <div className="flex flex-col items-center gap-4" role="status">
       {err ? (
         <>
           <p className="max-w-sm text-sm text-brand-ink/80">{err}</p>
@@ -213,6 +215,7 @@ export function JuryGo() {
           </div>
         </>
       ) : <p className="text-sm text-brand-ink/70" aria-busy="true">Входим в вашу копию демо…</p>}
-    </div>
+      </div>
+    </main>
   );
 }
