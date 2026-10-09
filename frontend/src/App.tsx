@@ -26,6 +26,7 @@ import EmployerOverview, { Company } from "./pages/employer/Overview";
 import { CandidateDetail, Search } from "./pages/employer/Search";
 import { employerSections } from "./pages/employer/sections";
 import { AppSection, InstallPage } from "./integrations/AppInstall";
+import Notifications from "./pages/Notifications";
 import { EmployerAts } from "./integrations/Ats";
 import { CompanyPublic } from "./integrations/CompanyPublic";
 import { FspIdDone } from "./integrations/FspId";
@@ -85,6 +86,7 @@ export default function App() {
         <Route path="vacancies" element={<CandidateVacancies />} />
         <Route path="companies/:id" element={<CompanyPublic />} />
         <Route path="app" element={<AppSection />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="cups" element={<CandidateCups />} />
         <Route path="cups/:id" element={<CandidateCup />} />
         <Route path="assignments" element={<CandidateAssignments />} />
@@ -106,6 +108,7 @@ export default function App() {
         <Route path="vacancies" element={<EmployerVacancies />} />
         <Route path="ats" element={<EmployerAts />} />
         <Route path="app" element={<AppSection />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="cups" element={<EmployerCups />} />
         <Route path="cups/:id" element={<EmployerCup />} />
         <Route path="assignments" element={<EmployerAssignments />} />

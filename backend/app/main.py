@@ -46,6 +46,8 @@ from app.modules.proctor.router import router as proctor_router
 from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
+from app.modules.subs import router as subs_api
+from app.modules.subs import runner as subs_runner
 from app.modules.validation.router import router as validation_router
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.passport.router import TAGS as PASSPORT_TAGS
@@ -69,7 +71,7 @@ TAGS = [
     {"name": "legal", "description": "Тексты согласий и реквизиты оператора персональных данных"},
     {"name": "expert-panel", "description": "Экспертная разметка: вход по ссылке, пары, ответы, Ангофф"},
     {"name": "system", "description": "Служебные методы"},
-]
+] + subs_api.TAGS
 
 
 @asynccontextmanager
@@ -85,6 +87,8 @@ async def lifespan(_app: FastAPI):
     from app.integrations.ats.stages import start_poller
 
     start_poller()
+    # Подписка на потребность и напоминания (И25, Н6): фоновый обход, под арендой в БД
+    subs_runner.start_background(get_settings().subs_tick_interval_s)
     yield
 
 
@@ -118,6 +122,7 @@ def create_app() -> FastAPI:
               expert_router, expert_panel_router, jury_router, validation_router, proctor_router,
               assignments_employer_router, assignments_candidate_router, passport_router,
               contact.router, contact.candidate_router, contact.employer_router,  # переписка, встречное (И4)
+              subs_api.employer_router, subs_api.notify_router, subs_api.jury_router,  # подписка, уведомления (И25)
               attempts_employer_router):  # две попытки теста рядом (И26)
         app.include_router(r)
     include_integration_routers(app)
