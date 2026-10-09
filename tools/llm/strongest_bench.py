@@ -131,6 +131,42 @@ def cmd_estimate(a) -> None:
               f"{r['usd_lo']}–{r['usd_hi']} | {r['full_usd_lo']}–{r['full_usd_hi']} |")
 
 
+def cmd_variant(a) -> None:
+    """Проба настроек на первых N вакансиях (разбор-дельта): лимит токенов ответа и/или усилие рассуждений.
+    Путь продукта тот же; меняются только max_tokens запроса-дельты и reasoning.effort (none — без рассуждений)."""
+    import ru_llm_bench as B
+    from app.modules.llm import client as llm
+    from app.modules.matching import need_parser as NP
+
+    bal = balance_usd()
+    if bal is not None:
+        print(f"баланс ключа: {bal} $, пол {a.floor_usd} $, потолок пробы {a.cap_usd} $", flush=True)
+        if bal - a.cap_usd < a.floor_usd:
+            sys.exit("отказ: проба может опустить баланс ниже пола")
+    B.SPEND["cap"] = a.cap_usd
+    orig_chat, orig_reason = NP.chat_json, llm.reasoning_for
+    if a.max_tokens:
+        def chat_mt(*x, **kw):
+            kw["max_tokens"] = a.max_tokens
+            return orig_chat(*x, **kw)
+        NP.chat_json = chat_mt
+    if a.effort:
+        llm.reasoning_for = lambda func=None, s=None: a.effort  # noqa: E731
+    try:
+        r = B.run_needs(a.model, a.conc, full=False, limit=a.limit)
+    finally:
+        NP.chat_json, llm.reasoning_for = orig_chat, orig_reason
+    r["variant"] = {"name": a.name, "max_tokens": a.max_tokens or 900, "reasoning_effort": a.effort or "low",
+                    "limit": a.limit}
+    r["spent_usd_process"] = round(B.SPEND["usd"], 4)
+    wdir = WDIR / B.slug(a.model)
+    wdir.mkdir(parents=True, exist_ok=True)
+    path = wdir / f"needs_delta__{a.name}.json"
+    path.write_text(json.dumps(r, ensure_ascii=False, indent=1), encoding="utf-8")
+    ok = sum(1 for x in r["per_text"] if x.get("ok"))
+    print(f"{a.model} вариант {a.name}: ответила {ok}/{len(r['per_text'])}, потрачено {B.SPEND['usd']:.4f} $ → {path}")
+
+
 def cmd_run(a) -> None:
     import ru_llm_bench as B
 
@@ -181,8 +217,17 @@ def main() -> None:
     r.add_argument("--cap-usd", type=float, required=True)
     r.add_argument("--floor-usd", type=float, default=8.0)
     r.add_argument("--force", action="store_true")
+    v = sub.add_parser("variant")
+    v.add_argument("--model", required=True)
+    v.add_argument("--name", required=True)
+    v.add_argument("--limit", type=int, default=5)
+    v.add_argument("--max-tokens", type=int, default=0)
+    v.add_argument("--effort", default="", help="low | medium | high | none (без рассуждений)")
+    v.add_argument("--conc", type=int, default=4)
+    v.add_argument("--cap-usd", type=float, default=0.1)
+    v.add_argument("--floor-usd", type=float, default=12.45)
     a = ap.parse_args()
-    cmd_estimate(a) if a.cmd == "estimate" else cmd_run(a)
+    {"estimate": cmd_estimate, "run": cmd_run, "variant": cmd_variant}[a.cmd](a)
 
 
 if __name__ == "__main__":
