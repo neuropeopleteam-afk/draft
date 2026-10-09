@@ -63,8 +63,8 @@ function Report({ r }: { r: any }) {
 
       {/* И26: стабильность при повторе и доля повторов заданий — выше по странице (жюри проверяет повтор руками) */}
       <RetestSection sim={sim} />
-      <PathRetest />
       <RetestLive />
+      <PathRetest />
 
       <Section id="bank" title="Банк заданий и калибровка">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
