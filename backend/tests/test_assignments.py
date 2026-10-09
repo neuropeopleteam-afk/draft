@@ -208,6 +208,7 @@ def test_open_assignment_feed_by_stack_and_interval(client, monkeypatch):
     from app.modules.assignments import feed
     from app.modules.assignments.models import AssignmentAttempt
 
+    monkeypatch.setattr(get_settings(), "assignments_feed_days", 3)  # К5: по умолчанию раз в 7 дней; здесь — проверка интервала
     te = employer(client)
     r = client.post("/api/employer/assignments", json={"mode": "open", "direction": "backend", "grade": "middle",
                                                        "stack": ["python", "postgresql"], "n_tasks": 3,
@@ -352,7 +353,7 @@ def test_jury_sandbox_has_assignments(client):
     lst = client.get("/api/employer/assignments", headers=H(te)).json()
     assert {x["mode"] for x in lst} == {"probe", "vacancy", "open"}
     probe = next(x for x in lst if x["mode"] == "probe")
-    assert probe["attempts_by_status"] == {"scored": 1}
+    assert probe["attempts_by_status"] == {"scored": 2}  # К5: Мария (оценено) и Илья (ждёт оценки)
     det = client.get(f"/api/employer/assignments/{probe['id']}", headers=H(te)).json()
     assert det["attempts"][0]["correct"] == 4 and det["attempts"][0]["total"] == 5
     vac = next(x for x in lst if x["mode"] == "vacancy")
