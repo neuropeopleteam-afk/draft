@@ -15,6 +15,7 @@ interface Feed { items: Item[]; unread: number; prefs: { push_enabled: boolean; 
 const KIND: Record<string, string> = {
   new_match: "Новые подходящие", digest: "Дайджест", inv_unanswered: "Приглашение без ответа", inv_expiring: "Срок ответа",
   inv_expired: "Приглашение истекло", app_stale: "Отклик без ответа",
+  hiring: "Найм", hiring_reminder: "Скоро собеседование",  // найм по приглашению (Н8)
 };
 const PUSH: Record<string, string> = {
   sent: "push отправлен", no_devices: "push: устройств нет", off: "push выключен вами", off_platform: "push на сервере не настроен", failed: "push не доставлен",

@@ -3,6 +3,7 @@ import { NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-route
 import { cabinetPath, useAuth } from "../lib/auth";
 import { api, type Role } from "../lib/api";
 import { MESSAGES_CHANGED } from "./Chat";
+import { useHiringTodo } from "./Hiring";
 import { Logo } from "./Logo";
 
 export interface Section { path: string; title: string; description: string; day?: string }
@@ -16,6 +17,7 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
   const loc = useLocation();
   const navRef = useRef<HTMLElement>(null);
   const unread = useUnread(me && (me.role === "candidate" || me.role === "employer") && me.role === role);
+  const hiringTodo = useHiringTodo(me && (me.role === "candidate" || me.role === "employer") && me.role === role);  // найм: что ждёт ответа
 
   // Телефон: меню — горизонтальная лента. Активный пункт прокручиваем в видимую часть ленты (по центру),
   // страницу по вертикали не двигаем.
@@ -52,7 +54,7 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
         </div>
         <nav ref={navRef} className="nav-strip flex gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
           <NavItem to={base} end label="Обзор" />
-          {sections.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={s.path === "messages" ? unread : 0} />)}
+          {sections.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={s.path === "messages" ? unread : s.path === "invitations" ? hiringTodo : 0} badgeLabel={s.path === "invitations" ? "ждут ответа" : undefined} />)}
         </nav>
         <div className="hidden border-t border-brand-night/10 px-5 py-5 md:block">
           <p className="truncate text-sm font-medium text-brand-ink/80" title={me.email}>{me.email}</p>
@@ -66,12 +68,12 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
   );
 }
 
-function NavItem({ to, label, end, hint, badge = 0 }: { to: string; label: string; end?: boolean; hint?: string; badge?: number }) {
+function NavItem({ to, label, end, hint, badge = 0, badgeLabel = "непрочитанных" }: { to: string; label: string; end?: boolean; hint?: string; badge?: number; badgeLabel?: string }) {
   return (
     <NavLink to={to} end={end} title={hint}
       className={({ isActive }) => `block shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors md:whitespace-normal ${isActive ? "bg-brand-blush text-brand-night" : "text-brand-ink/75 hover:bg-brand-blush/40 hover:text-brand-night"}`}>
       {label}
-      {badge > 0 && <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold leading-5 text-white" aria-label={`, непрочитанных: ${badge}`}>{badge}</span>}
+      {badge > 0 && <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold leading-5 text-white" aria-label={`, ${badgeLabel}: ${badge}`}>{badge}</span>}
     </NavLink>
   );
 }

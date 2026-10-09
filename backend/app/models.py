@@ -34,6 +34,7 @@ from app.passport.models import GradePassport, PassportKey  # noqa: E402,F401 �
 from app.modules.contact.models import ContactMessage, InvitationCounter  # noqa: E402,F401 — переписка, встречное (И4)
 from app.modules.proctor.models import ProctorEvent, ProctorSession  # noqa: E402,F401 — камера по согласию (И16)
 from app.modules.mydata.models import AccountDeletionLog, InterestEvent  # noqa: E402,F401 — «Мои данные», интерес (md01)
+from app.modules.hiring.models import HiringInterview, HiringOffer, HiringOutcome  # noqa: E402,F401 — найм (Н8)
 from app.modules.subs.models import NeedSubEntry, NeedSubscription, NotifyPrefs, SubsDirty, SubsState, UserNotification  # noqa: E402,F401 — подписки и напоминания (И25)
 import app.modules.subs.events  # noqa: E402,F401 — слушатель «кандидат изменился» (И25)
 

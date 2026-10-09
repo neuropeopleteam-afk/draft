@@ -16,6 +16,7 @@ os.environ.setdefault("ASSESSMENT_ENGINE", "stub")  # правила — на б
 os.environ["LLM_DISABLED"] = "true"
 os.environ["ATS_STAGE_POLL_S"] = "0"  # фоновый опрос этапов ATS — вызовами в тестах (stages.sync_due)
 os.environ["JURY_SPARE_SANDBOXES"] = "0"  # фоновые песочницы мешали бы очистке БД между тестами; проверка — отдельно
+os.environ["HIRING_REMIND_POLL_S"] = "0"  # напоминания о собеседованиях — вызовом reminders.remind_due
 os.environ["ASSIGNMENTS_FEED_INTERVAL_S"] = "0"  # фоновая лента заданий — так же; её логика проверяется вызовом run_once
 os.environ["SUBS_TICK_INTERVAL_S"] = "0"  # фоновый обход подписок (И25) — так же; логика — вызовом runner.tick
 os.environ.pop("POSTBOX_ACCESS_KEY_ID", None)

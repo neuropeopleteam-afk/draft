@@ -217,6 +217,23 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/candidate/invitations/{inv_id}/counter"): "candidate_own",  # feat/contact
     ("POST", "/api/candidate/invitations/{inv_id}/contacts/revoke"): "candidate_own",
     ("POST", "/api/candidate/invitations/{inv_id}/contacts/restore"): "candidate_own",
+    # найм после принятия (feat/hiring, Н8): собеседование {iid} в мире теста не создаётся — own404
+    ("GET", "/api/candidate/invitations/{inv_id}/hiring"): "candidate_own",
+    ("POST", "/api/candidate/invitations/{inv_id}/interviews/{iid}/choose"): "candidate_own404",
+    ("POST", "/api/candidate/invitations/{inv_id}/interviews/{iid}/reschedule"): "candidate_own404",
+    ("POST", "/api/candidate/invitations/{inv_id}/offer/accept"): "candidate_own",
+    ("POST", "/api/candidate/invitations/{inv_id}/offer/decline"): "candidate_own",
+    ("POST", "/api/candidate/invitations/{inv_id}/offer/counter"): "candidate_own",
+    ("GET", "/api/employer/invitations/{inv_id}/hiring"): "employer_own",
+    ("POST", "/api/employer/invitations/{inv_id}/interviews"): "employer_own",
+    ("POST", "/api/employer/invitations/{inv_id}/interviews/{iid}/done"): "employer_own404",
+    ("POST", "/api/employer/invitations/{inv_id}/interviews/{iid}/cancel"): "employer_own404",
+    ("POST", "/api/employer/invitations/{inv_id}/offer"): "employer_own",
+    ("POST", "/api/employer/invitations/{inv_id}/offer/withdraw"): "employer_own",
+    ("POST", "/api/employer/invitations/{inv_id}/offer/counter/accept"): "employer_own",
+    ("POST", "/api/employer/invitations/{inv_id}/offer/counter/decline"): "employer_own",
+    ("POST", "/api/employer/invitations/{inv_id}/outcome"): "employer_own",
+    ("GET", "/api/hiring/todo"): "auth",
     ("GET", "/api/candidate/cups"): "candidate",
     ("GET", "/api/candidate/cups/passport"): "candidate",
     ("GET", "/api/candidate/cups/{cup_id}"): "candidate_own",  # кубок чужой песочницы → 404 (_sees)

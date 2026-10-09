@@ -124,6 +124,24 @@ const STATUS: Record<string, [string, string]> = {
   counter_withdrawn: ["Встречное закрыто", "bg-gray-100 text-gray-500"],
   contacts_revoked: ["Доступ к контактам отозван", "bg-amber-50 text-amber-800"],
   contacts_restored: ["Доступ к контактам возвращён", "bg-emerald-50 text-emerald-700"],
+  // найм после принятия (app.modules.hiring): события истории приглашения
+  interview_proposed: ["Предложено время собеседования", "bg-[#ECEAF8] text-brand-night"],
+  interview_moved: ["Собеседование переносится", "bg-amber-50 text-amber-800"],
+  interview_reschedule: ["Кандидат просит другое время", "bg-amber-50 text-amber-800"],
+  interview_scheduled: ["Собеседование назначено", "bg-[#ECEAF8] text-brand-night"],
+  interview_done: ["Собеседование прошло", "bg-emerald-50 text-emerald-700"],
+  interview_cancelled: ["Собеседование отменено", "bg-gray-100 text-gray-600"],
+  offer_sent: ["Оффер отправлен", "bg-brand-blush text-brand-plum"],
+  offer_counter: ["Встречное на оффер", "bg-amber-50 text-amber-800"],
+  offer_counter_accepted: ["Встречное на оффер принято", "bg-emerald-50 text-emerald-700"],
+  offer_counter_declined: ["Встречное на оффер отклонено", "bg-gray-100 text-gray-600"],
+  offer_accepted: ["Оффер принят", "bg-emerald-50 text-emerald-700"],
+  offer_declined: ["Оффер отклонён", "bg-gray-100 text-gray-600"],
+  offer_withdrawn: ["Оффер отозван", "bg-gray-100 text-gray-500"],
+  offer_expired: ["Срок ответа на оффер истёк", "bg-gray-100 text-gray-500"],
+  hired: ["Вышел на работу", "bg-emerald-50 text-emerald-700"],
+  hire_rejected: ["Не прошёл", "bg-gray-100 text-gray-600"],
+  hire_declined: ["Отказ кандидата", "bg-gray-100 text-gray-600"],
 };
 
 export function Status({ s }: { s: string }) {

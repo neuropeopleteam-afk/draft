@@ -152,6 +152,9 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
     else:
         out["below_my_minimum"] = svc.below_minimum(cand, i.salary_to, i.salary_basis)
     out.update(contact_svc.invitation_extras(db, i, side))  # НДФЛ, встречное, доступ к контактам, переписка
+    from app.modules.hiring.service import summary as hiring_summary
+
+    out["hiring"] = hiring_summary(db, i, side)  # этап найма после принятия: собеседование, оффер, исход (Н8)
     return out
 
 
