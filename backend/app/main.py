@@ -35,6 +35,7 @@ from app.modules.auth.twofa_router import router as twofa_router
 from app.modules.catalog.router import router as catalog_router
 from app.modules.contact import router as contact
 from app.modules.experts.router import router as expert_panel_router
+from app.modules.hiring import router as hiring  # найм после принятия: собеседование, оффер, исход (Н8)
 from app.modules.invitations.router import candidate_router as candidate_contact_router
 from app.modules.invitations.router import employer_router as employer_contact_router
 from app.modules.jury.router import make_spare
@@ -88,6 +89,9 @@ async def lifespan(_app: FastAPI):
     from app.integrations.ats.stages import start_poller
 
     start_poller()
+    from app.modules.hiring.reminders import start_background as start_hiring_reminders
+
+    start_hiring_reminders()  # напоминания о собеседованиях (HIRING_REMIND_POLL_S; 0 — выключено)
     # Подписка на потребность и напоминания (И25, Н6): фоновый обход, под арендой в БД
     subs_runner.start_background(get_settings().subs_tick_interval_s)
     yield
@@ -104,7 +108,8 @@ def create_app() -> FastAPI:
             "кандидата по категории «направление · грейд» и приглашает с зарплатой.\n\n"
             "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
         ),
-        openapi_tags=TAGS + contact.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS + mutual.TAGS,
+        openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
+                      + mutual.TAGS),
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -123,6 +128,7 @@ def create_app() -> FastAPI:
               expert_router, expert_panel_router, jury_router, validation_router, proctor_router,
               assignments_employer_router, assignments_candidate_router, passport_router, mydata_router,
               contact.router, contact.candidate_router, contact.employer_router,  # переписка, встречное (И4)
+              hiring.router, hiring.candidate_router, hiring.employer_router,  # найм (Н8)
               subs_api.employer_router, subs_api.notify_router, subs_api.jury_router,  # подписка, уведомления (И25)
               mutual.employer_router, mutual.candidate_router, mutual.public_router):  # взаимный подбор (Н9, Н2, Н3)
         app.include_router(r)
