@@ -410,12 +410,47 @@ def _attach_examples(op: dict, rec: dict) -> None:
         req["example"] = copy.deepcopy(rec["request"])
 
 
+def response_refs() -> tuple[dict[str, dict], dict[str, dict]]:
+    """Ссылки на модели ответов из app/core/api_models.py: «METHOD /путь» → схема, и сами схемы компонентов."""
+    import typing
+
+    from pydantic.json_schema import models_json_schema
+
+    from app.core.api_models import RESPONSE_TYPES
+
+    def base(tp):
+        return typing.get_args(tp)[0] if typing.get_origin(tp) is list else tp
+
+    models = list(dict.fromkeys(base(tp) for tp in RESPONSE_TYPES.values()))
+    _, defs = models_json_schema([(m, "serialization") for m in models], ref_template="#/components/schemas/{model}")
+    refs = {}
+    for key, tp in RESPONSE_TYPES.items():
+        ref = {"$ref": f"#/components/schemas/{base(tp).__name__}"}
+        refs[key] = {"type": "array", "items": ref} if base(tp) is not tp else ref
+    return refs, defs.get("$defs", {})
+
+
+def _attach_model(op: dict, schema: dict) -> bool:
+    """Подставляет модель в успешный ответ, если у него нет своей схемы (обработчик возвращает dict)."""
+    ok = next((c for c in op.get("responses", {}) if c.startswith("2")), None)
+    if ok is None:
+        return False
+    media = op["responses"][ok].setdefault("content", {}).setdefault("application/json", {})
+    current = media.get("schema") or {}
+    if "$ref" in current or "$ref" in (current.get("items") or {}) or current.get("type") in ("string", "integer"):
+        return False  # у ответа уже есть своя модель
+    media["schema"] = copy.deepcopy(schema)
+    return True
+
+
 def enrich(app: FastAPI, spec: dict) -> dict:
     from app.core.deps import oauth2_scheme  # noqa: F401  (импорт — чтобы зависимость была загружена до разбора)
 
     _error_schemas(spec)
     _std_responses(spec)
     examples = load_examples()
+    refs, model_schemas = response_refs()
+    spec.setdefault("components", {}).setdefault("schemas", {}).update(model_schemas)
     contexts = {}
     for r in app.routes:
         if type(r).__name__ == "_IncludedRouter":
@@ -441,6 +476,8 @@ def enrich(app: FastAPI, spec: dict) -> dict:
                 op["tags"] = list(dict.fromkeys(op["tags"]))
             if op.get("responses"):  # коды ответов — по возрастанию, как их читают
                 op["responses"] = dict(sorted(op["responses"].items(), key=lambda kv: (not kv[0].isdigit(), kv[0])))
+            if f"{method.upper()} {path}" in refs:
+                _attach_model(op, refs[f"{method.upper()} {path}"])
             if f"{method.upper()} {path}" in examples:
                 _attach_examples(op, examples[f"{method.upper()} {path}"])
             line = access_line(ctx, op)
