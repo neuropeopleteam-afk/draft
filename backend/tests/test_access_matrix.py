@@ -291,7 +291,9 @@ def body_for(key: tuple[str, str], side: Side) -> dict | None:
 
 
 FILES = {("POST", "/api/me/resume"): lambda: {
-    "file": ("resume.pdf", io.BytesIO(_pdf_bytes(["Резюме для матрицы прав"])), "application/pdf")}}
+    "file": ("resume.pdf", io.BytesIO(_pdf_bytes(["Резюме для матрицы прав"])), "application/pdf")},
+    ("POST", "/api/employer/needs/file"): lambda: {  # Ф5
+    "file": ("vacancy.txt", io.BytesIO("Ищем Python-разработчика middle: FastAPI, PostgreSQL.".encode()), "text/plain")}}
 
 
 # ---------------------------------------------------------------- ожидания
