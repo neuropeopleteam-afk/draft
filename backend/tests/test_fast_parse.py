@@ -249,3 +249,21 @@ def test_no_format_suggestion_inside_allowed_formats(monkeypatch, net):
     r = parse_need(text)
     assert r["work_formats"] and "hybrid" in r["work_formats"] and r["llm_suggest"] == []
     assert "допустимые форматы работы:" in net.calls[0]["body"]["messages"][1]["content"]
+
+
+def test_migration_fp01_up_down(tmp_path):
+    from alembic import command
+    from sqlalchemy import create_engine, inspect
+
+    from tests.conftest import alembic_config
+
+    url = f"sqlite:///{tmp_path / 'm.db'}"
+    cfg = alembic_config(url)
+    command.upgrade(cfg, "head")
+    eng = create_engine(url)
+    assert {"key", "status", "result", "user_id"} <= {c["name"] for c in inspect(eng).get_columns("need_parse_jobs")}
+    eng.dispose()
+    command.downgrade(cfg, "tk02")
+    eng = create_engine(url)
+    assert "need_parse_jobs" not in inspect(eng).get_table_names()
+    eng.dispose()
