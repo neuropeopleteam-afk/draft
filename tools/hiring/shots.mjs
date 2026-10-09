@@ -11,6 +11,10 @@ async function api(path, body, token) {
   if (!r.ok) throw new Error(`${path}: ${r.status} ${await r.text()}`);
   return r.json();
 }
+async function until(ok, ms = 15000) {  // ждём состояния на сервере, а не текста на экране
+  for (const t0 = Date.now(); Date.now() - t0 < ms; await new Promise((r) => setTimeout(r, 300))) if (await ok()) return;
+  throw new Error("состояние не наступило");
+}
 async function pageAs(token, sid) {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: "ru-RU", timezoneId: "Europe/Moscow" });
   await ctx.addInitScript(([t, s]) => { localStorage.setItem("fsp_token", t); localStorage.setItem("jury_scenario", s);
@@ -57,7 +61,7 @@ try {
   await modal().getByRole("radio").first().check();
   await snap(pc, "2-candidate-slots", () => modal().locator("section[aria-label='Найм']"));
   await modal().getByRole("button", { name: "Подтвердить время" }).click();
-  await modal().getByText(/назначено|Собеседование .*МСК/).first().waitFor();
+  await until(async () => (await api(`/candidate/invitations/${inv.id}/hiring`, null, tc)).interview?.status === "scheduled");
   // 3. работодатель: «прошло» и оффер (готовые значения) — кликами
   await pe.reload();
   await card().getByRole("button", { name: "Собеседование прошло" }).click();
@@ -71,13 +75,14 @@ try {
   await snap(pc, "3-candidate-offer", () => modal().locator("section[aria-label='Найм']"));
   await modal().getByRole("button", { name: "Принять оффер" }).click();
   await modal().getByText(/Вы приняли оффер/).first().waitFor();
+  await until(async () => (await api(`/candidate/invitations/${inv.id}/hiring`, null, tc)).offer?.status === "accepted");
   // 5. работодатель: «Вышел на работу» → этап в «Потоке» и обратно
   await pe.reload();
   await card().getByRole("button", { name: "Вышел на работу" }).click();
-  await card().getByText(/Передано: «?Поток»? · этап «Вышел на работу»/).waitFor({ timeout: 20000 });
+  await card().getByText(/Передано:\s*«?Поток»? · этап «Вышел на работу»/).first().waitFor({ timeout: 20000 });
   await pe.reload();
-  await card().getByText(/Передано: «?Поток»? · этап «Вышел на работу»/).waitFor({ timeout: 20000 });
-  await snap(pe, "4-employer-hired", (w) => w === 390 ? card().locator("section[aria-label='Найм']") : card());
+  await card().getByText(/Передано:\s*«?Поток»? · этап «Вышел на работу»/).first().waitFor({ timeout: 20000 });
+  await snap(pe, "4-employer-hired", (w) => w === 390 ? card().locator("section[aria-label='Передача в ATS']") : card());
   const st = await api(`/employer/invitations/${inv.id}/hiring`, null, te);
   report.push("ats: " + JSON.stringify(st.ats.map((a) => [a.target, a.status, a.stage_title])));
   const ci = (await api("/candidate/invitations", null, tc)).find((i) => i.id === inv.id);
