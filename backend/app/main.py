@@ -162,9 +162,10 @@ def create_app() -> FastAPI:
                 "proctor_camera": get_settings().proctor_camera_enabled,  # на запросе (не замыкание s): флаг переключается без пересоздания app; false — экрана камеры нет
                 "llm": llm_status(), "assessment_engine": get_engine().name,
                 # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
-                "rules": {"grade_change_interval_days": s.grade_change_interval_days,
-                          "retake_same_grade_days": s.retake_same_grade_days,
-                          "invitation_cooldown_days": s.invitation_cooldown_days}}
+                # на запросе (get_settings, не замыкание s): иначе тест, сбросивший кэш настроек, ломал соседний (Н8)
+                "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,
+                          "retake_same_grade_days": get_settings().retake_same_grade_days,
+                          "invitation_cooldown_days": get_settings().invitation_cooldown_days}}
 
     class HealthOut(BaseModel):
         status: str
