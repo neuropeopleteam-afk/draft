@@ -81,7 +81,7 @@ function SlotLine({ s }: { s: Slot }) {
   return (
     <span className="min-w-0">
       <b className="text-brand-night">{mskText(s.starts_at)}</b>, {s.duration_min}{NB}мин · {FORMAT[s.format] ?? s.format}
-      {s.place && <> · {isLink(s.place) ? <a className="break-all font-semibold text-brand hover:underline" href={s.place} target="_blank" rel="noreferrer">ссылка на встречу</a> : <span className="break-words">{s.place}</span>}</>}
+      {s.place && <> · {isLink(s.place) ? <a className="break-all font-semibold text-brand-deep hover:underline" href={s.place} target="_blank" rel="noreferrer">ссылка на встречу</a> : <span className="break-words">{s.place}</span>}</>}
     </span>
   );
 }
@@ -169,7 +169,7 @@ export function EmployerHiring({ inv, onChange }: { inv: any; onChange?: () => v
   const lastDone = st.interviews?.find((x: any) => x.status === "done");
   const transfers = (st.ats ?? []).filter((a: any) => a.target !== "webhook");
   return (
-    <section className="space-y-3 rounded-xl border border-brand-night/10 bg-white p-3 sm:p-4" aria-label="Найм">
+    <section className="space-y-3 rounded-xl border border-brand-night/10 bg-white p-3 sm:p-4" aria-label={`Найм: ${inv.position_title ?? ""} · ${inv.candidate_ref ?? inv.id}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-semibold text-brand-night">Найм</p>
         <span className="text-xs font-semibold text-brand-ink/65">{st.stage_title}</span>
@@ -276,7 +276,7 @@ export function CandidateHiring({ inv, onChange }: { inv: any; onChange?: () => 
   const lastDone = st.interviews?.find((x: any) => x.status === "done");
   const quiet = st.stage === "contact" && !lastDone && !o && !st.outcome;
   return (
-    <section className="space-y-3 rounded-xl border border-brand-night/10 p-3 sm:p-4" aria-label="Найм">
+    <section className="space-y-3 rounded-xl border border-brand-night/10 p-3 sm:p-4" aria-label={`Собеседование и оффер: ${inv.position_title ?? inv.id}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-semibold text-brand-night">Собеседование и оффер</p>
         <span className="text-xs font-semibold text-brand-ink/65">{st.stage_title}</span>
