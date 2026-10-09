@@ -34,10 +34,14 @@ import json
 import os
 import random
 import re
+import sys
 import threading
 import time
 
 from locust import HttpUser, between, events, task
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from flows import CAND_PERSONAS, GRADE_FOR, NEED_TEXTS, answer_for, invitation_body, is_llm_item, need_requirements  # noqa: E402
 
 SCENARIO = os.environ.get("LT_SCENARIO", "")
 WEB = os.environ.get("LT_WEB", "")
@@ -45,20 +49,6 @@ MAX_STARTS = int(os.environ.get("LT_MAX_STARTS", "10"))
 MAX_NEEDS = int(os.environ.get("LT_MAX_NEEDS", "20"))
 MAX_INVITES = int(os.environ.get("LT_MAX_INVITES", "12"))
 PARSE = os.environ.get("LT_PARSE", "1") != "0"
-CAND_PERSONAS = ["candidate_new", "candidate_nofsp", "candidate_junior", "candidate"]
-GRADE_FOR = {"candidate_new": "junior", "candidate_nofsp": "middle", "candidate_junior": "junior", "candidate": "middle"}
-
-# Тексты потребностей — фиксированный набор: модель (фоновое уточнение И27) вызывается не больше одного раза на текст,
-# повторный разбор того же текста — из кэша. Контактов и персональных данных в текстах нет.
-NEED_TEXTS = [
-    "Ищем Middle Python-разработчика в команду платёжного сервиса: FastAPI, PostgreSQL, Docker, опыт от 2 лет, "
-    "удалённо или гибрид, вилка 220–280 тыс. рублей.",
-    "Нужен Junior frontend-разработчик: TypeScript, React, вёрстка по макетам Figma, тесты Jest, офис в Москве.",
-    "Senior Data Scientist: Python, pandas, scikit-learn, SQL, A/B-тесты, опыт продакшен-моделей от 4 лет, удалёнка.",
-    "QA-инженер Middle: автотесты на pytest и Playwright, API-тестирование, CI в GitLab, опыт от 2 лет.",
-]
-
-
 def _xlink() -> str:
     """Токен личной ссылки эксперта из файла (JURY_LINK_1=<токен или адрес …/x/<токен>>). Не печатается."""
     path = os.environ.get("LT_XLINK_FILE", "")
@@ -182,18 +172,9 @@ class CandidateTester(JuryUser):
         while item and guard < 30:
             guard += 1
             time.sleep(random.uniform(2, 5))  # «читает задание»
-            kind, fmt = item.get("answer_kind", "option"), item.get("format")
-            if fmt == "open_answer" or (fmt == "open_book_3step" and kind == "text"):
+            if is_llm_item(item):
                 return  # оценивает LLM по рубрике — не отправляем (в экспресс-тесте таких заданий нет)
-            if kind == "text":  # predict_output: вывод программы, сверка с ключом после нормализации, без LLM
-                ans = random.choice(["0", "1", "2", "None", "True", "[1, 2, 3]", "3"])
-            elif kind == "line":
-                ans = random.randint(1, max(1, len((item.get("code") or "x").splitlines())))
-            else:
-                ans = random.choice([o["id"] for o in item.get("options") or [{"id": "A"}]])
-            a = {"item_id": item["item_id"], "answer": ans, "time_spent_ms": random.randint(4_000, 40_000)}
-            if item.get("step"):
-                a["step"] = item["step"]
+            a = answer_for(item)
             with self.client.post(f"/api/assessment/sessions/{sid}/answers", json=a, name="тест: ответ",
                                   catch_response=True) as r:
                 if r.status_code == 200:
@@ -282,11 +263,7 @@ class Employer(JuryUser):
                              name="потребность: разбор (правила, модель в фоне)")
         if r.status_code != 200 or not _take("needs", MAX_NEEDS):
             return
-        p = r.json()
-        keys = ("direction", "grade", "experience_years_min", "work_format", "city", "salary_from", "salary_to")
-        req = {k: p.get(k) for k in keys if p.get(k) is not None}
-        for k in ("stack_required", "stack_desired"):
-            req[k] = [{"tag": x["tag"], "weight": x.get("weight", 1.0), "status": "confirmed"} for x in p.get(k) or []]
+        req = need_requirements(r.json())
         with self.client.post("/api/employer/needs", json={"text": text, "requirements": req},
                               name="потребность: создать + подборка v1", catch_response=True) as c:
             if c.status_code == 201:
@@ -334,9 +311,7 @@ class Employer(JuryUser):
                 return
             _counters["invites"] += 1
             _counters["invited"].add(ref)
-        body = {"candidate_ref": ref, "need_id": self.need, "position_title": "Разработчик (нагрузочный тест)",
-                "offer_description": "Нагрузочный тест песочницы жюри: приглашение без реального оффера.",
-                "salary_from": 150000, "salary_to": 220000, "contact_method": "Чат платформы"}
+        body = invitation_body(ref, self.need)
         with self.client.post("/api/employer/invitations", json=body, name="приглашение: отправить",
                               catch_response=True) as r:
             r.success() if r.status_code in (201, 409) else r.failure(f"{r.status_code} {r.text[:120]}")
