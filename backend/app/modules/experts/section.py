@@ -6,6 +6,7 @@ source — кто разметил: люди или языковая модел�
 """
 from __future__ import annotations
 
+import logging
 import re
 import threading
 
@@ -19,6 +20,7 @@ from app.modules.experts.models import ExpertItem, ExpertLabel, ExpertPanelist
 
 _cache: dict = {}
 _mx = threading.Lock()
+log = logging.getLogger(__name__)
 MIN_READY = {"A_needs": 10, "coders": 2}
 
 
@@ -132,6 +134,39 @@ def model_panel_view(res: dict) -> dict:
     return out
 
 
+MODEL_NOT_PEOPLE = "модельная разметка по экспертному протоколу, не люди"
+
+
+def packs_view(db: Session, items1: dict, labels1: list[dict]) -> dict | None:
+    """Блок A по пакетам v1, v2 и вместе (P@5 и nDCG@10 match-v1 против BM25, ДИ, согласие). None — v2 не собран;
+    v2_labeled False — собран, но не размечен: раздел показывает v1, как раньше."""
+    from app.modules.experts import pack2
+
+    if not pack2.exists(db):
+        return None
+    items2, labels2 = load(db, pack2.PACK2)
+    panel2 = service.panel_status(db, pack2.PACK2)
+    info = {"version": pack2.PACK2,
+            "A_pairs_new": sum(1 for it in items2.values() if it["kind"] == "A" and not it["hidden"].get("borrowed_from")),
+            "A_pairs_from_v1": sum(1 for it in items2.values() if it["hidden"].get("borrowed_from")),
+            "A_needs": len({it["grp"] for it in items2.values() if it["kind"] == "A"}),
+            "per_role": {p["code"]: p["progress"]["A"]["total"] for p in panel2}, "role_max": pack2.ROLE_MAX,
+            "plan": f"на потребность: топ-{pack2.TOP} match-v1, {pack2.MID_N} случайных из мест {pack2.MID_LO}–"
+                    f"{pack2.MID_HI}, {pack2.HARD_N} трудных отрицательных той же категории вне топ-{pack2.MID_HI}; "
+                    "совпавшие с v1 пары не повторяются; каждая пара — двум ролям из E1–E3"}
+    if not labels2:
+        return {"v2_labeled": False, "pack2": info, "panel2": panel2}
+    res = A.matching_by_pack({P.PACK: (items1, labels1), pack2.PACK2: (items2, labels2)}, base=P.PACK)
+    sources = {P.PACK: service.source_summary(service.panel_status(db)), pack2.PACK2: service.source_summary(panel2)}
+    model = [k for k, s in sources.items() if s and s["kind"] in ("model", "mixed")]
+    caption = None
+    if model:
+        who = "; ".join(f"{k} — {sources[k]['title']}" for k in sources if sources[k])
+        caption = f"{MODEL_NOT_PEOPLE[0].upper()}{MODEL_NOT_PEOPLE[1:]}: {who}."
+    return {"v2_labeled": True, "pack2": info, "panel2": panel2, "sources": sources, "caption": caption,
+            "model_labels": bool(model), **res}
+
+
 def synthetic(items: dict) -> dict | None:
     key = ("synth", len(items))
     with _mx:
@@ -160,7 +195,13 @@ def section(db: Session) -> dict:
     src = service.source_summary(panel)
     if src and src["model_panel"]:
         res = model_panel_view(res)
-    out = {"pack": _pack_info(items) if items else None, "panel": panel, "panel_kind": kind, "source": src,
+    try:
+        packs = packs_view(db, items, labels)
+    except Exception:  # noqa: BLE001 — раздел валидации не должен падать из-за пакета v2
+        log.exception("experts: блок пакетов v1/v2 не посчитан")
+        db.rollback()
+        packs = None
+    out = {"pack": _pack_info(items) if items else None, "panel": panel, "panel_kind": kind, "source": src, "packs": packs,
            "model_panel": bool(src and src["model_panel"]), "status": _status(panel, res), **res,
            "llm_without_experts": llm_only, "synthetic_check": synthetic(items) if items else None,
            "current_cuts": {b: v for b, (_, v) in A.CURRENT_CUTS.items()}}
