@@ -380,6 +380,11 @@ def _verify(provider: str, s: Settings) -> ssl.SSLContext | bool:
     return True
 
 
+def _schema_ok(route: Route, s: Settings) -> bool:
+    """Передавать ли JSON-схему ответа провайдеру: OpenRouter — всегда, Yandex AI Studio — по LLM_YANDEX_JSON_SCHEMA."""
+    return route.provider == "openrouter" or (route.provider == "yandex" and s.llm_yandex_json_schema)
+
+
 def _attempt(route: Route, messages: list[dict], *, temperature: float, max_tokens: int, want_json: bool,
              client: httpx.Client | None, validate: Callable[[object], bool] | None,
              response_format: dict | None = None) -> LLMResult:
@@ -391,8 +396,8 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
         body["reasoning"] = {"effort": route.reasoning}
     if want_json and route.provider == "local" and s.llm_local_json_mode:
         body["response_format"] = {"type": "json_object"}
-    if response_format and route.provider == "openrouter":
-        body["response_format"] = response_format  # жёсткая JSON-схема ответа (structured output, И27)
+    if response_format and _schema_ok(route, s):
+        body["response_format"] = response_format  # жёсткая JSON-схема ответа (structured output, И27; Yandex — Я2)
     name = short_model(route.model)
     t0 = time.monotonic()
     try:
@@ -461,8 +466,9 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
     latency_ms результата — суммарное время всех попыток (столько ждал пользователь).
     deadline — момент time.monotonic(), к которому нужен ответ (общий бюджет вызывающего): тайм-аут попытки
     урезается до остатка, при остатке меньше секунды следующие провайдеры не вызываются (ошибка deadline).
-    response_format — JSON-схема ответа ({"type": "json_schema", ...}) для OpenRouter (structured output); провайдер
-    её не принял (HTTP 400) — одна повторная попытка того же маршрута без схемы, ответ проверяется как обычно."""
+    response_format — JSON-схема ответа ({"type": "json_schema", ...}) для OpenRouter и, при LLM_YANDEX_JSON_SCHEMA, для
+    Yandex AI Studio (structured output); провайдер её не принял (HTTP 400) — одна повторная попытка того же маршрута
+    без схемы, ответ проверяется как обычно."""
     rs = routes(func, model, provider, timeout_s)
     if not rs:
         return LLMResult(ok=False, error="not_configured", func=func)
@@ -485,7 +491,7 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
             continue
         res = _attempt(r, messages, temperature=temperature, max_tokens=max_tokens, want_json=want_json,
                        client=client, validate=validate, response_format=response_format)
-        if response_format and r.provider == "openrouter" and res.error == "http_400":
+        if response_format and _schema_ok(r, get_settings()) and res.error == "http_400":
             attempts.append({"provider": r.provider, "model": res.model, "ok": False, "error": "schema_rejected",
                              "latency_ms": res.latency_ms})
             total += res.latency_ms

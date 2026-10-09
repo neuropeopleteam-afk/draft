@@ -196,6 +196,12 @@ def build(wdir: Path) -> dict:
                     row["quality"] = _resume_quality(per, gold)
             row["price"] = _price(m["key"], row, m["spec"])
             row["status"], row["date"] = "done", d.get("date")
+            v = _load(wdir / slug(m["spec"]) / "needs_delta_schema.json") if f["key"] == "needs_delta" else None
+            if v is not None:  # п.4: та же дельта с JSON-схемой у Yandex (LLM_YANDEX_JSON_SCHEMA=true)
+                sv = _calls(v["per_text"])
+                sv["quality"] = _needs_quality(vac, [x["requirements"] for x in v["per_text"]])
+                sv["schema_rejected"] = sum(1 for x in v["per_text"] if "schema_rejected" in (x.get("attempt_errors") or []))
+                row["schema_variant"] = sv
             rows[m["key"]] = row
         out_funcs.append({**f, "rows": rows})
     return out_funcs
