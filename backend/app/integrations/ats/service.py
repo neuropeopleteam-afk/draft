@@ -19,7 +19,7 @@ from sqlalchemy import or_, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.db import SessionLocal, utcnow
+from app.core.db import SessionLocal, as_aware, utcnow
 from app.core.enums import InvitationStatus
 from app.integrations.ats import profile as prof
 from app.integrations.ats import providers
@@ -271,7 +271,7 @@ def invitation_transfers(db: Session, company_id: uuid.UUID, inv: Invitation) ->
         state = "sent" if ok else "pending" if last is not None and last.status == "pending" \
             else "error" if last is not None else "not_sent"
         item = {"target": code, "title": TARGET_TITLES[code], "state": state, "enabled": code in enabled,
-                "at": (ok or last).created_at.isoformat() if (ok or last) else None,
+                "at": as_aware((ok or last).created_at).isoformat() if (ok or last) else None,
                 "auto": bool(ok and ok.trigger == "invitation_accepted"),
                 "error": last.error if state == "error" and last is not None else None,
                 "attempts": len(ds), "stage": None}
@@ -282,14 +282,17 @@ def invitation_transfers(db: Session, company_id: uuid.UUID, inv: Invitation) ->
                                  "name": rec.get("stage_name") or PLATFORM_STAGES[rec["stage"]], "at": rec.get("at"),
                                  "synced": True}
             elif (ok.result or {}).get("stage_title"):  # этап при передаче (до первого опроса «Потока»)
-                st_ = ok.result.get("stage") if (ok.trigger or "").startswith("hiring_") else "review"  # этап найма (Н8)
+                # передача этапа найма (Н8) — его этап; первичная передача — «на рассмотрении»
+                st_ = ok.result.get("stage") if (ok.trigger or "").startswith("hiring_") else "review"
                 item["stage"] = {"stage": st_, "title": PLATFORM_STAGES.get(st_, PLATFORM_STAGES["review"]),
-                                 "name": ok.result["stage_title"], "at": ok.created_at.isoformat(), "synced": False}
+                                 "name": ok.result["stage_title"], "at": as_aware(ok.created_at).isoformat(),
+                                 "synced": False}
         elif ok is not None and (ok.trigger or "").startswith("hiring_") and (ok.result or {}).get("stage_title"):
             # этап найма (Н8) в Talantix / Хантфлоу / вебхуке — из ответа ATS на перевод
             st_ = ok.result.get("stage")
             item["stage"] = {"stage": st_, "title": PLATFORM_STAGES.get(st_, ok.result["stage_title"]),
-                             "name": ok.result["stage_title"], "at": ok.created_at.isoformat(), "synced": False}
+                             "name": ok.result["stage_title"], "at": as_aware(ok.created_at).isoformat(),
+                             "synced": False}
         out.append(item)
     return out
 
