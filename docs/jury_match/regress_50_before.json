@@ -1,0 +1,94 @@
+{
+ "saved": {
+  "fields": {
+   "direction": {
+    "correct": 50,
+    "n": 50,
+    "accuracy": 1.0
+   },
+   "grade": {
+    "correct": 39,
+    "n": 39,
+    "accuracy": 1.0
+   },
+   "experience_years_min": {
+    "correct": 50,
+    "n": 50,
+    "accuracy": 1.0
+   },
+   "work_format": {
+    "correct": 49,
+    "n": 50,
+    "accuracy": 0.98
+   },
+   "salary_from": {
+    "correct": 50,
+    "n": 50,
+    "accuracy": 1.0
+   },
+   "salary_to": {
+    "correct": 50,
+    "n": 50,
+    "accuracy": 1.0
+   }
+  },
+  "grade_inferences_on_unspecified": 8,
+  "stack_micro_precision": 0.884,
+  "stack_micro_recall": 0.9338,
+  "stack_tp_fp_fn": [
+   282,
+   37,
+   20
+  ],
+  "quotes": 499,
+  "invalid_quotes": 0
+ },
+ "now": {
+  "fields": {
+   "direction": {
+    "correct": 50,
+    "n": 50,
+    "accuracy": 1.0
+   },
+   "grade": {
+    "correct": 34,
+    "n": 39,
+    "accuracy": 0.8718
+   },
+   "experience_years_min": {
+    "correct": 50,
+    "n": 50,
+    "accuracy": 1.0
+   },
+   "work_format": {
+    "correct": 49,
+    "n": 50,
+    "accuracy": 0.98
+   },
+   "salary_from": {
+    "correct": 50,
+    "n": 50,
+    "accuracy": 1.0
+   },
+   "salary_to": {
+    "correct": 50,
+    "n": 50,
+    "accuracy": 1.0
+   }
+  },
+  "grade_inferences_on_unspecified": 8,
+  "stack_micro_precision": 0.884,
+  "stack_micro_recall": 0.9338,
+  "stack_tp_fp_fn": [
+   282,
+   37,
+   20
+  ],
+  "quotes": 499,
+  "invalid_quotes": 0
+ },
+ "stack_changed": [],
+ "worse": [
+  "grade"
+ ]
+}

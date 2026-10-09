@@ -21,10 +21,13 @@ import { candidateSections } from "./pages/candidate/sections";
 import { EmployerInvitations, EmployerProbes } from "./pages/employer/Contact";
 import { Compare, CompareLanding } from "./pages/employer/Compare";
 import { Needs, Selection } from "./pages/employer/Needs";
+import { MutualEntry } from "./pages/mutual/Employer";  // взаимный подбор, ссылка руководителю (Н9, Н2, Н3)
+import { SharePage } from "./pages/mutual/Share";
 import EmployerOverview, { Company } from "./pages/employer/Overview";
 import { CandidateDetail, Search } from "./pages/employer/Search";
 import { employerSections } from "./pages/employer/sections";
 import { AppSection, InstallPage } from "./integrations/AppInstall";
+import Notifications from "./pages/Notifications";
 import { EmployerAts } from "./integrations/Ats";
 import { CompanyPublic } from "./integrations/CompanyPublic";
 import { FspIdDone } from "./integrations/FspId";
@@ -57,6 +60,7 @@ export default function App() {
         <Route path="security" element={<TwoFactorSettings />} />
       </Route>
       <Route path="/expert-invite/:token" element={<ExpertInvite />} />
+      <Route path="/share/:token" element={<SharePage />} />
       <Route path="/register" element={<Register />} />
       <Route path="/verify" element={<Verify />} />
       <Route path="/verify/:id" element={<PassportVerify />} />
@@ -83,6 +87,7 @@ export default function App() {
         <Route path="vacancies" element={<CandidateVacancies />} />
         <Route path="companies/:id" element={<CompanyPublic />} />
         <Route path="app" element={<AppSection />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="cups" element={<CandidateCups />} />
         <Route path="cups/:id" element={<CandidateCup />} />
         <Route path="assignments" element={<CandidateAssignments />} />
@@ -94,6 +99,7 @@ export default function App() {
         <Route path="needs" element={<Needs />} />
         <Route path="needs/:id" element={<Selection />} />
         <Route path="needs/:id/v/:version" element={<Selection />} />
+        <Route path="mutual" element={<MutualEntry />} />
         <Route path="needs/:id/compare" element={<Compare />} />
         <Route path="compare" element={<CompareLanding />} />
         <Route path="search" element={<Search />} />
@@ -104,6 +110,7 @@ export default function App() {
         <Route path="vacancies" element={<EmployerVacancies />} />
         <Route path="ats" element={<EmployerAts />} />
         <Route path="app" element={<AppSection />} />
+        <Route path="notifications" element={<Notifications />} />
         <Route path="cups" element={<EmployerCups />} />
         <Route path="cups/:id" element={<EmployerCup />} />
         <Route path="assignments" element={<EmployerAssignments />} />
