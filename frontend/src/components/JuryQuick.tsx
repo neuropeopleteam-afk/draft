@@ -154,6 +154,8 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
           ? <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(q)}>
               {busy ? "Входим…" : q === ANSWER && needLogin ? `Войти как ${first(ans.name)} и ответить` : needLogin || !s.cta.startsWith("Войти") ? s.cta : "Открыть экран"}
             </button>
+          : q === 0 && !need
+            ? <span className="text-xs text-white/75">Сохраните потребность — проводник перейдёт к подборке сам.</span>
           : q < LAST
             ? <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(q + 1)}>{busy ? "Входим…" : `Дальше: ${QUICK[q + 1].title}`}</button>
             : <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => quick.setMode("full")}>Готово · остальное — в справочнике</button>}
