@@ -19,9 +19,11 @@ FastAPI схеме добавляет то, что можно вывести и�
 from __future__ import annotations
 
 import ast
+import copy
 import importlib
 import inspect
 import json
+from pathlib import Path
 import textwrap
 import threading
 from typing import Any
@@ -386,11 +388,34 @@ def _document_error(op: dict, status: int, codes: dict[str, str]) -> None:
         resp["content"]["application/json"]["example"] = example
 
 
+EXAMPLES_FILE = Path(__file__).with_name("api_examples.json")
+
+
+def load_examples() -> dict[str, dict]:
+    """Примеры «METHOD /путь» → {status, response, request?}: снимаются с демо-мира `make openapi-examples`."""
+    try:
+        return json.loads(EXAMPLES_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _attach_examples(op: dict, rec: dict) -> None:
+    resp = op.get("responses", {}).get(str(rec.get("status")))
+    media = ((resp or {}).get("content") or {}).get("application/json")
+    if media is not None and "example" not in media and "response" in rec:
+        media["example"] = copy.deepcopy(rec["response"])
+        resp["description"] = (resp.get("description", "").rstrip() + " Пример — реальный ответ на демо-данных (сокращён).").strip()
+    req = ((op.get("requestBody") or {}).get("content") or {}).get("application/json")
+    if req is not None and "example" not in req and "examples" not in req and rec.get("request"):
+        req["example"] = copy.deepcopy(rec["request"])
+
+
 def enrich(app: FastAPI, spec: dict) -> dict:
     from app.core.deps import oauth2_scheme  # noqa: F401  (импорт — чтобы зависимость была загружена до разбора)
 
     _error_schemas(spec)
     _std_responses(spec)
+    examples = load_examples()
     contexts = {}
     for r in app.routes:
         if type(r).__name__ == "_IncludedRouter":
@@ -416,6 +441,8 @@ def enrich(app: FastAPI, spec: dict) -> dict:
                 op["tags"] = list(dict.fromkeys(op["tags"]))
             if op.get("responses"):  # коды ответов — по возрастанию, как их читают
                 op["responses"] = dict(sorted(op["responses"].items(), key=lambda kv: (not kv[0].isdigit(), kv[0])))
+            if f"{method.upper()} {path}" in examples:
+                _attach_examples(op, examples[f"{method.upper()} {path}"])
             line = access_line(ctx, op)
             base = (op.get("description") or "").rstrip()
             op["description"] = f"{base}\n\n{line}" if base else line
