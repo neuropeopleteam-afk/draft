@@ -12,6 +12,13 @@
   адаптивный выбор иначе тянет их из-за большой информации), open_answer — 1 (~20 мин). Лимит действует и в
   дотестировании у порога (там и так только короткие задания, см. ``CATConfig.ext_item_time_s``).
   ``max_item_time_s`` — только задания с рекомендуемым временем не больше этого (экспресс-тест жюри: 5–7 коротких).
+* **Семейства прошлых попыток (И26, 09.10).** ``seen`` — семейства всех прошлых попыток кандидата по направлению
+  с «возрастом» (0 — последняя попытка, 1 — предпоследняя, …). Они не берутся ни в основную часть, ни в
+  дотестирование. Основная часть: новые семейства своего субпула (как прежде: кончился один блок — берётся другой);
+  затем новые семейства других активных субпулов; когда новых нет — виденные давнее всего (LRU, по блокам), с новым
+  вариантом (новый seed, bank_engine). Дотестирование у порога: новые короткие семейства; LRU — только из попыток
+  до последней (семейства последней попытки туда не попадали и раньше). ``seen`` пуст или не задан — выбор как
+  прежде (первая попытка и сессии, начатые до обновления, не меняются).
 """
 from __future__ import annotations
 
@@ -29,11 +36,18 @@ class AppCATSession(CATSession):
     """CATSession с ограничением числа заданий одного формата в сессии."""
 
     def __init__(self, *args, max_per_format: dict[str, int] | None = None, max_item_time_s: float | None = None,
-                 **kwargs):
+                 seen: dict[str, int] | None = None, ext_lru: bool = False, **kwargs):
         self.max_per_format = dict(DEFAULT_FORMAT_LIMITS if max_per_format is None else max_per_format)
         self.max_item_time_s = max_item_time_s
         super().__init__(*args, **kwargs)
         self._fmt = {fid: i.format for fid, i in self.items.items()}
+        self.seen = {str(k): int(v) for k, v in (seen or {}).items()}
+        self.ext_lru = ext_lru  # True — дотестирование предварительного Junior (confirm): LRU по всем прошлым попыткам
+        if self.seen:
+            # запасной путь: весь банк направления без канареек, исключённых (стек, Стажёр) и субпулов на карантине
+            excl, blocked = set(kwargs.get("exclude") or ()), set(kwargs.get("blocked_subpools") or ())
+            self._reserve = [i for i in self.items.values() if not i.canary and i.family_id not in excl
+                             and (i.subpool == self.subpool or i.subpool not in blocked)]
 
     def format_counts(self) -> dict[str, int]:
         out: dict[str, int] = {}
@@ -52,10 +66,39 @@ class AppCATSession(CATSession):
         return [i for i in cands if cnt.get(i.format, 0) < self.max_per_format.get(i.format, 10**6)]
 
     def _candidates(self) -> list[PoolItem]:
-        return self._limit(super()._candidates())
+        base = self._limit(super()._candidates())
+        if not self.seen:
+            return base
+        # 1) новые семейства своего субпула — как прежде (кончился блок — берётся другой блок, см. CATSession._next_main);
+        # 2) новые семейства других активных субпулов; 3) LRU по блокам — виденные давнее всего, с новым вариантом
+        fresh = [i for i in base if i.family_id not in self.seen]
+        if fresh:
+            return fresh
+        left = self.cfg.max_time_s - self.time_used
+        reserve = self._limit([i for i in self._reserve if i.family_id not in self.used and i.time_limit_s <= left])
+        fresh = [i for i in reserve if i.family_id not in self.seen]
+        if fresh:
+            return fresh
+        return [i for common in (True, False) for i in self._oldest([r for r in reserve if (r.block == "common") == common])]
 
     def _ext_candidates(self) -> list[PoolItem]:
-        return self._limit(super()._ext_candidates())
+        base = self._limit(super()._ext_candidates())
+        if not self.seen:
+            return base
+        fresh = [i for i in base if i.family_id not in self.seen]
+        if fresh:
+            return fresh
+        # LRU в дотестировании у порога — без семейств последней попытки (как прежде: они в дотестирование не
+        # попадали); дотестирование предварительного Junior (confirm) — LRU по всем, чтобы не кончилось без заданий
+        return self._oldest(base if self.ext_lru else [i for i in base if self.seen.get(i.family_id, 0) >= 1])
+
+    def _oldest(self, cands: list[PoolItem]) -> list[PoolItem]:
+        """LRU: из виденных кандидатом семейств — те, что он видел давнее всего (наибольший «возраст»)."""
+        old = [i for i in cands if i.family_id in self.seen]
+        if not old:
+            return []
+        m = max(self.seen[i.family_id] for i in old)
+        return [i for i in old if self.seen[i.family_id] == m]
 
 
 @lru_cache(maxsize=1)
