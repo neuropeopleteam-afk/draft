@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { DIRECTIONS, dtt, num, pct, useApi } from "../ui";
+import { DIRECTIONS, dtt, num, pct, plural, useApi } from "../ui";
 import { Conditions } from "./StabilityBlocks";
 
 /* /validation (И26): доля повторов заданий между попытками — живая по базе стенда и синтетика по протоколу продукта
@@ -28,6 +28,11 @@ export default function RetestLive() {
   const before = syn.before ?? {};
   const rt = syn.retest_check;
   const dirs = Object.entries<any>(syn.directions ?? {});
+  const sizes = dirs.map(([, v]) => v.families_in_bank).filter((x) => typeof x === "number") as number[];
+  const famMax = sizes.length ? Math.max(...sizes) : 0;
+  const famRange = sizes.length ? `${Math.min(...sizes)}–${famMax} ${plural(famMax, "семейство", "семейства", "семейств")}` : "десятки семейств";
+  // направления, где к третьей попытке новых семейств хватает (повтор 3/1 меньше 10 %)
+  const enough = dirs.filter(([, v]) => (v.after?.third_vs_first?.share_families ?? 1) < 0.1).map(([d]) => DIRECTIONS[d] ?? d);
   return (
     <section id="retest-repeats" className="mt-8 scroll-mt-20" aria-labelledby="retest-repeats-t">
       <h3 id="retest-repeats-t" className="text-base font-bold text-brand-night">Доля повторов заданий между попытками</h3>
@@ -95,8 +100,8 @@ export default function RetestLive() {
       </Conditions>
       <p className="mt-2 text-sm leading-relaxed text-brand-ink/75">
         Что это значит. Вторая попытка — новая форма. Третья и следующие повторяют семейства, только когда новых в банке направления
-        не осталось: в банке 49–72 семейства на направление вместе с общим блоком, попытка — около 20 заданий, поэтому к третьей
-        попытке новые кончаются у всех направлений, кроме Backend. Повторяются семейства, виденные давнее всего (обычно из первой
+        не осталось: в банке {famRange} на направление вместе с общим блоком, попытка — около 20 заданий, поэтому к третьей
+        попытке новые кончаются у всех направлений{enough.length ? `, кроме ${enough.join(", ")}` : ""}. Повторяются семейства, виденные давнее всего (обычно из первой
         попытки), и всегда в новом варианте. {syn.variants?.note ? `Варианты: ${syn.variants.note}.` : ""}
         {" "}Посмотреть на своих попытках: <Link className="font-semibold text-brand-plum underline" to="/candidate/attempts">«Две попытки рядом»</Link> (после входа кандидатом).
       </p>
