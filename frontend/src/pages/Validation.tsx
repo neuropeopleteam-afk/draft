@@ -7,7 +7,7 @@ import GraderCheck from "../components/validation/GraderCheck";
 import LlmModels from "../components/validation/LlmModels";
 import RetestLive from "../components/validation/RetestLive";  // И26: доля повторов заданий между попытками
 import Headline from "../components/validation/Headline";
-import { ProvenanceLine, Snapshots } from "../components/validation/Provenance";  // Я8: происхождение чисел, снимки расчётов
+import { ProvenanceLine, Snapshots, type Prov } from "../components/validation/Provenance";  // Я8: происхождение чисел, снимки расчётов
 import PathRetest, { CalibrationCard } from "../components/validation/PathRetest";
 import LiveUsers from "../components/validation/LiveUsers";
 import Ablations from "../components/validation/Ablations";
@@ -40,7 +40,7 @@ export default function Validation() {
         <p className="mt-3 max-w-3xl leading-relaxed text-brand-ink/75">
           Все цифры — как получились, без подгонки. Тест проверяется симуляцией на синтетических кандидатах
           (параметры заданий — экспертная предкалибровка, пока нет калибровки на людях), подбор — на бенчмарке со скрытой истиной,
-          затем на экспертной разметке и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
+          затем на {r?.experts?.model_panel ? "разметке модельной панели (не люди)" : "экспертной разметке"} и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
         </p>
         <Headline />
         <Snapshots />
@@ -69,7 +69,7 @@ function Report({ r }: { r: any }) {
       <p className="mt-4 text-xs text-brand-ink/65" data-testid="report-signature">Отчёт симуляции построен {dtt(r.generated_at)} · {r.n_per_direction} синтетических кандидатов на направление · {num(r.seconds, 0)} с · банк расчёта: {rp.bank_n_families ?? "—"} семейств, коммит {rp.bank_commit ?? "—"}{pv.code_commit && pv.code_commit !== "unknown" ? ` · код стенда ${pv.code_commit}` : ""}</p>
       {bn.n_families != null && !rp.same_bank && <div className="mt-3"><Alert kind="info" ><b>Числа отчёта — на банке от {rp.bank_synced_at ? d10(rp.bank_synced_at) : rdate}.</b> Сейчас в банке {bn.n_families} семейств (синхронизирован {bn.synced_at ? d10(bn.synced_at) : "—"}, коммит {bn.commit ?? "—"}); полная симуляция теста на нём не пересчитывалась (make validate), поэтому таблицы ниже подписаны датой отчёта. Блоки «5 чисел» и «Весь путь дважды» посчитаны отдельно — их мир указан в подписи.</Alert></div>}
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["headline", "5 чисел"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["headline", "5 чисел"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"], ["grader", "Оценщик ответов"], ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -134,7 +134,7 @@ function Report({ r }: { r: any }) {
       <MatchingBench />
       <Ablations />
 
-      {r.experts && <ExpertsSection ex={r.experts} />}
+      {r.experts && <ExpertsSection ex={r.experts} prov={pv.experts} />}
       <GraderCheck />
 
       <Section id="matching" title="Подбор на демо-данных: разметка правилами" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>
@@ -143,7 +143,7 @@ function Report({ r }: { r: any }) {
         <Table head={["Способ", "precision@5", "nDCG@5", "nDCG@10", "Внутри категории: nDCG@3"]}
           rows={[["Подборка платформы", "platform"], ["Платформа без бонуса ФСП", "platform_no_fsp"], ["BM25 по тексту резюме и потребности", "bm25"], ["Совпадение тегов заявленного стека", "keywords"], ["Случайный порядок", "random"]].map(([t, k]) =>
             [t, num(m.summary?.["p@5"]?.[k]), num(m.summary?.["ndcg@5"]?.[k]), num(m.summary?.["ndcg@10"]?.[k]), num(m.summary?.["within_category_ndcg@3"]?.[k])])} />
-        <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Пересчёт по экспертной разметке — в разделе <a href="#experts" className="font-semibold text-brand-plum underline">«Экспертная разметка»</a>.</p>
+        <p className="mt-2 text-sm text-brand-ink/70">{m.caveat} Поэтому внутри категории BM25 и совпадение тегов выигрывают: метки строятся из того же заявленного текста (см. атаку «раздуть резюме» — его платформа не учитывает намеренно). Пересчёт по {r.experts?.model_panel ? "разметке модельной панели (не люди)" : "экспертной разметке"} — в разделе <a href="#experts" className="font-semibold text-brand-plum underline">«{r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"}»</a>.</p>
         <p className="mt-3 rounded-xl bg-[#F3F2FB] p-4 text-sm text-brand-ink/80">Рейтинг ФСП v2: все дисциплины и типы мероприятий имеют одинаковый вес. Победитель / призёр выше финалиста, финалист выше участника отбора. Повторные соревнования дают убывающий вклад; после 12 месяцев вес плавно снижается. Бонус ФСП в подборке — 0,10, грейд он не меняет. Возрастные группы 18+, 16–17 и 14–15 не участвуют в скоре: это проверяет «Красная кнопка».</p>
         <p className="mt-1 text-xs text-brand-ink/65">Пары и метки: docs/validation/matching_pairs.json</p>
         <FspRatingValidation />
@@ -348,9 +348,9 @@ const WHO: Record<string, { lead: string; coder: string }> = {
   model: { lead: "Разметка по экспертному протоколу — вслепую, в том же кабинете эксперта, что и у людей", coder: "Прогон" },
   mixed: { lead: "Разметку по экспертному протоколу выполняют {who} — вслепую, в кабинете эксперта", coder: "Участник" },
 };
-type Source = { kind: string; title: string; model_panel?: boolean; caption?: string | null };
+type Source = { kind: string; title: string; model_panel?: boolean; caption?: string | null; heading?: string; role_note?: string | null };
 
-function ExpertsSection({ ex }: { ex: any }) {
+function ExpertsSection({ ex, prov }: { ex: any; prov?: Prov }) {
   const st = ex.status ?? {};
   const pk = ex.pack;
   const src = ex.source as Source | null | undefined;
@@ -358,8 +358,9 @@ function ExpertsSection({ ex }: { ex: any }) {
   const modelPanel = !!ex.model_panel;
   const who = WHO[src?.kind ?? "people"] ?? WHO.people;
   return (
-    <Section id="experts" title="Экспертная разметка: подбор, модель-оценщик, пороги грейдов"
+    <Section id="experts" title={`${src && src.kind !== "people" && src.heading ? src.heading : "Экспертная разметка"}: подбор, модель-оценщик, пороги грейдов`}
       lead={`${who.lead.replace("{who}", src?.title ?? "")}: соответствие пар «потребность — кандидат» 0–3, ответы на открытые задания по рубрике, пороги грейдов методом Ангоффа. Ранги, баллы и пометки системы скрыты, порядок перемешан. Здесь те же метрики пересчитываются по этой разметке. Оценки демо-эксперта жюри в расчёт не входят.`}>
+      <ProvenanceLine p={prov} className="mb-3" />
       <div className="card flex flex-wrap items-start gap-4">
         <span className={`rounded-full px-3 py-1 text-sm font-bold ${STATE[st.state] ?? STATE.waiting}`}>{st.title ?? "Ожидает экспертов"}</span>
         <div className="min-w-[16rem] flex-1 text-sm leading-relaxed text-brand-ink/80">
@@ -367,7 +368,8 @@ function ExpertsSection({ ex }: { ex: any }) {
           {src && !modelPanel && <p className="mt-1 text-brand-ink/70">Источник разметки: {src.title}.</p>}
         </div>
       </div>
-      {modelPanel && src?.caption && <div className="mt-4" data-testid="experts-model-caption"><Alert kind="info"><b>Модельная панель. </b>{src.caption}</Alert></div>}
+      {modelPanel && src?.caption && <div className="mt-4" data-testid="experts-model-caption"><Alert kind="info"><b>Модельная панель, не люди. </b>{src.caption}</Alert></div>}
+      {src?.role_note && <p className="mt-2 text-xs leading-relaxed text-brand-ink/75" data-testid="experts-role-note">{src.role_note}</p>}
       {pk && (
         <div className="mt-4 grid gap-4 md:grid-cols-3">
           <Kpi label="A · пары «потребность — кандидат»" value={pk.A_pairs} hint={`${pk.A_needs} потребностей · ${pk.plan?.A}`} />
@@ -409,7 +411,7 @@ function ExpertResults({ res, kind = "people" }: { res: any; kind?: string }) {
   const model = kind === "model";  // модельная панель: согласие прогонов, консенсус модели, Ангофф справочно
   const by = people ? "по оценкам экспертов" : model ? "по разметке модельной панели" : "по экспертной разметке";
   const T = people ? { agree: "Межэкспертное согласие", coders: "Экспертов", vs: "против экспертов", per: "По экспертам", ref: "эталона экспертов" }
-    : model ? { agree: "Согласие прогонов модели", coders: "Прогонов", vs: "против консенсуса модельной панели", per: "По прогонам", ref: "консенсуса модельной панели" }
+    : model ? { agree: "Согласие прогонов одной модели — не надёжность людей", coders: "Прогонов", vs: "против консенсуса модельной панели", per: "По прогонам", ref: "консенсуса модельной панели" }
     : { agree: "Согласие между участниками разметки", coders: "Участников", vs: "против экспертной разметки", per: "По участникам", ref: "эталона разметки" };
   const m = res.matching;
   const s = m?.summary;

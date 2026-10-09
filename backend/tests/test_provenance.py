@@ -106,3 +106,35 @@ def test_experts_stamp_kind_follows_panel():
                              "panel": [{"last_seen_at": "2026-10-08T10:00:00"}]})["kind"] == "model"
     assert PV.experts_stamp({"model_panel": False, "source": {"kind": "people", "title": "люди"}})["kind"] == "people"
     assert PV.experts_stamp(None)["snapshot"] == "missing" and PV.experts_stamp(None)["date"] is None
+
+
+def test_experts_heading_names_model_panel_and_role(client):
+    """Я8 п. 2: «Модельная панель (Claude Fable 5.1 в трёх ролях) — не люди» — в заголовке; модель разметки ≠ модель продукта."""
+    from app.core.db import SessionLocal
+    from app.modules.demo.seed import _user
+    from app.modules.experts import pack as P
+    from app.modules.experts import section as SEC
+    from app.modules.experts.models import ExpertPanelist
+    from app.modules.experts.service import panel_status, set_source, source_summary
+    from app.core.enums import UserRole
+
+    assert "не межэкспертная надёжность людей" in SEC.MODEL_CAVEAT and SEC.MODEL_CAVEAT.startswith("согласие завышено")
+    with SessionLocal() as db:
+        have = {p.code for p in db.query(ExpertPanelist).all()}
+        for code in ("E1", "E2", "E3"):
+            if code not in have:
+                u = _user(db, f"{code.lower()}@expert.example.com", UserRole.expert, code)
+                db.add(ExpertPanelist(code=code, slot=code, user_id=u.id, pack=P.PACK, assignment={}))
+        db.commit()
+        set_source(db, ["E1", "E2", "E3"], "model", "Claude Fable 5.1", ["тимлид Backend", "Data/ML", "QA/ИБ"])
+        s = source_summary(panel_status(db))
+        assert s["heading"] == "Модельная панель (Claude Fable 5.1 в трёх ролях) — не люди"
+        assert "модель, выполнявшая разметку по экспертному протоколу" in s["role_note"]
+        assert "Claude Sonnet 5.5 через OpenRouter" in s["role_note"] and "YandexGPT" in s["role_note"]
+        assert "вторая оценка спорных" in s["role_note"]  # Fable 5.1 в продукте есть — без противоречия
+    ex = client.get("/api/validation/report").json()
+    assert ex["experts"]["source"]["heading"].endswith("— не люди") and ex["provenance"]["experts"]["kind"] == "model"
+    with SessionLocal() as db:
+        set_source(db, ["E1", "E2", "E3"], "people")
+        s = source_summary(panel_status(db))
+        assert s["heading"] == "Экспертная разметка людьми" and s["role_note"] is None
