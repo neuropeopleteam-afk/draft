@@ -15,7 +15,7 @@
 | Что | Число | Откуда |
 |---|---|---|
 | Автотесты бэкенда (`pytest`, SQLite) | **1222 прошли**, пропущено 2, упавших 0; покрытие строк 91,9 % при пороге 80 % | полный прогон на сервере проверок, SHA `e0a3580`, 09.10.2026; `make test`, `make coverage` |
-| Банк заданий | **165 семейств** (backend 44, common 34, data_ml 23, frontend 26, qa 19, security 19); валидатор: PASS 147, WARN 18, FAIL 0; 1379 проверок ключей исполнением кода, ошибок 0; 3300 вариантов, уникальных 3281 | `backend/assessment_bank/BANK_SYNC.json`, `make test-bank` |
+| Банк заданий | **165 семейств** (backend 44, common 34, data_ml 23, frontend 26, qa 19, security 19); валидатор (20 вариантов на семейство): PASS 147, WARN 18, FAIL 0 (WARN — открытый ответ без ключа или ключ не исполняется в окружении без Django/JDK; в окружении только с `requirements.txt` WARN больше); 1379 проверок ключей исполнением кода, ошибок 0; 3300 вариантов, уникальных 3281 | `backend/assessment_bank/BANK_SYNC.json`, `make test-bank` |
 | Миграции Alembic | **ревизий: 31, одна голова `fp01`** | `backend/migrations/versions`, `alembic heads` |
 | Подбор (модель, не люди) | P@5 **0,764** [0,728; 0,797], nDCG@10 **0,561** [0,534; 0,587], MRR 0,878; синтетический мир со скрытой истиной, 200 потребностей × 2000 кандидатов, seed 20261006, алгоритм `match-v1.1` | `make bench`, `docs/validation/MATCHING_BENCH.md`, `docs/validation/matching_bench.json` |
 | Сквозные сценарии (Playwright) | 35 сценариев в 16 файлах (число в коде, не результат прогона) | `e2e/tests`, `make e2e` |
