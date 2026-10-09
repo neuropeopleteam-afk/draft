@@ -752,7 +752,7 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
 
     # Контакты и ФИО контактного лица из текста вакансии тоже не уходят наружу: NER — только имена из 2+ слов
     # (одиночные «Гибрид», «Андроид» NER принимает за имена), плюс имя после «HR:», «рекрутер —» и т. п.
-    clean_text = redact(masked, use_ner=True, ner_min_tokens=2, contact_cues=True).text
+    clean_text = redact(masked, use_ner=True, ner_min_tokens=2, contact_cues=True, header=False).text
     res = chat_json(LLM_SYSTEM.replace("{tags}", ", ".join(sorted(tag_directions()))), clean_text[:6000],
                     func="parse_need", validate=lambda d: isinstance(d, dict), max_tokens=2500)
     if not res.ok or not isinstance(res.data, dict):
