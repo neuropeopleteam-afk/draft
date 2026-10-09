@@ -116,9 +116,9 @@ export default function LiveScreen() {
           </div>
         </div>
       </header>
-      <main className="mx-auto max-w-[1500px] px-6 py-6">
+      <main id="main" className="mx-auto max-w-[1500px] px-6 py-6">
         {error && <div className="mb-4"><Alert>{error}</Alert></div>}
-        {!feed ? <p className="text-sm text-brand-ink/60">Готовим зал: вход работодателем своей копии демо…</p> : (
+        {!feed ? <p className="text-sm text-brand-ink/65">Готовим зал: вход работодателем своей копии демо…</p> : (
           <div className="grid gap-6 lg:grid-cols-[minmax(280px,360px)_1fr] xl:grid-cols-[minmax(300px,380px)_1fr_minmax(280px,340px)]">
             <aside className="space-y-4">
               <div className="card p-5 text-center">
@@ -141,7 +141,7 @@ export default function LiveScreen() {
                 <Counter label="Приглашены" value={feed.counters.invited} accent />
                 <Counter label="Приняли" value={feed.counters.accepted} />
               </div>
-              <p className="text-xs leading-relaxed text-brand-ink/60">{feed.rule}</p>
+              <p className="text-xs leading-relaxed text-brand-ink/65">{feed.rule}</p>
             </aside>
 
             <section className="min-w-0 space-y-4">
@@ -157,11 +157,11 @@ export default function LiveScreen() {
             <aside className="min-w-0 lg:col-span-2 xl:col-span-1">
               <div className="card p-5">
                 <p className="text-sm font-bold text-brand-night">Лента зала</p>
-                {!feed.events.length ? <p className="mt-2 text-sm text-brand-ink/55">Событий пока нет</p> : (
+                {!feed.events.length ? <p className="mt-2 text-sm text-brand-ink/65">Событий пока нет</p> : (
                   <ol className="mt-3 max-h-[70vh] space-y-2.5 overflow-y-auto pr-1">
                     {feed.events.map((e, i) => (
                       <li key={`${e.at}-${e.kind}-${e.guest}-${i}`} className={`flex gap-3 text-sm`}>
-                        <span className="w-16 shrink-0 font-mono text-xs text-brand-ink/50">{time(e.at)}</span>
+                        <span className="w-16 shrink-0 font-mono text-xs text-brand-ink/65">{time(e.at)}</span>
                         <span className={`min-w-0 ${["invited", "accepted", "push"].includes(e.kind) ? "font-semibold text-brand-night" : "text-brand-ink/80"}`}>
                           <b>{e.label}</b> {e.text}
                         </span>
@@ -194,7 +194,7 @@ function Counter({ label, value, accent }: { label: string; value: number; accen
   return (
     <div className={`rounded-2xl px-3 py-3 text-center ${accent ? "bg-brand-strong text-white" : "border border-brand-night/10 bg-white"}`}>
       <p className={`text-2xl font-extrabold ${accent ? "" : "text-brand-night"}`}>{value}</p>
-      <p className={`text-[11px] font-semibold ${accent ? "text-white/85" : "text-brand-ink/60"}`}>{label}</p>
+      <p className={`text-[11px] font-semibold ${accent ? "text-white/85" : "text-brand-ink/65"}`}>{label}</p>
     </div>
   );
 }
@@ -236,10 +236,10 @@ function Focus({ g }: { g: Guest }) {
         <div className="card p-5">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <p className="text-sm font-bold text-brand-night">Подборка работодателя: {sel.need_title.replace("Живая демонстрация: ", "")}</p>
-            <p className="text-xs text-brand-ink/60">версия {sel.version} · {sel.total} {plural(sel.total, "кандидат", "кандидата", "кандидатов")}{sel.rank != null && ` · ${g.label} — место ${sel.rank}`}</p>
+            <p className="text-xs text-brand-ink/65">версия {sel.version} · {sel.total} {plural(sel.total, "кандидат", "кандидата", "кандидатов")}{sel.rank != null && ` · ${g.label} — место ${sel.rank}`}</p>
           </div>
           <table className="mt-3 w-full text-sm">
-            <thead className="text-left text-xs text-brand-ink/55">
+            <thead className="text-left text-xs text-brand-ink/65">
               <tr><th className="w-10 py-1.5 font-semibold">№</th><th className="py-1.5 font-semibold">Кандидат</th><th className="py-1.5 font-semibold">Категория</th><th className="w-40 py-1.5 font-semibold">Совпадение</th></tr>
             </thead>
             <tbody>
@@ -248,7 +248,7 @@ function Focus({ g }: { g: Guest }) {
                   <td className="py-2 pl-1 font-mono text-xs">{t.rank}</td>
                   <td className="py-2">
                     <span className="text-brand-night">{t.label ?? t.ref}</span>
-                    {t.label && <span className="ml-2 font-mono text-[11px] text-brand-ink/50">{t.ref}</span>}
+                    {t.label && <span className="ml-2 font-mono text-[11px] text-brand-ink/65">{t.ref}</span>}
                     {t.mini && <span className="ml-2 rounded bg-brand-blush px-1.5 py-0.5 text-[10px] font-bold text-brand-plum">мини-тест</span>}
                     {t.fsp && <span className="ml-2 rounded bg-[#ECEAF8] px-1.5 py-0.5 text-[10px] font-bold text-brand-night">ФСП</span>}
                   </td>
@@ -308,7 +308,7 @@ function Timeline({ g }: { g: Guest }) {
     <ol className="flex flex-wrap items-center gap-1.5" aria-label="Путь участника">
       {steps.map(([t, done], i) => (
         <li key={t} className="flex items-center gap-1.5">
-          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${done ? "bg-brand-strong text-white" : "bg-brand-blush/50 text-brand-ink/45"}`}>{t}</span>
+          <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${done ? "bg-brand-strong text-white" : "bg-brand-blush/50 text-brand-ink/65"}`}>{t}</span>
           {i < steps.length - 1 && <span className={`h-0.5 w-3 ${done ? "bg-brand" : "bg-brand-blush"}`} aria-hidden="true" />}
         </li>
       ))}
