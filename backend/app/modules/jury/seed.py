@@ -79,9 +79,12 @@ NEEDS = [
     "Frontend-разработчик middle для личного кабинета: React, TypeScript, HTML/CSS обязательно; "
     "желательно тестирование фронтенда. Гибрид, Санкт-Петербург, от 200 до 250 тыс.",
     # Демонстрация фильтра ст. 64 ТК РФ: фразы про пол, возраст, внешность и детей подсвечены, в требования
-    # и в ранжирование не попадают, предложен текст через навыки
+    # и в ранжирование не попадают, предложен текст через навыки. «Офис в Москве или удалённо»: условия потребности
+    # применяются сразу (Ф2) — персоны песочницы (удалённо, Москва) должны проходить условия своих демо-потребностей
     "Python-разработчик middle в отдел интеграций: только мужчины до 35 лет, славянской внешности, без детей, "
-    "в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве, 180–240 тыс.",
+    "в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве или удалённо, 180–240 тыс.",
+    # И18: подборка мала — «Что если» показывает, какое требование отсекает больше всего подтверждённых
+    "Backend-разработчик senior для платёжного шлюза: обязательно PostgreSQL, Kafka и Linux. Удалённо, от 350 тыс. ₽.",
 ]
 STACK = ["python", "fastapi", "postgresql", "redis", "docker", "sql", "git", "linux"]
 
@@ -391,8 +394,9 @@ def _create_jury(db: Session, sid: str) -> dict:
         db.add(n)
         db.flush()
         sel = ranking.build_selection(db, req, {})
-        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={}, requirements=req,
-                                results=sel["results"], algorithm_version=sel["algorithm"], created_by=eu.id))
+        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={"_meta": sel["meta"]},
+                                requirements=req, results=sel["results"], algorithm_version=sel["algorithm"],
+                                created_by=eu.id))  # Ф2: снимок версии — открытие без пересчёта
         needs.append(n)
     db.commit()
     from app.modules.invitations.service import create_invitation
