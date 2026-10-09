@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, Loading, Seg, Toggle, catTitle, dt, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, GRADE_SKILLS, Loading, Seg, Toggle, catTitle, dt, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
@@ -363,7 +363,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
 
   return (
     <>
-      <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTIONS[dir] ?? "—"}. Выберите уровень, на который хотите подтвердиться.`} />
+      <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTIONS[dir] ?? "—"}. Грейд — это уровень навыков, его подтверждает тест, а не стаж. Выберите уровень, на который хотите подтвердиться.`} />
       {status?.specializations?.length > 1 && (
         <div className="mt-4">
           <Field label="Направление теста" htmlFor="test-direction" hint="Подтверждения и ограничения в двух направлениях независимы.">
@@ -381,9 +381,10 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           <button key={id} type="button" onClick={() => setGrade(id)} aria-pressed={grade === id}
             className={`rounded-2xl border p-5 text-left transition-colors ${grade === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
             <p className="text-lg font-bold text-brand-night">{t}</p>
-            <p className="mt-1 text-xs text-brand-ink/65">{GRADE_EXPERIENCE[id]}</p>
+            <p className="mt-1 text-xs leading-relaxed text-brand-ink/80">{GRADE_SKILLS[id]}</p>
+            <p className="mt-1.5 text-xs text-brand-ink/55">Стаж: {GRADE_EXPERIENCE[id]} — ориентир, не условие</p>
             <span className="mt-3 flex flex-wrap gap-1.5">
-              {!hint.data && status?.claimed_grade === id && <span className="chip">Подходит по стажу</span>}
+              {!hint.data && status?.claimed_grade === id && <span className="chip">Подсказка по стажу из опроса</span>}
               {hint.data?.suggested === id && <span className="chip">Подсказка</span>}
               {retakeLocks[id] && <span className="chip">Повтор с {dt(retakeLocks[id]).replace(/ г\.$/, "")}</span>}
             </span>
@@ -409,6 +410,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
       <div className="card mt-6 space-y-3 text-sm text-brand-ink/75">
         <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам, обычно 8–16 заданий, до 60 минут. Если результат у самого порога грейда, будет ещё до 6 коротких заданий (до 20 минут) — чтобы грейд не зависел от случайности. Повторная попытка — из другого набора заданий.</p>
         <p>Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои.</p>
+        <p><b>Грейд — уровень навыков, а не стаж.</b> Уровень выбираете вы сами, подтверждает его только тест. Стаж в годах остаётся в профиле как справка для работодателя и в подборе не участвует; подсказки «обычно столько-то лет» — лишь ориентир, с какого уровня начать.</p>
         <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней. Повторить тест на тот же грейд после неподтверждённой попытки можно через {status?.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу; если тест уверенно показал уровень ниже, его можно принять без нового теста.</p>
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
       </div>
@@ -722,6 +724,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
       <div className="card mt-4 text-sm text-brand-ink/75">{ruText(r.explanation)}</div>
+      {(r.confirmed || r.accepted_lower) && <p className="mt-3 text-xs text-brand-ink/65">Грейд — уровень навыков, подтверждённый этим тестом. Стаж в годах остаётся справкой в профиле и на грейд не влияет.</p>}
       {r.details?.n_scored != null && (
         <p className="mt-3 text-xs text-brand-ink/65">
           Оценено заданий: {r.details.n_scored}

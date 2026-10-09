@@ -32,8 +32,15 @@ export const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Н�
 export const DIRECTIONS: Record<string, string> = { backend: "Backend", frontend: "Frontend", data_ml: "Data/ML", qa: "QA", security: "Информационная безопасность" };
 // Грейды платформы снизу вверх (как GRADE_ORDER в backend/app/modules/catalog/seed_data.py)
 export const GRADES: Record<string, string> = { intern: "Стажёр", junior: "Junior", middle: "Middle", senior: "Senior" };
-// Подсказка по стажу для выбора грейда (как GRADE_EXPERIENCE_TEXT на бэкенде)
-export const GRADE_EXPERIENCE: Record<string, string> = { intern: "без опыта или до полугода", junior: "до 1,5 лет опыта", middle: "1,5–4,5 года", senior: "от 4,5 лет" };
+// Грейд — уровень навыков, его подтверждает тест (ответ организаторов VS.1); стаж — только подсказка «обычно …»
+// (как GRADE_SKILL_TEXT и GRADE_EXPERIENCE_TEXT на бэкенде)
+export const GRADE_SKILLS: Record<string, string> = {
+  intern: "Начинающий: базовые конструкции языка, простые задачи по образцу, учится читать чужой код",
+  junior: "Решает типовые задачи по понятной постановке, знает основы инструментов, работает с наставником",
+  middle: "Самостоятельно ведёт задачу от постановки до выпуска, находит дефекты в чужом коде, понимает устройство инструментов",
+  senior: "Проектирует решения, выбирает компромиссы, находит неочевидные дефекты и объясняет их команде",
+};
+export const GRADE_EXPERIENCE: Record<string, string> = { intern: "обычно без опыта или до полугода", junior: "обычно до 1,5 лет опыта", middle: "обычно 1,5–4,5 года опыта", senior: "обычно от 4,5 лет опыта" };
 export const catTitle = (id?: string | null) => {
   if (!id) return "Не присвоена";
   const [d, g] = id.split(".");
