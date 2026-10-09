@@ -50,11 +50,13 @@ function FactorRow({ f }: { f: TrustFactor }) {
   );
 }
 
-/** brief (Ф6 В6, оффер у кандидата): на виду — итог, вилка, сведения ФНС и серьёзные замечания; все составляющие — по раскрытию. */
+/** brief (Ф6 В6, оффер у кандидата): на виду — итог, вилка, сведения ФНС, жалобы кандидатов и серьёзные замечания;
+ *  остальные составляющие — по раскрытию. */
 export function TrustPanel({ t, title = "Индекс доверия работодателя", companyLink, brief }: { t: Trust; title?: string; companyLink?: boolean; brief?: boolean }) {
   const [cls, dot] = LEVEL[t.level] ?? LEVEL.medium;
   const r = t.registry;
-  const key = brief ? t.factors.filter((f) => f.id === "registry" || f.status === "bad") : t.factors;
+  // жалобы кандидатов — всегда на виду: это рычаг самого кандидата (кнопка «Пожаловаться» рядом), e2e 05
+  const key = brief ? t.factors.filter((f) => f.id === "registry" || f.id === "complaints" || f.status === "bad") : t.factors;
   return (
     <section className="rounded-2xl border border-brand-night/10 bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
