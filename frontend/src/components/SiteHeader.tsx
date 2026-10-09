@@ -11,6 +11,7 @@ export function SiteHeader({ dark = false }: { dark?: boolean }) {
         <Link to="/" aria-label="На главную"><Logo light={dark} /></Link>
         <nav className="hidden items-center gap-6 text-sm font-medium lg:flex" aria-label="Основная навигация">
           <a href="/#jury" className={link}>Демо для жюри</a>
+          <Link to="/criteria" className={link}>Критерии ТЗ</Link>
           <a href="/#how" className={link}>Как это работает</a>
           <a href="/#candidates" className={link}>Кандидатам</a>
           <a href="/#employers" className={link}>Работодателям</a>
@@ -38,6 +39,7 @@ export function SiteFooter() {
         <p>Прототип спецтрека ФСП · ЛЦТ 2026. Открытый код, лицензия MIT.</p>
         <p className="flex flex-wrap gap-x-5 gap-y-2">
           <a className="hover:text-brand-night" href="/validation">Как мы проверяем себя</a>
+          <a className="hover:text-brand-night" href="/criteria">Проверка по критериям ТЗ</a>
           <a className="hover:text-brand-night" href="/api/docs">Документация API</a>
           <a className="hover:text-brand-night" href="/api/health">Статус сервиса</a>
         </p>

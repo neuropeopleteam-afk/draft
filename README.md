@@ -13,6 +13,7 @@
 - Доступ к стенду: логин и пароль — в материалах сдачи (базовая авторизация nginx; без неё открыты только `/api/*`, `/robots.txt`, манифест PWA, `sw.js`, иконки и страница гостя живой демонстрации `/j/<код>` со статикой `/assets/`, `/recover.js` — QR с телефона эксперта)
 - Для жюри: блок «Для экспертов жюри» на главной — вход в один клик за кандидата (с паспортом ФСП и без), работодателя и эксперта, проводник по сценарию, сброс демо; метрики — страница `/validation`
 - Документация API (OpenAPI/Swagger): https://fsp.neuropeople.pro/api/docs
+- Проверка по критериям ТЗ: страница `/criteria` и [docs/CRITERIA.md](docs/CRITERIA.md) — подпункт ТЗ → что сделать → что увидите → чем доказано
 - Архитектура и модель данных: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Интеграции: [антифрод и индекс доверия](docs/ANTIFRAUD.md), [ФСП ID](docs/FSP_INTEGRATION.md), [ATS](docs/ATS.md), [подписка на потребность и напоминания](docs/SUBSCRIPTIONS.md), [нагрузочный тест](docs/LOAD_TEST.md), [задания работодателя: причина, рубрика, свежесть](docs/ASSIGNMENTS.md)
 
@@ -68,6 +69,7 @@ make stack-ci && make e2e                  # стек в Docker + сквозны
 E2E_BASIC_PASSWORD=… make e2e-stand        # те же сценарии против стенда, демо жюри сбрасывается до и после
 make validate    # пересчёт метрик страницы /validation (≈ 15–20 мин)
 make bench       # бенчмарк подбора со скрытой истиной (200 × 2000), итог — docs/validation/MATCHING_BENCH.md
+make criteria-doc # docs/CRITERIA.md из того же источника, что /criteria (пересобирается и после bench/path-retest/validate)
 ```
 
 CI (GitHub Actions, `.github/workflows`): `ci.yml` — бэкенд на SQLite с покрытием и на PostgreSQL 16, банк заданий,
