@@ -35,5 +35,6 @@ from app.modules.contact.models import ContactMessage, InvitationCounter  # noqa
 from app.modules.proctor.models import ProctorEvent, ProctorSession  # noqa: E402,F401 — камера по согласию (И16)
 from app.modules.subs.models import NeedSubEntry, NeedSubscription, NotifyPrefs, SubsDirty, SubsState, UserNotification  # noqa: E402,F401 — подписки и напоминания (И25)
 import app.modules.subs.events  # noqa: E402,F401 — слушатель «кандидат изменился» (И25)
+from app.modules.study.models import StudyAnswer, StudyEvent, StudyParticipant  # noqa: E402,F401 — проверка с живыми пользователями (У1)
 
 metadata = Base.metadata
