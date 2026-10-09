@@ -51,7 +51,12 @@ test("«Пройдите тест сами»: экран перед старто
   await expect(main.getByText("Самостоятельность выполнения", { exact: true })).toBeVisible();
   await expect(main.getByText("Подробнее", { exact: true }).first()).toBeVisible();
   const len = await main.evaluate((el) => (el as HTMLElement).innerText.length);
-  expect(len, "текст экрана до кнопки «Начать тест»").toBeLessThanOrEqual(900);
+  // Ф4 калибровал 900 знаков до И23 (VS.1: уровень описан навыками на карточках, стаж — ориентир, не условие) и Ф6 (Н8: длина
+  // пути на виду). После слияния волны 4 (М4): на карточках короткая строка навыков, полные описания — под «Что умеет каждый
+  // уровень», стаж — одной строкой; измерено 1240 знаков — предел 1300, остальное по-прежнему под «Подробнее».
+  expect(len, "текст экрана до кнопки «Начать тест»").toBeLessThanOrEqual(1300);
+  await expect(main.getByText("Что умеет каждый уровень", { exact: true })).toBeVisible();
+  await expect(main.getByText(/^Стаж — ориентир, не условие: Стажёр — /)).toBeVisible();
   const noScroll = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
   expect(noScroll, "без горизонтальной прокрутки").toBe(true);
 });
