@@ -120,3 +120,18 @@ def test_run_load_scrub_and_summary(tmp_path, capsys, monkeypatch):
     out = capsys.readouterr().out
     assert "| тест: ответ | 10 | 0 | 20 | 40 | 80 | 90 |" in out
     assert "spectrek_fsp-api-1 | 150 / 150 | 600" in out and "oom_kill 0" in out
+
+
+def test_heavy_actions_resume_docx_and_red_button(client):
+    """Тяжёлые действия по письму штаба: DOCX резюме модельного кандидата принимается разбором, «Красная кнопка» —
+    по телу flows.attack_body; новый текст потребности не совпадает с базовым (кэш разбора не срабатывает)."""
+    sid = _login(client, "employer", "new")["scenario"]
+    tok = _login(client, "candidate_nofsp", sid)["access_token"]
+    r = client.post("/api/me/resume", headers=_h(tok), files={"file": ("resume.docx", flows.resume_docx(1),
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document")})
+    assert r.status_code == 201, r.text
+    assert r.json()["kind"] == "docx" and not any(r.json()["pii_found"].values())  # ПДн в модельном резюме нет
+    for aid in ("rename", "leak_bank"):
+        a = client.post(f"/api/validation/attacks/{aid}", headers=_h(tok), json=flows.attack_body(aid))
+        assert a.status_code == 200, a.text
+    assert flows.need_text_variant(0) != flows.NEED_TEXTS[0] and flows.need_text_variant(0).startswith(flows.NEED_TEXTS[0])

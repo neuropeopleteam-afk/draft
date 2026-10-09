@@ -4,7 +4,9 @@
   run_load.py prepare --host URL                 # одна новая песочница жюри → /tmp/lt_jury_state.json
   run_load.py run --host URL -u 100 -r 2 -t 10m --tag stand_100 [--server-stats] [--xlink-file F]
   run_load.py summary --tag stand_100            # таблица p50/p95/p99 + ресурсы сервера → stdout (markdown)
-  run_load.py cleanup --host URL                 # удалить песочницу (DELETE /api/jury/sandbox токеном её персоны)
+  run_load.py burst --host URL -n 5 --tag stand_burst   # холодный вход N экспертов одновременно (новые песочницы)
+  run_load.py cleanup --host URL                 # удалить песочницы прогона (DELETE /api/jury/sandbox токеном персоны)
+  В run: --burst-at 300 --burst-n 5 — тот же всплеск на 300-й секунде под нагрузкой.
 
 Только стандартная библиотека; Locust — в отдельном окружении (LOCUST, по умолчанию /tmp/lt/bin/locust):
 python3.12 -m venv /tmp/lt && /tmp/lt/bin/pip install locust==2.46.0.
@@ -53,20 +55,69 @@ def prepare(a) -> None:
 
 def cleanup(a) -> None:
     st = json.loads(STATE.read_text())
-    tok = _post(f"{a.host}/api/jury/login", {"persona": "employer", "scenario": st["scenario"]})["access_token"]
-    d = _post(f"{a.host}/api/jury/sandbox", None, tok, method="DELETE")
-    print(f"Песочница удалена: учёток {d.get('deleted_users')}, {d.get('seconds')} с")
+    for sid in [st["scenario"], *st.get("burst_sids", [])]:
+        try:
+            tok = _post(f"{a.host}/api/jury/login", {"persona": "employer", "scenario": sid})["access_token"]
+            d = _post(f"{a.host}/api/jury/sandbox", None, tok, method="DELETE")
+            print(f"Песочница удалена: учёток {d.get('deleted_users')}, {d.get('seconds')} с")
+        except Exception as e:  # noqa: BLE001
+            print(f"Песочница не удалена: {type(e).__name__} — удалит штаб")
+    st["burst_sids"] = []
+    STATE.write_text(json.dumps(st))
+
+
+BURST_PERSONAS = ["employer", "candidate", "candidate_new", "expert", "candidate_nofsp", "fsp", "candidate_junior"]
+
+
+def burst(a, tag: str | None = None) -> list[dict]:
+    """Холодный вход N экспертов одновременно: каждый — «Войти» на главной (scenario=new → своя песочница; первая
+    берёт запасную, остальные создаются сразу) и первые запросы кабинета. Время — с точки зрения эксперта."""
+    res: list[dict] = [{} for _ in range(a.n)]
+    go = threading.Event()
+
+    def one(i: int) -> None:
+        go.wait()
+        t0 = time.time()
+        try:
+            d = _post(f"{a.host}/api/jury/login", {"persona": BURST_PERSONAS[i % len(BURST_PERSONAS)], "scenario": "new"})
+            t1 = time.time()
+            for path in ("/api/meta", "/api/jury/status"):
+                urllib.request.urlopen(f"{a.host}{path}", timeout=60).read()
+            res[i] = {"persona": BURST_PERSONAS[i % len(BURST_PERSONAS)], "login_s": round(t1 - t0, 2),
+                      "first_screen_s": round(time.time() - t0, 2), "created": bool(d.get("created")),
+                      "shared": bool(d.get("shared")), "_sid": d.get("scenario")}
+        except Exception as e:  # noqa: BLE001
+            res[i] = {"error": f"{type(e).__name__}: {str(e)[:100]}", "login_s": round(time.time() - t0, 2)}
+
+    ts = [threading.Thread(target=one, args=(i,)) for i in range(a.n)]
+    for t in ts:
+        t.start()
+    go.set()
+    for t in ts:
+        t.join(timeout=300)
+    st = json.loads(STATE.read_text()) if STATE.exists() else {}
+    st["burst_sids"] = st.get("burst_sids", []) + [r.pop("_sid") for r in res if r.get("_sid")]
+    STATE.write_text(json.dumps(st))
+    OUT.mkdir(parents=True, exist_ok=True)
+    out = {"n": a.n, "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "results": res}
+    (OUT / f"{tag or a.tag}_burst.json").write_text(json.dumps(out, ensure_ascii=False, indent=1))
+    ok = [r for r in res if "error" not in r]
+    if ok:
+        print(f"Всплеск {a.n}: вход {min(r['login_s'] for r in ok)}–{max(r['login_s'] for r in ok)} с, первый экран до "
+              f"{max(r['first_screen_s'] for r in ok)} с; новых песочниц {sum(r['created'] for r in ok)}, общее демо "
+              f"{sum(r['shared'] for r in ok)}, ошибок {a.n - len(ok)}")
+    return res
 
 
 def _server_stats(seconds: int, out: Path) -> None:
     """Цикл замеров на сервере одной SSH-сессией (только чтение): docker stats стека и load average."""
     n = max(1, seconds // 10)
-    script = (f"for i in $(seq {n}); do echo \"## $(date +%T) $(cut -d' ' -f1-3 /proc/loadavg)\"; "
+    cg = "/sys/fs/cgroup/system.slice/docker-$(docker inspect -f '{{.Id}}' spectrek_fsp-api-1).scope"
+    script = (f"echo '## memory.events api до'; grep -E '^(oom|oom_kill) ' {cg}/memory.events; "
+              f"for i in $(seq {n}); do echo \"## $(date +%T) $(cut -d' ' -f1-3 /proc/loadavg)\"; "
               "docker stats --no-stream --format '{{.Name}};{{.CPUPerc}};{{.MemUsage}}' | grep '^spectrek_fsp-'; "
               "sleep 8; done; echo '## memory.peak api'; "
-              "cat /sys/fs/cgroup/system.slice/docker-$(docker inspect -f '{{.Id}}' spectrek_fsp-api-1).scope/memory.peak; "
-              "grep -E '^(oom|oom_kill) ' /sys/fs/cgroup/system.slice/docker-$(docker inspect -f '{{.Id}}' "
-              "spectrek_fsp-api-1).scope/memory.events")
+              f"cat {cg}/memory.peak; grep -E '^(oom|oom_kill) ' {cg}/memory.events")
     with out.open("w") as f:
         subprocess.run([sys.executable, KPY, "cmd", script], stdout=f, stderr=subprocess.STDOUT, timeout=seconds + 300)
 
@@ -107,6 +158,10 @@ def run(a) -> None:
     cmd = [LOCUST, "-f", str(ROOT / "tools/loadtest/jury_load.py"), "--host", a.host, "--headless", "-u", str(a.users),
            "-r", str(a.ramp), "-t", a.time, "--csv", str(OUT / a.tag), "--csv-full-history", "--only-summary",
            "--stop-timeout", "30", "--loglevel", "WARNING"] + (["--reset-stats"] if a.reset_stats else [])
+    if a.burst_at:
+        b = argparse.Namespace(host=a.host, n=a.burst_n, tag=a.tag)
+        threads.append(threading.Timer(a.burst_at, burst, args=(b,)))
+        threads[-1].start()
     t0 = time.time()
     p = subprocess.run(cmd, env=env, cwd=ROOT, capture_output=True, text=True)
     (OUT / f"{a.tag}_locust.log").write_text(_scrub(p.stdout[-20000:] + "\n" + p.stderr[-20000:]))
@@ -170,9 +225,23 @@ def summary(a) -> None:
             print(f"| {name} | {max(c):.0f} / {sum(c) / len(c):.0f} | {max(mem[name]):.0f} |")
         if la:
             print(f"\nLoad average сервера (1 мин): макс. {max(la):.2f}, средн. {sum(la) / len(la):.2f} (4 ядра)")
-        tail = srv.read_text().split("## memory.peak api", 1)
+        txt = srv.read_text()
+        if "## memory.events api до" in txt:
+            print("События памяти api до прогона: " + " ".join(txt.split("## memory.events api до", 1)[1]
+                                                               .split("##", 1)[0].split()))
+        tail = txt.split("## memory.peak api", 1)
         if len(tail) == 2:
-            print("memory.peak api и события памяти: " + " ".join(tail[1].split()))
+            v = tail[1].split()
+            peak = f"{int(v[0]) / 2**20:.0f} МиБ" if v and v[0].isdigit() else "—"
+            print(f"memory.peak api (с запуска контейнера): {peak}; события памяти после: " + " ".join(v[1:]))
+    bf = OUT / f"{a.tag}_burst.json"
+    if bf.exists():
+        b = json.loads(bf.read_text())
+        print(f"\nХолодный вход {b['n']} экспертов одновременно ({b['at']}):\n\n| Персона | Вход, с | Первый экран, с | "
+              f"Новая песочница |\n|---|---:|---:|---|")
+        for r in b["results"]:
+            print(f"| {r.get('persona', '—')} | {r.get('login_s')} | {r.get('first_screen_s', '—')} | "
+                  f"{'да' if r.get('created') else ('общее демо' if r.get('shared') else r.get('error', 'нет'))} |")
     cl = OUT / f"{a.tag}_client.txt"
     if cl.exists():
         vals = [float(x) for x in re.findall(r"locust_cpu=([\d.]+)%", cl.read_text())]
@@ -197,10 +266,16 @@ def main() -> None:
     s.add_argument("--xlink-file", default="")
     s.add_argument("--server-stats", action="store_true")
     s.add_argument("--reset-stats", action="store_true", help="сбросить статистику после разгона (Locust --reset-stats)")
+    s.add_argument("--burst-at", type=int, default=0, help="секунда прогона для всплеска холодного входа (0 — без)")
+    s.add_argument("--burst-n", type=int, default=5)
+    s = sub.add_parser("burst")
+    s.add_argument("--host", required=True)
+    s.add_argument("-n", type=int, default=5)
+    s.add_argument("--tag", required=True)
     s = sub.add_parser("summary")
     s.add_argument("--tag", required=True)
     a = ap.parse_args()
-    {"prepare": prepare, "cleanup": cleanup, "run": run, "summary": summary}[a.cmd](a)
+    {"prepare": prepare, "cleanup": cleanup, "run": run, "summary": summary, "burst": burst}[a.cmd](a)
 
 
 if __name__ == "__main__":
