@@ -42,6 +42,7 @@ function ConsentBrief({ t }: { t: ConsentText }) {
       {line("Что делает камера", (t.what.length > 1 ? t.what.slice(1) : t.what).join(" "))}
       {line("Что сохраняется", t.stored[0])}
       {line("Кто это видит", t.who_sees[1] ?? t.who_sees[0])}
+      {line("Как влияет на результат", t.effect.split(" Без камеры")[0])}
       <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDate(t.version)}.</p>
     </div>
   );
