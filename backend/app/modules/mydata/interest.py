@@ -32,6 +32,7 @@ log = logging.getLogger("mydata.interest")
 WINDOW_DAYS = 7
 CARD_DEDUP = timedelta(hours=6)
 KEEP_DAYS = 90
+_last_purge: datetime | None = None  # чистка старых событий — не чаще раза в сутки на процесс
 
 
 # ------------------------------------------------------------------ запись событий (вызывается из кабинета работодателя)
@@ -70,10 +71,20 @@ def record_selection(db: Session, company_id: uuid.UUID, need_id: uuid.UUID, res
                 for ref, uid in users.items() if uid not in have]
         if rows:
             db.add_all(rows)
-            db.commit()
+        _purge_sometimes(db)
+        db.commit()
     except Exception:  # noqa: BLE001
         db.rollback()
         log.warning("interest: selection не записан", exc_info=True)
+
+
+def _purge_sometimes(db: Session) -> None:
+    """Старше 90 дней события не нужны: чистим при построении подборки, не чаще раза в сутки (без планировщика)."""
+    global _last_purge
+    now = utcnow()
+    if _last_purge is None or now - _last_purge > timedelta(days=1):
+        _last_purge = now
+        purge_old(db)
 
 
 def purge_old(db: Session, days: int = KEEP_DAYS) -> int:
