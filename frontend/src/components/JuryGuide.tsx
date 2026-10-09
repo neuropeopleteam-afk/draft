@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/jury";
 import { api } from "../lib/api";
@@ -140,7 +140,10 @@ export function JuryGuide() {
           )}
         </div>
       )}
-      {me && <p className="mt-2 text-xs text-white/55">Вы вошли как {whoAmI(me.email)}</p>}
+      <p className="mt-2 flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs">
+        {me && <span className="text-white/55">Вы вошли как {whoAmI(me.email)}</span>}
+        <Link to="/criteria" className="font-semibold text-brand-blush underline-offset-2 hover:underline">Проверить по критериям ТЗ</Link>
+      </p>
       {msg && <p className="mt-2 rounded-lg bg-white/10 px-3 py-2 text-xs text-brand-blush" role="status">{msg}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20 disabled:opacity-40" disabled={step === 0 || busy} onClick={() => go(step - 1)}>Назад</button>
