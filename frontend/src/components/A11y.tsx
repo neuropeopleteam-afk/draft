@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { setScreenTitle } from "../lib/meta";
 
 /** Доступность всего приложения (docs/ACCESSIBILITY.md): ссылка «Перейти к содержимому», объявление смены экрана
  *  и возврат потерянного фокуса в <main>. Подключается один раз в App.tsx, страницы ничего не делают сами. */
@@ -28,15 +29,22 @@ export function SkipLink() {
 export function RouteAnnouncer() {
   const { pathname } = useLocation();
   const [text, setText] = useState("");
-  const first = useRef(true);
+  const prev = useRef<string | null>(null);
   useEffect(() => {
-    if (first.current) { first.current = false; return; }
-    const t = window.setTimeout(() => {
-      const h1 = document.querySelector("main h1")?.textContent?.trim();
+    const isFirst = prev.current === null || prev.current === pathname;  // первая загрузка (и повтор эффекта в StrictMode)
+    prev.current = pathname;
+    let tries = 0, t = 0;
+    // заголовок экрана появляется после загрузки данных — ждём его до 3 с
+    const run = () => {
+      const h1 = document.querySelector("main h1")?.textContent?.trim().replace(/\s+/g, " ").slice(0, 90) || null;
+      if (!h1 && ++tries < 10) { t = window.setTimeout(run, 300); return; }
+      setScreenTitle(pathname === "/" ? null : h1);
+      if (isFirst) return;  // первая загрузка: диктор и так читает страницу, фокус не трогаем
       setText(`Открыт экран: ${h1 || document.title}`);
       const a = document.activeElement;
       if (!a || a === document.body || !a.isConnected) focusMain({ preventScroll: true });
-    }, 450);
+    };
+    t = window.setTimeout(run, 300);
     return () => window.clearTimeout(t);
   }, [pathname]);
   return <p className="sr-only" aria-live="polite" aria-atomic="true">{text}</p>;

@@ -81,7 +81,7 @@ self.addEventListener("fetch", (e) => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
-  // API, вход ФСП ID (Keycloak), документация и сам SW — никогда не из кэша
+  // API, вход через внешний ID (/auth/), документация и сам SW — никогда не из кэша
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/") || url.pathname.startsWith("/docs")
       || url.pathname === "/sw.js" || url.pathname === "/recover.js") return;
   if (req.mode === "navigate" || url.pathname === "/index.html") {

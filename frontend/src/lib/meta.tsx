@@ -16,7 +16,7 @@ export interface Meta {
 }
 
 const Ctx = createContext<Meta | null>(null);
-const defaultTitle = (m: Meta) => `${m.product_name} — подбор ИТ-специалистов · спецтрек ФСП`;
+const defaultTitle = (m: Meta) => `${m.product_name} — подбор ИТ-специалистов`;
 let loaded: Meta | null = null;
 let ownTitle = false;  // экран задал свой заголовок (usePageTitle) — общий его не перезаписывает
 
@@ -40,4 +40,11 @@ export function usePageTitle(title: string) {
     document.title = product ? `${title} · ${product}` : title;
     return () => { ownTitle = false; if (loaded) document.title = defaultTitle(loaded); };
   }, [title, product]);
+}
+
+/** Заголовок вкладки по экрану (WCAG 2.4.2): «<заголовок h1> · Встречный»; null — общий. Вызывает RouteAnnouncer
+ *  (components/A11y.tsx) при смене адреса; экран со своим usePageTitle не перезаписывается. */
+export function setScreenTitle(h: string | null) {
+  if (ownTitle || !loaded) return;
+  document.title = h ? `${h} · ${loaded.product_name}` : defaultTitle(loaded);
 }
