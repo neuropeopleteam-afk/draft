@@ -33,5 +33,6 @@ from app.modules.assignments.models import Assignment, AssignmentAttempt  # noqa
 from app.passport.models import GradePassport, PassportKey  # noqa: E402,F401 — подписанный паспорт грейда
 from app.modules.contact.models import ContactMessage, InvitationCounter  # noqa: E402,F401 — переписка, встречное (И4)
 from app.modules.proctor.models import ProctorEvent, ProctorSession  # noqa: E402,F401 — камера по согласию (И16)
+from app.modules.hiring.models import HiringInterview, HiringOffer, HiringOutcome  # noqa: E402,F401 — найм (Н8)
 
 metadata = Base.metadata

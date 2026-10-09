@@ -209,6 +209,7 @@ def params_for(key: tuple[str, str], side: Side) -> dict[str, object]:
         "format": "json", "attack_id": "nope", "pid": "x" * 16, "kind": "processing",
         # ветки, ещё не влитые: объектов этих типов в мире нет — при слиянии добавьте их в build_side
         "aid": str(uuid.uuid4()), "atid": str(uuid.uuid4()), "delivery_id": str(uuid.uuid4()),
+        "iid": str(uuid.uuid4()),  # собеседование (feat/hiring) в мире не создаётся
     }
     p["code"] = side.ids.get("live_code", "nope") if path.startswith("/api/jury/live/") else "potok"
     p.update(PARAM_OVERRIDES.get(key, {}))
@@ -222,6 +223,21 @@ def fill(path: str, values: dict[str, object]) -> str:
         return str(values[name])
 
     return re.sub(r"\{([^}]+)\}", sub, path)
+
+
+def _hiring_bodies() -> dict[tuple[str, str], dict]:
+    from datetime import UTC, datetime, timedelta
+
+    at = (datetime.now(UTC) + timedelta(days=2)).replace(minute=0, second=0, microsecond=0).isoformat()
+    e, c = "/api/employer/invitations/{inv_id}", "/api/candidate/invitations/{inv_id}"
+    return {("POST", f"{e}/interviews"): {"slots": [{"starts_at": at, "format": "video", "place": "https://x.example/m"}]},
+            ("POST", f"{e}/interviews/{{iid}}/done"): {}, ("POST", f"{e}/interviews/{{iid}}/cancel"): {},
+            ("POST", f"{e}/offer"): {"salary": 300_000, "start_date": at[:10]},
+            ("POST", f"{e}/offer/counter/accept"): {}, ("POST", f"{e}/offer/counter/decline"): {},
+            ("POST", f"{e}/outcome"): {"outcome": "rejected"},
+            ("POST", f"{c}/interviews/{{iid}}/choose"): {"slot_id": "x"},
+            ("POST", f"{c}/interviews/{{iid}}/reschedule"): {"note": "Вечером"},
+            ("POST", f"{c}/offer/decline"): {}, ("POST", f"{c}/offer/counter"): {"salary": 400_000}}
 
 
 def body_for(key: tuple[str, str], side: Side) -> dict | None:
@@ -239,6 +255,7 @@ def body_for(key: tuple[str, str], side: Side) -> dict | None:
         ("POST", "/api/employer/probes/{probe_id}/review"): {"verdict": "ok"},
         ("POST", "/api/employer/invitations/{inv_id}/counter/accept"): {},
         ("POST", "/api/employer/invitations/{inv_id}/counter/decline"): {},
+        **_hiring_bodies(),  # найм после принятия (feat/hiring)
         ("POST", "/api/employer/cups"): cup_body("backend.middle"),
         ("POST", "/api/employer/cups/{cup_id}/entries/{entry_id}/score"): {"score_pct": 50},
         ("POST", "/api/employer/cups/{cup_id}/finish"): {"early": True},

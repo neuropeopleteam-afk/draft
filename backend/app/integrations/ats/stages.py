@@ -133,8 +133,10 @@ def _error(db: Session, company_id: uuid.UUID, code: str, message: str, **kw) ->
     db.add(AtsStageEvent(company_id=company_id, provider=code, status="error", error=message[:500], **kw))
 
 
-def sync_company(db: Session, company_id: uuid.UUID, code: str = "potok", *, trigger: str = "poll") -> dict:
-    """Опросить этапы всех переданных кандидатов компании в ATS и перенести изменения на платформу."""
+def sync_company(db: Session, company_id: uuid.UUID, code: str = "potok", *, trigger: str = "poll",
+                 quiet: set | frozenset = frozenset()) -> dict:
+    """Опросить этапы всех переданных кандидатов компании в ATS и перенести изменения на платформу.
+    quiet — id приглашений, кандидатам которых push об этапе не нужен (этап поставил шаг найма, push уже ушёл)."""
     if code not in PROVIDERS_WITH_STAGES:
         raise AtsError("Этапы из этой ATS не читаются", 404)
     conn = db.get(AtsConnection, (company_id, code))
@@ -205,7 +207,7 @@ def sync_company(db: Session, company_id: uuid.UUID, code: str = "potok", *, tri
             db.add(ev)
             db.commit()
             info["changed"] += 1
-            if target is not None and prev.get("stage") != stage:
+            if target is not None and prev.get("stage") != stage and getattr(target, "id", None) not in quiet:
                 _notify(db, target, stage)
     return _finish(db, conn, info, started)
 
