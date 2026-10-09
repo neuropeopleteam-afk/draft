@@ -50,6 +50,7 @@ RAW_TEXT_ALLOWED = {
     "app/modules/mutual/service.py",  # только detect_tasks (тип задач + слово-цитата) и индикатор условий
     "app/modules/demo/seed.py", "app/modules/jury/seed.py", "app/jury_live/service.py",
     "app/modules/validation/attacks.py",
+    "app/core/api_models.py",  # только описание ответа работодателю для OpenAPI (Я3), модель при запросах не используется
 }
 
 
