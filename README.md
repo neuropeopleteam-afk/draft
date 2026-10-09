@@ -14,7 +14,7 @@
 - Для жюри: блок «Для экспертов жюри» на главной — вход в один клик за кандидата (с паспортом ФСП и без), работодателя и эксперта, проводник по сценарию, сброс демо; метрики — страница `/validation`
 - Документация API (OpenAPI/Swagger): https://fsp.neuropeople.pro/api/docs
 - Архитектура и модель данных: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Интеграции: [антифрод и индекс доверия](docs/ANTIFRAUD.md), [ФСП ID](docs/FSP_INTEGRATION.md), [ATS](docs/ATS.md), [подписка на потребность и напоминания](docs/SUBSCRIPTIONS.md), [нагрузочный тест](docs/LOAD_TEST.md), [задания работодателя: причина, рубрика, свежесть](docs/ASSIGNMENTS.md)
+- Интеграции: [антифрод и индекс доверия](docs/ANTIFRAUD.md), [ФСП ID](docs/FSP_INTEGRATION.md), [ATS](docs/ATS.md), [подписка на потребность и напоминания](docs/SUBSCRIPTIONS.md), [нагрузочный тест](docs/LOAD_TEST.md), [задания работодателя: причина, рубрика, свежесть](docs/ASSIGNMENTS.md), [доступность: axe и клавиатура](docs/ACCESSIBILITY.md)
 
 ## Состав
 
