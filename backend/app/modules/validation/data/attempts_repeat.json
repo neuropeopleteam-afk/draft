@@ -1,0 +1,183 @@
+{
+ "pairs": {
+  "second_vs_first": {
+   "n_pairs": 1000,
+   "share_families": 0.0034,
+   "share_pairs_with_repeat": 0.067,
+   "mean_repeated": 0.069,
+   "max_share": 0.0909
+  },
+  "third_vs_second": {
+   "n_pairs": 1000,
+   "share_families": 0.0011,
+   "share_pairs_with_repeat": 0.022,
+   "mean_repeated": 0.023,
+   "max_share": 0.1
+  },
+  "third_vs_first": {
+   "n_pairs": 1000,
+   "share_families": 0.8588,
+   "share_pairs_with_repeat": 1.0,
+   "mean_repeated": 17.547,
+   "max_share": 1.0
+  }
+ },
+ "directions": {
+  "backend": {
+   "12": {
+    "n_pairs": 200,
+    "share_families": 0.0007,
+    "share_pairs_with_repeat": 0.01,
+    "mean_repeated": 0.015,
+    "max_share": 0.0909
+   },
+   "23": {
+    "n_pairs": 200,
+    "share_families": 0.0,
+    "share_pairs_with_repeat": 0.0,
+    "mean_repeated": 0.0,
+    "max_share": 0.0
+   },
+   "13": {
+    "n_pairs": 200,
+    "share_families": 0.7915,
+    "share_pairs_with_repeat": 1.0,
+    "mean_repeated": 16.27,
+    "max_share": 1.0
+   },
+   "mean_families": 20.67
+  },
+  "frontend": {
+   "12": {
+    "n_pairs": 200,
+    "share_families": 0.001,
+    "share_pairs_with_repeat": 0.02,
+    "mean_repeated": 0.02,
+    "max_share": 0.05
+   },
+   "23": {
+    "n_pairs": 200,
+    "share_families": 0.0002,
+    "share_pairs_with_repeat": 0.005,
+    "mean_repeated": 0.005,
+    "max_share": 0.0625
+   },
+   "13": {
+    "n_pairs": 200,
+    "share_families": 0.8414,
+    "share_pairs_with_repeat": 1.0,
+    "mean_repeated": 17.21,
+    "max_share": 1.0
+   },
+   "mean_families": 20.56
+  },
+  "data_ml": {
+   "12": {
+    "n_pairs": 200,
+    "share_families": 0.0002,
+    "share_pairs_with_repeat": 0.005,
+    "mean_repeated": 0.005,
+    "max_share": 0.0714
+   },
+   "23": {
+    "n_pairs": 200,
+    "share_families": 0.0,
+    "share_pairs_with_repeat": 0.0,
+    "mean_repeated": 0.0,
+    "max_share": 0.0
+   },
+   "13": {
+    "n_pairs": 200,
+    "share_families": 0.897,
+    "share_pairs_with_repeat": 1.0,
+    "mean_repeated": 19.02,
+    "max_share": 1.0
+   },
+   "mean_families": 21.07
+  },
+  "qa": {
+   "12": {
+    "n_pairs": 200,
+    "share_families": 0.0147,
+    "share_pairs_with_repeat": 0.29,
+    "mean_repeated": 0.295,
+    "max_share": 0.0909
+   },
+   "23": {
+    "n_pairs": 200,
+    "share_families": 0.0002,
+    "share_pairs_with_repeat": 0.005,
+    "mean_repeated": 0.005,
+    "max_share": 0.0455
+   },
+   "13": {
+    "n_pairs": 200,
+    "share_families": 0.9089,
+    "share_pairs_with_repeat": 1.0,
+    "mean_repeated": 19.11,
+    "max_share": 1.0
+   },
+   "mean_families": 20.75
+  },
+  "security": {
+   "12": {
+    "n_pairs": 200,
+    "share_families": 0.0005,
+    "share_pairs_with_repeat": 0.01,
+    "mean_repeated": 0.01,
+    "max_share": 0.0556
+   },
+   "23": {
+    "n_pairs": 200,
+    "share_families": 0.0056,
+    "share_pairs_with_repeat": 0.1,
+    "mean_repeated": 0.105,
+    "max_share": 0.1
+   },
+   "13": {
+    "n_pairs": 200,
+    "share_families": 0.8525,
+    "share_pairs_with_repeat": 1.0,
+    "mean_repeated": 16.125,
+    "max_share": 1.0
+   },
+   "mean_families": 19.24
+  }
+ },
+ "variants": {
+  "share": 0.0,
+  "by_construction": true,
+  "seed_space": 2137483647,
+  "note": "вариант — экземпляр семейства с seed генерации (variant_id = семейство:seed); seed каждого показа случаен из ~2,1 млрд, совпадение варианта практически исключено (≈ 5·10⁻¹⁰ на задание повторённого семейства). Насколько разнятся тексты при разных seed (числа, имена, код), зависит от семейства — это проверяет валидатор банка, не этот расчёт"
+ },
+ "protocol": "попытка 1 — субпул 0; попытка 2 — субпул 1, семейства попытки 1 исключены из дотестирования; попытка 3 — снова субпул 0 (субпулов два), исключены семейства попытки 2",
+ "config": {
+  "n_per_direction": 200,
+  "directions": [
+   "backend",
+   "frontend",
+   "data_ml",
+   "qa",
+   "security"
+  ],
+  "subpools": 2,
+  "rotation": "subpool",
+  "ext_items": 6,
+  "ext_own_first": true,
+  "min_items": 8,
+  "max_items": 16,
+  "stop_rule": "classification",
+  "exposure": true
+ },
+ "seconds": 57.4,
+ "signature": {
+  "world": "синтетика: θ ~ N(0, 1), истинные параметры = предкалибровка + ошибка эксперта σ = 0,5; конфигурация теста продукта, 2 субпула, K_f из exposure_k.json",
+  "seed": 20261006,
+  "config_hash": "bc116187c8e8",
+  "commit": "7417e48",
+  "bank": "a086bd7ad2304eb0",
+  "n": 1000,
+  "command": "python -m app.modules.validation.attempts_repeat",
+  "generated_at": "2026-10-09T09:01:41+00:00"
+ }
+}
