@@ -16,9 +16,9 @@ function Counts({ items, empty }: { items: Record<string, number>; empty: string
   const rows = Object.entries(items);
   if (!rows.length) return <p className="text-sm text-brand-ink/65">{empty}</p>;
   return (
-    <ul className="divide-y divide-brand-night/5 text-sm">
+    <ul className={`text-sm ${rows.length > 5 ? "sm:columns-2 sm:gap-x-8" : ""}`}>
       {rows.map(([k, n]) => (
-        <li key={k} className="flex items-start justify-between gap-3 py-1.5"><span className="min-w-0">{k}</span><span className="shrink-0 tabular-nums text-brand-ink/65">{num(n, 0)}</span></li>
+        <li key={k} className="flex break-inside-avoid items-start justify-between gap-3 border-b border-brand-night/5 py-1.5"><span className="min-w-0">{k}</span><span className="shrink-0 tabular-nums text-brand-ink/65">{num(n, 0)}</span></li>
       ))}
     </ul>
   );

@@ -66,7 +66,7 @@ LABELS: dict[str, str] = {
     "candidate_specializations": "Специализации и категории",
     "candidate_resumes": "Резюме (текст без ФИО и контактов)",
     "survey_responses": "Ответы опроса", "survey_stack_tags": "Ответы опроса",
-    "test_sessions": "Попытки теста", "test_session_items": "Попытки теста", "test_answers": "Ответы на задания теста",
+    "test_sessions": "Попытки теста", "test_session_items": "Задания, выданные в попытках теста", "test_answers": "Ответы на задания теста",
     "grade_history": "История грейда",
     "proctor_sessions": "События камеры (без кадров)", "proctor_events": "События камеры (без кадров)",
     "consents": "Согласия",
