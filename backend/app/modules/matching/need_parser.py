@@ -474,6 +474,9 @@ def clean_evidence(ev) -> dict | None:
     out["source"] = ev.get("source") if ev.get("source") in ("rules", "llm") else "rules"
     if isinstance(ev.get("basis"), str):
         out["basis"] = ev["basis"][:30]
+    for k in ("model", "confirmed_by"):  # И27: какая модель нашла цитату / подтвердила тег словаря
+        if isinstance(ev.get(k), str) and ev[k].strip():
+            out[k] = ev[k][:60]
     return out
 
 
@@ -560,6 +563,99 @@ def bias_report(text: str, req: dict) -> tuple[list[dict], str | None]:
     return bias_filter.suggestions(found, req), bias_filter.rewrite(text, found, req)
 
 
+# И27: короткий запрос-дельта — модели текст и то, что уже нашёл словарь; просим только недостающее и исправления
+DELTA_SYSTEM = (
+    "Ты проверяешь и дополняешь разбор описания вакансии в ИТ, который уже сделал словарь. Верни только JSON по "
+    "схеме. stack_required (обязательно) и stack_desired («будет плюсом») — ТОЛЬКО технологии, которых нет в «уже "
+    "найдено»: tag — идентификатор из списка, weight 0.1–1.0 (важность), quote — дословный фрагмент текста 2–8 слов. "
+    "Сленг, опечатки и английские названия сопоставляй с идентификаторами (кафка → kafka, k8s → kubernetes, "
+    "постгрес → postgresql). confirm — теги из «уже найдено», которые по тексту действительно требуются. remove — "
+    "теги из «уже найдено», которые по тексту НЕ требуются (отрицание, пример, другая роль): reason — коротко, "
+    "quote — фрагмент. direction, grade, experience_years_min, work_format — только если словарь не нашёл (нет в "
+    "«уже найдено») или ошибся, иначе null; quotes — дословные фрагменты для них. Без цитаты требование не указывай. "
+    "Не извлекай требования к полу, возрасту, внешности, национальности, семье, религии и месту жительства. "
+    "Идентификаторы тегов: {tags}."
+)
+
+
+def delta_schema() -> dict:
+    """Жёсткая JSON-схема ответа-дельты (structured output OpenRouter): теги и значения — только из справочника."""
+    tags = sorted(tag_directions())
+    item = {"type": "object", "additionalProperties": False, "required": ["tag", "weight", "quote"],
+            "properties": {"tag": {"type": "string", "enum": tags}, "weight": {"type": "number"},
+                           "quote": {"type": "string"}}}
+    opt = lambda values: {"anyOf": [{"type": "string", "enum": list(values)}, {"type": "null"}]}  # noqa: E731
+    qs = ("direction", "grade", "experience_years_min", "work_format")
+    schema = {"type": "object", "additionalProperties": False,
+              "required": ["stack_required", "stack_desired", "confirm", "remove", *qs, "quotes"],
+              "properties": {
+                  "stack_required": {"type": "array", "items": item},
+                  "stack_desired": {"type": "array", "items": item},
+                  "confirm": {"type": "array", "items": {"type": "string", "enum": tags}},
+                  "remove": {"type": "array", "items": {
+                      "type": "object", "additionalProperties": False, "required": ["tag", "reason", "quote"],
+                      "properties": {"tag": {"type": "string", "enum": tags}, "reason": {"type": "string"},
+                                     "quote": {"type": "string"}}}},
+                  "direction": opt(DIRECTIONS), "grade": opt(GRADES),
+                  "experience_years_min": {"anyOf": [{"type": "number"}, {"type": "null"}]},
+                  "work_format": opt(("office", "hybrid", "remote")),
+                  "quotes": {"type": "object", "additionalProperties": False, "required": list(qs),
+                             "properties": {k: {"anyOf": [{"type": "string"}, {"type": "null"}]} for k in qs}}}}
+    return {"type": "json_schema", "json_schema": {"name": "need_delta", "strict": True, "schema": schema}}
+
+
+def _rules_summary(rules: dict) -> str:
+    """«Уже найдено правилами» для запроса-дельты: только идентификаторы и значения справочника, без цитат и ПДн."""
+    lines = [f"{k}: {rules[k]}" for k in ("direction", "grade", "experience_years_min", "work_format")
+             if rules.get(k) is not None]
+    for zone in ("stack_required", "stack_desired"):
+        tags = [i["tag"] for i in rules.get(zone) or []]
+        if tags:
+            lines.append(f"{zone}: {', '.join(tags)}")
+    excluded = [x["tag"] for x in rules.get("excluded") or []]
+    if excluded:
+        lines.append(f"исключено отрицанием в тексте (не добавлять): {', '.join(excluded)}")
+    return "\n".join(lines) or "ничего"
+
+
+def _call_llm(clean_text: str, rules: dict, full: bool = False):
+    """Запрос к модели: дельта (по умолчанию, И27) или прежний полный разбор (mode=full)."""
+    tags = ", ".join(sorted(tag_directions()))
+    if full:
+        return chat_json(LLM_SYSTEM.replace("{tags}", tags), clean_text[:6000],
+                         func="parse_need", validate=lambda d: isinstance(d, dict), max_tokens=2500)
+    user = f"ТЕКСТ ВАКАНСИИ:\n{clean_text[:6000]}\n\nУЖЕ НАЙДЕНО СЛОВАРЁМ:\n{_rules_summary(rules)}"
+    return chat_json(DELTA_SYSTEM.replace("{tags}", tags), user, func="parse_need", max_tokens=900,
+                     validate=lambda d: isinstance(d, dict), response_format=delta_schema())
+
+
+def _llm_review(merged: dict, rules: dict, llm: dict, raw: dict, masked: str, hints: dict, label: str | None) -> None:
+    """И27: происхождение и предложения модели. Тег словаря, который модель подтвердила (confirm или тот же тег в
+    ответе) — evidence.confirmed_by; «убрать тег» и несогласие со значением словаря — только предложения
+    (llm_remove, llm_suggest), сами по себе в требования не попадают."""
+    confirmed = {t for t in raw.get("confirm") or [] if isinstance(t, str)}
+    confirmed |= {i["tag"] for i in llm["stack_required"] + llm["stack_desired"]}
+    rule_tags = {i["tag"] for i in rules["stack_required"] + rules["stack_desired"]}
+    for i in merged["stack_required"] + merged["stack_desired"]:
+        if i["tag"] in confirmed and i["tag"] in rule_tags and i.get("evidence") and label:
+            i["evidence"] = {**i["evidence"], "confirmed_by": label}
+    remove = []
+    for x in raw.get("remove") or []:
+        if isinstance(x, dict) and x.get("tag") in rule_tags and x["tag"] not in confirmed:
+            span = _locate(masked, x.get("quote"))
+            remove.append({"tag": x["tag"], "reason": str(x.get("reason") or "")[:200],
+                           "evidence": _ev(masked, span, source="llm") if span else None})
+    suggest = []
+    for key in ("direction", "grade", "experience_years_min", "work_format"):
+        v = llm.get(key)
+        if v is not None and not hints.get(key) and rules.get(key) is not None and v != rules[key] \
+                and llm["evidence"].get(key):
+            suggest.append({"field": key, "value": v, "current": rules[key], "evidence": llm["evidence"][key]})
+    for e in [x["evidence"] for x in remove + suggest if x.get("evidence")]:
+        e["model"] = label
+    merged["llm_remove"], merged["llm_suggest"] = remove, suggest
+
+
 def _locate(text: str, quote) -> tuple[int, int] | None:
     """Позиция дословной цитаты LLM в тексте (без учёта регистра и пробелов); нет — None."""
     if not isinstance(quote, str):
@@ -634,14 +730,17 @@ def text_notes(text: str, req: dict) -> dict:
 
 
 def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | None = None,
-               use_llm: bool = True) -> dict:
+               use_llm: bool = True, full: bool = False) -> dict:
     found = bias_filter.find_bias(text)
     masked = bias_filter.mask(text, found)  # из дискриминационных фрагментов ничего не извлекаем
     rules = parse_rules(masked, hint_direction, hint_grade)
     merged = rules
     if use_llm:
-        merged = _merge_llm(masked, rules, hint_direction, hint_grade)
+        merged = _merge_llm(masked, rules, hint_direction, hint_grade, full=full)
     merged = _with_quotes_from_original(merged, text)
+    for x in (merged.get("llm_remove") or []) + (merged.get("llm_suggest") or []):  # И27: предложения модели
+        if x.get("evidence"):
+            x["evidence"] = {**x["evidence"], **_ev(text, (x["evidence"]["start"], x["evidence"]["end"]), "llm")}
     for x in rules.get("excluded") or []:
         x["evidence"] = _ev(text, (x["evidence"]["start"], x["evidence"]["end"])) if x.get("evidence") else None
     merged["excluded"] = rules.get("excluded") or []
@@ -659,14 +758,14 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
     return merged
 
 
-def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade: str | None) -> dict:
+def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade: str | None,
+               full: bool = False) -> dict:
     from app.modules.resume.pii import redact
 
     # Контакты и ФИО контактного лица из текста вакансии тоже не уходят наружу: NER — только имена из 2+ слов
     # (одиночные «Гибрид», «Андроид» NER принимает за имена), плюс имя после «HR:», «рекрутер —» и т. п.
     clean_text = redact(masked, use_ner=True, ner_min_tokens=2, contact_cues=True).text
-    res = chat_json(LLM_SYSTEM.replace("{tags}", ", ".join(sorted(tag_directions()))), clean_text[:6000],
-                    func="parse_need", validate=lambda d: isinstance(d, dict), max_tokens=2500)
+    res = _call_llm(clean_text, rules, full)
     if not res.ok or not isinstance(res.data, dict):
         rules["llm"] = {"used": False, "reason": res.error, "attempts": res.attempts}
         return rules
@@ -705,6 +804,7 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
     for e in [*ev.values(), *(i.get("evidence") for i in merged["stack_required"] + merged["stack_desired"])]:
         if e and e.get("source") == "llm" and res.label:
             e["model"] = res.label  # подпись у цитаты: какая модель её нашла
+    _llm_review(merged, rules, llm, res.data, masked, {"direction": hint_direction, "grade": hint_grade}, res.label)
     # Кто фактически ответил (цепочка провайдеров llm/client.py) — подпись в интерфейсе
     merged["llm"] = {"used": True, "latency_ms": res.latency_ms, "dropped_without_quote": dropped,
                      "provider": res.provider, "model": res.model, "model_label": res.label,
