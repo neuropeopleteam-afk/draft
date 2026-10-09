@@ -259,7 +259,10 @@ def evaluate(db: Session, needs: list[str], seed: int = 20261006, *, baseline_or
     summary = {m: {k: round(sum(v) / len(v), 3) for k, v in agg[m].items()} for m in agg}
     summary["within_category_ndcg@3"] = {k: round(sum(v) / len(v), 3) if v else None for k, v in within.items()}
     summary["within_category_needs"] = len(within["platform"])
-    return {"algorithm": MUST_ALGORITHM if must_first else ALGORITHM_VERSION,
+    from app.modules.matching.ranking import CORE_ALGORITHM
+
+    return {"algorithm": (CORE_ALGORITHM if core else MUST_ALGORITHM) if must_first else
+            (f"{ALGORITHM_VERSION}+core" if core else ALGORITHM_VERSION),
             "n_needs": len(needs), "n_pool": len(bundles), "set_size": K_SET, "n_pairs": len(pairs),
             "relevant_share": round(sum(1 for p in pairs if p["label"] >= 2) / max(len(pairs), 1), 3),
             "methods": {"platform": "Подборка платформы", "platform_no_fsp": "Платформа без бонуса ФСП",

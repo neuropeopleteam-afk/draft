@@ -25,12 +25,13 @@ def test_rerank_control_reproduces_frozen_v2_and_prints_numbers(client, monkeypa
     from app.modules.experts import pack2, rerank_control as R
     from app.modules.experts.section import load
 
-    monkeypatch.delenv("RANK_CORE_SKILL", raising=False)
+    monkeypatch.setenv("RANK_CORE_SKILL", "0")  # пакеты на стенде собраны до Я1 — признак выключен
     _seed_v1()
     with SessionLocal() as db:
         _label_v1_synthetic(db)
         assert pack2.build(db)["created"]
         _label_v2_by_rules(db)
+        monkeypatch.delenv("RANK_CORE_SKILL", raising=False)  # дальше — как в продукте (по умолчанию вкл.)
         items2, labels2 = load(db, pack2.PACK2)
         demo = pack2._demo_pool(db)
         st: dict = {}

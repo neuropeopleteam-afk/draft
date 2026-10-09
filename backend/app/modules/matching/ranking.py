@@ -47,8 +47,15 @@ ALGORITHM_VERSION = "match-v1"
 MUST_ALGORITHM = "match-v1.1"  # Ф2: match-v1 + ярусы обязательного (те же веса и балл), флаг MATCH_MUST_FIRST
 
 
+CORE_ALGORITHM = "match-v1.2"  # Я1: match-v1.1 + ядро роли (основной язык / фреймворк / специализация), RANK_CORE_SKILL
+
+
 def algorithm() -> str:
-    return MUST_ALGORITHM if must_have.enabled() else ALGORITHM_VERSION
+    from app.modules.matching import core_skill
+
+    if must_have.enabled():
+        return CORE_ALGORITHM if core_skill.enabled() else MUST_ALGORITHM
+    return f"{ALGORITHM_VERSION}+core" if core_skill.enabled() else ALGORITHM_VERSION
 WEIGHTS = {"test": 0.45, "stack_required": 0.35, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05}
 LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "подтверждено тестом или зондом", "T0": "заявлено кандидатом",
           "none": "нет данных"}

@@ -78,7 +78,7 @@ function Body({ r }: { r: any }) {
 
       {r.must_have ? <MustHaveBlock mh={r.must_have} nNeeds={w.n_needs} sig={r.signature} /> : null}
       {r.core_skill ? <CoreSkillBlock cs={r.core_skill} nNeeds={w.n_needs} /> : null}
-      {r.guard ? <GuardBlock g={r.guard} policy={r.core_skill?.policy} /> : null}
+      {r.guard ? <GuardBlock g={r.guard} policy={r.core_skill?.policy} coreOn={r.core_skill?.enabled_in_product} /> : null}
 
       {jr?.columns?.length ? <JuniorBlock jr={jr} /> : null}
 
@@ -113,7 +113,7 @@ function Body({ r }: { r: any }) {
           <li>Парсер потребностей на текстах мира: направление {pct(w.parser?.direction_accuracy)}, грейд {pct(w.parser?.grade_accuracy)}, обязательные навыки — точность {pct(w.parser?.required_precision)}, полнота {pct(w.parser?.required_recall)}.</li>
         </ul>
         <p className="mt-3 text-brand-ink/70">
-          Алгоритм продукта: {r.algorithm ?? "match-v1"}{r.algorithm === "match-v1.1" ? " — match-v1 + ярусы обязательного (MATCH_MUST_FIRST)" : ""}.{r.signature?.commit ? ` Код — коммит ${r.signature.commit}${r.signature.bank ? `, банк ${r.signature.bank}` : ""}.` : ""}
+          Алгоритм продукта: {r.algorithm ?? "match-v1"}{r.algorithm === "match-v1.1" ? " — match-v1 + ярусы обязательного (MATCH_MUST_FIRST)" : r.algorithm === "match-v1.2" ? " — match-v1 + ярусы обязательного + ядро роли (MATCH_MUST_FIRST, RANK_CORE_SKILL)" : ""}.{r.signature?.commit ? ` Код — коммит ${r.signature.commit}${r.signature.bank ? `, банк ${r.signature.bank}` : ""}.` : ""}
           {" "}Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make bench</code> ({n2(r.seconds, 0)} с). Seed мира {r.seeds?.world}, второй мир {r.seeds?.world2}, бутстреп {r.seeds?.bootstrap}, разбиение {r.seeds?.split}; конфиг {r.config_hash}, алгоритм {r.algorithm}.
           Отчёт построен {r.generated_at?.slice(0, 10).split("-").reverse().join(".")}. Подробно: docs/validation/MATCHING_BENCH.md и matching_bench.json (метрики по каждой потребности).
         </p>
@@ -136,7 +136,7 @@ function MustHaveBlock({ mh, nNeeds, sig }: { mh: any; nNeeds?: number; sig?: an
       <Table head={["", ...cols.map(([, t]) => t)]}
         rows={[
           ["match-v1 (без ярусов)", ...cols.map(([k]) => <Cell x={mh.before?.[k]} d={3} />)],
-          [<b>match-v1 + ярусы обязательного (продукт)</b>, ...cols.map(([k]) => <Cell x={mh.after?.[k]} d={3} />)],
+          [<b>match-v1 + ярусы обязательного (match-v1.1)</b>, ...cols.map(([k]) => <Cell x={mh.after?.[k]} d={3} />)],
           ["Разница", ...cols.map(([k]) => <Cell x={mh.diff?.[k]} signed d={3} />)],
         ]} />
       <p className="mt-2 text-xs text-brand-ink/65">Топ-5 изменился у {mh.needs_changed_top5} из {nNeeds ?? "—"} потребностей (с обязательными навыками — {mh.needs_with_required}).</p>
@@ -160,8 +160,8 @@ function CoreSkillBlock({ cs, nNeeds }: { cs: any; nNeeds?: number }) {
       </p>
       <Table head={["", ...cols.map(([, t]) => t)]}
         rows={[
-          ["Без признака (продукт match-v1.1)", ...cols.map(([k]) => cs.before?.[k] ? <Cell x={cs.before[k]} d={3} /> : "—")],
-          [<b>С признаком «ядро роли»</b>, ...cols.map(([k]) => cs.after?.[k] ? <Cell x={cs.after[k]} d={3} /> : "—")],
+          [cs.enabled_in_product ? "Без признака (match-v1.1)" : <b>Без признака (match-v1.1, продукт)</b>, ...cols.map(([k]) => cs.before?.[k] ? <Cell x={cs.before[k]} d={3} /> : "—")],
+          [cs.enabled_in_product ? <b>С признаком «ядро роли» (match-v1.2, продукт)</b> : "С признаком «ядро роли» (match-v1.2)", ...cols.map(([k]) => cs.after?.[k] ? <Cell x={cs.after[k]} d={3} /> : "—")],
           ["Разница", ...cols.map(([k]) => cs.diff?.[k] ? <Cell x={cs.diff[k]} signed d={3} /> : "—")],
         ]} />
     </>
@@ -169,8 +169,8 @@ function CoreSkillBlock({ cs, nNeeds }: { cs: any; nNeeds?: number }) {
 }
 
 /** Закрытый guard порядка (tools/realdata/ranking_guard.py): те же профили, три столбца политики. */
-function GuardBlock({ g, policy }: { g: any; policy?: string }) {
-  const cols: [string, string][] = [["before", "match-v1 без ярусов"], ["after", "+ ярусы обязательного (продукт)"], ["core_on", "+ ядро роли"]];
+function GuardBlock({ g, policy, coreOn }: { g: any; policy?: string; coreOn?: boolean }) {
+  const cols: [string, string][] = [["before", "match-v1 без ярусов"], ["after", `+ ярусы обязательного (match-v1.1${coreOn ? "" : ", продукт"})`], ["core_on", `+ ядро роли (match-v1.2${coreOn ? ", продукт" : ""})`]];
   const ev = g.expert_v1_core;
   return (
     <>
@@ -181,6 +181,18 @@ function GuardBlock({ g, policy }: { g: any; policy?: string }) {
       <Table head={["", "Демо: p@5", "Демо: nDCG@10", "Истина: p@5", "Истина: nDCG@10", "Истина: MRR"]}
         rows={cols.filter(([k]) => g.demo_500?.[k]).map(([k, t]) => [t, n2(g.demo_500[k]["p@5"], 3), n2(g.demo_500[k]["ndcg@10"], 3), n2(g.hidden_truth_500?.[k]?.["p@5"], 3), n2(g.hidden_truth_500?.[k]?.["ndcg@10"], 3), n2(g.hidden_truth_500?.[k]?.mrr, 3)])} />
       {ev && policy && ev[policy] && <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Ядро роли на v1-разметке ({ev.n_needs} потребностей, {ev.n_pairs} пар; эксперты — модель, не люди): p@5 {n2(ev.off?.["p@5"], 3)} → {n2(ev[policy]["p@5"], 3)}, nDCG@10 {n2(ev.off?.["ndcg@10"], 3)} → {n2(ev[policy]["ndcg@10"], 3)}.</p>}
+      {g.expert_v2_control && (
+        <>
+          <p className="mt-3 max-w-4xl text-sm leading-relaxed text-brand-ink/70" data-testid="core-v2-control">
+            Контроль ядра роли на разметке v2 (модель, не люди) — только на сервере, на копии БД во временном PostgreSQL 16: места пересчитаны кодом подборки без признака и с признаком, метрики — тем же кодом, что раздел экспертов. Смотрели один раз, после выбора параметров; по v2 ничего не подбиралось.
+          </p>
+          <Table head={["Пакет", "P@5: без → с признаком", "nDCG@10: без → с признаком", "Разница nDCG@10", "Лучше / хуже потребностей", "BM25: P@5, nDCG@10"]}
+            rows={(["v1", "v2", "all"] as const).map((p) => {
+              const v = g.expert_v2_control;
+              return [`${p === "all" ? "v1 + v2" : p} (${v.off?.[p]?.needs})`, `${n2(v.off?.[p]?.["p@5"], 3)} → ${n2(v.on?.[p]?.["p@5"], 3)}`, `${n2(v.off?.[p]?.["ndcg@10"], 3)} → ${n2(v.on?.[p]?.["ndcg@10"], 3)}`, <Cell x={v.diff?.[p]?.["ndcg@10"]} signed d={3} />, `${v.diff?.[p]?.["ndcg@10"]?.better} / ${v.diff?.[p]?.["ndcg@10"]?.worse}`, `${n2(v.bm25?.[p]?.["p@5"], 3)}, ${n2(v.bm25?.[p]?.["ndcg@10"], 3)}`];
+            })} />
+        </>
+      )}
     </>
   );
 }
