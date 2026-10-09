@@ -62,7 +62,7 @@ export function Invitations() {
                   {i.counter && <p className="mt-1 text-xs font-semibold text-amber-800">Встречное предложение ждёт ответа работодателя</p>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {i.thread?.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {i.thread.unread}</span>}
+                  {i.thread?.unread > 0 && <span className="rounded-full bg-brand-strong px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {i.thread.unread}</span>}
                   <TrustBadge t={trust[i.id]} compact /><HiringChip h={i.hiring} /><AtsStageBadge s={i.ats_stage} /><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} />
                 </div>
               </button>

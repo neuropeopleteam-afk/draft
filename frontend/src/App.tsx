@@ -1,5 +1,6 @@
 import { Link, Route, Routes } from "react-router-dom";
 import { CabinetLayout } from "./components/CabinetLayout";
+import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
 import { JuryGuide } from "./components/JuryGuide";
 import { StudyDock } from "./components/study/StudyDock";
 import StudyAbout from "./pages/StudyAbout";
@@ -52,6 +53,7 @@ import { HashScroll } from "./lib/hashScroll";
 export default function App() {
   return (
     <>
+    <SkipLink />
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/validation" element={<Validation />} />
@@ -144,13 +146,14 @@ export default function App() {
     <JuryGuide />
     <HashScroll />
     <StudyDock />
+    <RouteAnnouncer />
     </>
   );
 }
 
 function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
+    <main id="main" className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center">
       <p className="text-6xl font-extrabold text-brand" aria-hidden="true">404</p>
       <h1 className="text-xl font-bold text-brand-night">Такой страницы нет</h1>
       <p className="max-w-sm text-sm text-brand-ink/70">Возможно, ссылка устарела. Демо-учётки для жюри — на главной, вход в один клик.</p>
@@ -158,6 +161,6 @@ function NotFound() {
         <Link to="/" className="btn-primary">На главную</Link>
         <Link to="/#jury" className="btn-ghost">Демо для жюри</Link>
       </div>
-    </div>
+    </main>
   );
 }

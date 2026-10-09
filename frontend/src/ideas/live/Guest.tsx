@@ -113,8 +113,8 @@ export default function LiveGuest() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Встречный · живая демонстрация</p>
         <p className="mt-1 text-base font-bold">{room?.company ?? "Демо жюри"}</p>
       </header>
-      <main className="mx-auto max-w-lg px-4 pt-4">
-        {loading ? <p className="text-sm text-brand-ink/60">Загрузка…</p>
+      <main id="main" className="mx-auto max-w-lg px-4 pt-4">
+        {loading ? <p className="text-sm text-brand-ink/65">Загрузка…</p>
           : !room ? <Alert>{error ?? "Зал не найден"}</Alert>
           : !g ? <Intro room={room} onStart={start} error={error} />
           : g.stage === "testing" && g.item ? <Item code={c} g={g} item={g.item} onNext={setG} />
@@ -155,7 +155,7 @@ function Intro({ room, onStart, error }: { room: RoomPublic; onStart: (d: string
             <button key={d.id} type="button" aria-pressed={dir === d.id} onClick={() => setDir(d.id)}
               className={`rounded-xl border px-3 py-3 text-left transition-colors ${dir === d.id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white"}`}>
               <span className="block text-sm font-bold text-brand-night">{d.title}</span>
-              <span className="mt-0.5 block text-[11px] leading-snug text-brand-ink/60">{d.need}</span>
+              <span className="mt-0.5 block text-[11px] leading-snug text-brand-ink/65">{d.need}</span>
             </button>
           ))}
         </div>
@@ -172,7 +172,7 @@ function Intro({ room, onStart, error }: { room: RoomPublic; onStart: (d: string
         onClick={async () => { setBusy(true); await onStart(dir!, canPush && wantPush); setBusy(false); }}>
         {busy ? "Готовим задание…" : dir ? "Начать мини-тест" : "Выберите направление"}
       </button>
-      <p className="mt-4 text-xs leading-relaxed text-brand-ink/55">{room.rule} Правильность ответов видна только в итоге; ключи заданий не покидают сервер.</p>
+      <p className="mt-4 text-xs leading-relaxed text-brand-ink/65">{room.rule} Правильность ответов видна только в итоге; ключи заданий не покидают сервер.</p>
     </>
   );
 }
@@ -193,7 +193,7 @@ function Item({ code, g, item, onNext }: { code: string; g: Guest; item: LiveIte
   }
   return (
     <div>
-      <div className="flex items-center justify-between text-xs font-semibold text-brand-ink/60">
+      <div className="flex items-center justify-between text-xs font-semibold text-brand-ink/65">
         <span>{g.direction_title} · {FORMAT_TITLE[item.format] ?? "Задание"}</span>
         <span>Задание {item.position} из {item.total}</span>
       </div>
@@ -248,12 +248,12 @@ function Item({ code, g, item, onNext }: { code: string; g: Guest; item: LiveIte
 function Step({ done, active, title, children }: { done: boolean; active: boolean; title: string; children?: React.ReactNode }) {
   return (
     <li className="flex gap-3">
-      <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-brand-strong text-white" : active ? "border-2 border-brand text-brand" : "border border-brand-night/20 text-brand-ink/40"}`} aria-hidden="true">
+      <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${done ? "bg-brand-strong text-white" : active ? "border-2 border-brand text-brand" : "border border-brand-night/20 text-brand-ink/65"}`} aria-hidden="true">
         {done ? <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2.4"><path d="M3.5 8.5l3 3 6-7" /></svg>
           : active ? <span className="h-2 w-2 animate-ping rounded-full bg-brand" /> : null}
       </span>
       <div className="min-w-0">
-        <p className={`text-sm font-semibold ${done || active ? "text-brand-night" : "text-brand-ink/45"}`}>{title}</p>
+        <p className={`text-sm font-semibold ${done || active ? "text-brand-night" : "text-brand-ink/65"}`}>{title}</p>
         {children && <div className="mt-0.5 text-xs leading-relaxed text-brand-ink/70">{children}</div>}
       </div>
     </li>
@@ -320,7 +320,7 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
             {r.skills.map((s) => <span key={s.tag} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${s.score >= 0.5 ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>{s.title}</span>)}
           </div>
         )}
-        <p className="mt-2 text-xs leading-relaxed text-brand-ink/55">
+        <p className="mt-2 text-xs leading-relaxed text-brand-ink/65">
           {r?.capped ? "Ответы сильные, но за 3 задания категория — не выше Middle: Senior подтверждает полный тест (8–16 заданий) или экспресс (8–12). " : "За 3 задания категория — не выше Middle. "}
           Погрешность велика — это предварительная оценка, полный тест уточняет грейд.
         </p>
@@ -364,7 +364,7 @@ function Outcome({ code, g, push, onUpdate, onAgain }: { code: string; g: Guest;
           )}
         </div>
       )}
-      {!invited && (push.note ? <p className="mt-3 text-xs text-brand-ink/60">{push.note}</p> : <IosHint />)}
+      {!invited && (push.note ? <p className="mt-3 text-xs text-brand-ink/65">{push.note}</p> : <IosHint />)}
       {FINAL.has(g.stage) && <button className="btn-ghost mt-5 w-full" onClick={onAgain}>Пройти ещё раз другим направлением</button>}
     </div>
   );
