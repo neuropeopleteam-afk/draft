@@ -17,7 +17,7 @@ from tests.test_day2_rules import H
 
 @pytest.fixture
 def bank(monkeypatch):
-    def fake_grade(*, stem, code, step_prompt, rubric, answer, use_llm=True):
+    def fake_grade(*, stem, code, step_prompt, rubric, answer, use_llm=True, **_):
         return GradeOutcome(status="scored", score=0.9 if len(answer) > 40 else 0.0, method="llm", model="test")
     monkeypatch.setattr(be, "grade_open", fake_grade)
     return BankEngine()
