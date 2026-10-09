@@ -587,3 +587,18 @@ def test_employer_side_survives_deleted_candidate(client, world):
         assert db.scalar(select(func.count()).select_from(ContactMessage)) == 0
         a = db.scalars(select(VacancyApplication)).one()
         assert a.cover_letter is None
+
+
+def test_export_hides_integrity_mechanics_in_facts():
+    """Р27: в JSON фактов лежит подробная достоверность (сигналы, баллы) — в выгрузке только вид для кандидата."""
+    from app.modules.mydata import export
+
+    raw = {"level": "medium", "points": 2, "kinds": ["behavior"], "reasons": ["Уход со вкладки теста: 2 задания"],
+           "signals": {"focus_lost_items": 2, "paste_chars": 0}}
+    out = export._scrub({"facts": [{"key": "backend.middle", "value": {"grade": "middle", "preknowledge_flagged": False,
+                                                                       "integrity": raw}}]})
+    v = out["facts"][0]["value"]
+    assert v["grade"] == "middle" and "preknowledge_flagged" not in v
+    text = json.dumps(v, ensure_ascii=False)
+    assert "signals" not in text and "focus_lost" not in text and "Уход со вкладки" not in text and "points" not in text
+    assert v["integrity"]["level"] == "medium" and v["integrity"]["reasons"]
