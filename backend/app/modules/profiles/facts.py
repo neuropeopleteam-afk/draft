@@ -25,6 +25,7 @@ from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK,
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
+from app.modules.fsp import relevance as fsp_relevance
 from app.modules.fsp.rating import details as fsp_rating
 
 DEFAULT_PRIVACY = {
@@ -73,9 +74,17 @@ def set_t0_facts(db: Session, user_id: uuid.UUID, source: FactSource, *, stack: 
                              value={"years": float(experience_years)}, evidence_level=EvidenceLevel.T0, source=source))
 
 
+def fsp_relevance_on() -> bool:
+    """Флаг FSP_DISCIPLINE_RELEVANCE (И23): мягкий коэффициент близости дисциплины к специализации; по умолчанию выкл."""
+    from app.core.config import get_settings
+
+    return bool(get_settings().fsp_discipline_relevance)
+
+
 def fsp_strength(achievements: list[FspAchievement], direction: str | None) -> float:
-    """Направление сохранено в сигнатуре для совместимости, но не влияет на вес ФСП."""
-    return fsp_rating(achievements)["strength"]
+    """Сила ФСП. Направление влияет только при флаге FSP_DISCIPLINE_RELEVANCE (коэффициент 1,0 / 0,9 / 0,8)."""
+    on = fsp_relevance_on()
+    return fsp_rating(achievements, direction=direction if on else None, relevance=on)["strength"]
 
 
 def achievement_text(a: FspAchievement) -> str:
@@ -472,8 +481,11 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "linked": b.passport is not None, "level": "T2" if verified_achievements(b) else None,
             "source": b.passport.link_source.value if b.passport else None,
             "strength": b.fsp,
-            "rating": fsp_rating(b.achievements),
-            "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified}
+            "rating": fsp_rating(b.achievements, direction=b.direction if fsp_relevance_on() else None,
+                                 relevance=fsp_relevance_on()),
+            "achievements": [{"text": achievement_text(a), "discipline": a.discipline, "verified": a.verified,
+                              **({"relevance": fsp_relevance.explain(a.discipline, b.direction)}
+                                 if fsp_relevance_on() else {})}
                              for a in verified_achievements(b)[:5]],
             "unverified_count": sum(1 for a in b.achievements
                                     if not a.verified and not (a.source_ref or "").startswith("cup:")),

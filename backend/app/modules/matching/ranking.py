@@ -250,11 +250,16 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     if verified:
         best = min(verified, key=lambda a: a.place or 99)
         from app.modules.fsp.rating import details
+        from app.modules.profiles.facts import DISCIPLINE_TITLES, fsp_relevance_on
 
-        rating = details(verified)
+        rel_on = fsp_relevance_on()  # И23: флаг FSP_DISCIPLINE_RELEVANCE, по умолчанию выкл. — текст прежний
+        rating = details(verified, direction=b.direction if rel_on else None, relevance=rel_on)
+        rb = (rating.get("relevance") or {}).get("best") or {}
+        rel_text = (f"Соревнования по «{DISCIPLINE_TITLES.get(rb['discipline'], rb['discipline'])}» — {rb['title']} кандидата "
+                    f"(коэффициент {str(rb['coef']).replace('.', ',')}). " if rb.get("title") else "")
         reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
                         "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")
-                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}. "
+                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}. " + rel_text
                         + rating["policy"]})
     else:
         # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
