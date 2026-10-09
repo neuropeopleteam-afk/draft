@@ -63,3 +63,11 @@ def test_test_run_announces_item_and_timer():
     assert "ref={itemHead}" in src and "itemHead.current?.focus" in src
     assert 'role={isLine ? "listbox" : undefined}' in src and "pickLine(" in src
 
+
+
+def test_ats_block_is_named_group_not_repeated_region():
+    """Карточек приглашений на экране много: одинаковые <section aria-label> — повтор области (axe landmark-unique)."""
+    src = _read("src/integrations/Ats.tsx")
+    block = src[src.index("export function AtsInvitationActions"):]
+    head = re.search(r"<section[^>]*>", block).group(0)
+    assert 'role="group"' in head and "candidateRef" in head
