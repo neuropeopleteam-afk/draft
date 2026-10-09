@@ -130,13 +130,16 @@ def _tags(req: dict) -> dict:
             "desired": sorted(i["tag"] for i in req.get("stack_desired") or [])}
 
 
-def run_needs(spec: str, conc: int, full: bool, jury: bool = False, limit: int = 0) -> dict:
+def run_needs(spec: str, conc: int, full: bool, jury: bool = False, limit: int = 0, rows: list[dict] | None = None,
+              func: str | None = None) -> dict:
+    """rows — свой набор ({id, text}); func — подпись функции в результате (напр. needs_hard)."""
     from app.modules.matching import need_parser as NP
 
     _set_model(spec, ("parse_need",))
     orig = _recorder(NP)
     try:
-        rows = [{"id": i, "kind": k, "text": t} for i, k, t in _jury_texts()] if jury else _vacancies()
+        if rows is None:
+            rows = [{"id": i, "kind": k, "text": t} for i, k, t in _jury_texts()] if jury else _vacancies()
         rows = rows[:limit] if limit else rows
 
         def one(row):
@@ -154,7 +157,7 @@ def run_needs(spec: str, conc: int, full: bool, jury: bool = False, limit: int =
         out = _pool(one, rows, conc)
     finally:
         NP.chat_json = orig
-    return {"spec": spec, "func": "needs_jury" if jury else ("needs_full" if full else "needs_delta"),
+    return {"spec": spec, "func": func or ("needs_jury" if jury else ("needs_full" if full else "needs_delta")),
             "date": time.strftime("%Y-%m-%d"), "per_text": out}
 
 
@@ -177,7 +180,9 @@ def _resume_pred(o: dict) -> dict:
             "llm_stack": sorted(s["tag"] for s in o["stack"] if s.get("by") == "llm")}
 
 
-def run_resume(spec: str, conc: int, limit: int = 0) -> dict:
+def run_resume(spec: str, conc: int, limit: int = 0, rows: list[dict] | None = None, func: str = "resume") -> dict:
+    """rows — свой набор; для набора с вымышленными ПДн (поле pii) сохраняются: какие pii остались в тексте,
+    ушедшем модели (промах вырезания продукта), и сырой ответ модели (проверка «восстановления» ПДн)."""
     from app.modules.resume import extract as RX
     from app.modules.resume.pii import redact
 
@@ -190,13 +195,20 @@ def run_resume(spec: str, conc: int, limit: int = 0) -> dict:
             _tl.res = None
             red = redact(row["text"], use_ner=True).text
             o = RX.extract(red, use_llm=True)
-            return {"id": row["id"], **_call_info(_tl.res), "used": bool((o.get("llm") or {}).get("used")),
-                    **_resume_pred(o)}
+            rec = {"id": row["id"], **_call_info(_tl.res), "used": bool((o.get("llm") or {}).get("used")),
+                   **_resume_pred(o)}
+            if row.get("pii"):
+                low = red.lower()
+                rec["pii_sent"] = [x for x in row["pii"] if x.lower() in low]
+                rec["reply_text"] = getattr(_tl.res, "text", None) if _tl.res is not None else None
+                rec["sent_text"] = red
+            return rec
 
-        out = _pool(one, _resumes()[:limit] if limit else _resumes(), conc)
+        src = rows if rows is not None else _resumes()
+        out = _pool(one, src[:limit] if limit else src, conc)
     finally:
         RX.chat_json = orig
-    return {"spec": spec, "func": "resume", "date": time.strftime("%Y-%m-%d"), "per_text": out}
+    return {"spec": spec, "func": func, "date": time.strftime("%Y-%m-%d"), "per_text": out}
 
 
 def rules_resume() -> dict:
