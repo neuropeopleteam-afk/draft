@@ -134,8 +134,7 @@ Kafka, сборщик мусора JVM), ключ проверяется исп�
 | `backend.go.context_background_bug` | find_bug | контекст запроса потерян (Background) | Go |
 | `backend.java.hashcode_bug` | find_bug | hashCode не согласован с equals | JVM: HashSet/HashMap |
 | `backend.java.stream_lazy_output`, `future_exception_output` | predict_output | ленивость Stream; исключения в CompletableFuture | JVM |
-| `backend.java.session_registry_leak_bug` | find_bug | утечка через долгоживущую коллекцию (`get` вместо `remove`) | JVM: реестр пуст после закрытия. **Выведено из выдачи 07.10 по калибровке** (ключ плохо определён для формата find_bug; p 0,03, a 0,62) — см. `families_retired/README.md` |
-| `backend.java.gc_reachability_mcq` | mcq_concept | сколько объектов доступны для сборки мусора | модель достижимости (обход ссылок от переменных). **Выведено из выдачи 07.10 по калибровке** (p 0,23 ≈ шанс, σ 1,88) — см. `families_retired/README.md` |
+| `backend.java.session_registry_leak_fix` (08.10, вместо `session_registry_leak_bug`) | choose_fix | утечка через долгоживущую коллекцию (`get` вместо `remove`); дистракторы — локальный `null`, `Map.remove(Object)` с объектом, `WeakHashMap` (значение держит свой ключ) | JVM: закрыта половина объектов — остаётся вторая половина, затем реестр пуст; для WeakHashMap подтверждено, что записи не очищаются после `System.gc()`. Версия 1 (find_bug) выведена 07.10 (ключ плохо определён; p 0,03) и переделана 08.10 |
 | `backend.java.string_equals_bug` (07.10) | find_bug | `==` вместо `equals` для строк, собранных при разборе | JVM: строки создаются во время выполнения, положительный и отрицательный случай |
 | `backend.java.list_remove_loop_fix` (07.10) | choose_fix | удаление из ArrayList в цикле по индексу (сдвиг и пропуск); дистракторы — for-each + remove (CME), remove по объекту, присвоение параметру | JVM: все четыре варианта на списке с подряд идущими подходящими записями |
 | `backend.django.n_plus_one_output` | predict_output | число запросов при select_related | настоящий Django |
@@ -167,20 +166,54 @@ Kafka, сборщик мусора JVM), ключ проверяется исп�
 (`panel_20261007_ext3`): `percentile_merge_mcq` — флагов нет (b −0,53, a 1,78); `severity_priority_mcq` —
 лучше, но σ 0,59 остаётся; `brittle_render_fix` и `utf8_truncate_fix` флаги не сняли.
 
-### Выведены из выдачи 07.10 по итогам калибровки
+### Переделка по итогам вычитки и панели ext4 (08.10)
 
-Четыре семейства перенесены в `assessment_bank/families_retired/` (реестр их не читает; после переноса в выдаче
-осталось 162 семейства): `backend.java.session_registry_leak_bug` (ключ плохо определён для формата find_bug: дефект —
-пропуск `remove`; p 0,03, отрицательная дискриминация), `backend.java.gc_reachability_mcq` (p 0,23 ≈ шанс,
-σ между вариантами 1,88), `common.text.utf8_truncate_fix` (вторая панель подряд: b 3,69, a 0,44),
+Ветка `feat/bank-fix`, перекалибровка — `calibration/panel_20261008_ext4` и `panel_20261008_ext4b`.
+* `backend.kafka.outbox_relay_fix` (v2): дистрактор с несуществующим параметром kafka-python заменён на правдоподобный,
+  но неверный (`add_errback` только пишет в журнал; строка помечается сразу); `django_migration_default_bug` (v2):
+  точная формулировка («все записи после запуска приложения получают одно значение — момент запуска»).
+* Выровнены длины вариантов (верный вариант не самый длинный и не самый короткий): `percentile_merge_mcq`, `git.undo_mcq`
+  (дистракторы зависят от формы верной команды), `tx_isolation_mcq`, `cors_csrf_mcq`, `cookie_policy_mcq` (v3, фиксированный
+  состав дистракторов), `js_listener_leak_fix`, `sql_reconciliation_fix`, `kafka.offset_commit_mcq`, `fe_onehot_serving_fix`,
+  `focus_trap_ob3`, `docker.cache_order_fix`. Не правились (отношение длин 1,03 и 0,99): `security.supply.dependency_patch_fix`,
+  `common.db.index_plan_mcq`.
+* Лимиты канареек: `common.alg.heap_trace` 150 → 180 с, `common.linux.umask_chmod` 90 → 120 с.
+* Пул песочницы (`sandbox.run_checks`) ограничен 24 потоками: на хосте со 192 ядрами `os.cpu_count()` давал 768 потоков
+  и «Too many open files» при проверках git/оболочки.
+* Правила калибровки (`calibration/rerun_new.py`): задание MCQ/choose_fix, на которое вся панель отвечает на уровне
+  угадывания (p ≤ 0,29, r(x,θ) < 0,15), считается неинформативным — остаётся prior, оценка панели в `b_panel`/`a_panel`.
+
+### Выведены из выдачи 07.10 по итогам калибровки; `session_registry_leak_fix` возвращён 08.10, `gc_reachability_mcq` выведен повторно 09.10
+
+Четыре семейства были перенесены в `assessment_bank/families_retired/` (реестр их не читает; после переноса в
+выдаче осталось 162 семейства): `backend.java.session_registry_leak_bug` (ключ плохо определён для формата
+find_bug: дефект — пропуск `remove`; p 0,03, отрицательная дискриминация), `backend.java.gc_reachability_mcq`
+(p 0,23 ≈ шанс, σ между вариантами 1,88), `common.text.utf8_truncate_fix` (вторая панель подряд: b 3,69, a 0,44),
 `qa.js.brittle_render_fix` (решается «в лоб», σ 1,04, 3B лучше 32B). Продукт выдаёт задания по
 `prior_difficulty` из YAML, где эти семейства стояли у порогов Junior/Middle с a ≈ 1 — то есть CAT выбирал их
 как самые информативные, а по данным они шум. Покрытие Java: 5 → 3 семейства (одно уровня Junior); тем же днём
-добавлены два простых Java-семейства с бесспорным ключом — `backend.java.string_equals_bug` (Стажёр/Junior, find_bug)
-и `backend.java.list_remove_loop_fix` (Junior/Middle, choose_fix с исполнением всех вариантов) — итого **164** семейства
-в выдаче, Java — 5. Новые семейства выдаются по prior из YAML до перекалибровки (`calibration/rerun_new.py`).
-Цифры, причины и план переделки — `assessment_bank/families_retired/README.md`;
-`calibration/params_current.json` не менялся (история измерений).
+добавлены два простых Java-семейства с бесспорным ключом — `backend.java.string_equals_bug` (Стажёр/Junior,
+find_bug) и `backend.java.list_remove_loop_fix` (Junior/Middle, choose_fix с исполнением всех вариантов) — итого
+**164** семейства в выдаче, Java — 5.
+
+08.10 (ветка `feat/bank-fix`) оба Java-семейства переделаны по решению консилиума и возвращены в `families/`:
+`session_registry_leak_bug` → **`backend.java.session_registry_leak_fix`** (choose_fix: `remove(id)` против
+локального `null`, `Map.remove(Object)` и `WeakHashMap`; все варианты исполняются на JVM), `gc_reachability_mcq`
+(тот же ID, версия 2: фиксированный сценарий — 4 объекта, 6 переназначений, одна схема дистракторов). В выдаче
+снова **166** семейств, Java — 7.
+
+09.10 (ветка `feat/bank-fix`, решение штаба по итогам панели ext4) `backend.java.gc_reachability_mcq` (версия 3) **повторно выведено**
+в `families_retired/backend/`: ключ однозначен и варианты изоморфны (σ 0,00, χ² p_hom 0,58), но вся панель отвечает на уровне
+угадывания (p 0,23 при шансе 0,25, a 0,36, r 0,04), то есть задание не различает уровни, а CAT по prior (b 0,3, a 1,0) выбирал бы
+его как информативное. Оценки трудности для людей нет; вернуть можно после пилота с людьми. Теперь в выдаче **165** семейств
+(backend 44, common 34, frontend 26, data_ml 23, qa 19, security 19), Java — 6 (`hashcode_bug`, `string_equals_bug`,
+`list_remove_loop_fix`, `session_registry_leak_fix`, `stream_lazy_output`, `future_exception_output`); в `families_retired/` —
+`gc_reachability_mcq`, `utf8_truncate_fix` и `brittle_render_fix`. Код и YAML перенесены `git mv` без содержательных правок
+(изменён только путь `generator:`); запись об измерениях в `params_current.json` сохранена как история. Регрессионный тест
+фиксированного сценария (`tests/test_bankfix.py`) исполняет генератор из `families_retired/` напрямую.
+Цифры, причины и план переделки — `assessment_bank/families_retired/README.md`; перекалибровка
+переделанных семейств — `calibration/panel_20261008_ext4/` (запись об измерениях 07.10 в `params_current.json`
+заменена новой оценкой, история — в отчётах панелей).
 
 Правила текста (вычитка 08.10, `tests/test_proofread.py`):
 
@@ -231,6 +264,28 @@ Kafka, сборщик мусора JVM), ключ проверяется исп�
   верные ответы на канарейках; порог калибруется по честной популяции под заданный FPR;
 * `serving.SeedServer` — ротация субпулов, не более 3 показов варианта, карантин;
   канарейки выдаются только из опубликованных seed.
+
+## Симуляция (`assessment_bank.simulation`, `make simulate`)
+
+Синтетическая популяция θ ~ N(0, 1) и синтетическая «истина» параметров (предкалибровка + сдвиг эксперта σ = 0,5):
+проверка механики теста (оценивание, остановка, калибровка на пилоте, детектор, ротация), не людей.
+`python -m assessment_bank simulate --n 1000 --seed 20261005 --worlds 10 --jobs 4 --out reports`.
+
+* **Потоки случайных чисел по ключу (с 09.10, `rng: keyed-v1` в отчёте).** Истина семейства — из потока
+  `(seed, "truth", family_id)`, популяция, пилот и каждый кандидат каждого сценария — из своих потоков. Добавление или
+  вывод семейства меняет только его самого; семейства backend не двигают frontend (тест `test_simulation_streams.py`).
+  До 09.10 весь прогон шёл одним генератором по порядку: вставка `backend.java.session_registry_leak_fix` и новые
+  лимиты времени трёх семейств common (08.10) перетасовали истину следующих семейств, популяции и пилот frontend
+  (backend идёт первым и расходует тот же генератор), и «решение верно» frontend/calibrated_cat в отчёте
+  упало 0,783 → 0,709 без единой правки во frontend (бисекция по входам симуляции 09.10: в том мире среднее θ
+  пилота frontend было +0,142, калибровка сдвинула трудности на −0,145, смещение θ̂ −0,142).
+* **Разброс по мирам (`--worlds`).** Таблицы отчёта — один мир (seed). Отдельная таблица — среднее, SD, мин и макс
+  prior_cat и calibrated_cat по независимым мирам (своя истина, популяция и пилот N = 300). Главный источник разброса
+  calibrated_cat — масштаб пилота: среднее θ 300 участников отклоняется от 0 на ±0,06 (SE), калибровка переносит это
+  в смещение θ̂, а правило подтверждения P(θ ≥ порога) ≥ 0,8 — в долю ложных отказов. Разница версий банка в одном
+  мире меньше двух SD разброса миров — не свойство банка.
+* Параметры `calibration/params_current.json` симуляция не читает: пул строится по `prior_difficulty` из YAML
+  (как и выдача платформы), калиброванный пул — по синтетическому пилоту.
 
 ## Модель угроз и ограничения
 

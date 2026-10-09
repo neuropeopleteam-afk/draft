@@ -5,11 +5,15 @@ Relay читает неотправленные строки outbox, вызыв�
 теряется, а строка уже помечена. Состав вариантов фиксирован:
   * верный — ждать результат `send(...).get(timeout)`, помечать строку только после успеха, при ошибке
     остановить цикл (строка останется неотправленной и уйдёт в следующем проходе);
-  * idempotent_only — включить идемпотентный продюсер и acks=all, цикл без изменений: идемпотентность
-    защищает от дублей при повторах, но не от потери, когда результат не проверяется;
+  * errback_log — не ждать результат, а повесить на future `add_errback` с записью ошибки в журнал, строку
+    помечать сразу: потеря видна в журнале, но не устранена — строка уже помечена и в outbox не вернётся;
   * flush_after_mark — цикл без изменений, перед commit вызвать `producer.flush()`: flush ждёт отправки, но
     ошибки доставки не поднимает, помеченные строки с неудачной доставкой потеряны;
   * acks_zero_get — ждать `.get()`, но у продюсера `acks=0`: подтверждения брокера нет, future успешен всегда.
+Версия 2 (08.10): дистрактор с `enable_idempotence` заменён на `add_errback` с журналом — параметра
+`enable_idempotence` в `KafkaProducer` из kafka-python нет (он есть в Java-клиенте и librdkafka), и кандидат,
+знающий библиотеку, отбросил бы вариант по формальной причине; все параметры и методы вариантов теперь
+существуют в kafka-python. Длины вариантов выровнены (верный вариант не самый длинный).
 Проверка исполнением: подменный пакет kafka с брокером, который отвергает часть сообщений; верный вариант
 помечает ровно доставленные строки, остальные помечают потерянные.
 """
@@ -123,23 +127,26 @@ def _rename(src: str, row: str, rows: str, batch_name: str) -> str:
 
 def _code(ctx, variant: str, brokers: str, batch: int, timeout: int) -> str:
     _c, topic, fn, _table = ctx
-    cfg = {"buggy": f"producer = KafkaProducer(bootstrap_servers={brokers}, acks=\"all\")",
-           "correct": f"producer = KafkaProducer(bootstrap_servers={brokers}, acks=\"all\")",
-           "idempotent_only": f"producer = KafkaProducer(\n    bootstrap_servers={brokers}, acks=\"all\", "
-                              f"enable_idempotence=True, retries=5\n)",
-           "flush_after_mark": f"producer = KafkaProducer(bootstrap_servers={brokers}, acks=\"all\")",
-           "acks_zero_get": f"producer = KafkaProducer(bootstrap_servers={brokers}, acks=0)"}[variant]
-    head = ["from kafka import KafkaProducer", "from kafka.errors import KafkaError", "", cfg, "", "",
-            f"def {fn}(db, batch_size={batch}):", "    rows = db.fetch_unsent(batch_size)", "    for row in rows:"]
-    if variant in ("buggy", "idempotent_only", "flush_after_mark"):
-        body = [f'        producer.send("{topic}", key=row.aggregate_id, value=row.payload)',
+    producer = (f"producer = KafkaProducer(bootstrap_servers={brokers}, acks=0)" if variant == "acks_zero_get"
+                else f"producer = KafkaProducer(bootstrap_servers={brokers}, acks=\"all\")")
+    imports = (["import logging"] if variant == "errback_log" else []) + \
+              ["from kafka import KafkaProducer", "from kafka.errors import KafkaError"]
+    head = imports + ["", producer, "", "",
+                      f"def {fn}(db, batch_size={batch}):", "    rows = db.fetch_unsent(batch_size)", "    for row in rows:"]
+    send = f'producer.send("{topic}", key=row.aggregate_id, value=row.payload)'
+    if variant in ("buggy", "flush_after_mark"):
+        body = [f"        {send}", "        db.mark_sent(row.id)"]
+        tail = ([f"    producer.flush(timeout={timeout * 2})"] if variant == "flush_after_mark" else []) + ["    db.commit()"]
+    elif variant == "errback_log":
+        body = [f"        future = {send}",
+                '        future.add_errback(lambda exc: logging.error("не доставлено: %s", exc))',
                 "        db.mark_sent(row.id)"]
-        tail = (["    producer.flush()"] if variant == "flush_after_mark" else []) + ["    db.commit()"]
+        tail = ["    db.commit()"]
     else:
         body = ["        try:",
-                f'            producer.send("{topic}", key=row.aggregate_id, value=row.payload).get(timeout={timeout})',
+                f"            {send}.get(timeout={timeout})",
                 "        except KafkaError:",
-                "            break  # строка останется неотправленной — уйдёт в следующем проходе",
+                "            break  # остановить проход",
                 "        db.mark_sent(row.id)"]
         tail = ["    db.commit()"]
     return "\n".join(head + body + tail) + "\n"
@@ -160,11 +167,11 @@ def generate(seed: int):
                             ("entry", "entries")])
     batch_name = rng.choice(["batch_size", "limit", "max_rows", "chunk"])
     buggy = _rename(_code(ctx, "buggy", brokers, batch, timeout), row, rows, batch_name)
-    names = ["correct", "idempotent_only", "flush_after_mark", "acks_zero_get"]
+    names = ["correct", "errback_log", "flush_after_mark", "acks_zero_get"]
     srcs = {n: _rename(_code(ctx, n, brokers, batch, timeout), row, rows, batch_name) for n in names}
     labels = {"correct": "Ждать результат send(...).get(), помечать строку только после успеха",
-              "idempotent_only": "Включить enable_idempotence=True и retries, цикл без изменений",
-              "flush_after_mark": "Цикл без изменений, перед commit вызвать producer.flush()",
+              "errback_log": "Не ждать результат: ошибки доставки писать в журнал через add_errback",
+              "flush_after_mark": "Цикл без изменений, перед commit дождаться отправки буфера: producer.flush(timeout)",
               "acks_zero_get": "Ждать результат send(...).get(), у продюсера acks=0"}
     opts, key = make_options(rng, (labels["correct"], srcs["correct"]), [(labels[n], srcs[n]) for n in names[1:]])
     by_text = {o.text: o.id for o in opts}
@@ -180,9 +187,9 @@ def generate(seed: int):
             f"а в топике их нет. Какой вариант устраняет потерю?")
     why = ("`send()` асинхронный: он кладёт сообщение в буфер и возвращает future, а ошибка доставки приходит позже. "
            "Помечать строку можно только после подтверждённой доставки — `get()` поднимает исключение при отказе, "
-           "и строка остаётся в outbox до следующего прохода. Идемпотентный продюсер защищает от дублей при "
-           "повторах, но результат по-прежнему не проверяется; `flush()` ждёт отправки, но ошибок не поднимает; "
-           "при `acks=0` подтверждения брокера нет, и `get()` всегда успешен.")
+           "и строка остаётся в outbox до следующего прохода. Запись ошибки через `add_errback` оставляет строку "
+           "помеченной: потеря видна в журнале, но сообщение в топик не вернётся; `flush()` ждёт отправки, "
+           "но ошибок не поднимает; при `acks=0` подтверждения брокера нет, и `get()` всегда успешен.")
     ak = AnswerKey(kind="option", value=key, explanation=why)
     return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, options=opts, answer_key=ak, context=c,
                          verification="execution", checks=checks, defect_type="unawaited_send",

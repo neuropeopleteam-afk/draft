@@ -45,27 +45,33 @@ SCENARIOS = [
 
 
 def _opt(kind, ev, m):
+    # Версия 2 (08.10): у всех вариантов одно строение — обработчик в `this.handler`, подписка, в `unmount` один-два
+    # оператора; отличается только суть ошибки. Раньше верный вариант был единственным с полем `handler` и
+    # дополнительной строкой `this.handler = null` и выделялся длиной (250 знаков против 170).
+    sub = [f"this.win.addEventListener('{ev}', this.handler);"]
+    unsub = [f"this.win.removeEventListener('{ev}', this.handler);", "this.handler = null;"]
     if kind == "good_arrow":
-        mount = [f"this.handler = (event) => this.{m}(event);", f"this.win.addEventListener('{ev}', this.handler);"]
-        unmount = [f"this.win.removeEventListener('{ev}', this.handler);", "this.handler = null;"]
+        mount = [f"this.handler = (event) => this.{m}(event);"] + sub
+        unmount = unsub
     elif kind == "good_bind":
-        mount = [f"this.handler = this.{m}.bind(this);", f"this.win.addEventListener('{ev}', this.handler);"]
-        unmount = [f"this.win.removeEventListener('{ev}', this.handler);", "this.handler = null;"]
+        mount = [f"this.handler = this.{m}.bind(this);"] + sub
+        unmount = unsub
     elif kind == "unbound":
-        mount = [f"this.win.addEventListener('{ev}', this.{m});"]
-        unmount = [f"this.win.removeEventListener('{ev}', this.{m});"]
+        mount = [f"this.handler = this.{m};"] + sub
+        unmount = unsub
     elif kind == "once":
-        mount = [f"this.win.addEventListener('{ev}', this.{m}.bind(this), {{ once: true }});"]
-        unmount = [f"this.win.removeEventListener('{ev}', this.{m}.bind(this));"]
+        mount = [f"this.handler = this.{m}.bind(this);",
+                 f"this.win.addEventListener('{ev}', this.handler, {{ once: true }});"]
+        unmount = unsub
     elif kind == "new_arrow":
-        mount = [f"this.handler = (event) => this.{m}(event);", f"this.win.addEventListener('{ev}', this.handler);"]
-        unmount = [f"this.win.removeEventListener('{ev}', (event) => this.{m}(event));"]
+        mount = [f"this.handler = (event) => this.{m}(event);"] + sub
+        unmount = [f"this.win.removeEventListener('{ev}', (event) => this.{m}(event));", "this.handler = null;"]
     elif kind == "rebind_remove":
-        mount = [f"this.handler = this.{m}.bind(this);", f"this.win.addEventListener('{ev}', this.handler);"]
-        unmount = [f"this.win.removeEventListener('{ev}', this.{m}.bind(this));"]
+        mount = [f"this.handler = this.{m}.bind(this);"] + sub
+        unmount = [f"this.win.removeEventListener('{ev}', this.{m}.bind(this));", "this.handler = null;"]
     elif kind == "null_refs":
-        mount = [f"this.win.addEventListener('{ev}', this.{m}.bind(this));"]
-        unmount = ["this.el = null;", "this.win = null;"]
+        mount = [f"this.handler = this.{m}.bind(this);"] + sub
+        unmount = ["this.el = null;", "this.win = null;", "this.handler = null;"]
     else:
         raise ValueError(kind)
     return "\n".join(["  mount() {"] + ["    " + x for x in mount] + ["  }", "  unmount() {"] +

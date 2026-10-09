@@ -11,16 +11,16 @@ invariants:
   n_options: 4
   defect_type: unawaited_send
   extra:
-    distractors: [idempotent_only, flush_after_mark, acks_zero_get]
+    distractors: [errback_log, flush_after_mark, acks_zero_get]
 time_limit_s: 360
 canary: false
 prior_difficulty:
   b: 0.5
   a: 1.1
   sigma_variant: 0.2
-  basis: "9 строк relay и четыре варианта; верный и дистрактор acks=0 различаются одним параметром продюсера; нужно понимать асинхронность send(), что даёт идемпотентность и что делает flush(); состав дистракторов фиксирован; Middle/Senior"
+  basis: "9 строк relay и четыре варианта; верный и дистрактор acks=0 различаются одним параметром продюсера; нужно понимать асинхронность send(), что делают flush() и add_errback и зачем acks; состав дистракторов фиксирован, все параметры существуют в kafka-python; длины вариантов выровнены (версия 2); Middle/Senior"
 generator: assessment_bank.families.backend.kafka_outbox_relay_fix
-version: 1
+version: 2
 description: >
   Relay outbox помечает строки отправленными до подтверждения доставки. Выбрать исправление без потери
   сообщений. Проверка исполнением: подменный пакет kafka с брокером, отвергающим часть сообщений; верный
