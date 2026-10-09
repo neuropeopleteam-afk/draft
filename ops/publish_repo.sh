@@ -54,7 +54,7 @@ verify_published() {
   step "Проверка после отправки: чистый клон опубликованного репозитория"
   local tmp; tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' RETURN
-  git clone --quiet "$REMOTE" "$tmp/clone" || { bad "не удалось клонировать $(hide_url "$REMOTE")"; return; }
+  git clone --quiet --branch main "$REMOTE" "$tmp/clone" || { bad "не удалось клонировать $(hide_url "$REMOTE")"; return; }
   local l_sha r_sha
   l_sha=$(git rev-parse "$BRANCH"); r_sha=$(git -C "$tmp/clone" rev-parse HEAD)
   [ "$l_sha" = "$r_sha" ] && ok "голова main совпадает: ${l_sha:0:12}" || bad "голова не совпадает: локально ${l_sha:0:12}, на удалённом ${r_sha:0:12}"
