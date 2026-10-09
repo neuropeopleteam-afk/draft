@@ -832,6 +832,11 @@ def _cell(x: dict) -> str:
     return f"{_f(x['mean'])} [{_f(x['lo'])}; {_f(x['hi'])}]"
 
 
+def _algo_label(algo: str) -> str:
+    """Одна формулировка везде (docs, /validation): продукт — «match-v1 + ярусы обязательного (MATCH_MUST_FIRST)»."""
+    return f"{algo} (match-v1 + ярусы обязательного, MATCH_MUST_FIRST)" if algo == "match-v1.1" else algo
+
+
 def markdown(rep: dict) -> str:
     w, m = rep["world"], rep["metrics"]
     ho = rep["heldout_weights"]
@@ -839,9 +844,10 @@ def markdown(rep: dict) -> str:
         "# Бенчмарк подбора со скрытой истиной",
         "",
         f"{w['n_needs']} потребностей × {w['n_candidates']} кандидатов = {w['n_pairs']:,} пар".replace(",", " ")
-        + f". Версия {rep['version']}, алгоритм {rep['algorithm']}, конфиг `{rep['config_hash']}`, "
-          f"seed мира {rep['seeds']['world']}, второй мир {rep['seeds']['world2']}. Пересчёт: `make bench` "
-          f"({_f(rep['seconds'], 0)} с на общей машине с 2 ядрами).",
+        + f". Версия {rep['version']}, алгоритм {_algo_label(rep['algorithm'])}, конфиг `{rep['config_hash']}`, "
+          f"seed мира {rep['seeds']['world']}, второй мир {rep['seeds']['world2']}"
+        + (f", код — коммит `{rep['signature']['commit']}`, банк `{rep['signature'].get('bank')}`" if rep.get("signature") else "")
+        + f". Пересчёт: `make bench` ({_f(rep['seconds'], 0)} с на общей машине с 2 ядрами).",
         "",
         f"> {rep['caveat']}",
         "",
@@ -907,7 +913,7 @@ def markdown(rep: dict) -> str:
               "(MATCH_MUST_FIRST).", "",
               "| | p@5 | nDCG@10 | MRR | Топ-5: всё обязательное подтверждено |", "|---|---|---|---|---|",
               *[f"| {t} | " + " | ".join(_cell(mh[k][mt]) for mt in ("p@5", "ndcg@10", "mrr", "top5_all_required_t1"))
-                + " |" for k, t in (("before", "match-v1 (без ярусов)"), ("after", "match-v1.1 (ярусы)"),
+                + " |" for k, t in (("before", "match-v1 (без ярусов)"), ("after", "match-v1 + ярусы обязательного (MATCH_MUST_FIRST, match-v1.1)"),
                                     ("diff", "Разница"))],
               "", f"Топ-5 изменился у {mh['needs_changed_top5']} из {rep['world']['n_needs']} потребностей "
                   f"(с обязательными навыками — {mh['needs_with_required']}).", ""]
