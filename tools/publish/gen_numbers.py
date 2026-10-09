@@ -129,7 +129,7 @@ def render_numbers(n: dict) -> str:
         "|---|---|---|",
         f"| Автотесты бэкенда (`pytest`, SQLite) | **{t.get('passed', '—')} прошли**, пропущено {t.get('skipped', '—')}, упавших {t.get('failed', '—')}{cov} | "
         f"полный прогон на сервере проверок, SHA `{t.get('sha', '—')}`, {t.get('date', '—')}; `make test`, `make coverage` |",
-        f"| Банк заданий | **{b['families']} семейств** ({dirs}); валидатор: PASS {b['pass']}, WARN {b['warn']}, FAIL {b['fail']}; "
+        f"| Банк заданий | **{b['families']} семейств** ({dirs}); валидатор (20 вариантов на семейство): PASS {b['pass']}, WARN {b['warn']}, FAIL {b['fail']} (WARN — открытый ответ без ключа или ключ не исполняется в окружении без Django/JDK; в окружении только с `requirements.txt` WARN больше); "
         f"{b['checks']} проверок ключей исполнением кода, ошибок {b['checks_failed']}; {b['variants']} вариантов, уникальных {b['unique_variants']} | "
         f"`backend/assessment_bank/BANK_SYNC.json`, `make test-bank` |",
         f"| Миграции Alembic | **ревизий: {mg['revisions']}, одна голова `{mg['heads'][0] if len(mg['heads']) == 1 else '/'.join(mg['heads'])}`** | "
