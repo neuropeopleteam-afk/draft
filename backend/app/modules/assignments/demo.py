@@ -31,6 +31,7 @@ from app.modules.assignments import why as why_mod
 from app.modules.assignments.models import Assignment, AssignmentAttempt
 from app.modules.auth.models import User
 from app.modules.matching.models import EmployerNeed
+from app.modules.profiles.facts import load_bundles, skill_confirmed
 from app.modules.profiles.models import CandidateProfile, Company
 
 log = logging.getLogger(__name__)
@@ -103,11 +104,15 @@ def seed_jury_assignments(db: Session, key: str, employer: User, company: Compan
         _attempt(db, a2, ilya.user_id, "vacancy", offered=now - timedelta(days=1, hours=3), application_id=app.id)
     out.append(a2.title)
 
-    # 3. открытое задание «на общее обозрение»: Марии — в ленту «Задания для вас» (предложение, ещё не начато)
+    # 3. открытое задание «на общее обозрение»: Марии — в ленту «Задания для вас» (предложение, ещё не начато).
+    # Стек — из навыков Марии, подтверждённых тестом (доля верных ≥ 50 %) и состаренных выше на 130 дней: тогда причина
+    # предложения детерминированно «давно не подтверждался» (stale_skill), а не «подтверждён слабо» — какой навык в её
+    # посеянном тесте окажется слабым, зависит от случайной формы (замер И26: 5 из 16 песочниц).
+    open_stack = _stale_confirmed_stack(db, maria, prefer=("python", "sql", "postgresql"), fallback=["python", "sql", "postgresql"])
     a3 = _assignment(db, employer, company, key, mode="open", title="Открытое задание: SQL и Python для платёжного ядра",
-                     description="Три задания банка на SQL и Python. Открыто для всех кандидатов Backend · Middle "
-                                 "с подходящим стеком; результат — факт T1 в профиле.",
-                     direction="backend", grade="middle", stack=["python", "sql", "postgresql"], n=3,
+                     description=f"Три задания банка: {', '.join(svc.tag_title(t) for t in open_stack)}. Открыто для всех "
+                                 "кандидатов Backend · Middle с подходящим стеком; результат — факт T1 в профиле.",
+                     direction="backend", grade="middle", stack=open_stack, n=3,
                      salary=(230_000, 280_000), created_days=-4, rnd=rnd)
     a4 = _assignment(db, employer, company, key, mode="open", title="Открытое задание: основы Python, HTTP и Git",
                      description="Три задания банка уровня Junior. Открыто для кандидатов Backend с подходящим стеком; "
@@ -175,6 +180,19 @@ APPROACH_MARIA = ("Начну с разбора платёжного поток�
 APPROACH_ILYA = ("Сначала уточню требования и нагрузку, потом разобью работу на этапы: модель данных, обработчик вебхуков, "
                  "очередь на Redis для повторов. Буду смотреть на логи и метрики после выкладки, чтобы понять, что "
                  "всё работает как задумано.")
+
+
+def _stale_confirmed_stack(db: Session, maria: CandidateProfile | None, *, prefer: tuple[str, ...], fallback: list[str],
+                           n: int = 3) -> list[str]:
+    """Теги навыков Марии, подтверждённых тестом Backend (`skill_confirmed`), сначала предпочтительные, затем остальные по
+    алфавиту; если подтверждённых меньше двух — стек по умолчанию (причина тогда может быть и weak_skill — честно)."""
+    if maria is None:
+        return list(fallback)
+    b = load_bundles(db, [maria.user_id], direction="backend").get(maria.user_id)
+    covered = set(bank.coverage_for("backend", "middle", sorted(b.skills_t1))["covered"]) if b else set()
+    ok = {t for t, f in (b.skills_t1 if b else {}).items() if skill_confirmed(f) and t in covered}
+    picked = [t for t in prefer if t in ok] + sorted(ok - set(prefer))
+    return picked[:n] if len(picked) >= 2 else list(fallback)
 
 
 def _age_test_skills(db: Session, user_id, when) -> None:
