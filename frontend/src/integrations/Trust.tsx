@@ -39,9 +39,22 @@ export function TrustBadge({ t, compact }: { t?: TrustShort | null; compact?: bo
   );
 }
 
-export function TrustPanel({ t, title = "Индекс доверия работодателя", companyLink }: { t: Trust; title?: string; companyLink?: boolean }) {
+function FactorRow({ f }: { f: TrustFactor }) {
+  const [ic, c] = FACTOR_ICON[f.status] ?? FACTOR_ICON.neutral;
+  return (
+    <li className="flex items-start gap-3 text-sm">
+      <span className={`mt-0.5 w-4 shrink-0 text-center font-bold ${c}`} aria-label={f.status}>{ic}</span>
+      <span className="flex-1"><span className="font-semibold text-brand-night">{f.title}.</span> <span className="text-brand-ink/75">{f.text}</span></span>
+      <span className="shrink-0 tabular-nums text-xs text-brand-ink/65">{f.max ? `${Math.round(f.points)}/${f.max}` : f.points < 0 ? `−${Math.abs(Math.round(f.points))}` : "0"}</span>
+    </li>
+  );
+}
+
+/** brief (Ф6 В6, оффер у кандидата): на виду — итог, вилка, сведения ФНС и серьёзные замечания; все составляющие — по раскрытию. */
+export function TrustPanel({ t, title = "Индекс доверия работодателя", companyLink, brief }: { t: Trust; title?: string; companyLink?: boolean; brief?: boolean }) {
   const [cls, dot] = LEVEL[t.level] ?? LEVEL.medium;
   const r = t.registry;
+  const key = brief ? t.factors.filter((f) => f.id === "registry" || f.status === "bad") : t.factors;
   return (
     <section className="rounded-2xl border border-brand-night/10 bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -62,18 +75,13 @@ export function TrustPanel({ t, title = "Индекс доверия работ�
           <b>Вилка этого предложения:</b> {t.offer_salary.text}
         </p>
       )}
-      <ul className="mt-3 space-y-2">
-        {t.factors.map((f) => {
-          const [ic, c] = FACTOR_ICON[f.status] ?? FACTOR_ICON.neutral;
-          return (
-            <li key={f.id} className="flex items-start gap-3 text-sm">
-              <span className={`mt-0.5 w-4 shrink-0 text-center font-bold ${c}`} aria-label={f.status}>{ic}</span>
-              <span className="flex-1"><span className="font-semibold text-brand-night">{f.title}.</span> <span className="text-brand-ink/75">{f.text}</span></span>
-              <span className="shrink-0 tabular-nums text-xs text-brand-ink/65">{f.max ? `${Math.round(f.points)}/${f.max}` : f.points < 0 ? `−${Math.abs(Math.round(f.points))}` : "0"}</span>
-            </li>
-          );
-        })}
-      </ul>
+      {key.length > 0 && <ul className="mt-3 space-y-2">{key.map((f) => <FactorRow key={f.id} f={f} />)}</ul>}
+      {brief && t.factors.length > key.length && (
+        <details className="mt-3 text-sm">
+          <summary className="cursor-pointer font-semibold text-brand-plum">Остальные составляющие индекса: {t.factors.length - key.length} из {t.factors.length}</summary>
+          <ul className="mt-2 space-y-2">{t.factors.filter((f) => !key.includes(f)).map((f) => <FactorRow key={f.id} f={f} />)}</ul>
+        </details>
+      )}
       {r && r.status === "found" && (
         <p className="mt-3 border-t border-brand-night/5 pt-3 text-xs text-brand-ink/65">
           ЕГРЮЛ (ФНС, egrul.nalog.ru): {r.name}{r.ogrn ? `, ОГРН ${r.ogrn}` : ""}{r.registered_at ? `, регистрация ${dateOnly(r.registered_at)}` : ""}{r.director ? `, ${r.director_role?.toLowerCase() ?? "руководитель"} ${r.director}` : ""}. Проверено {dt(r.checked_at).replace(/\.$/, "")}.
@@ -116,7 +124,7 @@ export function CompanyTrustCard({ hasInn }: { hasInn: boolean }) {
 export function InvitationTrust({ invitationId, version }: { invitationId: string; version?: string | number | null }) {
   const { data } = useApi<Trust>(`/candidate/invitations/${invitationId}/trust`, [invitationId, version ?? ""]);
   if (!data) return <div className="h-24 animate-pulse rounded-2xl bg-brand-blush/30" />;
-  return <TrustPanel t={data} companyLink />;
+  return <TrustPanel t={data} companyLink brief />;
 }
 
 /** Краткие индексы по всем приглашениям кандидата: { [invitation_id]: TrustShort }. */
