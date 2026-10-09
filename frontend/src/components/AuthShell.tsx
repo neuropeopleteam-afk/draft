@@ -14,7 +14,7 @@ export function AuthShell({ title, subtitle, children, footer }: { title: string
         </div>
         <p className="relative text-sm text-white/50">Спецтрек ФСП · ЛЦТ 2026</p>
       </aside>
-      <main className="flex items-center justify-center px-6 py-12">
+      <main id="main" className="flex items-center justify-center px-6 py-12">
         <div className="w-full max-w-md">
           <Link to="/" className="mb-10 inline-block lg:hidden"><Logo /></Link>
           <h1 className="text-2xl font-extrabold tracking-tight text-brand-night">{title}</h1>

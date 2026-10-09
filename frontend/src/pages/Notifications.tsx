@@ -34,7 +34,7 @@ function Delivery({ n }: { n: Item }) {
     if (n.digest === "queued") parts.push("попадёт в письмо-дайджест");
     if (n.digest === "sent") parts.push("вошло в письмо-дайджест");
   }
-  return parts.length ? <p className="mt-2 text-xs text-brand-ink/60">{parts.join(" · ")}</p> : null;
+  return parts.length ? <p className="mt-2 text-xs text-brand-ink/65">{parts.join(" · ")}</p> : null;
 }
 
 export default function Notifications() {
@@ -94,7 +94,7 @@ export default function Notifications() {
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                     {!n.read && <span className="h-2 w-2 rounded-full bg-brand" aria-label="не прочитано" />}
                     <span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{KIND[n.kind] ?? n.kind}</span>
-                    <span className="text-xs text-brand-ink/50">{dtt(n.created_at)}</span>
+                    <span className="text-xs text-brand-ink/65">{dtt(n.created_at)}</span>
                   </div>
                   <p className="mt-1 font-bold text-brand-night">{n.title}</p>
                   <p className="mt-1 whitespace-pre-line break-words text-sm text-brand-ink/80">{n.body}</p>
