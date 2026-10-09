@@ -60,6 +60,30 @@ def _j(v):
     return v
 
 
+# Служебные поля античита в JSON фактов и снимках (Р27): кандидату — только то, что он видит в кабинете
+_RAW_INTEGRITY = ("signals", "kinds", "points")
+_HIDDEN_KEYS = {"preknowledge_flagged", "integrity_extra"}
+
+
+def _scrub(o):
+    """Подробная достоверность (сигналы, баллы, пороги) заменяется видом для кандидата; технические флаги убираются."""
+    from app.modules.assessment.integrity import candidate_view
+
+    if isinstance(o, dict):
+        out = {}
+        for k, v in o.items():
+            if k in _HIDDEN_KEYS:
+                continue
+            if k == "integrity" and isinstance(v, dict) and any(m in v for m in _RAW_INTEGRITY):
+                out[k] = candidate_view(v)
+            else:
+                out[k] = _scrub(v)
+        return out
+    if isinstance(o, list):
+        return [_scrub(x) for x in o]
+    return o
+
+
 def _row(obj, *, only: tuple[str, ...] | None = None, skip: tuple[str, ...] = ()) -> dict:
     """Колонки записи → словарь JSON. Секретоподобные колонки пропускаются всегда."""
     cols = [c.name for c in obj.__table__.columns]
@@ -288,4 +312,4 @@ def build(db: Session, user: User) -> dict:
                                 skip=("id", "candidate_user_id", "tasks"))
     covered |= {"assignment_attempts"}
     data["other"] = _other(db, uid, covered)
-    return data
+    return _scrub(data)
