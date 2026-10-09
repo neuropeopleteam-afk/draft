@@ -47,6 +47,7 @@ from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
 from app.modules.subs import router as subs_api
 from app.modules.subs import runner as subs_runner
+from app.modules.study import router as study_api
 from app.modules.validation.router import router as validation_router
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.passport.router import TAGS as PASSPORT_TAGS
@@ -102,7 +103,7 @@ def create_app() -> FastAPI:
             "кандидата по категории «направление · грейд» и приглашает с зарплатой.\n\n"
             "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
         ),
-        openapi_tags=TAGS + contact.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS,
+        openapi_tags=TAGS + contact.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS + study_api.TAGS,
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -121,7 +122,8 @@ def create_app() -> FastAPI:
               expert_router, expert_panel_router, jury_router, validation_router, proctor_router,
               assignments_employer_router, assignments_candidate_router, passport_router,
               contact.router, contact.candidate_router, contact.employer_router,  # переписка, встречное (И4)
-              subs_api.employer_router, subs_api.notify_router, subs_api.jury_router):  # подписка, уведомления (И25)
+              subs_api.employer_router, subs_api.notify_router, subs_api.jury_router,  # подписка, уведомления (И25)
+              study_api.router):  # проверка с живыми пользователями (У1)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
