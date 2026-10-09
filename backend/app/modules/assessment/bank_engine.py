@@ -592,9 +592,14 @@ class BankEngine:
                 self._grade_text(it, 0, a["1"]["value"], None)
 
     def _grade_text(self, it: dict, part: int, text: str, step_prompt: str | None) -> None:
-        g = grade_open(stem=it["public"]["stem"], code=it["public"]["code"], step_prompt=step_prompt,
-                       rubric=it["rubric"], answer=text)
+        from app.core.config import get_settings
+
         prev = it["grading"][part] or {}
+        sec = prev.get("second") or {}
+        if sec.get("status") == "done" and sec.get("verdict") != "agree":
+            return  # И27: вторая модель (в фоне) не согласилась — ответ ждёт эксперта, повторно модель не оценивает
+        g = grade_open(stem=it["public"]["stem"], code=it["public"]["code"], step_prompt=step_prompt,
+                       rubric=it["rubric"], answer=text, second_async=get_settings().llm_grading_second_async)
         g_d = g.to_dict()
         g_d["attempts"] = int(prev.get("attempts", 0)) + 1
         it["grading"][part] = g_d
@@ -625,7 +630,9 @@ class BankEngine:
                     "stem": it["public"]["stem"], "code": it["public"]["code"], "code_language": it.get("language"),
                     "step_prompt": steps[part]["prompt"] if it["format"] == "open_book_3step" and len(steps) > part else None,
                     "rubric": it.get("rubric"), "answer": ans.get("value"), "skills": it.get("skills", []),
-                    "status": "pending" if it["x"][part] is None else "scored",
+                    # disputed (И27): вторая оценка в фоне разошлась с первой уже после итога — ответ эксперту
+                    "status": "pending" if it["x"][part] is None or (g.get("disputed") and not g.get("expert"))
+                    else "scored",
                     "method": g.get("method") if it["x"][part] is not None else None,
                     "score": it["x"][part], "grading": g, "expert": g.get("expert") or it.get("expert_reviews", {}).get(str(part)),
                 })
@@ -648,7 +655,10 @@ class BankEngine:
         rec = {"criteria": vals, "score": score, "comment": (comment or "")[:2000], "reviewer": reviewer,
                "at": time.time()}
         it.setdefault("expert_reviews", {})[str(part)] = rec
-        if it["x"][part] is None:  # «на проверке» → оценка эксперта входит в θ
+        disputed = bool((it["grading"][part] or {}).get("disputed"))
+        if it["x"][part] is None or disputed:  # «на проверке» (или спорный после итога, И27) → оценка эксперта в θ
+            if disputed:
+                rec["llm_score"] = it["x"][part]
             it["x"][part] = score
             prev = it["grading"][part] or {}
             it["grading"][part] = {**prev, "status": "scored", "method": "expert", "score": score,

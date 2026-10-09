@@ -46,3 +46,21 @@ class SelectionVersion(UUIDPk, Base):
     algorithm_version: Mapped[str] = mapped_column(sa.String(32), default="v0")
     created_by: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow)
+
+
+class NeedParseJob(UUIDPk, Base):
+    """И27: фоновое уточнение разбора потребности моделью и кэш разбора по нормализованному тексту.
+
+    Ответ правилами уходит работодателю сразу, модель работает в фоне (поток процесса api); карточка опрашивает
+    задачу. Строка с status=done и свежим created_at служит кэшем: тот же текст (ключ — хеш нормализованного
+    текста и подсказок, без ПДн) отдаётся мгновенно. Старые строки удаляются при создании новых."""
+    __tablename__ = "need_parse_jobs"
+
+    key: Mapped[str] = mapped_column(sa.String(64), index=True)  # sha256 нормализованного текста + подсказки + версия
+    user_id: Mapped[uuid.UUID | None] = mapped_column(sa.ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    status: Mapped[str] = mapped_column(sa.String(16), default="pending")  # pending | done | failed
+    result: Mapped[dict | None] = mapped_column(default=None)  # итоговые требования (словарь + модель)
+    delta: Mapped[list | None] = mapped_column(default=None)  # что добавила/предложила модель поверх правил
+    llm: Mapped[dict | None] = mapped_column(default=None)  # кто ответил, время, причина отказа
+    created_at: Mapped[datetime] = mapped_column(sa.DateTime(timezone=True), default=utcnow, index=True)
+    finished_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))

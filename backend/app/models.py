@@ -15,7 +15,7 @@ from app.modules.auth.models import Consent, EmailVerification, TwoFactorRecover
 from app.modules.catalog.models import Category, Direction, Grade, StackTag  # noqa: F401
 from app.modules.fsp.models import FspAchievement, FspPassport  # noqa: F401
 from app.modules.invitations.models import Invitation, InvitationComplaint, InvitationEvent, Probe  # noqa: F401
-from app.modules.matching.models import EmployerNeed, SelectionVersion  # noqa: F401
+from app.modules.matching.models import EmployerNeed, NeedParseJob, SelectionVersion  # noqa: F401
 from app.modules.profiles.models import (  # noqa: F401
     CandidateFact,
     CandidateProfile,
