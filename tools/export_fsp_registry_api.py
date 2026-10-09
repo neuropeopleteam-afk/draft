@@ -2,6 +2,7 @@
 from pathlib import Path
 import sys
 
+from fastapi import FastAPI
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -10,7 +11,9 @@ from app.main import create_app  # noqa: E402
 
 
 def contract():
-    schema = create_app().openapi()
+    # схема FastAPI без общего обогащения app.core.api_docs: контракт-предложение для ФСП не должен менять текст из-за
+    # строк «Доступ» и списков кодов нашей платформы
+    schema = FastAPI.openapi(create_app())
     paths = {k: v for k, v in schema["paths"].items() if k.startswith("/api/fsp-registry/v1/")}
     names = set()
 

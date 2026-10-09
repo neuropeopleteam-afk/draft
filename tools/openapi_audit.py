@@ -4,14 +4,18 @@
 Для каждой пары «метод × путь» проверяется:
   * summary и описание заданы явно (а не взяты из имени функции FastAPI);
   * тег из списка openapi_tags (группа в Swagger UI);
-  * модель ответа: в схеме успешного JSON-ответа не пустой `{}` (иначе dict без response_model);
+  * модель ответа: typed (модель с полями), generic (`-> dict`, объект без полей), none (схемы нет), file, empty;
   * коды ошибок «по факту кода»: статический разбор (AST) тела обработчика, его зависимостей (get_current_user,
-    require_role, лимиты частоты) и вызываемых из них функций пакета `app` (до 6 уровней вложенности);
-    сравнивается с кодами 4xx/5xx, которые есть в `responses` операции, и с моделью ErrorResponse у них.
+    require_role, лимиты частоты) и вызываемых из них функций пакета `app` (до 6 уровней вложенности) — общий
+    с обогащением схемы код `app.core.api_docs.error_facts`; сравнивается с кодами 4xx/5xx в `responses` операции
+    и с моделью ErrorResponse у них;
+  * примеры (example/examples) в операции или в схемах, на которые она ссылается.
 
 Разбор статический: вызовы методов объектов (`service.method()`), фабрики и коды, вычисленные в рантайме, он не видит —
-поэтому «по факту кода» означает «то, что находится в коде явными вызовами `api_error(<код>, …)`,
-`HTTPException(<код>, …)` и числовыми литералами 400–599 в аргументах вызовов». Это нижняя оценка, не доказательство.
+поэтому «по факту кода» означает «то, что находится в коде явными вызовами `api_error(<код>, …)`, `HTTPException(<код>, …)`,
+`hit(<лимит>, …)` и числовыми литералами 400–599 в `raise …(…)`». Это нижняя оценка, не доказательство.
+
+`--raw` — схема FastAPI до обогащения (что описано вручную в роутерах); без флага — как её отдаёт /api/openapi.json.
 
 Запуск (из корня репозитория):
   python tools/openapi_audit.py                 # сводка и таблица пробелов в stdout
@@ -22,25 +26,19 @@
 from __future__ import annotations
 
 import argparse
-import ast
-import inspect
 import json
 import os
-import re
 import sys
-import textwrap
-from collections import Counter, defaultdict
+from collections import Counter
 from pathlib import Path
 from typing import Any
+
+from fastapi import FastAPI
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 os.environ.setdefault("DATABASE_URL", "sqlite:////tmp/openapi_audit.db")  # приложению нужен адрес БД, соединение не открывается
 
-HTTP_METHODS = ("get", "put", "post", "delete", "patch")
-ERROR_CODES = {400, 401, 403, 404, 409, 410, 413, 415, 422, 423, 429, 500, 502, 503, 504}
-_STATUS_NAME = re.compile(r"HTTP_(\d{3})_")
-_MAX_DEPTH = 6
 
 
 # ---------------------------------------------------------------- обход маршрутов
@@ -62,111 +60,12 @@ def route_contexts(app) -> list[Any]:
     return out
 
 
-# ---------------------------------------------------------------- статический разбор кодов ошибок
+# ---------------------------------------------------------------- коды «по факту кода»: общий разбор приложения
 
-def _const_status(node: ast.AST) -> int | None:
-    if isinstance(node, ast.Constant) and isinstance(node.value, int) and not isinstance(node.value, bool):
-        return node.value if 400 <= node.value <= 599 else None
-    if isinstance(node, ast.Attribute):
-        m = _STATUS_NAME.search(node.attr)
-        if m and 400 <= int(m.group(1)) <= 599:
-            return int(m.group(1))
-    return None
+def code_facts(ctx) -> dict[int, dict[str, str]]:
+    from app.core.api_docs import error_facts
 
-
-def _resolve(node: ast.AST, fn: Any) -> Any:
-    """Имя или цепочка a.b.c → объект из пространства имён функции (глобальные и замыкание)."""
-    if isinstance(node, ast.Name):
-        try:
-            cv = inspect.getclosurevars(fn)
-            for ns in (cv.nonlocals, cv.globals):
-                if node.id in ns:
-                    return ns[node.id]
-        except (TypeError, ValueError):
-            pass
-        return getattr(fn, "__globals__", {}).get(node.id)
-    if isinstance(node, ast.Attribute):
-        base = _resolve(node.value, fn)
-        return getattr(base, node.attr, None) if base is not None else None
-    return None
-
-
-def _own_function(obj: Any) -> Any:
-    if inspect.isfunction(obj) or inspect.ismethod(obj):
-        mod = getattr(obj, "__module__", "") or ""
-        return obj if mod.startswith("app.") else None
-    return None
-
-
-_SRC_CACHE: dict[Any, tuple[ast.AST | None, set[int], list[Any]]] = {}
-
-
-def _scan(fn: Any) -> tuple[set[int], list[Any]]:
-    """Коды, найденные в теле функции напрямую, и функции пакета app, которые она вызывает."""
-    if fn in _SRC_CACHE:
-        _, codes, calls = _SRC_CACHE[fn]
-        return codes, calls
-    codes: set[int] = set()
-    calls: list[Any] = []
-    tree = None
-    try:
-        tree = ast.parse(textwrap.dedent(inspect.getsource(fn)))
-    except (OSError, TypeError, SyntaxError, IndentationError):
-        pass
-    if tree is not None:
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            fname = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", "")
-            args = list(node.args) + [k.value for k in node.keywords]
-            if fname in ("api_error", "HTTPException", "JSONResponse") or fname.endswith("_error") or fname.endswith("_err"):
-                for a in args[:2]:
-                    c = _const_status(a)
-                    if c:
-                        codes.add(c)
-            else:  # числовой литерал 4xx/5xx в аргументах любого вызова — код, переданный в общий помощник
-                for a in args:
-                    c = _const_status(a)
-                    if c:
-                        codes.add(c)
-            target = _own_function(_resolve(node.func, fn))
-            if target is not None:
-                calls.append(target)
-    _SRC_CACHE[fn] = (tree, codes, calls)
-    return codes, calls
-
-
-def codes_in_function(fn: Any, seen: set | None = None, depth: int = 0) -> set[int]:
-    seen = set() if seen is None else seen
-    if fn is None or fn in seen or depth > _MAX_DEPTH:
-        return set()
-    seen.add(fn)
-    codes, calls = _scan(fn)
-    out = set(codes)
-    for c in calls:
-        out |= codes_in_function(c, seen, depth + 1)
-    return out
-
-
-def dependency_calls(dependant, acc: list | None = None) -> list:
-    acc = [] if acc is None else acc
-    for d in getattr(dependant, "dependencies", []) or []:
-        if d.call is not None:
-            acc.append(d.call)
-        dependency_calls(d, acc)
-    return acc
-
-
-def code_facts(ctx) -> dict[int, str]:
-    """Код → откуда он взят: handler / dependency (для 401 и 403 — вход и роль)."""
-    facts: dict[int, str] = {}
-    seen: set = set()
-    for c in sorted(codes_in_function(ctx.endpoint, seen)):
-        facts[c] = "handler"
-    for dep in dependency_calls(ctx.dependant):
-        for c in sorted(codes_in_function(dep, seen)):
-            facts.setdefault(c, "dependency")
-    return facts
+    return error_facts(ctx)
 
 
 # ---------------------------------------------------------------- проверки схемы
@@ -192,17 +91,21 @@ def schema_kind(schema: dict | None) -> str:
     return "generic" if schema.get("type") == "object" else "typed"  # скаляр (строка, число) — описан типом
 
 
-def _is_error_model(resp: dict) -> bool:
+def _is_error_model(resp: dict, spec: dict | None = None) -> bool:
+    if "$ref" in resp and spec is not None:  # components.responses (общие 401/403)
+        resp = spec.get("components", {}).get("responses", {}).get(resp["$ref"].rsplit("/", 1)[-1], {})
     s = _json_schema(resp) or {}
     return "ErrorResponse" in json.dumps(s)
 
 
-def audit(app=None, spec: dict | None = None) -> list[dict]:
+def audit(app=None, spec: dict | None = None, raw: bool = False) -> list[dict]:
+    """raw=True — схема FastAPI до обогащения app.core.api_docs (что описано вручную в роутерах)."""
     if app is None:
         from app.main import create_app
 
         app = create_app()
-    spec = spec or app.openapi()
+    if spec is None:
+        spec = FastAPI.openapi(app) if raw else app.openapi()
     tag_names = {t["name"] for t in spec.get("tags", [])}
     rows: list[dict] = []
     for ctx in route_contexts(app):
@@ -231,11 +134,15 @@ def audit(app=None, spec: dict | None = None) -> list[dict]:
             actual = set(facts)
             # 422 FastAPI добавляет сама, если есть параметры; прочие 422 — по коду
             missing = sorted(c for c in actual if c not in documented)
-            no_model = sorted(c for c in documented if c != 422 and not _is_error_model(responses[str(c)]))
+            # заглушки ATS отвечают в формате имитируемых систем (это сказано в описании ответа) — модель платформы не требуется
+            no_model = [] if "ats-stub" in (ctx.tags or []) else sorted(
+                c for c in documented if c != 422 and not _is_error_model(responses[str(c)], spec))
             rows.append({
                 "method": method, "path": ctx.path, "endpoint": f"{ctx.endpoint.__module__}.{ctx.endpoint.__name__}",
                 "tags": list(ctx.tags or []),
-                "has_summary": bool(ctx.summary), "has_description": bool((ctx.description or "").strip()),
+                "has_summary": bool(ctx.summary), "has_description": bool((op.get("description") or "").strip()),
+                "has_authored_description": bool((ctx.description or "").strip()),
+                "has_access": "**Доступ:**" in (op.get("description") or ""),
                 "has_tag": bool(ctx.tags) and all(t in tag_names for t in ctx.tags),
                 "has_response_model": has_model, "response_kind": kind,
                 "documented_errors": sorted(documented), "actual_errors": sorted(actual),
@@ -282,6 +189,7 @@ def summarize(rows: list[dict]) -> dict:
     return {
         "operations": n,
         "with_summary": f("has_summary"), "with_description": f("has_description"), "with_tag": f("has_tag"),
+        "with_authored_description": f("has_authored_description"), "with_access": f("has_access"),
         "with_response_model": f("has_response_model"),
         "response_kinds": dict(sorted(Counter(r["response_kind"] for r in rows).items())),
         "with_all_actual_errors_documented": sum(1 for r in rows if not r["missing_errors"]),
@@ -292,15 +200,19 @@ def summarize(rows: list[dict]) -> dict:
     }
 
 
-def gap_rows(rows: list[dict]) -> list[dict]:
-    return [r for r in rows if not (r["has_summary"] and r["has_description"] and r["has_tag"] and r["has_response_model"])
-            or r["missing_errors"] or r["errors_without_model"]]
+def gap_rows(rows: list[dict], strict: bool = False) -> list[dict]:
+    """Операции с пробелами: нет summary/описания/тега, не описаны найденные в коде ошибки или у ошибок нет модели.
+    strict — ещё и без описанного ответа (модель с полями, файл, пустой)."""
+    return [r for r in rows if not (r["has_summary"] and r["has_description"] and r["has_tag"])
+            or (strict and not r["has_response_model"]) or r["missing_errors"] or r["errors_without_model"]]
 
 
 def to_markdown(rows: list[dict]) -> str:
     s = summarize(rows)
     lines = ["| Показатель | Операций | Доля |", "|---|---:|---:|"]
-    for key, label in (("with_summary", "явный summary"), ("with_description", "описание (docstring или description)"),
+    for key, label in (("with_summary", "явный summary"), ("with_authored_description", "авторское описание (docstring или description у метода)"),
+                       ("with_description", "описание в схеме (авторское и/или строка «Доступ»)"),
+                       ("with_access", "строка «Доступ» (вход, роль)"),
                        ("with_tag", "тег из openapi_tags"), ("with_response_model", "описан ответ: модель с полями, файл или пустой ответ"),
                        ("with_all_actual_errors_documented", "все найденные в коде ошибки описаны в responses"),
                        ("with_example", "есть пример (example/examples)")):
@@ -313,7 +225,7 @@ def to_markdown(rows: list[dict]) -> str:
     lines += ["", f"Не описано пар «операция × код»: {s['missing_error_pairs']} "
                   f"(по кодам: {', '.join(f'{k}: {v}' for k, v in s['missing_by_code'].items()) or '—'}); "
                   f"описанных ошибок без модели `ErrorResponse`: {s['errors_without_model_pairs']}.", ""]
-    gaps = gap_rows(rows)
+    gaps = gap_rows(rows, strict=True)
     if gaps:
         lines += ["| Метод | Путь | Нет | Не описаны коды |", "|---|---|---|---|"]
         for r in gaps:
@@ -330,9 +242,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--md", help="записать таблицу в Markdown-файл")
     ap.add_argument("--json", help="записать данные по каждой операции в JSON")
+    ap.add_argument("--raw", action="store_true", help="схема FastAPI до обогащения api_docs (описано вручную в роутерах)")
     ap.add_argument("--check", action="store_true", help="код возврата 1, если остались пробелы")
+    ap.add_argument("--strict", action="store_true", help="с --check: считать пробелом и ответ без модели с полями")
     a = ap.parse_args()
-    rows = audit()
+    rows = audit(raw=a.raw)
     s = summarize(rows)
     md = to_markdown(rows)
     print(json.dumps(s, ensure_ascii=False, indent=2))
@@ -342,7 +256,7 @@ def main() -> int:
         Path(a.json).write_text(json.dumps(rows, ensure_ascii=False, indent=1), encoding="utf-8")
     if not a.md and not a.json:
         print(md)
-    return 1 if a.check and gap_rows(rows) else 0
+    return 1 if a.check and gap_rows(rows, a.strict) else 0
 
 
 if __name__ == "__main__":
