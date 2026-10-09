@@ -96,6 +96,10 @@ async function fetchRetry(url: string, init: RequestInit, tries = 3, timeoutMs =
   }
 }
 
+/** Хук обезличенной статистики прохождения (lib/study.ts): путь, статус и код ошибки — без тел запросов и ответов. */
+let errorHook: ((path: string, status: number, code: string) => void) | null = null;
+export const setApiErrorHook = (fn: typeof errorHook) => { errorHook = fn; };
+
 export async function api<T>(path: string, opts: { method?: string; body?: unknown; auth?: boolean; token?: string } = {}): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
@@ -105,10 +109,13 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
   const method = opts.method ?? (opts.body !== undefined ? "POST" : "GET");
   const init: RequestInit = { method, headers, body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined };
   // GET идемпотентен: при обрыве или зависании соединения повторяем (до 2 раз, таймаут 15 с).
-  const res = method === "GET" ? await fetchRetry(apiUrl(path), init) : await fetch(apiUrl(path), init);
+  let res: Response;
+  try { res = method === "GET" ? await fetchRetry(apiUrl(path), init) : await fetch(apiUrl(path), init); }
+  catch (e) { errorHook?.(path, 0, "network"); throw e; }
   const body = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
     const { code, message } = messageFrom(res.status, body);
+    errorHook?.(path, res.status, code);
     throw new ApiError(res.status, code, message);
   }
   return body as T;

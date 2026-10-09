@@ -37,6 +37,7 @@ from app.modules.mydata.models import AccountDeletionLog, InterestEvent  # noqa:
 from app.modules.hiring.models import HiringInterview, HiringOffer, HiringOutcome  # noqa: E402,F401 — найм (Н8)
 from app.modules.subs.models import NeedSubEntry, NeedSubscription, NotifyPrefs, SubsDirty, SubsState, UserNotification  # noqa: E402,F401 — подписки и напоминания (И25)
 import app.modules.subs.events  # noqa: E402,F401 — слушатель «кандидат изменился» (И25)
+from app.modules.study.models import StudyAnswer, StudyEvent, StudyParticipant  # noqa: E402,F401 — проверка с живыми пользователями (У1)
 
 metadata = Base.metadata
 from app.modules.mutual.models import CandidatePreference, OfferFitCheck, SelectionFeedback, SelectionShare, ShareReaction  # noqa: E402,F401 — взаимный подбор (Н9, Н2, Н3)

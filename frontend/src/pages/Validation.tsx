@@ -6,6 +6,7 @@ import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
 import Headline from "../components/validation/Headline";
 import PathRetest, { CalibrationCard } from "../components/validation/PathRetest";
+import LiveUsers from "../components/validation/LiveUsers";
 import Ablations from "../components/validation/Ablations";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
@@ -52,11 +53,12 @@ function Report({ r }: { r: any }) {
   const dirs = Object.keys(sim.directions ?? {});
   const m = r.matching ?? {};
   const live = r.live ?? {};
+  const study = useApi<any>("/study/summary", []).data;  // «Живые пользователи»: блок и пункт навигации — только при N ≥ 3 завершённых путей
   return (
     <>
       <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["headline", "5 чисел"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["matching", "Демо-500"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["headline", "5 чисел"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -138,6 +140,7 @@ function Report({ r }: { r: any }) {
         </div>
       </Section>
 
+      <LiveUsers data={study} />
       <SelfCheck opts={r.self_check} />
       <RedButton attacks={r.attacks ?? []} />
     </>

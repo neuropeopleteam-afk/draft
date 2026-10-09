@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     dev_mode: bool | None = None
     # «Песочница жюри»: снимает ограничение частоты смены грейда (90 дней) для всех.
     demo_sandbox: bool = False
+    study_enabled: bool = True  # обезличенная статистика прохождения (app.modules.study); False — не собирается и не показывается
     # Разрешить демо-учёткам (users.is_demo, вход жюри в один клик) включать «демо-режим жюри» в кабинете.
     jury_mode_available: bool = True
 
