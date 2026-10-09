@@ -197,9 +197,10 @@ def match_order(db: Session, req: dict, demo: dict) -> list:
     scored = [(ranking.score_candidate(b, req)[0], b) for b in bundles]
     levels = must_have.declared_levels(db, [b.profile.user_id for _, b in scored]) if must_have.declared_counts() else {}
     must = must_have.tiers_for([b for _, b in scored], req, levels)
-    scored.sort(key=lambda x: (ranking.tier(x[1]), must[x[1].profile.user_id]["tier"], -x[0], -(x[1].rating or 0),
-                               x[1].profile.public_ref or ""))
-    return scored
+    from app.modules.matching import core_skill
+
+    core = core_skill.assess_pool([b for _, b in scored], req)  # Я1: при выключенном RANK_CORE_SKILL порядок прежний
+    return ranking.selection_order(scored, must, core)
 
 
 def _stable(uids, demo: dict) -> list:
