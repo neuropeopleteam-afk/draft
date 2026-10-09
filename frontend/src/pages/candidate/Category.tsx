@@ -69,7 +69,7 @@ export default function Category() {
           {gs?.status === "unconfirmed" && <p className="mt-1 text-xs text-brand-ink/65">Работодатели видят вас в поиске и подборках со статусом «грейд не подтверждён» — ниже всех подтверждённых. Категорию присваивает только тест.</p>}
         </div>
         <div className="rounded-xl bg-brand-blush/30 p-4 text-sm">
-          <p className="font-semibold text-brand-night">Правила 90 и 30 дней</p>
+          <p className="font-semibold text-brand-night">Правила {s.grade_change_interval_days ?? 90} и {s.retake_same_grade_days ?? 30} дней</p>
           {s.lock_active
             ? <p className="mt-1 text-brand-ink/75">Смена грейда доступна с <b>{dt(s.locked_until).replace(/ г\.$/, "")}</b>.{s.sandbox_active && " Сейчас ограничение снято демо-режимом."}</p>
             : <p className="mt-1 text-brand-ink/75">{c.grade ? "Можно пройти тест на грейд выше или ниже." : "Ограничений нет — пройдите тест."}</p>}
@@ -79,7 +79,7 @@ export default function Category() {
           <p className="mt-1 text-xs text-brand-ink/65">Смена подтверждённого грейда — не чаще раза в {s.grade_change_interval_days ?? 90} дней; повтор на тот же грейд после неудачи — через {s.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу.</p>
           {s.jury_mode_available && s.jury_mode_allowed && (
             <div className="mt-3 border-t border-brand/10 pt-2">
-              <Toggle checked={s.jury_mode} onChange={jury} label="Демо-режим жюри" hint="Только для демо-учёток. Снимает ограничение 90 дней для показа; в истории такие смены помечаются." />
+              <Toggle checked={s.jury_mode} onChange={jury} label="Демо-режим жюри" hint={`Только для демо-учёток. Снимает ограничение ${s.grade_change_interval_days ?? 90} дней для показа; в истории такие смены помечаются.`} />
               {s.sandbox_starts && <p className="text-xs text-brand-ink/65">Новых тестов за 24 часа осталось: {s.sandbox_starts.left} из {s.sandbox_starts.limit} — чтобы банк заданий нельзя было выкачать перезапусками.</p>}
             </div>
           )}
@@ -88,7 +88,7 @@ export default function Category() {
       {s.specializations?.length > 1 && (
         <section className="card space-y-3">
           <h2 className="font-bold text-brand-night">Две специализации</h2>
-          <p className="text-sm text-brand-ink/70">Каждое направление подтверждается своим тестом. Правило 90 дней, история и повторные попытки считаются отдельно.</p>
+          <p className="text-sm text-brand-ink/70">Каждое направление подтверждается своим тестом. Правило {s.grade_change_interval_days ?? 90} дней, история и повторные попытки считаются отдельно.</p>
           <Specializations items={s.specializations} testing />
         </section>
       )}
