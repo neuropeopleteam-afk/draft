@@ -39,6 +39,9 @@ SECTION_TABLES = {
     "user_two_factor", "user_two_factor_recovery_codes", "email_verifications", "oidc_login_states",
     "candidate_interest_events", "jury_live_guests",
 }
+# Внутренние записи работодателя о кандидате (строка подборки по его потребности: место, баллы, объяснения, в том числе то,
+# что кандидату не показывают, Р27). В выгрузку не входят; при удалении учётной записи стираются каскадом.
+EMPLOYER_INTERNAL = {"need_sub_entries"}
 
 
 def _j(v):
@@ -209,7 +212,7 @@ def _other(db: Session, uid: uuid.UUID, covered: set[str]) -> dict:
     """Остальные таблицы с данными учётной записи — построчно, без секретоподобных колонок."""
     out = {}
     for name, (t, cond) in erase.owned_tables(uid).items():
-        if name in covered:
+        if name in covered or name in EMPLOYER_INTERNAL:
             continue
         rows = db.execute(select(t).where(cond)).mappings().all()
         out[name] = [{k: _j(v) for k, v in r.items() if not SECRET_COL.search(k)} for r in rows]
@@ -253,6 +256,8 @@ def build(db: Session, user: User) -> dict:
             "not_included": [
                 "Данные других людей: другие кандидаты, имена и почты сотрудников работодателей.",
                 "Банк заданий теста (тексты, варианты, ключи) — собственность оператора; только ваши ответы и итоги.",
+                "Внутренние записи работодателей о вас: место и баллы в их подборках и подписках, их потребности и заметки. "
+                "Вы видите их результат — приглашения и зонды; сами записи работодателя стираются при удалении учётной записи.",
                 "Секреты: пароль, секрет второго фактора, коды и ключи подписок — они хранятся в виде, который "
                 "нельзя прочитать, и выгрузке не принадлежат.",
                 "Кадры и звук с камеры — они не хранятся: анализ идёт на вашем устройстве.",

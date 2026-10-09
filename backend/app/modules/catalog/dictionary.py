@@ -11,34 +11,34 @@ STACK_ALIASES: dict[str, list[str]] = {
     "sql": ["sql", "postgres sql", "запрос", "mysql", "t-sql", "pl/sql"],
     "http": ["http", "rest", "веб-протокол", "tcp/ip"],
     "git": ["git", "github", "gitlab", "bitbucket"],
-    "linux": ["linux", "bash", "unix", "ubuntu", "debian", "centos", "shell"],
-    "docker": ["docker", "контейнер", "docker-compose"],
-    "kubernetes": ["kubernetes", "k8s"],
-    "python": ["python", "питон", "python3"],
+    "linux": ["linux", "bash", "unix", "ubuntu", "debian", "centos", "shell", "линукс"],
+    "docker": ["docker", "контейнер", "docker-compose", "докер"],
+    "kubernetes": ["kubernetes", "k8s", "кубер"],
+    "python": ["python", "питон", "python3", "пайтон"],
     "fastapi": ["fastapi", "fast api"],
-    "django": ["django", "drf", "django rest"],
+    "django": ["django", "drf", "django rest", "джанго"],
     "flask": ["flask"],
     "asyncio": ["asyncio", "async/await", "асинхрон", "aiohttp"],
-    "postgresql": ["postgresql", "postgres", "постгрес", "psql"],
-    "redis": ["redis"],
-    "kafka": ["kafka", "кафка"],
+    "postgresql": ["postgresql", "postgres", "постгр", "psql"],
+    "redis": ["redis", "редис"],
+    "kafka": ["kafka", "кафк"],
     "rabbitmq": ["rabbitmq", "rabbit", "amqp"],
     "rest-api": ["rest api", "restful", "openapi", "swagger", "api"],
     "grpc": ["grpc", "protobuf"],
-    "go": ["golang", "go-разработ", "на go", "go "],
+    "go": ["golang", "go-разработ", "на go", "go ", "голанг"],
     "java": ["java", "spring"],
     "kotlin": ["kotlin"],
     "csharp": ["c#", "c sharp", ".net", "asp.net"],
     "php": ["php", "laravel", "symfony"],
-    "javascript": ["javascript", "js", "es6", "ecmascript", "node.js", "nodejs"],
-    "typescript": ["typescript", "ts"],
+    "javascript": ["javascript", "js", "es6", "ecmascript", "node.js", "nodejs", "джаваскрипт"],
+    "typescript": ["typescript", "ts", "тайпскрипт"],
     "react": ["react", "react.js", "reactjs", "реакт"],
     "vue": ["vue", "vue.js", "vuejs", "nuxt"],
-    "angular": ["angular"],
+    "angular": ["angular", "ангуляр"],
     "nextjs": ["next.js", "nextjs"],
     "html-css": ["html", "css", "scss", "sass", "вёрстк", "верстк"],
     "tailwind": ["tailwind"],
-    "state-management": ["redux", "zustand", "mobx", "effector", "управление состоянием"],
+    "state-management": ["redux", "zustand", "mobx", "effector", "управление состоянием", "редакс", "ngrx", "pinia", "vuex"],
     "vite-webpack": ["webpack", "vite", "rollup", "esbuild"],
     "frontend-testing": ["jest", "vitest", "testing library", "cypress"],
     "a11y": ["a11y", "доступност", "accessibility", "wcag"],
@@ -54,7 +54,8 @@ STACK_ALIASES: dict[str, list[str]] = {
     "cv": ["computer vision", "компьютерное зрение", "opencv", "yolo", "cv-"],
     "mlops": ["mlops", "mlflow", "kubeflow", "dvc"],
     "test-design": ["тест-дизайн", "тест дизайн", "test design", "тест-кейс", "тест кейс", "чек-лист", "граничных значений"],
-    "manual-testing": ["ручное тестирование", "ручного тестирования", "manual testing", "мануальн"],
+    "manual-testing": ["ручное тестирование", "ручного тестирования", "manual testing", "мануальн", "ручной тестировщ",
+                       "ручного тестировщ", "тестировщик ручн", "manual qa", "баг-репорт", "баг репорт"],
     "pytest": ["pytest"],
     "selenium": ["selenium", "selenide"],
     "playwright": ["playwright"],
@@ -63,7 +64,7 @@ STACK_ALIASES: dict[str, list[str]] = {
     "ci-cd": ["ci/cd", "ci cd", "jenkins", "gitlab ci", "github actions", "teamcity"],
     "allure": ["allure"],
     "owasp": ["owasp", "xss", "sql-инъекц", "csrf", "ssrf"],
-    "pentest": ["пентест", "pentest", "тестирование на проникновение", "penetration"],
+    "pentest": ["пентест", "pentest", "тестирование на проникновение", "penetration", "pentester", "red team", "redteam"],
     "network-security": ["сетевая безопасность", "сетевой безопасност", "firewall", "межсетев", "ids", "ips", "vpn"],
     "cryptography": ["криптограф", "cryptography", "pki", "tls", "шифрован"],
     "siem-soc": ["siem", "soc", "splunk", "maxpatrol", "kuma", "elk"],
@@ -71,6 +72,26 @@ STACK_ALIASES: dict[str, list[str]] = {
     "forensics": ["форензик", "forensics", "расследован инцидент", "dfir"],
     "burp-suite": ["burp"],
     "ctf": ["ctf", "capture the flag"],
+}
+
+# Известные технологии, которых нет в справочнике платформы: тест их не проверяет. Не молчим — показываем работодателю
+# «не учтено в подборе» (И18). Ключ — как показать, значение — синонимы (тот же разбор границ слова, что у стек-тегов).
+UNSUPPORTED_TECH: dict[str, list[str]] = {
+    "Rust": ["rust"], "C++": ["c++"], "Swift": ["swift"], "Objective-C": ["objective-c"], "Scala": ["scala"],
+    "Ruby": ["ruby", "rails"], "Elixir": ["elixir"], "Erlang": ["erlang"], "Haskell": ["haskell"], "Perl": ["perl"],
+    "Dart/Flutter": ["dart", "flutter"], "React Native": ["react native"], "Svelte": ["svelte"], "jQuery": ["jquery"],
+    "RxJS": ["rxjs"], "GraphQL": ["graphql"], "Celery": ["celery"], "Hibernate": ["hibernate"], "Gradle": ["gradle"],
+    "Maven": ["maven"], "Terraform": ["terraform"], "Ansible": ["ansible"], "Helm": ["helm"],
+    "Prometheus": ["prometheus"], "Grafana": ["grafana"], "Zabbix": ["zabbix"], "Nginx": ["nginx"],
+    "Elasticsearch": ["elasticsearch", "elastic search", "opensearch"], "MongoDB": ["mongodb", "mongo"],
+    "Cassandra": ["cassandra"], "Tarantool": ["tarantool"], "Oracle": ["oracle"], "Greenplum": ["greenplum"],
+    "Flink": ["flink"], "Hive": ["hive"], "dbt": ["dbt"], "Tableau": ["tableau"], "Power BI": ["power bi", "powerbi"],
+    "Excel": ["excel"], "Superset": ["superset"], "Looker": ["looker"], "AWS": ["aws"], "GCP": ["gcp"],
+    "Azure": ["azure"], "Appium": ["appium"], "JUnit": ["junit"], "TestNG": ["testng"], "Cucumber": ["cucumber"],
+    "Gatling": ["gatling"], "eBPF": ["ebpf"], "DPDK": ["dpdk"], "Active Directory": ["active directory"],
+    "Cobalt Strike": ["cobalt strike"], "Metasploit": ["metasploit"], "OSCP": ["oscp"], "Wireshark": ["wireshark"],
+    "BPMN": ["bpmn"], "UML": ["uml"], "Figma": ["figma"], "Unity": ["unity"], "Unreal": ["unreal"],
+    "Android": ["android"], "iOS": ["ios"], "Kotlin Multiplatform": ["kmp"], "Jetpack Compose": ["jetpack compose"],
 }
 
 # Короткие синонимы ищем только как отдельное слово в типичном написании (иначе много ложных срабатываний)
@@ -91,7 +112,7 @@ DIRECTION_KEYWORDS: dict[str, list[str]] = {
 
 GRADE_KEYWORDS: dict[str, list[str]] = {
     "intern": ["стажёр", "стажер", "стажир", "стажировк", "intern", "trainee", "без опыта", "студент", "школьник"],
-    "junior": ["junior", "джуниор", "джун", "младш", "начинающ"],
+    "junior": ["junior", "джуниор", "джун", "младш", "начинающ", "выпускник"],
     "middle": ["middle", "мидл", "миддл", "опытный разработчик"],
     "senior": ["senior", "сеньор", "синьор", "старш", "ведущ", "lead", "тимлид", "архитектор", "principal", "head of"],
 }
@@ -139,7 +160,7 @@ WORK_FORMAT_KEYWORDS = {
 REQUIRED_CUES = ["требован", "обязательн", "необходим", "must", "нужно", "нужен", "нужна", "нужны", "ожидаем", "опыт работы с",
                  "уверенн", "знание", "умение", "владение"]
 DESIRED_CUES = ["будет плюсом", "плюсом", "желательн", "nice to have", "приветству", "преимуществ", "хорошо, если",
-                "было бы здорово", "дополнительно"]
+                "было бы здорово", "дополнительно", "немного"]
 
 
 def _alias_regex(alias: str) -> re.Pattern:
@@ -172,6 +193,23 @@ def find_stack_spans(text: str) -> dict[str, tuple[int, int]]:
         if m and (tag not in found or m.start() < found[tag][0]):
             found[tag] = (m.start(), m.end())
     return found
+
+
+_UNSUPPORTED = {name: [_alias_regex(a) for a in aliases] for name, aliases in UNSUPPORTED_TECH.items()}
+
+
+def find_unsupported_spans(text: str) -> dict[str, tuple[int, int]]:
+    """Технологии вне справочника → позиция первого упоминания (кроме фрагментов, уже распознанных как стек-тег)."""
+    known = list(find_stack_spans(text).values())
+    out: dict[str, tuple[int, int]] = {}
+    for name, pats in _UNSUPPORTED.items():
+        for p in pats:
+            for m in p.finditer(text):
+                if not any(s < m.end() and m.start() < e for s, e in known):
+                    if name not in out or m.start() < out[name][0]:
+                        out[name] = m.span()
+                    break
+    return out
 
 
 def find_stack(text: str) -> dict[str, int]:
