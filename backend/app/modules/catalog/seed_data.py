@@ -131,5 +131,11 @@ def tag_direction(tag: str) -> str | None:
     return STACK[tag][2] if tag in STACK else None
 
 
+OTHER_TOPIC_TITLE = "Прочие темы"  # служебный тег "other" (задание без стек-тега) никогда не показывается как есть
+
+
 def tag_title(tag: str) -> str:
-    return STACK[tag][0] if tag in STACK else tag
+    """Название стек-тега для интерфейса; служебный «other» — «Прочие темы», неизвестный тег — как есть."""
+    if tag in STACK:
+        return STACK[tag][0]
+    return OTHER_TOPIC_TITLE if tag == "other" else tag
