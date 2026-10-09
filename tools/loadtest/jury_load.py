@@ -3,7 +3,7 @@
 Без временных учёток на сервере: все виртуальные пользователи входят в ОДНУ отдельную песочницу жюри
 (POST /api/jury/login, scenario = её id) — как эксперт по кнопке «Войти» на главной. Песочницу создаёт
 tools/loadtest/run_load.py prepare (один вызов scenario=new), удаляет — run_load.py cleanup (DELETE /api/jury/sandbox)
-или штаб. Страницы сайта — с cookie личной ссылки эксперта (/x/<токен>, без базовой авторизации; токен — из файла
+или администратор стенда. Страницы сайта — с cookie личной ссылки эксперта (/x/<токен>, без базовой авторизации; токен — из файла
 LT_XLINK_FILE, в журналы и CSV не попадает: у запросов фиксированные имена, тексты ошибок без адреса).
 
 Роли (веса — для числа пользователей сверх тестирующих):
@@ -60,12 +60,16 @@ MAX_STARTS = int(os.environ.get("LT_MAX_STARTS", "10"))
 MAX_NEEDS = int(os.environ.get("LT_MAX_NEEDS", "20"))
 MAX_INVITES = int(os.environ.get("LT_MAX_INVITES", "12"))
 PARSE = os.environ.get("LT_PARSE", "1") != "0"
-# Тяжёлые действия (по письму штаба 09.10, отчёт судьи п. 14) — с LLM на стенде, поэтому с потолком за прогон:
+# Тяжёлые действия (09.10: всплески памяти api и время ответа под LLM) — с LLM на стенде, поэтому с потолком за прогон:
 MAX_OPEN = int(os.environ.get("LT_MAX_OPEN", "4"))          # открытых ответов с оценкой LLM (полный тест персоны candidate)
 MAX_LLM_TEXT = int(os.environ.get("LT_MAX_LLM_TEXT", "6"))  # новых текстов потребности (модель уточняет в фоне)
 MAX_RESUME = int(os.environ.get("LT_MAX_RESUME", "6"))      # загрузок резюме DOCX (лимит продукта — 5 в час на учётку)
 REDBUTTON = int(os.environ.get("LT_REDBUTTON", "2"))        # пользователей «Красной кнопки» (12 атак в минуту на учётку)
 RESUME_USERS = int(os.environ.get("LT_RESUME", "1"))        # пользователей с загрузкой резюме
+# Подпись запросов в журнале nginx стенда: run_load.py nginx сверяет число запросов Locust с тем, что дошло до сервера
+UA = f"spectrek-load/{os.environ.get('LT_TAG', 'run')}"
+
+
 def _xlink() -> str:
     """Токен личной ссылки эксперта из файла (JURY_LINK_1=<токен или адрес …/x/<токен>>). Не печатается."""
     path = os.environ.get("LT_XLINK_FILE", "")
@@ -122,6 +126,10 @@ class JuryUser(HttpUser):
     abstract = True
     wait_time = between(1, 4)
     persona = "candidate"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.client.headers["User-Agent"] = UA
 
     def login(self, persona: str | None = None) -> bool:
         persona = persona or self.persona
