@@ -70,12 +70,16 @@ function modes(ex: ExpressParams, seniorMax: number): { id: Mode; title: string 
  *  (синтетические кандидаты). Время симуляции людям не обещается: показываются только лимиты в минутах. */
 interface TestLength { missing?: boolean; min_items: number; max_items: number; max_minutes: number; ext_items: number; ext_minutes: number;
   sim_mean_items?: number; sim_extension_share?: number; generated_at?: string }
-function FullLength({ len, short = false }: { len?: TestLength | null; short?: boolean }) {
-  const sim = len && !len.missing && len.sim_extension_share != null && len.sim_mean_items != null
-    ? `в модельной симуляции (синтетические кандидаты, отчёт ${len.generated_at ? new Date(len.generated_at).toLocaleDateString("ru-RU") : "—"}) дотестирование было в ${Math.round(len.sim_extension_share * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий; время реальных людей не измерялось.`
+/** brief — первый экран (Ф6 Н8 + Ф4 «до 600–900 знаков»): «планируйте до 80 минут» и доля дотестирования в модели;
+ *  short — одна фраза о симуляции; полный текст (условия симуляции) — под «Подробнее». */
+function FullLength({ len, short = false, brief = false }: { len?: TestLength | null; short?: boolean; brief?: boolean }) {
+  const ok = len && !len.missing && len.sim_extension_share != null && len.sim_mean_items != null;
+  const sim = ok
+    ? `в модельной симуляции (синтетические кандидаты, отчёт ${len.generated_at ? new Date(len.generated_at).toLocaleDateString("ru-RU") : "—"}) дотестирование было в ${Math.round(len.sim_extension_share! * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий; время реальных людей не измерялось.`
     : "как часто оно нужно реальным кандидатам, пока не измерено.";
   if (short) return <>{sim[0].toUpperCase() + sim.slice(1)}</>;
   const c = len && !len.missing ? len : { min_items: 8, max_items: 16, max_minutes: 60, ext_items: 6, ext_minutes: 20 };
+  if (brief) return <>Планируйте до {c.max_minutes + c.ext_minutes} минут{ok ? `: в модельной симуляции дотестирование — в ${Math.round(len.sim_extension_share! * 100)} % сессий, в среднем ${num(len.sim_mean_items, 0)} заданий` : ""}.</>;
   return <>Полный адаптивный тест: основной блок {c.min_items}–{c.max_items} заданий (до {c.max_minutes} минут), у порога грейда — ещё до {c.ext_items} коротких (до {c.ext_minutes} минут); планируйте до {c.max_minutes + c.ext_minutes} минут. {sim[0].toUpperCase() + sim.slice(1)} Именно этот тест присваивает категорию живым кандидатам.</>;
 }
 
@@ -422,11 +426,12 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
           <p className="mt-2 text-brand-ink/75">
             {mode === "express"
-              ? `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования${grade === "senior" ? " (за Senior длиннее, чем за Junior и Middle)" : ""}. Результат помечен «экспресс» для вас и работодателя; интервал оценки шире, чем у полного теста. Доступен только в демо-режиме жюри.`
-              : <FullLength len={len.data} />}
+              ? `Без дотестирования${grade === "senior" ? ", за Senior длиннее" : ""}; результат помечен «экспресс», интервал оценки шире, чем у полного. Только в демо-режиме жюри.`
+              : <FullLength len={len.data} brief />}
           </p>
           <details className="mt-2 text-xs text-brand-ink/70">
             <summary className="cursor-pointer font-semibold text-brand-plum">Подробнее</summary>
+            {mode !== "express" && <p className="mt-2 leading-relaxed"><FullLength len={len.data} /></p>}
             <p className="mt-2 leading-relaxed"><b>Как считается.</b>{" "}
             {mode === "express"
               ? (grade === "senior"
@@ -438,7 +443,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </div>
       )}
       <details className="mt-4 text-sm">
-        <summary className="cursor-pointer text-brand-ink/75"><b className="text-brand-night">Как устроен тест:</b> адаптивный, основной блок 8–16 заданий до 60 минут, у порога грейда — ещё до 6 коротких (до 20 минут).</summary>
+        <summary className="cursor-pointer text-brand-ink/75">{expressOk ? <b className="text-brand-night">Как устроен тест</b> : <><b className="text-brand-night">Как устроен тест:</b> адаптивный, основной блок 8–16 заданий до 60 минут, у порога грейда — ещё до 6 коротких (до 20 минут).</>}</summary>
       <div className="card mt-2 space-y-3 text-sm text-brand-ink/75">
         <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам. Основной блок — 8–16 заданий, до 60 минут; если результат у самого порога грейда — ещё до 6 коротких заданий (до 20 минут), чтобы грейд не зависел от случайности. Дотестирование — обычная часть пути, а не исключение: <FullLength len={len.data} short /> Повторная попытка — из другого набора заданий.</p>
         <p>Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои.</p>
