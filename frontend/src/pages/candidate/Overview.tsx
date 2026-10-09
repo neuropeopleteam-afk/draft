@@ -25,7 +25,7 @@ export default function CandidateOverview() {
       <div className="mt-8 grid gap-5 md:grid-cols-3">
         <Stat label="Категория" value={catTitle(category)} hint="Только по результатам теста" />
         <Stat label="Приглашения" value={inv.data ? `${inv.data.length}${newInv ? ` · новых ${newInv}` : ""}` : "…"} hint="Контакты — только после принятия" />
-        <Stat label="Задания от работодателей" value={probes.data ? `${probes.data.length}${newProbes ? ` · ждут ответа ${newProbes}` : ""}` : "…"} hint="Короткие задачи с вилкой" />
+        <Stat label="Зонды работодателей" value={probes.data ? `${probes.data.length}${newProbes ? ` · ждут ответа ${newProbes}` : ""}` : "…"} hint="Короткие задачи с вилкой" />
       </div>
       {c?.specializations?.length > 1 && (
         <section className="card mt-6 space-y-3">
