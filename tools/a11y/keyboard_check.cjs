@@ -169,7 +169,7 @@ const noFocusRing = (stops) => stops.filter((s) => s.tag !== "body" && !s.visibl
     const before = await p2.evaluate(() => document.querySelector("main")?.innerText.match(/Задание \d+[^\n]*/)?.[0] || "");
     const kind = await p2.evaluate(() => document.querySelector('main input[type="radio"]') ? "radio" : document.querySelector('main [role="option"]') ? "line" : document.querySelector("main textarea#ans") ? "text" : "?");
     if (kind === "radio") { t = await tabTo(p2, (f) => f.tag === "input", 60); await p2.keyboard.press("Space"); await p2.keyboard.press("ArrowDown"); }
-    else if (kind === "line") { t = await tabTo(p2, (f) => f.role === "option", 60); await p2.keyboard.press("Tab"); await p2.keyboard.press("Enter"); }
+    else if (kind === "line") { t = await tabTo(p2, (f) => f.role === "option", 60); await p2.keyboard.press("ArrowDown"); }
     else if (kind === "text") { t = await tabTo(p2, (f) => f.tag === "textarea", 60); await p2.keyboard.type("0"); }
     const tb = await tabTo(p2, (f) => f.tag === "button" && /^Ответить/.test(f.text), 60);
     if (tb.n < 0) { ok(`тест: задание ${k + 1} (${kind}) — «Ответить» достижима Tab`, false); break; }
@@ -185,7 +185,8 @@ const noFocusRing = (stops) => stops.filter((s) => s.tag !== "body" && !s.visibl
   ok("тест: ответы на задания с клавиатуры", answered > 0, `отвечено: ${answered}`);
   ok("тест: после ответа фокус переходит к новому заданию (заголовок)", answered > 0 && focusOnNew === answered, `${focusOnNew} из ${answered}`);
   const liveTest = await p2.evaluate(() => [...document.querySelectorAll('[aria-live="polite"], [role="status"]')].map((e) => (e.textContent || "").trim()).filter(Boolean).slice(0, 3));
-  ok("тест: новое задание объявляется живой областью", liveTest.some((x) => /Задание/.test(x)), liveTest.join(" | "));
+  // объявление нового задания: фокус на заголовке «Задание N» (диктор читает его сразу) или живая область
+  ok("тест: новое задание объявляется (фокус на заголовке или живая область)", (answered > 0 && focusOnNew === answered) || liveTest.some((x) => /Задание/.test(x)), `фокус на заголовке ${focusOnNew} из ${answered}; живые области: ${liveTest.join(" | ") || "—"}`);
 
   ok("ошибок JavaScript на страницах нет", errors.length === 0, errors.slice(0, 3).join(" | "));
   await browser.close();

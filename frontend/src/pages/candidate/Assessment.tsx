@@ -6,6 +6,7 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
 import { useMeta } from "../../lib/meta";
+import { trapTab } from "../../components/ui";  // А11: Tab по кругу внутри страницы теста
 import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
 import { CameraIndicator } from "../../proctor/CameraIndicator";
 import { CameraReport } from "../../proctor/CameraReport";
@@ -564,6 +565,9 @@ export function TestRun() {
   }, [id]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   useEffect(() => { if (s?.item) itemHead.current?.focus({ preventScroll: true }); }, [s?.item?.item_id, s?.item?.step]); // eslint-disable-line react-hooks/exhaustive-deps
+  // А11: Tab после последнего элемента не уводит фокус в адресную строку (окно теряет фокус — античит считал бы
+  // это уходом со вкладки у того, кто проходит тест клавиатурой); в открытом окне фокус держит само окно
+  useEffect(() => { const h = (e: KeyboardEvent) => { if (!document.querySelector('[role="dialog"]')) trapTab(e, document.body); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, []);
   // И16: камера (если включена на экране перед тестом) — события режутся по заданиям; уход со страницы выключает камеру
   useEffect(() => { camera.enterTest(id!); return () => camera.leaveTest(); }, [id]);
   useEffect(() => { camera.setItem(s?.item?.item_id ?? null); }, [s?.item?.item_id]);

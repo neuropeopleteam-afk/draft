@@ -186,8 +186,9 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
 
 /** Элементы окна, на которые попадает Tab (видимые и не выключенные). */
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-/** Tab и Shift+Tab ходят по кругу внутри окна (aria-modal): фокус не уходит на страницу под затемнением. */
-function trapTab(e: KeyboardEvent, box: HTMLElement | null) {
+/** Tab и Shift+Tab ходят по кругу внутри окна (aria-modal): фокус не уходит на страницу под затемнением.
+ *  С box = document.body — по кругу внутри страницы (тест: Tab после последней кнопки не уводит в адресную строку). */
+export function trapTab(e: KeyboardEvent, box: HTMLElement | null) {
   if (e.key !== "Tab" || !box) return;
   const items = [...box.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((x) => x.getClientRects().length > 0);
   if (!items.length) { e.preventDefault(); box.focus(); return; }
