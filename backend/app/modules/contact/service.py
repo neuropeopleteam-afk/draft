@@ -128,6 +128,9 @@ def _complained(db: Session, inv: Invitation) -> bool:
 
 def thread_state(db: Session, t: Thread) -> dict:
     """mode (qa | chat), можно ли писать и почему нет."""
+    cp = db.get(CandidateProfile, t.candidate_user_id)
+    if cp is not None and cp.deleted_at is not None:  # «Мои данные»: кандидат удалил учётную запись
+        return {"mode": "qa", "closed": "Кандидат удалил учётную запись — переписка закрыта", "revoked": False}
     if t.invitation is not None:
         i = t.invitation
         mode = "chat" if i.status == InvitationStatus.accepted and i.contacts_revealed_at else "qa"
