@@ -29,6 +29,7 @@ export interface Req {
   work_formats?: string[] | null;
   unknown_terms?: { term: string; evidence?: Ev | null }[]; excluded?: { tag: string; evidence?: Ev | null }[];
   salary_note?: { text: string; evidence?: Ev | null } | null;
+  weight_rule?: string;  // Я11 (С3-3): правило весов разбора — показываем у «Настроить веса»
 }
 
 /** Что не попало в подбор и подсказки по требованиям (И18): честно, без блокировки. */
@@ -239,7 +240,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <input aria-label="Город присутствия" className="input max-w-xs" placeholder="для офиса и гибрида" value={req.city ?? ""}
           onChange={(e) => setScalar("city", { city: e.target.value || null })} />)}</ul>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-ink/65">
-        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}</p>
+        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}
+          {tune && req.weight_rule ? <span data-testid="weight-rule" className="mt-1 block">{req.weight_rule}</span> : null}</p>
         <button type="button" className="font-semibold text-brand-plum hover:underline" aria-expanded={tune} onClick={() => setTune((v) => !v)}>{tune ? "Скрыть веса" : "Настроить веса"}</button>
       </div>
       <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
