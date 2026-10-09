@@ -82,13 +82,13 @@ export function SurveyModal({ open, onClose, role }: { open: boolean; onClose: (
     <Modal open={open} onClose={onClose} title="Короткая анкета (необязательно)">
       {done ? (
         <div className="space-y-4">
-          <p className="text-sm text-brand-ink/80">Спасибо, ответы сохранены обезличенно.{done.sus_score != null ? ` Ваша оценка удобства по шкале SUS: ${Math.round(done.sus_score)} из 100.` : ""}</p>
+          <p className="text-sm text-brand-ink/80">Спасибо, ответы сохранены без имени и почты.{done.sus_score != null ? ` Ваша оценка удобства по шкале SUS: ${Math.round(done.sus_score)} из 100.` : ""}</p>
           <button type="button" onClick={onClose} className="btn-primary">Закрыть</button>
         </div>
       ) : !form ? (err ? <Alert>{err}</Alert> : <Loading />) : (
         <div className="space-y-5">
           <div ref={top} />
-          <p className="text-xs text-brand-ink/65">Шаг {step + 1} из {steps.length}. Можно ответить на любую часть или закрыть окно: результат это не меняет. Анкета обезличена.</p>
+          <p className="text-xs text-brand-ink/65">Шаг {step + 1} из {steps.length}. Можно ответить на любую часть или закрыть окно: результат это не меняет. Анкета без имени и почты.</p>
 
           {kind === "sus" && (
             <section aria-label="Шкала удобства SUS">
