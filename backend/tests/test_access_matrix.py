@@ -286,6 +286,12 @@ def body_for(key: tuple[str, str], side: Side) -> dict | None:
         ("POST", "/api/jury/login"): {"persona": "candidate"},
         ("POST", "/api/jury/live/j/{code}/start"): {},
         ("POST", "/api/fsp-id/start"): {},
+        ("PUT", "/api/employer/needs/{need_id}/subscription"): {"enabled": False},  # И25
+        ("POST", "/api/employer/needs/{need_id}/subscription/seen"): {},
+        ("POST", "/api/notifications/read"): {"ids": []},
+        ("PUT", "/api/notifications/prefs"): {},
+        ("POST", "/api/jury/subs/simulate"): {},
+        ("POST", "/api/jury/subs/fast-forward"): {"days": 5},
     }
     return bodies.get(key)
 
