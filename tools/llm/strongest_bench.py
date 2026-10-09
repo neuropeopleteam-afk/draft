@@ -155,7 +155,10 @@ def cmd_run(a) -> None:
         elif f == "resume":
             r = B.run_resume(a.model, a.conc, limit=SAMPLE["resume"])
         elif f == "grade":
-            r = B.run_grade(a.model, a.conc, wdir, limit_per_group=5, timeout=50, with_second=False)
+            try:
+                r = B.run_grade(a.model, a.conc, wdir, limit_per_group=5, timeout=50, with_second=False)
+            except KeyError:  # отчёт grader_check рассчитан на полный набор — метрики выборки считает strongest_summary
+                r = {"spec": a.model, "func": "grade", "date": time.strftime("%Y-%m-%d"), "raw": "g/v2_1_out.jsonl"}
         else:
             sys.exit(f"неизвестная функция {f}")
         r["wall_s"] = round(time.time() - t0, 1)
