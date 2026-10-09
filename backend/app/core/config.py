@@ -210,6 +210,10 @@ class Settings(BaseSettings):
     jury_live_guests_per_ip_hour: int = 20
     jury_live_guests_per_room_hour: int = 60
     jury_live_guests_total_hour: int = 200
+    # Релевантность дисциплины ФСП специализации (И23, ответ организаторов E08): мягкий коэффициент 1,0 / 0,9 / 0,8
+    # к вкладу результата в силу паспорта (app/modules/fsp/relevance.py). По умолчанию выключено — порядок выдачи
+    # match-v1 не меняется; включать только без падения метрик make bench / ranking_guard (цифры — reports_0910/orgs.md)
+    fsp_discipline_relevance: bool = False
 
     # Резюме: максимальный размер PDF, разбор — в отдельном процессе с тайм-аутом и лимитом памяти
     resume_max_bytes: int = 5 * 1024 * 1024
