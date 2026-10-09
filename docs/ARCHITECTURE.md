@@ -41,7 +41,7 @@
 | ФСП | `fsp` | паспорт достижений по ЕВСК, связь с ФСП ID (заглушка), бонус в рейтинге, нейтральное «нет истории» | заглушка + демо-паспорта |
 | Валидация | `validation` | precision@k, стабильность грейда, дискриминативность, устойчивость к утечке | заготовка `make validate` |
 | Документы | `resume`, `pdf` | разбор PDF-резюме (pypdf), вырезание ПДн (Natasha + регулярные выражения), PDF-профиль (ReportLab) | готово |
-| LLM | `llm` | OpenAI-совместимый клиент (Yandex AI Studio), таймауты, запасной путь без LLM | готово |
+| LLM | `llm` | OpenAI-совместимый клиент; цепочка Claude Sonnet 5.5 (OpenRouter) → YandexGPT (Yandex AI Studio) → правила, таймауты, запасной путь без LLM | готово |
 | Демо | `demo` | 150 кандидатов, 10 работодателей, 15 потребностей (`is_demo`) | готово |
 | Уведомления | `notifications` | адаптер почты: DevMailer (лог) / Postbox (HTTPS API) | готово |
 
@@ -78,7 +78,7 @@ flowchart LR
   W -->|/api → api:8000| A[api: FastAPI\nмодульный монолит]
   A --> D[(db: PostgreSQL 16)]
   A -.->|HTTPS API| M[Yandex Cloud Postbox]
-  A -.->|HTTPS, после вырезания ПДн| L[Yandex AI Studio\nLLM, РФ]
+  A -.->|HTTPS, после вырезания ПДн| L[LLM: Claude Sonnet 5.5 через OpenRouter\nзапасная — YandexGPT, Yandex AI Studio]
   A -.->|OIDC| K[ФСП ID / Keycloak\nпрофиль compose keycloak]
   A -.->|API реестра, позже| R[Реестр ФСП]
 ```
@@ -329,7 +329,7 @@ PWA: `frontend/public/manifest.webmanifest`, `sw.js` (оболочка офла�
 - **Хранение.** Состояние — JSON `test_sessions.result.state` (CATSession пересобирается на каждом запросе,
   строка сессии блокируется `SELECT … FOR UPDATE`). Нормализованная копия — `task_families`, `task_variants`,
   `test_session_items`, `test_answers` (ответ, баллы по частям, время) — для калибровки банка и аудита.
-- **Экспозиция.** Ограничение Sympson–Hetter выключено: банк пока мал (≈ 130 семейств на 05.10, 164 на 08.10), уникальность обеспечивают
+- **Экспозиция.** Ограничение Sympson–Hetter выключено: банк пока мал (≈ 130 семейств на 05.10, 164 на 08.10, 165 на 09.10), уникальность обеспечивают
   случайные seed вариантов. Ротация субпулов — `ASSESSMENT_SUBPOOLS` (по умолчанию 1, т. е. выключена).
 - **Пополнение банка.** Пакет `../bank` не изменяется; `tools/sync_bank.py` (вызывается из скрипта выкладки) копирует
   его в `backend/assessment_bank`, прогоняет валидатор банка и проверку генерации/`public_view`, исключает

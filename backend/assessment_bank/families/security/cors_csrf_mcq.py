@@ -1,4 +1,4 @@
-"""CORS не заменяет серверную защиту изменяющих cookie-запросов (версия 2: цели вместо контракта в условии)."""
+"""CORS не заменяет серверную защиту изменяющих cookie-запросов (версия 3: цели вместо контракта в условии, длины вариантов выровнены)."""
 from __future__ import annotations
 
 from assessment_bank.gen_utils import build_variant, make_options, make_rng
@@ -23,11 +23,12 @@ def generate(seed: int):
          "json_only": {"allow": [origin], "credentials": True, "csrf": "json", "origin_check": True},
          "star": {"allow": ["*"], "credentials": True, "csrf": "all", "origin_check": True},
          "reflect": {"allow": ["reflect_any"], "credentials": True, "csrf": "all", "origin_check": True}}
-    T = {"good": "CORS: только UI-origin; credentials: да; CSRF-токен: для всех изменяющих запросов; Origin: проверять.",
-         "no_csrf": "CORS: только UI-origin; credentials: да; CSRF-токен: не нужен, чужой origin отсечёт CORS; Origin: проверять.",
+    # Версия 3 (08.10): длины формулировок выровнены (верный вариант раньше был на 4–9 знаков короче всех).
+    T = {"good": "CORS: только UI-origin; credentials: да; CSRF-токен: для всех изменяющих запросов API; Origin: проверять.",
+         "no_csrf": "CORS: только UI-origin; credentials: да; CSRF-токен: не нужен, CORS отсечёт чужой origin; Origin: проверять.",
          "json_only": "CORS: только UI-origin; credentials: да; CSRF-токен: только для запросов с JSON-телом; Origin: проверять.",
          "star": "CORS: «*» для всех origins; credentials: да; CSRF-токен: для всех изменяющих запросов; Origin: проверять.",
-         "reflect": "CORS: отражать пришедший Origin; credentials: да; CSRF-токен: для всех изменяющих запросов; Origin: проверять."}
+         "reflect": "CORS: отражать любой Origin; credentials: да; CSRF-токен: для всех изменяющих запросов; Origin: проверять."}
     chosen = ["no_csrf", "json_only", rng.choice(["star", "reflect"])]
     texts = [T["good"]] + [T[d] for d in chosen]
     policies = [P["good"]] + [P[d] for d in chosen]

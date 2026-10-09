@@ -5,7 +5,8 @@
 выбрать реализацию, которая использует категории из обучения, сохраняет их порядок и
 кодирует неизвестную категорию нулевым вектором, не падая. Дистракторы: KeyError на новой
 категории, объединение словарей (меняется длина), «последняя категория» для неизвестных,
-общий список-вектор на все строки.
+общий список-вектор на все строки. Версия 2 (08.10): дистракторы приведены к длине верного варианта
+(раньше верный с проверкой `in index` был самым длинным).
 """
 from __future__ import annotations
 
@@ -35,7 +36,8 @@ def _impl(kind, fn, col, nm):
             f"    cats = sorted(set(categories) | {{{R}[column] for {R} in rows}})",
             f"    {O} = []",
             f"    for {R} in rows:",
-            f"        {V} = [1 if {R}[column] == c else 0 for c in cats]",
+            f"        {V} = [0] * len(cats)",
+            f"        {V}[cats.index({R}[column])] = 1",
             f"        {O}.append({V})",
             f"    return {O}"])
     head = [f"def {fn}(rows, column, categories):",
@@ -49,9 +51,9 @@ def _impl(kind, fn, col, nm):
     if kind in ("good", "shared_vec"):
         body += [f"        if {R}[column] in {I}:", f"            {V}[{I}[{R}[column]]] = 1"]
     elif kind == "keyerror":
-        body += [f"        {V}[{I}[{R}[column]]] = 1"]
+        body += [f"        pos = {I}[{R}[column]]", f"        {V}[pos] = 1"]
     else:  # last_index
-        body += [f"        {V}[{I}.get({R}[column], len(categories) - 1)] = 1"]
+        body += [f"        pos = {I}.get({R}[column], len(categories) - 1)", f"        {V}[pos] = 1"]
     body += [f"        {O}.append({V})", f"    return {O}"]
     return "\n".join(head + body)
 

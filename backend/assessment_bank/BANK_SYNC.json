@@ -1,16 +1,16 @@
 {
   "source": "/srv/work/srv/work/spectrek/bank",
-  "commit": "c4fd38c",
+  "commit": "679823a",
   "dirty_files": 0,
-  "content_hash": "a086bd7ad2304eb0",
-  "synced_at": "2026-10-08T15:54:32+00:00",
-  "n_families": 164,
+  "content_hash": "76c4164b6ce83743",
+  "synced_at": "2026-10-09T12:00:37+00:00",
+  "n_families": 165,
   "by_direction": {
     "backend": {
-      "families": 43,
+      "families": 44,
       "canary": 2,
       "formats": {
-        "choose_fix": 9,
+        "choose_fix": 10,
         "predict_output": 12,
         "find_bug": 11,
         "open_book_3step": 5,
@@ -82,19 +82,19 @@
   "excluded": [],
   "validation": {
     "summary": {
-      "n_families": 164,
-      "n_variants_generated": 3280,
-      "n_unique_variants": 3261,
-      "n_checks": 1361,
+      "n_families": 165,
+      "n_variants_generated": 3300,
+      "n_unique_variants": 3281,
+      "n_checks": 1379,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 152,
-        "WARN": 12
+        "PASS": 147,
+        "WARN": 18
       },
       "n_fail": 0,
-      "n_warn": 12,
+      "n_warn": 18,
       "by_direction": {
-        "backend": 43,
+        "backend": 44,
         "common": 34,
         "data_ml": 23,
         "frontend": 26,
@@ -102,14 +102,14 @@
         "security": 19
       },
       "by_format": {
-        "choose_fix": 27,
+        "choose_fix": 28,
         "predict_output": 40,
         "find_bug": 39,
         "open_book_3step": 19,
         "open_answer": 11,
         "mcq_concept": 28
       },
-      "seconds": 92.1
+      "seconds": 97.1
     },
     "seeds": 20,
     "verify_seeds": 3
