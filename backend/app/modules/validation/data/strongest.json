@@ -1,0 +1,545 @@
+{
+ "title": "Сильнейшие модели: замер по функциям (малая выборка)",
+ "date": "2026-10-09",
+ "code_sha": "df4f9f3",
+ "models": {
+  "z-ai/glm-5.3": {
+   "name": "Z.ai: GLM 5.3",
+   "family": "Zhipu (Z.ai)",
+   "open_weights": "zai-org/GLM-5.3",
+   "in_usd_per_m": 0.04,
+   "out_usd_per_m": 3.6,
+   "stand": false
+  },
+  "qwen/qwen3.8-27b": {
+   "name": "Qwen: Qwen3.8 27B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
+   "stand": false
+  },
+  "anthropic/claude-sonnet-5.5": {
+   "name": "Anthropic: Claude Sonnet 5.5",
+   "family": "Anthropic",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "stand": true
+  }
+ },
+ "cells": {
+  "needs_delta": {
+   "anthropic/claude-sonnet-5.5": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 2.4,
+    "p95_s": 3.25,
+    "tokens": {
+     "prompt": 75513,
+     "completion": 4299
+    },
+    "cost_usd": 0.194,
+    "quality": {
+     "f1": 0.9451,
+     "p": 0.9348,
+     "r": 0.9556,
+     "f1_silver": 0.9266,
+     "p_silver": 0.8913,
+     "r_silver": 0.9647,
+     "n": 15,
+     "ci90": [
+      0.911,
+      0.971
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 12.93,
+     "rub_per_1k_calls": 1104.8
+    }
+   },
+   "qwen/qwen3.8-27b": {
+    "n": 15,
+    "calls": 15,
+    "ok": 3,
+    "format_fail": 12,
+    "transport_fail": 0,
+    "errors": {
+     "empty": 11,
+     "invalid_json": 1
+    },
+    "p50_s": 14.87,
+    "p95_s": 22.53,
+    "tokens": {
+     "prompt": 3244,
+     "completion": 2269
+    },
+    "cost_usd": 0.006,
+    "quality": {
+     "f1": 0.9609,
+     "p": 0.9663,
+     "r": 0.9556,
+     "f1_silver": 0.9425,
+     "p_silver": 0.9213,
+     "r_silver": 0.9647,
+     "n": 15,
+     "ci90": [
+      0.934,
+      0.982
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 0.4,
+     "rub_per_1k_calls": 34.2
+    }
+   },
+   "z-ai/glm-5.3": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 2.94,
+    "p95_s": 7.63,
+    "tokens": {
+     "prompt": 17318,
+     "completion": 5407
+    },
+    "cost_usd": 0.0338,
+    "quality": {
+     "f1": 0.9613,
+     "p": 0.956,
+     "r": 0.9667,
+     "f1_silver": 0.9432,
+     "p_silver": 0.9121,
+     "r_silver": 0.9765,
+     "n": 15,
+     "ci90": [
+      0.928,
+      0.986
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 2.25,
+     "rub_per_1k_calls": 192.5
+    }
+   },
+   "rules": {
+    "quality": {
+     "f1": 0.9609,
+     "p": 0.9663,
+     "r": 0.9556,
+     "f1_silver": 0.9425,
+     "p_silver": 0.9213,
+     "r_silver": 0.9647,
+     "n": 15,
+     "ci90": [
+      0.934,
+      0.982
+     ]
+    }
+   }
+  },
+  "needs_jury": {
+   "anthropic/claude-sonnet-5.5": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 1.96,
+    "p95_s": 2.53,
+    "tokens": {
+     "prompt": 64856,
+     "completion": 2030
+    },
+    "cost_usd": 0.15,
+    "quality": {
+     "jaccard": 1.0,
+     "n": 14,
+     "ci90": [
+      1.0,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 10.0,
+     "rub_per_1k_calls": 854.2
+    }
+   },
+   "qwen/qwen3.8-27b": {
+    "n": 15,
+    "calls": 15,
+    "ok": 14,
+    "format_fail": 1,
+    "transport_fail": 0,
+    "errors": {
+     "empty": 1
+    },
+    "p50_s": 5.48,
+    "p95_s": 13.49,
+    "tokens": {
+     "prompt": 13331,
+     "completion": 6879
+    },
+    "cost_usd": 0.0173,
+    "quality": {
+     "jaccard": 0.988,
+     "n": 14,
+     "ci90": [
+      0.964,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 1.15,
+     "rub_per_1k_calls": 98.5
+    }
+   },
+   "z-ai/glm-5.3": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 1.2,
+    "p95_s": 11.81,
+    "tokens": {
+     "prompt": 10400,
+     "completion": 2291
+    },
+    "cost_usd": 0.0153,
+    "quality": {
+     "jaccard": 1.0,
+     "n": 14,
+     "ci90": [
+      1.0,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 1.02,
+     "rub_per_1k_calls": 87.1
+    }
+   },
+   "rules": {
+    "quality": {
+     "jaccard": 0.972,
+     "n": 15,
+     "ci90": [
+      0.933,
+      1.0
+     ]
+    }
+   }
+  },
+  "resume": {
+   "anthropic/claude-sonnet-5.5": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 1.84,
+    "p95_s": 2.03,
+    "tokens": {
+     "prompt": 12765,
+     "completion": 1764
+    },
+    "cost_usd": 0.0432,
+    "quality": {
+     "stack_p": 0.956,
+     "stack_r": 1.0,
+     "stack_f1": 0.9775,
+     "tp_fp_fn": [
+      152,
+      7,
+      0
+     ],
+     "roles_p": 0.929,
+     "roles_r": 0.963,
+     "experience_ok": 19,
+     "n": 20,
+     "ci90": [
+      0.965,
+      0.991
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 2.16,
+     "rub_per_1k_calls": 184.5
+    }
+   },
+   "qwen/qwen3.8-27b": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 5.07,
+    "p95_s": 11.98,
+    "tokens": {
+     "prompt": 9255,
+     "completion": 7269
+    },
+    "cost_usd": 0.0175,
+    "quality": {
+     "stack_p": 0.9554,
+     "stack_r": 0.9868,
+     "stack_f1": 0.9708,
+     "tp_fp_fn": [
+      150,
+      7,
+      2
+     ],
+     "roles_p": 0.862,
+     "roles_r": 0.926,
+     "experience_ok": 19,
+     "n": 20,
+     "ci90": [
+      0.957,
+      0.984
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 0.88,
+     "rub_per_1k_calls": 74.7
+    }
+   },
+   "z-ai/glm-5.3": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 1.44,
+    "p95_s": 2.63,
+    "tokens": {
+     "prompt": 8753,
+     "completion": 2018
+    },
+    "cost_usd": 0.0115,
+    "quality": {
+     "stack_p": 0.9437,
+     "stack_r": 0.9934,
+     "stack_f1": 0.9679,
+     "tp_fp_fn": [
+      151,
+      9,
+      1
+     ],
+     "roles_p": 0.926,
+     "roles_r": 0.926,
+     "experience_ok": 20,
+     "n": 20,
+     "ci90": [
+      0.953,
+      0.983
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 0.57,
+     "rub_per_1k_calls": 49.1
+    }
+   },
+   "rules": {
+    "quality": {
+     "stack_p": 0.9524,
+     "stack_r": 0.9211,
+     "stack_f1": 0.9365,
+     "tp_fp_fn": [
+      140,
+      7,
+      12
+     ],
+     "roles_p": 0.909,
+     "roles_r": 0.741,
+     "experience_ok": 17,
+     "n": 20,
+     "ci90": [
+      0.907,
+      0.961
+     ]
+    }
+   }
+  },
+  "grade": {
+   "anthropic/claude-sonnet-5.5": {
+    "n": 50,
+    "calls": 50,
+    "ok": 50,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "p50_s": 2.46,
+    "p95_s": 4.52,
+    "cost_usd": 0.3687,
+    "quality": {
+     "mae": 0.008,
+     "mae_n": 18,
+     "ci90": [
+      0.0,
+      0.018
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 0,
+     "attacks_n": 25,
+     "order_strict": 5,
+     "order_n": 5
+    },
+    "price": {
+     "usd_per_1k_calls": 7.37,
+     "rub_per_1k_calls": 629.9
+    }
+   },
+   "qwen/qwen3.8-27b": {
+    "n": 50,
+    "calls": 50,
+    "ok": 46,
+    "format_fail": 4,
+    "transport_fail": 0,
+    "p50_s": 9.05,
+    "p95_s": 39.74,
+    "cost_usd": 0.0894,
+    "quality": {
+     "mae": 0.013,
+     "mae_n": 18,
+     "ci90": [
+      0.0,
+      0.033
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 3,
+     "attacks_n": 25,
+     "order_strict": 4,
+     "order_n": 4
+    },
+    "price": {
+     "usd_per_1k_calls": 1.79,
+     "rub_per_1k_calls": 152.7
+    }
+   },
+   "z-ai/glm-5.3": {
+    "n": 50,
+    "calls": 50,
+    "ok": 46,
+    "format_fail": 4,
+    "transport_fail": 0,
+    "p50_s": 3.52,
+    "p95_s": 12.97,
+    "cost_usd": 0.1151,
+    "quality": {
+     "mae": 0.012,
+     "mae_n": 18,
+     "ci90": [
+      0.0,
+      0.026
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 4,
+     "attacks_n": 25,
+     "order_strict": 4,
+     "order_n": 4
+    },
+    "price": {
+     "usd_per_1k_calls": 2.3,
+     "rub_per_1k_calls": 196.6
+    }
+   }
+  }
+ },
+ "grade_reference": {
+  "judges": [],
+  "note": "медиана всех остальных моделей замера (сильнейшие ещё не замерены)"
+ },
+ "sample": {
+  "needs_delta": 15,
+  "needs_jury": 15,
+  "resume": 20,
+  "grade": 50
+ },
+ "conditions": [
+  "Одна и та же малая выборка для всех моделей; путь продукта целиком (вырезание ПДн, проверка цитат, слияние с правилами); одна попытка на вход, без перехода по цепочке; настройки рассуждений — как в продукте (разбор и резюме — low, оценка — по умолчанию модели); 4 запроса параллельно; песочница → OpenRouter напрямую.",
+  "Разметки — модели, не люди: вакансии — исправленная разметка (silver И8 + лишние теги, подтверждённые GPT 6.1 Sol; лишние теги новых моделей не проверялись — их точность занижена), резюме — автор набора (модель Claude), оценщик — согласие сильнейших моделей (медиана, без самой оцениваемой).",
+  "Интервал — бутстреп 90 % по входам: на 15–50 входах разница в несколько сотых — в пределах шума.",
+  "Цена — фактическая (usage.cost OpenRouter) на 1000 вызовов функции; рубли — по курсу ЦБ РФ на 09.10.2026."
+ ],
+ "pending": "Дорогие модели (Claude Fable 5.1, GPT-6 Astra Pro, Claude Opus 5.5) — после пополнения баланса; до этого эталон оценщика — медиана остальных моделей замера.",
+ "recommendation": {
+  "needs_delta": {
+   "main": "z-ai/glm-5.3",
+   "reserve": "anthropic/claude-sonnet-5.5",
+   "then": "правила",
+   "best_open": "z-ai/glm-5.3",
+   "ranked": [
+    "z-ai/glm-5.3",
+    "anthropic/claude-sonnet-5.5"
+   ],
+   "within_noise": [
+    "anthropic/claude-sonnet-5.5"
+   ],
+   "excluded": {
+    "qwen/qwen3.8-27b": "отказы 12 из 15 (формат 12, сеть 0)"
+   },
+   "lower_better": false
+  },
+  "needs_jury": {
+   "main": "z-ai/glm-5.3",
+   "reserve": "anthropic/claude-sonnet-5.5",
+   "then": "правила",
+   "best_open": "z-ai/glm-5.3",
+   "ranked": [
+    "z-ai/glm-5.3",
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b"
+   ],
+   "within_noise": [
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b"
+   ],
+   "excluded": {},
+   "lower_better": false
+  },
+  "resume": {
+   "main": "anthropic/claude-sonnet-5.5",
+   "reserve": "qwen/qwen3.8-27b",
+   "then": "правила",
+   "best_open": "qwen/qwen3.8-27b",
+   "ranked": [
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b",
+    "z-ai/glm-5.3"
+   ],
+   "within_noise": [
+    "qwen/qwen3.8-27b",
+    "z-ai/glm-5.3"
+   ],
+   "excluded": {},
+   "lower_better": false
+  },
+  "grade": {
+   "main": "anthropic/claude-sonnet-5.5",
+   "reserve": null,
+   "then": "правила",
+   "best_open": null,
+   "ranked": [
+    "anthropic/claude-sonnet-5.5"
+   ],
+   "within_noise": [],
+   "excluded": {
+    "qwen/qwen3.8-27b": "отказы 4 из 50 (формат 4, сеть 0)",
+    "z-ai/glm-5.3": "отказы 4 из 50 (формат 4, сеть 0)"
+   },
+   "lower_better": true
+  }
+ }
+}
