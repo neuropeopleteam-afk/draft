@@ -24,7 +24,9 @@ from app.modules.study.models import StudyAnswer, StudyEvent, StudyParticipant
 
 ALPHABET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"  # без 0/O и 1/I (как у ссылок кандидатов)
 CODE_LEN = 12  # 32^12 = 2^60 вариантов
-QUICK_DOMAIN = "study.invalid"  # .invalid: письма таким учёткам не отправляются (notifications.mailer.notify)
+# Почта временных учёток: домен жюри — письма ему не уходят (notifications.mailer.notify), аналитика ФСП его не считает,
+# а «+study» у кандидата скрывает его из подборок и поиска (jury.scope.pool_clause: учётка не попадёт в выдачу жюри).
+QUICK_DOMAIN = "jury.example.com"
 EVENT_CAP = 3000  # событий на участника: защита базы от зацикленного клиента
 TOP_K = 5
 
@@ -61,8 +63,8 @@ def _next_label(db: Session, role: str, is_test: bool) -> str:
     return f"{prefix}-{n + 1:02d}"
 
 
-def create_invites(db: Session, role: str, n: int, *, batch: str = "", mode: str = "register", is_test: bool = False,
-                   base_url: str | None = None) -> list[dict]:
+def create_invites(db: Session, role: str, n: int, *, batch: str = "", mode: str = "quick", is_test: bool = False,
+                   base_url: str | None = None, source: str = texts.DEFAULT_SOURCE) -> list[dict]:
     """Выпускает n персональных ссылок. Код в базе — только хеш: показывается один раз, потеряли — выпустите новый."""
     if role not in texts.ROLES:
         raise api_error(422, "bad_role", "Роль участника — candidate или employer")
@@ -70,14 +72,16 @@ def create_invites(db: Session, role: str, n: int, *, batch: str = "", mode: str
         raise api_error(422, "bad_count", "За один раз можно выпустить от 1 до 100 ссылок")
     if mode not in ("register", "quick"):
         raise api_error(422, "bad_mode", "Режим входа — register или quick")
+    if source not in texts.SOURCES:
+        raise api_error(422, "bad_source", "Источник участников — freelance_paid или team")
     out = []
     for _ in range(n):
         code = new_code()
         p = StudyParticipant(code_hash=code_hash(code), role=role, label=_next_label(db, role, is_test), batch=(batch or "")[:64],
-                             mode=mode, is_test=is_test)
+                             mode=mode, is_test=is_test, source=source)
         db.add(p)
         db.flush()  # следующая метка считается по уже добавленным
-        out.append({"label": p.label, "role": role, "mode": mode, "is_test": is_test, "batch": p.batch,
+        out.append({"label": p.label, "role": role, "mode": mode, "is_test": is_test, "batch": p.batch, "source": source,
                     "code": pretty(code), "url": invite_url(code, base_url)})
     db.commit()
     return out
@@ -104,7 +108,7 @@ def invite_view(db: Session, p: StudyParticipant) -> dict:
     if p.opened_at is None:
         p.opened_at = utcnow()
         db.commit()
-    return {"role": p.role, "role_title": texts.ROLE_TITLE[p.role], "mode": p.mode, "state": _state(p), "minutes": 20,
+    return {"role": p.role, "role_title": texts.ROLE_TITLE[p.role], "mode": p.mode, "state": _state(p), "minutes": texts.MINUTES, "minutes_max": texts.MINUTES_MAX,
             "steps": [{"key": k, "title": t, "hint": texts.STEP_HINT[(p.role, k)]}
                       for k, t, _ in texts.PATH[p.role] if not (p.mode == "quick" and k == "register")],
             "consent": {"version": texts.CONSENT_VERSION, "title": texts.CONSENT_TITLE, "text": texts.CONSENT_TEXT,
@@ -112,15 +116,22 @@ def invite_view(db: Session, p: StudyParticipant) -> dict:
 
 
 def _quick_account(db: Session, role: str) -> User:
-    """Временная учётная запись без имени и почты (вход только по ссылке): письма ей не уходят (.invalid)."""
-    u = User(email=f"study-{secrets.token_hex(6)}@{QUICK_DOMAIN}", password_hash=hash_password(secrets.token_urlsafe(24)),
-             role=UserRole(role), is_email_verified=True, email_verified_at=utcnow(), is_demo=False)
+    """Временная учётная запись без имени и почты (вход только по ссылке, регистрации по почте нет).
+
+    Демо-учётка (is_demo): у кандидата так доступен экспресс-тест (5–7 заданий, без правила 90 дней) — путь укладывается
+    в 25 минут; письма таким учёткам не уходят. Кандидат скрыт из подборок и поиска (см. QUICK_DOMAIN), его карточку
+    работодатели и жюри не увидят; подборка работодателя строится по обычному демонстрационному пулу платформы."""
+    tag = secrets.token_hex(6)
+    email = f"study-{tag}+study@{QUICK_DOMAIN}" if role == "candidate" else f"study-{tag}@{QUICK_DOMAIN}"
+    u = User(email=email, password_hash=hash_password(secrets.token_urlsafe(24)), role=UserRole(role),
+             is_email_verified=True, email_verified_at=utcnow(), is_demo=True)
     db.add(u)
     db.flush()
     if role == "candidate":
-        db.add(CandidateProfile(user_id=u.id, full_name=None, public_ref=new_public_ref(db)))
+        db.add(CandidateProfile(user_id=u.id, full_name=None, public_ref=new_public_ref(db), jury_mode=True,
+                                visible_to_employers=False))
     else:
-        c = Company(name="Компания участника проверки", created_by=u.id, contact_email=u.email)
+        c = Company(name="Компания участника проверки", created_by=u.id, contact_email=u.email, is_demo=True)
         db.add(c)
         db.flush()
         db.add(EmployerProfile(user_id=u.id, company_id=c.id, full_name=None))
@@ -167,10 +178,10 @@ def join(db: Session, user: User, code: str) -> StudyParticipant:
     if user.role.value != p.role:
         raise api_error(409, "role_mismatch", f"Приглашение для роли «{texts.ROLE_TITLE[p.role]}», а вы вошли иначе: "
                                               "зарегистрируйтесь по ссылке заново")
+    if p.user_id == user.id:  # учётка, выданная этой же ссылкой (режим quick)
+        return p
     if user.is_demo:
         raise api_error(403, "demo_account", "Демо-учётки жюри в проверке не участвуют")
-    if p.user_id == user.id:
-        return p
     if p.user_id is not None:
         raise api_error(409, "invite_taken", "Эта ссылка уже привязана к другой учётной записи")
     other = db.scalar(select(StudyParticipant.id).where(StudyParticipant.user_id == user.id))
@@ -197,7 +208,7 @@ def me(db: Session, user: User) -> dict:
     started = as_aware(p.started_at)
     return {"active": True, "role": p.role, "mode": p.mode, "steps": rows, "current": d["current"], "path_done": d["path_done"],
             "answered": ans is not None, "elapsed_s": int((utcnow() - started).total_seconds()) if started else 0,
-            "target_min": 20, "survey_url": "/study/survey"}
+            "target_min": texts.MINUTES, "max_min": texts.MINUTES_MAX, "survey_url": "/study/survey"}
 
 
 # ----------------------------------------------------------------------------- события экранов и ошибок

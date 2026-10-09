@@ -59,11 +59,15 @@ class SurveyIn(BaseModel):
     comment: str | None = Field(None, max_length=2000)
 
 
+START_PAGE = {"candidate": "/candidate/assessment", "employer": "/employer/needs"}  # куда вести после входа по ссылке
+
+
 class InvitesIn(BaseModel):
     role: Literal["candidate", "employer"]
     n: int = Field(1, ge=1, le=100)
     batch: str = Field("", max_length=64)
-    mode: Literal["register", "quick"] = "register"
+    mode: Literal["register", "quick"] = "quick"
+    source: Literal["freelance_paid", "team"] = "freelance_paid"
     is_test: bool = False
 
 
@@ -81,7 +85,7 @@ def start(code: str, data: StartIn, request: Request, db: Session = Depends(get_
     hit(_ip, client_ip(request), "study_rate_limited", "Слишком много обращений к приглашению")
     p, user = service.start(db, service.find(db, code), data.consent)
     out: dict[str, Any] = {"role": p.role, "mode": p.mode, "state": "started",
-                           "next": f"/register?role={p.role}" if p.mode == "register" else f"/{p.role}"}
+                           "next": f"/register?role={p.role}" if p.mode == "register" else START_PAGE[p.role]}
     if user is not None:
         from app.modules.auth.service import issue_token
 
@@ -139,7 +143,7 @@ def admin_invites(data: InvitesIn, request: Request, user: User = Depends(admin)
     base = f"{(request.headers.get('x-forwarded-proto') or request.url.scheme).split(',')[0].strip()}://" \
            f"{(request.headers.get('x-forwarded-host') or request.headers.get('host') or '').split(',')[0].strip()}"
     return {"invites": service.create_invites(db, data.role, data.n, batch=data.batch, mode=data.mode, is_test=data.is_test,
-                                              base_url=base if "//" in base and not base.endswith("//") else None)}
+                                              source=data.source, base_url=base if "//" in base and not base.endswith("//") else None)}
 
 
 @router.get("/admin/report", summary="Служебная сводка по участникам (метки, шаги, время, ошибки; без имён и почт)")
