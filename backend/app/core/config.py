@@ -202,8 +202,15 @@ class Settings(BaseSettings):
     jury_spare_sandboxes: int = 1
     # Задания работодателя (И7): лента «Задания для вас» — предложение раз в N дней; фоновый обход раз в M секунд
     # (0 — выключен, тогда только лениво при обращении кандидата и из консоли python -m app.modules.assignments.feed)
-    assignments_feed_days: int = 3
+    # К5: по умолчанию раз в неделю (7), не больше assignments_feed_monthly_limit предложений за 30 дней, напоминание
+    # кандидату через assignments_remind_days дней (до двух раз), предложение без ответа истекает через
+    # assignments_offer_ttl_days; работодателю — напоминание об оценке по рубрике через assignments_review_remind_days
+    assignments_feed_days: int = 7
     assignments_feed_interval_s: int = 3600
+    assignments_feed_monthly_limit: int = 4
+    assignments_remind_days: int = 2
+    assignments_offer_ttl_days: int = 14
+    assignments_review_remind_days: int = 3
     # Живая демонстрация (QR → мини-тест на телефоне → автоприглашение, app/jury_live): пауза перед появлением в
     # подборке и перед приглашением (с; в тестах 0) и лимиты мини-тестов (гостей) в час — с адреса, на зал, всего
     jury_live_select_delay_s: float = 1.5

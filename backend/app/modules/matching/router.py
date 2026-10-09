@@ -124,6 +124,7 @@ class Filters(BaseModel):
     relaxation: str | None = Field(None, max_length=160, description="Подпись версии, созданной из «Что если» (И18)")
     conditions_off: bool = Field(False, description="Ф2: не применять условия потребности (формат, город) — показать "
                                                     "всех; по умолчанию условия применяются сразу")
+    exclude_refs: list[str] | None = Field(None, max_length=200, description="Исключить отмеченных «не подходит» (Н2)")
 
 
 class SelectionIn(BaseModel):
