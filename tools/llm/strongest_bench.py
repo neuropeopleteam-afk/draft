@@ -236,15 +236,21 @@ def cmd_run(a) -> None:
     wdir = WDIR / B.slug(a.model)
     wdir.mkdir(parents=True, exist_ok=True)
     for f in a.funcs.split(","):
-        path = wdir / f"{f}.json"
+        path = wdir / (f"{f}__{a.suffix}.json" if a.suffix else f"{f}.json")
         if path.exists() and not a.force:
             print("есть:", path)
             continue
         t0 = time.time()
-        if f == "needs_delta":
-            r = B.run_needs(a.model, a.conc, full=False, limit=SAMPLE["needs_delta"])
-        elif f == "needs_jury":
-            r = B.run_needs(a.model, a.conc, full=False, jury=True)
+        if f in ("needs_delta", "needs_jury"):
+            undo = _with_effort(a.effort)
+            try:
+                r = (B.run_needs(a.model, a.conc, full=False, limit=SAMPLE["needs_delta"]) if f == "needs_delta"
+                     else B.run_needs(a.model, a.conc, full=False, jury=True))
+            finally:
+                undo()
+            if a.effort:
+                r["variant"] = {"name": a.suffix or a.effort, "reasoning_effort": a.effort,
+                                "limit": SAMPLE["needs_delta"] if f == "needs_delta" else 15, "max_tokens": 900}
         elif f == "resume":
             r = B.run_resume(a.model, a.conc, limit=SAMPLE["resume"])
         elif f == "needs_hard":
@@ -254,7 +260,7 @@ def cmd_run(a) -> None:
                 r = B.run_needs(a.model, a.conc, full=False, rows=rows, func="needs_hard")
             finally:
                 undo()
-            r["variant"] = {"reasoning_effort": a.effort or "low"}
+            r["variant"] = {"name": a.suffix or a.effort or "low", "reasoning_effort": a.effort or "low"}
         elif f == "resume_pii":
             r = B.run_resume(a.model, a.conc, rows=json.loads(PII.read_text(encoding="utf-8"))["rows"],
                              func="resume_pii")
@@ -354,7 +360,8 @@ def main() -> None:
     r.add_argument("--cap-usd", type=float, required=True)
     r.add_argument("--floor-usd", type=float, default=8.0)
     r.add_argument("--force", action="store_true")
-    r.add_argument("--effort", default="", help="разбор (needs_hard): усилие рассуждений; none — без рассуждений")
+    r.add_argument("--effort", default="", help="разбор (needs_*): усилие рассуждений; none — без рассуждений")
+    r.add_argument("--suffix", default="", help="файл <func>__<suffix>.json (вариант настроек, напр. noreason)")
     j = sub.add_parser("judge")
     j.add_argument("--model", required=True, help="оцениваемая модель: openrouter=<id>")
     j.add_argument("--judge", default="", help="модель-судья (по умолчанию — другой семьи, см. default_judge)")
