@@ -183,7 +183,7 @@ export function EmployerProbes() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-bold text-brand-night">{p.title}</p>
-              <p className="text-brand-ink/65"><Link className="font-semibold text-brand" to={`/employer/candidates/${p.candidate_ref}`}>{p.candidate_ref}</Link> · {catTitle(p.candidate_category)} · {salaryText(p.salary_from, p.salary_to, p.salary_basis)} · {dt(p.created_at)}</p>
+              <p className="text-brand-ink/65">{p.candidate_deleted ? <><span className="font-semibold">{p.candidate_ref}</span> · кандидат удалил учётную запись</> : <><Link className="font-semibold text-brand" to={`/employer/candidates/${p.candidate_ref}`}>{p.candidate_ref}</Link> · {catTitle(p.candidate_category)}</>} · {salaryText(p.salary_from, p.salary_to, p.salary_basis)} · {dt(p.created_at)}</p>
             </div>
             <Status s={p.status} />
           </div>
@@ -223,7 +223,7 @@ export function EmployerInvitations() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="font-bold text-brand-night">{i.position_title}</p>
-              <p className="text-brand-ink/65"><Link className="font-semibold text-brand" to={`/employer/candidates/${i.candidate_ref}`}>{i.candidate_ref}</Link> · {catTitle(i.candidate_category)} · {salaryText(i.salary_from, i.salary_to, i.salary_basis)}</p>
+              <p className="text-brand-ink/65">{i.candidate_deleted ? <><span className="font-semibold">{i.candidate_ref}</span> · кандидат удалил учётную запись</> : <><Link className="font-semibold text-brand" to={`/employer/candidates/${i.candidate_ref}`}>{i.candidate_ref}</Link> · {catTitle(i.candidate_category)}</>} · {salaryText(i.salary_from, i.salary_to, i.salary_basis)}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {i.counter && <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800">Встречное ждёт решения</span>}

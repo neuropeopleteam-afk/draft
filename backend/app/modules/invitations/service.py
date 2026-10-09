@@ -90,6 +90,8 @@ def contacts_revealed(db: Session, company_id: uuid.UUID, candidate_id: uuid.UUI
 def candidate_contacts(db: Session, candidate_id: uuid.UUID) -> dict:
     p = db.get(CandidateProfile, candidate_id)
     u = db.get(User, candidate_id)
+    if p.deleted_at is not None:  # кандидат удалил учётную запись («Мои данные»): контактов больше нет
+        return {"full_name": None, "email": None, "phone": None, "telegram": None}
     return {"full_name": p.full_name, "email": u.email, "phone": p.phone, "telegram": p.telegram}
 
 

@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, Level, Loading, Toggle, dt, errText, num, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { FspIdLinkButton } from "../../integrations/FspId";
 import { CupPassportEvents } from "../../ideas/cup/Candidate";
 import { useAuth } from "../../lib/auth";
-import { useMeta } from "../../lib/meta";
 import { CameraSettings } from "../../proctor/CameraReport";
 import { MutualPrefs } from "../mutual/Candidate";  // интересы для взаимного подбора (Н9)
 
@@ -67,7 +67,6 @@ const CONSENT_TITLE: Record<string, string> = { processing: "Обработка 
 
 export function Settings() {
   const { me, refresh } = useAuth();
-  const meta = useMeta();
   const onb = useApi<any>("/me/onboarding");
   const consents = useApi<any[]>("/me/consents");
   const [privacy, setPrivacy] = useState<Record<string, boolean>>({});
@@ -132,11 +131,12 @@ export function Settings() {
                 {k === "publication" && (active(k)
                   ? <button className="btn-ghost" onClick={() => consent(k, false)}>Отозвать</button>
                   : <button className="btn-primary" onClick={() => consent(k, true)}>Дать согласие</button>)}
-                {k === "processing" && <span className="text-xs text-brand-ink/65">Отзыв — через обращение к оператору: {meta?.operator?.email}</span>}
+                {k === "processing" && <Link className="text-xs font-semibold text-brand hover:underline" to="/candidate/mydata#delete">Отозвать: удалить учётную запись</Link>}
               </li>
             );
           })}
         </ul>
+        <p className="mt-3 text-sm text-brand-ink/70">Скачать все данные, закрыть доступ к контактам и удалить учётную запись — в разделе <Link className="font-semibold text-brand hover:underline" to="/candidate/mydata">«Мои данные»</Link>.</p>
         {text && <div className="mt-4 rounded-xl bg-[#F3F2FB] p-4 text-xs leading-relaxed text-brand-ink/80"><p className="mb-2 font-semibold">{text.title}</p><p className="whitespace-pre-line">{text.text}</p></div>}
       </section>
       <CameraSettings />
