@@ -4,6 +4,7 @@ import { FspRatingValidation } from "../components/validation/FspRating";
 import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
+import RetestLive from "../components/validation/RetestLive";  // И26: доля повторов заданий между попытками
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
@@ -52,9 +53,13 @@ function Report({ r }: { r: any }) {
     <>
       <p className="mt-4 text-xs text-brand-ink/65">Отчёт построен {dtt(r.generated_at)} · {r.n_per_direction} симулированных кандидатов на направление · {num(r.seconds, 0)} с</p>
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["bank", "Банк"], ["test", "Тест"], ["retest", "Повтор"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["retest", "Повтор"], ["bank", "Банк"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["competitors", "Условия конкурентов"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["matching", "Подбор"], ["experts", "Экспертная разметка"], ["grader", "Оценщик ответов"], ["live", "Живые данные"], ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
+
+      {/* И26: стабильность при повторе и доля повторов заданий — выше по странице (жюри проверяет повтор руками) */}
+      <RetestSection sim={sim} />
+      <RetestLive />
 
       <Section id="bank" title="Банк заданий и калибровка">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -79,7 +84,6 @@ function Report({ r }: { r: any }) {
         <SimConditions sim={sim} kind="test" />
       </Section>
 
-      <RetestSection sim={sim} />
       <JuniorStability />
       <InternCutSection ic={r.intern_cut} />
       <CompetitorConditions sim={sim} />
