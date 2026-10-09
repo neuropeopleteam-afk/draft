@@ -155,6 +155,27 @@ def _existing(db: Session, company_id) -> dict[str, Vacancy]:
     return {v.external_id: v for v in rows}
 
 
+def _linked(db: Session, company_id) -> dict[str, Vacancy]:
+    """Вакансии платформы, вручную связанные с вакансией «Потока» в «Интеграции с ATS» (vacancy_map), — не дублируем."""
+    conn = providers.connection(db, company_id, SOURCE, create=False)
+    ids = {k: str((m or {}).get("id")) for k, m in ((conn.vacancy_map or {}) if conn else {}).items() if (m or {}).get("id")}
+    if not ids:
+        return {}
+    rows = db.scalars(select(Vacancy).where(Vacancy.company_id == company_id)).all()
+    return {ids[str(v.id)]: v for v in rows if str(v.id) in ids and v.source != SOURCE}
+
+
+def _same_title(db: Session, company_id) -> dict[str, Vacancy]:
+    """Свои (не импортированные) вакансии по названию — подсказка «возможно, дубль»."""
+    rows = db.scalars(select(Vacancy).where(Vacancy.company_id == company_id, Vacancy.source.is_(None))).all()
+    return {" ".join(v.title.lower().split()): v for v in rows}
+
+
+def _similar_note(v: Vacancy) -> str:
+    return (f"На платформе уже есть вакансия «{v.title}» — проверьте, не дубль ли; по умолчанию не выбрана. "
+            "Чтобы отклики на неё уходили в «Поток», свяжите её в «Интеграции с ATS»")
+
+
 def edited_after_import(v: Vacancy) -> bool:
     ua, ia = as_aware(v.updated_at), as_aware(v.imported_at)
     return bool(ia and ua and ua > ia)  # при импорте updated_at := imported_at, любая правка позже сдвигает updated_at
@@ -170,23 +191,31 @@ def _state(v: Vacancy | None, m: Mapped) -> str:
 
 
 STATE_TITLES = {"new": "новая", "same": "уже импортирована, без изменений", "changed": "изменилась в «Потоке»",
-                "edited": "уже импортирована и изменена на платформе — не перезаписываем"}
+                "edited": "уже импортирована и изменена на платформе — не перезаписываем",
+                "linked": "уже связана с вакансией платформы — не дублируем"}
 
 
 def preview(db: Session, company_id) -> dict:
     cl = _client(db, company_id)
     jobs = cl.jobs(scope="all")
-    have = _existing(db, company_id)
+    have, linked, titled = _existing(db, company_id), _linked(db, company_id), _same_title(db, company_id)
     items = []
     for j in jobs:
         m = map_job(db, j)
         v = have.get(m.external_id)
-        st = _state(v, m)
+        similar = None
+        if v is None and m.external_id in linked:
+            st, v = "linked", linked[m.external_id]
+        else:
+            st = _state(v, m)
+            similar = titled.get(" ".join(m.title.lower().split())) if st == "new" else None
+        notes = m.notes + ([_similar_note(similar)] if similar else [])
         items.append({"job_id": j.get("id"), "title": m.title, "closed": m.closed, "state": st,
                       "state_title": STATE_TITLES[st], "vacancy_id": str(v.id) if v else None,
+                      "similar_vacancy_id": str(similar.id) if similar else None,
                       "category_id": m.category_id, "stack": m.stack, "salary_from": m.salary_from,
                       "salary_to": m.salary_to, "salary_from_ats": m.salary_from_ats, "city": m.city,
-                      "work_format": m.work_format, "notes": m.notes,
+                      "work_format": m.work_format, "notes": notes,
                       "applicants": (j.get("applicants_count") or {}).get("all"),
                       "url": job_url(cl.base, j.get("id"))})
     return {"provider": SOURCE, "provider_title": SOURCE_TITLE, "demo": "app.potok.io" not in cl.base,
@@ -198,7 +227,7 @@ def run_import(db: Session, company, user, job_ids: list[int] | None, *, publish
     cl = _client(db, company.id)
     jobs = cl.jobs(scope="all")
     want = {str(x) for x in job_ids} if job_ids else None
-    have = _existing(db, company.id)
+    have, linked = _existing(db, company.id), _linked(db, company.id)
     conn = providers.connection(db, company.id, SOURCE, create=False)
     vmap = dict(conn.vacancy_map or {}) if conn else {}
     out = {"created": 0, "updated": 0, "skipped": 0, "items": []}
@@ -208,6 +237,12 @@ def run_import(db: Session, company, user, job_ids: list[int] | None, *, publish
             continue
         m = map_job(db, j)
         v = have.get(jid)
+        if v is None and jid in linked:  # связана вручную: отклики уже уходят в эту вакансию «Потока» — не дублируем
+            lv = linked[jid]
+            out["skipped"] += 1
+            out["items"].append({"job_id": j.get("id"), "vacancy_id": str(lv.id), "title": lv.title, "result": "skipped",
+                                 "state": "linked", "text": STATE_TITLES["linked"], "notes": []})
+            continue
         st = _state(v, m)
         now = utcnow()
         if st == "edited" and m.closed and v.status != "closed":

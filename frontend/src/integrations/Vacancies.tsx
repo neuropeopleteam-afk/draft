@@ -239,7 +239,8 @@ export function EmployerVacancies() {
 /** Бейдж «из «Потока»» у импортированной вакансии: ссылка на вакансию в «Потоке» (у демо — на раздел интеграции). */
 function SourceBadge({ v }: { v: Vacancy }) {
   const cls = "ml-2 inline-flex items-center rounded-full bg-[#ECEAF8] px-2 py-0.5 text-xs font-semibold text-brand-night hover:underline";
-  const label = `из «${v.source_title ?? v.source}» · № ${v.external_id}`;
+  const GEN: Record<string, string> = { potok: "Потока" };  // «из «Потока»» — родительный падеж
+  const label = `из «${GEN[v.source ?? ""] ?? v.source_title ?? v.source}» · № ${v.external_id}`;
   const hint = v.edited_after_import ? "Изменена на платформе после импорта — повторный импорт её не перезапишет" : "Импортирована из ATS; повторный импорт обновит поля";
   return v.external_url
     ? <a className={cls} href={v.external_url} target="_blank" rel="noopener noreferrer" title={hint}>{label} ↗</a>
@@ -247,8 +248,8 @@ function SourceBadge({ v }: { v: Vacancy }) {
 }
 
 interface ImportItem {
-  job_id: number; title: string; closed: boolean; state: "new" | "same" | "changed" | "edited"; state_title: string;
-  vacancy_id: string | null; category_id: string | null; stack: string[]; salary_from: number; salary_to: number;
+  job_id: number; title: string; closed: boolean; state: "new" | "same" | "changed" | "edited" | "linked"; state_title: string;
+  vacancy_id: string | null; similar_vacancy_id?: string | null; category_id: string | null; stack: string[]; salary_from: number; salary_to: number;
   salary_from_ats: boolean; city: string | null; work_format: string; notes: string[]; applicants: number | null; url: string | null;
 }
 interface ImportResult { created: number; updated: number; skipped: number; items: { job_id: number; title: string; result: string; text: string; notes: string[] }[] }
@@ -261,7 +262,7 @@ function ImportModal({ open, onClose, onDone }: { open: boolean; onClose: () => 
   const [res, setRes] = useState<ImportResult | null>(null);
   const [err, setErr] = useState<string | null>(null);
   useEffect(() => {
-    if (data) setPick(Object.fromEntries(data.items.map((x) => [x.job_id, x.state === "new" || x.state === "changed"])));
+    if (data) setPick(Object.fromEntries(data.items.map((x) => [x.job_id, (x.state === "new" && !x.similar_vacancy_id) || x.state === "changed"])));
   }, [data]);
   useEffect(() => { if (!open) { setRes(null); setErr(null); } }, [open]);
   const chosen = data?.items.filter((x) => pick[x.job_id]).map((x) => x.job_id) ?? [];
@@ -271,7 +272,7 @@ function ImportModal({ open, onClose, onDone }: { open: boolean; onClose: () => 
     catch (e) { setErr(errText(e)); }
     finally { setBusy(false); }
   }
-  const STATE_CLS: Record<string, string> = { new: "bg-emerald-50 text-emerald-700", changed: "bg-amber-50 text-amber-800", same: "bg-gray-100 text-gray-600", edited: "bg-gray-100 text-gray-600" };
+  const STATE_CLS: Record<string, string> = { new: "bg-emerald-50 text-emerald-700", changed: "bg-amber-50 text-amber-800", same: "bg-gray-100 text-gray-600", edited: "bg-gray-100 text-gray-600", linked: "bg-gray-100 text-gray-600" };
   return (
     <Modal open={open} onClose={onClose} title="Импорт вакансий из «Потока»">
       <div className="space-y-4 text-sm">
@@ -285,11 +286,11 @@ function ImportModal({ open, onClose, onDone }: { open: boolean; onClose: () => 
               {data.items.map((x) => (
                 <li key={x.job_id} className="rounded-xl border border-brand-night/10 p-3">
                   <label className="flex min-w-0 items-start gap-3">
-                    <input type="checkbox" className="mt-1" checked={!!pick[x.job_id]} disabled={x.state === "same"} onChange={(e) => setPick({ ...pick, [x.job_id]: e.target.checked })} />
+                    <input type="checkbox" className="mt-1" checked={!!pick[x.job_id]} disabled={x.state === "same" || x.state === "linked"} onChange={(e) => setPick({ ...pick, [x.job_id]: e.target.checked })} />
                     <span className="min-w-0 flex-1">
                       <span className="font-semibold text-brand-night">{x.title}</span>
-                      <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold ${STATE_CLS[x.state]}`}>{x.state_title}</span>
-                      {x.closed && <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">закрыта в «Потоке»</span>}
+                      <span className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${STATE_CLS[x.state]}`}>{x.state_title}</span>
+                      {x.closed && <span className="ml-2 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">закрыта в «Потоке»</span>}
                       <span className="mt-1 block text-brand-ink/65">№ {x.job_id} · {x.category_id ? catTitle(x.category_id) : "категория не определена"} · {salaryText(x.salary_from, x.salary_to, "gross")}{x.salary_from_ats ? "" : " (рынок)"}{x.city ? ` · ${x.city}` : ""}{x.applicants != null ? ` · кандидатов в «Потоке»: ${x.applicants}` : ""}</span>
                       {x.notes.map((n, i) => <span key={i} className="mt-1 block text-xs text-amber-800">{n}</span>)}
                       {x.url && <a className="mt-1 inline-block text-xs font-semibold text-brand-plum underline" href={x.url} target="_blank" rel="noopener noreferrer">Открыть в «Потоке» ↗</a>}
