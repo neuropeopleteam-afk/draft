@@ -67,7 +67,7 @@ export default function Profile() {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="font-bold text-brand-night">Резюме PDF или DOCX</h2>
-            <p className="mt-1 max-w-xl text-sm text-brand-ink/65">Извлечём стек, роли, стаж и софт-скиллы — как заявленные (T0), не подтверждённые тестом. ФИО и контакты вырезаются на нашем сервере до любой обработки моделью; исходный файл не хранится. До 5 МБ.</p>
+            <p className="mt-1 max-w-xl text-sm text-brand-ink/65">Извлечём стек, роли, стаж и софт-скиллы — как заявленные (T0), не подтверждённые тестом. ФИО, контакты, адрес, дата рождения и возраст вырезаются на нашем сервере до любой обработки моделью (город остаётся для подбора); исходный файл не хранится. До 5 МБ.</p>
             <LlmOff className="mt-1 max-w-xl text-xs text-brand-ink/65">LLM на этой установке не подключён: резюме разбирается по словарям и правилам, нераспознанное добавьте вручную.</LlmOff>
           </div>
           <label className={`btn-primary cursor-pointer ${busy ? "pointer-events-none opacity-60" : ""}`}>
@@ -81,7 +81,7 @@ export default function Profile() {
             <div className="rounded-xl bg-[#F3F2FB] p-4 text-sm">
               <p className="font-semibold text-brand-night">Вырезано до обработки</p>
               <p className="mt-1 text-brand-ink/70">
-                {Object.entries(r.pii_summary ?? {}).filter(([k]) => k !== "ner").map(([k, v]) => `${({ person: "ФИО", email: "почта", phone: "телефон", telegram: "Telegram", url_messenger: "ссылки на профили", birthdate: "дата рождения", snils: "СНИЛС", passport: "паспорт", address: "адрес" } as any)[k] ?? k}: ${v}`).join(" · ") || "персональных данных не найдено"}
+                {Object.entries(r.pii_summary ?? {}).filter(([k]) => k !== "ner").map(([k, v]) => `${({ person: "ФИО", email: "почта", phone: "телефон", telegram: "Telegram", url_messenger: "ссылки на профили", birthdate: "дата рождения", age: "возраст", gender: "пол", snils: "СНИЛС", passport: "паспорт", inn: "ИНН", address: "адрес" } as any)[k] ?? k}: ${v}`).join(" · ") || "персональных данных не найдено"}
               </p>
               {found && (found.full_name || found.email || found.phone) && (
                 <div className="mt-3 flex flex-wrap items-center gap-3">
