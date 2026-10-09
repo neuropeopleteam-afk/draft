@@ -1,0 +1,6601 @@
+[
+ {
+  "id": "J01",
+  "kind": "опечатки, сленг",
+  "text": "Ищем питон разработчика мидл, джанго, постгрес, удаленка, 200-250к",
+  "req": {
+   "direction": "backend",
+   "grade": "middle",
+   "required": [
+    "python",
+    "django",
+    "postgresql"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    200000,
+    250000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 44,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.middle",
+    "exact",
+    44
+   ],
+   [
+    "backend.junior",
+    "below",
+    41
+   ],
+   [
+    "backend.senior",
+    "above",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-ERXPBH",
+    "score": 0.7193,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Python=T1",
+     "Django=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 02.10.2026: 14 из 18 верно, θ = +1.27 ± 0.49"
+   },
+   {
+    "ref": "C-YFGZCC",
+    "score": 0.6195,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "office",
+    "stack": [
+     "Python=T0",
+     "Django=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 21.09.2026: 13 из 18 верно, θ = +0.82 ± 0.39"
+   },
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.5925,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "Python=none",
+     "Django=none",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-UCLYL4",
+    "score": 0.5706,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "hybrid",
+    "stack": [
+     "Python=T1",
+     "Django=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 22.07.2026: 12 из 18 верно, θ = +0.67 ± 0.44"
+   },
+   {
+    "ref": "C-7ZG7MZ",
+    "score": 0.5693,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "office",
+    "stack": [
+     "Python=none",
+     "Django=none",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 03.08.2026: 12 из 18 верно, θ = +0.95 ± 0.39"
+   }
+  ],
+  "ms_parse": 2.5,
+  "ms_select": 552.5,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "django",
+     "title": "Django",
+     "cut": 41
+    },
+    {
+     "kind": "skill",
+     "key": "python",
+     "title": "Python",
+     "cut": 36
+    }
+   ],
+   "options": [
+    [
+     "grade",
+     "Добавить Backend · Senior (грейд выше) — ещё 1 подтверждённый Senior",
+     1
+    ],
+    [
+     "format",
+     "Любой формат вместо «удалённо» — ещё 1 подтверждённый Middle",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 76.0
+ },
+ {
+  "id": "J02",
+  "kind": "английский",
+  "text": "Нужен Senior Python Developer: FastAPI, PostgreSQL, Redis, Kafka. Remote. Salary 350k+",
+  "req": {
+   "direction": "backend",
+   "grade": "senior",
+   "required": [
+    "python",
+    "fastapi",
+    "postgresql",
+    "redis",
+    "kafka"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    350000,
+    null
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 45,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "backend.senior",
+    "exact",
+    45
+   ],
+   [
+    "backend.middle",
+    "below",
+    44
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-TUGXJT",
+    "score": 0.7372,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "any",
+    "stack": [
+     "Python=T1",
+     "FastAPI=T1",
+     "PostgreSQL=T1",
+     "Redis=T1",
+     "Kafka=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 18.08.2026: 13 из 18 верно, θ = +1.93 ± 0.41"
+   },
+   {
+    "ref": "C-RFDP76",
+    "score": 0.5736,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "remote",
+    "stack": [
+     "Python=T0",
+     "FastAPI=T1",
+     "PostgreSQL=T1",
+     "Redis=T1",
+     "Kafka=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 02.10.2026: 13 из 18 верно, θ = +1.77 ± 0.43"
+   },
+   {
+    "ref": "C-5L3869",
+    "score": 0.5702,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "office",
+    "stack": [
+     "Python=none",
+     "FastAPI=none",
+     "PostgreSQL=T1",
+     "Redis=T1",
+     "Kafka=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 12.09.2026: 13 из 18 верно, θ = +2.25 ± 0.35"
+   },
+   {
+    "ref": "C-XRTCE7",
+    "score": 0.553,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "office",
+    "stack": [
+     "Python=none",
+     "FastAPI=none",
+     "PostgreSQL=T1",
+     "Redis=T1",
+     "Kafka=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 12.08.2026: 13 из 18 верно, θ = +2.02 ± 0.47"
+   },
+   {
+    "ref": "C-8M4NV2",
+    "score": 0.5486,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "hybrid",
+    "stack": [
+     "Python=none",
+     "FastAPI=none",
+     "PostgreSQL=T0",
+     "Redis=T1",
+     "Kafka=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 21.07.2026: 11 из 18 верно, θ = +1.97 ± 0.39"
+   }
+  ],
+  "ms_parse": 1.5,
+  "ms_select": 417.8,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "python",
+     "title": "Python",
+     "cut": 35
+    },
+    {
+     "kind": "skill",
+     "key": "fastapi",
+     "title": "FastAPI",
+     "cut": 35
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без Redis — ещё 1 подтверждённый Senior",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 32.2
+ },
+ {
+  "id": "J03",
+  "kind": "тимлид",
+  "text": "Тимлид бэкенд-команды на Go, 5+ лет опыта, Kubernetes, Kafka, PostgreSQL. Москва, офис или гибрид. До 450 000 руб.",
+  "req": {
+   "direction": "backend",
+   "grade": "senior",
+   "required": [
+    "go",
+    "kubernetes",
+    "kafka",
+    "postgresql"
+   ],
+   "desired": [],
+   "experience": 5.0,
+   "work_format": "hybrid",
+   "work_formats": [
+    "office",
+    "hybrid"
+   ],
+   "city": "Москва",
+   "salary": [
+    null,
+    450000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 45,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "backend.senior",
+    "exact",
+    45
+   ],
+   [
+    "backend.middle",
+    "below",
+    44
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-TUGXJT",
+    "score": 0.5839,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "any",
+    "stack": [
+     "Go=none",
+     "Kubernetes=none",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 18.08.2026: 13 из 18 верно, θ = +1.93 ± 0.41"
+   },
+   {
+    "ref": "C-YLUKV5",
+    "score": 0.5741,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "any",
+    "stack": [
+     "Go=T1",
+     "Kubernetes=none",
+     "Kafka=none",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 08.08.2026: 12 из 18 верно, θ = +2.21 ± 0.43"
+   },
+   {
+    "ref": "C-5L3869",
+    "score": 0.5562,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "office",
+    "stack": [
+     "Go=none",
+     "Kubernetes=T0",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 12.09.2026: 13 из 18 верно, θ = +2.25 ± 0.35"
+   },
+   {
+    "ref": "C-77ZAPZ",
+    "score": 0.5333,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "office",
+    "stack": [
+     "Go=none",
+     "Kubernetes=T0",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 09.09.2026: 14 из 18 верно, θ = +2.26 ± 0.40"
+   },
+   {
+    "ref": "C-7X62LR",
+    "score": 0.5216,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "remote",
+    "stack": [
+     "Go=T1",
+     "Kubernetes=T0",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 16.08.2026: 10 из 18 верно, θ = +1.35 ± 0.35"
+   }
+  ],
+  "ms_parse": 2.2,
+  "ms_select": 416.3,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "kubernetes",
+     "title": "Kubernetes",
+     "cut": 45
+    },
+    {
+     "kind": "skill",
+     "key": "go",
+     "title": "Go",
+     "cut": 39
+    }
+   ],
+   "options": [
+    [
+     "combo",
+     "Без Kubernetes и без Go — ещё 5 подтверждённых Senior",
+     5
+    ]
+   ]
+  },
+  "ms_whatif": 32.9
+ },
+ {
+  "id": "J04",
+  "kind": "junior, вилка",
+  "text": "Junior frontend: React, TypeScript, HTML/CSS. Можно без коммерческого опыта, обучим. Удалённо, 80 000 – 100 000 ₽",
+  "req": {
+   "direction": "frontend",
+   "grade": "junior",
+   "required": [
+    "react",
+    "typescript",
+    "html-css"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    80000,
+    100000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 31,
+  "confirmed": 30,
+  "provisional": 1,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "frontend.junior",
+    "exact",
+    31
+   ],
+   [
+    "frontend.intern",
+    "below",
+    2
+   ],
+   [
+    "frontend.middle",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-7FEDZF",
+    "score": 0.7348,
+    "category": "Frontend · Junior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "any",
+    "stack": [
+     "React=T1",
+     "TypeScript=T1",
+     "HTML и CSS=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Junior подтверждена тестом 09.08.2026: 14 из 18 верно, θ = +0.30 ± 0.50"
+   },
+   {
+    "ref": "C-R98UFG",
+    "score": 0.7018,
+    "category": "Frontend · Junior",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "remote",
+    "stack": [
+     "React=T1",
+     "TypeScript=T1",
+     "HTML и CSS=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Junior подтверждена тестом 08.09.2026: 12 из 18 верно, θ = -0.09 ± 0.40"
+   },
+   {
+    "ref": "C-3GB7QL",
+    "score": 0.6905,
+    "category": "Frontend · Junior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "any",
+    "stack": [
+     "React=T1",
+     "TypeScript=T1",
+     "HTML и CSS=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Junior подтверждена тестом 08.08.2026: 11 из 18 верно, θ = -0.42 ± 0.44"
+   },
+   {
+    "ref": "C-6QS8GH",
+    "score": 0.6686,
+    "category": "Frontend · Junior",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "remote",
+    "stack": [
+     "React=T1",
+     "TypeScript=T1",
+     "HTML и CSS=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Junior подтверждена тестом 04.08.2026: 11 из 18 верно, θ = -0.10 ± 0.36"
+   },
+   {
+    "ref": "C-SGMUCS",
+    "score": 0.6671,
+    "category": "Frontend · Junior",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "any",
+    "stack": [
+     "React=T1",
+     "TypeScript=T1",
+     "HTML и CSS=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Junior подтверждена тестом 11.08.2026: 11 из 18 верно, θ = +0.05 ± 0.37"
+   }
+  ],
+  "ms_parse": 2.0,
+  "ms_select": 420.6,
+  "whatif": {
+   "shown": true,
+   "strict": 2,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "html-css",
+     "title": "HTML и CSS",
+     "cut": 27
+    },
+    {
+     "kind": "skill",
+     "key": "react",
+     "title": "React",
+     "cut": 8
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без «HTML и CSS» — ещё 12 подтверждённых Junior",
+     12
+    ]
+   ]
+  },
+  "ms_whatif": 22.4
+ },
+ {
+  "id": "J05",
+  "kind": "опечатки",
+  "text": "Фронтэндер на реакте, мидл, редакс, тайпскрипт. зп 180 тыс на руки",
+  "req": {
+   "direction": "frontend",
+   "grade": "middle",
+   "required": [
+    "react",
+    "state-management",
+    "typescript"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    180000,
+    180000
+   ],
+   "net": true,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "frontend.middle",
+    "exact",
+    29
+   ],
+   [
+    "frontend.junior",
+    "below",
+    31
+   ],
+   [
+    "frontend.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-YP9BHD",
+    "score": 0.7098,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "React=T1",
+     "Управление состоянием (Redux, Zustand)=T1",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 07.09.2026: 12 из 18 верно, θ = +1.23 ± 0.50"
+   },
+   {
+    "ref": "C-ZWZH49",
+    "score": 0.6656,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "any",
+    "stack": [
+     "React=T1",
+     "Управление состоянием (Redux, Zustand)=T1",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 12.09.2026: 11 из 18 верно, θ = +0.90 ± 0.47"
+   },
+   {
+    "ref": "C-WMZF4K",
+    "score": 0.6458,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "React=T1",
+     "Управление состоянием (Redux, Zustand)=none",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 25.08.2026: 12 из 18 верно, θ = +1.00 ± 0.47"
+   },
+   {
+    "ref": "C-2NEE92",
+    "score": 0.6412,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "React=T1",
+     "Управление состоянием (Redux, Zustand)=none",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 28.09.2026: 13 из 18 верно, θ = +1.20 ± 0.45"
+   },
+   {
+    "ref": "C-FQTWN5",
+    "score": 0.6169,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "office",
+    "stack": [
+     "React=T1",
+     "Управление состоянием (Redux, Zustand)=none",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 23.08.2026: 13 из 18 верно, θ = +1.03 ± 0.38"
+   }
+  ],
+  "ms_parse": 1.3,
+  "ms_select": 413.5,
+  "whatif": {
+   "shown": true,
+   "strict": 2,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "state-management",
+     "title": "Управление состоянием (Redux, Zustand)",
+     "cut": 23
+    },
+    {
+     "kind": "skill",
+     "key": "react",
+     "title": "React",
+     "cut": 15
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без «Управление состоянием (Redux, Zustand)» — ещё 8 подтверждённых Middle",
+     8
+    ],
+    [
+     "grade",
+     "Добавить Frontend · Senior (грейд выше) — ещё 5 подтверждённых Senior",
+     5
+    ],
+    [
+     "skill",
+     "Без React — ещё 3 подтверждённых Middle",
+     3
+    ]
+   ]
+  },
+  "ms_whatif": 58.7
+ },
+ {
+  "id": "J06",
+  "kind": "смесь языков",
+  "text": "Middle QA automation, Python + pytest + Selenium, API testing (Postman). Гибрид, Санкт-Петербург. 160-200k",
+  "req": {
+   "direction": "qa",
+   "grade": "middle",
+   "required": [
+    "python",
+    "pytest",
+    "selenium",
+    "api-testing"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "hybrid",
+   "work_formats": null,
+   "city": "Санкт-Петербург",
+   "salary": [
+    160000,
+    200000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 28,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "qa.middle",
+    "exact",
+    28
+   ],
+   [
+    "qa.junior",
+    "below",
+    31
+   ],
+   [
+    "qa.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-4UP5YV",
+    "score": 0.5632,
+    "category": "QA · Middle",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "any",
+    "stack": [
+     "Python=none",
+     "pytest=none",
+     "Selenium=T1",
+     "Тестирование API=T1"
+    ],
+    "mismatch": [
+     "Нужен Санкт-Петербург; заявлен другой город без переезда"
+    ],
+    "head": "Категория QA · Middle подтверждена тестом 24.09.2026: 13 из 18 верно, θ = +1.02 ± 0.45"
+   },
+   {
+    "ref": "C-YKXFPY",
+    "score": 0.549,
+    "category": "QA · Middle",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "any",
+    "stack": [
+     "Python=none",
+     "pytest=T1",
+     "Selenium=none",
+     "Тестирование API=T0"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Middle подтверждена тестом 12.09.2026: 12 из 18 верно, θ = +1.19 ± 0.34"
+   },
+   {
+    "ref": "C-V9TL3M",
+    "score": 0.5377,
+    "category": "QA · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "remote",
+    "stack": [
+     "Python=none",
+     "pytest=none",
+     "Selenium=T1",
+     "Тестирование API=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Санкт-Петербург; заявлен другой город без переезда"
+    ],
+    "head": "Категория QA · Middle подтверждена тестом 19.09.2026: 13 из 18 верно, θ = +1.00 ± 0.36"
+   },
+   {
+    "ref": "C-2F6KMT",
+    "score": 0.5336,
+    "category": "QA · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "office",
+    "stack": [
+     "Python=none",
+     "pytest=none",
+     "Selenium=none",
+     "Тестирование API=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Санкт-Петербург; заявлен другой город без переезда"
+    ],
+    "head": "Категория QA · Middle подтверждена тестом 06.08.2026: 13 из 18 верно, θ = +1.29 ± 0.44"
+   },
+   {
+    "ref": "C-B3JN25",
+    "score": 0.5176,
+    "category": "QA · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "Python=none",
+     "pytest=T1",
+     "Selenium=none",
+     "Тестирование API=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Санкт-Петербург; заявлен другой город без переезда"
+    ],
+    "head": "Категория QA · Middle подтверждена тестом 27.08.2026: 13 из 18 верно, θ = +0.96 ± 0.37"
+   }
+  ],
+  "ms_parse": 1.9,
+  "ms_select": 401.2,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "python",
+     "title": "Python",
+     "cut": 28
+    },
+    {
+     "kind": "skill",
+     "key": "selenium",
+     "title": "Selenium",
+     "cut": 23
+    }
+   ],
+   "options": [
+    [
+     "combo",
+     "Без Python и без Selenium — ещё 1 подтверждённый Middle",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 32.8
+ },
+ {
+  "id": "J07",
+  "kind": "ручное QA",
+  "text": "Тестировщик ручной, джуниор, тест-кейсы, чек-листы, баг-репорты. Офис Казань. 60к",
+  "req": {
+   "direction": "qa",
+   "grade": "junior",
+   "required": [
+    "manual-testing",
+    "test-design"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "office",
+   "work_formats": null,
+   "city": "Казань",
+   "salary": [
+    60000,
+    60000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 31,
+  "confirmed": 30,
+  "provisional": 1,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "qa.junior",
+    "exact",
+    31
+   ],
+   [
+    "qa.intern",
+    "below",
+    2
+   ],
+   [
+    "qa.middle",
+    "above",
+    28
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-6HL4VK",
+    "score": 0.7412,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Ручное тестирование=T1",
+     "Тест-дизайн=T1"
+    ],
+    "mismatch": [
+     "Нужен Казань; заявлен другой город без переезда"
+    ],
+    "head": "Категория QA · Junior подтверждена тестом 02.10.2026: 12 из 18 верно, θ = -0.06 ± 0.38"
+   },
+   {
+    "ref": "C-3FDGKH",
+    "score": 0.7347,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "Ручное тестирование=T1",
+     "Тест-дизайн=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Казань; заявлен другой город без переезда"
+    ],
+    "head": "Категория QA · Junior подтверждена тестом 19.09.2026: 11 из 18 верно, θ = -0.03 ± 0.35"
+   },
+   {
+    "ref": "C-BY4JQ9",
+    "score": 0.7181,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "hybrid",
+    "stack": [
+     "Ручное тестирование=T1",
+     "Тест-дизайн=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Казань; заявлен другой город без переезда"
+    ],
+    "head": "Категория QA · Junior подтверждена тестом 11.08.2026: 12 из 18 верно, θ = +0.28 ± 0.44"
+   },
+   {
+    "ref": "C-CSFCWE",
+    "score": 0.6782,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "remote",
+    "stack": [
+     "Ручное тестирование=T1",
+     "Тест-дизайн=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория QA · Junior подтверждена тестом 10.09.2026: 11 из 18 верно, θ = -0.20 ± 0.47"
+   },
+   {
+    "ref": "C-R8VM2D",
+    "score": 0.6746,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "any",
+    "stack": [
+     "Ручное тестирование=T1",
+     "Тест-дизайн=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Junior подтверждена тестом 31.07.2026: 13 из 18 верно, θ = -0.09 ± 0.40"
+   }
+  ],
+  "ms_parse": 1.8,
+  "ms_select": 487.3,
+  "whatif": {
+   "shown": true,
+   "strict": 2,
+   "cuts": [
+    {
+     "kind": "format",
+     "key": "work_format",
+     "title": "формат «офис»",
+     "cut": 21
+    },
+    {
+     "kind": "city",
+     "key": "city",
+     "title": "город Казань",
+     "cut": 17
+    }
+   ],
+   "options": [
+    [
+     "city",
+     "Без условия «город Казань» — ещё 4 подтверждённых Junior",
+     4
+    ],
+    [
+     "format",
+     "Любой формат вместо «офис» — ещё 3 подтверждённых Junior",
+     3
+    ],
+    [
+     "grade",
+     "Добавить QA · Middle (грейд выше) — ещё 2 подтверждённых Middle",
+     2
+    ]
+   ]
+  },
+  "ms_whatif": 23.1
+ },
+ {
+  "id": "J08",
+  "kind": "вне справочника: DevOps",
+  "text": "DevOps-инженер middle: Kubernetes, Docker, Terraform, CI/CD (GitLab), мониторинг Prometheus. Удаленно. 250-300 т.р.",
+  "req": {
+   "direction": "backend",
+   "grade": "middle",
+   "required": [
+    "kubernetes",
+    "docker",
+    "ci-cd",
+    "git"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    250000,
+    300000
+   ],
+   "net": false,
+   "coverage": "devops",
+   "hint": null,
+   "unknown": [
+    {
+     "term": "Terraform",
+     "evidence": {
+      "start": 43,
+      "end": 52,
+      "quote": "Terraform",
+      "context": "DevOps-инженер middle: Kubernetes, Docker, Terraform, CI/CD (GitLab), мониторинг Prometheus.",
+      "source": "rules"
+     }
+    },
+    {
+     "term": "Prometheus",
+     "evidence": {
+      "start": 81,
+      "end": 91,
+      "quote": "Prometheus",
+      "context": "DevOps-инженер middle: Kubernetes, Docker, Terraform, CI/CD (GitLab), мониторинг Prometheus.",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 44,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.middle",
+    "exact",
+    44
+   ],
+   [
+    "backend.junior",
+    "below",
+    41
+   ],
+   [
+    "backend.senior",
+    "above",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.6184,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "Kubernetes=none",
+     "Docker=T1",
+     "CI/CD=none",
+     "Git=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-GD75XE",
+    "score": 0.5765,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "remote",
+    "stack": [
+     "Kubernetes=none",
+     "Docker=T1",
+     "CI/CD=none",
+     "Git=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 15.08.2026: 12 из 18 верно, θ = +1.17 ± 0.35"
+   },
+   {
+    "ref": "C-F29VD9",
+    "score": 0.5307,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "remote",
+    "stack": [
+     "Kubernetes=T0",
+     "Docker=none",
+     "CI/CD=none",
+     "Git=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 02.09.2026: 11 из 18 верно, θ = +1.10 ± 0.39"
+   },
+   {
+    "ref": "C-R792EQ",
+    "score": 0.5238,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "any",
+    "stack": [
+     "Kubernetes=none",
+     "Docker=T1",
+     "CI/CD=none",
+     "Git=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 14.09.2026: 11 из 18 верно, θ = +0.89 ± 0.42"
+   },
+   {
+    "ref": "C-7ZG7MZ",
+    "score": 0.4975,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "office",
+    "stack": [
+     "Kubernetes=none",
+     "Docker=none",
+     "CI/CD=none",
+     "Git=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 03.08.2026: 12 из 18 верно, θ = +0.95 ± 0.39"
+   }
+  ],
+  "ms_parse": 1.9,
+  "ms_select": 414.8,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "kubernetes",
+     "title": "Kubernetes",
+     "cut": 44
+    },
+    {
+     "kind": "skill",
+     "key": "ci-cd",
+     "title": "CI/CD",
+     "cut": 44
+    }
+   ],
+   "options": [
+    [
+     "combo",
+     "Без Kubernetes и без CI/CD — ещё 3 подтверждённых Middle",
+     3
+    ]
+   ]
+  },
+  "ms_whatif": 44.8
+ },
+ {
+  "id": "J09",
+  "kind": "вне справочника: 1С",
+  "text": "Программист 1С, middle, доработка конфигураций УТ и ERP, СКД. Офис, Екатеринбург. 150 000",
+  "req": {
+   "direction": "backend",
+   "grade": "middle",
+   "required": [],
+   "desired": [],
+   "experience": null,
+   "work_format": "office",
+   "work_formats": null,
+   "city": "Екатеринбург",
+   "salary": [
+    150000,
+    150000
+   ],
+   "net": false,
+   "coverage": "1c",
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 44,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.middle",
+    "exact",
+    44
+   ],
+   [
+    "backend.junior",
+    "below",
+    41
+   ],
+   [
+    "backend.senior",
+    "above",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.8032,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Екатеринбург; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-F29VD9",
+    "score": 0.7701,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Екатеринбург; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 02.09.2026: 11 из 18 верно, θ = +1.10 ± 0.39"
+   },
+   {
+    "ref": "C-7ZG7MZ",
+    "score": 0.7576,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "office",
+    "stack": [],
+    "mismatch": [
+     "Нужен Екатеринбург; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 03.08.2026: 12 из 18 верно, θ = +0.95 ± 0.39"
+   },
+   {
+    "ref": "C-GD75XE",
+    "score": 0.755,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Екатеринбург; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 15.08.2026: 12 из 18 верно, θ = +1.17 ± 0.35"
+   },
+   {
+    "ref": "C-3SGEB9",
+    "score": 0.7456,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Екатеринбург",
+    "format": "office",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 02.08.2026: 13 из 18 верно, θ = +0.94 ± 0.42"
+   }
+  ],
+  "ms_parse": 1.9,
+  "ms_select": 416.4,
+  "whatif": {
+   "shown": false,
+   "strict": 8,
+   "cuts": [
+    {
+     "kind": "city",
+     "key": "city",
+     "title": "город Екатеринбург",
+     "cut": 34
+    },
+    {
+     "kind": "format",
+     "key": "work_format",
+     "title": "формат «офис»",
+     "cut": 23
+    }
+   ],
+   "options": [
+    [
+     "city",
+     "Без условия «город Екатеринбург» — ещё 13 подтверждённых Middle",
+     13
+    ],
+    [
+     "grade",
+     "Добавить Backend · Senior (грейд выше) — ещё 9 подтверждённых Senior",
+     9
+    ],
+    [
+     "grade",
+     "Добавить Backend · Junior (грейд ниже) — ещё 3 подтверждённых Junior",
+     3
+    ]
+   ]
+  },
+  "ms_whatif": 72.8
+ },
+ {
+  "id": "J10",
+  "kind": "вне справочника: аналитика",
+  "text": "Аналитик данных junior: SQL, Python (pandas), A/B-тесты, Tableau. Москва, гибрид, 120-150 тыс.",
+  "req": {
+   "direction": "data_ml",
+   "grade": "junior",
+   "required": [
+    "sql",
+    "python",
+    "pandas",
+    "statistics"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "hybrid",
+   "work_formats": null,
+   "city": "Москва",
+   "salary": [
+    120000,
+    150000
+   ],
+   "net": false,
+   "coverage": "analytics",
+   "hint": null,
+   "unknown": [
+    {
+     "term": "Tableau",
+     "evidence": {
+      "start": 57,
+      "end": 64,
+      "quote": "Tableau",
+      "context": "Аналитик данных junior: SQL, Python (pandas), A/B-тесты, Tableau.",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 32,
+  "confirmed": 30,
+  "provisional": 1,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "data_ml.junior",
+    "exact",
+    31
+   ],
+   [
+    "data_ml.intern",
+    "below",
+    2
+   ],
+   [
+    "data_ml.middle",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-Z4F4U6",
+    "score": 0.6841,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "office",
+    "stack": [
+     "SQL=T1",
+     "Python=T1",
+     "pandas=T1",
+     "Статистика и A/B-тесты=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 21.07.2026: 12 из 18 верно, θ = +0.00 ± 0.40"
+   },
+   {
+    "ref": "C-LHKSVQ",
+    "score": 0.5941,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "any",
+    "stack": [
+     "SQL=none",
+     "Python=T1",
+     "pandas=T1",
+     "Статистика и A/B-тесты=none"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 25.07.2026: 12 из 18 верно, θ = -0.22 ± 0.32"
+   },
+   {
+    "ref": "C-927MMZ",
+    "score": 0.5883,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "SQL=none",
+     "Python=T1",
+     "pandas=T1",
+     "Статистика и A/B-тесты=none"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 12.09.2026: 12 из 18 верно, θ = -0.04 ± 0.41"
+   },
+   {
+    "ref": "C-SM8K84",
+    "score": 0.5642,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "any",
+    "stack": [
+     "SQL=none",
+     "Python=T1",
+     "pandas=T1",
+     "Статистика и A/B-тесты=none"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 21.09.2026: 12 из 18 верно, θ = -0.22 ± 0.34"
+   },
+   {
+    "ref": "C-H6M6HJ",
+    "score": 0.5448,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "remote",
+    "stack": [
+     "SQL=none",
+     "Python=T1",
+     "pandas=T1",
+     "Статистика и A/B-тесты=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 26.07.2026: 12 из 18 верно, θ = -0.07 ± 0.37"
+   }
+  ],
+  "ms_parse": 1.6,
+  "ms_select": 416.2,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "statistics",
+     "title": "Статистика и A/B-тесты",
+     "cut": 30
+    },
+    {
+     "kind": "skill",
+     "key": "sql",
+     "title": "SQL",
+     "cut": 27
+    }
+   ],
+   "options": [
+    [
+     "combo",
+     "Без «Статистика и A/B-тесты» и без SQL — ещё 3 подтверждённых Junior",
+     3
+    ]
+   ]
+  },
+  "ms_whatif": 23.5
+ },
+ {
+  "id": "J11",
+  "kind": "слишком общий",
+  "text": "Нужен хороший программист",
+  "req": {
+   "direction": null,
+   "grade": null,
+   "required": [],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 500,
+  "confirmed": 489,
+  "provisional": 5,
+  "unconfirmed": 6,
+  "categories": [
+   [
+    "backend.junior",
+    "all",
+    41
+   ],
+   [
+    "backend.middle",
+    "all",
+    44
+   ],
+   [
+    "backend.senior",
+    "all",
+    45
+   ],
+   [
+    "frontend.junior",
+    "all",
+    31
+   ],
+   [
+    "frontend.middle",
+    "all",
+    29
+   ],
+   [
+    "frontend.senior",
+    "all",
+    29
+   ],
+   [
+    "data_ml.junior",
+    "all",
+    31
+   ],
+   [
+    "data_ml.middle",
+    "all",
+    29
+   ],
+   [
+    "data_ml.senior",
+    "all",
+    29
+   ],
+   [
+    "qa.junior",
+    "all",
+    31
+   ],
+   [
+    "qa.middle",
+    "all",
+    28
+   ],
+   [
+    "qa.senior",
+    "all",
+    29
+   ],
+   [
+    "security.junior",
+    "all",
+    31
+   ],
+   [
+    "security.middle",
+    "all",
+    29
+   ],
+   [
+    "security.senior",
+    "all",
+    28
+   ],
+   [
+    "backend.intern",
+    "all",
+    2
+   ],
+   [
+    "frontend.intern",
+    "all",
+    2
+   ],
+   [
+    "data_ml.intern",
+    "all",
+    2
+   ],
+   [
+    "qa.intern",
+    "all",
+    2
+   ],
+   [
+    "security.intern",
+    "all",
+    2
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-UVGUGL",
+    "score": 0.8047,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Data/ML · Junior подтверждена тестом 16.09.2026: 13 из 18 верно, θ = +0.26 ± 0.35"
+   },
+   {
+    "ref": "C-7FEDZF",
+    "score": 0.8037,
+    "category": "Frontend · Junior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "any",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Frontend · Junior подтверждена тестом 09.08.2026: 14 из 18 верно, θ = +0.30 ± 0.50"
+   },
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.8032,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-VQ7V7H",
+    "score": 0.7994,
+    "category": "Информационная безопасность · Junior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Junior подтверждена тестом 23.07.2026: 12 из 18 верно, θ = +0.22 ± 0.49"
+   },
+   {
+    "ref": "C-WQRNUU",
+    "score": 0.7927,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория QA · Junior подтверждена тестом 18.09.2026: 12 из 18 верно, θ = +0.17 ± 0.37"
+   }
+  ],
+  "ms_parse": 0.6,
+  "ms_select": 577.9,
+  "whatif": {
+   "shown": false,
+   "strict": 489,
+   "cuts": [],
+   "options": []
+  },
+  "ms_whatif": 180.7
+ },
+ {
+  "id": "J12",
+  "kind": "слишком узкий, вне справочника",
+  "text": "Senior Rust developer, eBPF, DPDK, ядро Linux, high-load networking",
+  "req": {
+   "direction": null,
+   "grade": "senior",
+   "required": [
+    "linux"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": [
+    {
+     "term": "Rust",
+     "evidence": {
+      "start": 7,
+      "end": 11,
+      "quote": "Rust",
+      "context": "Senior Rust developer, eBPF, DPDK, ядро Linux, high-load networking",
+      "source": "rules"
+     }
+    },
+    {
+     "term": "eBPF",
+     "evidence": {
+      "start": 23,
+      "end": 27,
+      "quote": "eBPF",
+      "context": "Senior Rust developer, eBPF, DPDK, ядро Linux, high-load networking",
+      "source": "rules"
+     }
+    },
+    {
+     "term": "DPDK",
+     "evidence": {
+      "start": 29,
+      "end": 33,
+      "quote": "DPDK",
+      "context": "Senior Rust developer, eBPF, DPDK, ядро Linux, high-load networking",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 500,
+  "confirmed": 489,
+  "provisional": 5,
+  "unconfirmed": 6,
+  "categories": [
+   [
+    "backend.junior",
+    "all",
+    41
+   ],
+   [
+    "backend.middle",
+    "all",
+    44
+   ],
+   [
+    "backend.senior",
+    "all",
+    45
+   ],
+   [
+    "frontend.junior",
+    "all",
+    31
+   ],
+   [
+    "frontend.middle",
+    "all",
+    29
+   ],
+   [
+    "frontend.senior",
+    "all",
+    29
+   ],
+   [
+    "data_ml.junior",
+    "all",
+    31
+   ],
+   [
+    "data_ml.middle",
+    "all",
+    29
+   ],
+   [
+    "data_ml.senior",
+    "all",
+    29
+   ],
+   [
+    "qa.junior",
+    "all",
+    31
+   ],
+   [
+    "qa.middle",
+    "all",
+    28
+   ],
+   [
+    "qa.senior",
+    "all",
+    29
+   ],
+   [
+    "security.junior",
+    "all",
+    31
+   ],
+   [
+    "security.middle",
+    "all",
+    29
+   ],
+   [
+    "security.senior",
+    "all",
+    28
+   ],
+   [
+    "backend.intern",
+    "all",
+    2
+   ],
+   [
+    "frontend.intern",
+    "all",
+    2
+   ],
+   [
+    "data_ml.intern",
+    "all",
+    2
+   ],
+   [
+    "qa.intern",
+    "all",
+    2
+   ],
+   [
+    "security.intern",
+    "all",
+    2
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-TUGXJT",
+    "score": 0.818,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "any",
+    "stack": [
+     "Linux=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 18.08.2026: 13 из 18 верно, θ = +1.93 ± 0.41"
+   },
+   {
+    "ref": "C-PDA4QH",
+    "score": 0.7705,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "any",
+    "stack": [
+     "Linux=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 24.08.2026: 14 из 18 верно, θ = +2.27 ± 0.36"
+   },
+   {
+    "ref": "C-96LGTV",
+    "score": 0.7528,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Екатеринбург",
+    "format": "any",
+    "stack": [
+     "Linux=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 01.10.2026: 13 из 18 верно, θ = +2.26 ± 0.45"
+   },
+   {
+    "ref": "C-YLUKV5",
+    "score": 0.7491,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "any",
+    "stack": [
+     "Linux=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 08.08.2026: 12 из 18 верно, θ = +2.21 ± 0.43"
+   },
+   {
+    "ref": "C-X54ZU4",
+    "score": 0.737,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "any",
+    "stack": [
+     "Linux=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 23.07.2026: 12 из 18 верно, θ = +2.07 ± 0.45"
+   }
+  ],
+  "ms_parse": 1.2,
+  "ms_select": 618.3,
+  "whatif": {
+   "shown": false,
+   "strict": 66,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "linux",
+     "title": "Linux",
+     "cut": 423
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без Linux — ещё 423 подтверждённых Senior",
+     423
+    ]
+   ]
+  },
+  "ms_whatif": 204.1
+ },
+ {
+  "id": "J13",
+  "kind": "зарплата в долларах",
+  "text": "Data Scientist middle — NLP, LLM, PyTorch, трансформеры; будет плюсом MLOps (MLflow). Удаленка. $3000-4000",
+  "req": {
+   "direction": "data_ml",
+   "grade": "middle",
+   "required": [
+    "nlp",
+    "pytorch"
+   ],
+   "desired": [
+    "mlops"
+   ],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "data_ml.middle",
+    "exact",
+    29
+   ],
+   [
+    "data_ml.junior",
+    "below",
+    31
+   ],
+   [
+    "data_ml.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-46BPG3",
+    "score": 0.7049,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "remote",
+    "stack": [
+     "NLP=T1",
+     "PyTorch=T1",
+     "MLOps=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 14.08.2026: 10 из 18 верно, θ = +0.74 ± 0.49"
+   },
+   {
+    "ref": "C-7ETRP9",
+    "score": 0.6056,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "NLP=none",
+     "PyTorch=T1",
+     "MLOps=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 30.09.2026: 13 из 18 верно, θ = +1.13 ± 0.37"
+   },
+   {
+    "ref": "C-2EG7JG",
+    "score": 0.5714,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "NLP=none",
+     "PyTorch=T1",
+     "MLOps=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 27.07.2026: 12 из 18 верно, θ = +1.30 ± 0.32"
+   },
+   {
+    "ref": "C-U9ZGYK",
+    "score": 0.5626,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "hybrid",
+    "stack": [
+     "NLP=T1",
+     "PyTorch=none",
+     "MLOps=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Data/ML · Middle подтверждена тестом 21.09.2026: 13 из 18 верно, θ = +0.94 ± 0.46"
+   },
+   {
+    "ref": "C-F5YD64",
+    "score": 0.5619,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "hybrid",
+    "stack": [
+     "NLP=T1",
+     "PyTorch=none",
+     "MLOps=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Data/ML · Middle подтверждена тестом 30.08.2026: 12 из 18 верно, θ = +0.76 ± 0.32"
+   }
+  ],
+  "ms_parse": 1.9,
+  "ms_select": 408.2,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "nlp",
+     "title": "NLP",
+     "cut": 23
+    },
+    {
+     "kind": "skill",
+     "key": "pytorch",
+     "title": "PyTorch",
+     "cut": 23
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без NLP — ещё 4 подтверждённых Middle",
+     4
+    ],
+    [
+     "grade",
+     "Добавить Data/ML · Senior (грейд выше) — ещё 2 подтверждённых Senior",
+     2
+    ],
+    [
+     "skill",
+     "Без PyTorch — ещё 2 подтверждённых Middle",
+     2
+    ]
+   ]
+  },
+  "ms_whatif": 30.2
+ },
+ {
+  "id": "J14",
+  "kind": "ИБ",
+  "text": "Специалист по информационной безопасности middle: пентест веб-приложений, Burp Suite, OWASP Top 10; CTF приветствуется. 200–260 тыс.",
+  "req": {
+   "direction": "security",
+   "grade": "middle",
+   "required": [
+    "pentest",
+    "burp-suite",
+    "owasp"
+   ],
+   "desired": [
+    "ctf"
+   ],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    200000,
+    260000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "security.middle",
+    "exact",
+    29
+   ],
+   [
+    "security.junior",
+    "below",
+    31
+   ],
+   [
+    "security.senior",
+    "above",
+    28
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-EA9JZJ",
+    "score": 0.6258,
+    "category": "Информационная безопасность · Middle",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "remote",
+    "stack": [
+     "Пентест веб-приложений=T1",
+     "Burp Suite=T1",
+     "OWASP Top 10=T0",
+     "CTF=T0"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Middle подтверждена тестом 14.09.2026: 13 из 18 верно, θ = +0.99 ± 0.46"
+   },
+   {
+    "ref": "C-B3659S",
+    "score": 0.5833,
+    "category": "Информационная безопасность · Middle",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "office",
+    "stack": [
+     "Пентест веб-приложений=T0",
+     "Burp Suite=none",
+     "OWASP Top 10=T1",
+     "CTF=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Middle подтверждена тестом 02.08.2026: 11 из 18 верно, θ = +0.89 ± 0.50"
+   },
+   {
+    "ref": "C-D3545L",
+    "score": 0.5426,
+    "category": "Информационная безопасность · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Пентест веб-приложений=none",
+     "Burp Suite=T1",
+     "OWASP Top 10=T1",
+     "CTF=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Middle подтверждена тестом 18.09.2026: 13 из 18 верно, θ = +0.75 ± 0.39"
+   },
+   {
+    "ref": "C-JR6CJ2",
+    "score": 0.5323,
+    "category": "Информационная безопасность · Middle",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "remote",
+    "stack": [
+     "Пентест веб-приложений=none",
+     "Burp Suite=T1",
+     "OWASP Top 10=T1",
+     "CTF=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Middle подтверждена тестом 23.08.2026: 12 из 18 верно, θ = +0.96 ± 0.44"
+   },
+   {
+    "ref": "C-3NZNAK",
+    "score": 0.525,
+    "category": "Информационная безопасность · Middle",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "hybrid",
+    "stack": [
+     "Пентест веб-приложений=none",
+     "Burp Suite=T1",
+     "OWASP Top 10=T1",
+     "CTF=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Middle подтверждена тестом 24.08.2026: 12 из 18 верно, θ = +0.65 ± 0.44"
+   }
+  ],
+  "ms_parse": 2.2,
+  "ms_select": 401.9,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "pentest",
+     "title": "Пентест веб-приложений",
+     "cut": 26
+    },
+    {
+     "kind": "skill",
+     "key": "burp-suite",
+     "title": "Burp Suite",
+     "cut": 22
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без «Пентест веб-приложений» — ещё 4 подтверждённых Middle",
+     4
+    ],
+    [
+     "skill",
+     "Без OWASP Top 10 — ещё 1 подтверждённый Middle",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 60.4
+ },
+ {
+  "id": "J15",
+  "kind": "ИБ, SOC",
+  "text": "SOC-аналитик L2: SIEM (MaxPatrol, KUMA), расследование инцидентов, сетевая безопасность. Сменный график, офис Москва.",
+  "req": {
+   "direction": "security",
+   "grade": null,
+   "required": [
+    "siem-soc",
+    "network-security"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "office",
+   "work_formats": null,
+   "city": "Москва",
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 91,
+  "confirmed": 89,
+  "provisional": 1,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "security.intern",
+    "direction",
+    2
+   ],
+   [
+    "security.junior",
+    "direction",
+    31
+   ],
+   [
+    "security.middle",
+    "direction",
+    29
+   ],
+   [
+    "security.senior",
+    "direction",
+    28
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-NDKD9N",
+    "score": 0.7675,
+    "category": "Информационная безопасность · Middle",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "any",
+    "stack": [
+     "SIEM и SOC=T1",
+     "Сетевая безопасность=T1"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Информационная безопасность · Middle подтверждена тестом 21.08.2026: 13 из 18 верно, θ = +1.26 ± 0.35"
+   },
+   {
+    "ref": "C-PDA4QH",
+    "score": 0.7292,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "any",
+    "stack": [
+     "SIEM и SOC=T1",
+     "Сетевая безопасность=T1"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 24.08.2026: 14 из 18 верно, θ = +2.27 ± 0.36"
+   },
+   {
+    "ref": "C-XXUYK9",
+    "score": 0.7258,
+    "category": "Информационная безопасность · Junior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "hybrid",
+    "stack": [
+     "SIEM и SOC=T1",
+     "Сетевая безопасность=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Информационная безопасность · Junior подтверждена тестом 20.07.2026: 11 из 18 верно, θ = -0.12 ± 0.33"
+   },
+   {
+    "ref": "C-DKT6KN",
+    "score": 0.7132,
+    "category": "Информационная безопасность · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "SIEM и SOC=T1",
+     "Сетевая безопасность=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Информационная безопасность · Middle подтверждена тестом 03.10.2026: 13 из 18 верно, θ = +0.95 ± 0.37"
+   },
+   {
+    "ref": "C-QUK7HP",
+    "score": 0.6973,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "office",
+    "stack": [
+     "SIEM и SOC=T1",
+     "Сетевая безопасность=T1"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 27.08.2026: 10 из 18 верно, θ = +1.62 ± 0.44"
+   }
+  ],
+  "ms_parse": 1.9,
+  "ms_select": 422.0,
+  "whatif": {
+   "shown": true,
+   "strict": 2,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "siem-soc",
+     "title": "SIEM и SOC",
+     "cut": 64
+    },
+    {
+     "kind": "city",
+     "key": "city",
+     "title": "город Москва",
+     "cut": 57
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без «SIEM и SOC» — ещё 4 подтверждённых",
+     4
+    ],
+    [
+     "city",
+     "Без условия «город Москва» — ещё 4 подтверждённых",
+     4
+    ],
+    [
+     "format",
+     "Любой формат вместо «офис» — ещё 4 подтверждённых",
+     4
+    ]
+   ]
+  },
+  "ms_whatif": 31.2
+ },
+ {
+  "id": "J16",
+  "kind": "gross, вилка словами",
+  "text": "Java backend senior: Spring Boot, Kafka, микросервисы, PostgreSQL. Гибрид Москва. от 400 000 до 500 000 рублей gross",
+  "req": {
+   "direction": "backend",
+   "grade": "senior",
+   "required": [
+    "java",
+    "kafka",
+    "postgresql"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "hybrid",
+   "work_formats": null,
+   "city": "Москва",
+   "salary": [
+    400000,
+    500000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 45,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "backend.senior",
+    "exact",
+    45
+   ],
+   [
+    "backend.middle",
+    "below",
+    44
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-372HVM",
+    "score": 0.6994,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "remote",
+    "stack": [
+     "Java=T1",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 13.09.2026: 12 из 18 верно, θ = +2.08 ± 0.34"
+   },
+   {
+    "ref": "C-5L3869",
+    "score": 0.6871,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "office",
+    "stack": [
+     "Java=T1",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 12.09.2026: 13 из 18 верно, θ = +2.25 ± 0.35"
+   },
+   {
+    "ref": "C-L2HUEX",
+    "score": 0.6574,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "remote",
+    "stack": [
+     "Java=T1",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 26.09.2026: 12 из 18 верно, θ = +1.89 ± 0.46"
+   },
+   {
+    "ref": "C-XRTCE7",
+    "score": 0.6383,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "office",
+    "stack": [
+     "Java=T1",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 12.08.2026: 13 из 18 верно, θ = +2.02 ± 0.47"
+   },
+   {
+    "ref": "C-RGEER2",
+    "score": 0.6375,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "remote",
+    "stack": [
+     "Java=T1",
+     "Kafka=T1",
+     "PostgreSQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Senior подтверждена тестом 22.07.2026: 11 из 18 верно, θ = +1.81 ± 0.50"
+   }
+  ],
+  "ms_parse": 2.0,
+  "ms_select": 402.3,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "java",
+     "title": "Java",
+     "cut": 29
+    },
+    {
+     "kind": "city",
+     "key": "city",
+     "title": "город Москва",
+     "cut": 28
+    }
+   ],
+   "options": [
+    [
+     "format",
+     "Любой формат вместо «гибрид» — ещё 3 подтверждённых Senior",
+     3
+    ],
+    [
+     "city",
+     "Без условия «город Москва» — ещё 2 подтверждённых Senior",
+     2
+    ],
+    [
+     "skill",
+     "Без Java — ещё 1 подтверждённый Senior",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 31.0
+ },
+ {
+  "id": "J17",
+  "kind": "Kotlin",
+  "text": "Kotlin backend middle, Spring, PostgreSQL, Docker",
+  "req": {
+   "direction": "backend",
+   "grade": "middle",
+   "required": [
+    "kotlin",
+    "postgresql",
+    "docker"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 44,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.middle",
+    "exact",
+    44
+   ],
+   [
+    "backend.junior",
+    "below",
+    41
+   ],
+   [
+    "backend.senior",
+    "above",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.701,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "Kotlin=none",
+     "PostgreSQL=T1",
+     "Docker=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-7ZG7MZ",
+    "score": 0.5896,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "office",
+    "stack": [
+     "Kotlin=none",
+     "PostgreSQL=T1",
+     "Docker=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 03.08.2026: 12 из 18 верно, θ = +0.95 ± 0.39"
+   },
+   {
+    "ref": "C-ERXPBH",
+    "score": 0.5748,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Kotlin=none",
+     "PostgreSQL=T1",
+     "Docker=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 02.10.2026: 14 из 18 верно, θ = +1.27 ± 0.49"
+   },
+   {
+    "ref": "C-YFGZCC",
+    "score": 0.5614,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "office",
+    "stack": [
+     "Kotlin=none",
+     "PostgreSQL=T1",
+     "Docker=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 21.09.2026: 13 из 18 верно, θ = +0.82 ± 0.39"
+   },
+   {
+    "ref": "C-SRCJZ9",
+    "score": 0.5382,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "office",
+    "stack": [
+     "Kotlin=none",
+     "PostgreSQL=T1",
+     "Docker=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 11.09.2026: 11 из 18 верно, θ = +0.65 ± 0.35"
+   }
+  ],
+  "ms_parse": 1.0,
+  "ms_select": 428.4,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "kotlin",
+     "title": "Kotlin",
+     "cut": 44
+    },
+    {
+     "kind": "skill",
+     "key": "docker",
+     "title": "Docker",
+     "cut": 33
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без Kotlin — ещё 8 подтверждённых Middle",
+     8
+    ]
+   ]
+  },
+  "ms_whatif": 41.6
+ },
+ {
+  "id": "J18",
+  "kind": "CV, без вилки",
+  "text": "Ищем ML-инженера (CV): OpenCV, YOLO, PyTorch. Senior. офис Новосибирск. ЗП по договоренности",
+  "req": {
+   "direction": "data_ml",
+   "grade": "senior",
+   "required": [
+    "cv",
+    "pytorch"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "office",
+   "work_formats": null,
+   "city": "Новосибирск",
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "data_ml.senior",
+    "exact",
+    29
+   ],
+   [
+    "data_ml.middle",
+    "below",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-3HLCTE",
+    "score": 0.6752,
+    "category": "Data/ML · Senior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "remote",
+    "stack": [
+     "Компьютерное зрение=T1",
+     "PyTorch=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Новосибирск; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Senior подтверждена тестом 19.08.2026: 11 из 18 верно, θ = +2.06 ± 0.44"
+   },
+   {
+    "ref": "C-LT8JRU",
+    "score": 0.6246,
+    "category": "Data/ML · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "office",
+    "stack": [
+     "Компьютерное зрение=T1",
+     "PyTorch=T1"
+    ],
+    "mismatch": [
+     "Нужен Новосибирск; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Senior подтверждена тестом 02.10.2026: 12 из 18 верно, θ = +1.49 ± 0.38"
+   },
+   {
+    "ref": "C-5XNB9R",
+    "score": 0.5858,
+    "category": "Data/ML · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "remote",
+    "stack": [
+     "Компьютерное зрение=T1",
+     "PyTorch=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Новосибирск; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Senior подтверждена тестом 25.09.2026: 11 из 18 верно, θ = +2.02 ± 0.32"
+   },
+   {
+    "ref": "C-K3NY25",
+    "score": 0.5728,
+    "category": "Data/ML · Senior",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "remote",
+    "stack": [
+     "Компьютерное зрение=T1",
+     "PyTorch=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Data/ML · Senior подтверждена тестом 04.08.2026: 10 из 18 верно, θ = +1.32 ± 0.36"
+   },
+   {
+    "ref": "C-Y5TR3N",
+    "score": 0.5474,
+    "category": "Data/ML · Senior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "Компьютерное зрение=T1",
+     "PyTorch=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Новосибирск; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Senior подтверждена тестом 05.09.2026: 10 из 18 верно, θ = +1.47 ± 0.39"
+   }
+  ],
+  "ms_parse": 1.7,
+  "ms_select": 417.3,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "cv",
+     "title": "Компьютерное зрение",
+     "cut": 21
+    },
+    {
+     "kind": "city",
+     "key": "city",
+     "title": "город Новосибирск",
+     "cut": 21
+    }
+   ],
+   "options": [
+    [
+     "city",
+     "Без условия «город Новосибирск» — ещё 2 подтверждённых Senior",
+     2
+    ],
+    [
+     "skill",
+     "Без PyTorch — ещё 1 подтверждённый Senior",
+     1
+    ],
+    [
+     "format",
+     "Любой формат вместо «офис» — ещё 1 подтверждённый Senior",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 53.6
+ },
+ {
+  "id": "J19",
+  "kind": "смесь языков",
+  "text": "Python/Django dev (middle+), DRF, Celery, Postgres, Docker, k8s будет плюсом; full remote; 250k-320k RUB",
+  "req": {
+   "direction": "backend",
+   "grade": "middle",
+   "required": [
+    "python",
+    "django",
+    "postgresql",
+    "docker"
+   ],
+   "desired": [
+    "kubernetes"
+   ],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    250000,
+    320000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": [
+    {
+     "term": "Celery",
+     "evidence": {
+      "start": 34,
+      "end": 40,
+      "quote": "Celery",
+      "context": "Python/Django dev (middle+), DRF, Celery, Postgres, Docker, k8s будет плюсом;",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 44,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.middle",
+    "exact",
+    44
+   ],
+   [
+    "backend.junior",
+    "below",
+    41
+   ],
+   [
+    "backend.senior",
+    "above",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-ERXPBH",
+    "score": 0.7253,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Python=T1",
+     "Django=T1",
+     "PostgreSQL=T1",
+     "Docker=T1",
+     "Kubernetes=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 02.10.2026: 14 из 18 верно, θ = +1.27 ± 0.49"
+   },
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.6349,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "Python=none",
+     "Django=none",
+     "PostgreSQL=T1",
+     "Docker=T1",
+     "Kubernetes=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-YFGZCC",
+    "score": 0.588,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "office",
+    "stack": [
+     "Python=T0",
+     "Django=T1",
+     "PostgreSQL=T1",
+     "Docker=none",
+     "Kubernetes=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 21.09.2026: 13 из 18 верно, θ = +0.82 ± 0.39"
+   },
+   {
+    "ref": "C-7ZG7MZ",
+    "score": 0.5514,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "office",
+    "stack": [
+     "Python=none",
+     "Django=none",
+     "PostgreSQL=T1",
+     "Docker=none",
+     "Kubernetes=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 03.08.2026: 12 из 18 верно, θ = +0.95 ± 0.39"
+   },
+   {
+    "ref": "C-UCLYL4",
+    "score": 0.5311,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "hybrid",
+    "stack": [
+     "Python=T1",
+     "Django=T1",
+     "PostgreSQL=T1",
+     "Docker=none",
+     "Kubernetes=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 22.07.2026: 12 из 18 верно, θ = +0.67 ± 0.44"
+   }
+  ],
+  "ms_parse": 1.9,
+  "ms_select": 495.7,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "django",
+     "title": "Django",
+     "cut": 41
+    },
+    {
+     "kind": "skill",
+     "key": "python",
+     "title": "Python",
+     "cut": 36
+    }
+   ],
+   "options": [
+    [
+     "combo",
+     "Без Django и без Python — ещё 5 подтверждённых Middle",
+     5
+    ]
+   ]
+  },
+  "ms_whatif": 44.0
+ },
+ {
+  "id": "J20",
+  "kind": "Vue",
+  "text": "Vue.js frontend developer middle, Nuxt, TypeScript, Pinia; удаленно; 200 000 - 250 000",
+  "req": {
+   "direction": "frontend",
+   "grade": "middle",
+   "required": [
+    "vue",
+    "typescript",
+    "state-management"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    200000,
+    250000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "frontend.middle",
+    "exact",
+    29
+   ],
+   [
+    "frontend.junior",
+    "below",
+    31
+   ],
+   [
+    "frontend.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-YP9BHD",
+    "score": 0.7434,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "Vue=T1",
+     "TypeScript=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 07.09.2026: 12 из 18 верно, θ = +1.23 ± 0.50"
+   },
+   {
+    "ref": "C-UZ56V6",
+    "score": 0.6404,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Екатеринбург",
+    "format": "office",
+    "stack": [
+     "Vue=T1",
+     "TypeScript=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Frontend · Middle подтверждена тестом 28.09.2026: 11 из 18 верно, θ = +0.87 ± 0.41"
+   },
+   {
+    "ref": "C-W9J84G",
+    "score": 0.6348,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "office",
+    "stack": [
+     "Vue=T1",
+     "TypeScript=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Frontend · Middle подтверждена тестом 26.08.2026: 11 из 18 верно, θ = +0.80 ± 0.34"
+   },
+   {
+    "ref": "C-3VDGX4",
+    "score": 0.5949,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "Vue=none",
+     "TypeScript=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 06.08.2026: 11 из 18 верно, θ = +0.94 ± 0.41"
+   },
+   {
+    "ref": "C-ZWZH49",
+    "score": 0.5764,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "any",
+    "stack": [
+     "Vue=T0",
+     "TypeScript=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 12.09.2026: 11 из 18 верно, θ = +0.90 ± 0.47"
+   }
+  ],
+  "ms_parse": 1.7,
+  "ms_select": 431.8,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "vue",
+     "title": "Vue",
+     "cut": 25
+    },
+    {
+     "kind": "skill",
+     "key": "state-management",
+     "title": "Управление состоянием (Redux, Zustand)",
+     "cut": 23
+    }
+   ],
+   "options": [
+    [
+     "grade",
+     "Добавить Frontend · Senior (грейд выше) — ещё 2 подтверждённых Senior",
+     2
+    ],
+    [
+     "skill",
+     "Без Vue — ещё 2 подтверждённых Middle",
+     2
+    ],
+    [
+     "format",
+     "Любой формат вместо «удалённо» — ещё 2 подтверждённых Middle",
+     2
+    ]
+   ]
+  },
+  "ms_whatif": 30.6
+ },
+ {
+  "id": "J21",
+  "kind": "стажёр",
+  "text": "Стажёр-аналитик / стажёр data science, студент старших курсов, Python, SQL, статистика. Стипендия 40 тыс.",
+  "req": {
+   "direction": "data_ml",
+   "grade": "intern",
+   "required": [
+    "python",
+    "sql",
+    "statistics"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    40000,
+    40000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 2,
+  "confirmed": 2,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "data_ml.intern",
+    "exact",
+    2
+   ],
+   [
+    "data_ml.junior",
+    "above",
+    31
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-L9MTK7",
+    "score": 0.4277,
+    "category": "Data/ML · Стажёр",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "Python=T1",
+     "SQL=none",
+     "Статистика и A/B-тесты=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Стажёр подтверждена тестом 28.08.2026: 8 из 16 верно, θ = -1.21 ± 0.48"
+   },
+   {
+    "ref": "C-PBCVFB",
+    "score": 0.3528,
+    "category": "Data/ML · Стажёр",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "hybrid",
+    "stack": [
+     "Python=T0",
+     "SQL=none",
+     "Статистика и A/B-тесты=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Стажёр подтверждена тестом 19.08.2026: 8 из 16 верно, θ = -0.99 ± 0.44"
+   }
+  ],
+  "ms_parse": 1.8,
+  "ms_select": 450.3,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "sql",
+     "title": "SQL",
+     "cut": 2
+    },
+    {
+     "kind": "skill",
+     "key": "statistics",
+     "title": "Статистика и A/B-тесты",
+     "cut": 2
+    }
+   ],
+   "options": [
+    [
+     "combo",
+     "Без SQL и без «Статистика и A/B-тесты» — ещё 1 подтверждённый (Стажёр)",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 14.5
+ },
+ {
+  "id": "J22",
+  "kind": "лид фронтенда",
+  "text": "Senior frontend lead: React, Next.js, TypeScript, архитектура фронтенда, менторинг джунов. 350к",
+  "req": {
+   "direction": "frontend",
+   "grade": "senior",
+   "required": [
+    "react",
+    "nextjs",
+    "typescript"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    350000,
+    350000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 30,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "frontend.senior",
+    "exact",
+    29
+   ],
+   [
+    "frontend.middle",
+    "below",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-47JSSQ",
+    "score": 0.6651,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "office",
+    "stack": [
+     "React=T1",
+     "Next.js=T1",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Senior подтверждена тестом 08.08.2026: 13 из 18 верно, θ = +2.08 ± 0.41"
+   },
+   {
+    "ref": "C-AG2D9F",
+    "score": 0.6637,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "any",
+    "stack": [
+     "React=T1",
+     "Next.js=T1",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Senior подтверждена тестом 19.09.2026: 11 из 18 верно, θ = +1.98 ± 0.38"
+   },
+   {
+    "ref": "C-DGK9FP",
+    "score": 0.6042,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Екатеринбург",
+    "format": "office",
+    "stack": [
+     "React=T1",
+     "Next.js=T0",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Senior подтверждена тестом 13.08.2026: 11 из 18 верно, θ = +1.91 ± 0.43"
+   },
+   {
+    "ref": "C-TYS9Z7",
+    "score": 0.5922,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "hybrid",
+    "stack": [
+     "React=T1",
+     "Next.js=T1",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Senior подтверждена тестом 22.09.2026: 11 из 18 верно, θ = +1.68 ± 0.32"
+   },
+   {
+    "ref": "C-GJMSW3",
+    "score": 0.5826,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "remote",
+    "stack": [
+     "React=T0",
+     "Next.js=T1",
+     "TypeScript=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Senior подтверждена тестом 31.08.2026: 12 из 18 верно, θ = +2.12 ± 0.42"
+   }
+  ],
+  "ms_parse": 1.6,
+  "ms_select": 443.6,
+  "whatif": {
+   "shown": false,
+   "strict": 6,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "nextjs",
+     "title": "Next.js",
+     "cut": 16
+    },
+    {
+     "kind": "skill",
+     "key": "typescript",
+     "title": "TypeScript",
+     "cut": 9
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без Next.js — ещё 9 подтверждённых Senior",
+     9
+    ],
+    [
+     "grade",
+     "Добавить Frontend · Middle (грейд ниже) — ещё 4 подтверждённых Middle",
+     4
+    ],
+    [
+     "skill",
+     "Без React — ещё 3 подтверждённых Senior",
+     3
+    ]
+   ]
+  },
+  "ms_whatif": 22.8
+ },
+ {
+  "id": "J23",
+  "kind": "QA lead",
+  "text": "QA Lead / ведущий тестировщик: выстроить процессы, автотесты на Playwright, нагрузочное тестирование (k6/JMeter), CI/CD",
+  "req": {
+   "direction": "qa",
+   "grade": "senior",
+   "required": [
+    "playwright",
+    "load-testing",
+    "ci-cd"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "qa.senior",
+    "exact",
+    29
+   ],
+   [
+    "qa.middle",
+    "below",
+    28
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-PS7WTM",
+    "score": 0.696,
+    "category": "QA · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "Playwright=none",
+     "Нагрузочное тестирование=T1",
+     "CI/CD=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Senior подтверждена тестом 30.07.2026: 14 из 18 верно, θ = +2.29 ± 0.50"
+   },
+   {
+    "ref": "C-JU6MN8",
+    "score": 0.6054,
+    "category": "QA · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "Playwright=T1",
+     "Нагрузочное тестирование=T1",
+     "CI/CD=none"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Senior подтверждена тестом 01.09.2026: 13 из 18 верно, θ = +2.12 ± 0.44"
+   },
+   {
+    "ref": "C-AHL7RS",
+    "score": 0.5711,
+    "category": "QA · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "hybrid",
+    "stack": [
+     "Playwright=none",
+     "Нагрузочное тестирование=T1",
+     "CI/CD=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Senior подтверждена тестом 22.09.2026: 12 из 18 верно, θ = +2.26 ± 0.49"
+   },
+   {
+    "ref": "C-WPZZRD",
+    "score": 0.5565,
+    "category": "QA · Senior",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "hybrid",
+    "stack": [
+     "Playwright=T1",
+     "Нагрузочное тестирование=none",
+     "CI/CD=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Senior подтверждена тестом 22.09.2026: 11 из 18 верно, θ = +1.94 ± 0.44"
+   },
+   {
+    "ref": "C-G5TMZN",
+    "score": 0.5455,
+    "category": "QA · Senior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "remote",
+    "stack": [
+     "Playwright=T1",
+     "Нагрузочное тестирование=none",
+     "CI/CD=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Senior подтверждена тестом 12.09.2026: 12 из 18 верно, θ = +2.18 ± 0.46"
+   }
+  ],
+  "ms_parse": 1.9,
+  "ms_select": 437.3,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "playwright",
+     "title": "Playwright",
+     "cut": 19
+    },
+    {
+     "kind": "skill",
+     "key": "ci-cd",
+     "title": "CI/CD",
+     "cut": 18
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без Playwright — ещё 6 подтверждённых Senior",
+     6
+    ],
+    [
+     "skill",
+     "Без «Нагрузочное тестирование» — ещё 4 подтверждённых Senior",
+     4
+    ],
+    [
+     "skill",
+     "Без CI/CD — ещё 2 подтверждённых Senior",
+     2
+    ]
+   ]
+  },
+  "ms_whatif": 23.1
+ },
+ {
+  "id": "J24",
+  "kind": "без грейда, PHP",
+  "text": "Нужен человек на поддержку сайта на PHP (Laravel), MySQL, немного JS. Удалённо. 100-130 тыс.",
+  "req": {
+   "direction": "backend",
+   "grade": null,
+   "required": [
+    "php",
+    "sql"
+   ],
+   "desired": [
+    "javascript"
+   ],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    100000,
+    130000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 134,
+  "confirmed": 131,
+  "provisional": 1,
+  "unconfirmed": 2,
+  "categories": [
+   [
+    "backend.intern",
+    "direction",
+    2
+   ],
+   [
+    "backend.junior",
+    "direction",
+    41
+   ],
+   [
+    "backend.middle",
+    "direction",
+    44
+   ],
+   [
+    "backend.senior",
+    "direction",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-YLUKV5",
+    "score": 0.4971,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "any",
+    "stack": [
+     "PHP=none",
+     "SQL=T1",
+     "JavaScript=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 08.08.2026: 12 из 18 верно, θ = +2.21 ± 0.43"
+   },
+   {
+    "ref": "C-EEAGLT",
+    "score": 0.492,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "PHP=none",
+     "SQL=T1",
+     "JavaScript=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 29.07.2026: 11 из 18 верно, θ = +1.60 ± 0.44"
+   },
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.4889,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "PHP=none",
+     "SQL=none",
+     "JavaScript=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-ERXPBH",
+    "score": 0.4768,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "PHP=none",
+     "SQL=T1",
+     "JavaScript=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 02.10.2026: 14 из 18 верно, θ = +1.27 ± 0.49"
+   },
+   {
+    "ref": "C-G8SHZP",
+    "score": 0.4703,
+    "category": "Backend · Junior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "any",
+    "stack": [
+     "PHP=none",
+     "SQL=none",
+     "JavaScript=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Junior подтверждена тестом 24.07.2026: 12 из 18 верно, θ = +0.09 ± 0.38"
+   }
+  ],
+  "ms_parse": 1.7,
+  "ms_select": 577.7,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "php",
+     "title": "PHP",
+     "cut": 131
+    },
+    {
+     "kind": "skill",
+     "key": "sql",
+     "title": "SQL",
+     "cut": 122
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без PHP — ещё 6 подтверждённых",
+     6
+    ]
+   ]
+  },
+  "ms_whatif": 44.7
+ },
+ {
+  "id": "J25",
+  "kind": "C#",
+  "text": "C#/.NET backend developer, ASP.NET Core, MS SQL, middle, гибрид Казань",
+  "req": {
+   "direction": "backend",
+   "grade": "middle",
+   "required": [
+    "csharp",
+    "sql"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "hybrid",
+   "work_formats": null,
+   "city": "Казань",
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 44,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.middle",
+    "exact",
+    44
+   ],
+   [
+    "backend.junior",
+    "below",
+    41
+   ],
+   [
+    "backend.senior",
+    "above",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.4889,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "C#=T0",
+     "SQL=none"
+    ],
+    "mismatch": [
+     "Нужен Казань; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-ERXPBH",
+    "score": 0.4768,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "C#=none",
+     "SQL=T1"
+    ],
+    "mismatch": [
+     "Нужен Казань; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 02.10.2026: 14 из 18 верно, θ = +1.27 ± 0.49"
+   },
+   {
+    "ref": "C-F29VD9",
+    "score": 0.467,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "remote",
+    "stack": [
+     "C#=T0",
+     "SQL=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Казань; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 02.09.2026: 11 из 18 верно, θ = +1.10 ± 0.39"
+   },
+   {
+    "ref": "C-7ZG7MZ",
+    "score": 0.4657,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "office",
+    "stack": [
+     "C#=none",
+     "SQL=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Казань; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 03.08.2026: 12 из 18 верно, θ = +0.95 ± 0.39"
+   },
+   {
+    "ref": "C-3SGEB9",
+    "score": 0.4544,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Екатеринбург",
+    "format": "office",
+    "stack": [
+     "C#=T0",
+     "SQL=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 02.08.2026: 13 из 18 верно, θ = +0.94 ± 0.42"
+   }
+  ],
+  "ms_parse": 1.4,
+  "ms_select": 419.0,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "csharp",
+     "title": "C#",
+     "cut": 44
+    },
+    {
+     "kind": "skill",
+     "key": "sql",
+     "title": "SQL",
+     "cut": 40
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без C# — ещё 1 подтверждённый Middle",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 42.8
+ },
+ {
+  "id": "J26",
+  "kind": "data engineer, до НДФЛ",
+  "text": "Data engineer middle: Airflow, Spark, ClickHouse, Kafka; опыт от 3 лет; 270-330 тыс. ₽ до вычета НДФЛ",
+  "req": {
+   "direction": "data_ml",
+   "grade": "middle",
+   "required": [
+    "airflow",
+    "spark",
+    "clickhouse",
+    "kafka"
+   ],
+   "desired": [],
+   "experience": 3.0,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    270000,
+    330000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "data_ml.middle",
+    "exact",
+    29
+   ],
+   [
+    "data_ml.junior",
+    "below",
+    31
+   ],
+   [
+    "data_ml.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-ZXSLNP",
+    "score": 0.5502,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "hybrid",
+    "stack": [
+     "Airflow=T1",
+     "Spark=none",
+     "ClickHouse=T1",
+     "Kafka=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 24.09.2026: 13 из 18 верно, θ = +1.11 ± 0.49"
+   },
+   {
+    "ref": "C-WKXDDH",
+    "score": 0.535,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "Airflow=none",
+     "Spark=T1",
+     "ClickHouse=none",
+     "Kafka=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 08.09.2026: 12 из 18 верно, θ = +1.19 ± 0.44"
+   },
+   {
+    "ref": "C-CRB7L5",
+    "score": 0.494,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Airflow=T1",
+     "Spark=none",
+     "ClickHouse=none",
+     "Kafka=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 01.08.2026: 12 из 18 верно, θ = +0.82 ± 0.33"
+   },
+   {
+    "ref": "C-USUQAW",
+    "score": 0.4805,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "any",
+    "stack": [
+     "Airflow=none",
+     "Spark=T1",
+     "ClickHouse=T1",
+     "Kafka=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 25.08.2026: 11 из 18 верно, θ = +0.90 ± 0.49"
+   },
+   {
+    "ref": "C-3WYU87",
+    "score": 0.4736,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "office",
+    "stack": [
+     "Airflow=T1",
+     "Spark=none",
+     "ClickHouse=none",
+     "Kafka=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 01.10.2026: 11 из 18 верно, θ = +1.04 ± 0.34"
+   }
+  ],
+  "ms_parse": 2.0,
+  "ms_select": 432.2,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "kafka",
+     "title": "Kafka",
+     "cut": 29
+    },
+    {
+     "kind": "skill",
+     "key": "clickhouse",
+     "title": "ClickHouse",
+     "cut": 23
+    }
+   ],
+   "options": [
+    [
+     "combo",
+     "Без Kafka и без ClickHouse — ещё 1 подтверждённый Middle",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 66.4
+ },
+ {
+  "id": "J27",
+  "kind": "сленг, вилка без валюты",
+  "text": "бекендер golang джун+ , grpc, постгря, редис. зп 120-150",
+  "req": {
+   "direction": "backend",
+   "grade": "junior",
+   "required": [
+    "go",
+    "grpc",
+    "postgresql",
+    "redis"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    120000,
+    150000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 42,
+  "confirmed": 40,
+  "provisional": 1,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.junior",
+    "exact",
+    41
+   ],
+   [
+    "backend.intern",
+    "below",
+    2
+   ],
+   [
+    "backend.middle",
+    "above",
+    44
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-8CF7PE",
+    "score": 0.7318,
+    "category": "Backend · Junior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "hybrid",
+    "stack": [
+     "Go=T1",
+     "gRPC=T1",
+     "PostgreSQL=T1",
+     "Redis=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Junior подтверждена тестом 09.08.2026: 13 из 18 верно, θ = +0.24 ± 0.34"
+   },
+   {
+    "ref": "C-P2VFQ2",
+    "score": 0.7165,
+    "category": "Backend · Junior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "Go=T1",
+     "gRPC=T1",
+     "PostgreSQL=T1",
+     "Redis=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Junior подтверждена тестом 01.08.2026: 14 из 18 верно, θ = +0.27 ± 0.35"
+   },
+   {
+    "ref": "C-XG6XPK",
+    "score": 0.6489,
+    "category": "Backend · Junior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "any",
+    "stack": [
+     "Go=T1",
+     "gRPC=T1",
+     "PostgreSQL=T1",
+     "Redis=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Junior подтверждена тестом 31.08.2026: 13 из 18 верно, θ = +0.19 ± 0.48"
+   },
+   {
+    "ref": "C-UBQCTP",
+    "score": 0.5774,
+    "category": "Backend · Junior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "remote",
+    "stack": [
+     "Go=none",
+     "gRPC=none",
+     "PostgreSQL=T1",
+     "Redis=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Junior подтверждена тестом 13.08.2026: 11 из 18 верно, θ = -0.02 ± 0.49"
+   },
+   {
+    "ref": "C-RKACCX",
+    "score": 0.5732,
+    "category": "Backend · Junior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "Go=none",
+     "gRPC=none",
+     "PostgreSQL=T1",
+     "Redis=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Junior подтверждена тестом 15.09.2026: 12 из 18 верно, θ = -0.15 ± 0.42"
+   }
+  ],
+  "ms_parse": 1.1,
+  "ms_select": 457.9,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "go",
+     "title": "Go",
+     "cut": 34
+    },
+    {
+     "kind": "skill",
+     "key": "grpc",
+     "title": "gRPC",
+     "cut": 32
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без Redis — ещё 3 подтверждённых Junior",
+     3
+    ],
+    [
+     "grade",
+     "Добавить Backend · Middle (грейд выше) — ещё 1 подтверждённый Middle",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 29.4
+ },
+ {
+  "id": "J28",
+  "kind": "вне справочника: мобильная",
+  "text": "Мобильный разработчик iOS (Swift), middle",
+  "req": {
+   "direction": "frontend",
+   "grade": "middle",
+   "required": [],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": "mobile",
+   "hint": null,
+   "unknown": [
+    {
+     "term": "iOS",
+     "evidence": {
+      "start": 22,
+      "end": 25,
+      "quote": "iOS",
+      "context": "Мобильный разработчик iOS (Swift), middle",
+      "source": "rules"
+     }
+    },
+    {
+     "term": "Swift",
+     "evidence": {
+      "start": 27,
+      "end": 32,
+      "quote": "Swift",
+      "context": "Мобильный разработчик iOS (Swift), middle",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "frontend.middle",
+    "exact",
+    29
+   ],
+   [
+    "frontend.junior",
+    "below",
+    31
+   ],
+   [
+    "frontend.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-YP9BHD",
+    "score": 0.7683,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 07.09.2026: 12 из 18 верно, θ = +1.23 ± 0.50"
+   },
+   {
+    "ref": "C-2NEE92",
+    "score": 0.7501,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 28.09.2026: 13 из 18 верно, θ = +1.20 ± 0.45"
+   },
+   {
+    "ref": "C-ZWZH49",
+    "score": 0.7363,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "any",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 12.09.2026: 11 из 18 верно, θ = +0.90 ± 0.47"
+   },
+   {
+    "ref": "C-WMZF4K",
+    "score": 0.7344,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 25.08.2026: 12 из 18 верно, θ = +1.00 ± 0.47"
+   },
+   {
+    "ref": "C-N25MNY",
+    "score": 0.7184,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "hybrid",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 21.08.2026: 13 из 18 верно, θ = +1.28 ± 0.33"
+   }
+  ],
+  "ms_parse": 0.8,
+  "ms_select": 449.3,
+  "whatif": {
+   "shown": false,
+   "strict": 29,
+   "cuts": [],
+   "options": [
+    [
+     "grade",
+     "Добавить Frontend · Junior (грейд ниже) — ещё 30 подтверждённых Junior",
+     30
+    ],
+    [
+     "grade",
+     "Добавить Frontend · Senior (грейд выше) — ещё 29 подтверждённых Senior",
+     29
+    ]
+   ]
+  },
+  "ms_whatif": 31.4
+ },
+ {
+  "id": "J29",
+  "kind": "fullstack",
+  "text": "Fullstack разработчик: Node.js + React, PostgreSQL. Middle. Удалёнка.",
+  "req": {
+   "direction": "frontend",
+   "grade": "middle",
+   "required": [
+    "javascript",
+    "react",
+    "postgresql"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "frontend.middle",
+    "exact",
+    29
+   ],
+   [
+    "frontend.junior",
+    "below",
+    31
+   ],
+   [
+    "frontend.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-YP9BHD",
+    "score": 0.6416,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "JavaScript=T1",
+     "React=T1",
+     "PostgreSQL=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 07.09.2026: 12 из 18 верно, θ = +1.23 ± 0.50"
+   },
+   {
+    "ref": "C-ZWZH49",
+    "score": 0.624,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "any",
+    "stack": [
+     "JavaScript=T1",
+     "React=T1",
+     "PostgreSQL=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 12.09.2026: 11 из 18 верно, θ = +0.90 ± 0.47"
+   },
+   {
+    "ref": "C-WMZF4K",
+    "score": 0.62,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "JavaScript=T1",
+     "React=T1",
+     "PostgreSQL=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 25.08.2026: 12 из 18 верно, θ = +1.00 ± 0.47"
+   },
+   {
+    "ref": "C-2NEE92",
+    "score": 0.6146,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "JavaScript=T1",
+     "React=T1",
+     "PostgreSQL=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 28.09.2026: 13 из 18 верно, θ = +1.20 ± 0.45"
+   },
+   {
+    "ref": "C-5YRZQT",
+    "score": 0.5742,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "office",
+    "stack": [
+     "JavaScript=T1",
+     "React=T1",
+     "PostgreSQL=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Frontend · Middle подтверждена тестом 02.10.2026: 11 из 18 верно, θ = +0.87 ± 0.33"
+   }
+  ],
+  "ms_parse": 1.3,
+  "ms_select": 433.8,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "postgresql",
+     "title": "PostgreSQL",
+     "cut": 29
+    },
+    {
+     "kind": "skill",
+     "key": "react",
+     "title": "React",
+     "cut": 15
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без PostgreSQL — ещё 7 подтверждённых Middle",
+     7
+    ]
+   ]
+  },
+  "ms_whatif": 31.5
+ },
+ {
+  "id": "J30",
+  "kind": "слишком общий, смешанный",
+  "text": "Нужен senior, который сможет и в бэк, и в DevOps, и в архитектуру; стек любой",
+  "req": {
+   "direction": "backend",
+   "grade": "senior",
+   "required": [],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": "devops",
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 45,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "backend.senior",
+    "exact",
+    45
+   ],
+   [
+    "backend.middle",
+    "below",
+    44
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-TUGXJT",
+    "score": 0.7582,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "any",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 18.08.2026: 13 из 18 верно, θ = +1.93 ± 0.41"
+   },
+   {
+    "ref": "C-8M4NV2",
+    "score": 0.7418,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "hybrid",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 21.07.2026: 11 из 18 верно, θ = +1.97 ± 0.39"
+   },
+   {
+    "ref": "C-XML9LC",
+    "score": 0.7184,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "remote",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 12.09.2026: 14 из 18 верно, θ = +2.28 ± 0.36"
+   },
+   {
+    "ref": "C-77ZAPZ",
+    "score": 0.716,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "office",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 09.09.2026: 14 из 18 верно, θ = +2.26 ± 0.40"
+   },
+   {
+    "ref": "C-5L3869",
+    "score": 0.7144,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "office",
+    "stack": [],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 12.09.2026: 13 из 18 верно, θ = +2.25 ± 0.35"
+   }
+  ],
+  "ms_parse": 1.4,
+  "ms_select": 457.2,
+  "whatif": {
+   "shown": false,
+   "strict": 45,
+   "cuts": [],
+   "options": [
+    [
+     "grade",
+     "Добавить Backend · Middle (грейд ниже) — ещё 44 подтверждённых Middle",
+     44
+    ]
+   ]
+  },
+  "ms_whatif": 31.8
+ },
+ {
+  "id": "J31",
+  "kind": "подробная вакансия",
+  "text": "Python-разработчик в финтех. Требования: Python 3.11, asyncio, aiohttp, PostgreSQL, RabbitMQ. Опыт 3+ года. Будет плюсом: Kafka, ClickHouse. Офис или гибрид в Санкт-Петербурге. 280–350 тыс. руб. на руки.",
+  "req": {
+   "direction": "backend",
+   "grade": "middle",
+   "required": [
+    "python",
+    "asyncio",
+    "postgresql",
+    "rabbitmq"
+   ],
+   "desired": [
+    "kafka",
+    "clickhouse"
+   ],
+   "experience": 3.0,
+   "work_format": "hybrid",
+   "work_formats": [
+    "office",
+    "hybrid"
+   ],
+   "city": "Санкт-Петербург",
+   "salary": [
+    280000,
+    350000
+   ],
+   "net": true,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 44,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.middle",
+    "exact",
+    44
+   ],
+   [
+    "backend.junior",
+    "below",
+    41
+   ],
+   [
+    "backend.senior",
+    "above",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-YFGZCC",
+    "score": 0.5894,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "office",
+    "stack": [
+     "Python=T0",
+     "asyncio=T1",
+     "PostgreSQL=T1",
+     "RabbitMQ=none",
+     "Kafka=none",
+     "ClickHouse=none"
+    ],
+    "mismatch": [
+     "Нужен Санкт-Петербург; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 21.09.2026: 13 из 18 верно, θ = +0.82 ± 0.39"
+   },
+   {
+    "ref": "C-LU9CVT",
+    "score": 0.588,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "office",
+    "stack": [
+     "Python=T1",
+     "asyncio=none",
+     "PostgreSQL=T1",
+     "RabbitMQ=T1",
+     "Kafka=none",
+     "ClickHouse=none"
+    ],
+    "mismatch": [
+     "Нужен Санкт-Петербург; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 20.08.2026: 12 из 18 верно, θ = +0.73 ± 0.33"
+   },
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.5712,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "Python=none",
+     "asyncio=none",
+     "PostgreSQL=T1",
+     "RabbitMQ=none",
+     "Kafka=none",
+     "ClickHouse=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-ERXPBH",
+    "score": 0.5618,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Python=T1",
+     "asyncio=none",
+     "PostgreSQL=T1",
+     "RabbitMQ=none",
+     "Kafka=none",
+     "ClickHouse=none"
+    ],
+    "mismatch": [
+     "Нужен Санкт-Петербург; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 02.10.2026: 14 из 18 верно, θ = +1.27 ± 0.49"
+   },
+   {
+    "ref": "C-7ZG7MZ",
+    "score": 0.5605,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "office",
+    "stack": [
+     "Python=none",
+     "asyncio=none",
+     "PostgreSQL=T1",
+     "RabbitMQ=none",
+     "Kafka=T1",
+     "ClickHouse=none"
+    ],
+    "mismatch": [
+     "Нужен Санкт-Петербург; заявлен другой город без переезда"
+    ],
+    "head": "Категория Backend · Middle подтверждена тестом 03.08.2026: 12 из 18 верно, θ = +0.95 ± 0.39"
+   }
+  ],
+  "ms_parse": 3.2,
+  "ms_select": 520.4,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "asyncio",
+     "title": "asyncio",
+     "cut": 43
+    },
+    {
+     "kind": "skill",
+     "key": "rabbitmq",
+     "title": "RabbitMQ",
+     "cut": 41
+    }
+   ],
+   "options": [
+    [
+     "combo",
+     "Без asyncio и без Python — ещё 1 подтверждённый Middle",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 78.7
+ },
+ {
+  "id": "J32",
+  "kind": "junior QA API, remote",
+  "text": "Ищем джуна-тестировщика API: Postman, SQL, понимание HTTP/REST. 70-90k, remote",
+  "req": {
+   "direction": "qa",
+   "grade": "junior",
+   "required": [
+    "api-testing",
+    "sql",
+    "http"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    70000,
+    90000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 31,
+  "confirmed": 30,
+  "provisional": 1,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "qa.junior",
+    "exact",
+    31
+   ],
+   [
+    "qa.intern",
+    "below",
+    2
+   ],
+   [
+    "qa.middle",
+    "above",
+    28
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-HCLDZR",
+    "score": 0.6717,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "Тестирование API=T1",
+     "SQL=T1",
+     "HTTP и веб=none"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Junior подтверждена тестом 14.08.2026: 11 из 18 верно, θ = +0.08 ± 0.46"
+   },
+   {
+    "ref": "C-RKSHBF",
+    "score": 0.6035,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "remote",
+    "stack": [
+     "Тестирование API=T1",
+     "SQL=T0",
+     "HTTP и веб=none"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Junior подтверждена тестом 30.09.2026: 13 из 18 верно, θ = -0.06 ± 0.43"
+   },
+   {
+    "ref": "C-WQRNUU",
+    "score": 0.596,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "remote",
+    "stack": [
+     "Тестирование API=T1",
+     "SQL=none",
+     "HTTP и веб=none"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Junior подтверждена тестом 18.09.2026: 12 из 18 верно, θ = +0.17 ± 0.37"
+   },
+   {
+    "ref": "C-2F973U",
+    "score": 0.5957,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "hybrid",
+    "stack": [
+     "Тестирование API=T1",
+     "SQL=none",
+     "HTTP и веб=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория QA · Junior подтверждена тестом 06.08.2026: 12 из 18 верно, θ = +0.07 ± 0.48"
+   },
+   {
+    "ref": "C-RLDQ8L",
+    "score": 0.5692,
+    "category": "QA · Junior",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "remote",
+    "stack": [
+     "Тестирование API=T1",
+     "SQL=T1",
+     "HTTP и веб=none"
+    ],
+    "mismatch": [],
+    "head": "Категория QA · Junior подтверждена тестом 28.09.2026: 12 из 18 верно, θ = -0.12 ± 0.44"
+   }
+  ],
+  "ms_parse": 1.4,
+  "ms_select": 419.3,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "http",
+     "title": "HTTP и веб",
+     "cut": 30
+    },
+    {
+     "kind": "skill",
+     "key": "sql",
+     "title": "SQL",
+     "cut": 28
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без «HTTP и веб» — ещё 2 подтверждённых Junior",
+     2
+    ]
+   ]
+  },
+  "ms_whatif": 22.5
+ },
+ {
+  "id": "J33",
+  "kind": "отрицание",
+  "text": "Хочу middle разработчика на React, опыт Angular не нужен",
+  "req": {
+   "direction": "frontend",
+   "grade": "middle",
+   "required": [
+    "react"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "frontend.middle",
+    "exact",
+    29
+   ],
+   [
+    "frontend.junior",
+    "below",
+    31
+   ],
+   [
+    "frontend.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-WMZF4K",
+    "score": 0.7883,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "React=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 25.08.2026: 12 из 18 верно, θ = +1.00 ± 0.47"
+   },
+   {
+    "ref": "C-5S48PL",
+    "score": 0.7415,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Екатеринбург",
+    "format": "office",
+    "stack": [
+     "React=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 02.09.2026: 11 из 18 верно, θ = +1.12 ± 0.48"
+   },
+   {
+    "ref": "C-FQTWN5",
+    "score": 0.7334,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "office",
+    "stack": [
+     "React=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 23.08.2026: 13 из 18 верно, θ = +1.03 ± 0.38"
+   },
+   {
+    "ref": "C-YP9BHD",
+    "score": 0.7193,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "React=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 07.09.2026: 12 из 18 верно, θ = +1.23 ± 0.50"
+   },
+   {
+    "ref": "C-2NEE92",
+    "score": 0.7028,
+    "category": "Frontend · Middle",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "remote",
+    "stack": [
+     "React=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Middle подтверждена тестом 28.09.2026: 13 из 18 верно, θ = +1.20 ± 0.45"
+   }
+  ],
+  "ms_parse": 1.1,
+  "ms_select": 437.3,
+  "whatif": {
+   "shown": false,
+   "strict": 14,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "react",
+     "title": "React",
+     "cut": 15
+    }
+   ],
+   "options": [
+    [
+     "grade",
+     "Добавить Frontend · Junior (грейд ниже) — ещё 22 подтверждённых Junior",
+     22
+    ],
+    [
+     "grade",
+     "Добавить Frontend · Senior (грейд выше) — ещё 21 подтверждённый Senior",
+     21
+    ],
+    [
+     "skill",
+     "Без React — ещё 15 подтверждённых Middle",
+     15
+    ]
+   ]
+  },
+  "ms_whatif": 32.3
+ },
+ {
+  "id": "J34",
+  "kind": "ИБ, узкий",
+  "text": "Pentester senior, red team, Active Directory, Cobalt Strike, OSCP желателен. 400k+",
+  "req": {
+   "direction": "security",
+   "grade": "senior",
+   "required": [
+    "pentest"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    400000,
+    null
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": [
+    {
+     "term": "Active Directory",
+     "evidence": {
+      "start": 28,
+      "end": 44,
+      "quote": "Active Directory",
+      "context": "Pentester senior, red team, Active Directory, Cobalt Strike, OSCP желателен.",
+      "source": "rules"
+     }
+    },
+    {
+     "term": "Cobalt Strike",
+     "evidence": {
+      "start": 46,
+      "end": 59,
+      "quote": "Cobalt Strike",
+      "context": "Pentester senior, red team, Active Directory, Cobalt Strike, OSCP желателен.",
+      "source": "rules"
+     }
+    },
+    {
+     "term": "OSCP",
+     "evidence": {
+      "start": 61,
+      "end": 65,
+      "quote": "OSCP",
+      "context": "Pentester senior, red team, Active Directory, Cobalt Strike, OSCP желателен.",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 28,
+  "confirmed": 28,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "security.senior",
+    "exact",
+    28
+   ],
+   [
+    "security.middle",
+    "below",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-5VRWRQ",
+    "score": 0.7082,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "hybrid",
+    "stack": [
+     "Пентест веб-приложений=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 20.08.2026: 13 из 18 верно, θ = +1.80 ± 0.49"
+   },
+   {
+    "ref": "C-VSDRLF",
+    "score": 0.645,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "remote",
+    "stack": [
+     "Пентест веб-приложений=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 09.08.2026: 13 из 18 верно, θ = +2.02 ± 0.45"
+   },
+   {
+    "ref": "C-EVQKX4",
+    "score": 0.5825,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "remote",
+    "stack": [
+     "Пентест веб-приложений=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 02.09.2026: 11 из 18 верно, θ = +1.60 ± 0.39"
+   },
+   {
+    "ref": "C-LN4KGP",
+    "score": 0.5666,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "hybrid",
+    "stack": [
+     "Пентест веб-приложений=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 26.09.2026: 11 из 18 верно, θ = +1.61 ± 0.45"
+   },
+   {
+    "ref": "C-B7SUUR",
+    "score": 0.5149,
+    "category": "Информационная безопасность · Senior",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "any",
+    "stack": [
+     "Пентест веб-приложений=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Информационная безопасность · Senior подтверждена тестом 29.09.2026: 10 из 18 верно, θ = +1.30 ± 0.47"
+   }
+  ],
+  "ms_parse": 1.4,
+  "ms_select": 448.5,
+  "whatif": {
+   "shown": false,
+   "strict": 5,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "pentest",
+     "title": "Пентест веб-приложений",
+     "cut": 23
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без «Пентест веб-приложений» — ещё 23 подтверждённых Senior",
+     23
+    ],
+    [
+     "grade",
+     "Добавить Информационная безопасность · Middle (грейд ниже) — ещё 3 подтверждённых Middle",
+     3
+    ]
+   ]
+  },
+  "ms_whatif": 22.9
+ },
+ {
+  "id": "J35",
+  "kind": "вне справочника: бизнес-аналитик",
+  "text": "Бизнес-аналитик / аналитик 1С: BPMN, постановка задач разработчикам, SQL на уровне запросов",
+  "req": {
+   "direction": "data_ml",
+   "grade": null,
+   "required": [
+    "sql"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": "analytics",
+   "hint": null,
+   "unknown": [
+    {
+     "term": "BPMN",
+     "evidence": {
+      "start": 31,
+      "end": 35,
+      "quote": "BPMN",
+      "context": "Бизнес-аналитик / аналитик 1С: BPMN, постановка задач разработчикам, SQL на уровне запросов",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 92,
+  "confirmed": 90,
+  "provisional": 1,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "data_ml.intern",
+    "direction",
+    2
+   ],
+   [
+    "data_ml.junior",
+    "direction",
+    31
+   ],
+   [
+    "data_ml.middle",
+    "direction",
+    29
+   ],
+   [
+    "data_ml.senior",
+    "direction",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-WKXDDH",
+    "score": 0.7923,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "SQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 08.09.2026: 12 из 18 верно, θ = +1.19 ± 0.44"
+   },
+   {
+    "ref": "C-Z4F4U6",
+    "score": 0.7387,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "office",
+    "stack": [
+     "SQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Junior подтверждена тестом 21.07.2026: 12 из 18 верно, θ = +0.00 ± 0.40"
+   },
+   {
+    "ref": "C-3HLCTE",
+    "score": 0.7361,
+    "category": "Data/ML · Senior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "remote",
+    "stack": [
+     "SQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Senior подтверждена тестом 19.08.2026: 11 из 18 верно, θ = +2.06 ± 0.44"
+   },
+   {
+    "ref": "C-CRB7L5",
+    "score": 0.6792,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "SQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 01.08.2026: 12 из 18 верно, θ = +0.82 ± 0.33"
+   },
+   {
+    "ref": "C-7ETRP9",
+    "score": 0.6742,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "SQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 30.09.2026: 13 из 18 верно, θ = +1.13 ± 0.37"
+   }
+  ],
+  "ms_parse": 1.6,
+  "ms_select": 475.3,
+  "whatif": {
+   "shown": false,
+   "strict": 15,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "sql",
+     "title": "SQL",
+     "cut": 75
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без SQL — ещё 75 подтверждённых",
+     75
+    ]
+   ]
+  },
+  "ms_whatif": 76.4
+ },
+ {
+  "id": "J36",
+  "kind": "годовая зарплата",
+  "text": "Machine learning engineer middle, scikit-learn, pandas, numpy, SQL. Опыт от 2 лет. Удалённо. 2,4 млн в год",
+  "req": {
+   "direction": "data_ml",
+   "grade": "middle",
+   "required": [
+    "scikit-learn",
+    "pandas",
+    "numpy",
+    "sql"
+   ],
+   "desired": [],
+   "experience": 2.0,
+   "work_format": "remote",
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    200000,
+    200000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 29,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "data_ml.middle",
+    "exact",
+    29
+   ],
+   [
+    "data_ml.junior",
+    "below",
+    31
+   ],
+   [
+    "data_ml.senior",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-WKXDDH",
+    "score": 0.6848,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "scikit-learn=none",
+     "pandas=T1",
+     "NumPy=T1",
+     "SQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 08.09.2026: 12 из 18 верно, θ = +1.19 ± 0.44"
+   },
+   {
+    "ref": "C-2EG7JG",
+    "score": 0.5878,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "scikit-learn=T0",
+     "pandas=T1",
+     "NumPy=T1",
+     "SQL=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 27.07.2026: 12 из 18 верно, θ = +1.30 ± 0.32"
+   },
+   {
+    "ref": "C-AK79F6",
+    "score": 0.581,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "any",
+    "stack": [
+     "scikit-learn=none",
+     "pandas=T1",
+     "NumPy=T1",
+     "SQL=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 17.08.2026: 13 из 18 верно, θ = +1.11 ± 0.47"
+   },
+   {
+    "ref": "C-ASQMD5",
+    "score": 0.5773,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "remote",
+    "stack": [
+     "scikit-learn=T1",
+     "pandas=T1",
+     "NumPy=T1",
+     "SQL=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 23.07.2026: 13 из 18 верно, θ = +0.88 ± 0.39"
+   },
+   {
+    "ref": "C-HSZW2J",
+    "score": 0.5634,
+    "category": "Data/ML · Middle",
+    "status": "confirmed",
+    "city": "Ростов-на-Дону",
+    "format": "any",
+    "stack": [
+     "scikit-learn=T1",
+     "pandas=T0",
+     "NumPy=T1",
+     "SQL=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Middle подтверждена тестом 30.07.2026: 12 из 18 верно, θ = +0.80 ± 0.32"
+   }
+  ],
+  "ms_parse": 1.8,
+  "ms_select": 467.5,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "scikit-learn",
+     "title": "scikit-learn",
+     "cut": 23
+    },
+    {
+     "kind": "skill",
+     "key": "sql",
+     "title": "SQL",
+     "cut": 20
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без scikit-learn — ещё 4 подтверждённых Middle",
+     4
+    ],
+    [
+     "skill",
+     "Без SQL — ещё 1 подтверждённый Middle",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 32.5
+ },
+ {
+  "id": "J37",
+  "kind": "Angular senior",
+  "text": "Frontend-разработчик (Angular 15+, RxJS, NgRx), senior, офис Москва, до 380 тыс.",
+  "req": {
+   "direction": "frontend",
+   "grade": "senior",
+   "required": [
+    "angular",
+    "state-management"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "office",
+   "work_formats": null,
+   "city": "Москва",
+   "salary": [
+    null,
+    380000
+   ],
+   "net": false,
+   "coverage": null,
+   "hint": null,
+   "unknown": [
+    {
+     "term": "RxJS",
+     "evidence": {
+      "start": 35,
+      "end": 39,
+      "quote": "RxJS",
+      "context": "Frontend-разработчик (Angular 15+, RxJS, NgRx), senior, офис Москва, до 380 тыс.",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 30,
+  "confirmed": 29,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "frontend.senior",
+    "exact",
+    29
+   ],
+   [
+    "frontend.middle",
+    "below",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-47JSSQ",
+    "score": 0.6459,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "office",
+    "stack": [
+     "Angular=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Frontend · Senior подтверждена тестом 08.08.2026: 13 из 18 верно, θ = +2.08 ± 0.41"
+   },
+   {
+    "ref": "C-DGK9FP",
+    "score": 0.6053,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Екатеринбург",
+    "format": "office",
+    "stack": [
+     "Angular=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Senior подтверждена тестом 13.08.2026: 11 из 18 верно, θ = +1.91 ± 0.43"
+   },
+   {
+    "ref": "C-6DK827",
+    "score": 0.577,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Angular=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Frontend · Senior подтверждена тестом 19.08.2026: 10 из 18 верно, θ = +1.73 ± 0.41"
+   },
+   {
+    "ref": "C-BESJ3B",
+    "score": 0.5716,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Самара",
+    "format": "remote",
+    "stack": [
+     "Angular=T1",
+     "Управление состоянием (Redux, Zustand)=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Frontend · Senior подтверждена тестом 16.08.2026: 11 из 18 верно, θ = +1.57 ± 0.45"
+   },
+   {
+    "ref": "C-AZHKAW",
+    "score": 0.5232,
+    "category": "Frontend · Senior",
+    "status": "confirmed",
+    "city": "Москва",
+    "format": "office",
+    "stack": [
+     "Angular=T1",
+     "Управление состоянием (Redux, Zustand)=T0"
+    ],
+    "mismatch": [],
+    "head": "Категория Frontend · Senior подтверждена тестом 07.08.2026: 12 из 18 верно, θ = +2.22 ± 0.46"
+   }
+  ],
+  "ms_parse": 1.5,
+  "ms_select": 498.8,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "city",
+     "key": "city",
+     "title": "город Москва",
+     "cut": 20
+    },
+    {
+     "kind": "skill",
+     "key": "state-management",
+     "title": "Управление состоянием (Redux, Zustand)",
+     "cut": 19
+    }
+   ],
+   "options": [
+    [
+     "city",
+     "Без условия «город Москва» — ещё 3 подтверждённых Senior",
+     3
+    ],
+    [
+     "skill",
+     "Без «Управление состоянием (Redux, Zustand)» — ещё 3 подтверждённых Senior",
+     3
+    ]
+   ]
+  },
+  "ms_whatif": 24.4
+ },
+ {
+  "id": "J38",
+  "kind": "слишком узкий: 8 обязательных",
+  "text": "Backend middle на Python. Обязательно: FastAPI, PostgreSQL, Kafka, Kubernetes, gRPC, ClickHouse, Redis, Elasticsearch",
+  "req": {
+   "direction": "backend",
+   "grade": "middle",
+   "required": [
+    "python",
+    "fastapi",
+    "postgresql",
+    "kafka",
+    "kubernetes",
+    "grpc",
+    "clickhouse",
+    "redis"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": [
+    {
+     "term": "Elasticsearch",
+     "evidence": {
+      "start": 104,
+      "end": 117,
+      "quote": "Elasticsearch",
+      "context": "Обязательно: FastAPI, PostgreSQL, Kafka, Kubernetes, gRPC, ClickHouse, Redis, Elasticsearch",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 44,
+  "provisional": 0,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "backend.middle",
+    "exact",
+    44
+   ],
+   [
+    "backend.junior",
+    "below",
+    41
+   ],
+   [
+    "backend.senior",
+    "above",
+    45
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-7ZG7MZ",
+    "score": 0.5892,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Нижний Новгород",
+    "format": "office",
+    "stack": [
+     "Python=none",
+     "FastAPI=none",
+     "PostgreSQL=T1",
+     "Kafka=T1",
+     "Kubernetes=none",
+     "gRPC=T1",
+     "ClickHouse=none",
+     "Redis=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 03.08.2026: 12 из 18 верно, θ = +0.95 ± 0.39"
+   },
+   {
+    "ref": "C-LH3H4H",
+    "score": 0.5733,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "Python=none",
+     "FastAPI=none",
+     "PostgreSQL=T1",
+     "Kafka=none",
+     "Kubernetes=none",
+     "gRPC=none",
+     "ClickHouse=none",
+     "Redis=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 26.08.2026: 13 из 18 верно, θ = +1.28 ± 0.44"
+   },
+   {
+    "ref": "C-ERXPBH",
+    "score": 0.5233,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "Python=T1",
+     "FastAPI=T1",
+     "PostgreSQL=T1",
+     "Kafka=none",
+     "Kubernetes=none",
+     "gRPC=none",
+     "ClickHouse=none",
+     "Redis=none"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 02.10.2026: 14 из 18 верно, θ = +1.27 ± 0.49"
+   },
+   {
+    "ref": "C-M9PE4G",
+    "score": 0.5112,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "hybrid",
+    "stack": [
+     "Python=none",
+     "FastAPI=none",
+     "PostgreSQL=T1",
+     "Kafka=T1",
+     "Kubernetes=none",
+     "gRPC=none",
+     "ClickHouse=none",
+     "Redis=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 12.09.2026: 12 из 18 верно, θ = +1.18 ± 0.39"
+   },
+   {
+    "ref": "C-LU9CVT",
+    "score": 0.5065,
+    "category": "Backend · Middle",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "office",
+    "stack": [
+     "Python=T1",
+     "FastAPI=T1",
+     "PostgreSQL=T1",
+     "Kafka=none",
+     "Kubernetes=none",
+     "gRPC=none",
+     "ClickHouse=none",
+     "Redis=T0"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Middle подтверждена тестом 20.08.2026: 12 из 18 верно, θ = +0.73 ± 0.33"
+   }
+  ],
+  "ms_parse": 1.9,
+  "ms_select": 456.5,
+  "whatif": {
+   "shown": true,
+   "strict": 0,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "kubernetes",
+     "title": "Kubernetes",
+     "cut": 44
+    },
+    {
+     "kind": "skill",
+     "key": "clickhouse",
+     "title": "ClickHouse",
+     "cut": 44
+    }
+   ],
+   "options": []
+  },
+  "ms_whatif": 48.2
+ },
+ {
+  "id": "J39",
+  "kind": "сленг, тимлид",
+  "text": "Сеньор питонист с опытом тимлидства, команда 6 человек, highload, микросервисы",
+  "req": {
+   "direction": "backend",
+   "grade": "senior",
+   "required": [
+    "python"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": null,
+   "work_formats": null,
+   "city": null,
+   "salary": [
+    null,
+    null
+   ],
+   "net": null,
+   "coverage": null,
+   "hint": null,
+   "unknown": []
+  },
+  "bias": [],
+  "total": 45,
+  "confirmed": 45,
+  "provisional": 0,
+  "unconfirmed": 0,
+  "categories": [
+   [
+    "backend.senior",
+    "exact",
+    45
+   ],
+   [
+    "backend.middle",
+    "below",
+    44
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-TUGXJT",
+    "score": 0.818,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "any",
+    "stack": [
+     "Python=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 18.08.2026: 13 из 18 верно, θ = +1.93 ± 0.41"
+   },
+   {
+    "ref": "C-VHDS6T",
+    "score": 0.7316,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Екатеринбург",
+    "format": "any",
+    "stack": [
+     "Python=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 15.08.2026: 12 из 18 верно, θ = +2.01 ± 0.36"
+   },
+   {
+    "ref": "C-YLUKV5",
+    "score": 0.6337,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Иннополис",
+    "format": "any",
+    "stack": [
+     "Python=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 08.08.2026: 12 из 18 верно, θ = +2.21 ± 0.43"
+   },
+   {
+    "ref": "C-EEAGLT",
+    "score": 0.6078,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "remote",
+    "stack": [
+     "Python=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 29.07.2026: 11 из 18 верно, θ = +1.60 ± 0.44"
+   },
+   {
+    "ref": "C-J2MGAB",
+    "score": 0.5842,
+    "category": "Backend · Senior",
+    "status": "confirmed",
+    "city": "Томск",
+    "format": "office",
+    "stack": [
+     "Python=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Backend · Senior подтверждена тестом 15.08.2026: 10 из 18 верно, θ = +1.54 ± 0.48"
+   }
+  ],
+  "ms_parse": 1.4,
+  "ms_select": 455.5,
+  "whatif": {
+   "shown": false,
+   "strict": 10,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "python",
+     "title": "Python",
+     "cut": 35
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без Python — ещё 35 подтверждённых Senior",
+     35
+    ],
+    [
+     "grade",
+     "Добавить Backend · Middle (грейд ниже) — ещё 8 подтверждённых Middle",
+     8
+    ]
+   ]
+  },
+  "ms_whatif": 65.3
+ },
+ {
+  "id": "J40",
+  "kind": "английский, аналитика",
+  "text": "Junior Data Analyst (SQL, Excel, Power BI), 90 000 rub, hybrid Moscow",
+  "req": {
+   "direction": "data_ml",
+   "grade": "junior",
+   "required": [
+    "sql"
+   ],
+   "desired": [],
+   "experience": null,
+   "work_format": "hybrid",
+   "work_formats": null,
+   "city": "Москва",
+   "salary": [
+    90000,
+    90000
+   ],
+   "net": false,
+   "coverage": "analytics",
+   "hint": null,
+   "unknown": [
+    {
+     "term": "Excel",
+     "evidence": {
+      "start": 26,
+      "end": 31,
+      "quote": "Excel",
+      "context": "Junior Data Analyst (SQL, Excel, Power BI), 90 000 rub, hybrid Moscow",
+      "source": "rules"
+     }
+    },
+    {
+     "term": "Power BI",
+     "evidence": {
+      "start": 33,
+      "end": 41,
+      "quote": "Power BI",
+      "context": "Junior Data Analyst (SQL, Excel, Power BI), 90 000 rub, hybrid Moscow",
+      "source": "rules"
+     }
+    }
+   ]
+  },
+  "bias": [],
+  "total": 32,
+  "confirmed": 30,
+  "provisional": 1,
+  "unconfirmed": 1,
+  "categories": [
+   [
+    "data_ml.junior",
+    "exact",
+    31
+   ],
+   [
+    "data_ml.intern",
+    "below",
+    2
+   ],
+   [
+    "data_ml.middle",
+    "above",
+    29
+   ]
+  ],
+  "top5": [
+   {
+    "ref": "C-Z4F4U6",
+    "score": 0.7387,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Пермь",
+    "format": "office",
+    "stack": [
+     "SQL=T1"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 21.07.2026: 12 из 18 верно, θ = +0.00 ± 0.40"
+   },
+   {
+    "ref": "C-YGLPQ5",
+    "score": 0.6058,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Новосибирск",
+    "format": "any",
+    "stack": [
+     "SQL=T1"
+    ],
+    "mismatch": [],
+    "head": "Категория Data/ML · Junior подтверждена тестом 03.09.2026: 10 из 18 верно, θ = -0.65 ± 0.39"
+   },
+   {
+    "ref": "C-Q92H4B",
+    "score": 0.5189,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Санкт-Петербург",
+    "format": "any",
+    "stack": [
+     "SQL=T1"
+    ],
+    "mismatch": [
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 02.10.2026: 10 из 18 верно, θ = -0.78 ± 0.49"
+   },
+   {
+    "ref": "C-UVGUGL",
+    "score": 0.4914,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Казань",
+    "format": "remote",
+    "stack": [
+     "SQL=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 16.09.2026: 13 из 18 верно, θ = +0.26 ± 0.35"
+   },
+   {
+    "ref": "C-235YZN",
+    "score": 0.4452,
+    "category": "Data/ML · Junior",
+    "status": "confirmed",
+    "city": "Краснодар",
+    "format": "office",
+    "stack": [
+     "SQL=none"
+    ],
+    "mismatch": [
+     "Заявлен другой формат работы",
+     "Нужен Москва; заявлен другой город без переезда"
+    ],
+    "head": "Категория Data/ML · Junior подтверждена тестом 07.09.2026: 12 из 18 верно, θ = +0.19 ± 0.48"
+   }
+  ],
+  "ms_parse": 1.1,
+  "ms_select": 471.0,
+  "whatif": {
+   "shown": true,
+   "strict": 1,
+   "cuts": [
+    {
+     "kind": "skill",
+     "key": "sql",
+     "title": "SQL",
+     "cut": 27
+    },
+    {
+     "kind": "city",
+     "key": "city",
+     "title": "город Москва",
+     "cut": 21
+    }
+   ],
+   "options": [
+    [
+     "skill",
+     "Без SQL — ещё 4 подтверждённых Junior",
+     4
+    ],
+    [
+     "grade",
+     "Добавить Data/ML · Middle (грейд выше) — ещё 2 подтверждённых Middle",
+     2
+    ],
+    [
+     "city",
+     "Без условия «город Москва» — ещё 1 подтверждённый Junior",
+     1
+    ]
+   ]
+  },
+  "ms_whatif": 23.7
+ }
+]
