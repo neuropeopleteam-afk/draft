@@ -1051,6 +1051,14 @@
      "source_url": "https://youngjunior.ru/javascript/jobs/27104"
     }
    ]
+  },
+  "run2_first_20": {
+   "source": "docs/llm/needs_qwen_tags.json (облачный прогон 2 на 50, первые 20 вакансий), silver-стек из docs/llm/extra_tags_judgement.json",
+   "tp": 100,
+   "fp": 32,
+   "fn": 1,
+   "stack_micro_precision": 0.7576,
+   "stack_micro_recall": 0.9901
   }
  }
 }

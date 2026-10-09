@@ -4,6 +4,7 @@ import { FspRatingValidation } from "../components/validation/FspRating";
 import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
+import LlmModels from "../components/validation/LlmModels";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
 import { api } from "../lib/api";
@@ -356,6 +357,7 @@ function ExpertsSection({ ex }: { ex: any }) {
         <p className="mt-4 text-sm text-brand-ink/70">Пока оценок нет, ниже — проверка расчёта на синтетической разметке: те же формулы, заложенная истина, сверка.</p>
       )}
       {!ex.llm && ex.llm_without_experts && <div className="mt-4"><LlmTable llm={ex.llm_without_experts} note="Оценки моделей получены, согласие появится после разметки ответов экспертами." /></div>}
+      <LlmModels />
       {ex.synthetic_check && (
         <details className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10">
           <summary className="cursor-pointer font-semibold text-brand-night">Проверка расчёта на синтетической разметке {ex.synthetic_check.ok ? "· пройдена" : "· не пройдена"}</summary>
