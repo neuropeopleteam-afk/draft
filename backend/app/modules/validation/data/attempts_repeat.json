@@ -169,15 +169,15 @@
   "stop_rule": "classification",
   "exposure": true
  },
- "seconds": 57.4,
+ "seconds": 27.5,
  "signature": {
   "world": "синтетика: θ ~ N(0, 1), истинные параметры = предкалибровка + ошибка эксперта σ = 0,5; конфигурация теста продукта, 2 субпула, K_f из exposure_k.json",
   "seed": 20261006,
   "config_hash": "bc116187c8e8",
-  "commit": "7417e48",
+  "commit": "4a35c19",
   "bank": "a086bd7ad2304eb0",
   "n": 1000,
   "command": "python -m app.modules.validation.attempts_repeat",
-  "generated_at": "2026-10-09T09:01:41+00:00"
+  "generated_at": "2026-10-09T09:17:43+00:00"
  }
 }
