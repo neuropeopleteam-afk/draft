@@ -341,8 +341,14 @@ export function IntegrityNotice() {
   );
 }
 
-/** Полноэкранный режим теста: запрос — только из обработчика нажатия (требование браузеров). */
-const fsSupported = () => typeof document !== "undefined" && !!document.fullscreenEnabled && !!document.documentElement.requestFullscreen;
+/** Полноэкранный режим теста: запрос — только из обработчика нажатия (требование браузеров).
+ * Я11 (С3-5): на телефонах и планшетах (основной ввод — касание: pointer: coarse и hover: none) полноэкранный режим
+ * страницы недоступен (iPhone) или слетает от жестов — его не просим, баннер «Вернуться…» не показываем; в сигналах
+ * задания fs_na = 1, и сервер не пишет «без полноэкранного режима, хотя браузер его поддерживает». */
+export const touchPrimary = () => typeof window !== "undefined" && !!window.matchMedia
+  && window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(hover: none)").matches;
+const fsSupported = () => typeof document !== "undefined" && !!document.fullscreenEnabled && !!document.documentElement.requestFullscreen
+  && !touchPrimary();
 function enterFullscreen() {
   if (fsSupported() && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => undefined);
 }

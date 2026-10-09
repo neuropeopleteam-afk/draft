@@ -3,8 +3,10 @@
 Текст супервизора (sup2_shots/b23): «Офис в Москве … опыт не требуется … Удалёнка не предусмотрена …» — было: формат
 «удалённо или офис/гибрид», опыт 0 без цитаты («добавлено вручную»), веса одного перечисления 1,0/0,9/0,8/0,56 у
 словаря и 0,85/0,53 после усреднения с моделью. Стало: формат «офис» (Москва), опыт 0 с цитатой «опыт не требуется»,
-у навыков одного перечисления один вес (правило LIST_WEIGHT_RULE) — и у словаря, и после модели. Сеть не используется:
-транспорт httpx подменён (tests/test_llm_chain.py).
+веса — по одному правилу у словаря и после модели (вес словаря не усредняется с весом модели; добавленному моделью
+навыку — вес по тому же правилу), правило показано у весов. По умолчанию правило прежнее — по порядку упоминания
+(ORDER_WEIGHT_RULE); «один вес на перечисление» (LIST_WEIGHT_RULE) — за флагом NEED_LIST_WEIGHTS=1: на бенчмарке он
+даёт MRR −0,005 (reports_0910/sup3.md). Сеть не используется: транспорт httpx подменён (tests/test_llm_chain.py).
 """
 from __future__ import annotations
 
@@ -13,8 +15,8 @@ import json
 import pytest
 
 from app.modules.matching import fast_parse
-from app.modules.matching.need_parser import (LIST_WEIGHT_RULE, enumerations, experience_span, parse_conditions,
-                                              parse_need, parse_rules)
+from app.modules.matching.need_parser import (LIST_WEIGHT_RULE, ORDER_WEIGHT_RULE, enumerations, experience_span,
+                                              parse_conditions, parse_need, parse_rules)
 from tests.test_day2_rules import H, employer
 from tests.test_llm_chain import configure, net, reply  # noqa: F401 — фикстура net
 
@@ -36,8 +38,16 @@ def test_supervisor_text_rules():
     assert (r["work_format"], r["work_formats"], r["city"]) == ("office", None, "Москва")
     assert r["experience_years_min"] == 0.0
     assert r["evidence"]["experience_years_min"]["quote"] == "опыт не требуется"  # С3-2: цитата есть
-    assert _w(r) == {"python": 1.0, "django": 1.0, "postgresql": 1.0, "docker": 1.0}  # С3-3: одно перечисление
+    assert _w(r) == {"python": 1.0, "django": 0.9, "postgresql": 0.8, "docker": 0.56}  # С3-3: по правилу, не 0,85/0,53
     assert _w(r, "stack_desired") == {"redis": 0.3}
+    assert r["weight_rule"] == ORDER_WEIGHT_RULE and "×0,8" in r["weight_rule"]
+
+
+def test_supervisor_text_list_flag(monkeypatch):
+    monkeypatch.setenv("NEED_LIST_WEIGHTS", "1")
+    r = parse_need(SUP3, use_llm=False)
+    assert _w(r) == {"python": 1.0, "django": 1.0, "postgresql": 1.0, "docker": 1.0}  # одно перечисление — один вес
+    assert r["weight_rule"] == LIST_WEIGHT_RULE
 
 
 @pytest.mark.parametrize("text,allowed", [
@@ -79,8 +89,9 @@ def test_zero_experience(text, years, quote):
         assert text[span[0]:span[1]] == quote
 
 
-# ------------------------------------------------------------------ С3-3: веса по перечислениям
-def test_list_weights_rule():
+# ------------------------------------------------------------------ С3-3: веса по перечислениям (флаг)
+def test_list_weights_rule(monkeypatch):
+    monkeypatch.setenv("NEED_LIST_WEIGHTS", "1")
     t = ("Требования:\n- Python\n- Django; PostgreSQL\n- Docker\n\nТакже нужно знание Kafka и Redis.\n"
          "Обязательно Git. Будет плюсом: Celery, Kubernetes.")
     assert len(enumerations(t)) == 4  # список под заголовком — одно перечисление
@@ -91,12 +102,14 @@ def test_list_weights_rule():
     assert "одно предложение или один список" in LIST_WEIGHT_RULE
 
 
-def test_list_weights_flag_off_keeps_old_rule(monkeypatch):
-    monkeypatch.setenv("NEED_LIST_WEIGHTS", "0")
-    assert _w(parse_rules(SUP3)) == {"python": 1.0, "django": 0.9, "postgresql": 0.8, "docker": 0.56}
+def test_default_is_old_order_rule(monkeypatch):
+    monkeypatch.delenv("NEED_LIST_WEIGHTS", raising=False)
+    t = "Требования: Python, Django. Также нужно знание Kafka и Git."
+    assert _w(parse_rules(t)) == {"python": 1.0, "django": 0.9, "kafka": 0.8, "git": 0.56}
 
 
-def test_floor_is_point_six():
+def test_floor_is_point_six(monkeypatch):
+    monkeypatch.setenv("NEED_LIST_WEIGHTS", "1")
     t = ". ".join(f"Обязательно {x}" for x in ("Python", "Django", "Redis", "Kafka", "PostgreSQL", "Docker", "Linux")) + "."
     assert list(_w(parse_rules(t)).values()) == [1.0, 0.9, 0.8, 0.7, 0.6, 0.6, 0.6]
 
@@ -107,9 +120,13 @@ def _model(monkeypatch, net, delta: dict) -> None:
     net.on("or.test", None, lambda req, body: reply(json.dumps({**EMPTY, **delta}, ensure_ascii=False), body["model"]))
 
 
-def test_model_weights_do_not_split_one_list(monkeypatch, net):
-    # модель ставит Django 0,8 и Docker 0,5 (как на стенде), добавляет FastAPI в то же перечисление и предлагает
-    # «удалённо» и «опыт от 1 года» — веса остаются по правилу, исключённый текстом формат не предлагается
+@pytest.mark.parametrize("flag,weights", [
+    ("0", {"python": 1.0, "django": 0.9, "postgresql": 0.8, "docker": 0.56}),
+    ("1", {"python": 1.0, "django": 1.0, "postgresql": 1.0, "docker": 1.0})])
+def test_model_weights_are_not_averaged(monkeypatch, net, flag, weights):
+    # модель ставит Django 0,8 и Docker 0,5 (как на стенде: было 0,85 / 0,53) и предлагает «удалённо» и «опыт от
+    # 1 года» — веса словаря остаются по правилу, исключённый текстом формат не предлагается
+    monkeypatch.setenv("NEED_LIST_WEIGHTS", flag)
     _model(monkeypatch, net, {
         "stack_required": [{"tag": "django", "weight": 0.8, "quote": "Django"}, {"tag": "docker", "weight": 0.5,
                                                                                   "quote": "Docker"}],
@@ -117,7 +134,7 @@ def test_model_weights_do_not_split_one_list(monkeypatch, net):
         "quotes": {**EMPTY["quotes"], "work_format": "Удалёнка", "experience_years_min": "junior с пет-проектами"}})
     r = parse_need(SUP3)
     assert r["method"] == "llm+rules"
-    assert _w(r) == {"python": 1.0, "django": 1.0, "postgresql": 1.0, "docker": 1.0}
+    assert _w(r) == weights
     assert r["work_format"] == "office" and r["experience_years_min"] == 0.0
     assert not [s for s in r["llm_suggest"] if s["field"] == "work_format"]
 
@@ -132,7 +149,8 @@ def test_model_does_not_suggest_excluded_format(monkeypatch, net):
 
 
 def test_fast_parse_job_weights_by_rule(client, monkeypatch, net):
-    """Фоновое уточнение (И27): добавленный моделью навык из того же перечисления — с весом перечисления."""
+    """Фоновое уточнение (И27): добавленный моделью навык — с весом по правилу по месту в тексте (3-й → 0,8), не 0,4
+    от модели; веса навыков словаря не меняются."""
     _model(monkeypatch, net, {"stack_required": [{"tag": "rabbitmq", "weight": 0.4, "quote": "очереди задач"}]})
     monkeypatch.setattr(fast_parse, "_spawn", lambda fn, *a: fn(*a))
     te = employer(client)
@@ -142,6 +160,7 @@ def test_fast_parse_job_weights_by_rule(client, monkeypatch, net):
     job = client.get(f"/api/employer/needs/parse/{r['parse_job']['id']}", headers=H(te)).json()
     assert job["status"] == "done"
     add = next(d for d in job["delta"] if d["kind"] == "add_tag")
-    assert add["tag"] == "rabbitmq" and add["weight"] == 1.0  # модель дала 0,4 — вес перечисления 1,0
-    assert set(_w(job["result"]).values()) == {1.0}
+    assert add["tag"] == "rabbitmq" and add["weight"] == 0.8  # модель дала 0,4
+    assert _w(job["result"]) == {**_w(r), "rabbitmq": 0.8}
+    assert r["weight_rule"] == job["result"]["weight_rule"] == ORDER_WEIGHT_RULE
     assert fast_parse.PARSER_VERSION != "fp3"  # правила изменились — старый кэш разбора не отдаётся

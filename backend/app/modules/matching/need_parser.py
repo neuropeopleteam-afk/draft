@@ -495,6 +495,10 @@ def negated_directions(text: str) -> str:
 
 
 # ---------------------------------------------------------------- веса навыков по перечислениям (Я11, С3-3)
+ORDER_WEIGHT_RULE = ("Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в "
+                     "тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: "
+                     "он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить "
+                     "вес можно вручную.")
 LIST_WEIGHT_RULE = ("Вес навыка — по правилу, одинаково для словаря и модели: навыки одного перечисления «обязательно» "
                     "(одно предложение или один список под заголовком) — один вес; первое перечисление — 1,0, каждое "
                     "следующее — на 0,1 ниже, не ниже 0,6; «желательно» — 0,3. Модель находит навыки и цитаты, вес "
@@ -503,10 +507,17 @@ _BULLET = re.compile(r"^\s*(?:[-–—•*·▪●◦]|\d{1,2}[.)])\s+")
 
 
 def list_weights_on() -> bool:
-    """Флаг NEED_LIST_WEIGHTS (по умолчанию «1»): веса по перечислениям; «0» — прежние веса по порядку упоминания."""
+    """Флаг NEED_LIST_WEIGHTS (по умолчанию выключен): «1» — один вес на перечисление (LIST_WEIGHT_RULE), иначе —
+    по порядку упоминания (ORDER_WEIGHT_RULE, как до Я11). По умолчанию выключен: на бенчмарке MRR −0,005 в двух мирах
+    (reports_0910/sup3.md, «Замер»)."""
     import os
 
-    return os.environ.get("NEED_LIST_WEIGHTS", "1").strip().lower() not in ("0", "false", "no", "off", "")
+    return os.environ.get("NEED_LIST_WEIGHTS", "0").strip().lower() in ("1", "true", "yes", "on")
+
+
+def weight_rule() -> str:
+    """Текст действующего правила весов — для подсказки у весов в карточке потребности."""
+    return LIST_WEIGHT_RULE if list_weights_on() else ORDER_WEIGHT_RULE
 
 
 def enumerations(text: str) -> list[tuple[int, int]]:
@@ -540,14 +551,25 @@ def apply_list_weights(text: str, required: list[dict], desired: list[dict]) -> 
 
     order = sorted({g for it in required if (g := group(it)) is not None})
     rank = {g: i for i, g in enumerate(order)}
-    import os
-    common = os.environ.get("NEED_LIST_COMMON", "0") == "1"  # TMP A/B
     for it in required:
         g = group(it)
         if g is not None:
-            it["weight"] = round(max(0.6, 1.0 - 0.1 * rank[g]) * (0.8 if common and it["tag"] in COMMON_TAGS else 1.0), 2)
+            it["weight"] = round(max(0.6, 1.0 - 0.1 * rank[g]), 2)
     for it in desired:
         if group(it) is not None:
+            it["weight"] = 0.3
+
+
+def apply_weights(text: str, required: list[dict], desired: list[dict]) -> None:
+    """Веса по действующему правилу (weight_rule) на месте; навык без цитаты (добавлен вручную) — с прежним весом."""
+    if list_weights_on():
+        apply_list_weights(text, required, desired)
+        return
+    pos = [it for it in required if (it.get("evidence") or {}).get("start") is not None]
+    for i, it in enumerate(sorted(pos, key=lambda it: it["evidence"]["start"])):
+        it["weight"] = round(max(0.6, 1.0 - 0.1 * i) * (0.8 if it["tag"] in COMMON_TAGS else 1.0), 2)
+    for it in desired:
+        if (it.get("evidence") or {}).get("start") is not None:
             it["weight"] = 0.3
 
 
@@ -1004,6 +1026,7 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
         if not hint_direction:
             merged["direction"] = cov["nearest_direction"]
             merged["evidence"]["direction"] = cov["evidence"]
+    merged["weight_rule"] = weight_rule()  # Я11 (С3-3): правило весов — рядом с весами в карточке
     return merged
 
 
@@ -1042,7 +1065,7 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
         if not hint and not rules[key] and llm[key] and llm["evidence"].get(key):
             ev[key] = llm["evidence"][key]
     if llm["stack_required"] or llm["stack_desired"]:
-        # Объединяем: тег из правил сохраняет зону и цитату, вес — среднее; новые теги LLM — со своей цитатой
+        # Объединяем: тег из правил сохраняет зону, цитату и вес; новые теги LLM — со своей цитатой
         by_tag = {i["tag"]: ("required", i) for i in rules["stack_required"]}
         by_tag.update({i["tag"]: ("desired", i) for i in rules["stack_desired"]})
         for zone, items in (("required", llm["stack_required"]), ("desired", llm["stack_desired"])):
@@ -1052,10 +1075,7 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
                     replaced |= over
                     same_fragment += 1
                     continue
-                if i["tag"] in by_tag:
-                    z, cur = by_tag[i["tag"]]
-                    by_tag[i["tag"]] = (z, {**cur, "weight": round((cur["weight"] + i["weight"]) / 2, 2)})
-                else:
+                if i["tag"] not in by_tag:  # Я11 (С3-3): у тега словаря вес не усредняется с весом модели (был 0,53)
                     by_tag[i["tag"]] = (zone, {**i, "status": "extracted"})
         merged["stack_required"] = [i for z, i in by_tag.values() if z == "required"]
         merged["stack_desired"] = [i for z, i in by_tag.values() if z == "desired"]
@@ -1065,8 +1085,13 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
         merged[key] = rules[key] if rules[key] is not None else llm[key]
         if rules[key] is None and llm[key] is not None and llm["evidence"].get(key):
             ev[key] = llm["evidence"][key]
-    if list_weights_on():  # Я11 (С3-3): вес — по перечислению, не среднее словаря и модели
-        apply_list_weights(masked, merged["stack_required"], merged["stack_desired"])
+    # Я11 (С3-3): навыкам, добавленным моделью, — вес по тому же правилу (weight_rule) по месту в тексте; навыки словаря
+    # сохраняют свой вес
+    rules_w = {i["tag"]: i["weight"] for i in rules["stack_required"] + rules["stack_desired"]}
+    apply_weights(masked, merged["stack_required"], merged["stack_desired"])
+    for i in merged["stack_required"] + merged["stack_desired"]:
+        if i["tag"] in rules_w:
+            i["weight"] = rules_w[i["tag"]]
     excluded = {x["tag"] for x in rules.get("excluded") or []}
     if excluded:  # «Angular не нужен»: тег, исключённый отрицанием в тексте, LLM обратно не добавляет (И18)
         merged["stack_required"] = [i for i in merged["stack_required"] if i["tag"] not in excluded]
