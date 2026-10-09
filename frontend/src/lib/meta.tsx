@@ -13,6 +13,8 @@ export interface Meta {
   };
   operator: Record<string, string>;
   proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
+  // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
+  rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
 }
 
 const Ctx = createContext<Meta | null>(null);
@@ -29,6 +31,14 @@ export function MetaProvider({ children }: { children: ReactNode }) {
 }
 
 export const useMeta = () => useContext(Ctx);
+export const useRules = () => useContext(Ctx)?.rules ?? null;
+
+/** «1 день», «3 дня», «30 дней» — сроки правил в текстах интерфейса. */
+export function daysText(n: number): string {
+  const m10 = n % 10, m100 = n % 100;
+  const w = m10 === 1 && m100 !== 11 ? "день" : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? "дня" : "дней";
+  return `${n} ${w}`;
+}
 export const useProductName = () => useContext(Ctx)?.product_name ?? "";
 
 /** Свой заголовок вкладки экрана: «Мини-тест · Встречный». Ответ /api/meta приходит позже — он его не затирает;
