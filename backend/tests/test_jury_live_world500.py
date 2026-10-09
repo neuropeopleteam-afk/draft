@@ -17,10 +17,14 @@ def _fast_live(monkeypatch):
     monkeypatch.setattr(get_settings(), "jury_live_invite_delay_s", 0)
 
 
-def test_qr_guest_gets_place_and_invite_in_world_of_500(client, _fast_live):
-    """Гость после мини-теста получает приглашение и своё настоящее место, даже если оно ниже первых 60 в подборке
-    (на стенде Backend: из 139 — гость не попадал в топ-60, и приглашения не было)."""
+def test_qr_guest_gets_place_and_invite_in_world_of_500(client, _fast_live, monkeypatch):
+    """Гость после мини-теста получает приглашение и своё настоящее место, даже если оно ниже окна подборки
+    (на стенде Backend: из 139 — гость не попадал в топ-60, и приглашения не было).
+    После Ф2 условия живой потребности («Удалённо») применяются сразу, и в мире из 500 в выдаче остаётся около 60
+    удалённых кандидатов направления — окно сужено до 10, чтобы место гостя гарантированно оказалось за его пределами."""
     from app.jury_live import service as S
+
+    monkeypatch.setattr(S, "SELECTION_LIMIT", 10)
     from app.jury_live.models import LiveGuest
     from app.modules.demo.seed import seed
     from app.modules.matching.models import SelectionVersion
@@ -38,10 +42,10 @@ def test_qr_guest_gets_place_and_invite_in_world_of_500(client, _fast_live):
         sel = me["selection"]
         # приглашение — по правилу экрана: каждому, кому мини-тест дал экспресс-категорию
         assert me["stage"] == "invited" and me["invite"] and me["invite"]["salary_from"] > 0, (direction, me["stage"])
-        assert isinstance(sel["rank"], int) and 1 <= sel["rank"] <= sel["total"] and sel["total"] > 60
+        assert isinstance(sel["rank"], int) and 1 <= sel["rank"] <= sel["total"] and sel["total"] > S.SELECTION_LIMIT
         assert f"{sel['rank']}-м месте из {sel['total']}" in me["invite"]["offer_description"]
         places[direction] = sel["rank"]
-    # хотя бы у одного направления место за пределами прежнего окна в 60 — на нём и падало
+    # хотя бы у одного направления место за пределами окна подборки — на этом и падало (С-1)
     assert max(places.values()) > S.SELECTION_LIMIT, places
     feed = client.get("/api/jury/live/room/feed", headers=H(emp["access_token"])).json()
     assert feed["counters"]["invited"] == 2

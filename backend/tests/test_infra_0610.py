@@ -40,8 +40,11 @@ def test_jury_sandboxes_are_isolated(client):
     # чужая песочница не видна: 4 демо-кандидата (трое с категорией и «Пройдите тест сами» со статусом «не подтверждён»)
     assert len(own_a) == 4 and len(own_b) == 4 and not own_a & own_b
     # подборка песочницы — только по её кандидатам
+    # Ф2: условия потребности применяются сразу — берём удалённую потребность (персоны песочницы — удалённо, Москва;
+    # в «Офис в Москве» они скрыты условиями)
     need = next(n for n in client.get("/api/employer/needs", headers=H(ea["access_token"])).json()
-                if n["requirements"].get("direction") == "backend")
+                if n["requirements"].get("direction") == "backend" and n["requirements"].get("grade") == "middle"
+                and n["requirements"].get("work_format") == "remote")
     sel = client.get(f"/api/employer/needs/{need['id']}/selections/1", headers=H(ea["access_token"])).json()
     refs = {c["ref"] for c in sel["results"]}
     # подборка по умолчанию — категория потребности (backend.middle): два своих подтверждённых и «Пройдите тест сами»

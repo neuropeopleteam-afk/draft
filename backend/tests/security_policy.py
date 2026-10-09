@@ -225,6 +225,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/candidate/assignments/{atid}/start"): "candidate_own404",
     ("POST", "/api/candidate/assignments/{atid}/submit"): "candidate_own404",
     ("POST", "/api/candidate/assignments/{atid}/decline"): "candidate_own404",
+    ("PUT", "/api/candidate/assignments/prefs"): "candidate",  # К5 расписание ленты
+    ("POST", "/api/candidate/assignments/demo/next-week"): ("candidate", {"candidate": 403}),  # К5: только песочница жюри
     # ---------------------------------------------------------------- вакансии (публичный список для вошедших)
     ("GET", "/api/vacancies"): "auth",
     ("GET", "/api/vacancies/{vid}"): "vacancy",
@@ -245,6 +247,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("PATCH", "/api/employer/needs/{need_id}"): "employer_own",
     ("POST", "/api/employer/needs/{need_id}/selections"): "employer_own",
     ("GET", "/api/employer/needs/{need_id}/selections/{version}"): "employer_own",
+    ("GET", "/api/employer/needs/{need_id}/selections/{version}/what-if"): "employer_own",  # И18 «Что если»
     ("GET", "/api/employer/needs/{need_id}/compare"): "employer_own",
     ("GET", "/api/employer/probes"): "employer",
     ("POST", "/api/employer/probes"): "employer_ref",
@@ -279,6 +282,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/employer/assignments/{aid}"): "employer_own404",  # задание в мире теста не создаётся
     ("POST", "/api/employer/assignments/{aid}/send"): "employer_own404",
     ("POST", "/api/employer/assignments/{aid}/close"): "employer_own404",
+    ("POST", "/api/employer/assignments/{aid}/attempts/{atid}/review"): "employer_own404",  # К5 рубрика
     # ATS компании: настройки и журнал — только работодатель своей компании (объекты по id — журнал передач)
     ("GET", "/api/employer/ats/settings"): "employer",
     ("PUT", "/api/employer/ats/settings"): "employer",
@@ -343,10 +347,25 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/validation/attacks/{attack_id}"): "auth404",  # attack_id=nope: вход проверяется, атаки нет
     ("GET", "/api/validation/junior-stability"): "open",  # feat/status
     ("GET", "/api/validation/grader-check"): "open",  # feat/integrity
+    ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
+    ("GET", "/api/validation/headline"): "open",
     ("POST", "/api/validation/self-check"): "auth",  # feat/jury-test
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",
     ("POST", "/api/validation/closed-set/export"): "sandbox_employer",
+    # подписка на потребность, уведомления, напоминания (И25, Н6 — feat/subs)
+    ("GET", "/api/employer/subscriptions"): "employer",
+    ("GET", "/api/employer/needs/{need_id}/subscription"): "employer_own",
+    ("PUT", "/api/employer/needs/{need_id}/subscription"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/subscription/seen"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/subscription/check"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/subscription/new-version"): "employer_own",
+    ("GET", "/api/notifications"): "auth",
+    ("POST", "/api/notifications/read"): "auth",
+    ("GET", "/api/notifications/prefs"): "auth",
+    ("PUT", "/api/notifications/prefs"): "auth",
+    ("POST", "/api/jury/subs/simulate"): "sandbox_employer",
+    ("POST", "/api/jury/subs/fast-forward"): "sandbox_employer",
     ("GET", "/api/sus/questions"): "open",
     ("POST", "/api/sus"): "open",
     ("GET", "/api/sus/mine"): "open",
