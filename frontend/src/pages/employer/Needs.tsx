@@ -9,6 +9,7 @@ import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
+import { NeedFileNote, NeedFileUpload, type NeedFileInfo } from "./NeedFile";  // Ф5: потребность из файла вакансии
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -242,6 +243,7 @@ export function Needs() {
   const [focus, setFocus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [file, setFile] = useState<NeedFileInfo | null>(null);  // Ф5: текст взят из файла
 
   async function parse(t: string = text) {
     setErr(null); setBusy(true);
@@ -267,12 +269,14 @@ export function Needs() {
         <Field label="Кого вы ищете" htmlFor="need" hint="Контакты из текста вырезаются до обработки. Без LLM разбор идёт по словарю технологий и правилам. Требования к полу, возрасту, внешности, семье (ст. 64 ТК РФ) не учитываются.">
           <textarea id="need" className="input min-h-[120px]" value={text} onChange={(e) => { setText(e.target.value); setReq(null); }} placeholder={EXAMPLE} />
         </Field>
+        {file && text.slice(0, 40) === file.text.slice(0, 40) && <NeedFileNote info={file} edited={text !== file.text} />}
         {!req && (
           <div className="flex flex-wrap gap-4 text-sm">
             <button type="button" className="font-semibold text-brand hover:underline" onClick={() => setText(EXAMPLE)}>Подставить пример</button>
             <button type="button" className="font-semibold text-brand-plum hover:underline" onClick={() => setText(EXAMPLE_BIAS)}>Пример с нарушением ст. 64 ТК РФ</button>
           </div>
         )}
+        {!req && <NeedFileUpload disabled={busy} onText={(f) => { setFile(f); setText(f.text); parse(f.text); }} />}
         <Alert>{err}</Alert>
         {!req ? (
           <button className="btn-primary" disabled={text.trim().length < 10 || busy} onClick={() => parse()}>{busy ? "Разбираем…" : "Разобрать требования"}</button>
