@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
@@ -214,9 +214,15 @@ export function EmployerProbes() {
   );
 }
 
+/** Ответ POST по приглашению (та же форма, что строка списка) — сразу в список, без ожидания повторного GET (В-2). */
+export const replaceInvitation = (list: any[] | null, inv: any): any[] | null =>
+  list && inv?.id ? list.map((x) => (x.id === inv.id ? inv : x)) : list;
+
 export function EmployerInvitations() {
-  const { data, loading, error, reload } = useApi<any[]>("/employer/invitations");
+  const { data, loading, error, reload, setData } = useApi<any[]>("/employer/invitations");
   const [err, setErr] = useState<string | null>(null);
+  // карточка обновляется ответом POST сразу; полный список (передачи в ATS после принятия) — следом, в фоне
+  const applyUpdated = (inv?: any) => { if (inv?.id) setData((d) => replaceInvitation(d, inv)); void reload(); };
   async function withdraw(id: string) {
     try { await api(`/employer/invitations/${id}/withdraw`, { method: "POST" }); await reload(); } catch (e) { setErr(errText(e)); }
   }
@@ -248,7 +254,7 @@ export function EmployerInvitations() {
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Кандидат отозвал доступ к контактам {i.contacts_revoked_at ? dt(i.contacts_revoked_at) : ""} — карточка снова обезличена, передача в ATS и PDF с контактами закрыты. Переписка — в формате «вопрос — ответ». Вернуть доступ может только кандидат.</p>
           ) : <p className="text-brand-ink/65">Контакты откроются после принятия приглашения.</p>}
           <EmploymentTermsText terms={i.employment_terms} />
-          <CounterDecision inv={i} onDone={reload} />
+          <CounterDecision inv={i} onDone={applyUpdated} />
           <AtsInvitationActions invitationId={i.id} status={i.contacts_revoked ? "contacts_revoked" : i.status} candidateRef={i.candidate_ref} transfers={i.ats_transfers} onChanged={reload} />
           <EmployerHiring inv={i} onChange={reload} />
           {i.complaint ? (
@@ -264,16 +270,22 @@ export function EmployerInvitations() {
 }
 
 /** Встречное предложение кандидата: принять (вилка заменяется, приглашение принято, контакты открыты) или отклонить. */
-function CounterDecision({ inv, onDone }: { inv: any; onDone: () => void }) {
+function CounterDecision({ inv, onDone }: { inv: any; onDone: (updated?: any) => void }) {
   const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"" | "accept" | "decline">("");
   const [err, setErr] = useState<string | null>(null);
+  const inFlight = useRef(false);  // второй клик до ответа сервера не уходит вторым POST
   const c = inv.counter;
   const decided = (inv.counters ?? []).filter((x: any) => x.status !== "pending");
   async function decide(kind: "accept" | "decline") {
-    setBusy(true); setErr(null);
-    try { await api(`/employer/invitations/${inv.id}/counter/${kind}`, { body: { note: note || null } }); setNote(""); onDone(); }
-    catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+    if (inFlight.current) return;
+    inFlight.current = true; setBusy(kind); setErr(null);
+    try {
+      // В-2: ответ — обновлённое приглашение (статус, контакты, история): карточка меняется сразу, без перезагрузки
+      const updated = await api<any>(`/employer/invitations/${inv.id}/counter/${kind}`, { body: { note: note || null } });
+      setNote(""); onDone(updated);
+    }
+    catch (e) { setErr(errText(e)); } finally { inFlight.current = false; setBusy(""); }
   }
   if (!c) {
     const last = decided[decided.length - 1];
@@ -299,8 +311,8 @@ function CounterDecision({ inv, onDone }: { inv: any; onDone: () => void }) {
       <p className="text-xs text-brand-ink/70">Если принять — вилка приглашения заменится на встречную, приглашение станет принятым и откроются контакты кандидата (он согласился на это, отправляя встречное). Если отклонить — приглашение останется открытым с вашей вилкой: кандидат сможет принять её, отказаться или предложить ещё раз.</p>
       <input className="input" placeholder="Комментарий кандидату (необязательно)" aria-label="Комментарий кандидату к решению по встречному" maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
       <div className="flex flex-wrap gap-2">
-        <button className="btn-primary !py-2" disabled={busy} onClick={() => decide("accept")}>Принять встречное</button>
-        <button className="btn-ghost !py-2" disabled={busy} onClick={() => decide("decline")}>Отклонить встречное</button>
+        <button className="btn-primary !py-2" disabled={!!busy} aria-busy={busy === "accept"} onClick={() => decide("accept")}>{busy === "accept" ? "Принимаем…" : "Принять встречное"}</button>
+        <button className="btn-ghost !py-2" disabled={!!busy} aria-busy={busy === "decline"} onClick={() => decide("decline")}>{busy === "decline" ? "Отклоняем…" : "Отклонить встречное"}</button>
       </div>
       <Alert>{err}</Alert>
     </section>
