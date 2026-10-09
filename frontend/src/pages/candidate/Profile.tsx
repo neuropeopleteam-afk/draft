@@ -79,7 +79,7 @@ export default function Profile() {
             <div className="rounded-xl bg-[#F3F2FB] p-4 text-sm">
               <p className="font-semibold text-brand-night">Вырезано до обработки</p>
               <p className="mt-1 text-brand-ink/70">
-                {Object.entries(r.pii_summary ?? {}).filter(([k]) => k !== "ner").map(([k, v]) => `${({ person: "ФИО", email: "почта", phone: "телефон", telegram: "Telegram", url_messenger: "ссылки на профили", birthdate: "дата рождения", snils: "СНИЛС", passport: "паспорт", address: "адрес" } as any)[k] ?? k}: ${v}`).join(" · ") || "персональных данных не найдено"}
+                {Object.entries(r.pii_summary ?? {}).filter(([k]) => k !== "ner").map(([k, v]) => `${({ person: "ФИО", email: "почта", phone: "телефон", telegram: "Telegram", url_messenger: "ссылки на профили", birthdate: "дата рождения", age: "возраст", gender: "пол", snils: "СНИЛС", passport: "паспорт", inn: "ИНН", address: "адрес" } as any)[k] ?? k}: ${v}`).join(" · ") || "персональных данных не найдено"}
               </p>
               {found && (found.full_name || found.email || found.phone) && (
                 <div className="mt-3 flex flex-wrap items-center gap-3">
