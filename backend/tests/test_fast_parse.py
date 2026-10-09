@@ -252,6 +252,7 @@ def test_no_format_suggestion_inside_allowed_formats(monkeypatch, net):
 
 
 def test_migration_fp01_up_down(tmp_path):
+    """fp01 — над головой integ (mu01): вверх создаёт need_parse_jobs, вниз до mu01 — убирает."""
     from alembic import command
     from sqlalchemy import create_engine, inspect
 
@@ -263,7 +264,7 @@ def test_migration_fp01_up_down(tmp_path):
     eng = create_engine(url)
     assert {"key", "status", "result", "user_id"} <= {c["name"] for c in inspect(eng).get_columns("need_parse_jobs")}
     eng.dispose()
-    command.downgrade(cfg, "tk02")
+    command.downgrade(cfg, "mu01")
     eng = create_engine(url)
     assert "need_parse_jobs" not in inspect(eng).get_table_names()
     eng.dispose()

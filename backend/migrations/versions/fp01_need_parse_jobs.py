@@ -1,7 +1,7 @@
 """И27: быстрый разбор потребности — фоновые задачи уточнения моделью и кэш разбора по тексту
 
 Revision ID: fp01
-Revises: tk02 (голова integ/0710 9cb1806 на 09.10; было pc01 — перевешено при слиянии)
+Revises: mu01 (голова integ/0710 1da1080 на 09.10; было pc01 → tk02 — перевешено при слияниях)
 Create Date: 2026-10-09
 
 Таблица need_parse_jobs: задача фонового уточнения разбора (status pending → done | failed) и одновременно кэш:
@@ -14,7 +14,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision: str = "fp01"
-down_revision: str | None = "tk02"
+down_revision: str | None = "mu01"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
