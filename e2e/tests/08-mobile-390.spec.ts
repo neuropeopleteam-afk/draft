@@ -72,13 +72,15 @@ test("390 px: кандидат — опрос, экран задания, кат
   await test.step("390 px: свёрнутый проводник — в шапке кабинета, не над содержимым (Ф6 В8)", async () => {
     const pill = page.getByRole("button", { name: "Показать проводник для жюри" });
     await expect(pill).toBeVisible();
-    // кнопка в потоке шапки (не fixed) и в её первой строке — содержимое страницы она не перекрывает
+    // кнопка в потоке шапки (не fixed), на месте подписи роли — содержимое страницы она не перекрывает
     expect(await pill.evaluate((el) => {
       for (let e: HTMLElement | null = el as HTMLElement; e; e = e.parentElement) if (getComputedStyle(e).position === "fixed") return "fixed";
       return "static";
     }), "кнопка проводника не плавает над страницей").toBe("static");
     const box = await pill.boundingBox();
     expect(box && box.y + box.height <= 64, "кнопка — в строке шапки").toBe(true);
+    const noScroll = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+    expect(noScroll, "кнопка не даёт горизонтальной прокрутки").toBe(true);
     // открытая панель — с местом под ней внизу страницы; закрытие запоминается
     await pill.click();
     const panel = page.getByRole("complementary", { name: "Проводник для экспертов жюри" });

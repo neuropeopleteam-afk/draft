@@ -49,10 +49,11 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
       <aside className="sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none">
         <div className="flex h-14 items-center justify-between gap-3 px-4 md:block md:h-auto md:px-5 md:py-5">
           <NavLink to="/" aria-label="На главную"><Logo /></NavLink>
-          <p className="ml-auto min-w-0 truncate text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-6 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">
+          {/* Ф6 (В8): свёрнутый проводник жюри на телефоне — в шапке на месте подписи роли, а не над содержимым */}
+          <GuideSlot where="header" />
+          <p className="ml-auto min-w-0 truncate peer-[:not(:empty)]:hidden text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-6 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">
             <span className="md:hidden">{SHORT[role] ?? title}</span><span className="hidden md:inline">{title}</span>
           </p>
-          <GuideSlot where="header" />{/* Ф6 (В8): свёрнутый проводник жюри — здесь, а не над содержимым */}
           <button onClick={exit} className="shrink-0 rounded-lg px-2 py-1.5 text-sm font-semibold text-brand-plum hover:bg-brand-blush/50 hover:text-brand md:hidden">Выйти</button>
         </div>
         <nav ref={navRef} className="nav-strip flex gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
