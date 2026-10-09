@@ -5,7 +5,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { StatusCounts } from "../../components/GradeStatus";
 import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi } from "../../components/ui";
 import { apiDownload } from "../../lib/api";
-import { InviteForm, ProbeForm } from "./Contact";
+import { InviteForm, ProbeForm, probeSentText } from "./Contact";
 import { useTags } from "./Needs";
 import { PassportEmployerBadge } from "../../passport/Share";
 
@@ -124,7 +124,6 @@ export function CandidateDetail() {
         <PageTitle title={`Кандидат ${c.ref}`} subtitle={c.contacts ? "Кандидат принял ваше приглашение — контакты открыты." : c.contacts_revoked ? `Обезличенная карточка. ${c.contacts_note}.` : "Обезличенная карточка. Контакты откроются после принятия приглашения."} />
         <button className="btn-ghost" onClick={() => apiDownload(`/employer/candidates/${c.ref}/profile.pdf`, `profile-${c.ref}.pdf`)}>PDF-профиль</button>
       </div>
-      {msg && <Alert kind="ok">{msg}</Alert>}
       {c.contacts_revoked && !c.contacts && (
         <section className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber-900">
           <p className="flex flex-wrap items-center gap-2 font-bold">Контакты скрыты <Status s="contacts_revoked" /></p>
@@ -144,6 +143,8 @@ export function CandidateDetail() {
             <button className="btn-primary" disabled={!c.can_invite} onClick={() => setModal("invite")}>Пригласить</button>
           </div>
         } />
+      {/* Ф6: итог зонда/приглашения — сразу под кнопками, где был клик */}
+      {msg && <Alert kind="ok">{msg}</Alert>}
       <PassportEmployerBadge refId={c.ref} />
       {!c.can_invite && <Alert kind="info">Приглашение этому кандидату уже отправлялось. Следующее — с {dt(c.invite_available_at)} (не чаще раза в {c.invitation_cooldown_days} дней).</Alert>}
       {(c.my_invitations.length > 0 || c.my_probes.length > 0) && (
@@ -156,7 +157,7 @@ export function CandidateDetail() {
         </section>
       )}
       <Modal open={modal === "probe"} onClose={() => setModal("")} title="Зонд кандидату">
-        <ProbeForm refs={[c.ref]} needId={need ?? undefined} market={c.market_range} needSalary={needSalary} onDone={() => { setModal(""); void reload(); }} />
+        <ProbeForm refs={[c.ref]} needId={need ?? undefined} market={c.market_range} needSalary={needSalary} onDone={(r) => { setModal(""); setMsg(probeSentText(r)); void reload(); }} />
       </Modal>
       <Modal open={modal === "invite"} onClose={() => setModal("")} title="Приглашение-оффер">
         <InviteForm cref={c.ref} needId={need} market={c.market_range} needSalary={needSalary} onDone={() => { setModal(""); setMsg("Приглашение отправлено. Кандидат получит письмо; контакты откроются после принятия."); void reload(); }} />
