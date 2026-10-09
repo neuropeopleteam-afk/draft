@@ -88,6 +88,9 @@ def overview(db: Session, user: User) -> dict:
     uid = user.id
     p = db.get(CandidateProfile, uid)
     n_tests = _count(db, TestSession, TestSession.user_id == uid)
+    owned = erase.owned_tables(uid)
+    n_prefs = sum(db.scalar(select(func.count()).select_from(t).where(c)) or 0
+                  for name, (t, c) in owned.items() if name in ("candidate_preferences", "assignment_prefs", "notify_prefs", "user_notifications"))
     n_msgs = _count(db, ContactMessage, ContactMessage.invitation_id.in_(
         select(Invitation.id).where(Invitation.candidate_user_id == uid)))
     stored = [
@@ -123,6 +126,8 @@ def overview(db: Session, user: User) -> dict:
          "what": "сообщения по приглашениям и откликам"},
         {"key": "counters", "title": "Встречные предложения", "count": _count(db, InvitationCounter, InvitationCounter.candidate_user_id == uid),
          "what": "ваша вилка в ответ на приглашение"},
+        {"key": "prefs", "title": "Предпочтения и уведомления", "count": n_prefs,
+         "what": "готовность к предложениям и интересы, настройки уведомлений и ленты заданий, сами уведомления"},
     ]
     inter = interest.summary(db, uid)
     return {

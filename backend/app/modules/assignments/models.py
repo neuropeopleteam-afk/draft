@@ -45,6 +45,9 @@ class Assignment(UUIDPk, Timestamps, Base):
     is_demo: Mapped[bool] = mapped_column(default=False, server_default=sa.false())
     # Задание из песочницы жюри (app.modules.jury.scope): видно в ленте только кандидатам этой песочницы
     jury_scope: Mapped[str | None] = mapped_column(sa.String(16), index=True)
+    # К5: рубрика (критерии и баллы, видны работодателю и кандидату до начала) и просьба описать подход
+    rubric: Mapped[list | None]
+    approach_prompt: Mapped[str | None] = mapped_column(sa.Text)
 
 
 class AssignmentAttempt(UUIDPk, Timestamps, Base):
@@ -75,3 +78,23 @@ class AssignmentAttempt(UUIDPk, Timestamps, Base):
     skills: Mapped[dict] = mapped_column(default=dict)  # {tag: {correct, total, score}} — основа фактов T1
     time_spent_s: Mapped[int | None]
     score_method: Mapped[str | None] = mapped_column(sa.String(16))  # auto | demo
+    # К5: почему предложено (слепок на момент выдачи), ответ о подходе, баллы по рубрике и оценка работодателя
+    why: Mapped[dict | None]
+    approach_text: Mapped[str | None] = mapped_column(sa.Text)
+    rubric_result: Mapped[dict | None]  # {criteria: [{id, kind, max, points, comment?}], auto_points, employer_points, ...}
+    review_status: Mapped[str] = mapped_column(sa.String(16), default="none", server_default="none")  # none|pending|reviewed
+    final_points: Mapped[int | None]  # 0..100 — после оценки работодателя; до неё итога нет
+    reviewed_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))
+    remind_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))  # напоминание кандидату
+    remind_count: Mapped[int] = mapped_column(default=0, server_default="0")
+    review_remind_at: Mapped[datetime | None] = mapped_column(sa.DateTime(timezone=True))  # напоминание работодателю
+    review_remind_count: Mapped[int] = mapped_column(default=0, server_default="0")
+
+
+class AssignmentPrefs(Timestamps, Base):
+    """Настройки ленты «Задания для вас» у кандидата: как часто предлагать (0 — выключено)."""
+
+    __tablename__ = "assignment_prefs"
+
+    user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    frequency_days: Mapped[int] = mapped_column(default=7, server_default="7")

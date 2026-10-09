@@ -38,10 +38,17 @@ from app.modules.profiles.facts import (
     skill_evidence_text,
     test_component,
 )
+from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
+from app.modules.matching import must_have
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
 ALGORITHM_VERSION = "match-v1"
+MUST_ALGORITHM = "match-v1.1"  # Ф2: match-v1 + ярусы обязательного (те же веса и балл), флаг MATCH_MUST_FIRST
+
+
+def algorithm() -> str:
+    return MUST_ALGORITHM if must_have.enabled() else ALGORITHM_VERSION
 WEIGHTS = {"test": 0.45, "stack_required": 0.35, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05}
 LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "подтверждено тестом или зондом", "T0": "заявлено кандидатом",
           "none": "нет данных"}
@@ -235,12 +242,17 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                 got += w * f.value.get("score", 0)
                 reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "confirmed", "weight": w,
                                 "text": skill_evidence_text(f)})  # тест и задания работодателя (И7)
+            elif f is not None:  # И18: тест проверял навык, порог не набран — это не «нет данных» (как в сравнении)
+                reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "mismatch", "weight": w,
+                                "text": f"Проверено заданиями: {fmt_count(f.value.get('correct'))} из "
+                                        f"{fmt_count(f.value.get('total'))} — ниже порога подтверждения"})
             elif tag in b.stack_t0:
                 reasons.append({"requirement": f"{label}: {title}", "level": "T0", "status": "declared", "weight": w,
                                 "text": "Заявлено кандидатом — не влияет на ранжирование, можно проверить зондом"})
             else:
                 reasons.append({"requirement": f"{label}: {title}", "level": "none", "status": "missing", "weight": w,
-                                "text": "Нет данных"})
+                                "text": "Не подтверждено: тест кандидата этот навык не проверял, в профиле он не заявлен — "
+                                        "можно проверить зондом"})
         return got / total
 
     sreq = stack_part(req.get("stack_required") or [], "Обязательно")
@@ -254,8 +266,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         rating = details(verified)
         reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
                         "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")
-                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}. "
-                        + rating["policy"]})
+                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}"})  # формула — в карточке (И18)
     else:
         # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
         extra = len(b.achievements)
@@ -267,26 +278,32 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         lvl = integ.get("level")
         reasons.append({"requirement": "Достоверность результата теста", "level": "T1",
                         "status": {"high": "confirmed", "medium": "partial"}.get(lvl, "mismatch"),
-                        "text": f"{(integ.get('title') or '').capitalize()}: " + "; ".join((integ.get("reasons") or [])[:2]),
+                        "text": f"{(integ.get('title') or '').capitalize()}: " + "; ".join((integ.get("reasons") or [])[:2])
+                        + ("" if lvl == "high" else ". Не блокирует: на место в подборке не влияет, решение за вами — "
+                                                    "можно пригласить или проверить зондом"),
                         "integrity": lvl})
     probe = max((f.value.get("score", 0) for f in b.probes_t1), default=0.0)
-    if b.probes_t1:
-        best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))
+    own = [f for f in b.probes_t1 if not assignment_signal.is_assignment_fact(f)]  # задание работодателя — своя строка (К5)
+    if own:
+        best = max(own, key=lambda f: f.value.get("score", 0))
         reasons.append({"requirement": "Зонд", "level": "T1", "status": "confirmed",
                         "text": f"{quoted(best.title)} — {best.value.get('verdict', 'оценено')}"})
+    sig = assignment_signal.reason_for(b.probes_t1)  # К5: адресное задание — одна строка, порядок match-v1 не меняет
+    if sig:
+        reasons.append(sig)
     # Фильтровые требования (T0): показываем, но в скор не включаем
-    wf = req.get("work_format")
-    if wf:
-        allowed = req.get("work_formats") or [wf]
+    cond = need_conditions(req)
+    allowed = cond["work_formats"]
+    if allowed:
         ok = p.work_format.value in (*allowed, "any")
         reasons.append({"requirement": "Формат работы", "level": "T0", "status": "declared" if ok else "mismatch",
                         "text": "Заявленный формат подходит" if ok else "Заявлен другой формат работы"})
-    if req.get("city") and wf in ("office", "hybrid"):
-        ok = getattr(p, "relocation", False) or (getattr(p, "city", None) or "").casefold() == req["city"].casefold()
+    if cond["city"] and city_applies(p.work_format.value, allowed):
+        ok = getattr(p, "relocation", False) or (getattr(p, "city", None) or "").casefold() == cond["city"].casefold()
         reasons.append({"requirement": "Город присутствия", "level": "T0",
                         "status": "declared" if ok else "mismatch",
                         "text": "Город подходит или заявлен переезд" if ok else
-                                f"Нужен {req['city']}; заявлен другой город без переезда"})
+                                f"Нужен {cond['city']}; заявлен другой город без переезда"})
     comps = {"test": test, "stack_required": round(sreq, 3), "stack_desired": round(sdes, 3), "fsp": fsp,
              "probe": probe, "provisional": PROVISIONAL_PENALTY if b.provisional else 0.0,
              "grade_status": b.grade_status}
@@ -315,16 +332,60 @@ def requirement_priority(b: Bundle, req: dict) -> int:
     return sum(not skill_confirmed(b.skills_t1.get(i["tag"])) for i in must)
 
 
+FORMATS = ("office", "hybrid", "remote")
+
+
+def need_conditions(req: dict) -> dict:
+    """Условия потребности (T0): допустимые форматы и город офиса. Ф2: «удалёнка или офис в Москве» —
+    work_formats = [remote, office, hybrid], city = Москва: город относится только к офису и гибриду."""
+    formats = [f for f in (req.get("work_formats") or []) if f in FORMATS]
+    if not formats and req.get("work_format") in FORMATS:
+        formats = [req["work_format"]]
+    formats = list(dict.fromkeys(formats)) or None
+    city = req.get("city") if formats and any(f in formats for f in ("office", "hybrid")) else None
+    return {"work_formats": formats, "city": (city or "").strip() or None}
+
+
+def city_applies(candidate_format: str, formats: list[str] | None) -> bool:
+    """Город проверяется только у тех, кто будет работать на месте: офис и гибрид; «любой формат» — если удалёнка
+    условиями не допускается. Без условия формата — у всех (ручной фильтр «Город»)."""
+    if not formats:
+        return True
+    if candidate_format == "remote":
+        return False
+    if candidate_format == "any":
+        return "remote" not in formats
+    return True
+
+
 def condition_filters(req: dict, filters: dict) -> dict:
-    """T0 conditions narrow the pool, never add points to the confirmation score."""
-    out = {}
-    if req.get("work_formats"):
-        out["work_formats"] = req["work_formats"]
-    elif req.get("work_format") in ("office", "hybrid", "remote"):
-        out["work_format"] = req["work_format"]
-    if req.get("city") and req.get("work_format") in ("office", "hybrid"):
-        out["city"] = req["city"]
-    return {**out, **filters}
+    """Ф2: условия потребности (формат, город) применяются к подборке по умолчанию; явный фильтр версии важнее,
+    conditions_off — показать всех без условий. T0-условия только сужают выдачу и не добавляют баллов."""
+    out = {k: v for k, v in filters.items() if k != "conditions_off"}
+    if filters.get("conditions_off"):
+        return out
+    cond = need_conditions(req)
+    explicit_fmt = filters.get("work_formats") or filters.get("work_format")
+    if not explicit_fmt and cond["work_formats"]:
+        out["work_formats"] = cond["work_formats"]
+    fmts = out.get("work_formats") or ([out["work_format"]] if out.get("work_format") else None)
+    if not filters.get("city") and cond["city"] and fmts and any(f in fmts for f in ("office", "hybrid")):
+        out["city"] = cond["city"]
+    return out
+
+
+def conditions_text(f: dict) -> str | None:
+    """«Удалённо или офис/гибрид (Москва)» — подпись условий, применённых к версии."""
+    titles = {"remote": "удалённо", "office": "офис", "hybrid": "гибрид"}
+    fmts = f.get("work_formats") or ([f["work_format"]] if f.get("work_format") else [])
+    city = f.get("city")
+    onsite = "/".join(titles[x] for x in ("office", "hybrid") if x in fmts)
+    if onsite and city:
+        onsite += f" ({city})"
+    txt = " или ".join((["удалённо"] if "remote" in fmts else []) + ([onsite] if onsite else []))
+    if not fmts and city:
+        txt = f"город {city}"
+    return (txt[:1].upper() + txt[1:]) if txt else None
 
 
 def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
@@ -332,6 +393,8 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
     out = []
     for b in bundles:
         p = b.profile
+        if f.get("exclude_refs") and p.public_ref in f["exclude_refs"]:  # отзыв «не подходит» (Н2, modules/mutual)
+            continue
         if f.get("fsp_only") and not b.achievements:
             continue
         if f.get("confirmed_only") and (b.provisional or b.unconfirmed):  # только подтверждённый грейд
@@ -345,7 +408,8 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
         formats = f.get("work_formats") or ([f["work_format"]] if f.get("work_format") else [])
         if formats and p.work_format.value not in (*formats, "any"):
             continue
-        if f.get("city") and (p.city or "").strip().lower() != f["city"].strip().lower() and not p.relocation:
+        if (f.get("city") and city_applies(p.work_format.value, formats)
+                and (p.city or "").strip().lower() != f["city"].strip().lower() and not p.relocation):
             continue
         if f.get("experience_min") is not None and float(p.experience_years or 0) < float(f["experience_min"]):
             continue
@@ -365,31 +429,42 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         # без подтверждённого грейда — по заявленной категории, отдельным ярусом ниже (видео №6: показывать, не скрывать)
         ids += [p.user_id for p, _, _ in unconfirmed_pool(db, category_ids=cat_ids)]
     bundles = list(load_bundles(db, ids, direction=req.get("direction"), category_ids=cat_ids).values())
-    # T0 only filters an explicitly chosen pool, never sorts profiles or adds points.
-    # Automatically restricting a parsed need is evaluated separately in the audit;
-    # it is not enabled without confirming conditions in the employer's filter panel.
-    bundles = apply_filters(bundles, filters)
+    # Ф2: условия потребности (формат, город — T0) применяются по умолчанию, только сужают выдачу и не дают баллов;
+    # сколько скрыто условиями — в ответе (чип «скрыто условиями: N», отмена — filters.conditions_off)
+    effective = condition_filters(req, filters)
+    before_conditions = len(apply_filters(bundles, {k: v for k, v in filters.items() if k != "conditions_off"}))
+    bundles = apply_filters(bundles, effective)
     scored = []
     for b in bundles:
         s, comps, reasons = score_candidate(b, req)
         if filters.get("min_score") and s < float(filters["min_score"]):
             continue
         scored.append((s, b, comps, reasons))
-    # Mandatory-gap-first (И8) was evaluated without fitting, but failed the hidden-truth 500 guard.
-    # Keep the established order: tier (grade status) → score; mandatory T1 and T0 conditions are explicit filters.
-    scored.sort(key=lambda x: (tier(x[1]), -x[0], -(x[1].rating or 0), x[1].profile.public_ref or ""))
+    # Ф2: ярус статуса грейда → ярус обязательного (0, 1, ≥ 2 непокрытых; must_have) → балл → рейтинг → ref
+    levels = must_have.declared_levels(db, [b.profile.user_id for _, b, _, _ in scored]) \
+        if must_have.declared_counts() else {}
+    must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)
+    scored.sort(key=lambda x: (tier(x[1]), must[x[1].profile.user_id]["tier"], -x[0], -(x[1].rating or 0),
+                               x[1].profile.public_ref or ""))
     results = []
     for rank, (s, b, comps, reasons) in enumerate(scored, start=1):
         if rank > limit and b.profile.public_ref not in include_refs:
             continue
         results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
-                        "reasons": reasons, "category_id": b.category_id,
+                        "reasons": reasons, "category_id": b.category_id, "must": must[b.profile.user_id],
                         "grade_status": b.grade_status, "card": card(b, cats)})
     prov, unc = provisional_counts(db), unconfirmed_counts(db)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
         r["unconfirmed"] = unc.get(r["id"], 0)
-    return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": ALGORITHM_VERSION,
+    applied = {k: effective[k] for k in ("work_formats", "work_format", "city") if effective.get(k)}
+    conditions = {"applied": applied, "text": conditions_text(applied), "off": bool(filters.get("conditions_off")),
+                  "from_need": need_conditions(req)["work_formats"] is not None,
+                  "hidden": max(0, before_conditions - len(bundles))}
+    meta = {"categories": recs, "conditions": conditions, "must_first": must_have.enabled(),
+            "total_matched": len(scored)}
+    return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": algorithm(),
+            "conditions": conditions, "must_first": must_have.enabled(), "meta": meta,
             "weights": WEIGHTS, "provisional_penalty": PROVISIONAL_PENALTY,
             "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional),
             "unconfirmed_matched": sum(1 for _, b, _, _ in scored if b.unconfirmed),

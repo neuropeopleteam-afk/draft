@@ -82,6 +82,10 @@ LABELS: dict[str, str] = {
     "candidate_interest_events": "События интереса (просмотры и подборки)",
     "jury_live_guests": "Гостевой вход живой демонстрации",
     "contact_messages": "Переписка по приглашениям и откликам",
+    "candidate_preferences": "Предпочтения (готовность к предложениям, интересы)",
+    "assignment_prefs": "Настройки ленты заданий", "notify_prefs": "Настройки уведомлений",
+    "user_notifications": "Уведомления",
+    "need_sub_entries": "Записи работодателей о вас в их подписках (место, баллы)",
 }
 OTHER_LABEL = "Прочие данные учётной записи"
 
