@@ -696,6 +696,8 @@ def _rules_summary(rules: dict) -> str:
     """«Уже найдено правилами» для запроса-дельты: только идентификаторы и значения справочника, без цитат и ПДн."""
     lines = [f"{k}: {rules[k]}" for k in ("direction", "grade", "experience_years_min", "work_format")
              if rules.get(k) is not None]
+    if rules.get("work_formats"):
+        lines.append(f"допустимые форматы работы: {', '.join(rules['work_formats'])}")
     for zone in ("stack_required", "stack_desired"):
         tags = [i["tag"] for i in rules.get(zone) or []]
         if tags:
@@ -736,6 +738,8 @@ def _llm_review(merged: dict, rules: dict, llm: dict, raw: dict, masked: str, hi
     suggest = []
     for key in ("direction", "grade", "experience_years_min", "work_format"):
         v = llm.get(key)
+        if key == "work_format" and v in (rules.get("work_formats") or []):
+            continue  # «офис или гибрид»: словарь уже принял несколько форматов — замена одним сузила бы условие
         if v is not None and not hints.get(key) and rules.get(key) is not None and v != rules[key] \
                 and llm["evidence"].get(key):
             suggest.append({"field": key, "value": v, "current": rules[key], "evidence": llm["evidence"][key]})
