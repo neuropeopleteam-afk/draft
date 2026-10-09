@@ -6,12 +6,15 @@
   run_load.py summary --tag stand_100            # таблица p50/p95/p99 + ресурсы сервера → stdout (markdown)
   run_load.py burst --host URL -n 5 --tag stand_burst   # холодный вход N экспертов одновременно (новые песочницы)
   run_load.py cleanup --host URL                 # удалить песочницы прогона (DELETE /api/jury/sandbox токеном персоны)
+  run_load.py preflight --host URL --xlink-file F   # перед прогоном: стенд жив, LLM, личная ссылка, Locust, сервер
+  run_load.py nginx --tag stand_100              # сверка с журналом nginx стенда: сколько запросов дошло, коды ответа
   В run: --burst-at 300 --burst-n 5 — тот же всплеск на 300-й секунде под нагрузкой.
+  Все запросы подписаны User-Agent «spectrek-load/<tag>» (всплеск — «spectrek-load/<tag>-burst»).
 
 Только стандартная библиотека; Locust — в отдельном окружении (LOCUST, по умолчанию /tmp/lt/bin/locust):
 python3.12 -m venv /tmp/lt && /tmp/lt/bin/pip install locust==2.46.0.
---server-stats — замер `docker stats` на сервере «Москва» каждые ~10 с через tools/k.py (только чтение; на машине
-с доступом к серверу; KPY — путь к k.py). Результаты — docs/loadtest/<tag>_stats.csv, _stats_history.csv,
+--server-stats, nginx, preflight — команды на сервере стенда (только чтение) через SSH-обёртку: KPY — путь к ней
+(вызов `python3 $KPY cmd '<команда>'`; без KPY эти шаги пропускаются). Результаты — docs/loadtest/<tag>_stats.csv, _stats_history.csv,
 _failures.csv, _server.txt, _client.txt. Пароли и токены не печатаются и не пишутся в файлы.
 """
 from __future__ import annotations
@@ -25,6 +28,7 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -32,15 +36,33 @@ ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs" / "loadtest"
 STATE = Path(os.environ.get("LT_STATE", "/tmp/lt_jury_state.json"))
 LOCUST = os.environ.get("LOCUST", "/tmp/lt/bin/locust")
-KPY = os.environ.get("KPY", "/home/user/workspace/tools/k.py")
+KPY = os.environ.get("KPY", "")
+UA = "spectrek-load/prepare"  # User-Agent запросов этого скрипта; run и burst ставят свой тег
+
+
+def _remote(script: str, timeout: int = 120) -> str:
+    """Команда на сервере стенда через SSH-обёртку (только чтение). Без KPY — пустая строка."""
+    if not KPY:
+        return ""
+    p = subprocess.run([sys.executable, KPY, "cmd", script], capture_output=True, text=True, timeout=timeout)
+    return p.stdout + p.stderr
 
 
 def _post(url: str, body: dict | None, token: str | None = None, method: str = "POST") -> dict:
     req = urllib.request.Request(url, data=json.dumps(body).encode() if body is not None else None, method=method,
-                                 headers={"content-type": "application/json",
+                                 headers={"content-type": "application/json", "user-agent": UA,
                                           **({"authorization": f"Bearer {token}"} if token else {})})
     with urllib.request.urlopen(req, timeout=120) as r:
         return json.loads(r.read().decode())
+
+
+def _get(url: str) -> tuple[int, str, dict]:
+    req = urllib.request.Request(url, headers={"user-agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as r:
+            return r.status, r.read().decode(errors="replace"), dict(r.headers)
+    except urllib.error.HTTPError as e:
+        return e.code, "", dict(e.headers)
 
 
 def prepare(a) -> None:
@@ -61,7 +83,7 @@ def cleanup(a) -> None:
             d = _post(f"{a.host}/api/jury/sandbox", None, tok, method="DELETE")
             print(f"Песочница удалена: учёток {d.get('deleted_users')}, {d.get('seconds')} с")
         except Exception as e:  # noqa: BLE001
-            print(f"Песочница не удалена: {type(e).__name__} — удалит штаб")
+            print(f"Песочница не удалена: {type(e).__name__} — удалить вручную (администратор стенда)")
     st["burst_sids"] = []
     STATE.write_text(json.dumps(st))
 
@@ -72,6 +94,8 @@ BURST_PERSONAS = ["employer", "candidate", "candidate_new", "expert", "candidate
 def burst(a, tag: str | None = None) -> list[dict]:
     """Холодный вход N экспертов одновременно: каждый — «Войти» на главной (scenario=new → своя песочница; первая
     берёт запасную, остальные создаются сразу) и первые запросы кабинета. Время — с точки зрения эксперта."""
+    global UA
+    UA = f"spectrek-load/{tag or a.tag}-burst"
     res: list[dict] = [{} for _ in range(a.n)]
     go = threading.Event()
 
@@ -82,7 +106,9 @@ def burst(a, tag: str | None = None) -> list[dict]:
             d = _post(f"{a.host}/api/jury/login", {"persona": BURST_PERSONAS[i % len(BURST_PERSONAS)], "scenario": "new"})
             t1 = time.time()
             for path in ("/api/meta", "/api/jury/status"):
-                urllib.request.urlopen(f"{a.host}{path}", timeout=60).read()
+                c, _, _ = _get(f"{a.host}{path}")
+                if c != 200:
+                    raise RuntimeError(f"{path}: {c}")
             res[i] = {"persona": BURST_PERSONAS[i % len(BURST_PERSONAS)], "login_s": round(t1 - t0, 2),
                       "first_screen_s": round(time.time() - t0, 2), "created": bool(d.get("created")),
                       "shared": bool(d.get("shared")), "_sid": d.get("scenario")}
@@ -118,8 +144,7 @@ def _server_stats(seconds: int, out: Path) -> None:
               "docker stats --no-stream --format '{{.Name}};{{.CPUPerc}};{{.MemUsage}}' | grep '^spectrek_fsp-'; "
               "sleep 8; done; echo '## memory.peak api'; "
               f"cat {cg}/memory.peak; grep -E '^(oom|oom_kill) ' {cg}/memory.events")
-    with out.open("w") as f:
-        subprocess.run([sys.executable, KPY, "cmd", script], stdout=f, stderr=subprocess.STDOUT, timeout=seconds + 300)
+    out.write_text(_remote(script, timeout=seconds + 300) or "KPY не задан — ресурсы сервера не сняты\n")
 
 
 def _client_stats(seconds: int, out: Path, stop: threading.Event) -> None:
@@ -143,7 +168,7 @@ def _seconds(t: str) -> int:
 def run(a) -> None:
     st = json.loads(STATE.read_text())
     OUT.mkdir(parents=True, exist_ok=True)
-    env = {**os.environ, "LT_SCENARIO": st["scenario"]}
+    env = {**os.environ, "LT_SCENARIO": st["scenario"], "LT_TAG": a.tag}
     if a.xlink_file:
         env["LT_XLINK_FILE"] = a.xlink_file
     if a.web:
@@ -163,11 +188,16 @@ def run(a) -> None:
         threads.append(threading.Timer(a.burst_at, burst, args=(b,)))
         threads[-1].start()
     t0 = time.time()
+    meta = {"tag": a.tag, "host": a.host, "users": a.users, "ramp_per_s": a.ramp, "time": a.time,
+            "burst_at_s": a.burst_at, "burst_n": a.burst_n if a.burst_at else 0, "user_agent": f"spectrek-load/{a.tag}",
+            "start": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
     p = subprocess.run(cmd, env=env, cwd=ROOT, capture_output=True, text=True)
     (OUT / f"{a.tag}_locust.log").write_text(_scrub(p.stdout[-20000:] + "\n" + p.stderr[-20000:]))
     stop.set()
     for t in threads:
         t.join(timeout=dur + 400)
+    meta.update(end=time.strftime("%Y-%m-%dT%H:%M:%S%z"), locust_exit=p.returncode)
+    (OUT / f"{a.tag}_meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1))
     print(f"Locust завершён (код {p.returncode}) за {time.time() - t0:.0f} с; CSV — docs/loadtest/{a.tag}_*.csv")
 
 
@@ -248,6 +278,118 @@ def summary(a) -> None:
         las = [float(x.split()[0]) for x in re.findall(r"loadavg=([\d. ]+) locust", cl.read_text())]
         if vals:
             print(f"Машина теста: CPU Locust макс. {max(vals):.0f} %, load average макс. {max(las):.2f}")
+    lg = OUT / f"{a.tag}_locust.log"
+    if lg.exists():
+        for ln in lg.read_text().splitlines():
+            if ln.startswith("[jury_load]"):
+                print("\nДействия за прогон (потолки LLM — docs/LOAD.md, раздел 3): " + ln.split("]", 1)[1].strip())
+    ng = OUT / f"{a.tag}_nginx.txt"
+    if ng.exists():
+        print("\n" + ng.read_text().strip())
+
+
+def _xlink_token(path: str) -> str:
+    for line in open(path, encoding="utf-8"):
+        m = re.match(r"\s*JURY_LINK_\d+\s*=\s*(\S+)", line)
+        if m:
+            v = m.group(1).strip().strip("'\"")
+            return v.split("/x/", 1)[1].strip("/") if "/x/" in v else v
+    return ""
+
+
+def preflight(a) -> None:
+    """Перед прогоном на стенде: всё ли готово. Секреты не печатаются; на сервере — только чтение."""
+    ok = True
+
+    def line(good: bool, text: str) -> None:
+        nonlocal ok
+        ok = ok and good
+        print(f"{'OK ' if good else 'ERR'} {text}")
+
+    v = subprocess.run([LOCUST, "--version"], capture_output=True, text=True) if Path(LOCUST).exists() else None
+    line(bool(v and v.returncode == 0), f"Locust: {(v.stdout or v.stderr).strip()[:60] if v else 'нет ' + LOCUST}")
+    c, body, _ = _get(f"{a.host}/api/health")
+    line(c == 200 and '"ok"' in body, f"/api/health: {c}")
+    c, body, _ = _get(f"{a.host}/api/meta")
+    if c == 200:
+        llm = json.loads(body).get("llm", {})
+        chain = ", ".join(f"{x.get('provider')}{'' if x.get('configured') else ' (не настроен)'}" for x in llm.get("chain", []))
+        line(True, f"/api/meta: LLM {'вкл.' if llm.get('configured') else 'выкл.'}; цепочка: {chain or '—'}")
+    else:
+        line(False, f"/api/meta: {c}")
+    if a.xlink_file:
+        tok = _xlink_token(a.xlink_file) if Path(a.xlink_file).exists() else ""
+        line(bool(tok), "личная ссылка: ключ JURY_LINK_1 в файле" + ("" if tok else " не найден"))
+        if tok:
+            req = urllib.request.Request(f"{a.host}/x/{tok}", headers={"user-agent": UA})
+
+            class _NoRedirect(urllib.request.HTTPRedirectHandler):
+                def redirect_request(self, *args, **kwargs):
+                    return None
+            try:
+                r = urllib.request.build_opener(_NoRedirect).open(req, timeout=30)
+                code, hdr = r.status, str(r.headers)
+            except urllib.error.HTTPError as e:
+                code, hdr = e.code, str(e.headers)
+            line(code in (200, 302, 303) and "fsp_x=" in hdr, f"вход по личной ссылке: {code}, cookie fsp_x "
+                 f"{'есть' if 'fsp_x=' in hdr else 'нет'}")
+    if KPY:
+        out = _remote("cat /proc/loadavg; free -m | sed -n 2p; df -BG / | tail -1; "
+                      "docker ps --format '{{.Names}} {{.Status}}' | grep '^spectrek_fsp-'; "
+                      "docker inspect -f '{{.State.StartedAt}}' spectrek_fsp-api-1; "
+                      "docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' spectrek_fsp-api-1 "
+                      "| grep -E '^JURY_SPARE_SANDBOXES=' || echo 'JURY_SPARE_SANDBOXES не задан (по умолчанию 1)'; "
+                      "pgrep -af 'deploy|docker compose (up|build)|docker-compose' | grep -v pgrep | wc -l")
+        print("Сервер стенда (только чтение):")
+        for ln in out.strip().splitlines():
+            print("   ", ln)
+        busy = out.strip().splitlines()[-1:] or ["?"]
+        line(busy[0].strip() == "0", f"выкладка или сборка на сервере: {'нет' if busy[0].strip() == '0' else 'идёт — подождать'}")
+    else:
+        print("KPY не задан — сервер стенда не проверен")
+    print("Готово к прогону" if ok else "Есть ошибки — прогон не начинать")
+    sys.exit(0 if ok else 1)
+
+
+def nginx(a) -> None:
+    """Сверка с журналом nginx стенда (только чтение): сколько запросов с User-Agent прогона дошло до сервера, коды
+    ответа, неуспешные — по началу пути. Печатаются только счётчики (без адресов, токенов и чужих строк)."""
+    meta = json.loads((OUT / f"{a.tag}_meta.json").read_text()) if (OUT / f"{a.tag}_meta.json").exists() else {}
+    ua = meta.get("user_agent", f"spectrek-load/{a.tag}")
+    awk = ("awk '{st=$9; path=$7; sub(/\\?.*/, \"\", path); n=split(path, s, \"/\"); "
+           "pre=(s[2]==\"x\") ? \"/x/<токен>\" : ((s[2]==\"api\") ? \"/\" s[2] \"/\" s[3] \"/\" s[4] : \"/\" s[2]); "
+           "c[st]++; if (st !~ /^[23]/) f[st \" \" pre]++} END {for (k in c) print \"code\", k, c[k]; "
+           "for (k in f) print \"fail\", k, f[k]}'")
+    out = {}
+    for kind, agent in (("main", ua), ("burst", ua + "-burst")):
+        script = (f"cd /var/log/nginx && zcat -f access.log access.log.1 2>/dev/null | grep -aF '\"{agent}\"' | {awk}")
+        out[kind] = _remote(script, timeout=300)
+    lines = [f"# Журнал nginx стенда: запросы с User-Agent «{ua}» (всплеск — «{ua}-burst»)", ""]
+    total = {}
+    for kind, txt in out.items():
+        codes = sorted((ln.split()[1], int(ln.split()[2])) for ln in txt.splitlines() if ln.startswith("code "))
+        fails = sorted(((ln.split(" ", 1)[1].rsplit(" ", 1)[0], int(ln.rsplit(" ", 1)[1]))
+                        for ln in txt.splitlines() if ln.startswith("fail ")), key=lambda x: -x[1])
+        total[kind] = sum(n for _, n in codes)
+        lines.append(f"{'Прогон' if kind == 'main' else 'Всплеск'}: строк журнала {total[kind]}; коды: "
+                     + (", ".join(f"{c} — {n}" for c, n in codes) or "—"))
+        for k, n in fails[:15]:
+            lines.append(f"    {k}: {n}")
+    st = OUT / f"{a.tag}_stats.csv"
+    if st.exists():
+        agg = next((r for r in csv.DictReader(open(st, encoding="utf-8")) if r["Name"] == "Aggregated"), None)
+        fr = OUT / f"{a.tag}_failures.csv"
+        zero = sum(int(r["Occurrences"]) for r in csv.DictReader(open(fr, encoding="utf-8"))
+                   if re.search(r"\('0 |ConnectionError|RemoteDisconnected|Timeout|status_code=0", r["Error"])) \
+            if fr.exists() else 0
+        if agg:
+            sent = int(agg["Request Count"])
+            llm = sum(int(r["Request Count"]) for r in csv.DictReader(open(st, encoding="utf-8")) if r["Type"] == "LLM")
+            lines.append(f"Locust: запросов {sent - llm} (без событий фоновой модели {llm}), из них без ответа (код 0, "
+                         f"обрыв связи) {zero}; дошло до nginx {total.get('main', 0)} — разница "
+                         f"{sent - llm - total.get('main', 0):+d}")
+    (OUT / f"{a.tag}_nginx.txt").write_text("\n".join(lines) + "\n")
+    print("\n".join(lines))
 
 
 def main() -> None:
@@ -272,10 +414,15 @@ def main() -> None:
     s.add_argument("--host", required=True)
     s.add_argument("-n", type=int, default=5)
     s.add_argument("--tag", required=True)
-    s = sub.add_parser("summary")
-    s.add_argument("--tag", required=True)
+    for name in ("summary", "nginx"):
+        s = sub.add_parser(name)
+        s.add_argument("--tag", required=True)
+    s = sub.add_parser("preflight")
+    s.add_argument("--host", required=True)
+    s.add_argument("--xlink-file", default="")
     a = ap.parse_args()
-    {"prepare": prepare, "cleanup": cleanup, "run": run, "summary": summary, "burst": burst}[a.cmd](a)
+    {"prepare": prepare, "cleanup": cleanup, "run": run, "summary": summary, "burst": burst, "preflight": preflight,
+     "nginx": nginx}[a.cmd](a)
 
 
 if __name__ == "__main__":
