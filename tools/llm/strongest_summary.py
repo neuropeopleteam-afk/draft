@@ -236,6 +236,29 @@ def build(wdir: Path) -> dict:
                 sub.write_text("".join(json.dumps(o, ensure_ascii=False) + "\n" for o in first.values()), encoding="utf-8")
                 sc, calls = _grade_scores(sub)
             grade_in[mid] = (sc, calls)
+    variants = {}  # проба настроек разбора на той же выборке (strongest_bench.py variant), напр. без рассуждений
+    probes = []
+    for mid, d in models:
+        for vf in sorted(d.glob("needs_delta__*.json")):
+            v = _load(vf)
+            info = v.get("variant") or {}
+            c = needs_cell(v["per_text"], ref)
+            c["variant"] = info
+            if info.get("limit") == SAMPLE_VAC:
+                key = f"{mid}@{info['name']}"
+                cells["needs_delta"][key] = c
+                variants[key] = {"base": mid, **info}
+            else:
+                probes.append({"model": mid, **info, "ok": c["ok"], "calls": c["calls"], "errors": c["errors"],
+                               "p50_s": c["p50_s"], "p95_s": c["p95_s"]})
+    i24 = _load(ROOT / "docs/llm/needs_qwen_tags.json")  # И24: Qwen3.5-9B (те же веса, что профиль llm-local на CPU)
+    if i24:
+        per = [{**x, "called": True} for x in i24["per_text"]]
+        key = "qwen/qwen3.5-9b@i24"
+        cells["needs_delta"][key] = needs_cell(per, ref)
+        variants[key] = {"base": "qwen/qwen3.5-9b", "name": "i24",
+                         "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, "
+                                 "что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"}
     rules_needs = _load(RULES_DIR / "needs.json")
     if rules_needs:
         per = [{"id": x["id"], "called": False, **x} for x in rules_needs["per_text"]]
@@ -256,17 +279,19 @@ def build(wdir: Path) -> dict:
                 c["price"] = _price(c)
 
     meta = {}
-    for mid in {m for f in cells.values() for m in f if m != "rules"}:
+    for key in {m for f in cells.values() for m in f if m != "rules"}:
+        mid = key.split("@", 1)[0]
         p = prices["models"].get(mid) or {}
         vendor = mid.split("/")[0]
-        meta[mid] = {"name": p.get("name") or mid, "family": FAMILY.get(vendor, vendor),
-                     "open_weights": p.get("hugging_face_id"), "in_usd_per_m": p.get("in_usd_per_m"),
-                     "out_usd_per_m": p.get("out_usd_per_m"), "stand": mid == sonnet}
+        meta[key] = {"name": p.get("name") or mid, "family": FAMILY.get(vendor, vendor),
+                     "open_weights": p.get("hugging_face_id") or ("Qwen/Qwen3.5-9B" if mid == "qwen/qwen3.5-9b" else None),
+                     "in_usd_per_m": p.get("in_usd_per_m"), "out_usd_per_m": p.get("out_usd_per_m"),
+                     "stand": key == sonnet, "variant": variants.get(key)}
     sha = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, cwd=ROOT).stdout.strip()
     d = {"title": "Сильнейшие модели: замер по функциям (малая выборка)", "date": time.strftime("%Y-%m-%d"),
          "code_sha": sha, "models": meta, "cells": cells, "grade_reference": gref,
          "sample": {"needs_delta": len(ref), "needs_jury": 15, "resume": len(gold), "grade": len(sample_ids)},
-         "conditions": CONDITIONS, "pending": PENDING}
+         "conditions": CONDITIONS, "pending": PENDING, "probes": probes, "not_measured": NOT_MEASURED}
     d["recommendation"] = recommend(d)
     return d
 
@@ -280,6 +305,11 @@ CONDITIONS = [
     "оценщик — согласие сильнейших моделей (медиана, без самой оцениваемой).",
     "Интервал — бутстреп 90 % по входам: на 15–50 входах разница в несколько сотых — в пределах шума.",
     "Цена — фактическая (usage.cost OpenRouter) на 1000 вызовов функции; рубли — по курсу ЦБ РФ на 09.10.2026.",
+]
+NOT_MEASURED = [
+    {"model": "YandexGPT 5.1", "why": "не цель после смены задачи 09.10 (решение штаба); ключ Yandex AI Studio в песочницу "
+                                     "не передан. Прежний замер 08.10 — docs/LLM.md, разделы 6 и 11"},
+    {"model": "Объяснения подборки, «почему», ранжирование, категория", "why": "модель не вызывается — правила"},
 ]
 PENDING = ("Дорогие модели (Claude Fable 5.1, GPT-6 Astra Pro, Claude Opus 5.5) — после пополнения баланса; до этого "
            "эталон оценщика — медиана остальных моделей замера.")

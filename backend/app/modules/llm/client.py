@@ -83,7 +83,7 @@ class Route:
     provider: str
     model: str  # как в запросе (для Yandex AI Studio — gpt://<каталог>/…)
     timeout_s: float
-    reasoning: str | None = None  # усилие рассуждений (OpenRouter): low | medium | high; None — не передаётся
+    reasoning: str | None = None  # усилие рассуждений (OpenRouter): none | minimal | low | medium | high; None — не передаётся
 
     @property
     def key(self) -> str:
@@ -183,7 +183,8 @@ def model_for(func: str | None, provider: str, s: Settings | None = None) -> str
             m = s.llm_local_model
     if not m:
         return None
-    return resolve_model(m) if provider == "yandex" else m
+    # Я2: «a|b» — несколько моделей одного провайдера по порядку (резерв другого поставщика внутри OpenRouter)
+    return "|".join(resolve_model(x.strip()) for x in m.split("|") if x.strip()) if provider == "yandex" else m
 
 
 def timeout_for(func: str | None, s: Settings | None = None) -> float:
@@ -197,7 +198,9 @@ def timeout_for(func: str | None, s: Settings | None = None) -> float:
 def reasoning_for(func: str | None, s: Settings | None = None) -> str | None:
     s = s or get_settings()
     v = (getattr(s, f"llm_reasoning_{func}", None) if func in FUNCTIONS else None) or "default"
-    return v if v in ("low", "medium", "high") else None
+    # Я2: none — без рассуждений (reasoning.effort=none): открытые модели с рассуждениями иначе тратят лимит
+    # ответа-дельты (900 токенов) на ход мысли и возвращают пустой ответ (docs/LLM.md, раздел 12)
+    return v if v in ("none", "minimal", "low", "medium", "high") else None
 
 
 def routes(func: str | None = None, model: str | None = None, provider: str | None = None,
@@ -223,8 +226,9 @@ def routes(func: str | None = None, model: str | None = None, provider: str | No
         if not s.llm_provider_configured(p):
             continue
         m = model_for(func, p, s)
-        if m:
-            out.append(Route(p, m, tl if p == "local" else t, reasoning_for(func, s) if p == "openrouter" else None))
+        for mm in (x.strip() for x in (m or "").split("|")):
+            if mm:
+                out.append(Route(p, mm, tl if p == "local" else t, reasoning_for(func, s) if p == "openrouter" else None))
     return out
 
 
