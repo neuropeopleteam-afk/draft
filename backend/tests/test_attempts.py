@@ -305,11 +305,20 @@ def test_validation_attempts_repeat_live_and_synthetic(client, bank):
     assert r.status_code == 200
     d = r.json()
     syn = d["synthetic"]
-    # сохранённая синтетика: подпись мира и условия, три пары попыток, варианты — новые по построению
+    # сохранённая синтетика: подпись мира и условия, четыре попытки «после» и три «до» на одном мире, варианты — новые
     assert syn["signature"]["seed"] == 20261006 and syn["signature"]["config_hash"] and syn["signature"]["world"]
-    assert set(syn["pairs"]) == {"second_vs_first", "third_vs_second", "third_vs_first"}
-    assert syn["pairs"]["second_vs_first"]["share_families"] < 0.05  # параллельная форма
-    assert syn["pairs"]["third_vs_first"]["share_families"] > 0.3  # третья попытка — снова субпул первой (честно)
+    p, b = syn["pairs"], syn["before"]
+    assert set(p) == {"second_vs_first", "third_vs_second", "third_vs_first", "fourth_vs_first",
+                      "fourth_vs_any_previous"}
+    assert set(b) == {"second_vs_first", "third_vs_second", "third_vs_first"}
+    assert p["second_vs_first"]["share_families"] <= b["second_vs_first"]["share_families"] < 0.05  # параллельная форма
+    # третья против первой: исключаются все прошлые попытки — повторов заметно меньше (остаток — малый банк, LRU)
+    assert p["third_vs_first"]["share_families"] < b["third_vs_first"]["share_families"] - 0.2
+    assert syn["directions"]["backend"]["after"]["third_vs_first"]["share_families"] < 0.15
+    # test–retest первых двух попыток парно «до» и «после» — те же цифры (/validation не сдвигается)
+    rt = syn["retest_check"]
+    assert abs(rt["after"]["grade_kappa_quadratic"] - rt["before"]["grade_kappa_quadratic"]) < 0.02
+    assert abs(rt["after"]["icc_theta"] - rt["before"]["icc_theta"]) < 0.02 and rt["same_share"] > 0.8
     assert syn["variants"]["share"] == 0.0 and syn["config"]["subpools"] == 2
     assert d["live"]["n_pairs"] == 0 and "по базе" in d["live"]["conditions"]
     # живая строка: две попытки банка одного человека
