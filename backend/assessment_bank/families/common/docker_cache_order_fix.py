@@ -103,9 +103,9 @@ def generate(seed: int):
             "req_then_all_then_run": mk("req_then_all_then_run"), "dockerignore_only": buggy}
     ignores = {n: [] for n in srcs}
     ignores["dockerignore_only"] = [".git/", "__pycache__/" if "python" in base else "node_modules/"]
-    labels = {"correct": f"Сначала COPY {' и '.join(dep_files)}, затем установка, затем COPY . .",
+    labels = {"correct": f"COPY {' и '.join(dep_files)}, затем установка зависимостей, затем COPY . .",
               "install_before_copy": "Установка зависимостей до любого COPY, затем COPY . .",
-              "req_then_all_then_run": f"COPY {' и '.join(dep_files)}, затем COPY . ., затем установка",
+              "req_then_all_then_run": f"COPY {' и '.join(dep_files)}, затем COPY . ., затем установка зависимостей",
               "dockerignore_only": "Dockerfile без изменений, добавить .dockerignore"}
     show = {n: s for n, s in srcs.items()}
     show["dockerignore_only"] = ("# .dockerignore\n" + "\n".join(ignores["dockerignore_only"]) +

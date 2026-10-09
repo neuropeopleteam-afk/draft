@@ -20,7 +20,7 @@ prior_difficulty:
   sigma_variant: 0.45
   basis: "6–8 шагов двух сессий; нужно знать семантику PostgreSQL: снимок на оператор в READ COMMITTED и при первом операторе в REPEATABLE READ, перечитывание строки после ожидания, ошибку 40001, отсутствие грязного чтения и фантомов; разброс по сценариям большой (Middle/Senior)"
 generator: assessment_bank.families.common.db_tx_isolation_mcq
-version: 1
+version: 2
 description: >
   Две транзакции чередуют команды; спросить итоговое значение и исход транзакций или
   результат отмеченного SELECT. Ключ — таблица правил PostgreSQL, проверка — независимая
