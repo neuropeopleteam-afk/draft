@@ -50,6 +50,11 @@ const noFocusRing = (stops) => stops.filter((s) => s.tag !== "body" && !s.visibl
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "ru-RU", reducedMotion: "reduce" });
   const page = await ctx.newPage();
+  // журнал фокуса (время, элемент, путь) — для разбора редкого сбоя первой остановки после входа
+  await page.addInitScript(() => {
+    window.__fl = [];
+    document.addEventListener("focusin", (e) => window.__fl.push(`${performance.now() | 0} ${e.target.tagName.toLowerCase()}#${e.target.id || ""} ${location.pathname}`), true);
+  });
   const errors = [];
   page.on("pageerror", (e) => errors.push(String(e)));
   const invisible = {};
@@ -80,7 +85,9 @@ const noFocusRing = (stops) => stops.filter((s) => s.tag !== "body" && !s.visibl
   // 3. Кабинет: первая остановка — пропуск навигации; меню → «Потребности и подборки»
   await page.keyboard.press("Tab");
   const cab = await focusInfo(page);
-  ok("кабинет: первая остановка Tab после входа — «Перейти к содержимому»", /Перейти к содержимому|К содержимому/.test(cab.text), `${cab.tag} «${cab.text}»`);
+  const cabOk = /Перейти к содержимому|К содержимому/.test(cab.text);
+  ok("кабинет: первая остановка Tab после входа — «Перейти к содержимому»", cabOk, `${cab.tag} «${cab.text}»`);
+  if (!cabOk) console.log("   журнал фокуса: " + (await page.evaluate(() => window.__fl.slice(-8).join("; "))));
   t = await tabTo(page, (f) => f.tag === "a" && f.text === "Потребности и подборки");
   ok("кабинет: пункт меню «Потребности и подборки» достижим Tab", t.n > 0, `нажатий: ${t.n}`);
   await page.keyboard.press("Enter");
