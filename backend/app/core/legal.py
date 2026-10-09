@@ -16,7 +16,10 @@ OPERATOR = {
     "actual_address": "г. Москва, Пресненская набережная, д. 8, стр. 1, офис 445",
     "email": "info@neuropeople.shop",
     "director": "Михеев Денис Геннадьевич",
-    "storage": "Сервер в Москве (HOSTKEY); письма — Yandex Cloud Postbox; языковая модель — Yandex AI Studio (РФ)",
+    # Честно о контуре обработки (поле уходит в /api/meta; в текст согласий не входит — версия согласия от него не зависит).
+    "storage": ("Данные хранятся на сервере в Москве (HOSTKEY); письма — Yandex Cloud Postbox; языковые модели — "
+                "основная Claude Sonnet 5.5 (через OpenRouter), запасная YandexGPT (Yandex AI Studio); в модель передаётся "
+                "только текст для разбора с вырезанными контактами"),
 }
 
 
