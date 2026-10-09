@@ -41,7 +41,8 @@ import time
 from locust import HttpUser, between, events, task
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from flows import CAND_PERSONAS, GRADE_FOR, NEED_TEXTS, answer_for, invitation_body, is_llm_item, need_requirements  # noqa: E402
+from flows import (ATTACKS, CAND_PERSONAS, GRADE_FOR, NEED_TEXTS, OPEN_ANSWER, answer_for, attack_body,  # noqa: E402
+                   invitation_body, is_llm_item, need_requirements, need_text_variant, resume_docx)
 
 SCENARIO = os.environ.get("LT_SCENARIO", "")
 WEB = os.environ.get("LT_WEB", "")
@@ -49,6 +50,12 @@ MAX_STARTS = int(os.environ.get("LT_MAX_STARTS", "10"))
 MAX_NEEDS = int(os.environ.get("LT_MAX_NEEDS", "20"))
 MAX_INVITES = int(os.environ.get("LT_MAX_INVITES", "12"))
 PARSE = os.environ.get("LT_PARSE", "1") != "0"
+# Тяжёлые действия (по письму штаба 09.10, отчёт судьи п. 14) — с LLM на стенде, поэтому с потолком за прогон:
+MAX_OPEN = int(os.environ.get("LT_MAX_OPEN", "4"))          # открытых ответов с оценкой LLM (полный тест персоны candidate)
+MAX_LLM_TEXT = int(os.environ.get("LT_MAX_LLM_TEXT", "6"))  # новых текстов потребности (модель уточняет в фоне)
+MAX_RESUME = int(os.environ.get("LT_MAX_RESUME", "6"))      # загрузок резюме DOCX (лимит продукта — 5 в час на учётку)
+REDBUTTON = int(os.environ.get("LT_REDBUTTON", "2"))        # пользователей «Красной кнопки» (12 атак в минуту на учётку)
+RESUME_USERS = int(os.environ.get("LT_RESUME", "1"))        # пользователей с загрузкой резюме
 def _xlink() -> str:
     """Токен личной ссылки эксперта из файла (JURY_LINK_1=<токен или адрес …/x/<токен>>). Не печатается."""
     path = os.environ.get("LT_XLINK_FILE", "")
@@ -64,7 +71,8 @@ def _xlink() -> str:
 
 XLINK = _xlink()
 _lock = threading.Lock()
-_counters = {"starts": {}, "needs": 0, "invites": 0, "invited": set(), "llm_texts": set()}
+_counters = {"starts": {}, "needs": 0, "invites": 0, "invited": set(), "llm_texts": set(), "open": 0, "llm_text": 0,
+             "resume": 0, "attacks": 0, "full": 0}
 _tokens = json.load(open(os.environ["LT_TOKENS"])) if os.environ.get("LT_TOKENS") else {}
 _extra = [c["token"] for c in _tokens.get("candidates", [])]
 _tester_slots = itertools.cycle([("persona", p) for p in CAND_PERSONAS] + [("token", t) for t in _extra])
@@ -89,7 +97,15 @@ def _check(environment, **_kw):
 def _report(environment, **_kw):
     print(f"[jury_load] стартов теста по персонам: {dict(_counters['starts'])}; потребностей создано: "
           f"{_counters['needs']}; приглашений отправлено: {_counters['invites']}; "
-          f"текстов на разбор (модель в фоне — не больше одного раза на текст): {len(_counters['llm_texts'])}")
+          f"текстов на разбор (модель в фоне — не больше одного раза на текст): {len(_counters['llm_texts'])}; "
+          f"новых текстов для модели: {_counters['llm_text']}; полных тестов: {_counters['full']}; открытых ответов "
+          f"с оценкой: {_counters['open']}; резюме: {_counters['resume']}; атак «Красной кнопки»: {_counters['attacks']}")
+
+
+def _fire(name: str, t0: float, exc: Exception | None = None, kind: str = "LLM") -> None:
+    """Своё событие в статистику Locust: время фоновой работы (модель уточнила разбор) — p50/p95 в той же таблице."""
+    events.request.fire(request_type=kind, name=name, response_time=(time.time() - t0) * 1000, response_length=0,
+                        exception=exc, context={})
 
 
 class JuryUser(HttpUser):
@@ -156,8 +172,14 @@ class CandidateTester(JuryUser):
             _counters["starts"][self.slot] = n + 1
         self.client.get("/api/assessment/status", name="тест: статус категории")
         self.client.get("/api/assessment/grade-hint", name="тест: подсказка грейда")
-        body = {"claimed_grade": GRADE_FOR.get(self.persona, "middle"), "mode": "express", "integrity_ack": True}
-        with self.client.post("/api/assessment/sessions", json=body, name="тест: начать (экспресс)",
+        full = self.persona == "candidate" and n % 2 == 1 and _counters["open"] < MAX_OPEN
+        mode = "full" if full else "express"
+        if full:
+            with _lock:
+                _counters["full"] += 1
+        body = {"claimed_grade": GRADE_FOR.get(self.persona, "middle"), "mode": mode, "integrity_ack": True}
+        with self.client.post("/api/assessment/sessions", json=body,
+                              name="тест: начать (полный)" if full else "тест: начать (экспресс)",
                               catch_response=True) as r:
             if r.status_code in (200, 201):
                 s = r.json()
@@ -172,10 +194,17 @@ class CandidateTester(JuryUser):
         while item and guard < 30:
             guard += 1
             time.sleep(random.uniform(2, 5))  # «читает задание»
-            if is_llm_item(item):
-                return  # оценивает LLM по рубрике — не отправляем (в экспресс-тесте таких заданий нет)
-            a = answer_for(item)
-            with self.client.post(f"/api/assessment/sessions/{sid}/answers", json=a, name="тест: ответ",
+            name = "тест: ответ"
+            if is_llm_item(item):  # оценивает LLM по рубрике (в экспресс-тесте таких заданий нет)
+                if not _take("open", MAX_OPEN):
+                    return  # потолок открытых ответов за прогон: сессию бросаем, следующий старт её закроет
+                a, name = {"item_id": item["item_id"], "answer": OPEN_ANSWER, "time_spent_ms": 60_000}, \
+                    "тест: открытый ответ (оценка LLM)"
+                if item.get("step"):
+                    a["step"] = item["step"]
+            else:
+                a = answer_for(item)
+            with self.client.post(f"/api/assessment/sessions/{sid}/answers", json=a, name=name,
                                   catch_response=True) as r:
                 if r.status_code == 200:
                     item = r.json().get("item")
@@ -256,11 +285,17 @@ class Employer(JuryUser):
         """Жюри вводит свою потребность: разбор (правила сразу) → сохранение с готовыми требованиями → подборка."""
         if not PARSE:
             return
-        text = random.choice(NEED_TEXTS)
         with _lock:
+            fresh = _counters["llm_text"] < MAX_LLM_TEXT and random.random() < 0.5
+            if fresh:
+                _counters["llm_text"] += 1
+            text = need_text_variant(_counters["llm_text"] - 1) if fresh else random.choice(NEED_TEXTS)
             _counters["llm_texts"].add(text)
+        t0 = time.time()
         r = self.client.post("/api/employer/needs/parse", json={"text": text, "mode": "fast"},
                              name="потребность: разбор (правила, модель в фоне)")
+        if r.status_code == 200 and fresh:
+            self.wait_llm(r.json(), t0)
         if r.status_code != 200 or not _take("needs", MAX_NEEDS):
             return
         req = need_requirements(r.json())
@@ -272,6 +307,20 @@ class Employer(JuryUser):
                 c.success()
             else:
                 c.failure(f"{c.status_code} {c.text[:120]}")
+
+    def wait_llm(self, parsed: dict, t0: float) -> None:
+        """Новый текст: модель уточняет разбор в фоне — опрашиваем, как интерфейс, и пишем время до готовности."""
+        job = (parsed.get("parse_job") or {}).get("id")
+        if not job or not (parsed.get("llm") or {}).get("pending"):
+            return  # модель не настроена (локальный стенд) или ответ из кэша
+        for _ in range(40):
+            time.sleep(1.5)
+            g = self.client.get(f"/api/employer/needs/parse/{job}", name="потребность: опрос фонового разбора")
+            st = g.json().get("status") if g.status_code == 200 else "failed"
+            if st in ("done", "failed"):
+                return _fire("потребность: модель уточнила разбор (фон)", t0,
+                             None if st == "done" else RuntimeError("модель не ответила — остался разбор словарём"))
+        _fire("потребность: модель уточнила разбор (фон)", t0, TimeoutError("нет ответа модели за 60 с"))
 
     @task(4)
     def selection(self):
@@ -367,3 +416,53 @@ class ValidationVisitor(JuryUser):
     def open_page(self):
         for p in VALIDATION_API:
             self.client.get(p, name=f"/validation: {p.rsplit('/', 1)[-1]}")
+
+
+class RedButton(JuryUser):
+    """«Красная кнопка» /validation: атаки на подбор (симуляция вне кэша — всплеск памяти api). Своя учётка у каждого
+    пользователя (лимит продукта — 12 атак в минуту на учётку, 90 в минуту на воркер); 429 — правило, не сбой."""
+    fixed_count = REDBUTTON
+    wait_time = between(6, 10)
+    _personas = itertools.cycle(["expert", "fsp", "candidate_nofsp", "employer"])
+
+    def on_start(self):
+        self.ok = self.login(next(self._personas))
+
+    @task
+    def attack(self):
+        if not self.ok:
+            return
+        aid = random.choice(ATTACKS)
+        with self.client.post(f"/api/validation/attacks/{aid}", json=attack_body(aid),
+                              name=f"/validation: красная кнопка ({aid})", catch_response=True) as r:
+            if r.status_code == 200:
+                r.success()
+                with _lock:
+                    _counters["attacks"] += 1
+            elif r.status_code == 429:
+                r.success()  # лимит продукта
+            else:
+                r.failure(f"{r.status_code} {r.text[:120]}")
+
+
+class ResumeUploader(JuryUser):
+    """Загрузка резюме DOCX (разбор в отдельном процессе, ПДн вырезаются; на стенде поля уточняет LLM)."""
+    fixed_count = RESUME_USERS
+    wait_time = between(40, 70)
+    _personas = itertools.cycle(["candidate_nofsp", "candidate_junior"])
+
+    def on_start(self):
+        self.ok = self.login(next(self._personas))
+        self.i = 0
+
+    @task
+    def upload(self):
+        if not self.ok or not _take("resume", MAX_RESUME):
+            return
+        self.i += 1
+        files = {"file": ("resume.docx", resume_docx(self.i),
+                          "application/vnd.openxmlformats-officedocument.wordprocessingml.document")}
+        with self.client.post("/api/me/resume", files=files, name="кандидат: резюме DOCX (разбор)",
+                              catch_response=True) as r:
+            r.success() if r.status_code in (201, 429) else r.failure(f"{r.status_code} {r.text[:120]}")
+        self.client.get("/api/me/resume", name="кандидат: последнее резюме")
