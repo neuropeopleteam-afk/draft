@@ -212,3 +212,13 @@ def _grader() -> dict:
 @router.get("/grader-check", summary="Оценщик открытых ответов на наборе панели 06.10: инъекции и завышение, до и после")
 def grader_check():
     return _grader()
+
+
+LLM_MODELS = Path(__file__).resolve().parent / "data" / "llm_models.json"
+
+
+@router.get("/llm-models", summary="Какая модель где: облачные модели, открытая Qwen на CPU и правила на одних наборах")
+def llm_models():
+    if not LLM_MODELS.exists():
+        return {"missing": True}
+    return json.loads(LLM_MODELS.read_text(encoding="utf-8"))

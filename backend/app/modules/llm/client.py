@@ -169,6 +169,9 @@ def model_for(func: str | None, provider: str, s: Settings | None = None) -> str
     s = s or get_settings()
     f = func if func in FUNCTIONS else None
     spec = parse_spec(getattr(s, f"llm_model_{f}", None) if f else None)
+    # «off» — функция без модели, сразу путь без LLM: LLM_MODEL_PARSE_NEED=off (все провайдеры) или local=off
+    if (spec[provider] if provider in spec else spec.get(None, "")).lower() == "off":
+        return None
     chain = s.llm_chain_list
     m = spec.get(provider) or (spec.get(None) if chain and chain[0] == provider else None)
     if not m:
