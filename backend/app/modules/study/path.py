@@ -1,9 +1,10 @@
-"""Путь участника: шаги берутся из фактов платформы (время создания записей), а не из того, что сообщил браузер.
+"""Путь пользователя: шаги берутся из фактов платформы (время создания записей), а не из того, что сообщил браузер.
 
-* Кандидат: регистрация (почта подтверждена) → опрос → тест начат → результат (тест завершён).
-* Работодатель: регистрация → потребность создана → подборка открыта → вопрос или приглашение отправлены.
-Браузер добавляет только то, чего в базе нет: открытие экрана подборки, экраны и ошибки (study_events).
-Факты до согласия на участие (старая учётная запись) не засчитываются.
+* Кандидат: опрос → тест начат → результат (тест завершён; экспресс-режим жюри тоже).
+* Работодатель: потребность (создана или открыта) → подборка открыта → вопрос или приглашение отправлены.
+Браузер добавляет только то, чего в базе нет: открытие экрана потребности и подборки, экраны и ошибки (study_events).
+Факты до начала сбора (учётная запись или опрос появились раньше) не засчитываются: опрос, заполненный заранее —
+например, у персоны жюри, — отмечается как пропущенный. Регистрация не измеряется: статистика начинается после входа.
 """
 from __future__ import annotations
 
@@ -23,7 +24,6 @@ from app.modules.study import texts
 from app.modules.study.models import StudyAnswer, StudyEvent, StudyParticipant
 
 STALL_AFTER = timedelta(minutes=30)  # нет событий дольше — считаем, что человек остановился
-NEW_ACCOUNT_SLACK = timedelta(minutes=3)  # учётная запись создана не раньше согласия (с запасом на часы)
 SELECTION_VIEW = re.compile(r"^/employer/needs/:id(/|$)")
 
 _UUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
@@ -63,9 +63,9 @@ def _after(dt: datetime | None, since: datetime | None) -> datetime | None:
 
 
 def derive(db: Session, p: StudyParticipant) -> dict:
-    """{steps: {ключ: {at, skipped}}, path_done, done_at, current, last_activity, errors, views}. Только факты после согласия."""
+    """{steps: {ключ: {at, skipped}}, keys, path_done, done_at, current, last_activity, errors, views}. Только факты после начала сбора."""
     steps_def = texts.PATH[p.role]
-    started = as_aware(p.started_at)
+    started = as_aware(p.enrolled_at)
     user = db.get(User, p.user_id) if p.user_id else None
     at: dict[str, datetime | None] = {k: None for k, _, _ in steps_def}
     skipped: dict[str, bool] = {k: False for k, _, _ in steps_def}
@@ -74,25 +74,24 @@ def derive(db: Session, p: StudyParticipant) -> dict:
     errors = [e for e in events if e.kind == "error"]
 
     if user is not None and started is not None:
-        # регистрация: учётная запись создана после согласия и почта подтверждена; иначе — «уже был аккаунт» / вход по ссылке
-        fresh = as_aware(user.created_at) >= started - NEW_ACCOUNT_SLACK
-        if p.mode == "quick" or not fresh:
-            at["register"], skipped["register"] = as_aware(p.joined_at), True
-        elif user.is_email_verified:
-            at["register"] = as_aware(user.email_verified_at) or as_aware(p.joined_at)
         if p.role == "candidate":
             at["survey"] = _after(_first(db, SurveyResponse.created_at, SurveyResponse.user_id == user.id), started)
+            if at["survey"] is None and _first(db, SurveyResponse.created_at, SurveyResponse.user_id == user.id,
+                                               SurveyResponse.created_at < started) is not None:
+                at["survey"], skipped["survey"] = started, True  # опрос уже был (заранее заполнен или пройден раньше)
             ts_where = (TestSession.user_id == user.id, TestSession.created_at >= started)  # и экспресс-режим (is_sandbox)
             at["test"] = _first(db, func.coalesce(TestSession.started_at, TestSession.created_at), *ts_where)
             at["result"] = _first(db, TestSession.finished_at, *ts_where, TestSession.status == TestSessionStatus.finished,
                                   TestSession.finished_at.is_not(None))
         else:
-            need_where = (EmployerNeed.created_by == user.id, EmployerNeed.created_at >= started)
-            at["need"] = _first(db, EmployerNeed.created_at, *need_where)
+            seen_need = [as_aware(v.at) for v in views if SELECTION_VIEW.match(v.key)]
+            created = _first(db, EmployerNeed.created_at, EmployerNeed.created_by == user.id, EmployerNeed.created_at >= started)
+            opened = min(seen_need) if seen_need else None
+            at["need"] = min([t for t in (created, opened) if t], default=None)
             if at["need"]:
-                seen = [as_aware(v.at) for v in views if SELECTION_VIEW.match(v.key) and as_aware(v.at) >= at["need"]]
-                if seen:
-                    at["selection"] = min(seen)
+                after = [t for t in seen_need if t >= at["need"]]
+                if after:
+                    at["selection"] = min(after)
                 elif not views:  # браузер ничего не сообщал (нет экранов вообще): версия подборки создана вместе с потребностью
                     at["selection"] = _first(db, SelectionVersion.created_at, SelectionVersion.created_by == user.id,
                                              SelectionVersion.created_at >= started)
@@ -102,10 +101,9 @@ def derive(db: Session, p: StudyParticipant) -> dict:
             at["contact"] = min(cand) if cand else None
 
     keys = [k for k, _, _ in steps_def]
-    # путь строго по порядку: шаг без предыдущих не засчитывается как «пройденный» (кроме пропущенной регистрации)
     path_done = all(at[k] is not None for k in keys)
     current = next((k for k in keys if at[k] is None), None)
-    times = [t for t in list(at.values()) + [as_aware(e.at) for e in events] + [as_aware(p.joined_at), started] if t]
+    times = [t for t in list(at.values()) + [as_aware(e.at) for e in events] + [as_aware(p.last_seen_at), started] if t]
     last_activity = max(times) if times else None
     done_at = max(at[k] for k in keys) if path_done else None
     return {"steps": {k: {"at": at[k], "skipped": skipped[k]} for k in keys}, "keys": keys, "path_done": path_done,
@@ -113,12 +111,10 @@ def derive(db: Session, p: StudyParticipant) -> dict:
 
 
 def status_of(p: StudyParticipant, d: dict, answered: bool, now: datetime | None = None) -> str:
-    """withdrawn | not_started | done | stopped | active — состояние участника для сводок."""
+    """declined | done | stopped | active — состояние для сводок. stopped: дольше STALL_AFTER без действий и путь не завершён."""
     now = now or utcnow()
-    if p.withdrawn_at:
-        return "withdrawn"
-    if not p.started_at:
-        return "not_started"
+    if p.declined_at:
+        return "declined"
     if d["path_done"]:
         return "done"
     last = d["last_activity"]

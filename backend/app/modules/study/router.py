@@ -1,12 +1,12 @@
-"""API проверки с живыми пользователями (/api/study/*).
+"""API обезличенной статистики прохождения (/api/study/*).
 
-Открытые: страница приглашения по коду, публичная сводка (пустая при N < 3). Для вошедших: привязка к приглашению, состояние
-пути, события экранов и ошибок, анкета, отзыв участия. Для администратора: выпуск ссылок и служебная сводка.
-Не участник на `me` и `events` получает нейтральный ответ без ошибок: интерфейс спрашивает об этом при каждом входе.
+Для вошедшего пользователя: состояние (`me`), включение после показа уведомления (`enroll`), отказ (`decline`), события
+экранов и ошибок, необязательная анкета. Открытая публичная сводка для /validation — пустая при N < 3 завершённых путей.
+Для администратора — служебная сводка. Автотесты, служебные и демо-учётки в статистику не входят (exclude.py).
 """
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, Field
@@ -16,26 +16,23 @@ from app.core.db import get_db
 from app.core.deps import get_current_user, require_role
 from app.core.enums import UserRole
 from app.core.errors import err
-from app.core.ratelimit import SlidingWindow, client_ip, hit
+from app.core.ratelimit import SlidingWindow, hit
 from app.modules.auth.models import User
-from app.modules.study import report, service
+from app.modules.study import report, service, texts
 
 router = APIRouter(prefix="/api/study", tags=["study"])
-TAGS = [{"name": "study", "description": "Проверка с живыми пользователями: ссылка-приглашение, согласие, путь, анкета SUS, "
-                                         "оценки топ-5, сводка для /validation (при N ≥ 3)"}]
+TAGS = [{"name": "study", "description": "Обезличенная статистика прохождения у жюри и посетителей стенда: уведомление и отказ, "
+                                         "путь, необязательная анкета SUS и оценки топ-5, сводка для /validation (при N ≥ 3)"}]
 admin = require_role(UserRole.admin)
 
-_ip = SlidingWindow(40, 60)  # просмотры и старт по коду: перебор кода — 2^60, лимит — на всякий случай
 _ev_user = SlidingWindow(240, 60)
 _sub_user = SlidingWindow(20, 60)
+_enroll_user = SlidingWindow(30, 60)
 
 
-class StartIn(BaseModel):
-    consent: bool = Field(..., description="Согласие на участие и обезличенную статистику")
-
-
-class JoinIn(BaseModel):
-    code: str = Field(..., min_length=8, max_length=40)
+class EnrollIn(BaseModel):
+    automation: bool = Field(False, description="Браузер сообщил navigator.webdriver: автотест в статистику не входит")
+    again: bool = Field(False, description="Отказавший сам просит включить статистику снова")
 
 
 class EventIn(BaseModel):
@@ -51,101 +48,70 @@ class RatingIn(BaseModel):
 
 
 class SurveyIn(BaseModel):
-    sus: list[int] = Field(..., min_length=10, max_length=10, description="10 ответов шкалы SUS, 1–5, в порядке пунктов")
-    ratings: list[RatingIn] | None = Field(None, description="Оценки показанных кандидатов подборки (работодатель)")
+    sus: list[int] | None = Field(None, max_length=10, description="10 ответов шкалы SUS, 1–5, в порядке пунктов, или не передавать")
+    ratings: list[RatingIn] | None = Field(None, description="Оценки всех показанных кандидатов подборки (работодатель)")
     belief: int | None = Field(None, ge=1, le=5, description="«Верю грейду», 1–5")
     grade_fit: Literal["lower", "fit", "higher"] | None = Field(None, description="Кандидат: грейд занижен / соответствует / завышен")
     tags: list[str] | None = Field(None, max_length=10)
     comment: str | None = Field(None, max_length=2000)
+    need_id: str | None = Field(None, max_length=40, description="Потребность, подборку которой оценивали (из адреса экрана)")
+    version: int | None = Field(None, ge=1, le=10_000)
 
 
-START_PAGE = {"candidate": "/candidate/assessment", "employer": "/employer/needs"}  # куда вести после входа по ссылке
+def _ua(request: Request) -> str:
+    return request.headers.get("user-agent", "")
 
 
-class InvitesIn(BaseModel):
-    role: Literal["candidate", "employer"]
-    n: int = Field(1, ge=1, le=100)
-    batch: str = Field("", max_length=64)
-    mode: Literal["register", "quick"] = "quick"
-    source: Literal["freelance_paid", "team"] = "freelance_paid"
-    is_test: bool = False
+@router.get("/me", summary="Состояние статистики для пользователя: new | on (шаги пути) | declined | excluded")
+def me(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    return service.me(db, user, ua=_ua(request))
 
 
-@router.get("/invites/{code}", summary="Страница приглашения: роль, шаги, текст согласия (без входа)",
-            responses={404: err("Ссылка недействительна")})
-def invite(code: str, request: Request, db: Session = Depends(get_db)) -> dict:
-    hit(_ip, client_ip(request), "study_rate_limited", "Слишком много обращений к приглашению")
-    return service.invite_view(db, service.find(db, code))
+@router.post("/enroll", summary="Включить сбор после показа уведомления (автотесты и служебные учётки не включаются)")
+def enroll(data: EnrollIn, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    hit(_enroll_user, str(user.id), "study_rate_limited", "Слишком много запросов")
+    return service.enroll(db, user, ua=_ua(request), automation=data.automation, again=data.again)
 
 
-@router.post("/invites/{code}/start", summary="Дать согласие и начать путь; в режиме quick — войти без регистрации",
-             responses={404: err("Ссылка недействительна"), 410: err("Участие отозвано или приглашение закрыто"),
-                        422: err("Нет согласия")})
-def start(code: str, data: StartIn, request: Request, db: Session = Depends(get_db)) -> dict:
-    hit(_ip, client_ip(request), "study_rate_limited", "Слишком много обращений к приглашению")
-    p, user = service.start(db, service.find(db, code), data.consent)
-    out: dict[str, Any] = {"role": p.role, "mode": p.mode, "state": "started",
-                           "next": f"/register?role={p.role}" if p.mode == "register" else START_PAGE[p.role]}
-    if user is not None:
-        from app.modules.auth.service import issue_token
-
-        out["token"] = issue_token(user).model_dump(mode="json")
-    return out
+@router.post("/decline", summary="«Не участвовать»: собранное по записи удаляется, сбор больше не ведётся")
+def decline(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    hit(_enroll_user, str(user.id), "study_rate_limited", "Слишком много запросов")
+    return service.decline(db, user)
 
 
-@router.post("/join", summary="Привязать вошедшего пользователя к приглашению (после регистрации или входа)",
-             responses={404: err("Ссылка недействительна"), 409: err("Роль не совпадает или ссылка уже занята"),
-                        410: err("Участие отозвано или приглашение закрыто")})
-def join(data: JoinIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    service.join(db, user, data.code)
-    return service.me(db, user)
-
-
-@router.get("/me", summary="Участвует ли пользователь в проверке и как идёт путь (шаги, время, что дальше)")
-def me(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    return service.me(db, user)
-
-
-@router.post("/events", status_code=204, summary="Событие экрана или ошибка интерфейса (обезличенно; не участнику — без последствий)")
-def events(data: EventIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Response:
+@router.post("/events", status_code=204, summary="Событие экрана или ошибка интерфейса (обезличенно; без включённой статистики — без последствий)")
+def events(data: EventIn, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Response:
     hit(_ev_user, str(user.id), "study_rate_limited", "Слишком много событий")
-    service.record_event(db, user, data.kind, data.key, data.status, data.code)
+    service.record_event(db, user, data.kind, data.key, data.status, data.code, ua=_ua(request))
     return Response(status_code=204)
 
 
 @router.get("/survey", summary="Анкета после пути: SUS, оценки топ-5 (работодатель), доверие к грейду, «что мешало»",
-            responses={404: err("Пользователь не участвует в проверке")})
-def survey(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    return service.form(db, user)
+            responses={404: err("Статистика прохождения у пользователя не ведётся")})
+def survey(need_id: str | None = None, version: int | None = None, user: User = Depends(get_current_user),
+           db: Session = Depends(get_db)) -> dict:
+    return service.form(db, user, need_id, version)
 
 
-@router.post("/survey", summary="Сдать анкету (повторная отправка заменяет ответы)",
-             responses={404: err("Пользователь не участвует в проверке"), 422: err("Неполные или неверные ответы")})
+@router.post("/survey", summary="Сдать анкету (необязательна; любая часть; повторная отправка заменяет ответы)",
+             responses={404: err("Статистика прохождения у пользователя не ведётся"), 422: err("Неполные или неверные ответы")})
 def submit(data: SurveyIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
     hit(_sub_user, str(user.id), "study_rate_limited", "Слишком много отправок")
     return service.submit(db, user, sus=data.sus, ratings=[r.model_dump() for r in data.ratings or []], belief=data.belief,
-                          grade_fit=data.grade_fit, tags=data.tags, comment=data.comment)
+                          grade_fit=data.grade_fit, tags=data.tags, comment=data.comment, need_id=data.need_id,
+                          version=data.version)
 
 
-@router.post("/withdraw", summary="Отозвать участие: события пути и анкета удаляются, в цифры участник не входит",
-             responses={404: err("Пользователь не участвует в проверке")})
-def withdraw(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
-    return service.withdraw(db, user)
+@router.post("/survey/shown", summary="Отметить, что анкета показана: повторно её не предлагают")
+def survey_shown(user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    return service.mark_prompted(db, user)
 
 
-@router.get("/summary", summary="Сводка «Живые пользователи» для /validation (shown=false при N < 3)")
+@router.get("/summary", summary="Сводка «Живые пользователи» для /validation (shown=false при N < 3 завершённых путей)")
 def summary(db: Session = Depends(get_db)) -> dict:
     return report.public_summary(db)
 
 
-@router.post("/admin/invites", summary="Выпустить ссылки-приглашения (администратор; код показывается один раз)")
-def admin_invites(data: InvitesIn, request: Request, user: User = Depends(admin), db: Session = Depends(get_db)) -> dict:
-    base = f"{(request.headers.get('x-forwarded-proto') or request.url.scheme).split(',')[0].strip()}://" \
-           f"{(request.headers.get('x-forwarded-host') or request.headers.get('host') or '').split(',')[0].strip()}"
-    return {"invites": service.create_invites(db, data.role, data.n, batch=data.batch, mode=data.mode, is_test=data.is_test,
-                                              source=data.source, base_url=base if "//" in base and not base.endswith("//") else None)}
-
-
-@router.get("/admin/report", summary="Служебная сводка по участникам (метки, шаги, время, ошибки; без имён и почт)")
+@router.get("/admin/report", summary="Служебная сводка по участникам (шаги, время, ошибки; без имён и почт)")
 def admin_report(texts: bool = False, user: User = Depends(admin), db: Session = Depends(get_db)) -> dict:
     return report.admin_report(db, with_texts=texts)

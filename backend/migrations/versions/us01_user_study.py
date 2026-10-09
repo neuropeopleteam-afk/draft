@@ -21,36 +21,21 @@ JSONType = sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.Text()), "post
 def upgrade() -> None:
     op.create_table(
         "study_participants",
-        sa.Column("code_hash", sa.String(length=64), nullable=False),
-        sa.Column("role", sa.String(length=16), nullable=False),
-        sa.Column("label", sa.String(length=16), nullable=False),
-        sa.Column("batch", sa.String(length=64), server_default="", nullable=False),
-        sa.Column("mode", sa.String(length=16), server_default="quick", nullable=False),
-        sa.Column("source", sa.String(length=16), server_default="freelance_paid", nullable=False),
-        sa.Column("is_test", sa.Boolean(), server_default=sa.false(), nullable=False),
-        sa.Column("is_active", sa.Boolean(), server_default=sa.true(), nullable=False),
         sa.Column("user_id", sa.Uuid(), nullable=True),
-        sa.Column("opened_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("consent_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("consent_version", sa.String(length=32), nullable=True),
-        sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("joined_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("role", sa.String(length=16), nullable=False),
+        sa.Column("enrolled_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("last_seen_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("withdrawn_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("prompted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("declined_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.CheckConstraint("role IN ('candidate', 'employer')", name=op.f("ck_study_participants_role")),
-        sa.CheckConstraint("mode IN ('register', 'quick')", name=op.f("ck_study_participants_mode")),
-        sa.CheckConstraint("source IN ('freelance_paid', 'team')", name=op.f("ck_study_participants_source")),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], name=op.f("fk_study_participants_user_id_users"),
                                 ondelete="SET NULL"),
         sa.PrimaryKeyConstraint("id", name=op.f("pk_study_participants")),
-        sa.UniqueConstraint("code_hash", name=op.f("uq_study_participants_code_hash")),
         sa.UniqueConstraint("user_id", name=op.f("uq_study_participants_user_id")),
     )
-    with op.batch_alter_table("study_participants", schema=None) as b:
-        b.create_index("ix_study_participants_batch", ["batch"], unique=False)
 
     op.create_table(
         "study_events",

@@ -1,15 +1,11 @@
-"""Команды проверки с живыми пользователями (на сервере: docker compose exec api python -m app.modules.study …).
+"""Команды обезличенной статистики прохождения (на сервере: docker compose exec api python -m app.modules.study …).
 
-    python -m app.modules.study invite --role candidate --n 5 [--batch 10.10] [--source freelance_paid|team]
-                                       [--register] [--test] [--base-url https://…]
-        выпустить ссылки; код печатается один раз (в базе — только хеш). По умолчанию вход по ссылке создаёт
-        временную учётку без регистрации по почте (путь ≤ 25 минут); --register: участник регистрируется сам;
-        --source: freelance_paid — оплаченные участники с бирж (по умолчанию), team — знакомые команды;
-        --test: репетиция команды (в публичные цифры не входит).
-    python -m app.modules.study status          # кто начал, на каком шаге, сколько ответило (метки, без имён)
+    python -m app.modules.study status          # сколько человек в статистике, на каком шаге, сколько завершили
     python -m app.modules.study report [--texts] [--json]   # служебная сводка; --texts — комментарии (очищены от контактов)
-    python -m app.modules.study summary         # то, что увидит /validation (пусто при N < 3)
-    python -m app.modules.study close --batch 10.10 | --label К-03   # закрыть неначатые ссылки
+    python -m app.modules.study summary         # то, что увидит /validation (пусто при N < 3 завершённых путей)
+    python -m app.modules.study reset-study [--yes] [--include-declined]
+        сбросить собранную статистику (данные, не код): события, анкеты, участников. Отказавшиеся остаются отказавшимися
+        (их выбор не статистика); --include-declined убирает и отметки отказа. Без --yes только показывает, что будет удалено.
 """
 from __future__ import annotations
 
@@ -17,12 +13,11 @@ import argparse
 import json
 import sys
 
-from app.core.db import SessionLocal, get_engine
-from fastapi import HTTPException
+from app.core.db import SessionLocal
 from app.modules.study import report, service, texts
+from app.modules.study.models import StudyAnswer, StudyEvent, StudyParticipant
 
-STATUS_RU = {"not_started": "не открывал", "closed": "закрыта", "active": "идёт", "done": "путь пройден",
-             "stopped": "остановился", "withdrawn": "отозвал"}
+STATUS_RU = {"active": "идёт", "done": "путь пройден", "stopped": "остановился"}
 
 
 def _fmt_s(v) -> str:
@@ -31,41 +26,21 @@ def _fmt_s(v) -> str:
     return f"{int(v // 60)}:{int(v % 60):02d}"
 
 
-def cmd_invite(a) -> int:
-    with SessionLocal() as db:
-        try:
-            out = service.create_invites(db, a.role, a.n, batch=a.batch, mode="register" if a.register else "quick",
-                                         is_test=a.test, base_url=a.base_url, source=a.source)
-        except HTTPException as e:
-            print(e.detail["message"], file=sys.stderr)
-            return 2
-    if a.json:
-        print(json.dumps(out, ensure_ascii=False, indent=2))
-        return 0
-    print(f"Выпущено ссылок: {len(out)} · роль: {texts.ROLE_TITLE[a.role]} · "
-          f"{'с регистрацией по почте' if a.register else 'вход по ссылке, без регистрации'} · "
-          f"{texts.SOURCES[a.source]}{' · РЕПЕТИЦИЯ' if a.test else ''}")
-    print("Ссылки показаны один раз: в базе только хеш. Потеряли — выпустите новые.\n")
-    for x in out:
-        print(f"{x['label']}\t{x['url']}")
-    return 0
-
-
 def cmd_status(_a) -> int:
     with SessionLocal() as db:
-        rs = report.rows(db, include_test=True, include_unstarted=True)
+        rs = report.rows(db)
+        declined = db.query(StudyParticipant).filter(StudyParticipant.declined_at.is_not(None)).count()
     if not rs:
-        print("Приглашений пока нет. Выпуск: python -m app.modules.study invite --role candidate --n 5")
+        print(f"В статистике пока никого. Отказались: {declined}.")
         return 0
-    print(f"{'метка':<7}{'роль':<13}{'пачка':<10}{'статус':<15}{'шаг сейчас':<12}{'время пути':<11}{'ошибок':<7}анкета")
+    print(f"{'запись':<8}{'роль':<13}{'статус':<15}{'шаг сейчас':<12}{'время пути':<11}{'ошибок':<7}анкета")
     for r in rs:
-        st = STATUS_RU.get(r.status if r.p.started_at else ("closed" if not r.p.is_active else "not_started"), r.status)
-        print(f"{r.p.label:<7}{texts.ROLE_TITLE[r.p.role]:<13}{(r.p.batch or '—'):<10}{st:<15}{(r.d['current'] or 'все'):<12}"
-              f"{_fmt_s(r.path_s):<11}{len(r.d['errors']):<7}{'да, SUS ' + str(round(r.sus)) if r.ans and r.sus is not None else 'нет'}"
-              f"{'  [репетиция]' if r.p.is_test else ''}")
-    real = [r for r in rs if not r.p.is_test and r.p.started_at]
-    print(f"\nНачали: {len(real)} · путь пройден: {sum(1 for r in real if r.status == 'done')} · "
-          f"ответили на анкету: {sum(1 for r in real if r.ans)} · блок на /validation при N ≥ 3 ответивших")
+        print(f"{'П-' + str(r.p.id).replace('-', '')[:4]:<8}{texts.ROLE_TITLE[r.p.role]:<13}"
+              f"{STATUS_RU.get(r.status, r.status):<15}{(r.d['current'] or 'все'):<12}{_fmt_s(r.path_s):<11}{len(r.d['errors']):<7}"
+              f"{'да' + (', SUS ' + str(round(r.sus)) if r.sus is not None else '') if r.ans else 'нет'}")
+    done = sum(1 for r in rs if r.status == "done")
+    print(f"\nВ статистике: {len(rs)} · путь пройден: {done} · ответили на анкету: {sum(1 for r in rs if r.ans)} · "
+          f"отказались: {declined} · блок на /validation при N ≥ 3 завершённых путей")
     return 0
 
 
@@ -76,16 +51,17 @@ def cmd_report(a) -> int:
         print(json.dumps(out, ensure_ascii=False, indent=2, default=str))
         return 0
     for x in out["participants"]:
-        print(f"[{x['label']}] {texts.ROLE_TITLE[x['role']]} · {x['status']} · путь {_fmt_s(x['path_seconds'])} · "
-              f"ошибок {len(x['errors'])} · последний экран {x['last_screen'] or '—'}{' · РЕПЕТИЦИЯ' if x['test'] else ''}")
+        print(f"[{x['id']}] {texts.ROLE_TITLE[x['role']]} · {STATUS_RU.get(x['status'], x['status'])} · путь {_fmt_s(x['path_seconds'])} · "
+              f"ошибок {len(x['errors'])} · последний экран {x['last_screen'] or '—'}")
         for k, s in x["steps"].items():
-            print(f"    {k:<10}{'—' if not s else ('пропущен' if s['skipped'] else 'есть')}  {_fmt_s(x['step_seconds'].get(k))}")
+            print(f"    {k:<10}{'—' if not s else ('заранее' if s['skipped'] else 'есть')}  {_fmt_s(x['step_seconds'].get(k))}")
         a_ = x["answers"]
         if a_:
             print(f"    анкета: SUS {a_['sus']} · P@5 {a_['p5']} · верю грейду {a_['belief']} · метки {a_['tags']}"
                   + (f"\n    комментарий: {a_['comment']}" if a_.get("comment") else ""))
     pub = out["public"]
-    print("\nПубличная сводка:", pub["signature"] if pub.get("shown") else f"не показывается (нужно N ≥ {pub['min_n']} ответивших)")
+    print(f"\nОтказались: {out['declined']}")
+    print("Публичная сводка:", pub["signature"] if pub.get("shown") else f"не показывается (нужно N ≥ {pub['min_n']} завершённых путей)")
     return 0
 
 
@@ -95,42 +71,38 @@ def cmd_summary(_a) -> int:
     return 0
 
 
-def cmd_close(a) -> int:
-    if a.batch is None and not a.label:
-        print("Нужно --batch или --label: закрыть все ссылки сразу команда не позволяет", file=sys.stderr)
-        return 2
+def cmd_reset(a) -> int:
     with SessionLocal() as db:
-        n = service.close_invites(db, batch=a.batch, label=a.label)
-    print(f"Закрыто неначатых ссылок: {n}")
+        n_p = db.query(StudyParticipant).count()
+        n_d = db.query(StudyParticipant).filter(StudyParticipant.declined_at.is_not(None)).count()
+        n_e, n_a = db.query(StudyEvent).count(), db.query(StudyAnswer).count()
+        will = n_p - (0 if a.include_declined else n_d)
+        print(f"Сейчас: записей {n_p} (из них отказавшихся {n_d}), событий {n_e}, анкет {n_a}.")
+        if not a.yes:
+            print(f"Будет удалено записей: {will}, событий: {n_e}, анкет: {n_a}. Для выполнения добавьте --yes.")
+            return 0
+        out = service.reset_all(db, keep_declined=not a.include_declined)
+    print(f"Сброшено: записей {out['participants']}, событий {out['events']}, анкет {out['answers']}; "
+          f"отметок отказа оставлено: {out['declined_kept']}. Блок на /validation скрыт до N ≥ 3.")
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="python -m app.modules.study")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    inv = sub.add_parser("invite", help="выпустить ссылки-приглашения")
-    inv.add_argument("--role", required=True, choices=texts.ROLES)
-    inv.add_argument("--n", type=int, required=True)
-    inv.add_argument("--batch", default="")
-    inv.add_argument("--register", action="store_true", help="участник регистрируется по почте сам (по умолчанию — вход по ссылке)")
-    inv.add_argument("--quick", action="store_true", help="по умолчанию (оставлено для совместимости)")
-    inv.add_argument("--source", choices=sorted(texts.SOURCES), default=texts.DEFAULT_SOURCE)
-    inv.add_argument("--test", action="store_true")
-    inv.add_argument("--base-url")
-    inv.add_argument("--json", action="store_true")
-    sub.add_parser("status")
+    sub.add_parser("status").set_defaults(fn=cmd_status)
     rp = sub.add_parser("report")
     rp.add_argument("--texts", action="store_true")
     rp.add_argument("--json", action="store_true")
-    sub.add_parser("summary")
-    cl = sub.add_parser("close")
-    cl.add_argument("--batch")
-    cl.add_argument("--label")
+    rp.set_defaults(fn=cmd_report)
+    sub.add_parser("summary").set_defaults(fn=cmd_summary)
+    rs = sub.add_parser("reset-study")
+    rs.add_argument("--yes", action="store_true")
+    rs.add_argument("--include-declined", action="store_true")
+    rs.set_defaults(fn=cmd_reset)
     a = ap.parse_args(argv)
-    get_engine()
-    return {"invite": cmd_invite, "status": cmd_status, "report": cmd_report, "summary": cmd_summary,
-            "close": cmd_close}[a.cmd](a)
+    return a.fn(a)
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    sys.exit(main())

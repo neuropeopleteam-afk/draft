@@ -1,8 +1,8 @@
 """Сводки проверки с живыми пользователями: публичная (для /validation) и служебная (для команды).
 
-Публичная сводка — только суммарные цифры и только при N ≥ MIN_N ответивших; срез по роли — при N роли ≥ MIN_N.
-Репетиции (is_test) и отозвавшие согласие в цифры не входят. Имён, почт, кодов и построчных ответов здесь нет.
-Служебная — построчно по меткам «К-01», «Р-03», без имён; комментарии — по запросу, уже очищенные от контактов.
+Публичная сводка — только суммарные цифры и только при N ≥ MIN_N завершённых путей; срез по роли — при N роли ≥ MIN_N.
+Отказавшиеся в цифры не входят. Имён, почт и построчных ответов здесь нет.
+Служебная — построчно по короткому номеру записи («П-1a2b»), без имён; комментарии — по запросу, уже очищенные от контактов.
 """
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.db import as_aware, utcnow
@@ -39,22 +39,17 @@ class Row:
 
     @property
     def path_s(self) -> float | None:
-        if not self.d["path_done"] or not self.p.started_at:
+        if not self.d["path_done"]:
             return None
-        return max(0.0, (self.d["done_at"] - as_aware(self.p.started_at)).total_seconds())
+        return max(0.0, (self.d["done_at"] - as_aware(self.p.enrolled_at)).total_seconds())
 
 
-def rows(db: Session, *, include_test: bool = False, include_unstarted: bool = False) -> list[Row]:
+def rows(db: Session) -> list[Row]:
+    """Все, у кого ведётся статистика (отказавшие не входят), по времени включения."""
     now = utcnow()
-    q = select(StudyParticipant).where(StudyParticipant.withdrawn_at.is_(None)).order_by(StudyParticipant.created_at,
-                                                                                       StudyParticipant.label)
-    if not include_test:
-        q = q.where(StudyParticipant.is_test.is_(False))
     answers = {a.participant_id: a for a in db.scalars(select(StudyAnswer))}
     out = []
-    for p in db.scalars(q):
-        if p.started_at is None and not include_unstarted:
-            continue
+    for p in db.scalars(select(StudyParticipant).where(StudyParticipant.declined_at.is_(None)).order_by(StudyParticipant.enrolled_at)):
         d = P.derive(db, p)
         a = answers.get(p.id)
         out.append(Row(p, d, a, P.status_of(p, d, a is not None, now)))
@@ -70,8 +65,8 @@ def _fmt_date(dt: datetime) -> str:
 
 
 def _step_times(r: Row) -> dict[str, float]:
-    """Секунды на каждый шаг (от предыдущего шага или согласия); пропущенная регистрация не считается."""
-    prev = as_aware(r.p.started_at)
+    """Секунды на каждый шаг (от предыдущего шага или от начала сбора); пропущенный шаг не считается."""
+    prev = as_aware(r.p.enrolled_at)
     out: dict[str, float] = {}
     for k in r.d["keys"]:
         s = r.d["steps"][k]
@@ -85,9 +80,11 @@ def _step_times(r: Row) -> dict[str, float]:
 
 def _sus_block(rs: list[Row]) -> dict:
     vals = [r.sus for r in rs if r.sus is not None]
+    if len(vals) < stats.MIN_N:
+        return {"n": len(vals)}  # мелкие группы не раскрываем
     m = stats.mean_ci(vals, lo=0, hi=100)
     ge = sum(1 for v in vals if v >= stats.SUS_BENCHMARK)
-    return {**m, "median": stats.median(vals), "min": min(vals) if vals else None, "max": max(vals) if vals else None,
+    return {**m, "median": stats.median(vals), "min": min(vals), "max": max(vals),
             "ge_benchmark": stats.share(ge, len(vals)), "benchmark": stats.SUS_BENCHMARK}
 
 
@@ -162,28 +159,27 @@ def _errors_block(rs: list[Row]) -> dict:
             "by_code": dict(sorted(by_code.items(), key=lambda kv: -kv[1])[:8])}
 
 
+def _period(rs: list[Row]) -> tuple[datetime, datetime]:
+    return min(as_aware(r.p.enrolled_at) for r in rs), max(r.d["done_at"] for r in rs)
+
+
 def public_summary(db: Session) -> dict:
     rs = rows(db)
-    ans = [r for r in rs if r.ans]
-    if len(ans) < stats.MIN_N:
+    done = [r for r in rs if r.status == "done"]
+    if len(done) < stats.MIN_N:
         return {"shown": False, "min_n": stats.MIN_N}
     roles = {ro: [r for r in rs if r.p.role == ro] for ro in texts.ROLES}
+    done_by = {ro: [r for r in v if r.status == "done"] for ro, v in roles.items()}
+    ans = [r for r in rs if r.ans]
     roles_ans = {ro: [r for r in v if r.ans] for ro, v in roles.items()}
-    invited = db.scalars(select(StudyParticipant).where(StudyParticipant.is_test.is_(False),
-                                                         StudyParticipant.withdrawn_at.is_(None))).all()
-    invited_n = sum(1 for p in invited if p.is_active or p.started_at)
-    first = min(as_aware(r.p.started_at) for r in ans)
-    last = max(as_aware(r.ans.submitted_at) for r in ans)
-    n_by = {ro: len(v) for ro, v in roles_ans.items()}
-    src_n = {s: sum(1 for r in ans if r.p.source == s) for s in texts.SOURCES}
-    src = ("участники " + texts.SOURCES[next(s for s, k in src_n.items() if k)] if sum(1 for k in src_n.values() if k) == 1
-           else "участники приглашены командой: " + "; ".join(f"{texts.SOURCES[s].replace('приглашены командой ', '')} — {k}"
-                                                           for s, k in src_n.items() if k))
-    sig = (f"Люди, {src}. N = {len(ans)} ответивших ("
-           + ", ".join(f"{ROLE_PL[ro]} — {n_by[ro]}" for ro in texts.ROLES) + "), "
+    first, last = _period(done)
+    sig = ("Реальные люди на стенде, не команда; обезличенно; период "
            + (_fmt_date(first) if _fmt_date(first) == _fmt_date(last) else f"{_fmt_date(first)} – {_fmt_date(last)}")
-           + ". Репетиции команды не учитываются.")
-    ok = lambda ro: len(roles_ans[ro]) >= stats.MIN_N  # noqa: E731 — срез по роли — только при N роли ≥ MIN_N
+           + f". N = {len(done)} завершённых путей ("
+           + ", ".join(f"{ROLE_PL[ro]} — {len(done_by[ro])}" for ro in texts.ROLES)
+           + "); один человек мог пройти оба пути. Автотесты и служебные учётные записи не входят.")
+    ok = lambda ro: len(done_by[ro]) >= stats.MIN_N  # noqa: E731 — срез по роли — только при N роли ≥ MIN_N
+    ok_a = lambda ro: len([r for r in roles_ans[ro] if r.sus is not None]) >= stats.MIN_N  # noqa: E731
     tags: dict[str, int] = {}
     for r in ans:
         for t in r.ans.tags or []:
@@ -191,16 +187,14 @@ def public_summary(db: Session) -> dict:
     comp = _completion(rs)
     return {
         "shown": True, "min_n": stats.MIN_N, "signature": sig,
-        "sources": {s: k for s, k in src_n.items() if k},
-        "world": ("Люди оценивали платформу на демонстрационных данных: кандидаты в подборке — смоделированные профили, "
-                  "а не реальные люди."
-                  + (" Кандидаты проходили экспресс-тест (5–7 заданий), а не полный."
-                     if any(r.p.mode == "quick" and r.p.role == "candidate" for r in ans) else "")),
+        "world": ("Люди работали с платформой на демонстрационных данных: кандидаты в подборке и сравнении — смоделированные "
+                  "профили, а не реальные люди. Баллы SUS и оценки подборки (P@5) дали те, кто сам заполнил необязательную анкету."),
         "period": {"from": first.isoformat(), "to": last.isoformat()},
-        "n": {"invited": invited_n, "started": len(rs), "done": comp["done"], "answered": len(ans),
-              "by_role": {ro: {"started": len(roles[ro]), "answered": n_by[ro],
-                               "done": sum(1 for r in roles[ro] if r.status == "done")} for ro in texts.ROLES}},
-        "sus": {**_sus_block(ans), "by_role": {ro: _sus_block(roles_ans[ro]) for ro in texts.ROLES if ok(ro)}},
+        "n": {"enrolled": len(rs), "done": comp["done"], "stopped": comp["stopped"], "active": comp["active"],
+              "answered": len(ans),
+              "by_role": {ro: {"enrolled": len(roles[ro]), "done": len(done_by[ro]), "answered": len(roles_ans[ro])}
+                          for ro in texts.ROLES}},
+        "sus": {**_sus_block(ans), "by_role": {ro: _sus_block(roles_ans[ro]) for ro in texts.ROLES if ok_a(ro)}},
         "completion": {**comp, "by_role": {ro: _completion(roles[ro]) for ro in texts.ROLES if ok(ro)}},
         "time": {**_time_block(rs), "by_role": {ro: _time_block(roles[ro]) for ro in texts.ROLES if ok(ro)}},
         "p5": _p5_block(roles_ans["employer"]),
@@ -214,14 +208,14 @@ def public_summary(db: Session) -> dict:
 
 
 def admin_report(db: Session, *, with_texts: bool = False) -> dict:
-    rs = rows(db, include_test=True, include_unstarted=True)
+    rs = rows(db)
+    declined = db.scalar(select(func.count()).select_from(StudyParticipant).where(StudyParticipant.declined_at.is_not(None))) or 0
     items = []
     for r in rs:
         a = r.ans
         items.append({
-            "label": r.p.label, "role": r.p.role, "batch": r.p.batch, "mode": r.p.mode, "source": r.p.source, "test": r.p.is_test,
-            "status": r.status if r.p.started_at else ("closed" if not r.p.is_active else "not_started"),
-            "started_at": r.p.started_at.isoformat() if r.p.started_at else None,
+            "id": "П-" + str(r.p.id).replace("-", "")[:4], "role": r.p.role, "status": r.status,
+            "enrolled_at": r.p.enrolled_at.isoformat(),
             "steps": {k: ({"at": s["at"].isoformat(), "skipped": s["skipped"]} if s["at"] else None)
                       for k, s in r.d["steps"].items()},
             "step_seconds": {k: _ms(v) for k, v in _step_times(r).items()},
@@ -233,5 +227,4 @@ def admin_report(db: Session, *, with_texts: bool = False) -> dict:
                          "tags": a.tags, "path_done": a.path_done, "submitted_at": a.submitted_at.isoformat(),
                          **({"comment": a.comment} if with_texts else {"has_comment": bool(a.comment)})} if a else None),
         })
-    return {"generated_at": utcnow().isoformat(), "participants": items,
-            "public": public_summary(db)}
+    return {"generated_at": utcnow().isoformat(), "declined": declined, "participants": items, "public": public_summary(db)}
