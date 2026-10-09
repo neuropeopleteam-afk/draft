@@ -128,3 +128,9 @@ def test_n4_own_mention_is_not_a_duplicate():
     assert _same_fragment(text, item, rules) == set()  # Next.js в цитате — самостоятельное требование
     item = {"tag": "redux", "evidence": {"start": s, "end": s + len("React")}}
     assert _same_fragment(text, item, rules) == {"react"}
+
+
+def test_n2_model_variant_of_known_term_is_not_duplicated(monkeypatch, net):
+    _model(monkeypatch, net, {"unknown_required": [{"term": "1С:Предприятие", "quote": "1С:Предприятие"}]})
+    terms = [u["term"] for u in parse_need(UNSUP)["unknown_terms"]]
+    assert "1С" in terms and "1С:Предприятие" not in terms
