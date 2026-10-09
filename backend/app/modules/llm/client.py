@@ -381,7 +381,8 @@ def _verify(provider: str, s: Settings) -> ssl.SSLContext | bool:
 
 
 def _attempt(route: Route, messages: list[dict], *, temperature: float, max_tokens: int, want_json: bool,
-             client: httpx.Client | None, validate: Callable[[object], bool] | None) -> LLMResult:
+             client: httpx.Client | None, validate: Callable[[object], bool] | None,
+             response_format: dict | None = None) -> LLMResult:
     s = get_settings()
     url, headers, extra = _endpoint(route.provider, s)
     body = {"model": route.model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens,
@@ -390,6 +391,8 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
         body["reasoning"] = {"effort": route.reasoning}
     if want_json and route.provider == "local" and s.llm_local_json_mode:
         body["response_format"] = {"type": "json_object"}
+    if response_format and route.provider == "openrouter":
+        body["response_format"] = response_format  # жёсткая JSON-схема ответа (structured output, И27)
     name = short_model(route.model)
     t0 = time.monotonic()
     try:
@@ -448,7 +451,8 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
 def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 1200, want_json: bool = False,
          client: httpx.Client | None = None, model: str | None = None, timeout_s: float | None = None,
          func: str | None = None, provider: str | None = None,
-         validate: Callable[[object], bool] | None = None, deadline: float | None = None) -> LLMResult:
+         validate: Callable[[object], bool] | None = None, deadline: float | None = None,
+         response_format: dict | None = None) -> LLMResult:
     """Запрос по цепочке провайдеров функции func. Никогда не бросает исключений: при ошибке всех провайдеров
     ok=False и вызывающий идёт по правилам.
 
@@ -456,7 +460,9 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
     validate — проверка разобранного ответа (JSON или текст); False — переход к следующему провайдеру.
     latency_ms результата — суммарное время всех попыток (столько ждал пользователь).
     deadline — момент time.monotonic(), к которому нужен ответ (общий бюджет вызывающего): тайм-аут попытки
-    урезается до остатка, при остатке меньше секунды следующие провайдеры не вызываются (ошибка deadline)."""
+    урезается до остатка, при остатке меньше секунды следующие провайдеры не вызываются (ошибка deadline).
+    response_format — JSON-схема ответа ({"type": "json_schema", ...}) для OpenRouter (structured output); провайдер
+    её не принял (HTTP 400) — одна повторная попытка того же маршрута без схемы, ответ проверяется как обычно."""
     rs = routes(func, model, provider, timeout_s)
     if not rs:
         return LLMResult(ok=False, error="not_configured", func=func)
@@ -478,7 +484,13 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
                              "error": "circuit_open", "latency_ms": 0})
             continue
         res = _attempt(r, messages, temperature=temperature, max_tokens=max_tokens, want_json=want_json,
-                       client=client, validate=validate)
+                       client=client, validate=validate, response_format=response_format)
+        if response_format and r.provider == "openrouter" and res.error == "http_400":
+            attempts.append({"provider": r.provider, "model": res.model, "ok": False, "error": "schema_rejected",
+                             "latency_ms": res.latency_ms})
+            total += res.latency_ms
+            res = _attempt(r, messages, temperature=temperature, max_tokens=max_tokens, want_json=want_json,
+                           client=client, validate=validate)
         total += res.latency_ms
         attempts.append({"provider": r.provider, "model": res.model, "ok": res.ok, "error": res.error,
                          "latency_ms": res.latency_ms})

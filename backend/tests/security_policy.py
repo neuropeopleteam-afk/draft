@@ -264,6 +264,7 @@ POLICY: dict[tuple[str, str], Policy] = {
                                                                              "jury_employer": OK404}),  # feat/passport
     ("POST", "/api/employer/needs/parse"): "employer",
     ("POST", "/api/employer/needs/file"): "employer",  # Ф5: текст потребности из файла вакансии
+    ("GET", "/api/employer/needs/parse/{job_id}"): "employer_own404",  # И27: задача фонового разбора, чужая — 404
     ("GET", "/api/employer/needs"): "employer",
     ("POST", "/api/employer/needs"): "employer",
     ("GET", "/api/employer/needs/{need_id}"): "employer_own",
@@ -459,6 +460,7 @@ PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
     ("GET", "/api/expert-panel/items/{kind}"): {"kind": "A"},
     ("GET", "/api/messages/{kind}/{tid}"): {"kind": "invitation"},
     ("POST", "/api/messages/{kind}/{tid}"): {"kind": "invitation"},
+    ("GET", "/api/employer/needs/parse/{job_id}"): {"job_id": "00000000-0000-4000-8000-000000000027"},  # И27
 }
 
 # Маршруты, меняющие состояние так, что дальнейшие проверки могут сломаться (сброс песочницы отзывает токены,

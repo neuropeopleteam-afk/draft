@@ -340,9 +340,14 @@ def test_need_file_contacts_do_not_reach_llm(client, monkeypatch):
     from app.modules.llm.client import LLMResult
     from app.modules.matching import need_parser
 
+    from app.modules.matching import fast_parse
+
     sent: list[str] = []
     monkeypatch.setattr(need_parser, "chat_json",
                         lambda system, user, **k: (sent.append(user), LLMResult(ok=False, error="mock"))[1])
+    # И27: модель вызывается в фоновой задаче, если провайдер настроен — здесь задача выполняется внутри запроса
+    monkeypatch.setattr(fast_parse.llm_client, "available", lambda func=None: True)
+    monkeypatch.setattr(fast_parse, "_spawn", lambda fn, *a: fn(*a))
     t = employer(client)
     j = _upload(client, t, "v.docx", (EXAMPLES / "vacancy_python_middle.docx").read_bytes()).json()
     assert "hr@example.invalid" in j["text"]  # работодатель видит свой текст целиком
