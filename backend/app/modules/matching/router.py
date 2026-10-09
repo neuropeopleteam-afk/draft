@@ -29,6 +29,7 @@ from app.modules.invitations.service import (
 from app.modules.matching import ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
 from app.modules.matching import compare as compare_mod
+from app.modules.matching import fast_parse
 from app.modules.matching.need_parser import bias_report, normalize, parse_need, text_notes
 from app.modules.matching import whatif
 from app.modules.mydata import interest  # обезличенная отметка интереса для кандидата (md01)
@@ -59,9 +60,17 @@ class Evidence(BaseModel):
     context: str | None = Field(None, max_length=300)
     source: Literal["rules", "llm"] | None = None
     basis: str | None = Field(None, max_length=30)
+    model: str | None = Field(None, max_length=60, description="Какая модель нашла цитату (source=llm)")
+    confirmed_by: str | None = Field(None, max_length=60, description="Тег словаря подтверждён моделью")
 
 
 ReviewStatus = Literal["extracted", "confirmed", "edited"]
+
+
+class UnknownTerm(BaseModel):
+    """Требование вне справочника («вне справочника — проверить вручную», И27): в подбор не входит, не теряется."""
+    term: str = Field(max_length=80)
+    evidence: Evidence | None = None
 
 
 class StackReq(BaseModel):
@@ -85,6 +94,8 @@ class Requirements(BaseModel):
     salary_to: int | None = Field(None, gt=0)
     evidence: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary", "city"], Evidence | None] | None = None
     review: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary", "city"], ReviewStatus] | None = None
+    unknown_terms: list[UnknownTerm] | None = Field(None, max_length=20, description="Вне справочника: сохраняются "
+                                                    "найденные моделью (source=llm) с цитатой из текста")
 
     @model_validator(mode="after")
     def _range(self):
@@ -97,6 +108,8 @@ class ParseIn(BaseModel):
     text: str = Field(min_length=10, max_length=8000)
     direction: str | None = None
     grade: str | None = None
+    mode: Literal["fast", "full"] = Field("fast", description="fast — словарь сразу, модель в фоне (опрос "
+                                          "GET /needs/parse/{job_id}); full — прежний синхронный разбор с моделью")
 
 
 class NeedIn(BaseModel):
@@ -149,7 +162,8 @@ def _req_dict(r: Requirements | dict, text: str) -> dict:
     cov = coverage(text)
     if cov:
         req["coverage"] = cov
-    req.update(text_notes(text, req))  # И18: вне справочника, исключённое отрицанием, вилка не в рублях
+    # И18: вне справочника, исключённое отрицанием, вилка не в рублях; И27: найденное моделью вне справочника
+    req.update(text_notes(text, req, extra=d.get("unknown_terms")))
     return req
 
 
@@ -255,10 +269,28 @@ def _need_out(db: Session, n: EmployerNeed) -> dict:
                          "вырезаются до отправки в LLM. У каждого требования — цитата из текста (evidence: start, "
                          "end, quote); требование LLM без найденной в тексте цитаты отбрасывается. bias — фрагменты, "
                          "нарушающие ст. 64 ТК РФ (возраст, пол, семья, внешность, место жительства…), с предложением "
-                         "переписать через навыки; из них требования не извлекаются, в ранжирование они не попадают.",
+                         "переписать через навыки; из них требования не извлекаются, в ранжирование они не попадают. "
+                         "mode=fast (по умолчанию, И27): ответ словарём сразу, модель — в фоне: parse_job.id для "
+                         "опроса GET /needs/parse/{job_id}, llm.pending=true; тот же текст повторно — из кэша "
+                         "(llm.cached=true, delta — что добавила модель). mode=full — синхронно, как раньше.",
              responses=AUTH)
-def parse(data: ParseIn, user: User = Depends(employer)) -> dict:
-    return parse_need(data.text, data.direction, data.grade)
+def parse(data: ParseIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    if data.mode == "full":
+        return parse_need(data.text, data.direction, data.grade, full=True)
+    return fast_parse.start(db, data.text, data.direction, data.grade, user.id)
+
+
+@router.get("/needs/parse/{job_id}", summary="Фоновое уточнение разбора моделью: состояние и итог (И27)",
+            description="status pending → done | failed. done: result — итоговый разбор (словарь + модель), delta — "
+                        "что изменила модель (add_tag, set_scalar, confirm_tag применяются, пока работодатель не "
+                        "правил поля; remove_tag и suggest_scalar — только предложения). failed: модель не ответила, "
+                        "result — разбор словарём, llm.reason — причина.",
+            responses={**AUTH, 404: err("Задача не найдена или устарела")})
+def parse_job(job_id: uuid.UUID, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    out = fast_parse.get(db, job_id, user.id)
+    if out is None:
+        raise api_error(404, "parse_job_not_found", "Задача разбора не найдена или устарела")
+    return out
 
 
 # Ф5: текст потребности из файла вакансии (PDF, DOCX, TXT) → тот же разбор /needs/parse на клиенте
