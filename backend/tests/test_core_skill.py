@@ -129,3 +129,106 @@ def test_sort_key_policies_and_cap():
     absent = [True, False, True, False, False]
     assert C.cap_positions(absent, cap=2) == [1, 3, 0, 2, 4]
     assert C.cap_positions([True, True], cap=2) == [0, 1]
+
+
+# ---------------------------------------------------------------- пункты 2–3: подборка, карточка, сравнение
+GO_NEED = "Senior Go-разработчик для маршрутизации: Go, PostgreSQL, Kafka, Docker. Удалённо."
+
+
+def _go_world(client):
+    """Три кандидата Backend · Middle: у A Go подтверждён тестом, у B Go только заявлен, у C (сильнее всех по
+    подтверждённому) Go нет вовсе — Java, PostgreSQL, Kafka, Docker."""
+    from sqlalchemy import delete
+
+    from app.core.db import SessionLocal
+    from app.modules.profiles.facts import set_t0_facts
+    from app.modules.profiles.models import CandidateFact, EvidenceLevel, FactSource
+    from tests.test_day2_rules import H, candidate_with_category
+
+    plan = {"a": ({"go": 0.67, "postgresql": 0.67}, ["go", "postgresql"]),
+            "b": ({"postgresql": 1.0, "kafka": 1.0}, ["go", "postgresql", "kafka"]),
+            "c": ({"java": 1.0, "postgresql": 1.0, "kafka": 1.0, "docker": 1.0}, ["java", "postgresql", "kafka", "docker"])}
+    refs = {}
+    for name, (skills, stack) in plan.items():
+        t = candidate_with_category(client, email=f"core_{name}@example.com")
+        me = client.get("/api/me", headers=H(t)).json()
+        uid = uuid.UUID(me["id"])
+        with SessionLocal() as db:
+            db.execute(delete(CandidateFact).where(CandidateFact.user_id == uid, CandidateFact.kind == "skill"))
+            set_t0_facts(db, uid, FactSource.self_report, stack=stack)
+            set_t0_facts(db, uid, FactSource.resume, stack=[])
+            for tag, sc in skills.items():
+                db.add(CandidateFact(user_id=uid, kind="skill", key=tag, title=tag, evidence_level=EvidenceLevel.T1,
+                                     source=FactSource.test, value={"direction": "backend", "score": sc,
+                                                                    "correct": round(sc * 3), "total": 3}))
+            db.commit()
+        refs[name] = me["candidate"]["public_ref"]
+    return refs
+
+
+def _selection(text: str):
+    from app.core.db import SessionLocal
+    from app.modules.matching import ranking
+
+    req = parse_need(text, use_llm=False)
+    req["grade"] = "middle"  # кандидаты тестов — Backend · Middle
+    with SessionLocal() as db:
+        return ranking.build_selection(db, req, {"conditions_off": True})
+
+
+def test_selection_flag_off_keeps_order_flag_on_moves_absent_core_down(client, monkeypatch):
+    refs = _go_world(client)
+    monkeypatch.setenv(C.FLAG, "0")
+    off = _selection(GO_NEED)
+    order_off = [r["ref"] for r in off["results"]]
+    by = {r["ref"]: r for r in off["results"]}
+    # предусловие: без признака Java-кандидат (Go нет вовсе) выше заявившего Go
+    assert order_off.index(refs["c"]) < order_off.index(refs["b"]), order_off
+    assert by[refs["c"]]["core"]["state"] == "absent" and by[refs["c"]]["core"]["key"] == 0
+    assert off["core"] == {"label": "Основной язык роли", "title": "Go", "kind": "language", "on": False,
+                           "policy": C.POLICY, "active": True, "counts": {"confirmed": 1, "declared": 1, "absent": 1}}
+    monkeypatch.setenv(C.FLAG, "1")
+    on = _selection(GO_NEED)
+    order_on = [r["ref"] for r in on["results"]]
+    assert order_on.index(refs["c"]) > order_on.index(refs["b"]) and order_on.index(refs["c"]) > order_on.index(refs["a"])
+    assert len(order_on) == len(order_off)  # из выдачи никто не выпал
+    rc = {r["ref"]: r for r in on["results"]}[refs["c"]]
+    line = next(x for x in rc["reasons"] if x.get("core"))
+    assert line["requirement"] == "Основной язык роли: Go" and line["status"] == "mismatch"
+    assert "ниже тех, у кого ядро роли заявлено или подтверждено" in line["text"]
+    assert rc["core"]["headline"] == "Основной язык роли — Go: не заявлен"
+    assert {r["ref"]: r for r in on["results"]}[refs["a"]]["core"]["headline"].endswith("подтверждён тестом")
+
+
+def test_need_without_core_order_unchanged(client, monkeypatch):
+    _go_world(client)
+    text = "Backend-разработчик middle: обязательно PostgreSQL, Kafka и Docker."
+    monkeypatch.setenv(C.FLAG, "0")
+    off = _selection(text)
+    monkeypatch.setenv(C.FLAG, "1")
+    on = _selection(text)
+    assert [r["ref"] for r in on["results"]] == [r["ref"] for r in off["results"]]
+    assert on["core"] is None and all(r["core"] is None for r in on["results"])
+
+
+def test_card_and_compare_show_core(client, monkeypatch):
+    from tests.test_day2_rules import H, employer
+
+    monkeypatch.setenv(C.FLAG, "1")
+    refs = _go_world(client)
+    te = employer(client)
+    n = client.post("/api/employer/needs", json={"text": GO_NEED.replace("Senior", "Middle")}, headers=H(te))
+    assert n.status_code == 201, n.text
+    need = n.json()
+    card = client.get(f"/api/employer/candidates/{refs['c']}", params={"need_id": need["id"]}, headers=H(te)).json()
+    assert card["match"]["core"]["headline"] == "Основной язык роли — Go: не заявлен"
+    assert any(x.get("core") for x in card["match"]["reasons"])
+    cmp = client.get(f"/api/employer/needs/{need['id']}/compare", params={"refs": [refs["a"], refs["c"]]},
+                     headers=H(te)).json()
+    row = next(r for r in cmp["rows"] if r["key"] == "core")
+    assert row["group"] == "Ядро роли" and row["requirement"] == "Go"
+    cells = {c["ref"]: c["cells"]["core"] for c in cmp["candidates"]}
+    assert cells[refs["a"]]["text"] == "Подтверждён тестом" and cells[refs["a"]]["level"] == "T1"
+    assert cells[refs["c"]]["text"] == "Не заявлен — смежное направление" and cells[refs["c"]]["state"] == "absent"
+    notes = [w.get("core_note") for w in cmp["why"] if w.get("core_note")]
+    assert notes and "у " in notes[0] and "не заявлен" in notes[0]
