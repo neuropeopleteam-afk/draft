@@ -233,3 +233,19 @@ def test_evidence_model_label_is_bounded(client, bad):
     req = {"stack_required": [{"tag": "python", **bad}]}
     r = client.post("/api/employer/needs", json={"text": TEXT, "requirements": req}, headers=H(t))
     assert r.status_code == 422
+
+
+def test_no_format_suggestion_inside_allowed_formats(monkeypatch, net):
+    """«Офис или гибрид»: словарь принял оба формата — предложение модели «гибрид» вместо «офис» не показываем."""
+    from app.modules.matching.need_parser import parse_need
+
+    configure(monkeypatch, LLM_CHAIN="openrouter")
+    text = "Go-разработчик middle: Kafka, PostgreSQL. Москва, офис или гибрид."
+    net.on("or.test", None, lambda req, body: reply(json.dumps({**DELTA, "stack_required": [], "stack_desired": [],
+                                                                 "remove": [], "grade": None, "work_format": "hybrid",
+                                                                 "quotes": {**DELTA["quotes"], "grade": None,
+                                                                            "work_format": "офис или гибрид"}}),
+                                                     body["model"]))
+    r = parse_need(text)
+    assert r["work_formats"] and "hybrid" in r["work_formats"] and r["llm_suggest"] == []
+    assert "допустимые форматы работы:" in net.calls[0]["body"]["messages"][1]["content"]
