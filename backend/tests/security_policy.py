@@ -244,6 +244,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("PATCH", "/api/employer/needs/{need_id}"): "employer_own",
     ("POST", "/api/employer/needs/{need_id}/selections"): "employer_own",
     ("GET", "/api/employer/needs/{need_id}/selections/{version}"): "employer_own",
+    ("GET", "/api/employer/needs/{need_id}/selections/{version}/what-if"): "employer_own",  # И18 «Что если»
     ("GET", "/api/employer/needs/{need_id}/compare"): "employer_own",
     ("GET", "/api/employer/probes"): "employer",
     ("POST", "/api/employer/probes"): "employer_ref",
@@ -345,6 +346,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/validation/attacks/{attack_id}"): "auth404",  # attack_id=nope: вход проверяется, атаки нет
     ("GET", "/api/validation/junior-stability"): "open",  # feat/status
     ("GET", "/api/validation/grader-check"): "open",  # feat/integrity
+    ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
+    ("GET", "/api/validation/headline"): "open",
     ("POST", "/api/validation/self-check"): "auth",  # feat/jury-test
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",
