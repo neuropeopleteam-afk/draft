@@ -134,7 +134,7 @@ export function CandidateDetail() {
           <p className="mt-1 text-sm">{[c.contacts.full_name, c.contacts.email, c.contacts.phone, c.contacts.telegram].filter(Boolean).join(" · ")}</p>
         </section>
       )}
-      <CandidateCard c={c} score={c.match?.score} reasons={c.match?.reasons}
+      <CandidateCard c={c} score={c.match?.score} reasons={c.match?.reasons} must={c.match?.must}
         actions={
           <div className="flex flex-wrap gap-3">
             <button className="btn-ghost" onClick={() => setModal("probe")}>Отправить зонд</button>
