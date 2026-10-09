@@ -164,7 +164,7 @@ function MyApplications() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div><p className="font-bold text-brand-night">{a.vacancy_title}</p><p className="text-sm text-brand-ink/65">{a.company.name} · {salaryText(a.salary_from, a.salary_to, a.salary_basis)} · отклик {dt(a.created_at)}</p></div>
             <div className="flex flex-wrap items-center gap-2">
-              {a.thread?.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {a.thread.unread}</span>}
+              {a.thread?.unread > 0 && <span className="rounded-full bg-brand-strong px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {a.thread.unread}</span>}
               <AtsStageBadge s={a.ats_stage} /><AppStatus s={a.status} />
             </div>
           </div>
@@ -322,7 +322,7 @@ function ApplicationsModal({ v, onClose }: { v: Vacancy | null; onClose: () => v
                   {a.contacts && <p className="text-brand-ink/70">{a.contacts.email}{a.contacts.phone ? ` · ${a.contacts.phone}` : ""}{a.contacts.telegram ? ` · ${a.contacts.telegram}` : ""}</p>}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {a.thread?.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {a.thread.unread}</span>}
+                  {a.thread?.unread > 0 && <span className="rounded-full bg-brand-strong px-2 py-0.5 text-xs font-bold text-white">Новых сообщений: {a.thread.unread}</span>}
                   <AtsStageBadge s={a.ats_stage} employer /><AppStatus s={a.status} />
                 </div>
               </div>

@@ -98,7 +98,7 @@ export function AssignmentForm({ init, onDone, onClose }: { init: FormInit; onDo
             {(cat.data?.categories ?? []).map((c) => <option key={c.id} value={c.id}>{catTitle(c.id)}</option>)}
           </select></Field>
           <div><p className="label">Стек (до 10)</p><div className="flex flex-wrap gap-1.5">
-            {stackOpts.map((t) => { const on = stack.includes(t.id); return <button key={t.id} type="button" aria-pressed={on} onClick={() => setStack(on ? stack.filter((x) => x !== t.id) : [...stack, t.id].slice(0, 10))} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${on ? "bg-brand text-white" : "bg-brand-blush/40 text-brand-plum"}`}>{t.title}</button>; })}
+            {stackOpts.map((t) => { const on = stack.includes(t.id); return <button key={t.id} type="button" aria-pressed={on} onClick={() => setStack(on ? stack.filter((x) => x !== t.id) : [...stack, t.id].slice(0, 10))} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${on ? "bg-brand-strong text-white" : "bg-brand-blush/40 text-brand-plum"}`}>{t.title}</button>; })}
           </div></div>
         </>
       )}

@@ -13,6 +13,7 @@ import { useAuth } from "../lib/auth";
 import { juryToken } from "../lib/jury";
 import { useHashScroll } from "../lib/hashScroll";
 import { useMeta } from "../lib/meta";
+import { ScrollX } from "../components/A11y";
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -25,7 +26,7 @@ export default function Validation() {
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
       <SiteHeader />
-      <main className="mx-auto max-w-content px-6 py-12">
+      <main id="main" className="mx-auto max-w-content px-6 py-12">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Валидация</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night md:text-4xl">Как мы проверяем себя</h1>
         <p className="mt-3 max-w-3xl leading-relaxed text-brand-ink/75">
@@ -166,10 +167,10 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <label><span className={lab}>Стратегия ответов</span>
             <select className={sel} value={f.strategy} onChange={(e) => setF({ ...f, strategy: e.target.value })}>{strategies.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}</select>
-            <span className="mt-1 block text-xs text-brand-ink/60">{strategies.find((x) => x.id === f.strategy)?.text}</span></label>
+            <span className="mt-1 block text-xs text-brand-ink/65">{strategies.find((x) => x.id === f.strategy)?.text}</span></label>
           {f.strategy === "theta" && <label><span className={lab}>Уровень θ (от −3 до 3)</span>
             <input className={sel} type="number" step="0.1" min={-3} max={3} value={f.theta} onChange={(e) => setF({ ...f, theta: Number(e.target.value) })} />
-            <span className="mt-1 block text-xs text-brand-ink/60">Пороги: Junior −1, Middle 0, Senior 1</span></label>}
+            <span className="mt-1 block text-xs text-brand-ink/65">Пороги: Junior −1, Middle 0, Senior 1</span></label>}
           <label><span className={lab}>Направление</span>
             <select className={sel} value={f.direction} onChange={(e) => setF({ ...f, direction: e.target.value })}>{(opts?.directions ?? Object.keys(DIRECTIONS)).map((d) => <option key={d} value={d}>{DIRECTIONS[d] ?? d}</option>)}</select></label>
           <label><span className={lab}>Заявленный грейд</span>
@@ -180,17 +181,17 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
             <select className={sel} value={f.mode} onChange={(e) => setF({ ...f, mode: e.target.value })}><option value="full">Полный · 8–16 заданий</option><option value="express">Экспресс · 5–7 заданий (Senior: 8–12)</option></select></label>
           <label className="flex items-center gap-2 self-end pb-2 text-sm text-brand-ink/80"><input type="checkbox" className="h-4 w-4 accent-brand" checked={f.repeat} onChange={(e) => setF({ ...f, repeat: e.target.checked })} />Повторить каждого (согласие попыток)</label>
         </div>
-        {oneClick && <p className="mt-3 text-xs text-brand-ink/60">Запуск доступен после входа: по нажатию кнопки вы войдёте как демо-работодатель жюри (своя копия демо) и проверка сразу запустится.</p>}
+        {oneClick && <p className="mt-3 text-xs text-brand-ink/65">Запуск доступен после входа: по нажатию кнопки вы войдёте как демо-работодатель жюри (своя копия демо) и проверка сразу запустится.</p>}
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <button className="btn-primary" disabled={busy} onClick={run}>{busy ? "Проходим тесты…" : res ? "Запустить ещё раз" : "Запустить проверку"}</button>
-          <span className="text-xs text-brand-ink/60">Один расчёт за раз, не чаще 6 в минуту. Расчёт — секунды.</span>
+          <span className="text-xs text-brand-ink/65">Один расчёт за раз, не чаще 6 в минуту. Расчёт — секунды.</span>
         </div>
         {err && <div className="mt-4"><Alert>{err}</Alert></div>}
         {res && (
           <div className="mt-5 space-y-4" role="status" data-testid="self-check-result">
             <div className="rounded-xl bg-brand-blush/25 p-4 text-sm">
               {/* подпись честная: «В допуске выборки, разрыв N п. п.» — разрыв больше шума выборки, но в допуске модели (консилиум 07.10, 7.5) */}
-              <p data-testid="self-check-verdict" className={`inline-flex rounded-md px-2 py-0.5 text-xs font-bold ${!res.verdict?.ok ? "bg-brand text-white" : res.verdict?.kind === "tolerance" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-800"}`}>{res.verdict?.label ?? (res.verdict?.ok ? "Как и ожидалось" : "Расхождение с ожиданием")}</p>
+              <p data-testid="self-check-verdict" className={`inline-flex rounded-md px-2 py-0.5 text-xs font-bold ${!res.verdict?.ok ? "bg-brand-strong text-white" : res.verdict?.kind === "tolerance" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-800"}`}>{res.verdict?.label ?? (res.verdict?.ok ? "Как и ожидалось" : "Расхождение с ожиданием")}</p>
               <p className="mt-2 text-brand-ink/80"><span className="font-semibold text-brand-night">Ожидание: </span>{res.expected?.text}</p>
               <p className="mt-1 text-brand-ink/80"><span className="font-semibold text-brand-night">Факт: </span>{res.verdict?.text}</p>
             </div>
@@ -215,7 +216,7 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
                 </div>
               ))}
             </dl>
-            {res.retest?.note && <p className="text-xs text-brand-ink/60">{res.retest.note}</p>}
+            {res.retest?.note && <p className="text-xs text-brand-ink/65">{res.retest.note}</p>}
             <details className="text-sm">
               <summary className="cursor-pointer font-semibold text-brand-plum">Все прогоны ({res.runs?.length})</summary>
               <div className="mt-2"><Table head={["№", "θ̂", "SE", "Решение", "Точечный грейд", "Заданий", "Дотест.", "Минут", "Верных", "Остановка"]}
@@ -476,7 +477,7 @@ function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: s
 
 function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+    <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
           <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
@@ -489,6 +490,6 @@ function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollX>
   );
 }

@@ -38,11 +38,8 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
 
   return (
     <div className="min-h-screen bg-[#FBF8FC] md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
-      <a href="#cabinet-main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-brand-night focus:shadow-lg">
-        К содержимому
-      </a>
       {/* Телефон: строка с логотипом уезжает вверх, лента меню остаётся прилипшей (top = −высота строки). */}
-      <aside className="sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none">
+      <aside aria-label="Меню кабинета" className="sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none">
         <div className="flex h-14 items-center justify-between gap-3 px-4 md:block md:h-auto md:px-5 md:py-5">
           <NavLink to="/" aria-label="На главную"><Logo /></NavLink>
           <p className="ml-auto min-w-0 truncate text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-6 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">
@@ -59,7 +56,7 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
           <button onClick={exit} className="mt-1.5 rounded text-sm font-semibold text-brand-plum hover:text-brand">Выйти</button>
         </div>
       </aside>
-      <main id="cabinet-main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-6 outline-none sm:px-6 md:px-10 md:py-10">
+      <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-6 outline-none sm:px-6 md:px-10 md:py-10">
         <Outlet />
       </main>
     </div>
@@ -71,7 +68,7 @@ function NavItem({ to, label, end, hint, badge = 0 }: { to: string; label: strin
     <NavLink to={to} end={end} title={hint}
       className={({ isActive }) => `block shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors md:whitespace-normal ${isActive ? "bg-brand-blush text-brand-night" : "text-brand-ink/75 hover:bg-brand-blush/40 hover:text-brand-night"}`}>
       {label}
-      {badge > 0 && <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-brand px-1.5 text-xs font-bold leading-5 text-white" aria-label={`, непрочитанных: ${badge}`}>{badge}</span>}
+      {badge > 0 && <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-brand-strong px-1.5 text-xs font-bold leading-5 text-white" aria-label={`, непрочитанных: ${badge}`}>{badge}</span>}
     </NavLink>
   );
 }

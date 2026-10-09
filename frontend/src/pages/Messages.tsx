@@ -42,11 +42,11 @@ export function Messages({ role }: { role: "candidate" | "employer" }) {
                     className={`card w-full !p-3 text-left transition-colors hover:border-brand/40 ${active ? "border-brand/50 bg-brand-blush/30" : ""}`}>
                     <div className="flex items-start justify-between gap-2">
                       <p className="min-w-0 font-semibold text-brand-night">{t.counterpart}</p>
-                      {t.unread > 0 && <span className="shrink-0 rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white" aria-label={`Непрочитанных: ${t.unread}`}>{t.unread}</span>}
+                      {t.unread > 0 && <span className="shrink-0 rounded-full bg-brand-strong px-2 py-0.5 text-xs font-bold text-white" aria-label={`Непрочитанных: ${t.unread}`}>{t.unread}</span>}
                     </div>
                     <p className="truncate text-xs text-brand-ink/65">{t.kind === "invitation" ? "Приглашение" : "Отклик"} · {t.title}</p>
                     <p className="mt-1 line-clamp-2 text-sm text-brand-ink/75">{t.last ? `${t.last.mine ? "Вы: " : ""}${t.last.body}` : "Сообщений пока нет"}</p>
-                    <p className="mt-1 text-[11px] text-brand-ink/50">{dtt(t.activity_at)}{t.revoked ? " · доступ к контактам отозван" : t.mode === "qa" && !t.closed ? " · вопрос — ответ" : ""}</p>
+                    <p className="mt-1 text-[11px] text-brand-ink/65">{dtt(t.activity_at)}{t.revoked ? " · доступ к контактам отозван" : t.mode === "qa" && !t.closed ? " · вопрос — ответ" : ""}</p>
                   </button>
                 </li>
               );
