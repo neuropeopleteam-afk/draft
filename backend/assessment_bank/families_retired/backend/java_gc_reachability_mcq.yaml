@@ -6,20 +6,20 @@ target_grades: [junior, middle]
 format: mcq_concept
 language: java
 invariants:
-  code_lines: [17, 25]
-  operations: [13, 21]
+  code_lines: [18, 22]
+  operations: [14, 18]
   n_options: 4
   extra:
     subtype: reachability_count
 time_limit_s: 240
 canary: false
 prior_difficulty:
-  b: -0.1
+  b: 0.3
   a: 1.0
-  sigma_variant: 0.4
-  basis: "3–5 объектов и 4–8 переназначений ссылок; нужно пройти граф ссылок от локальных переменных; дистракторы — число обнулённых переменных, число объектов без своей переменной, ±1; сложность варианта зависит от длины цепочки → σ повышена; Junior/Middle"
+  sigma_variant: 0.25
+  basis: "Версия 2 (08.10): фиксированный сценарий — ровно 4 объекта и 6 переназначений (три связи next в цепочку, затем три обнуления; остаётся одна переменная), условие без оговорки про JIT, одна схема дистракторов (число обнулённых переменных всегда 3 и не совпадает с ключом, ключ ± 1); ответ 1 или 2 объекта, ловушка одна — обнулённая переменная, но объект достижим по next; Junior/Middle"
 generator: assessment_bank.families_retired.backend.java_gc_reachability_mcq
-version: 1
+version: 3
 description: >
   Сколько объектов доступны для сборки мусора в отмеченной точке. Ключ проверяется исполнением модели
   достижимости (обход графа ссылок от локальных переменных через поля next).

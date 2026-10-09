@@ -20,7 +20,7 @@ prior_difficulty:
   sigma_variant: 0.3
   basis: "15 строк, причина утечки — новая функция при каждом bind; дистракторы правдоподобны (обнуление ссылок, once, новая стрелочная функция при снятии, метод без привязки) и требуют понимать сравнение обработчиков по ссылке и this; Middle/Senior"
 generator: assessment_bank.families.frontend.js_listener_leak_fix
-version: 1
+version: 2
 description: >
   Класс компонента подписывается на событие окна и не может отписаться. Каждое исправление
   проверяется исполнением с поддельным EventTarget: три цикла mount/unmount, обработчик
