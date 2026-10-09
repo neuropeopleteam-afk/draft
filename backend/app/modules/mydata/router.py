@@ -93,6 +93,12 @@ def overview(db: Session, user: User) -> dict:
                   for name, (t, c) in owned.items() if name in ("candidate_preferences", "assignment_prefs", "notify_prefs", "user_notifications"))
     n_msgs = _count(db, ContactMessage, ContactMessage.invitation_id.in_(
         select(Invitation.id).where(Invitation.candidate_user_id == uid)))
+    from app.modules.hiring.models import HiringInterview, HiringOffer, HiringOutcome
+    from app.modules.study.models import StudyEvent, StudyParticipant
+
+    n_hiring = sum(_count(db, m, m.candidate_user_id == uid) for m in (HiringInterview, HiringOffer, HiringOutcome))
+    n_study = _count(db, StudyEvent, StudyEvent.participant_id.in_(
+        select(StudyParticipant.id).where(StudyParticipant.user_id == uid)))
     stored = [
         {"key": "account", "title": "Учётная запись", "count": 1, "kept": "пока вы не удалите учётную запись",
          "what": "почта, роль, даты регистрации и входа; пароль хранится только в виде хеша"},
@@ -128,6 +134,11 @@ def overview(db: Session, user: User) -> dict:
          "what": "ваша вилка в ответ на приглашение"},
         {"key": "prefs", "title": "Предпочтения и уведомления", "count": n_prefs,
          "what": "готовность к предложениям и интересы, настройки уведомлений и ленты заданий, сами уведомления"},
+        {"key": "hiring", "title": "Этапы найма", "count": n_hiring,
+         "what": "собеседования, офферы и исход по принятым приглашениям; у работодателя остаются как история без ваших текстов"},
+        {"key": "study", "title": "Статистика прохождения", "count": n_study,
+         "what": "роль, время шагов, адреса экранов и коды ошибок без содержимого — пока вы не нажали «Не участвовать» на /study; "
+                 "привязана к учётной записи, после удаления учётной записи — отвязывается"},
     ]
     inter = interest.summary(db, uid)
     return {
@@ -144,7 +155,7 @@ def overview(db: Session, user: User) -> dict:
             {"what": "Резервные копии базы", "term": "до 14 последних копий"},
         ],
         "backups": BACKUPS, "not_in_our_power": NOT_IN_OUR_POWER,
-        "operator": {"name": OPERATOR["short_name"], "email": OPERATOR["email"]},
+        "operator": {"name": OPERATOR["short_name"], "email": OPERATOR["email"], "storage": OPERATOR["storage"]},
         "consent_version": CONSENT_VERSION,
     }
 
