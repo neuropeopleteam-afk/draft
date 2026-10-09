@@ -52,6 +52,7 @@ class AppConfig:
     ext_minutes: int = 20
     ext_own_first: bool = True
     legacy_ext: int = 0            # > 0 — механика до 06.10 (LegacyExtSession), ext_items не используется
+    retake_seen: bool = True       # повтор: семейства прошлых попыток не берутся нигде (И26, 09.10); False — как до 09.10
     claim_prior: bool = False      # абляция: EAP с априорным распределением по заявленному грейду
     rotation: str = "subpool"      # subpool — параллельные формы-субпулы; exclude_last — весь банк без семейств прошлой попытки
     cuts: tuple = field(default_factory=cuts_tuple)              # пороги грейдов платформы (со Стажёром), как в bank_engine
@@ -69,8 +70,8 @@ class AppConfig:
 BASELINE_DAY2 = AppConfig(max_items=20, max_minutes=90, subpools=1, exposure=False, max_per_format={},
                           stop_rule="se", select_at="theta", ext_items=0, ext_own_first=False)
 # Механика до 06.10: в продукте (дотестирование 3 заданиями у порога заявленного грейда) и как её считала симуляция
-LEGACY = AppConfig(stop_rule="se", select_at="theta", ext_items=0, legacy_ext=3, ext_own_first=False)
-LEGACY_SIM = AppConfig(stop_rule="se", select_at="theta", ext_items=0, ext_own_first=False)
+LEGACY = AppConfig(stop_rule="se", select_at="theta", ext_items=0, legacy_ext=3, ext_own_first=False, retake_seen=False)
+LEGACY_SIM = AppConfig(stop_rule="se", select_at="theta", ext_items=0, ext_own_first=False, retake_seen=False)
 
 
 def app_config_from_settings() -> AppConfig:
@@ -407,12 +408,14 @@ def retest_metrics(people, r1: list[dict], r2: list[dict]) -> dict:
 
 def retest(pool, truth, people, direction, cfg: AppConfig, rng, k) -> dict:
     """Повторное прохождение на другом субпуле (параллельная форма) и других вариантах. Во второй попытке
-    семейства первой не попадают в дотестирование (как в продукте: previous_families)."""
+    семейства первой не берутся ни в основную часть, ни в дотестирование (как в продукте с 09.10, И26: seen);
+    у механики «до» (legacy_ext) — прежнее исключение только из дотестирования."""
     n = len(people)
     r1 = run_population(pool, truth, people, direction, cfg, rng, k=k, subpools=[0] * n)
     excl = [set(r["families"]) for r in r1]
+    seen = [{f: 0 for f in r["families"]} for r in r1] if cfg.retake_seen and not cfg.legacy_ext else None
     r2 = run_population(pool, truth, people, direction, cfg, rng, k=k, subpools=[1 % max(cfg.subpools, 1)] * n,
-                        exclude=excl)
+                        exclude=excl, seen=seen)
     return retest_metrics(people, r1, r2)
 
 

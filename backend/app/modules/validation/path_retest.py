@@ -8,7 +8,8 @@
    коммерческого стажа и с самооценкой «Стажёр» — Стажёр. Стек опроса — фильтр семейств ``bank_engine.stack_excluded``;
 2. адаптивный тест на банке (все семейства выдачи) — ``AppCATSession`` с настройками платформы
    (``sim.app_config_from_settings``): классификационная остановка, дотестирование у порога, Sympson — Hetter,
-   ротация субпулов ``exposure.choose_subpool`` по истории сессий, семейства последней сессии не в дотестировании,
+   ротация субпулов ``exposure.choose_subpool`` по истории сессий, семейства всех прошлых сессий не берутся (И26:
+   ``seen``, запасной путь — давно виденные, LRU),
    тест Стажёра — без ротации и только по лёгким семействам (``intern_pool.intern_exclusions``);
 3. детектор предзнания и пересчёт θ, как в ``bank_engine.finish``; решение — ``grades.decide_grade`` (P ≥ 0,8,
    «Junior (предварительно)» при P от 0,10);
@@ -152,10 +153,11 @@ def run_session(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, claim
     if claimed == "intern":  # как bank_engine.start/_rebuild: без ротации, только лёгкие семейства
         sp = None
         excl |= set(intern_exclusions(pool, d))
-    last = history[0]["families"] if history else []
+    # как service.seen_families (И26): семейства всех прошлых сессий с «возрастом» (0 — последняя), LRU при исчерпании
+    seen = {f: age for age, h in reversed(list(enumerate(history))) for f in h["families"]}
     person = Person(cand.theta, cand.tau, claimed)
     sess, res = sim.run_session(pool, d, responder or make_responder(person, truth), cfg, counter, claimed, sp, rng,
-                                exclude_ext=sorted(last), exclude=sorted(excl))
+                                exclude=sorted(excl), seen=seen)
     theta, se = float(res.theta), float(res.se)
     clean, canary, idx = _timed(sess, res)
     st = det.statistic(clean, canary)
