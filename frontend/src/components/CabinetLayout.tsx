@@ -5,8 +5,9 @@ import { api, type Role } from "../lib/api";
 import { MESSAGES_CHANGED } from "./Chat";
 import { useHiringTodo } from "./Hiring";
 import { Logo } from "./Logo";
+import { GuideSlot } from "./JuryGuide";
 
-export interface Section { path: string; title: string; description: string; day?: string }
+export interface Section { path: string; title: string; description: string; day?: string; more?: boolean }
 
 /** Короткая подпись роли для шапки на телефоне: «Кабинет работодателя» не помещается рядом с логотипом. */
 const SHORT: Partial<Record<Role, string>> = { candidate: "Кандидат", employer: "Работодатель", expert: "Эксперт", fsp_analyst: "ФСП", admin: "Администратор" };
@@ -18,6 +19,7 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
   const navRef = useRef<HTMLElement>(null);
   const unread = useUnread(me && (me.role === "candidate" || me.role === "employer") && me.role === role);
   const hiringTodo = useHiringTodo(me && (me.role === "candidate" || me.role === "employer") && me.role === role);  // найм: что ждёт ответа
+  const [moreOpen, setMoreOpen] = useState(false);  // Ф6 (В4): второстепенные разделы под «Ещё»
 
   // Телефон: меню — горизонтальная лента. Активный пункт прокручиваем в видимую часть ленты (по центру),
   // страницу по вертикали не двигаем.
@@ -37,6 +39,8 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
   if (me.role !== role && !alsoRoles.includes(me.role)) return <Navigate to={cabinetPath(me.role)} replace />;
   const base = cabinetPath(role);
   const exit = () => { signOut(); navigate("/"); };
+  const moreS = sections.filter((s) => s.more);
+  const activeMore = moreS.some((s) => loc.pathname === `${base}/${s.path}` || loc.pathname.startsWith(`${base}/${s.path}/`));
 
   return (
     <div className="min-h-screen bg-[#FBF8FC] md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
@@ -47,16 +51,25 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
       <aside className="sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none">
         <div className="flex h-14 items-center justify-between gap-3 px-4 md:block md:h-auto md:px-5 md:py-5">
           <NavLink to="/" aria-label="На главную"><Logo /></NavLink>
-          <p className="ml-auto min-w-0 truncate text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-6 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">
+          {/* Ф6 (В8): свёрнутый проводник жюри на телефоне — в шапке на месте подписи роли, а не над содержимым */}
+          <GuideSlot where="header" />
+          <p className="ml-auto min-w-0 truncate peer-[:not(:empty)]:hidden text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-6 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">
             <span className="md:hidden">{SHORT[role] ?? title}</span><span className="hidden md:inline">{title}</span>
           </p>
           <button onClick={exit} className="shrink-0 rounded-lg px-2 py-1.5 text-sm font-semibold text-brand-plum hover:bg-brand-blush/50 hover:text-brand md:hidden">Выйти</button>
         </div>
         <nav ref={navRef} className="nav-strip flex gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
           <NavItem to={base} end label="Обзор" />
-          {sections.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={s.path === "messages" ? unread : s.path === "invitations" ? hiringTodo : 0} badgeLabel={s.path === "invitations" ? "ждут ответа" : undefined} />)}
+          {sections.filter((s) => !s.more).map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} badge={s.path === "messages" ? unread : s.path === "invitations" ? hiringTodo : 0} />)}
+          {moreS.length > 0 && (activeMore
+            ? <p className="block shrink-0 whitespace-nowrap px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Ещё</p>
+            : <button type="button" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}
+                className="block shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-semibold text-brand-plum hover:bg-brand-blush/40 md:w-full">
+                {moreOpen ? "Свернуть" : `Ещё ${moreS.length}`}</button>)}
+          {(moreOpen || activeMore) && moreS.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} />)}
         </nav>
         <div className="hidden border-t border-brand-night/10 px-5 py-5 md:block">
+          <GuideSlot where="sidebar" />
           <p className="truncate text-sm font-medium text-brand-ink/80" title={me.email}>{me.email}</p>
           <button onClick={exit} className="mt-1.5 rounded text-sm font-semibold text-brand-plum hover:text-brand">Выйти</button>
         </div>

@@ -38,6 +38,14 @@ export async function juryEnter(page: Page, persona: Persona): Promise<void> {
 
 /** Переход по разделу кабинета через меню (как пользователь), без прямого ввода адреса. */
 export async function openSection(page: Page, name: string, url: RegExp): Promise<void> {
-  await page.getByRole("navigation").getByRole("link", { name, exact: true }).first().click();
+  // Ф6 (В4): второстепенные разделы кабинета — под кнопкой «Ещё N»; раскрываем, если ссылки нет
+  const nav = page.getByRole("navigation");
+  await expect(nav.getByRole("link", { name: "Обзор", exact: true }).first()).toBeVisible();
+  const link = nav.getByRole("link", { name, exact: true }).first();
+  if (!(await link.isVisible())) {
+    const more = nav.getByRole("button", { name: /^Ещё \d+$/ });
+    if (await more.count()) await more.first().click();
+  }
+  await link.click();
   await expect(page).toHaveURL(url);
 }

@@ -55,6 +55,7 @@ test("работодатель: потребность → подборка с �
     await expect(main.getByRole("combobox", { name: "Грейд", exact: true })).toHaveValue("middle");
     await expect(main.getByRole("spinbutton", { name: "Вилка от, ₽" })).toHaveValue("230000");
     await expect(main.getByRole("spinbutton", { name: "Вилка до, ₽" })).toHaveValue("290000");
+    await main.getByRole("button", { name: "Настроить веса" }).click();  // Ф6 (В5): веса — по запросу
     const row = (zone: string, tag: string) => main.getByRole("listitem")
       .filter({ has: page.getByRole("combobox", { name: `Вес: ${tag}`, exact: true }) }).filter({ hasText: `${zone}:` });
     for (const tag of ["Python", "FastAPI", "PostgreSQL", "Redis"]) await expect(row("Обязательно", tag), `обязательно ${tag}`).toBeVisible();

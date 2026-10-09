@@ -40,6 +40,7 @@ test("потребность: ст. 64 → цитаты и предупрежд�
     // в требования ушли только навыки и условия, без пола и возраста
     await expect(main.getByRole("heading", { level: 2, name: "Требования", exact: true })).toBeVisible();
     await expect(main.getByRole("combobox", { name: "Направление", exact: true })).toHaveValue("backend");
+    await main.getByRole("button", { name: "Настроить веса" }).click();  // Ф6 (В5): веса — по запросу
     for (const tag of ["Python", "Django", "PostgreSQL", "Docker"]) {
       await expect(main.getByRole("combobox", { name: `Вес: ${tag}`, exact: true }), tag).toBeVisible();
     }

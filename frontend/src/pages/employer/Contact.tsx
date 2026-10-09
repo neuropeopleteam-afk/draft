@@ -73,7 +73,12 @@ function salaryError(from: string, to: string) {
   return null;
 }
 
-export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: () => void }) {
+/** Текст на странице после отправки зонда (окно закрывается само, если отправлено всем). */
+export const probeSentText = (r: any) => r?.created?.length
+  ? `Зонд отправлен: ${r.created.length} ${plural(r.created.length, "кандидату", "кандидатам", "кандидатам")}. Ответ появится в разделе «Зонды»; контакты не раскрываются.`
+  : null;
+
+export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: (res?: any) => void }) {
   const [title, setTitle] = useState("");
   const [task, setTask] = useState("");
   const [mode, setMode] = useState<"any" | "solution" | "approach">("any");
@@ -88,7 +93,9 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: 
     if (se) { setErr(se); return; }
     setErr(null);
     try {
-      setRes(await api<any>("/employer/probes", { body: { candidate_refs: refs, need_id: needId ?? null, title, task_text: task, answer_mode: mode, time_limit_min: Number(mins), salary_from: Number(from), salary_to: Number(to), salary_basis: basis } }));
+      const r = await api<any>("/employer/probes", { body: { candidate_refs: refs, need_id: needId ?? null, title, task_text: task, answer_mode: mode, time_limit_min: Number(mins), salary_from: Number(from), salary_to: Number(to), salary_basis: basis } });
+      // Ф6: отправлено всем — окно закрывается, итог — на странице; есть пропуски — показываем причины в окне
+      if (r.created?.length && !r.skipped?.length) onDone(r); else setRes(r);
     } catch (e) { setErr(errText(e)); }
   }
   if (res) return (
@@ -97,7 +104,7 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: 
         ? <Alert kind="ok">Зонд отправлен: {res.created.length} {plural(res.created.length, "кандидату", "кандидатам", "кандидатам")}. {res.created.length === 1 ? "Кандидат получит" : "Кандидаты получат"} уведомление; контакты не раскрываются.</Alert>
         : <Alert kind="info">Зонд никому не отправлен: причины ниже.</Alert>}
       {res.skipped.length > 0 && <Alert kind="info">Пропущено: {res.skipped.map((s: any) => `${s.ref} — ${s.reason}`).join("; ")}</Alert>}
-      <button className="btn-primary" onClick={onDone}>Готово</button>
+      <button className="btn-primary" onClick={() => onDone(res)}>Готово</button>
     </div>
   );
   return (

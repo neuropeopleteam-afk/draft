@@ -176,9 +176,11 @@ function Competitions({ list, url }: { list: Comp[]; url?: string }) {
 }
 
 /** Короткая сводка для экрана результата теста. */
-export function FeedbackSummary({ sessionId }: { sessionId: string }) {
+export function FeedbackSummary({ sessionId, fallbackLink = false }: { sessionId: string; fallbackLink?: boolean }) {
   const { data: fb, loading } = useApi<FeedbackData>(`/assessment/feedback?session_id=${sessionId}`, [sessionId]);
-  if (loading || !fb?.available) return null;
+  if (loading) return null;
+  // Ф6 (В2): один переход к карте роста на экране результата — из сводки или, если сводки нет, отдельной кнопкой
+  if (!fb?.available) return fallbackLink ? <Link className="btn-ghost mt-4 inline-flex" to={`/candidate/feedback?session=${sessionId}`}>Карта навыков и маршрут роста</Link> : null;
   const s = fb.skill_map!.summary;
   return (
     <section className="card mt-4">
