@@ -13,6 +13,7 @@ import { TwoFactorLogin, TwoFactorSettings } from "./pages/Security";
 import Verify from "./pages/Verify";
 import Assessment, { TestRun } from "./pages/candidate/Assessment";
 import Category from "./pages/candidate/Category";
+import Attempts from "./pages/candidate/Attempts";  // И26: две попытки теста рядом
 import Feedback from "./pages/candidate/Feedback";
 import { Invitations, Probes } from "./pages/candidate/Contact";
 import { Messages } from "./pages/Messages";
@@ -85,6 +86,7 @@ export default function App() {
         <Route path="express" element={<Assessment express />} />
         <Route path="assessment/test/:id" element={<TestRun />} />
         <Route path="category" element={<Category />} />
+        <Route path="attempts" element={<Attempts />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="profile" element={<Profile />} />
         <Route path="invitations" element={<Invitations />} />
