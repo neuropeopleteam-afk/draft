@@ -226,8 +226,13 @@ class PotokProvider(Provider):
         if dedup and (attached or force):
             if soft(steps, "Комментарий", lambda: self.cl.event(aid, prof.comment_text(d, update=not attached), vid) or True):
                 steps.append("Комментарий с вилкой оффера и ссылкой на PDF (POST /events.json)")
+        stage_title = target.stage_title if (target.stage_id and stage_now == target.stage_id) else None
+        if vid and stage_now and not stage_title:  # название этапа для карточки приглашения: «Передано: Поток · этап «Новые»»
+            stage_title = (((join or {}).get("stage") or {}).get("name")
+                           or soft(steps, "Название этапа", lambda: next(
+                               (x["title"] for x in self.stages(vid) if x["id"] == stage_now), None)))
         url = CARD_URL.format(job=vid, stage=stage_now, applicant=aid) if (vid and stage_now and "app.potok.io"
                                                                            in self.cl.base) else None
         return {"external_id": aid, "applicant_id": aid, "vacancy_id": vid, "vacancy_title": target.vacancy_title,
                 "join_id": join_id, "stage_id": target.stage_id if (attached or force) else None, "dedup": dedup,
-                "url": url, "steps": steps}
+                "stage_title": stage_title, "url": url, "steps": steps}
