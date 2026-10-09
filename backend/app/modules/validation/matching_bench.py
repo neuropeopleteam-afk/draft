@@ -697,6 +697,37 @@ def must_have_section(world: World, sc: dict, seed: int) -> dict:
     return out
 
 
+GUARD_JSON = REPO / "docs" / "realdata" / "ranking_guard_500.json"
+CORE_V1_JSON = REPO / "docs" / "core_skill" / "metrics.json"
+
+
+def guard_summary() -> dict | None:
+    """Закрытый guard порядка (tools/realdata/ranking_guard.py, сохранённый json): одни и те же 500 профилей демо-мира
+    (разметка правилами) и мир 50 × 500 со скрытой истиной; столбцы — match-v1 без ярусов, продукт с ярусами
+    обязательного (MATCH_MUST_FIRST), то же + ядро роли (RANK_CORE_SKILL). Плюс v1-разметка ядра роли (модель, не
+    люди). Параметры по этим числам не подбирались."""
+    if not GUARD_JSON.exists():
+        return None
+    g = json.loads(GUARD_JSON.read_text(encoding="utf-8"))
+    cols = ("before", "after", "core_on")
+    out = {"source": str(GUARD_JSON.relative_to(REPO)), "command": "python tools/realdata/ranking_guard.py",
+           "demo_500": {k: {m: g["demo_500"][k][m]["platform"] for m in ("p@5", "ndcg@5", "ndcg@10")}
+                        for k in cols if k in g["demo_500"]},
+           "hidden_truth_500": {k: {m: g["hidden_truth_500"][k][m] for m in ("p@5", "ndcg@10", "mrr")}
+                                for k in cols if k in g["hidden_truth_500"]},
+           "n_pool": g["demo_500"].get("n_pool"), "n_needs": g["demo_500"].get("n_needs"),
+           "hidden_config": {k: g["hidden_truth_500"]["config"][k] for k in ("n_needs", "n_candidates")}}
+    if CORE_V1_JSON.exists():
+        v1 = json.loads(CORE_V1_JSON.read_text(encoding="utf-8"))["expert_v1"]
+        sm = v1["summary"]
+        out["expert_v1_core"] = {"n_needs": v1["n_needs"], "n_pairs": v1["n_pairs"], "raters": v1["raters"],
+                                 **{k: {m: sm[m][k]["mean"] for m in ("p@5", "ndcg@5", "ndcg@10")}
+                                    for k in ("off", core_skill.POLICY)},
+                                 "diff": {m: sm[m][f"diff_{core_skill.POLICY}"] for m in ("p@5", "ndcg@10")},
+                                 "source": str(CORE_V1_JSON.relative_to(REPO))}
+    return out
+
+
 def core_skill_section(world: World, sc: dict, seed: int) -> dict:
     """Я1: признак «ядро роли» (основной язык / фреймворк / специализация) на этом же мире — продукт без признака
     против продукта с признаком (политика core_skill.POLICY), парный бутстреп по потребностям; доля мест топ-5,
@@ -774,6 +805,7 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "score_rebuild_max_error": r["scored"]["max_rebuild_error"],
         "must_have": must_have_section(world, r["scored"], cfg.seed),
         "core_skill": core_skill_section(world, r["scored"], cfg.seed),
+        "guard": guard_summary(),
         "ablations": ablations(s),
         "signature": signature(seed=cfg.seed, config=cfg_d, n=cfg.n_needs * cfg.n_candidates,
                                world=f"бенчмарк подбора: {cfg.n_needs} потребностей × {cfg.n_candidates} кандидатов",
@@ -891,6 +923,10 @@ def findings(rep: dict) -> list[str]:
     return out
 
 
+def _signed(x: dict) -> str:
+    return ("+" if x["mean"] > 0 else "") + _cell(x)
+
+
 def _cell(x: dict) -> str:
     return f"{_f(x['mean'])} [{_f(x['lo'])}; {_f(x['hi'])}]"
 
@@ -979,7 +1015,13 @@ def markdown(rep: dict) -> str:
                 + " |" for k, t in (("before", "match-v1 (без ярусов)"), ("after", "match-v1 + ярусы обязательного (MATCH_MUST_FIRST, match-v1.1)"),
                                     ("diff", "Разница"))],
               "", f"Топ-5 изменился у {mh['needs_changed_top5']} из {rep['world']['n_needs']} потребностей "
-                  f"(с обязательными навыками — {mh['needs_with_required']}).", ""]
+                  f"(с обязательными навыками — {mh['needs_with_required']}).", "",
+              f"**Компромисс, а не рост всех метрик.** Ярусы поднимают долю топ-5, где всё обязательное подтверждено "
+              f"тестом, на {_signed(mh['diff']['top5_all_required_t1'])}, и меняют nDCG@10 на "
+              f"{_signed(mh['diff']['ndcg@10'])} (p@5 {_signed(mh['diff']['p@5'])}). Скрытая истина засчитывает "
+              "заявленный без теста навык частично, а продукт обещает работодателю сначала проверенное обязательное — "
+              "правило включено осознанно, ради доли подтверждённого обязательного; веса и ярусы по бенчмарку не "
+              "подбирались. Закрытый guard — ниже.", ""]
     cs = rep.get("core_skill")
     if cs:
         L += ["## Ядро роли: основной язык, фреймворк, специализация (Я1)", "",
@@ -994,6 +1036,24 @@ def markdown(rep: dict) -> str:
                                        for mt in ("p@5", "ndcg@10", "mrr", "top5_core_absent")) + " |"
                 for k, t in (("before", "Без признака (продукт match-v1.1)"), ("after", "С признаком «ядро роли»"),
                              ("diff", "Разница"))], ""]
+    gd = rep.get("guard")
+    if gd:
+        titles = (("before", "match-v1 без ярусов"), ("after", "продукт: + ярусы обязательного"),
+                  ("core_on", "+ ядро роли (RANK_CORE_SKILL)"))
+        L += ["## Guard порядка: те же профили, без подгонки", "",
+              f"`{gd['command']}` → `{gd['source']}`. Демо-мир: {gd['n_pool']} профилей, {gd['n_needs']} потребностей "
+              f"(разметка правилами); скрытая истина: {gd['hidden_config']['n_needs']} × "
+              f"{gd['hidden_config']['n_candidates']}. Это контроль, параметры по нему не выбирались.", "",
+              "| | Демо-500: p@5 | Демо-500: nDCG@10 | Истина 500: p@5 | Истина 500: nDCG@10 | Истина 500: MRR |",
+              "|---|---|---|---|---|---|",
+              *[f"| {t} | {_f(gd['demo_500'][k]['p@5'])} | {_f(gd['demo_500'][k]['ndcg@10'])} | "
+                f"{_f(gd['hidden_truth_500'][k]['p@5'])} | {_f(gd['hidden_truth_500'][k]['ndcg@10'])} | "
+                f"{_f(gd['hidden_truth_500'][k]['mrr'])} |" for k, t in titles if k in gd["demo_500"]], ""]
+        ev = gd.get("expert_v1_core")
+        if ev:
+            L += [f"Ядро роли на v1-разметке ({ev['n_needs']} потребностей, {ev['n_pairs']} пар, {ev['raters']}): p@5 "
+                  f"{_f(ev['off']['p@5'])} → {_f(ev[core_skill.POLICY]['p@5'])}, nDCG@10 {_f(ev['off']['ndcg@10'])} → "
+                  f"{_f(ev[core_skill.POLICY]['ndcg@10'])} (разница {_cell(ev['diff']['ndcg@10'])}).", ""]
     g = rep["groups"]
     fp = g["fsp"].get("platform", {})
     L += ["## Группы кандидатов", "",

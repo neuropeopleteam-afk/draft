@@ -76,6 +76,8 @@ function Body({ r }: { r: any }) {
       </ul>
 
       {r.must_have ? <MustHaveBlock mh={r.must_have} nNeeds={w.n_needs} sig={r.signature} /> : null}
+      {r.core_skill ? <CoreSkillBlock cs={r.core_skill} nNeeds={w.n_needs} /> : null}
+      {r.guard ? <GuardBlock g={r.guard} policy={r.core_skill?.policy} /> : null}
 
       {jr?.columns?.length ? <JuniorBlock jr={jr} /> : null}
 
@@ -136,7 +138,48 @@ function MustHaveBlock({ mh, nNeeds, sig }: { mh: any; nNeeds?: number; sig?: an
           [<b>match-v1 + ярусы обязательного (продукт)</b>, ...cols.map(([k]) => <Cell x={mh.after?.[k]} d={3} />)],
           ["Разница", ...cols.map(([k]) => <Cell x={mh.diff?.[k]} signed d={3} />)],
         ]} />
-      <p className="mt-2 text-xs text-brand-ink/65">Топ-5 изменился у {mh.needs_changed_top5} из {nNeeds ?? "—"} потребностей (с обязательными навыками — {mh.needs_with_required}). Разницу пишем как есть: на синтетике nDCG@10 чуть ниже, доля подтверждённого обязательного в топ-5 выше.</p>
+      <p className="mt-2 text-xs text-brand-ink/65">Топ-5 изменился у {mh.needs_changed_top5} из {nNeeds ?? "—"} потребностей (с обязательными навыками — {mh.needs_with_required}).</p>
+      <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/80" data-testid="must-tradeoff">
+        <b className="font-semibold text-brand-night">Это компромисс, а не рост всех метрик.</b> Доля топ-5, где всё обязательное подтверждено тестом: <Cell x={mh.diff?.top5_all_required_t1} signed d={3} />; nDCG@10: <Cell x={mh.diff?.["ndcg@10"]} signed d={3} />.
+        {" "}Скрытая истина засчитывает заявленный без теста навык частично, а продукт обещает работодателю сначала проверенное обязательное — правило включено осознанно, ради первого числа. Ярусы и веса по бенчмарку не подбирались; закрытый guard — ниже.
+      </p>
+    </>
+  );
+}
+
+/** Я1: ядро роли (основной язык / фреймворк / специализация) — продукт без признака против продукта с признаком, тот же мир. */
+function CoreSkillBlock({ cs, nNeeds }: { cs: any; nNeeds?: number }) {
+  const cols: [string, string][] = [["p@5", "p@5"], ["ndcg@10", "nDCG@10"], ["mrr", "MRR"], ["top5_core_absent", "Топ-5: доля без ядра роли"]];
+  return (
+    <>
+      <h3 className="mt-8 text-base font-bold text-brand-night">Ядро роли: основной язык, фреймворк, специализация (RANK_CORE_SKILL)</h3>
+      <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+        Ядро берётся из обязательных навыков правилами и словарём направлений: Backend, QA, ИБ — основной язык; Frontend — React, Vue или Angular; Data/ML — CV или NLP, иначе PyTorch. Кандидат без ядра (не заявлено и не подтверждено тестом) — смежное направление: он остаётся в выдаче, но идёт ниже кандидатов с ядром.
+        {" "}Ядро есть у {cs.needs_with_core} из {nNeeds ?? "—"} потребностей, признак действует у {cs.needs_active}; в продукте признак {cs.enabled_in_product ? "включён" : "выключен"}.
+      </p>
+      <Table head={["", ...cols.map(([, t]) => t)]}
+        rows={[
+          ["Без признака (продукт match-v1.1)", ...cols.map(([k]) => cs.before?.[k] ? <Cell x={cs.before[k]} d={3} /> : "—")],
+          [<b>С признаком «ядро роли»</b>, ...cols.map(([k]) => cs.after?.[k] ? <Cell x={cs.after[k]} d={3} /> : "—")],
+          ["Разница", ...cols.map(([k]) => cs.diff?.[k] ? <Cell x={cs.diff[k]} signed d={3} /> : "—")],
+        ]} />
+    </>
+  );
+}
+
+/** Закрытый guard порядка (tools/realdata/ranking_guard.py): те же профили, три столбца политики. */
+function GuardBlock({ g, policy }: { g: any; policy?: string }) {
+  const cols: [string, string][] = [["before", "match-v1 без ярусов"], ["after", "+ ярусы обязательного (продукт)"], ["core_on", "+ ядро роли"]];
+  const ev = g.expert_v1_core;
+  return (
+    <>
+      <h3 className="mt-8 text-base font-bold text-brand-night">Guard порядка: те же профили, без подгонки</h3>
+      <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+        Демо-мир: {intRu(g.n_pool)} профилей, {g.n_needs} потребностей, разметка правилами; скрытая истина: {g.hidden_config?.n_needs} × {intRu(g.hidden_config?.n_candidates)}. Это контроль: параметры по нему не выбирались. Пересчёт — <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">{g.command}</code>.
+      </p>
+      <Table head={["", "Демо: p@5", "Демо: nDCG@10", "Истина: p@5", "Истина: nDCG@10", "Истина: MRR"]}
+        rows={cols.filter(([k]) => g.demo_500?.[k]).map(([k, t]) => [t, n2(g.demo_500[k]["p@5"], 3), n2(g.demo_500[k]["ndcg@10"], 3), n2(g.hidden_truth_500?.[k]?.["p@5"], 3), n2(g.hidden_truth_500?.[k]?.["ndcg@10"], 3), n2(g.hidden_truth_500?.[k]?.mrr, 3)])} />
+      {ev && policy && ev[policy] && <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Ядро роли на v1-разметке ({ev.n_needs} потребностей, {ev.n_pairs} пар; эксперты — модель, не люди): p@5 {n2(ev.off?.["p@5"], 3)} → {n2(ev[policy]["p@5"], 3)}, nDCG@10 {n2(ev.off?.["ndcg@10"], 3)} → {n2(ev[policy]["ndcg@10"], 3)}.</p>}
     </>
   );
 }
