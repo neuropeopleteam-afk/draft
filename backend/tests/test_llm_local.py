@@ -297,6 +297,8 @@ def test_compose_profile_llm_local():
     assert "llama.cpp:server" in svc["image"] and "llm_models" in dc["volumes"]
     cmd = " ".join(str(x) for x in svc["command"])
     assert "--hf-repo" in cmd and "Q4_K_M" in cmd and "--reasoning off" in cmd and "--no-mmproj" in cmd
+    # память предсказуема: веса целиком в памяти процесса, кэш подсказок ограничен (по умолчанию llama.cpp — 8 ГБ)
+    assert "--load-mode none" in cmd and "--cache-ram" in cmd
     assert any(v.startswith("llm_models:") for v in svc["volumes"])  # модель — в томе, не в образе и не в репозитории
     assert svc["ports"][0].startswith("127.0.0.1:")
     api = dc["services"]["api"]
@@ -309,3 +311,22 @@ def test_compose_profile_llm_local():
     assert not any(k in env for k in ("API_KEY=", "TOKEN=", "SECRET"))
     assert "llm-local:" in (ROOT / "Makefile").read_text(encoding="utf-8")
     assert not list(ROOT.glob("**/*.gguf"))
+
+
+def test_compose_llm_local_threads_from_nproc():
+    """--threads -1 у llama.cpp считает все ядра хоста (на 8 vCPU сервера проверок — 192 потока), поэтому точка входа
+    берёт nproc или LLM_LOCAL_THREADS. Проверяем сам скрипт точки входа ($$ — экранирование подстановки compose)."""
+    import os
+    import subprocess
+
+    ep = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))["services"]["llm-local"]["entrypoint"]
+    assert ep[:2] == ["/bin/sh", "-c"] and "/app/llama-server" in ep[2]
+    script = ep[2].replace("$$", "$").replace("exec /app/llama-server", "exec echo")
+
+    def run(threads: str) -> list[str]:
+        env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "LLM_THREADS": threads}
+        return subprocess.run(["/bin/sh", "-c", script, *ep[3:], "--hf-repo", "x:Q4_K_M"], env=env,
+                              capture_output=True, text=True, check=True).stdout.split()
+
+    assert run("") == ["--threads", str(len(os.sched_getaffinity(0))), "--hf-repo", "x:Q4_K_M"]
+    assert run("3") == ["--threads", "3", "--hf-repo", "x:Q4_K_M"]
