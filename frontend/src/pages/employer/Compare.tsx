@@ -4,6 +4,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
 import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, ruText, useApi } from "../../components/ui";
 import { InviteForm, ProbeForm } from "./Contact";
+import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
 interface Row { key: string; group: string; title: string; requirement?: string | null; quote?: string | null; weight?: number | null; hint?: string }
@@ -139,7 +140,7 @@ export function Compare() {
                       <div key={c.ref} role="cell" className={`border-b border-l border-brand-night/10 p-4 text-sm ${cell?.best ? "bg-emerald-50/70" : ""}`}>
                         {!cell ? <span className="text-brand-ink/65">—</span> : (
                           <div className="flex items-start gap-2">
-                            {cell.level !== "market" && <Level level={cell.level} />}
+                            {cell.level !== "market" && <ReasonLevel r={{ ...cell, weight: r.weight }} />}
                             <p className={STATUS_TEXT[cell.status] ?? ""}>{ruText(cell.text)}{cell.best && <span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">лучше в строке</span>}</p>
                           </div>
                         )}
