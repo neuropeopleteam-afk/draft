@@ -40,8 +40,11 @@ def title(c: float) -> str:
 
 
 def explain(discipline: str | None, direction: str | None) -> dict:
+    """{coef, title}; без направления или для неизвестной дисциплины — коэффициент 1,0 и пустая подпись (не утверждаем
+    «близко», когда сравнивать не с чем)."""
     c = coef(discipline, direction)
-    return {"coef": c, "title": title(c)}
+    known = bool(discipline and direction and discipline in AFFINITY)
+    return {"coef": c, "title": title(c) if known else ""}
 
 
 def every_discipline_is_close_somewhere() -> bool:

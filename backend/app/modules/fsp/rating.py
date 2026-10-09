@@ -36,7 +36,16 @@ def recency(event_date: date | None, today: date) -> float:
     return 0.7 + 0.3 * math.exp(-months / 3)
 
 
-def details(achievements, *, today: date | None = None) -> dict:
+RELEVANCE_POLICY = (" Результат по дисциплине, близкой к специализации кандидата, — полный вес; смежной — 0,9; "
+                    "дальше — 0,8 (дисциплины между собой равны: у каждой есть близкие специализации).")
+
+
+def details(achievements, *, today: date | None = None, direction: str | None = None,
+            relevance: bool = False) -> dict:
+    """Сила паспорта. relevance=True (флаг FSP_DISCIPLINE_RELEVANCE) — вклад результата умножается на коэффициент
+    близости дисциплины к направлению кандидата (fsp/relevance.py); при False ответ байт-в-байт прежний (fsp-v2)."""
+    from app.modules.fsp import relevance as rel
+
     today = today or date.today()
     events = {}
     for a in achievements:
@@ -46,10 +55,19 @@ def details(achievements, *, today: date | None = None) -> dict:
         key = getattr(a, "event_id", None) or (a.event_name.strip().casefold(), a.event_date)
         kind = result_kind(a)
         value = RESULT_WEIGHTS[kind] * recency(a.event_date, today)
+        c = rel.coef(getattr(a, "discipline", None), direction) if relevance else 1.0
+        value *= c
         if key not in events or value > events[key]["value"]:
-            events[key] = {"value": value, "result": kind}
+            events[key] = {"value": value, "result": kind, "discipline": getattr(a, "discipline", None), "coef": c}
     values = sorted((e["value"] for e in events.values()), reverse=True)
     strength = 0.8 * values[0] + 0.2 * (1 - math.exp(-sum(values[1:]))) if values else 0.0
-    return {"version": VERSION, "strength": round(strength, 3), "competitions": len(values),
-            "best_result": max(events.values(), key=lambda e: e["value"])["result"] if values else None,
-            "policy": POLICY, "as_of": today.isoformat()}
+    best = max(events.values(), key=lambda e: e["value"]) if values else None
+    out = {"version": VERSION, "strength": round(strength, 3), "competitions": len(values),
+           "best_result": best["result"] if best else None,
+           "policy": POLICY, "as_of": today.isoformat()}
+    if relevance:
+        out["policy"] = POLICY + RELEVANCE_POLICY
+        out["relevance"] = {"enabled": True, "direction": direction,
+                            "best": ({"discipline": best["discipline"], **rel.explain(best["discipline"], direction)}
+                                     if best else None)}
+    return out
