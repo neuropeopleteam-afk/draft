@@ -206,7 +206,7 @@ def clean_approach(text: str | None) -> str:
         raise api_error(422, "approach_required", f"Опишите подход подробнее: не меньше {rub.APPROACH_MIN} символов")
     if len(t) > rub.APPROACH_MAX:
         raise api_error(422, "approach_too_long", f"Ответ о подходе — не больше {rub.APPROACH_MAX} символов")
-    return redact(t, use_ner=False).text
+    return redact(t, use_ner=False, header=False).text
 
 
 def submit(db: Session, at: AssignmentAttempt, a: Assignment, answers: dict, approach: str | None = None) -> AssignmentAttempt:
