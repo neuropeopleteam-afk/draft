@@ -196,6 +196,14 @@ def validation_headline():
     return headline()
 
 
+@router.get("/criteria", summary="Страница /criteria: критерии ТЗ → что сделать → что увидите → чем доказано",
+            description="Подпункты раздела 6 ТЗ дословно; числа — из тех же расчётов, что /validation, с подписью мира "
+                        "(seed, конфигурация, коммит). Источник docs/CRITERIA.md (make criteria-doc).")
+def validation_criteria(db: Session = Depends(get_db)):
+    from app.modules.validation.criteria import build
+    return build(db)
+
+
 @router.get("/fsp-rating", summary="Парный регрессионный бенчмарк формулы ФСП v1/v2")
 def fsp_rating_regression():
     path = BENCH.parent / "fsp_rating_regression_0710.json"

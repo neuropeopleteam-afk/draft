@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 const HOLD_MS = 8000;
 const USER_EVENTS = ["wheel", "touchstart", "keydown", "mousedown"] as const;
@@ -13,25 +14,41 @@ export function useHashScroll(ready: boolean) {
   useEffect(() => {
     const id = decodeURIComponent(location.hash.slice(1));
     if (!ready || !id) return;
-    let stopped = false;
-    const place = () => {
-      const el = document.getElementById(id);
-      if (stopped || !el) return;
-      const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
-      if (Math.abs(el.getBoundingClientRect().top - margin) > 2) el.scrollIntoView({ block: "start" });
-    };
-    const ro = new ResizeObserver(() => place());
-    let timer = 0;
-    const stop = () => {
-      stopped = true;
-      ro.disconnect();
-      for (const e of USER_EVENTS) window.removeEventListener(e, stop);
-      window.clearTimeout(timer);
-    };
-    for (const e of USER_EVENTS) window.addEventListener(e, stop, { passive: true });
-    timer = window.setTimeout(stop, HOLD_MS);
-    ro.observe(document.body);
-    place();
-    return stop;
+    return holdAnchor(id);
   }, [ready]);
+}
+
+/** То же для любого экрана (К1, ссылки /criteria: /employer/ats#ats-stages, /candidate/category#passport):
+ *  на смену адреса с якорем; /validation держит якорь сам (useHashScroll после загрузки данных). */
+export function HashScroll() {
+  const loc = useLocation();
+  useEffect(() => {
+    const id = decodeURIComponent(loc.hash.slice(1));
+    if (!id || loc.pathname === "/validation") return;
+    return holdAnchor(id);
+  }, [loc.key]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
+
+function holdAnchor(id: string): () => void {
+  let stopped = false;
+  const place = () => {
+    const el = document.getElementById(id);
+    if (stopped || !el) return;
+    const margin = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    if (Math.abs(el.getBoundingClientRect().top - margin) > 2) el.scrollIntoView({ block: "start" });
+  };
+  const ro = new ResizeObserver(() => place());
+  let timer = 0;
+  const stop = () => {
+    stopped = true;
+    ro.disconnect();
+    for (const e of USER_EVENTS) window.removeEventListener(e, stop);
+    window.clearTimeout(timer);
+  };
+  for (const e of USER_EVENTS) window.addEventListener(e, stop, { passive: true });
+  timer = window.setTimeout(stop, HOLD_MS);
+  ro.observe(document.body);
+  place();
+  return stop;
 }

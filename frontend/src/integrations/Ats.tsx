@@ -423,7 +423,7 @@ function PotokStages({ demo, onChanged }: { demo: boolean; onChanged: () => void
   if (j.loading || !j.data) return null;
   const mins = Math.round(j.data.poll_s / 60);
   return (
-    <section className="space-y-3">
+    <section id="ats-stages" className="scroll-mt-20 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-bold text-brand-night">Этапы из «Потока»</h2>
         <button className="btn-ghost px-3 py-1.5 text-sm" disabled={busy !== null || !p?.linked} onClick={syncNow}>{busy === "sync" ? "Опрашиваем…" : "Обновить этапы сейчас"}</button>
