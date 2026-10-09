@@ -48,7 +48,7 @@ feat/passport (И15), feat/integrity (И9/Р27), feat/llm-chain (Р37), feat/con
 |---|---|
 | Бэкенд, SQLite (`pytest`, без `-q`) | 442 из 442, 2,5 мин |
 | Миграции Alembic | одна голова `tk01` (… → qr01 → ms01 → fs01 → jr01 → ir01 → rd01 → tk01) |
-| Банк заданий (копия `backend/assessment_bank`, источник 1e44580) | 164 семейства: PASS 152, WARN 12, FAIL 0; `BANK_SYNC.json` |
+| Банк заданий (копия `backend/assessment_bank`, источник 2b1091a) | 165 семейств: в sync (20 seed) PASS 147, WARN 18, FAIL 0; полный валидатор банка — PASS 150, WARN 15, FAIL 0; `BANK_SYNC.json` |
 | Фронтенд | `npm run build` — ок, 11–13 с |
 | E2E против `vite preview` (SQLite, uvicorn :8120, preview :5120) | 9 спеков, 19 сценариев: мягкий режим 19 из 19; `E2E_STRICT=1` — 15 из 19, четыре падения — известные ошибки продукта (`productIssue`: «г..» в карте навыков, повтор места в кубке, индекс доверия в окне жалобы, дата ГГГГ-ММ-ДД у эксперта), исправлены в feat/fixes (волна 2) |
 | Пересчёт `/validation` (консилиум 07.10, п. 7.1) | `make bench stability intern-cut fsp-regression` одним прогоном: мир seed 20261006, конфиг `19255e3a8b95`; подбор платформы nDCG@10 0,569 [0,542; 0,595]; порог Стажёра −1,75 подтверждён |
