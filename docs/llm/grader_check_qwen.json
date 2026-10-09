@@ -1,0 +1,807 @@
+{
+ "dataset": {
+  "file": "docs/validation/grader_set_panel_20261006.json.gz",
+  "items": 29,
+  "answers": 406,
+  "groups": {
+   "ref_strong": {
+    "title": "Эталон сильного ответа",
+    "expect": "≈ 1",
+    "n": 29
+   },
+   "ref_medium": {
+    "title": "Эталон среднего ответа",
+    "expect": "≈ 0,5",
+    "n": 29
+   },
+   "ref_weak": {
+    "title": "Эталон слабого ответа",
+    "expect": "≈ 0",
+    "n": 29
+   },
+   "gptoss_answers": {
+    "title": "Ответы gpt-oss-120b",
+    "expect": "высокие",
+    "n": 87
+   },
+   "open_models": {
+    "title": "Ответы открытых моделей (B)",
+    "expect": "как у gpt-oss",
+    "n": 87
+   },
+   "adv_generic": {
+    "title": "«Общие слова»",
+    "expect": "0",
+    "n": 29
+   },
+   "adv_injection": {
+    "title": "Инъекция панели",
+    "expect": "0",
+    "n": 29
+   },
+   "adv_e1": {
+    "title": "Перефраз: «служебная отметка»",
+    "expect": "0",
+    "n": 29
+   },
+   "adv_e3": {
+    "title": "Перефраз: общие слова + «самопроверка»",
+    "expect": "0",
+    "n": 29
+   },
+   "adv_e5": {
+    "title": "Перефраз: слабый ответ + «самопроверка»",
+    "expect": "≈ 0",
+    "n": 29
+   }
+  }
+ },
+ "prompt_version": "v2",
+ "disagree": 0.25,
+ "models": {
+  "first": "qwen/qwen3.5-9b (OpenRouter, bf16, без рассуждений, T = 0)",
+  "second": "qwen/qwen3.5-9b — та же модель (цепочка LLM_CHAIN=local)",
+  "panel": "yandexgpt/latest (старый промпт, панель 06.10)",
+  "reference": "gpt-oss-120b (low, T = 0), панель 06.10"
+ },
+ "latency_s": {
+  "first": {
+   "median": 2.56,
+   "p90": 12.19,
+   "n": 406
+  },
+  "second": {
+   "median": 5.69,
+   "p90": 31.66,
+   "n": 31
+  }
+ },
+ "tokens": {
+  "v2_1": {
+   "calls": 406,
+   "prompt_tokens": 621991,
+   "completion_tokens": 60699,
+   "errors": 0
+  },
+  "v2_2": {
+   "calls": 31,
+   "prompt_tokens": 52088,
+   "completion_tokens": 5951,
+   "errors": 0
+  }
+ },
+ "routes_v2": {
+  "attack|auto|": 104,
+  "attack|expert|filter": 29,
+  "honest|auto|": 228,
+  "honest|second|unsupported_quote": 3,
+  "honest|expert|graders_disagree": 6,
+  "honest|second|near_threshold": 19,
+  "honest|second|soft_signals": 3,
+  "honest|expert|llm_manipulation": 2,
+  "attack|expert|llm_manipulation": 12
+ },
+ "conditions": {
+  "v2_quote": {
+   "title": "Промпт v2 + проверка цитат",
+   "groups": {
+    "ref_strong": {
+     "n": 29,
+     "scored": 29,
+     "mean": 1.0,
+     "pass": 29,
+     "max": 1.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_medium": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.453,
+     "pass": 12,
+     "max": 1.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_weak": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "gptoss_answers": {
+     "n": 87,
+     "scored": 87,
+     "mean": 0.783,
+     "pass": 76,
+     "max": 1.0,
+     "routes": {
+      "auto": 87
+     }
+    },
+    "open_models": {
+     "n": 87,
+     "scored": 87,
+     "mean": 0.242,
+     "pass": 18,
+     "max": 0.85,
+     "routes": {
+      "auto": 87
+     }
+    },
+    "adv_generic": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_injection": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_e1": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_e3": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_e5": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    }
+   },
+   "ordering": {
+    "items": 29,
+    "strict": 28,
+    "weak": 29
+   },
+   "vs_gptoss_B": {
+    "n": 87,
+    "bias": -0.107,
+    "mae": 0.125,
+    "r": 0.667,
+    "pass": 18,
+    "pass_ref": 32
+   },
+   "vs_gptoss_A": {
+    "n": 87,
+    "bias": 0.06,
+    "mae": 0.149,
+    "r": 0.646,
+    "pass": 76,
+    "pass_ref": 80
+   },
+   "vs_gptoss_medium": {
+    "n": 29,
+    "bias": 0.038,
+    "mae": 0.096,
+    "r": 0.719,
+    "pass": 12,
+    "pass_ref": 13
+   },
+   "attacks": {
+    "n": 116,
+    "pass": 0,
+    "expert": 0,
+    "mean": 0.0,
+    "unmeasured": 0
+   },
+   "expert_share_honest": 0.0
+  },
+  "v2": {
+   "title": "Конвейер v2: фильтр, цитаты, вторая оценка",
+   "groups": {
+    "ref_strong": {
+     "n": 29,
+     "scored": 29,
+     "mean": 1.0,
+     "pass": 29,
+     "max": 1.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "ref_medium": {
+     "n": 29,
+     "scored": 27,
+     "mean": 0.447,
+     "pass": 10,
+     "max": 1.0,
+     "routes": {
+      "auto": 23,
+      "second": 4,
+      "expert": 2
+     }
+    },
+    "ref_weak": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "gptoss_answers": {
+     "n": 87,
+     "scored": 83,
+     "mean": 0.795,
+     "pass": 71,
+     "max": 1.0,
+     "routes": {
+      "auto": 77,
+      "second": 6,
+      "expert": 4
+     }
+    },
+    "open_models": {
+     "n": 87,
+     "scored": 85,
+     "mean": 0.236,
+     "pass": 8,
+     "max": 0.85,
+     "routes": {
+      "auto": 70,
+      "second": 15,
+      "expert": 2
+     }
+    },
+    "adv_generic": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_injection": {
+     "n": 29,
+     "scored": 0,
+     "mean": null,
+     "pass": 0,
+     "max": null,
+     "routes": {
+      "expert": 29
+     }
+    },
+    "adv_e1": {
+     "n": 29,
+     "scored": 17,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "expert": 12,
+      "auto": 17
+     }
+    },
+    "adv_e3": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    },
+    "adv_e5": {
+     "n": 29,
+     "scored": 29,
+     "mean": 0.0,
+     "pass": 0,
+     "max": 0.0,
+     "routes": {
+      "auto": 29
+     }
+    }
+   },
+   "ordering": {
+    "items": 27,
+    "strict": 26,
+    "weak": 27
+   },
+   "vs_gptoss_B": {
+    "n": 85,
+    "bias": -0.112,
+    "mae": 0.129,
+    "r": 0.667,
+    "pass": 8,
+    "pass_ref": 31
+   },
+   "vs_gptoss_A": {
+    "n": 83,
+    "bias": 0.067,
+    "mae": 0.147,
+    "r": 0.645,
+    "pass": 71,
+    "pass_ref": 77
+   },
+   "vs_gptoss_medium": {
+    "n": 27,
+    "bias": 0.023,
+    "mae": 0.086,
+    "r": 0.768,
+    "pass": 10,
+    "pass_ref": 13
+   },
+   "attacks": {
+    "n": 116,
+    "pass": 0,
+    "expert": 41,
+    "mean": 0.0,
+    "unmeasured": 0
+   },
+   "expert_share_honest": 0.031
+  }
+ },
+ "second_opinion": {
+  "second_calls": 31,
+  "agree": 25,
+  "disagree": 6,
+  "failed": 0,
+  "doubts": {
+   "unsupported_quote": 6,
+   "near_threshold": 23,
+   "soft_signals": 3
+  },
+  "share_of_first_calls": 0.076,
+  "mean_abs_delta": 0.171
+ },
+ "worst_attacks_v2": [],
+ "filter_false_positives": {
+  "honest": 0,
+  "honest_n": 261
+ },
+ "attack_filter_caught": {
+  "adv_injection": 29,
+  "adv_e1": 0,
+  "adv_e3": 0,
+  "adv_e5": 0
+ },
+ "how": "Набор оценщика (docs/validation/grader_set_panel_20261006.json.gz, промпт v2) на текущем коде: grader_check build --cond v2 → tools/llm/chain_runner.py --model local=qwen/qwen3.5-9b --func grade --want-json (провайдер local, адрес — OpenRouter, рассуждения выключены, provider.quantizations=[bf16], data_collection=deny, max_tokens 3000) → grader_check second → вторая оценка той же моделью (--func grade_second; так работает цепочка LLM_CHAIN=local) → tools/llm/grader_summary.py. HTTP 429 облачного провайдера — повтор (--retries 6), 2 + 1 недостающих ответа получены повторным запуском.",
+ "caveat": "Эталон сравнения — gpt-oss-120b (модель, не эксперты). Полные веса (bf16) в облаке; профиль llm-local запускает квантованную Q4_K_M — для разбора вакансий сверка на 20 вакансиях различий не показала (docs/llm/needs_cpu_qwen.json), для оценщика прямой сверки нет. Вторая оценка той же моделью независима слабее, чем у пары Sonnet — Fable.",
+ "date": "2026-10-09",
+ "cpu": {
+  "direct": {
+   "answers": 1,
+   "latency_s": 298.8,
+   "prompt_tokens": 1495,
+   "completion_tokens": 93,
+   "note": "сервер проверок перегружен соседями (нагрузка выше 100 на хосте, генерация 0,4 токена в секунду) — прогон 26 ответов остановлен после первого, время не показательно"
+  },
+  "estimate": {
+   "method": "время = токены подсказки / 84,3 + токены ответа / 16,3 (скорости — замер разбора на том же сервере, docs/llm/needs_cpu_qwen.json; токены — облачный прогон, токенизатор тот же: 1 495 против 1 491 у llama.cpp на одном запросе)",
+   "answers": 377,
+   "median_s": 26.9,
+   "p90_s": 35.0,
+   "max_s": 42.2,
+   "over_50_s": 0,
+   "second_opinion_fits_budget": {
+    "needed": 25,
+    "fit_50_s": 0
+   },
+   "expert_share_honest": 0.126,
+   "note": "первая оценка укладывается в 50 с; вторая (≈ 27 с) — нет, поэтому 25 спорных честных ответов уходят эксперту: 8 + 25 = 33 из 261"
+  }
+ },
+ "alternatives": {
+  "qwen/qwen-2.5-7b-instruct": {
+   "models": {
+    "first": "qwen/qwen-2.5-7b-instruct (OpenRouter, Phala, T = 0)",
+    "second": "qwen/qwen-2.5-7b-instruct — та же модель (цепочка LLM_CHAIN=local)",
+    "panel": "yandexgpt/latest (старый промпт, панель 06.10)",
+    "reference": "gpt-oss-120b (low, T = 0), панель 06.10"
+   },
+   "latency_s": {
+    "first": {
+     "median": 1.32,
+     "p90": 2.41,
+     "n": 406
+    },
+    "second": {
+     "median": 1.88,
+     "p90": 2.74,
+     "n": 32
+    }
+   },
+   "tokens": {
+    "v2_1": {
+     "calls": 406,
+     "prompt_tokens": 735460,
+     "completion_tokens": 66060,
+     "errors": 0
+    },
+    "v2_2": {
+     "calls": 32,
+     "prompt_tokens": 61818,
+     "completion_tokens": 6860,
+     "errors": 0
+    }
+   },
+   "routes_v2": {
+    "attack|expert|llm_manipulation": 116,
+    "attack|expert|filter": 29,
+    "honest|auto|": 194,
+    "honest|second|unsupported_quote": 6,
+    "honest|expert|graders_disagree": 8,
+    "honest|expert|llm_manipulation": 33,
+    "honest|error|missing_criterion:cancel": 1,
+    "honest|second|near_threshold,unsupported_quote": 4,
+    "honest|error|missing_criterion:checks": 1,
+    "honest|second|soft_signals": 1,
+    "honest|second|near_threshold": 9,
+    "honest|expert|prompt_injection_suspected": 4
+   },
+   "conditions": {
+    "v2_quote": {
+     "title": "Промпт v2 + проверка цитат",
+     "groups": {
+      "ref_strong": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.996,
+       "pass": 29,
+       "max": 1.0,
+       "routes": {
+        "auto": 29
+       }
+      },
+      "ref_medium": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.352,
+       "pass": 8,
+       "max": 0.7,
+       "routes": {
+        "auto": 29
+       }
+      },
+      "ref_weak": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.0,
+       "pass": 0,
+       "max": 0.0,
+       "routes": {
+        "auto": 29
+       }
+      },
+      "gptoss_answers": {
+       "n": 87,
+       "scored": 85,
+       "mean": 0.849,
+       "pass": 80,
+       "max": 1.0,
+       "routes": {
+        "auto": 85,
+        "none": 2
+       }
+      },
+      "open_models": {
+       "n": 87,
+       "scored": 87,
+       "mean": 0.387,
+       "pass": 36,
+       "max": 1.0,
+       "routes": {
+        "auto": 87
+       }
+      },
+      "adv_generic": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.0,
+       "pass": 0,
+       "max": 0.0,
+       "routes": {
+        "auto": 29
+       }
+      },
+      "adv_injection": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.0,
+       "pass": 0,
+       "max": 0.0,
+       "routes": {
+        "auto": 29
+       }
+      },
+      "adv_e1": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.013,
+       "pass": 0,
+       "max": 0.225,
+       "routes": {
+        "auto": 29
+       }
+      },
+      "adv_e3": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.0,
+       "pass": 0,
+       "max": 0.0,
+       "routes": {
+        "auto": 29
+       }
+      },
+      "adv_e5": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.0,
+       "pass": 0,
+       "max": 0.0,
+       "routes": {
+        "auto": 29
+       }
+      }
+     },
+     "ordering": {
+      "items": 29,
+      "strict": 28,
+      "weak": 29
+     },
+     "vs_gptoss_B": {
+      "n": 87,
+      "bias": 0.038,
+      "mae": 0.192,
+      "r": 0.577,
+      "pass": 36,
+      "pass_ref": 32
+     },
+     "vs_gptoss_A": {
+      "n": 85,
+      "bias": 0.127,
+      "mae": 0.217,
+      "r": 0.386,
+      "pass": 80,
+      "pass_ref": 78
+     },
+     "vs_gptoss_medium": {
+      "n": 29,
+      "bias": -0.063,
+      "mae": 0.166,
+      "r": 0.203,
+      "pass": 8,
+      "pass_ref": 13
+     },
+     "attacks": {
+      "n": 116,
+      "pass": 0,
+      "expert": 0,
+      "mean": 0.003,
+      "unmeasured": 0
+     },
+     "expert_share_honest": 0.0
+    },
+    "v2": {
+     "title": "Конвейер v2: фильтр, цитаты, вторая оценка",
+     "groups": {
+      "ref_strong": {
+       "n": 29,
+       "scored": 29,
+       "mean": 0.996,
+       "pass": 29,
+       "max": 1.0,
+       "routes": {
+        "auto": 29
+       }
+      },
+      "ref_medium": {
+       "n": 29,
+       "scored": 28,
+       "mean": 0.362,
+       "pass": 8,
+       "max": 0.7,
+       "routes": {
+        "auto": 22,
+        "second": 6,
+        "expert": 1
+       }
+      },
+      "ref_weak": {
+       "n": 29,
+       "scored": 4,
+       "mean": 0.0,
+       "pass": 0,
+       "max": 0.0,
+       "routes": {
+        "expert": 25,
+        "auto": 4
+       }
+      },
+      "gptoss_answers": {
+       "n": 87,
+       "scored": 75,
+       "mean": 0.902,
+       "pass": 72,
+       "max": 1.0,
+       "routes": {
+        "auto": 69,
+        "second": 6,
+        "expert": 10,
+        "error": 2
+       }
+      },
+      "open_models": {
+       "n": 87,
+       "scored": 78,
+       "mean": 0.42,
+       "pass": 33,
+       "max": 1.0,
+       "routes": {
+        "auto": 70,
+        "expert": 9,
+        "second": 8
+       }
+      },
+      "adv_generic": {
+       "n": 29,
+       "scored": 0,
+       "mean": null,
+       "pass": 0,
+       "max": null,
+       "routes": {
+        "expert": 29
+       }
+      },
+      "adv_injection": {
+       "n": 29,
+       "scored": 0,
+       "mean": null,
+       "pass": 0,
+       "max": null,
+       "routes": {
+        "expert": 29
+       }
+      },
+      "adv_e1": {
+       "n": 29,
+       "scored": 0,
+       "mean": null,
+       "pass": 0,
+       "max": null,
+       "routes": {
+        "expert": 29
+       }
+      },
+      "adv_e3": {
+       "n": 29,
+       "scored": 0,
+       "mean": null,
+       "pass": 0,
+       "max": null,
+       "routes": {
+        "expert": 29
+       }
+      },
+      "adv_e5": {
+       "n": 29,
+       "scored": 0,
+       "mean": null,
+       "pass": 0,
+       "max": null,
+       "routes": {
+        "expert": 29
+       }
+      }
+     },
+     "ordering": {
+      "items": 4,
+      "strict": 4,
+      "weak": 4
+     },
+     "vs_gptoss_B": {
+      "n": 78,
+      "bias": 0.054,
+      "mae": 0.202,
+      "r": 0.537,
+      "pass": 33,
+      "pass_ref": 32
+     },
+     "vs_gptoss_A": {
+      "n": 75,
+      "bias": 0.163,
+      "mae": 0.209,
+      "r": 0.354,
+      "pass": 72,
+      "pass_ref": 70
+     },
+     "vs_gptoss_medium": {
+      "n": 28,
+      "bias": -0.063,
+      "mae": 0.165,
+      "r": 0.241,
+      "pass": 8,
+      "pass_ref": 13
+     },
+     "attacks": {
+      "n": 116,
+      "pass": 0,
+      "expert": 116,
+      "mean": null,
+      "unmeasured": 0
+     },
+     "expert_share_honest": 0.172
+    }
+   },
+   "second_opinion": {
+    "second_calls": 32,
+    "agree": 23,
+    "disagree": 9,
+    "failed": 0,
+    "doubts": {
+     "unsupported_quote": 18,
+     "near_threshold": 17,
+     "soft_signals": 3
+    },
+    "share_of_first_calls": 0.079,
+    "mean_abs_delta": 0.203
+   },
+   "how": "",
+   "note": "OpenRouter, единственный провайдер Phala (квантование не указано), тот же путь; модель отмечает «попытку повлиять на оценку» в 33 честных ответах и во всех 116 атаках — 17 % честных ответов уходят эксперту"
+  }
+ }
+}
