@@ -104,6 +104,33 @@ def test_docx_list_style_from_styles_xml_and_strict_namespace():
     assert docx_to_text(make_docx(strict)) == "Строгий OOXML"
 
 
+def test_docx_heading_styles_are_not_list_items():
+    """Заголовок с нумерацией стиля (LibreOffice: numPr с numId 0, outlineLvl) — заголовок, а не «- пункт»."""
+    styles = (f'<w:styles xmlns:w="{W}"><w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/>'
+              '<w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="0"/></w:numPr><w:outlineLvl w:val="1"/></w:pPr>'
+              '</w:style><w:style w:type="paragraph" w:styleId="Num"><w:pPr><w:numPr><w:numId w:val="2"/></w:numPr>'
+              '</w:pPr></w:style><w:style w:type="paragraph" w:styleId="NoNum"><w:basedOn w:val="Num"/><w:pPr><w:numPr>'
+              '<w:numId w:val="0"/></w:numPr></w:pPr></w:style></w:styles>')
+    doc = body(p("Требования", style="Heading2"), p("Go", style="Num"), p("Обычный", style="NoNum"),
+               p("1. Условия", bullet=True, style="Heading2"))
+    assert docx_to_text(make_docx(doc, extra={"word/styles.xml": styles})).splitlines() == \
+        ["Требования", "- Go", "Обычный", "1. Условия"]
+
+
+@pytest.mark.parametrize("name", ["vacancy_go_pandoc.docx", "vacancy_go_libreoffice.docx"])
+def test_docx_real_generators(name):
+    """DOCX из pandoc и из LibreOffice (тот же текст, tests/fixtures_fileparse/vacancy_go.md) читаются одинаково."""
+    from app.modules.matching.need_parser import parse_need
+
+    raw = (Path(__file__).parent / "fixtures_fileparse" / name).read_bytes()
+    t = clean_text(docx_to_text(raw), headings=True)
+    assert "Требования:\n- Go от 5 лет" in t and "Будет плюсом:\n- Kubernetes" in t and "Вилка | от 400 000 ₽" in t
+    r = parse_need(t, use_llm=False)
+    assert (r["direction"], r["grade"]) == ("backend", "senior")
+    assert [i["tag"] for i in r["stack_required"]] == ["go", "postgresql", "kafka", "grpc"]
+    assert [i["tag"] for i in r["stack_desired"]] == ["kubernetes", "clickhouse"]
+
+
 def test_docx_main_part_from_rels():
     assert docx_to_text(make_docx(body(p("Из document2")), main="word/document2.xml")) == "Из document2"
     with pytest.raises(DocxError) as e:  # нет ни word/document.xml, ни связи officeDocument

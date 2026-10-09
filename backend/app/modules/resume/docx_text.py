@@ -121,55 +121,84 @@ def _check_archive(zf: zipfile.ZipFile) -> tuple[zipfile.ZipInfo, dict[str, zipf
     return main, names
 
 
-def _list_styles(zf: zipfile.ZipFile, names: dict[str, zipfile.ZipInfo]) -> set[str]:
-    """Стили абзацев с нумерацией (маркированные и нумерованные списки), с учётом наследования basedOn."""
+def _val(attrs: dict, name: str = "val") -> str | None:
+    return next((v for k, v in attrs.items() if k.rpartition(" ")[2] == name), None)
+
+
+def _styles(zf: zipfile.ZipFile, names: dict[str, zipfile.ZipInfo]) -> tuple[set[str], set[str]]:
+    """Стили абзацев: (списки, заголовки) с учётом наследования basedOn.
+
+    Список — w:numPr с numId ≠ 0 (numId 0 в производном стиле отменяет нумерацию базового). Заголовок — w:outlineLvl
+    или имя heading N / Title: пункт с нумерацией заголовка («1. Требования») — заголовок, а не пункт списка.
+    """
     info = names.get("word/styles.xml")
-    if info is None:
-        return set()
-    if info.file_size > 4 << 20:
-        return set()
+    if info is None or info.file_size > 4 << 20:
+        return set(), set()
     based: dict[str, str] = {}
-    numbered: set[str] = set()
-    cur: list[str] = []
+    num: dict[str, bool] = {}       # объявлено в самом стиле: True — нумерация есть, False — отменена
+    head: set[str] = set()
+    cur: list[str] = [""]
+    in_num = [False]
 
     def start(name: str, attrs: dict) -> None:
         ns, _, tag = name.rpartition(" ")
         if ns not in NS_MAIN:
             return
-        val = next((v for k, v in attrs.items() if k.rpartition(" ")[2] in ("styleId", "val")), None)
         if tag == "style":
-            cur[:] = [next((v for k, v in attrs.items() if k.rpartition(" ")[2] == "styleId"), "")]
-        elif tag == "basedOn" and cur and val:
-            based[cur[0]] = val
-        elif tag == "numPr" and cur and cur[0]:
-            numbered.add(cur[0])
+            cur[0] = _val(attrs, "styleId") or ""
+        elif not cur[0]:
+            return
+        elif tag == "basedOn" and _val(attrs):
+            based[cur[0]] = _val(attrs)
+        elif tag == "name" and (_val(attrs) or "").lower().startswith(("heading", "title", "заголовок")):
+            head.add(cur[0])
+        elif tag == "outlineLvl" and (_val(attrs) or "9") != "9":
+            head.add(cur[0])
+        elif tag == "numPr":
+            in_num[0] = True
+            num.setdefault(cur[0], True)
+        elif tag == "numId" and in_num[0]:
+            num[cur[0]] = _val(attrs) != "0"
+
+    def end(name: str) -> None:
+        tag = name.rpartition(" ")[2]
+        if tag == "numPr":
+            in_num[0] = False
+        elif tag == "style":
+            cur[0] = ""
 
     p = _parser()
-    p.StartElementHandler = start
+    p.StartElementHandler, p.EndElementHandler = start, end
     try:
         p.Parse(_read_small(zf, info, 4 << 20), True)
     except (expat.ExpatError, DocxError):
-        return set()  # стили необязательны: без них списки просто без маркеров
-    out = set(numbered)
-    for sid in based:
-        seen, x = set(), sid
-        while x in based and x not in seen and x not in out:
-            seen.add(x)
-            x = based[x]
-        if x in out:
-            out.add(sid)
-    return out
+        return set(), set()  # стили необязательны: без них списки просто без маркеров
+
+    def resolve(sid: str, own) -> bool:
+        seen = set()
+        while sid and sid not in seen:
+            seen.add(sid)
+            v = own(sid)
+            if v is not None:
+                return v
+            sid = based.get(sid, "")
+        return False
+
+    all_ids = set(based) | set(num) | head
+    heads = {x for x in all_ids if resolve(x, lambda i: True if i in head else None)}
+    lists = {x for x in all_ids if x not in heads and resolve(x, num.get)}
+    return lists, heads
 
 
 class _Text:
     """Собирает текст из событий expat: абзацы → строки, ячейки таблицы → «a | b | c», пункты списка → «- …»."""
 
-    def __init__(self, list_styles: set[str] | None = None) -> None:
-        self.list_styles = list_styles or set()
+    def __init__(self, list_styles: set[str] | None = None, heading_styles: set[str] | None = None) -> None:
+        self.list_styles, self.heading_styles = list_styles or set(), heading_styles or set()
         self.out: list[str] = []
         self.size = 0
         self.paras: list[list[str]] = []      # стек абзацев (надпись внутри абзаца — вложенный абзац)
-        self.bullet: list[bool] = []
+        self.pinfo: list[dict] = []           # у каждого абзаца: стиль, своя нумерация (None — не задана), заголовок
         self.cells: list[list[str]] = []      # стек ячеек: строки абзацев текущей ячейки
         self.rows: list[list[str]] = []       # стек строк таблицы: тексты ячеек
         self.in_t = 0
@@ -195,16 +224,18 @@ class _Text:
             return
         if tag == "p":
             self.paras.append([])
-            self.bullet.append(False)
-        elif tag == "numPr" and self.bullet:
-            self.bullet[-1] = True
-        elif tag == "pStyle" and self.bullet:
-            val = next((v for k, v in attrs.items() if k.rpartition(" ")[2] == "val"), None)
-            if val in self.list_styles:
-                self.bullet[-1] = True
-        elif tag == "numId" and self.bullet:
-            if next((v for k, v in attrs.items() if k.rpartition(" ")[2] == "val"), None) == "0":
-                self.bullet[-1] = False  # numId 0 — нумерация стиля отключена у абзаца
+            self.pinfo.append({"style": None, "num": None, "outline": False})
+        elif tag in ("pStyle", "numPr", "numId", "outlineLvl"):
+            if not self.pinfo:
+                return
+            if tag == "pStyle":
+                self.pinfo[-1]["style"] = _val(attrs)
+            elif tag == "numPr":
+                self.pinfo[-1]["num"] = True
+            elif tag == "numId":
+                self.pinfo[-1]["num"] = _val(attrs) != "0"  # numId 0 — нумерация стиля отключена у абзаца
+            elif (_val(attrs) or "9") != "9":
+                self.pinfo[-1]["outline"] = True
         elif tag == "t":
             self.in_t += 1
         elif tag == "tabs":
@@ -234,7 +265,10 @@ class _Text:
             self.in_tabs = max(0, self.in_tabs - 1)
         elif tag == "p" and self.paras:
             text = "".join(self.paras.pop()).strip()
-            bullet = self.bullet.pop()
+            info = self.pinfo.pop()
+            heading = info["outline"] or info["style"] in self.heading_styles
+            listed = info["num"] if info["num"] is not None else info["style"] in self.list_styles
+            bullet = listed and not heading
             if text:
                 self._emit(f"- {text}" if bullet else text)
         elif tag == "tc" and self.cells:
@@ -262,7 +296,7 @@ def docx_to_text(data: bytes) -> str:
     with zf:
         try:
             main, names = _check_archive(zf)
-            sink = _Text(_list_styles(zf, names))
+            sink = _Text(*_styles(zf, names))
             p = _parser()
             p.StartElementHandler, p.EndElementHandler, p.CharacterDataHandler = sink.start, sink.end, sink.chars
             read, stopped = 0, False
