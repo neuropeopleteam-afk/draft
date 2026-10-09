@@ -21,7 +21,7 @@ export function SharePage() {
           <span className="text-xs text-brand-ink/65">подборка для руководителя · только чтение</span>
         </div>
       </header>
-      <main className="mx-auto max-w-5xl space-y-5 px-4 py-6 sm:px-6">
+      <main id="main" className="mx-auto max-w-5xl space-y-5 px-4 py-6 sm:px-6">
         {d.loading && !d.data ? <Loading /> : !d.data ? (
           <Empty title="Ссылка недоступна" text={d.error ?? "Попросите рекрутера прислать новую ссылку."} />
         ) : (

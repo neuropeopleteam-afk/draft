@@ -1,0 +1,870 @@
+{
+  "base": "http://127.0.0.1:5138",
+  "at": "2026-10-09T12:51:29.500Z",
+  "results": [
+    {
+      "screen": "landing",
+      "viewport": "1440",
+      "url": "/",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1826
+    },
+    {
+      "screen": "login",
+      "viewport": "1440",
+      "url": "/login",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1514
+    },
+    {
+      "screen": "register",
+      "viewport": "1440",
+      "url": "/register",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1512
+    },
+    {
+      "screen": "validation",
+      "viewport": "1440",
+      "url": "/validation",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 3771
+    },
+    {
+      "screen": "cand_overview",
+      "viewport": "1440",
+      "url": "/candidate",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1636
+    },
+    {
+      "screen": "cand_category",
+      "viewport": "1440",
+      "url": "/candidate/category",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1717
+    },
+    {
+      "screen": "cand_invitations",
+      "viewport": "1440",
+      "url": "/candidate/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1521
+    },
+    {
+      "screen": "cand_invitation_modal",
+      "viewport": "1440",
+      "url": "/candidate/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1586
+    },
+    {
+      "screen": "cand_profile",
+      "viewport": "1440",
+      "url": "/candidate/profile",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1513
+    },
+    {
+      "screen": "cand_feedback",
+      "viewport": "1440",
+      "url": "/candidate/feedback",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1675
+    },
+    {
+      "screen": "landing",
+      "viewport": "390",
+      "url": "/",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1699
+    },
+    {
+      "screen": "login",
+      "viewport": "390",
+      "url": "/login",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1609
+    },
+    {
+      "screen": "register",
+      "viewport": "390",
+      "url": "/register",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1423
+    },
+    {
+      "screen": "validation",
+      "viewport": "390",
+      "url": "/validation",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 3808
+    },
+    {
+      "screen": "cand_overview",
+      "viewport": "390",
+      "url": "/candidate",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1617
+    },
+    {
+      "screen": "cand_category",
+      "viewport": "390",
+      "url": "/candidate/category",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1682
+    },
+    {
+      "screen": "cand_invitations",
+      "viewport": "390",
+      "url": "/candidate/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1500
+    },
+    {
+      "screen": "cand_invitation_modal",
+      "viewport": "390",
+      "url": "/candidate/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1569
+    },
+    {
+      "screen": "cand_profile",
+      "viewport": "390",
+      "url": "/candidate/profile",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1545
+    },
+    {
+      "screen": "cand_feedback",
+      "viewport": "390",
+      "url": "/candidate/feedback",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1632
+    },
+    {
+      "screen": "test_start",
+      "viewport": "1440",
+      "url": "/candidate/express",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1909
+    },
+    {
+      "screen": "test_item",
+      "viewport": "1440",
+      "url": "/candidate/assessment/test/3bd30614-0047-4159-8b09-d16083d9f896",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 3761
+    },
+    {
+      "screen": "test_result",
+      "viewport": "1440",
+      "url": "/candidate/assessment/test/3bd30614-0047-4159-8b09-d16083d9f896",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 4879
+    },
+    {
+      "screen": "emp_overview",
+      "viewport": "1440",
+      "url": "/employer",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1832
+    },
+    {
+      "screen": "emp_needs",
+      "viewport": "1440",
+      "url": "/employer/needs",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1885
+    },
+    {
+      "screen": "selection",
+      "viewport": "1440",
+      "url": "/employer/needs/9a439db5-f067-4196-aa67-1484f43375ea",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 5804
+    },
+    {
+      "screen": "candidate_card",
+      "viewport": "1440",
+      "url": "/employer/candidates/C-JT6HZY?need=9a439db5-f067-4196-aa67-1484f43375ea",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1861
+    },
+    {
+      "screen": "invite_modal",
+      "viewport": "1440",
+      "url": "/employer/candidates/C-JT6HZY?need=9a439db5-f067-4196-aa67-1484f43375ea",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1847
+    },
+    {
+      "screen": "test_start",
+      "viewport": "390",
+      "url": "/candidate/express",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2241
+    },
+    {
+      "screen": "test_item",
+      "viewport": "390",
+      "url": "/candidate/assessment/test/1e5aa551-a3ac-42b8-a339-16506305aa27",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 5468
+    },
+    {
+      "screen": "test_result",
+      "viewport": "390",
+      "url": "/candidate/assessment/test/1e5aa551-a3ac-42b8-a339-16506305aa27",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 6500
+    },
+    {
+      "screen": "emp_overview",
+      "viewport": "390",
+      "url": "/employer",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1727
+    },
+    {
+      "screen": "emp_needs",
+      "viewport": "390",
+      "url": "/employer/needs",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1507
+    },
+    {
+      "screen": "selection",
+      "viewport": "390",
+      "url": "/employer/needs/ba46b756-4bd5-4561-b43b-18ab1f42dc19",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 4190
+    },
+    {
+      "screen": "candidate_card",
+      "viewport": "390",
+      "url": "/employer/candidates/C-JT6HZY?need=ba46b756-4bd5-4561-b43b-18ab1f42dc19",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1557
+    },
+    {
+      "screen": "invite_modal",
+      "viewport": "390",
+      "url": "/employer/candidates/C-JT6HZY?need=ba46b756-4bd5-4561-b43b-18ab1f42dc19",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1609
+    },
+    {
+      "screen": "emp_invitations",
+      "viewport": "1440",
+      "url": "/employer/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2018
+    },
+    {
+      "screen": "emp_probes",
+      "viewport": "1440",
+      "url": "/employer/probes",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1514
+    },
+    {
+      "screen": "emp_search",
+      "viewport": "1440",
+      "url": "/employer/search",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 4081
+    },
+    {
+      "screen": "emp_compare",
+      "viewport": "1440",
+      "url": "/employer/needs/4d0b2de7-a69a-4af7-80f1-e5434b860213/compare",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1758
+    },
+    {
+      "screen": "expert_home",
+      "viewport": "1440",
+      "url": "/expert",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1657
+    },
+    {
+      "screen": "expert_pairs",
+      "viewport": "1440",
+      "url": "/expert/pairs",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1544
+    },
+    {
+      "screen": "expert_answers",
+      "viewport": "1440",
+      "url": "/expert/answers",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1521
+    },
+    {
+      "screen": "expert_angoff",
+      "viewport": "1440",
+      "url": "/expert/angoff",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1514
+    },
+    {
+      "screen": "expert_review",
+      "viewport": "1440",
+      "url": "/expert/review",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1568
+    },
+    {
+      "screen": "emp_invitations",
+      "viewport": "390",
+      "url": "/employer/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1903
+    },
+    {
+      "screen": "emp_probes",
+      "viewport": "390",
+      "url": "/employer/probes",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1684
+    },
+    {
+      "screen": "emp_search",
+      "viewport": "390",
+      "url": "/employer/search",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 3752
+    },
+    {
+      "screen": "emp_compare",
+      "viewport": "390",
+      "url": "/employer/needs/dacecf28-a039-4593-8b8f-9af89354052b/compare",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1691
+    },
+    {
+      "screen": "expert_home",
+      "viewport": "390",
+      "url": "/expert",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1589
+    },
+    {
+      "screen": "expert_pairs",
+      "viewport": "390",
+      "url": "/expert/pairs",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1549
+    },
+    {
+      "screen": "expert_answers",
+      "viewport": "390",
+      "url": "/expert/answers",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1547
+    },
+    {
+      "screen": "expert_angoff",
+      "viewport": "390",
+      "url": "/expert/angoff",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1522
+    },
+    {
+      "screen": "expert_review",
+      "viewport": "390",
+      "url": "/expert/review",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1569
+    }
+  ]
+}
