@@ -201,3 +201,18 @@ def get_feedback(session_id: uuid.UUID | None = None, user: User = Depends(candi
     from app.modules.assessment.feedback import build
 
     return build(db, user.id, session_id)
+
+
+# --- И26: две попытки теста рядом (логика — attempts.py; работодателю — attempts.employer_router) ---
+@router.get("/attempts", summary="Две попытки теста рядом: θ ± погрешность, статус, время, повторы заданий, что изменилось",
+            description="По умолчанию — две последние завершённые попытки направления (без параметра — основного); "
+                        "a и b — конкретные попытки (только свои: чужая — 404). Повторы — по новым оценённым "
+                        "заданиям без контрольных. В демо-режиме жюри повтор доступен сразу (can_retake_now).",
+            responses={**AUTH, 404: err("Сессия не найдена"), 409: err("Попытка ещё не завершена"),
+                       422: err("different_directions / same_attempt / pair_required")})
+def get_attempts(direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+                 a: uuid.UUID | None = None, b: uuid.UUID | None = None,
+                 user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    from app.modules.assessment.attempts import for_candidate
+
+    return for_candidate(db, user.id, direction, a, b)
