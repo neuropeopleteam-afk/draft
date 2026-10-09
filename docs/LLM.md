@@ -22,6 +22,9 @@
 | `grade`, `grade_second` | Qwen3.5-9B Q4_K_M на CPU (вторая оценка — та же модель) | 50 с, бюджет 50 с | 0 из 116 атак, MAE к эталону 0,147 / 0,129; на CPU ≈ 27 с на ответ |
 | `parse_need`, `resume` | правила и словари (`LLM_MODEL_<FUNC>=off`) | — | на 50 вакансиях Qwen снижает F1 стека (0,87 против 0,91) и выдумывает требования к опыту; 29 с на CPU |
 
+Режим «только российская модель» (`LLM_CHAIN=yandex`, все функции — YandexGPT 5.1 в Yandex AI Studio) — раздел 11:
+как включить и замер против Sonnet и правил на одних входах.
+
 Без новых переменных поведение прежнее: один провайдер `LLM_*` (Yandex AI Studio), модель `LLM_MODEL`, оценка —
 `LLM_GRADING_MODEL`, второй оценки нет (та же модель — не независимая).
 
@@ -648,3 +651,106 @@ python tools/llm/llm_models_table.py             # блок «Какая мод�
   (`reports_0910/fastparse_shots/parse_dump2.py`); входы `make bench` и `ranking_guard.py` не изменились.
 - Версия разбора `PARSER_VERSION` — `fp3` (кэш прежних версий не отдаётся). Тесты — `test_parse_fresh_look.py` (Н1, Н2,
   Н4), `test_parse_merge_0910.py` (опыт 0, «офис в Москве», «мск»).
+
+## 11. Режим «только российская модель»: замер
+
+**09.10.2026, Я2.** Основная модель стенда — Claude Sonnet 5.5 через OpenRouter (решение владельца, остаётся). Для
+заказчика, которому нужно «данные не уходят за рубеж», весь путь работает в режиме `LLM_CHAIN=yandex`: все четыре
+LLM-функции идут только в Yandex AI Studio (YandexGPT 5.1 Pro, РФ), последний рубеж — те же правила. Режим без модели
+вовсе (`LLM_DISABLED=true`) тоже работает: разбор — словарём, оценка открытых ответов — экспертом.
+
+### Как включить
+
+В `.env` сервера (ключ Yandex AI Studio — в `llm.env`: `LLM_PROVIDER=yandex_ai_studio`, `LLM_BASE_URL`, `LLM_API_KEY`,
+`LLM_FOLDER_ID`, `LLM_MODEL`), затем пересоздать api (`docker compose up -d api`):
+
+```
+LLM_CHAIN=yandex
+LLM_MODEL_PARSE_NEED=yandex=yandexgpt-5.1/latest
+LLM_MODEL_RESUME=yandex=yandexgpt-5.1/latest
+LLM_MODEL_GRADE=yandex=yandexgpt-5.1/latest
+LLM_MODEL_GRADE_SECOND=yandex=yandexgpt-5.1/latest
+# необязательно: JSON-схема ответа-дельты разбора и у Yandex (по умолчанию выключено, см. ниже)
+# LLM_YANDEX_JSON_SCHEMA=true
+```
+
+Проверка: `/api/meta` → `llm.chain` = `[{"provider": "yandex", "configured": true, …}]`, у всех функций
+`functions.*.models[0].label` = «YandexGPT 5.1»; чип разбора — «словарь + YandexGPT 5.1», оценка — «YandexGPT 5.1».
+Ключ OpenRouter при этом может оставаться в окружении: провайдера нет в цепочке — запросов к нему нет (тест
+`test_ru_llm.py::test_ru_only_routes_every_function_to_yandex`). Вторая оценка спорных ответов — та же YandexGPT
+независимым вызовом (критерии и эталоны в обратном порядке, первая оценка не передаётся) — независимость слабее, чем у
+пары Sonnet — Fable.
+
+### Какие функции вызывают модель
+
+| Функция | Где в коде | Набор замера | Путь без LLM |
+|---|---|---|---|
+| `parse_need` — разбор потребности: дельта к словарю в фоне (путь продукта, раздел 10) | `matching/need_parser.py::_call_llm`, `fast_parse.py` | 50 вакансий И8 (silver) + 15 демо и «жюрийных» текстов | словарь и правила |
+| `parse_need` — полный запрос (`mode: full`) | то же | 50 вакансий И8 | словарь и правила |
+| `resume` — разбор резюме (после вырезания ПДн) | `resume/extract.py::extract` | 20 синтетических резюме `docs/llm/resume_synth.json` (сленг, транслит; разметка автора набора — модель) | словари |
+| `grade` — оценка развёрнутого ответа (тест, кубок, пакет экспертов) | `assessment/grader.py::grade_open` | набор оценщика: 29 заданий, 406 ответов, 116 атак (раздел 6) | «на проверке» → эксперт |
+| `grade_second` — вторая оценка спорных | `grader.py`, `second_opinion.py` | спорные ответы того же набора | эксперт |
+| объяснения подборки, ранжирование, категория, «почему», зонды | `matching/ranking.py`, `assignments/why.py` и др. | не нужен | всегда правила, модель не вызывается |
+
+### Условия
+
+- Одни и те же входы для всех; одна попытка на вход без перехода по цепочке и без автомата-выключателя; путь продукта
+  целиком (вырезание ПДн и признаков ст. 64, проверка цитат, слияние с правилами); 4 запроса параллельно
+  (`tools/llm/ru_llm_bench.py`). Вызовов на модель — около 610 (50 + 50 + 15 + 20 + 406 + 64 вторых).
+- Sonnet — из песочницы в OpenRouter напрямую (на стенде — через ретранслятор, задержка там больше); вторая оценка в
+  строке Sonnet — Claude Fable 5.1, как в продукте. YandexGPT — Yandex AI Studio, OpenAI-совместимый API, вторая
+  оценка — та же модель (режим `LLM_CHAIN=yandex`).
+- «Ответила» — продукт принял ответ; «формат» — ответ пришёл, но продукт его не принял (не JSON, не объект, нет баллов
+  по всем критериям); «сеть» — тайм-аут, HTTP ≠ 200. Задержка p50 / p95 — по принятым ответам, только время модели.
+- Цена — на 1000 вызовов функции: OpenRouter — фактическая (`usage.cost`), рубли — по курсу ЦБ РФ на 09.10.2026
+  (85,42 ₽ за $); YandexGPT 5.1 Pro — токены × 0,8 ₽ за 1000 входящих и исходящих (синхронный режим, с НДС, тариф
+  [AI Studio](https://aistudio.yandex.ru/ru/docs/ai-studio/pricing) на 09.10.2026).
+- Разметки не экспертные: вакансии — silver И8 (модель + ручная сверка), резюме — автор набора (модель семейства
+  Claude), оценщик — эталон gpt-oss-120b (модель). Согласие Sonnet с разметкой, сделанной моделью того же семейства,
+  может быть завышено.
+
+### Результат
+
+<!-- ru_llm:begin (tools/llm/ru_llm_summary.py) -->
+<!-- ru_llm:end -->
+
+### Что видно
+
+- **Разбор потребности (путь продукта).** Дельта Sonnet к словарю по F1 стека на silver — на уровне правил
+  (полнота выше, точность ниже: модель добавляет теги, часть которых разметка не содержит, см. раздел 8). На 15 текстах
+  «как у жюри» Sonnet добавила к словарю требования в 2 (D2 — тестирование фронтенда, J19 — REST API по «DRF»), в
+  остальных 13 итог совпал со словарём; у каждого добавленного требования — цитата из текста. Полный запрос (`mode: full`) у Sonnet дешевле дельты (у дельты в запросе JSON-схема с
+  перечнем тегов), но точность ниже — поэтому в продукте дельта.
+- **Резюме.** На синтетике модель добирает сленг и транслит («торч», «плейрайт», «склерн»), которых нет в словаре:
+  полнота стека выше, чем у словарей; стаж модель дописывает там, где словарь не нашёл фразы.
+- **Оценщик.** Sonnet: атаки не проходят, порядок «сильный > средний > слабый» на всех заданиях; вторая оценка — у
+  порога. Сравнение с YandexGPT — в таблице, когда будет прогон.
+- **YandexGPT.** См. строку таблицы и абзац под ней: пока прогона нет, числа YandexGPT в этом разделе — только замер
+  08.10 (полный разбор, раздел 6).
+
+### Формат ответов YandexGPT (п. 4)
+
+- Ответ «фраза + блок ```json» и несколько объектов подряд разбираются (`_extract_json`, тест
+  `test_ru_only_need_delta_fenced_reply`); отказ модели («не могу ничего сказать об этом») — невалидный JSON → разбор
+  словарём, оценка «на проверке» (тест `test_ru_only_yandex_down_falls_to_rules`).
+- Запрос-дельта разбора уходит в OpenRouter с JSON-схемой (structured output). Yandex AI Studio тоже принимает
+  `response_format: json_schema` ([документация](https://aistudio.yandex.ru/en/docs/ai-studio/operations/generation/completions-structured)),
+  поэтому добавлен флаг `LLM_YANDEX_JSON_SCHEMA` (по умолчанию выключен): схема передаётся и в Yandex, HTTP 400 —
+  повтор без схемы, как у OpenRouter (тест `test_ru_only_need_delta_json_schema_flag`). Включать по умолчанию — только
+  по замеру (вариант `needs_delta_schema` раннера). Поведение Sonnet не меняется.
+- Подпись модели в интерфейсе — «YandexGPT 5.1» (было `yandexgpt-5.1`).
+
+### Как воспроизвести
+
+```bash
+# ключи — только в окружении процесса (значения не печатать)
+set -a; . /home/user/workspace/.secrets/openrouter.env; set +a
+cd backend
+python ../tools/llm/ru_llm_bench.py run --model openrouter=anthropic/claude-sonnet-5.5 --dir /tmp/rullm \
+    --second-model openrouter=anthropic/claude-fable-5.1
+set -a; . /home/user/workspace/.secrets/yandex.env; set +a      # LLM_PROVIDER, LLM_BASE_URL, LLM_API_KEY, LLM_FOLDER_ID, LLM_MODEL
+python ../tools/llm/ru_llm_bench.py run --model yandex=yandexgpt-5.1/latest --dir /tmp/rullm \
+    --funcs needs_delta,needs_delta_schema,needs_full,needs_jury,resume,grade
+python ../tools/llm/ru_llm_bench.py summary --dir /tmp/rullm --out ../docs/realdata/ru_llm.json
+# → docs/realdata/ru_llm.json, backend/app/modules/validation/data/ru_llm.json (/validation#ru-llm), таблица этого раздела
+```
