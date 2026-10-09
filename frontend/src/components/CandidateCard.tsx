@@ -19,6 +19,15 @@ export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: numbe
   );
 }
 
+/** Ф6 (Н5): навык проверен тестом или заданием, но порог не набран — не значок T1, а нейтральная пометка. */
+export function ReasonLevel({ r }: { r: { level?: string | null; status?: string; weight?: number | null } }) {
+  if (r.level === "T1" && r.status === "mismatch" && r.weight != null) {
+    return <span title="Проверено тестом или заданием работодателя, порог подтверждения не набран — это не подтверждение навыка"
+      className="inline-flex shrink-0 items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide text-gray-600">не подтв.</span>;
+  }
+  return <Level level={r.level} />;
+}
+
 export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge, mutual }: {
   c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9)
 }) {
@@ -106,7 +115,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
           <ul className="mt-2 space-y-1.5">
             {reasons.map((r, i) => (
               <li key={i} className="flex items-start gap-2 text-sm">
-                <Level level={r.level} />
+                <ReasonLevel r={r} />
                 <span><b className="font-semibold">{r.requirement}.</b> <span className="text-brand-ink/70">{ruText(r.text)}</span></span>
               </li>
             ))}
