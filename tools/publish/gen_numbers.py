@@ -66,6 +66,14 @@ def static_numbers() -> dict:
     bench = json.loads((ROOT / "docs/validation/matching_bench.json").read_text(encoding="utf-8"))
     plat = bench["metrics"]["platform"]
     sig = bench["signature"]
+    # отчёт /validation (make validate): на каком банке посчитан
+    rep = json.loads((ROOT / "backend/app/modules/validation/data/report.json").read_text(encoding="utf-8"))
+    exp = json.loads((ROOT / "backend/app/modules/assessment/exposure_k.json").read_text(encoding="utf-8"))
+    validation = {
+        "report_generated_at": rep.get("generated_at", "?")[:10], "report_bank_families": rep.get("bank", {}).get("n_families"),
+        "exposure_generated_at": exp.get("generated_at", "?")[:10], "exposure_bank_families": exp.get("bank", {}).get("n_families"),
+        "report_matches_bank": rep.get("bank", {}).get("content_hash") == bank["content_hash"],
+    }
     # e2e в коде
     specs = sorted((ROOT / "e2e/tests").glob("*.spec.ts"))
     n_tests = sum(len(re.findall(r"^\s*test\(", p.read_text(encoding="utf-8"), re.M)) for p in specs)
@@ -86,6 +94,7 @@ def static_numbers() -> dict:
             "p5": plat["p@5"], "ndcg10": plat["ndcg@10"], "mrr": plat["mrr"],
         },
         "e2e_in_code": {"spec_files": len(specs), "scenarios": n_tests},
+        "validation_report": validation,
     }
 
 
@@ -116,6 +125,19 @@ def git_short() -> str:
         return "?"
 
 
+def validation_row(v: dict, families: int) -> str:
+    def dm(x: str) -> str:
+        return ".".join(reversed(x.split("-")[1:])) if x != "?" else "?"
+    d = dm(v["report_generated_at"])
+    if v["report_matches_bank"]:
+        tail = "соответствует текущему банку"
+    else:
+        tail = (f"**на банке из {v['report_bank_families']} семейств, а в банке сейчас {families}: пересчёт `make validate` (≈ 10 мин на 8 ядрах) "
+                f"даст другие числа симуляции, повтора и утечки**")
+    return (f"| Отчёт страницы `/validation` (симуляция теста, повтор, утечка) | посчитан {d}; {tail}; константы показа `exposure_k.json` — "
+            f"{dm(v['exposure_generated_at'])} на {v['exposure_bank_families']} семействах | `make validate`, `backend/app/modules/validation/data/report.json` |")
+
+
 def render_numbers(n: dict) -> str:
     b, mg, ml, mt, e2 = n["bank"], n["migrations"], n["memory_limits_mib"], n["matching"], n["e2e_in_code"]
     t = n.get("tests", {})
@@ -138,6 +160,7 @@ def render_numbers(n: dict) -> str:
         f"nDCG@10 **{fnum(mt['ndcg10']['mean'])}** [{fnum(mt['ndcg10']['lo'])}; {fnum(mt['ndcg10']['hi'])}], MRR {fnum(mt['mrr']['mean'])}; "
         f"синтетический мир со скрытой истиной, {mt['world'].split(': ')[-1]}, seed {mt['seed']}, алгоритм `{mt['algorithm']}` | "
         f"`make bench`, `docs/validation/MATCHING_BENCH.md`, `docs/validation/matching_bench.json` |",
+        validation_row(n["validation_report"], b["families"]),
         f"| Сквозные сценарии (Playwright) | {e2['scenarios']} сценариев в {e2['spec_files']} файлах (число в коде, не результат прогона) | `e2e/tests`, `make e2e` |",
         f"| Лимиты памяти контейнеров | {lim} | `docker-compose.yml`, разбор — `docs/LOAD_TEST.md` |",
     ]
@@ -185,7 +208,7 @@ def main() -> int:
     new_json = json.dumps(n, ensure_ascii=False, indent=1) + "\n"
     if a.check:
         # сравниваем статическую часть (без тестов: они приходят из журнала) и тексты блоков
-        for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code"):
+        for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code", "validation_report"):
             if old.get(k) != n[k]:
                 bad.append(f"docs/NUMBERS.json: раздел «{k}» устарел")
     else:

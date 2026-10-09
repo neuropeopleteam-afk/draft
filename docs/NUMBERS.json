@@ -59,6 +59,13 @@
   "spec_files": 16,
   "scenarios": 35
  },
+ "validation_report": {
+  "report_generated_at": "2026-10-06",
+  "report_bank_families": 128,
+  "exposure_generated_at": "2026-10-06",
+  "exposure_bank_families": 128,
+  "report_matches_bank": false
+ },
  "tests": {
   "failed": 0,
   "passed": 1222,
