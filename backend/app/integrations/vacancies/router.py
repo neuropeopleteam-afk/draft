@@ -18,6 +18,7 @@ from app.core.enums import UserRole
 from app.core.errors import api_error, err
 from app.integrations.egrul import trust
 from app.integrations.push.service import notify_user
+from app.integrations.vacancies import ats_import
 from app.integrations.vacancies.models import Vacancy, VacancyApplication
 from app.modules.assignments import service as assignments  # задание к вакансии (И7)
 from app.modules.auth.models import User
@@ -88,6 +89,11 @@ def _vac_out(db: Session, v: Vacancy, *, company: Company | None = None, with_tr
            "salary_from": v.salary_from, "salary_to": v.salary_to, "work_format": v.work_format, "city": v.city,
            "status": v.status, "published_at": v.published_at.isoformat() if v.published_at else None,
            "updated_at": v.updated_at.isoformat(), "is_demo": v.is_demo, **basis_out(v.salary_basis),
+           # И23: импорт из ATS — бейдж «из «Потока»», ссылка, правилась ли после импорта
+           "source": v.source, "source_title": ats_import.SOURCE_TITLE if v.source == ats_import.SOURCE else None,
+           "external_id": v.external_id, "external_url": v.external_url,
+           "imported_at": v.imported_at.isoformat() if v.imported_at else None,
+           "edited_after_import": ats_import.edited_after_import(v) if v.source else None,
            "company": {"id": str(c.id), "name": c.name, "city": c.city, "industry": c.industry}}
     cat = db.get(Category, v.category_id) if v.category_id else None
     out["market_range"] = {"from": cat.market_salary_from, "to": cat.market_salary_to,
@@ -153,6 +159,40 @@ def my_vacancies(user: User = Depends(employer), db: Session = Depends(get_db)) 
         if st == "sent":
             cnt[vid]["new"] += n
     return [_vac_out(db, v, company=c, counts=cnt.get(v.id, {"total": 0, "new": 0})) for v in rows]
+
+
+# ------------------------------------------------------------------ импорт из ATS (И23)
+class ImportIn(BaseModel):
+    job_ids: list[int] | None = Field(None, max_length=200, description="id вакансий в «Потоке»; пусто — все")
+    publish: bool = Field(True, description="Публиковать сразу, если в «Потоке» указана вилка в рублях и открыта вакансия")
+
+
+def _import_error(e: ats_import.AtsError):
+    if e.status == 422:
+        return api_error(422, "potok_not_connected", "«Поток» не подключён: укажите токен компании в разделе "
+                         "«Интеграция с ATS» (или включите демо-режим «Потока») и повторите импорт")
+    return api_error(502, "potok_error", str(e))
+
+
+@employer_router.get("/vacancies/import/potok/preview", summary="Импорт из «Потока»: вакансии ATS и что с ними будет",
+                     responses={**E_AUTH, 422: err("«Поток» не подключён (нет токена)"), 502: err("«Поток» ответил ошибкой")})
+def import_preview(user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    c = my_company(db, user)
+    try:
+        return ats_import.preview(db, c.id)
+    except ats_import.AtsError as e:
+        raise _import_error(e) from None
+
+
+@employer_router.post("/vacancies/import/potok", summary="Импортировать вакансии из «Потока» (только чтение /jobs)",
+                      responses={**E_AUTH, 422: err("«Поток» не подключён (нет токена)"), 502: err("«Поток» ответил ошибкой")})
+def import_from_potok(data: ImportIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+    c = my_company(db, user)
+    try:
+        return ats_import.run_import(db, c, user, data.job_ids, publish=data.publish)
+    except ats_import.AtsError as e:
+        db.rollback()
+        raise _import_error(e) from None
 
 
 @employer_router.post("/vacancies", status_code=201, summary="Создать вакансию (вилка «от–до» обязательна)",

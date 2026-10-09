@@ -52,8 +52,9 @@ def build_hint(*, survey_years: float | None, resume: dict | None, achievements:
     if g_s:
         votes[g_s] += 2.0
         signals.append({"source": "survey", "title": "Опрос", "grade": g_s,
-                        "text": f"Коммерческий стаж {_years_ru(float(survey_years))}: по шкале платформы это {GRADE_RU[g_s]} "
-                                "(до 1,5 лет — Junior, 1,5–4,5 — Middle, от 4,5 — Senior)."})
+                        "text": f"Коммерческий стаж {_years_ru(float(survey_years))}: обычно это {GRADE_RU[g_s]} "
+                                "(до 1,5 лет — Junior, 1,5–4,5 — Middle, от 4,5 — Senior). Стаж — только ориентир: "
+                                "грейд подтверждает тест навыков."})
     else:
         signals.append({"source": "survey", "title": "Опрос", "grade": None, "text": "Стаж в опросе не указан."})
 
@@ -62,7 +63,7 @@ def build_hint(*, survey_years: float | None, resume: dict | None, achievements:
         g_r = grade_by_years(float(ry)) if isinstance(ry, (int, float)) else None
         if g_r:
             votes[g_r] += 2.0
-            txt = f"Стаж по резюме {_years_ru(float(ry))}: {GRADE_RU[g_r]}."
+            txt = f"Стаж по резюме {_years_ru(float(ry))}: обычно {GRADE_RU[g_r]}."
             if g_s and g_r != g_s:
                 txt += f" Расходится с опросом ({GRADE_RU[g_s]}) — уточните стаж."
             signals.append({"source": "resume", "title": "Резюме: стаж", "grade": g_r, "text": txt})
@@ -113,7 +114,7 @@ def build_hint(*, survey_years: float | None, resume: dict | None, achievements:
     if total == 0:
         return {"suggested": None, "confidence": "none", "signals": signals,
                 "summary": "Данных для подсказки пока нет: укажите стаж в опросе или загрузите резюме. Выбор грейда — за вами.",
-                "note": "Подсказка необязательна. Категорию присваивает только тест."}
+                "note": "Подсказка необязательна. Грейд — уровень навыков: его подтверждает тест, стаж — лишь ориентир."}
     suggested = max(votes, key=lambda g: (votes[g], GRADE_LEVEL[g]))
     share = votes[suggested] / total
     graded = [s for s in signals if s["grade"]]
@@ -126,7 +127,7 @@ def build_hint(*, survey_years: float | None, resume: dict | None, achievements:
             summary += f" Есть доводы и за {', '.join(GRADE_RU[g] for g in others)}."
     summary += " Выбор за вами: тест на грейд ниже можно пройти сразу, на тот же — через 30 дней."
     return {"suggested": suggested, "confidence": confidence, "signals": signals, "summary": summary,
-            "votes": votes, "note": "Подсказка необязательна. Категорию присваивает только тест."}
+            "votes": votes, "note": "Подсказка необязательна. Грейд — уровень навыков: его подтверждает тест, стаж — лишь ориентир."}
 
 
 def grade_hint(db: Session, user_id: uuid.UUID) -> dict:
