@@ -34,6 +34,19 @@ export function ConsentBody({ t, compact = false }: { t: ConsentText; compact?: 
   );
 }
 
+/** Ф6 (В3): краткие условия — по одному главному пункту на вопрос; полный текст — ConsentBody. */
+function ConsentBrief({ t }: { t: ConsentText }) {
+  const line = (title: string, text?: string) => text ? <p><b className="text-brand-night">{title}</b> — {text}</p> : null;
+  return (
+    <div className="space-y-2 text-sm leading-relaxed text-brand-ink/80">
+      {line("Что делает камера", (t.what.length > 1 ? t.what.slice(1) : t.what).join(" "))}
+      {line("Что сохраняется", t.stored[0])}
+      {line("Кто это видит", t.who_sees[1] ?? t.who_sees[0])}
+      <p className="text-xs text-brand-ink/65">Оператор: {t.operator}. Редакция согласия от {verDate(t.version)}.</p>
+    </div>
+  );
+}
+
 function Block({ title, items }: { title: string; items: string[] }) {
   return (
     <div>
@@ -84,6 +97,7 @@ export function CameraConsent({ onDone, onBack, busy, error }: {
   onDone: (mode: CamMode, reason?: string | null) => void; onBack: () => void; busy: boolean; error: string | null;
 }) {
   const [c, setC] = useState<ConsentState | null>(null);
+  const [fullText, setFullText] = useState(false);  // Ф6 (В3)
   const [loadErr, setLoadErr] = useState<string | null>(null);
   const [starting, setStarting] = useState(false);
   const cam = useCamera();
@@ -114,9 +128,12 @@ export function CameraConsent({ onDone, onBack, busy, error }: {
         По желанию: камера подтверждает работодателю, что тест вы проходили сами. Без камеры тест доступен полностью, оценка и грейд
         от неё не зависят — работодатель увидит нейтральную пометку «тест без камеры». Выбор делается перед каждым тестом заново.
       </p>
+      {/* Ф6 (В3): кратко — главное по трём вопросам; полный текст согласия раскрывается кнопкой (выбор и согласие не меняются) */}
       <div className="card mt-5">
         <p className="font-bold text-brand-night">{c.text.title}</p>
-        <div className="mt-3"><ConsentBody t={c.text} /></div>
+        <div className="mt-3">{fullText ? <ConsentBody t={c.text} /> : <ConsentBrief t={c.text} />}</div>
+        <button type="button" className="mt-3 text-sm font-semibold text-brand-plum underline-offset-2 hover:underline" aria-expanded={fullText}
+          onClick={() => setFullText((v) => !v)}>{fullText ? "Свернуть до краткого" : "Полный текст согласия: хранение, срок, отзыв"}</button>
       </div>
       {cam.status === "error" && cam.error && <div className="mt-4"><Alert kind="info">{cam.error}</Alert></div>}
       {error && <div className="mt-4"><Alert>{error}</Alert></div>}
