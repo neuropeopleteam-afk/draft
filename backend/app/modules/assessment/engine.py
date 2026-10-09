@@ -16,7 +16,7 @@ from dataclasses import asdict, dataclass, field
 import math
 from typing import Any, Protocol
 
-from app.core.fmt import theta_se
+from app.core.fmt import theta_round, theta_se
 from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER  # единый набор грейдов платформы
 
 GRADES = GRADE_ORDER  # ("intern", "junior", "middle", "senior") — снизу вверх
@@ -302,6 +302,7 @@ class StubEngine:
             d["score"] = round(d["correct"] / d["total"], 2) if d["total"] else 0.0
         theta, se = eap_theta(responses)
         dec = grade_decision(theta, se, state["claimed_grade"])
+        theta, se = theta_round(theta, se)  # одно округление θ и погрешности для всех экранов (fmt.theta_round)
         correct = sum(1 for _, ok in responses if ok)
         return EngineResult(
             engine=self.name, theta=theta, se=se, claimed_grade=state["claimed_grade"], answered=len(responses),
