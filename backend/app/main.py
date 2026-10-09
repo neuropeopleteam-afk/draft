@@ -42,6 +42,7 @@ from app.modules.jury.router import router as jury_router
 from app.modules.jury.scope import JuryScopeMiddleware
 from app.modules.matching.router import router as employer_router
 from app.modules.proctor.router import router as proctor_router
+from app.modules.mydata.router import router as mydata_router
 from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
@@ -115,7 +116,7 @@ def create_app() -> FastAPI:
     for r in (auth_router, twofa_router, twofa_admin_router, profiles_router, candidate_router, legal_router, assessment_router,
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
               expert_router, expert_panel_router, jury_router, validation_router, proctor_router,
-              assignments_employer_router, assignments_candidate_router, passport_router,
+              assignments_employer_router, assignments_candidate_router, passport_router, mydata_router,
               contact.router, contact.candidate_router, contact.employer_router):  # переписка, встречное (И4)
         app.include_router(r)
     include_integration_routers(app)
