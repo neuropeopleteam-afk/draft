@@ -104,7 +104,7 @@ def test_assess_pool_texts_and_key(monkeypatch):
     r = C.reason(on[x.profile.user_id])
     assert r["requirement"] == "Основной язык роли: Go" and r["status"] == "mismatch" and r["core"]
     monkeypatch.delenv(C.FLAG, raising=False)
-    assert not C.enabled()  # по умолчанию выключен до замера
+    assert C.enabled()  # по умолчанию включён после замера (п. 7 карточки Я1)
 
 
 def test_no_data_in_pool_feature_inactive():
@@ -198,6 +198,9 @@ def test_selection_flag_off_keeps_order_flag_on_moves_absent_core_down(client, m
     assert "ниже тех, у кого ядро роли заявлено или подтверждено" in line["text"]
     assert rc["core"]["headline"] == "Основной язык роли — Go: не заявлен"
     assert {r["ref"]: r for r in on["results"]}[refs["a"]]["core"]["headline"].endswith("подтверждён тестом")
+    assert off["algorithm"] == "match-v1.1" and on["algorithm"] == "match-v1.2"
+    monkeypatch.delenv(C.FLAG)
+    assert C.enabled() and [r["ref"] for r in _selection(GO_NEED)["results"]] == order_on  # по умолчанию включён
 
 
 def test_need_without_core_order_unchanged(client, monkeypatch):

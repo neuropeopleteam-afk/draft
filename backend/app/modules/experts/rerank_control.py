@@ -190,8 +190,9 @@ def run(db: Session) -> list[str]:
 
 
 def main() -> int:
-    from app.core.db import SessionLocal
+    from app.core.db import SessionLocal, get_engine
 
+    get_engine()  # движок по DATABASE_URL (в контейнере проверки — временная копия БД)
     with SessionLocal() as db:
         for line in run(db):
             print(line, flush=True)

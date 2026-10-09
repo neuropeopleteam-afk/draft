@@ -680,7 +680,7 @@ def must_have_section(world: World, sc: dict, seed: int) -> dict:
     pn, cov = {}, {}
     req = sc["has_req"]
     for name, flag in (("before", False), ("after", True)):
-        o = platform_orders(sc, must_first=flag)
+        o = platform_orders(sc, must_first=flag, core=False)  # Ф2 отдельно от ядра роли (Я1): match-v1 против match-v1.1
         pn[name] = per_need(world.rel, o)
         cov[name] = np.array([sc["must_full"][i, o[i, :5]].mean() if req[i] else np.nan for i in range(len(o))])
     idx = boot_idx(len(world.needs), seed + 31)
@@ -692,13 +692,14 @@ def must_have_section(world: World, sc: dict, seed: int) -> dict:
     out["diff"] = {m: _ci(pn["after"][m] - pn["before"][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
     out["diff"]["top5_all_required_t1"] = _ci(cov["after"][req] - cov["before"][req], ridx)
     out["needs_changed_top5"] = int(sum(1 for i in range(len(world.needs))
-                                        if not np.array_equal(platform_orders({**sc, **_row(sc, i)}, must_first=False)[0, :5],
-                                                              platform_orders({**sc, **_row(sc, i)}, must_first=True)[0, :5])))
+                                        if not np.array_equal(platform_orders({**sc, **_row(sc, i)}, must_first=False, core=False)[0, :5],
+                                                              platform_orders({**sc, **_row(sc, i)}, must_first=True, core=False)[0, :5])))
     return out
 
 
 GUARD_JSON = REPO / "docs" / "realdata" / "ranking_guard_500.json"
 CORE_V1_JSON = REPO / "docs" / "core_skill" / "metrics.json"
+CORE_V2_JSON = REPO / "docs" / "core_skill" / "v2_control.json"  # только числа: расчёт на сервере (ПДн не покидают его)
 
 
 def guard_summary() -> dict | None:
@@ -725,6 +726,14 @@ def guard_summary() -> dict | None:
                                     for k in ("off", core_skill.POLICY)},
                                  "diff": {m: sm[m][f"diff_{core_skill.POLICY}"] for m in ("p@5", "ndcg@10")},
                                  "source": str(CORE_V1_JSON.relative_to(REPO))}
+    if CORE_V2_JSON.exists():
+        v2 = json.loads(CORE_V2_JSON.read_text(encoding="utf-8"))
+        out["expert_v2_control"] = {
+            "command": v2["command"], "source": str(CORE_V2_JSON.relative_to(REPO)),
+            **{k: {p: {m: v2[k][p][m]["platform"]["mean"] for m in ("p@5", "ndcg@10")} | {"needs": v2[k][p]["needs"]}
+                   for p in ("v1", "v2", "all")} for k in ("frozen", "off", "on")},
+            "bm25": {p: {m: v2["off"][p][m]["bm25"]["mean"] for m in ("p@5", "ndcg@10")} for p in ("v1", "v2", "all")},
+            "diff": v2["on_minus_off"]}
     return out
 
 
@@ -933,7 +942,9 @@ def _cell(x: dict) -> str:
 
 def _algo_label(algo: str) -> str:
     """Одна формулировка везде (docs, /validation): продукт — «match-v1 + ярусы обязательного (MATCH_MUST_FIRST)»."""
-    return f"{algo} (match-v1 + ярусы обязательного, MATCH_MUST_FIRST)" if algo == "match-v1.1" else algo
+    labels = {"match-v1.1": "match-v1 + ярусы обязательного, MATCH_MUST_FIRST",
+              "match-v1.2": "match-v1 + ярусы обязательного + ядро роли, MATCH_MUST_FIRST и RANK_CORE_SKILL"}
+    return f"{algo} ({labels[algo]})" if algo in labels else algo
 
 
 def markdown(rep: dict) -> str:
@@ -1034,12 +1045,15 @@ def markdown(rep: dict) -> str:
               "| | p@5 | nDCG@10 | MRR | Топ-5: доля без ядра роли |", "|---|---|---|---|---|",
               *[f"| {t} | " + " | ".join(_cell(cs[k][mt]) if cs[k].get(mt) else "—"
                                        for mt in ("p@5", "ndcg@10", "mrr", "top5_core_absent")) + " |"
-                for k, t in (("before", "Без признака (продукт match-v1.1)"), ("after", "С признаком «ядро роли»"),
+                for k, t in (("before", "Без признака (match-v1.1)" + ("" if cs["enabled_in_product"] else ", продукт")),
+                             ("after", "С признаком «ядро роли» (match-v1.2" + (", продукт)" if cs["enabled_in_product"] else ")")),
                              ("diff", "Разница"))], ""]
     gd = rep.get("guard")
     if gd:
-        titles = (("before", "match-v1 без ярусов"), ("after", "продукт: + ярусы обязательного"),
-                  ("core_on", "+ ядро роли (RANK_CORE_SKILL)"))
+        prod = core_skill.enabled()
+        titles = (("before", "match-v1 без ярусов"),
+                  ("after", "+ ярусы обязательного (match-v1.1" + (")" if prod else ", продукт)")),
+                  ("core_on", "+ ядро роли (match-v1.2" + (", продукт)" if prod else ")")))
         L += ["## Guard порядка: те же профили, без подгонки", "",
               f"`{gd['command']}` → `{gd['source']}`. Демо-мир: {gd['n_pool']} профилей, {gd['n_needs']} потребностей "
               f"(разметка правилами); скрытая истина: {gd['hidden_config']['n_needs']} × "
@@ -1054,6 +1068,18 @@ def markdown(rep: dict) -> str:
             L += [f"Ядро роли на v1-разметке ({ev['n_needs']} потребностей, {ev['n_pairs']} пар, {ev['raters']}): p@5 "
                   f"{_f(ev['off']['p@5'])} → {_f(ev[core_skill.POLICY]['p@5'])}, nDCG@10 {_f(ev['off']['ndcg@10'])} → "
                   f"{_f(ev[core_skill.POLICY]['ndcg@10'])} (разница {_cell(ev['diff']['ndcg@10'])}).", ""]
+        v2 = gd.get("expert_v2_control")
+        if v2:
+            L += ["Контроль на разметке v2 (модель, не люди) — только на сервере, копия БД во временном PostgreSQL 16 "
+                  f"(`{v2['command']}`); места пересчитаны кодом подборки без признака и с признаком, метрики — тем же "
+                  "кодом, что раздел экспертов /validation. Смотрели один раз, после выбора параметров; по v2 ничего не "
+                  "подбиралось.", "",
+                  "| Пакет | P@5 без → с признаком | nDCG@10 без → с признаком | Разница nDCG@10 (лучше / хуже) | BM25: P@5, nDCG@10 |",
+                  "|---|---|---|---|---|",
+                  *[f"| {p} ({v2['off'][p]['needs']} потр.) | {_f(v2['off'][p]['p@5'])} → {_f(v2['on'][p]['p@5'])} | "
+                    f"{_f(v2['off'][p]['ndcg@10'])} → {_f(v2['on'][p]['ndcg@10'])} | {_cell(v2['diff'][p]['ndcg@10'])} "
+                    f"({v2['diff'][p]['ndcg@10']['better']} / {v2['diff'][p]['ndcg@10']['worse']}) | "
+                    f"{_f(v2['bm25'][p]['p@5'])}, {_f(v2['bm25'][p]['ndcg@10'])} |" for p in ("v1", "v2", "all")], ""]
     g = rep["groups"]
     fp = g["fsp"].get("platform", {})
     L += ["## Группы кандидатов", "",
