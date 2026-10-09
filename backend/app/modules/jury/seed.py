@@ -350,6 +350,13 @@ def _create_jury(db: Session, sid: str) -> dict:
     t0 = time.time()
     # у Марии тест пройден с камерой по согласию (замечаний нет); у Ильи — «тест без камеры» (нейтрально)
     _, p1, r1 = _candidate(db, "candidate", "Мария Королёва", True, 1.05, 3101, 0, sid=sid, camera=True)
+    # И26: готовая пара попыток Backend · Middle — «Две попытки рядом» видно без прохождения. Повтор в демо-режиме
+    # сразу (правило 30/90 дней снято), из другого субпула банка; повторное подтверждение обновляет оценку в фактах.
+    for attempt in range(4):
+        r1b = run_demo_test(db, p1.user_id, "middle", 1.05, 3201 + attempt, camera=True)
+        if r1b.get("confirmed"):
+            r1 = r1b
+            break
     # Вторая специализация — реальный отдельный тест банка, не ручная пометка в профиле.
     from app.modules.profiles.specializations import ensure_specialization
     ensure_specialization(db, p1, "frontend")
