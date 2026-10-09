@@ -1,9 +1,9 @@
 {
   "source": "/home/user/workspace/spectrek/bank",
-  "commit": "2b1091a",
+  "commit": "679823a",
   "dirty_files": 0,
-  "content_hash": "180791bef2a67b72",
-  "synced_at": "2026-10-09T10:28:53+00:00",
+  "content_hash": "76c4164b6ce83743",
+  "synced_at": "2026-10-09T12:00:37+00:00",
   "n_families": 165,
   "by_direction": {
     "backend": {
@@ -109,7 +109,7 @@
         "open_answer": 11,
         "mcq_concept": 28
       },
-      "seconds": 328.1
+      "seconds": 97.1
     },
     "seeds": 20,
     "verify_seeds": 3
