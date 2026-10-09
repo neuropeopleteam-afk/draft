@@ -255,10 +255,12 @@ def test_bank_retake_has_no_repeated_families(client, bank):
     # второго субпула — в синтетике так в ~7 % пар, одно семейство), варианты — новые всегда
     assert c12["overlap"]["share_families"] <= 0.15 and c12["overlap"]["repeated_variants"] == 0
     assert v[0]["subpool"] != v[1]["subpool"]
-    # третья попытка исключает семейства только прошлой (второй) попытки
-    c23 = compare(v[1], v[2])
-    assert c23["overlap"]["share_families"] <= 0.15 and c23["overlap"]["repeated_variants"] == 0
-    assert v[2]["subpool"] == v[0]["subpool"]  # субпулов два: третья попытка — в субпуле первой
+    # третья попытка — снова субпул первой (субпулов два), но семейства всех прошлых попыток исключены (И26, 09.10);
+    # повтор возможен только запасным путём LRU, когда новых семейств нет, и всегда с новым вариантом
+    c23, c13 = compare(v[1], v[2]), compare(v[0], v[2])
+    assert c23["overlap"]["repeated_variants"] == 0 and c13["overlap"]["repeated_variants"] == 0
+    assert c13["overlap"]["repeated_families"] <= v[2]["lru_repeats"]
+    assert v[2]["subpool"] == v[0]["subpool"]
     d = client.get("/api/assessment/attempts", headers=H(t)).json()
     assert len(d["attempts"]) == 3 and d["comparison"]["second"]["id"] == d["attempts"][2]["id"]
     ov = next(x["text"] for x in d["comparison"]["changes"] if x["id"] == "overlap")

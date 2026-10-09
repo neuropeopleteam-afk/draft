@@ -6,8 +6,9 @@
 заданий, до 60 минут) заканчивается, когда ни один порог не попадает в θ̂ ± z·SE (z = 1,28 — 90 % с одной
 стороны) или SE ≤ 0,35. Если после неё ближайший порог ещё внутри интервала — дотестирование до точности у
 этого порога: до 6 коротких заданий (≤ 5 минут каждое, всего ≤ 20 минут) — сначала из своего субпула, затем из
-остального банка направления, кроме семейств прошлой попытки и субпулов на карантине, — пока порог не выйдет
-из интервала.
+остального банка направления, кроме семейств прошлых попыток и субпулов на карантине, — пока порог не выйдет
+из интервала. Семейства всех прошлых попыток по направлению (``seen``, И26) не берутся и в основную часть; если новых
+нет — запасной путь LRU с новым вариантом (``exposure.AppCATSession``).
 Итог: θ, SE, решение по грейду ``psychometrics.decide`` (без принудительного понижения), детектор предзнания
 по канарейкам и времени ответов (``psychometrics.CanaryDetector``) с пересчётом θ без подозрительных ответов.
 
@@ -187,14 +188,18 @@ class BankEngine:
 
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
               previous_subpools: list[int] | None = None, previous_families: list[str] | None = None,
-              confirm_from: dict | None = None, mode: str = "full") -> dict:
+              confirm_from: dict | None = None, mode: str = "full", seen: dict[str, int] | None = None,
+              seen_seeds: dict[str, list[int]] | None = None) -> dict:
         """confirm_from — состояние завершённой сессии с итогом «Junior (предварительно)»: новая сессия —
         короткое дотестирование у порога Junior поверх её ответов (см. _start_confirm).
         mode: full — обычный адаптивный тест; express — экспресс-тест для жюри (без канареек, короче);
-        confirm (дотестирование) задаётся через confirm_from."""
+        confirm (дотестирование) задаётся через confirm_from.
+        seen — семейства всех прошлых попыток с «возрастом» (0 — последняя), seen_seeds — их seed (И26): не берутся
+        ни в основную часть, ни в дотестирование; запасной путь — LRU с новым вариантом (exposure.AppCATSession).
+        Без seen — как до 09.10: семейства прошлой попытки (previous_families) не попадают только в дотестирование."""
         if confirm_from is not None:
             return self._start_confirm(direction=direction, stack_tags=stack_tags, seed=seed, prev=confirm_from,
-                                       previous_families=previous_families)
+                                       previous_families=previous_families, seen=seen, seen_seeds=seen_seeds)
         cfg = self._base_cfg()
         if mode == "express":
             cfg = self._express_cfg(cfg, claimed_grade)
@@ -204,7 +209,7 @@ class BankEngine:
                                  parse_quarantine(self._settings().assessment_subpool_quarantine))
         if claimed_grade == "intern":  # лёгких семейств мало — тест Стажёра идёт без ротации субпулов (intern_pool.py)
             subpool = None
-        return {
+        state = {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": claimed_grade,
             "mode": mode, "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
             # семейства прошлой попытки не попадают в дотестирование (оно берёт задания и из другого субпула)
@@ -212,9 +217,14 @@ class BankEngine:
             "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
             "started_at": time.time(),
         }
+        if seen is not None:  # И26: все прошлые попытки — и в основной части, и в дотестировании; LRU — запасной путь
+            state.update(seen=dict(seen), seen_seeds={k: list(v) for k, v in (seen_seeds or {}).items()},
+                         exclude_ext=[])
+        return state
 
     def _start_confirm(self, *, direction: str, stack_tags: list[str], seed: int, prev: dict,
-                       previous_families: list[str] | None) -> dict:
+                       previous_families: list[str] | None, seen: dict[str, int] | None = None,
+                       seen_seeds: dict[str, list[int]] | None = None) -> dict:
         """Дотестирование для подтверждения предварительного Junior.
 
         Ответы прошлой сессии (оцениваемые и канарейки) переносятся как «prior» — входят в θ и в детектор, но
@@ -240,6 +250,10 @@ class BankEngine:
             "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
             "started_at": time.time(),
         }
+        if seen is not None:  # И26: прошлые семейства — через seen, при исчерпании — LRU (исходные ответы перенесены)
+            state.update(seen=dict(seen), seen_seeds={k: list(v) for k, v in (seen_seeds or {}).items()},
+                         exclude_ext=sorted(own))
+            return state
         # После нескольких попыток исключённые семейства прошлых сессий могут выбрать все короткие задания банка —
         # тогда исключаем только семейства исходной сессии (её ответы и так перенесены), чтобы дотестирование
         # не закончилось без единого нового задания.
@@ -458,7 +472,8 @@ class BankEngine:
         sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
                              state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
                              max_item_time_s=cfg.get("max_item_time_s"),
-                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl)
+                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
+                             seen=state.get("seen"), ext_lru=state.get("mode") == "confirm")
         lookup = sess.items
         for it in prior + state["items"]:
             if it["done"] and it["family_id"] in lookup:
@@ -493,6 +508,9 @@ class BankEngine:
             seed = int(pub[secrets.randbelow(len(pub))])
         else:
             seed = SEED_MIN + secrets.randbelow(SEED_MAX - SEED_MIN)
+            old_seeds = set((state.get("seen_seeds") or {}).get(pi.family_id) or ())
+            while seed in old_seeds:  # повтор семейства (LRU) — только с новым вариантом
+                seed = SEED_MIN + secrets.randbelow(SEED_MAX - SEED_MIN)
         v = generate(pi.family_id, seed)
         pv = v.public_view()
         steps = [s.model_dump() for s in (v.meta.steps or [])]
@@ -503,6 +521,7 @@ class BankEngine:
             "language": spec.language, "time_limit_s": spec.time_limit_s, "issued_at": time.time(),
             "ext": state.get("ext") is not None, "pool": _pool_snapshot(pi), "parts": spec.n_parts,
             "theta_before": round(float(sess.theta), 3),
+            "repeat": pi.family_id in (state.get("seen") or {}),  # И26: семейство из прошлой попытки (запасной путь LRU)
             "public": {"stem": pv["stem"], "code": pv["code"], "options": pv["options"], "steps": steps,
                        "code_lines": len((pv["code"] or "").splitlines())},
             "key": v.answer_key.model_dump(include={"kind", "value", "accept"}),
