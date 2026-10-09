@@ -1,7 +1,7 @@
 """Проверка с живыми пользователями: участники, события пути, ответы анкеты
 
 Revision ID: us01
-Revises: sb01 (голова integ/0710 на момент ветки; перед слиянием — перевесить на текущую голову)
+Revises: mu01
 Create Date: 2026-10-09
 """
 from collections.abc import Sequence
