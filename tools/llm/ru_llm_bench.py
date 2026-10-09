@@ -250,13 +250,23 @@ def grade_summary(spec: str, wdir: Path, second: str | None = None) -> dict:
     by_id = {r["id"]: r for r in rows}
     fmt = {}
     for stage in ("v2_1", "v2_2"):
-        res = GC._results(g / f"{stage}_out.jsonl")
-        calls, transport, bad = len(res), 0, 0
-        lat, pt, ct, cost = [], 0, 0, 0.0
-        for rid, o in res.items():
+        # доля отказов — по ПЕРВОЙ попытке на вход (докачка повторяет только сбойные, качество оценщика — по последней);
+        # токены и цена — по всем вызовам
+        res, retried = {}, 0
+        pt, ct, cost = 0, 0, 0.0
+        p_out = g / f"{stage}_out.jsonl"
+        for line in (open(p_out, encoding="utf-8") if p_out.exists() else []):
+            o = json.loads(line)
             pt += o.get("pt") or 0
             ct += o.get("ct") or 0
             cost += o.get("cost") or 0
+            if o["req_id"] in res:
+                retried += 1
+                continue
+            res[o["req_id"]] = o
+        calls, transport, bad = len(res), 0, 0
+        lat = []
+        for rid, o in res.items():
             if o.get("error") and o["error"] not in FORMAT_ERRORS:
                 transport += 1
                 continue
@@ -271,7 +281,8 @@ def grade_summary(spec: str, wdir: Path, second: str | None = None) -> dict:
         fmt[stage] = {"calls": calls, "ok": calls - transport - bad, "format_fail": bad, "transport_fail": transport,
                       "latency_s": {"p50": round(pct(lat, 0.5), 2) if lat else None,
                                     "p95": round(pct(lat, 0.95), 2) if lat else None},
-                      "tokens": {"prompt": pt, "completion": ct}, "cost_usd": round(cost, 4) if cost else None}
+                      "tokens": {"prompt": pt, "completion": ct}, "cost_usd": round(cost, 4) if cost else None,
+                      "retried": retried}
     summ["format"] = fmt
     return {"spec": spec, "second": second or spec, "func": "grade", "date": time.strftime("%Y-%m-%d"), "summary": summ}
 
@@ -334,12 +345,21 @@ def main() -> None:
     s = sub.add_parser("summary")
     s.add_argument("--dir", required=True)
     s.add_argument("--out", required=True)
+    s.add_argument("--regrade", action="store_true", help="пересчитать grade.json по сохранённым ответам (без вызовов)")
     a = ap.parse_args()
     if a.cmd == "run":
         cmd_run(a)
     else:
         from ru_llm_summary import write_summary  # tools/llm/ru_llm_summary.py
 
+        if a.regrade:
+            for gj in sorted(Path(a.dir).glob("*/grade.json")):
+                old = json.loads(gj.read_text(encoding="utf-8"))
+                second = old.get("second") if old.get("second") != old["spec"] else None
+                new = grade_summary(old["spec"], gj.parent, second)
+                new["date"] = old.get("date", new["date"])
+                gj.write_text(json.dumps(new, ensure_ascii=False, indent=1), encoding="utf-8")
+                print("пересчитано:", gj)
         write_summary(Path(a.dir), Path(a.out))
 
 
