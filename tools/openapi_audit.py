@@ -98,6 +98,12 @@ def _is_error_model(resp: dict, spec: dict | None = None) -> bool:
     return "ErrorResponse" in json.dumps(s)
 
 
+def _table_descriptions() -> dict:
+    from app.core.api_docs_text import DESCRIPTIONS
+
+    return DESCRIPTIONS
+
+
 def audit(app=None, spec: dict | None = None, raw: bool = False) -> list[dict]:
     """raw=True — схема FastAPI до обогащения app.core.api_docs (что описано вручную в роутерах)."""
     if app is None:
@@ -141,7 +147,7 @@ def audit(app=None, spec: dict | None = None, raw: bool = False) -> list[dict]:
                 "method": method, "path": ctx.path, "endpoint": f"{ctx.endpoint.__module__}.{ctx.endpoint.__name__}",
                 "tags": list(ctx.tags or []),
                 "has_summary": bool(ctx.summary), "has_description": bool((op.get("description") or "").strip()),
-                "has_authored_description": bool((ctx.description or "").strip()),
+                "has_authored_description": bool((ctx.description or "").strip()) or (not raw and f"{method} {ctx.path}" in _table_descriptions()),
                 "has_access": "**Доступ:**" in (op.get("description") or ""),
                 "has_tag": bool(ctx.tags) and all(t in tag_names for t in ctx.tags),
                 "has_response_model": has_model, "response_kind": kind,
@@ -210,7 +216,7 @@ def gap_rows(rows: list[dict], strict: bool = False) -> list[dict]:
 def to_markdown(rows: list[dict]) -> str:
     s = summarize(rows)
     lines = ["| Показатель | Операций | Доля |", "|---|---:|---:|"]
-    for key, label in (("with_summary", "явный summary"), ("with_authored_description", "авторское описание (docstring или description у метода)"),
+    for key, label in (("with_summary", "явный summary"), ("with_authored_description", "авторское описание (docstring, description у метода или таблица api_docs_text.py)"),
                        ("with_description", "описание в схеме (авторское и/или строка «Доступ»)"),
                        ("with_access", "строка «Доступ» (вход, роль)"),
                        ("with_tag", "тег из openapi_tags"), ("with_response_model", "описан ответ: модель с полями, файл или пустой ответ"),

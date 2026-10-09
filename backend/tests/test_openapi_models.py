@@ -12,6 +12,7 @@ from pydantic import TypeAdapter, ValidationError
 import pytest
 
 from app.core import api_docs
+from app.core.api_docs_text import DESCRIPTIONS
 from app.core.api_models import RESPONSE_TYPES
 from tests.test_openapi_file import _load
 
@@ -80,3 +81,13 @@ def test_documentation_ratchet(spec):
     assert typed >= MIN_TYPED_RESPONSES, f"описанных моделью ответов стало меньше: {typed} < {MIN_TYPED_RESPONSES}"
     assert s["with_example"] >= MIN_WITH_EXAMPLE, f"примеров стало меньше: {s['with_example']} < {MIN_WITH_EXAMPLE}"
     assert s["with_summary"] == s["operations"] == s["with_tag"]
+
+
+def test_authored_descriptions_match_operations_and_reach_the_schema(spec):
+    ops = {f"{m.upper()} {p}": op for p, item in spec["paths"].items() for m, op in item.items() if m in ("get", "post", "put", "patch", "delete")}
+    stale = sorted(set(DESCRIPTIONS) - set(ops))
+    assert not stale, f"в api_docs_text.DESCRIPTIONS нет таких операций: {stale}"
+    for key, text in DESCRIPTIONS.items():
+        assert text.strip() and len(text) >= 40 or key == "GET /api/health", key
+        # текст попал в схему, если у обработчика нет своего описания (иначе остаётся авторский docstring)
+        assert ops[key].get("description"), key
