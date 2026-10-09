@@ -1,0 +1,810 @@
+{
+ "summary": {
+  "before_full_s": 2.38,
+  "first_card_ms": 23,
+  "background_s": 1.87,
+  "cache_ms": 3,
+  "before_llm_ms": 2316,
+  "delta_llm_ms": 1704,
+  "n": 15,
+  "max_before_full_s": 3.53,
+  "max_background_s": 3.05,
+  "max_first_card_ms": 739,
+  "done": 15,
+  "cached": 15
+ },
+ "rows": [
+  {
+   "id": "D1",
+   "kind": "демо: песочница жюри",
+   "text": "Backend-разработчик middle в команду платежей: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka и Docker. Удалённо. Зарплата 260 000 ₽ на руки.",
+   "before_full_s": 2.84,
+   "before_llm_ms": 2540,
+   "before_used": true,
+   "first_card_ms": 41,
+   "background_s": 2.43,
+   "delta_llm_ms": 2243,
+   "status": "done",
+   "cache_ms": 4,
+   "cached": true,
+   "rules": {
+    "req": [
+     "fastapi",
+     "postgresql",
+     "python",
+     "redis"
+    ],
+    "des": [
+     "docker",
+     "kafka"
+    ]
+   },
+   "full": {
+    "req": [
+     "fastapi",
+     "postgresql",
+     "python",
+     "redis"
+    ],
+    "des": [
+     "docker",
+     "kafka"
+    ]
+   },
+   "fast": {
+    "req": [
+     "fastapi",
+     "postgresql",
+     "python",
+     "redis"
+    ],
+    "des": [
+     "docker",
+     "kafka"
+    ]
+   },
+   "added": [],
+   "confirmed": [
+    "python",
+    "fastapi",
+    "postgresql",
+    "redis",
+    "kafka",
+    "docker"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "D2",
+   "kind": "демо: песочница жюри",
+   "text": "Frontend-разработчик middle для личного кабинета: React, TypeScript, HTML/CSS обязательно; желательно тестирование фронтенда. Гибрид, Санкт-Петербург, от 200 до 250 тыс.",
+   "before_full_s": 2.63,
+   "before_llm_ms": 2475,
+   "before_used": true,
+   "first_card_ms": 14,
+   "background_s": 1.78,
+   "delta_llm_ms": 1696,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "html-css",
+     "react",
+     "typescript"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "html-css",
+     "react",
+     "typescript"
+    ],
+    "des": [
+     "frontend-testing"
+    ]
+   },
+   "fast": {
+    "req": [
+     "html-css",
+     "react",
+     "typescript"
+    ],
+    "des": [
+     "frontend-testing"
+    ]
+   },
+   "added": [
+    "frontend-testing"
+   ],
+   "confirmed": [
+    "react",
+    "typescript",
+    "html-css"
+   ],
+   "offers": [],
+   "full_added": [
+    "frontend-testing"
+   ],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "D3",
+   "kind": "демо: песочница жюри",
+   "text": "Python-разработчик middle в отдел интеграций: только мужчины до 35 лет, славянской внешности, без детей, в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве или удалённо, 180–240 тыс.",
+   "before_full_s": 2.68,
+   "before_llm_ms": 2668,
+   "before_used": true,
+   "first_card_ms": 15,
+   "background_s": 1.57,
+   "delta_llm_ms": 1484,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "django",
+     "postgresql",
+     "python"
+    ],
+    "des": [
+     "docker"
+    ]
+   },
+   "full": {
+    "req": [
+     "django",
+     "postgresql",
+     "python"
+    ],
+    "des": [
+     "docker"
+    ]
+   },
+   "fast": {
+    "req": [
+     "django",
+     "postgresql",
+     "python"
+    ],
+    "des": [
+     "docker"
+    ]
+   },
+   "added": [],
+   "confirmed": [
+    "python",
+    "django",
+    "postgresql",
+    "docker"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "D4",
+   "kind": "демо: песочница жюри",
+   "text": "Backend-разработчик senior для платёжного шлюза: обязательно PostgreSQL, Kafka и Linux. Удалённо, от 350 тыс. ₽.",
+   "before_full_s": 3.53,
+   "before_llm_ms": 3467,
+   "before_used": true,
+   "first_card_ms": 23,
+   "background_s": 1.79,
+   "delta_llm_ms": 1652,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "kafka",
+     "linux",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "kafka",
+     "linux",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "fast": {
+    "req": [
+     "kafka",
+     "linux",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "added": [],
+   "confirmed": [
+    "postgresql",
+    "kafka",
+    "linux"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "D5",
+   "kind": "демо: пример на экране",
+   "text": "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс. ₽",
+   "before_full_s": 2.42,
+   "before_llm_ms": 2315,
+   "before_used": true,
+   "first_card_ms": 29,
+   "background_s": 1.81,
+   "delta_llm_ms": 1620,
+   "status": "done",
+   "cache_ms": 4,
+   "cached": true,
+   "rules": {
+    "req": [
+     "fastapi",
+     "postgresql",
+     "python",
+     "redis"
+    ],
+    "des": [
+     "kafka"
+    ]
+   },
+   "full": {
+    "req": [
+     "fastapi",
+     "postgresql",
+     "python",
+     "redis"
+    ],
+    "des": [
+     "kafka"
+    ]
+   },
+   "fast": {
+    "req": [
+     "fastapi",
+     "postgresql",
+     "python",
+     "redis"
+    ],
+    "des": [
+     "kafka"
+    ]
+   },
+   "added": [],
+   "confirmed": [
+    "python",
+    "fastapi",
+    "postgresql",
+    "redis"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J03",
+   "kind": "демо: аудит подбора (needs_40)",
+   "text": "Тимлид бэкенд-команды на Go, 5+ лет опыта, Kubernetes, Kafka, PostgreSQL. Москва, офис или гибрид. До 450 000 руб.",
+   "before_full_s": 2.27,
+   "before_llm_ms": 2253,
+   "before_used": true,
+   "first_card_ms": 34,
+   "background_s": 2.43,
+   "delta_llm_ms": 2220,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "go",
+     "kafka",
+     "kubernetes",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "go",
+     "kafka",
+     "kubernetes",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "fast": {
+    "req": [
+     "go",
+     "kafka",
+     "kubernetes",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "added": [],
+   "confirmed": [
+    "go",
+    "kubernetes",
+    "kafka",
+    "postgresql"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J10",
+   "kind": "демо: аудит подбора (needs_40)",
+   "text": "Аналитик данных junior: SQL, Python (pandas), A/B-тесты, Tableau. Москва, гибрид, 120-150 тыс.",
+   "before_full_s": 2.26,
+   "before_llm_ms": 2246,
+   "before_used": true,
+   "first_card_ms": 20,
+   "background_s": 1.79,
+   "delta_llm_ms": 1704,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "pandas",
+     "python",
+     "sql",
+     "statistics"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "pandas",
+     "python",
+     "sql",
+     "statistics"
+    ],
+    "des": []
+   },
+   "fast": {
+    "req": [
+     "pandas",
+     "python",
+     "sql",
+     "statistics"
+    ],
+    "des": []
+   },
+   "added": [],
+   "confirmed": [
+    "sql",
+    "python",
+    "pandas",
+    "statistics"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J16",
+   "kind": "демо: аудит подбора (needs_40)",
+   "text": "Java backend senior: Spring Boot, Kafka, микросервисы, PostgreSQL. Гибрид Москва. от 400 000 до 500 000 рублей gross",
+   "before_full_s": 2.0,
+   "before_llm_ms": 1886,
+   "before_used": true,
+   "first_card_ms": 9,
+   "background_s": 2.2,
+   "delta_llm_ms": 2103,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "java",
+     "kafka",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "java",
+     "kafka",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "fast": {
+    "req": [
+     "java",
+     "kafka",
+     "postgresql"
+    ],
+    "des": []
+   },
+   "added": [],
+   "confirmed": [
+    "java",
+    "kafka",
+    "postgresql"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J26",
+   "kind": "демо: аудит подбора (needs_40)",
+   "text": "Data engineer middle: Airflow, Spark, ClickHouse, Kafka; опыт от 3 лет; 270-330 тыс. ₽ до вычета НДФЛ",
+   "before_full_s": 2.48,
+   "before_llm_ms": 2341,
+   "before_used": true,
+   "first_card_ms": 16,
+   "background_s": 1.68,
+   "delta_llm_ms": 1588,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "airflow",
+     "clickhouse",
+     "kafka",
+     "spark"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "airflow",
+     "clickhouse",
+     "kafka",
+     "spark"
+    ],
+    "des": []
+   },
+   "fast": {
+    "req": [
+     "airflow",
+     "clickhouse",
+     "kafka",
+     "spark"
+    ],
+    "des": []
+   },
+   "added": [],
+   "confirmed": [
+    "airflow",
+    "spark",
+    "clickhouse",
+    "kafka"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J31",
+   "kind": "демо: аудит подбора (needs_40)",
+   "text": "Python-разработчик в финтех. Требования: Python 3.11, asyncio, aiohttp, PostgreSQL, RabbitMQ. Опыт 3+ года. Будет плюсом: Kafka, ClickHouse. Офис или гибрид в Санкт-Петербурге. 280–350 тыс. руб. на руки.",
+   "before_full_s": 2.33,
+   "before_llm_ms": 2316,
+   "before_used": true,
+   "first_card_ms": 11,
+   "background_s": 1.92,
+   "delta_llm_ms": 1802,
+   "status": "done",
+   "cache_ms": 4,
+   "cached": true,
+   "rules": {
+    "req": [
+     "asyncio",
+     "postgresql",
+     "python",
+     "rabbitmq"
+    ],
+    "des": [
+     "clickhouse",
+     "kafka"
+    ]
+   },
+   "full": {
+    "req": [
+     "asyncio",
+     "postgresql",
+     "python",
+     "rabbitmq"
+    ],
+    "des": [
+     "clickhouse",
+     "kafka"
+    ]
+   },
+   "fast": {
+    "req": [
+     "asyncio",
+     "postgresql",
+     "python",
+     "rabbitmq"
+    ],
+    "des": [
+     "clickhouse",
+     "kafka"
+    ]
+   },
+   "added": [],
+   "confirmed": [
+    "python",
+    "asyncio",
+    "postgresql",
+    "rabbitmq"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J01",
+   "kind": "жюри: сленг / английский",
+   "text": "Ищем питон разработчика мидл, джанго, постгрес, удаленка, 200-250к",
+   "before_full_s": 2.15,
+   "before_llm_ms": 2140,
+   "before_used": true,
+   "first_card_ms": 721,
+   "background_s": 2.92,
+   "delta_llm_ms": 1558,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "django",
+     "postgresql",
+     "python"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "django",
+     "postgresql",
+     "python"
+    ],
+    "des": []
+   },
+   "fast": {
+    "req": [
+     "django",
+     "postgresql",
+     "python"
+    ],
+    "des": []
+   },
+   "added": [],
+   "confirmed": [
+    "python",
+    "django",
+    "postgresql"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J27",
+   "kind": "жюри: сленг / английский",
+   "text": "бекендер golang джун+ , grpc, постгря, редис. зп 120-150",
+   "before_full_s": 2.12,
+   "before_llm_ms": 2117,
+   "before_used": true,
+   "first_card_ms": 739,
+   "background_s": 3.05,
+   "delta_llm_ms": 1830,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "go",
+     "grpc",
+     "postgresql",
+     "redis"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "go",
+     "grpc",
+     "postgresql",
+     "redis"
+    ],
+    "des": []
+   },
+   "fast": {
+    "req": [
+     "go",
+     "grpc",
+     "postgresql",
+     "redis"
+    ],
+    "des": []
+   },
+   "added": [],
+   "confirmed": [
+    "go",
+    "grpc",
+    "postgresql",
+    "redis"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J19",
+   "kind": "жюри: сленг / английский",
+   "text": "Python/Django dev (middle+), DRF, Celery, Postgres, Docker, k8s будет плюсом; full remote; 250k-320k RUB",
+   "before_full_s": 2.38,
+   "before_llm_ms": 2370,
+   "before_used": true,
+   "first_card_ms": 10,
+   "background_s": 1.87,
+   "delta_llm_ms": 1712,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "django",
+     "docker",
+     "postgresql",
+     "python"
+    ],
+    "des": [
+     "kubernetes"
+    ]
+   },
+   "full": {
+    "req": [
+     "django",
+     "docker",
+     "postgresql",
+     "python",
+     "rest-api"
+    ],
+    "des": [
+     "kubernetes"
+    ]
+   },
+   "fast": {
+    "req": [
+     "django",
+     "docker",
+     "postgresql",
+     "python",
+     "rest-api"
+    ],
+    "des": [
+     "kubernetes"
+    ]
+   },
+   "added": [
+    "rest-api"
+   ],
+   "confirmed": [
+    "python",
+    "django",
+    "postgresql",
+    "docker"
+   ],
+   "offers": [],
+   "full_added": [
+    "rest-api"
+   ],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "J39",
+   "kind": "жюри: сленг / английский",
+   "text": "Сеньор питонист с опытом тимлидства, команда 6 человек, highload, микросервисы",
+   "before_full_s": 2.04,
+   "before_llm_ms": 1953,
+   "before_used": true,
+   "first_card_ms": 120,
+   "background_s": 2.07,
+   "delta_llm_ms": 1722,
+   "status": "done",
+   "cache_ms": 3,
+   "cached": true,
+   "rules": {
+    "req": [
+     "python"
+    ],
+    "des": []
+   },
+   "full": {
+    "req": [
+     "python"
+    ],
+    "des": []
+   },
+   "fast": {
+    "req": [
+     "python"
+    ],
+    "des": []
+   },
+   "added": [],
+   "confirmed": [
+    "python"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  },
+  {
+   "id": "E1",
+   "kind": "жюри: английский стек",
+   "text": "Looking for a middle frontend engineer: React + TS, Next.js, Tailwind; Playwright e2e tests nice to have. Hybrid, St. Petersburg.",
+   "before_full_s": 2.47,
+   "before_llm_ms": 2456,
+   "before_used": true,
+   "first_card_ms": 178,
+   "background_s": 1.85,
+   "delta_llm_ms": 1550,
+   "status": "done",
+   "cache_ms": 7,
+   "cached": true,
+   "rules": {
+    "req": [
+     "nextjs",
+     "react",
+     "tailwind",
+     "typescript"
+    ],
+    "des": [
+     "playwright"
+    ]
+   },
+   "full": {
+    "req": [
+     "nextjs",
+     "react",
+     "tailwind",
+     "typescript"
+    ],
+    "des": [
+     "playwright"
+    ]
+   },
+   "fast": {
+    "req": [
+     "nextjs",
+     "react",
+     "tailwind",
+     "typescript"
+    ],
+    "des": [
+     "playwright"
+    ]
+   },
+   "added": [],
+   "confirmed": [
+    "react",
+    "typescript",
+    "nextjs",
+    "tailwind"
+   ],
+   "offers": [],
+   "full_added": [],
+   "model": "Claude Sonnet 5.5"
+  }
+ ]
+}
