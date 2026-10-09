@@ -161,6 +161,12 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/me/consents"): "candidate",
     ("POST", "/api/me/consents/{kind}"): "candidate",
     ("DELETE", "/api/me/consents/{kind}"): "candidate",  # kind=processing → 409 (через оператора), профиль не трогает
+    ("GET", "/api/me/data"): "candidate",  # feat/my-data: «Мои данные»
+    ("GET", "/api/me/data/export"): "candidate",
+    ("GET", "/api/me/data/delete/preview"): "candidate",
+    ("POST", "/api/me/data/contacts/revoke"): "candidate",  # отзыв доступа к контактам у всех (в LAST)
+    ("POST", "/api/me/data/delete"): "candidate",  # без тела — 422: матрица ничего не удаляет
+    ("GET", "/api/me/interest"): "candidate",
     ("GET", "/api/me/fsp"): "candidate",
     ("POST", "/api/me/fsp/link"): "candidate",
     ("POST", "/api/me/fsp/registry-sync"): "candidate",
@@ -391,6 +397,7 @@ PARAM_OVERRIDES: dict[tuple[str, str], dict[str, object]] = {
 # Маршруты, меняющие состояние так, что дальнейшие проверки могут сломаться (сброс песочницы отзывает токены,
 # завершение теста/кубка меняет статусы): выполняются последними, в этом порядке.
 LAST: tuple[tuple[str, str], ...] = (
+    ("POST", "/api/me/data/contacts/revoke"),
     ("POST", "/api/candidate/invitations/{inv_id}/decline"),
     ("POST", "/api/employer/invitations/{inv_id}/withdraw"),
     ("POST", "/api/candidate/probes/{probe_id}/decline"),
