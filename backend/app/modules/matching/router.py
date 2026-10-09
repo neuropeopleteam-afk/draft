@@ -31,6 +31,7 @@ from app.modules.matching.models import EmployerNeed, SelectionVersion
 from app.modules.matching import compare as compare_mod
 from app.modules.matching.need_parser import bias_report, normalize, parse_need, text_notes
 from app.modules.matching import whatif
+from app.modules.mydata import interest  # обезличенная отметка интереса для кандидата (md01)
 from app.modules.profiles.facts import card, load_bundles
 from app.modules.profiles.models import Company, EmployerProfile
 
@@ -181,6 +182,7 @@ def _make_version(db: Session, need: EmployerNeed, user: User, filters: dict, pa
                          results=sel["results"], algorithm_version=sel["algorithm"], created_by=user.id)
     db.add(v)
     db.commit()
+    interest.record_selection(db, need.company_id, need.id, v.results)  # кандидату — «в M подборках», без названий
     return v
 
 
@@ -444,6 +446,7 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
                      db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
     p = profile_by_ref(db, ref)
+    interest.record_card_view(db, c.id, p.user_id)  # кандидату — «карточку посмотрели N работодателей»
     n = _own_need(db, c, need_id) if need_id else None
     selected_direction = (n.requirements or {}).get("direction") if n else direction
     b = load_bundles(db, [p.user_id], direction=selected_direction)[p.user_id]
@@ -493,6 +496,7 @@ def candidate_pdf(ref: str, user: User = Depends(employer), db: Session = Depend
 
     c = my_company(db, user)
     p = profile_by_ref(db, ref)
+    interest.record_card_view(db, c.id, p.user_id)
     b = load_bundles(db, [p.user_id])[p.user_id]
     cats = {x.id: x for x in db.scalars(select(Category)).all()}
     contacts = candidate_contacts(db, p.user_id) if contacts_revealed(db, c.id, p.user_id) else None

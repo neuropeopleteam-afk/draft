@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { CandidateCard } from "../../components/CandidateCard";
 import { Alert, Field, Level, Loading, dtt, errText, useApi, years } from "../../components/ui";
@@ -59,6 +60,7 @@ export default function Profile() {
           <button className="btn-primary" onClick={() => saveContacts()}>Сохранить контакты</button>
           <button className="btn-ghost" onClick={() => apiDownload("/me/profile.pdf", `profile-${c.public_ref ?? "me"}.pdf`).catch((e) => setMsg({ k: "error", t: errText(e) }))}>Скачать PDF-профиль</button>
         </div>
+        <p className="mt-3 text-xs text-brand-ink/65">Все данные одним файлом и удаление учётной записи — в разделе <Link className="font-semibold text-brand hover:underline" to="/candidate/mydata">«Мои данные»</Link>.</p>
       </section>
 
       <section className="card">

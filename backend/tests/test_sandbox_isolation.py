@@ -93,7 +93,8 @@ def _probe_and_invitation(client, world):
         r = client.post("/api/employer/invitations", json=inv, headers=H(world[who]))
         assert r.status_code == 404, (who, "invitation", r.status_code, r.text[:200])
     # кандидат песочницы A не получил ничего извне
-    assert client.get("/api/candidate/probes", headers=H(world["ca"])).json() == []
+    # в песочнице у кандидата есть собственный зонд от второй демо-компании (отметка интереса); чужого — нет
+    assert [p for p in client.get("/api/candidate/probes", headers=H(world["ca"])).json() if p["title"] == probe["title"]] == []
     foreign = [i for i in client.get("/api/candidate/invitations", headers=H(world["ca"])).json()
                if i["position_title"] == "Backend-разработчик"]
     assert foreign == []

@@ -15,6 +15,7 @@ import Feedback from "./pages/candidate/Feedback";
 import { Invitations, Probes } from "./pages/candidate/Contact";
 import { Messages } from "./pages/Messages";
 import CandidateOverview from "./pages/candidate/Overview";
+import MyData from "./pages/candidate/MyData";
 import Profile from "./pages/candidate/Profile";
 import { Fsp, Settings } from "./pages/candidate/Settings";
 import { candidateSections } from "./pages/candidate/sections";
@@ -84,6 +85,7 @@ export default function App() {
         <Route path="probes" element={<Probes />} />
         <Route path="fsp" element={<Fsp />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="mydata" element={<MyData />} />
         <Route path="vacancies" element={<CandidateVacancies />} />
         <Route path="companies/:id" element={<CompanyPublic />} />
         <Route path="app" element={<AppSection />} />
