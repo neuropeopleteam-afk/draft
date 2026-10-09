@@ -19,8 +19,8 @@ export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: numbe
   );
 }
 
-export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge }: {
-  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode;
+export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge, mutual }: {
+  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9)
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
@@ -50,6 +50,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
           </div>
         )}
       </div>
+      {mutual}
 
       {c.specializations?.length > 1 && <div className="mt-4"><Specializations items={c.specializations} /></div>}
       <div className={`mt-4 grid gap-3 ${compact ? "" : "md:grid-cols-2"}`}>
