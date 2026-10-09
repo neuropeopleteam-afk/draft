@@ -175,7 +175,11 @@ def public_summary(db: Session) -> dict:
     first = min(as_aware(r.p.started_at) for r in ans)
     last = max(as_aware(r.ans.submitted_at) for r in ans)
     n_by = {ro: len(v) for ro, v in roles_ans.items()}
-    sig = (f"Люди, приглашены командой. N = {len(ans)} ответивших ("
+    src_n = {s: sum(1 for r in ans if r.p.source == s) for s in texts.SOURCES}
+    src = ("участники " + texts.SOURCES[next(s for s, k in src_n.items() if k)] if sum(1 for k in src_n.values() if k) == 1
+           else "участники приглашены командой: " + "; ".join(f"{texts.SOURCES[s].replace('приглашены командой ', '')} — {k}"
+                                                           for s, k in src_n.items() if k))
+    sig = (f"Люди, {src}. N = {len(ans)} ответивших ("
            + ", ".join(f"{ROLE_PL[ro]} — {n_by[ro]}" for ro in texts.ROLES) + "), "
            + (_fmt_date(first) if _fmt_date(first) == _fmt_date(last) else f"{_fmt_date(first)} – {_fmt_date(last)}")
            + ". Репетиции команды не учитываются.")
@@ -187,6 +191,11 @@ def public_summary(db: Session) -> dict:
     comp = _completion(rs)
     return {
         "shown": True, "min_n": stats.MIN_N, "signature": sig,
+        "sources": {s: k for s, k in src_n.items() if k},
+        "world": ("Люди оценивали платформу на демонстрационных данных: кандидаты в подборке — смоделированные профили, "
+                  "а не реальные люди."
+                  + (" Кандидаты проходили экспресс-тест (5–7 заданий), а не полный."
+                     if any(r.p.mode == "quick" and r.p.role == "candidate" for r in ans) else "")),
         "period": {"from": first.isoformat(), "to": last.isoformat()},
         "n": {"invited": invited_n, "started": len(rs), "done": comp["done"], "answered": len(ans),
               "by_role": {ro: {"started": len(roles[ro]), "answered": n_by[ro],
@@ -210,7 +219,7 @@ def admin_report(db: Session, *, with_texts: bool = False) -> dict:
     for r in rs:
         a = r.ans
         items.append({
-            "label": r.p.label, "role": r.p.role, "batch": r.p.batch, "mode": r.p.mode, "test": r.p.is_test,
+            "label": r.p.label, "role": r.p.role, "batch": r.p.batch, "mode": r.p.mode, "source": r.p.source, "test": r.p.is_test,
             "status": r.status if r.p.started_at else ("closed" if not r.p.is_active else "not_started"),
             "started_at": r.p.started_at.isoformat() if r.p.started_at else None,
             "steps": {k: ({"at": s["at"].isoformat(), "skipped": s["skipped"]} if s["at"] else None)

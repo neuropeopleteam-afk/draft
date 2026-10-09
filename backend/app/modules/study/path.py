@@ -82,7 +82,7 @@ def derive(db: Session, p: StudyParticipant) -> dict:
             at["register"] = as_aware(user.email_verified_at) or as_aware(p.joined_at)
         if p.role == "candidate":
             at["survey"] = _after(_first(db, SurveyResponse.created_at, SurveyResponse.user_id == user.id), started)
-            ts_where = (TestSession.user_id == user.id, TestSession.is_sandbox.is_(False), TestSession.created_at >= started)
+            ts_where = (TestSession.user_id == user.id, TestSession.created_at >= started)  # и экспресс-режим (is_sandbox)
             at["test"] = _first(db, func.coalesce(TestSession.started_at, TestSession.created_at), *ts_where)
             at["result"] = _first(db, TestSession.finished_at, *ts_where, TestSession.status == TestSessionStatus.finished,
                                   TestSession.finished_at.is_not(None))

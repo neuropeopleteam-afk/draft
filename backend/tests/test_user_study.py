@@ -11,6 +11,8 @@ from app.core.db import SessionLocal, utcnow
 from app.modules.study import path as P
 from app.modules.study import report, service, stats, texts
 from app.modules.study.models import StudyAnswer, StudyEvent, StudyParticipant
+from app.modules.auth.models import User
+from app.modules.profiles.models import Company
 from tests.conftest import register_and_verify
 from tests.test_day2_rules import INVITE, ONBOARDING, H, candidate_with_category, employer, make_demo, my_ref, pass_test
 
@@ -19,6 +21,7 @@ SUS_GOOD = [5, 1, 5, 1, 5, 1, 5, 1, 5, 1]
 
 
 def issue(role="candidate", n=1, **kw) -> list[dict]:
+    kw.setdefault("mode", "register")  # по умолчанию ссылка создаёт учётку без почты (quick); большинству тестов нужна регистрация
     with SessionLocal() as db:
         return service.create_invites(db, role, n, **kw)
 
@@ -86,7 +89,7 @@ def test_p_at_5_threshold_and_bootstrap_is_reproducible():
     a, b = stats.boot_mean_ci(vals), stats.boot_mean_ci(vals)
     assert a == b and 0.4 <= a[0] <= a[1] <= 1.0
     w = stats.wilson(6, 9)
-    assert w[0] == pytest.approx(0.3, abs=0.01) and w[1] == pytest.approx(0.88, abs=0.01)
+    assert w[0] == pytest.approx(0.354, abs=0.005) and w[1] == pytest.approx(0.879, abs=0.005)
     assert stats.share(0, 0)["share"] is None
 
 
@@ -139,22 +142,100 @@ def test_start_requires_consent_and_is_idempotent(client):
     assert client.get(f"/api/study/invites/{inv['code']}").json()["state"] == "started"
 
 
-def test_quick_mode_enters_without_registration_and_without_mail(client):
+def test_default_link_creates_account_without_email_registration(client):
     inv = issue("candidate", mode="quick")[0]
     r = client.post(f"/api/study/invites/{inv['code']}/start", json={"consent": True}).json()
-    assert r["next"] == "/candidate" and r["token"]["user"]["role"] == "candidate"
+    assert r["next"] == "/candidate/assessment" and r["token"]["user"]["role"] == "candidate"
     t = r["token"]["access_token"]
-    assert r["token"]["user"]["email"].endswith("@study.invalid")  # письма таким учёткам не уходят
+    email = r["token"]["user"]["email"]
+    assert email.endswith("@jury.example.com") and email.startswith("study-")  # письма такой почте не уходят
     me = client.get("/api/study/me", headers=H(t)).json()
-    assert me["active"] and me["mode"] == "quick"
+    assert me["active"] and me["mode"] == "quick" and me["target_min"] == 20 and me["max_min"] == 25
     reg = next(s for s in me["steps"] if s["key"] == "register")
     assert reg["done"] and reg["skipped"]  # регистрация не измерялась
-    assert client.get("/api/me", headers=H(t)).json()["candidate"]["public_ref"]
-    # повторный вход по той же ссылке — в ту же учётную запись
+    prof = client.get("/api/me", headers=H(t)).json()["candidate"]
+    assert prof["public_ref"] and not prof.get("full_name")
+    # повторный вход по той же ссылке — в ту же учётную запись; без ввода почты и пароля, письма не нужны
     r2 = client.post(f"/api/study/invites/{inv['code']}/start", json={"consent": True}).json()
     assert r2["token"]["user"]["id"] == r["token"]["user"]["id"]
     with SessionLocal() as db:
         assert db.scalar(select(func.count()).select_from(StudyParticipant)) == 1
+        u = db.scalar(select(User).where(User.email == email))
+        assert u.is_demo and u.is_email_verified
+    # по умолчанию (без явного mode) приглашение — без регистрации, источник — оплаченные участники с бирж
+    with SessionLocal() as db:
+        d = service.create_invites(db, "employer", 1)[0]
+    assert d["mode"] == "quick" and d["source"] == "freelance_paid"
+
+
+def test_quick_candidate_short_path_with_express_test_and_hidden_from_pools(client):
+    pool = seed_pool(client, 3)
+    inv = issue("candidate", mode="quick")[0]
+    r = client.post(f"/api/study/invites/{inv['code']}/start", json={"consent": True}).json()
+    t = r["token"]["access_token"]
+    assert client.put("/api/me/onboarding", json=ONBOARDING, headers=H(t)).status_code == 200
+    st = client.get("/api/assessment/status", headers=H(t)).json()
+    assert st["express_available"] and st["sandbox_active"]  # экспресс — путь в 25 минут, не полный тест
+    s = client.post("/api/assessment/sessions", json={"claimed_grade": "middle", "mode": "express"}, headers=H(t))
+    assert s.status_code == 201, s.text
+    from tests.test_day2_rules import correct_index
+    s = s.json()
+    while s["item"]:
+        it = s["item"]
+        s = client.post(f"/api/assessment/sessions/{s['session_id']}/answers",
+                        json={"item_id": it["item_id"], "answer": correct_index(s["session_id"], it["item_id"])}, headers=H(t)).json()
+    assert client.post(f"/api/assessment/sessions/{s['session_id']}/finish", headers=H(t)).status_code == 200
+    me = client.get("/api/study/me", headers=H(t)).json()
+    assert me["path_done"] and me["current"] is None and all(x["done"] for x in me["steps"]), me["steps"]
+    # учётка участника не попадает в подборки и поиск: её карточку не увидят ни работодатели, ни жюри
+    ref = client.get("/api/me", headers=H(t)).json()["candidate"]["public_ref"]
+    te = register_and_verify(client, email="boss@corp.ru", role="employer", company_name="ООО Ромашка")
+    need = client.post("/api/employer/needs", json={"text": NEED}, headers=H(te)).json()
+    sel = client.get(f"/api/employer/needs/{need['id']}/selections/1", headers=H(te)).json()
+    assert ref not in json.dumps(sel) and any(x["ref"] in pool for x in sel["results"])
+    assert ref not in json.dumps(client.get("/api/employer/candidates", headers=H(te)).json())
+    ans = rate_top5(client, t, belief=4, grade_fit="fit")
+    assert ans["path_done"]
+
+
+def test_quick_employer_path_and_selection_pool_is_platform_demo(client):
+    refs = seed_pool(client, 6)
+    inv = issue("employer", mode="quick")[0]
+    r = client.post(f"/api/study/invites/{inv['code']}/start", json={"consent": True}).json()
+    assert r["next"] == "/employer/needs"
+    t = r["token"]["access_token"]
+    need = client.post("/api/employer/needs", json={"text": NEED}, headers=H(t))
+    assert need.status_code in (200, 201), need.text
+    nid = need.json()["id"]
+    client.post("/api/study/events", json={"kind": "view", "key": f"/employer/needs/{nid}"}, headers=H(t))
+    assert client.post("/api/employer/invitations", json={**INVITE, "candidate_ref": refs[0]}, headers=H(t)).status_code == 201
+    me = client.get("/api/study/me", headers=H(t)).json()
+    assert me["path_done"], me["steps"]
+    assert rate_top5(client, t, belief=5)["sus_score"] == 100.0
+    with SessionLocal() as db:
+        u = db.scalar(select(User).where(User.id == db.scalar(select(StudyParticipant.user_id))))
+        c = db.scalar(select(Company).where(Company.created_by == u.id))
+        assert u.is_demo and c.is_demo  # аналитика ФСП и метрики платформы такие компании не считают
+
+
+def test_signature_names_paid_freelance_source_and_dates(client):
+    with SessionLocal() as db:
+        for _ in range(3):
+            p = answered_participant(db, "candidate")
+        assert p.source == "freelance_paid"
+    s = client.get("/api/study/summary").json()
+    assert s["signature"].startswith("Люди, участники приглашены командой через фриланс-биржи, оплачено. N = 3 ответивших")
+    assert s["sources"] == {"freelance_paid": 3} and "смоделированные" in s["world"] and "экспресс" in s["world"]
+    assert utcnow().strftime("%d.%m.%Y") in s["signature"]
+    with SessionLocal() as db:
+        answered_participant(db, "employer", source="team")
+    s2 = client.get("/api/study/summary").json()
+    assert "через фриланс-биржи, оплачено — 3" in s2["signature"] and "знакомые, без оплаты" in s2["signature"]
+    # оплата раскрыта и в согласии, которое видит участник до старта
+    inv = issue("candidate")[0]
+    v = client.get(f"/api/study/invites/{inv['code']}").json()
+    assert "Вознаграждение" in v["consent"]["text"] and "не зависит от ваших оценок" in v["consent"]["text"]
+    assert v["minutes"] == 20 and v["minutes_max"] == 25
 
 
 # ------------------------------------------------------------------ путь кандидата по фактам платформы
@@ -192,6 +273,10 @@ def test_candidate_path_steps_come_from_platform_facts(client):
 def test_facts_before_consent_are_not_counted(client):
     """Учётная запись, у которой тест был до согласия, не получает «пройденный путь» задним числом."""
     t = candidate_with_category(client, email="old@example.com")  # аккаунт уже с категорией
+    with SessionLocal() as db:  # создан давно: регистрация не входит в путь участника
+        u = db.scalar(select(User).where(User.email == "old@example.com"))
+        u.created_at = utcnow() - timedelta(days=2)
+        db.commit()
     inv = issue("candidate")[0]
     begin(client, inv)
     assert client.post("/api/study/join", json={"code": inv["code"]}, headers=H(t)).status_code == 200
@@ -214,6 +299,17 @@ def test_stopped_vs_active_by_inactivity(client):
 
 
 # ------------------------------------------------------------------ путь работодателя и анкета с P@5
+
+def rate_top5(client, t, ratings=(5, 4, 4, 2, 1), **extra) -> dict:
+    """Заполнить анкету: оценки показанных кандидатов (если подборку открывали), SUS «хорошо»."""
+    form = client.get("/api/study/survey", headers=H(t)).json()
+    body = {"sus": SUS_GOOD, **extra}
+    if form["rel"]["selection"]:
+        body["ratings"] = [{"ref": x["ref"], "rating": r} for x, r in zip(form["rel"]["selection"]["shown"], ratings * 2)]
+    r = client.post("/api/study/survey", json=body, headers=H(t))
+    assert r.status_code == 200, r.text
+    return r.json()
+
 
 def seed_pool(client, n=6):
     refs = []
@@ -291,8 +387,9 @@ def test_candidate_grade_questions_only_after_result(client):
 
 # ------------------------------------------------------------------ порог показа и сводка
 
-def answered_participant(db, role="candidate", sus=None, ratings=None, test=False, started=None, belief=None):
-    p = StudyParticipant(code_hash=uuid.uuid4().hex + uuid.uuid4().hex, role=role, label=f"X-{uuid.uuid4().hex[:4]}",
+def answered_participant(db, role="candidate", sus=None, ratings=None, test=False, started=None, belief=None,
+                         source="freelance_paid"):
+    p = StudyParticipant(code_hash=uuid.uuid4().hex + uuid.uuid4().hex, role=role, source=source, label=f"X-{uuid.uuid4().hex[:4]}",
                          is_test=test, started_at=started or utcnow(), consent_at=utcnow(), consent_version="t")
     db.add(p)
     db.flush()
@@ -337,22 +434,22 @@ def test_role_slices_p5_and_sus_ci(client):
     lo, hi = s["sus"]["by_role"]["employer"]["ci"]
     assert 0 <= lo < 75 < hi <= 100
     p5 = s["p5"]
-    # P@5 участников: 0,6; 0,4; 0,6 → среднее 0,5333
-    assert p5["n"] == 3 and p5["mean"] == pytest.approx((0.6 + 0.4 + 0.6) / 3) and p5["threshold"] == 4
-    assert p5["ratings"] == 15 and p5["ratings_relevant"] == 7 and len(p5["by_rank"]) == 5 and p5["ci"][0] <= p5["mean"] <= p5["ci"][1]
+    # P@5 участников: 0,8; 0,4; 0,6 → среднее 0,6
+    assert p5["n"] == 3 and p5["mean"] == pytest.approx(0.6) and p5["threshold"] == 4
+    assert p5["ratings"] == 15 and p5["ratings_relevant"] == 9 and len(p5["by_rank"]) == 5 and p5["ci"][0] <= p5["mean"] <= p5["ci"][1]
     assert s["belief"]["employer"]["mean"] == 4.0 and s["belief"]["candidate"]["mean"] == 3.0
     assert s["blockers"] == {texts.BLOCKER_TAGS["slow"]: 6}
 
 
 def test_completion_time_and_errors_in_summary(client):
-    refs = seed_pool(client, 3)
+    refs = seed_pool(client, 6)
     invs = issue("employer", 3)
     for i, inv in enumerate(invs):
         t, _ = employer_path(client, inv, email=f"e{i}@corp.ru", cand_ref=refs[i] if i < 2 else None)
         if i == 0:
             client.post("/api/study/events", json={"kind": "error", "key": f"/api/employer/needs/{uuid.uuid4()}",
                                                    "status": 500, "code": "http_500"}, headers=H(t))
-        client.post("/api/study/survey", json={"sus": SUS_GOOD}, headers=H(t))
+        rate_top5(client, t)
     with SessionLocal() as db:  # третий остановился на «вопрос или приглашение» (прошло больше получаса)
         p = db.scalars(select(StudyParticipant).order_by(StudyParticipant.label)).all()[2]
         assert P.derive(db, p)["current"] == "contact"
@@ -369,7 +466,7 @@ def test_withdrawn_participants_leave_no_trace(client):
     refs = seed_pool(client, 2)
     inv = issue("employer")[0]
     t, _ = employer_path(client, inv, cand_ref=refs[0])
-    client.post("/api/study/survey", json={"sus": SUS_GOOD}, headers=H(t))
+    rate_top5(client, t)
     assert client.post("/api/study/withdraw", headers=H(t)).json() == {"ok": True}
     with SessionLocal() as db:
         assert db.scalar(select(func.count()).select_from(StudyAnswer)) == 0
@@ -454,7 +551,7 @@ def test_admin_routes_are_admin_only(client):
 # ------------------------------------------------------------------ нет ПДн
 
 def test_no_personal_data_in_public_or_admin_output(client):
-    refs = seed_pool(client, 3)
+    refs = seed_pool(client, 6)
     secret_email, secret_name = "ivan.sidorov@example.com", "Сидоров Иван"
     for i in range(3):
         inv = issue("employer")[0]
@@ -463,8 +560,8 @@ def test_no_personal_data_in_public_or_admin_output(client):
                                 company_name="ООО Тайная", full_name=secret_name)
         client.post("/api/study/join", json={"code": inv["code"]}, headers=H(t))
         client.post("/api/employer/needs", json={"text": NEED}, headers=H(t))
-        client.post("/api/study/survey", json={"sus": SUS_GOOD, "comment": f"звоните {secret_email} 8 (900) 123-45-67 t.me/sidorov"}, headers=H(t))
         client.post("/api/study/events", json={"kind": "view", "key": f"/employer/candidates/{refs[0]}"}, headers=H(t))
+        rate_top5(client, t, comment=f"звоните {secret_email} 8 (900) 123-45-67 t.me/sidorov")
     with SessionLocal() as db:
         pub = json.dumps(report.public_summary(db), ensure_ascii=False)
         adm = json.dumps(report.admin_report(db, with_texts=True), ensure_ascii=False, default=str)
