@@ -87,7 +87,7 @@ export function JuryGuide() {
   const [q, setQ] = useQuickStep(mode, loc.pathname, me?.email);
   // «Показать проводник» с главной и «Скрыть» в другой вкладке — состояние берём из хранилища
   useEffect(() => {
-    const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); };
+    const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); setQ(quick.step()); };
     window.addEventListener(GUIDE_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => { window.removeEventListener(GUIDE_EVENT, sync); window.removeEventListener("storage", sync); };
