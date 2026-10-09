@@ -162,3 +162,32 @@ def test_real_potok_mock_read_only_draft_without_salary_and_no_pii(client, http,
     http.on("GET", r"jobs\.json$", (401, {"error": "unauthorized"}))
     bad = client.get(PREVIEW, headers=H(te))
     assert bad.status_code == 502 and "токен недействителен" in bad.json()["detail"]["message"]
+
+
+def test_manual_link_and_same_title_are_not_duplicated(client, ats_http):  # noqa: F811
+    """Своя вакансия, связанная с вакансией «Потока» вручную (vacancy_map), не дублируется; одноимённая —
+    помечается «возможно, дубль» и в окне не выбрана по умолчанию (импорт — только если выбрать явно)."""
+    from tests.test_integrations import VAC
+
+    te = employer(client)
+    assert client.post("/api/employer/ats/providers/potok/demo", headers=H(te)).status_code == 200
+    own = client.post("/api/employer/vacancies", json={**VAC, "title": "Интеграции, своя вакансия"}, headers=H(te)).json()
+    twin = client.post("/api/employer/vacancies", json={**VAC, "title": "frontend-разработчик  (React)"},
+                       headers=H(te)).json()
+    with SessionLocal() as db:
+        conn = db.scalars(select(AtsConnection).where(AtsConnection.provider == "potok")).first()
+        conn.vacancy_map = {own["id"]: {"id": 410102, "title": "Python-разработчик (интеграции)"}}
+        db.commit()
+    items = {x["job_id"]: x for x in client.get(PREVIEW, headers=H(te)).json()["items"]}
+    assert items[410102]["state"] == "linked" and items[410102]["vacancy_id"] == own["id"]
+    assert items[410103]["state"] == "new" and items[410103]["similar_vacancy_id"] == twin["id"]
+    assert any("проверьте, не дубль ли" in n for n in items[410103]["notes"])
+    assert items[410101]["similar_vacancy_id"] is None
+    r = client.post(IMPORT, json={}, headers=H(te)).json()
+    assert (r["created"], r["skipped"]) == (3, 1)
+    assert next(x for x in r["items"] if x["job_id"] == 410102)["state"] == "linked"
+    vs = _vacancies(client, te)
+    assert "410102" not in vs and {"410101", "410103", "410104"} <= set(vs)
+    with SessionLocal() as db:
+        conn = db.scalars(select(AtsConnection).where(AtsConnection.provider == "potok")).first()
+        assert conn.vacancy_map[own["id"]]["id"] == 410102  # ручная связь не тронута
