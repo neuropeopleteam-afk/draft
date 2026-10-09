@@ -132,9 +132,9 @@ function MustHaveBlock({ mh, nNeeds, sig }: { mh: any; nNeeds?: number; sig?: an
       </p>
       <Table head={["", ...cols.map(([, t]) => t)]}
         rows={[
-          ["match-v1 (без ярусов)", ...cols.map(([k]) => <Cell x={mh.before?.[k]} />)],
-          [<b>match-v1 + ярусы обязательного (продукт)</b>, ...cols.map(([k]) => <Cell x={mh.after?.[k]} />)],
-          ["Разница", ...cols.map(([k]) => <Cell x={mh.diff?.[k]} signed />)],
+          ["match-v1 (без ярусов)", ...cols.map(([k]) => <Cell x={mh.before?.[k]} d={3} />)],
+          [<b>match-v1 + ярусы обязательного (продукт)</b>, ...cols.map(([k]) => <Cell x={mh.after?.[k]} d={3} />)],
+          ["Разница", ...cols.map(([k]) => <Cell x={mh.diff?.[k]} signed d={3} />)],
         ]} />
       <p className="mt-2 text-xs text-brand-ink/65">Топ-5 изменился у {mh.needs_changed_top5} из {nNeeds ?? "—"} потребностей (с обязательными навыками — {mh.needs_with_required}). Разницу пишем как есть: на синтетике nDCG@10 чуть ниже, доля подтверждённого обязательного в топ-5 выше.</p>
     </>
@@ -178,12 +178,13 @@ function JuniorBlock({ jr }: { jr: any }) {
   );
 }
 
-function Cell({ x, signed = false }: { x?: { mean: number; lo: number; hi: number }; signed?: boolean }) {
+function Cell({ x, signed = false, d = 2 }: { x?: { mean: number; lo: number; hi: number }; signed?: boolean; d?: number }) {
   if (!x) return <>—</>;
+  const v = signed ? `${x.mean > 0 ? "+" : x.mean < 0 ? "−" : ""}${Math.abs(x.mean).toFixed(d).replace(".", ",")}` : n2(x.mean, d);
   return (
     <span className="whitespace-nowrap">
-      <span className="font-semibold text-brand-night">{signed ? sgn(x.mean) : n2(x.mean)}</span>
-      <span className="ml-1 text-xs text-brand-ink/65">{range(x)}</span>
+      <span className="font-semibold text-brand-night">{v}</span>
+      <span className="ml-1 text-xs text-brand-ink/65">{x.lo != null && x.hi != null ? `${n2(x.lo, d)}–${n2(x.hi, d)}` : ""}</span>
     </span>
   );
 }
