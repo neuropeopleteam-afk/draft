@@ -1,4 +1,4 @@
-"""API обезличенной статистики прохождения (/api/study/*).
+"""API статистики прохождения без личных данных (/api/study/*; записи псевдонимизированы — привязаны к учётной записи, не к имени).
 
 Для вошедшего пользователя: состояние (`me`), включение после показа уведомления (`enroll`), отказ (`decline`), события
 экранов и ошибок, необязательная анкета. Открытая публичная сводка для /validation — пустая при N < 3 завершённых путей.
@@ -79,7 +79,7 @@ def decline(user: User = Depends(get_current_user), db: Session = Depends(get_db
     return service.decline(db, user)
 
 
-@router.post("/events", status_code=204, summary="Событие экрана или ошибка интерфейса (обезличенно; без включённой статистики — без последствий)")
+@router.post("/events", status_code=204, summary="Событие экрана или ошибка интерфейса (без содержимого; без включённой статистики — без последствий)")
 def events(data: EventIn, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> Response:
     hit(_ev_user, str(user.id), "study_rate_limited", "Слишком много событий")
     service.record_event(db, user, data.kind, data.key, data.status, data.code, ua=_ua(request))
