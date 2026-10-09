@@ -116,11 +116,11 @@ export function MutualCardBlock({ needId, version, cref, mutual }: { needId: str
           <button type="button" className="text-xs font-semibold text-brand hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "Скрыть" : "Подробнее"}</button>
         </div>
       ) : <p className="text-sm text-brand-ink/65">Кандидат скрыл профиль — индикатор недоступен</p>}
-      {open && fit && <div className="border-t border-brand-night/5 pt-2"><FitFactors factors={fit.factors} /><p className="mt-1 text-xs text-brand-ink/60">Минимум зарплаты кандидата не раскрывается: только «в ожиданиях» или «ниже ожиданий».</p></div>}
+      {open && fit && <div className="border-t border-brand-night/5 pt-2"><FitFactors factors={fit.factors} /><p className="mt-1 text-xs text-brand-ink/65">Минимум зарплаты кандидата не раскрывается: только «в ожиданиях» или «ниже ожиданий».</p></div>}
       {reacts.map((x, i) => (
         <p key={i} className="text-sm"><span className={`chip ${x.verdict === "interesting" ? "!bg-emerald-50 !text-emerald-800" : ""}`}>руководитель: {x.verdict_title}</span>
           {x.comment && <span className="ml-2 text-brand-ink/80">«{x.comment}»</span>}
-          <span className="ml-2 text-xs text-brand-ink/60">{[x.author, x.share_label, dtt(x.updated_at)].filter(Boolean).join(" · ")}</span></p>
+          <span className="ml-2 text-xs text-brand-ink/65">{[x.author, x.share_label, dtt(x.updated_at)].filter(Boolean).join(" · ")}</span></p>
       ))}
       <div className="flex flex-wrap items-center gap-2">
         {fb ? (
@@ -195,7 +195,7 @@ function ShareModal({ open, onClose, needId, version }: { open: boolean; onClose
                   <span><b className="font-semibold">{s.label || "Без подписи"}</b> · v{s.version} · {STATUS[s.status]} · просмотров: {s.views}</span>
                   {s.status === "active" && <button type="button" className="text-xs font-semibold text-brand hover:underline" onClick={() => revoke(s.id)}>Отозвать</button>}
                 </div>
-                <p className="text-xs text-brand-ink/60">создана {dtt(s.created_at)} · {s.status === "revoked" ? `отозвана ${dtt(s.revoked_at)}` : `до ${dtt(s.expires_at)}`}</p>
+                <p className="text-xs text-brand-ink/65">создана {dtt(s.created_at)} · {s.status === "revoked" ? `отозвана ${dtt(s.revoked_at)}` : `до ${dtt(s.expires_at)}`}</p>
                 {s.reactions.map((r: any) => <p key={r.ref} className="text-xs"><span className="font-semibold">{r.ref}</span>: {r.verdict_title}{r.comment ? ` — «${r.comment}»` : ""}{r.author ? ` (${r.author})` : ""}</p>)}
               </li>
             ))}

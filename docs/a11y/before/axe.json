@@ -1,0 +1,1708 @@
+{
+  "base": "http://127.0.0.1:5138",
+  "at": "2026-10-09T08:54:49.726Z",
+  "results": [
+    {
+      "screen": "landing",
+      "viewport": "1440",
+      "url": "/",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 2,
+        "minor": 0
+      },
+      "total": 3,
+      "nodes": 14,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 3,
+          "targets": [
+            {
+              "target": ".gap-2:nth-child(1) > .text-brand-soft.font-bold",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.88 (foreground color: #fc3777, background color: #3d1d5d, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"font-bold text-brand-soft\">T1</span>"
+            },
+            {
+              "target": ".gap-2:nth-child(2) > .text-brand-soft.font-bold",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.88 (foreground color: #fc3777, background color: #3d1d5d, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"font-bold text-brand-soft\">T1</span>"
+            },
+            {
+              "target": ".text-brand-lavender.font-bold",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 2.31 (foreground color: #5f57b8, background color: #3d1d5d, font size: 10.5pt (14px), font weight: bold). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"font-bold text-brand-lavender\">T2</span>"
+            }
+          ]
+        },
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "help": "Document should have one main landmark",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following:\n  Document does not have a main landmark",
+              "html": "<html lang=\"ru\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "help": "All page content should be contained by landmarks",
+          "nodes": 10,
+          "targets": [
+            {
+              "target": ".chip",
+              "summary": "Fix any of the following:\n  Some page content is not contained by landmarks",
+              "html": "<span class=\"chip bg-white/10 text-brand-blush\">Спецтрек ФСП · ЛЦТ 2026</span>"
+            },
+            {
+              "target": "h1",
+              "summary": "Fix any of the following:\n  Some page content is not contained by landmarks",
+              "html": "<h1 class=\"mt-5 text-[2.1rem] font-extrabold leading-[1.15] tracking-tight sm:text-4xl md:text-[3.1rem]\">Работодатель находит вас сам — и сразу называет зарплату</h1>"
+            },
+            {
+              "target": ".max-w-xl",
+              "summary": "Fix any of the following:\n  Some page content is not contained by landmarks",
+              "html": "<p class=\"mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg\">"
+            },
+            {
+              "target": ".mt-8.flex-wrap.gap-3",
+              "summary": "Fix any of the following:\n  Some page content is not contained by landmarks",
+              "html": "<div class=\"mt-8 flex flex-wrap gap-3\"><a class=\"btn-primary px-6\" href=\"/register?role=candidate\">Я ищу работу</a><a class=\"btn-light px-6\" href=\"/register?role=employer\">Я нанимаю</a></div>"
+            }
+          ]
+        }
+      ],
+      "ms": 3257
+    },
+    {
+      "screen": "login",
+      "viewport": "1440",
+      "url": "/login",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 1,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": "a[href$=\"/#jury\"]",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #e0004c, background color: #ffeff4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<a class=\"font-semibold text-brand hover:text-brand-soft\" href=\"/#jury\">главной</a>"
+            }
+          ]
+        }
+      ],
+      "ms": 2561
+    },
+    {
+      "screen": "register",
+      "viewport": "1440",
+      "url": "/register",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 3121
+    },
+    {
+      "screen": "validation",
+      "viewport": "1440",
+      "url": "/validation",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 1
+      },
+      "total": 2,
+      "nodes": 19,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 17,
+          "targets": [
+            {
+              "target": ".p-4.rounded-2xl.ring-brand-night\\/10:nth-child(1) > .text-brand-ink\\/60.tracking-\\[0\\.06em\\].uppercase",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.46 (foreground color: #77777a, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<div class=\"text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60\">Предварительных среди заявивших Junior</div>"
+            },
+            {
+              "target": ".p-4.rounded-2xl.ring-brand-night\\/10:nth-child(2) > .text-brand-ink\\/60.tracking-\\[0\\.06em\\].uppercase",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.46 (foreground color: #77777a, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<div class=\"text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60\">Ложные отказы: до → после</div>"
+            },
+            {
+              "target": ".p-4.rounded-2xl.ring-brand-night\\/10:nth-child(3) > .text-brand-ink\\/60.tracking-\\[0\\.06em\\].uppercase",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.46 (foreground color: #77777a, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<div class=\"text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60\">Ложных предварительных</div>"
+            },
+            {
+              "target": ".p-4.rounded-2xl.ring-brand-night\\/10:nth-child(4) > .text-brand-ink\\/60.tracking-\\[0\\.06em\\].uppercase",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.46 (foreground color: #77777a, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<div class=\"text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60\">После дотестирования остаётся предварительных</div>"
+            }
+          ]
+        },
+        {
+          "id": "empty-table-header",
+          "impact": "minor",
+          "help": "Table header text should not be empty",
+          "nodes": 2,
+          "targets": [
+            {
+              "target": "#junior > .mt-4 > .overflow-x-auto.rounded-2xl.ring-brand-night\\/10:nth-child(5) > .min-w-\\[44rem\\] > thead > tr > .py-2\\.5[scope=\"col\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Element does not have text that is visible to screen readers",
+              "html": "<th scope=\"col\" class=\"px-3 py-2.5 font-semibold\"></th>"
+            },
+            {
+              "target": ".overflow-x-auto.mt-3.rounded-2xl:nth-child(11) > .min-w-\\[44rem\\] > thead > tr > .py-2\\.5[scope=\"col\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Element does not have text that is visible to screen readers",
+              "html": "<th scope=\"col\" class=\"px-3 py-2.5 font-semibold\"></th>"
+            }
+          ]
+        }
+      ],
+      "ms": 11341
+    },
+    {
+      "screen": "cand_overview",
+      "viewport": "1440",
+      "url": "/candidate",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2747
+    },
+    {
+      "screen": "cand_category",
+      "viewport": "1440",
+      "url": "/candidate/category",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2824
+    },
+    {
+      "screen": "cand_invitations",
+      "viewport": "1440",
+      "url": "/candidate/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2186
+    },
+    {
+      "screen": "cand_invitation_modal",
+      "viewport": "1440",
+      "url": "/candidate/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2175
+    },
+    {
+      "screen": "cand_profile",
+      "viewport": "1440",
+      "url": "/candidate/profile",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2328
+    },
+    {
+      "screen": "cand_feedback",
+      "viewport": "1440",
+      "url": "/candidate/feedback",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 3423
+    },
+    {
+      "screen": "test_start",
+      "viewport": "1440",
+      "url": "/candidate/express",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2644
+    },
+    {
+      "screen": "test_item",
+      "viewport": "1440",
+      "url": "/candidate/assessment/test/3502e3b4-da4e-459e-ad79-a8b1a0c3c7b9",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 1,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 1,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "help": "Page should contain a level-one heading",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following:\n  Page must have a level-one heading",
+              "html": "<html lang=\"ru\">"
+            }
+          ]
+        }
+      ],
+      "ms": 3170
+    },
+    {
+      "screen": "test_result",
+      "viewport": "1440",
+      "url": "/candidate/assessment/test/3502e3b4-da4e-459e-ad79-a8b1a0c3c7b9",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 5638
+    },
+    {
+      "screen": "emp_overview",
+      "viewport": "1440",
+      "url": "/employer",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2772
+    },
+    {
+      "screen": "emp_needs",
+      "viewport": "1440",
+      "url": "/employer/needs",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2611
+    },
+    {
+      "screen": "selection",
+      "viewport": "1440",
+      "url": "/employer/needs/20e5823e-e148-444f-9d3f-6c2a901f6611",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 1,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 5,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 4,
+          "targets": [
+            {
+              "target": ".text-amber-900\\/70",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.15 (foreground color: #a17257, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<p class=\"text-xs font-semibold uppercase tracking-[0.12em] text-amber-900/70\">Текст через навыки</p>"
+            },
+            {
+              "target": ".justify-between:nth-child(1) > .chip > .text-brand-ink\\/50",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.03 (foreground color: #8e7a83, background color: #ffd6e4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"text-brand-ink/50\"> +2</span>"
+            },
+            {
+              "target": ".justify-between:nth-child(2) > .chip > .text-brand-ink\\/50",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.03 (foreground color: #8e7a83, background color: #ffd6e4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"text-brand-ink/50\"> +1</span>"
+            },
+            {
+              "target": ".text-brand-ink\\/50.mt-2",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.26 (foreground color: #8e8e91, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<p class=\"mt-2 text-xs text-brand-ink/50\">+n — заявили категорию, грейд не подтверждён: в подборке ниже всех подтверждённых</p>"
+            }
+          ]
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".sticky",
+              "summary": "Fix any of the following:\n  The landmark must have a unique aria-label, aria-labelledby, or title to make landmarks distinguishable",
+              "html": "<aside class=\"sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none\">"
+            }
+          ]
+        }
+      ],
+      "ms": 15118
+    },
+    {
+      "screen": "candidate_card",
+      "viewport": "1440",
+      "url": "/employer/candidates/C-HLN4QC?need=20e5823e-e148-444f-9d3f-6c2a901f6611",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2509
+    },
+    {
+      "screen": "invite_modal",
+      "viewport": "1440",
+      "url": "/employer/candidates/C-HLN4QC?need=20e5823e-e148-444f-9d3f-6c2a901f6611",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2483
+    },
+    {
+      "screen": "emp_invitations",
+      "viewport": "1440",
+      "url": "/employer/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 1,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".py-0\\.5",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.9 (foreground color: #ffffff, background color: #ff0053, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white\">Новых: 1</span>"
+            }
+          ]
+        }
+      ],
+      "ms": 2515
+    },
+    {
+      "screen": "emp_probes",
+      "viewport": "1440",
+      "url": "/employer/probes",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2658
+    },
+    {
+      "screen": "emp_search",
+      "viewport": "1440",
+      "url": "/employer/search",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 1,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 8,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 7,
+          "targets": [
+            {
+              "target": "li:nth-child(2) > span:nth-child(2) > .text-brand-ink\\/50",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.26 (foreground color: #8e8e91, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"text-brand-ink/50\"> +1</span>"
+            },
+            {
+              "target": "li:nth-child(3) > span:nth-child(2) > .text-brand-ink\\/50",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.26 (foreground color: #8e8e91, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"text-brand-ink/50\"> +2</span>"
+            },
+            {
+              "target": "li:nth-child(6) > span:nth-child(2) > .text-brand-ink\\/50",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.26 (foreground color: #8e8e91, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"text-brand-ink/50\"> +1</span>"
+            },
+            {
+              "target": "li:nth-child(12) > span:nth-child(2) > .text-brand-ink\\/50",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.26 (foreground color: #8e8e91, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"text-brand-ink/50\"> +1</span>"
+            }
+          ]
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".sticky",
+              "summary": "Fix any of the following:\n  The landmark must have a unique aria-label, aria-labelledby, or title to make landmarks distinguishable",
+              "html": "<aside class=\"sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none\">"
+            }
+          ]
+        }
+      ],
+      "ms": 8723
+    },
+    {
+      "screen": "emp_compare",
+      "viewport": "1440",
+      "url": "/employer/needs/20e5823e-e148-444f-9d3f-6c2a901f6611/compare",
+      "counts": {
+        "critical": 1,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 8,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 8,
+          "targets": [
+            {
+              "target": ".contents[role=\"rowgroup\"]:nth-child(2) > .contents[role=\"row\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Required ARIA children role not present: cell, columnheader, gridcell, rowheader",
+              "html": "<div role=\"row\" class=\"contents\">"
+            },
+            {
+              "target": ".contents[role=\"rowgroup\"]:nth-child(3) > .contents[role=\"row\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Required ARIA children role not present: cell, columnheader, gridcell, rowheader",
+              "html": "<div role=\"row\" class=\"contents\">"
+            },
+            {
+              "target": ".contents[role=\"rowgroup\"]:nth-child(4) > .contents[role=\"row\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Required ARIA children role not present: cell, columnheader, gridcell, rowheader",
+              "html": "<div role=\"row\" class=\"contents\">"
+            },
+            {
+              "target": ".contents[role=\"rowgroup\"]:nth-child(5) > .contents[role=\"row\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Required ARIA children role not present: cell, columnheader, gridcell, rowheader",
+              "html": "<div role=\"row\" class=\"contents\">"
+            }
+          ]
+        }
+      ],
+      "ms": 3131
+    },
+    {
+      "screen": "expert_home",
+      "viewport": "1440",
+      "url": "/expert",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 3,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "nodes": 3,
+          "targets": [
+            {
+              "target": ".hover\\:border-brand\\/40.card[href$=\"pairs\"] > .mt-4.space-y-1\\.5 > .h-2.w-full.overflow-hidden",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            },
+            {
+              "target": ".hover\\:border-brand\\/40.card[href$=\"answers\"] > .mt-4.space-y-1\\.5 > .h-2.w-full.overflow-hidden",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            },
+            {
+              "target": ".hover\\:border-brand\\/40.card[href$=\"angoff\"] > .mt-4.space-y-1\\.5 > .h-2.w-full.overflow-hidden",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            }
+          ]
+        }
+      ],
+      "ms": 2674
+    },
+    {
+      "screen": "expert_pairs",
+      "viewport": "1440",
+      "url": "/expert/pairs",
+      "counts": {
+        "critical": 0,
+        "serious": 2,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 24,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".h-2",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            }
+          ]
+        },
+        {
+          "id": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 23,
+          "targets": [
+            {
+              "target": ".ring-2",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"1\" aria-label=\"Объект 1\" class=\"h-3 w-3 rounded-sm ring-2 ring-brand ring-offset-1 bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"2\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"2\" aria-label=\"Объект 2\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"3\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"3\" aria-label=\"Объект 3\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"4\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"4\" aria-label=\"Объект 4\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            }
+          ]
+        }
+      ],
+      "ms": 2522
+    },
+    {
+      "screen": "expert_answers",
+      "viewport": "1440",
+      "url": "/expert/answers",
+      "counts": {
+        "critical": 0,
+        "serious": 2,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 7,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".h-2",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            }
+          ]
+        },
+        {
+          "id": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 6,
+          "targets": [
+            {
+              "target": ".ring-2",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"1\" aria-label=\"Объект 1\" class=\"h-3 w-3 rounded-sm ring-2 ring-brand ring-offset-1 bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"2\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"2\" aria-label=\"Объект 2\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"3\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"3\" aria-label=\"Объект 3\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"4\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"4\" aria-label=\"Объект 4\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            }
+          ]
+        }
+      ],
+      "ms": 2793
+    },
+    {
+      "screen": "expert_angoff",
+      "viewport": "1440",
+      "url": "/expert/angoff",
+      "counts": {
+        "critical": 0,
+        "serious": 2,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 7,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".h-2",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            }
+          ]
+        },
+        {
+          "id": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 6,
+          "targets": [
+            {
+              "target": ".ring-2",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"1\" aria-label=\"Объект 1\" class=\"h-3 w-3 rounded-sm ring-2 ring-brand ring-offset-1 bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"2\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"2\" aria-label=\"Объект 2\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"3\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"3\" aria-label=\"Объект 3\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"4\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"4\" aria-label=\"Объект 4\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            }
+          ]
+        }
+      ],
+      "ms": 2289
+    },
+    {
+      "screen": "expert_review",
+      "viewport": "1440",
+      "url": "/expert/review",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2642
+    },
+    {
+      "screen": "landing",
+      "viewport": "390",
+      "url": "/",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 2,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 10,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "landmark-one-main",
+          "impact": "moderate",
+          "help": "Document should have one main landmark",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following:\n  Document does not have a main landmark",
+              "html": "<html lang=\"ru\">"
+            }
+          ]
+        },
+        {
+          "id": "region",
+          "impact": "moderate",
+          "help": "All page content should be contained by landmarks",
+          "nodes": 9,
+          "targets": [
+            {
+              "target": ".chip",
+              "summary": "Fix any of the following:\n  Some page content is not contained by landmarks",
+              "html": "<span class=\"chip bg-white/10 text-brand-blush\">Спецтрек ФСП · ЛЦТ 2026</span>"
+            },
+            {
+              "target": "h1",
+              "summary": "Fix any of the following:\n  Some page content is not contained by landmarks",
+              "html": "<h1 class=\"mt-5 text-[2.1rem] font-extrabold leading-[1.15] tracking-tight sm:text-4xl md:text-[3.1rem]\">Работодатель находит вас сам — и сразу называет зарплату</h1>"
+            },
+            {
+              "target": ".max-w-xl",
+              "summary": "Fix any of the following:\n  Some page content is not contained by landmarks",
+              "html": "<p class=\"mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg\">"
+            },
+            {
+              "target": ".mt-8.flex-wrap.gap-3",
+              "summary": "Fix any of the following:\n  Some page content is not contained by landmarks",
+              "html": "<div class=\"mt-8 flex flex-wrap gap-3\"><a class=\"btn-primary px-6\" href=\"/register?role=candidate\">Я ищу работу</a><a class=\"btn-light px-6\" href=\"/register?role=employer\">Я нанимаю</a></div>"
+            }
+          ]
+        }
+      ],
+      "ms": 2680
+    },
+    {
+      "screen": "login",
+      "viewport": "390",
+      "url": "/login",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 1,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": "a[href$=\"/#jury\"]",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.42 (foreground color: #e0004c, background color: #ffeff4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<a class=\"font-semibold text-brand hover:text-brand-soft\" href=\"/#jury\">главной</a>"
+            }
+          ]
+        }
+      ],
+      "ms": 1986
+    },
+    {
+      "screen": "register",
+      "viewport": "390",
+      "url": "/register",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1917
+    },
+    {
+      "screen": "validation",
+      "viewport": "390",
+      "url": "/validation",
+      "counts": {
+        "critical": 0,
+        "serious": 2,
+        "moderate": 0,
+        "minor": 1
+      },
+      "total": 3,
+      "nodes": 44,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 17,
+          "targets": [
+            {
+              "target": ".p-4.rounded-2xl.ring-brand-night\\/10:nth-child(1) > .text-brand-ink\\/60.tracking-\\[0\\.06em\\].uppercase",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.46 (foreground color: #77777a, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<div class=\"text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60\">Предварительных среди заявивших Junior</div>"
+            },
+            {
+              "target": ".p-4.rounded-2xl.ring-brand-night\\/10:nth-child(2) > .text-brand-ink\\/60.tracking-\\[0\\.06em\\].uppercase",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.46 (foreground color: #77777a, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<div class=\"text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60\">Ложные отказы: до → после</div>"
+            },
+            {
+              "target": ".p-4.rounded-2xl.ring-brand-night\\/10:nth-child(3) > .text-brand-ink\\/60.tracking-\\[0\\.06em\\].uppercase",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.46 (foreground color: #77777a, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<div class=\"text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60\">Ложных предварительных</div>"
+            },
+            {
+              "target": ".p-4.rounded-2xl.ring-brand-night\\/10:nth-child(4) > .text-brand-ink\\/60.tracking-\\[0\\.06em\\].uppercase",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.46 (foreground color: #77777a, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<div class=\"text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60\">После дотестирования остаётся предварительных</div>"
+            }
+          ]
+        },
+        {
+          "id": "empty-table-header",
+          "impact": "minor",
+          "help": "Table header text should not be empty",
+          "nodes": 2,
+          "targets": [
+            {
+              "target": "#junior > .mt-4 > .overflow-x-auto.rounded-2xl.ring-brand-night\\/10:nth-child(5) > .min-w-\\[44rem\\] > thead > tr > .py-2\\.5[scope=\"col\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Element does not have text that is visible to screen readers",
+              "html": "<th scope=\"col\" class=\"px-3 py-2.5 font-semibold\"></th>"
+            },
+            {
+              "target": ".overflow-x-auto.mt-3.rounded-2xl:nth-child(11) > .min-w-\\[44rem\\] > thead > tr > .py-2\\.5[scope=\"col\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Element does not have text that is visible to screen readers",
+              "html": "<th scope=\"col\" class=\"px-3 py-2.5 font-semibold\"></th>"
+            }
+          ]
+        },
+        {
+          "id": "scrollable-region-focusable",
+          "impact": "serious",
+          "help": "Scrollable region must have keyboard access",
+          "nodes": 25,
+          "targets": [
+            {
+              "target": "#test > .mt-4 > .overflow-x-auto.rounded-2xl.ring-brand-night\\/10",
+              "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable",
+              "html": "<div class=\"overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10\">"
+            },
+            {
+              "target": "#retest > .mt-4 > .overflow-x-auto.rounded-2xl.ring-brand-night\\/10:nth-child(1)",
+              "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable",
+              "html": "<div class=\"overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10\">"
+            },
+            {
+              "target": "#retest > .mt-4 > .overflow-x-auto.rounded-2xl.ring-brand-night\\/10:nth-child(5)",
+              "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable",
+              "html": "<div class=\"overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10\">"
+            },
+            {
+              "target": ".overflow-x-auto.rounded-2xl.ring-brand-night\\/10:nth-child(9)",
+              "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable",
+              "html": "<div class=\"overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10\">"
+            }
+          ]
+        }
+      ],
+      "ms": 9696
+    },
+    {
+      "screen": "cand_overview",
+      "viewport": "390",
+      "url": "/candidate",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2368
+    },
+    {
+      "screen": "cand_category",
+      "viewport": "390",
+      "url": "/candidate/category",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2743
+    },
+    {
+      "screen": "cand_invitations",
+      "viewport": "390",
+      "url": "/candidate/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2184
+    },
+    {
+      "screen": "cand_invitation_modal",
+      "viewport": "390",
+      "url": "/candidate/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2352
+    },
+    {
+      "screen": "cand_profile",
+      "viewport": "390",
+      "url": "/candidate/profile",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2629
+    },
+    {
+      "screen": "cand_feedback",
+      "viewport": "390",
+      "url": "/candidate/feedback",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 3215
+    },
+    {
+      "screen": "test_start",
+      "viewport": "390",
+      "url": "/candidate/express",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2419
+    },
+    {
+      "screen": "test_item",
+      "viewport": "390",
+      "url": "/candidate/assessment/test/95702c3a-d4c0-4ef2-b371-01fffe6a5a85",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 1,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 1,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "page-has-heading-one",
+          "impact": "moderate",
+          "help": "Page should contain a level-one heading",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": "html",
+              "summary": "Fix all of the following:\n  Page must have a level-one heading",
+              "html": "<html lang=\"ru\">"
+            }
+          ]
+        }
+      ],
+      "ms": 2898
+    },
+    {
+      "screen": "test_result",
+      "viewport": "390",
+      "url": "/candidate/assessment/test/95702c3a-d4c0-4ef2-b371-01fffe6a5a85",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 7010
+    },
+    {
+      "screen": "emp_overview",
+      "viewport": "390",
+      "url": "/employer",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2333
+    },
+    {
+      "screen": "emp_needs",
+      "viewport": "390",
+      "url": "/employer/needs",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 1968
+    },
+    {
+      "screen": "selection",
+      "viewport": "390",
+      "url": "/employer/needs/a1adcb7e-910e-4081-a969-8fdaa65bb9a9",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 1,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 5,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 4,
+          "targets": [
+            {
+              "target": ".text-amber-900\\/70",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 4.15 (foreground color: #a17257, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<p class=\"text-xs font-semibold uppercase tracking-[0.12em] text-amber-900/70\">Текст через навыки</p>"
+            },
+            {
+              "target": ".justify-between:nth-child(1) > .chip > .text-brand-ink\\/50",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.03 (foreground color: #8e7a83, background color: #ffd6e4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"text-brand-ink/50\"> +2</span>"
+            },
+            {
+              "target": ".justify-between:nth-child(2) > .chip > .text-brand-ink\\/50",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.03 (foreground color: #8e7a83, background color: #ffd6e4, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"text-brand-ink/50\"> +1</span>"
+            },
+            {
+              "target": ".text-brand-ink\\/50.mt-2",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.26 (foreground color: #8e8e91, background color: #ffffff, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1",
+              "html": "<p class=\"mt-2 text-xs text-brand-ink/50\">+n — заявили категорию, грейд не подтверждён: в подборке ниже всех подтверждённых</p>"
+            }
+          ]
+        },
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".sticky",
+              "summary": "Fix any of the following:\n  The landmark must have a unique aria-label, aria-labelledby, or title to make landmarks distinguishable",
+              "html": "<aside class=\"sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none\">"
+            }
+          ]
+        }
+      ],
+      "ms": 16472
+    },
+    {
+      "screen": "candidate_card",
+      "viewport": "390",
+      "url": "/employer/candidates/C-HLN4QC?need=a1adcb7e-910e-4081-a969-8fdaa65bb9a9",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2322
+    },
+    {
+      "screen": "invite_modal",
+      "viewport": "390",
+      "url": "/employer/candidates/C-HLN4QC?need=a1adcb7e-910e-4081-a969-8fdaa65bb9a9",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2284
+    },
+    {
+      "screen": "emp_invitations",
+      "viewport": "390",
+      "url": "/employer/invitations",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 1,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "color-contrast",
+          "impact": "serious",
+          "help": "Elements must meet minimum color contrast ratio thresholds",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".py-0\\.5",
+              "summary": "Fix any of the following:\n  Element has insufficient color contrast of 3.9 (foreground color: #ffffff, background color: #ff0053, font size: 9.0pt (12px), font weight: bold). Expected contrast ratio of 4.5:1",
+              "html": "<span class=\"rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white\">Новых: 1</span>"
+            }
+          ]
+        }
+      ],
+      "ms": 2544
+    },
+    {
+      "screen": "emp_probes",
+      "viewport": "390",
+      "url": "/employer/probes",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 0,
+      "nodes": 0,
+      "hscroll": 0,
+      "violations": [],
+      "ms": 2125
+    },
+    {
+      "screen": "emp_search",
+      "viewport": "390",
+      "url": "/employer/search",
+      "counts": {
+        "critical": 0,
+        "serious": 0,
+        "moderate": 1,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 1,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "landmark-unique",
+          "impact": "moderate",
+          "help": "Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".sticky",
+              "summary": "Fix any of the following:\n  The landmark must have a unique aria-label, aria-labelledby, or title to make landmarks distinguishable",
+              "html": "<aside class=\"sticky -top-14 z-30 border-b border-brand-night/10 bg-white/95 backdrop-blur md:top-0 md:flex md:h-screen md:flex-col md:border-b-0 md:border-r md:bg-white md:backdrop-blur-none\">"
+            }
+          ]
+        }
+      ],
+      "ms": 12296
+    },
+    {
+      "screen": "emp_compare",
+      "viewport": "390",
+      "url": "/employer/needs/a1adcb7e-910e-4081-a969-8fdaa65bb9a9/compare",
+      "counts": {
+        "critical": 1,
+        "serious": 0,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 8,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-required-children",
+          "impact": "critical",
+          "help": "Certain ARIA roles must contain particular children",
+          "nodes": 8,
+          "targets": [
+            {
+              "target": ".contents[role=\"rowgroup\"]:nth-child(2) > .contents[role=\"row\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Required ARIA children role not present: cell, columnheader, gridcell, rowheader",
+              "html": "<div role=\"row\" class=\"contents\">"
+            },
+            {
+              "target": ".contents[role=\"rowgroup\"]:nth-child(3) > .contents[role=\"row\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Required ARIA children role not present: cell, columnheader, gridcell, rowheader",
+              "html": "<div role=\"row\" class=\"contents\">"
+            },
+            {
+              "target": ".contents[role=\"rowgroup\"]:nth-child(4) > .contents[role=\"row\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Required ARIA children role not present: cell, columnheader, gridcell, rowheader",
+              "html": "<div role=\"row\" class=\"contents\">"
+            },
+            {
+              "target": ".contents[role=\"rowgroup\"]:nth-child(5) > .contents[role=\"row\"]:nth-child(1)",
+              "summary": "Fix any of the following:\n  Required ARIA children role not present: cell, columnheader, gridcell, rowheader",
+              "html": "<div role=\"row\" class=\"contents\">"
+            }
+          ]
+        }
+      ],
+      "ms": 3917
+    },
+    {
+      "screen": "expert_home",
+      "viewport": "390",
+      "url": "/expert",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 3,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "nodes": 3,
+          "targets": [
+            {
+              "target": ".hover\\:border-brand\\/40.card[href$=\"pairs\"] > .mt-4.space-y-1\\.5 > .h-2.w-full.overflow-hidden",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            },
+            {
+              "target": ".hover\\:border-brand\\/40.card[href$=\"answers\"] > .mt-4.space-y-1\\.5 > .h-2.w-full.overflow-hidden",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            },
+            {
+              "target": ".hover\\:border-brand\\/40.card[href$=\"angoff\"] > .mt-4.space-y-1\\.5 > .h-2.w-full.overflow-hidden",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            }
+          ]
+        }
+      ],
+      "ms": 2172
+    },
+    {
+      "screen": "expert_pairs",
+      "viewport": "390",
+      "url": "/expert/pairs",
+      "counts": {
+        "critical": 0,
+        "serious": 2,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 24,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".h-2",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            }
+          ]
+        },
+        {
+          "id": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 23,
+          "targets": [
+            {
+              "target": ".ring-2",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"1\" aria-label=\"Объект 1\" class=\"h-3 w-3 rounded-sm ring-2 ring-brand ring-offset-1 bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"2\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"2\" aria-label=\"Объект 2\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"3\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"3\" aria-label=\"Объект 3\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"4\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"4\" aria-label=\"Объект 4\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            }
+          ]
+        }
+      ],
+      "ms": 2192
+    },
+    {
+      "screen": "expert_answers",
+      "viewport": "390",
+      "url": "/expert/answers",
+      "counts": {
+        "critical": 0,
+        "serious": 2,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 2,
+      "nodes": 7,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".h-2",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            }
+          ]
+        },
+        {
+          "id": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 6,
+          "targets": [
+            {
+              "target": ".ring-2",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"1\" aria-label=\"Объект 1\" class=\"h-3 w-3 rounded-sm ring-2 ring-brand ring-offset-1 bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"2\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"2\" aria-label=\"Объект 2\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"3\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"3\" aria-label=\"Объект 3\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"4\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"4\" aria-label=\"Объект 4\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            }
+          ]
+        }
+      ],
+      "ms": 2624
+    },
+    {
+      "screen": "expert_angoff",
+      "viewport": "390",
+      "url": "/expert/angoff",
+      "counts": {
+        "critical": 0,
+        "serious": 3,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 3,
+      "nodes": 8,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "aria-progressbar-name",
+          "impact": "serious",
+          "help": "ARIA progressbar nodes must have an accessible name",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": ".h-2",
+              "summary": "Fix any of the following:\n  aria-label attribute does not exist or is empty\n  aria-labelledby attribute does not exist, references elements that do not exist or references elements that are empty\n  Element has no title attribute",
+              "html": "<div class=\"h-2 w-full overflow-hidden rounded-full bg-brand-blush/50\" role=\"progressbar\" aria-valuenow=\"0\" aria-valuemin=\"0\" aria-valuemax=\"100\"><div class=\"h-full rounded-full bg-brand transition-al"
+            }
+          ]
+        },
+        {
+          "id": "scrollable-region-focusable",
+          "impact": "serious",
+          "help": "Scrollable region must have keyboard access",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": "pre",
+              "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable",
+              "html": "<pre class=\"max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]\"><code>START=/srv/app/shared/logs\nrealpath -m \"$START/.//.//../../releases/v1\"\n</code></pre>"
+            }
+          ]
+        },
+        {
+          "id": "target-size",
+          "impact": "serious",
+          "help": "All touch targets must be 24px large, or leave sufficient space",
+          "nodes": 6,
+          "targets": [
+            {
+              "target": ".ring-2",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"1\" aria-label=\"Объект 1\" class=\"h-3 w-3 rounded-sm ring-2 ring-brand ring-offset-1 bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"2\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"2\" aria-label=\"Объект 2\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"3\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"3\" aria-label=\"Объект 3\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            },
+            {
+              "target": "button[title=\"4\"]",
+              "summary": "Fix any of the following:\n  Target has insufficient size (12px by 12px, should be at least 24px by 24px)\n  Target has insufficient space to its closest neighbors. Safe clickable space has a diameter of 8px instead of at least 24px.",
+              "html": "<button type=\"button\" title=\"4\" aria-label=\"Объект 4\" class=\"h-3 w-3 rounded-sm  bg-brand-blush\"></button>"
+            }
+          ]
+        }
+      ],
+      "ms": 2980
+    },
+    {
+      "screen": "expert_review",
+      "viewport": "390",
+      "url": "/expert/review",
+      "counts": {
+        "critical": 0,
+        "serious": 1,
+        "moderate": 0,
+        "minor": 0
+      },
+      "total": 1,
+      "nodes": 1,
+      "hscroll": 0,
+      "violations": [
+        {
+          "id": "scrollable-region-focusable",
+          "impact": "serious",
+          "help": "Scrollable region must have keyboard access",
+          "nodes": 1,
+          "targets": [
+            {
+              "target": "pre",
+              "summary": "Fix any of the following:\n  Element should have focusable content\n  Element should be focusable",
+              "html": "<pre class=\"mt-3 max-h-72 overflow-auto rounded-xl bg-brand-ink p-3 text-xs leading-relaxed text-[#FFD6E4]\">"
+            }
+          ]
+        }
+      ],
+      "ms": 3079
+    }
+  ]
+}

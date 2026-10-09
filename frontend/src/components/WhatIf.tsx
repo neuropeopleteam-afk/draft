@@ -23,7 +23,7 @@ export function WhatIf({ needId, version, next, busy, onApply }: {
     <p className="text-sm text-brand-ink/80">
       Полностью подходят: <b className="text-brand-night">{num(d.strict, 0)}</b> из {num(d.confirmed_in_categories, 0)} подтверждённых
       в выбранных категориях
-      <span className="block text-xs text-brand-ink/60">{d.criteria.join("; ")}</span>
+      <span className="block text-xs text-brand-ink/65">{d.criteria.join("; ")}</span>
     </p>
   );
   if (!d.shown) {
@@ -56,7 +56,7 @@ export function WhatIf({ needId, version, next, busy, onApply }: {
           {d.options.map((o) => (
             <li key={o.kind + o.key} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-brand-blush/25 px-3 py-2">
               <span className="min-w-0 text-sm"><b className="font-semibold">{o.text}</b>
-                <span className="block text-xs text-brand-ink/60">станет {num(o.result, 0)} полностью подходящих · {o.action[0].toLowerCase() + o.action.slice(1)}</span></span>
+                <span className="block text-xs text-brand-ink/65">станет {num(o.result, 0)} полностью подходящих · {o.action[0].toLowerCase() + o.action.slice(1)}</span></span>
               <button type="button" className="btn-ghost !py-1.5 text-sm" disabled={busy} onClick={() => onApply(o.apply)}>Применить как v{next}</button>
             </li>
           ))}
@@ -67,7 +67,7 @@ export function WhatIf({ needId, version, next, busy, onApply }: {
       )}
       {d.provisional_full > 0 && <p className="text-xs text-brand-ink/70">Ещё {num(d.provisional_full, 0)} со статусом «предварительно» (грейд у порога, не подтверждён) проходят все требования — они в подборке ниже подтверждённых и в приросты не входят; короткое дотестирование может подтвердить грейд.</p>}
       {d.salary && <p className="text-xs text-brand-ink/70">{d.salary.text}</p>}
-      <p className="text-xs text-brand-ink/55">Считаются только кандидаты с подтверждённым грейдом. Зарплатные ожидания кандидатов скрыты и не отсекают.
+      <p className="text-xs text-brand-ink/65">Считаются только кандидаты с подтверждённым грейдом. Зарплатные ожидания кандидатов скрыты и не отсекают.
         Применение создаёт новую версию подборки — прежние сохраняются.</p>
     </section>
   );

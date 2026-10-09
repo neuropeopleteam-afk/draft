@@ -93,7 +93,7 @@ export function Thread({ kind, id, compact, onUpdate }: { kind: ThreadKind; id: 
             <div className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm ${m.mine ? "rounded-br-md bg-brand-night text-white" : "rounded-bl-md bg-white text-brand-ink"}`}>
               <p className={`mb-0.5 text-[11px] font-semibold ${m.mine ? "text-white/70" : "text-brand-plum"}`}>{m.mine ? "Вы" : other}</p>
               <Body text={m.body} mine={m.mine} />
-              <p className={`mt-1 text-right text-[11px] ${m.mine ? "text-white/60" : "text-brand-ink/50"}`}>
+              <p className={`mt-1 text-right text-[11px] ${m.mine ? "text-white/60" : "text-brand-ink/65"}`}>
                 {dtt(m.at)}{m.mine ? (m.read_at ? " · прочитано" : " · не прочитано") : ""}
               </p>
             </div>
@@ -107,7 +107,7 @@ export function Thread({ kind, id, compact, onUpdate }: { kind: ThreadKind; id: 
             placeholder={t.side === "candidate" ? (qa ? "Вопрос работодателю" : "Сообщение работодателю") : (qa ? "Вопрос или ответ кандидату" : "Сообщение кандидату")}
             onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) void send(); }} />
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-xs text-brand-ink/55">{text.length} / {t.max_len.toLocaleString("ru-RU")}</span>
+            <span className="text-xs text-brand-ink/65">{text.length} / {t.max_len.toLocaleString("ru-RU")}</span>
             <button className="btn-primary !py-2" disabled={busy || !text.trim()} onClick={send}>Отправить</button>
           </div>
         </div>
@@ -129,7 +129,7 @@ export function InlineThread({ kind, id, thread, onUpdate, who = "с канди�
         <button type="button" className="text-sm font-semibold text-brand-plum hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
           {open ? "Скрыть переписку" : `Переписка ${who}`}{!open && t.total ? ` (${t.total})` : ""}
         </button>
-        {t.unread > 0 && <span className="rounded-full bg-brand px-2 py-0.5 text-xs font-bold text-white">Новых: {t.unread}</span>}
+        {t.unread > 0 && <span className="rounded-full bg-brand-strong px-2 py-0.5 text-xs font-bold text-white">Новых: {t.unread}</span>}
         <Link className="text-xs font-semibold text-brand hover:underline" to={`${base}/messages?t=${kind}:${id}`}>Открыть в «Сообщениях»</Link>
       </div>
       {open && <div className="mt-3"><Thread compact kind={kind} id={id} onUpdate={onUpdate} /></div>}
