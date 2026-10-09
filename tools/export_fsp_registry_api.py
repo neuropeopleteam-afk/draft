@@ -33,8 +33,7 @@ def contract():
                        "командные результаты и даты. Мок содержит только FSP-770012, FSP-770013, FSP-770014; "
                        "весь паспорт — один ограниченный снимок (до 1000 достижений). Реальный реестр потребует "
                        "сервисной авторизации, согласования кодов ЕВСК и пагинации. Поле evsk_code в моках пустое: "
-                       "официальные коды не придумываем. Обоснование: <закрытая ссылка>
-                       "11L9QI3apRb04DslW6hhass4SIksRUCYK/view (53:44–55:16)."},
+                       "официальные коды не придумываем. Обоснование — разбор видео организаторов (53:44–55:16)."},
         "servers": [{"url": "http://127.0.0.1:8106", "description": "Локальный мок исполнителя И6"}],
         "paths": paths, "components": {"schemas": {n: schema["components"]["schemas"][n] for n in sorted(names)}},
         "x-proposed-production-auth": "Authorization: Bearer <service-token> (FSP_REGISTRY_TOKEN)"}

@@ -298,7 +298,7 @@ PWA: `frontend/public/manifest.webmanifest`, `sw.js` (оболочка офла�
   берутся; стоп, как только порог вышел из интервала. Настройки `ASSESSMENT_STOP_RULE`, `ASSESSMENT_CLASSIFY_Z`,
   `ASSESSMENT_SELECT_AT`, `ASSESSMENT_EXTENSION_ITEMS`, `ASSESSMENT_EXTENSION_MINUTES`, `ASSESSMENT_EXTENSION_OWN_FIRST`;
   сессии, начатые до обновления, доигрываются по прежним правилам. Обоснование и метрики «до/после» —
-  `<внутренний документ>` и раздел «Повтор» на /validation.
+  внутренний отчёт разработки и раздел «Повтор» на /validation.
 - **Состав и частота показа (день 3А).** Не больше 2 заданий open_book_3step и 1 open_answer в сессии. Контроль частоты
   Sympson — Hetter: параметры K_f (`app/modules/assessment/exposure_k.json`, цель r_max = 0,3) подбираются симуляцией
   `tools/calibrate_exposure.py`. Ротация субпулов: банк поделён на 2 субпула, повторная попытка идёт по другому;
@@ -555,7 +555,7 @@ sudo systemctl daemon-reload && sudo systemctl enable --now spectrek-monitor.tim
 | Оценка пакета разметки (`experts/llm_grade.py`) | `llm_not_configured`, ответы оценивает эксперт | сообщение на `/validation` |
 
 Подбор, ранжирование, объяснения, тест на банке заданий, приглашения, ATS, переписка и кубки с автопроверкой LLM не используют.
-Проверено тестами `tests/test_no_llm.py` и прогоном свежего клона (отчёт `<внутренний документ>`, раздел «Чистая машина»).
+Проверено тестами `tests/test_no_llm.py` и прогоном свежего клона (внутренний отчёт разработки, раздел «Чистая машина»).
 
 ## 13. Подбор и ранжирование (match-v1.1)
 
