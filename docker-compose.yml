@@ -152,14 +152,18 @@ services:
   # OpenAI-совместимый API на CPU, модель Qwen3.5-9B (Q4_K_M, 5,7 ГБ) скачивается с Hugging Face при первом старте в том
   # llm_models (в репозитории её нет). Включение одной командой: make llm-local. Без профиля llm-local сервис не
   # запускается и api работает как раньше. Рассуждения выключены (--reasoning off): на CPU они стоят минуты.
-  # Память: модель 5,7 ГБ (mmap) + контекст 2 × 8192 токенов — замер на CPU в docs/LLM.md; для машины 8 ГБ —
-  # LLM_LOCAL_HF_REPO=unsloth/Qwen3.5-4B-GGUF:Q4_K_M и LLM_LOCAL_MODEL=qwen3.5-4b (2,7 ГБ).
+  # Замер 09.10 (8 vCPU, docs/llm/needs_cpu_qwen.json): память процесса 6,0–6,6 ГиБ (веса читаются в память целиком,
+  # --load-mode none; кэш подсказок ограничен 512 МБ), разбор вакансии — медиана 29 с. Для машины 8 ГБ —
+  # LLM_LOCAL_HF_REPO=unsloth/Qwen3.5-4B-GGUF:Q4_K_M, LLM_LOCAL_MODEL=qwen3.5-4b, LLM_LOCAL_MEM_LIMIT=4g (2,7 ГБ).
+  # Потоков — по числу доступных ядер (nproc), а не всех ядер хоста: --threads -1 на 8 vCPU сервера проверок взял 192.
   llm-local:
     profiles: ["llm-local"]
     image: ${LLM_LOCAL_IMAGE:-ghcr.io/ggml-org/llama.cpp:server-b11515}
     restart: unless-stopped
     environment:
       LLAMA_CACHE: /models
+      LLM_THREADS: ${LLM_LOCAL_THREADS:-}
+    entrypoint: ["/bin/sh", "-c", 'exec /app/llama-server --threads "$${LLM_THREADS:-$$(nproc)}" "$$@"', "llama-server"]
     command:
       - --hf-repo
       - ${LLM_LOCAL_HF_REPO:-unsloth/Qwen3.5-9B-GGUF:Q4_K_M}
@@ -170,8 +174,10 @@ services:
       - ${LLM_LOCAL_CTX:-16384}
       - --parallel
       - ${LLM_LOCAL_PARALLEL:-2}
-      - --threads
-      - ${LLM_LOCAL_THREADS:--1}
+      - --cache-ram
+      - ${LLM_LOCAL_CACHE_RAM:-512}
+      - --load-mode
+      - none
       - --reasoning
       - "off"
       - --no-webui
