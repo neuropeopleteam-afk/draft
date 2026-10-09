@@ -40,7 +40,7 @@ from app.modules.matching.need_parser import parse_need
 
 log = logging.getLogger("fast_parse")
 
-PARSER_VERSION = "fp2"  # меняется при изменении правил или запроса — старый кэш не используется
+PARSER_VERSION = "fp3"  # меняется при изменении правил или запроса — старый кэш не используется
 STALE_S = 120  # задача pending дольше — считаем оборвавшейся (перезапуск процесса), отдаём failed
 MAX_PENDING_PER_USER = 4  # защита от очереди из одного окна (повторные нажатия)
 SCALARS = ("direction", "grade", "experience_years_min", "work_format")
