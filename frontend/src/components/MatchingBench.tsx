@@ -75,6 +75,8 @@ function Body({ r }: { r: any }) {
         {jun && jun.no_test > jun.platform ? <li>Слабое место — потребности уровня Junior: nDCG@10 {n2(jun.platform)} против {n2(jun.no_test)} у самоописания. Тест у порога Junior осторожен (подтверждение от P = 0,8): часть подходящих не подтверждает грейд и остаётся без категории (без категории — {intRu(w.no_category)} из {intRu(w.n_candidates)}). Дотестирование у порога в синтетике не моделируется.</li> : null}
       </ul>
 
+      {r.must_have ? <MustHaveBlock mh={r.must_have} nNeeds={w.n_needs} sig={r.signature} /> : null}
+
       {jr?.columns?.length ? <JuniorBlock jr={jr} /> : null}
 
       <h3 className="mt-8 text-base font-bold text-brand-night">Веса на отложенных данных</h3>
@@ -108,11 +110,33 @@ function Body({ r }: { r: any }) {
           <li>Парсер потребностей на текстах мира: направление {pct(w.parser?.direction_accuracy)}, грейд {pct(w.parser?.grade_accuracy)}, обязательные навыки — точность {pct(w.parser?.required_precision)}, полнота {pct(w.parser?.required_recall)}.</li>
         </ul>
         <p className="mt-3 text-brand-ink/70">
-          Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make bench</code> ({n2(r.seconds, 0)} с). Seed мира {r.seeds?.world}, второй мир {r.seeds?.world2}, бутстреп {r.seeds?.bootstrap}, разбиение {r.seeds?.split}; конфиг {r.config_hash}, алгоритм {r.algorithm}.
+          Алгоритм продукта: {r.algorithm ?? "match-v1"}{r.algorithm === "match-v1.1" ? " — match-v1 + ярусы обязательного (MATCH_MUST_FIRST)" : ""}.{r.signature?.commit ? ` Код — коммит ${r.signature.commit}${r.signature.bank ? `, банк ${r.signature.bank}` : ""}.` : ""}
+          {" "}Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make bench</code> ({n2(r.seconds, 0)} с). Seed мира {r.seeds?.world}, второй мир {r.seeds?.world2}, бутстреп {r.seeds?.bootstrap}, разбиение {r.seeds?.split}; конфиг {r.config_hash}, алгоритм {r.algorithm}.
           Отчёт построен {r.generated_at?.slice(0, 10).split("-").reverse().join(".")}. Подробно: docs/validation/MATCHING_BENCH.md и matching_bench.json (метрики по каждой потребности).
         </p>
         <p className="mt-2 text-brand-ink/70">Разрез по направлениям (nDCG@10, платформа / BM25): {Object.entries<any>(r.breakdown?.by_direction ?? {}).map(([d, v]) => `${DIRECTIONS[d] ?? d} ${n2(v.platform)} / ${n2(v.bm25)}`).join("; ")}. По грейдам: {Object.entries<any>(r.breakdown?.by_grade ?? {}).map(([gr, v]) => `${GRADES[gr] ?? gr} ${n2(v.platform)} / ${n2(v.bm25)}`).join("; ")}.</p>
       </details>
+    </>
+  );
+}
+
+/** Ф2 «сначала покрывающие обязательное»: match-v1 без ярусов против продукта (match-v1 + ярусы обязательного, MATCH_MUST_FIRST) на том же мире. */
+function MustHaveBlock({ mh, nNeeds, sig }: { mh: any; nNeeds?: number; sig?: any }) {
+  const cols: [string, string][] = [["p@5", "p@5"], ["ndcg@10", "nDCG@10"], ["mrr", "MRR"], ["top5_all_required_t1", "Топ-5: всё обязательное подтверждено"]];
+  return (
+    <>
+      <h3 className="mt-8 text-base font-bold text-brand-night">Сначала покрывающие обязательное (MATCH_MUST_FIRST)</h3>
+      <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+        Ярусы по числу обязательных навыков без подтверждения тестом (0, 1, ≥ 2; навык, не подтверждённый ни у кого в категории, не считается), внутри яруса — прежний балл match-v1.
+        Тот же мир, парный бутстреп по потребностям; в продукте правило {mh.enabled_in_product ? "включено" : "выключено"}{sig?.commit ? `; числа — код ${sig.commit}` : ""}.
+      </p>
+      <Table head={["", ...cols.map(([, t]) => t)]}
+        rows={[
+          ["match-v1 (без ярусов)", ...cols.map(([k]) => <Cell x={mh.before?.[k]} />)],
+          [<b>match-v1 + ярусы обязательного (продукт)</b>, ...cols.map(([k]) => <Cell x={mh.after?.[k]} />)],
+          ["Разница", ...cols.map(([k]) => <Cell x={mh.diff?.[k]} signed />)],
+        ]} />
+      <p className="mt-2 text-xs text-brand-ink/65">Топ-5 изменился у {mh.needs_changed_top5} из {nNeeds ?? "—"} потребностей (с обязательными навыками — {mh.needs_with_required}). Разницу пишем как есть: на синтетике nDCG@10 чуть ниже, доля подтверждённого обязательного в топ-5 выше.</p>
     </>
   );
 }
