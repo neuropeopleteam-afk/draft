@@ -141,7 +141,7 @@ async function runAxe(page) {
 
 (async () => {
   const ctx = await prepare();
-  const browser = await chromium.launch();
+  let browser = await chromium.launch();
   const results = [];
   for (const [w, h] of VIEWPORTS) {
     // своя песочница на каждую ширину: тест проходит один раз в каждой
@@ -163,6 +163,7 @@ async function runAxe(page) {
       return p;
     }
     for (const s of screens(vctx)) {
+     for (let attempt = 0; attempt < 2; attempt++) {
       const page = await pageFor(s.persona);
       const t0 = Date.now();
       try {
@@ -176,12 +177,22 @@ async function runAxe(page) {
         results.push({ screen: s.id, viewport: `${w}`, url: page.url().replace(BASE, ""), counts, total: v.length, nodes: v.reduce((a, x) => a + x.nodes, 0), hscroll, violations: v, ms: Date.now() - t0 });
         console.log(`${w} ${s.id}: ${IMPACTS.map((i) => `${i[0]}${counts[i]}`).join(" ")} hscroll=${hscroll} (${Date.now() - t0} мс)`);
         if (SHOTS) await page.screenshot({ path: path.join(OUT, "shots", `${s.id}_${w}.png`), fullPage: false });
+        break;
       } catch (e) {
+        // браузер закрылся (нехватка памяти на общей машине) — перезапуск и повтор экрана один раз
+        if (attempt === 0 && /has been closed|crashed/.test(String(e))) {
+          console.log(`${w} ${s.id}: браузер закрылся, перезапуск`);
+          await browser.close().catch(() => null); browser = await chromium.launch();
+          for (const k of Object.keys(contexts)) delete contexts[k];
+          continue;
+        }
         results.push({ screen: s.id, viewport: `${w}`, error: String(e).slice(0, 300) });
         console.log(`${w} ${s.id}: ОШИБКА ${String(e).slice(0, 200)}`);
+        break;
       }
+     }
     }
-    for (const p of Object.values(contexts)) await p.context().close();
+    for (const p of Object.values(contexts)) await p.context().close().catch(() => null);
   }
   await browser.close();
   fs.writeFileSync(path.join(OUT, "axe.json"), JSON.stringify({ base: BASE, at: new Date().toISOString(), results }, null, 2));

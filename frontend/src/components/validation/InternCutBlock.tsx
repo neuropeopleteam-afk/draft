@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { DIRECTIONS } from "../ui";
+import { ScrollX } from "../A11y";
 
 /* Блок /validation «Порог грейда Стажёр»: симуляция теста при четырёх порогах-кандидатах на текущем банке и на банке
    с лёгкими семействами. Данные — intern_cut из /api/validation/report (make intern-cut). Без подгонки: правило выбора
@@ -11,7 +12,7 @@ const theta = (v?: number | null) => (v == null ? "—" : `${v < 0 ? "−" : ""}
 
 function Table({ head, rows, mark }: { head: string[]; rows: ReactNode[][]; mark?: number }) {
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+    <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[40rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
           <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
@@ -24,7 +25,7 @@ function Table({ head, rows, mark }: { head: string[]; rows: ReactNode[][]; mark
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollX>
   );
 }
 

@@ -80,7 +80,7 @@ export function BiasPanel({ bias, suggested, onRewrite, rewriteLabel = "Пере
       </ul>
       {suggested && (
         <div className="mt-3 rounded-xl bg-white p-3 ring-1 ring-amber-200">
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-900/70">Текст через навыки</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-amber-900/80">Текст через навыки</p>
           <p className="mt-1 text-brand-ink/85">{suggested}</p>
           {onRewrite && <button type="button" className="btn-primary mt-3 !py-2" onClick={() => onRewrite(suggested)}>{rewriteLabel}</button>}
         </div>

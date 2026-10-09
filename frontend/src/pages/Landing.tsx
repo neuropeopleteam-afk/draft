@@ -31,6 +31,7 @@ export default function Landing() {
   return (
     <div className="min-h-screen">
       <SiteHeader dark />
+      <main id="main" tabIndex={-1} className="outline-none">
 
       <section className="relative overflow-hidden bg-brand-night text-white">
         <div className="pointer-events-none absolute -right-40 -top-40 h-[34rem] w-[34rem] rounded-full bg-brand-plum/70 blur-3xl" />
@@ -63,9 +64,9 @@ export default function Landing() {
             <p className="mt-1 text-sm text-white/70">ООО «Пример» · удалённо</p>
             <p className="mt-5 text-3xl font-extrabold text-white">{"220\u00A0000\u00A0– 290\u00A0000\u00A0₽"}</p>
             <ul className="mt-5 space-y-2 text-sm text-white/80">
-              <li className="flex gap-2"><span className="font-bold text-brand-soft">T1</span> SQL и индексы — тест, 9 из 10</li>
-              <li className="flex gap-2"><span className="font-bold text-brand-soft">T1</span> FastAPI — зонд «найди ошибку»</li>
-              <li className="flex gap-2"><span className="font-bold text-brand-lavender">T2</span> Призёр соревнований ФСП</li>
+              <li className="flex gap-2"><span className="font-bold text-[#FF7AA5]">T1</span> SQL и индексы — тест, 9 из 10</li>
+              <li className="flex gap-2"><span className="font-bold text-[#FF7AA5]">T1</span> FastAPI — зонд «найди ошибку»</li>
+              <li className="flex gap-2"><span className="font-bold text-[#B9B4EA]">T2</span> Призёр соревнований ФСП</li>
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-3">
               <span className="btn bg-brand-strong text-white" aria-hidden="true">Принять</span>
@@ -117,6 +118,7 @@ export default function Landing() {
         </div>
       </section>
 
+      </main>
       <SiteFooter />
     </div>
   );
