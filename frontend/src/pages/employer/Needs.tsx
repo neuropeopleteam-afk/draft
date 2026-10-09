@@ -3,13 +3,14 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { CandidateCard } from "../../components/CandidateCard";
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, num, range, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { ProbeForm } from "./Contact";
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
+import { ParseStatus, Suggestions, evSource, useFastParse } from "./parseFlow";  // И27: словарь сразу, модель в фоне
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -94,19 +95,14 @@ const STATUS_CHIP: Record<ItemStatus, [string, string]> = {
   manual: ["вручную", "bg-brand-blush text-brand-plum"],
 };
 
-// Кто разобрал текст: модель, которая фактически ответила, или правила (запасная модель — если основная не ответила)
-function llmNote(llm: any): string | undefined {
-  if (!llm) return undefined;
-  if (llm.used) return `Ответила модель ${llm.model_label ?? llm.model}${llm.fallback ? " (запасная: основная не ответила)" : ""}, ${num(llm.latency_ms / 1000)} с`;
-  return llm.reason && llm.reason !== "not_configured" ? "Модели не ответили — разбор по словарю технологий и правилам" : undefined;
-}
+// Кто разобрал текст (модель, которая фактически ответила, или словарь) — ParseStatus в parseFlow.tsx (И27)
 
 function Quote({ ev }: { ev?: Ev | null }) {
   if (!ev) return <p className="mt-0.5 text-xs text-brand-ink/65">нет цитаты — добавлено вручную</p>;
   return (
     <p className="mt-0.5 text-xs text-brand-ink/65" title={ev.context}>
       <span className="rounded bg-brand-blush/60 px-1 text-brand-night">«{ev.quote}»</span>
-      <span className="text-brand-ink/65"> · {ev.source === "llm" ? `${ev.model ?? "LLM"}, цитата найдена в тексте` : ev.basis === "stack" ? "по технологиям" : ev.basis === "experience" ? "по опыту" : "словарь"}</span>
+      <span className="text-brand-ink/65"> · {evSource(ev)}</span>
     </p>
   );
 }
@@ -265,10 +261,12 @@ export function Needs() {
   const [focus, setFocus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const fp = useFastParse(setReq);
 
   async function parse(t: string = text) {
-    setErr(null); setBusy(true);
-    try { const r = await api<Req>("/employer/needs/parse", { body: { text: t } }); setParsed(t); setReq(r); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+    setErr(null); setBusy(true); fp.reset();
+    // сервер нормализует текст (переводы строк, пробелы по краям) — смещения цитат считаются по его версии
+    try { const r = await api<Req & { text?: string }>("/employer/needs/parse", { body: { text: t } }); setParsed(r.text ?? t); setReq(r); fp.start(r); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   useEffect(() => { if ((loc.state as any)?.text) parse((loc.state as any).text); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
   function rewrite(t: string) { setText(t); parse(t); }
@@ -288,7 +286,7 @@ export function Needs() {
       <PageTitle title="Потребности и подборки" subtitle="Опишите, кто нужен, своими словами. У каждого извлечённого требования — цитата из вашего текста: подтвердите, поправьте или удалите. Подборка строится по подтверждённым фактам о кандидатах." />
       <section className="card space-y-4">
         <Field label="Кого вы ищете" htmlFor="need" hint="Контакты из текста вырезаются до обработки. Без LLM разбор идёт по словарю технологий и правилам. Требования к полу, возрасту, внешности, семье (ст. 64 ТК РФ) не учитываются.">
-          <textarea id="need" className="input min-h-[120px]" value={text} onChange={(e) => { setText(e.target.value); setReq(null); }} placeholder={EXAMPLE} />
+          <textarea id="need" className="input min-h-[120px]" value={text} onChange={(e) => { setText(e.target.value); setReq(null); fp.reset(); }} placeholder={EXAMPLE} />
         </Field>
         {!req && (
           <div className="flex flex-wrap gap-4 text-sm">
@@ -303,7 +301,7 @@ export function Needs() {
           <>
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-brand-night/10 pt-4">
               <h2 className="font-bold text-brand-night">Откуда взяты требования</h2>
-              <span className="chip" title={llmNote(req.llm)}>{req.method === "rules" ? (req.llm?.reason && req.llm.reason !== "not_configured" ? "разбор по словарю: модель не ответила" : "разбор по словарю") : `разбор: словарь + ${req.llm?.model_label ?? "LLM"}, цитаты проверены`}</span>
+              <ParseStatus req={req} fp={fp} />
             </div>
             <LlmOff>LLM на этой установке не подключён: технологии, грейд и опыт найдены по словарю и правилам, формулировки вне словаря не распознаются — проверьте список и добавьте недостающее вручную.</LlmOff>
             <div className="rounded-xl bg-[#F7F6FB] p-4">
@@ -312,12 +310,13 @@ export function Needs() {
             {llmDropped > 0 && <p className="text-xs text-brand-ink/65">LLM предложил требований без цитаты из текста: {llmDropped} — они отброшены.</p>}
             <BiasPanel bias={req.bias ?? []} suggested={req.suggested_text} onRewrite={rewrite} focus={focus} onFocus={setFocus} />
             <h2 className="border-t border-brand-night/10 pt-4 font-bold text-brand-night">Требования</h2>
-            <ReqEditor req={req} onChange={setReq} focus={focus} onFocus={setFocus} />
+            <Suggestions fp={fp} />
+            <ReqEditor req={req} onChange={(r) => { fp.touch(); setReq(r); }} focus={focus} onFocus={setFocus} />
             <div className="flex flex-wrap items-center gap-3 border-t border-brand-night/10 pt-4">
               <button className="btn-primary" disabled={busy} onClick={create}>
                 {busy ? "Подбираем…" : counts.pending ? "Подтвердить остальные и показать подборку" : "Сохранить и показать подборку"}
               </button>
-              <button type="button" className="btn-ghost" disabled={busy} onClick={() => setReq(null)}>Изменить текст</button>
+              <button type="button" className="btn-ghost" disabled={busy} onClick={() => { setReq(null); fp.reset(); }}>Изменить текст</button>
             </div>
           </>
         )}

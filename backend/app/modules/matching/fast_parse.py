@@ -98,7 +98,8 @@ def start(db: Session, text: str, hint_direction: str | None, hint_grade: str | 
             return {**rules, "text": t, "llm": {"used": False, "pending": True}, "parse_job": _job_out(same)}
         if len(mine) >= MAX_PENDING_PER_USER:
             return {**rules, "text": t, "llm": {"used": False, "reason": "busy", "attempts": []}, "parse_job": None}
-    db.execute(delete(NeedParseJob).where(NeedParseJob.created_at < now - timedelta(seconds=max(ttl, STALE_S))))
+    db.execute(delete(NeedParseJob).where(NeedParseJob.created_at < now - timedelta(seconds=max(ttl, STALE_S)))
+               .execution_options(synchronize_session=False))  # старые задачи и кэш — не копятся
     job = NeedParseJob(key=key, user_id=user_id, status="pending", result=rules, created_at=now)
     db.add(job)
     db.commit()
@@ -168,7 +169,7 @@ def diff(base: dict, merged: dict) -> list[dict]:
                             "name": _name(i["tag"]), "weight": i.get("weight"), "evidence": ev or None})
             elif ev.get("confirmed_by"):
                 out.append({"id": f"confirm:{i['tag']}", "kind": "confirm_tag", "auto": True, "zone": z,
-                            "tag": i["tag"], "name": _name(i["tag"])})
+                            "tag": i["tag"], "name": _name(i["tag"]), "by": ev["confirmed_by"]})
     m_ev = merged.get("evidence") or {}
     for k in SCALARS:
         if base.get(k) is None and merged.get(k) is not None:
