@@ -388,7 +388,7 @@ def _document_error(op: dict, status: int, codes: dict[str, str]) -> None:
         resp["content"]["application/json"]["example"] = example
 
 
-from app.core.api_docs_text import DESCRIPTIONS  # noqa: E402
+from app.core.api_docs_text import DESCRIPTIONS, FILE_RESPONSES  # noqa: E402
 
 EXAMPLES_FILE = Path(__file__).with_name("api_examples.json")
 
@@ -445,6 +445,13 @@ def _attach_model(op: dict, schema: dict) -> bool:
     return True
 
 
+def _attach_file(op: dict, spec: tuple[str, dict, str]) -> None:
+    media, schema, text = spec
+    ok = next((c for c in op.get("responses", {}) if c.startswith("2")), None)
+    if ok is not None:
+        op["responses"][ok] = {"description": text, "content": {media: {"schema": copy.deepcopy(schema)}}}
+
+
 def enrich(app: FastAPI, spec: dict) -> dict:
     from app.core.deps import oauth2_scheme  # noqa: F401  (импорт — чтобы зависимость была загружена до разбора)
 
@@ -478,6 +485,8 @@ def enrich(app: FastAPI, spec: dict) -> dict:
                 op["tags"] = list(dict.fromkeys(op["tags"]))
             if op.get("responses"):  # коды ответов — по возрастанию, как их читают
                 op["responses"] = dict(sorted(op["responses"].items(), key=lambda kv: (not kv[0].isdigit(), kv[0])))
+            if f"{method.upper()} {path}" in FILE_RESPONSES:
+                _attach_file(op, FILE_RESPONSES[f"{method.upper()} {path}"])
             if f"{method.upper()} {path}" in refs:
                 _attach_model(op, refs[f"{method.upper()} {path}"])
             if f"{method.upper()} {path}" in examples:
