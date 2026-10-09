@@ -1,7 +1,7 @@
 {
  "title": "Режим «только российская модель»: замер",
  "date": "2026-10-09",
- "code_sha": "cfa0958",
+ "code_sha": "ea5b82f",
  "models": [
   {
    "key": "sonnet",
@@ -431,7 +431,7 @@
    "LLM_MODEL_GRADE_SECOND=yandex=yandexgpt-5.1/latest"
   ],
   "where": ".env сервера (/opt/spectrek_fsp/app/.env) + ключ Yandex AI Studio в llm.env (LLM_PROVIDER=yandex_ai_studio, LLM_BASE_URL, LLM_API_KEY, LLM_FOLDER_ID, LLM_MODEL); пересоздать api",
-  "check": "/api/meta → llm.chain = [{provider: yandex, configured: true}], functions.*.models[0].label = YandexGPT"
+  "check": "/api/meta → llm.chain = [{provider: yandex, configured: true}], functions.*.models[0].label = YandexGPT 5.1"
  },
  "pending_note": "YandexGPT ещё не замерена на этих входах: ключ Yandex AI Studio есть только на сервере «Москва», в песочницу не передан. Прогон — одной командой, когда ключ будет: tools/llm/ru_llm_bench.py run --model yandex=yandexgpt-5.1/latest. До этого — замер 08.10 (полный разбор 50 вакансий, код c1c248e)."
 }

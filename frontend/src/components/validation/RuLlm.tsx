@@ -27,8 +27,9 @@ function quality(f: Func, c: Cell): string {
     return `F1 ${num(q.stack_f1, 3)} (P ${num(q.stack_p, 3)} / R ${num(q.stack_r, 3)}), стаж ±0,5 года ${q.experience_ok} из ${q.n}`;
   if (f.key === "grade") {
     if (q.mae_b == null) return `эксперту ${pct(q.expert_honest, 0)} честных ответов`;
-    return `MAE ${num(q.mae_a, 3)} / ${num(q.mae_b, 3)}, атаки ${q.attacks_pass} из ${q.attacks_n}, ` +
-      `порядок ${q.order_strict} из ${q.order_n}, эксперту ${pct(q.expert_honest, 1)}`;
+    return `MAE ${num(q.mae_b, 3)} (A ${num(q.mae_a, 3)}), атаки ${q.attacks_pass} из ${q.attacks_n}, ` +
+      `порядок ${q.order_strict} из ${q.order_n}; вторая оценка — ${q.second_calls} (${pct(q.second_share, 0)}), ` +
+      `разошлась ${q.second_disagree}`;
   }
   return "—";
 }
@@ -37,8 +38,9 @@ function calls(f: Func, c: Cell, model: string): string | null {
   if (model === "rules") return f.key === "grade" ? null : "сразу, без сети";
   if (c.n == null) return null;
   const fails = (c.format_fail ?? 0) + (c.transport_fail ?? 0);
+  const rub = c.price?.rub_per_1k_calls;
   return `ответила ${c.ok} из ${c.n}${fails ? ` (формат ${c.format_fail ?? 0}, сеть ${c.transport_fail ?? 0})` : ""} · ` +
-    `p50 ${sec(c.p50_s)}, p95 ${sec(c.p95_s)}`;
+    `p50 ${sec(c.p50_s)}, p95 ${sec(c.p95_s)}${rub != null ? ` · ≈ ${num(rub, 0)} ₽ за 1000 вызовов` : ""}`;
 }
 
 function cellView(d: Data, f: Func, model: string) {
@@ -55,21 +57,10 @@ function cellView(d: Data, f: Func, model: string) {
   return <>{quality(f, c)}{sub && <><br /><span className="text-xs text-brand-ink/65">{sub}</span></>}</>;
 }
 
-function price(d: Data, key: string): string | null {
-  let rub = 0, n = 0;
-  for (const f of d.functions) {
-    const c = f.rows[key];
-    if (c?.status === "done" && c.price?.rub_per_1k_calls != null) { rub += c.price.rub_per_1k_calls; n += 1; }
-  }
-  return n ? `${num(rub / n, 0)} ₽` : null;
-}
-
 export default function RuLlm() {
   const { data: d } = useApi<Data>("/validation/ru-llm", []);
   if (!d || d.missing || !d.functions?.length) return null;
   const models = d.models;
-  const priceLine = models.filter((m) => m.key !== "rules").map((m) => [m.label, price(d, m.key)] as const)
-    .filter(([, p]) => p);
   return (
     <div className="mt-6" id="ru-llm" data-testid="ru-llm">
       <h3 className="text-base font-bold text-brand-night">Только российская модель: YandexGPT против Claude Sonnet и правил</h3>
@@ -77,7 +68,7 @@ export default function RuLlm() {
         Весь путь работает в режиме <code>LLM_CHAIN=yandex</code> (Yandex AI Studio, РФ): тексты не уходят за рубеж.
         Одни и те же входы, одна попытка на вход, путь продукта целиком. Замер {d.date}, код {d.code_sha}.
       </p>
-      <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+      <div className="mt-3 hidden overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10 md:block">
         <table className="w-full min-w-[52rem] text-left text-sm">
           <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
             <tr>
@@ -97,11 +88,23 @@ export default function RuLlm() {
           </tbody>
         </table>
       </div>
-      {priceLine.length > 0 && (
-        <p className="mt-2 text-sm text-brand-ink/75" data-testid="ru-llm-price">
-          Цена 1000 вызовов (в среднем по функциям): {priceLine.map(([l, p]) => `${l} — ${p}`).join(", ")}; правила — бесплатно.
-        </p>
-      )}
+      <div className="mt-3 space-y-3 md:hidden">
+        {d.functions.map((f) => (
+          <div key={f.key} className="rounded-2xl bg-white p-3 text-sm ring-1 ring-brand-night/10" data-testid={`ru-llm-m-${f.key}`}>
+            <div className="font-medium text-brand-night">{f.title}</div>
+            <div className="text-xs text-brand-ink/65">{f.set}; {f.metric}</div>
+            <dl className="mt-2 space-y-1.5">
+              {models.map((m) => (
+                <div key={m.key}>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.06em] text-brand-night/70">{m.label}</dt>
+                  <dd className="tabular-nums text-brand-ink/80">{cellView(d, f, m.key)}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2 text-sm text-brand-ink/75" data-testid="ru-llm-price">{d.conditions.find((c) => c.startsWith("Цена"))}</p>
       {d.pending_note && <p className="mt-1 text-sm text-brand-ink/75" data-testid="ru-llm-pending">{d.pending_note}</p>}
       <p className="mt-1 text-xs text-brand-ink/65">
         {d.conditions[d.conditions.length - 1]} Включить: <code>{d.how_to_enable.env[0]}</code> в .env (модели по функциям — docs/LLM.md, раздел 11).

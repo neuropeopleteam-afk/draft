@@ -373,5 +373,5 @@ HOW = {
             "LLM_MODEL_GRADE_SECOND=yandex=yandexgpt-5.1/latest"],
     "where": ".env сервера (/opt/spectrek_fsp/app/.env) + ключ Yandex AI Studio в llm.env (LLM_PROVIDER=yandex_ai_studio, "
              "LLM_BASE_URL, LLM_API_KEY, LLM_FOLDER_ID, LLM_MODEL); пересоздать api",
-    "check": "/api/meta → llm.chain = [{provider: yandex, configured: true}], functions.*.models[0].label = YandexGPT",
+    "check": "/api/meta → llm.chain = [{provider: yandex, configured: true}], functions.*.models[0].label = YandexGPT 5.1",
 }

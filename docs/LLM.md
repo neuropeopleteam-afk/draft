@@ -713,7 +713,7 @@ LLM_MODEL_GRADE_SECOND=yandex=yandexgpt-5.1/latest
 
 <!-- ru_llm:begin (tools/llm/ru_llm_summary.py) -->
 
-Замер 2026-10-09, код `cfa0958` (данные — `docs/realdata/ru_llm.json`).
+Замер 2026-10-09, код `ea5b82f` (данные — `docs/realdata/ru_llm.json`).
 
 | Функция и набор | Claude Sonnet 5.5 | YandexGPT 5.1 Pro | Правила и словари |
 |---|---|---|---|
