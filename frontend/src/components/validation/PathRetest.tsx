@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTIONS, GRADES, Loading, NB, num, pct, useApi } from "../ui";
 import { SignatureLine } from "./Headline";
+import { ScrollX } from "../A11y";
 
 /** Блоки /validation: test–retest всего пути кандидата, дискриминативность семейств, карточка калибровки
  *  (backend: app/modules/validation/path_retest.py, make path-retest). */
@@ -8,11 +9,11 @@ import { SignatureLine } from "./Headline";
 const LEVEL: Record<string, string> = { none: "Без категории", ...GRADES };
 const LEVELS = ["none", "intern", "junior", "middle", "senior"];
 const ci = (c?: number[] | null, d = 3) => (c ? `${num(c[0], d)} … ${num(c[1], d)}` : "");
-const withCi = (v?: number | null, c?: number[] | null) => <>{num(v, 3)}{c && <span className="block text-xs text-brand-ink/60">{ci(c)}</span>}</>;
+const withCi = (v?: number | null, c?: number[] | null) => <>{num(v, 3)}{c && <span className="block text-xs text-brand-ink/65">{ci(c)}</span>}</>;
 
 function T({ head, rows, min = "36rem", caption }: { head: string[]; rows: ReactNode[][]; min?: string; caption: string }) {
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+    <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full text-left text-sm" style={{ minWidth: min }}>
         <caption className="sr-only">{caption}</caption>
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
@@ -20,7 +21,7 @@ function T({ head, rows, min = "36rem", caption }: { head: string[]; rows: React
         </thead>
         <tbody>{rows.map((r, i) => <tr key={i} className="border-t border-brand-night/5">{r.map((c, j) => <td key={j} className={`px-3 py-2 align-top tabular-nums ${j === 0 ? "font-medium text-brand-night" : "text-brand-ink/80"}`}>{c}</td>)}</tr>)}</tbody>
       </table>
-    </div>
+    </ScrollX>
   );
 }
 

@@ -6,6 +6,7 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
 import { useMeta } from "../../lib/meta";
+import { trapTab } from "../../components/ui";  // А11: Tab по кругу внутри страницы теста
 import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
 import { CameraIndicator } from "../../proctor/CameraIndicator";
 import { CameraReport } from "../../proctor/CameraReport";
@@ -530,6 +531,7 @@ export function TestRun() {
   const [away, setAway] = useState({ focus: 0, paste: 0, copy: 0 });
   const [fsOn, setFsOn] = useState(() => !!document.fullscreenElement);
   const fsOk = fsSupported();
+  const itemHead = useRef<HTMLHeadingElement>(null);  // А11: новое задание — фокус на его заголовок (экранный диктор)
 
   function show(x: any) {
     setS(x); setValue(null); setShownAt(Date.now() - (x?.item?.elapsed_s ?? 0) * 1000);
@@ -609,9 +611,22 @@ export function TestRun() {
     }).catch((e) => setError(errText(e)));
   }, [id]);
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
+  useEffect(() => { if (s?.item) itemHead.current?.focus({ preventScroll: true }); }, [s?.item?.item_id, s?.item?.step]); // eslint-disable-line react-hooks/exhaustive-deps
+  // А11: Tab после последнего элемента не уводит фокус в адресную строку (окно теряет фокус — античит считал бы
+  // это уходом со вкладки у того, кто проходит тест клавиатурой); в открытом окне фокус держит само окно
+  useEffect(() => { const h = (e: KeyboardEvent) => { if (!document.querySelector('[role="dialog"]')) trapTab(e, document.body); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, []);
   // И16: камера (если включена на экране перед тестом) — события режутся по заданиям; уход со страницы выключает камеру
   useEffect(() => { camera.enterTest(id!); return () => camera.leaveTest(); }, [id]);
   useEffect(() => { camera.setItem(s?.item?.item_id ?? null); }, [s?.item?.item_id]);
+
+  function pickLine(e: { key: string; preventDefault(): void; currentTarget: HTMLDivElement }, n: number) {
+    const cur = typeof value === "number" ? value : 1;
+    const to = e.key === "ArrowDown" ? Math.min(n, cur + 1) : e.key === "ArrowUp" ? Math.max(1, cur - 1) : e.key === "Home" ? 1 : e.key === "End" ? n : 0;
+    if (!to) return;
+    e.preventDefault();
+    setValue(to);
+    e.currentTarget.querySelectorAll<HTMLButtonElement>('[role="option"]')[to - 1]?.focus();
+  }
 
   async function finish() {
     setBusy(true); setError(null);
@@ -666,9 +681,10 @@ export function TestRun() {
         {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTIONS[s.direction]}»`}</span>}
         {it.extension && <span className="chip">Дотестирование у порога грейда</span>}
         {it.steps_total && <span className="chip">Шаг {it.step} из {it.steps_total}</span>}
-        <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/65"}`} aria-live="off">
+        <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/65"}`} role="timer" aria-live="off">
           {left >= 0 ? `Рекомендуемое время: ${fmtTime(left)}` : `Сверх рекомендуемого: ${fmtTime(-left)}`}
         </span>
+        <span className="sr-only" aria-live="polite">{left < 0 ? "Рекомендуемое время задания вышло. Это ориентир: ответить можно и позже." : ""}</span>
       </div>
       <CameraIndicator sessionId={id!} />
       {fsOk && !fsOn && (
@@ -677,24 +693,26 @@ export function TestRun() {
           <button type="button" className="ml-1 font-semibold underline" onClick={enterFullscreen}>Вернуться в полноэкранный режим</button>
         </Alert></div>
       )}
+      <h1 ref={itemHead} tabIndex={-1} className="sr-only">{`Задание ${it.position}${it.steps_total ? `, шаг ${it.step} из ${it.steps_total}` : ""}`}</h1>
       <div className="card mt-4" onCopy={onCopy} onCut={onCopy} onContextMenu={(e) => { if (!(e.target as HTMLElement).closest("textarea, input")) e.preventDefault(); }}
         onDragStart={(e) => e.preventDefault()}>
         <p className="select-none whitespace-pre-line text-base font-semibold leading-relaxed text-brand-night"><Rich text={it.stem} /></p>
         {it.code && (
-          <div className="mt-4 select-none overflow-x-auto rounded-xl bg-brand-ink py-3 text-sm leading-relaxed text-[#FFD6E4]" role={isLine ? "listbox" : undefined} aria-label={isLine ? "Строки кода: выберите строку с дефектом" : undefined}>
+          <div className="mt-4 select-none overflow-x-auto rounded-xl bg-brand-ink py-3 text-sm leading-relaxed text-[#FFD6E4]" role={isLine ? "listbox" : undefined} aria-label={isLine ? "Строки кода: выберите строку с дефектом" : "Код задания"}
+            tabIndex={isLine ? undefined : 0} onKeyDown={isLine ? (e) => pickLine(e, lines.length) : undefined}>
             {lines.map((ln, i) => {
               const n = i + 1;
               const sel = isLine && value === n;
               const cls = `flex w-full items-start gap-3 px-4 text-left font-mono text-[13px] ${sel ? "bg-brand/40" : isLine ? "hover:bg-white/10" : ""}`;
-              const body = (<><span className="w-7 shrink-0 select-none text-right text-[#FFD6E4]/45">{n}</span><span className="whitespace-pre">{ln || " "}</span></>);
+              const body = (<><span className="w-7 shrink-0 select-none text-right text-[#FFD6E4]/60">{n}</span><span className="whitespace-pre">{ln || " "}</span></>);
               return isLine
-                ? <button key={i} type="button" role="option" aria-selected={sel} className={cls} onClick={() => setValue(n)}>{body}</button>
+                ? <button key={i} type="button" role="option" aria-selected={sel} tabIndex={(value ?? 1) === n ? 0 : -1} className={cls} onClick={() => setValue(n)}>{body}</button>
                 : <div key={i} className={cls}>{body}</div>;
             })}
           </div>
         )}
         {it.step_prompt && <p className="mt-5 select-none whitespace-pre-line rounded-xl bg-brand-blush/30 px-4 py-3 text-sm font-semibold text-brand-night"><Rich text={it.step_prompt} /></p>}
-        {isLine && <p className="mt-3 text-sm text-brand-ink/70">{value ? `Выбрана строка ${value}.` : "Нажмите на строку, в которой дефект."}</p>}
+        {isLine && <p className="mt-3 text-sm text-brand-ink/70" aria-live="polite">{value ? `Выбрана строка ${value}.` : "Нажмите на строку, в которой дефект (с клавиатуры — стрелки вверх и вниз)."}</p>}
         {it.answer_kind === "option" && it.options && (
           <fieldset className="mt-5 min-w-0 select-none space-y-2">
             <legend className="sr-only">Варианты ответа</legend>
