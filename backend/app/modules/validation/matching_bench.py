@@ -37,7 +37,8 @@ import numpy as np
 
 from app.modules.catalog.seed_data import GRADE_ORDER
 from app.modules.matching.need_parser import parse_need
-from app.modules.matching.ranking import ALGORITHM_VERSION, WEIGHTS, requirement_priority, score_candidate
+from app.modules.matching import must_have
+from app.modules.matching.ranking import WEIGHTS, algorithm, requirement_priority, score_candidate
 from app.modules.profiles.facts import PROVISIONAL_PENALTY
 from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate, true_grade)
 from app.modules.validation.matching_eval import _tokens, keyword_score, selection_categories
@@ -122,10 +123,19 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
     has_req = np.array([bool(r.get("stack_required")) for r in reqs])
     out = {"comps": comps, "has_req": has_req, "vis": _vis(bundles, reqs),
            "mandatory_gaps": np.array([[requirement_priority(b, r) for b in bundles] for r in reqs]),
+           "must_tier": np.zeros((n, m), dtype=np.int8), "must_full": np.zeros((n, m), dtype=bool),
            "rating": np.array([b.profile.rating_score or 0.0 for b in bundles]),
            "ref_rank": np.argsort(np.argsort([b.profile.public_ref for b in bundles])),
            "provisional": np.array([1.0 if b.provisional else 0.0 for b in bundles]),  # «Junior (предварительно)»
            "bundles": bundles}
+    # Ф2: ярус «сначала покрывающие обязательное» — непокрытые обязательные, которые в пуле подборки (категория
+    # потребности) покрыты хоть у кого-то; самооценок в мире нет, поэтому покрытие здесь — только T1
+    for i, r in enumerate(reqs):
+        avail = must_have.available([b for j, b in enumerate(bundles) if out["vis"][i, j] == 2], r)
+        for j, b in enumerate(bundles):
+            a = must_have.assess(b, r, avail)
+            out["must_tier"][i, j] = a["tier"]
+            out["must_full"][i, j] = a["missing_total"] == 0
     rebuilt = weighted(out, np.array([WEIGHTS[k] for k in COMP_KEYS]))
     out["max_rebuild_error"] = float(np.abs(rebuilt - prod).max()) if n else 0.0
     assert out["max_rebuild_error"] < 1e-3, "скор из компонент не совпал с ranking.score_candidate"
@@ -143,11 +153,17 @@ def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY) -> n
 
 
 def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROVISIONAL_PENALTY, *,
-                    experimental: bool = False) -> np.ndarray:
-    """Порядок как в build_selection: категория → −скор (со штрафом «предварительно») → −рейтинг → public_ref;
-    эксперимент «сначала без пробелов в обязательных навыках» (И8) включается только явно."""
+                    experimental: bool = False, must_first: bool | None = None) -> np.ndarray:
+    """Порядок как в build_selection: категория → ярус обязательного (Ф2, флаг MATCH_MUST_FIRST) → −скор (со штрафом
+    «предварительно») → −рейтинг → public_ref. experimental — прежний эксперимент И8 (число пробелов без ярусов)."""
     s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w, penalty)
-    gaps = sc.get("mandatory_gaps", np.zeros_like(s)) if experimental else np.zeros_like(s)
+    must_first = must_have.enabled() if must_first is None else must_first
+    if experimental:
+        gaps = sc.get("mandatory_gaps", np.zeros_like(s))
+    elif must_first:
+        gaps = sc.get("must_tier", np.zeros_like(s))
+    else:
+        gaps = np.zeros_like(s)
     return np.stack([np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], gaps[i], -sc["vis"][i]))
                      for i in range(len(s))])
 
@@ -314,7 +330,8 @@ def fast_ndcg10(sc: dict, rel: np.ndarray, rows: np.ndarray, w: np.ndarray, idea
     """nDCG@10 по подмножеству потребностей без полного lexsort (для перебора сетки). Порядок: категория → скор →
     рейтинг (как в продукте; разбиение оставшихся ничьих по public_ref здесь не воспроизводится)."""
     sub = {"comps": sc["comps"][rows], "has_req": sc["has_req"][rows], "provisional": sc["provisional"]}
-    key = sc["vis"][rows] * 10.0 + weighted(sub, w) + sc["rating"][None, :] * 1e-6
+    tier = sc["must_tier"][rows] if must_have.enabled() and "must_tier" in sc else 0  # ярус обязательного (Ф2)
+    key = sc["vis"][rows] * 10.0 - tier * 3.0 + weighted(sub, w) + sc["rating"][None, :] * 1e-6
     top = np.argpartition(-key, 10, axis=1)[:, :10]
     kt = np.take_along_axis(key, top, axis=1)
     top = np.take_along_axis(top, np.argsort(-kt, axis=1), axis=1)
@@ -339,7 +356,8 @@ def heldout(world: World, run: dict, world2: World, run2: dict, seed: int) -> di
 
     def full(sc_, rel_, rows, w):
         o = platform_orders({**sc_, "comps": sc_["comps"][rows], "has_req": sc_["has_req"][rows],
-                             "vis": sc_["vis"][rows], "mandatory_gaps": sc_["mandatory_gaps"][rows]}, w)
+                             "vis": sc_["vis"][rows], "mandatory_gaps": sc_["mandatory_gaps"][rows],
+                             "must_tier": sc_["must_tier"][rows]}, w)
         return per_need(rel_[rows], o)["ndcg@10"]
 
     t_prod, t_best = full(sc, rel, test, w_prod), full(sc, rel, test, best)
@@ -581,6 +599,34 @@ def junior_section(cfg: BenchConfig, blocks: dict, main_world: World | None = No
                      "его эффект считает симуляция теста (раздел «Junior у порога» на /validation).")}
 
 
+def must_have_section(world: World, sc: dict, seed: int) -> dict:
+    """Ф2: «сначала покрывающие обязательное» на этом же мире — match-v1 (без ярусов) против ярусов; парный бутстреп
+    по потребностям. Покрытие обязательного в топ-5 — доля мест топ-5, где все обязательные подтверждены тестом (T1),
+    по потребностям с обязательными навыками."""
+    pn, cov = {}, {}
+    req = sc["has_req"]
+    for name, flag in (("before", False), ("after", True)):
+        o = platform_orders(sc, must_first=flag)
+        pn[name] = per_need(world.rel, o)
+        cov[name] = np.array([sc["must_full"][i, o[i, :5]].mean() if req[i] else np.nan for i in range(len(o))])
+    idx = boot_idx(len(world.needs), seed + 31)
+    ridx = boot_idx(int(req.sum()), seed + 37)
+    out = {"enabled_in_product": must_have.enabled(), "needs_with_required": int(req.sum())}
+    for name in ("before", "after"):
+        out[name] = {m: _ci(pn[name][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
+        out[name]["top5_all_required_t1"] = _ci(cov[name][req], ridx)
+    out["diff"] = {m: _ci(pn["after"][m] - pn["before"][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
+    out["diff"]["top5_all_required_t1"] = _ci(cov["after"][req] - cov["before"][req], ridx)
+    out["needs_changed_top5"] = int(sum(1 for i in range(len(world.needs))
+                                        if not np.array_equal(platform_orders({**sc, **_row(sc, i)}, must_first=False)[0, :5],
+                                                              platform_orders({**sc, **_row(sc, i)}, must_first=True)[0, :5])))
+    return out
+
+
+def _row(sc: dict, i: int) -> dict:
+    return {k: sc[k][i:i + 1] for k in ("comps", "has_req", "vis", "mandatory_gaps", "must_tier")}
+
+
 # ---------------------------------------------------------------- запуск
 
 def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None = None, write: bool = True) -> dict:
@@ -613,7 +659,7 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         junior = junior_section(cfg, blocks, world, r["scored"])
     cfg_d = cfg.to_dict()
     rep = {
-        "version": BENCH_VERSION, "algorithm": ALGORITHM_VERSION, "weights": WEIGHTS,
+        "version": BENCH_VERSION, "algorithm": algorithm(), "weights": WEIGHTS,
         "fsp_rating": {"version": FSP_RATING_VERSION, "policy": FSP_RATING_POLICY},
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "command": "make bench" if not quick else "python -m app.modules.validation.matching_bench --quick",
@@ -627,6 +673,7 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "world2": {"seed": cfg2.seed, "metrics": s2["metrics"]},
         "heldout_weights": ho, "sensitivity": sens, "junior": junior,
         "score_rebuild_max_error": r["scored"]["max_rebuild_error"],
+        "must_have": must_have_section(world, r["scored"], cfg.seed),
     }
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
@@ -798,6 +845,19 @@ def markdown(rep: dict) -> str:
           "", f"Подобранные − продукт: отложенная половина {_cell(ho['test']['tuned_minus_product'])}, второй мир "
           f"{_cell(ho['world2']['tuned_minus_product'])}. Веса продукта — {ho['product_rank_in_grid']}-е место из "
           f"{ho['grid_size']} на обучающей половине. {ho['decision']}", ""]
+    mh = rep.get("must_have")
+    if mh:
+        L += ["## Сначала покрывающие обязательное (Ф2)", "",
+              "Ярусы по числу обязательных навыков без подтверждения тестом (0, 1, ≥ 2; навык, не подтверждённый ни у "
+              "кого в категории, не считается), внутри яруса — прежний балл. Тот же мир, парный бутстреп по "
+              f"потребностям; в продукте правило {'включено' if mh['enabled_in_product'] else 'выключено'} "
+              "(MATCH_MUST_FIRST).", "",
+              "| | p@5 | nDCG@10 | MRR | Топ-5: всё обязательное подтверждено |", "|---|---|---|---|---|",
+              *[f"| {t} | " + " | ".join(_cell(mh[k][mt]) for mt in ("p@5", "ndcg@10", "mrr", "top5_all_required_t1"))
+                + " |" for k, t in (("before", "match-v1 (без ярусов)"), ("after", "match-v1.1 (ярусы)"),
+                                    ("diff", "Разница"))],
+              "", f"Топ-5 изменился у {mh['needs_changed_top5']} из {rep['world']['n_needs']} потребностей "
+                  f"(с обязательными навыками — {mh['needs_with_required']}).", ""]
     g = rep["groups"]
     fp = g["fsp"].get("platform", {})
     L += ["## Группы кандидатов", "",
