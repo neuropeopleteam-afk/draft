@@ -222,7 +222,7 @@ def to_markdown(rows: list[dict]) -> str:
                        ("with_tag", "тег из openapi_tags"), ("with_response_model", "описан ответ: модель с полями, файл или пустой ответ"),
                        ("with_all_actual_errors_documented", "все найденные в коде ошибки описаны в responses"),
                        ("with_example", "есть пример (example/examples)")):
-        lines.append(f"| {label} | {s[key]} из {s['operations']} | {100 * s[key] / s['operations']:.0f} % |".replace(".", ","))
+        lines.append(f"| {label} | {s[key]} из {s['operations']} | {100 * s[key] / s['operations']:.0f} % |")
     kinds = s["response_kinds"]
     lines += ["", "Успешный ответ: " + ", ".join(
         f"{label} — {kinds.get(k, 0)}" for k, label in (("typed", "модель с полями"), ("file", "файл/не JSON"),

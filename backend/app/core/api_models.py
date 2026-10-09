@@ -503,6 +503,118 @@ class ValidationHeadlineOut(Doc):
     how_to_read: str
 
 
+# ---------------------------------------------------------------- вакансии и отклики
+
+class VacancyOut(Doc):
+    """Вакансия: условия, вилка, компания; для кандидата — ещё свой отклик и индекс доверия работодателя."""
+
+    id: str
+    title: str
+    category_id: str | None = Field(description="Категория «направление.грейд», если вакансия к ней привязана")
+    category_title: str | None
+    description: str
+    stack: list[Obj] = Field(description="Стек вакансии: технология и уровень")
+    salary_from: int | None
+    salary_to: int | None
+    salary_basis: str = Field(description="gross или net")
+    salary_basis_title: str
+    work_format: str | None = Field(description="office, hybrid, remote, any")
+    city: str | None
+    status: str = Field(description="Статус публикации вакансии")
+    published_at: str | None
+    updated_at: str | None
+    is_demo: bool
+    source: str | None = Field(description="Источник импорта, если вакансия загружена из внешней системы")
+    source_title: str | None
+    external_id: str | None
+    external_url: str | None
+    imported_at: str | None
+    edited_after_import: bool | None
+    company: Obj = Field(description="Компания: name, industry, website, city")
+    market_range: Obj | None = Field(description="Вилка рынка по категории: from, to, median")
+    assignment: Obj | None = Field(description="Задание к вакансии, если работодатель его добавил")
+    my_application: Obj | None = Field(default=None, description="Отклик текущего кандидата (только в ответах кандидату)")
+    trust: Obj | None = Field(default=None, description="Индекс доверия работодателя (только в ответах кандидату)")
+    applications: Obj | None = Field(default=None, description="Счётчики откликов (только в ответах работодателю)")
+
+
+class VacancyListOut(Doc):
+    items: list[VacancyOut]
+    my_category_id: str | None = Field(description="Категория кандидата — по ней вакансии подсвечиваются как «подходящие»")
+
+
+class ApplicationOut(Doc):
+    """Отклик кандидата на вакансию. Работодателю дополнительно приходят карточка кандидата и контакты (после ответа)."""
+
+    id: str
+    vacancy_id: str
+    vacancy_title: str
+    status: str = Field(description="Машинный статус отклика, например sent")
+    status_title: str = Field(description="Подпись статуса по-русски")
+    events: list[Obj] = Field(description="История статусов")
+    cover_letter: str | None
+    created_at: str
+    viewed_at: str | None
+    responded_at: str | None
+    salary_from: int | None
+    salary_to: int | None
+    salary_basis: str
+    salary_basis_title: str
+    thread: Obj = Field(description="Переписка: total, unread")
+    ats_stage: str | None
+    employer_note: str | None
+    assignment: Obj | None
+    company: Obj | None = Field(default=None, description="Компания (в ответах кандидату)")
+    card: Obj | None = Field(default=None, description="Обезличенная карточка кандидата (в ответах работодателю)")
+    contacts: Obj | None = Field(default=None, description="Контакты кандидата (в ответах работодателю, когда доступны)")
+
+
+# ---------------------------------------------------------------- переписка
+
+class ThreadBriefOut(Doc):
+    kind: str = Field(description="Предмет переписки: invitation (приглашение) или application (отклик)")
+    id: str
+    title: str
+    counterpart: str = Field(description="Собеседник (для работодателя — обезличенный кандидат)")
+    status: str
+    mode: str = Field(description="qa — вопросы до принятия, chat — после")
+    closed: str | None
+    revoked: bool = Field(description="Доступ к контактам отозван")
+    messages: int
+    unread: int
+    last: Obj | None = Field(description="Последнее сообщение")
+    activity_at: str | None
+
+
+class ThreadOut(Doc):
+    kind: str
+    id: str
+    title: str
+    side: str = Field(description="Сторона текущего пользователя: candidate или employer")
+    counterpart: str
+    company: str
+    messages: list[Obj]
+    mode: str
+    max_len: int = Field(description="Максимальная длина сообщения")
+    can_write: bool
+    reason: str | None = Field(description="Почему писать нельзя, если can_write = false")
+    revoked: bool
+    rules: Obj
+    status: str
+
+
+class UnreadOut(Doc):
+    total: int
+    invitations: int
+    applications: int
+
+
+class NotificationPrefsOut(Doc):
+    push_enabled: bool
+    email_enabled: bool
+    reminders_enabled: bool
+
+
 # Таблица подключения: «МЕТОД /путь» → тип ответа (успешный код определяется по операции).
 RESPONSE_TYPES: dict[str, Any] = {
     "GET /api/meta": MetaOut,
@@ -549,4 +661,21 @@ RESPONSE_TYPES: dict[str, Any] = {
     "GET /api/notifications": NotificationsOut,
     "GET /api/fsp-cabinet/overview": FspOverviewOut,
     "GET /api/validation/headline": ValidationHeadlineOut,
+    "GET /api/vacancies": VacancyListOut,
+    "GET /api/vacancies/{vid}": VacancyOut,
+    "GET /api/employer/vacancies": list[VacancyOut],
+    "POST /api/employer/vacancies": VacancyOut,
+    "PATCH /api/employer/vacancies/{vid}": VacancyOut,
+    "POST /api/employer/vacancies/{vid}/close": VacancyOut,
+    "POST /api/employer/vacancies/{vid}/publish": VacancyOut,
+    "GET /api/candidate/applications": list[ApplicationOut],
+    "POST /api/candidate/applications/{app_id}/withdraw": ApplicationOut,
+    "GET /api/employer/vacancies/{vid}/applications": list[ApplicationOut],
+    "POST /api/employer/applications/{app_id}/status": ApplicationOut,
+    "POST /api/employer/applications/{app_id}/view": ApplicationOut,
+    "GET /api/messages/threads": list[ThreadBriefOut],
+    "GET /api/messages/{kind}/{tid}": ThreadOut,
+    "GET /api/messages/unread": UnreadOut,
+    "GET /api/notifications/prefs": NotificationPrefsOut,
+    "PUT /api/notifications/prefs": NotificationPrefsOut,
 }
