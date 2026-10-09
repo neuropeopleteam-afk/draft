@@ -55,7 +55,7 @@ def prepare(a) -> None:
 
 def cleanup(a) -> None:
     st = json.loads(STATE.read_text())
-    for sid in [st["scenario"], *st.get("burst_sids", [])]:
+    for sid in [x for x in (st.get("scenario"), *st.get("burst_sids", [])) if x]:  # после одного burst — без основной
         try:
             tok = _post(f"{a.host}/api/jury/login", {"persona": "employer", "scenario": sid})["access_token"]
             d = _post(f"{a.host}/api/jury/sandbox", None, tok, method="DELETE")
