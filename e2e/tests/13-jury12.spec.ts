@@ -14,8 +14,10 @@ const POSITION = "Python-разработчик (Я9, 12 минут)";
 
 async function notCovered(el: Locator): Promise<boolean> {
   await el.scrollIntoViewIfNeeded();
-  return el.evaluate((b) => {
-    b.scrollIntoView({ block: "center" });
+  return el.evaluate(async (b) => {
+    // без плавной прокрутки (html scroll-behavior: smooth): иначе координаты читаются до конца анимации
+    b.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
     const r = b.getBoundingClientRect();
     const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
     return !!hit && (hit === b || b.contains(hit));
@@ -59,7 +61,7 @@ async function startQuick(page: Page): Promise<void> {
   const g = guideOf(page);
   await expect(g).toBeVisible();
   await expect(g.getByRole("button", { name: "Проверка за 12 минут" })).toHaveAttribute("aria-pressed", "true");
-  await expect(g.getByTestId("quick-timer")).toContainText(/Прошло \d+:\d\d · план 2 мин из 12/);
+  await expect(g.getByTestId("quick-timer")).toContainText(/Прошло \d+:\d\d · план 2\sмин из 12/);
 }
 
 test("1440: проверка за 12 минут — от своей потребности до доказательств", async ({ page }) => {
@@ -77,9 +79,11 @@ test("1440: проверка за 12 минут — от своей потреб
     await expect(field).toHaveValue(PY);
     await page.getByRole("button", { name: "Разобрать требования" }).click();
     const main = page.locator("main");
-    await expect(main.getByText("Django не нужен").first()).toBeVisible({ timeout: 60_000 });
-    const confirmAll = main.getByRole("button", { name: "Подтвердить все" });
-    if (await confirmAll.isVisible()) await confirmAll.click();
+    await expect(main.getByRole("heading", { level: 2, name: "Требования", exact: true })).toBeVisible({ timeout: 60_000 });
+    // отрицания — в «исключено», с цитатой из текста
+    await expect(main.getByText(/Исключено по тексту/)).toContainText("Django («Django не нужен»)");
+    await expect(main.getByText(/Исключено по тексту/)).toContainText("PHP («PHP не нужен»)");
+    await main.getByRole("button", { name: "Подтвердить все" }).click();
     await page.getByRole("button", { name: "Сохранить и показать подборку" }).click();
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+$/, { timeout: 60_000 });
   });
@@ -186,11 +190,16 @@ test("390: проводник «12 минут» не перекрывает де
   const parse = page.getByRole("button", { name: "Разобрать требования" });
   expect(await notCovered(parse), "«Разобрать требования» не под проводником").toBe(true);
   await parse.click();
-  const save = page.getByRole("button", { name: "Сохранить и показать подборку" });
-  await expect(save).toBeVisible({ timeout: 60_000 });
+  const main = page.locator("main");
+  await expect(main.getByRole("heading", { level: 2, name: "Требования", exact: true })).toBeVisible({ timeout: 60_000 });
+  // нестандартный стек: Rust — вне справочника, честно отмечен
+  await expect(main.getByText("Rust").first()).toBeVisible();
   expect(await noHScroll(page), "разбор без горизонтальной прокрутки").toBe(true);
-  const confirmAll = page.locator("main").getByRole("button", { name: "Подтвердить все" });
-  if (await confirmAll.isVisible()) await confirmAll.click();
+  const confirmAll = main.getByRole("button", { name: "Подтвердить все" });
+  expect(await notCovered(confirmAll), "«Подтвердить все» не под проводником").toBe(true);
+  await confirmAll.click();
+  const save = page.getByRole("button", { name: "Сохранить и показать подборку" });
+  await expect(save).toBeVisible();
   expect(await notCovered(save), "«Сохранить и показать подборку» не под проводником").toBe(true);
   await save.click();
   await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+$/, { timeout: 60_000 });
