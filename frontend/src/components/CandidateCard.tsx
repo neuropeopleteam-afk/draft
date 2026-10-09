@@ -82,7 +82,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
           <p className="flex items-center gap-2 font-semibold text-brand-night"><Level level={fsp.achievements?.length ? "T2" : "none"} /> Паспорт ФСП</p>
           {fsp.hidden ? <p className="mt-1 text-brand-ink/65">скрыто кандидатом</p>
             : fsp.achievements?.length ? (
-              <ul className="mt-1 space-y-1 text-brand-ink/75">{fsp.achievements.slice(0, compact ? 2 : 4).map((a: any, i: number) => <li key={i}>{a.text}</li>)}</ul>
+              <ul className="mt-1 space-y-1 text-brand-ink/75">{fsp.achievements.slice(0, compact ? 2 : 4).map((a: any, i: number) => <li key={i}>{a.text}{a.relevance?.title && <span className="ml-1 text-xs text-brand-plum">· {a.relevance.title}{a.relevance.coef < 1 ? ` (×${String(a.relevance.coef).replace(".", ",")})` : ""}</span>}</li>)}</ul>
             ) : <p className="mt-1 text-brand-ink/65">истории ФСП нет — нейтрально</p>}
           {fsp.unverified_count > 0 && <p className="mt-1 text-xs text-brand-ink/65">Заявлено без подтверждения реестром: {fsp.unverified_count} — не учитывается</p>}
           {fsp.source === "demo" && <p className="mt-1 text-xs text-brand-lavender">демо-реестр</p>}

@@ -22,6 +22,9 @@ export interface Vacancy {
   trust?: TrustShort | Trust; applications?: { total: number; new: number };
   my_application?: { id: string; status: string; status_title: string };
   assignment?: { id: string; title: string; n_tasks: number; time_limit_min: number; stack_titles: string[] } | null;
+  // И23: импорт из ATS — источник, id и ссылка вакансии в «Потоке»
+  source?: string | null; source_title?: string | null; external_id?: string | null; external_url?: string | null;
+  imported_at?: string | null; edited_after_import?: boolean | null;
 }
 const FORMAT: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 const APP_STATUS: Record<string, [string, string]> = {
@@ -191,6 +194,7 @@ export function EmployerVacancies() {
   const cat = useApi<Catalog>("/catalog");
   const [edit, setEdit] = useState<(typeof EMPTY & { id?: string }) | null>(null);
   const [apps, setApps] = useState<Vacancy | null>(null);
+  const [importing, setImporting] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   async function setStatus(v: Vacancy, s: "publish" | "close") {
     try { await api(`/employer/vacancies/${v.id}/${s}`, { method: "POST" }); void reload(); } catch (e) { setErr(errText(e)); }
@@ -199,7 +203,10 @@ export function EmployerVacancies() {
     <div className="max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageTitle title="Вакансии" subtitle="Вилка «от–до» обязательна. Контакты откликнувшихся кандидатов видны сразу." />
-        <button className="btn-primary" onClick={() => setEdit({ ...EMPTY })}>Новая вакансия</button>
+        <div className="flex flex-wrap gap-2">
+          <button className="btn-ghost" onClick={() => setImporting(true)}>Импортировать из ATS</button>
+          <button className="btn-primary" onClick={() => setEdit({ ...EMPTY })}>Новая вакансия</button>
+        </div>
       </div>
       <Alert>{err}</Alert>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
@@ -208,8 +215,8 @@ export function EmployerVacancies() {
         <ul className="space-y-3">
           {data.map((v) => (
             <li key={v.id} className="card flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="font-bold text-brand-night">{v.title} <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold ${v.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>{v.status === "published" ? "Опубликована" : v.status === "draft" ? "Черновик" : "Снята"}</span></p>
+              <div className="min-w-0">
+                <p className="font-bold text-brand-night">{v.title} <span className={`ml-2 rounded-full px-2 py-0.5 text-xs font-semibold ${v.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>{v.status === "published" ? "Опубликована" : v.status === "draft" ? "Черновик" : "Снята"}</span>{v.source && <SourceBadge v={v} />}</p>
                 <p className="text-sm text-brand-ink/65">{v.category_title ?? "Без категории"} · {salaryText(v.salary_from, v.salary_to, v.salary_basis)} · {FORMAT[v.work_format]}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -224,7 +231,89 @@ export function EmployerVacancies() {
       )}
       {edit && <VacancyForm init={edit} catalog={cat.data} onClose={() => setEdit(null)} onSaved={() => { setEdit(null); void reload(); }} />}
       <ApplicationsModal v={apps} onClose={() => { setApps(null); void reload(); }} />
+      <ImportModal open={importing} onClose={() => setImporting(false)} onDone={() => void reload()} />
     </div>
+  );
+}
+
+/** Бейдж «из «Потока»» у импортированной вакансии: ссылка на вакансию в «Потоке» (у демо — на раздел интеграции). */
+function SourceBadge({ v }: { v: Vacancy }) {
+  const cls = "ml-2 inline-flex items-center rounded-full bg-[#ECEAF8] px-2 py-0.5 text-xs font-semibold text-brand-night hover:underline";
+  const GEN: Record<string, string> = { potok: "Потока" };  // «из «Потока»» — родительный падеж
+  const label = `из «${GEN[v.source ?? ""] ?? v.source_title ?? v.source}» · № ${v.external_id}`;
+  const hint = v.edited_after_import ? "Изменена на платформе после импорта — повторный импорт её не перезапишет" : "Импортирована из ATS; повторный импорт обновит поля";
+  return v.external_url
+    ? <a className={cls} href={v.external_url} target="_blank" rel="noopener noreferrer" title={hint}>{label} ↗</a>
+    : <Link className={cls} to="/employer/ats" title={hint}>{label}</Link>;
+}
+
+interface ImportItem {
+  job_id: number; title: string; closed: boolean; state: "new" | "same" | "changed" | "edited" | "linked"; state_title: string;
+  vacancy_id: string | null; similar_vacancy_id?: string | null; category_id: string | null; stack: string[]; salary_from: number; salary_to: number;
+  salary_from_ats: boolean; city: string | null; work_format: string; notes: string[]; applicants: number | null; url: string | null;
+}
+interface ImportResult { created: number; updated: number; skipped: number; items: { job_id: number; title: string; result: string; text: string; notes: string[] }[] }
+
+/** Импорт вакансий из «Потока»: что придёт и с какими пометками → выбор → итог. В «Потоке» только чтение. */
+function ImportModal({ open, onClose, onDone }: { open: boolean; onClose: () => void; onDone: () => void }) {
+  const { data, error, loading, reload } = useApi<{ demo: boolean; total: number; items: ImportItem[] }>(open ? "/employer/vacancies/import/potok/preview" : null, [open]);
+  const [pick, setPick] = useState<Record<number, boolean>>({});
+  const [busy, setBusy] = useState(false);
+  const [res, setRes] = useState<ImportResult | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => {
+    if (data) setPick(Object.fromEntries(data.items.map((x) => [x.job_id, (x.state === "new" && !x.similar_vacancy_id) || x.state === "changed"])));
+  }, [data]);
+  useEffect(() => { if (!open) { setRes(null); setErr(null); } }, [open]);
+  const chosen = data?.items.filter((x) => pick[x.job_id]).map((x) => x.job_id) ?? [];
+  async function run() {
+    setBusy(true); setErr(null);
+    try { setRes(await api<ImportResult>("/employer/vacancies/import/potok", { body: { job_ids: chosen } })); onDone(); void reload(); }
+    catch (e) { setErr(errText(e)); }
+    finally { setBusy(false); }
+  }
+  const STATE_CLS: Record<string, string> = { new: "bg-emerald-50 text-emerald-700", changed: "bg-amber-50 text-amber-800", same: "bg-gray-100 text-gray-600", edited: "bg-gray-100 text-gray-600", linked: "bg-gray-100 text-gray-600" };
+  return (
+    <Modal open={open} onClose={onClose} title="Импорт вакансий из «Потока»">
+      <div className="space-y-4 text-sm">
+        <p className="text-brand-ink/70">Платформа читает список вакансий «Потока» (только чтение, в «Потоке» ничего не меняется). Импортированная вакансия получает бейдж «из «Потока»», а отклики на неё передаются в ту же вакансию «Потока» — этапы рекрутёра возвращаются обратно.</p>
+        {loading && !data ? <Loading /> : error ? (
+          <Alert>{error} <Link className="font-semibold underline" to="/employer/ats">Интеграция с ATS</Link></Alert>
+        ) : !data?.items.length ? <Empty title="В «Потоке» нет вакансий" /> : (
+          <>
+            {data.demo && <Alert kind="info">Демо-«Поток»: вакансии заглушки, имитирующей API «Потока». С токеном компании — настоящие вакансии.</Alert>}
+            <ul className="space-y-2">
+              {data.items.map((x) => (
+                <li key={x.job_id} className="rounded-xl border border-brand-night/10 p-3">
+                  <label className="flex min-w-0 items-start gap-3">
+                    <input type="checkbox" className="mt-1" checked={!!pick[x.job_id]} disabled={x.state === "same" || x.state === "linked"} onChange={(e) => setPick({ ...pick, [x.job_id]: e.target.checked })} />
+                    <span className="min-w-0 flex-1">
+                      <span className="font-semibold text-brand-night">{x.title}</span>
+                      <span className={`ml-2 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${STATE_CLS[x.state]}`}>{x.state_title}</span>
+                      {x.closed && <span className="ml-2 inline-block rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">закрыта в «Потоке»</span>}
+                      <span className="mt-1 block text-brand-ink/65">№ {x.job_id} · {x.category_id ? catTitle(x.category_id) : "категория не определена"} · {salaryText(x.salary_from, x.salary_to, "gross")}{x.salary_from_ats ? "" : " (рынок)"}{x.city ? ` · ${x.city}` : ""}{x.applicants != null ? ` · кандидатов в «Потоке»: ${x.applicants}` : ""}</span>
+                      {x.notes.map((n, i) => <span key={i} className="mt-1 block text-xs text-amber-800">{n}</span>)}
+                      {x.url && <a className="mt-1 inline-block text-xs font-semibold text-brand-plum underline" href={x.url} target="_blank" rel="noopener noreferrer">Открыть в «Потоке» ↗</a>}
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <Alert>{err}</Alert>
+            {res && (
+              <Alert kind="ok">
+                Создано: {res.created}, обновлено: {res.updated}, пропущено: {res.skipped}.
+                <ul className="mt-2 list-disc space-y-0.5 pl-5">{res.items.map((r) => <li key={r.job_id}>{r.title}: {r.text}</li>)}</ul>
+              </Alert>
+            )}
+            <div className="flex flex-wrap justify-end gap-2">
+              <button className="btn-ghost" onClick={onClose}>Закрыть</button>
+              <button className="btn-primary" disabled={busy || !chosen.length} onClick={() => void run()}>{busy ? "Импорт…" : `Импортировать выбранные (${chosen.length})`}</button>
+            </div>
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }
 

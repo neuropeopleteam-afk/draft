@@ -285,6 +285,9 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/employer/vacancies/{vid}/publish"): "employer_own",
     ("POST", "/api/employer/vacancies/{vid}/close"): "employer_own",
     ("GET", "/api/employer/vacancies/{vid}/applications"): "employer_own",
+    # И23: импорт вакансий из «Потока» — своя компания; без токена 422, ATS недоступна — 502
+    ("GET", "/api/employer/vacancies/import/potok/preview"): ("employer", _UPSTREAM),
+    ("POST", "/api/employer/vacancies/import/potok"): ("employer", _UPSTREAM),
     ("POST", "/api/employer/applications/{app_id}/view"): "employer_own",
     ("POST", "/api/employer/applications/{app_id}/status"): "employer_own",
     ("GET", "/api/employer/applications/{app_id}/export.json"): "employer_own",
