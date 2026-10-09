@@ -90,7 +90,7 @@ def revoke_consent(kind: Literal["processing", "publication"], user: User = Depe
         from app.core.legal import OPERATOR
 
         raise api_error(409, "use_account_deletion",
-                        f"Чтобы отозвать согласие на обработку, напишите оператору: {OPERATOR['email']}")
+                        f"Согласие на обработку отзывается удалением учётной записи: Кабинет — Мои данные. Или напишите оператору: {OPERATOR['email']}")
     c = _active_consent(db, user.id, ConsentKind.publication)
     if c:
         c.revoked_at = utcnow()

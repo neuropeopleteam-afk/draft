@@ -7,7 +7,7 @@ import uuid
 import pytest
 from sqlalchemy import func, select, text
 
-from app.core.db import SessionLocal, utcnow
+from app.core.db import SessionLocal, as_aware, utcnow
 from tests.conftest import register_and_verify
 from tests.test_day2_rules import H, INVITE, candidate_with_category, employer, make_demo, my_ref
 
@@ -488,6 +488,21 @@ def test_interest_purge_old(client, world):
         assert interest.purge_old(db) == 2
         db.commit()
     assert len(_events(uid)) == 1
+
+
+def test_interest_purge_runs_when_selection_is_built(client, world, monkeypatch):
+    """Старые события чистятся при построении подборки (без планировщика), не чаще раза в сутки."""
+    from app.modules.mydata import interest
+    from app.modules.mydata.models import InterestEvent
+
+    uid = _uid("cand@example.com")
+    with SessionLocal() as db:
+        db.add(InterestEvent(candidate_user_id=uid, kind="card_view", company_key=uuid.uuid4(), created_at=utcnow() - timedelta(days=120)))
+        db.commit()
+    monkeypatch.setattr(interest, "_last_purge", None)
+    client.post("/api/employer/needs", json={"text": NEED}, headers=H(world["te"]))
+    assert all(as_aware(e.created_at) > utcnow() - timedelta(days=90) for e in _events(uid))
+    assert interest._last_purge is not None
 
 
 # ------------------------------------------------------------------ демо жюри
