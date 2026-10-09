@@ -542,7 +542,7 @@ export function AtsInvitationActions({ invitationId, status, candidateRef, trans
     } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(null); }
   }
   return (
-    <section className="space-y-2" aria-label="Передача в ATS">
+    <section className="space-y-2" role="group" aria-label={candidateRef ? `Передача в ATS: ${candidateRef}` : "Передача в ATS"}>
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Передача в ATS</p>
       {!list.length ? (
         <p className="text-brand-ink/70">ATS не подключена: принятого кандидата можно выгрузить в JSON или <Link className="font-semibold text-brand hover:underline" to="/employer/ats">подключить систему</Link>.</p>
