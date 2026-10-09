@@ -171,7 +171,7 @@ export function JuryGuide() {
       {s.action === "simulate" && (
         <div className="mt-3 rounded-xl bg-white/10 p-3 text-sm">
           {personaOf(me?.email) === "employer" && me?.email.includes("+")
-            ? <button className="btn bg-brand px-3 py-1.5 text-sm text-white hover:bg-brand-soft disabled:opacity-40" disabled={busy} onClick={simulate}>{busy ? "Проходит тест…" : "Смоделировать нового кандидата"}</button>
+            ? <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-soft disabled:opacity-40" disabled={busy} onClick={simulate}>{busy ? "Проходит тест…" : "Смоделировать нового кандидата"}</button>
             : <p className="text-xs text-white/75">Кнопка работает в своей песочнице: войдите как демо-работодатель (общее демо не меняется).</p>}
           {sim && (
             <div className="mt-2 space-y-1 text-xs leading-relaxed text-white/85" role="status">
