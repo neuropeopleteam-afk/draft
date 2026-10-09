@@ -19,8 +19,8 @@ export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: numbe
   );
 }
 
-export function CandidateCard({ c, score, reasons, actions, must, compact = false }: {
-  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean;
+export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge }: {
+  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode;
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
@@ -32,6 +32,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
             <GradeBadge s={c.status} claimed={c.claimed} />
+            {badge}
           </div>
           <MustLine m={must} />
           <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
