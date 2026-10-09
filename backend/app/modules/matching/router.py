@@ -122,6 +122,8 @@ class Filters(BaseModel):
     experience_min: float | None = Field(None, ge=0, le=30)
     min_score: float | None = Field(None, ge=0, le=1)
     relaxation: str | None = Field(None, max_length=160, description="Подпись версии, созданной из «Что если» (И18)")
+    conditions_off: bool = Field(False, description="Ф2: не применять условия потребности (формат, город) — показать "
+                                                    "всех; по умолчанию условия применяются сразу")
 
 
 class SelectionIn(BaseModel):
@@ -170,7 +172,10 @@ def _make_version(db: Session, need: EmployerNeed, user: User, filters: dict, pa
     last = db.scalar(select(func.max(SelectionVersion.version)).where(SelectionVersion.need_id == need.id)) or 0
     req = req or need.requirements
     sel = ranking.build_selection(db, req, filters)
-    v = SelectionVersion(need_id=need.id, version=last + 1, parent_version=parent, filters=filters, requirements=req,
+    # Ф2: снимок версии (категории со счётчиками, условия, «скрыто условиями») — в filters["_meta"]: открытие
+    # сохранённой версии отдаёт его без пересчёта
+    v = SelectionVersion(need_id=need.id, version=last + 1, parent_version=parent,
+                         filters={**filters, META: sel["meta"]}, requirements=req,
                          results=sel["results"], algorithm_version=sel["algorithm"], created_by=user.id)
     db.add(v)
     db.commit()
@@ -187,17 +192,35 @@ def _result_status(r: dict) -> str:
     return "provisional" if (c.get("category") or {}).get("provisional") else "confirmed"
 
 
+META = "_meta"
+
+
+def split_filters(stored: dict | None) -> tuple[dict, dict | None]:
+    """Фильтры версии без снимка _meta (Ф2) и сам снимок."""
+    f = dict(stored or {})
+    return f, f.pop(META, None)
+
+
 def _version_out(db: Session, v: SelectionVersion) -> dict:
-    cats = {c.id: c for c in db.scalars(select(Category)).all()}
-    counts = ranking.category_counts(db)
-    prov, unc = ranking.provisional_counts(db), ranking.unconfirmed_counts(db)
-    recs = ranking.recommended_categories(v.requirements, counts, cats)
-    for r in recs:
-        r["provisional"], r["unconfirmed"] = prov.get(r["id"], 0), unc.get(r["id"], 0)
+    filters, meta = split_filters(v.filters)
+    if meta and meta.get("categories") is not None:
+        recs = meta["categories"]  # снимок на момент расчёта версии — без пересчёта пула (Ф2, п. 4)
+    else:  # версии до Ф2: считаем и сохраняем снимок, следующие открытия — без пересчёта
+        cats = {c.id: c for c in db.scalars(select(Category)).all()}
+        counts = ranking.category_counts(db)
+        prov, unc = ranking.provisional_counts(db), ranking.unconfirmed_counts(db)
+        recs = ranking.recommended_categories(v.requirements, counts, cats)
+        for r in recs:
+            r["provisional"], r["unconfirmed"] = prov.get(r["id"], 0), unc.get(r["id"], 0)
+        meta = {**(meta or {}), "categories": recs}
+        v.filters = {**filters, META: meta}
+        db.commit()
     st = [_result_status(r) for r in v.results]
     return {
         "version": v.version, "parent_version": v.parent_version, "created_at": v.created_at.isoformat(),
-        "filters": v.filters, "requirements": v.requirements, "algorithm": v.algorithm_version,
+        "filters": filters, "requirements": v.requirements, "algorithm": v.algorithm_version,
+        # Ф2: условия потребности, применённые к версии, и сколько кандидатов они скрыли (None — версия до Ф2)
+        "conditions": meta.get("conditions"), "must_first": meta.get("must_first"),
         "weights": ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
         "categories": recs,
         "total": len(v.results), "results": v.results,
@@ -215,7 +238,8 @@ def _need_out(db: Session, n: EmployerNeed) -> dict:
                           .where(SelectionVersion.need_id == n.id).order_by(SelectionVersion.version)).all()
     return {"id": str(n.id), "title": n.title, "raw_text": n.raw_text, "requirements": n.requirements,
             "status": n.status.value, "created_at": n.created_at.isoformat(),
-            "versions": [{"version": a, "parent_version": b, "created_at": c.isoformat(), "filters": d, "total": e}
+            "versions": [{"version": a, "parent_version": b, "created_at": c.isoformat(),
+                          "filters": split_filters(d)[0], "total": e}
                          for a, b, c, d, e in versions]}
 
 
@@ -311,7 +335,7 @@ def get_selection(need_id: uuid.UUID, version: int, user: User = Depends(employe
                         "требования — сколько подтверждённых оно отсекает и сколько полностью подходящих появится без "
                         "него (только подтверждённые). options[].apply — тело для POST …/selections: новая версия, "
                         "прежние сохраняются. Зарплата не отсекает: ожидания кандидатов скрыты и в подбор не входят. "
-                        "Кэш 2 минуты с отметкой свежести данных; порядок выдачи match-v1 не меняется.",
+                        "Кэш 2 минуты с отметкой свежести данных; порядок выдачи (ярусы обязательного, затем балл) не меняется.",
             responses={**AUTH, 404: err("Версия не найдена")})
 def selection_what_if(need_id: uuid.UUID, version: int, user: User = Depends(employer),
                       db: Session = Depends(get_db)) -> dict:
@@ -319,7 +343,7 @@ def selection_what_if(need_id: uuid.UUID, version: int, user: User = Depends(emp
     v = db.scalar(select(SelectionVersion).where(SelectionVersion.need_id == n.id, SelectionVersion.version == version))
     if v is None:
         raise api_error(404, "version_not_found", "Версия подборки не найдена")
-    return whatif.what_if(db, v.requirements, v.filters or {})
+    return whatif.what_if(db, v.requirements, split_filters(v.filters)[0])
 
 
 @router.get("/needs/{need_id}/compare", summary="Сравнение 2–3 кандидатов рядом по требованиям потребности",
@@ -394,7 +418,11 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
         out = card(b, cats)
     if need_id:
         s, comps, reasons = ranking.score_candidate(b, n.requirements)
-        out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons}
+        from app.modules.matching import must_have
+
+        # Ф2: «Не хватает обязательного» в шапке; ярус без пула не считается (missing — по самому кандидату)
+        must = must_have.assess(b, n.requirements, set(must_have.must_tags(n.requirements)))
+        out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must}
     until = cooldown_until(db, c.id, p.user_id)
     inv = db.scalars(select(Invitation).where(Invitation.company_id == c.id, Invitation.candidate_user_id == p.user_id)
                      .order_by(Invitation.created_at.desc())).all()
