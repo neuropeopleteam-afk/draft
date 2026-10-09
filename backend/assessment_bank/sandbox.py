@@ -647,8 +647,10 @@ def run_checks(checks: list[Check], timeout: float = DEFAULT_TIMEOUT_S,
             tasks.append(("shell", [j], None))
         else:
             results[j] = RunResult("", "unavailable", f"{checks[j].runner} не найден")
-    # оболочка и git ждут в основном ввода-вывода и запуска процессов — пул шире числа ядер
-    with ThreadPoolExecutor(max_workers=workers or max(4, 4 * (os.cpu_count() or 2))) as ex:
+    # оболочка и git ждут в основном ввода-вывода и запуска процессов — пул шире числа ядер, но не более 24 потоков:
+    # на хостах со 192 ядрами (`os.cpu_count()` в контейнере показывает ядра хоста) 4×ядер потоков исчерпывали
+    # лимит открытых файлов («Too many open files», ulimit -n 1024)
+    with ThreadPoolExecutor(max_workers=workers or min(24, max(4, 4 * (os.cpu_count() or 2)))) as ex:
         for idx, res in ex.map(do, tasks):
             for j, r in zip(idx, res):
                 results[j] = r

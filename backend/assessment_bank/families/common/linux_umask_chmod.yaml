@@ -9,7 +9,7 @@ invariants:
   code_lines: [4, 4]
   operations: [4, 4]
   n_options: 4
-time_limit_s: 90
+time_limit_s: 120
 canary: true
 canary_pool_size: 24
 prior_difficulty:
@@ -18,7 +18,7 @@ prior_difficulty:
   sigma_variant: 0.35
   basis: "4 команды, 4 варианта ответа; umask с битами x (арифметическое вычитание даёт другой ответ) и символьный chmod с «=»"
 generator: assessment_bank.families.common.linux_umask_chmod
-version: 1
+version: 2
 description: >
   Канареечное семейство: seed 1..24 опубликованы, кандидату выдаются только они.
   Правильный ответ проверяется исполнением команд и `stat -c %a` в песочнице.

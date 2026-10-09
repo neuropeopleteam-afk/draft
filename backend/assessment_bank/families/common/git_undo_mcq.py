@@ -85,9 +85,20 @@ def _scenario(rng, name):
         state = STATE + f'echo "config=$(cat {cfg})"\necho "app=$(cat {app})"\n'
         good = rng.choice([f"git checkout HEAD~2 -- {cfg}",
                            f"git restore --source=HEAD~2 --staged --worktree {cfg}"])
-        wrong = {"detach": "git checkout -q HEAD~2", "reset": "git reset -q --hard HEAD~2",
-                 "restore_index": f"git restore {cfg}",
-                 "revert_range": "git revert --no-edit HEAD~2..HEAD"}
+        # Версия 2 (08.10): дистракторы по длине и форме близки к верной команде (короткая форма checkout или
+        # длинная форма restore): раньше верная «restore --source=… --staged --worktree» была заметно длиннее остальных.
+        if good.startswith("git checkout"):
+            wrong = {"checkout_prev": f"git checkout HEAD~1 -- {cfg}",
+                     "restore_worktree": f"git restore --source=HEAD~2 {cfg}",
+                     "restore_unstage": f"git restore --staged {cfg}",
+                     "reset": "git reset -q --hard HEAD~2",
+                     "revert_range": "git revert --no-edit HEAD~2..HEAD",
+                     "detach": "git checkout -q HEAD~2"}
+        else:
+            wrong = {"worktree_only": f"git restore --source=HEAD~2 --worktree {cfg}",
+                     "staged_only": f"git restore --source=HEAD~2 --staged {cfg}",
+                     "prev_commit": f"git restore --source=HEAD~1 --staged --worktree {cfg}",
+                     "head_source": f"git restore --source=HEAD --staged --worktree {cfg}"}
         ask = (f"После коммитов «{s1}» и «{s2}» сломалась конфигурация. Нужно вернуть только файл "
                f"{cfg} к версии коммита «add config» (HEAD~2) — в рабочей копии и в индексе; "
                f"ветка `main` остаётся на месте, остальные файлы не меняются, новых коммитов нет. "
@@ -109,8 +120,14 @@ EXPECTED_NOTE = {"checkout_b": "reset выполняется на новой в�
                  "reset1": "сбрасывает не тот коммит и переписывает историю",
                  "detach": "переводит в detached HEAD и меняет все файлы",
                  "reset": "двигает ветку и меняет все файлы",
-                 "restore_index": "восстанавливает файл из индекса, то есть текущую версию",
-                 "revert_range": "создаёт новые коммиты и откатывает остальные файлы"}
+                 "revert_range": "создаёт новые коммиты и откатывает остальные файлы",
+                 "checkout_prev": "берёт версию файла из HEAD~1, а не из коммита «add config»",
+                 "restore_worktree": "восстанавливает только рабочую копию, индекс остаётся прежним",
+                 "restore_unstage": "--staged сбрасывает индекс к HEAD, то есть текущей версии, и не трогает рабочую копию",
+                 "worktree_only": "без --staged индекс остаётся прежним, изменение не попадает в индекс",
+                 "staged_only": "без --worktree рабочая копия остаётся прежней",
+                 "prev_commit": "берёт версию из HEAD~1, а не из коммита «add config»",
+                 "head_source": "HEAD — текущая версия файла, ничего не меняется"}
 
 
 # Калибровка 05.10: подтипы move выделены в common.git.move_commits_mcq (варианты были неизоморфны).
