@@ -4,7 +4,7 @@ import { fmtMin } from "../../lib/study";
 import { NB, num, pct } from "../ui";
 
 /** Блок /validation «Живые пользователи: жюри и посетители стенда». Показывается при N ≥ 3 завершённых путей (backend: app/modules/study,
- *  GET /api/study/summary); до этого сервер отдаёт shown=false и блок скрыт. Люди на демонстрационных данных; обезличенно. */
+ *  GET /api/study/summary); до этого сервер отдаёт shown=false и блок скрыт. Люди на демонстрационных данных; записи псевдонимизированы, наружу — только сводные числа. */
 
 const ROLE: Record<string, string> = { candidate: "Кандидаты", employer: "Работодатели" };
 const ci = (c?: number[] | null, f: (v: number) => string = (v) => num(v, 1)) => (c ? `${f(c[0])} … ${f(c[1])}` : "");

@@ -3,11 +3,18 @@ import { Link, useLocation } from "react-router-dom";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { isAutomation, sendEvent, study, type StudyMe } from "../../lib/study";
+import { GUIDE_EVENT, guide, isJury } from "../../lib/jury";
 import { SurveyModal } from "./Survey";
 
 const ACK = (uid: string) => `study_ack_${uid}`;
 
-/** Обезличенная статистика прохождения: уведомление при первом входе с кнопкой «Не участвовать», события экранов, а после
+/** Панель дока: внизу слева; на телефоне, пока открыт проводник жюри (он занимает низ экрана во всю ширину), — сверху,
+ *  чтобы уведомление и проводник не перекрывали друг друга (на ≥ 640 px проводник справа, док слева — не пересекаются). */
+const dockClass = (guideOpen: boolean, w = "24rem") =>
+  `fixed inset-x-2 z-40 rounded-2xl shadow-2xl sm:inset-x-auto sm:bottom-4 sm:left-4 sm:top-auto sm:w-[min(${w},calc(100vw-2rem))] ` +
+  (guideOpen ? "top-2" : "bottom-2");
+
+/** Статистика прохождения без личных данных (псевдонимизированная — привязана к учётной записи, не к имени): уведомление при первом входе с кнопкой «Не участвовать», события экранов, а после
  *  завершённого пути — одно необязательное приглашение к короткой анкете. Автотесты и служебные учётки не участвуют. */
 export function StudyDock() {
   const { me } = useAuth();
@@ -21,6 +28,15 @@ export function StudyDock() {
   const [off, setOff] = useState(false);
   const offered = useRef(false);
   const lastPoll = useRef(0);
+  // открыт ли проводник жюри (его состояние — в хранилище, как в JuryGuide)
+  const [guideHidden, setGuideHidden] = useState(guide.hidden());
+  useEffect(() => {
+    const sync = () => setGuideHidden(guide.hidden());
+    window.addEventListener(GUIDE_EVENT, sync);
+    window.addEventListener("storage", sync);
+    return () => { window.removeEventListener(GUIDE_EVENT, sync); window.removeEventListener("storage", sync); };
+  }, []);
+  const guideOpen = (guide.on() || isJury(me?.email)) && !guideHidden && !loc.pathname.startsWith("/j/") && loc.pathname !== "/login/2fa";
 
   // вход, смена учётной записи (в том числе переключение персоны жюри): состояние и включение сбора
   useEffect(() => {
@@ -77,9 +93,9 @@ export function StudyDock() {
     <>
       {notice && st?.state === "on" && (
         <aside role="region" aria-label="Статистика прохождения"
-          className="fixed inset-x-2 bottom-2 z-40 rounded-2xl bg-white p-4 text-sm text-brand-ink shadow-2xl ring-1 ring-brand-night/15 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[min(24rem,calc(100vw-2rem))]">
-          <p className="font-semibold text-brand-night">Собираем обезличенную статистику прохождения</p>
-          <p className="mt-1 leading-snug text-brand-ink/80">Время шагов, без личных данных — чтобы улучшать продукт. Имя, почту и тексты мы не собираем, на результат и подборки это не влияет.</p>
+          className={`${dockClass(guideOpen)} bg-white p-4 text-sm text-brand-ink ring-1 ring-brand-night/15`}>
+          <p className="font-semibold text-brand-night">Собираем статистику прохождения без личных данных</p>
+          <p className="mt-1 leading-snug text-brand-ink/80">Время шагов и события экранов без содержимого, имён и почт — чтобы улучшать продукт. Связь с учётной записью нужна только чтобы склеить шаги и удалить собранное по «Не участвовать»; наружу — только сводные числа. На результат и подборки это не влияет.</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={ack} className="btn-primary !px-4 !py-2">Понятно</button>
             <button type="button" onClick={() => void decline()} className="btn-ghost !px-4 !py-2">Не участвовать</button>
@@ -89,7 +105,7 @@ export function StudyDock() {
       )}
       {!notice && offer && st?.state === "on" && !survey && (
         <aside role="region" aria-label="Короткая анкета"
-          className="fixed inset-x-2 bottom-2 z-40 rounded-2xl bg-white p-4 text-sm text-brand-ink shadow-2xl ring-1 ring-brand-night/15 sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[min(24rem,calc(100vw-2rem))]">
+          className={`${dockClass(guideOpen)} bg-white p-4 text-sm text-brand-ink ring-1 ring-brand-night/15`}>
           <p className="font-semibold text-brand-night">Путь пройден. Оцените, как всё прошло</p>
           <p className="mt-1 leading-snug text-brand-ink/80">Короткая анкета на пару минут: удобство{st.role === "employer" ? ", релевантность первых пяти кандидатов подборки" : ""} и доверие к грейду. Необязательно, можно закрыть.</p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -99,7 +115,7 @@ export function StudyDock() {
         </aside>
       )}
       {off && (
-        <aside role="status" className="fixed inset-x-2 bottom-2 z-40 rounded-2xl bg-brand-night p-3.5 text-sm text-white shadow-2xl sm:inset-x-auto sm:bottom-4 sm:left-4 sm:w-[min(22rem,calc(100vw-2rem))]">
+        <aside role="status" className={`${dockClass(guideOpen, "22rem")} bg-brand-night p-3.5 text-sm text-white`}>
           Статистика отключена, собранное по вашей записи удалено.
         </aside>
       )}
