@@ -4,6 +4,7 @@ import { cabinetPath, useAuth } from "../lib/auth";
 import { api, type Role } from "../lib/api";
 import { MESSAGES_CHANGED } from "./Chat";
 import { Logo } from "./Logo";
+import { GuideSlot } from "./JuryGuide";
 
 export interface Section { path: string; title: string; description: string; day?: string; more?: boolean }
 
@@ -51,6 +52,7 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
           <p className="ml-auto min-w-0 truncate text-right text-xs font-semibold text-brand-plum md:ml-0 md:mt-6 md:text-left md:text-xs md:uppercase md:tracking-[0.14em] md:text-brand-lavender">
             <span className="md:hidden">{SHORT[role] ?? title}</span><span className="hidden md:inline">{title}</span>
           </p>
+          <GuideSlot where="header" />{/* Ф6 (В8): свёрнутый проводник жюри — здесь, а не над содержимым */}
           <button onClick={exit} className="shrink-0 rounded-lg px-2 py-1.5 text-sm font-semibold text-brand-plum hover:bg-brand-blush/50 hover:text-brand md:hidden">Выйти</button>
         </div>
         <nav ref={navRef} className="nav-strip flex gap-1 overflow-x-auto px-3 pb-2 md:block md:flex-1 md:space-y-0.5 md:overflow-y-auto md:overflow-x-visible md:pb-3" aria-label={title}>
@@ -64,6 +66,7 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
           {(moreOpen || activeMore) && moreS.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} />)}
         </nav>
         <div className="hidden border-t border-brand-night/10 px-5 py-5 md:block">
+          <GuideSlot where="sidebar" />
           <p className="truncate text-sm font-medium text-brand-ink/80" title={me.email}>{me.email}</p>
           <button onClick={exit} className="mt-1.5 rounded text-sm font-semibold text-brand-plum hover:text-brand">Выйти</button>
         </div>

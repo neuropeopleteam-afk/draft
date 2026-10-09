@@ -7,7 +7,7 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, T
 import { api } from "../../lib/api";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
-import { InviteForm, ProbeForm } from "./Contact";
+import { InviteForm, ProbeForm, probeSentText } from "./Contact";
 import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
@@ -593,7 +593,7 @@ export function Selection() {
           onDone={() => { setInvited(`Приглашение ${invite.ref} отправлено. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`); setInvite(null); }} />}
       </Modal>
       <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Зонд для ${picked.length} канд.`}>
-        <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={() => { setProbeOpen(false); setPicked([]); }} />
+        <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setProbeOpen(false); setPicked([]); setInvited(probeSentText(r)); }} />
       </Modal>
     </div>
   );
