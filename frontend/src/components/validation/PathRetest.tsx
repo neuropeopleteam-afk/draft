@@ -59,7 +59,7 @@ function Body({ r }: { r: any }) {
   return (
     <>
       <p className="max-w-4xl text-sm leading-relaxed text-brand-ink/70">
-        {num(pg.n, 0)} синтетических кандидатов ({r.directions?.length} направлений × {num(r.n_per_direction, 0)}) проходят весь путь платформы дважды — теми же функциями, что живой кандидат. Вторая попытка — другой субпул и новые варианты заданий; семейства прошлой сессии не попадают в дотестирование.
+        {num(pg.n, 0)} синтетических кандидатов ({r.directions?.length} направлений × {num(r.n_per_direction, 0)}) проходят весь путь платформы дважды — теми же функциями, что живой кандидат. Вторая попытка — другой субпул и новые варианты заданий; какие семейства исключались в этом расчёте — в последнем пункте процедуры.
       </p>
       <ol className="mt-3 max-w-4xl list-decimal space-y-1 pl-5 text-sm text-brand-ink/75">{(r.procedure ?? []).map((s: string) => <li key={s}>{s}</li>)}</ol>
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
