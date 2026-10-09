@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTIONS, GRADES, Loading, useApi } from "./ui";
 import { ScrollX } from "./A11y";
+import { ProvenanceLine } from "./validation/Provenance";
 
 /** Блок /validation: бенчмарк подбора со скрытой истиной (backend: app/modules/validation/matching_bench.py, make bench). */
 
@@ -19,6 +20,7 @@ export default function MatchingBench() {
   return (
     <section id="bench" className="mt-12 scroll-mt-20" aria-labelledby="bench-t">
       <h2 id="bench-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Бенчмарк подбора со скрытой истиной</h2>
+      {r?.provenance && <ProvenanceLine p={r.provenance} className="mt-1.5" />}
       <div className="mt-4">
         {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !r || r.missing
           ? <Alert kind="info">Бенчмарк ещё не посчитан: запустите make bench.</Alert>

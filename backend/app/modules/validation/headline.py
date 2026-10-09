@@ -37,7 +37,39 @@ def _p(v: float) -> str:
     return f"{txt}\u00a0%"
 
 
+def _p1(v: float) -> str:
+    """Проценты с одной десятой (57,5 %): рядом с κ — доли к истине, где целые проценты прячут разницу."""
+    return f"{100 * v:.1f}".replace(".", ",") + "\u00a0%"
+
+
+def retest_vs_truth(pr: dict | None) -> dict | None:
+    """Я8 (судья п. 13): рядом с κ повтора — точность к синтетической истине, завышение, занижение, «без категории»,
+    цена порога P ≥ 0,8 и маршрут восстановления. Только числа сохранённого make path-retest, без пересчёта."""
+    t = (pr or {}).get("total") or {}
+    tr, pg, ps = t.get("truth") or {}, t.get("path_grade") or {}, t.get("path") or {}
+    if not tr or not pg or (pr or {}).get("quick"):
+        return None
+    cfg, st = ((pr.get("config") or {}).get("app") or {}), ps.get("status_share") or {}
+    k = f"{pg['kappa_w']:.3f}".replace(".", ",")
+    return {
+        "kappa_w": pg["kappa_w"], "retest_exact": pg["exact"], "exact": tr["exact"], "over": tr["over_share"],
+        "under": tr["under_share"], "no_category": tr["no_category_share"],
+        "extension_share": ps.get("extension_share"), "accepted_lower": st.get("accepted_lower"),
+        "provisional": st.get("provisional"),
+        "lead": (f"κ {k} — повторяемость, а не точность: при повторе всего пути грейд совпал у {_p1(pg['exact'])}, "
+                 f"а с синтетической истиной — у {_p1(tr['exact'])} (первая попытка)."),
+        "cost": (f"Цена порога P ≥ 0,8: правило осторожно против завышения (выше истинного — {_p1(tr['over_share'])}), "
+                 f"поэтому чаще занижает ({_p1(tr['under_share'])}, без категории — {_p1(tr['no_category_share'])}); "
+                 f"восстановление — дотестирование у порога (+{cfg.get('ext_items', '—')} заданий, до "
+                 f"{cfg.get('ext_minutes', '—')} мин; было у {_p1(ps.get('extension_share') or 0)} путей), «принять "
+                 f"доказанный уровень ниже» без нового теста ({_p1(st.get('accepted_lower') or 0)}) или вторая попытка "
+                 "на новых вариантах другого субпула."),
+        "signature": pr.get("signature")}
+
+
 def headline() -> dict:
+    from app.modules.validation.provenance import stamp  # Я8: строка происхождения у каждого числа
+
     pr, b = _load(PATH_RETEST), _load(BENCH)
     items: list[dict] = []
     if pr and not pr.get("quick"):
@@ -49,7 +81,8 @@ def headline() -> dict:
             "title": "Повтор всего пути",
             "text": (f"κ с весами: {pg['n']} синтетических кандидатов прошли опрос, тест и решение дважды. Грейд совпал у "
                      f"{_p(pg['exact'])}, ±1 ступень — у {_p(pg['within_1'])}."),
-            "note": "5 ступеней, подтверждение при P ≥ 0,8; новые варианты заданий",
+            "note": (f"повторяемость, не точность: с синтетической истиной грейд совпал у {_p1(t['truth']['exact'])}"
+                     if t.get("truth") else "5 ступеней, подтверждение при P ≥ 0,8; новые варианты заданий"),
             "signature": sig})
         tr = t["truth"]
         items.append({
@@ -85,7 +118,11 @@ def headline() -> dict:
                 "text": (f"Неподходящие с раздутым резюме в топ-10; у BM25 — "
                          f"{_p(inf['bm25']['irrelevant_inflated_top10'])}."),
                 "note": f"раздутых в популяции {_p(inf.get('population_share', 0))}", "signature": sig})
-    return {"items": items, "missing": not items,
+    for it in items:  # Я8: «синтетика · дата · SHA алгоритма · банк · команда» — из JSON расчёта
+        it["provenance"] = stamp("path" if it["anchor"] == "path-retest" else "bench",
+                                 pr if it["anchor"] == "path-retest" else b)
+    return {"items": items, "missing": not items, "retest_vs_truth": retest_vs_truth(pr),
             "how_to_read": ("Каждое число — из расчёта с подписью мира (seed, hash конфигурации, коммит), рядом — 95 % "
-                            "доверительный интервал. Ниже по странице: синтетика с интервалами, затем экспертная "
-                            "разметка, затем демо-данные с оговоркой о циркулярности.")}
+                            "доверительный интервал и строка происхождения: синтетика, модель или люди, дата, SHA "
+                            "алгоритма, банк, команда пересчёта. Ниже по странице: синтетика с интервалами, затем "
+                            "модельная панель (не люди), затем демо-данные с оговоркой о циркулярности.")}
