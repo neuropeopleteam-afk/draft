@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../lib/api";
 import { study } from "../../lib/study";
 import { Alert, errText, Loading, Modal } from "../ui";
@@ -41,6 +41,9 @@ export function SurveyModal({ open, onClose, role }: { open: boolean; onClose: (
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<{ sus_score: number | null } | null>(null);
   const need = study.need();
+  const top = useRef<HTMLDivElement>(null);
+  // новый шаг — окно прокручивается к началу (иначе после длинной шкалы человек попадает в середину следующего шага)
+  useEffect(() => { top.current?.closest('[role="dialog"]')?.scrollTo({ top: 0 }); }, [step, done]);
 
   useEffect(() => {
     if (!open) return;
@@ -84,6 +87,7 @@ export function SurveyModal({ open, onClose, role }: { open: boolean; onClose: (
         </div>
       ) : !form ? (err ? <Alert>{err}</Alert> : <Loading />) : (
         <div className="space-y-5">
+          <div ref={top} />
           <p className="text-xs text-brand-ink/65">Шаг {step + 1} из {steps.length}. Можно ответить на любую часть или закрыть окно: результат это не меняет. Анкета обезличена.</p>
 
           {kind === "sus" && (
