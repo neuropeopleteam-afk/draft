@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
 import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, ruText, useApi } from "../../components/ui";
-import { InviteForm, ProbeForm } from "./Contact";
+import { InviteForm, ProbeForm, probeSentText } from "./Contact";
 import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
@@ -155,7 +155,7 @@ export function Compare() {
       </div>
       <p className="text-xs text-brand-ink/65">Пол, возраст, имя и фото в сравнении и в ранжировании не участвуют. Контакты откроются только после того, как кандидат примет приглашение.</p>
       <Modal open={!!probe} onClose={() => setProbe(null)} title={`Зонд для ${probe?.length ?? 0} канд.`}>
-        {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={() => { setProbe(null); setDone("Зонд отправлен. Ответы появятся в разделе «Зонды»."); reload(); }} />}
+        {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={(r) => { setProbe(null); setDone(probeSentText(r) ?? "Зонд никому не отправлен."); reload(); }} />}
       </Modal>
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение ${invite?.ref ?? ""}`}>
         {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} needSalary={needSalary} onDone={() => { setInvite(null); setDone(`Приглашение ${invite.ref} отправлено. Контакты откроются после согласия кандидата.`); reload(); }} />}
