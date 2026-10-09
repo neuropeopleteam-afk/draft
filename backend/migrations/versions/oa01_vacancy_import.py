@@ -1,7 +1,7 @@
 """И23: импорт вакансий из ATS («Поток») — источник, id и ссылка вакансии в ATS, время импорта, дедупликация
 
 Revision ID: oa01
-Revises: pc01 (при слиянии в integ/0710 — текущая голова integ)
+Revises: sb01 (перевешена на голову integ/0710 b2e8dfe; в ветке была pc01)
 Create Date: 2026-10-09
 
 Вакансии, созданные на платформе вручную, — source = NULL. Импортированные — source = 'potok', external_id = id
@@ -14,7 +14,7 @@ from alembic import op
 import sqlalchemy as sa
 
 revision: str = "oa01"
-down_revision: str | None = "pc01"
+down_revision: str | None = "sb01"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 

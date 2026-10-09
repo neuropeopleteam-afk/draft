@@ -215,6 +215,23 @@ class Settings(BaseSettings):
     # match-v1 не меняется; включать только без падения метрик make bench / ranking_guard (цифры — <внутренний документ>)
     fsp_discipline_relevance: bool = False
 
+    # Подписка на потребность и напоминания (И25, Н6; app/modules/subs): фоновый обход раз в N секунд (0 — выключен:
+    # тесты и консольный запуск python -m app.modules.subs.runner). Топ-N подписки, не чаще одного пересчёта в
+    # subs_min_recompute_s секунд, страховочный полный пересчёт раз в subs_full_refresh_h часов, «новый» живёт
+    # subs_new_ttl_days дней. Тихие часы (по Москве, UTC+3) — только для живых пользователей: push и письма ждут утра.
+    subs_tick_interval_s: int = 300
+    subs_top_n: int = 10
+    subs_min_recompute_s: int = 60
+    subs_full_refresh_h: int = 24
+    subs_new_ttl_days: int = 14
+    subs_quiet_from: int = 22
+    subs_quiet_to: int = 8
+    subs_digest_hour: int = 9
+    subs_tz_offset_h: int = 3
+    reminder_invite_days: int = 3
+    reminder_expiry_hours: int = 24
+    reminder_application_days: int = 5
+
     # Резюме: максимальный размер PDF, разбор — в отдельном процессе с тайм-аутом и лимитом памяти
     resume_max_bytes: int = 5 * 1024 * 1024
     resume_max_pages: int = 20
