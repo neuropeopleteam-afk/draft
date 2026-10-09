@@ -139,7 +139,7 @@ def test_export_covers_every_owned_table(client, world):
         data = export.build(db, db.get(User, uid))
     other = set(data["other"])
     assert other.isdisjoint(export.SECTION_TABLES | {"assignment_attempts"})
-    assert owned - export.SECTION_TABLES - {"assignment_attempts"} == other
+    assert owned - export.SECTION_TABLES - export.EMPLOYER_INTERNAL - {"assignment_attempts"} == other
 
 
 # ------------------------------------------------------------------ удаление: подтверждение

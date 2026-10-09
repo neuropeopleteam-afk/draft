@@ -22,7 +22,9 @@ class CandidateProfileOut(_ORM):
     experience_years: Decimal | None
     headline: str | None
     about: str | None
-    salary_min_hidden: int | None = Field(description="Видно только самому кандидату")
+    salary_min_hidden: int | None = Field(description="Сумма видна только самому кандидату; с его разрешения (включено по "
+                                                      "умолчанию, выключается в настройках) работодатель видит лишь "
+                                                      "«вилка в ожиданиях / ниже ожиданий»")
     current_direction_id: str | None
     current_grade_id: str | None
     current_category_id: str | None
