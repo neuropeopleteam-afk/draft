@@ -399,16 +399,52 @@ def _part(f: CandidateFact) -> dict:
         return {"correct": 0.0, "total": 0.0}
 
 
+# Ф6 (Н5): у каждого источника навыка — свой исход. «Задание работодателя 0 из 1» — не подтверждение, даже если
+# слитый факт подтверждён тестом; порог части — тот же, что у skill_confirmed (доля верных ≥ 0,5). Скор не меняется.
+SKILL_SOURCE = {"test": "тест", "assignment": "задание работодателя"}
+
+
+def _part_ok(x: dict) -> bool:
+    return bool(x.get("total")) and x["correct"] / x["total"] >= 0.5
+
+
+def skill_parts_text(f: CandidateFact) -> str:
+    """«тест — подтверждено, 1 из 1; задание работодателя — не выполнено, 0 из 1» (по источникам, без слияния)."""
+    v = getattr(f, "value", None) or {}
+    parts = v.get("parts") or {_origin(f): _part(f)}
+    out = []
+    for k, x in sorted(parts.items(), key=lambda kx: kx[0] != "test"):  # сначала тест платформы, затем задания
+        ok = _part_ok(x)
+        word = ("выполнено" if ok else "не выполнено" if not x["correct"] else "ниже порога") if k == "assignment" \
+            else ("подтверждено" if ok else "ниже порога")
+        out.append(f"{SKILL_SOURCE.get(k, k)} — {word}, {fmt_count(x['correct'])} из {fmt_count(x['total'])}")
+    return "; ".join(out)
+
+
 def skill_evidence_text(f: CandidateFact) -> str:
-    """«Подтверждено заданиями теста: 2 из 3», с заданием работодателя — «… и заданием работодателя (3 из 3)»."""
+    """Один источник: «Подтверждено заданиями теста: 2 из 3» (ниже порога — «Проверено …: — ниже порога
+    подтверждения»). Несколько (И7): исход каждого отдельно — «Тест — подтверждено, 1 из 1; задание работодателя —
+    не выполнено, 0 из 1»: неуспешное задание не выглядит подтверждением рядом с успешным тестом (Н5)."""
     v = getattr(f, "value", None) or {}
     parts = v.get("parts") or {_origin(f): _part(f)}
     names = {"test": "заданиями теста", "assignment": "заданием работодателя"}
     if len(parts) == 1:
         k, x = next(iter(parts.items()))
+        if not _part_ok(x):
+            return (f"Проверено {names.get(k, k)}: {fmt_count(x['correct'])} из {fmt_count(x['total'])} — "
+                    "ниже порога подтверждения")
         return f"Подтверждено {names.get(k, k)}: {fmt_count(x['correct'])} из {fmt_count(x['total'])}"
-    return "Подтверждено " + " и ".join(f"{names.get(k, k)} ({fmt_count(x['correct'])} из {fmt_count(x['total'])})"
-                                        for k, x in parts.items())
+    t = skill_parts_text(f)
+    return t[:1].upper() + t[1:]
+
+
+def skill_check_text(f: CandidateFact) -> str:
+    """Навык проверялся, порог не набран: один источник — как раньше, несколько — исход каждого (Н5)."""
+    v = getattr(f, "value", None) or {}
+    if len(v.get("parts") or {}) > 1:
+        return f"Не подтверждено: {skill_parts_text(f)}"
+    return (f"Проверено заданиями: {fmt_count(v.get('correct'))} из {fmt_count(v.get('total'))} — "
+            "ниже порога подтверждения")
 
 
 
