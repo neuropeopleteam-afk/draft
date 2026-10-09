@@ -258,3 +258,27 @@ def test_bank_retake_has_no_repeated_families(client, bank):
     d = client.get("/api/assessment/attempts", headers=H(t)).json()
     assert len(d["attempts"]) == 3 and d["comparison"]["second"]["id"] == d["attempts"][2]["id"]
     assert "Повторов нет" in next(x["text"] for x in d["comparison"]["changes"] if x["id"] == "overlap")
+
+
+# ------------------------------------------------------------------ демо-персона жюри: готовая пара
+
+def test_jury_persona_has_ready_pair_for_candidate_and_employer(client):
+    j = client.post("/api/jury/login", json={"persona": "candidate", "scenario": "new"})
+    assert j.status_code == 200, j.text
+    t, sid = j.json()["access_token"], j.json()["scenario"]
+    d = client.get("/api/assessment/attempts?direction=backend", headers=H(t)).json()
+    assert len(d["attempts"]) >= 2 and d["comparison"] is not None
+    assert d["sandbox"] and d["can_retake_now"] and d["retake_grade"] == "middle"
+    c = d["comparison"]
+    assert c["overlap"]["engine"] == "bank" and c["overlap"]["repeated_families"] == 0
+    assert c["second"]["status"] == "confirmed" and c["second"]["is_sandbox"]
+    # грейд Марии после пары — по-прежнему Backend · Middle
+    st = client.get("/api/assessment/status?direction=backend", headers=H(t)).json()
+    assert st["current"]["category_id"] == "backend.middle"
+    e = client.post("/api/jury/login", json={"persona": "employer", "scenario": sid}).json()["access_token"]
+    ref = my_ref(client, t)
+    r = client.get(f"/api/employer/candidates/{ref}/attempts", headers=H(e))
+    assert r.status_code == 200 and r.json()["available"], r.text
+    # кандидат песочницы не существует для работодателя другой песочницы
+    other = client.post("/api/jury/login", json={"persona": "employer", "scenario": "new"}).json()["access_token"]
+    assert client.get(f"/api/employer/candidates/{ref}/attempts", headers=H(other)).status_code == 404
