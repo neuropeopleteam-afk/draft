@@ -345,11 +345,26 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/validation/attacks/{attack_id}"): "auth404",  # attack_id=nope: вход проверяется, атаки нет
     ("GET", "/api/validation/junior-stability"): "open",  # feat/status
     ("GET", "/api/validation/grader-check"): "open",  # feat/integrity
+    ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
+    ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/attempts-repeat"): "open",  # feat/attempts (И26)
     ("POST", "/api/validation/self-check"): "auth",  # feat/jury-test
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",
     ("POST", "/api/validation/closed-set/export"): "sandbox_employer",
+    # подписка на потребность, уведомления, напоминания (И25, Н6 — feat/subs)
+    ("GET", "/api/employer/subscriptions"): "employer",
+    ("GET", "/api/employer/needs/{need_id}/subscription"): "employer_own",
+    ("PUT", "/api/employer/needs/{need_id}/subscription"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/subscription/seen"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/subscription/check"): "employer_own",
+    ("POST", "/api/employer/needs/{need_id}/subscription/new-version"): "employer_own",
+    ("GET", "/api/notifications"): "auth",
+    ("POST", "/api/notifications/read"): "auth",
+    ("GET", "/api/notifications/prefs"): "auth",
+    ("PUT", "/api/notifications/prefs"): "auth",
+    ("POST", "/api/jury/subs/simulate"): "sandbox_employer",
+    ("POST", "/api/jury/subs/fast-forward"): "sandbox_employer",
     ("GET", "/api/sus/questions"): "open",
     ("POST", "/api/sus"): "open",
     ("GET", "/api/sus/mine"): "open",

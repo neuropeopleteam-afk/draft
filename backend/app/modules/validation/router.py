@@ -178,6 +178,24 @@ def matching_bench():
     return _bench()
 
 
+PATH_RETEST = Path(__file__).resolve().parent / "data" / "path_retest.json"
+
+
+@router.get("/path-retest", summary="Test–retest всего пути кандидата и D / r_pb семейств (пересчёт: make path-retest)")
+def path_retest():
+    if not PATH_RETEST.exists():
+        return {"missing": True}
+    d = json.loads(PATH_RETEST.read_text(encoding="utf-8"))
+    d.get("discrimination", {}).pop("families", None)  # полный список — в JSON репозитория, на страницу — слабые
+    return d
+
+
+@router.get("/headline", summary="Первый экран /validation: 5 чисел с ДИ и подписью мира")
+def validation_headline():
+    from app.modules.validation.headline import headline
+    return headline()
+
+
 @router.get("/fsp-rating", summary="Парный регрессионный бенчмарк формулы ФСП v1/v2")
 def fsp_rating_regression():
     path = BENCH.parent / "fsp_rating_regression_0710.json"
