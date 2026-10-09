@@ -243,6 +243,51 @@ def delivery_out(db: Session, d: AtsDelivery) -> dict:
             "created_at": d.created_at.isoformat(), "updated_at": d.updated_at.isoformat()}
 
 
+def invitation_transfers(db: Session, company_id: uuid.UUID, inv: Invitation) -> list[dict]:
+    """Состояние передачи принятого приглашения по каждой ATS работодателя (карточка приглашения, Ф4).
+
+    Вместо одной общей кнопки «В ATS» с ответом «уже передано ранее» ×4 — строка на систему:
+    state = sent («Передано», для «Потока» — с этапом «Новые» из ответа ATS или обратного канала) / error /
+    pending / not_sent (подключена, но кандидата в неё ещё не передавали). Только принятые приглашения.
+    """
+    from app.integrations.ats.stages import PLATFORM_STAGES, PROVIDER_TITLES  # noqa: F401 — PROVIDER_TITLES для ясности
+
+    if inv.status != InvitationStatus.accepted:
+        return []
+    st = db.get(AtsSettings, company_id)
+    enabled = providers.enabled_targets(db, company_id, st)
+    rows = db.scalars(select(AtsDelivery).where(AtsDelivery.company_id == company_id, AtsDelivery.invitation_id == inv.id)
+                      .order_by(AtsDelivery.created_at.desc())).all()
+    by: dict[str, list[AtsDelivery]] = {}
+    for d in rows:
+        by.setdefault(d.target, []).append(d)
+    out = []
+    for code in TARGET_TITLES:
+        if code not in enabled and code not in by:
+            continue
+        ds = by.get(code, [])
+        ok = next((d for d in ds if d.status == "ok"), None)
+        last = ds[0] if ds else None
+        state = "sent" if ok else "pending" if last is not None and last.status == "pending" \
+            else "error" if last is not None else "not_sent"
+        item = {"target": code, "title": TARGET_TITLES[code], "state": state, "enabled": code in enabled,
+                "at": (ok or last).created_at.isoformat() if (ok or last) else None,
+                "auto": bool(ok and ok.trigger == "invitation_accepted"),
+                "error": last.error if state == "error" and last is not None else None,
+                "attempts": len(ds), "stage": None}
+        if code == "potok" and ok is not None:
+            rec = inv.ats_stage or {}
+            if rec.get("provider") == "potok" and rec.get("stage") in PLATFORM_STAGES:  # обратный канал: свежее
+                item["stage"] = {"stage": rec["stage"], "title": PLATFORM_STAGES[rec["stage"]],
+                                 "name": rec.get("stage_name") or PLATFORM_STAGES[rec["stage"]], "at": rec.get("at"),
+                                 "synced": True}
+            elif (ok.result or {}).get("stage_title"):  # этап при передаче (до первого опроса «Потока»)
+                item["stage"] = {"stage": "review", "title": PLATFORM_STAGES["review"], "name": ok.result["stage_title"],
+                                 "at": ok.created_at.isoformat(), "synced": False}
+        out.append(item)
+    return out
+
+
 def company_settings(db: Session, company_id: uuid.UUID) -> AtsSettings:
     st = db.get(AtsSettings, company_id)
     if st is None:
