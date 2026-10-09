@@ -288,7 +288,12 @@ def test_candidate_and_anonymous_api_hide_mechanics(client, bank_api):
                 assert not bad, f"{p}: {bad}"
                 continue
             body = _body(r)
-            assert_candidate_safe(r.json() if "json" in r.headers.get("content-type", "") else body, f"{p} ({who})")
+            payload = r.json() if "json" in r.headers.get("content-type", "") else body
+            if p == "/api/me/data/export" and isinstance(payload, dict):
+                # «Мои данные»: ответы кандидата — его собственный текст (слова-метки в нём он вставил сам), остальное проверяется
+                for s_ in (payload.get("tests") or {}).get("sessions", []):
+                    s_["answers"] = []
+            assert_candidate_safe(payload, f"{p} ({who})")
             payloads[f"{p} ({who})"] = body
             checked += r.status_code == 200
     assert checked >= 20, checked

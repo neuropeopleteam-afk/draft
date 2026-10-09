@@ -3,6 +3,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Stat, catTitle, useApi } from "../../components/ui";
 import { useAuth } from "../../lib/auth";
 import { Specializations } from "../../components/Specializations";
+import InterestCard from "../../components/InterestCard";
 
 export default function CandidateOverview() {
   const { me } = useAuth();
@@ -22,7 +23,8 @@ export default function CandidateOverview() {
   return (
     <div className="max-w-4xl">
       <PageTitle title={name ? `Здравствуйте, ${name}` : "Кабинет кандидата"} subtitle={category ? (c?.visible_to_employers ? "Ваш профиль виден работодателям: ждите приглашений с зарплатой и коротких задач." : "Категория присвоена. Дайте согласие на публикацию профиля, чтобы работодатели могли вас найти.") : "Пройдите опрос и тест — после этого работодатели смогут найти вас и прислать приглашение с зарплатой."} />
-      <div className="mt-8 grid gap-5 md:grid-cols-3">
+      <div className="mt-6"><InterestCard /></div>
+      <div className="mt-6 grid gap-5 md:grid-cols-3">
         <Stat label="Категория" value={catTitle(category)} hint="Только по результатам теста" />
         <Stat label="Приглашения" value={inv.data ? `${inv.data.length}${newInv ? ` · новых ${newInv}` : ""}` : "…"} hint="Контакты — только после принятия" />
         <Stat label="Зонды работодателей" value={probes.data ? `${probes.data.length}${newProbes ? ` · ждут ответа ${newProbes}` : ""}` : "…"} hint="Короткие задачи с вилкой" />
