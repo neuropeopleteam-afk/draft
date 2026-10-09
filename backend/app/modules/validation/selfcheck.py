@@ -50,7 +50,7 @@ STRATEGIES = [
     {"id": "random", "title": "Случайно", "text": "Случайный вариант, строка или ответ"},
     {"id": "common_only", "title": "Знает только общий блок", "text": "Общий блок — верно, блок направления — случайно"},
 ]
-from app.modules.catalog.seed_data import GRADE_CUTS as CUTS  # шкала платформы со Стажёром (intern), И13
+from app.modules.catalog.seed_data import GRADE_CUTS as CUTS, GRADE_ORDER  # шкала платформы со Стажёром (intern), И13
 _busy = threading.BoundedSemaphore(1)
 
 
@@ -327,8 +327,9 @@ def run(*, strategy: str, theta: float | None, direction: str, claimed: str, n: 
         c1 = np.array([r["confirmed"] for r in first]); c2 = np.array([r["confirmed"] for r in second])
         g1 = [r["point_grade"] for r in first]; g2 = [r["point_grade"] for r in second]
         t1 = np.array([r["theta"] for r in first]); t2 = np.array([r["theta"] for r in second])
-        idx = {"none": 0, "junior": 1, "middle": 2, "senior": 3}
-        gi1 = np.array([idx[g] for g in g1]); gi2 = np.array([idx[g] for g in g2])
+        # шкала платформы со Стажёром (И13): none 0, intern 1, junior 2, middle 3, senior 4; неизвестное значение — как none
+        idx = {"none": 0, **{g: i + 1 for i, g in enumerate(GRADE_ORDER)}}
+        gi1 = np.array([idx.get(g or "none", 0) for g in g1]); gi2 = np.array([idx.get(g or "none", 0) for g in g2])
         rt = {"decision_agreement": round(float(np.mean(c1 == c2)), 3),
               "grade_exact_agreement": round(float(np.mean(gi1 == gi2)), 3),
               "grade_within_1": round(float(np.mean(np.abs(gi1 - gi2) <= 1)), 3),

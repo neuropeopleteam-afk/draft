@@ -27,7 +27,7 @@ function useWindowEvent(name: string, fn: () => void) {
 
 /** Чип «новый» у карточки кандидата в подборке. */
 export function NewChip() {
-  return <span className="inline-flex items-center rounded-full bg-brand px-2.5 py-0.5 text-xs font-bold text-white" title="Вошёл в топ-10 после того, как вы подписались">новый</span>;
+  return <span className="inline-flex items-center rounded-full bg-brand-strong px-2.5 py-0.5 text-xs font-bold text-white" title="Вошёл в топ-10 после того, как вы подписались">новый</span>;
 }
 
 export function SubscriptionPanel({ needId, sub, versionNo, onNewVersion }: { needId: string; sub: ReturnType<typeof useSub>; versionNo?: number; onNewVersion?: (v: number) => void }) {
@@ -87,7 +87,7 @@ export function SubscriptionPanel({ needId, sub, versionNo, onNewVersion }: { ne
                     <Link className="font-semibold text-brand-night hover:underline" to={`/employer/candidates/${n.ref}?need=${needId}`}>{n.ref}</Link>
                     <span className="text-brand-ink/75">{n.card?.category?.title ?? "категория"}</span>
                     <span className="text-brand-ink/65">соответствие {num(n.score * 100, 0)} из 100 · место {n.rank} в топе</span>
-                    <span className="text-xs text-brand-ink/50">{dtt(n.entered_at)}</span>
+                    <span className="text-xs text-brand-ink/65">{dtt(n.entered_at)}</span>
                   </li>
                 ))}
               </ul>

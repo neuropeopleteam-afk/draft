@@ -53,7 +53,7 @@ export default function Login() {
       </form>
       <FspIdLogin />
       <p className="mt-5 rounded-lg bg-brand-blush/40 px-3 py-2 text-xs leading-relaxed text-brand-ink/80">
-        Эксперту жюри: готовые учётки — вход в один клик на <Link to="/#jury" className="font-semibold text-brand hover:text-brand-soft">главной</Link>.
+        Эксперту жюри: готовые учётки — вход в один клик на <Link to="/#jury" className="font-semibold text-brand-deep hover:text-brand">главной</Link>.
         Логин и пароль стенда — в материалах сдачи.
       </p>
     </AuthShell>
