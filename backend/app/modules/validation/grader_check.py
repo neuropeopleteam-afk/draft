@@ -86,7 +86,7 @@ def load() -> tuple[dict, list[dict]]:
 def _redacted(text: str) -> str:
     from app.modules.resume.pii import redact
 
-    return redact(text, use_ner=True).text
+    return redact(text, use_ner=True, header=False).text
 
 
 def build(cond: str, out: str, limit_per_group: int = 0) -> None:

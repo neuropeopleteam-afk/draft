@@ -209,7 +209,7 @@ def submit(db: Session, cup: Cup, e: CupEntry, *, answers: dict | None = None, t
             raise api_error(422, "cup_answer_too_short", "Опишите решение подробнее (не короче 20 символов)")
         from app.modules.resume.pii import redact
 
-        red = redact(body, use_ner=True)
+        red = redact(body, use_ner=True, header=False)
         e.answer = {"text": body[:10000], "link": (link or "").strip()[:500] or None, "text_redacted": red.text[:10000],
                     "redacted": sorted(red.found)}
         e.status = "submitted"
