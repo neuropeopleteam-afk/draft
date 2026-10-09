@@ -15,6 +15,8 @@ from app.cup import tasks as auto
 from app.integrations.push.service import send_to_user
 from app.integrations.vacancies.models import Vacancy, VacancyApplication
 from app.modules.assignments import bank
+from app.modules.assignments import rubric as rub
+from app.modules.assignments import why as why_mod
 from app.modules.assignments.models import Assignment, AssignmentAttempt
 from app.modules.auth.models import User
 from app.modules.catalog.seed_data import STACK, category_title
@@ -24,6 +26,7 @@ from app.modules.notifications.mailer import notify
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateProfile, Company
 from app.modules.profiles.models import CandidateFact
+from app.modules.resume.pii import redact
 
 log = logging.getLogger(__name__)
 
@@ -75,6 +78,8 @@ def requirements_from(db: Session, company: Company, *, need_id=None, vacancy_id
 
 
 def preview(db: Session, company: Company, *, n_tasks: int = 5, seed: int | None = None, **src) -> dict:
+    src.pop("with_approach", None)
+    src.pop("approach_prompt", None)
     r = requirements_from(db, company, **src)
     fams = bank.pick(r["direction"], r["grade"], r["stack"], n_tasks, seed=seed)
     cov = bank.coverage_for(r["direction"], r["grade"], r["stack"])
@@ -85,7 +90,10 @@ def preview(db: Session, company: Company, *, n_tasks: int = 5, seed: int | None
             "families": bank.families_public(fams), "n_tasks": len(fams),
             "coverage": {"covered": cov["covered"], "missing": cov["missing"],
                          "missing_titles": [tag_title(t) for t in cov["missing"]]},
-            "time_limit_min": suggested_time(fams)}
+            "time_limit_min": suggested_time(fams),
+            # К5: рубрика видна до создания — с просьбой описать подход (оценивает работодатель) и без неё (всё автоматически)
+            "rubric": rub.build(True), "rubric_auto": rub.build(False),
+            "approach_prompt": rub.default_prompt(r["title"], [tag_title(t) for t in r["stack"]])}
 
 
 def suggested_time(fams: list[dict]) -> int:
@@ -97,7 +105,7 @@ def suggested_time(fams: list[dict]) -> int:
 
 def create(db: Session, company: Company, user: User, *, mode: str, title: str | None, description: str,
            n_tasks: int, time_limit_min: int | None, salary_from: int | None, salary_to: int | None,
-           **src) -> Assignment:
+           with_approach: bool = False, approach_prompt: str | None = None, **src) -> Assignment:
     r = requirements_from(db, company, **src)
     fams = bank.pick(r["direction"], r["grade"], r["stack"], n_tasks)
     if len(fams) < bank.N_MIN:
@@ -113,9 +121,12 @@ def create(db: Session, company: Company, user: User, *, mode: str, title: str |
 
         salary_from, salary_to = salary_from or r["salary_from"], salary_to or r["salary_to"]
         check_salary(salary_from, salary_to)  # зонд и открытое задание — предложение, вилка обязательна
+    final_title = (title or r["title"] or "Задание работодателя")[:200]
+    prompt = ((approach_prompt or "").strip() or rub.default_prompt(final_title, [tag_title(t) for t in r["stack"]])) if with_approach else None
     a = Assignment(
+        rubric=rub.build(with_approach), approach_prompt=prompt,
         company_id=company.id, created_by=user.id, need_id=r["need_id"], vacancy_id=r["vacancy_id"], mode=mode,
-        title=(title or r["title"] or "Задание работодателя")[:200], description=description or "",
+        title=final_title, description=description or "",
         direction_id=r["direction"], grade_id=r["grade"], stack_tags=r["stack"], families=fams,
         coverage=bank.coverage_for(r["direction"], r["grade"], r["stack"]), n_tasks=len(fams),
         time_limit_min=time_limit_min or suggested_time(fams), salary_from=salary_from, salary_to=salary_to,
@@ -134,7 +145,7 @@ def active_for_vacancy(db: Session, vacancy_id) -> Assignment | None:
 # ------------------------------------------------------------------ выдача кандидату
 
 def offer(db: Session, a: Assignment, cand: User, source: str, *, application_id=None,
-          send: bool = True) -> AssignmentAttempt | None:
+          send: bool = True, why_days: int | None = None) -> AssignmentAttempt | None:
     """Предложить задание кандидату (одна попытка на задание). Уведомление — письмо и push."""
     ex = db.scalar(select(AssignmentAttempt).where(AssignmentAttempt.assignment_id == a.id,
                                                    AssignmentAttempt.candidate_user_id == cand.id))
@@ -142,6 +153,10 @@ def offer(db: Session, a: Assignment, cand: User, source: str, *, application_id
         return None
     at = AssignmentAttempt(assignment_id=a.id, candidate_user_id=cand.id, source=source,
                            application_id=application_id, status="offered", offered_at=utcnow())
+    try:  # причина предложения («почему вам») — слепок; сбой разбора не должен срывать выдачу
+        at.why = why_mod.build(db, a, cand, source, frequency_days=why_days)
+    except Exception:  # noqa: BLE001
+        log.exception("причина предложения не определена")
     db.add(at)
     db.flush()
     if send:
@@ -150,13 +165,15 @@ def offer(db: Session, a: Assignment, cand: User, source: str, *, application_id
         head = {"probe": "Задание с автопроверкой от компании", "vacancy": "К отклику прилагается задание компании",
                 "feed": "Задание для вас от компании"}[source]
         notify(cand.email, f"{head} {company.name if company else ''}".strip(),
-               [f"«{a.title}»: {a.n_tasks} заданий банка по стеку {', '.join(tag_title(t) for t in a.stack_tags[:5])}, "
-                f"{a.time_limit_min} минут. Проверка автоматическая, результат станет фактом T1 в вашем профиле.",
+               [f"«{a.title}»: {n_zad(a.n_tasks)} банка по стеку {', '.join(tag_title(t) for t in a.stack_tags[:5])}, "
+                f"{a.time_limit_min} минут. Проверка автоматическая, результат станет фактом T1 в вашем профиле"
+                + (", подход оценит работодатель по рубрике." if a.approach_prompt else "."),
+                f"Почему вам: {(at.why or {}).get('primary', {}).get('text') or 'стек задания пересекается с вашим профилем'}",
                 "Задание необязательно: отказ не влияет на рейтинг и категорию."],
                is_demo=cand.is_demo, link_path=path)
         try:
             send_to_user(db, cand.id, f"{head} {company.name if company else ''}".strip(),
-                         f"«{a.title}» · {a.n_tasks} заданий · {a.time_limit_min} мин", path, f"assignment-{at.id}")
+                         f"«{a.title}» · {n_zad(a.n_tasks)} · {a.time_limit_min} мин", path, f"assignment-{at.id}")
         except Exception:  # noqa: BLE001 — push не должен ломать основной сценарий
             log.exception("push о задании не отправлен")
     return at
@@ -176,10 +193,28 @@ def start(db: Session, at: AssignmentAttempt, a: Assignment) -> AssignmentAttemp
     return at
 
 
-def submit(db: Session, at: AssignmentAttempt, a: Assignment, answers: dict) -> AssignmentAttempt:
+def n_zad(n: int) -> str:
+    """«1 задание», «3 задания», «5 заданий»."""
+    m10, m100 = n % 10, n % 100
+    return f"{n} " + ("задание" if m10 == 1 and m100 != 11 else "задания" if 2 <= m10 <= 4 and not 12 <= m100 <= 14 else "заданий")
+
+
+def clean_approach(text: str | None) -> str:
+    """Ответ о подходе: контакты, ссылки на профили и ФИО маскируются локально (регулярные выражения) до сохранения."""
+    t = (text or "").strip()
+    if len(t) < rub.APPROACH_MIN:
+        raise api_error(422, "approach_required", f"Опишите подход подробнее: не меньше {rub.APPROACH_MIN} символов")
+    if len(t) > rub.APPROACH_MAX:
+        raise api_error(422, "approach_too_long", f"Ответ о подходе — не больше {rub.APPROACH_MAX} символов")
+    return redact(t, use_ner=False).text
+
+
+def submit(db: Session, at: AssignmentAttempt, a: Assignment, answers: dict, approach: str | None = None) -> AssignmentAttempt:
     if at.status != "in_progress":
         raise api_error(409, "attempt_not_started", "Сначала начните задание")
     now = utcnow()
+    in_time = not (at.deadline_at and now > as_aware(at.deadline_at) + timedelta(seconds=GRACE_S))
+    cleaned = clean_approach(approach) if (a.approach_prompt and in_time) else None  # 422 — до любых изменений
     at.submitted_at = now
     at.time_spent_s = int((now - as_aware(at.started_at)).total_seconds()) if at.started_at else None
     if at.deadline_at and now > as_aware(at.deadline_at) + timedelta(seconds=GRACE_S):
@@ -194,9 +229,47 @@ def submit(db: Session, at: AssignmentAttempt, a: Assignment, answers: dict) -> 
     at.skills = _skills(items)
     at.status = "scored"
     at.score_method = "auto"
+    at.approach_text = cleaned
+    init_rubric(at, a)
     db.flush()
     write_facts(db, at, a)
     _notify_employer(db, at, a)
+    return at
+
+
+def init_rubric(at: AssignmentAttempt, a: Assignment) -> None:
+    """Автоматические баллы рубрики сразу; если есть критерии работодателя — ждёт оценки (итога ещё нет)."""
+    rubric = rub.of(a)
+    at.rubric_result = rub.init_result(rubric, at, a)
+    if rub.has_employer_part(rubric):
+        at.review_status, at.final_points = "pending", None
+    else:
+        at.review_status, at.final_points = "none", rub.totals(rubric, at.rubric_result)["total"]
+
+
+def review(db: Session, at: AssignmentAttempt, a: Assignment, scores: dict, comment: str | None) -> AssignmentAttempt:
+    """Оценка работодателя по рубрике: баллы критериев «employer» → итог → факт «зонд» и уведомление кандидату."""
+    if at.status != "scored":
+        raise api_error(409, "attempt_not_scored", "Оценить можно только выполненное задание")
+    rubric = rub.of(a)
+    pts = rub.validate_review(rubric, scores)
+    base = at.rubric_result or rub.init_result(rubric, at, a)
+    at.rubric_result = rub.apply_review(rubric, base, pts, comment)
+    t = rub.totals(rubric, at.rubric_result)
+    at.final_points, at.review_status, at.reviewed_at = t["total"], "reviewed", utcnow()
+    db.flush()
+    write_facts(db, at, a)  # факт «зонд» — по итогу рубрики; даты навыков не сдвигаются (источник — время решения)
+    cand = db.get(User, at.candidate_user_id)
+    if cand is not None:
+        path = f"/candidate/assignments/{at.id}"
+        text = f"{t['total']} из {t['max']} по рубрике: автопроверка {t['auto_points']} из {t['auto_max']}, оценка работодателя {t['employer_points']} из {t['employer_max']}."
+        notify(cand.email, f"Работодатель оценил ваше задание «{a.title}»", [text, "Критерии и комментарий — на странице задания."],
+               is_demo=cand.is_demo, link_path=path)
+        try:
+            send_to_user(db, cand.id, "Работодатель оценил ваше задание", f"«{a.title}»: {t['total']} из {t['max']}", path,
+                         f"assignment-review-{at.id}")
+        except Exception:  # noqa: BLE001
+            log.exception("push об оценке не отправлен")
     return at
 
 
@@ -239,7 +312,9 @@ def _skills(items: list[dict]) -> dict:
 def write_facts(db: Session, at: AssignmentAttempt, a: Assignment) -> None:
     """Результат — факты T1: по навыку (kind=skill, сливаются с тестом в load_bundles) и общий (kind=probe)."""
     ref = f"{SOURCE_REF}{at.id}"
+    was: dict = {}
     for f in db.scalars(select(CandidateFact).where(CandidateFact.source_ref == ref)).all():
+        was[(f.kind, f.key)] = f.created_at  # повторная запись (оценка работодателя) не сдвигает дату подтверждения
         db.delete(f)
     company = db.get(Company, a.company_id)
     cname = company.name if company else "компания"
@@ -249,13 +324,35 @@ def write_facts(db: Session, at: AssignmentAttempt, a: Assignment) -> None:
             value={"score": d["score"], "correct": d["correct"], "total": d["total"], "origin": "assignment",
                    "direction": a.direction_id, "assignment_title": a.title, "company": cname},
             evidence_level=EvidenceLevel.T1, source=FactSource.probe, source_ref=ref))
+    score, verdict, rubric_v = fact_summary(at, a)
     db.add(CandidateFact(
         user_id=at.candidate_user_id, kind="probe", key=f"assignment:{a.id}", title=f"Задание работодателя: {a.title}",
-        value={"score": at.score, "verdict": f"{at.correct} из {at.total} верно, автопроверка",
-               "origin": "assignment", "direction": a.direction_id, "company": cname, "source": at.source},
+        value={"score": score, "verdict": verdict, "origin": "assignment", "direction": a.direction_id, "company": cname,
+               "source": at.source, "rubric": rubric_v, "skills": sorted((at.skills or {}).keys()),
+               "attempt_id": str(at.id), "reviewed": at.review_status == "reviewed"},
         evidence_level=EvidenceLevel.T1, source=FactSource.probe, source_ref=ref))
     db.flush()
+    if was:
+        for f in db.scalars(select(CandidateFact).where(CandidateFact.source_ref == ref)).all():
+            if (f.kind, f.key) in was:
+                f.created_at = was[(f.kind, f.key)]
+        db.flush()
     refresh_rating(db, at.candidate_user_id)
+
+
+def fact_summary(at: AssignmentAttempt, a: Assignment) -> tuple[float, str, dict | None]:
+    """Оценка для факта «зонд»: до оценки работодателя — доля верных автопроверки, после — итог рубрики / 100;
+    строка вердикта (она же — объяснение в подборке) с разбивкой автопроверка/работодатель."""
+    rubric = rub.of(a)
+    t = rub.totals(rubric, at.rubric_result) if at.rubric_result else None
+    base = f"{at.correct} из {at.total} верно, автопроверка"
+    if t is None or not t["employer_max"]:
+        return float(at.score or 0.0), base, None
+    if at.review_status == "reviewed":
+        v = (f"{t['total']} из {t['max']} по рубрике: автопроверка {t['auto_points']} из {t['auto_max']}, "
+             f"оценка работодателя {t['employer_points']} из {t['employer_max']}")
+        return round(t["total"] / t["max"], 4), v, {"reviewed": True, **t}
+    return float(at.score or 0.0), f"{base}; оценка подхода работодателем ожидается", {"reviewed": False, **t}
 
 
 def _notify_employer(db: Session, at: AssignmentAttempt, a: Assignment) -> None:
@@ -267,12 +364,55 @@ def _notify_employer(db: Session, at: AssignmentAttempt, a: Assignment) -> None:
     path = f"/employer/assignments/{a.id}"
     notify(eu.email, f"Кандидат {ref} выполнил задание «{a.title}»",
            [f"Результат автопроверки: {at.correct} из {at.total} верно.",
-            "Результат записан как факт T1 и учтён в подборке."], is_demo=eu.is_demo, link_path=path)
+            "Результат записан как факт T1 и учтён в подборке."]
+           + (["Кандидат описал подход — оцените его по рубрике на странице задания."] if at.review_status == "pending" else []),
+           is_demo=eu.is_demo, link_path=path)
     try:
         send_to_user(db, eu.id, f"Кандидат {ref} выполнил задание", f"«{a.title}»: {at.correct} из {at.total} верно",
                      path, f"assignment-done-{at.id}")
     except Exception:  # noqa: BLE001
         log.exception("push работодателю не отправлен")
+
+
+# ------------------------------------------------------------------ напоминания
+
+def remind_candidate(db: Session, at: AssignmentAttempt, a: Assignment, *, ttl_days: int | None = None) -> None:
+    """Напоминание кандидату о неначатом задании (письмо и push; демо-учёткам письмо не шлётся)."""
+    cand = db.get(User, at.candidate_user_id)
+    if cand is None:
+        return
+    path = f"/candidate/assignments/{at.id}"
+    left = ""
+    if ttl_days:
+        days = max(0, ttl_days - (utcnow() - as_aware(at.offered_at)).days)
+        left = f" Предложение действует ещё {days} дн."
+    why_line = ((at.why or {}).get("primary") or {}).get("text")
+    notify(cand.email, f"Напоминание: задание «{a.title}» ждёт вас",
+           [f"{n_zad(a.n_tasks)}, {a.time_limit_min} мин, проверка автоматическая.{left}"] + ([f"Почему вам: {why_line}"] if why_line else [])
+           + ["Задание необязательно: отказ не влияет на рейтинг и категорию."], is_demo=cand.is_demo, link_path=path)
+    try:
+        send_to_user(db, cand.id, "Напоминание о задании", f"«{a.title}» ждёт вас{left}", path, f"assignment-remind-{at.id}-{at.remind_count}")
+    except Exception:  # noqa: BLE001
+        log.exception("push-напоминание не отправлено")
+
+
+def remind_employer(db: Session, at: AssignmentAttempt, a: Assignment) -> None:
+    """Напоминание работодателю оценить подход кандидата по рубрике."""
+    eu = db.get(User, a.created_by) if a.created_by else None
+    if eu is None:
+        return
+    p = db.get(CandidateProfile, at.candidate_user_id)
+    ref = p.public_ref if p else "кандидат"
+    days = max(1, (utcnow() - as_aware(at.submitted_at or at.offered_at)).days)
+    path = f"/employer/assignments/{a.id}"
+    notify(eu.email, f"Оцените подход кандидата {ref} по заданию «{a.title}»",
+           [f"Ответ ждёт оценки {days} дн.: два критерия рубрики, не больше минуты.",
+            "Пока оценки нет, в подборке виден только результат автопроверки."], is_demo=eu.is_demo, link_path=path)
+    try:
+        send_to_user(db, eu.id, f"Оцените подход кандидата {ref}", f"«{a.title}»: ждёт {days} дн.", path,
+                     f"assignment-review-remind-{at.id}-{at.review_remind_count}")
+    except Exception:  # noqa: BLE001
+        log.exception("push-напоминание работодателю не отправлено")
 
 
 # ------------------------------------------------------------------ интеграция с откликами на вакансии
@@ -286,7 +426,7 @@ def on_application(db: Session, v: Vacancy, app: VacancyApplication) -> Assignme
     return offer(db, a, cand, "vacancy", application_id=app.id) if cand else None
 
 
-def attempt_for_application(db: Session, app: VacancyApplication) -> dict | None:
+def attempt_for_application(db: Session, app: VacancyApplication, role: str = "candidate") -> dict | None:
     """Результат задания рядом с откликом (у работодателя и у кандидата)."""
     a = active_for_vacancy(db, app.vacancy_id)
     at = db.scalar(select(AssignmentAttempt).where(AssignmentAttempt.application_id == app.id)
@@ -297,7 +437,7 @@ def attempt_for_application(db: Session, app: VacancyApplication) -> dict | None
     if at is None:
         return None
     asg = a if a is not None and at.assignment_id == a.id else db.get(Assignment, at.assignment_id)
-    return attempt_brief(at, asg)
+    return attempt_brief(at, asg, role)
 
 
 def vacancy_brief(db: Session, vacancy_id) -> dict | None:
@@ -310,17 +450,29 @@ def vacancy_brief(db: Session, vacancy_id) -> dict | None:
 
 STATUS_TITLE = {"offered": "Предложено", "in_progress": "В работе", "scored": "Проверено", "declined": "Отклонено",
                 "expired": "Время вышло"}
+REVIEW_TITLE = {"none": "Проверено автоматически", "pending": "Ждёт оценки работодателя", "reviewed": "Оценено работодателем"}
 
 
-def attempt_brief(at: AssignmentAttempt, a: Assignment | None) -> dict:
-    return {
+def attempt_brief(at: AssignmentAttempt, a: Assignment | None, role: str = "candidate") -> dict:
+    status_title = STATUS_TITLE.get(at.status, at.status)
+    if at.status == "expired" and at.started_at is None:
+        status_title = "Предложение истекло"
+    out = {
         "attempt_id": str(at.id), "assignment_id": str(at.assignment_id), "title": a.title if a else None,
-        "status": at.status, "status_title": STATUS_TITLE.get(at.status, at.status), "source": at.source,
+        "status": at.status, "status_title": status_title, "source": at.source,
         "score": at.score, "score_pct": round(at.score * 100) if at.score is not None else None,
         "correct": at.correct, "total": at.total, "time_spent_s": at.time_spent_s,
         "submitted_at": at.submitted_at, "offered_at": at.offered_at,
         "skills": [{"tag": t, "title": tag_title(t), **d} for t, d in sorted((at.skills or {}).items())],
+        # К5: причина предложения, рубрика с баллами, оценка работодателя, напоминания
+        "why": why_mod.public(at.why, role),
+        "review_status": at.review_status, "review_title": REVIEW_TITLE.get(at.review_status, ""),
+        "final_points": at.final_points, "reviewed_at": at.reviewed_at,
+        "remind_at": at.remind_at, "remind_count": at.remind_count,
     }
+    if a is not None and at.status == "scored":
+        out["rubric"] = rub.view(a, at)
+    return out
 
 
 def assignment_out(db: Session, a: Assignment, *, for_candidate: bool = False) -> dict:
@@ -336,6 +488,7 @@ def assignment_out(db: Session, a: Assignment, *, for_candidate: bool = False) -
         "vacancy_id": str(a.vacancy_id) if a.vacancy_id else None, "is_demo": a.is_demo,
         "created_at": a.created_at,
         "company": {"id": str(company.id), "name": company.name} if company else None,
+        "rubric": rub.view(a, None), "approach_prompt": a.approach_prompt,
     }
 
 
@@ -344,6 +497,7 @@ def attempt_out(db: Session, at: AssignmentAttempt, a: Assignment) -> dict:
     expire_overdue(db, at)
     out = {**attempt_brief(at, a), "assignment": assignment_out(db, a, for_candidate=True),
            "started_at": at.started_at, "deadline_at": at.deadline_at, "grace_s": GRACE_S,
+           "approach_text": at.approach_text,
            "tasks": auto.public_tasks(at.tasks, reveal_result=at.status == "scored") if at.status in ("in_progress", "scored") else None}
     if at.application_id:
         out["application_id"] = str(at.application_id)

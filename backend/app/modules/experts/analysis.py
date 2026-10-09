@@ -336,3 +336,117 @@ def analyze(items: dict, labels: list[dict], panel_kind: str = "human") -> dict:
     return {"matching": matching(items, labels), "agreement": agr,
             "llm": llm_agreement(items, labels, agr["B"]["kappa_mean"], panel_kind), "angoff": angoff(items, labels),
             "labels": len(labels), "coders": sorted({lb["coder"] for lb in labels})}
+
+
+# ------------------------------------------------------------------ A по пакетам: v1, v2 и v1 + v2
+PACK_METRICS = ("p@5", "ndcg@10")
+PACK_METHODS = ("platform", "bm25", "platform_trec", "bm25_trec")
+
+
+def platform_rank(h: dict):
+    """Место в подборке match-v1 в мире пакета: v2 — rank_match (None — пара вне подборки), v1 — rank_platform."""
+    return h["rank_match"] if "rank_match" in h else h.get("rank_platform")
+
+
+def need_units(items: dict, gold: dict, pack: str) -> list[dict]:
+    """Потребности пакета → P@5 и nDCG@10 match-v1 и BM25 по снимку пакета (ранги из hidden, не из текущего мира).
+
+    Сжатый список (condensed list, Sakai 2007): способ упорядочивает только размеченные пары пула своей потребности
+    (match-v1 — пары своей подборки, BM25 — все пары пула), неразмеченные кандидаты пропускаются. Идеальный DCG — по
+    всем размеченным парам пула, как в v1. Топ-5 match-v1 размечен полностью в обоих пакетах, поэтому его P@5 — точное;
+    у BM25 в v1 топ-5 размечен полностью, в v2 — по пулу match-v1 (bm25_top5_judged — сколько из его топ-5 в пуле).
+    Сжатый список BM25 в v2 выбирает только из пула match-v1 (категорийный фильтр ему засчитан даром), поэтому разность
+    match-v1 − BM25 консервативна. Чувствительность — *_trec: допущение TREC «неразмеченные = нерелевантны» (места —
+    истинные, неразмеченные дают 0); оно, наоборот, строже к BM25. Истина — между двумя оценками."""
+    needs: dict[str, list] = defaultdict(list)
+    for k, it in items.items():
+        if it["kind"] == "A":
+            needs[it["grp"]].append(k)
+    out = []
+    for nid, keys in sorted(needs.items()):
+        text = items[keys[0]]["payload"].get("need_text") or ""
+        row = {"pack": pack, "need": nid, "cluster": " ".join(text.split()).lower() or nid, "pairs": len(keys),
+               "labeled": sum(1 for k in keys if k in gold)}
+        row["complete"] = row["labeled"] == len(keys)
+        if row["complete"]:
+            h = {k: items[k]["hidden"] for k in keys}
+            all_g = [gold[k] for k in keys]
+            lists = {"platform": sorted((k for k in keys if platform_rank(h[k]) is not None),
+                                        key=lambda k: (platform_rank(h[k]), k)),
+                     "bm25": sorted((k for k in keys if h[k].get("rank_bm25") is not None),
+                                    key=lambda k: (h[k]["rank_bm25"], k))}
+            ideal = S.dcg(sorted(all_g, reverse=True), 10)
+            for m, lst in lists.items():
+                g = [gold[k] for k in lst]
+                row[m] = {"p@5": S.precision_at(g, 5), "ndcg@10": S.ndcg_at(g, all_g, 10)}
+                rank = {k: (platform_rank(h[k]) if m == "platform" else h[k].get("rank_bm25")) for k in lst}
+                p5 = sum(1 for k in lst if rank[k] <= 5 and gold[k] >= 2) / 5
+                dcg = sum((2 ** gold[k] - 1) / math.log2(rank[k] + 1) for k in lst if rank[k] <= 10)
+                row[f"{m}_trec"] = {"p@5": p5, "ndcg@10": dcg / ideal if ideal > 0 else 0.0}
+            row["bm25_top5_judged"] = sum(1 for k in keys if (h[k].get("rank_bm25") or 10 ** 6) <= 5)
+            row["relevant"] = sum(1 for k in keys if gold[k] >= 2)
+            row["borrowed"] = sum(1 for k in keys if h[k].get("borrowed_from"))
+        out.append(row)
+    return out
+
+
+def summarize_units(units: list[dict]) -> dict:
+    """Средние по потребностям с 95 % ДИ кластерного бутстрепа (кластер — потребность: одна и та же в v1 и v2 — один
+    кластер), разность match-v1 − BM25 — парно, p — знаковый критерий Уилкоксона по средним кластеров."""
+    comp = [u for u in units if u["complete"]]
+    clusters: dict[str, list] = defaultdict(list)
+    for u in comp:
+        clusters[u["cluster"]].append(u)
+    groups = [clusters[c] for c in sorted(clusters)]
+    out = {"needs_total": len(units), "needs_complete": len(comp), "clusters": len(groups),
+           "pairs": sum(u["pairs"] for u in comp), "pairs_total": sum(u["pairs"] for u in units)}
+    if not comp:
+        return out
+    summ: dict = {}
+    for metric in PACK_METRICS:
+        summ[metric] = {m: S.cluster_boot_ci([[u[m][metric] for u in g] for g in groups]) for m in PACK_METHODS}
+        for name, a, b in (("diff", "platform", "bm25"), ("diff_trec", "platform_trec", "bm25_trec")):
+            diffs = [[u[a][metric] - u[b][metric] for u in g] for g in groups]
+            summ[metric][name] = {**S.cluster_boot_ci(diffs), "wilcoxon_p": S.wilcoxon_p([float(np.mean(d)) for d in diffs])}
+    out["summary"] = summ
+    out["bm25_top5_coverage"] = _r(sum(u["bm25_top5_judged"] for u in comp) / (5 * len(comp)))
+    out["borrowed"] = sum(u.get("borrowed", 0) for u in comp)
+    return out
+
+
+def matching_by_pack(packs: dict[str, tuple[dict, list[dict]]], base: str = "v1") -> dict:
+    """A по пакетам и вместе. packs: {пакет: (items, labels)} в порядке v1, v2. Пары v2, совпавшие с v1
+    (hidden.borrowed_from — ключ v1), получают эталон из оценок v1; заново их не размечали."""
+    golds: dict[str, dict] = {}
+    res: dict = {}
+    units_all: list[dict] = []
+    ratings_all: dict[str, dict] = defaultdict(dict)
+    labels_all = 0
+    raw_all: list[int] = []
+    for pack, (items, labels) in packs.items():
+        gold, raw = gold_labels(items, labels)
+        for k, it in items.items():
+            b = it["hidden"].get("borrowed_from") if it["kind"] == "A" else None
+            if b and b in golds.get(base, {}):
+                gold[k] = golds[base][b]
+        golds[pack] = gold
+        units = need_units(items, gold, pack)
+        units_all += units
+        ratings = _ratings(items, labels, "A", lambda v, it: v["relevance"])
+        for coder, r in ratings.items():
+            for k, v in r.items():
+                ratings_all[coder][f"{pack}|{k}"] = v
+        n_lab = sum(len(v) for v in raw.values())
+        labels_all += n_lab
+        raw_all += [len(v) for v in raw.values()]
+        res[pack] = {**summarize_units(units), "labels": n_lab, "pairs_labeled": len(raw),
+                     "ratings_per_pair": _r(np.mean([len(v) for v in raw.values()]), 2) if raw else None,
+                     "agreement": agreement_block(ratings) if ratings else None}
+    res["all"] = {**summarize_units(units_all), "labels": labels_all, "pairs_labeled": len(raw_all),
+                  "ratings_per_pair": _r(np.mean(raw_all), 2) if raw_all else None,
+                  "agreement": agreement_block(ratings_all) if ratings_all else None}
+    per_need = [{"pack": u["pack"], "need": u["need"], "pairs": u["pairs"], "labeled": u["labeled"],
+                 "complete": u["complete"], "relevant": u.get("relevant"), "borrowed": u.get("borrowed"),
+                 "bm25_top5_judged": u.get("bm25_top5_judged"),
+                 **{m: {x: _r(y) for x, y in u[m].items()} for m in PACK_METHODS if m in u}} for u in units_all]
+    return {"packs": res, "per_need": per_need}

@@ -42,9 +42,12 @@ from app.modules.jury.router import router as jury_router
 from app.modules.jury.scope import JuryScopeMiddleware
 from app.modules.matching.router import router as employer_router
 from app.modules.proctor.router import router as proctor_router
+from app.modules.mutual import router as mutual  # взаимный подбор, отзывы, ссылка руководителю (Н9, Н2, Н3)
 from app.modules.profiles.candidate_router import legal_router
 from app.modules.profiles.candidate_router import router as candidate_router
 from app.modules.profiles.router import router as profiles_router
+from app.modules.subs import router as subs_api
+from app.modules.subs import runner as subs_runner
 from app.modules.validation.router import router as validation_router
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.passport.router import TAGS as PASSPORT_TAGS
@@ -68,7 +71,7 @@ TAGS = [
     {"name": "legal", "description": "Тексты согласий и реквизиты оператора персональных данных"},
     {"name": "expert-panel", "description": "Экспертная разметка: вход по ссылке, пары, ответы, Ангофф"},
     {"name": "system", "description": "Служебные методы"},
-]
+] + subs_api.TAGS
 
 
 @asynccontextmanager
@@ -84,6 +87,8 @@ async def lifespan(_app: FastAPI):
     from app.integrations.ats.stages import start_poller
 
     start_poller()
+    # Подписка на потребность и напоминания (И25, Н6): фоновый обход, под арендой в БД
+    subs_runner.start_background(get_settings().subs_tick_interval_s)
     yield
 
 
@@ -98,7 +103,7 @@ def create_app() -> FastAPI:
             "кандидата по категории «направление · грейд» и приглашает с зарплатой.\n\n"
             "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
         ),
-        openapi_tags=TAGS + contact.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS,
+        openapi_tags=TAGS + contact.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS + mutual.TAGS,
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -116,7 +121,9 @@ def create_app() -> FastAPI:
               candidate_contact_router, employer_router, employer_contact_router, catalog_router,
               expert_router, expert_panel_router, jury_router, validation_router, proctor_router,
               assignments_employer_router, assignments_candidate_router, passport_router,
-              contact.router, contact.candidate_router, contact.employer_router):  # переписка, встречное (И4)
+              contact.router, contact.candidate_router, contact.employer_router,  # переписка, встречное (И4)
+              subs_api.employer_router, subs_api.notify_router, subs_api.jury_router,  # подписка, уведомления (И25)
+              mutual.employer_router, mutual.candidate_router, mutual.public_router):  # взаимный подбор (Н9, Н2, Н3)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)

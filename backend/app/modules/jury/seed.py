@@ -79,9 +79,12 @@ NEEDS = [
     "Frontend-разработчик middle для личного кабинета: React, TypeScript, HTML/CSS обязательно; "
     "желательно тестирование фронтенда. Гибрид, Санкт-Петербург, от 200 до 250 тыс.",
     # Демонстрация фильтра ст. 64 ТК РФ: фразы про пол, возраст, внешность и детей подсвечены, в требования
-    # и в ранжирование не попадают, предложен текст через навыки
+    # и в ранжирование не попадают, предложен текст через навыки. «Офис в Москве или удалённо»: условия потребности
+    # применяются сразу (Ф2) — персоны песочницы (удалённо, Москва) должны проходить условия своих демо-потребностей
     "Python-разработчик middle в отдел интеграций: только мужчины до 35 лет, славянской внешности, без детей, "
-    "в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве, 180–240 тыс.",
+    "в молодой коллектив. Нужны Python, Django и PostgreSQL, желательно Docker. Офис в Москве или удалённо, 180–240 тыс.",
+    # И18: подборка мала — «Что если» показывает, какое требование отсекает больше всего подтверждённых
+    "Backend-разработчик senior для платёжного шлюза: обязательно PostgreSQL, Kafka и Linux. Удалённо, от 350 тыс. ₽.",
 ]
 STACK = ["python", "fastapi", "postgresql", "redis", "docker", "sql", "git", "linux"]
 
@@ -311,6 +314,10 @@ def delete_jury(db: Session, sid: str = "") -> int:
         live.delete_guests(db, list(db.scalars(select(User.id).where(User.email.like(live.guest_emails_like(sid)))).all()))
         live.bump_sid(db, sid)
     ids = db.scalars(select(User.id).where(User.email.in_(list(scope.emails(sid).values())))).all()
+    if sid:  # И25: подписки, лента уведомлений и смоделированные кандидаты песочницы
+        from app.modules.subs import demo as subs_demo
+
+        subs_demo.purge(db, sid, list(ids))
     if ids:  # участия её кандидатов в общих кубках платформы
         db.execute(delete(CupEntry).where(CupEntry.candidate_user_id.in_(ids)))
     own = Company.created_by.in_(ids) if ids else Company.id.is_(None)
@@ -391,8 +398,9 @@ def _create_jury(db: Session, sid: str) -> dict:
         db.add(n)
         db.flush()
         sel = ranking.build_selection(db, req, {})
-        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={}, requirements=req,
-                                results=sel["results"], algorithm_version=sel["algorithm"], created_by=eu.id))
+        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={"_meta": sel["meta"]},
+                                requirements=req, results=sel["results"], algorithm_version=sel["algorithm"],
+                                created_by=eu.id))  # Ф2: снимок версии — открытие без пересчёта
         needs.append(n)
     db.commit()
     from app.modules.invitations.service import create_invitation
@@ -403,8 +411,10 @@ def _create_jury(db: Session, sid: str) -> dict:
                       need_id=needs[0].id, probe_id=None)
     _jury_contact(db, eu, c, p2, p1, needs)  # переписка и встречное предложение (app.modules.contact, И4)
     cups = _jury_cups(db, sid, eu, c, p1)
-    tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2)  # задания работодателя с автопроверкой (И7)
+    tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2, p3)  # задания работодателя с автопроверкой (И7)
     _maria_extras(db, eu, p1)
+    from app.modules.mutual.demo import seed_jury_mutual  # взаимный подбор, отзывы, ссылка руководителю (Н9, Н2, Н3)
+    seed_jury_mutual(db, eu, needs, p1, p2, p3)
     _user(db, "fsp", UserRole.fsp_analyst, sid)  # только агрегаты /api/fsp-cabinet/* — общие для платформы
     # эксперт — последним: набор почт песочницы полон (_complete) только когда всё создано — запасную не выдадут раньше
     ex = _user(db, "expert", UserRole.expert, sid)  # не admin: только /api/expert/*, только демо-кандидаты
@@ -445,12 +455,12 @@ def _jury_cups(db: Session, sid: str, eu: User, c: Company, maria: CandidateProf
 
 
 def _jury_assignments(db: Session, sid: str, eu: User, c: Company, need, maria: CandidateProfile,
-                      ilya: CandidateProfile) -> list[str]:
+                      ilya: CandidateProfile, artem: CandidateProfile | None = None) -> list[str]:
     """Задания работодателя песочницы (И7, app.modules.assignments.demo); сбой не ломает сид жюри."""
     from app.modules.assignments.demo import seed_jury_assignments
 
     try:
-        return seed_jury_assignments(db, sid or scope.SHARED, eu, c, need, maria, ilya)
+        return seed_jury_assignments(db, sid or scope.SHARED, eu, c, need, maria, ilya, artem)
     except Exception:  # noqa: BLE001
         db.rollback()
         log.exception("jury: demo assignments failed")
