@@ -1,0 +1,1334 @@
+{
+ "rule": "Ф2: ярусы по числу непокрытых обязательных (0, 1, ≥2), внутри — балл match-v1",
+ "experts_v1": {
+  "n_needs": 10,
+  "n_pairs": 109,
+  "raters": "E1, E2, E3 (медиана)",
+  "summary": {
+   "p@5": {
+    "before": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "after": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "after_declared": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "diff_after_before": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    },
+    "diff_declared_before": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    }
+   },
+   "ndcg@5": {
+    "before": {
+     "mean": 0.846,
+     "lo": 0.728,
+     "hi": 0.946,
+     "n": 10
+    },
+    "after": {
+     "mean": 0.86,
+     "lo": 0.739,
+     "hi": 0.961,
+     "n": 10
+    },
+    "after_declared": {
+     "mean": 0.837,
+     "lo": 0.724,
+     "hi": 0.929,
+     "n": 10
+    },
+    "diff_after_before": {
+     "mean": 0.014,
+     "lo": 0.0,
+     "hi": 0.038,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 3
+    },
+    "diff_declared_before": {
+     "mean": -0.009,
+     "lo": -0.041,
+     "hi": 0.027,
+     "n": 10,
+     "wilcoxon_p": 0.8125,
+     "worse_needs": 3,
+     "better_needs": 2
+    }
+   },
+   "rules_p@5": {
+    "before": {
+     "mean": 0.92,
+     "lo": 0.82,
+     "hi": 1.0,
+     "n": 10
+    },
+    "after": {
+     "mean": 0.92,
+     "lo": 0.82,
+     "hi": 1.0,
+     "n": 10
+    },
+    "after_declared": {
+     "mean": 0.92,
+     "lo": 0.82,
+     "hi": 1.0,
+     "n": 10
+    },
+    "diff_after_before": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    },
+    "diff_declared_before": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    }
+   },
+   "rules_ndcg@5": {
+    "before": {
+     "mean": 0.927,
+     "lo": 0.869,
+     "hi": 0.977,
+     "n": 10
+    },
+    "after": {
+     "mean": 0.927,
+     "lo": 0.869,
+     "hi": 0.977,
+     "n": 10
+    },
+    "after_declared": {
+     "mean": 0.947,
+     "lo": 0.904,
+     "hi": 0.986,
+     "n": 10
+    },
+    "diff_after_before": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    },
+    "diff_declared_before": {
+     "mean": 0.02,
+     "lo": 0.0,
+     "hi": 0.049,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 2
+    }
+   }
+  },
+  "per_need": [
+   {
+    "need": "N00",
+    "text": "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс.",
+    "pairs": 11,
+    "relevant": 4,
+    "required": [
+     "Python",
+     "FastAPI",
+     "PostgreSQL",
+     "Redis"
+    ],
+    "before": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "rules_p@5": 0.6,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "3b827f49-e7ab-4e15-acf0-3806269d258e",
+      "e091b323-5710-412b-99e0-c04802bb1283",
+      "0873b576-a33b-49de-a34b-30636b2931d6",
+      "28dfbd00-a7df-49c3-b26a-ed260024d354",
+      "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa"
+     ]
+    },
+    "after": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "rules_p@5": 0.6,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "3b827f49-e7ab-4e15-acf0-3806269d258e",
+      "e091b323-5710-412b-99e0-c04802bb1283",
+      "0873b576-a33b-49de-a34b-30636b2931d6",
+      "28dfbd00-a7df-49c3-b26a-ed260024d354",
+      "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa"
+     ]
+    },
+    "after_declared": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "rules_p@5": 0.6,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "3b827f49-e7ab-4e15-acf0-3806269d258e",
+      "e091b323-5710-412b-99e0-c04802bb1283",
+      "0873b576-a33b-49de-a34b-30636b2931d6",
+      "28dfbd00-a7df-49c3-b26a-ed260024d354",
+      "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa"
+     ]
+    }
+   },
+   {
+    "need": "N02",
+    "text": "Data Scientist middle: Python, pandas, scikit-learn, статистика, SQL. Желательно Airflow и ClickHouse. 200–280 тыс. ₽",
+    "pairs": 11,
+    "relevant": 5,
+    "required": [
+     "Python",
+     "pandas",
+     "scikit-learn",
+     "Статистика и A/B-тесты",
+     "SQL"
+    ],
+    "before": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "rules_p@5": 0.8,
+     "rules_ndcg@5": 0.9125,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "top5_items": [
+      "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+      "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+      "ea30edc2-66d4-42be-8a27-b69743c5520b",
+      "4ba3af4d-7658-45ca-9005-a721715872e6",
+      "a0c80d3a-97da-4e9b-b659-d9e02bd90427"
+     ]
+    },
+    "after": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "rules_p@5": 0.8,
+     "rules_ndcg@5": 0.9125,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "top5_items": [
+      "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+      "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+      "ea30edc2-66d4-42be-8a27-b69743c5520b",
+      "4ba3af4d-7658-45ca-9005-a721715872e6",
+      "a0c80d3a-97da-4e9b-b659-d9e02bd90427"
+     ]
+    },
+    "after_declared": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "rules_p@5": 0.8,
+     "rules_ndcg@5": 0.9125,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      2,
+      2,
+      2,
+      2,
+      2
+     ],
+     "top5_items": [
+      "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+      "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+      "ea30edc2-66d4-42be-8a27-b69743c5520b",
+      "4ba3af4d-7658-45ca-9005-a721715872e6",
+      "a0c80d3a-97da-4e9b-b659-d9e02bd90427"
+     ]
+    }
+   },
+   {
+    "need": "N03",
+    "text": "Junior аналитик данных/ML: Python, pandas, SQL; будет плюсом опыт с numpy. Офис в Москве или гибрид.",
+    "pairs": 11,
+    "relevant": 3,
+    "required": [
+     "Python",
+     "pandas",
+     "SQL"
+    ],
+    "before": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.8443,
+     "top5_gold": [
+      1.0,
+      1.0,
+      2.0,
+      0.0,
+      0.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "91968da3-ac02-4473-899a-b1ca65409051",
+      "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+      "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+      "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+      "317a6a00-8ac1-401b-a7bf-88b248e942b4"
+     ]
+    },
+    "after": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.8443,
+     "top5_gold": [
+      1.0,
+      1.0,
+      2.0,
+      0.0,
+      0.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "91968da3-ac02-4473-899a-b1ca65409051",
+      "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+      "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+      "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+      "317a6a00-8ac1-401b-a7bf-88b248e942b4"
+     ]
+    },
+    "after_declared": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.8443,
+     "top5_gold": [
+      1.0,
+      1.0,
+      2.0,
+      0.0,
+      0.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "91968da3-ac02-4473-899a-b1ca65409051",
+      "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+      "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+      "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+      "317a6a00-8ac1-401b-a7bf-88b248e942b4"
+     ]
+    }
+   },
+   {
+    "need": "N04",
+    "text": "Специалист по ИБ middle: OWASP, Burp Suite, пентест веб-приложений, сетевая безопасность. Желательно CTF.",
+    "pairs": 9,
+    "relevant": 5,
+    "required": [
+     "OWASP Top 10",
+     "Burp Suite",
+     "Пентест веб-приложений",
+     "Сетевая безопасность"
+    ],
+    "before": {
+     "p@5": 0.6,
+     "ndcg@5": 0.91,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.5,
+      2.5,
+      1.5,
+      2.0,
+      1.5
+     ],
+     "top5_tiers": [
+      0,
+      0,
+      1,
+      0,
+      1
+     ],
+     "top5_items": [
+      "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+      "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+      "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+      "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+      "07fbccc0-b17c-4c6b-9663-92d32bbaf15d"
+     ]
+    },
+    "after": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9171,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.5,
+      2.5,
+      2.0,
+      1.5,
+      1.5
+     ],
+     "top5_tiers": [
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     "top5_items": [
+      "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+      "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+      "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+      "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+      "07fbccc0-b17c-4c6b-9663-92d32bbaf15d"
+     ]
+    },
+    "after_declared": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9171,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.5,
+      2.5,
+      2.0,
+      1.5,
+      1.5
+     ],
+     "top5_tiers": [
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     "top5_items": [
+      "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+      "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+      "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+      "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+      "07fbccc0-b17c-4c6b-9663-92d32bbaf15d"
+     ]
+    }
+   },
+   {
+    "need": "N05",
+    "text": "Senior SOC-аналитик: SIEM/SOC, форензика, сетевая безопасность, Linux. Удалённо.",
+    "pairs": 12,
+    "relevant": 3,
+    "required": [
+     "SIEM и SOC",
+     "Форензика",
+     "Сетевая безопасность",
+     "Linux"
+    ],
+    "before": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9893,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.8851,
+     "top5_gold": [
+      2.0,
+      2.0,
+      1.5,
+      2.0,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      2,
+      1,
+      2
+     ],
+     "top5_items": [
+      "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+      "ce019233-806a-4370-82a0-88fc54924912",
+      "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+      "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+      "8b5bd8db-299a-4f9f-b832-97cf84decb70"
+     ]
+    },
+    "after": {
+     "p@5": 0.6,
+     "ndcg@5": 1.0,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.8851,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      1.5,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+      "ce019233-806a-4370-82a0-88fc54924912",
+      "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+      "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+      "8b5bd8db-299a-4f9f-b832-97cf84decb70"
+     ]
+    },
+    "after_declared": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9893,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.8851,
+     "top5_gold": [
+      2.0,
+      2.0,
+      1.5,
+      2.0,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      2,
+      1,
+      2
+     ],
+     "top5_items": [
+      "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+      "ce019233-806a-4370-82a0-88fc54924912",
+      "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+      "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+      "8b5bd8db-299a-4f9f-b832-97cf84decb70"
+     ]
+    }
+   },
+   {
+    "need": "N06",
+    "text": "Frontend-разработчик middle: React, TypeScript, HTML/CSS обязательно; Next.js будет плюсом. 180–250 тыс.",
+    "pairs": 12,
+    "relevant": 9,
+    "required": [
+     "React",
+     "TypeScript",
+     "HTML и CSS",
+     "Next.js"
+    ],
+    "before": {
+     "p@5": 1.0,
+     "ndcg@5": 0.984,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      3.0,
+      3.0,
+      2.0,
+      3.0,
+      2.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      2,
+      2,
+      2
+     ],
+     "top5_items": [
+      "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+      "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+      "49b1b6ce-0977-4c23-95bc-03af187315a4",
+      "a10fdeed-bb94-4b0a-b6aa-e330b0081a67",
+      "d0b6066a-15f6-470d-a903-e777c6549e2f"
+     ]
+    },
+    "after": {
+     "p@5": 1.0,
+     "ndcg@5": 0.984,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      3.0,
+      3.0,
+      2.0,
+      3.0,
+      2.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      2,
+      2,
+      2
+     ],
+     "top5_items": [
+      "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+      "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+      "49b1b6ce-0977-4c23-95bc-03af187315a4",
+      "a10fdeed-bb94-4b0a-b6aa-e330b0081a67",
+      "d0b6066a-15f6-470d-a903-e777c6549e2f"
+     ]
+    },
+    "after_declared": {
+     "p@5": 1.0,
+     "ndcg@5": 0.8849,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      3.0,
+      3.0,
+      2.0,
+      2.0,
+      2.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      2,
+      2,
+      2
+     ],
+     "top5_items": [
+      "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+      "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+      "92c8ee8b-640a-4eba-bdc4-0f50e03add72",
+      "cc1347f7-578b-4011-a498-cb4dbd62f73f",
+      "49b1b6ce-0977-4c23-95bc-03af187315a4"
+     ]
+    }
+   },
+   {
+    "need": "N08",
+    "text": "QA-инженер middle: тест-дизайн, API-тестирование, pytest; желательно Playwright и Allure.",
+    "pairs": 11,
+    "relevant": 8,
+    "required": [
+     "Тест-дизайн",
+     "Тестирование API",
+     "pytest"
+    ],
+    "before": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.7227,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "top5_items": [
+      "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+      "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+      "c9122d92-84cf-4072-b72b-62678e14a359",
+      "5f9b8144-48ee-4718-b647-2a05150ebdf9",
+      "efde5793-ef60-4170-a687-880313aac71c"
+     ]
+    },
+    "after": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.7227,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "top5_items": [
+      "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+      "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+      "c9122d92-84cf-4072-b72b-62678e14a359",
+      "5f9b8144-48ee-4718-b647-2a05150ebdf9",
+      "efde5793-ef60-4170-a687-880313aac71c"
+     ]
+    },
+    "after_declared": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.8416,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "top5_items": [
+      "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+      "c9122d92-84cf-4072-b72b-62678e14a359",
+      "170beb48-002c-46e1-afa9-e657f0903565",
+      "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+      "5f9b8144-48ee-4718-b647-2a05150ebdf9"
+     ]
+    }
+   },
+   {
+    "need": "N09",
+    "text": "Senior Go-разработчик для маршрутизации: Go, PostgreSQL, Kafka, Docker. От 5 лет опыта.",
+    "pairs": 11,
+    "relevant": 2,
+    "required": [
+     "Go",
+     "PostgreSQL",
+     "Kafka",
+     "Docker"
+    ],
+    "before": {
+     "p@5": 0.4,
+     "ndcg@5": 0.839,
+     "rules_p@5": 0.8,
+     "rules_ndcg@5": 0.9891,
+     "top5_gold": [
+      1.0,
+      2.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      2,
+      2,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+      "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+      "33de790a-343e-4148-8ec8-25f8896c6f54",
+      "4f323b02-47df-4ba0-9710-da63f0948360",
+      "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb"
+     ]
+    },
+    "after": {
+     "p@5": 0.4,
+     "ndcg@5": 0.9578,
+     "rules_p@5": 0.8,
+     "rules_ndcg@5": 0.9891,
+     "top5_gold": [
+      2.0,
+      1.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      2,
+      2,
+      2,
+      2
+     ],
+     "top5_items": [
+      "33de790a-343e-4148-8ec8-25f8896c6f54",
+      "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+      "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+      "4f323b02-47df-4ba0-9710-da63f0948360",
+      "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb"
+     ]
+    },
+    "after_declared": {
+     "p@5": 0.4,
+     "ndcg@5": 0.9578,
+     "rules_p@5": 0.8,
+     "rules_ndcg@5": 0.9891,
+     "top5_gold": [
+      2.0,
+      1.0,
+      2.0,
+      1.0,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      2,
+      2,
+      2,
+      2
+     ],
+     "top5_items": [
+      "33de790a-343e-4148-8ec8-25f8896c6f54",
+      "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+      "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+      "4f323b02-47df-4ba0-9710-da63f0948360",
+      "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb"
+     ]
+    }
+   },
+   {
+    "need": "N12",
+    "text": "Senior frontend: TypeScript, React, state management, доступность (a11y), тестирование фронтенда.",
+    "pairs": 10,
+    "relevant": 6,
+    "required": [
+     "TypeScript",
+     "React",
+     "Доступность (a11y)"
+    ],
+    "before": {
+     "p@5": 1.0,
+     "ndcg@5": 0.9102,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.9165,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      2.5,
+      2.0
+     ],
+     "top5_tiers": [
+      0,
+      1,
+      0,
+      1,
+      1
+     ],
+     "top5_items": [
+      "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+      "216d709c-8644-4299-85da-258e25eb6a2a",
+      "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+      "0d34a6f6-c906-4498-870c-bedb81b56d7f",
+      "cfab5723-a321-453b-a9ae-fdaa8320c19c"
+     ]
+    },
+    "after": {
+     "p@5": 1.0,
+     "ndcg@5": 0.9102,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 0.9165,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      2.5,
+      2.0
+     ],
+     "top5_tiers": [
+      0,
+      0,
+      1,
+      1,
+      1
+     ],
+     "top5_items": [
+      "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+      "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+      "216d709c-8644-4299-85da-258e25eb6a2a",
+      "0d34a6f6-c906-4498-870c-bedb81b56d7f",
+      "cfab5723-a321-453b-a9ae-fdaa8320c19c"
+     ]
+    },
+    "after_declared": {
+     "p@5": 1.0,
+     "ndcg@5": 0.8422,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.0,
+      2.0,
+      2.0,
+      2.0,
+      2.0
+     ],
+     "top5_tiers": [
+      0,
+      0,
+      1,
+      1,
+      1
+     ],
+     "top5_items": [
+      "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+      "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+      "cfab5723-a321-453b-a9ae-fdaa8320c19c",
+      "ef804918-3018-4e9d-8aee-67a951bf9bd1",
+      "216d709c-8644-4299-85da-258e25eb6a2a"
+     ]
+    }
+   },
+   {
+    "need": "N13",
+    "text": "Junior QA: ручное тестирование, тест-дизайн, SQL, основы API-тестирования. Самара, офис.",
+    "pairs": 11,
+    "relevant": 3,
+    "required": [
+     "Ручное тестирование",
+     "Тест-дизайн",
+     "SQL",
+     "Тестирование API"
+    ],
+    "before": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9808,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.0,
+      2.0,
+      1.0,
+      2.0,
+      1.0
+     ],
+     "top5_tiers": [
+      2,
+      1,
+      2,
+      1,
+      1
+     ],
+     "top5_items": [
+      "c914991f-f6d1-407e-95be-a837ce6a9933",
+      "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+      "9962a1b5-5268-479c-a792-3161d610bf9d",
+      "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+      "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1"
+     ]
+    },
+    "after": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9808,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.0,
+      2.0,
+      1.0,
+      2.0,
+      1.0
+     ],
+     "top5_tiers": [
+      1,
+      1,
+      1,
+      2,
+      2
+     ],
+     "top5_items": [
+      "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+      "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+      "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1",
+      "c914991f-f6d1-407e-95be-a837ce6a9933",
+      "9962a1b5-5268-479c-a792-3161d610bf9d"
+     ]
+    },
+    "after_declared": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9323,
+     "rules_p@5": 1.0,
+     "rules_ndcg@5": 1.0,
+     "top5_gold": [
+      2.0,
+      1.0,
+      2.0,
+      1.0,
+      2.0
+     ],
+     "top5_tiers": [
+      1,
+      2,
+      1,
+      1,
+      2
+     ],
+     "top5_items": [
+      "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+      "9962a1b5-5268-479c-a792-3161d610bf9d",
+      "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+      "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1",
+      "c914991f-f6d1-407e-95be-a837ce6a9933"
+     ]
+    }
+   }
+  ],
+  "caveat": "Оценка на размеченном пуле пакета v1 (объединение топ-5 match-v1, топ-5 BM25 и 2 случайных): кандидатов вне пула нельзя считать нерелевантными, поэтому порядок сравнивается внутри пула."
+ },
+ "hidden_truth_500": {
+  "before": {
+   "p@5": 0.704,
+   "p@10": 0.662,
+   "ndcg@5": 0.573,
+   "ndcg@10": 0.5776,
+   "mrr": 0.8567,
+   "top5_all_required_t1": 0.184
+  },
+  "after": {
+   "p@5": 0.712,
+   "p@10": 0.646,
+   "ndcg@5": 0.5617,
+   "ndcg@10": 0.5717,
+   "mrr": 0.84,
+   "top5_all_required_t1": 0.228
+  },
+  "diff": {
+   "p@5": {
+    "mean": 0.008,
+    "lo": -0.02,
+    "hi": 0.04,
+    "n": 50,
+    "wilcoxon_p": 0.7002,
+    "worse_needs": 5,
+    "better_needs": 6
+   },
+   "ndcg@10": {
+    "mean": -0.006,
+    "lo": -0.017,
+    "hi": 0.004,
+    "n": 50,
+    "wilcoxon_p": 0.4105,
+    "worse_needs": 20,
+    "better_needs": 19
+   },
+   "mrr": {
+    "mean": -0.017,
+    "lo": -0.043,
+    "hi": 0.0,
+    "n": 50,
+    "wilcoxon_p": null,
+    "worse_needs": 3,
+    "better_needs": 0
+   }
+  },
+  "config": {
+   "seed": 20261006,
+   "n_needs": 50,
+   "n_candidates": 500,
+   "theta_sigma": 0.48,
+   "se_reported": 0.4,
+   "items_mean": 14.8,
+   "common_share": 0.4,
+   "guess": 0.2,
+   "known_bonus": 0.3,
+   "unknown_penalty": -1.2,
+   "share_inflated": 0.2,
+   "share_modest": 0.15,
+   "inflate_all": false,
+   "fsp_base": -1.3,
+   "fsp_slope": 0.9,
+   "fsp_informative": true,
+   "truth": "capable",
+   "cov_full": 0.75,
+   "cov_min": 0.5,
+   "min_relevant_per_need": 3,
+   "decision": "bank",
+   "provisional": true
+  }
+ },
+ "demo_500_rules": {
+  "before": {
+   "p@5": {
+    "platform": 0.84,
+    "platform_no_fsp": 0.827,
+    "bm25": 0.52,
+    "keywords": 0.587,
+    "random": 0.325
+   },
+   "ndcg@5": {
+    "platform": 0.834,
+    "platform_no_fsp": 0.835,
+    "bm25": 0.709,
+    "keywords": 0.764,
+    "random": 0.408
+   },
+   "ndcg@10": {
+    "platform": 0.893,
+    "platform_no_fsp": 0.901,
+    "bm25": 0.81,
+    "keywords": 0.844,
+    "random": 0.493
+   },
+   "within_category_ndcg@3": {
+    "platform": 0.706,
+    "platform_no_fsp": 0.752,
+    "bm25": 0.923,
+    "keywords": 0.945,
+    "random": 0.717
+   },
+   "within_category_needs": 12
+  },
+  "after": {
+   "p@5": {
+    "platform": 0.84,
+    "platform_no_fsp": 0.853,
+    "bm25": 0.52,
+    "keywords": 0.587,
+    "random": 0.325
+   },
+   "ndcg@5": {
+    "platform": 0.859,
+    "platform_no_fsp": 0.869,
+    "bm25": 0.709,
+    "keywords": 0.764,
+    "random": 0.408
+   },
+   "ndcg@10": {
+    "platform": 0.915,
+    "platform_no_fsp": 0.918,
+    "bm25": 0.81,
+    "keywords": 0.844,
+    "random": 0.493
+   },
+   "within_category_ndcg@3": {
+    "platform": 0.778,
+    "platform_no_fsp": 0.792,
+    "bm25": 0.923,
+    "keywords": 0.945,
+    "random": 0.717
+   },
+   "within_category_needs": 12
+  },
+  "n_pool": 479,
+  "n_needs": 15,
+  "top5_coverage": {
+   "before": {
+    "cards": 75,
+    "all_required_covered": 0.16,
+    "all_required_t1": 0.16
+   },
+   "after": {
+    "cards": 75,
+    "all_required_covered": 0.2133,
+    "all_required_t1": 0.2133
+   }
+  },
+  "conditions": [
+   {
+    "need": "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и ",
+    "conditions": "Удалённо",
+    "hidden": 17,
+    "shown": 28
+   },
+   {
+    "need": "Нужен senior Java-разработчик для платёжного ядра: Java, PostgreSQL, K",
+    "conditions": "Гибрид (Санкт-Петербург)",
+    "hidden": 36,
+    "shown": 9
+   },
+   {
+    "need": "Data Scientist middle: Python, pandas, scikit-learn, статистика, SQL. ",
+    "conditions": null,
+    "hidden": 0,
+    "shown": 29
+   },
+   {
+    "need": "Junior аналитик данных/ML: Python, pandas, SQL; будет плюсом опыт с nu",
+    "conditions": "Офис/гибрид (Москва)",
+    "hidden": 26,
+    "shown": 6
+   },
+   {
+    "need": "Специалист по ИБ middle: OWASP, Burp Suite, пентест веб-приложений, се",
+    "conditions": null,
+    "hidden": 0,
+    "shown": 29
+   },
+   {
+    "need": "Senior SOC-аналитик: SIEM/SOC, форензика, сетевая безопасность, Linux.",
+    "conditions": "Удалённо",
+    "hidden": 12,
+    "shown": 16
+   },
+   {
+    "need": "Frontend-разработчик middle: React, TypeScript, HTML/CSS обязательно; ",
+    "conditions": null,
+    "hidden": 0,
+    "shown": 29
+   },
+   {
+    "need": "Бэкенд junior: Python, Django, SQL, Git. Обучим остальному. Казань или",
+    "conditions": "Удалённо или офис/гибрид (Казань)",
+    "hidden": 11,
+    "shown": 31
+   },
+   {
+    "need": "QA-инженер middle: тест-дизайн, API-тестирование, pytest; желательно P",
+    "conditions": null,
+    "hidden": 0,
+    "shown": 29
+   },
+   {
+    "need": "Senior Go-разработчик для маршрутизации: Go, PostgreSQL, Kafka, Docker",
+    "conditions": null,
+    "hidden": 0,
+    "shown": 45
+   },
+   {
+    "need": "Junior frontend: JavaScript, HTML/CSS, React. Желательно TypeScript. Т",
+    "conditions": "Офис/гибрид (Томск)",
+    "hidden": 25,
+    "shown": 6
+   },
+   {
+    "need": "ML-инженер senior: PyTorch, компьютерное зрение (CV), MLOps, Python. Ж",
+    "conditions": null,
+    "hidden": 0,
+    "shown": 29
+   },
+   {
+    "need": "Senior frontend: TypeScript, React, state management, доступность (a11",
+    "conditions": null,
+    "hidden": 0,
+    "shown": 30
+   },
+   {
+    "need": "Junior QA: ручное тестирование, тест-дизайн, SQL, основы API-тестирова",
+    "conditions": "Офис (Самара)",
+    "hidden": 26,
+    "shown": 5
+   },
+   {
+    "need": "Автоматизатор тестирования senior: Python, pytest, Selenium или Playwr",
+    "conditions": null,
+    "hidden": 0,
+    "shown": 29
+   }
+  ]
+ }
+}

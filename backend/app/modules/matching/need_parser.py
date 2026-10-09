@@ -27,6 +27,7 @@ from app.modules.catalog.dictionary import (
     find_keys,
     find_stack,
     find_stack_spans,
+    find_unsupported_spans,
 )
 from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, STACK
 from app.modules.llm.client import chat_json
@@ -41,18 +42,115 @@ CITY_ALIASES = {
     "Томск": ["Томск", "Томске"], "Самара": ["Самара", "Самаре"], "Краснодар": ["Краснодар", "Краснодаре"],
     "Иннополис": ["Иннополис", "Иннополисе"], "Пермь": ["Пермь", "Перми"],
 }
+# Английские и разговорные написания (И18): «hybrid Moscow», «офис в Питере», «СПб»
+CITY_ALIASES["Москва"] += ["Moscow"]
+CITY_ALIASES["Санкт-Петербург"] += ["Saint Petersburg", "St. Petersburg", "СПб", "Питер", "Питере"]
+CITY_ALIASES["Казань"] += ["Kazan"]
 
 
-def city_span(text: str, work_format: str | None) -> tuple[str | None, tuple[int, int] | None]:
-    """Only an explicit office/hybrid location, never residence inferred from any other mention."""
-    if work_format not in ("office", "hybrid"):
-        return None, None
+# ---------------------------------------------------------------- условия: формат работы и город (Ф2)
+_FORMAT_RE = {
+    "remote": re.compile(r"удал[её]нн\w*|удал[её]нк\w*|remote\w*|дистанцион\w*|из дома|work from home|\bwfh\b", re.I),
+    "hybrid": re.compile(r"гибрид\w*|hybrid", re.I),
+    "office": re.compile(r"(?<![\w-])офис\w*|(?<![\w-])office\b|on-?site|на(?:\s|\u00a0)месте работодателя", re.I),
+}
+_NOT_FORMAT_AFTER = re.compile(r"^\w*\s+(?:пакет|приложен|программ|техник|мебел|365|suite)", re.I)
+_NOT_FORMAT_BEFORE = re.compile(r"(?:\bms|microsoft|\bback|бэк|фронт|front)[\s-]*$", re.I)
+_FMT_NEG_BEFORE = re.compile(r"(?:\bкроме|\bбез|\bисключая|\bexcept|\bno|\bnot|\bnon|\bне\s+(?:рассматрива\w*|предлага\w*)"
+                         r"|(?<!\w)не)\s*(?:(?:полн\w*|чист\w*|full|fully)\s+)?[«\"]?$", re.I)
+_FMT_NEG_AFTER = re.compile(r"^[»\"]?\s*(?:[—–-]\s*|:\s*)?(?:не\s+(?:рассматрива|предлага|подход|возможн|обсужда|вариант|"
+                        r"интересн|допуска)|нет\b|исключ|запрещ|невозможн|is not|not (?:possible|available|an option))",
+                        re.I)
+_HYBRID_DAYS = re.compile(r"(?:\d|один|два|две|три|четыре)\s*(?:дн\w*|раз\w*)\s+в\s+неделю[^.;\n]{0,30}(?:удал|офис|дома)"
+                          r"|(?:удал|офис|дома)\w*[^.;\n]{0,30}?(?:\d|один|два|две|три|четыре)\s*(?:дн\w*|раз\w*)\s+в\s+неделю",
+                          re.I)
+_ANY_FORMAT = re.compile(r"любой\s+формат|формат(?:\s+работы)?\s*(?:[:—–-]\s*)?(?:любой|не важен|неважен)|any format"
+                         r"|формат\s+на\s+(?:ваш|выбор)", re.I)
+
+
+def format_mentions(text: str) -> list[tuple[str, int, int, bool]]:
+    """Упоминания формата работы: (формат, начало, конец, отрицание) по порядку в тексте. «MS Office», «бэк-офис»,
+    «офисный пакет» — не формат; «без удалёнки», «кроме офиса», «удалёнка не рассматривается» — отрицание."""
+    out = []
+    for fmt, rx in _FORMAT_RE.items():
+        for m in rx.finditer(text):
+            s, e = m.span()
+            if fmt == "office" and (_NOT_FORMAT_AFTER.match(text[s:s + 40]) or _NOT_FORMAT_BEFORE.search(text[max(0, s - 12):s])):
+                continue
+            neg = bool(_FMT_NEG_BEFORE.search(text[max(0, s - 32):s]) or _FMT_NEG_AFTER.match(text[e:e + 40]))
+            out.append((fmt, s, e, neg))
+    out.sort(key=lambda x: x[1])
+    # «гибридный график с офисом», «гибрид (3 дня офис / 2 дня удалённо)» — офис и удалёнка здесь описывают гибрид
+    hyb = [(s, e) for f, s, e, _ in out if f == "hybrid"]
+    return [m for m in out if m[0] == "hybrid" or not any(
+        0 <= m[1] - he <= 45 and not re.search(r"[.;!?\n]", text[he:m[1]]) for _, he in hyb)]
+
+
+def parse_conditions(text: str) -> dict:
+    """Формат и город из текста потребности. Несколько допустимых форматов — объединение: «удалёнка или офис в Москве»
+    = {удалённо} ∪ {офис/гибрид, Москва} (город — только для офиса и гибрида). «Любой формат» без исключений или
+    формат не упомянут — условия нет; все три формата в тексте — условие показывается, но никого не скрывает. Возвращает work_format (первый допустимый по тексту), work_formats (если допустимых больше одного),
+    city и цитаты."""
+    mentions = format_mentions(text)
+    pos = list(dict.fromkeys(f for f, _, _, neg in mentions if not neg))
+    neg = {f for f, _, _, n in mentions if n} - set(pos)
+    any_m = _ANY_FORMAT.search(text)
+    if any_m and not neg:
+        return {"work_format": None, "work_formats": None, "city": None, "format_span": None, "city_span": None}
+    if any_m or (not pos and neg):
+        allowed = [f for f in (pos or []) + ["office", "hybrid", "remote"] if f not in neg]
+    else:
+        allowed = pos
+    allowed = list(dict.fromkeys(allowed))
+    if not any_m and _HYBRID_DAYS.search(text) and allowed:
+        allowed = ["hybrid", "office"]  # «офис, 2 дня в неделю удалённо» — это гибрид, а не «удалённо или офис»
+    alt_city = _city_or_remote(text, mentions) if allowed == ["remote"] else None
+    if alt_city:
+        allowed += ["office", "hybrid"]  # «Казань или удалённо» — на месте в Казани или удалённо
+    if "remote" in allowed and "office" in allowed and "hybrid" not in allowed:
+        allowed.append("hybrid")  # удалённо или офис — гибрид между ними тоже подходит
+    city, city_pos = alt_city or city_span(text, allowed)
+    spans = [(s, e) for f, s, e, n in mentions if f in allowed and not n]
+    if any_m and allowed:
+        spans.append(any_m.span())
+    span = None
+    if spans:
+        s0, e0 = min(spans)
+        ends = [e for s, e in spans if s - e0 <= 60]
+        span = (s0, max([e0, *ends]))
+    return {"work_format": allowed[0] if allowed else None,
+            "work_formats": allowed if len(allowed) > 1 else None,
+            "city": city, "format_span": span, "city_span": city_pos}
+
+
+def _city_or_remote(text: str, mentions: list) -> tuple[str, tuple[int, int]] | None:
+    """«Казань или удалённо», «удалённо или Москва»: город — альтернатива удалёнке, то есть работа на месте."""
+    remote = [(s, e) for f, s, e, n in mentions if f == "remote" and not n]
     for city, aliases in CITY_ALIASES.items():
         for alias in aliases:
-            m = re.search(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I)
-            if m and re.search(r"офис|гибрид", text[max(0, m.start()-100):m.end()+80], re.I):
-                return city, m.span()
-    return None, None
+            for m in re.finditer(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I):
+                for s, e in remote:
+                    gap = text[m.end():s] if m.end() <= s else text[e:m.start()] if e <= m.start() else None
+                    if gap is not None and re.fullmatch(r"[\s,]*(?:или|либо|or)\s+(?:в\s+|in\s+)?", gap, re.I):
+                        return city, m.span()
+    return None
+
+
+def city_span(text: str, work_format) -> tuple[str | None, tuple[int, int] | None]:
+    """Only an explicit office/hybrid location, never residence inferred from any other mention. work_format — формат
+    или список допустимых форматов (Ф2: «удалёнка или офис в Москве» — город относится к офису)."""
+    formats = work_format if isinstance(work_format, (list, tuple, set)) else [work_format]
+    if not any(f in ("office", "hybrid") for f in formats):
+        return None, None
+    best = None
+    for city, aliases in CITY_ALIASES.items():
+        for alias in aliases:
+            for m in re.finditer(rf"(?<!\w){re.escape(alias)}(?!\w)", text, re.I):
+                if re.search(r"офис|гибрид|office|hybrid|on-?site", text[max(0, m.start()-100):m.end()+80], re.I):
+                    if best is None or m.start() < best[1][0]:
+                        best = (city, m.span())
+                    break
+    return best if best else (None, None)
 
 
 def tag_directions() -> dict[str, str | None]:
@@ -60,8 +158,8 @@ def tag_directions() -> dict[str, str | None]:
 
 
 _SALARY_RE = re.compile(
-    r"(?:от\s*)?(\d{2,3}(?:[\s\u00a0]?\d{3})?)\s*(к|k|тыс\.?)?\s*(?:₽|руб\.?|р\.)?\s*(?:—|–|-|до)\s*"
-    r"(\d{2,3}(?:[\s\u00a0]?\d{3})?)\s*(?:(к|k|тыс\.?)\s*(?:₽|руб\w*|р\.)?|(?:₽|руб\w*|р\.))",
+    r"(?:от\s*)?(\d{2,3}(?:[\s\u00a0]?\d{3})?)\s*(к|k|тыс\.?|т\.\s?р\.?)?\s*(?:₽|руб\.?|р\.)?\s*(?:—|–|-|до)\s*"
+    r"(\d{2,3}(?:[\s\u00a0]?\d{3})?)\s*(?:(к|k|тыс\.?|т\.\s?р\.?)\s*(?:₽|руб\w*|р\.)?|(?:₽|руб\w*|р\.))",
     re.IGNORECASE,
 )
 _EXP_RE = re.compile(r"(?:опыт\w*[^\n]{0,100}?|коммерческ\w*[^\n]{0,60}?|(?:Java|Go|Kotlin|PHP)\s+\w+\s+от\s*)"
@@ -69,18 +167,21 @@ _EXP_RE = re.compile(r"(?:опыт\w*[^\n]{0,100}?|коммерческ\w*[^\n]{
                      r"(?:\s*[-–]?\s*[хx])?\+?\s*(год\w*|лет|месяц\w*)",
                      re.IGNORECASE)
 _WORD_EXP_RE = re.compile(r"опыт\w*[^.\n]{0,90}?(?:от|не менее)\s+"
-                          r"(года|одного|двух|трех|трёх|четырех|четырёх|пяти|полутора)\s*(?:лет|год\w*)?", re.I)
+                          r"(полугода|года|одного|двух|трех|трёх|четырех|четырёх|пяти|полутора)\s*(?:лет|год\w*)?", re.I)
 _ZERO_EXP_RE = re.compile(r"опыт\s+работы\s*:\s*не\s+требуется", re.I)
 _TOTAL_EXP_RE = re.compile(r"(?:общий|суммарный)\s+опыт\s+(?:от\s*)?(\d+(?:[.,]\d+)?)\s*(?:лет|год)", re.I)
 _REVERSE_EXP_RE = re.compile(r"(?:от\s*)?(\d+(?:[.,]\d+)?)\s*(?:[-–]\s*\d+)?\s*(?:лет|год\w*)"
                             r"\s+коммерческ\w*\s+(?:опыт\w*|разработ\w*)", re.I)
-_EXP_WORDS = {"года": 1, "одного": 1, "двух": 2, "трех": 3, "трёх": 3,
+# «5+ лет опыта», «от 3 лет опыта в разработке», «3 года опыта» — число перед словом «опыт» (И18)
+_FWD_EXP_RE = re.compile(r"(?:от\s*)?(\d{1,2}(?:[.,]\d+)?)\s*\+?\s*(?:лет|года?)\s+(?:опыт\w*|коммерческ\w*|в\s+разработк\w*)",
+                         re.I)
+_EXP_WORDS = {"полугода": 0.5, "года": 1, "одного": 1, "двух": 2, "трех": 3, "трёх": 3,
               "четырех": 4, "четырёх": 4, "пяти": 5, "полутора": 1.5}
 
 
 def _money(num: str, suffix: str | None) -> int:
     v = int(re.sub(r"\D", "", num))
-    if suffix and suffix.lower().startswith(("к", "k", "тыс")):
+    if suffix and suffix.lower().startswith(("к", "k", "тыс", "т")):
         v *= 1000
     elif v < 1000:
         v *= 1000
@@ -98,6 +199,17 @@ _KEYWORD_RE = re.compile(rf"(?:зарплат\w*|оклад\w*|зп|з/п|дох
                          rf"(\d{{2,3}}(?:[\s\u00a0]\d{{3}})+|\d{{5,7}})(?!\s*(?:лет|год|%))", re.IGNORECASE)
 _KEYWORD_RANGE_RE = re.compile(rf"(?:зарплат\w*|оклад\w*|зп|з/п|доход\w*|вилк\w*|компенсац\w*)\s*[:—–-]?\s*(?:от\s*)?"
                                rf"{_NUM}\s*{_SUF}?\s*(?:—|–|-|до)\s*{_NUM}\s*{_SUF}?", re.IGNORECASE)
+# «200 000 - 250 000» без валюты: обе границы с группой «000» — почти наверняка вилка (И18)
+_GROUPED_RANGE_RE = re.compile(r"(?<![\d.,])(\d{2,3}[\s\u00a0]000)\s*(?:—|–|-|до)\s*(\d{2,3}[\s\u00a0]000)(?![\d])")
+# «… Екатеринбург. 150 000» — одно число с группой «000» отдельной фразой в конце предложения
+_GROUPED_SINGLE_RE = re.compile(r"(?:^|[.;:\n]\s*)(\d{2,3}[\s\u00a0]000)\s*(?=[.;\n]|$)")
+# «2,4 млн в год» — годовая сумма → в месяц
+_ANNUAL_RE = re.compile(r"(?:(от|до)\s*)?(\d{1,2}(?:[.,]\d{1,2})?)\s*млн\.?\s*(?:₽|руб\w*|р\.)?\s*(?:в|/)\s*год",
+                        re.IGNORECASE)
+# Валюта не рубли: вилку не подставляем, но и не молчим
+_FOREIGN_RE = re.compile(r"(?:[$€]\s?\d[\d\s\u00a0.,]*(?:k|к)?(?:\s*(?:—|–|-|до)\s*[$€]?\s?\d[\d\s\u00a0.,]*(?:k|к)?)?"
+                         r"|\d[\d\s\u00a0.,]*(?:k|к)?\s*(?:—|–|-|до)?\s*(?:\d[\d\s\u00a0.,]*(?:k|к)?)?\s*"
+                         r"(?:[$€]|usd|eur|долл\w*|евро)(?![a-zа-я]))", re.IGNORECASE)
 _NET_RE = re.compile(r"на\s+руки|после\s+вычета|чистыми|\bnet\b", re.IGNORECASE)
 _GENERAL_RANGE_RE = re.compile(rf"(?:от\s*)?{_NUM}\s*{_SUF}?\s*(?:₽|руб\w*|RUB)?\s*"
                                rf"(?:—|–|-|до)\s*{_NUM}\s*{_SUF}?\s*(?:₽|руб\w*|RUB)", re.I)
@@ -118,6 +230,13 @@ def parse_salary_span(text: str) -> tuple[int | None, int | None, tuple[int, int
     """То же, что parse_salary, и позиция фрагмента с вилкой в тексте (для цитаты)."""
     # Remove display-only characters without changing evidence offsets.
     text = text.replace("\u200d", " ").replace("*", " ").replace("`", " ")
+    if _FOREIGN_RE.search(text) and not re.search(r"₽|руб|rub|тыс", text, re.I):
+        return None, None, None  # вилка в долларах/евро — не выдаём её за рубли (подсказка — salary_note)
+    if am := _ANNUAL_RE.search(text):
+        v = int(round(float(am.group(2).replace(",", ".")) * 1_000_000 / 12, -3))
+        if _ok(v):
+            side = (am.group(1) or "").lower()
+            return ((v, None) if side == "от" else (None, v) if side == "до" else (v, v)) + (am.span(),)
     m = _GENERAL_RANGE_RE.search(text) or _SALARY_RE.search(text)
     if m:
         lo, hi = _money(m.group(1), m.group(2) or m.group(4)), _money(m.group(3), m.group(4))
@@ -136,12 +255,33 @@ def parse_salary_span(text: str) -> tuple[int | None, int | None, tuple[int, int
         v = _money(one.group(2), one.group(3))
         if _ok(v):
             return ((v, None) if one.group(1).lower() == "от" else (None, v)) + (one.span(),)
+    if gr := _GROUPED_RANGE_RE.search(text):
+        lo, hi = sorted((_money(gr.group(1), None), _money(gr.group(2), None)))
+        if _ok(lo) and _ok(hi):
+            return lo, hi, gr.span()
     for rx in (_SINGLE_RE, _KEYWORD_RE):
         for m_ in rx.finditer(text):
             v = _money(m_.group(1), m_.group(2) if rx is _SINGLE_RE else None)
             if _ok(v):
+                if text[m_.end():m_.end() + 1] == "+":  # «350k+», «от 400к+» — нижняя граница, не точное значение
+                    return v, None, (m_.start(), m_.end() + 1)
                 return v, v, m_.span()
+    if gs := _GROUPED_SINGLE_RE.search(text):
+        v = _money(gs.group(1), None)
+        if _ok(v):
+            return v, v, gs.span(1)
     return None, None, None
+
+
+def salary_note(text: str) -> dict | None:
+    """Вилка не в рублях: не подставляем её, а честно говорим, что сравнить с рынком нельзя (И18)."""
+    if re.search(r"₽|руб|rub|тыс", text, re.I):
+        return None
+    m = _FOREIGN_RE.search(text)
+    if not m:
+        return None
+    return {"code": "currency", "text": "Вилка указана не в рублях — платформа сравнивает вилку с рынком категории в рублях. "
+                                        "Укажите её в рублях вручную.", "evidence": _ev(text, m.span())}
 
 
 def salary_is_net(text: str) -> bool:
@@ -160,13 +300,19 @@ def experience_span(text: str) -> tuple[float | None, tuple[int, int] | None]:
         return float(m.group(1).replace(",", ".")), m.span()
     if m := _REVERSE_EXP_RE.search(clean):
         return float(m.group(1).replace(",", ".")), m.span()
-    if m := _EXP_RE.search(clean):
+    for m in _EXP_RE.finditer(clean):
+        # «опыт до 1 года» — верхняя граница (типично для Junior), а не «от»: минимума нет (И18)
+        lead = clean[m.start():m.start(1)]
+        if re.search(r"(?<![а-яё])до\s*$", lead, re.I) and not re.search(r"(?<![а-яё])от(?![а-яё])", lead, re.I):
+            continue
         value = float(m.group(1).replace(",", "."))
         if m.group(3).lower().startswith("месяц"):
             value = round(value / 12, 4)
         return value, m.span()
     if m := _WORD_EXP_RE.search(clean):
         return float(_EXP_WORDS[m.group(1).lower()]), m.span()
+    if m := _FWD_EXP_RE.search(clean):
+        return float(m.group(1).replace(",", ".")), m.span()
     return None, None
 
 
@@ -210,6 +356,10 @@ def _section_kind(text: str) -> list[tuple[int, int, str]]:
             zones.extend(_mixed_zones(start, sent, current))  # «Python, FastAPI обязательно, Kafka будет плюсом»
             continue
         if any(c in low for c in DESIRED_CUES):
+            post = _postfix_desired(start, sent, current)
+            if post:  # «Python, Django, Docker, k8s будет плюсом» — плюсом только k8s, остальное как было (И18)
+                zones.extend(post)
+                continue
             kind = "desired"
             current = "desired" if low.strip().endswith(":") else current
         elif any(c in low for c in REQUIRED_CUES):
@@ -229,6 +379,36 @@ def _cue(clause: str) -> tuple[str | None, bool]:
         if pos:
             return kind, not find_stack(clause[:min(pos)])
     return None, False
+
+
+def _postfix_desired(start: int, sent: str, default: str) -> list[tuple[int, int, str]] | None:
+    """Предложение только с маркером «желательно», стоящим после технологий в своей части перечня: маркер относится
+    к этой части, а не ко всему перечню слева. Маркер-префикс («Будет плюсом: Kafka, Redis») — None, как раньше."""
+    parts, pos = [], 0
+    for chunk in re.split(r"(?i)(?<!хорошо,)(?<=,)", sent):
+        parts.append((start + pos, start + pos + len(chunk), chunk))
+        pos += len(chunk)
+    first = next((i for i, p in enumerate(parts) if _cue(p[2])[0] == "desired"), None)
+    if first is None or first == 0 or _cue(parts[first][2])[1] or not any(find_stack(p[2]) for p in parts[:first]):
+        return None
+    return [(s, e, default if i < first else "desired" if i == first else default) for i, (s, e, _c) in enumerate(parts)]
+
+
+_NEG_AFTER = re.compile(r"^[^,.;:\n]{0,25}?\bне\s+(?:нужен|нужна|нужно|нужны|требуется|требуются|обязател\w*|важ\w*|критич\w*)",
+                        re.I)
+_NEG_BEFORE = re.compile(r"(?:\bбез|\bне\s+(?:нужен|нужна|нужно|требуется|обязател\w*))\s+(?:коммерческ\w+\s+)?"
+                         r"(?:опыт\w*\s+|знани\w*\s+)?(?:работы\s+)?(?:с\s+|на\s+)?$", re.I)
+
+
+def negated_tags(text: str, spans: dict[str, tuple[int, int]]) -> dict[str, tuple[int, int]]:
+    """Технологии, про которые сказано «не нужен», «без …», «не требуется …» → фрагмент с отрицанием (И18)."""
+    out = {}
+    for tag, (s, e) in spans.items():
+        if m := _NEG_AFTER.search(text[e:e + 60]):
+            out[tag] = (s, e + m.end())
+        elif m := _NEG_BEFORE.search(text[max(0, s - 45):s]):
+            out[tag] = (max(0, s - 45) + m.start(), e)
+    return out
 
 
 def _mixed_zones(start: int, sent: str, default: str) -> list[tuple[int, int, str]]:
@@ -258,6 +438,13 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
 
     text должен быть уже очищен от дискриминационных фрагментов (bias.mask) — позиции совпадают с исходным."""
     spans = find_stack_spans(text)
+    # «Kotlin, Spring» — Spring здесь не означает Java (И8: Kotlin ≠ Java); Java остаётся, если названа явно
+    if "kotlin" in spans and "java" in spans and text[slice(*spans["java"])].lower().startswith("spring") \
+            and not re.search(r"(?<![\w-])java(?![a-z])", text, re.I):
+        spans.pop("java")
+    excluded = negated_tags(text, spans)
+    for t in excluded:
+        spans.pop(t)
     tags = {t: sp[0] for t, sp in spans.items()}
     zones = _section_kind(text)
     dirs = tag_directions()
@@ -332,17 +519,12 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
     for it in desired:
         it["weight"] = 0.3
 
-    wf = find_keys(text, WORK_FORMAT_KEYWORDS)
-    work_format = max(wf, key=wf.get) if wf else None
-    work_formats = None
-    if re.search(r"офис[^\n.!?]{0,45}или[^\n.!?]{0,20}гибрид|гибрид[^\n.!?]{0,45}или[^\n.!?]{0,20}офис",
-                 text, re.I):
-        work_formats = ["office", "hybrid"]
+    cond = parse_conditions(text)  # Ф2: объединение форматов, отрицания, «любой формат»
+    work_format, work_formats, city = cond["work_format"], cond["work_formats"], cond["city"]
     if work_format:
-        ev["work_format"] = _ev(text, find_key_span(text, WORK_FORMAT_KEYWORDS[work_format]))
-    city, city_pos = city_span(text, work_format)
+        ev["work_format"] = _ev(text, cond["format_span"])
     if city:
-        ev["city"] = _ev(text, city_pos)
+        ev["city"] = _ev(text, cond["city_span"])
     salary_from, salary_to, sal_span = parse_salary_span(text)
     if salary_from or salary_to:
         ev["salary"] = _ev(text, sal_span)
@@ -359,7 +541,7 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
         "salary_to": salary_to,
         "salary_net": salary_is_net(text) if (salary_from or salary_to) else None,
         "evidence": ev,
-    }, method="rules")
+    }, method="rules") | {"excluded": [{"tag": t, "evidence": _ev(text, sp)} for t, sp in excluded.items()]}
 
 
 EVIDENCE_KEYS = ("direction", "grade", "experience_years_min", "work_format", "salary", "city")
@@ -524,6 +706,21 @@ def _with_quotes_from_original(req: dict, text: str) -> dict:
     return req
 
 
+def text_notes(text: str, req: dict) -> dict:
+    """Что из текста не попало в подбор, — честно (И18): технологии вне справочника, исключённые отрицанием, вилка
+    не в рублях. Считается по тексту и итоговым требованиям; в ранжирование не входит."""
+    masked = bias_filter.mask(text, bias_filter.find_bias(text))
+    unknown = [{"term": name, "evidence": _ev(text, sp)}
+               for name, sp in sorted(find_unsupported_spans(masked).items(), key=lambda kv: kv[1][0])][:12]
+    used = {i["tag"] for i in (req.get("stack_required") or []) + (req.get("stack_desired") or [])}
+    excluded = [x for x in (req.get("excluded") or []) if isinstance(x, dict) and x.get("tag") in STACK
+                and x["tag"] not in used]
+    if not excluded and "excluded" not in req:
+        excluded = [{"tag": t, "evidence": _ev(text, sp)} for t, sp in negated_tags(masked, find_stack_spans(masked)).items()
+                    if t not in used]
+    return {"unknown_terms": unknown, "excluded": excluded, "salary_note": salary_note(text)}
+
+
 def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | None = None,
                use_llm: bool = True) -> dict:
     found = bias_filter.find_bias(text)
@@ -533,6 +730,10 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
     if use_llm:
         merged = _merge_llm(masked, rules, hint_direction, hint_grade)
     merged = _with_quotes_from_original(merged, text)
+    for x in rules.get("excluded") or []:
+        x["evidence"] = _ev(text, (x["evidence"]["start"], x["evidence"]["end"])) if x.get("evidence") else None
+    merged["excluded"] = rules.get("excluded") or []
+    merged.update(text_notes(text, merged))
     merged["bias"] = bias_filter.suggestions(found, merged)
     merged["suggested_text"] = bias_filter.rewrite(text, found, merged)
     from app.modules.matching.coverage import coverage
@@ -583,6 +784,10 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
         merged[key] = rules[key] or llm[key]
         if not rules[key] and llm[key] and llm["evidence"].get(key):
             ev[key] = llm["evidence"][key]
+    excluded = {x["tag"] for x in rules.get("excluded") or []}
+    if excluded:  # «Angular не нужен»: тег, исключённый отрицанием в тексте, LLM обратно не добавляет (И18)
+        merged["stack_required"] = [i for i in merged["stack_required"] if i["tag"] not in excluded]
+        merged["stack_desired"] = [i for i in merged["stack_desired"] if i["tag"] not in excluded]
     merged["evidence"] = ev
     merged["method"] = "llm+rules"
     for e in [*ev.values(), *(i.get("evidence") for i in merged["stack_required"] + merged["stack_desired"])]:

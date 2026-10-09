@@ -1,0 +1,169 @@
+{
+ "note": "И18: защита правок разбора потребности и объяснений. База — integ/0710 35d5982 (дерево той же ветки до правок), после — feat/jury-match. LLM выключена. Порядок выдачи match-v1 не менялся (веса и score_candidate те же).",
+ "make_bench": {
+  "command": "spectrek/bin/remote-make <дерево> bench (сервер проверок)",
+  "numeric_keys": 654,
+  "changed": 73,
+  "changed_outside_bm25": [],
+  "platform_before": {
+   "p@5": 0.777,
+   "p@10": 0.741,
+   "ndcg@5": 0.6,
+   "ndcg@10": 0.58,
+   "mrr": 0.893
+  },
+  "platform_after": {
+   "p@5": 0.777,
+   "p@10": 0.741,
+   "ndcg@5": 0.6,
+   "ndcg@10": 0.58,
+   "mrr": 0.893
+  },
+  "junior_needs_platform_before": [
+   {
+    "p@5": 0.712,
+    "p@10": 0.692,
+    "ndcg@10": 0.525,
+    "mrr": 0.875
+   },
+   {
+    "p@5": 0.728,
+    "p@10": 0.678,
+    "ndcg@10": 0.513,
+    "mrr": 0.83
+   },
+   {
+    "p@5": 0.728,
+    "p@10": 0.678,
+    "ndcg@10": 0.513,
+    "mrr": 0.83
+   }
+  ],
+  "junior_needs_platform_after": [
+   {
+    "p@5": 0.712,
+    "p@10": 0.692,
+    "ndcg@10": 0.525,
+    "mrr": 0.875
+   },
+   {
+    "p@5": 0.728,
+    "p@10": 0.678,
+    "ndcg@10": 0.513,
+    "mrr": 0.83
+   },
+   {
+    "p@5": 0.728,
+    "p@10": 0.678,
+    "ndcg@10": 0.513,
+    "mrr": 0.83
+   }
+  ],
+  "bm25_changes": {
+   "/metrics/bm25/p@5/mean": [
+    0.442,
+    0.443
+   ],
+   "/metrics/bm25/p@10/mean": [
+    0.436,
+    0.432
+   ],
+   "/metrics/bm25/ndcg@5/mean": [
+    0.409,
+    0.408
+   ],
+   "/metrics/bm25/ndcg@10/mean": [
+    0.403,
+    0.4
+   ],
+   "/metrics/bm25/mrr/mean": [
+    0.67,
+    0.661
+   ],
+   "/paired_platform_minus/bm25/p@5/mean": [
+    0.335,
+    0.334
+   ],
+   "/paired_platform_minus/bm25/ndcg@10/mean": [
+    0.177,
+    0.18
+   ],
+   "/paired_platform_minus/bm25/mrr/mean": [
+    0.223,
+    0.232
+   ],
+   "/world2/metrics/bm25/p@5/mean": [
+    0.468,
+    0.473
+   ],
+   "/world2/metrics/bm25/p@10/mean": [
+    0.458,
+    0.461
+   ],
+   "/world2/metrics/bm25/ndcg@5/mean": [
+    0.426,
+    0.43
+   ],
+   "/world2/metrics/bm25/mrr/mean": [
+    0.653,
+    0.656
+   ]
+  },
+  "why_bm25": "BM25-бейзлайн берёт текст кандидата мира, куда попадают теги словаря; новые синонимы слегка меняют его токены. Платформа и все абляции (no_test, no_fsp, grade_only, no_guard, keywords_grade, random) — без изменений."
+ },
+ "regress_50_vacancies": [
+  "{\"worse\": []}",
+  "stack_micro_precision 0.884 → 0.8847",
+  "stack_micro_recall 0.9338 → 0.9404",
+  "stack_tp_fp_fn [282, 37, 20] → [284, 37, 18]",
+  "invalid_quotes 0 → 0",
+  "quotes 499 → 501",
+  "direction 50 → 50 / 50",
+  "grade 34 → 34 / 39",
+  "experience_years_min 50 → 50 / 50",
+  "work_format 49 → 49 / 50",
+  "salary_from 50 → 50 / 50",
+  "salary_to 50 → 50 / 50"
+ ],
+ "ranking_guard_500": {
+  "identical_to_base": true,
+  "demo_500_product": {
+   "p@5": {
+    "platform": 0.853,
+    "platform_no_fsp": 0.853,
+    "bm25": 0.627,
+    "keywords": 0.627,
+    "random": 0.325
+   },
+   "ndcg@5": {
+    "platform": 0.857,
+    "platform_no_fsp": 0.863,
+    "bm25": 0.788,
+    "keywords": 0.768,
+    "random": 0.423
+   },
+   "ndcg@10": {
+    "platform": 0.899,
+    "platform_no_fsp": 0.903,
+    "bm25": 0.836,
+    "keywords": 0.832,
+    "random": 0.5
+   },
+   "within_category_ndcg@3": {
+    "platform": 0.71,
+    "platform_no_fsp": 0.754,
+    "bm25": 0.948,
+    "keywords": 0.966,
+    "random": 0.697
+   },
+   "within_category_needs": 10
+  },
+  "hidden_truth_500_after": {
+   "p@5": 0.712,
+   "p@10": 0.644,
+   "ndcg@5": 0.5617,
+   "ndcg@10": 0.5709,
+   "mrr": 0.84
+  }
+ }
+}
