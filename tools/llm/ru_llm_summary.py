@@ -139,6 +139,7 @@ def _grade_row(d: dict) -> dict:
     return {
         "calls": fmt["calls"] + sec.get("calls", 0), "ok": fmt["ok"], "n": fmt["calls"], "format_fail": fmt["format_fail"],
         "transport_fail": fmt["transport_fail"], "p50_s": fmt["latency_s"]["p50"], "p95_s": fmt["latency_s"]["p95"],
+        "retried": fmt.get("retried", 0) + sec.get("retried", 0),
         "tokens": {"prompt": fmt["tokens"]["prompt"] + sec.get("tokens", {}).get("prompt", 0),
                    "completion": fmt["tokens"]["completion"] + sec.get("tokens", {}).get("completion", 0)},
         "cost_usd": round((fmt.get("cost_usd") or 0) + (sec.get("cost_usd") or 0), 4) or None,
@@ -180,6 +181,12 @@ def build(wdir: Path) -> dict:
                 continue
             if f["key"] == "grade":
                 row = _grade_row(d)
+                row["second_model"] = (d.get("second") or m["spec"]).split("=", 1)[1]
+                same = _load(wdir / slug(m["spec"]) / "grade_second_sonnet.json")  # Sonnet → Sonnet: для сравнения
+                if same is not None and m["key"] == "sonnet":  # с режимом РФ, где вторая оценка — та же модель
+                    so = same["summary"]["second_opinion"]
+                    row["quality"]["second_same_model"] = {k: so.get(k) for k in
+                                                           ("second_calls", "agree", "disagree", "failed", "mean_abs_delta")}
             else:
                 per = d["per_text"]
                 row = _calls(per)

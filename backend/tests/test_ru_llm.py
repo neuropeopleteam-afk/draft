@@ -149,3 +149,14 @@ def test_ru_llm_data_copy_matches_docs():
     a = json.loads((ROOT / "docs/realdata/ru_llm.json").read_text(encoding="utf-8"))
     b = json.loads((ROOT / "backend/app/modules/validation/data/ru_llm.json").read_text(encoding="utf-8"))
     assert a == b, "пересобрать: python tools/llm/ru_llm_bench.py summary --dir … --out docs/realdata/ru_llm.json"
+
+
+def test_ru_llm_docs_table_from_json():
+    """Таблица docs/LLM.md, раздел 11 — из того же JSON (не текстом)."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "tools" / "llm"))
+    import ru_llm_summary as S
+
+    d = json.loads((ROOT / "docs/realdata/ru_llm.json").read_text(encoding="utf-8"))
+    assert S.md_table(d) in (ROOT / "docs/LLM.md").read_text(encoding="utf-8")
