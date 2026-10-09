@@ -42,6 +42,9 @@ def _answer(text: str):  # как в assessment.grader
     ("Адрес: Москва, Ленина 5-3", ["Ленина", "5-3"], ["Москва"]),
     ("Адрес проживания: Томск, Ленина 5, кв. 7", ["Ленина 5", "кв. 7"], ["Томск"]),
     ("Проживает: Москва, м. Тверская", ["м. Тверская"], ["Москва"]),
+    ("Moscow, ul. Tverskaya, 7, apt. 15", ["Tverskaya", "apt. 15"], ["Moscow"]),
+    ("Kazan, Baumana Street 12, apt. 4", ["Baumana", "apt. 4"], ["Kazan"]),
+    ("221B Baker Street, London", ["Baker"], ["London"]),
 ])
 def test_address_variants(line, secret, keep):
     for fn in (redact, _vac, _answer):
@@ -66,6 +69,7 @@ def test_address_variants(line, secret, keep):
     "Зарплата 150000, Москва, гибрид; от 200000 на руки.",
     "Опыт от 3 лет, 5 лет коммерческой разработки, 10 лет в ИТ.",
     "SELECT * FROM users WHERE age > 18 AND city = 'Москва';",
+    "Wall Street experience; St. Petersburg, 5 years of Java; Main Street Bank.",
 ])
 def test_address_and_age_false_positives(text):
     for fn in (redact, _vac, _answer):
@@ -153,7 +157,14 @@ def test_resume_parse_unchanged(text):
     a, b = extract_rules(text), extract_rules(red)
     assert experience_years(text) == experience_years(red)
     assert [s["tag"] for s in a["stack"]] == [s["tag"] for s in b["stack"]], (a["stack"], b["stack"])
-    assert a["roles"] == b["roles"] and a["grade_hint"] == b["grade_hint"]
+    assert a["roles"] == b["roles"] and a["grade_hint"] == b["grade_hint"] and a["direction_hint"] == b["direction_hint"]
+    assert a["soft_skills"] == b["soft_skills"]
+
+
+def test_ner_single_word_without_name_signs_is_kept():
+    """NER принимал «Автотесты:» в начале строки за имя — слово пропадало из разбора (направление QA)."""
+    r = redact("Кузнецов Дмитрий\nQA-инженер\nАвтотесты: Python, pytest, Selenium\nДмитрий — автор доклада.")
+    assert "Автотесты" in r.text and "Кузнецов" not in r.text and "Дмитрий" not in r.text
 
 
 # ------------------------------------------------------------------ 3. имена латиницей
