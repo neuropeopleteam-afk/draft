@@ -49,6 +49,214 @@
         "title": "AdminTwoFactorResetIn",
         "type": "object"
       },
+      "ApplicationOut": {
+        "additionalProperties": true,
+        "description": "Отклик кандидата на вакансию. Работодателю дополнительно приходят карточка кандидата и контакты (после ответа).",
+        "properties": {
+          "assignment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assignment"
+          },
+          "ats_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ats Stage"
+          },
+          "card": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Обезличенная карточка кандидата (в ответах работодателю)",
+            "title": "Card"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Компания (в ответах кандидату)",
+            "title": "Company"
+          },
+          "contacts": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Контакты кандидата (в ответах работодателю, когда доступны)",
+            "title": "Contacts"
+          },
+          "cover_letter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cover Letter"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "employer_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Employer Note"
+          },
+          "events": {
+            "description": "История статусов",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "salary_basis": {
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_basis_title": {
+            "title": "Salary Basis Title",
+            "type": "string"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "status": {
+            "description": "Машинный статус отклика, например sent",
+            "title": "Status",
+            "type": "string"
+          },
+          "status_title": {
+            "description": "Подпись статуса по-русски",
+            "title": "Status Title",
+            "type": "string"
+          },
+          "thread": {
+            "additionalProperties": true,
+            "description": "Переписка: total, unread",
+            "title": "Thread",
+            "type": "object"
+          },
+          "vacancy_id": {
+            "title": "Vacancy Id",
+            "type": "string"
+          },
+          "vacancy_title": {
+            "title": "Vacancy Title",
+            "type": "string"
+          },
+          "viewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Viewed At"
+          }
+        },
+        "required": [
+          "id",
+          "vacancy_id",
+          "vacancy_title",
+          "status",
+          "status_title",
+          "events",
+          "cover_letter",
+          "created_at",
+          "viewed_at",
+          "responded_at",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_basis_title",
+          "thread",
+          "ats_stage",
+          "employer_note",
+          "assignment"
+        ],
+        "title": "ApplicationOut",
+        "type": "object"
+      },
       "AssessmentResultOut": {
         "additionalProperties": true,
         "description": "Итог теста: оценка способности, грейд, вероятности по уровням и пояснение.",
@@ -6011,6 +6219,30 @@
         "title": "NeedVersionOut",
         "type": "object"
       },
+      "NotificationPrefsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "email_enabled": {
+            "title": "Email Enabled",
+            "type": "boolean"
+          },
+          "push_enabled": {
+            "title": "Push Enabled",
+            "type": "boolean"
+          },
+          "reminders_enabled": {
+            "title": "Reminders Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "push_enabled",
+          "email_enabled",
+          "reminders_enabled"
+        ],
+        "title": "NotificationPrefsOut",
+        "type": "object"
+      },
       "NotificationsOut": {
         "additionalProperties": true,
         "properties": {
@@ -8776,6 +9008,196 @@
         "title": "SusIn",
         "type": "object"
       },
+      "ThreadBriefOut": {
+        "additionalProperties": true,
+        "properties": {
+          "activity_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Activity At"
+          },
+          "closed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Closed"
+          },
+          "counterpart": {
+            "description": "Собеседник (для работодателя — обезличенный кандидат)",
+            "title": "Counterpart",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "description": "Предмет переписки: invitation (приглашение) или application (отклик)",
+            "title": "Kind",
+            "type": "string"
+          },
+          "last": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Последнее сообщение",
+            "title": "Last"
+          },
+          "messages": {
+            "title": "Messages",
+            "type": "integer"
+          },
+          "mode": {
+            "description": "qa — вопросы до принятия, chat — после",
+            "title": "Mode",
+            "type": "string"
+          },
+          "revoked": {
+            "description": "Доступ к контактам отозван",
+            "title": "Revoked",
+            "type": "boolean"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "unread": {
+            "title": "Unread",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "title",
+          "counterpart",
+          "status",
+          "mode",
+          "closed",
+          "revoked",
+          "messages",
+          "unread",
+          "last",
+          "activity_at"
+        ],
+        "title": "ThreadBriefOut",
+        "type": "object"
+      },
+      "ThreadOut": {
+        "additionalProperties": true,
+        "properties": {
+          "can_write": {
+            "title": "Can Write",
+            "type": "boolean"
+          },
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "counterpart": {
+            "title": "Counterpart",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_len": {
+            "description": "Максимальная длина сообщения",
+            "title": "Max Len",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Почему писать нельзя, если can_write = false",
+            "title": "Reason"
+          },
+          "revoked": {
+            "title": "Revoked",
+            "type": "boolean"
+          },
+          "rules": {
+            "additionalProperties": true,
+            "title": "Rules",
+            "type": "object"
+          },
+          "side": {
+            "description": "Сторона текущего пользователя: candidate или employer",
+            "title": "Side",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "title",
+          "side",
+          "counterpart",
+          "company",
+          "messages",
+          "mode",
+          "max_len",
+          "can_write",
+          "reason",
+          "revoked",
+          "rules",
+          "status"
+        ],
+        "title": "ThreadOut",
+        "type": "object"
+      },
       "TicketIn": {
         "properties": {
           "ticket": {
@@ -9283,6 +9705,30 @@
         "title": "UnknownTerm",
         "type": "object"
       },
+      "UnreadOut": {
+        "additionalProperties": true,
+        "properties": {
+          "applications": {
+            "title": "Applications",
+            "type": "integer"
+          },
+          "invitations": {
+            "title": "Invitations",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "invitations",
+          "applications"
+        ],
+        "title": "UnreadOut",
+        "type": "object"
+      },
       "UnsubscribeIn": {
         "properties": {
           "endpoint": {
@@ -9498,6 +9944,341 @@
           "salary_to"
         ],
         "title": "VacancyIn",
+        "type": "object"
+      },
+      "VacancyListOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VacancyOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "my_category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Категория кандидата — по ней вакансии подсвечиваются как «подходящие»",
+            "title": "My Category Id"
+          }
+        },
+        "required": [
+          "items",
+          "my_category_id"
+        ],
+        "title": "VacancyListOut",
+        "type": "object"
+      },
+      "VacancyOut": {
+        "additionalProperties": true,
+        "description": "Вакансия: условия, вилка, компания; для кандидата — ещё свой отклик и индекс доверия работодателя.",
+        "properties": {
+          "applications": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Счётчики откликов (только в ответах работодателю)",
+            "title": "Applications"
+          },
+          "assignment": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Задание к вакансии, если работодатель его добавил",
+            "title": "Assignment"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Категория «направление.грейд», если вакансия к ней привязана",
+            "title": "Category Id"
+          },
+          "category_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Title"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "company": {
+            "additionalProperties": true,
+            "description": "Компания: name, industry, website, city",
+            "title": "Company",
+            "type": "object"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "edited_after_import": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edited After Import"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "external_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Url"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "imported_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imported At"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "market_range": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Вилка рынка по категории: from, to, median",
+            "title": "Market Range"
+          },
+          "my_application": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Отклик текущего кандидата (только в ответах кандидату)",
+            "title": "My Application"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          },
+          "salary_basis": {
+            "description": "gross или net",
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_basis_title": {
+            "title": "Salary Basis Title",
+            "type": "string"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Источник импорта, если вакансия загружена из внешней системы",
+            "title": "Source"
+          },
+          "source_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Title"
+          },
+          "stack": {
+            "description": "Стек вакансии: технология и уровень",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stack",
+            "type": "array"
+          },
+          "status": {
+            "description": "Статус публикации вакансии",
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "trust": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Индекс доверия работодателя (только в ответах кандидату)",
+            "title": "Trust"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "work_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "office, hybrid, remote, any",
+            "title": "Work Format"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "category_id",
+          "category_title",
+          "description",
+          "stack",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_basis_title",
+          "work_format",
+          "city",
+          "status",
+          "published_at",
+          "updated_at",
+          "is_demo",
+          "source",
+          "source_title",
+          "external_id",
+          "external_url",
+          "imported_at",
+          "edited_after_import",
+          "company",
+          "market_range",
+          "assignment"
+        ],
+        "title": "VacancyOut",
         "type": "object"
       },
       "VacancyPatch": {
@@ -15074,10 +15855,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/ApplicationOut"
                   },
-                  "title": "Response My Applications Api Candidate Applications Get",
                   "type": "array"
                 }
               }
@@ -15164,9 +15943,7 @@
                   "viewed_at": "2026-10-09T14:59:31.141779"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Withdraw Api Candidate Applications  App Id  Withdraw Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ApplicationOut"
                 }
               }
             },
@@ -20084,9 +20861,7 @@
                   "viewed_at": "2026-10-09T14:59:31.141779+00:00"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Decide Api Employer Applications  App Id  Status Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ApplicationOut"
                 }
               }
             },
@@ -20269,9 +21044,7 @@
                   "viewed_at": "2026-10-09T14:59:31.141779"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response View Application Api Employer Applications  App Id  View Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ApplicationOut"
                 }
               }
             },
@@ -31571,10 +32344,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/VacancyOut"
                   },
-                  "title": "Response My Vacancies Api Employer Vacancies Get",
                   "type": "array"
                 }
               }
@@ -31684,9 +32455,7 @@
                   "work_format": "remote"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Create Vacancy Api Employer Vacancies Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/VacancyOut"
                 }
               }
             },
@@ -32009,9 +32778,7 @@
                   "work_format": "remote"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Patch Vacancy Api Employer Vacancies  Vid  Patch",
-                  "type": "object"
+                  "$ref": "#/components/schemas/VacancyOut"
                 }
               }
             },
@@ -32144,10 +32911,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/ApplicationOut"
                   },
-                  "title": "Response Vacancy Applications Api Employer Vacancies  Vid  Applications Get",
                   "type": "array"
                 }
               }
@@ -32272,9 +33037,7 @@
                   "work_format": "remote"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Close Api Employer Vacancies  Vid  Close Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/VacancyOut"
                 }
               }
             },
@@ -32398,9 +33161,7 @@
                   "work_format": "remote"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Publish Api Employer Vacancies  Vid  Publish Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/VacancyOut"
                 }
               }
             },
@@ -39597,10 +40358,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/ThreadBriefOut"
                   },
-                  "title": "Response My Threads Api Messages Threads Get",
                   "type": "array"
                 }
               }
@@ -39652,9 +40411,7 @@
                   "total": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Unread Api Messages Unread Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/UnreadOut"
                 }
               }
             },
@@ -39738,9 +40495,7 @@
                   "title": "Backend-разработчик (платёжный шлюз)"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Thread Api Messages  Kind   Tid  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ThreadOut"
                 }
               }
             },
@@ -40111,9 +40866,7 @@
                   "reminders_enabled": true
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Prefs Api Notifications Prefs Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NotificationPrefsOut"
                 }
               }
             },
@@ -40156,9 +40909,7 @@
                   "reminders_enabled": true
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Put Prefs Api Notifications Prefs Put",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NotificationPrefsOut"
                 }
               }
             },
@@ -42647,9 +43398,7 @@
                   "my_category_id": "backend.middle"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response List Vacancies Api Vacancies Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/VacancyListOut"
                 }
               }
             },
@@ -42803,9 +43552,7 @@
                   "work_format": "remote"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Vacancy Api Vacancies  Vid  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/VacancyOut"
                 }
               }
             },
