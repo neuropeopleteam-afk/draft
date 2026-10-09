@@ -492,13 +492,14 @@ export function Selection() {
 
   return (
     <div className="max-w-6xl space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <PageTitle title={need.data.title} subtitle="Подборка по подтверждённым фактам: тест платформы (T1), зонды и ФСП (T2). Заявленное кандидатом (T0) показано отдельно и в скор не входит." />
-        <Link to="/employer/needs" className="btn-ghost">Все потребности</Link>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <PageTitle title={need.data.title} subtitle="В балле — только подтверждённое: тест (T1), зонды и ФСП (T2); заявленное (T0) — отдельно." />
+        <Link to="/employer/needs" className="btn-ghost hidden sm:inline-flex">Все потребности</Link>
       </div>
       {/* И27, Н2: частичное соответствие и требования вне справочника видны и в каждой версии подборки */}
       {cov && <p className="rounded-lg bg-brand-blush/25 px-3 py-2 text-sm" data-testid="sel-coverage"><b className="font-semibold">{cov.message}</b> Не проверяется: {cov.not_tested}.</p>}
       <div className="flex flex-wrap items-center gap-2 text-sm">
+        <Link to="/employer/needs" className="font-semibold text-brand hover:underline sm:hidden">Все потребности</Link>
         <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
           <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} title={x.filters?.relaxation ? `из v${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
@@ -513,19 +514,11 @@ export function Selection() {
                 <div className="min-w-0">
                   <h2 id="top-picks-h" className="text-lg font-bold text-brand-night">{ordered.length ? `Кого пригласить первым: ${Math.min(TOP, ordered.length)} из ${s.total}` : "Кандидаты"}</h2>
                   <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
-                  <StatusCounts confirmed={s.confirmed_matched} provisional={s.provisional_matched} unconfirmed={s.unconfirmed_matched} hiddenNote={!!s.filters?.confirmed_only} />
-                  <Conditions c={s.conditions} busy={busy} onToggle={toggleConditions} />
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button className="btn-ghost !py-2" disabled={picked.length < 2 || picked.length > 3} title="Отметьте «Сравнить» у 2–3 кандидатов"
-                    onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
-                  <button className="btn-ghost !py-2" disabled={!picked.length} title={picked.length ? "Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length}) · необязательно</button>
-                  <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
-                </div>
+                {ordered.length > 0 && <button type="button" className="text-sm font-semibold text-brand hover:underline" aria-pressed={expandAll} onClick={() => { setExpandAll(!expandAll); setOpen({}); }}>{expandAll ? "Коротко у всех" : "Подробно у всех"}</button>}
               </div>
-              {ordered.length > 0 && <div className="flex flex-wrap items-start justify-between gap-2 rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75" data-testid="score-legend">
-                <p className="min-w-0 flex-1 basis-72"><b className="font-semibold text-brand-night">Как читать.</b> Балл из 100 — доля требований, подтверждённых тестом (обязательные весят больше); порядок — как в подборке{s.must_first ? ", сначала всё обязательное подтверждено" : ""}. В карточке — что совпало по тесту, что не проверено и риски; доказательства — «Подробнее». Отметьте «Сравнить» у 2–3 кандидатов или <Link className="font-semibold text-brand hover:underline" to={`/employer/compare-first?need=${id}&v=${s.version}`} onClick={(e) => { e.preventDefault(); navigate(`/employer/needs/${id}/compare?v=${s.version}`); }}>сравните первых трёх</Link>.</p>
-                <button type="button" className="font-semibold text-brand hover:underline" aria-pressed={expandAll} onClick={() => { setExpandAll(!expandAll); setOpen({}); }}>{expandAll ? "Коротко у всех" : "Подробно у всех"}</button>
+              {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
+                <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Балл — доля требований, подтверждённых тестом; порядок подборки не меняется. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
               </div>}
               {invited && <Alert kind="ok">{invited}</Alert>}
               {!ordered.length ? <Empty title="Подходящих кандидатов нет"
@@ -564,6 +557,19 @@ export function Selection() {
                   </aside>}
                 </div>
               )}
+              {/* Я10: действия с отмеченными — под карточками; пока кто-то отмечен, панель прилипает к низу экрана */}
+              <div className={`flex flex-wrap items-center gap-2 ${picked.length ? "sticky bottom-2 z-30 rounded-2xl bg-white/95 p-2 shadow-lg ring-1 ring-brand-night/10 backdrop-blur" : ""}`} data-testid="pick-toolbar">
+                {picked.length > 0 && <span className="px-1 text-sm text-brand-ink/70">Отмечено: {picked.join(", ")}{picked.length < 2 ? " — отметьте ещё одного" : ""}</span>}
+                <button className="btn-ghost !px-3 !py-1.5 text-sm" disabled={picked.length < 2 || picked.length > 3} title="Отметьте «Сравнить» у 2–3 кандидатов"
+                    onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
+                <button className="btn-ghost !px-3 !py-1.5 text-sm" disabled={!picked.length} title={picked.length ? "Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length}) · необязательно</button>
+                  <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
+                {picked.length > 0 && <button type="button" className="text-sm font-semibold text-brand hover:underline" onClick={() => setPicked([])}>Снять отметки</button>}
+              </div>
+              <div className="text-sm">
+                  <StatusCounts confirmed={s.confirmed_matched} provisional={s.provisional_matched} unconfirmed={s.unconfirmed_matched} hiddenNote={!!s.filters?.confirmed_only} />
+                  <Conditions c={s.conditions} busy={busy} onToggle={toggleConditions} />
+              </div>
             </section>
             {/* Я10: фильтры и уточнение — после решения «кого пригласить»; две колонки на ≥ 768 px */}
             <div className="grid items-start gap-4 md:grid-cols-2" data-testid="refine-panel">
