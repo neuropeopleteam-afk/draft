@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, errText, rub, ruText, useApi } from "../../components/ui";
+import { Alert, Empty, Field, History, Level, Loading, Modal, Seg, Status, dt, dtEnd, errText, rub, ruText, useApi } from "../../components/ui";
 import { Thread } from "../../components/Chat";
 import { BasisSeg, SalaryLine, otherBasis, salaryText, type Basis } from "../../components/Salary";
 import { api } from "../../lib/api";
@@ -9,6 +9,7 @@ import { SusPrompt } from "../../integrations/Sus";
 import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrations/Trust";
 import { EmploymentTermsText } from "../../integrations/Youth";
 import { AtsStageBadge } from "../../integrations/Ats";
+import { WhyChosen } from "../mutual/Candidate";  // почему меня выбрали (Н9)
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -77,6 +78,7 @@ export function Invitations() {
             <EmploymentTermsText terms={open.employment_terms} />
             <p><b>Способ связи:</b> {open.contact_method}</p>
             <InvitationTrust invitationId={open.id} version={`${trustV}:${open.status}:${open.complaint?.at ?? ""}`} />
+            <WhyChosen invitationId={open.id} />
             {open.evidence?.length > 0 && (
               <div>
                 <p className="font-semibold text-brand-night">На чём основано приглашение</p>
@@ -204,7 +206,7 @@ function ContactsAccess({ inv, onDone }: { inv: any; onDone: (r: any) => void })
   }
   if (inv.contacts_revoked) return (
     <div className="space-y-2">
-      <Alert kind="info">Вы отозвали доступ к контактам {dt(inv.contacts_revoked_at)}. Работодатель снова видит обезличенную карточку, переписка — в формате «вопрос — ответ».</Alert>
+      <Alert kind="info">Вы отозвали доступ к контактам {dtEnd(inv.contacts_revoked_at)}. Работодатель снова видит обезличенную карточку, переписка — в формате «вопрос — ответ».</Alert>
       <button className="btn-ghost" onClick={() => go("restore")}>Вернуть доступ к контактам</button>
       <Alert>{err}</Alert>
     </div>

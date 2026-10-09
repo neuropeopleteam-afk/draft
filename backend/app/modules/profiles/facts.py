@@ -17,11 +17,11 @@ from sqlalchemy.orm import Session
 
 from app.core.db import as_aware
 from app.core.enums import EvidenceLevel, FactSource
-from app.core.fmt import theta_se
+from app.core.fmt import probe_title, theta_se
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK, category_title
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK, category_title, tag_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
@@ -443,11 +443,13 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
     from app.modules.fsp.youth import employment_safety
 
     is_prov = b.provisional and cat is not None
+    mini_prov = bool(t and t.get("mini")) and cat is not None  # мини-тест QR: категория предварительная (Ф3)
     status = grade_status(b)
     cd, cg = b.claimed
     return {
         "ref": p.public_ref,
-        "category": {"id": cat.id, "title": prov.title(cat.title, is_prov), "provisional": is_prov} if cat else None,
+        "category": {"id": cat.id, "title": prov.title(cat.title, is_prov or mini_prov), "provisional": is_prov,
+                     "preliminary": mini_prov} if cat else None,
         # единая модель статуса: подтверждён / предварительно / не подтверждён (+ заявленное из опроса)
         "status": status,
         "claimed": ({"direction": cd, "grade": cg, "category_id": f"{cd}.{cg}",
@@ -472,10 +474,10 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "mode": t.get("mode", "full"), "accepted_lower": bool(t.get("accepted_lower")), "grade": t.get("grade"),
         } if t else None,
         "skills_confirmed": [
-            {"tag": k, "title": STACK.get(k, (k,))[0], "score": f.value.get("score"), "level": "T1"}
+            {"tag": k, "title": tag_title(k), "score": f.value.get("score"), "level": "T1"}
             for k, f in sorted(b.skills_t1.items()) if skill_confirmed(f)
         ],
-        "probes": [{"title": f.title, "score": f.value.get("score"), "verdict": f.value.get("verdict"), "level": "T1"}
+        "probes": [{"title": probe_title(f.title, f.value.get("verdict")), "score": f.value.get("score"), "verdict": f.value.get("verdict"), "level": "T1"}
                    for f in b.probes_t1],
         "fsp": ({
             "linked": b.passport is not None, "level": "T2" if verified_achievements(b) else None,
