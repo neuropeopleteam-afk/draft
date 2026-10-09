@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../lib/api";
 import { BASIS_TITLE, BasisSeg, basisTitle, grossOf, netOf, type Basis } from "./Salary";
-import { Alert, Field, NB, dt, errText, rub } from "./ui";
+import { Alert, Field, NB, dateOnly, errText, rub } from "./ui";
+
+/** Дата выхода (ГГГГ-ММ-ДД) без «г.» — чтобы точка в конце фразы не удваивалась: «26 октября 2026». */
+const day = (v?: string | null) => dateOnly(v).replace(/ г\.$/, "");
 
 /**
  * Найм после принятия приглашения (Н8): собеседование (1–3 слота), оффер со встречным, исход найма.
@@ -53,6 +56,7 @@ function Steps({ stage, outcome }: { stage: string; outcome?: any }) {
   const cur = STEP_OF[stage] ?? 0;
   const closed = stage === "rejected" || stage === "declined";
   const items = ["Собеседование", "Оффер", closed ? outcome?.title ?? "Завершено" : "Выход на работу"];
+  const short = ["Интервью", "Оффер", closed ? (stage === "declined" ? "Отказ" : outcome?.title ?? "Итог") : "Выход"];
   return (
     <ol className="grid grid-cols-3 gap-1.5 text-xs" aria-label="Этапы найма">
       {items.map((t, k) => {
@@ -60,7 +64,7 @@ function Steps({ stage, outcome }: { stage: string; outcome?: any }) {
         const now = closed ? k === 2 : k === cur;
         const c = done ? "border-emerald-200 bg-emerald-50 text-emerald-800" : now ? (closed ? "border-gray-200 bg-gray-100 text-gray-700" : "border-brand/30 bg-brand-blush text-brand-night")
           : "border-brand-night/10 bg-white text-brand-ink/55";
-        return <li key={t} className={`min-w-0 rounded-lg border px-2 py-1.5 font-semibold ${c}`} aria-current={now ? "step" : undefined}><span className="block truncate">{k + 1}. {t}</span></li>;
+        return <li key={t} className={`min-w-0 rounded-lg border px-2 py-1.5 font-semibold ${c}`} aria-current={now ? "step" : undefined}><span className="hidden truncate sm:block">{k + 1}. {t}</span><span className="block truncate sm:hidden">{short[k]}</span></li>;
       })}
     </ol>
   );
@@ -179,7 +183,7 @@ export function EmployerHiring({ inv, onChange }: { inv: any; onChange?: () => v
       {st.paused && <Alert kind="info">Кандидат отозвал доступ к контактам — найм на паузе, пока он не вернёт доступ.</Alert>}
       {st.outcome && (
         <Alert kind={st.outcome.outcome === "hired" ? "ok" : "info"}>
-          Найм завершён: <b>{st.outcome.title.toLowerCase()}</b>{st.outcome.start_date ? `, выход ${dt(st.outcome.start_date)}` : ""}{st.outcome.note ? ` — «${st.outcome.note}»` : ""}. Этап передан в ATS и вернулся обратным каналом.
+          Найм завершён: <b>{st.outcome.title.toLowerCase()}</b>{st.outcome.start_date ? `, выход ${day(st.outcome.start_date)}` : ""}{st.outcome.note ? ` — «${st.outcome.note}»` : ""}.{transfers.some((a: any) => a.status === "ok") ? (inv.ats_stage ? " Этап передан в ATS и вернулся обратным каналом." : " Этап передан в ATS.") : ""}
         </Alert>
       )}
 
@@ -213,7 +217,7 @@ export function EmployerHiring({ inv, onChange }: { inv: any; onChange?: () => v
       {/* оффер */}
       {o?.status === "sent" && (
         <div className="space-y-2 rounded-lg border border-brand-night/10 p-3">
-          <p className="text-brand-night">Оффер отправлен: <b>{offerText(o)}</b> · выход {dt(o.start_date)} · ответ до {mskText(o.respond_until)}</p>
+          <p className="text-brand-night">Оффер отправлен: <b>{offerText(o)}</b> · выход {day(o.start_date)} · ответ до {mskText(o.respond_until)}</p>
           {o.counter ? (
             <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50/60 p-3">
               <p className="font-semibold text-brand-night">Встречное кандидата: {rub(o.counter.salary)} {basisTitle(o.counter.salary_basis)}</p>
@@ -229,7 +233,7 @@ export function EmployerHiring({ inv, onChange }: { inv: any; onChange?: () => v
           <button className="text-sm font-semibold text-brand-plum hover:underline" disabled={busy} onClick={() => go("offer/withdraw")}>Отозвать оффер</button>
         </div>
       )}
-      {o?.status === "accepted" && !st.outcome && <Alert kind="ok">Кандидат принял оффер: <b>{offerText(o)}</b>, выход {dt(o.start_date)}. Отметьте выход на работу — этап уйдёт в ATS.</Alert>}
+      {o?.status === "accepted" && !st.outcome && <Alert kind="ok">Кандидат принял оффер: <b>{offerText(o)}</b>, выход {day(o.start_date)}. Отметьте выход на работу — этап уйдёт в ATS.</Alert>}
       {o && ["declined", "withdrawn", "expired"].includes(o.status) && !st.outcome && <p className="text-xs text-brand-ink/65">Оффер {offerText(o)} {o.status === "declined" ? "отклонён кандидатом" : o.status === "withdrawn" ? "отозван" : "истёк"}.</p>}
       {form === "offer" ? <OfferForm st={st} busy={busy} onSubmit={(b) => act("offer", b, true).then((ok) => { if (ok) setForm(""); return ok; })} onCancel={() => setForm("")} />
         : can.offer && form !== "slots" && (
@@ -281,8 +285,8 @@ export function CandidateHiring({ inv, onChange }: { inv: any; onChange?: () => 
       {quiet && <p className="text-brand-ink/70">Работодатель предложит здесь время собеседования, а потом — оффер. Ответить можно прямо в кабинете.</p>}
       {st.outcome && (
         <Alert kind={st.outcome.outcome === "hired" ? "ok" : "info"}>
-          {st.outcome.outcome === "hired" ? <>Работодатель отметил выход на работу{st.outcome.start_date ? ` с ${dt(st.outcome.start_date)}` : ""}. Успехов на новом месте.</>
-            : st.outcome.outcome === "rejected" ? <>Работодатель завершил рассмотрение{st.outcome.note ? `: «${st.outcome.note}»` : "."}</>
+          {st.outcome.outcome === "hired" ? <>Работодатель отметил выход на работу{st.outcome.start_date ? ` с ${day(st.outcome.start_date)}` : ""}. Успехов на новом месте.</>
+            : st.outcome.outcome === "rejected" ? <>Работодатель завершил рассмотрение{st.outcome.note ? `: «${st.outcome.note}».` : "."}</>
               : <>Найм завершён: вы отказались от предложения.</>}
         </Alert>
       )}
@@ -329,7 +333,7 @@ export function CandidateHiring({ inv, onChange }: { inv: any; onChange?: () => 
         <div className="space-y-2 rounded-lg border border-brand/30 bg-brand-blush/25 p-3">
           <p className="font-semibold text-brand-night">Оффер</p>
           <p className="text-lg font-extrabold text-brand-night">{offerText(o)} <span className="text-sm font-semibold text-brand-ink/65">в месяц</span></p>
-          <p className="text-xs text-brand-ink/70">{otherOne(o.salary, o.salary_basis)} · выход {dt(o.start_date)} · ответить до {mskText(o.respond_until)}</p>
+          <p className="text-xs text-brand-ink/70">{otherOne(o.salary, o.salary_basis)} · выход {day(o.start_date)} · ответить до {mskText(o.respond_until)}</p>
           {o.comment && <p className="text-brand-ink/80">«{o.comment}»</p>}
           {o.counter ? <Alert kind="info">Встречное отправлено: <b>{rub(o.counter.salary)} {basisTitle(o.counter.salary_basis)}</b>. Ждём ответа работодателя; пока можно принять оффер как есть.</Alert>
             : o.counters?.length > 0 && o.counters[o.counters.length - 1].status === "declined" && <p className="text-xs text-brand-ink/70">Работодатель не принял встречное {rub(o.counters[o.counters.length - 1].salary)}{o.counters[o.counters.length - 1].note ? `: «${o.counters[o.counters.length - 1].note}»` : ""}. В силе оффер.</p>}
@@ -361,7 +365,7 @@ export function CandidateHiring({ inv, onChange }: { inv: any; onChange?: () => 
           )}
         </div>
       )}
-      {o?.status === "accepted" && !st.outcome && <Alert kind="ok">Вы приняли оффер: <b>{offerText(o)}</b>, выход {dt(o.start_date)}. Работодатель отметит выход на работу.</Alert>}
+      {o?.status === "accepted" && !st.outcome && <Alert kind="ok">Вы приняли оффер: <b>{offerText(o)}</b>, выход {day(o.start_date)}. Работодатель отметит выход на работу.</Alert>}
       {o && ["withdrawn", "expired"].includes(o.status) && !st.outcome && <p className="text-xs text-brand-ink/65">Оффер {offerText(o)} {o.status === "withdrawn" ? "отозван работодателем" : "истёк"}.</p>}
       <Alert>{err}</Alert>
     </section>
