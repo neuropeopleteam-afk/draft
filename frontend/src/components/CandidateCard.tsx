@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { GradeBadge, GradeStatusNote } from "./GradeStatus";
 import { Level, num, pct, ruText, signed, years } from "./ui";
 import { Specializations } from "./Specializations";
@@ -19,13 +19,98 @@ export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: numbe
   );
 }
 
-export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge, mutual }: {
+/** Ф6 (Н5): навык проверен тестом или заданием, но порог не набран — не значок T1, а нейтральная пометка. */
+export function ReasonLevel({ r }: { r: { level?: string | null; status?: string; weight?: number | null } }) {
+  if (r.level === "T1" && r.status === "mismatch" && r.weight != null) {
+    return <span title="Проверено тестом или заданием работодателя, порог подтверждения не набран — это не подтверждение навыка"
+      className="inline-flex shrink-0 items-center rounded-md bg-gray-100 px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide text-gray-600">не подтв.</span>;
+  }
+  return <Level level={r.level} />;
+}
+
+/** Ф6 (Н3): рядом с баллом — покрытие обязательного тестом; подсказка — что балл значит и какие условия жёсткие. */
+export const SCORE_HINT = "Соответствие из 100 — взвешенная доля требований потребности, подтверждённых тестом (T1); обязательные весят больше желательных, ФСП и зонды добавляют немного. Заявленное кандидатом (T0) в балл не входит. Обязательные навыки — мягкое условие: без подтверждения кандидат не исключается, но помечен и идёт ниже. Формат и город — жёсткое условие: не прошедшие скрыты (можно показать всех).";
+
+function ScoreBox({ score, must }: { score: number; must?: any }) {
+  const req = must?.required_total ?? 0, miss = must?.missing_total ?? 0;
+  return (
+    <div className="text-right" title={SCORE_HINT}>
+      <p className="text-2xl font-extrabold text-brand">{Math.round(score * 100)}</p>
+      <p className="text-xs text-brand-ink/65">соответствие из 100</p>
+      {req > 0 && <p data-testid="must-coverage" className={`mt-0.5 text-xs font-semibold ${miss ? "text-amber-900" : "text-emerald-800"}`}>обязательное: {req - miss} из {req}</p>}
+    </div>
+  );
+}
+
+/** Ф6 (Н9): короткая карточка подборки — 2–3 причины и пробелы; полная — по кнопке «Подробнее». */
+function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
+  const stack = (reasons ?? []).filter((r) => /^(Обязательно|Желательно): /.test(r.requirement ?? ""));
+  const name = (r: any) => String(r.requirement).replace(/^(Обязательно|Желательно): /, "");
+  const okMust = stack.filter((r) => r.status === "confirmed" && r.requirement.startsWith("Обязательно")).map(name);
+  const okWant = stack.filter((r) => r.status === "confirmed" && r.requirement.startsWith("Желательно")).map(name);
+  const gaps = stack.filter((r) => r.status !== "confirmed" && r.requirement.startsWith("Обязательно"))
+    .map((r) => `${name(r)} (${r.status === "mismatch" ? "ниже порога" : r.status === "declared" ? "только заявлено" : "не проверялось"})`);
+  const t = c.test, fsp = c.fsp ?? {};
+  const integ = t?.integrity && t.integrity.level !== "high" ? t.integrity.title : null;
+  return (
+    <ul className="mt-3 space-y-1 text-sm" data-testid="card-brief">
+      <li className="flex items-start gap-2"><Level level={t ? "T1" : "none"} />
+        <span className="text-brand-ink/80">{t ? `Тест: ${t.correct} из ${t.answered} верно · θ = ${signed(t.theta)} ± ${num(t.se)}${t.mode === "express" ? " · экспресс" : ""}${integ ? ` · достоверность: ${integ.toLowerCase()}` : ""}` : "Результата теста нет"}</span></li>
+      {(okMust.length > 0 || okWant.length > 0) && <li className="flex items-start gap-2"><Level level="T1" />
+        <span className="text-brand-ink/80">Подтверждено: {[...okMust, ...okWant.map((x) => `${x} (желательно)`)].join(", ")}</span></li>}
+      {gaps.length > 0 && <li className="flex items-start gap-2"><Level level="none" />
+        <span className="text-brand-ink/80">Пробелы обязательного: {gaps.join(", ")} — можно проверить зондом</span></li>}
+      <li className="flex items-start gap-2"><Level level={fsp.achievements?.length && !fsp.hidden ? "T2" : "none"} />
+        <span className="text-brand-ink/80">{fsp.hidden ? "Паспорт ФСП скрыт кандидатом" : fsp.achievements?.length ? `ФСП: ${fsp.achievements[0].text}${fsp.achievements.length > 1 ? ` и ещё ${fsp.achievements.length - 1}` : ""}` : "Истории ФСП нет — нейтрально"}</span></li>
+    </ul>
+  );
+}
+
+export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge, mutual, collapsible = false, expanded = false }: {
   c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9)
+  collapsible?: boolean; expanded?: boolean;  // Ф6 (Н9): короткая карточка с раскрытием по клику
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
+  const [open, setOpen] = useState(!collapsible || expanded);
+  useEffect(() => { setOpen(!collapsible || expanded); }, [collapsible, expanded]);
+  const toggle = collapsible ? (
+    <button type="button" className="text-sm font-semibold text-brand hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
+      {open ? "Свернуть" : "Подробнее: тест, навыки, ФСП, все причины"}
+    </button>
+  ) : null;
+  if (!open) {
+    return (
+      <article className="card" data-testid="candidate-card" data-collapsed="true">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
+              <GradeBadge s={c.status} claimed={c.claimed} />
+              {badge}
+            </div>
+            <MustLine m={must} />
+            <p className="mt-0.5 text-sm text-brand-ink/65">
+              {c.rank_in_category ? `Место ${c.rank_in_category} из ${c.category_size} в категории · ` : ""}
+              {c.experience_years != null ? `стаж ${years(c.experience_years)} · ` : ""}
+              {c.work_format ? WF[c.work_format] : ""}{c.city ? ` · ${c.city}` : ""}{c.relocation ? " · готов к переезду" : ""}
+            </p>
+          </div>
+          {score != null && <ScoreBox score={score} must={must} />}
+        </div>
+        <Brief c={c} reasons={reasons} />
+        {c.employment_safety?.minor && <p className="mt-2 text-xs font-semibold text-amber-900">Особые условия оффера · {c.employment_safety.age_group === "16-17" ? "16–17 лет" : "14–15 лет"} — подробнее в карточке</p>}
+        {mutual}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          {toggle}
+          {actions}
+        </div>
+      </article>
+    );
+  }
   return (
-    <article className="card">
+    <article className="card" data-testid="candidate-card">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
@@ -45,12 +130,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
             {c.work_format ? WF[c.work_format] : ""}{c.city ? ` · ${c.city}` : ""}{c.relocation ? " · готов к переезду" : ""}
           </p>
         </div>
-        {score != null && (
-          <div className="text-right">
-            <p className="text-2xl font-extrabold text-brand">{Math.round(score * 100)}</p>
-            <p className="text-xs text-brand-ink/65">соответствие из 100</p>
-          </div>
-        )}
+        {score != null && <ScoreBox score={score} must={must} />}
       </div>
       {mutual}
 
@@ -109,7 +189,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
           <ul className="mt-2 space-y-1.5">
             {reasons.map((r, i) => (
               <li key={i} className="flex items-start gap-2 text-sm">
-                <Level level={r.level} />
+                <ReasonLevel r={r} />
                 <span><b className="font-semibold">{r.requirement}.</b> <span className="text-brand-ink/70">{ruText(r.text)}</span></span>
               </li>
             ))}
@@ -121,6 +201,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
         {c.market_range ? <MarketNote m={c.market_range} short /> : <span />}
         {actions}
       </div>
+      {toggle && <div className="mt-3 border-t border-brand-night/5 pt-2">{toggle}</div>}
     </article>
   );
 }

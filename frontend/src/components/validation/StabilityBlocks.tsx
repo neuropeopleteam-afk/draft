@@ -1,8 +1,12 @@
-import type { ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { DIRECTIONS } from "../ui";
 
 /* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в других условиях»
    и атаку утечкой по доле слитых вариантов. Данные — simulation из validation/report.json (make validate). */
+
+/** Ф6 (Н7): вместо «сейчас» — дата отчёта и мир, на котором он посчитан (задаёт Validation.tsx из provenance). */
+export const AsOf = createContext<{ date: string; world: string }>({ date: "", world: "" });
+const useNow = () => { const a = useContext(AsOf); return a.date ? `отчёт ${a.date}` : "текущая механика"; };
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -43,9 +47,10 @@ function Table({ head, rows, strong = [] }: { head: string[]; rows: ReactNode[][
 
 /** Строка условий рядом с цифрами: длина теста, ошибка параметров, число симулированных кандидатов. */
 export function Conditions({ children }: { children: ReactNode }) {
+  const a = useContext(AsOf);
   return (
     <p className="mt-2 rounded-xl bg-[#F3F2FB] px-3 py-2 text-xs leading-relaxed text-brand-night/80">
-      <b>Условия: </b>{children}
+      <b>Условия: </b>{children}{a.world && <span className="block text-brand-night/65">Мир: {a.world}</span>}
     </p>
   );
 }
@@ -91,6 +96,7 @@ export function RetestSection({ sim }: { sim: any }) {
   const curve: any[] = sim?.ceiling_curve ?? [];
   const sa = sim?.sensitivity_a;
   const oc = sim?.overclaim_mean ?? {};
+  const now = useNow();
   const row = (t: string, x: any) => [t, num(x?.grade_kappa_quadratic), pct(x?.grade_exact_agreement), pct(x?.grade_within_1, 1),
     pct(x?.grade_two_step_change, 1), num(x?.icc_theta), pct(x?.decision_agreement), num(x?.mean_items, 1), num(x?.mean_time_min, 0),
     `${num(x?.ceiling?.grade_kappa_quadratic)} / ${pct(x?.ceiling?.grade_exact_agreement)}`];
@@ -98,13 +104,13 @@ export function RetestSection({ sim }: { sim: any }) {
     pct(x?.false_confirm_rate, 1), pct(x?.false_reject_rate, 1), num(x?.mean_items, 1)];
   return (
     <Section id="retest" title="Стабильность грейда при повторе"
-      lead="Тот же кандидат проходит тест дважды: на другом субпуле банка и с другими вариантами заданий (параллельная форма); в дотестирование второй попытки не попадают семейства первой. Сравнение «до» и «сейчас» — на одних и тех же симулированных кандидатах и одних и тех же seed.">
+      lead="Тот же кандидат проходит тест дважды: на другом субпуле банка и с другими вариантами заданий (параллельная форма); в дотестирование второй попытки не попадают семейства первой. Сравнение «до 06.10» и «с 06.10» — на одних и тех же симулированных кандидатах и одних и тех же seed.">
       <Table head={["Механика", "κ (квадр.)", "Грейд совпал", "±1 ступень", "Сдвиг на 2 ступени", "ICC по θ", "Решение совпало", "Заданий", "Минут", "Потолок κ / совпадения"]}
         strong={[2]}
         rows={[row("До 06.10, как считалось на этой странице (без дотестирования)", rm.legacy_sim),
           row("До 06.10, как работало в продукте", leg),
-          row("Сейчас: классификация у порога и дотестирование", app),
-          row("Сейчас, если бы параметры заданий были без ошибки", rm.ideal_params)]} />
+          row(`С 06.10 (${now}): классификация у порога и дотестирование`, app),
+          row(`С 06.10 (${now}), если бы параметры заданий были без ошибки`, rm.ideal_params)]} />
       <Conditions>
         {lengthText(sim?.config)}; {errorText}; {c.n_retest_pairs} пар попыток на направление × {dirs.length} направлений;
         средняя погрешность одной попытки SE ≈ {num(app.rms_se)} (до 06.10 — {num(leg.rms_se)}); seed одинаковые для всех строк.
@@ -117,7 +123,7 @@ export function RetestSection({ sim }: { sim: any }) {
       </p>
 
       <H3>По направлениям</H3>
-      <Table head={["Направление", "κ: до → сейчас", "Грейд совпал", "ICC по θ", "Заданий", "Потолок κ сейчас"]}
+      <Table head={["Направление", `κ: до 06.10 → ${now}`, "Грейд совпал", "ICC по θ", "Заданий", `Потолок κ (${now})`]}
         rows={dirs.map((d) => {
           const v = sim.directions[d]; const a = v.retest ?? {}; const b = v.retest_legacy ?? {};
           return [DIRECTIONS[d] ?? d, arrow(b.grade_kappa_quadratic, a.grade_kappa_quadratic), arrow(b.grade_exact_agreement, a.grade_exact_agreement, pct),
@@ -134,23 +140,23 @@ export function RetestSection({ sim }: { sim: any }) {
       <Table head={["SE одной попытки", "Надёжность", "Грейд совпал", "±1 ступень", "κ (квадр.)"]}
         rows={curve.map((x) => [num(x.se), num(x.reliability), pct(x.grade_exact_agreement), pct(x.grade_within_1, 1), num(x.grade_kappa_quadratic)])} />
       <p className="mt-2 text-sm leading-relaxed text-brand-ink/75">
-        Сейчас κ {num(app.grade_kappa_quadratic)} при потолке {num(app.ceiling?.grade_kappa_quadratic)} для нашей погрешности SE ≈ {num(app.rms_se)}:
+        По {now.replace("отчёт", "отчёту")} κ {num(app.grade_kappa_quadratic)} при потолке {num(app.ceiling?.grade_kappa_quadratic)} для нашей погрешности SE ≈ {num(app.rms_se)}:
         при такой погрешности κ 0,86 недостижим ни для какого правила остановки. κ 0,86 соответствует SE ≈ 0,25 — это примерно втрое больше
         информации, чем дают 16–22 задания с текущей предкалибровкой (дискриминация a ≈ 1). Поднять потолок могут более информативные задания у
         порогов, больший банк (во второй попытке дотестированию не хватает свежих коротких заданий: в среднем {num(app.mean_items, 1)} задания на
         попытку в паре против {num(sim?.mean?.mean_items, 1)} у одиночной попытки) и калибровка на ответах людей.
       </p>
 
-      <H3>Точность к истинному грейду: до и сейчас</H3>
+      <H3>Точность к истинному грейду: до 06.10 и {now}</H3>
       <Table head={["Механика", "Грейд точно", "κ с истиной", "r(θ̂, θ)", "Решение верно", "Ложное подтверждение", "Ложный отказ", "Заданий"]}
-        strong={[1]} rows={[acc("До 06.10 (в продукте)", sim?.mean_legacy), acc("Сейчас", sim?.mean)]} />
+        strong={[1]} rows={[acc("До 06.10 (в продукте)", sim?.mean_legacy), acc(`С 06.10 (${now})`, sim?.mean)]} />
       <Conditions>{c.n_per_direction} кандидатов на направление × {dirs.length}; {errorText}; те же кандидаты и seed.</Conditions>
 
       <H3>Проверки, что улучшение честное</H3>
       <ul className="mt-2 max-w-4xl list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-brand-ink/75">
         <li>
           Цена досрочной остановки — завышение грейда. Кандидат заявляет грейд на ступень выше своего: ложное подтверждение
-          {" "}{arrow(oc.legacy, oc.app, (x) => pct(x, 1))} (до → сейчас, {c.n_overclaim} кандидатов на направление) — небольшой рост, его мы честно
+          {" "}{arrow(oc.legacy, oc.app, (x) => pct(x, 1))} (до 06.10 → {now}, {c.n_overclaim} кандидатов на направление) — небольшой рост, его мы честно
           показываем. Поэтому z = 1,28 (90 % с одной стороны), а не 1,0: в предварительном прогоне z = 1,0 не дал κ выше, а ложных подтверждений было
           больше (8,3 % против 6,2 %).
         </li>
@@ -222,6 +228,7 @@ export function LeakShareTable({ sim }: { sim: any }) {
   const a = sim?.asr_mean ?? {};
   if (!lt) return null;
   const pair = (k: string) => arrow(a.legacy?.[k], a.app?.[k], (x) => pct(x));
+  const now = useNow();
   return (
     <>
       <H3>Атака по доле слитых вариантов</H3>
@@ -232,8 +239,8 @@ export function LeakShareTable({ sim }: { sim: any }) {
         {lengthText(sim?.config)}; {errorText}; {lt.n_per_direction} кандидатов на направление × {ndirs(sim)}, из них {pct(lt.cheater_share)} пользуются утечкой;
         карантин — утёкший субпул выведен из ротации; опубликованными остаются только канарейки.
       </Conditions>
-      <H3>Защита от утечки: до и сейчас (слито 30 %)</H3>
-      <Table head={["Сценарий", "До 06.10 → сейчас"]}
+      <H3>Защита от утечки: до 06.10 и {now} (слито 30 %)</H3>
+      <Table head={["Сценарий", `До 06.10 → ${now}`]}
         rows={[["Без детектора", pair("leak_no_detector")], ["С детектором", pair("leak_detector")], ["Детектор и карантин субпула", pair("leak_detector_rotation")],
           ["Без утечки (ошибка теста, не атака)", pair("no_leak")],
           ["Ложные срабатывания детектора", arrow(a.detector_fpr?.legacy, a.detector_fpr?.app, (x) => pct(x, 1))]]} />
@@ -250,13 +257,14 @@ export function LeakShareTable({ sim }: { sim: any }) {
 export function ExposureNote({ sim }: { sim: any }) {
   const e = sim?.exposure_mean ?? {};
   const ext = sim?.retest_mean?.app?.mean_ext_items;
+  const now = useNow();
   return (
     <div className="mt-3">
       <Table head={["Механика", "Макс. частота", "Средняя", "Доля > 0,3", "Не используются"]}
         rows={[["До 06.10", num(e.legacy?.max_rate), num(e.legacy?.mean_rate), pct(e.legacy?.share_over_rmax), pct(e.legacy?.unused_share)],
-          ["Сейчас", num(e.app?.max_rate), num(e.app?.mean_rate), pct(e.app?.share_over_rmax), pct(e.app?.unused_share)]]} />
+          [`С 06.10 (${now})`, num(e.app?.max_rate), num(e.app?.mean_rate), pct(e.app?.share_over_rmax), pct(e.app?.unused_share)]]} />
       <p className="mt-2 text-sm leading-relaxed text-brand-ink/70">
-        Честно: цель 0,3 не достигнута ни раньше, ни сейчас. С двумя субпулами по ~20 семейств и 16 заданиями субпул почти исчерпывается; дотестирование у
+        Честно: цель 0,3 не достигнута ни до 06.10, ни в {now}. С двумя субпулами по ~20 семейств и 16 заданиями субпул почти исчерпывается; дотестирование у
         порога добавляет в среднем {num(ext, 1)} коротких задания, и самые информативные у порогов показываются чаще — это плата за стабильность грейда.
         Чтобы её ограничить, дотестирование сначала берёт свободные задания своего субпула. Защита от «слива» держится не на частоте семейства, а на
         уникальном варианте у каждого кандидата, канарейках и карантине субпула (см. таблицу атаки ниже). Чтобы опустить частоту до 0,3, нужен банк

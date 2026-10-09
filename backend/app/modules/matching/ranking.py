@@ -20,7 +20,7 @@ from __future__ import annotations
 from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import Session
 
-from app.core.fmt import probe_title, quoted, theta_se
+from app.core.fmt import probe_title, quoted, ru_num, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
@@ -28,13 +28,13 @@ from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
     GRADE_STATUS_ORDER,
     PROVISIONAL_PENALTY,
-    fmt_count,
     Bundle,
     achievement_text,
     card,
     grade_status,
     load_bundles,
     skill_confirmed,
+    skill_check_text,
     skill_evidence_text,
     test_component,
 )
@@ -244,8 +244,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                                 "text": skill_evidence_text(f)})  # тест и задания работодателя (И7)
             elif f is not None:  # И18: тест проверял навык, порог не набран — это не «нет данных» (как в сравнении)
                 reasons.append({"requirement": f"{label}: {title}", "level": "T1", "status": "mismatch", "weight": w,
-                                "text": f"Проверено заданиями: {fmt_count(f.value.get('correct'))} из "
-                                        f"{fmt_count(f.value.get('total'))} — ниже порога подтверждения"})
+                                "text": skill_check_text(f)})  # Ф6 (Н5): тест и задание работодателя — раздельно
             elif tag in b.stack_t0:
                 reasons.append({"requirement": f"{label}: {title}", "level": "T0", "status": "declared", "weight": w,
                                 "text": "Заявлено кандидатом — не влияет на ранжирование, можно проверить зондом"})
@@ -271,8 +270,8 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
                     f"(коэффициент {str(rb['coef']).replace('.', ',')})" if rb.get("title") else "")
         reasons.append({"requirement": "Достижения ФСП", "level": "T2", "status": "confirmed",
                         "text": achievement_text(best) + (f" и ещё {len(verified) - 1}" if len(verified) > 1 else "")
-                        + f". Сила ФСП {fsp:.3f}, соревнований: {rating['competitions']}"  # формула — в карточке (И18)
-                        + (f". {rel_text}" if rel_text else "")})
+                        + f". Сила ФСП {ru_num(fsp, 3)}, соревнований: {rating['competitions']}"  # формула — в карточке (И18, Ф6 В5)
+                        + (f". {rel_text}" if rel_text else "")})  # И23: релевантность дисциплины — только при флаге
     else:
         # Неподтверждённые реестром записи (значок «из анкеты») — не T2: ни бонуса, ни пометки «подтверждено»
         extra = len(b.achievements)

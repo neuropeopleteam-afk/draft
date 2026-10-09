@@ -331,12 +331,12 @@ def test_merge_skill_facts_unit():
     asg = CandidateFact(user_id=uid, kind="skill", key="python", title="Python",
                         value={"score": 1.0, "correct": 3, "total": 3, "origin": "assignment"},
                         evidence_level=EvidenceLevel.T1, source=FactSource.probe, source_ref="assignment:y")
-    assert skill_evidence_text(test) == "Подтверждено заданиями теста: 1 из 3"
+    assert skill_evidence_text(test) == "Проверено заданиями теста: 1 из 3 — ниже порога подтверждения"  # Ф6 (Н5)
     assert skill_evidence_text(asg) == "Подтверждено заданием работодателя: 3 из 3"
     m = merge_skill(test, asg)
     assert m.value["correct"] == 4 and m.value["total"] == 6 and m.value["score"] == pytest.approx(0.6667)
     assert not skill_confirmed(test) and skill_confirmed(m)
-    assert skill_evidence_text(m) == "Подтверждено заданиями теста (1 из 3) и заданием работодателя (3 из 3)"
+    assert skill_evidence_text(m) == "Тест — ниже порога, 1 из 3; задание работодателя — выполнено, 3 из 3"  # Ф6 (Н5)
     m2 = merge_skill(m, asg)  # ещё одно задание — суммируется в ту же часть
     assert m2.value["parts"]["assignment"] == {"correct": 6.0, "total": 6.0} and m2.value["total"] == 9
 

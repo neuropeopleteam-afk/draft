@@ -24,7 +24,8 @@ from app.modules.invitations.models import Invitation, Probe
 from app.modules.invitations.service import cooldown_until, profile_by_ref
 from app.modules.matching import ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
-from app.modules.profiles.facts import GRADE_CUTS, card, fmt_count, load_bundles, skill_confirmed
+from app.modules.profiles.facts import (GRADE_CUTS, card, fmt_count, load_bundles, skill_check_text, skill_confirmed,
+                                       skill_evidence_text)
 from app.modules.profiles.models import Company
 
 MIN_REFS, MAX_REFS = 2, 3
@@ -80,14 +81,13 @@ def _stack_cell(b, tag: str) -> tuple[dict, float | None]:
     f = b.skills_t1.get(tag)
     if skill_confirmed(f):
         sc = float(f.value.get("score", 0))
+        multi = len(f.value.get("parts") or {}) > 1  # Ф6 (Н5): тест и задание работодателя — раздельные исходы
         return ({"level": "T1", "status": "confirmed",
-                 "text": f"Подтверждено заданиями: {fmt_count(f.value.get('correct'))} из "
+                 "text": skill_evidence_text(f) if multi else f"Подтверждено заданиями: {fmt_count(f.value.get('correct'))} из "
                          f"{fmt_count(f.value.get('total'))} ({sc * 100:.0f} %)"}, sc)
     if f is not None:  # проверялось тестом, но ниже порога подтверждения
         sc = float(f.value.get("score", 0))
-        return ({"level": "T1", "status": "mismatch",
-                 "text": f"Проверено заданиями: {fmt_count(f.value.get('correct'))} из "
-                         f"{fmt_count(f.value.get('total'))} — ниже порога подтверждения"}, sc)
+        return ({"level": "T1", "status": "mismatch", "text": skill_check_text(f)}, sc)
     if tag in b.stack_t0:
         return ({"level": "T0", "status": "declared",
                  "text": "Заявлено кандидатом — в ранжирование не входит, можно проверить зондом"}, None)
