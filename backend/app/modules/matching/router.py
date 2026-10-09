@@ -504,7 +504,13 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
 
         # Ф2: «Не хватает обязательного» в шапке; ярус без пула не считается (missing — по самому кандидату)
         must = must_have.assess(b, n.requirements, set(must_have.must_tags(n.requirements)))
-        out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must}
+        from app.modules.matching import core_skill
+
+        core = core_skill.describe(b, n.requirements)  # Я1: «Основной язык роли — Go: не заявлен»
+        if core:
+            reasons = reasons[:1] + [core_skill.reason(core)] + reasons[1:]
+        out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must,
+                        "core": core}
     until = cooldown_until(db, c.id, p.user_id)
     inv = db.scalars(select(Invitation).where(Invitation.company_id == c.id, Invitation.candidate_user_id == p.user_id)
                      .order_by(Invitation.created_at.desc())).all()
