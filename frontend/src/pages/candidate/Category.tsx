@@ -7,6 +7,7 @@ import { MarketNote } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { Specializations } from "../../components/Specializations";
 import { PassportShare } from "../../passport/Share";
+import { AttemptsLink } from "../../components/AttemptsCompare";
 
 const REASON: Record<string, string> = {
   initial: "Первое присвоение", retest_up: "Пересдача на грейд выше", retest_down: "Пересдача на грейд ниже", sandbox: "Демо-режим жюри",
@@ -118,6 +119,8 @@ export default function Category() {
         {idx > 0 && <button className="btn-ghost" disabled={!s.can_retest_now} onClick={() => retest(grades[idx - 1])}>Тест на {GRADES[grades[idx - 1]]}</button>}
         {idx >= 0 && idx < grades.length - 1 && <button className="btn-primary" disabled={!s.can_retest_now} onClick={() => retest(grades[idx + 1])}>Тест на {GRADES[grades[idx + 1]]}</button>}
         {pv && <button className="btn-ghost" disabled={!s.can_retest_now} onClick={() => retest(c.grade)}>Пройти тест на {GRADES[c.grade]} заново</button>}
+        {/* И26: в демо-режиме жюри вторая попытка — сразу (у жюри нет 30 дней); у обычных кандидатов правила как есть */}
+        {s.sandbox_active && c.grade && !pv && <button className="btn-ghost" onClick={() => retest(c.grade)} title="В демо-режиме жюри правило 30/90 дней не действует; у обычных кандидатов — как обычно">Пройти ещё раз (демо)</button>}
         {idx < 0 && <Link className="btn-primary" to="/candidate/assessment">Выбрать грейд и начать тест</Link>}
         <Link className="btn-ghost" to="/candidate/assessment?survey=1">{s.specializations?.length < 2 ? "Добавить второе направление" : "Изменить опрос"}</Link>
         {s.sessions.some((t: any) => t.status === "finished") && <Link className="btn-ghost" to="/candidate/feedback">Карта навыков и маршрут роста</Link>}
@@ -138,7 +141,10 @@ export default function Category() {
           ) : <p className="mt-3 text-sm text-brand-ink/65">Пока пусто.</p>}
         </section>
         <section className="card">
-          <h2 className="font-bold text-brand-night">Тесты</h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="font-bold text-brand-night">Тесты</h2>
+            <AttemptsLink direction={c.direction} n={s.sessions.filter((t: any) => t.status === "finished" && t.direction === c.direction).length} />
+          </div>
           {s.sessions.length ? (
             <ul className="mt-3 space-y-3 text-sm">
               {s.sessions.map((t: any) => (

@@ -109,6 +109,27 @@ def recent_failed(db: Session, user_id: uuid.UUID, direction_id: str, now, retak
     return out
 
 
+def seen_families(db: Session, user_id, direction: str | None = None) -> tuple[dict[str, int], dict[str, list[int]]]:
+    """Семейства всех завершённых попыток кандидата (по направлению; None — по всем) с «возрастом»: 0 — последняя
+    попытка, 1 — предпоследняя, … (для LRU), и их seed — чтобы повтор семейства шёл только с новым вариантом.
+    Контрольные задания (канарейки) не входят: они опубликованы и идут отдельным пулом."""
+    q = select(TestSession).where(TestSession.user_id == user_id, TestSession.status == TestSessionStatus.finished)
+    if direction is not None:
+        q = q.where(TestSession.direction_id == direction)
+    seen: dict[str, int] = {}
+    seeds: dict[str, list[int]] = {}
+    for age, t in enumerate(db.scalars(q.order_by(TestSession.created_at.desc()))):
+        st = (t.result or {}).get("state") or {}
+        for it in (st.get("items") or []) + (st.get("prior") or []):
+            f = it.get("family_id")
+            if not f or it.get("canary"):
+                continue
+            seen.setdefault(f, age)
+            if it.get("seed") is not None and int(it["seed"]) not in seeds.setdefault(f, []):
+                seeds[f].append(int(it["seed"]))
+    return seen, seeds
+
+
 def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_name: str | None = None, *,
                   integrity_ack: bool = False, enforce_sandbox_quota: bool = False,
                   direction: str | None = None, mode: str = "full") -> TestSession:
@@ -183,20 +204,24 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
             .order_by(TestSession.created_at.desc()).limit(5))]
         fams = sorted({i.get("family_id") for st in past for i in (st.get("items") or []) + (st.get("prior") or [])
                        if i.get("family_id")})
+        seen, seen_seeds = seen_families(db, user_id)
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
-                             previous_families=fams, confirm_from=prev_state)
+                             previous_families=fams, confirm_from=prev_state, seen=seen, seen_seeds=seen_seeds)
         state["confirm"]["source_session_id"] = str(confirm_src.id)
     elif engine.name.startswith("bank"):
         # Повторная попытка — другой субпул, чем в прошлых сессиях этого кандидата (параллельная форма);
-        # семейства последней попытки не попадают в дотестирование у порога (оно берёт задания и из другого субпула)
+        # семейства всех прошлых попыток по направлению не берутся ни в основную часть, ни в дотестирование
+        # (И26; запасной путь при исчерпании — семейства, виденные давнее всего, с новым вариантом)
         past = [((t.result or {}).get("state") or {}) for t in db.scalars(
             select(TestSession).where(TestSession.user_id == user_id, TestSession.direction_id == survey.direction_id,
                                       TestSession.status == TestSessionStatus.finished)
             .order_by(TestSession.created_at.desc()).limit(5))]
         prev = [st.get("subpool") for st in past if st.get("subpool") is not None]
         last_families = [i.get("family_id") for i in (past[0].get("items") or []) if i.get("family_id")] if past else []
+        seen, seen_seeds = seen_families(db, user_id, survey.direction_id)
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed,
-                             previous_subpools=prev, previous_families=last_families, mode=mode)
+                             previous_subpools=prev, previous_families=last_families, mode=mode,
+                             seen=seen, seen_seeds=seen_seeds)
     else:
         state = engine.start(direction=survey.direction_id, claimed_grade=claimed_grade, stack_tags=stack, seed=seed)
     # демо-режим жюри: быстрые верные ответы без других сигналов — мягкая пометка, не понижение достоверности (Ф3)
