@@ -176,8 +176,8 @@ class ClaimPriorSession(AppCATSession):
 
 
 def run_session(pool, direction, responder, cfg: AppConfig, exposure: ExposureControl | None, claimed: str,
-                subpool: int | None, rng: np.random.Generator, *, exclude_ext=(), blocked_subpools=(), exclude=()
-                ) -> tuple[AppCATSession, object]:
+                subpool: int | None, rng: np.random.Generator, *, exclude_ext=(), blocked_subpools=(), exclude=(),
+                seen: dict[str, int] | None = None) -> tuple[AppCATSession, object]:
     # ExposureControl передаётся всегда (счётчик частоты показа); отбор Sympson — Hetter включает cfg.cat().exposure
     kw = {"max_per_format": cfg.max_per_format}
     if cfg.legacy_ext:
@@ -185,6 +185,8 @@ def run_session(pool, direction, responder, cfg: AppConfig, exposure: ExposureCo
     else:
         cls = ClaimPriorSession if cfg.claim_prior else AppCATSession
         kw.update(exclude_ext=exclude_ext, blocked_subpools=blocked_subpools, exclude=exclude)
+        if seen:  # И26: семейства всех прошлых попыток с «возрастом» — как bank_engine (seen)
+            kw["seen"] = seen
         if cfg.rotation == "exclude_last":
             subpool = None
     sess = cls(pool, direction, cfg.cat(), exposure, claimed, subpool, rng, **kw)
@@ -210,9 +212,11 @@ def run_population(pool, truth, people: list[Person], direction: str, cfg: AppCo
                    k: dict | None = None, r_max: float = 0.3, subpools: list[int | None] | None = None,
                    leak: LeakModel | None = None, detector: CanaryDetector | None = None,
                    counter: ExposureControl | None = None, exclude: list[set] | None = None,
-                   blocked_subpools: set[int] | None = None, leaked_subpools: set[int] | None = None) -> list[dict]:
+                   blocked_subpools: set[int] | None = None, leaked_subpools: set[int] | None = None,
+                   seen: list[dict] | None = None) -> list[dict]:
     """Прогон популяции. counter — общий ExposureControl для подсчёта частоты показа по сессиям;
-    exclude — семейства прошлой попытки каждого кандидата (в дотестирование не попадают)."""
+    exclude — семейства прошлой попытки каждого кандидата (в дотестирование не попадают);
+    seen — семейства всех прошлых попыток кандидата с «возрастом» (протокол продукта с 09.10, И26)."""
     out = []
     for i, p in enumerate(people):
         if subpools is not None:
@@ -226,8 +230,9 @@ def run_population(pool, truth, people: list[Person], direction: str, cfg: AppCo
                      else make_responder(p, truth, leak))
         prev = exclude[i] if exclude else ()
         sess, res = run_session(pool, direction, responder, cfg, expo, p.claimed, sp, rng,
-                                exclude_ext=prev, blocked_subpools=blocked_subpools or (),
-                                exclude=prev if cfg.rotation == "exclude_last" else ())
+                                exclude_ext=() if seen and seen[i] else prev, blocked_subpools=blocked_subpools or (),
+                                exclude=prev if cfg.rotation == "exclude_last" else (),
+                                seen=seen[i] if seen else None)
         d = decide(res.theta, res.se, p.claimed)
         rec = {"theta": res.theta, "se": res.se, "n_items": res.n_items, "time_s": res.time_used_s,
                "confirmed": d.confirmed, "stop": res.stop_reason, "subpool": sp, "n_ext": sess.n_ext,
