@@ -211,8 +211,8 @@ def test_quote_supported_and_parse_reply_zeroes_unsupported():
              "level": "strong", "manipulation": False}
     p = G.parse_reply(reply, RUBRIC, ANSWER)
     assert p["ok"] and p["criteria"] == {"cause": 1.0, "fix": 0.0} and p["unsupported"] == ["fix"] and p["score"] == 0.6
-    old = G.parse_reply({"criteria": {"cause": 1, "fix": 0.5}}, RUBRIC, ANSWER)  # старый формат без цитат —
-    assert old["no_quotes"] and old["criteria"] == {"cause": 0.5, "fix": 0.0}  # на шаг ниже (Я13/Я5, 10.10)
+    old = G.parse_reply({"criteria": {"cause": 1, "fix": 0.5}}, RUBRIC, ANSWER)  # старый формат — без обнуления
+    assert old["score"] == 0.8 and old["no_quotes"]
     assert G.parse_reply({"criteria": {"cause": 1}}, RUBRIC, ANSWER)["error"] == "missing_criterion:fix"
     assert G.parse_reply("x", RUBRIC, ANSWER)["error"] == "invalid_json"
     assert G.parse_reply({**reply, "manipulation": "true"}, RUBRIC, ANSWER)["manipulation"]
