@@ -26552,6 +26552,48 @@
         "title": "VerifyEmailIn",
         "type": "object"
       },
+      "VoiceNeedOut": {
+        "properties": {
+          "chars": {
+            "title": "Chars",
+            "type": "integer"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "seconds": {
+            "description": "Длительность записи по данным распознавания (у заглушки — оценка)",
+            "title": "Seconds",
+            "type": "number"
+          },
+          "stub": {
+            "description": "Заглушка: распознавание не подключено, подставлен пример текста",
+            "title": "Stub",
+            "type": "boolean"
+          },
+          "text": {
+            "description": "Распознанный текст для поля «Кого вы ищете» — работодатель проверяет и правит",
+            "title": "Text",
+            "type": "string"
+          },
+          "truncated": {
+            "description": "Текст длиннее поля потребности — обрезан",
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "text",
+          "stub",
+          "seconds",
+          "chars",
+          "truncated",
+          "note"
+        ],
+        "title": "VoiceNeedOut",
+        "type": "object"
+      },
       "WebhookIn": {
         "properties": {
           "enabled": {
@@ -44488,6 +44530,192 @@
           }
         ],
         "summary": "Фоновое уточнение разбора моделью: состояние и итог (И27)",
+        "tags": [
+          "employer"
+        ]
+      }
+    },
+    "/api/employer/needs/voice": {
+      "post": {
+        "description": "Тело — запись целиком (audio/webm, audio/ogg, audio/mp4, audio/wav, audio/mpeg), до VOICE_NEED_MAX_SECONDS (60) секунд и VOICE_NEED_MAX_KB. Параметр consent — версия согласия из /api/meta → voice_need.consent_version. Распознавание — функция движка интервью stt (Deepgram nova-3, ru, через ретранслятор); заглушка (INTERVIEW_STUB=1 или нет ключа) отвечает фиксированным текстом и stub=true. Ни запись, ни текст на сервере не сохраняются; ответ ничего не создаёт и не отправляет — разбор POST /needs/parse по кнопке работодателя.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "need_voice_api_employer_needs_voice_post",
+        "parameters": [
+          {
+            "description": "Версия согласия",
+            "in": "query",
+            "name": "consent",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Версия согласия",
+              "title": "Consent"
+            }
+          },
+          {
+            "description": "Длительность записи по часам браузера",
+            "in": "query",
+            "name": "duration_ms",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 3600000,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Длительность записи по часам браузера",
+              "title": "Duration Ms"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceNeedOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "voice_need_disabled",
+                    "message": "Голосовой ввод выключен на этой установке — введите текст"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Голосовой ввод выключен на этой установке (VOICE_NEED_ENABLED). Коды `detail.code`: `voice_need_disabled` — Голосовой ввод выключен на этой установке — введите текст."
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "voice_too_long",
+                    "message": "Запись длиннее … секунд — надиктуйте короче или введите текст"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Запись длиннее 60 секунд или больше предела размера. Коды `detail.code`: `voice_too_long` — Запись длиннее … секунд — надиктуйте короче или введите текст; `voice_too_large` — Запись слишком большая — надиктуйте короче или введите текст."
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "voice_bad_type",
+                    "message": "Это не аудиозапись — запишите ещё раз или введите текст"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не аудиозапись. Коды `detail.code`: `voice_bad_type` — Это не аудиозапись — запишите ещё раз или введите текст."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "voice_consent_required",
+                    "message": "Нужно согласие на распознавание записи — или введите текст"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нет согласия или речь не распознана. Коды `detail.code`: `voice_consent_required` — Нужно согласие на распознавание записи — или введите текст; `voice_empty` — Пустая запись — попробуйте ещё раз или введите текст."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "voice_rate",
+                    "message": "Слишком много записей. Повторите через …"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Слишком много записей. Коды `detail.code`: `voice_rate` — Слишком много записей. Повторите через …."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "voice_unavailable",
+                    "message": "Распознавание речи недоступно — введите текст с клавиатуры"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Распознавание недоступно — введите текст. Коды `detail.code`: `voice_unavailable` — Распознавание речи недоступно — введите текст с клавиатуры."
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "voice_timeout",
+                    "message": "Распознавание не ответило вовремя — введите текст с клавиатуры"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Распознавание не ответило вовремя — введите текст. Коды `detail.code`: `voice_timeout` — Распознавание не ответило вовремя — введите текст с клавиатуры."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Надиктовать потребность: запись → текст в поле (без сохранения, разбор — по кнопке)",
         "tags": [
           "employer"
         ]
