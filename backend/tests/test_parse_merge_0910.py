@@ -63,14 +63,16 @@ def test_zero_experience_from_rules_is_not_overwritten_by_model(monkeypatch, net
 
 
 def test_model_fills_experience_only_when_rules_found_nothing(monkeypatch, net):
-    text = "Junior QA-инженер: ручное тестирование, Postman, SQL. Можно без опыта, обучим. Удалённо."
+    # Я11: «можно без опыта» словарь теперь понимает сам (0 с цитатой) — для проверки «модель заполняет пустое»
+    # берём формулировку, которой в словаре нет
+    text = "Junior QA-инженер: ручное тестирование, Postman, SQL. Подойдёт выпускник курсов, обучим. Удалённо."
     assert parse_rules(text)["experience_years_min"] is None
     _model(monkeypatch, net, {"experience_years_min": 0,
-                              "quotes": {**EMPTY["quotes"], "experience_years_min": "Можно без опыта"}})
+                              "quotes": {**EMPTY["quotes"], "experience_years_min": "Подойдёт выпускник курсов"}})
     r = parse_need(text)
     assert r["experience_years_min"] == 0.0  # 0 от модели — тоже значение, а не «пусто»
     assert r["evidence"]["experience_years_min"]["source"] == "llm"
-    assert r["evidence"]["experience_years_min"]["quote"] == "Можно без опыта"
+    assert r["evidence"]["experience_years_min"]["quote"] == "Подойдёт выпускник курсов"
     assert r["work_format"] == "remote" and r["grade"] == "junior"
 
 

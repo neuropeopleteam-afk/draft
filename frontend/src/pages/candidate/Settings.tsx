@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, Level, Loading, Toggle, dt, errText, num, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
+import { NO_FSP, OriginTag } from "../../components/Origin";
 import { FspIdLinkButton } from "../../integrations/FspId";
 import { CupPassportEvents } from "../../ideas/cup/Candidate";
 import { useAuth } from "../../lib/auth";
@@ -25,7 +26,7 @@ export function Fsp() {
     <div className="max-w-3xl space-y-6">
       <PageTitle title="Паспорт ФСП" subtitle="Достижения в соревнованиях по дисциплинам спортивного программирования (ЕВСК) — подтверждённые реестром факты (T2)." />
       <section className="card space-y-4">
-        <div className="flex items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p></div>
+        <div className="flex items-center gap-3"><Level level={data.linked ? "T2" : "none"} /><p className="font-semibold text-brand-night">{data.linked ? "Паспорт связан" : "Паспорт не связан"}</p>{data.origin && <OriginTag o={data.origin} />}</div>
         <p className="text-sm text-brand-ink/70">{data.link_source === "keycloak" ? `Паспорт связан через ФСП ID${data.fsp_id_claimed ? ` (${data.fsp_id_claimed})` : ""}: достижения подтверждены реестром (T2).` : data.note}</p>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 rounded-xl bg-[#F3F2FB] p-4 text-center text-sm" data-testid="fsp-identity-link">
           <div className="min-w-0"><p className="font-bold text-brand-night">ФСП ID</p><p className="mt-1 break-all text-xs text-brand-ink/70">{data.fsp_id_claimed || "Не указан"}</p></div>
@@ -57,7 +58,7 @@ export function Fsp() {
           <h2 className="font-bold text-brand-night">Достижения</h2>
           <ul className="mt-3 space-y-3 text-sm">{data.achievements.map((a: any, i: number) => <li key={i} className="flex items-start gap-2"><Level level="T2" /><div><p>{a.text}</p>{(a.team || a.evsk_code || a.sport_rank) && <p className="mt-1 text-xs text-brand-ink/65">{[a.team ? `Команда: ${a.team}` : null, a.team_result?.place ? `командное место: ${num(a.team_result.place, 0)}` : null, a.evsk_code ? `ЕВСК: ${a.evsk_code}` : null, a.sport_rank ? `разряд: ${a.sport_rank}` : null].filter(Boolean).join(" · ")}</p>}</div></li>)}</ul>
         </section>
-      ) : <Empty title="Достижений нет" text="Это нейтральное состояние: на категорию и рейтинг не влияет отрицательно." />}
+      ) : <Empty title="Достижений нет" text={`${NO_FSP}.`} />}
       <CupPassportEvents />
     </div>
   );
@@ -103,7 +104,7 @@ export function Settings() {
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card">
         <h2 className="font-bold text-brand-night">Поля обезличенной карточки</h2>
-        <p className="mt-1 text-sm text-brand-ink/65">Имя, почта, телефон и сумма минимума зарплаты не показываются никогда. Контакты — только после принятия приглашения. По умолчанию работодатель видит лишь «вилка в ожиданиях / ниже ожиданий» — это выключается ниже, в «Интересах».</p>
+        <p className="mt-1 text-sm text-brand-ink/65">Имя, почта, телефон и сумма минимума зарплаты в подборке и карточке не показываются. Контакты — только после принятия приглашения. По умолчанию работодатель видит лишь «вилка в ожиданиях / ниже ожиданий» — это выключается ниже, в «Интересах».</p>
         <div className="mt-3 divide-y divide-brand-night/5">
           {onb.data?.options.privacy_fields.map((f: any) => <Toggle key={f.id} label={f.title} checked={privacy[f.id] ?? true} onChange={(v) => savePrivacy({ ...privacy, [f.id]: v })} />)}
         </div>

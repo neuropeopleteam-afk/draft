@@ -55299,6 +55299,111 @@
         ]
       }
     },
+    "/api/jury/quick": {
+      "get": {
+        "description": "Только демо-персоны жюри. need — id своей потребности: место каждой демо-персоны в версии подборки (version, по умолчанию последней). can_invite — компании песочницы можно пригласить персону сейчас (одно приглашение в 30 дней); invitation — последнее приглашение компании персоне.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
+        "operationId": "quick_api_jury_quick_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "need",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Need"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Version"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "jury_only",
+                    "message": "Только для демо-персон жюри"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для демо-персон жюри. Коды `detail.code`: `jury_only` — Только для демо-персон жюри."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "jury_disabled",
+                    "message": "Режим жюри выключен"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Не найдено. Коды `detail.code`: `jury_disabled` — Режим жюри выключен."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Проверка за 12 минут: демо-кандидаты своей копии в подборке и приглашения им",
+        "tags": [
+          "jury"
+        ]
+      }
+    },
     "/api/jury/reset": {
       "post": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
@@ -64228,6 +64333,26 @@
           }
         },
         "summary": "Test–retest всего пути кандидата и D / r_pb семейств (пересчёт: make path-retest)",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
+    "/api/validation/provenance": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "validation_provenance_api_validation_provenance_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Происхождение чисел /validation: синтетика/модель/люди, дата, SHA, банк, команда",
         "tags": [
           "validation"
         ]

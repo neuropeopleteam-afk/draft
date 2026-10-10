@@ -6,6 +6,8 @@ import { api, ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { juryLogin, type Persona } from "../lib/jury";
 import { usePageTitle } from "../lib/meta";
+import JuryChoice from "./JuryChoice";  // Я9
+import { ProvenanceLine, type Prov } from "../components/validation/Provenance";
 
 /** «Проверьте нас по критериям ТЗ» (К1): раздел 6 ТЗ дословно по подпунктам → что сделать → что увидите → чем доказано
  *  → ограничение. Тексты и числа — из GET /api/validation/criteria (backend/app/modules/validation/criteria.py, тот же
@@ -13,11 +15,11 @@ import { usePageTitle } from "../lib/meta";
 
 type Go = { label: string; to: string; as: Persona | null; need: string | null };
 type Sig = { world?: string; seed?: number | null; commit?: string | null; generated_at?: string | null; n?: number | null };
-type Proof =
+type Proof = (
   | { kind: "metric"; label: string; fmt: string; value: number; ci?: number[] | null; vs?: { label: string; value: number; fmt?: string } | null;
       note?: string | null; anchor: string; signature?: Sig }
   | { kind: "link"; label: string; anchor: string; missing?: boolean }
-  | { kind: "doc"; label: string; path: string };
+  | { kind: "doc"; label: string; path: string }) & { provenance?: Prov | null };  // Я8 п. 5: та же строка, что на /validation
 type Item = { id: string; n: string; tz: string; do: Go[]; see: string; proof: Proof; limit: string };
 type Crit = { id: string; n: number; title: string; short: string; weight: number; items: Item[] };
 type Out = {
@@ -67,14 +69,15 @@ function ProofView({ p }: { p: Proof }) {
         </p>
         {(p.vs || p.note) && <p className="text-xs text-brand-ink/70">{p.vs && <>{p.vs.label}: <b className="tabular-nums">{fmt(p.vs.value, p.vs.fmt ?? p.fmt)}</b></>}{p.vs && p.note ? "; " : ""}{p.note}</p>}
         <SigLine s={p.signature} />
+        <ProvenanceLine p={p.provenance} className="mt-1" />
         <ProofLink to={p.anchor} text="Блок с расчётом" />
       </div>
     );
   }
   if (p.kind === "doc") {
-    return <p className="text-sm text-brand-ink/80">{p.label}<span className="mt-0.5 block text-xs text-brand-ink/65">в репозитории: <code className="[overflow-wrap:anywhere]">{p.path}</code></span></p>;
+    return <div><p className="text-sm text-brand-ink/80">{p.label}<span className="mt-0.5 block text-xs text-brand-ink/65">в репозитории: <code className="[overflow-wrap:anywhere]">{p.path}</code></span></p><ProvenanceLine p={p.provenance} className="mt-1" /></div>;
   }
-  return <ProofLink to={p.anchor} text={p.label} />;
+  return <div><ProofLink to={p.anchor} text={p.label} /><ProvenanceLine p={p.provenance} className="mt-1" /></div>;
 }
 
 function ProofLink({ to, text }: { to: string; text: string }) {
@@ -171,6 +174,12 @@ const safePath = (to: string | null) => (to && to.startsWith("/") && !to.startsW
  *  жюри — вход в один клик под персоной (как на главной) и переход на экран. need — открыть подборку демо-потребности:
  *  у каждой песочницы свои id, поэтому потребность ищется по названию. */
 export function JuryGo() {
+  const [sp] = useSearchParams();
+  // Я9: без роли и экрана — выбор режима проводника («Проверка за 12 минут» или справочник); ?tour=12|full — сразу
+  return sp.get("as") || sp.get("to") ? <JuryGoLink /> : <JuryChoice tour={sp.get("tour")} />;
+}
+
+function JuryGoLink() {
   const [sp] = useSearchParams();
   const { signIn } = useAuth();
   const navigate = useNavigate();

@@ -6,6 +6,7 @@ import { Alert, Field, Level, Loading, Toggle, errText, useApi } from "../compon
 import { api } from "../lib/api";
 import { cabinetPath, useAuth } from "../lib/auth";
 import { dateOnly } from "./Trust";
+import { NO_FSP } from "../components/Origin";
 
 interface FspConfig { enabled: boolean; demo: boolean; title: string; demo_accounts: { username: string; title: string }[]; demo_password: string | null; note: string }
 
@@ -122,7 +123,7 @@ export function FspIdDone() {
                   <li key={i} className="flex items-start gap-2"><Level level="T2" /><span>{a.event} — {a.result ?? (a.place ? `${a.place} место` : "участие")}, {LEVEL_RU[a.level] ?? a.level} уровень{a.date ? `, ${dateOnly(a.date)}` : ""}</span></li>
                 ))}
               </ul>
-            ) : <p className="mt-1 text-brand-ink/65">Истории соревнований ФСП нет — это нейтрально: без бонуса и без штрафа в рейтинге.</p>}
+            ) : <p className="mt-1 text-brand-ink/65">{NO_FSP}.</p>}
             <p className="mt-2 text-xs text-brand-ink/65">ФИО и контакты из ФСП ID в карточку не попадают; работодатель увидит их только после вашего согласия.</p>
           </div>
           {state.email_taken && <Alert kind="info">Аккаунт с почтой {p?.email} уже есть. Войдите паролем и свяжите ФСП ID в разделе «Паспорт ФСП».</Alert>}
