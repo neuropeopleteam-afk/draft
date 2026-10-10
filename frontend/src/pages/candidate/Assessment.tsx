@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, GRADE_SKILLS, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
@@ -396,7 +396,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
 
   return (
     <>
-      <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTIONS[dir] ?? "—"}. Грейд — это уровень навыков, его подтверждает тест, а не стаж. Выберите уровень, на который хотите подтвердиться.`} />
+      <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTIONS[dir] ?? "—"}. Грейд — уровень навыков: его подтверждает тест, а не стаж. Выберите уровень.`} />
       {status?.specializations?.length > 1 && (
         <div className="mt-4">
           <Field label="Направление теста" htmlFor="test-direction" hint="Подтверждения и ограничения в двух направлениях независимы.">
@@ -414,8 +414,8 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           <button key={id} type="button" onClick={() => setGrade(id)} aria-pressed={grade === id}
             className={`rounded-2xl border p-5 text-left transition-colors ${grade === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
             <p className="text-lg font-bold text-brand-night">{t}</p>
-            <p className="mt-1 text-xs leading-relaxed text-brand-ink/80">{GRADE_SKILLS[id]}</p>
-            <p className="mt-1.5 text-xs text-brand-ink/65">Стаж: {GRADE_EXPERIENCE[id]} — ориентир, не условие</p>
+            {/* И23 (VS.1): уровень — по навыкам; Ф4: на карточке коротко, полный текст и стаж — ниже */}
+            <p className="mt-1 text-xs leading-relaxed text-brand-ink/80">{GRADE_SKILLS_SHORT[id]}</p>
             <span className="mt-3 flex flex-wrap gap-1.5">
               {!hint.data && status?.claimed_grade === id && <span className="chip">Подсказка по стажу из опроса</span>}
               {hint.data?.suggested === id && <span className="chip">Подсказка</span>}
@@ -424,6 +424,15 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           </button>
         ))}
       </div>
+      <p className="mt-2 text-xs text-brand-ink/65">
+        Стаж — ориентир, не условие: {Object.entries(GRADES).map(([id, t]) => `${t} — ${GRADE_EXPERIENCE[id].replace(/^обычно /, "").replace(/ опыта$/, "")}`).join(" · ")}.
+      </p>
+      <details className="mt-1 text-xs text-brand-ink/75">
+        <summary className="cursor-pointer font-semibold text-brand-night">Что умеет каждый уровень</summary>
+        <ul className="mt-1 list-disc space-y-1 pl-5">
+          {Object.entries(GRADES).map(([id, t]) => <li key={id}><b>{t}</b> — {GRADE_SKILLS[id]}</li>)}
+        </ul>
+      </details>
       <GradeHint hint={hint.data ?? null} grade={grade} onPick={setGrade} />
       {expressOk && (
         <div className="card mt-4 text-sm" data-testid="mode-choice">

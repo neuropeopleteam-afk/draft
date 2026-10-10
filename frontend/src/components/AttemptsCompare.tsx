@@ -48,7 +48,8 @@ function Row({ label, a, b, d }: { label: string; a: ReactNode; b: ReactNode; d?
 }
 
 /** Таблица «Попытка 1 / Попытка 2 / разница» и список «что изменилось и почему». */
-export function AttemptsCompare({ cmp, audience = "candidate" }: { cmp: Comparison; audience?: "candidate" | "employer" }) {
+export function AttemptsCompare({ cmp, audience = "candidate", level = 3 }: { cmp: Comparison; audience?: "candidate" | "employer"; level?: 2 | 3 }) {
+  const H = level === 2 ? "h2" : "h3";  // axe heading-order: на странице кандидата под h1 — h2, у работодателя под h2 — h3
   const { first: a, second: b, delta: d, overlap: o } = cmp;
   const head = (x: Attempt, n: number) => (
     <div className="min-w-0">
@@ -80,7 +81,7 @@ export function AttemptsCompare({ cmp, audience = "candidate" }: { cmp: Comparis
           d={o.engine === "stub" ? "тестовая заглушка" : o.repeated_families === 0 ? "параллельная форма" : "часть семейств повторилась"} />
       </div>
       <section aria-label="Что изменилось и почему">
-        <h3 className="font-bold text-brand-night">Что изменилось и почему</h3>
+        <H className="font-bold text-brand-night">Что изменилось и почему</H>
         <ul className="mt-2 space-y-2 text-sm">
           {cmp.changes.map((x) => (
             <li key={x.id} className="border-l-2 border-brand-blush pl-3">
