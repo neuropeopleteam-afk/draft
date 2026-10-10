@@ -25,6 +25,7 @@ from app.integrations.ats import stub_providers as stub
 from app.integrations.ats.demo import connect_demo, connect_demo_all, reset_links, stub_huntflow_webhook
 from app.integrations.ats.clients import AtsError, check_url
 from app.integrations.ats import stages
+from app.core.origin import ats_origin
 from app.integrations.ats.models import AtsConnection, AtsDelivery, AtsLink, AtsSettings, AtsStageEvent, AtsStubRecord
 from app.integrations.ats.providers.talantix import parse_tokens
 from app.integrations.crypto import decrypt, encrypt, mask
@@ -182,7 +183,9 @@ def provider_out(db: Session, company_id: uuid.UUID, code: str) -> dict:
     if code == "huntflow":
         st = svc.company_settings(db, company_id)
         url = (st.huntflow_base_url or providers.real_base(code)).rstrip("/")
-        return {**base, "enabled": st.huntflow_enabled, "mode": "demo" if url == providers.demo_base(code) else "real",
+        hf_mode = "demo" if url == providers.demo_base(code) else "real"
+        return {**base, "enabled": st.huntflow_enabled, "mode": hf_mode,
+                "origin": ats_origin(hf_mode, bool(st.huntflow_token_enc)),  # Я8: метка происхождения
                 "base_url": url, "token_set": bool(st.huntflow_token_enc),
                 "token_masked": mask(decrypt(st.huntflow_token_enc)), "account_id": st.huntflow_account_id,
                 "vacancy_id": st.huntflow_vacancy_id, "vacancy_title": None, "stage_id": st.huntflow_status_id,
@@ -191,7 +194,8 @@ def provider_out(db: Session, company_id: uuid.UUID, code: str) -> dict:
     c = providers.connection(db, company_id, code)
     sec = providers.secrets_of(c)
     tok = sec.get("access_token") or sec.get("token")
-    return {**base, "enabled": c.enabled, "mode": c.mode, "base_url": providers.base_url(c),
+    return {**base, "enabled": c.enabled, "mode": c.mode, "origin": ats_origin(c.mode, bool(tok), c.last_check_ok),
+            "base_url": providers.base_url(c),
             "custom_base_url": c.base_url, "token_set": bool(tok), "token_masked": mask(tok),
             "refresh_set": bool(sec.get("refresh_token")), "token_expires_at": _iso(c.token_expires_at),
             "refresh_expires_at": _iso(c.refresh_expires_at), "token_refreshed_at": _iso(c.token_refreshed_at),
