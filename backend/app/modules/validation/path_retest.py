@@ -792,7 +792,7 @@ def _sweep_section() -> list[str]:
          f"- Выбрано и действует по умолчанию (`ASSESSMENT_CONFIRM_LEVEL` = {_f(ch['point']['confirm_level'], 2)}): {m(c)}.",
          ]
     if strict and strict["key"] != ch["key"]:
-        L.append(f"- При завышении ≤ 6 % (карточка Я22) — P ≥ {_f(strict['point']['confirm_level'], 2)}: {m(strict['metrics'])}.")
+        L.append(f"- При завышении ≤ 6 % (прежний ориентир) — P ≥ {_f(strict['point']['confirm_level'], 2)}: {m(strict['metrics'])}.")
     L += ["- Длина теста, дотестирование, остановка по SE и z меняют точность в пределах ±2 п. п.: тест упирается в 60 "
           "минут, SE в конце ≈ 0,33. Почти две трети «ниже» — кандидаты, заявившие грейд ниже своего: тест подтверждает "
           "заявленный грейд и выше не поднимает.",
