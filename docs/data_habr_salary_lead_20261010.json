@@ -1,0 +1,182 @@
+{
+ "devops": {
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=devops",
+  "as_of": "2026-10-10",
+  "groups": {
+   "All": {
+    "p25": 142500,
+    "median": 225000,
+    "p75": 350000,
+    "total": 1226,
+    "title": "DevOps-инженер",
+    "min": 84166,
+    "max": 480833
+   },
+   "Senior": {
+    "p25": 286000,
+    "median": 358922,
+    "p75": 461666,
+    "total": 263,
+    "title": "Senior DevOps-инженер",
+    "min": 212500,
+    "max": 543333
+   },
+   "Middle": {
+    "p25": 162500,
+    "median": 220833,
+    "p75": 287500,
+    "total": 580,
+    "title": "Middle DevOps-инженер",
+    "min": 111416,
+    "max": 354166
+   },
+   "Lead": {
+    "p25": 333333,
+    "median": 453333,
+    "p75": 560970,
+    "total": 114,
+    "title": "Lead DevOps-инженер",
+    "min": 196666,
+    "max": 685000
+   },
+   "Junior": {
+    "p25": 81583,
+    "median": 112500,
+    "p75": 166249,
+    "total": 217,
+    "title": "Junior DevOps-инженер",
+    "min": 54083,
+    "max": 203333
+   },
+   "Intern": {
+    "p25": 45331,
+    "median": 64166,
+    "p75": 85791,
+    "total": 52,
+    "title": "Intern DevOps-инженер",
+    "min": 25416,
+    "max": 102500
+   }
+  }
+ },
+ "data_eng": {
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=data_engineer",
+  "as_of": "2026-10-10",
+  "groups": {
+   "All": {
+    "p25": 166666,
+    "median": 256666,
+    "p75": 360000,
+    "total": 374,
+    "title": "Инженер по данным",
+    "min": 108333,
+    "max": 468000
+   },
+   "Middle": {
+    "p25": 189250,
+    "median": 233333,
+    "p75": 291666,
+    "total": 184,
+    "title": "Middle Инженер по данным",
+    "min": 131883,
+    "max": 356250
+   },
+   "Senior": {
+    "p25": 320083,
+    "median": 361666,
+    "p75": 435000,
+    "total": 79,
+    "title": "Senior Инженер по данным",
+    "min": 264666,
+    "max": 503333
+   },
+   "Lead": {
+    "p25": 361666,
+    "median": 436875,
+    "p75": 548333,
+    "total": 39,
+    "title": "Lead Инженер по данным",
+    "min": 310000,
+    "max": 628333
+   },
+   "Junior": {
+    "p25": 96625,
+    "median": 136666,
+    "p75": 173666,
+    "total": 58,
+    "title": "Junior Инженер по данным",
+    "min": 77166,
+    "max": 224500
+   },
+   "Intern": {
+    "p25": 66666,
+    "median": 88641,
+    "p75": 101666,
+    "total": 14,
+    "title": "Intern Инженер по данным",
+    "min": 40066,
+    "max": 121666
+   }
+  }
+ },
+ "analyst": {
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=systems_analyst",
+  "as_of": "2026-10-10",
+  "groups": {
+   "All": {
+    "p25": 130833,
+    "median": 222500,
+    "p75": 301666,
+    "total": 2459,
+    "title": "Системный аналитик",
+    "min": 84166,
+    "max": 395166
+   },
+   "Junior": {
+    "p25": 74583,
+    "median": 100000,
+    "p75": 136666,
+    "total": 351,
+    "title": "Junior Системный аналитик",
+    "min": 56833,
+    "max": 183333
+   },
+   "Senior": {
+    "p25": 245833,
+    "median": 301666,
+    "p75": 370000,
+    "total": 569,
+    "title": "Senior Системный аналитик",
+    "min": 190833,
+    "max": 416666
+   },
+   "Middle": {
+    "p25": 148875,
+    "median": 196666,
+    "p75": 257264,
+    "total": 1201,
+    "title": "Middle Системный аналитик",
+    "min": 104166,
+    "max": 312000
+   },
+   "Intern": {
+    "p25": 51458,
+    "median": 64166,
+    "p75": 98466,
+    "total": 112,
+    "title": "Intern Системный аналитик",
+    "min": 32833,
+    "max": 122968
+   },
+   "Lead": {
+    "p25": 293750,
+    "median": 375999,
+    "p75": 462000,
+    "total": 226,
+    "title": "Lead Системный аналитик",
+    "min": 217500,
+    "max": 550000
+   }
+  }
+ }
+}

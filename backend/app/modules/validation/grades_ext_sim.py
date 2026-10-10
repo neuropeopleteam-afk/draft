@@ -60,7 +60,7 @@ WORLDS = {"pop": "популяция θ ~ N(0; 1)", "top": "верх θ ~ U(0,5;
 # Ожидаемый банк (карточка банка волны 7): общий блок ≈ 6 (4 Lead, 2 Principal), направление — 2 Lead и 1 Principal
 BANKS = {"expected": {"own_lead": 2, "own_principal": 1, "common_lead": 4, "common_principal": 2},
          "double": {"own_lead": 4, "own_principal": 2, "common_lead": 8, "common_principal": 4}}
-CUT_VARIANTS = {"2.0/2.75": (2.0, 2.75), "1.75/2.5": (1.75, 2.5), "2.0/3.0": (2.0, 3.0), "2.25/3.0": (2.25, 3.0)}
+CUT_VARIANTS = {"2.0/3.0": (2.0, 3.0), "2.0/2.75": (2.0, 2.75), "1.75/2.5": (1.75, 2.5), "2.25/3.0": (2.25, 3.0)}
 B_RANGE = {"lead": (1.8, 2.5), "principal": (2.5, 3.1)}
 
 
@@ -118,7 +118,7 @@ def set_cuts(lead: float, principal: float) -> None:
     for d in (seed_data.GRADE_CUTS, seed_data.ALL_GRADE_CUTS):
         d["lead"], d["principal"] = lead, principal
     for d in (seed_data.GRADE_START_THETA, seed_data.ALL_GRADE_START_THETA):
-        d["lead"], d["principal"] = round(lead + 0.3, 2), round(principal + 0.25, 2)
+        d["lead"], d["principal"] = round(lead + 0.4, 2), round(principal + 0.3, 2)  # как ALL_GRADE_START_THETA
     grades_mod.scale.cache_clear()
 
 
@@ -307,7 +307,7 @@ def _n(v, d: int = 1) -> str:
 def markdown(rep: dict) -> str:
     sig = rep["signature"]
     L = ["# Уровни Lead и Principal: путь-повтор с 6 уровнями (симуляция)", "",
-         "> Модель, не люди. " + rep["caveat"], "",
+         "> " + rep["caveat"], "",
          f"Подпись: {sig.get('world')}; seed {sig.get('seed')}; коммит {sig.get('commit') or '—'}; "
          f"команда `{sig.get('command')}`.", "",
          "Путь кандидата — как в TEST_RETEST.md (те же функции продукта): опрос → заявленный уровень → адаптивный тест "
@@ -361,7 +361,7 @@ def main() -> int:
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--merge", action="store_true", help="дописать варианты к data/grades_ext_sim.json")
     ap.add_argument("--worker", action="store_true")
-    ap.add_argument("--cuts", default="2.0/2.75")
+    ap.add_argument("--cuts", default="2.0/3.0")
     ap.add_argument("--bank", default="expected")
     ap.add_argument("--world", default="top")
     ap.add_argument("--direction", default="backend")
