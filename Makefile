@@ -10,8 +10,9 @@ env: ## Создать .env из .env.example со случайными секр
 	  sed -i "s/^POSTGRES_PASSWORD=$$/POSTGRES_PASSWORD=$$(openssl rand -hex 24)/; s/^JWT_SECRET=$$/JWT_SECRET=$$(openssl rand -hex 32)/" .env && \
 	  echo ".env создан")
 
-up: env ## Собрать и запустить стек (db, api, web)
-	$(COMPOSE) up -d --build
+up: env ## Собрать и запустить стек (db, api, web), дождаться готовности, создать демо-данные (NO_SEED=1 — без них)
+	$(COMPOSE) up -d --build --wait --wait-timeout 300
+	@if [ -z "$$NO_SEED" ]; then $(COMPOSE) exec -T api python -m app.modules.demo.seed; fi
 	@echo "Сайт: http://127.0.0.1:$${WEB_PORT:-8140}  API-документация: http://127.0.0.1:$${WEB_PORT:-8140}/api/docs"
 
 llm-local: env ## Стек + открытая модель Qwen на CPU без ключей (профиль llm-local; первый старт скачивает модель 5,7 ГБ)

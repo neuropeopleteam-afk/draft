@@ -1,5 +1,5 @@
 {
-  "source": "/srv/work/srv/work/spectrek/bank",
+  "source": "../bank",
   "commit": "679823a",
   "dirty_files": 0,
   "content_hash": "76c4164b6ce83743",

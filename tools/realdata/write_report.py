@@ -29,7 +29,7 @@ def main():
     lines = [
         "# И8 «Подбор на чужих данных» — отчёт 07.10.2026",
         "",
-        "Worktree: `/srv/work/srv/work/spectrek/wt/realdata`, ветка `feat/realdata`, база `763b8f7`.",
+        "Worktree: `<рабочее дерево realdata>`, ветка `feat/realdata`, база `763b8f7`.",
         "",
         "## Итог для координатора",
         "",
@@ -178,7 +178,7 @@ def main():
         ".venv/bin/python tools/realdata/audit_expert_ranking.py",
         "```",
         "",
-        "Пути `.venv/bin/python` в командах выше замените на `/srv/work/srv/work/spectrek/.venv/bin/python`; аудит E1–E3 требует имеющихся локальных слепых снимков из исходной задачи, секретные файлы соседних каталогов не используются.",
+        "Пути `.venv/bin/python` в командах выше замените на `python`; аудит E1–E3 требует имеющихся локальных слепых снимков из исходной задачи, секретные файлы соседних каталогов не используются.",
         "",
         "Коммиты на момент генерации отчёта:",
         "",
@@ -207,9 +207,10 @@ def main():
         lines.append(f"| {row['id']} | {title} | [{title}]({url}) |")
     text = "\n".join(lines) + "\n"
     (DATA / "REPORT.md").write_text(text.replace("../wt/realdata/", "../../"))
-    dest = ROOT.parents[1] / "<внутренний документ>"
-    dest.write_text(text)
-    print(dest)
+    dest = ROOT.parents[1] / "private_data" / "realdata.md"
+    if dest.parent.exists():  # копия во внутреннюю папку отчётов — только там, где она есть
+        dest.write_text(text)
+        print(dest)
 
 
 if __name__ == "__main__":
