@@ -29,6 +29,18 @@ class Settings(BaseSettings):
     jury_mode_available: bool = True
 
     database_url: str = "postgresql+psycopg://fsp:fsp@db:5432/fsp"
+    # Пул соединений с БД на ОДИН воркер uvicorn. 10.10 под нагрузкой 100 пользователей (docs/LOAD.md, раздел 6) пул
+    # 5 + 10 при 40 потоках FastAPI на воркер исчерпывался: запросы ждали соединение 30 с и падали 500. Бюджет:
+    # API_WORKERS × (DB_POOL_SIZE + DB_MAX_OVERFLOW) ≤ max_connections PostgreSQL (50 в docker-compose.yml) − Keycloak
+    # (KC_DB_POOL_MAX_SIZE=6) − 3 (резерв суперпользователя) − ≈ 5 (миграции, резервная копия, консоль):
+    # 2 × (8 + 10) = 36 ≤ 36. Больше воркеров — меньше пул на воркер или выше max_connections (docs/LOAD.md, раздел 8).
+    db_pool_size: int = 8
+    db_max_overflow: int = 10
+    # Ожидание свободного соединения; дольше — 503 db_busy с Retry-After (фронтенд повторяет GET), а не 500 через 30 с
+    db_pool_timeout_s: float = 10.0
+    db_busy_retry_after_s: int = 3
+    # Готовый ответ /api/validation/report на воркер, секунд (validation/router.py); 0 — считать на каждый запрос
+    validation_report_ttl_s: float = 20.0
 
     jwt_secret: str = "dev-only-change-me"
     jwt_algorithm: str = "HS256"
@@ -241,7 +253,7 @@ class Settings(BaseSettings):
     jury_live_guests_total_hour: int = 200
     # Релевантность дисциплины ФСП специализации (И23, ответ организаторов E08): мягкий коэффициент 1,0 / 0,9 / 0,8
     # к вкладу результата в силу паспорта (app/modules/fsp/relevance.py). По умолчанию выключено — порядок выдачи
-    # match-v1 не меняется; включать только без падения метрик make bench / ranking_guard (цифры — reports_0910/orgs.md)
+    # match-v1 не меняется; включать только без падения метрик make bench / ranking_guard (цифры — внутренний отчёт разработки)
     fsp_discipline_relevance: bool = False
 
     # Подписка на потребность и напоминания (И25, Н6; app/modules/subs): фоновый обход раз в N секунд (0 — выключен:

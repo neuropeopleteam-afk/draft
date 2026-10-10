@@ -1,6 +1,8 @@
 # Стек: db (PostgreSQL 16) + api (FastAPI) + web (nginx со сборкой React).
 # Порты публикуются только на 127.0.0.1; наружу сайт отдаёт nginx хоста.
-# Память (бюджет стека ≤ 2,5 ГБ): db 320M + api 1536M + web 32M + keycloak 576M = 2464M; без профиля fsp-id — 1888M.
+# Память (бюджет стека ≤ 4 ГБ): db 320M + api 3072M + web 32M + keycloak 576M = 4000M; без профиля fsp-id — 3424M.
+# 10.10 (вечер): лимит api 1536M → 3072M (решение владельца; на стенде поднят docker update после нагрузочного прогона:
+#   memory.peak 1471 МиБ из 1536M при 100 пользователях, OOM не было — запас ×2 на день оценки).
 # Сервер — 7,9 ГБ, на 08.10 свободно 5,5 ГБ: лимит api 1536M — запас на день оценки, когда несколько экспертов жюри разом создают
 # песочницы (подборка по 500 кандидатам, разбор потребности) и api поднялся с 342 до 593 МиБ из 768 (77 %) за 100 минут проверки.
 # Лимиты — по фактическому потреблению на стенде (cgroup memory.peak и memory.events с запуска контейнера):
@@ -25,7 +27,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-fsp}
       POSTGRES_USER: ${POSTGRES_USER:-fsp}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в .env (см. .env.example)}
-    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=50", "-c", "work_mem=8MB"]
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=${PG_MAX_CONNECTIONS:-50}", "-c", "work_mem=8MB"]
     volumes:
       - db_data:/var/lib/postgresql/data
       # Отдельная база keycloak для ФСП ID (только при создании тома)
@@ -100,7 +102,11 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:${API_PORT:-8141}:8000"
-    mem_limit: 1536m  # 08.10: было 768m (77 % при спокойной проверке, OOM 07.10 при 640m); сервер 7,9 ГБ, свободно 5,5 ГБ
+    # 08.10: было 768m (77 % при спокойной проверке, OOM 07.10 при 640m); сервер 7,9 ГБ, свободно 5,5 ГБ.
+    # 10.10, 100 пользователей: memory.peak 1471 МиБ при 2 воркерах. API_WORKERS (Dockerfile) больше 2 — поднять и
+    # API_MEM_LIMIT (≈ 700 МиБ на воркер), и сверить пул БД: API_WORKERS × (DB_POOL_SIZE + DB_MAX_OVERFLOW) ≤
+    # PG_MAX_CONNECTIONS − 14 (docs/LOAD.md, раздел 8). 10.10 вечер: 1536m → 3072m (пик 1471 МиБ при 100 пользователях).
+    mem_limit: ${API_MEM_LIMIT:-3072m}
 
   web:
     build: ./frontend

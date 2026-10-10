@@ -1,4 +1,4 @@
-"""И26 (09.10, решение штаба): при повторе семейства ВСЕХ прошлых попыток кандидата по направлению не берутся ни в
+"""И26 (09.10, решение руководителя проекта): при повторе семейства ВСЕХ прошлых попыток кандидата по направлению не берутся ни в
 основную часть, ни в дотестирование; если новых семейств нет — запасной путь LRU (виденные давнее всего) с новым
 вариантом; первая попытка, экспресс и дотестирование предварительного Junior не ломаются."""
 from __future__ import annotations
@@ -37,6 +37,9 @@ def _session(world, *, subpool, seen=None, seed=1, theta=0.6, pool=None, truth=N
 def _seen(history: list[list[str]]) -> dict[str, int]:
     """history — семейства попыток, последняя первой; возраст — номер самой поздней попытки с семейством."""
     return {f: age for age, fams in reversed(list(enumerate(history))) for f in fams}
+
+
+REPEAT_MAX = 3  # во 2-й попытке повторов давно виденных семейств (запасной путь LRU) в измерениях — 0 или 1 из ~20
 
 
 def _scored(pool, direction="backend"):
@@ -153,7 +156,16 @@ def test_engine_all_seen_falls_back_to_lru_with_new_variants(bank, mode):
 
 def test_service_passes_all_previous_attempts_with_age(client, bank):
     """Сервис: seen — семейства всех завершённых попыток по направлению (0 — последняя), seed — для новых
-    вариантов; 2-я не повторяет 1-ю; повтор семейства в 3-й и 4-й — только с пометкой repeat и новым вариантом."""
+    вариантов; 2-я попытка — почти целиком новые семейства; любой повтор семейства (2-я, 3-я, 4-я) — только с пометкой
+    repeat и новым вариантом.
+
+    Устойчивость теста. Сессия получает случайный seed (service.start_session), поэтому состав попыток от запуска к
+    запуску разный. Когда в конце бюджета времени не остаётся новых коротких семейств, движок берёт запасной путь LRU:
+    одно давно виденное короткое семейство с новым вариантом (documented: exposure.AppCATSession._candidates). В
+    ~20 % запусков это случалось уже во 2-й попытке, и прежняя проверка «2-я не пересекается с 1-й» падала без
+    дефекта продукта. Поэтому: (1) порядок попыток берётся из session_id в порядке прохождения, а не из finished_at
+    (4 демо-попытки завершаются за секунды, порядок по времени завершения в тесте не опора); (2) повтор во 2-й попытке
+    допускается как исключение — не больше REPEAT_MAX семейств и только с repeat=True и новым seed."""
     from app.modules.assessment.attempts import attempt_view, finished_attempts
     from app.modules.auth.models import User
     from app.modules.jury.seed import run_demo_test
@@ -165,22 +177,24 @@ def test_service_passes_all_previous_attempts_with_age(client, bank):
     assert client.put("/api/me/jury-mode", json={"enabled": True}, headers=H(t)).status_code == 200
     with SessionLocal() as db:
         uid = db.scalar(select(User.id).where(User.email == email))
-        for k in range(4):
-            run_demo_test(db, uid, "middle", 0.9, 8801 + k)
-        rows = finished_attempts(db, uid, "backend")
+        order = [run_demo_test(db, uid, "middle", 0.9, 8801 + k)["session_id"] for k in range(4)]
+        by_id = {str(r.id): r for r in finished_attempts(db, uid, "backend")}
+        assert set(order) == set(by_id) and len(order) == 4
+        rows = [by_id[sid] for sid in order]  # порядок прохождения, не сортировка по finished_at
         states = [r.result["state"] for r in rows]
         views = [attempt_view(r) for r in rows]
     fam = [{i["family_id"] for i in st["items"] if not i["canary"]} for st in states]
-    assert states[0]["seen"] == {} and not fam[0] & fam[1]
+    assert states[0]["seen"] == {}
+    assert len(fam[0] & fam[1]) <= REPEAT_MAX, fam[0] & fam[1]  # 2-я — почти целиком новые; повтор — запасной путь LRU
     last = states[3]["seen"]
     for f in fam[2]:
         assert last[f] == 0
     for f in fam[0] - fam[1] - fam[2]:
         assert last[f] == 2
     assert set(states[3]["seen_seeds"]) == set(last)
-    for k in (2, 3):
+    for k in (1, 2, 3):
         prev = set().union(*fam[:k])
         for i in states[k]["items"]:
             if not i["canary"] and i["family_id"] in prev:
-                assert i["repeat"] and i["seed"] not in states[k]["seen_seeds"][i["family_id"]]
+                assert i["repeat"] and i["seed"] not in states[k]["seen_seeds"][i["family_id"]], (k, i["family_id"])
     assert [v["subpool"] for v in views[:3]] in ([0, 1, 0], [1, 0, 1])
