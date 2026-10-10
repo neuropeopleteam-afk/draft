@@ -1,7 +1,7 @@
 {
  "title": "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)",
  "date": "2026-10-10",
- "code_sha": "8146fe8",
+ "code_sha": "5097b76",
  "models": {
   "deepseek/deepseek-v4-pro-0813@noreason15": {
    "name": "DeepSeek: DeepSeek V4 Pro 0813",
@@ -18,15 +18,6 @@
     "limit": 15
    }
   },
-  "openai/gpt-6.1-sol-pro": {
-   "name": "OpenAI: GPT-6.1 Sol Pro",
-   "family": "OpenAI",
-   "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 10.0,
-   "stand": false,
-   "variant": null
-  },
   "qwen/qwen3.8-2.4t-a95b": {
    "name": "Qwen: Qwen3.8 2.4T A95B",
    "family": "Alibaba Qwen",
@@ -36,12 +27,79 @@
    "stand": false,
    "variant": null
   },
-  "z-ai/glm-5.3": {
-   "name": "Z.ai: GLM 5.3",
-   "family": "Zhipu (Z.ai)",
-   "open_weights": "zai-org/GLM-5.3",
-   "in_usd_per_m": 0.04,
-   "out_usd_per_m": 3.6,
+  "moonshotai/kimi-k3": {
+   "name": "MoonshotAI: Kimi K3",
+   "family": "Moonshot",
+   "open_weights": "moonshotai/Kimi-K3",
+   "in_usd_per_m": 0.5,
+   "out_usd_per_m": 12.0,
+   "stand": false,
+   "variant": null
+  },
+  "openai/gpt-6-astra-pro": {
+   "name": "OpenAI: GPT-6 Astra Pro",
+   "family": "OpenAI",
+   "open_weights": null,
+   "in_usd_per_m": 10.0,
+   "out_usd_per_m": 50.0,
+   "stand": false,
+   "variant": null
+  },
+  "x-ai/grok-4.7": {
+   "name": "SpaceXAI: Grok 4.7",
+   "family": "xAI",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 6.0,
+   "stand": false,
+   "variant": null
+  },
+  "anthropic/claude-sonnet-5.5": {
+   "name": "Anthropic: Claude Sonnet 5.5",
+   "family": "Anthropic",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "stand": true,
+   "variant": null
+  },
+  "deepseek/deepseek-v4-pro-0813": {
+   "name": "DeepSeek: DeepSeek V4 Pro 0813",
+   "family": "DeepSeek",
+   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "in_usd_per_m": 0.66,
+   "out_usd_per_m": 1.98,
+   "stand": false,
+   "variant": null
+  },
+  "google/gemini-3.1-pro-preview": {
+   "name": "Google: Gemini 3.1 Pro Preview",
+   "family": "Google",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 12.0,
+   "stand": false,
+   "variant": null
+  },
+  "qwen/qwen3.5-9b@i24": {
+   "name": "qwen/qwen3.5-9b",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.5-9B",
+   "in_usd_per_m": null,
+   "out_usd_per_m": null,
+   "stand": false,
+   "variant": {
+    "base": "qwen/qwen3.5-9b",
+    "name": "i24",
+    "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"
+   }
+  },
+  "qwen/qwen3.8-27b": {
+   "name": "Qwen: Qwen3.8 27B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
    "stand": false,
    "variant": null
   },
@@ -69,70 +127,30 @@
    "stand": false,
    "variant": null
   },
-  "deepseek/deepseek-v4-pro-0813": {
-   "name": "DeepSeek: DeepSeek V4 Pro 0813",
-   "family": "DeepSeek",
-   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
-   "in_usd_per_m": 0.66,
-   "out_usd_per_m": 1.98,
-   "stand": false,
-   "variant": null
-  },
-  "qwen/qwen3.8-27b": {
-   "name": "Qwen: Qwen3.8 27B",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.8-27B",
-   "in_usd_per_m": 0.425,
-   "out_usd_per_m": 2.55,
-   "stand": false,
-   "variant": null
-  },
-  "moonshotai/kimi-k3": {
-   "name": "MoonshotAI: Kimi K3",
-   "family": "Moonshot",
-   "open_weights": "moonshotai/Kimi-K3",
-   "in_usd_per_m": 0.5,
-   "out_usd_per_m": 12.0,
-   "stand": false,
-   "variant": null
-  },
-  "qwen/qwen3.5-9b@i24": {
-   "name": "qwen/qwen3.5-9b",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.5-9B",
-   "in_usd_per_m": null,
-   "out_usd_per_m": null,
-   "stand": false,
-   "variant": {
-    "base": "qwen/qwen3.5-9b",
-    "name": "i24",
-    "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"
-   }
-  },
-  "x-ai/grok-4.7": {
-   "name": "SpaceXAI: Grok 4.7",
-   "family": "xAI",
-   "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 6.0,
-   "stand": false,
-   "variant": null
-  },
-  "anthropic/claude-sonnet-5.5": {
-   "name": "Anthropic: Claude Sonnet 5.5",
+  "anthropic/claude-fable-5.1": {
+   "name": "Anthropic: Claude Fable 5.1",
    "family": "Anthropic",
+   "open_weights": null,
+   "in_usd_per_m": 10.0,
+   "out_usd_per_m": 50.0,
+   "stand": false,
+   "variant": null
+  },
+  "openai/gpt-6.1-sol-pro": {
+   "name": "OpenAI: GPT-6.1 Sol Pro",
+   "family": "OpenAI",
    "open_weights": null,
    "in_usd_per_m": 2.0,
    "out_usd_per_m": 10.0,
-   "stand": true,
+   "stand": false,
    "variant": null
   },
-  "google/gemini-3.1-pro-preview": {
-   "name": "Google: Gemini 3.1 Pro Preview",
-   "family": "Google",
-   "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 12.0,
+  "z-ai/glm-5.3": {
+   "name": "Z.ai: GLM 5.3",
+   "family": "Zhipu (Z.ai)",
+   "open_weights": "zai-org/GLM-5.3",
+   "in_usd_per_m": 0.04,
+   "out_usd_per_m": 3.6,
    "stand": false,
    "variant": null
   }
@@ -169,6 +187,38 @@
     "price": {
      "usd_per_1k_calls": 12.93,
      "rub_per_1k_calls": 1104.8
+    }
+   },
+   "anthropic/claude-fable-5.1": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 4.66,
+    "p95_s": 7.29,
+    "tokens": {
+     "prompt": 75513,
+     "completion": 4752
+    },
+    "cost_usd": 0.9927,
+    "quality": {
+     "f1": 0.9617,
+     "p": 0.9462,
+     "r": 0.9778,
+     "f1_silver": 0.9438,
+     "p_silver": 0.9032,
+     "r_silver": 0.9882,
+     "n": 15,
+     "ci90": [
+      0.929,
+      0.986
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 66.18,
+     "rub_per_1k_calls": 5653.1
     }
    },
    "anthropic/claude-opus-5.5": {
@@ -331,6 +381,38 @@
     "price": {
      "usd_per_1k_calls": 14.63,
      "rub_per_1k_calls": 1249.4
+    }
+   },
+   "openai/gpt-6-astra-pro": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 7.45,
+    "p95_s": 10.16,
+    "tokens": {
+     "prompt": 112650,
+     "completion": 8561
+    },
+    "cost_usd": 1.0472,
+    "quality": {
+     "f1": 0.9609,
+     "p": 0.9663,
+     "r": 0.9556,
+     "f1_silver": 0.9425,
+     "p_silver": 0.9213,
+     "r_silver": 0.9647,
+     "n": 15,
+     "ci90": [
+      0.934,
+      0.982
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 69.81,
+     "rub_per_1k_calls": 5963.5
     }
    },
    "qwen/qwen3.8-2.4t-a95b": {
@@ -617,6 +699,33 @@
      "rub_per_1k_calls": 854.2
     }
    },
+   "anthropic/claude-fable-5.1": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 3.8,
+    "p95_s": 5.77,
+    "tokens": {
+     "prompt": 64856,
+     "completion": 2134
+    },
+    "cost_usd": 0.7553,
+    "quality": {
+     "jaccard": 1.0,
+     "n": 15,
+     "ci90": [
+      1.0,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 50.35,
+     "rub_per_1k_calls": 4301.2
+    }
+   },
    "anthropic/claude-opus-5.5": {
     "n": 15,
     "calls": 15,
@@ -753,6 +862,33 @@
     "price": {
      "usd_per_1k_calls": 7.87,
      "rub_per_1k_calls": 672.5
+    }
+   },
+   "openai/gpt-6-astra-pro": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 4.36,
+    "p95_s": 7.38,
+    "tokens": {
+     "prompt": 86972,
+     "completion": 3554
+    },
+    "cost_usd": 0.61,
+    "quality": {
+     "jaccard": 0.989,
+     "n": 15,
+     "ci90": [
+      0.967,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 40.67,
+     "rub_per_1k_calls": 3473.7
     }
    },
    "qwen/qwen3.8-2.4t-a95b": {
@@ -914,6 +1050,43 @@
     "price": {
      "usd_per_1k_calls": 2.16,
      "rub_per_1k_calls": 184.5
+    }
+   },
+   "anthropic/claude-fable-5.1": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 3.29,
+    "p95_s": 3.57,
+    "tokens": {
+     "prompt": 12765,
+     "completion": 1575
+    },
+    "cost_usd": 0.2064,
+    "quality": {
+     "stack_p": 0.956,
+     "stack_r": 1.0,
+     "stack_f1": 0.9775,
+     "tp_fp_fn": [
+      152,
+      7,
+      0
+     ],
+     "roles_p": 0.926,
+     "roles_r": 0.926,
+     "experience_ok": 20,
+     "n": 20,
+     "ci90": [
+      0.965,
+      0.991
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 10.32,
+     "rub_per_1k_calls": 881.5
     }
    },
    "anthropic/claude-opus-5.5": {
@@ -1103,6 +1276,43 @@
      "rub_per_1k_calls": 647.5
     }
    },
+   "openai/gpt-6-astra-pro": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 4.71,
+    "p95_s": 6.42,
+    "tokens": {
+     "prompt": 56997,
+     "completion": 3444
+    },
+    "cost_usd": 0.7422,
+    "quality": {
+     "stack_p": 0.9557,
+     "stack_r": 0.9934,
+     "stack_f1": 0.9742,
+     "tp_fp_fn": [
+      151,
+      7,
+      1
+     ],
+     "roles_p": 0.893,
+     "roles_r": 0.926,
+     "experience_ok": 19,
+     "n": 20,
+     "ci90": [
+      0.961,
+      0.987
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 37.11,
+     "rub_per_1k_calls": 3169.9
+    }
+   },
    "qwen/qwen3.8-2.4t-a95b": {
     "n": 20,
     "calls": 20,
@@ -1283,11 +1493,11 @@
     "p95_s": 4.52,
     "cost_usd": 0.3687,
     "quality": {
-     "mae": 0.011,
+     "mae": 0.01,
      "mae_n": 25,
      "ci90": [
       0.0,
-      0.023
+      0.02
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -1300,6 +1510,33 @@
      "rub_per_1k_calls": 629.9
     }
    },
+   "anthropic/claude-fable-5.1": {
+    "n": 50,
+    "calls": 50,
+    "ok": 50,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "p50_s": 4.99,
+    "p95_s": 15.42,
+    "cost_usd": 2.0734,
+    "quality": {
+     "mae": 0.02,
+     "mae_n": 25,
+     "ci90": [
+      0.009,
+      0.032
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 0,
+     "attacks_n": 25,
+     "order_strict": 5,
+     "order_n": 5
+    },
+    "price": {
+     "usd_per_1k_calls": 41.47,
+     "rub_per_1k_calls": 3542.2
+    }
+   },
    "anthropic/claude-opus-5.5": {
     "n": 50,
     "calls": 50,
@@ -1310,11 +1547,11 @@
     "p95_s": 8.95,
     "cost_usd": 0.7985,
     "quality": {
-     "mae": 0.02,
+     "mae": 0.029,
      "mae_n": 25,
      "ci90": [
-      0.006,
-      0.04
+      0.013,
+      0.05
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -1337,11 +1574,11 @@
     "p95_s": 21.54,
     "cost_usd": 0.118,
     "quality": {
-     "mae": 0.026,
+     "mae": 0.032,
      "mae_n": 22,
      "ci90": [
-      0.0,
-      0.06
+      0.006,
+      0.066
      ],
      "attacks_pass": 0,
      "attacks_flagged": 2,
@@ -1364,11 +1601,11 @@
     "p95_s": 15.92,
     "cost_usd": 0.6615,
     "quality": {
-     "mae": 0.047,
+     "mae": 0.052,
      "mae_n": 25,
      "ci90": [
-      0.014,
-      0.081
+      0.021,
+      0.087
      ],
      "attacks_pass": 0,
      "attacks_flagged": 1,
@@ -1391,11 +1628,11 @@
     "p95_s": 22.98,
     "cost_usd": 0.5707,
     "quality": {
-     "mae": 0.02,
+     "mae": 0.014,
      "mae_n": 23,
      "ci90": [
       0.0,
-      0.048
+      0.042
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -1418,11 +1655,11 @@
     "p95_s": 11.99,
     "cost_usd": 0.7175,
     "quality": {
-     "mae": 0.018,
+     "mae": 0.013,
      "mae_n": 25,
      "ci90": [
-      0.005,
-      0.035
+      0.0,
+      0.027
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -1435,6 +1672,33 @@
      "rub_per_1k_calls": 1225.8
     }
    },
+   "openai/gpt-6-astra-pro": {
+    "n": 50,
+    "calls": 50,
+    "ok": 50,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "p50_s": 4.88,
+    "p95_s": 11.8,
+    "cost_usd": 3.6248,
+    "quality": {
+     "mae": 0.03,
+     "mae_n": 25,
+     "ci90": [
+      0.013,
+      0.052
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 0,
+     "attacks_n": 25,
+     "order_strict": 5,
+     "order_n": 5
+    },
+    "price": {
+     "usd_per_1k_calls": 72.5,
+     "rub_per_1k_calls": 6192.6
+    }
+   },
    "qwen/qwen3.8-2.4t-a95b": {
     "n": 50,
     "calls": 50,
@@ -1445,11 +1709,11 @@
     "p95_s": 13.6,
     "cost_usd": 0.2715,
     "quality": {
-     "mae": 0.009,
+     "mae": 0.016,
      "mae_n": 17,
      "ci90": [
       0.0,
-      0.026
+      0.034
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -1472,11 +1736,11 @@
     "p95_s": 39.74,
     "cost_usd": 0.0894,
     "quality": {
-     "mae": 0.008,
+     "mae": 0.014,
      "mae_n": 21,
      "ci90": [
       0.0,
-      0.025
+      0.031
      ],
      "attacks_pass": 0,
      "attacks_flagged": 3,
@@ -1499,11 +1763,11 @@
     "p95_s": 48.63,
     "cost_usd": 0.5383,
     "quality": {
-     "mae": 0.012,
+     "mae": 0.011,
      "mae_n": 25,
      "ci90": [
       0.0,
-      0.024
+      0.023
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -1526,11 +1790,11 @@
     "p95_s": 12.97,
     "cost_usd": 0.1151,
     "quality": {
-     "mae": 0.031,
+     "mae": 0.025,
      "mae_n": 21,
      "ci90": [
-      0.006,
-      0.064
+      0.0,
+      0.056
      ],
      "attacks_pass": 0,
      "attacks_flagged": 4,
@@ -1547,9 +1811,11 @@
  },
  "grade_reference": {
   "judges": [
-   "anthropic/claude-opus-5.5"
+   "anthropic/claude-opus-5.5",
+   "anthropic/claude-fable-5.1",
+   "openai/gpt-6-astra-pro"
   ],
-  "note": "медиана всех остальных моделей замера (сильнейшие ещё не замерены)"
+  "note": "согласие anthropic/claude-opus-5.5, anthropic/claude-fable-5.1, openai/gpt-6-astra-pro"
  },
  "sample": {
   "needs_delta": 15,
@@ -1559,11 +1825,11 @@
  },
  "conditions": [
   "Одна и та же малая выборка для всех моделей; путь продукта целиком (вырезание ПДн, проверка цитат, слияние с правилами); одна попытка на вход, без перехода по цепочке; настройки рассуждений — как в продукте (разбор и резюме — low, оценка — по умолчанию модели); 4 запроса параллельно; песочница → OpenRouter напрямую.",
-  "Разметки — модели, не люди: вакансии — исправленная разметка (silver И8 + лишние теги, подтверждённые GPT 6.1 Sol; лишние теги новых моделей не проверялись — их точность занижена), резюме — автор набора (модель Claude), оценщик — среднее трёх моделей разных семейств (Claude Opus 5.5, Claude Fable 5.1, GPT-6 Astra Pro) без самой оцениваемой; разметка панели v2 — Fable 5.1 (риск той же семьи для моделей Anthropic).",
+  "Разметки — модели, не люди: вакансии — исправленная разметка (silver И8 + лишние теги, подтверждённые GPT 6.1 Sol; лишние теги новых моделей не проверялись — их точность занижена), резюме — автор набора (модель Claude), оценщик — среднее трёх сильнейших моделей двух семейств (Claude Opus 5.5 и Claude Fable 5.1 — Anthropic, GPT-6 Astra Pro — OpenAI) без самой оцениваемой; разметка панели v2 — Fable 5.1. Риск: для моделей Anthropic эталон и разметка — той же семьи (Opus и Fable согласны между собой сильнее, чем с Astra).",
   "Интервал — бутстреп 90 % по входам: на 15–50 входах разница в несколько сотых — в пределах шума.",
   "Цена — фактическая (usage.cost OpenRouter) на 1000 вызовов функции, $."
  ],
- "pending": "не начаты — Claude Fable 5.1, GPT-6 Astra Pro (ждут пополнения баланса); эталон оценщика из трёх семейств ещё не полный — где нет двух моделей эталона, эталон — среднее остальных моделей замера.",
+ "pending": null,
  "probes": [
   {
    "model": "qwen/qwen3.8-27b",
@@ -1610,8 +1876,10 @@
    "best_open": "z-ai/glm-5.3",
    "ranked": [
     "anthropic/claude-opus-5.5",
+    "anthropic/claude-fable-5.1",
     "z-ai/glm-5.3",
     "openai/gpt-6.1-sol-pro",
+    "openai/gpt-6-astra-pro",
     "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
     "moonshotai/kimi-k3",
@@ -1619,8 +1887,10 @@
     "deepseek/deepseek-v4-pro-0813@noreason15"
    ],
    "within_noise": [
+    "anthropic/claude-fable-5.1",
     "z-ai/glm-5.3",
     "openai/gpt-6.1-sol-pro",
+    "openai/gpt-6-astra-pro",
     "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
     "moonshotai/kimi-k3",
@@ -1648,7 +1918,9 @@
     "x-ai/grok-4.7",
     "anthropic/claude-sonnet-5.5",
     "anthropic/claude-opus-5.5",
+    "anthropic/claude-fable-5.1",
     "openai/gpt-6.1-sol-pro",
+    "openai/gpt-6-astra-pro",
     "qwen/qwen3.8-27b",
     "qwen/qwen3.8-2.4t-a95b"
    ],
@@ -1658,7 +1930,9 @@
     "x-ai/grok-4.7",
     "anthropic/claude-sonnet-5.5",
     "anthropic/claude-opus-5.5",
+    "anthropic/claude-fable-5.1",
     "openai/gpt-6.1-sol-pro",
+    "openai/gpt-6-astra-pro",
     "qwen/qwen3.8-27b",
     "qwen/qwen3.8-2.4t-a95b"
    ],
@@ -1676,20 +1950,24 @@
     "anthropic/claude-sonnet-5.5",
     "qwen/qwen3.8-2.4t-a95b",
     "anthropic/claude-opus-5.5",
+    "anthropic/claude-fable-5.1",
     "moonshotai/kimi-k3",
     "x-ai/grok-4.7",
     "openai/gpt-6.1-sol-pro",
     "google/gemini-3.1-pro-preview",
+    "openai/gpt-6-astra-pro",
     "qwen/qwen3.8-27b",
     "z-ai/glm-5.3"
    ],
    "within_noise": [
     "qwen/qwen3.8-2.4t-a95b",
     "anthropic/claude-opus-5.5",
+    "anthropic/claude-fable-5.1",
     "moonshotai/kimi-k3",
     "x-ai/grok-4.7",
     "openai/gpt-6.1-sol-pro",
     "google/gemini-3.1-pro-preview",
+    "openai/gpt-6-astra-pro",
     "qwen/qwen3.8-27b",
     "z-ai/glm-5.3"
    ],
@@ -1707,14 +1985,17 @@
     "anthropic/claude-sonnet-5.5",
     "openai/gpt-6.1-sol-pro",
     "moonshotai/kimi-k3",
+    "anthropic/claude-fable-5.1",
     "anthropic/claude-opus-5.5",
+    "openai/gpt-6-astra-pro",
     "google/gemini-3.1-pro-preview"
    ],
    "within_noise": [
     "openai/gpt-6.1-sol-pro",
     "moonshotai/kimi-k3",
+    "anthropic/claude-fable-5.1",
     "anthropic/claude-opus-5.5",
-    "google/gemini-3.1-pro-preview"
+    "openai/gpt-6-astra-pro"
    ],
    "excluded": {
     "deepseek/deepseek-v4-pro-0813": "отказы 3 из 50 (формат 3, сеть 0)",
@@ -1728,6 +2009,170 @@
  },
  "functions": {
   "parse_need": {
+   "anthropic/claude-fable-5.1": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.962,
+      "ci90": [
+       0.929,
+       0.986
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": 0.992,
+      "ci90": [
+       0.977,
+       1.0
+      ],
+      "n": 20
+     },
+     "fields_acc": {
+      "value": 0.959,
+      "ci90": [
+       0.929,
+       0.982
+      ],
+      "n": 170
+     },
+     "fields": {
+      "direction": {
+       "value": 0.97,
+       "ci90": [
+        0.909,
+        1
+       ],
+       "n": 33
+      },
+      "grade": {
+       "value": 0.9,
+       "ci90": [
+        0.8,
+        0.967
+       ],
+       "n": 30
+      },
+      "work_format": {
+       "value": 0.906,
+       "ci90": [
+        0.812,
+        0.969
+       ],
+       "n": 32
+      },
+      "experience_years_min": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 27
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      }
+     },
+     "negations": {
+      "value": 0.909,
+      "ci90": [
+       0.727,
+       1
+      ],
+      "n": 11
+     },
+     "hallucinated_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 63
+     },
+     "unknown_named": {
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
+     },
+     "unknown_no_substitute": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 5
+     },
+     "dropped_without_quote": 0,
+     "index": {
+      "value": 0.964,
+      "ci90": [
+       0.93,
+       0.988
+      ],
+      "components": [
+       "stack_f1_vac",
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 4.08,
+     "p95_s": 7.29,
+     "budget_s": 25
+    },
+    "usd_per_1k": 56.32,
+    "score": {
+     "total": 0.855,
+     "quality": 0.998,
+     "reliability": 1,
+     "latency": 0.708,
+     "price": 0.0
+    },
+    "within_budget": true
+   },
    "anthropic/claude-opus-5.5": {
     "config": "как в продукте",
     "complete": true,
@@ -1884,11 +2329,11 @@
     },
     "usd_per_1k": 22.12,
     "score": {
-     "total": 0.841,
+     "total": 0.861,
      "quality": 0.961,
      "reliability": 1,
      "latency": 0.735,
-     "price": 0.0
+     "price": 0.206
     },
     "within_budget": true
    },
@@ -2048,11 +2493,11 @@
     },
     "usd_per_1k": 1.35,
     "score": {
-     "total": 0.911,
+     "total": 0.915,
      "quality": 0.948,
      "reliability": 1,
      "latency": 0.728,
-     "price": 0.775
+     "price": 0.821
     },
     "within_budget": true
    },
@@ -2214,11 +2659,11 @@
     },
     "usd_per_1k": 8.19,
     "score": {
-     "total": 0.874,
+     "total": 0.889,
      "quality": 0.995,
      "reliability": 0.96,
      "latency": 0.727,
-     "price": 0.275
+     "price": 0.425
     },
     "within_budget": true
    },
@@ -2378,11 +2823,11 @@
     },
     "usd_per_1k": 7.18,
     "score": {
-     "total": 0.879,
+     "total": 0.893,
      "quality": 0.998,
      "reliability": 1,
      "latency": 0.661,
-     "price": 0.312
+     "price": 0.454
     },
     "within_budget": true
    },
@@ -2539,11 +2984,172 @@
     },
     "usd_per_1k": 10.09,
     "score": {
-     "total": 0.857,
+     "total": 0.873,
      "quality": 1.0,
      "reliability": 1,
      "latency": 0.568,
-     "price": 0.218
+     "price": 0.379
+    },
+    "within_budget": true
+   },
+   "openai/gpt-6-astra-pro": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.961,
+      "ci90": [
+       0.934,
+       0.982
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": 0.992,
+      "ci90": [
+       0.977,
+       1.0
+      ],
+      "n": 20
+     },
+     "fields_acc": {
+      "value": 0.971,
+      "ci90": [
+       0.947,
+       0.988
+      ],
+      "n": 170
+     },
+     "fields": {
+      "direction": {
+       "value": 0.97,
+       "ci90": [
+        0.909,
+        1
+       ],
+       "n": 33
+      },
+      "grade": {
+       "value": 0.9,
+       "ci90": [
+        0.8,
+        0.967
+       ],
+       "n": 30
+      },
+      "work_format": {
+       "value": 0.969,
+       "ci90": [
+        0.906,
+        1
+       ],
+       "n": 32
+      },
+      "experience_years_min": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 27
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      }
+     },
+     "negations": {
+      "value": 0.909,
+      "ci90": [
+       0.727,
+       1
+      ],
+      "n": 11
+     },
+     "hallucinated_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 63
+     },
+     "unknown_named": {
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
+     },
+     "unknown_no_substitute": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": null,
+      "n": 1
+     },
+     "dropped_without_quote": 0,
+     "index": {
+      "value": 0.966,
+      "ci90": [
+       0.931,
+       0.989
+      ],
+      "components": [
+       "stack_f1_vac",
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 5.14,
+     "p95_s": 9.3,
+     "budget_s": 25
+    },
+    "usd_per_1k": 50.64,
+    "score": {
+     "total": 0.846,
+     "quality": 1.0,
+     "reliability": 1,
+     "latency": 0.628,
+     "price": 0.023
     },
     "within_budget": true
    },
@@ -2707,11 +3313,11 @@
     },
     "usd_per_1k": 2.95,
     "score": {
-     "total": 0.798,
+     "total": 0.807,
      "quality": 0.959,
      "reliability": 0.8,
      "latency": 0.42,
-     "price": 0.558
+     "price": 0.649
     },
     "within_budget": false
    },
@@ -2804,7 +3410,7 @@
      "hallucinated_share": {
       "value": 0.044,
       "ci90": [
-       0.015,
+       0,
        0.088
       ],
       "n": 68
@@ -2837,8 +3443,8 @@
      "index": {
       "value": 0.907,
       "ci90": [
-       0.856,
-       0.954
+       0.855,
+       0.953
       ],
       "components": [
        "stack_f1_vac",
@@ -3035,11 +3641,11 @@
     },
     "usd_per_1k": 9.4,
     "score": {
-     "total": 0.772,
+     "total": 0.788,
      "quality": 0.98,
      "reliability": 1,
      "latency": 0.057,
-     "price": 0.237
+     "price": 0.394
     },
     "within_budget": true
    },
@@ -3201,11 +3807,11 @@
     },
     "usd_per_1k": 1.41,
     "score": {
-     "total": 0.913,
+     "total": 0.918,
      "quality": 0.98,
      "reliability": 0.98,
      "latency": 0.674,
-     "price": 0.763
+     "price": 0.812
     },
     "within_budget": true
    },
@@ -3365,16 +3971,98 @@
     },
     "usd_per_1k": 12.04,
     "score": {
-     "total": 0.874,
+     "total": 0.891,
      "quality": 0.959,
      "reliability": 1,
      "latency": 0.851,
-     "price": 0.169
+     "price": 0.34
     },
     "within_budget": true
    }
   },
   "resume": {
+   "anthropic/claude-fable-5.1": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.964,
+      "ci90": [
+       0.946,
+       0.98
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.06,
+      "ci90": [
+       0.037,
+       0.088
+      ],
+      "n": 216
+     },
+     "experience_ok": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.976,
+      "ci90": [
+       0.968,
+       0.984
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 3.22,
+     "p95_s": 3.57,
+     "budget_s": 25
+    },
+    "usd_per_1k": 10.31,
+    "score": {
+     "total": 0.909,
+     "quality": 1.0,
+     "reliability": 1,
+     "latency": 0.857,
+     "price": 0.304
+    },
+    "within_budget": true
+   },
    "anthropic/claude-opus-5.5": {
     "config": "как в продукте",
     "complete": true,
@@ -3416,8 +4104,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.941,
-       0.982
+       0.942,
+       0.983
       ],
       "components": [
        "stack_f1",
@@ -3449,11 +4137,11 @@
     },
     "usd_per_1k": 5.44,
     "score": {
-     "total": 0.864,
-     "quality": 0.99,
+     "total": 0.891,
+     "quality": 0.989,
      "reliability": 1,
      "latency": 0.675,
-     "price": 0.176
+     "price": 0.458
     },
     "within_budget": true
    },
@@ -3498,8 +4186,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.941,
-       0.982
+       0.942,
+       0.983
       ],
       "components": [
        "stack_f1",
@@ -3533,11 +4221,11 @@
     },
     "usd_per_1k": 2.57,
     "score": {
-     "total": 0.78,
-     "quality": 0.99,
+     "total": 0.799,
+     "quality": 0.989,
      "reliability": 0.962,
      "latency": 0.0,
-     "price": 0.45
+     "price": 0.638
     },
     "within_budget": false
    },
@@ -3615,11 +4303,11 @@
     },
     "usd_per_1k": 8.82,
     "score": {
-     "total": 0.842,
-     "quality": 0.99,
+     "total": 0.876,
+     "quality": 0.989,
      "reliability": 1,
      "latency": 0.651,
-     "price": 0.0
+     "price": 0.341
     },
     "within_budget": true
    },
@@ -3665,7 +4353,7 @@
       "value": 0.975,
       "ci90": [
        0.967,
-       0.983
+       0.982
       ],
       "components": [
        "stack_f1",
@@ -3697,11 +4385,11 @@
     },
     "usd_per_1k": 2.99,
     "score": {
-     "total": 0.909,
-     "quality": 1.0,
+     "total": 0.929,
+     "quality": 0.999,
      "reliability": 1,
      "latency": 0.799,
-     "price": 0.395
+     "price": 0.601
     },
     "within_budget": true
    },
@@ -3779,11 +4467,93 @@
     },
     "usd_per_1k": 7.44,
     "score": {
-     "total": 0.864,
-     "quality": 0.99,
+     "total": 0.896,
+     "quality": 0.989,
      "reliability": 1,
      "latency": 0.754,
-     "price": 0.062
+     "price": 0.382
+    },
+    "within_budget": true
+   },
+   "openai/gpt-6-astra-pro": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.964,
+      "ci90": [
+       0.947,
+       0.979
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.056,
+      "ci90": [
+       0.033,
+       0.079
+      ],
+      "n": 214
+     },
+     "experience_ok": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.965,
+      "ci90": [
+       0.939,
+       0.982
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 4.55,
+     "p95_s": 6.42,
+     "budget_s": 25
+    },
+    "usd_per_1k": 36.47,
+    "score": {
+     "total": 0.856,
+     "quality": 0.989,
+     "reliability": 1,
+     "latency": 0.743,
+     "price": 0.0
     },
     "within_budget": true
    },
@@ -3828,8 +4598,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.941,
-       0.982
+       0.942,
+       0.983
       ],
       "components": [
        "stack_f1",
@@ -3861,11 +4631,11 @@
     },
     "usd_per_1k": 3.37,
     "score": {
-     "total": 0.854,
-     "quality": 0.99,
+     "total": 0.876,
+     "quality": 0.989,
      "reliability": 1,
      "latency": 0.495,
-     "price": 0.351
+     "price": 0.573
     },
     "within_budget": true
    },
@@ -3885,7 +4655,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.085
+       0.08
       ],
       "n": 213
      },
@@ -3910,7 +4680,7 @@
      "index": {
       "value": 0.964,
       "ci90": [
-       0.939,
+       0.94,
        0.981
       ],
       "components": [
@@ -3943,11 +4713,11 @@
     },
     "usd_per_1k": 0.88,
     "score": {
-     "total": 0.907,
-     "quality": 0.989,
+     "total": 0.912,
+     "quality": 0.988,
      "reliability": 1,
      "latency": 0.521,
-     "price": 0.841
+     "price": 0.896
     },
     "within_budget": true
    },
@@ -4025,11 +4795,11 @@
     },
     "usd_per_1k": 4.78,
     "score": {
-     "total": 0.85,
-     "quality": 0.99,
+     "total": 0.876,
+     "quality": 0.989,
      "reliability": 1,
      "latency": 0.553,
-     "price": 0.224
+     "price": 0.489
     },
     "within_budget": true
    },
@@ -4074,8 +4844,8 @@
      "index": {
       "value": 0.973,
       "ci90": [
-       0.965,
-       0.981
+       0.964,
+       0.98
       ],
       "components": [
        "stack_f1",
@@ -4107,8 +4877,8 @@
     },
     "usd_per_1k": 0.57,
     "score": {
-     "total": 0.978,
-     "quality": 0.998,
+     "total": 0.977,
+     "quality": 0.997,
      "reliability": 1,
      "latency": 0.859,
      "price": 1.0
@@ -4156,8 +4926,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.941,
-       0.982
+       0.942,
+       0.983
       ],
       "components": [
        "stack_f1",
@@ -4189,42 +4959,42 @@
     },
     "usd_per_1k": 2.13,
     "score": {
-     "total": 0.935,
-     "quality": 0.99,
+     "total": 0.95,
+     "quality": 0.989,
      "reliability": 1,
      "latency": 0.919,
-     "price": 0.519
+     "price": 0.683
     },
     "within_budget": true
    }
   },
   "grade": {
-   "anthropic/claude-opus-5.5": {
+   "anthropic/claude-fable-5.1": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и openai/gpt-6-astra-pro (без самой модели)",
     "quality": {
      "mae": {
-      "value": 0.033,
+      "value": 0.02,
       "ci90": [
-       0.015,
-       0.051
+       0.009,
+       0.032
       ],
       "n": 25
      },
      "kappa_w": {
-      "value": 0.975,
+      "value": 0.982,
       "ci90": [
-       0.944,
-       0.993
+       0.957,
+       1.0
       ],
       "n": 25
      },
      "bias": {
-      "value": -0.011,
+      "value": 0.006,
       "ci90": [
-       -0.033,
-       0.01
+       -0.008,
+       0.02
       ],
       "n": 25
      },
@@ -4245,10 +5015,174 @@
       "n": 25
      },
      "exact_bin": {
-      "value": 0.88,
+      "value": 0.92,
       "ci90": [
-       0.76,
-       0.96
+       0.84,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.02,
+      "ci90": [
+       0.0,
+       0.06
+      ],
+      "n": 10
+     },
+     "stability_same": {
+      "value": 0.9,
+      "ci90": [
+       0.7,
+       1
+      ],
+      "n": 10
+     },
+     "judge_consistency": {
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 15
+     },
+     "judge_grounded": {
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 15
+     },
+     "judge_fair": {
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 15
+     },
+     "judge_russian": {
+      "value": 5,
+      "ci90": [
+       5,
+       5
+      ],
+      "n": 15
+     },
+     "judge_model": "openai_gpt_6.1_sol_pro",
+     "index": {
+      "value": 0.98,
+      "ci90": [
+       0.965,
+       0.992
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)",
+       "обоснование (судья)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 70,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 70
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 5.25,
+     "p95_s": 17.22,
+     "budget_s": 50
+    },
+    "usd_per_1k": 44.97,
+    "score": {
+     "total": 0.856,
+     "quality": 0.99,
+     "reliability": 1,
+     "latency": 0.656,
+     "price": 0.132
+    },
+    "within_budget": true
+   },
+   "anthropic/claude-opus-5.5": {
+    "config": "как в продукте",
+    "complete": true,
+    "reference": "среднее anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro (без самой модели)",
+    "quality": {
+     "mae": {
+      "value": 0.029,
+      "ci90": [
+       0.013,
+       0.05
+      ],
+      "n": 25
+     },
+     "kappa_w": {
+      "value": 0.982,
+      "ci90": [
+       0.956,
+       1.0
+      ],
+      "n": 25
+     },
+     "bias": {
+      "value": 0.002,
+      "ci90": [
+       -0.02,
+       0.023
+      ],
+      "n": 25
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "exact_bin": {
+      "value": 0.92,
+      "ci90": [
+       0.84,
+       1
       ],
       "n": 25
      },
@@ -4319,10 +5253,10 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.967,
+      "value": 0.97,
       "ci90": [
-       0.948,
-       0.982
+       0.951,
+       0.985
       ],
       "components": [
        "mae×2",
@@ -4355,40 +5289,40 @@
     },
     "usd_per_1k": 16.86,
     "score": {
-     "total": 0.86,
-     "quality": 0.978,
+     "total": 0.901,
+     "quality": 0.98,
      "reliability": 1,
      "latency": 0.805,
-     "price": 0.0
+     "price": 0.406
     },
     "within_budget": true
    },
    "deepseek/deepseek-v4-pro-0813": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.038,
+      "value": 0.035,
       "ci90": [
-       0.011,
+       0.009,
        0.069
       ],
       "n": 22
      },
      "kappa_w": {
-      "value": 0.971,
+      "value": 0.981,
       "ci90": [
-       0.931,
-       0.992
+       0.946,
+       1.0
       ],
       "n": 22
      },
      "bias": {
-      "value": -0.001,
+      "value": 0.003,
       "ci90": [
-       -0.032,
-       0.033
+       -0.026,
+       0.037
       ],
       "n": 22
      },
@@ -4409,10 +5343,10 @@
       "n": 22
      },
      "exact_bin": {
-      "value": 0.864,
+      "value": 0.909,
       "ci90": [
-       0.727,
-       0.955
+       0.773,
+       1
       ],
       "n": 22
      },
@@ -4483,10 +5417,10 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.979,
+      "value": 0.982,
       "ci90": [
-       0.964,
-       0.991
+       0.968,
+       0.993
       ],
       "components": [
        "mae×2",
@@ -4521,24 +5455,24 @@
     },
     "usd_per_1k": 2.4,
     "score": {
-     "total": 0.871,
-     "quality": 0.99,
+     "total": 0.876,
+     "quality": 0.992,
      "reliability": 0.929,
      "latency": 0.352,
-     "price": 0.914
+     "price": 0.949
     },
     "within_budget": true
    },
    "google/gemini-3.1-pro-preview": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.043,
+      "value": 0.054,
       "ci90": [
-       0.019,
-       0.068
+       0.026,
+       0.086
       ],
       "n": 25
      },
@@ -4551,18 +5485,18 @@
       "n": 25
      },
      "bias": {
-      "value": 0.028,
+      "value": 0.034,
       "ci90": [
-       0.002,
-       0.058
+       0.003,
+       0.071
       ],
       "n": 25
      },
      "over_share": {
-      "value": 0.04,
+      "value": 0.08,
       "ci90": [
        0,
-       0.12
+       0.2
       ],
       "n": 25
      },
@@ -4649,10 +5583,10 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.978,
+      "value": 0.973,
       "ci90": [
-       0.965,
-       0.988
+       0.958,
+       0.985
       ],
       "components": [
        "mae×2",
@@ -4685,24 +5619,24 @@
     },
     "usd_per_1k": 13.91,
     "score": {
-     "total": 0.86,
-     "quality": 0.989,
+     "total": 0.894,
+     "quality": 0.983,
      "reliability": 1,
      "latency": 0.71,
-     "price": 0.09
+     "price": 0.459
     },
     "within_budget": true
    },
    "moonshotai/kimi-k3": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.022,
+      "value": 0.026,
       "ci90": [
-       0.006,
-       0.042
+       0.007,
+       0.052
       ],
       "n": 23
      },
@@ -4715,18 +5649,18 @@
       "n": 23
      },
      "bias": {
-      "value": 0.017,
+      "value": 0.021,
       "ci90": [
-       0.002,
-       0.038
+       0.001,
+       0.048
       ],
       "n": 23
      },
      "over_share": {
-      "value": 0,
+      "value": 0.043,
       "ci90": [
        0,
-       0
+       0.13
       ],
       "n": 23
      },
@@ -4813,9 +5747,9 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.986,
+      "value": 0.984,
       "ci90": [
-       0.976,
+       0.972,
        0.993
       ],
       "components": [
@@ -4852,40 +5786,40 @@
     },
     "usd_per_1k": 11.75,
     "score": {
-     "total": 0.831,
-     "quality": 0.997,
+     "total": 0.863,
+     "quality": 0.994,
      "reliability": 0.929,
      "latency": 0.556,
-     "price": 0.169
+     "price": 0.506
     },
     "within_budget": true
    },
    "openai/gpt-6.1-sol-pro": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.027,
+      "value": 0.018,
       "ci90": [
-       0.013,
-       0.042
+       0.007,
+       0.029
       ],
       "n": 25
      },
      "kappa_w": {
-      "value": 0.956,
+      "value": 0.965,
       "ci90": [
-       0.912,
-       0.983
+       0.926,
+       0.99
       ],
       "n": 25
      },
      "bias": {
-      "value": -0.009,
+      "value": 0.003,
       "ci90": [
-       -0.026,
-       0.008
+       -0.01,
+       0.015
       ],
       "n": 25
      },
@@ -4906,10 +5840,10 @@
       "n": 25
      },
      "exact_bin": {
-      "value": 0.8,
+      "value": 0.84,
       "ci90": [
-       0.68,
-       0.92
+       0.72,
+       0.96
       ],
       "n": 25
      },
@@ -4980,10 +5914,10 @@
      },
      "judge_model": "anthropic_claude_sonnet_5.5",
      "index": {
-      "value": 0.953,
+      "value": 0.959,
       "ci90": [
-       0.931,
-       0.971
+       0.937,
+       0.976
       ],
       "components": [
        "mae×2",
@@ -5016,24 +5950,188 @@
     },
     "usd_per_1k": 14.11,
     "score": {
-     "total": 0.853,
-     "quality": 0.964,
+     "total": 0.893,
+     "quality": 0.969,
      "reliability": 1,
      "latency": 0.752,
-     "price": 0.084
+     "price": 0.455
+    },
+    "within_budget": true
+   },
+   "openai/gpt-6-astra-pro": {
+    "config": "как в продукте",
+    "complete": true,
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 (без самой модели)",
+    "quality": {
+     "mae": {
+      "value": 0.03,
+      "ci90": [
+       0.013,
+       0.052
+      ],
+      "n": 25
+     },
+     "kappa_w": {
+      "value": 0.965,
+      "ci90": [
+       0.924,
+       0.99
+      ],
+      "n": 25
+     },
+     "bias": {
+      "value": -0.007,
+      "ci90": [
+       -0.03,
+       0.014
+      ],
+      "n": 25
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "exact_bin": {
+      "value": 0.84,
+      "ci90": [
+       0.72,
+       0.96
+      ],
+      "n": 25
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.015,
+      "ci90": [
+       0.0,
+       0.045
+      ],
+      "n": 10
+     },
+     "stability_same": {
+      "value": 0.9,
+      "ci90": [
+       0.7,
+       1
+      ],
+      "n": 10
+     },
+     "judge_consistency": {
+      "value": 0.967,
+      "ci90": [
+       0.9,
+       1.0
+      ],
+      "n": 15
+     },
+     "judge_grounded": {
+      "value": 0.933,
+      "ci90": [
+       0.867,
+       1.0
+      ],
+      "n": 15
+     },
+     "judge_fair": {
+      "value": 0.9,
+      "ci90": [
+       0.8,
+       0.967
+      ],
+      "n": 15
+     },
+     "judge_russian": {
+      "value": 4.667,
+      "ci90": [
+       4.467,
+       4.867
+      ],
+      "n": 15
+     },
+     "judge_model": "anthropic_claude_sonnet_5.5",
+     "index": {
+      "value": 0.963,
+      "ci90": [
+       0.946,
+       0.978
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)",
+       "обоснование (судья)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 70,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 70
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 5.28,
+     "p95_s": 13.11,
+     "budget_s": 50
+    },
+    "usd_per_1k": 72.24,
+    "score": {
+     "total": 0.847,
+     "quality": 0.973,
+     "reliability": 1,
+     "latency": 0.738,
+     "price": 0.0
     },
     "within_budget": true
    },
    "qwen/qwen3.8-2.4t-a95b": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.017,
+      "value": 0.015,
       "ci90": [
-       0.005,
-       0.031
+       0.004,
+       0.027
       ],
       "n": 17
      },
@@ -5046,10 +6144,10 @@
       "n": 17
      },
      "bias": {
-      "value": -0.014,
+      "value": -0.015,
       "ci90": [
-       -0.028,
-       -0.001
+       -0.027,
+       -0.004
       ],
       "n": 17
      },
@@ -5144,10 +6242,10 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.988,
+      "value": 0.989,
       "ci90": [
        0.978,
-       0.997
+       0.998
       ],
       "components": [
        "mae×2",
@@ -5183,24 +6281,24 @@
     },
     "usd_per_1k": 5.12,
     "score": {
-     "total": 0.837,
+     "total": 0.855,
      "quality": 0.999,
      "reliability": 0.757,
      "latency": 0.616,
-     "price": 0.559
+     "price": 0.738
     },
     "within_budget": false
    },
    "qwen/qwen3.8-27b": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.022,
+      "value": 0.021,
       "ci90": [
-       0.007,
-       0.043
+       0.004,
+       0.04
       ],
       "n": 21
      },
@@ -5215,7 +6313,7 @@
      "bias": {
       "value": 0.006,
       "ci90": [
-       -0.012,
+       -0.011,
        0.028
       ],
       "n": 21
@@ -5311,9 +6409,9 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.989,
+      "value": 0.99,
       "ci90": [
-       0.979,
+       0.98,
        0.997
       ],
       "components": [
@@ -5361,29 +6459,29 @@
    "x-ai/grok-4.7": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.026,
+      "value": 0.017,
       "ci90": [
-       0.012,
-       0.04
+       0.007,
+       0.028
       ],
       "n": 25
      },
      "kappa_w": {
-      "value": 0.975,
+      "value": 0.991,
       "ci90": [
-       0.942,
-       0.993
+       0.974,
+       1.0
       ],
       "n": 25
      },
      "bias": {
-      "value": -0.02,
+      "value": -0.007,
       "ci90": [
-       -0.035,
-       -0.006
+       -0.019,
+       0.005
       ],
       "n": 25
      },
@@ -5404,10 +6502,10 @@
       "n": 25
      },
      "exact_bin": {
-      "value": 0.88,
+      "value": 0.96,
       "ci90": [
-       0.76,
-       0.96
+       0.88,
+       1
       ],
       "n": 25
      },
@@ -5478,10 +6576,10 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.98,
+      "value": 0.986,
       "ci90": [
-       0.968,
-       0.99
+       0.976,
+       0.995
       ],
       "components": [
        "mae×2",
@@ -5514,24 +6612,24 @@
     },
     "usd_per_1k": 12.4,
     "score": {
-     "total": 0.76,
-     "quality": 0.991,
+     "total": 0.797,
+     "quality": 0.996,
      "reliability": 1,
      "latency": 0.0,
-     "price": 0.144
+     "price": 0.491
     },
     "within_budget": false
    },
    "z-ai/glm-5.3": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.026,
+      "value": 0.033,
       "ci90": [
-       0.009,
-       0.048
+       0.01,
+       0.063
       ],
       "n": 21
      },
@@ -5544,18 +6642,18 @@
       "n": 21
      },
      "bias": {
-      "value": 0.024,
+      "value": 0.027,
       "ci90": [
-       0.006,
-       0.046
+       0.003,
+       0.058
       ],
       "n": 21
      },
      "over_share": {
-      "value": 0,
+      "value": 0.048,
       "ci90": [
        0,
-       0
+       0.143
       ],
       "n": 21
      },
@@ -5642,10 +6740,10 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.965,
+      "value": 0.962,
       "ci90": [
-       0.937,
-       0.985
+       0.933,
+       0.984
       ],
       "components": [
        "mae×2",
@@ -5682,39 +6780,39 @@
     "usd_per_1k": 2.22,
     "score": {
      "total": 0.9,
-     "quality": 0.976,
+     "quality": 0.972,
      "reliability": 0.829,
      "latency": 0.732,
-     "price": 0.951
+     "price": 0.971
     },
     "within_budget": false
    },
    "anthropic/claude-sonnet-5.5": {
     "config": "как в продукте",
     "complete": true,
-    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "reference": "среднее anthropic/claude-opus-5.5 и anthropic/claude-fable-5.1 и openai/gpt-6-astra-pro",
     "quality": {
      "mae": {
-      "value": 0.027,
+      "value": 0.015,
       "ci90": [
-       0.013,
-       0.041
+       0.007,
+       0.024
       ],
       "n": 25
      },
      "kappa_w": {
-      "value": 0.965,
+      "value": 0.991,
       "ci90": [
-       0.925,
-       0.991
+       0.971,
+       1.0
       ],
       "n": 25
      },
      "bias": {
-      "value": -0.019,
+      "value": -0.006,
       "ci90": [
-       -0.035,
-       -0.005
+       -0.016,
+       0.003
       ],
       "n": 25
      },
@@ -5735,10 +6833,10 @@
       "n": 25
      },
      "exact_bin": {
-      "value": 0.84,
+      "value": 0.96,
       "ci90": [
-       0.72,
-       0.96
+       0.88,
+       1
       ],
       "n": 25
      },
@@ -5809,10 +6907,10 @@
      },
      "judge_model": "openai_gpt_6.1_sol_pro",
      "index": {
-      "value": 0.971,
+      "value": 0.981,
       "ci90": [
-       0.957,
-       0.983
+       0.969,
+       0.991
       ],
       "components": [
        "mae×2",
@@ -5845,11 +6943,11 @@
     },
     "usd_per_1k": 7.79,
     "score": {
-     "total": 0.911,
-     "quality": 0.982,
+     "total": 0.942,
+     "quality": 0.991,
      "reliability": 1,
      "latency": 0.893,
-     "price": 0.362
+     "price": 0.621
     },
     "within_budget": true
    }
@@ -5999,7 +7097,7 @@
     "extra_share": {
      "value": 0.06,
      "ci90": [
-      0.035,
+      0.03,
       0.09
      ],
      "n": 200
@@ -6018,8 +7116,8 @@
     "index": {
      "value": 0.906,
      "ci90": [
-      0.856,
-      0.948
+      0.859,
+      0.949
      ],
      "components": [
       "stack_f1",
@@ -6034,6 +7132,8 @@
   "parse_need": {
    "strongest_within_latency": "openai/gpt-6.1-sol-pro",
    "within_noise": [
+    "openai/gpt-6-astra-pro",
+    "anthropic/claude-fable-5.1",
     "moonshotai/kimi-k3",
     "google/gemini-3.1-pro-preview",
     "x-ai/grok-4.7",
@@ -6043,11 +7143,13 @@
     "deepseek/deepseek-v4-pro-0813",
     "qwen/qwen3.8-27b"
    ],
-   "reserve_other_family": "moonshotai/kimi-k3",
+   "reserve_other_family": "anthropic/claude-fable-5.1",
    "best_open": "moonshotai/kimi-k3",
    "best_total": "qwen/qwen3.8-27b",
    "ranked_quality": [
     "openai/gpt-6.1-sol-pro",
+    "openai/gpt-6-astra-pro",
+    "anthropic/claude-fable-5.1",
     "moonshotai/kimi-k3",
     "google/gemini-3.1-pro-preview",
     "x-ai/grok-4.7",
@@ -6062,10 +7164,12 @@
     "z-ai/glm-5.3",
     "deepseek/deepseek-v4-pro-0813",
     "moonshotai/kimi-k3",
-    "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
+    "google/gemini-3.1-pro-preview",
     "openai/gpt-6.1-sol-pro",
     "anthropic/claude-opus-5.5",
+    "anthropic/claude-fable-5.1",
+    "openai/gpt-6-astra-pro",
     "qwen/qwen3.8-2.4t-a95b",
     "x-ai/grok-4.7"
    ],
@@ -6075,26 +7179,30 @@
    "then": "правила"
   },
   "resume": {
-   "strongest_within_latency": "moonshotai/kimi-k3",
+   "strongest_within_latency": "anthropic/claude-fable-5.1",
    "within_noise": [
-    "z-ai/glm-5.3",
-    "anthropic/claude-opus-5.5",
-    "google/gemini-3.1-pro-preview",
-    "openai/gpt-6.1-sol-pro",
-    "qwen/qwen3.8-2.4t-a95b",
-    "x-ai/grok-4.7",
-    "anthropic/claude-sonnet-5.5",
-    "qwen/qwen3.8-27b"
-   ],
-   "reserve_other_family": "z-ai/glm-5.3",
-   "best_open": "moonshotai/kimi-k3",
-   "best_total": "z-ai/glm-5.3",
-   "ranked_quality": [
     "moonshotai/kimi-k3",
     "z-ai/glm-5.3",
     "anthropic/claude-opus-5.5",
     "google/gemini-3.1-pro-preview",
     "openai/gpt-6.1-sol-pro",
+    "openai/gpt-6-astra-pro",
+    "qwen/qwen3.8-2.4t-a95b",
+    "x-ai/grok-4.7",
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b"
+   ],
+   "reserve_other_family": "moonshotai/kimi-k3",
+   "best_open": "moonshotai/kimi-k3",
+   "best_total": "z-ai/glm-5.3",
+   "ranked_quality": [
+    "anthropic/claude-fable-5.1",
+    "moonshotai/kimi-k3",
+    "z-ai/glm-5.3",
+    "anthropic/claude-opus-5.5",
+    "google/gemini-3.1-pro-preview",
+    "openai/gpt-6.1-sol-pro",
+    "openai/gpt-6-astra-pro",
     "qwen/qwen3.8-2.4t-a95b",
     "x-ai/grok-4.7",
     "anthropic/claude-sonnet-5.5",
@@ -6105,11 +7213,13 @@
     "anthropic/claude-sonnet-5.5",
     "moonshotai/kimi-k3",
     "qwen/qwen3.8-27b",
-    "anthropic/claude-opus-5.5",
+    "anthropic/claude-fable-5.1",
     "openai/gpt-6.1-sol-pro",
+    "anthropic/claude-opus-5.5",
+    "google/gemini-3.1-pro-preview",
     "qwen/qwen3.8-2.4t-a95b",
     "x-ai/grok-4.7",
-    "google/gemini-3.1-pro-preview",
+    "openai/gpt-6-astra-pro",
     "deepseek/deepseek-v4-pro-0813"
    ],
    "excluded_latency_or_fails": [
@@ -6122,8 +7232,9 @@
    "within_noise": [
     "moonshotai/kimi-k3",
     "deepseek/deepseek-v4-pro-0813",
-    "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
+    "anthropic/claude-fable-5.1",
+    "google/gemini-3.1-pro-preview",
     "anthropic/claude-opus-5.5"
    ],
    "reserve_other_family": "moonshotai/kimi-k3",
@@ -6133,21 +7244,25 @@
     "qwen/qwen3.8-27b",
     "moonshotai/kimi-k3",
     "deepseek/deepseek-v4-pro-0813",
-    "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
+    "anthropic/claude-fable-5.1",
+    "google/gemini-3.1-pro-preview",
     "anthropic/claude-opus-5.5",
+    "openai/gpt-6-astra-pro",
     "openai/gpt-6.1-sol-pro"
    ],
    "ranked_total": [
     "anthropic/claude-sonnet-5.5",
-    "z-ai/glm-5.3",
-    "deepseek/deepseek-v4-pro-0813",
     "anthropic/claude-opus-5.5",
+    "z-ai/glm-5.3",
     "google/gemini-3.1-pro-preview",
-    "qwen/qwen3.8-27b",
     "openai/gpt-6.1-sol-pro",
-    "qwen/qwen3.8-2.4t-a95b",
+    "deepseek/deepseek-v4-pro-0813",
     "moonshotai/kimi-k3",
+    "qwen/qwen3.8-27b",
+    "anthropic/claude-fable-5.1",
+    "qwen/qwen3.8-2.4t-a95b",
+    "openai/gpt-6-astra-pro",
     "x-ai/grok-4.7"
    ],
    "excluded_latency_or_fails": [
@@ -6158,7 +7273,71 @@
    "then": "правила"
   }
  },
- "judges_agreement": [],
+ "judges_agreement": [
+  {
+   "a": "anthropic/claude-opus-5.5",
+   "b": "anthropic/claude-fable-5.1",
+   "n": 25,
+   "mae": {
+    "value": 0.019,
+    "ci90": [
+     0.005,
+     0.038
+    ],
+    "n": 25
+   },
+   "kappa_w": {
+    "value": 0.991,
+    "ci90": [
+     0.972,
+     1.0
+    ],
+    "n": 25
+   }
+  },
+  {
+   "a": "anthropic/claude-opus-5.5",
+   "b": "openai/gpt-6-astra-pro",
+   "n": 25,
+   "mae": {
+    "value": 0.04,
+    "ci90": [
+     0.019,
+     0.065
+    ],
+    "n": 25
+   },
+   "kappa_w": {
+    "value": 0.965,
+    "ci90": [
+     0.923,
+     0.99
+    ],
+    "n": 25
+   }
+  },
+  {
+   "a": "anthropic/claude-fable-5.1",
+   "b": "openai/gpt-6-astra-pro",
+   "n": 25,
+   "mae": {
+    "value": 0.021,
+    "ci90": [
+     0.006,
+     0.041
+    ],
+    "n": 25
+   },
+   "kappa_w": {
+    "value": 0.973,
+    "ci90": [
+     0.938,
+     0.992
+    ],
+    "n": 25
+   }
+  }
+ ],
  "weights": {
   "quality": 0.5,
   "reliability": 0.25,
