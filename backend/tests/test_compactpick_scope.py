@@ -61,5 +61,7 @@ def test_selection_version_has_scope_and_probe_counter(client):
     again = client.get(f"/api/employer/needs/{n['id']}/selections/1", headers=H(te)).json()
     assert again["scope"]["probes"]["total"] == 1
     assert [x["ref"] for x in again["results"]] == order      # порядок версии не меняется
+    mine = client.get("/api/employer/probes", headers=H(te)).json()
+    assert [p["need_id"] for p in mine] == [n["id"]]           # «зонды по этой потребности»: /employer/probes?need=
     plain = client.post("/api/employer/needs", json={"text": NORMAL}, headers=H(te)).json()
     assert client.get(f"/api/employer/needs/{plain['id']}/selections/1", headers=H(te)).json()["scope"] is None
