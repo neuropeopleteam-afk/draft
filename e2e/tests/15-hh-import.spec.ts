@@ -102,9 +102,10 @@ test("hh.ru: своя вакансия → черновик; чужая — с �
   await test.step("390: окно импорта без горизонтальной прокрутки", async () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await open();
-    await preview("90000002");
+    const p = await preview("90000002");
     expect(await noHScroll(page), "окно импорта, 390 px").toBe(true);
-    await shot(page, "import-preview-390");
+    await p.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(DIR, "import-preview-390.png") });  // окно прокручено к предпросмотру
     await axe(page, '[role="dialog"]', "окно импорта 390");
     await dialog.getByRole("button", { name: "Закрыть" }).first().click();
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -140,9 +141,31 @@ test("hh.ru: своя вакансия → черновик; чужая — с �
     await shot(page, "invite-market-1440");
     await axe(page, '[role="dialog"]', "приглашение 1440");
     await page.setViewportSize({ width: 390, height: 844 });
+    await m.scrollIntoViewIfNeeded();
     await expect(m).toBeVisible();
     expect(await noHScroll(page), "приглашение, 390 px").toBe(true);
-    await shot(page, "invite-market-390");
+    await page.screenshot({ path: join(DIR, "invite-market-390.png") });  // окно прокручено к строке «Рынок по hh.ru»
   });
   await api.dispose();
+});
+
+test("/validation: блок «Разбор потребности на вакансиях hh.ru» — числа, дата и SHA, 1440 и 390", async ({ page }) => {
+  const api = await apiContext();
+  const meta = await (await api.get("/api/meta")).json();
+  await api.dispose();
+  test.skip(!meta.hh?.enabled, "интеграция hh.ru выключена (HH_ENABLED)");
+  await page.goto("/validation#hh-parse", { waitUntil: "domcontentloaded" });
+  const sec = page.locator("section#hh-parse");
+  await expect(sec.getByRole("heading", { name: "Разбор потребности на вакансиях hh.ru" })).toBeVisible({ timeout: 60_000 });
+  await expect(sec.getByTestId("hh-parse-signature")).toContainText(/код [0-9a-f]{7}/);
+  await expect(sec.getByRole("cell", { name: /«Удалёнка не предусмотрена»/ })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Разделы" }).getByRole("link", { name: "Разбор на hh.ru" })).toBeVisible();
+  await sec.scrollIntoViewIfNeeded();
+  expect(await noHScroll(page)).toBe(true);
+  await sec.screenshot({ path: join(DIR, "validation-1440.png") });
+  await axe(page, "section#hh-parse", "блок /validation 1440");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await sec.scrollIntoViewIfNeeded();
+  expect(await noHScroll(page), "/validation, 390 px").toBe(true);
+  await sec.screenshot({ path: join(DIR, "validation-390.png") });
 });
