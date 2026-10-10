@@ -26,7 +26,7 @@ from app.modules.auth.models import User
 from app.modules.assessment.rules import (GRADE_LEVEL, GradeOutcome, accept_lower_allowed, apply_result,
                                           check_can_start, retake_locks)
 from app.modules.catalog import levels as grade_levels
-from app.modules.catalog.seed_data import GRADES, tag_title
+from app.modules.catalog.seed_data import GRADE_ORDER, GRADES, tag_title
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile
 from app.modules.profiles.models import CandidateSpecialization
@@ -752,7 +752,7 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         # min_items/max_items — для Junior/Middle (как раньше), by_grade — по каждому грейду
         "express_available": sandbox and get_engine().name.startswith("bank"),
         "express": {"min_items": st_.assessment_express_min_items, "max_items": st_.assessment_express_max_items,
-                    "by_grade": {g: express_params(st_, g) for g in ("intern", "junior", "middle", "senior")}},
+                    "by_grade": {g: express_params(st_, g) for g in GRADE_ORDER}},
         # Lead/Principal (флаг GRADES_EXT_ENABLED): уровни, которые тест проверяет в выбранном направлении (по банку);
         # без флага ключей нет — экран выбора показывает прежние 4 уровня
         **(_grades_ext_status(selected) if grade_levels.enabled() else {}),
