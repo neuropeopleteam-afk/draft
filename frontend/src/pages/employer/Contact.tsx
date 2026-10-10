@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
 import { InlineThread } from "../../components/Chat";
@@ -172,7 +172,9 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
 }
 
 export function EmployerProbes() {
-  const { data, loading, error, reload } = useApi<any[]>("/employer/probes");
+  const { data: all, loading, error, reload } = useApi<any[]>("/employer/probes");
+  const need = new URLSearchParams(useLocation().search).get("need");  // Я10: из подборки — «зонды по этой потребности»
+  const data = need && all ? all.filter((p) => p.need_id === need) : all;
   const [err, setErr] = useState<string | null>(null);
   const [comment, setComment] = useState<Record<string, string>>({});
   async function review(id: string, verdict: string) {
@@ -183,6 +185,7 @@ export function EmployerProbes() {
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Зонды" subtitle="Короткие задачи с вилкой зарплаты до раскрытия контактов. Оценка ответа становится фактом T1 в профиле кандидата." />
       <p className="text-sm text-brand-ink/70">Рядом с зондом со свободным ответом — <Link className="font-semibold text-brand hover:underline" to="/employer/assignments">задания с автопроверкой</Link>: 3–5 заданий банка по стеку потребности, проверяет система.</p>
+      {need && all && <p className="text-sm text-brand-ink/70" data-testid="probes-need-filter">Показаны зонды по одной потребности: {data?.length ?? 0} из {all.length}. <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${need}`}>К подборке</Link> · <Link className="font-semibold text-brand hover:underline" to="/employer/probes">Все зонды</Link></p>}
       <Alert>{err}</Alert>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Зондов пока нет" text="Отметьте кандидатов в подборке и отправьте им короткую задачу." action={<Link to="/employer/needs" className="btn-primary">К подборкам</Link>} />
