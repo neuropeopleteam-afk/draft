@@ -149,7 +149,7 @@ class StubPort:
     def speak(self, text: str) -> tuple[bytes, str, float]:
         raise EngineUnavailable("голос в заглушке не работает")
 
-    def check_limits(self, jury: bool, last_hour: int, spent_today_usd: float) -> None:
+    def check_limits(self, jury: bool, last_hour: list[dict], spent_today_usd: float) -> None:
         return None
 
 
@@ -247,7 +247,8 @@ class EnginePort:
             raise EngineUnavailable("tts_unavailable")
         return a.data, a.mime or "audio/mpeg", float(a.cost_usd or 0)
 
-    def check_limits(self, jury: bool, last_hour: int, spent_today_usd: float) -> None:
+    def check_limits(self, jury: bool, last_hour: list[dict], spent_today_usd: float) -> None:
+        """last_hour — сессии песочницы жюри за час: [{"created_at": datetime, "active": bool}] (контракт, раздел 4)."""
         self.eng.check_limits(jury, last_hour, spent_today_usd)  # EngineError(jury_limit | daily_cap) — ловит сервис
 
     def hint(self, state: dict, n: int) -> str | None:

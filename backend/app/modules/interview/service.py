@@ -82,12 +82,18 @@ def _limits(db: Session, user: User, jkey: str | None) -> None:
         *live, InterviewSession.created_at >= now - timedelta(days=1)))
     if day >= s.interview_total_day:
         raise api_error(429, "interview_daily_cap", "Дневной лимит сессий исчерпан — попробуйте завтра")
-    hour = db.scalar(select(func.count()).select_from(InterviewSession).where(
-        *live, InterviewSession.jury_scope == jkey, InterviewSession.created_at >= now - timedelta(hours=1))) if jkey else 0
+    recent = db.execute(select(InterviewSession.created_at, InterviewSession.status).where(
+        *live, InterviewSession.jury_scope == jkey, InterviewSession.created_at >= now - timedelta(hours=1))).all() if jkey else []
+    hour = len(recent)
     spent = sum(float((c or {}).get("usd") or 0) for c in db.scalars(select(InterviewSession.cost).where(
         InterviewSession.created_at >= now - timedelta(days=1), InterviewSession.cost.is_not(None)).limit(5000)))
+    port = pt.get_port()
     try:
-        pt.get_port().check_limits(bool(jkey), hour, spent)  # лимиты движка: жюри 1 в час, дневной потолок расходов
+        # лимиты движка (контракт, раздел 4): жюри — 1 сессия в час на песочницу, дневной потолок расходов. На заглушке
+        # денег нет — действуют только лимиты продукта ниже (INTERVIEW_JURY_PER_HOUR и др.)
+        if not port.is_stub():
+            port.check_limits(bool(jkey), [{"created_at": as_aware(c), "active": st in ("created", "in_progress")}
+                                           for c, st in recent], spent)
     except Exception as e:  # noqa: BLE001 — EngineError движка
         code = getattr(e, "code", "interview_busy")
         raise api_error(429, code if code in ("jury_limit", "daily_cap") else "interview_busy",
