@@ -176,3 +176,49 @@ def _decide(theta: float, se: float, claimed: str, confirm_level: float, upgrade
                 "Грейд не понижается принудительно; "
                 + (f"можно пройти тест на {retake}." if retake else "можно пройти тест ещё раз после подготовки."))
     return GradeDecision(claimed, point, confirmed, claimed if confirmed else "none", upgrade, retake, probs, expl)
+
+
+# ---------------------------------------------------------------- позиция внутри уровня (Я22, флаг GRADE_POSITION_ENABLED)
+# Полоса грейда — [порог; порог следующего); у Senior сверху порога нет — условная ширина 1 (как у Junior и Middle).
+# Половина полосы — граница «нижняя / верхняя часть»; середина — центральная половина полосы. Позиция называется,
+# только когда погрешность это позволяет: P(θ по одну сторону середины полосы) ≥ 0,8 — «нижняя» / «верхняя часть»;
+# P(θ в центральной половине полосы) ≥ 0,5 — «середина»; иначе — «точнее — после дотестирования». Числа θ не выводятся.
+POSITION_LEVEL = 0.8
+POSITION_MID_LEVEL = 0.5
+POSITION_MAX_SE = 0.6
+POSITION_TEXT = {"lower": "нижняя часть уровня", "middle": "середина уровня", "upper": "верхняя часть уровня",
+                 "uncertain": "точнее — после дотестирования"}
+
+
+def _band(grade: str) -> tuple[float, float]:
+    i = GRADE_ORDER.index(grade)
+    lo = GRADE_CUTS[grade]
+    hi = GRADE_CUTS[GRADE_ORDER[i + 1]] if i + 1 < len(GRADE_ORDER) else lo + 1.0
+    return lo, hi
+
+
+def _cdf(x: float, theta: float, se: float) -> float:
+    return 0.5 * (1 + math.erf((x - theta) / (max(se, 1e-6) * math.sqrt(2))))
+
+
+def level_position(theta: float | None, se: float | None, grade: str | None) -> dict | None:
+    """Позиция θ̂ внутри полосы присвоенного грейда: lower | middle | upper | uncertain (см. правила выше).
+    None — нет грейда или оценки. Текст без чисел θ — для результата кандидата и карточки работодателя."""
+    if grade not in GRADE_ORDER or theta is None or se is None:
+        return None
+    theta, se = float(theta), float(se)
+    lo, hi = _band(grade)
+    w = hi - lo
+    mid = lo + w / 2
+    code = "uncertain"
+    if se <= POSITION_MAX_SE:
+        p_low = _cdf(mid, theta, se)
+        p_center = _cdf(lo + 3 * w / 4, theta, se) - _cdf(lo + w / 4, theta, se)
+        if p_low >= POSITION_LEVEL:
+            code = "lower"
+        elif 1 - p_low >= POSITION_LEVEL:
+            code = "upper"
+        elif p_center >= POSITION_MID_LEVEL:
+            code = "middle"
+    return {"code": code, "text": POSITION_TEXT[code], "grade": grade, "grade_title": GRADE_RU.get(grade, grade),
+            "known": code != "uncertain"}

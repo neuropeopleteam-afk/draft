@@ -1,0 +1,2046 @@
+{
+ "signature": {
+  "world": "симуляция всего пути: 5 направлений × 500 кандидатов, точек перебора: 35",
+  "seed": 20261006,
+  "config_hash": "a6cf2b851700",
+  "commit": "unknown",
+  "bank": "76c4164b6ce83743",
+  "n": 2500,
+  "command": "make grade-sweep",
+  "generated_at": "2026-10-10T17:24:38+00:00"
+ },
+ "constraints": {
+  "max_over": 0.07,
+  "min_retest_kappa": 0.84,
+  "max_minutes_mean": 60.0
+ },
+ "baseline_key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+ "choice": {
+  "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "point": {
+   "decision": "claimed",
+   "misspec": 0.5,
+   "confirm_level": 0.6,
+   "ext_items": 6,
+   "ext_minutes": 20,
+   "min_items": 8,
+   "max_items": 16,
+   "se_target": 0.35,
+   "classify_z": 1.28,
+   "stop_rule": "classification",
+   "award_above": null
+  },
+  "better_on_all": true,
+  "delta_exact": 0.0656,
+  "delta_over": 0.0156,
+  "delta_kappa": 0.0294,
+  "delta_minutes": -0.07
+ },
+ "choice_strict_over_6": {
+  "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "point": {
+   "decision": "claimed",
+   "misspec": 0.5,
+   "confirm_level": 0.65,
+   "ext_items": 6,
+   "ext_minutes": 20,
+   "min_items": 8,
+   "max_items": 16,
+   "se_target": 0.35,
+   "classify_z": 1.28,
+   "stop_rule": "classification",
+   "award_above": null
+  },
+  "better_on_all": true,
+  "delta_exact": 0.05,
+  "delta_over": 0.01,
+  "delta_kappa": 0.0254,
+  "delta_minutes": -0.1
+ },
+ "pareto": [
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.75;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=0;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=12;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=30;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=12;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=14;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.25;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.3;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.4;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.45;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=se;award_above=None;misspec=0.5",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35",
+  "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35"
+ ],
+ "points": [
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5752,
+    "over": 0.0492,
+    "under": 0.3484,
+    "none": 0.0544,
+    "within_1": 0.986,
+    "kappa_true": 0.7581,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8442,
+    "retest_exact": 0.7696,
+    "minutes_mean": 56.6321,
+    "minutes_p90": 74.2291,
+    "minutes_over_60": 0.4888,
+    "items_mean": 20.5396,
+    "sessions_mean": 1.006,
+    "borderline": 0.7372,
+    "status": {
+     "accepted_lower": 0.2724,
+     "confirmed": 0.5796,
+     "none": 0.0544,
+     "provisional": 0.0936
+    },
+    "exact_ci": [
+     0.556,
+     0.594
+    ],
+    "over_ci": [
+     0.041,
+     0.058
+    ],
+    "retest_kappa_ci": [
+     0.829,
+     0.857
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.5,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6544,
+    "over": 0.082,
+    "under": 0.2584,
+    "none": 0.0168,
+    "within_1": 0.9944,
+    "kappa_true": 0.8046,
+    "under_claimed_below": 0.1668,
+    "retest_kappa": 0.8814,
+    "retest_exact": 0.8112,
+    "minutes_mean": 56.5317,
+    "minutes_p90": 74.2138,
+    "minutes_over_60": 0.4828,
+    "items_mean": 20.5212,
+    "sessions_mean": 1.002,
+    "borderline": 0.7428,
+    "status": {
+     "accepted_lower": 0.1844,
+     "confirmed": 0.7632,
+     "none": 0.0168,
+     "provisional": 0.0356
+    },
+    "exact_ci": [
+     0.635,
+     0.674
+    ],
+    "over_ci": [
+     0.071,
+     0.093
+    ],
+    "retest_kappa_ci": [
+     0.87,
+     0.892
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.55,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6496,
+    "over": 0.0736,
+    "under": 0.2684,
+    "none": 0.0244,
+    "within_1": 0.9936,
+    "kappa_true": 0.8018,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.873,
+    "retest_exact": 0.8052,
+    "minutes_mean": 56.7347,
+    "minutes_p90": 74.552,
+    "minutes_over_60": 0.4844,
+    "items_mean": 20.512,
+    "sessions_mean": 1.0028,
+    "borderline": 0.736,
+    "status": {
+     "accepted_lower": 0.1952,
+     "confirmed": 0.7364,
+     "none": 0.0244,
+     "provisional": 0.044
+    },
+    "exact_ci": [
+     0.632,
+     0.668
+    ],
+    "over_ci": [
+     0.064,
+     0.084
+    ],
+    "retest_kappa_ci": [
+     0.862,
+     0.884
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6408,
+    "over": 0.0648,
+    "under": 0.2796,
+    "none": 0.034,
+    "within_1": 0.9936,
+    "kappa_true": 0.7997,
+    "under_claimed_below": 0.1668,
+    "retest_kappa": 0.8736,
+    "retest_exact": 0.8036,
+    "minutes_mean": 56.5626,
+    "minutes_p90": 74.4947,
+    "minutes_over_60": 0.4904,
+    "items_mean": 20.4808,
+    "sessions_mean": 1.0036,
+    "borderline": 0.7404,
+    "status": {
+     "accepted_lower": 0.2088,
+     "confirmed": 0.7036,
+     "none": 0.034,
+     "provisional": 0.0536
+    },
+    "exact_ci": [
+     0.624,
+     0.66
+    ],
+    "over_ci": [
+     0.056,
+     0.075
+    ],
+    "retest_kappa_ci": [
+     0.863,
+     0.884
+    ],
+    "feasible": true,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.65,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6252,
+    "over": 0.0592,
+    "under": 0.2976,
+    "none": 0.04,
+    "within_1": 0.9928,
+    "kappa_true": 0.7915,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.8696,
+    "retest_exact": 0.7964,
+    "minutes_mean": 56.5337,
+    "minutes_p90": 74.3648,
+    "minutes_over_60": 0.4856,
+    "items_mean": 20.4996,
+    "sessions_mean": 1.004,
+    "borderline": 0.7372,
+    "status": {
+     "accepted_lower": 0.2256,
+     "confirmed": 0.6716,
+     "none": 0.04,
+     "provisional": 0.0628
+    },
+    "exact_ci": [
+     0.605,
+     0.645
+    ],
+    "over_ci": [
+     0.05,
+     0.068
+    ],
+    "retest_kappa_ci": [
+     0.858,
+     0.882
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.7,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6112,
+    "over": 0.0568,
+    "under": 0.3124,
+    "none": 0.0424,
+    "within_1": 0.9924,
+    "kappa_true": 0.7835,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.8643,
+    "retest_exact": 0.79,
+    "minutes_mean": 56.5337,
+    "minutes_p90": 74.3648,
+    "minutes_over_60": 0.4856,
+    "items_mean": 20.4996,
+    "sessions_mean": 1.004,
+    "borderline": 0.7372,
+    "status": {
+     "accepted_lower": 0.2396,
+     "confirmed": 0.6424,
+     "none": 0.0424,
+     "provisional": 0.0756
+    },
+    "exact_ci": [
+     0.593,
+     0.63
+    ],
+    "over_ci": [
+     0.047,
+     0.065
+    ],
+    "retest_kappa_ci": [
+     0.852,
+     0.875
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.75;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.75,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.592,
+    "over": 0.0536,
+    "under": 0.3332,
+    "none": 0.0448,
+    "within_1": 0.9892,
+    "kappa_true": 0.7678,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.85,
+    "retest_exact": 0.7744,
+    "minutes_mean": 56.6321,
+    "minutes_p90": 74.2291,
+    "minutes_over_60": 0.4888,
+    "items_mean": 20.5396,
+    "sessions_mean": 1.006,
+    "borderline": 0.7372,
+    "status": {
+     "accepted_lower": 0.2588,
+     "confirmed": 0.6132,
+     "none": 0.0448,
+     "provisional": 0.0832
+    },
+    "exact_ci": [
+     0.572,
+     0.611
+    ],
+    "over_ci": [
+     0.045,
+     0.063
+    ],
+    "retest_kappa_ci": [
+     0.838,
+     0.863
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=0;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 0,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5404,
+    "over": 0.06,
+    "under": 0.3768,
+    "none": 0.0416,
+    "within_1": 0.9776,
+    "kappa_true": 0.717,
+    "under_claimed_below": 0.1648,
+    "retest_kappa": 0.8111,
+    "retest_exact": 0.7452,
+    "minutes_mean": 46.4972,
+    "minutes_p90": 59.1061,
+    "minutes_over_60": 0.0036,
+    "items_mean": 14.8964,
+    "sessions_mean": 1.0032,
+    "borderline": 0.794,
+    "status": {
+     "accepted_lower": 0.2968,
+     "confirmed": 0.562,
+     "none": 0.0416,
+     "provisional": 0.0996
+    },
+    "exact_ci": [
+     0.522,
+     0.558
+    ],
+    "over_ci": [
+     0.051,
+     0.069
+    ],
+    "retest_kappa_ci": [
+     0.795,
+     0.827
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=3;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 3,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5504,
+    "over": 0.0552,
+    "under": 0.3708,
+    "none": 0.0464,
+    "within_1": 0.9816,
+    "kappa_true": 0.7311,
+    "under_claimed_below": 0.1652,
+    "retest_kappa": 0.8285,
+    "retest_exact": 0.7484,
+    "minutes_mean": 51.9876,
+    "minutes_p90": 67.2328,
+    "minutes_over_60": 0.376,
+    "items_mean": 17.9292,
+    "sessions_mean": 1.006,
+    "borderline": 0.7744,
+    "status": {
+     "accepted_lower": 0.2928,
+     "confirmed": 0.5632,
+     "none": 0.0464,
+     "provisional": 0.0976
+    },
+    "exact_ci": [
+     0.531,
+     0.57
+    ],
+    "over_ci": [
+     0.047,
+     0.064
+    ],
+    "retest_kappa_ci": [
+     0.816,
+     0.841
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=9;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 9,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5776,
+    "over": 0.054,
+    "under": 0.3392,
+    "none": 0.0524,
+    "within_1": 0.988,
+    "kappa_true": 0.7616,
+    "under_claimed_below": 0.164,
+    "retest_kappa": 0.8397,
+    "retest_exact": 0.7596,
+    "minutes_mean": 60.7253,
+    "minutes_p90": 78.894,
+    "minutes_over_60": 0.5652,
+    "items_mean": 22.8272,
+    "sessions_mean": 1.008,
+    "borderline": 0.7124,
+    "status": {
+     "accepted_lower": 0.2676,
+     "confirmed": 0.5896,
+     "none": 0.0524,
+     "provisional": 0.0904
+    },
+    "exact_ci": [
+     0.558,
+     0.596
+    ],
+    "over_ci": [
+     0.045,
+     0.062
+    ],
+    "retest_kappa_ci": [
+     0.826,
+     0.852
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=12;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 12,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5928,
+    "over": 0.0472,
+    "under": 0.3332,
+    "none": 0.0544,
+    "within_1": 0.9864,
+    "kappa_true": 0.7702,
+    "under_claimed_below": 0.164,
+    "retest_kappa": 0.8361,
+    "retest_exact": 0.7616,
+    "minutes_mean": 62.9994,
+    "minutes_p90": 79.2665,
+    "minutes_over_60": 0.6276,
+    "items_mean": 24.0576,
+    "sessions_mean": 1.008,
+    "borderline": 0.6772,
+    "status": {
+     "accepted_lower": 0.264,
+     "confirmed": 0.6048,
+     "none": 0.0544,
+     "provisional": 0.0768
+    },
+    "exact_ci": [
+     0.573,
+     0.612
+    ],
+    "over_ci": [
+     0.04,
+     0.056
+    ],
+    "retest_kappa_ci": [
+     0.821,
+     0.849
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=10;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 10,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.564,
+    "over": 0.0516,
+    "under": 0.3552,
+    "none": 0.0564,
+    "within_1": 0.9848,
+    "kappa_true": 0.7483,
+    "under_claimed_below": 0.1644,
+    "retest_kappa": 0.8337,
+    "retest_exact": 0.7564,
+    "minutes_mean": 55.6395,
+    "minutes_p90": 69.1959,
+    "minutes_over_60": 0.5028,
+    "items_mean": 20.1916,
+    "sessions_mean": 1.004,
+    "borderline": 0.7432,
+    "status": {
+     "accepted_lower": 0.2804,
+     "confirmed": 0.5704,
+     "none": 0.0564,
+     "provisional": 0.0928
+    },
+    "exact_ci": [
+     0.546,
+     0.582
+    ],
+    "over_ci": [
+     0.043,
+     0.06
+    ],
+    "retest_kappa_ci": [
+     0.82,
+     0.848
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=30;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 30,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5768,
+    "over": 0.0504,
+    "under": 0.3468,
+    "none": 0.052,
+    "within_1": 0.9836,
+    "kappa_true": 0.7555,
+    "under_claimed_below": 0.164,
+    "retest_kappa": 0.8387,
+    "retest_exact": 0.7628,
+    "minutes_mean": 56.6696,
+    "minutes_p90": 74.4368,
+    "minutes_over_60": 0.4768,
+    "items_mean": 20.4644,
+    "sessions_mean": 1.006,
+    "borderline": 0.7308,
+    "status": {
+     "accepted_lower": 0.274,
+     "confirmed": 0.5784,
+     "none": 0.052,
+     "provisional": 0.0956
+    },
+    "exact_ci": [
+     0.558,
+     0.596
+    ],
+    "over_ci": [
+     0.043,
+     0.059
+    ],
+    "retest_kappa_ci": [
+     0.825,
+     0.853
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=6;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 6,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5572,
+    "over": 0.0548,
+    "under": 0.36,
+    "none": 0.0528,
+    "within_1": 0.9892,
+    "kappa_true": 0.7517,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8432,
+    "retest_exact": 0.7672,
+    "minutes_mean": 56.3856,
+    "minutes_p90": 74.3735,
+    "minutes_over_60": 0.4784,
+    "items_mean": 20.3684,
+    "sessions_mean": 1.004,
+    "borderline": 0.754,
+    "status": {
+     "accepted_lower": 0.2824,
+     "confirmed": 0.5728,
+     "none": 0.0528,
+     "provisional": 0.092
+    },
+    "exact_ci": [
+     0.538,
+     0.576
+    ],
+    "over_ci": [
+     0.046,
+     0.064
+    ],
+    "retest_kappa_ci": [
+     0.83,
+     0.856
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=10;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 10,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5572,
+    "over": 0.058,
+    "under": 0.36,
+    "none": 0.0468,
+    "within_1": 0.9884,
+    "kappa_true": 0.7467,
+    "under_claimed_below": 0.1652,
+    "retest_kappa": 0.8393,
+    "retest_exact": 0.77,
+    "minutes_mean": 56.7568,
+    "minutes_p90": 74.204,
+    "minutes_over_60": 0.4764,
+    "items_mean": 20.5464,
+    "sessions_mean": 1.004,
+    "borderline": 0.7464,
+    "status": {
+     "accepted_lower": 0.2836,
+     "confirmed": 0.5716,
+     "none": 0.0468,
+     "provisional": 0.098
+    },
+    "exact_ci": [
+     0.538,
+     0.576
+    ],
+    "over_ci": [
+     0.048,
+     0.068
+    ],
+    "retest_kappa_ci": [
+     0.825,
+     0.853
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=12;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 12,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5628,
+    "over": 0.0496,
+    "under": 0.36,
+    "none": 0.0544,
+    "within_1": 0.9868,
+    "kappa_true": 0.7522,
+    "under_claimed_below": 0.1644,
+    "retest_kappa": 0.8394,
+    "retest_exact": 0.7652,
+    "minutes_mean": 57.333,
+    "minutes_p90": 74.299,
+    "minutes_over_60": 0.5048,
+    "items_mean": 20.7144,
+    "sessions_mean": 1.0068,
+    "borderline": 0.7312,
+    "status": {
+     "accepted_lower": 0.282,
+     "confirmed": 0.572,
+     "none": 0.0544,
+     "provisional": 0.0916
+    },
+    "exact_ci": [
+     0.542,
+     0.581
+    ],
+    "over_ci": [
+     0.041,
+     0.058
+    ],
+    "retest_kappa_ci": [
+     0.825,
+     0.852
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=12;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 12,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.552,
+    "over": 0.0544,
+    "under": 0.3656,
+    "none": 0.0536,
+    "within_1": 0.9844,
+    "kappa_true": 0.7413,
+    "under_claimed_below": 0.1636,
+    "retest_kappa": 0.8305,
+    "retest_exact": 0.7592,
+    "minutes_mean": 51.0009,
+    "minutes_p90": 71.7953,
+    "minutes_over_60": 0.328,
+    "items_mean": 17.6256,
+    "sessions_mean": 1.006,
+    "borderline": 0.7612,
+    "status": {
+     "accepted_lower": 0.2864,
+     "confirmed": 0.5636,
+     "none": 0.0536,
+     "provisional": 0.0964
+    },
+    "exact_ci": [
+     0.533,
+     0.572
+    ],
+    "over_ci": [
+     0.045,
+     0.063
+    ],
+    "retest_kappa_ci": [
+     0.817,
+     0.844
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=14;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 14,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5556,
+    "over": 0.0572,
+    "under": 0.3636,
+    "none": 0.046,
+    "within_1": 0.9868,
+    "kappa_true": 0.7443,
+    "under_claimed_below": 0.1656,
+    "retest_kappa": 0.8364,
+    "retest_exact": 0.7612,
+    "minutes_mean": 54.0117,
+    "minutes_p90": 73.2343,
+    "minutes_over_60": 0.3892,
+    "items_mean": 19.2208,
+    "sessions_mean": 1.006,
+    "borderline": 0.7492,
+    "status": {
+     "accepted_lower": 0.2832,
+     "confirmed": 0.5752,
+     "none": 0.046,
+     "provisional": 0.0956
+    },
+    "exact_ci": [
+     0.536,
+     0.574
+    ],
+    "over_ci": [
+     0.048,
+     0.066
+    ],
+    "retest_kappa_ci": [
+     0.821,
+     0.849
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=18;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 18,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5628,
+    "over": 0.0516,
+    "under": 0.3636,
+    "none": 0.0488,
+    "within_1": 0.9864,
+    "kappa_true": 0.7506,
+    "under_claimed_below": 0.1644,
+    "retest_kappa": 0.8328,
+    "retest_exact": 0.7564,
+    "minutes_mean": 58.6664,
+    "minutes_p90": 75.0007,
+    "minutes_over_60": 0.5492,
+    "items_mean": 21.5244,
+    "sessions_mean": 1.006,
+    "borderline": 0.7328,
+    "status": {
+     "accepted_lower": 0.2804,
+     "confirmed": 0.5836,
+     "none": 0.0488,
+     "provisional": 0.0872
+    },
+    "exact_ci": [
+     0.543,
+     0.583
+    ],
+    "over_ci": [
+     0.043,
+     0.06
+    ],
+    "retest_kappa_ci": [
+     0.818,
+     0.846
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 20,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5708,
+    "over": 0.0552,
+    "under": 0.346,
+    "none": 0.0544,
+    "within_1": 0.9876,
+    "kappa_true": 0.7581,
+    "under_claimed_below": 0.1648,
+    "retest_kappa": 0.8486,
+    "retest_exact": 0.772,
+    "minutes_mean": 59.6916,
+    "minutes_p90": 75.0087,
+    "minutes_over_60": 0.5992,
+    "items_mean": 22.0628,
+    "sessions_mean": 1.0052,
+    "borderline": 0.7084,
+    "status": {
+     "accepted_lower": 0.2668,
+     "confirmed": 0.5936,
+     "none": 0.0544,
+     "provisional": 0.0852
+    },
+    "exact_ci": [
+     0.552,
+     0.589
+    ],
+    "over_ci": [
+     0.046,
+     0.064
+    ],
+    "retest_kappa_ci": [
+     0.835,
+     0.862
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.25;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.25,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5752,
+    "over": 0.0492,
+    "under": 0.3484,
+    "none": 0.0544,
+    "within_1": 0.986,
+    "kappa_true": 0.7581,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8442,
+    "retest_exact": 0.7696,
+    "minutes_mean": 56.6321,
+    "minutes_p90": 74.2291,
+    "minutes_over_60": 0.4888,
+    "items_mean": 20.5396,
+    "sessions_mean": 1.006,
+    "borderline": 0.7372,
+    "status": {
+     "accepted_lower": 0.2724,
+     "confirmed": 0.5796,
+     "none": 0.0544,
+     "provisional": 0.0936
+    },
+    "exact_ci": [
+     0.556,
+     0.594
+    ],
+    "over_ci": [
+     0.041,
+     0.058
+    ],
+    "retest_kappa_ci": [
+     0.829,
+     0.858
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.3;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.3,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5752,
+    "over": 0.0492,
+    "under": 0.3484,
+    "none": 0.0544,
+    "within_1": 0.986,
+    "kappa_true": 0.7581,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8442,
+    "retest_exact": 0.7696,
+    "minutes_mean": 56.6321,
+    "minutes_p90": 74.2291,
+    "minutes_over_60": 0.4888,
+    "items_mean": 20.5396,
+    "sessions_mean": 1.006,
+    "borderline": 0.7372,
+    "status": {
+     "accepted_lower": 0.2724,
+     "confirmed": 0.5796,
+     "none": 0.0544,
+     "provisional": 0.0936
+    },
+    "exact_ci": [
+     0.556,
+     0.594
+    ],
+    "over_ci": [
+     0.041,
+     0.058
+    ],
+    "retest_kappa_ci": [
+     0.829,
+     0.857
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.4;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.4,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5752,
+    "over": 0.0492,
+    "under": 0.3484,
+    "none": 0.0544,
+    "within_1": 0.986,
+    "kappa_true": 0.7581,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8442,
+    "retest_exact": 0.7696,
+    "minutes_mean": 56.6321,
+    "minutes_p90": 74.2291,
+    "minutes_over_60": 0.4888,
+    "items_mean": 20.5396,
+    "sessions_mean": 1.006,
+    "borderline": 0.7372,
+    "status": {
+     "accepted_lower": 0.2724,
+     "confirmed": 0.5796,
+     "none": 0.0544,
+     "provisional": 0.0936
+    },
+    "exact_ci": [
+     0.555,
+     0.594
+    ],
+    "over_ci": [
+     0.041,
+     0.058
+    ],
+    "retest_kappa_ci": [
+     0.831,
+     0.857
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.45;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.45,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5684,
+    "over": 0.0504,
+    "under": 0.3532,
+    "none": 0.0544,
+    "within_1": 0.986,
+    "kappa_true": 0.7538,
+    "under_claimed_below": 0.164,
+    "retest_kappa": 0.8527,
+    "retest_exact": 0.7792,
+    "minutes_mean": 55.6216,
+    "minutes_p90": 73.9988,
+    "minutes_over_60": 0.45,
+    "items_mean": 19.9376,
+    "sessions_mean": 1.006,
+    "borderline": 0.7508,
+    "status": {
+     "accepted_lower": 0.2784,
+     "confirmed": 0.5732,
+     "none": 0.0544,
+     "provisional": 0.094
+    },
+    "exact_ci": [
+     0.549,
+     0.588
+    ],
+    "over_ci": [
+     0.042,
+     0.059
+    ],
+    "retest_kappa_ci": [
+     0.839,
+     0.866
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.0,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5816,
+    "over": 0.0592,
+    "under": 0.3348,
+    "none": 0.0496,
+    "within_1": 0.988,
+    "kappa_true": 0.7632,
+    "under_claimed_below": 0.1652,
+    "retest_kappa": 0.8415,
+    "retest_exact": 0.7628,
+    "minutes_mean": 52.8246,
+    "minutes_p90": 73.123,
+    "minutes_over_60": 0.37,
+    "items_mean": 18.4124,
+    "sessions_mean": 1.0044,
+    "borderline": 0.6304,
+    "status": {
+     "accepted_lower": 0.2592,
+     "confirmed": 0.6128,
+     "none": 0.0496,
+     "provisional": 0.0784
+    },
+    "exact_ci": [
+     0.562,
+     0.6
+    ],
+    "over_ci": [
+     0.05,
+     0.069
+    ],
+    "retest_kappa_ci": [
+     0.827,
+     0.855
+    ],
+    "feasible": true,
+    "feasible_strict": true
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.15;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.15,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.566,
+    "over": 0.0552,
+    "under": 0.3524,
+    "none": 0.054,
+    "within_1": 0.9864,
+    "kappa_true": 0.7535,
+    "under_claimed_below": 0.1632,
+    "retest_kappa": 0.8367,
+    "retest_exact": 0.7572,
+    "minutes_mean": 55.7887,
+    "minutes_p90": 74.1089,
+    "minutes_over_60": 0.4532,
+    "items_mean": 20.0272,
+    "sessions_mean": 1.0044,
+    "borderline": 0.7252,
+    "status": {
+     "accepted_lower": 0.2724,
+     "confirmed": 0.5768,
+     "none": 0.054,
+     "provisional": 0.0968
+    },
+    "exact_ci": [
+     0.547,
+     0.585
+    ],
+    "over_ci": [
+     0.046,
+     0.064
+    ],
+    "retest_kappa_ci": [
+     0.823,
+     0.851
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.44;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.44,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.57,
+    "over": 0.052,
+    "under": 0.3536,
+    "none": 0.0516,
+    "within_1": 0.9852,
+    "kappa_true": 0.7511,
+    "under_claimed_below": 0.1648,
+    "retest_kappa": 0.8323,
+    "retest_exact": 0.7536,
+    "minutes_mean": 57.3143,
+    "minutes_p90": 74.5227,
+    "minutes_over_60": 0.5088,
+    "items_mean": 20.7788,
+    "sessions_mean": 1.0076,
+    "borderline": 0.7464,
+    "status": {
+     "accepted_lower": 0.2756,
+     "confirmed": 0.5752,
+     "none": 0.0516,
+     "provisional": 0.0976
+    },
+    "exact_ci": [
+     0.552,
+     0.589
+    ],
+    "over_ci": [
+     0.044,
+     0.06
+    ],
+    "retest_kappa_ci": [
+     0.818,
+     0.845
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.64;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.64,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5664,
+    "over": 0.0552,
+    "under": 0.3516,
+    "none": 0.0528,
+    "within_1": 0.9848,
+    "kappa_true": 0.75,
+    "under_claimed_below": 0.1652,
+    "retest_kappa": 0.8257,
+    "retest_exact": 0.7388,
+    "minutes_mean": 57.3412,
+    "minutes_p90": 74.3612,
+    "minutes_over_60": 0.5076,
+    "items_mean": 20.7076,
+    "sessions_mean": 1.004,
+    "borderline": 0.748,
+    "status": {
+     "accepted_lower": 0.2728,
+     "confirmed": 0.576,
+     "none": 0.0528,
+     "provisional": 0.0984
+    },
+    "exact_ci": [
+     0.546,
+     0.585
+    ],
+    "over_ci": [
+     0.046,
+     0.064
+    ],
+    "retest_kappa_ci": [
+     0.812,
+     0.839
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=se;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "se",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5536,
+    "over": 0.048,
+    "under": 0.3672,
+    "none": 0.0596,
+    "within_1": 0.9848,
+    "kappa_true": 0.7474,
+    "under_claimed_below": 0.1652,
+    "retest_kappa": 0.8278,
+    "retest_exact": 0.75,
+    "minutes_mean": 57.189,
+    "minutes_p90": 74.2328,
+    "minutes_over_60": 0.4904,
+    "items_mean": 20.796,
+    "sessions_mean": 1.006,
+    "borderline": 0.754,
+    "status": {
+     "accepted_lower": 0.2916,
+     "confirmed": 0.552,
+     "none": 0.0596,
+     "provisional": 0.0968
+    },
+    "exact_ci": [
+     0.534,
+     0.574
+    ],
+    "over_ci": [
+     0.04,
+     0.057
+    ],
+    "retest_kappa_ci": [
+     0.812,
+     0.843
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=0.8;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": 0.8
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6112,
+    "over": 0.0744,
+    "under": 0.2872,
+    "none": 0.0544,
+    "within_1": 0.9904,
+    "kappa_true": 0.7762,
+    "under_claimed_below": 0.1056,
+    "retest_kappa": 0.7638,
+    "retest_exact": 0.6732,
+    "minutes_mean": 56.6321,
+    "minutes_p90": 74.2291,
+    "minutes_over_60": 0.4888,
+    "items_mean": 20.5396,
+    "sessions_mean": 1.006,
+    "borderline": 0.68,
+    "status": {
+     "accepted_lower": 0.2724,
+     "confirmed": 0.4888,
+     "confirmed_above": 0.0908,
+     "none": 0.0544,
+     "provisional": 0.0936
+    },
+    "exact_ci": [
+     0.592,
+     0.629
+    ],
+    "over_ci": [
+     0.064,
+     0.085
+    ],
+    "retest_kappa_ci": [
+     0.744,
+     0.782
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=0.9;misspec=0.5",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": 0.9
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6068,
+    "over": 0.0588,
+    "under": 0.3072,
+    "none": 0.0544,
+    "within_1": 0.9904,
+    "kappa_true": 0.7766,
+    "under_claimed_below": 0.1252,
+    "retest_kappa": 0.7927,
+    "retest_exact": 0.7048,
+    "minutes_mean": 56.6321,
+    "minutes_p90": 74.2291,
+    "minutes_over_60": 0.4888,
+    "items_mean": 20.5396,
+    "sessions_mean": 1.006,
+    "borderline": 0.7156,
+    "status": {
+     "accepted_lower": 0.2724,
+     "confirmed": 0.5244,
+     "confirmed_above": 0.0552,
+     "none": 0.0544,
+     "provisional": 0.0936
+    },
+    "exact_ci": [
+     0.588,
+     0.626
+    ],
+    "over_ci": [
+     0.05,
+     0.068
+    ],
+    "retest_kappa_ci": [
+     0.776,
+     0.809
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5",
+   "point": {
+    "decision": "point",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6548,
+    "over": 0.1776,
+    "under": 0.16,
+    "none": 0.0204,
+    "within_1": 0.9952,
+    "kappa_true": 0.8047,
+    "under_claimed_below": 0.0544,
+    "retest_kappa": 0.7157,
+    "retest_exact": 0.5712,
+    "minutes_mean": 56.4795,
+    "minutes_p90": 74.1767,
+    "minutes_over_60": 0.4832,
+    "items_mean": 20.4144,
+    "sessions_mean": 1.0,
+    "borderline": 0.6936,
+    "status": {
+     "none": 0.0204,
+     "point": 0.9796
+    },
+    "exact_ci": [
+     0.635,
+     0.673
+    ],
+    "over_ci": [
+     0.162,
+     0.194
+    ],
+    "retest_kappa_ci": [
+     0.695,
+     0.734
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.35,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5816,
+    "over": 0.0464,
+    "under": 0.3488,
+    "none": 0.0512,
+    "within_1": 0.9884,
+    "kappa_true": 0.7631,
+    "under_claimed_below": 0.1648,
+    "retest_kappa": 0.8393,
+    "retest_exact": 0.7652,
+    "minutes_mean": 56.8006,
+    "minutes_p90": 74.2503,
+    "minutes_over_60": 0.49,
+    "items_mean": 20.5648,
+    "sessions_mean": 1.006,
+    "borderline": 0.746,
+    "status": {
+     "accepted_lower": 0.2752,
+     "confirmed": 0.5844,
+     "none": 0.0512,
+     "provisional": 0.0892
+    },
+    "exact_ci": [
+     0.563,
+     0.6
+    ],
+    "over_ci": [
+     0.038,
+     0.054
+    ],
+    "retest_kappa_ci": [
+     0.824,
+     0.852
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35",
+   "point": {
+    "decision": "point",
+    "misspec": 0.35,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6716,
+    "over": 0.1572,
+    "under": 0.1624,
+    "none": 0.0248,
+    "within_1": 0.9952,
+    "kappa_true": 0.8181,
+    "under_claimed_below": 0.0536,
+    "retest_kappa": 0.7271,
+    "retest_exact": 0.5856,
+    "minutes_mean": 56.4747,
+    "minutes_p90": 74.0206,
+    "minutes_over_60": 0.4808,
+    "items_mean": 20.388,
+    "sessions_mean": 1.0,
+    "borderline": 0.6804,
+    "status": {
+     "none": 0.0248,
+     "point": 0.9752
+    },
+    "exact_ci": [
+     0.652,
+     0.69
+    ],
+    "over_ci": [
+     0.143,
+     0.171
+    ],
+    "retest_kappa_ci": [
+     0.709,
+     0.744
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.35,
+    "confirm_level": 0.5,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6676,
+    "over": 0.0792,
+    "under": 0.2484,
+    "none": 0.0184,
+    "within_1": 0.9936,
+    "kappa_true": 0.8107,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.8893,
+    "retest_exact": 0.8204,
+    "minutes_mean": 56.7348,
+    "minutes_p90": 74.4391,
+    "minutes_over_60": 0.4872,
+    "items_mean": 20.516,
+    "sessions_mean": 1.0024,
+    "borderline": 0.7328,
+    "status": {
+     "accepted_lower": 0.1764,
+     "confirmed": 0.7712,
+     "none": 0.0184,
+     "provisional": 0.034
+    },
+    "exact_ci": [
+     0.649,
+     0.686
+    ],
+    "over_ci": [
+     0.069,
+     0.09
+    ],
+    "retest_kappa_ci": [
+     0.879,
+     0.899
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  }
+ ],
+ "caveat": "Синтетика: истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5, люди — модель ответов 2PL; проверяется механика всей процедуры, а не качество заданий на людях. «Предварительно» считается ступенью Junior. Дискриминативность — на симулированном пилоте с авторскими параметрами: она показывает замысел автора, а не поведение людей; r_pb панели моделей — независимая проверка на ответах моделей, шкала моделей не равна шкале людей.",
+ "seconds": 456.2
+}

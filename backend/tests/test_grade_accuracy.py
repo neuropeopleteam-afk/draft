@@ -1,0 +1,141 @@
+"""Я22: точность уровня — позиция внутри уровня (флаг GRADE_POSITION_ENABLED), параметры решения в симуляции пути,
+перебор параметров (метрики, Парето, выбор)."""
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from app.core.config import get_settings
+from app.modules.assessment.grades import level_position
+from app.modules.assessment.rules import accept_lower_allowed
+from app.modules.validation import grade_sweep as gs
+from tests.conftest import register_and_verify
+from tests.test_day2_rules import H, ONBOARDING, pass_test
+
+
+# ------------------------------------------------------------------ позиция внутри уровня
+
+@pytest.mark.parametrize("theta,se,grade,code", [
+    (0.5, 0.30, "middle", "middle"),
+    (0.1, 0.30, "middle", "lower"),
+    (0.9, 0.30, "middle", "upper"),
+    (0.5, 0.45, "middle", "uncertain"),     # погрешность шире половины полосы — позицию не называем
+    (0.3, 0.33, "middle", "uncertain"),
+    (2.0, 0.40, "senior", "upper"),         # у Senior условная ширина полосы 1
+    (-1.3, 0.30, "intern", "uncertain"),    # полоса Стажёра узкая (0,75)
+    (-0.8, 0.25, "junior", "lower"),
+    (0.1, 0.70, "middle", "uncertain"),     # SE > POSITION_MAX_SE
+])
+def test_level_position(theta, se, grade, code):
+    p = level_position(theta, se, grade)
+    assert p["code"] == code and p["known"] == (code != "uncertain")
+    assert "θ" not in p["text"] and not any(ch.isdigit() for ch in p["text"])  # без чисел θ
+
+
+def test_level_position_none():
+    assert level_position(0.5, 0.3, None) is None
+    assert level_position(0.5, 0.3, "none") is None
+    assert level_position(None, 0.3, "middle") is None
+
+
+def _with_flag(monkeypatch, on: bool):
+    monkeypatch.setenv("GRADE_POSITION_ENABLED", "true" if on else "false")
+    get_settings.cache_clear()
+
+
+def test_result_position_flag(client, monkeypatch):
+    t = register_and_verify(client, email="pos@example.com")
+    assert client.put("/api/me/onboarding", json=ONBOARDING, headers=H(t)).status_code == 200
+    _with_flag(monkeypatch, False)
+    res = pass_test(client, t, "middle")
+    assert "level_position" not in res  # флаг выключен — как раньше
+    _with_flag(monkeypatch, True)
+    try:
+        res = client.get(f"/api/assessment/sessions/{res['session_id']}/result", headers=H(t))
+        if res.status_code == 404:  # путь итога другой — проверяем через новый тест
+            res = pass_test(client, t, "middle")
+        else:
+            res = res.json()
+        assert "level_position" in res
+        if res.get("confirmed"):
+            assert res["level_position"]["grade"] == "middle"
+            assert res["level_position"]["code"] in ("lower", "middle", "upper", "uncertain")
+    finally:
+        _with_flag(monkeypatch, False)
+
+
+def test_grade_status_position(monkeypatch):
+    from app.modules.profiles import facts
+
+    out: dict = {}
+    _with_flag(monkeypatch, False)
+    facts._position(out, {"theta": 0.9, "se": 0.3}, "middle")
+    assert "position" not in out
+    _with_flag(monkeypatch, True)
+    try:
+        facts._position(out, {"theta": 0.9, "se": 0.3}, "middle")
+        assert out["position"]["code"] == "upper"
+    finally:
+        _with_flag(monkeypatch, False)
+
+
+# ------------------------------------------------------------------ порог уверенности «уровня ниже»
+
+def test_accept_lower_level_parameter():
+    probs = {"none": 0.02, "intern": 0.08, "junior": 0.25, "middle": 0.6, "senior": 0.05}
+    # P(≥ junior) = 0,9, P(≥ middle) = 0,65: при 0,8 — junior, при 0,6 — middle (но middle заявлен) → junior
+    assert accept_lower_allowed(None, "senior", False, probs, level=0.8)[0] == "junior"
+    assert accept_lower_allowed(None, "senior", False, probs, level=0.6)[0] == "middle"
+
+
+# ------------------------------------------------------------------ перебор: метрики, Парето, выбор
+
+def _row(true, l1, l2, minutes=50.0):
+    n = len(true)
+    return {"true": true, "claimed": true, "l1": l1, "l2": l2, "min1": [minutes] * n, "items1": [20] * n,
+            "sess1": [1] * n, "status1": ["confirmed"] * n, "border1": [False] * n}
+
+
+def test_sweep_metrics_and_choice():
+    t = [1, 2, 3, 4, 2, 3, 3, 2, 1, 4]
+    exact = gs.metrics([_row(t, t, t)], boot=False)
+    assert exact["exact"] == 1.0 and exact["over"] == 0.0 and exact["retest_kappa"] == 1.0 and exact["feasible"]
+    low = [max(v - 1, 0) for v in t]
+    under = gs.metrics([_row(t, low, low)], boot=False)
+    assert under["under"] + under["none"] == 1.0 and under["exact"] == 0.0
+    slow = gs.metrics([_row(t, t, t, minutes=75.0)], boot=False)
+    assert not slow["feasible"]  # время пути > 60 мин
+    base = gs.baseline_point()
+    pts = [{"key": "base", "point": base, "metrics": under},
+           {"key": "fast", "point": {**base, "confirm_level": 0.5}, "metrics": exact},
+           {"key": "slow", "point": {**base, "max_items": 20}, "metrics": slow}]
+    front = gs.pareto(pts)
+    assert "fast" in front and "base" not in front
+    ch = gs.choose(pts, "base")
+    assert ch["key"] == "fast" and ch["better_on_all"] and ch["delta_exact"] == 1.0
+
+
+def test_borderline_rule():
+    assert not gs.borderline("middle", 0.5, 0.2)
+    assert gs.borderline("middle", 0.1, 0.3)       # нижняя граница не доказана с P ≥ 0,8
+    assert gs.borderline("middle", 0.9, 0.3)       # следующий уровень не исключён
+    assert not gs.borderline("senior", 2.0, 0.3)
+
+
+def test_low_info_families_share():
+    from app.modules.validation import sim
+
+    pool = sim.make_pool(2)
+    low = gs.low_info_families(pool, 0.2)
+    blocks = {i.block for i in pool if not i.canary}
+    assert 0 < len(low) <= int(0.2 * len([i for i in pool if not i.canary])) + len(blocks)
+    assert not gs.low_info_families(pool, 0.0)
+
+
+def test_sweep_task_small():
+    """Одна точка, 3 кандидата: путь считается, уровни в шкале, 4 ступени — без Стажёра."""
+    r = gs.run_task((gs._p(), 0, "backend", 3))
+    assert len(r["l1"]) == 3 and all(0 <= v <= 4 for v in r["l1"] + r["true"])
+    r4 = gs.run_task((gs._p(levels=4, misspec=0.35, decision="point"), 0, "backend", 3))
+    assert all(0 <= v <= 3 for v in r4["l1"] + r4["true"])
+    assert np.isfinite(r4["min1"]).all()
