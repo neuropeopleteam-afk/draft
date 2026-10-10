@@ -1,0 +1,353 @@
+## memory.events api до
+oom 0
+oom_kill 0
+## 13:05:34 0.06 0.93 1.12
+spectrek_fsp-api-1;119.66%;893.6MiB / 1.5GiB
+spectrek_fsp-web-1;0.54%;5.176MiB / 32MiB
+spectrek_fsp-keycloak-1;0.26%;309.3MiB / 576MiB
+spectrek_fsp-db-1;11.80%;125.6MiB / 320MiB
+## 13:05:44 0.35 0.96 1.13
+spectrek_fsp-api-1;114.47%;897.3MiB / 1.5GiB
+spectrek_fsp-web-1;2.72%;5.148MiB / 32MiB
+spectrek_fsp-keycloak-1;0.20%;309.3MiB / 576MiB
+spectrek_fsp-db-1;25.05%;132.3MiB / 320MiB
+## 13:05:54 0.37 0.95 1.13
+spectrek_fsp-api-1;243.58%;919.7MiB / 1.5GiB
+spectrek_fsp-web-1;4.51%;5.473MiB / 32MiB
+spectrek_fsp-keycloak-1;0.35%;309.2MiB / 576MiB
+spectrek_fsp-db-1;34.22%;142MiB / 320MiB
+## 13:06:04 0.54 0.97 1.13
+spectrek_fsp-api-1;205.55%;936.5MiB / 1.5GiB
+spectrek_fsp-web-1;1.08%;5.449MiB / 32MiB
+spectrek_fsp-keycloak-1;0.29%;309.2MiB / 576MiB
+spectrek_fsp-db-1;29.52%;144.6MiB / 320MiB
+## 13:06:15 2.39 1.37 1.26
+spectrek_fsp-api-1;201.14%;951.2MiB / 1.5GiB
+spectrek_fsp-web-1;0.97%;5.844MiB / 32MiB
+spectrek_fsp-keycloak-1;0.15%;309.2MiB / 576MiB
+spectrek_fsp-db-1;27.92%;156.3MiB / 320MiB
+## 13:06:25 2.77 1.49 1.30
+spectrek_fsp-api-1;247.96%;1004MiB / 1.5GiB
+spectrek_fsp-web-1;1.16%;5.988MiB / 32MiB
+spectrek_fsp-keycloak-1;0.13%;309.3MiB / 576MiB
+spectrek_fsp-db-1;41.30%;176.6MiB / 320MiB
+## 13:06:35 3.45 1.68 1.36
+spectrek_fsp-api-1;195.57%;1012MiB / 1.5GiB
+spectrek_fsp-web-1;3.85%;6.375MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.3MiB / 576MiB
+spectrek_fsp-db-1;32.39%;161.9MiB / 320MiB
+## 13:06:46 3.61 1.77 1.40
+spectrek_fsp-api-1;170.64%;1.012GiB / 1.5GiB
+spectrek_fsp-web-1;1.88%;6.227MiB / 32MiB
+spectrek_fsp-keycloak-1;0.39%;309.2MiB / 576MiB
+spectrek_fsp-db-1;44.91%;154.5MiB / 320MiB
+## 13:06:56 3.66 1.84 1.43
+spectrek_fsp-api-1;194.07%;1.013GiB / 1.5GiB
+spectrek_fsp-web-1;0.69%;6.293MiB / 32MiB
+spectrek_fsp-keycloak-1;0.52%;309.2MiB / 576MiB
+spectrek_fsp-db-1;31.45%;153.3MiB / 320MiB
+## 13:07:06 4.40 2.06 1.50
+spectrek_fsp-api-1;205.68%;1.017GiB / 1.5GiB
+spectrek_fsp-web-1;1.04%;6.281MiB / 32MiB
+spectrek_fsp-keycloak-1;0.19%;309.2MiB / 576MiB
+spectrek_fsp-db-1;43.99%;162.3MiB / 320MiB
+## 13:07:17 4.66 2.19 1.55
+spectrek_fsp-api-1;199.31%;1.025GiB / 1.5GiB
+spectrek_fsp-web-1;1.06%;6.289MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.3MiB / 576MiB
+spectrek_fsp-db-1;25.70%;156.5MiB / 320MiB
+## 13:07:27 4.95 2.34 1.60
+spectrek_fsp-api-1;201.18%;1.028GiB / 1.5GiB
+spectrek_fsp-web-1;0.68%;6.77MiB / 32MiB
+spectrek_fsp-keycloak-1;8.16%;309.3MiB / 576MiB
+spectrek_fsp-db-1;28.02%;151.7MiB / 320MiB
+## 13:07:37 5.14 2.46 1.65
+spectrek_fsp-api-1;188.04%;1.036GiB / 1.5GiB
+spectrek_fsp-web-1;0.59%;6.438MiB / 32MiB
+spectrek_fsp-keycloak-1;0.25%;309.3MiB / 576MiB
+spectrek_fsp-db-1;13.74%;158.3MiB / 320MiB
+## 13:07:47 4.98 2.51 1.68
+spectrek_fsp-api-1;186.41%;1.046GiB / 1.5GiB
+spectrek_fsp-web-1;0.93%;6.418MiB / 32MiB
+spectrek_fsp-keycloak-1;0.19%;309.2MiB / 576MiB
+spectrek_fsp-db-1;47.82%;154.1MiB / 320MiB
+## 13:07:58 4.59 2.51 1.69
+spectrek_fsp-api-1;132.79%;1.049GiB / 1.5GiB
+spectrek_fsp-web-1;0.41%;6.352MiB / 32MiB
+spectrek_fsp-keycloak-1;6.81%;309.2MiB / 576MiB
+spectrek_fsp-db-1;14.30%;154.5MiB / 320MiB
+## 13:08:08 4.11 2.47 1.68
+spectrek_fsp-api-1;167.37%;1.05GiB / 1.5GiB
+spectrek_fsp-web-1;0.99%;6.379MiB / 32MiB
+spectrek_fsp-keycloak-1;0.19%;309.2MiB / 576MiB
+spectrek_fsp-db-1;12.91%;155.7MiB / 320MiB
+## 13:08:18 3.78 2.46 1.69
+spectrek_fsp-api-1;210.69%;1.055GiB / 1.5GiB
+spectrek_fsp-web-1;0.97%;6.57MiB / 32MiB
+spectrek_fsp-keycloak-1;0.18%;309.3MiB / 576MiB
+spectrek_fsp-db-1;35.42%;163.5MiB / 320MiB
+## 13:08:29 3.88 2.52 1.72
+spectrek_fsp-api-1;210.87%;1.072GiB / 1.5GiB
+spectrek_fsp-web-1;0.28%;6.328MiB / 32MiB
+spectrek_fsp-keycloak-1;0.19%;309.3MiB / 576MiB
+spectrek_fsp-db-1;15.08%;160MiB / 320MiB
+## 13:08:39 3.82 2.56 1.74
+spectrek_fsp-api-1;199.77%;1.084GiB / 1.5GiB
+spectrek_fsp-web-1;1.19%;6.254MiB / 32MiB
+spectrek_fsp-keycloak-1;0.26%;309.3MiB / 576MiB
+spectrek_fsp-db-1;57.43%;159.1MiB / 320MiB
+## 13:08:49 4.53 2.75 1.81
+spectrek_fsp-api-1;191.66%;1.107GiB / 1.5GiB
+spectrek_fsp-web-1;2.62%;6.023MiB / 32MiB
+spectrek_fsp-keycloak-1;0.26%;309.2MiB / 576MiB
+spectrek_fsp-db-1;60.21%;165.8MiB / 320MiB
+## 13:08:59 4.28 2.76 1.82
+spectrek_fsp-api-1;206.71%;1.131GiB / 1.5GiB
+spectrek_fsp-web-1;0.84%;6.133MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.2MiB / 576MiB
+spectrek_fsp-db-1;34.60%;184.8MiB / 320MiB
+## 13:09:10 6.68 3.36 2.04
+spectrek_fsp-api-1;197.76%;1.161GiB / 1.5GiB
+spectrek_fsp-web-1;1.76%;6.234MiB / 32MiB
+spectrek_fsp-keycloak-1;0.15%;309.2MiB / 576MiB
+spectrek_fsp-db-1;44.00%;175.9MiB / 320MiB
+## 13:09:20 6.48 3.43 2.07
+spectrek_fsp-api-1;204.78%;1.182GiB / 1.5GiB
+spectrek_fsp-web-1;1.28%;6.16MiB / 32MiB
+spectrek_fsp-keycloak-1;0.42%;309.3MiB / 576MiB
+spectrek_fsp-db-1;52.32%;170.5MiB / 320MiB
+## 13:09:30 7.43 3.73 2.19
+spectrek_fsp-api-1;190.03%;1.175GiB / 1.5GiB
+spectrek_fsp-web-1;2.31%;6.004MiB / 32MiB
+spectrek_fsp-keycloak-1;0.18%;309.3MiB / 576MiB
+spectrek_fsp-db-1;71.37%;164.1MiB / 320MiB
+## 13:09:41 6.67 3.69 2.19
+spectrek_fsp-api-1;192.31%;1.183GiB / 1.5GiB
+spectrek_fsp-web-1;1.09%;6.016MiB / 32MiB
+spectrek_fsp-keycloak-1;0.22%;309.3MiB / 576MiB
+spectrek_fsp-db-1;47.53%;170.1MiB / 320MiB
+## 13:09:51 8.90 4.26 2.39
+spectrek_fsp-api-1;187.80%;1.191GiB / 1.5GiB
+spectrek_fsp-web-1;2.74%;5.902MiB / 32MiB
+spectrek_fsp-keycloak-1;0.13%;309.2MiB / 576MiB
+spectrek_fsp-db-1;75.93%;182MiB / 320MiB
+## 13:10:01 8.58 4.35 2.44
+spectrek_fsp-api-1;198.15%;1.19GiB / 1.5GiB
+spectrek_fsp-web-1;2.46%;5.629MiB / 32MiB
+spectrek_fsp-keycloak-1;0.15%;309.2MiB / 576MiB
+spectrek_fsp-db-1;60.72%;159.8MiB / 320MiB
+## 13:10:12 8.53 4.47 2.50
+spectrek_fsp-api-1;209.51%;1.189GiB / 1.5GiB
+spectrek_fsp-web-1;0.86%;5.723MiB / 32MiB
+spectrek_fsp-keycloak-1;0.22%;309.2MiB / 576MiB
+spectrek_fsp-db-1;29.09%;158.1MiB / 320MiB
+## 13:10:22 7.96 4.49 2.53
+spectrek_fsp-api-1;191.64%;1.199GiB / 1.5GiB
+spectrek_fsp-web-1;2.98%;5.973MiB / 32MiB
+spectrek_fsp-keycloak-1;0.76%;309.3MiB / 576MiB
+spectrek_fsp-db-1;74.03%;159.8MiB / 320MiB
+## 13:10:32 7.97 4.61 2.59
+spectrek_fsp-api-1;201.14%;1.198GiB / 1.5GiB
+spectrek_fsp-web-1;1.29%;6.125MiB / 32MiB
+spectrek_fsp-keycloak-1;0.42%;309.3MiB / 576MiB
+spectrek_fsp-db-1;54.40%;167.7MiB / 320MiB
+## 13:10:43 8.56 4.83 2.68
+spectrek_fsp-api-1;192.71%;1.201GiB / 1.5GiB
+spectrek_fsp-web-1;1.70%;5.77MiB / 32MiB
+spectrek_fsp-keycloak-1;0.19%;309.3MiB / 576MiB
+spectrek_fsp-db-1;53.71%;160.7MiB / 320MiB
+## 13:10:53 9.04 5.06 2.78
+spectrek_fsp-api-1;208.60%;1.207GiB / 1.5GiB
+spectrek_fsp-web-1;2.98%;5.715MiB / 32MiB
+spectrek_fsp-keycloak-1;0.23%;309.2MiB / 576MiB
+spectrek_fsp-db-1;45.73%;154.3MiB / 320MiB
+## 13:11:03 9.53 5.29 2.88
+spectrek_fsp-api-1;199.68%;1.215GiB / 1.5GiB
+spectrek_fsp-web-1;2.16%;5.969MiB / 32MiB
+spectrek_fsp-keycloak-1;0.18%;309.2MiB / 576MiB
+spectrek_fsp-db-1;29.10%;177.7MiB / 320MiB
+## 13:11:14 8.85 5.28 2.90
+spectrek_fsp-api-1;198.64%;1.22GiB / 1.5GiB
+spectrek_fsp-web-1;1.30%;6.23MiB / 32MiB
+spectrek_fsp-keycloak-1;0.21%;309.2MiB / 576MiB
+spectrek_fsp-db-1;46.48%;183.9MiB / 320MiB
+## 13:11:24 8.28 5.27 2.92
+spectrek_fsp-api-1;240.04%;1.229GiB / 1.5GiB
+spectrek_fsp-web-1;2.13%;5.988MiB / 32MiB
+spectrek_fsp-keycloak-1;0.19%;309.3MiB / 576MiB
+spectrek_fsp-db-1;82.86%;167MiB / 320MiB
+## 13:11:34 7.68 5.24 2.94
+spectrek_fsp-api-1;183.29%;1.238GiB / 1.5GiB
+spectrek_fsp-web-1;2.82%;5.926MiB / 32MiB
+spectrek_fsp-keycloak-1;0.15%;309.3MiB / 576MiB
+spectrek_fsp-db-1;58.50%;179.5MiB / 320MiB
+## 13:11:44 7.97 5.38 3.01
+spectrek_fsp-api-1;199.13%;1.25GiB / 1.5GiB
+spectrek_fsp-web-1;0.64%;5.996MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.3MiB / 576MiB
+spectrek_fsp-db-1;58.23%;183.8MiB / 320MiB
+## 13:11:55 7.21 5.31 3.01
+spectrek_fsp-api-1;201.80%;1.261GiB / 1.5GiB
+spectrek_fsp-web-1;2.79%;5.949MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.2MiB / 576MiB
+spectrek_fsp-db-1;59.22%;175MiB / 320MiB
+## 13:12:05 7.37 5.44 3.09
+spectrek_fsp-api-1;187.33%;1.26GiB / 1.5GiB
+spectrek_fsp-web-1;2.25%;5.824MiB / 32MiB
+spectrek_fsp-keycloak-1;0.21%;309.2MiB / 576MiB
+spectrek_fsp-db-1;75.11%;182.4MiB / 320MiB
+## 13:12:15 7.14 5.45 3.12
+spectrek_fsp-api-1;186.08%;1.273GiB / 1.5GiB
+spectrek_fsp-web-1;1.49%;5.926MiB / 32MiB
+spectrek_fsp-keycloak-1;5.28%;309.2MiB / 576MiB
+spectrek_fsp-db-1;51.08%;187.9MiB / 320MiB
+## 13:12:25 7.98 5.69 3.22
+spectrek_fsp-api-1;200.92%;1.272GiB / 1.5GiB
+spectrek_fsp-web-1;1.40%;5.852MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.3MiB / 576MiB
+spectrek_fsp-db-1;51.67%;189.3MiB / 320MiB
+## 13:12:36 9.29 6.04 3.37
+spectrek_fsp-api-1;183.86%;1.278GiB / 1.5GiB
+spectrek_fsp-web-1;4.00%;5.984MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.3MiB / 576MiB
+spectrek_fsp-db-1;102.16%;169.7MiB / 320MiB
+## 13:12:46 9.06 6.11 3.42
+spectrek_fsp-api-1;213.99%;1.34GiB / 1.5GiB
+spectrek_fsp-web-1;1.25%;5.816MiB / 32MiB
+spectrek_fsp-keycloak-1;0.32%;309.2MiB / 576MiB
+spectrek_fsp-db-1;40.64%;154.8MiB / 320MiB
+## 13:12:56 9.62 6.33 3.52
+spectrek_fsp-api-1;205.47%;1.292GiB / 1.5GiB
+spectrek_fsp-web-1;1.41%;6.004MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.2MiB / 576MiB
+spectrek_fsp-db-1;50.89%;179.7MiB / 320MiB
+## 13:13:06 10.25 6.58 3.63
+spectrek_fsp-api-1;198.64%;1.284GiB / 1.5GiB
+spectrek_fsp-web-1;1.17%;5.883MiB / 32MiB
+spectrek_fsp-keycloak-1;0.15%;309.2MiB / 576MiB
+spectrek_fsp-db-1;52.92%;180.7MiB / 320MiB
+## 13:13:17 10.02 6.66 3.69
+spectrek_fsp-api-1;216.36%;1.304GiB / 1.5GiB
+spectrek_fsp-web-1;0.69%;5.965MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.3MiB / 576MiB
+spectrek_fsp-db-1;19.67%;177.2MiB / 320MiB
+## 13:13:27 9.02 6.56 3.69
+spectrek_fsp-api-1;186.15%;1.301GiB / 1.5GiB
+spectrek_fsp-web-1;1.84%;5.891MiB / 32MiB
+spectrek_fsp-keycloak-1;0.49%;309.3MiB / 576MiB
+spectrek_fsp-db-1;100.48%;181.6MiB / 320MiB
+## 13:13:37 9.45 6.72 3.77
+spectrek_fsp-api-1;198.24%;1.305GiB / 1.5GiB
+spectrek_fsp-web-1;0.74%;5.859MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.3MiB / 576MiB
+spectrek_fsp-db-1;86.48%;178.3MiB / 320MiB
+## 13:13:48 10.01 6.94 3.88
+spectrek_fsp-api-1;241.84%;1.316GiB / 1.5GiB
+spectrek_fsp-web-1;1.71%;5.777MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.2MiB / 576MiB
+spectrek_fsp-db-1;69.76%;163.2MiB / 320MiB
+## 13:13:58 10.16 7.08 3.95
+spectrek_fsp-api-1;197.04%;1.311GiB / 1.5GiB
+spectrek_fsp-web-1;3.38%;5.992MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.2MiB / 576MiB
+spectrek_fsp-db-1;101.90%;172.3MiB / 320MiB
+## 13:14:08 10.22 7.19 4.02
+spectrek_fsp-api-1;174.62%;1.309GiB / 1.5GiB
+spectrek_fsp-web-1;1.23%;5.84MiB / 32MiB
+spectrek_fsp-keycloak-1;0.20%;309.2MiB / 576MiB
+spectrek_fsp-db-1;37.07%;163.9MiB / 320MiB
+## 13:14:18 11.27 7.51 4.16
+spectrek_fsp-api-1;204.45%;1.315GiB / 1.5GiB
+spectrek_fsp-web-1;2.32%;5.805MiB / 32MiB
+spectrek_fsp-keycloak-1;0.19%;309.3MiB / 576MiB
+spectrek_fsp-db-1;44.90%;173.8MiB / 320MiB
+## 13:14:29 11.26 7.63 4.24
+spectrek_fsp-api-1;186.32%;1.324GiB / 1.5GiB
+spectrek_fsp-web-1;2.52%;6.152MiB / 32MiB
+spectrek_fsp-keycloak-1;0.15%;309.3MiB / 576MiB
+spectrek_fsp-db-1;73.51%;174.4MiB / 320MiB
+## 13:14:39 10.05 7.49 4.23
+spectrek_fsp-api-1;186.86%;1.325GiB / 1.5GiB
+spectrek_fsp-web-1;1.64%;6.023MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.3MiB / 576MiB
+spectrek_fsp-db-1;76.34%;179.4MiB / 320MiB
+## 13:14:49 9.11 7.38 4.23
+spectrek_fsp-api-1;205.45%;1.331GiB / 1.5GiB
+spectrek_fsp-web-1;0.90%;5.871MiB / 32MiB
+spectrek_fsp-keycloak-1;0.15%;309.2MiB / 576MiB
+spectrek_fsp-db-1;67.15%;186.3MiB / 320MiB
+## 13:15:00 8.74 7.35 4.25
+spectrek_fsp-api-1;253.82%;1.335GiB / 1.5GiB
+spectrek_fsp-web-1;2.20%;6.105MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.2MiB / 576MiB
+spectrek_fsp-db-1;32.58%;195.1MiB / 320MiB
+## 13:15:10 7.79 7.22 4.26
+spectrek_fsp-api-1;191.53%;1.353GiB / 1.5GiB
+spectrek_fsp-web-1;2.28%;5.969MiB / 32MiB
+spectrek_fsp-keycloak-1;0.40%;309.2MiB / 576MiB
+spectrek_fsp-db-1;66.42%;169.8MiB / 320MiB
+## 13:15:20 7.36 7.14 4.27
+spectrek_fsp-api-1;212.25%;1.352GiB / 1.5GiB
+spectrek_fsp-web-1;0.35%;5.875MiB / 32MiB
+spectrek_fsp-keycloak-1;0.74%;309.3MiB / 576MiB
+spectrek_fsp-db-1;19.64%;189.5MiB / 320MiB
+## 13:15:31 6.69 7.01 4.25
+spectrek_fsp-api-1;209.28%;1.356GiB / 1.5GiB
+spectrek_fsp-web-1;2.21%;6.117MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.3MiB / 576MiB
+spectrek_fsp-db-1;47.23%;197.2MiB / 320MiB
+## 13:15:41 6.58 6.97 4.27
+spectrek_fsp-api-1;200.06%;1.361GiB / 1.5GiB
+spectrek_fsp-web-1;4.06%;5.934MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.3MiB / 576MiB
+spectrek_fsp-db-1;42.58%;189.7MiB / 320MiB
+## 13:15:51 7.52 7.16 4.36
+spectrek_fsp-api-1;199.77%;1.367GiB / 1.5GiB
+spectrek_fsp-web-1;1.32%;6.07MiB / 32MiB
+spectrek_fsp-keycloak-1;0.19%;309.2MiB / 576MiB
+spectrek_fsp-db-1;44.77%;188.4MiB / 320MiB
+## 13:16:01 6.98 7.05 4.36
+spectrek_fsp-api-1;187.02%;1.371GiB / 1.5GiB
+spectrek_fsp-web-1;3.40%;6MiB / 32MiB
+spectrek_fsp-keycloak-1;0.16%;309.2MiB / 576MiB
+spectrek_fsp-db-1;88.98%;190.8MiB / 320MiB
+## 13:16:12 8.10 7.30 4.47
+spectrek_fsp-api-1;195.44%;1.369GiB / 1.5GiB
+spectrek_fsp-web-1;1.78%;5.648MiB / 32MiB
+spectrek_fsp-keycloak-1;0.20%;309.2MiB / 576MiB
+spectrek_fsp-db-1;73.16%;156.1MiB / 320MiB
+## 13:16:22 7.77 7.25 4.48
+spectrek_fsp-api-1;199.58%;1.379GiB / 1.5GiB
+spectrek_fsp-web-1;1.48%;6.066MiB / 32MiB
+spectrek_fsp-keycloak-1;0.17%;309.3MiB / 576MiB
+spectrek_fsp-db-1;58.74%;190.5MiB / 320MiB
+## 13:16:32 7.79 7.28 4.52
+spectrek_fsp-api-1;206.02%;1.373GiB / 1.5GiB
+spectrek_fsp-web-1;2.62%;5.727MiB / 32MiB
+spectrek_fsp-keycloak-1;7.42%;309.3MiB / 576MiB
+spectrek_fsp-db-1;17.22%;156.4MiB / 320MiB
+## 13:16:43 6.90 7.10 4.49
+spectrek_fsp-api-1;198.28%;1.372GiB / 1.5GiB
+spectrek_fsp-web-1;0.06%;5.52MiB / 32MiB
+spectrek_fsp-keycloak-1;0.76%;309.3MiB / 576MiB
+spectrek_fsp-db-1;7.37%;130.7MiB / 320MiB
+## 13:16:53 6.07 6.92 4.46
+spectrek_fsp-api-1;128.59%;1.37GiB / 1.5GiB
+spectrek_fsp-web-1;0.00%;5.25MiB / 32MiB
+spectrek_fsp-keycloak-1;0.33%;309.2MiB / 576MiB
+spectrek_fsp-db-1;25.30%;132.9MiB / 320MiB
+## 13:17:03 5.51 6.77 4.44
+spectrek_fsp-api-1;77.28%;1.37GiB / 1.5GiB
+spectrek_fsp-web-1;0.00%;5.23MiB / 32MiB
+spectrek_fsp-keycloak-1;0.76%;309.2MiB / 576MiB
+spectrek_fsp-db-1;21.84%;137MiB / 320MiB
+## 13:17:13 5.14 6.65 4.42
+spectrek_fsp-api-1;90.90%;1.369GiB / 1.5GiB
+spectrek_fsp-web-1;0.00%;5.207MiB / 32MiB
+spectrek_fsp-keycloak-1;0.28%;309.2MiB / 576MiB
+spectrek_fsp-db-1;11.21%;135.9MiB / 320MiB
+## memory.peak api
+1542180864
+oom 0
+oom_kill 0
+ 

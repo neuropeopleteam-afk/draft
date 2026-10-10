@@ -35,6 +35,7 @@ from sqlalchemy.orm import Session
 from app.core.db import as_aware, utcnow
 from app.core.enums import InvitationStatus, ProbeStatus
 from app.core.fmt import ru_num
+from app.core.origin import fns_origin
 from app.integrations.egrul import demo as demo_mod
 from app.integrations.egrul.client import age_years, check_inn
 from app.integrations.egrul.models import RegistryCheck
@@ -236,9 +237,14 @@ def email_factor(db: Session, company: Company) -> dict:
 def salary_factor(db: Session, company: Company, cats: dict[str, Category]) -> tuple[dict, list[dict]]:
     since = utcnow() - timedelta(days=180)
     checks = []
-    for inv in db.scalars(select(Invitation).where(Invitation.company_id == company.id,
-                                                   Invitation.created_at > since)).all():
-        cp = db.get(CandidateProfile, inv.candidate_user_id)
+    invs = db.scalars(select(Invitation).where(Invitation.company_id == company.id, Invitation.created_at > since)).all()
+    # профили кандидатов — одним запросом: по одному на приглашение список вакансий делал ~300 запросов к БД, и под
+    # нагрузкой 100 пользователей (docs/LOAD.md, раздел 6) каждый запрос ждал свою очередь — p50 16 с
+    ids = {inv.candidate_user_id for inv in invs}
+    cps = {cp.user_id: cp for cp in db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(ids)))} \
+        if ids else {}
+    for inv in invs:
+        cp = cps.get(inv.candidate_user_id)
         st, txt = salary_check(inv.salary_from, inv.salary_to, cats.get(cp.current_category_id) if cp else None,
                                inv.salary_basis)
         checks.append({"kind": "invitation", "title": inv.position_title, "status": st, "text": txt})
@@ -375,6 +381,7 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
         "level_title": title, "preliminary": preliminary, "critical": critical,
         "demo": demo_mod.is_demo_company(company),  # сведения ФНС — демо (пометка «демо» в интерфейсе)
         "factors": factors, "registry": registry, "offer_salary": offer,
+        "origin": fns_origin(registry),  # Я8: сведения ФНС — модельные данные / реальный запрос / не проверено
         "salary_checks": salary_checks[:10],
         "summary": (reasons_bad[0]["text"] if reasons_bad else (reasons_ok[0]["text"] if reasons_ok else "")),
         "computed_at": utcnow().isoformat(),
@@ -383,4 +390,5 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
 
 
 def short(t: dict) -> dict:
-    return {k: t.get(k) for k in ("score", "level", "level_title", "preliminary", "critical", "summary", "offer_salary", "demo")}
+    return {k: t.get(k) for k in ("score", "level", "level_title", "preliminary", "critical", "summary", "offer_salary", "demo",
+                                  "origin")}

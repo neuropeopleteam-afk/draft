@@ -10,8 +10,9 @@ env: ## Создать .env из .env.example со случайными секр
 	  sed -i "s/^POSTGRES_PASSWORD=$$/POSTGRES_PASSWORD=$$(openssl rand -hex 24)/; s/^JWT_SECRET=$$/JWT_SECRET=$$(openssl rand -hex 32)/" .env && \
 	  echo ".env создан")
 
-up: env ## Собрать и запустить стек (db, api, web)
-	$(COMPOSE) up -d --build
+up: env ## Собрать и запустить стек (db, api, web), дождаться готовности, создать демо-данные (NO_SEED=1 — без них)
+	$(COMPOSE) up -d --build --wait --wait-timeout 300
+	@if [ -z "$$NO_SEED" ]; then $(COMPOSE) exec -T api python -m app.modules.demo.seed; fi
 	@echo "Сайт: http://127.0.0.1:$${WEB_PORT:-8140}  API-документация: http://127.0.0.1:$${WEB_PORT:-8140}/api/docs"
 
 llm-local: env ## Стек + открытая модель Qwen на CPU без ключей (профиль llm-local; первый старт скачивает модель 5,7 ГБ)
@@ -109,4 +110,13 @@ e2e-stand: ## Те же сценарии против стенда (E2E_BASIC_PA
 	cd e2e && E2E_BASE_URL=$${E2E_BASE_URL:-https://fsp.neuropeople.pro} E2E_BASIC_USER=$${E2E_BASIC_USER:-demo} \
 	  npx playwright test
 
-.PHONY: coverage test-bank stack-ci e2e e2e-stand
+openapi: ## Пересобрать docs/api/openapi.json из кода (после любой правки API; тест tests/test_openapi_file.py проверяет актуальность)
+	cd backend && $(PY) ../tools/export_openapi.py
+
+openapi-examples: ## Пересъёмка примеров ответов для OpenAPI с демо-мира матрицы прав (≈ 2 мин) → backend/app/core/api_examples.json; затем make openapi
+	cd backend && OPENAPI_CAPTURE=1 $(PY) -m pytest -p no:cacheprovider tests/test_openapi_capture.py -k capture -s
+
+openapi-audit: ## Аудит полноты OpenAPI: описания, ошибки по коду, ответы (tools/openapi_audit.py; --raw — без общего обогащения)
+	cd backend && $(PY) ../tools/openapi_audit.py
+
+.PHONY: coverage test-bank stack-ci e2e e2e-stand openapi openapi-audit openapi-examples

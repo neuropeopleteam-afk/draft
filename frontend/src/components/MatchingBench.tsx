@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTIONS, GRADES, Loading, useApi } from "./ui";
 import { ScrollX } from "./A11y";
+import { ProvenanceLine } from "./validation/Provenance";
 
 /** Блок /validation: бенчмарк подбора со скрытой истиной (backend: app/modules/validation/matching_bench.py, make bench). */
 
@@ -19,6 +20,7 @@ export default function MatchingBench() {
   return (
     <section id="bench" className="mt-12 scroll-mt-20" aria-labelledby="bench-t">
       <h2 id="bench-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Бенчмарк подбора со скрытой истиной</h2>
+      {r?.provenance && <ProvenanceLine p={r.provenance} className="mt-1.5" />}
       <div className="mt-4">
         {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !r || r.missing
           ? <Alert kind="info">Бенчмарк ещё не посчитан: запустите make bench.</Alert>
@@ -72,11 +74,13 @@ function Body({ r }: { r: any }) {
         <li>Тест — главный вклад: без него (только самоописание) nDCG@10 ниже на {n2(pm.no_test?.["ndcg@10"]?.mean)}, только грейд из теста без скора внутри категории — ниже на {n2(pm.grade_only?.["ndcg@10"]?.mean)}.</li>
         <li>Раздутые резюме: нерелевантные «раздутые» занимают {pct(g.inflated?.platform?.irrelevant_inflated_top10)} мест топ-10 у платформы, {pct(g.inflated?.bm25?.irrelevant_inflated_top10)} у BM25 и {pct(g.inflated?.no_guard?.irrelevant_inflated_top10)}, если засчитывать заявленное как подтверждённое.</li>
         <li>Цена защиты от раздувания: при {pct(r.config?.share_inflated)} «раздутых» засчитывание заявленных навыков дало бы nDCG@10 {sgn(-(pm.no_guard?.["ndcg@10"]?.mean ?? 0))}{strategic ? <> — но если 40 % кандидатов дописывают все навыки направления, оно {strategic.no_guard?.["ndcg@10"] <= strategic.platform?.["ndcg@10"] + 0.01 ? "уже не выигрывает у платформы" : "всё ещё выигрывает у платформы"} ({n2(strategic.no_guard?.["ndcg@10"])} против {n2(strategic.platform?.["ndcg@10"])}, мир {strategic.n_needs} × {strategic.n_candidates}), а у платформы nDCG@10 почти не меняется ({n2(base?.platform?.["ndcg@10"])} → {n2(strategic.platform?.["ndcg@10"])})</> : null}. Заявленное (T0) в скор не входит намеренно — это устойчивость к атаке «дописать в резюме навыки вакансии».</li>
-        <li>Вклад бонуса ФСП в nDCG@10: {sgn(pm.no_fsp?.["ndcg@10"]?.mean)} (ДИ {range(pm.no_fsp?.["ndcg@10"])}). Кандидаты без ФСП не тонут: средний перцентиль места подходящих — {n2(g.fsp?.platform?.without_fsp_percentile)} против {n2(g.fsp?.platform?.with_fsp_percentile)} у кандидатов с ФСП (0 — вершина выдачи). Но бонус переставляет подходящих: среди подходящих в топ-10 без ФСП {pct(g.fsp?.platform?.without_fsp_share_of_relevant_top10)} (без бонуса {pct(g.fsp?.no_fsp?.without_fsp_share_of_relevant_top10)}, среди всех подходящих {pct(g.fsp?.without_fsp_share_of_all_relevant)}).</li>
+        <li>Вклад бонуса ФСП в nDCG@10: {sgn(pm.no_fsp?.["ndcg@10"]?.mean)} (ДИ {range(pm.no_fsp?.["ndcg@10"])}). Кандидаты без ФСП (без штрафа; подтверждённые достижения дают бонус) — средний перцентиль места подходящих — {n2(g.fsp?.platform?.without_fsp_percentile)} против {n2(g.fsp?.platform?.with_fsp_percentile)} у кандидатов с ФСП (0 — вершина выдачи). Но бонус переставляет подходящих: среди подходящих в топ-10 без ФСП {pct(g.fsp?.platform?.without_fsp_share_of_relevant_top10)} (без бонуса {pct(g.fsp?.no_fsp?.without_fsp_share_of_relevant_top10)}, среди всех подходящих {pct(g.fsp?.without_fsp_share_of_all_relevant)}).</li>
         {jun && jun.no_test > jun.platform ? <li>Слабое место — потребности уровня Junior: nDCG@10 {n2(jun.platform)} против {n2(jun.no_test)} у самоописания. Тест у порога Junior осторожен (подтверждение от P = 0,8): часть подходящих не подтверждает грейд и остаётся без категории (без категории — {intRu(w.no_category)} из {intRu(w.n_candidates)}). Дотестирование у порога в синтетике не моделируется.</li> : null}
       </ul>
 
       {r.must_have ? <MustHaveBlock mh={r.must_have} nNeeds={w.n_needs} sig={r.signature} /> : null}
+      {r.core_skill ? <CoreSkillBlock cs={r.core_skill} nNeeds={w.n_needs} /> : null}
+      {r.guard ? <GuardBlock g={r.guard} policy={r.core_skill?.policy} coreOn={r.core_skill?.enabled_in_product} /> : null}
 
       {jr?.columns?.length ? <JuniorBlock jr={jr} /> : null}
 
@@ -111,7 +115,7 @@ function Body({ r }: { r: any }) {
           <li>Парсер потребностей на текстах мира: направление {pct(w.parser?.direction_accuracy)}, грейд {pct(w.parser?.grade_accuracy)}, обязательные навыки — точность {pct(w.parser?.required_precision)}, полнота {pct(w.parser?.required_recall)}.</li>
         </ul>
         <p className="mt-3 text-brand-ink/70">
-          Алгоритм продукта: {r.algorithm ?? "match-v1"}{r.algorithm === "match-v1.1" ? " — match-v1 + ярусы обязательного (MATCH_MUST_FIRST)" : ""}.{r.signature?.commit ? ` Код — коммит ${r.signature.commit}${r.signature.bank ? `, банк ${r.signature.bank}` : ""}.` : ""}
+          Алгоритм продукта: {r.algorithm ?? "match-v1"}{r.algorithm === "match-v1.1" ? " — match-v1 + ярусы обязательного (MATCH_MUST_FIRST)" : r.algorithm === "match-v1.2" ? " — match-v1 + ярусы обязательного + ядро роли (MATCH_MUST_FIRST, RANK_CORE_SKILL)" : ""}.{r.signature?.commit ? ` Код — коммит ${r.signature.commit}${r.signature.bank ? `, банк ${r.signature.bank}` : ""}.` : ""}
           {" "}Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make bench</code> ({n2(r.seconds, 0)} с). Seed мира {r.seeds?.world}, второй мир {r.seeds?.world2}, бутстреп {r.seeds?.bootstrap}, разбиение {r.seeds?.split}; конфиг {r.config_hash}, алгоритм {r.algorithm}.
           Отчёт построен {r.generated_at?.slice(0, 10).split("-").reverse().join(".")}. Подробно: docs/validation/MATCHING_BENCH.md и matching_bench.json (метрики по каждой потребности).
         </p>
@@ -134,10 +138,63 @@ function MustHaveBlock({ mh, nNeeds, sig }: { mh: any; nNeeds?: number; sig?: an
       <Table head={["", ...cols.map(([, t]) => t)]}
         rows={[
           ["match-v1 (без ярусов)", ...cols.map(([k]) => <Cell x={mh.before?.[k]} d={3} />)],
-          [<b>match-v1 + ярусы обязательного (продукт)</b>, ...cols.map(([k]) => <Cell x={mh.after?.[k]} d={3} />)],
+          [<b>match-v1 + ярусы обязательного (match-v1.1)</b>, ...cols.map(([k]) => <Cell x={mh.after?.[k]} d={3} />)],
           ["Разница", ...cols.map(([k]) => <Cell x={mh.diff?.[k]} signed d={3} />)],
         ]} />
-      <p className="mt-2 text-xs text-brand-ink/65">Топ-5 изменился у {mh.needs_changed_top5} из {nNeeds ?? "—"} потребностей (с обязательными навыками — {mh.needs_with_required}). Разницу пишем как есть: на синтетике nDCG@10 чуть ниже, доля подтверждённого обязательного в топ-5 выше.</p>
+      <p className="mt-2 text-xs text-brand-ink/65">Топ-5 изменился у {mh.needs_changed_top5} из {nNeeds ?? "—"} потребностей (с обязательными навыками — {mh.needs_with_required}).</p>
+      <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/80" data-testid="must-tradeoff">
+        <b className="font-semibold text-brand-night">Это компромисс, а не рост всех метрик.</b> Доля топ-5, где всё обязательное подтверждено тестом: <Cell x={mh.diff?.top5_all_required_t1} signed d={3} />; nDCG@10: <Cell x={mh.diff?.["ndcg@10"]} signed d={3} />.
+        {" "}Скрытая истина засчитывает заявленный без теста навык частично, а продукт обещает работодателю сначала проверенное обязательное — правило включено осознанно, ради первого числа. Ярусы и веса по бенчмарку не подбирались; закрытый guard — ниже.
+      </p>
+    </>
+  );
+}
+
+/** Я1: ядро роли (основной язык / фреймворк / специализация) — продукт без признака против продукта с признаком, тот же мир. */
+function CoreSkillBlock({ cs, nNeeds }: { cs: any; nNeeds?: number }) {
+  const cols: [string, string][] = [["p@5", "p@5"], ["ndcg@10", "nDCG@10"], ["mrr", "MRR"], ["top5_core_absent", "Топ-5: доля без ядра роли"]];
+  return (
+    <>
+      <h3 className="mt-8 text-base font-bold text-brand-night">Ядро роли: основной язык, фреймворк, специализация (RANK_CORE_SKILL)</h3>
+      <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+        Ядро берётся из обязательных навыков правилами и словарём направлений: Backend, QA, ИБ — основной язык; Frontend — React, Vue или Angular; Data/ML — CV или NLP, иначе PyTorch. Кандидат без ядра (не заявлено и не подтверждено тестом) — смежное направление: он остаётся в выдаче, но идёт ниже кандидатов с ядром.
+        {" "}Ядро есть у {cs.needs_with_core} из {nNeeds ?? "—"} потребностей, признак действует у {cs.needs_active}; в продукте признак {cs.enabled_in_product ? "включён" : "выключен"}.
+      </p>
+      <Table head={["", ...cols.map(([, t]) => t)]}
+        rows={[
+          [cs.enabled_in_product ? "Без признака (match-v1.1)" : <b>Без признака (match-v1.1, продукт)</b>, ...cols.map(([k]) => cs.before?.[k] ? <Cell x={cs.before[k]} d={3} /> : "—")],
+          [cs.enabled_in_product ? <b>С признаком «ядро роли» (match-v1.2, продукт)</b> : "С признаком «ядро роли» (match-v1.2)", ...cols.map(([k]) => cs.after?.[k] ? <Cell x={cs.after[k]} d={3} /> : "—")],
+          ["Разница", ...cols.map(([k]) => cs.diff?.[k] ? <Cell x={cs.diff[k]} signed d={3} /> : "—")],
+        ]} />
+    </>
+  );
+}
+
+/** Закрытый guard порядка (tools/realdata/ranking_guard.py): те же профили, три столбца политики. */
+function GuardBlock({ g, policy, coreOn }: { g: any; policy?: string; coreOn?: boolean }) {
+  const cols: [string, string][] = [["before", "match-v1 без ярусов"], ["after", `+ ярусы обязательного (match-v1.1${coreOn ? "" : ", продукт"})`], ["core_on", `+ ядро роли (match-v1.2${coreOn ? ", продукт" : ""})`]];
+  const ev = g.expert_v1_core;
+  return (
+    <>
+      <h3 className="mt-8 text-base font-bold text-brand-night">Guard порядка: те же профили, без подгонки</h3>
+      <p className="mt-1 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+        Демо-мир: {intRu(g.n_pool)} профилей, {g.n_needs} потребностей, разметка правилами; скрытая истина: {g.hidden_config?.n_needs} × {intRu(g.hidden_config?.n_candidates)}. Это контроль: параметры по нему не выбирались. Пересчёт — <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">{g.command}</code>.
+      </p>
+      <Table head={["", "Демо: p@5", "Демо: nDCG@10", "Истина: p@5", "Истина: nDCG@10", "Истина: MRR"]}
+        rows={cols.filter(([k]) => g.demo_500?.[k]).map(([k, t]) => [t, n2(g.demo_500[k]["p@5"], 3), n2(g.demo_500[k]["ndcg@10"], 3), n2(g.hidden_truth_500?.[k]?.["p@5"], 3), n2(g.hidden_truth_500?.[k]?.["ndcg@10"], 3), n2(g.hidden_truth_500?.[k]?.mrr, 3)])} />
+      {ev && policy && ev[policy] && <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Ядро роли на v1-разметке ({ev.n_needs} потребностей, {ev.n_pairs} пар; эксперты — модель, не люди): p@5 {n2(ev.off?.["p@5"], 3)} → {n2(ev[policy]["p@5"], 3)}, nDCG@10 {n2(ev.off?.["ndcg@10"], 3)} → {n2(ev[policy]["ndcg@10"], 3)}.</p>}
+      {g.expert_v2_control && (
+        <>
+          <p className="mt-3 max-w-4xl text-sm leading-relaxed text-brand-ink/70" data-testid="core-v2-control">
+            Контроль ядра роли на разметке v2 (модель, не люди) — только на сервере, на копии БД во временном PostgreSQL 16: места пересчитаны кодом подборки без признака и с признаком, метрики — тем же кодом, что раздел экспертов. Смотрели один раз, после выбора параметров; по v2 ничего не подбиралось.
+          </p>
+          <Table head={["Пакет", "P@5: без → с признаком", "nDCG@10: без → с признаком", "Разница nDCG@10", "Лучше / хуже потребностей", "BM25: P@5, nDCG@10"]}
+            rows={(["v1", "v2", "all"] as const).map((p) => {
+              const v = g.expert_v2_control;
+              return [`${p === "all" ? "v1 + v2" : p} (${v.off?.[p]?.needs})`, `${n2(v.off?.[p]?.["p@5"], 3)} → ${n2(v.on?.[p]?.["p@5"], 3)}`, `${n2(v.off?.[p]?.["ndcg@10"], 3)} → ${n2(v.on?.[p]?.["ndcg@10"], 3)}`, <Cell x={v.diff?.[p]?.["ndcg@10"]} signed d={3} />, `${v.diff?.[p]?.["ndcg@10"]?.better} / ${v.diff?.[p]?.["ndcg@10"]?.worse}`, `${n2(v.bm25?.[p]?.["p@5"], 3)}, ${n2(v.bm25?.[p]?.["ndcg@10"], 3)}`];
+            })} />
+        </>
+      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 # И8 «Подбор на чужих данных» — отчёт 07.10.2026
 
-Worktree: `/home/user/workspace/spectrek/wt/realdata`, ветка `feat/realdata`, база `763b8f7`.
+Worktree: `<рабочее дерево realdata>`, ветка `feat/realdata`, база `763b8f7`.
 
 ## Итог для координатора
 
@@ -142,7 +142,7 @@ flock /tmp/spectrek_heavy.lock .venv/bin/python tools/realdata/recompute_demo.py
 .venv/bin/python tools/realdata/audit_expert_ranking.py
 ```
 
-Пути `.venv/bin/python` в командах выше замените на `/home/user/workspace/spectrek/.venv/bin/python`; аудит E1–E3 требует имеющихся локальных слепых снимков из исходной задачи, секретные файлы соседних каталогов не используются.
+Пути `.venv/bin/python` в командах выше замените на `python`; аудит E1–E3 требует имеющихся локальных слепых снимков из исходной задачи, секретные файлы соседних каталогов не используются.
 
 Коммиты на момент генерации отчёта:
 
