@@ -1,67 +1,22 @@
 {
  "title": "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)",
  "date": "2026-10-10",
- "code_sha": "5097b76",
+ "code_sha": "5f2d49c",
  "models": {
-  "deepseek/deepseek-v4-pro-0813@noreason15": {
-   "name": "DeepSeek: DeepSeek V4 Pro 0813",
-   "family": "DeepSeek",
-   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
-   "in_usd_per_m": 0.66,
-   "out_usd_per_m": 1.98,
+  "qwen/qwen3.8-27b@noreason15": {
+   "name": "Qwen: Qwen3.8 27B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
    "stand": false,
    "variant": {
-    "base": "deepseek/deepseek-v4-pro-0813",
+    "base": "qwen/qwen3.8-27b",
     "name": "noreason15",
     "max_tokens": 900,
     "reasoning_effort": "none",
     "limit": 15
    }
-  },
-  "qwen/qwen3.8-2.4t-a95b": {
-   "name": "Qwen: Qwen3.8 2.4T A95B",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.8-2.4T-A95B",
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 6.0,
-   "stand": false,
-   "variant": null
-  },
-  "moonshotai/kimi-k3": {
-   "name": "MoonshotAI: Kimi K3",
-   "family": "Moonshot",
-   "open_weights": "moonshotai/Kimi-K3",
-   "in_usd_per_m": 0.5,
-   "out_usd_per_m": 12.0,
-   "stand": false,
-   "variant": null
-  },
-  "openai/gpt-6-astra-pro": {
-   "name": "OpenAI: GPT-6 Astra Pro",
-   "family": "OpenAI",
-   "open_weights": null,
-   "in_usd_per_m": 10.0,
-   "out_usd_per_m": 50.0,
-   "stand": false,
-   "variant": null
-  },
-  "x-ai/grok-4.7": {
-   "name": "SpaceXAI: Grok 4.7",
-   "family": "xAI",
-   "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 6.0,
-   "stand": false,
-   "variant": null
-  },
-  "anthropic/claude-sonnet-5.5": {
-   "name": "Anthropic: Claude Sonnet 5.5",
-   "family": "Anthropic",
-   "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 10.0,
-   "stand": true,
-   "variant": null
   },
   "deepseek/deepseek-v4-pro-0813": {
    "name": "DeepSeek: DeepSeek V4 Pro 0813",
@@ -81,6 +36,84 @@
    "stand": false,
    "variant": null
   },
+  "z-ai/glm-5.3": {
+   "name": "Z.ai: GLM 5.3",
+   "family": "Zhipu (Z.ai)",
+   "open_weights": "zai-org/GLM-5.3",
+   "in_usd_per_m": 0.04,
+   "out_usd_per_m": 3.6,
+   "stand": false,
+   "variant": null
+  },
+  "anthropic/claude-fable-5.1": {
+   "name": "Anthropic: Claude Fable 5.1",
+   "family": "Anthropic",
+   "open_weights": null,
+   "in_usd_per_m": 10.0,
+   "out_usd_per_m": 50.0,
+   "stand": false,
+   "variant": null
+  },
+  "qwen/qwen3.8-27b": {
+   "name": "Qwen: Qwen3.8 27B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
+   "stand": false,
+   "variant": null
+  },
+  "anthropic/claude-sonnet-5.5": {
+   "name": "Anthropic: Claude Sonnet 5.5",
+   "family": "Anthropic",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "stand": true,
+   "variant": null
+  },
+  "openai/gpt-6-astra-pro": {
+   "name": "OpenAI: GPT-6 Astra Pro",
+   "family": "OpenAI",
+   "open_weights": null,
+   "in_usd_per_m": 10.0,
+   "out_usd_per_m": 50.0,
+   "stand": false,
+   "variant": null
+  },
+  "qwen/qwen3.8-2.4t-a95b": {
+   "name": "Qwen: Qwen3.8 2.4T A95B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-2.4T-A95B",
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 6.0,
+   "stand": false,
+   "variant": null
+  },
+  "deepseek/deepseek-v4-pro-0813@noreason15": {
+   "name": "DeepSeek: DeepSeek V4 Pro 0813",
+   "family": "DeepSeek",
+   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "in_usd_per_m": 0.66,
+   "out_usd_per_m": 1.98,
+   "stand": false,
+   "variant": {
+    "base": "deepseek/deepseek-v4-pro-0813",
+    "name": "noreason15",
+    "max_tokens": 900,
+    "reasoning_effort": "none",
+    "limit": 15
+   }
+  },
+  "x-ai/grok-4.7": {
+   "name": "SpaceXAI: Grok 4.7",
+   "family": "xAI",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 6.0,
+   "stand": false,
+   "variant": null
+  },
   "qwen/qwen3.5-9b@i24": {
    "name": "qwen/qwen3.5-9b",
    "family": "Alibaba Qwen",
@@ -94,29 +127,14 @@
     "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"
    }
   },
-  "qwen/qwen3.8-27b": {
-   "name": "Qwen: Qwen3.8 27B",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.8-27B",
-   "in_usd_per_m": 0.425,
-   "out_usd_per_m": 2.55,
+  "openai/gpt-6.1-sol-pro": {
+   "name": "OpenAI: GPT-6.1 Sol Pro",
+   "family": "OpenAI",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
    "stand": false,
    "variant": null
-  },
-  "qwen/qwen3.8-27b@noreason15": {
-   "name": "Qwen: Qwen3.8 27B",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.8-27B",
-   "in_usd_per_m": 0.425,
-   "out_usd_per_m": 2.55,
-   "stand": false,
-   "variant": {
-    "base": "qwen/qwen3.8-27b",
-    "name": "noreason15",
-    "max_tokens": 900,
-    "reasoning_effort": "none",
-    "limit": 15
-   }
   },
   "anthropic/claude-opus-5.5": {
    "name": "Anthropic: Claude Opus 5.5",
@@ -127,30 +145,12 @@
    "stand": false,
    "variant": null
   },
-  "anthropic/claude-fable-5.1": {
-   "name": "Anthropic: Claude Fable 5.1",
-   "family": "Anthropic",
-   "open_weights": null,
-   "in_usd_per_m": 10.0,
-   "out_usd_per_m": 50.0,
-   "stand": false,
-   "variant": null
-  },
-  "openai/gpt-6.1-sol-pro": {
-   "name": "OpenAI: GPT-6.1 Sol Pro",
-   "family": "OpenAI",
-   "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 10.0,
-   "stand": false,
-   "variant": null
-  },
-  "z-ai/glm-5.3": {
-   "name": "Z.ai: GLM 5.3",
-   "family": "Zhipu (Z.ai)",
-   "open_weights": "zai-org/GLM-5.3",
-   "in_usd_per_m": 0.04,
-   "out_usd_per_m": 3.6,
+  "moonshotai/kimi-k3": {
+   "name": "MoonshotAI: Kimi K3",
+   "family": "Moonshot",
+   "open_weights": "moonshotai/Kimi-K3",
+   "in_usd_per_m": 0.5,
+   "out_usd_per_m": 12.0,
    "stand": false,
    "variant": null
   }
@@ -3996,7 +3996,7 @@
      "extra_share": {
       "value": 0.06,
       "ci90": [
-       0.037,
+       0.032,
        0.088
       ],
       "n": 216
@@ -4104,7 +4104,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.942,
+       0.941,
        0.983
       ],
       "components": [
@@ -4186,7 +4186,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.942,
+       0.941,
        0.983
       ],
       "components": [
@@ -4245,7 +4245,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.079
+       0.084
       ],
       "n": 214
      },
@@ -4270,7 +4270,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.939,
+       0.938,
        0.982
       ],
       "components": [
@@ -4326,7 +4326,7 @@
      "extra_share": {
       "value": 0.06,
       "ci90": [
-       0.033,
+       0.037,
        0.088
       ],
       "n": 215
@@ -4353,7 +4353,7 @@
       "value": 0.975,
       "ci90": [
        0.967,
-       0.982
+       0.983
       ],
       "components": [
        "stack_f1",
@@ -4409,7 +4409,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.079
+       0.084
       ],
       "n": 214
      },
@@ -4434,7 +4434,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.939,
+       0.938,
        0.982
       ],
       "components": [
@@ -4491,7 +4491,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.079
+       0.084
       ],
       "n": 214
      },
@@ -4516,7 +4516,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.939,
+       0.938,
        0.982
       ],
       "components": [
@@ -4598,7 +4598,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.942,
+       0.941,
        0.983
       ],
       "components": [
@@ -4655,7 +4655,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.08
+       0.085
       ],
       "n": 213
      },
@@ -4681,7 +4681,7 @@
       "value": 0.964,
       "ci90": [
        0.94,
-       0.981
+       0.982
       ],
       "components": [
        "stack_f1",
@@ -4737,7 +4737,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.079
+       0.084
       ],
       "n": 214
      },
@@ -4762,7 +4762,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.939,
+       0.938,
        0.982
       ],
       "components": [
@@ -4844,8 +4844,8 @@
      "index": {
       "value": 0.973,
       "ci90": [
-       0.964,
-       0.98
+       0.965,
+       0.981
       ],
       "components": [
        "stack_f1",
@@ -4926,7 +4926,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.942,
+       0.941,
        0.983
       ],
       "components": [
@@ -7097,7 +7097,7 @@
     "extra_share": {
      "value": 0.06,
      "ci90": [
-      0.03,
+      0.035,
       0.09
      ],
      "n": 200
@@ -7116,8 +7116,8 @@
     "index": {
      "value": 0.906,
      "ci90": [
-      0.859,
-      0.949
+      0.856,
+      0.948
      ],
      "components": [
       "stack_f1",
@@ -7349,5 +7349,198 @@
   "resume": 25,
   "grade": 50
  },
- "full_run": {}
+ "full_run": {
+  "anthropic/claude-sonnet-5.5": {
+   "parse_need": {
+    "n": 50,
+    "stack_f1": {
+     "value": 0.932,
+     "ci90": [
+      0.913,
+      0.95
+     ],
+     "n": 50
+    },
+    "fields_acc": {
+     "value": 0.953,
+     "ci90": [
+      0.933,
+      0.973
+     ],
+     "n": 300
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.58,
+     "p95_s": 3.87,
+     "budget_s": 25
+    },
+    "usd_per_1k": 13.36
+   },
+   "grade": {
+    "n": 405,
+    "reference": "среднее  (без самой модели)",
+    "mae": {
+     "value": null,
+     "ci90": null,
+     "n": 0
+    },
+    "kappa_w": {
+     "value": null,
+     "ci90": null,
+     "n": 0
+    },
+    "bias": {
+     "value": null,
+     "ci90": null,
+     "n": 0
+    },
+    "exact_bin": {
+     "value": null,
+     "ci90": null,
+     "n": 0
+    },
+    "attacks_resisted": {
+     "value": 1,
+     "ci90": [
+      1,
+      1
+     ],
+     "n": 145
+    },
+    "attacks_n": 145,
+    "order_strict": {
+     "value": 1,
+     "ci90": [
+      1,
+      1
+     ],
+     "n": 29
+    },
+    "reliability": {
+     "calls": 406,
+     "ok_share": {
+      "value": 0.998,
+      "ci90": [
+       0.993,
+       1
+      ],
+      "n": 406
+     },
+     "errors": {
+      "invalid_json": 1
+     },
+     "empty": 0,
+     "invalid_json": 1,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.71,
+     "p95_s": 4.93,
+     "budget_s": 50
+    },
+    "usd_per_1k": 7.75
+   }
+  },
+  "anthropic/claude-fable-5.1": {
+   "parse_need": {
+    "n": 50,
+    "stack_f1": {
+     "value": 0.936,
+     "ci90": [
+      0.919,
+      0.952
+     ],
+     "n": 50
+    },
+    "fields_acc": {
+     "value": 0.95,
+     "ci90": [
+      0.927,
+      0.97
+     ],
+     "n": 300
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 0.98,
+      "ci90": [
+       0.94,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {
+      "invalid_json": 1
+     },
+     "empty": 0,
+     "invalid_json": 1,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 5.1,
+     "p95_s": 8.61,
+     "budget_s": 25
+    },
+    "usd_per_1k": 68.01
+   }
+  },
+  "openai/gpt-6.1-sol-pro": {
+   "parse_need": {
+    "n": 50,
+    "stack_f1": {
+     "value": 0.943,
+     "ci90": [
+      0.926,
+      0.958
+     ],
+     "n": 50
+    },
+    "fields_acc": {
+     "value": 0.957,
+     "ci90": [
+      0.937,
+      0.973
+     ],
+     "n": 300
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 9.64,
+     "p95_s": 14.43,
+     "budget_s": 25
+    },
+    "usd_per_1k": 16.95
+   }
+  }
+ }
 }
