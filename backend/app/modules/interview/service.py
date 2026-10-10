@@ -182,7 +182,7 @@ def begin(db: Session, row: InterviewSession, channel: str) -> InterviewSession:
             raise api_error(422, "insufficient_context", "Защищать нечего: нет развёрнутых ответов от 120 знаков") from None
         raise api_error(503, "interview_unavailable", "Интервьюер сейчас недоступен — попробуйте позже") from None
     row.state = {**st, "engine": est, "n": 1, "q": q, "port": port.name, "channels_log": [channel]}
-    row.engine = port.name
+    row.engine = "stub" if port.is_stub() else port.name  # движок без ключа модели — тоже заглушка
     row.transcript = [{"who": "interviewer", "text": q, "n": 1}]
     row.status, row.started_at, row.channel = "in_progress", utcnow(), channel
     db.commit()
@@ -437,7 +437,8 @@ def view(row: InterviewSession, audience: str, *, transcript: bool = False) -> d
     r = row.result or {}
     meta_ = row.context_meta or {}
     titles = {t["id"]: t.get("title") for t in meta_.get("tasks") or []}
-    done = row.status == "completed"
+    # ИИ-интервью компании: итог и разбор видит только она (кандидату — статус); устную защиту кандидат видит сам
+    done = row.status == "completed" and not (audience == "candidate" and row.mode == "interview")
     qs = [{"n": q.get("n"), "question": q.get("question") or "", "task_id": q.get("task_id"),
            "task_title": titles.get(q.get("task_id")), "skill": q.get("skill"), "level": q.get("level") or "no_data",
            "level_title": LEVEL_TITLES.get(q.get("level"), "нет данных"),
@@ -457,6 +458,7 @@ def view(row: InterviewSession, audience: str, *, transcript: bool = False) -> d
             "tasks": [{"id": t["id"], "title": t.get("title")} for t in meta_.get("tasks") or []],
             "skills": [s_["name"] for s_ in meta_.get("skills") or []], "note": row.note if audience == "employer" else None,
             "transcript": row.transcript if transcript and done and audience == "employer" else None,
+            "result_hidden": row.status == "completed" and not done,
             "return_to": "/candidate/category#defense" if row.mode == "defense" else "/candidate/invitations",
             "error": row.error if row.status == "failed" else None}
 
