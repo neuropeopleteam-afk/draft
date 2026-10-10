@@ -155,6 +155,7 @@ def test_run_load_nginx_counts_only_tagged_lines(tmp_path, monkeypatch):
     (logs / "access.log").write_text("".join(ln.format(i=i, req=r, code=c, ua=u) for i, (r, c, u) in enumerate(rows)))
     monkeypatch.setattr(m, "OUT", out)
     monkeypatch.setattr(m, "NGINX_LOG_DIR", str(logs))
+    monkeypatch.setattr(m, "KPY", "k.py")
     monkeypatch.setattr(m, "_remote", lambda s, timeout=120: subprocess.run(["bash", "-c", s], capture_output=True,
                                                                             text=True).stdout)
     head = "Type,Name,Request Count,Failure Count\n"
