@@ -455,7 +455,8 @@ function Task({ it }: { it: any }) {
   const opts: any[] = it.options ?? [];
   const Opt = ({ o, ok }: { o: any; ok: boolean }) => (
     <li className={`rounded-xl border p-2.5 text-sm ${ok ? "border-emerald-300 bg-emerald-50" : "border-brand-night/10"}`}>
-      <span className="font-bold">{o.id}.</span> {o.text}{ok && <span className="ml-2 text-xs font-semibold text-emerald-700">верный</span>}
+      {/* Я11 (С3-9): пометка — через пробел и разделитель, иначе в тексте (копирование, экранный диктор) «Failedверный» */}
+      <span className="font-bold">{o.id}.</span> {o.text}{ok && <>{" "}<span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">· верный</span></>}
       {o.code && <pre className="mt-2 overflow-auto rounded-lg bg-brand-ink p-2 text-xs text-[#FFD6E4]"><code>{o.code}</code></pre>}
     </li>
   );

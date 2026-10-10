@@ -151,7 +151,10 @@ def test_intern_cut_simulation_quick_and_report_block(client):
 
     res = intern_cut.run(quick=True, synthetic=True)
     assert res["chosen"]["cut"] in res["candidate_cuts"]
-    assert res["chosen"]["basis"] == "with_easy_families"
+    # выбор — по текущему банку без синтетических семейств; прогон с лёгкими семействами — справочный
+    assert res["chosen"]["basis"] == "current_bank"
+    assert {k: res["chosen"][k] for k in ("cut", "all_pass", "passing")} == res["current_bank_rule"]
+    assert res["with_easy_families"]["rule"]["cut"] in res["candidate_cuts"]
     for s in res["by_cut"]:
         assert 0 <= (s["false_confirm"] or 0) <= 1 and 0 <= (s["false_reject"] or 0) <= 1
         assert s["n_sessions"] == len(res["theta_grid"]) * res["n_per_theta"] * len(res["directions"])
@@ -164,5 +167,6 @@ def test_intern_cut_simulation_quick_and_report_block(client):
     blk = rep["intern_cut"]
     assert not blk.get("missing")
     assert blk["cut_in_use"] == GRADE_CUTS["intern"] == blk["chosen"]["cut"]
+    assert blk["chosen"]["basis"] == "current_bank" and blk["chosen"]["all_pass"]
     assert blk["pool_now"]["qa"]["n_common"] + blk["pool_now"]["qa"]["n_direction"] >= 8
     assert all(k in blk for k in ("by_cut", "with_easy_families", "retest", "rule"))
