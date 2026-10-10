@@ -541,8 +541,10 @@ def _accept_lower_fields(ts: TestSession, specialization, er: dict) -> dict:
     current = specialization.grade_id if specialization is not None else None
     cur_prov = bool(specialization is not None and specialization.status == "provisional" and current)
     probs = er.get("probabilities") or {}
+    from app.modules.assessment.grades import confirm_level as _cl  # Я22: при широком интервале — прежние 0,8
+
     can_lower, _ = accept_lower_allowed(current, ts.claimed_grade_id, bool(er.get("confirmed")), probs,
-                                        provisional=cur_prov)
+                                        provisional=cur_prov, level=_cl(er.get("se")))
     accepted = ((ts.result or {}).get("outcome") or {}).get("accepted_lower")
     avail = bool(can_lower and not accepted)
     return {
@@ -600,8 +602,10 @@ def accept_lower_grade(db: Session, ts: TestSession) -> dict:
     specialization = ensure_specialization(db, profile, ts.direction_id)
     current = specialization.grade_id
     cur_prov = bool(specialization.status == "provisional" and current)
+    from app.modules.assessment.grades import confirm_level as _cl  # Я22: при широком интервале — прежние 0,8
+
     lower, why = accept_lower_allowed(current, ts.claimed_grade_id, bool(er.get("confirmed")), er.get("probabilities"),
-                                      provisional=cur_prov)
+                                      provisional=cur_prov, level=_cl(er.get("se")))
     if lower is None:
         from app.modules.assessment.grades import confirm_pct
 
