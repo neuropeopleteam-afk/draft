@@ -13,8 +13,11 @@ import pytest
 
 from app.core import api_docs
 from app.core.api_docs_text import DESCRIPTIONS, FILE_RESPONSES
-from app.core.api_models import RESPONSE_TYPES
+from app.core.api_models import MODULES, all_types
 from tests.test_openapi_file import _load
+
+RESPONSE_TYPES = all_types()
+
 
 @pytest.fixture(scope="module")
 def spec() -> dict:
@@ -40,6 +43,41 @@ def test_model_names_do_not_clash_with_app_schemas():
     raw = set(FastAPI.openapi(create_app())["components"]["schemas"])
     own = {tp.__name__ if isinstance(tp, type) else tp.__args__[0].__name__ for tp in RESPONSE_TYPES.values()}
     assert not (raw & own), f"имена моделей совпали со схемами приложения: {sorted(raw & own)}"
+
+
+def test_all_documentation_models_have_unique_names_and_are_used():
+    """Имена всех моделей из api_models*.py различны (иначе в components.schemas одна затрёт другую); неиспользуемых нет."""
+    import importlib
+    import inspect
+
+    from pydantic import BaseModel
+
+    from app.core.api_models_base import Doc
+
+    seen: dict[str, str] = {}
+    for modname in ("api_models", *MODULES):
+        mod = importlib.import_module(f"app.core.{modname}")
+        for name, obj in vars(mod).items():
+            if inspect.isclass(obj) and issubclass(obj, BaseModel) and obj.__module__ == mod.__name__ and obj is not Doc:
+                assert name not in seen, f"модель {name} определена и в {seen[name]}, и в {modname}"
+                seen[name] = modname
+    used = set()
+
+    def walk(tp):
+        import typing
+
+        for a in typing.get_args(tp):
+            walk(a)
+        if inspect.isclass(tp) and issubclass(tp, BaseModel):
+            if tp.__name__ in used:
+                return
+            used.update(b.__name__ for b in tp.__mro__ if issubclass(b, BaseModel))  # базовые классы — часть модели
+            for f in tp.model_fields.values():
+                walk(f.annotation)
+
+    for tp in RESPONSE_TYPES.values():
+        walk(tp)
+    assert not (set(seen) - used), f"модели без операции: {sorted(set(seen) - used)}"
 
 
 def test_models_are_attached_in_the_schema(spec):

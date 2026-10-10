@@ -418,7 +418,9 @@ def response_refs() -> tuple[dict[str, dict], dict[str, dict]]:
 
     from pydantic.json_schema import models_json_schema
 
-    from app.core.api_models import RESPONSE_TYPES
+    from app.core.api_models import all_types
+
+    RESPONSE_TYPES = all_types()
 
     def base(tp):
         return typing.get_args(tp)[0] if typing.get_origin(tp) is list else tp

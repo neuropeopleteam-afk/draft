@@ -805,6 +805,1222 @@
         "title": "AssessmentStatusOut",
         "type": "object"
       },
+      "AssignmentCandidateAttemptOut": {
+        "additionalProperties": true,
+        "description": "Задание кандидата с описанием, вариантами (после старта) и результатом.",
+        "properties": {
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Отклик, к которому привязано задание",
+            "title": "Application Id"
+          },
+          "approach_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approach Text"
+          },
+          "assignment": {
+            "$ref": "#/components/schemas/AssignmentOut"
+          },
+          "assignment_id": {
+            "title": "Assignment Id",
+            "type": "string"
+          },
+          "attempt_id": {
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "correct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct"
+          },
+          "deadline_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline At"
+          },
+          "final_points": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Points"
+          },
+          "grace_s": {
+            "description": "Допуск на отправку после дедлайна, секунд",
+            "title": "Grace S",
+            "type": "integer"
+          },
+          "offered_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered At"
+          },
+          "remind_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remind At"
+          },
+          "remind_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remind Count"
+          },
+          "review_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Оценка работодателя: pending, reviewed, …",
+            "title": "Review Status"
+          },
+          "review_title": {
+            "title": "Review Title",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Рубрика с баллами (только после проверки)",
+            "title": "Rubric"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "score_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Pct"
+          },
+          "skills": {
+            "description": "Навыки по заданию: tag, title, correct, total, …",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "source": {
+            "description": "Откуда задание: feed (лента), invitation, application, …",
+            "title": "Source",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "description": "offered, in_progress, scored, declined, expired",
+            "title": "Status",
+            "type": "string"
+          },
+          "status_title": {
+            "title": "Status Title",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "tasks": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Задания с вариантами (в процессе и после проверки); верные ответы — только после проверки",
+            "title": "Tasks"
+          },
+          "time_spent_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Spent S"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "why": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Почему предложено (для ленты): текст и сигналы",
+            "title": "Why"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "assignment_id",
+          "title",
+          "status",
+          "status_title",
+          "source",
+          "score",
+          "score_pct",
+          "correct",
+          "total",
+          "time_spent_s",
+          "submitted_at",
+          "offered_at",
+          "skills",
+          "why",
+          "review_status",
+          "review_title",
+          "final_points",
+          "reviewed_at",
+          "remind_at",
+          "remind_count",
+          "assignment",
+          "started_at",
+          "deadline_at",
+          "grace_s",
+          "approach_text",
+          "tasks"
+        ],
+        "title": "AssignmentCandidateAttemptOut",
+        "type": "object"
+      },
+      "AssignmentCompanyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "AssignmentCompanyOut",
+        "type": "object"
+      },
+      "AssignmentCoverageOut": {
+        "additionalProperties": true,
+        "properties": {
+          "covered": {
+            "description": "Навыки стека, под которые нашлись задания банка",
+            "items": {
+              "type": "string"
+            },
+            "title": "Covered",
+            "type": "array"
+          },
+          "missing": {
+            "description": "Навыки стека без заданий в банке",
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing",
+            "type": "array"
+          },
+          "missing_titles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Missing Titles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "covered",
+          "missing",
+          "missing_titles"
+        ],
+        "title": "AssignmentCoverageOut",
+        "type": "object"
+      },
+      "AssignmentDetailOut": {
+        "additionalProperties": true,
+        "properties": {
+          "approach_prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Просьба описать подход, если оценка идёт и по рубрике",
+            "title": "Approach Prompt"
+          },
+          "attempts": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentEmployerAttemptOut"
+            },
+            "title": "Attempts",
+            "type": "array"
+          },
+          "attempts_by_status": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Попытки по статусам: offered, in_progress, scored, expired, …",
+            "title": "Attempts By Status"
+          },
+          "attempts_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Всего попыток (в ответах работодателю)",
+            "title": "Attempts Total"
+          },
+          "category_title": {
+            "title": "Category Title",
+            "type": "string"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssignmentCompanyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/AssignmentCoverageOut"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction_id": {
+            "title": "Direction Id",
+            "type": "string"
+          },
+          "families": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentFamilyOut"
+            },
+            "title": "Families",
+            "type": "array"
+          },
+          "grade_id": {
+            "title": "Grade Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "mode": {
+            "description": "open — открытое задание, vacancy — к вакансии, probe — зонд",
+            "title": "Mode",
+            "type": "string"
+          },
+          "n_tasks": {
+            "title": "N Tasks",
+            "type": "integer"
+          },
+          "need_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Id"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Рубрика: criteria (критерии с баллами) и max",
+            "title": "Rubric"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "sent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сколько предложений выдано (ответ на «разослать»)",
+            "title": "Sent"
+          },
+          "stack": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentStackItemOut"
+            },
+            "title": "Stack",
+            "type": "array"
+          },
+          "status": {
+            "description": "active или closed",
+            "title": "Status",
+            "type": "string"
+          },
+          "time_limit_min": {
+            "title": "Time Limit Min",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "to_review": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Ждут оценки работодателя",
+            "title": "To Review"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "title",
+          "description",
+          "status",
+          "direction_id",
+          "grade_id",
+          "category_title",
+          "stack",
+          "families",
+          "n_tasks",
+          "time_limit_min",
+          "coverage",
+          "salary_from",
+          "salary_to",
+          "need_id",
+          "vacancy_id",
+          "is_demo",
+          "created_at",
+          "company",
+          "rubric",
+          "approach_prompt",
+          "attempts"
+        ],
+        "title": "AssignmentDetailOut",
+        "type": "object"
+      },
+      "AssignmentEmployerAttemptOut": {
+        "additionalProperties": true,
+        "properties": {
+          "approach_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Описание подхода, если запрошено (только после проверки)",
+            "title": "Approach Text"
+          },
+          "assignment_id": {
+            "title": "Assignment Id",
+            "type": "string"
+          },
+          "attempt_id": {
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "candidate_category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Category"
+          },
+          "candidate_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Обезличенный номер кандидата",
+            "title": "Candidate Ref"
+          },
+          "correct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct"
+          },
+          "final_points": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Points"
+          },
+          "offered_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered At"
+          },
+          "remind_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remind At"
+          },
+          "remind_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remind Count"
+          },
+          "review_remind_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Remind At"
+          },
+          "review_remind_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Remind Count"
+          },
+          "review_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Оценка работодателя: pending, reviewed, …",
+            "title": "Review Status"
+          },
+          "review_title": {
+            "title": "Review Title",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Рубрика с баллами (только после проверки)",
+            "title": "Rubric"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "score_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Pct"
+          },
+          "skills": {
+            "description": "Навыки по заданию: tag, title, correct, total, …",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "source": {
+            "description": "Откуда задание: feed (лента), invitation, application, …",
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "description": "offered, in_progress, scored, declined, expired",
+            "title": "Status",
+            "type": "string"
+          },
+          "status_title": {
+            "title": "Status Title",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "time_spent_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Spent S"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "why": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Почему предложено (для ленты): текст и сигналы",
+            "title": "Why"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "assignment_id",
+          "title",
+          "status",
+          "status_title",
+          "source",
+          "score",
+          "score_pct",
+          "correct",
+          "total",
+          "time_spent_s",
+          "submitted_at",
+          "offered_at",
+          "skills",
+          "why",
+          "review_status",
+          "review_title",
+          "final_points",
+          "reviewed_at",
+          "remind_at",
+          "remind_count",
+          "candidate_ref",
+          "candidate_category",
+          "approach_text",
+          "review_remind_at",
+          "review_remind_count"
+        ],
+        "title": "AssignmentEmployerAttemptOut",
+        "type": "object"
+      },
+      "AssignmentFamilyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "difficulty": {
+            "title": "Difficulty",
+            "type": "number"
+          },
+          "format": {
+            "description": "Формат задания банка: predict_output, find_bug, …",
+            "title": "Format",
+            "type": "string"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "tag_titles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tag Titles",
+            "type": "array"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "format",
+          "language",
+          "difficulty",
+          "tags",
+          "tag_titles"
+        ],
+        "title": "AssignmentFamilyOut",
+        "type": "object"
+      },
+      "AssignmentFeedItemOut": {
+        "additionalProperties": true,
+        "properties": {
+          "assignment": {
+            "$ref": "#/components/schemas/AssignmentOut"
+          },
+          "assignment_id": {
+            "title": "Assignment Id",
+            "type": "string"
+          },
+          "attempt_id": {
+            "title": "Attempt Id",
+            "type": "string"
+          },
+          "correct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct"
+          },
+          "final_points": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Final Points"
+          },
+          "offered_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered At"
+          },
+          "remind_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remind At"
+          },
+          "remind_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remind Count"
+          },
+          "review_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Оценка работодателя: pending, reviewed, …",
+            "title": "Review Status"
+          },
+          "review_title": {
+            "title": "Review Title",
+            "type": "string"
+          },
+          "reviewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewed At"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Рубрика с баллами (только после проверки)",
+            "title": "Rubric"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "score_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Pct"
+          },
+          "skills": {
+            "description": "Навыки по заданию: tag, title, correct, total, …",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "source": {
+            "description": "Откуда задание: feed (лента), invitation, application, …",
+            "title": "Source",
+            "type": "string"
+          },
+          "status": {
+            "description": "offered, in_progress, scored, declined, expired",
+            "title": "Status",
+            "type": "string"
+          },
+          "status_title": {
+            "title": "Status Title",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "time_spent_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Spent S"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          },
+          "why": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Почему предложено (для ленты): текст и сигналы",
+            "title": "Why"
+          }
+        },
+        "required": [
+          "attempt_id",
+          "assignment_id",
+          "title",
+          "status",
+          "status_title",
+          "source",
+          "score",
+          "score_pct",
+          "correct",
+          "total",
+          "time_spent_s",
+          "submitted_at",
+          "offered_at",
+          "skills",
+          "why",
+          "review_status",
+          "review_title",
+          "final_points",
+          "reviewed_at",
+          "remind_at",
+          "remind_count",
+          "assignment"
+        ],
+        "title": "AssignmentFeedItemOut",
+        "type": "object"
+      },
       "AssignmentIn": {
         "properties": {
           "approach_prompt": {
@@ -980,6 +2196,400 @@
           "mode"
         ],
         "title": "AssignmentIn",
+        "type": "object"
+      },
+      "AssignmentOut": {
+        "additionalProperties": true,
+        "description": "Задание работодателя: открытое, к вакансии или зонд; результат — факт T1 в паспорте кандидата.",
+        "properties": {
+          "approach_prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Просьба описать подход, если оценка идёт и по рубрике",
+            "title": "Approach Prompt"
+          },
+          "attempts_by_status": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Попытки по статусам: offered, in_progress, scored, expired, …",
+            "title": "Attempts By Status"
+          },
+          "attempts_total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Всего попыток (в ответах работодателю)",
+            "title": "Attempts Total"
+          },
+          "category_title": {
+            "title": "Category Title",
+            "type": "string"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AssignmentCompanyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/AssignmentCoverageOut"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction_id": {
+            "title": "Direction Id",
+            "type": "string"
+          },
+          "families": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentFamilyOut"
+            },
+            "title": "Families",
+            "type": "array"
+          },
+          "grade_id": {
+            "title": "Grade Id",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "mode": {
+            "description": "open — открытое задание, vacancy — к вакансии, probe — зонд",
+            "title": "Mode",
+            "type": "string"
+          },
+          "n_tasks": {
+            "title": "N Tasks",
+            "type": "integer"
+          },
+          "need_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Id"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Рубрика: criteria (критерии с баллами) и max",
+            "title": "Rubric"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "sent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сколько предложений выдано (ответ на «разослать»)",
+            "title": "Sent"
+          },
+          "stack": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentStackItemOut"
+            },
+            "title": "Stack",
+            "type": "array"
+          },
+          "status": {
+            "description": "active или closed",
+            "title": "Status",
+            "type": "string"
+          },
+          "time_limit_min": {
+            "title": "Time Limit Min",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "to_review": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Ждут оценки работодателя",
+            "title": "To Review"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          }
+        },
+        "required": [
+          "id",
+          "mode",
+          "title",
+          "description",
+          "status",
+          "direction_id",
+          "grade_id",
+          "category_title",
+          "stack",
+          "families",
+          "n_tasks",
+          "time_limit_min",
+          "coverage",
+          "salary_from",
+          "salary_to",
+          "need_id",
+          "vacancy_id",
+          "is_demo",
+          "created_at",
+          "company",
+          "rubric",
+          "approach_prompt"
+        ],
+        "title": "AssignmentOut",
+        "type": "object"
+      },
+      "AssignmentPreviewOut": {
+        "additionalProperties": true,
+        "description": "Предпросмотр задания до создания: подобранные задания банка и покрытие стека.",
+        "properties": {
+          "approach_prompt": {
+            "title": "Approach Prompt",
+            "type": "string"
+          },
+          "category_title": {
+            "title": "Category Title",
+            "type": "string"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/AssignmentCoverageOut"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "families": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentFamilyOut"
+            },
+            "title": "Families",
+            "type": "array"
+          },
+          "grade": {
+            "title": "Grade",
+            "type": "string"
+          },
+          "n_tasks": {
+            "title": "N Tasks",
+            "type": "integer"
+          },
+          "need_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Need Id"
+          },
+          "rubric": {
+            "additionalProperties": true,
+            "description": "Рубрика с просьбой описать подход: criteria, max",
+            "title": "Rubric",
+            "type": "object"
+          },
+          "rubric_auto": {
+            "additionalProperties": true,
+            "description": "Рубрика только с автоматической частью",
+            "title": "Rubric Auto",
+            "type": "object"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "stack": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stack",
+            "type": "array"
+          },
+          "stack_titles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stack Titles",
+            "type": "array"
+          },
+          "time_limit_min": {
+            "title": "Time Limit Min",
+            "type": "integer"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          }
+        },
+        "required": [
+          "stack",
+          "direction",
+          "grade",
+          "title",
+          "salary_from",
+          "salary_to",
+          "need_id",
+          "vacancy_id",
+          "category_title",
+          "stack_titles",
+          "families",
+          "n_tasks",
+          "coverage",
+          "time_limit_min",
+          "rubric",
+          "rubric_auto",
+          "approach_prompt"
+        ],
+        "title": "AssignmentPreviewOut",
+        "type": "object"
+      },
+      "AssignmentStackItemOut": {
+        "additionalProperties": true,
+        "properties": {
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "title"
+        ],
+        "title": "AssignmentStackItemOut",
         "type": "object"
       },
       "AttackIn": {
@@ -1185,6 +2795,66 @@
           "file"
         ],
         "title": "Body_upload_resume_api_me_resume_post",
+        "type": "object"
+      },
+      "CandidateAssignmentsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "demo": {
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "feed_days": {
+            "title": "Feed Days",
+            "type": "integer"
+          },
+          "freshness": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FreshnessOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "has_category": {
+            "title": "Has Category",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AssignmentFeedItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "new_offer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Идентификатор попытки, предложенной прямо сейчас",
+            "title": "New Offer"
+          },
+          "schedule": {
+            "$ref": "#/components/schemas/FeedScheduleOut"
+          }
+        },
+        "required": [
+          "items",
+          "feed_days",
+          "new_offer",
+          "has_category",
+          "schedule",
+          "freshness",
+          "demo"
+        ],
+        "title": "CandidateAssignmentsOut",
         "type": "object"
       },
       "CandidateCardOut": {
@@ -1514,6 +3184,47 @@
         "title": "CandidateCardOut",
         "type": "object"
       },
+      "CandidateCupsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "category_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Title"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CupCandidateItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "category_id",
+          "category_title",
+          "items"
+        ],
+        "title": "CandidateCupsOut",
+        "type": "object"
+      },
       "CandidateInvitationOut": {
         "additionalProperties": true,
         "properties": {
@@ -1754,6 +3465,49 @@
           "below_my_minimum"
         ],
         "title": "CandidateInvitationOut",
+        "type": "object"
+      },
+      "CandidatePrefsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": true,
+            "description": "Допустимые значения: offers (готовность), tasks (задачи) — код → название",
+            "title": "Options",
+            "type": "object"
+          },
+          "preferences": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "offers_status, interest_tags, interest_tasks, salary_signal, updated_at",
+            "title": "Preferences"
+          },
+          "survey_stack": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Survey Stack",
+            "type": "array"
+          }
+        },
+        "required": [
+          "preferences",
+          "survey_stack",
+          "options",
+          "note"
+        ],
+        "title": "CandidatePrefsOut",
         "type": "object"
       },
       "CandidateProfileOut": {
@@ -2219,6 +3973,72 @@
         "title": "CandidateSearchOut",
         "type": "object"
       },
+      "CandidateWhyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "counts": {
+            "additionalProperties": true,
+            "title": "Counts",
+            "type": "object"
+          },
+          "matched": {
+            "description": "Требования с уровнем доказанности: requirement, level, status, text",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Matched",
+            "type": "array"
+          },
+          "need": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Потребность: title, category",
+            "title": "Need"
+          },
+          "offer": {
+            "$ref": "#/components/schemas/MutualFitOut"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Место в подборке: version, rank, total, score",
+            "title": "Place"
+          },
+          "to_confirm": {
+            "description": "Обязательные навыки, которые ещё надо подтвердить",
+            "items": {
+              "type": "string"
+            },
+            "title": "To Confirm",
+            "type": "array"
+          }
+        },
+        "required": [
+          "need",
+          "place",
+          "matched",
+          "counts",
+          "to_confirm",
+          "offer"
+        ],
+        "title": "CandidateWhyOut",
+        "type": "object"
+      },
       "CatalogOut": {
         "properties": {
           "categories": {
@@ -2602,6 +4422,129 @@
         "title": "CompanyUpdate",
         "type": "object"
       },
+      "CompareCandidateOut": {
+        "additionalProperties": true,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "components": {
+            "additionalProperties": true,
+            "description": "Вклад составляющих скора (0…1): test, fsp, probe, stack_required, stack_desired; grade_status — подпись статуса",
+            "title": "Components",
+            "type": "object"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "status": {
+            "additionalProperties": true,
+            "title": "Status",
+            "type": "object"
+          }
+        },
+        "required": [
+          "ref",
+          "score",
+          "grade",
+          "category",
+          "status",
+          "components"
+        ],
+        "title": "CompareCandidateOut",
+        "type": "object"
+      },
+      "CompareOut": {
+        "additionalProperties": true,
+        "description": "Сравнение кандидатов подборки: составляющие скора и «почему выше».",
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/CompareCandidateOut"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "levels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Уровни доказательства: код (T0, T1, T2, none) → пояснение",
+            "title": "Levels",
+            "type": "object"
+          },
+          "need": {
+            "additionalProperties": true,
+            "title": "Need",
+            "type": "object"
+          },
+          "rows": {
+            "description": "Строки таблицы: group, key, title, hint",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "selection_total": {
+            "title": "Selection Total",
+            "type": "integer"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Weights",
+            "type": "object"
+          },
+          "why": {
+            "description": "Разбор пар: higher, lower, diff, summary, text, pro",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Why",
+            "type": "array"
+          }
+        },
+        "required": [
+          "need",
+          "candidates",
+          "rows",
+          "why",
+          "levels",
+          "weights",
+          "selection_total"
+        ],
+        "title": "CompareOut",
+        "type": "object"
+      },
       "ComplaintIn": {
         "properties": {
           "comment": {
@@ -2846,6 +4789,1033 @@
         "title": "CriterionIn",
         "type": "object"
       },
+      "CupCandidateItemOut": {
+        "additionalProperties": true,
+        "properties": {
+          "below_my_minimum": {
+            "title": "Below My Minimum",
+            "type": "boolean"
+          },
+          "category_id": {
+            "description": "Категория «направление.грейд», например backend.middle",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "category_title": {
+            "title": "Category Title",
+            "type": "string"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CupCompanyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_method": {
+            "title": "Contact Method",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "finalized_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalized At"
+          },
+          "grade": {
+            "title": "Grade",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "invite_top_n": {
+            "description": "Сколько лучших участников получат приглашение по итогам",
+            "title": "Invite Top N",
+            "type": "integer"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "min_score_pct": {
+            "description": "Минимальный балл (%) для приглашения",
+            "title": "Min Score Pct",
+            "type": "integer"
+          },
+          "mode": {
+            "description": "Способ оценки: auto — автопроверка заданий банка, rubric — оценка работодателем по рубрике, …",
+            "title": "Mode",
+            "type": "string"
+          },
+          "mode_title": {
+            "title": "Mode Title",
+            "type": "string"
+          },
+          "my_place": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "My Place"
+          },
+          "my_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Статус моего участия или null",
+            "title": "My Status"
+          },
+          "n_tasks": {
+            "description": "Число заданий в автопроверяемом кубке",
+            "title": "N Tasks",
+            "type": "integer"
+          },
+          "offer_description": {
+            "title": "Offer Description",
+            "type": "string"
+          },
+          "participants": {
+            "title": "Participants",
+            "type": "integer"
+          },
+          "phase": {
+            "description": "Фаза по времени: upcoming (ещё не началась), active, closed (приём решений завершён), finished",
+            "title": "Phase",
+            "type": "string"
+          },
+          "position_title": {
+            "description": "Позиция, на которую приглашают по итогам",
+            "title": "Position Title",
+            "type": "string"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CupRubricItemOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Рубрика оценки (только mode = rubric)",
+            "title": "Rubric"
+          },
+          "salary_basis": {
+            "description": "gross — до вычета налога, net — на руки",
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_basis_title": {
+            "title": "Salary Basis Title",
+            "type": "string"
+          },
+          "salary_from": {
+            "title": "Salary From",
+            "type": "integer"
+          },
+          "salary_to": {
+            "title": "Salary To",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "status": {
+            "description": "Статус кубка: active, finished или cancelled",
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted": {
+            "description": "Сдали решение (в том числе уже оценённые)",
+            "title": "Submitted",
+            "type": "integer"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "description": "Итоги после завершения: best_pct, joined, placed, invited, invite_top_n, early, expired, finalized_at; до завершения — пустой объект",
+            "title": "Summary",
+            "type": "object"
+          },
+          "time_limit_min": {
+            "description": "Время на решение у участника, минут",
+            "title": "Time Limit Min",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "to_review": {
+            "description": "Ждут оценки работодателя",
+            "title": "To Review",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "category_id",
+          "category_title",
+          "direction",
+          "grade",
+          "mode",
+          "mode_title",
+          "phase",
+          "status",
+          "starts_at",
+          "ends_at",
+          "time_limit_min",
+          "n_tasks",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_basis_title",
+          "invite_top_n",
+          "min_score_pct",
+          "position_title",
+          "offer_description",
+          "contact_method",
+          "rubric",
+          "company",
+          "participants",
+          "submitted",
+          "to_review",
+          "summary",
+          "finalized_at",
+          "is_demo",
+          "my_status",
+          "my_place",
+          "below_my_minimum"
+        ],
+        "title": "CupCandidateItemOut",
+        "type": "object"
+      },
+      "CupCandidateOut": {
+        "additionalProperties": true,
+        "description": "Кубок в ответах кандидату: плюс его участие и условия вступления.",
+        "properties": {
+          "below_my_minimum": {
+            "description": "Верх вилки ниже вашего минимума зарплаты (сам минимум не раскрывается)",
+            "title": "Below My Minimum",
+            "type": "boolean"
+          },
+          "can_join": {
+            "title": "Can Join",
+            "type": "boolean"
+          },
+          "category_id": {
+            "description": "Категория «направление.грейд», например backend.middle",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "category_title": {
+            "title": "Category Title",
+            "type": "string"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CupCompanyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_method": {
+            "title": "Contact Method",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "finalized_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalized At"
+          },
+          "grade": {
+            "title": "Grade",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "invite_top_n": {
+            "description": "Сколько лучших участников получат приглашение по итогам",
+            "title": "Invite Top N",
+            "type": "integer"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "leaderboard": {
+            "items": {
+              "$ref": "#/components/schemas/CupLeaderRowOut"
+            },
+            "title": "Leaderboard",
+            "type": "array"
+          },
+          "min_score_pct": {
+            "description": "Минимальный балл (%) для приглашения",
+            "title": "Min Score Pct",
+            "type": "integer"
+          },
+          "mode": {
+            "description": "Способ оценки: auto — автопроверка заданий банка, rubric — оценка работодателем по рубрике, …",
+            "title": "Mode",
+            "type": "string"
+          },
+          "mode_title": {
+            "title": "Mode Title",
+            "type": "string"
+          },
+          "my_entry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CupEntryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "n_tasks": {
+            "description": "Число заданий в автопроверяемом кубке",
+            "title": "N Tasks",
+            "type": "integer"
+          },
+          "offer_description": {
+            "title": "Offer Description",
+            "type": "string"
+          },
+          "participants": {
+            "title": "Participants",
+            "type": "integer"
+          },
+          "phase": {
+            "description": "Фаза по времени: upcoming (ещё не началась), active, closed (приём решений завершён), finished",
+            "title": "Phase",
+            "type": "string"
+          },
+          "position_title": {
+            "description": "Позиция, на которую приглашают по итогам",
+            "title": "Position Title",
+            "type": "string"
+          },
+          "profile_visible": {
+            "description": "Ваш профиль виден работодателям",
+            "title": "Profile Visible",
+            "type": "boolean"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CupRubricItemOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Рубрика оценки (только mode = rubric)",
+            "title": "Rubric"
+          },
+          "salary_basis": {
+            "description": "gross — до вычета налога, net — на руки",
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_basis_title": {
+            "title": "Salary Basis Title",
+            "type": "string"
+          },
+          "salary_from": {
+            "title": "Salary From",
+            "type": "integer"
+          },
+          "salary_to": {
+            "title": "Salary To",
+            "type": "integer"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "status": {
+            "description": "Статус кубка: active, finished или cancelled",
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted": {
+            "description": "Сдали решение (в том числе уже оценённые)",
+            "title": "Submitted",
+            "type": "integer"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "description": "Итоги после завершения: best_pct, joined, placed, invited, invite_top_n, early, expired, finalized_at; до завершения — пустой объект",
+            "title": "Summary",
+            "type": "object"
+          },
+          "time_limit_min": {
+            "description": "Время на решение у участника, минут",
+            "title": "Time Limit Min",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "to_review": {
+            "description": "Ждут оценки работодателя",
+            "title": "To Review",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "category_id",
+          "category_title",
+          "direction",
+          "grade",
+          "mode",
+          "mode_title",
+          "phase",
+          "status",
+          "starts_at",
+          "ends_at",
+          "time_limit_min",
+          "n_tasks",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_basis_title",
+          "invite_top_n",
+          "min_score_pct",
+          "position_title",
+          "offer_description",
+          "contact_method",
+          "rubric",
+          "company",
+          "participants",
+          "submitted",
+          "to_review",
+          "summary",
+          "finalized_at",
+          "is_demo",
+          "my_entry",
+          "below_my_minimum",
+          "can_join",
+          "profile_visible",
+          "leaderboard"
+        ],
+        "title": "CupCandidateOut",
+        "type": "object"
+      },
+      "CupCompanyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Industry"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "industry",
+          "city"
+        ],
+        "title": "CupCompanyOut",
+        "type": "object"
+      },
+      "CupEmployerOut": {
+        "additionalProperties": true,
+        "description": "Кубок в ответах работодателю: плюс текст задания, таблица результатов и решения (в ответах на список и создание их нет).",
+        "properties": {
+          "category_id": {
+            "description": "Категория «направление.грейд», например backend.middle",
+            "title": "Category Id",
+            "type": "string"
+          },
+          "category_title": {
+            "title": "Category Title",
+            "type": "string"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CupCompanyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "contact_method": {
+            "title": "Contact Method",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ends At"
+          },
+          "finalized_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finalized At"
+          },
+          "grade": {
+            "title": "Grade",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "invite_top_n": {
+            "description": "Сколько лучших участников получат приглашение по итогам",
+            "title": "Invite Top N",
+            "type": "integer"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "leaderboard": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CupLeaderRowOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Таблица результатов (карточка кубка и завершение)",
+            "title": "Leaderboard"
+          },
+          "min_score_pct": {
+            "description": "Минимальный балл (%) для приглашения",
+            "title": "Min Score Pct",
+            "type": "integer"
+          },
+          "mode": {
+            "description": "Способ оценки: auto — автопроверка заданий банка, rubric — оценка работодателем по рубрике, …",
+            "title": "Mode",
+            "type": "string"
+          },
+          "mode_title": {
+            "title": "Mode Title",
+            "type": "string"
+          },
+          "n_tasks": {
+            "description": "Число заданий в автопроверяемом кубке",
+            "title": "N Tasks",
+            "type": "integer"
+          },
+          "offer_description": {
+            "title": "Offer Description",
+            "type": "string"
+          },
+          "participants": {
+            "title": "Participants",
+            "type": "integer"
+          },
+          "phase": {
+            "description": "Фаза по времени: upcoming (ещё не началась), active, closed (приём решений завершён), finished",
+            "title": "Phase",
+            "type": "string"
+          },
+          "position_title": {
+            "description": "Позиция, на которую приглашают по итогам",
+            "title": "Position Title",
+            "type": "string"
+          },
+          "rubric": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CupRubricItemOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Рубрика оценки (только mode = rubric)",
+            "title": "Rubric"
+          },
+          "salary_basis": {
+            "description": "gross — до вычета налога, net — на руки",
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_basis_title": {
+            "title": "Salary Basis Title",
+            "type": "string"
+          },
+          "salary_from": {
+            "title": "Salary From",
+            "type": "integer"
+          },
+          "salary_to": {
+            "title": "Salary To",
+            "type": "integer"
+          },
+          "solutions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CupSolutionOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Решения для оценки (карточка кубка и завершение)",
+            "title": "Solutions"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "status": {
+            "description": "Статус кубка: active, finished или cancelled",
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted": {
+            "description": "Сдали решение (в том числе уже оценённые)",
+            "title": "Submitted",
+            "type": "integer"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "description": "Итоги после завершения: best_pct, joined, placed, invited, invite_top_n, early, expired, finalized_at; до завершения — пустой объект",
+            "title": "Summary",
+            "type": "object"
+          },
+          "task_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текст задания (mode = rubric)",
+            "title": "Task Text"
+          },
+          "time_limit_min": {
+            "description": "Время на решение у участника, минут",
+            "title": "Time Limit Min",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "to_review": {
+            "description": "Ждут оценки работодателя",
+            "title": "To Review",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "description",
+          "category_id",
+          "category_title",
+          "direction",
+          "grade",
+          "mode",
+          "mode_title",
+          "phase",
+          "status",
+          "starts_at",
+          "ends_at",
+          "time_limit_min",
+          "n_tasks",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_basis_title",
+          "invite_top_n",
+          "min_score_pct",
+          "position_title",
+          "offer_description",
+          "contact_method",
+          "rubric",
+          "company",
+          "participants",
+          "submitted",
+          "to_review",
+          "summary",
+          "finalized_at",
+          "is_demo",
+          "task_text"
+        ],
+        "title": "CupEmployerOut",
+        "type": "object"
+      },
+      "CupEntryOut": {
+        "additionalProperties": true,
+        "description": "Участие текущего кандидата в кубке.",
+        "properties": {
+          "alias": {
+            "title": "Alias",
+            "type": "string"
+          },
+          "answer": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Отправленный ответ: text, link",
+            "title": "Answer"
+          },
+          "auto": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Результат автопроверки",
+            "title": "Auto"
+          },
+          "deadline_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "invitation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Id"
+          },
+          "invitation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Status"
+          },
+          "invite_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invite Note"
+          },
+          "passport_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Запись в паспорт ФСП: written, pending, …",
+            "title": "Passport Status"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "score_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Method"
+          },
+          "score_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Pct"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "task_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Task Text"
+          },
+          "tasks": {
+            "description": "Задания с вариантами ответа (после старта); верные ответы раскрываются, когда кубок завершён",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Tasks",
+            "type": "array"
+          },
+          "time_spent_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Spent S"
+          }
+        },
+        "required": [
+          "id",
+          "alias",
+          "status",
+          "started_at",
+          "deadline_at",
+          "submitted_at",
+          "time_spent_s",
+          "score_pct",
+          "score_method",
+          "place",
+          "task_text",
+          "tasks",
+          "answer",
+          "auto",
+          "invitation_id",
+          "invitation_status",
+          "invite_note",
+          "passport_status"
+        ],
+        "title": "CupEntryOut",
+        "type": "object"
+      },
       "CupIn": {
         "properties": {
           "category_id": {
@@ -3030,6 +6000,473 @@
         "title": "CupIn",
         "type": "object"
       },
+      "CupLeaderRowOut": {
+        "additionalProperties": true,
+        "description": "Строка таблицы результатов: участник под псевдонимом («Участник 01»), без имён.",
+        "properties": {
+          "alias": {
+            "title": "Alias",
+            "type": "string"
+          },
+          "candidate_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Только работодателю и только после приглашения: обезличенный номер кандидата",
+            "title": "Candidate Ref"
+          },
+          "entry_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Только в ответах работодателю",
+            "title": "Entry Id"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Только работодателю и только после принятия приглашения кандидатом",
+            "title": "Full Name"
+          },
+          "invitation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Только работодателю: статус приглашения",
+            "title": "Invitation Status"
+          },
+          "invite_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Только в ответах работодателю: пометка к приглашению",
+            "title": "Invite Note"
+          },
+          "invited": {
+            "description": "Участнику отправлено приглашение по итогам кубка",
+            "title": "Invited",
+            "type": "boolean"
+          },
+          "me": {
+            "description": "Это строка текущего пользователя",
+            "title": "Me",
+            "type": "boolean"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Место; у несдавших — null",
+            "title": "Position"
+          },
+          "score_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Pct"
+          },
+          "status": {
+            "description": "joined, in_progress, submitted, scored, expired",
+            "title": "Status",
+            "type": "string"
+          },
+          "time_spent_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Spent S"
+          }
+        },
+        "required": [
+          "alias",
+          "position",
+          "status",
+          "score_pct",
+          "time_spent_s",
+          "me",
+          "invited"
+        ],
+        "title": "CupLeaderRowOut",
+        "type": "object"
+      },
+      "CupOptionsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "auto_tasks_available": {
+            "description": "Сколько заданий банка доступно для автопроверяемого кубка",
+            "title": "Auto Tasks Available",
+            "type": "integer"
+          },
+          "candidates": {
+            "description": "Видимых работодателям кандидатов в категории",
+            "title": "Candidates",
+            "type": "integer"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "category_title": {
+            "title": "Category Title",
+            "type": "string"
+          },
+          "default_rubric": {
+            "description": "Рубрика по умолчанию: id, title, weight",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Default Rubric",
+            "type": "array"
+          },
+          "market": {
+            "additionalProperties": true,
+            "description": "Вилка рынка по категории: from, to, median",
+            "title": "Market",
+            "type": "object"
+          },
+          "modes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Способы оценки: код → название",
+            "title": "Modes",
+            "type": "object"
+          }
+        },
+        "required": [
+          "category_id",
+          "category_title",
+          "market",
+          "candidates",
+          "auto_tasks_available",
+          "modes",
+          "default_rubric"
+        ],
+        "title": "CupOptionsOut",
+        "type": "object"
+      },
+      "CupPassportRowOut": {
+        "additionalProperties": true,
+        "description": "Место кандидата в кубке — запись «мероприятие платформы» в паспорте ФСП.",
+        "properties": {
+          "category_title": {
+            "title": "Category Title",
+            "type": "string"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "cup_id": {
+            "title": "Cup Id",
+            "type": "string"
+          },
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "event_level": {
+            "description": "Уровень мероприятия: platform",
+            "title": "Event Level",
+            "type": "string"
+          },
+          "invited": {
+            "title": "Invited",
+            "type": "boolean"
+          },
+          "level": {
+            "description": "Уровень доказательства записи: T1",
+            "title": "Level",
+            "type": "string"
+          },
+          "of": {
+            "description": "Из скольких участников с местом",
+            "title": "Of",
+            "type": "integer"
+          },
+          "passport_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Passport Status"
+          },
+          "place": {
+            "title": "Place",
+            "type": "integer"
+          },
+          "result_title": {
+            "title": "Result Title",
+            "type": "string"
+          },
+          "score_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Pct"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cup_id",
+          "title",
+          "company",
+          "category_title",
+          "date",
+          "place",
+          "of",
+          "score_pct",
+          "result_title",
+          "invited",
+          "level",
+          "event_level",
+          "passport_status"
+        ],
+        "title": "CupPassportRowOut",
+        "type": "object"
+      },
+      "CupRubricItemOut": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "description": "Вес критерия в оценке работодателя",
+            "title": "Weight"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "weight"
+        ],
+        "title": "CupRubricItemOut",
+        "type": "object"
+      },
+      "CupSolutionOut": {
+        "additionalProperties": true,
+        "description": "Решение для оценки работодателем — вслепую: псевдоним, текст без персональных данных, ссылки скрыты.",
+        "properties": {
+          "alias": {
+            "title": "Alias",
+            "type": "string"
+          },
+          "auto": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Результат автопроверки: correct, total (только mode = auto)",
+            "title": "Auto"
+          },
+          "employer": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Оценка работодателя, если уже поставлена",
+            "title": "Employer"
+          },
+          "entry_id": {
+            "title": "Entry Id",
+            "type": "string"
+          },
+          "has_link": {
+            "description": "В ответе была ссылка (сама ссылка работодателю не показывается)",
+            "title": "Has Link",
+            "type": "boolean"
+          },
+          "llm": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Предварительная оценка языковой моделью: status, score, criteria, comment, model",
+            "title": "Llm"
+          },
+          "redacted": {
+            "description": "Что вымарано из текста",
+            "items": {
+              "type": "string"
+            },
+            "title": "Redacted",
+            "type": "array"
+          },
+          "score_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "auto, llm или employer",
+            "title": "Score Method"
+          },
+          "score_pct": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score Pct"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "submitted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Submitted At"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текст ответа с вымаранными персональными данными",
+            "title": "Text"
+          },
+          "time_spent_s": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Spent S"
+          }
+        },
+        "required": [
+          "entry_id",
+          "alias",
+          "status",
+          "submitted_at",
+          "time_spent_s",
+          "score_pct",
+          "score_method",
+          "text",
+          "has_link",
+          "redacted",
+          "llm",
+          "employer",
+          "auto"
+        ],
+        "title": "CupSolutionOut",
+        "type": "object"
+      },
       "DecisionIn": {
         "properties": {
           "note": {
@@ -3108,6 +6545,42 @@
           "confirm"
         ],
         "title": "DeleteIn",
+        "type": "object"
+      },
+      "DemoNextWeekOut": {
+        "additionalProperties": true,
+        "properties": {
+          "expired": {
+            "title": "Expired",
+            "type": "integer"
+          },
+          "offered": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered"
+          },
+          "reminded": {
+            "title": "Reminded",
+            "type": "integer"
+          },
+          "review_reminded": {
+            "title": "Review Reminded",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expired",
+          "reminded",
+          "review_reminded",
+          "offered"
+        ],
+        "title": "DemoNextWeekOut",
         "type": "object"
       },
       "DirectionOut": {
@@ -4143,6 +7616,121 @@
         "title": "FastForwardIn",
         "type": "object"
       },
+      "FeedScheduleOut": {
+        "additionalProperties": true,
+        "description": "Расписание ленты «Задания для вас».",
+        "properties": {
+          "backoff": {
+            "description": "Частота снижена из-за пропущенных заданий",
+            "title": "Backoff",
+            "type": "boolean"
+          },
+          "blocked": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Причина, по которой новое предложение не выдаётся: pending, limit, …",
+            "title": "Blocked"
+          },
+          "due": {
+            "title": "Due",
+            "type": "boolean"
+          },
+          "effective_days": {
+            "description": "Фактическая частота с учётом паузы, дней",
+            "title": "Effective Days",
+            "type": "integer"
+          },
+          "frequency_days": {
+            "description": "Выбранная частота, дней (0 — выключено)",
+            "title": "Frequency Days",
+            "type": "integer"
+          },
+          "last_offer_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Offer At"
+          },
+          "limit": {
+            "description": "Не более предложений за окно window_days",
+            "title": "Limit",
+            "type": "integer"
+          },
+          "next_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next At"
+          },
+          "options": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "paused": {
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "pending": {
+            "description": "Есть непройденное предложение",
+            "title": "Pending",
+            "type": "boolean"
+          },
+          "remind_days": {
+            "title": "Remind Days",
+            "type": "integer"
+          },
+          "ttl_days": {
+            "title": "Ttl Days",
+            "type": "integer"
+          },
+          "used": {
+            "title": "Used",
+            "type": "integer"
+          },
+          "window_days": {
+            "title": "Window Days",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "frequency_days",
+          "effective_days",
+          "options",
+          "paused",
+          "backoff",
+          "pending",
+          "due",
+          "blocked",
+          "last_offer_at",
+          "next_at",
+          "limit",
+          "used",
+          "window_days",
+          "remind_days",
+          "ttl_days"
+        ],
+        "title": "FeedScheduleOut",
+        "type": "object"
+      },
       "FeedbackIn": {
         "properties": {
           "comment": {
@@ -4204,6 +7792,78 @@
           "verdict"
         ],
         "title": "FeedbackIn",
+        "type": "object"
+      },
+      "FeedbackOut": {
+        "additionalProperties": true,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Причина «не подходит»: skill, grade, format, salary, other",
+            "title": "Reason"
+          },
+          "reason_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Title"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "verdict": {
+            "description": "fit или unfit",
+            "title": "Verdict",
+            "type": "string"
+          },
+          "verdict_title": {
+            "title": "Verdict Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ref",
+          "version",
+          "verdict",
+          "verdict_title",
+          "reason",
+          "reason_title",
+          "comment",
+          "updated_at"
+        ],
+        "title": "FeedbackOut",
         "type": "object"
       },
       "Filters": {
@@ -4387,6 +8047,91 @@
           }
         },
         "title": "FinishIn",
+        "type": "object"
+      },
+      "FreshnessOut": {
+        "additionalProperties": true,
+        "description": "Свежесть подтверждений навыков: сколько навыков подтверждено недавно, сколько устаревает.",
+        "properties": {
+          "aging": {
+            "title": "Aging",
+            "type": "integer"
+          },
+          "fresh": {
+            "title": "Fresh",
+            "type": "integer"
+          },
+          "fresh_days": {
+            "title": "Fresh Days",
+            "type": "integer"
+          },
+          "last_confirmed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Confirmed At"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "share_fresh": {
+            "title": "Share Fresh",
+            "type": "number"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/SkillFreshnessOut"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "integer"
+          },
+          "stale_days": {
+            "title": "Stale Days",
+            "type": "integer"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "weak": {
+            "title": "Weak",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "n",
+          "fresh",
+          "aging",
+          "stale",
+          "weak",
+          "fresh_days",
+          "stale_days",
+          "share_fresh",
+          "level",
+          "title",
+          "text",
+          "last_confirmed_at",
+          "skills"
+        ],
+        "title": "FreshnessOut",
         "type": "object"
       },
       "FspDisciplineOut": {
@@ -4836,6 +8581,424 @@
         "title": "HealthOut",
         "type": "object"
       },
+      "HiringCandidateCanOut": {
+        "additionalProperties": true,
+        "properties": {
+          "answer_offer": {
+            "title": "Answer Offer",
+            "type": "boolean"
+          },
+          "choose": {
+            "title": "Choose",
+            "type": "boolean"
+          },
+          "reschedule": {
+            "title": "Reschedule",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "choose",
+          "reschedule",
+          "answer_offer"
+        ],
+        "title": "HiringCandidateCanOut",
+        "type": "object"
+      },
+      "HiringCandidateStateOut": {
+        "additionalProperties": true,
+        "description": "Состояние найма для кандидата (и ответ на каждое его действие: выбрать слот, ответить на оффер).",
+        "properties": {
+          "can": {
+            "$ref": "#/components/schemas/HiringCandidateCanOut"
+          },
+          "interview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InterviewOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текущее интервью"
+          },
+          "interviews": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewOut"
+            },
+            "title": "Interviews",
+            "type": "array"
+          },
+          "invitation_id": {
+            "title": "Invitation Id",
+            "type": "string"
+          },
+          "offer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текущий оффер"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/OfferOut"
+            },
+            "title": "Offers",
+            "type": "array"
+          },
+          "open": {
+            "description": "Контакты раскрыты, итог не зафиксирован",
+            "title": "Open",
+            "type": "boolean"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutcomeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paused": {
+            "description": "Контакты отозваны кандидатом — найм приостановлен",
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/HiringRulesOut"
+          },
+          "salary_basis": {
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "stage": {
+            "description": "Этап найма: invited, interview, offer, hired, …",
+            "title": "Stage",
+            "type": "string"
+          },
+          "stage_title": {
+            "title": "Stage Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invitation_id",
+          "stage",
+          "stage_title",
+          "open",
+          "paused",
+          "interview",
+          "interviews",
+          "offer",
+          "offers",
+          "outcome",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "rules",
+          "can"
+        ],
+        "title": "HiringCandidateStateOut",
+        "type": "object"
+      },
+      "HiringEmployerCanOut": {
+        "additionalProperties": true,
+        "properties": {
+          "cancel": {
+            "title": "Cancel",
+            "type": "boolean"
+          },
+          "declined": {
+            "title": "Declined",
+            "type": "boolean"
+          },
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "hired": {
+            "title": "Hired",
+            "type": "boolean"
+          },
+          "offer": {
+            "title": "Offer",
+            "type": "boolean"
+          },
+          "propose": {
+            "title": "Propose",
+            "type": "boolean"
+          },
+          "rejected": {
+            "title": "Rejected",
+            "type": "boolean"
+          },
+          "withdraw_offer": {
+            "title": "Withdraw Offer",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "propose",
+          "done",
+          "cancel",
+          "offer",
+          "withdraw_offer",
+          "hired",
+          "rejected",
+          "declined"
+        ],
+        "title": "HiringEmployerCanOut",
+        "type": "object"
+      },
+      "HiringEmployerStateOut": {
+        "additionalProperties": true,
+        "description": "Состояние найма для работодателя (в том числе ответ на каждое действие: предложить слоты, оффер, итог).",
+        "properties": {
+          "ats": {
+            "description": "Выгрузки в ATS по этому приглашению",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Ats",
+            "type": "array"
+          },
+          "can": {
+            "$ref": "#/components/schemas/HiringEmployerCanOut"
+          },
+          "interview": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InterviewOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текущее интервью"
+          },
+          "interviews": {
+            "items": {
+              "$ref": "#/components/schemas/InterviewOut"
+            },
+            "title": "Interviews",
+            "type": "array"
+          },
+          "invitation_id": {
+            "title": "Invitation Id",
+            "type": "string"
+          },
+          "offer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfferOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Текущий оффер"
+          },
+          "offers": {
+            "items": {
+              "$ref": "#/components/schemas/OfferOut"
+            },
+            "title": "Offers",
+            "type": "array"
+          },
+          "open": {
+            "description": "Контакты раскрыты, итог не зафиксирован",
+            "title": "Open",
+            "type": "boolean"
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OutcomeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "paused": {
+            "description": "Контакты отозваны кандидатом — найм приостановлен",
+            "title": "Paused",
+            "type": "boolean"
+          },
+          "presets": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Готовые значения форм: slots (три слота), offer (вилка, выход, срок ответа)",
+            "title": "Presets"
+          },
+          "rules": {
+            "$ref": "#/components/schemas/HiringRulesOut"
+          },
+          "salary_basis": {
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "stage": {
+            "description": "Этап найма: invited, interview, offer, hired, …",
+            "title": "Stage",
+            "type": "string"
+          },
+          "stage_title": {
+            "title": "Stage Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "invitation_id",
+          "stage",
+          "stage_title",
+          "open",
+          "paused",
+          "interview",
+          "interviews",
+          "offer",
+          "offers",
+          "outcome",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "rules",
+          "presets",
+          "can",
+          "ats"
+        ],
+        "title": "HiringEmployerStateOut",
+        "type": "object"
+      },
+      "HiringRulesOut": {
+        "additionalProperties": true,
+        "properties": {
+          "counter_max": {
+            "title": "Counter Max",
+            "type": "integer"
+          },
+          "counter_max_up": {
+            "title": "Counter Max Up",
+            "type": "number"
+          },
+          "demo_done_anytime": {
+            "description": "В демо-компании интервью можно отметить проведённым в любой момент",
+            "title": "Demo Done Anytime",
+            "type": "boolean"
+          },
+          "offer_max_up": {
+            "title": "Offer Max Up",
+            "type": "number"
+          },
+          "reschedule_max": {
+            "title": "Reschedule Max",
+            "type": "integer"
+          },
+          "respond_max_days": {
+            "title": "Respond Max Days",
+            "type": "integer"
+          },
+          "slots_max": {
+            "title": "Slots Max",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slots_max",
+          "reschedule_max",
+          "counter_max",
+          "counter_max_up",
+          "offer_max_up",
+          "respond_max_days",
+          "demo_done_anytime"
+        ],
+        "title": "HiringRulesOut",
+        "type": "object"
+      },
+      "HiringTodoOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "description": "Что сделать по найму: приглашение, этап, действие",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "HiringTodoOut",
+        "type": "object"
+      },
       "HuntflowIn": {
         "properties": {
           "account_id": {
@@ -4934,6 +9097,193 @@
           }
         },
         "title": "ImportIn",
+        "type": "object"
+      },
+      "InterviewOut": {
+        "additionalProperties": true,
+        "properties": {
+          "candidate_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Note"
+          },
+          "chosen_slot": {
+            "title": "Chosen Slot"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "done_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Done At"
+          },
+          "duration_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Min"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
+          },
+          "format_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format Title"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "place": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place"
+          },
+          "reschedules": {
+            "title": "Reschedules",
+            "type": "integer"
+          },
+          "reschedules_left": {
+            "title": "Reschedules Left",
+            "type": "integer"
+          },
+          "result_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Note"
+          },
+          "round": {
+            "title": "Round",
+            "type": "integer"
+          },
+          "slots": {
+            "description": "Предложенные слоты: starts_at, duration_min, format, place",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Slots",
+            "type": "array"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Starts At"
+          },
+          "starts_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Время начала по Москве, готовая строка",
+            "title": "Starts Text"
+          },
+          "status": {
+            "description": "proposed — предложены слоты, scheduled — время выбрано, done, cancelled",
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "id",
+          "round",
+          "title",
+          "status",
+          "slots",
+          "chosen_slot",
+          "starts_at",
+          "starts_text",
+          "duration_min",
+          "format",
+          "format_title",
+          "place",
+          "note",
+          "candidate_note",
+          "reschedules",
+          "reschedules_left",
+          "result_note",
+          "done_at",
+          "created_at"
+        ],
+        "title": "InterviewOut",
         "type": "object"
       },
       "InvitationIn": {
@@ -5646,6 +9996,111 @@
           "rules"
         ],
         "title": "MetaOut",
+        "type": "object"
+      },
+      "MutualFactorOut": {
+        "additionalProperties": true,
+        "properties": {
+          "in_line": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "In Line"
+          },
+          "key": {
+            "description": "format, location, salary, stack, tasks или readiness",
+            "title": "Key",
+            "type": "string"
+          },
+          "status": {
+            "description": "ok, bad, unknown (кандидат не указал) или partial",
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "weight": {
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "status",
+          "text",
+          "weight"
+        ],
+        "title": "MutualFactorOut",
+        "type": "object"
+      },
+      "MutualFitOut": {
+        "additionalProperties": true,
+        "description": "Индикатор «предложение подходит кандидату» — вторая сторона подбора; в скор не входит.",
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "decline_risk": {
+            "description": "Кандидат, вероятно, откажет",
+            "title": "Decline Risk",
+            "type": "boolean"
+          },
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/MutualFactorOut"
+            },
+            "title": "Factors",
+            "type": "array"
+          },
+          "known_weight": {
+            "description": "Доля веса факторов, по которым у кандидата есть данные",
+            "title": "Known Weight",
+            "type": "number"
+          },
+          "level": {
+            "description": "high, medium, low или unknown",
+            "title": "Level",
+            "type": "string"
+          },
+          "line": {
+            "description": "Строка объяснения для интерфейса",
+            "title": "Line",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "algorithm",
+          "level",
+          "title",
+          "line",
+          "score",
+          "known_weight",
+          "decline_risk",
+          "factors"
+        ],
+        "title": "MutualFitOut",
         "type": "object"
       },
       "MyDataOut": {
@@ -6376,6 +10831,85 @@
         "title": "OfferCheckIn",
         "type": "object"
       },
+      "OfferCheckOut": {
+        "additionalProperties": true,
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "checks_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Сколько проверок вилки осталось за сутки; null — лимит исчерпан",
+            "title": "Checks Left"
+          },
+          "decline_risk": {
+            "description": "Кандидат, вероятно, откажет",
+            "title": "Decline Risk",
+            "type": "boolean"
+          },
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/MutualFactorOut"
+            },
+            "title": "Factors",
+            "type": "array"
+          },
+          "hint": {
+            "title": "Hint",
+            "type": "string"
+          },
+          "known_weight": {
+            "description": "Доля веса факторов, по которым у кандидата есть данные",
+            "title": "Known Weight",
+            "type": "number"
+          },
+          "level": {
+            "description": "high, medium, low или unknown",
+            "title": "Level",
+            "type": "string"
+          },
+          "line": {
+            "description": "Строка объяснения для интерфейса",
+            "title": "Line",
+            "type": "string"
+          },
+          "salary_status": {
+            "title": "Salary Status",
+            "type": "string"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "algorithm",
+          "level",
+          "title",
+          "line",
+          "score",
+          "known_weight",
+          "decline_risk",
+          "factors",
+          "hint",
+          "salary_status",
+          "checks_left"
+        ],
+        "title": "OfferCheckOut",
+        "type": "object"
+      },
       "OfferIn": {
         "properties": {
           "comment": {
@@ -6437,6 +10971,126 @@
           "start_date"
         ],
         "title": "OfferIn",
+        "type": "object"
+      },
+      "OfferOut": {
+        "additionalProperties": true,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "counter": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Встречное предложение, ожидающее ответа",
+            "title": "Counter"
+          },
+          "counters": {
+            "description": "Встречные предложения кандидата и ответы работодателя",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Counters",
+            "type": "array"
+          },
+          "counters_left": {
+            "title": "Counters Left",
+            "type": "integer"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "decline_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decline Reason"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "respond_until": {
+            "title": "Respond Until",
+            "type": "string"
+          },
+          "respond_until_text": {
+            "title": "Respond Until Text",
+            "type": "string"
+          },
+          "responded_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Responded At"
+          },
+          "salary": {
+            "title": "Salary",
+            "type": "integer"
+          },
+          "salary_basis": {
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_basis_title": {
+            "title": "Salary Basis Title",
+            "type": "string"
+          },
+          "start_date": {
+            "title": "Start Date",
+            "type": "string"
+          },
+          "status": {
+            "description": "sent, accepted, declined, withdrawn, expired",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "salary",
+          "salary_basis",
+          "salary_basis_title",
+          "start_date",
+          "respond_until",
+          "respond_until_text",
+          "comment",
+          "decline_reason",
+          "counters",
+          "counter",
+          "counters_left",
+          "created_at",
+          "responded_at"
+        ],
+        "title": "OfferOut",
         "type": "object"
       },
       "OnboardingIn": {
@@ -6790,6 +11444,55 @@
           "outcome"
         ],
         "title": "OutcomeIn",
+        "type": "object"
+      },
+      "OutcomeOut": {
+        "additionalProperties": true,
+        "properties": {
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "outcome": {
+            "description": "hired, rejected или declined",
+            "title": "Outcome",
+            "type": "string"
+          },
+          "start_date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Start Date"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "outcome",
+          "title",
+          "note",
+          "start_date",
+          "at"
+        ],
+        "title": "OutcomeOut",
         "type": "object"
       },
       "ParseIn": {
@@ -7218,6 +11921,94 @@
           "slots"
         ],
         "title": "ProposeIn",
+        "type": "object"
+      },
+      "PublicShareOut": {
+        "additionalProperties": true,
+        "properties": {
+          "candidates": {
+            "description": "Обезличенные карточки: ref, rank, score, grade_status, card, reasons, fit",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "hidden": {
+            "description": "Скрыто кандидатов, которые закрыли профиль от работодателей",
+            "title": "Hidden",
+            "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "need_title": {
+            "title": "Need Title",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "reactions": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ShareReactionOut"
+            },
+            "title": "Reactions",
+            "type": "object"
+          },
+          "requirements": {
+            "additionalProperties": true,
+            "title": "Requirements",
+            "type": "object"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "company",
+          "need_title",
+          "requirements",
+          "version",
+          "created_at",
+          "label",
+          "expires_at",
+          "hidden",
+          "candidates",
+          "reactions",
+          "note"
+        ],
+        "title": "PublicShareOut",
         "type": "object"
       },
       "PushIn": {
@@ -8155,6 +12946,104 @@
         "title": "SelectionIn",
         "type": "object"
       },
+      "SelectionMutualOut": {
+        "additionalProperties": true,
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "feedback": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "description": "Отзывы работодателя по номерам кандидатов",
+            "title": "Feedback",
+            "type": "object"
+          },
+          "items": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/MutualFitOut"
+            },
+            "description": "Индикатор по обезличенному номеру кандидата",
+            "title": "Items",
+            "type": "object"
+          },
+          "levels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Levels",
+            "type": "object"
+          },
+          "mutual_order": {
+            "description": "Номера кандидатов в порядке «подходит обеим сторонам»",
+            "items": {
+              "type": "string"
+            },
+            "title": "Mutual Order",
+            "type": "array"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "reactions": {
+            "additionalProperties": {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "description": "Отметки руководителей по ссылкам",
+            "title": "Reactions",
+            "type": "object"
+          },
+          "tasks_detected": {
+            "description": "Задачи, найденные в тексте потребности",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tasks Detected",
+            "type": "array"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "weights": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Weights",
+            "type": "object"
+          }
+        },
+        "required": [
+          "version",
+          "algorithm",
+          "weights",
+          "levels",
+          "items",
+          "mutual_order",
+          "counts",
+          "feedback",
+          "reactions",
+          "tasks_detected",
+          "note"
+        ],
+        "title": "SelectionMutualOut",
+        "type": "object"
+      },
       "SelectionOut": {
         "additionalProperties": true,
         "description": "Подбор кандидатов под потребность: условия, веса, категории и ранжированные результаты с причинами.",
@@ -8507,6 +13396,194 @@
         "title": "ShareIn",
         "type": "object"
       },
+      "ShareOut": {
+        "additionalProperties": true,
+        "description": "Ссылка для нанимающего руководителя: только чтение, без персональных данных.",
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "expires_at": {
+            "title": "Expires At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "last_viewed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Viewed At"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Путь /share/<токен> — только в ответе на создание",
+            "title": "Path"
+          },
+          "reactions": {
+            "items": {
+              "$ref": "#/components/schemas/ShareReactionOut"
+            },
+            "title": "Reactions",
+            "type": "array"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "status": {
+            "description": "active, revoked или expired",
+            "title": "Status",
+            "type": "string"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Токен ссылки — только в ответе на создание, потом не показывается",
+            "title": "Token"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "views": {
+            "title": "Views",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "version",
+          "label",
+          "status",
+          "created_at",
+          "expires_at",
+          "revoked_at",
+          "views",
+          "last_viewed_at",
+          "reactions"
+        ],
+        "title": "ShareOut",
+        "type": "object"
+      },
+      "ShareReactionOut": {
+        "additionalProperties": true,
+        "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
+          "comment": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "share_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Label"
+          },
+          "share_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Share Version"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          },
+          "verdict": {
+            "title": "Verdict",
+            "type": "string"
+          },
+          "verdict_title": {
+            "title": "Verdict Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref",
+          "verdict",
+          "verdict_title",
+          "comment",
+          "author",
+          "updated_at",
+          "share_label",
+          "share_version"
+        ],
+        "title": "ShareReactionOut",
+        "type": "object"
+      },
       "SignedIn": {
         "properties": {
           "passport": {
@@ -8560,6 +13637,93 @@
           }
         },
         "title": "SimulateIn",
+        "type": "object"
+      },
+      "SkillFreshnessOut": {
+        "additionalProperties": true,
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "confirmed": {
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "correct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Total"
+          }
+        },
+        "required": [
+          "tag",
+          "title",
+          "at",
+          "date",
+          "confirmed",
+          "correct",
+          "total",
+          "score"
+        ],
+        "title": "SkillFreshnessOut",
         "type": "object"
       },
       "SlotIn": {
@@ -8849,6 +14013,340 @@
           "join_id"
         ],
         "title": "StubMoveIn",
+        "type": "object"
+      },
+      "SubsFastForwardOut": {
+        "additionalProperties": true,
+        "properties": {
+          "created": {
+            "additionalProperties": true,
+            "description": "Сколько записей смоделировано: inv_expiring, inv_expired, inv_unanswered, app_stale",
+            "title": "Created",
+            "type": "object"
+          },
+          "days": {
+            "title": "Days",
+            "type": "integer"
+          },
+          "why": {
+            "title": "Why",
+            "type": "string"
+          }
+        },
+        "required": [
+          "days",
+          "created",
+          "why"
+        ],
+        "title": "SubsFastForwardOut",
+        "type": "object"
+      },
+      "SubsSimulateOut": {
+        "additionalProperties": true,
+        "properties": {
+          "auto_subscribed": {
+            "title": "Auto Subscribed",
+            "type": "boolean"
+          },
+          "candidate_ref": {
+            "title": "Candidate Ref",
+            "type": "string"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "confirmed": {
+            "title": "Confirmed",
+            "type": "boolean"
+          },
+          "entered_top": {
+            "title": "Entered Top",
+            "type": "boolean"
+          },
+          "need_id": {
+            "title": "Need Id",
+            "type": "string"
+          },
+          "need_title": {
+            "title": "Need Title",
+            "type": "string"
+          },
+          "notification": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notification"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "tick": {
+            "additionalProperties": true,
+            "description": "Что сделал фоновый пересчёт: recomputed, entered, notified, cached, digest, dispatch",
+            "title": "Tick",
+            "type": "object"
+          },
+          "top_n": {
+            "title": "Top N",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "candidate_ref",
+          "category_id",
+          "need_id",
+          "need_title",
+          "confirmed",
+          "auto_subscribed",
+          "entered_top",
+          "rank",
+          "score",
+          "top_n",
+          "notification",
+          "tick"
+        ],
+        "title": "SubsSimulateOut",
+        "type": "object"
+      },
+      "SubscriptionFrequencyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title"
+        ],
+        "title": "SubscriptionFrequencyOut",
+        "type": "object"
+      },
+      "SubscriptionItemOut": {
+        "additionalProperties": true,
+        "properties": {
+          "computed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "frequency": {
+            "title": "Frequency",
+            "type": "string"
+          },
+          "need_id": {
+            "title": "Need Id",
+            "type": "string"
+          },
+          "new_count": {
+            "title": "New Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "need_id",
+          "enabled",
+          "frequency",
+          "new_count",
+          "computed_at"
+        ],
+        "title": "SubscriptionItemOut",
+        "type": "object"
+      },
+      "SubscriptionNewVersionOut": {
+        "additionalProperties": true,
+        "properties": {
+          "parent_version": {
+            "title": "Parent Version",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "parent_version"
+        ],
+        "title": "SubscriptionNewVersionOut",
+        "type": "object"
+      },
+      "SubscriptionOut": {
+        "additionalProperties": true,
+        "description": "Подписка на новых подходящих кандидатов по потребности.",
+        "properties": {
+          "baseline_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline At"
+          },
+          "computed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Computed At"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "exists": {
+            "title": "Exists",
+            "type": "boolean"
+          },
+          "frequencies": {
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionFrequencyOut"
+            },
+            "title": "Frequencies",
+            "type": "array"
+          },
+          "frequency": {
+            "title": "Frequency",
+            "type": "string"
+          },
+          "frequency_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Есть, когда подписка создана",
+            "title": "Frequency Title"
+          },
+          "in_top": {
+            "title": "In Top",
+            "type": "integer"
+          },
+          "need_id": {
+            "title": "Need Id",
+            "type": "string"
+          },
+          "need_status": {
+            "title": "Need Status",
+            "type": "string"
+          },
+          "new": {
+            "description": "Новые в верхних местах: обезличенная строка подборки + rank, score, entered_at",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "New",
+            "type": "array"
+          },
+          "new_count": {
+            "title": "New Count",
+            "type": "integer"
+          },
+          "new_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "New Refs",
+            "type": "array"
+          },
+          "top_n": {
+            "description": "Сколько верхних мест подборки отслеживается",
+            "title": "Top N",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "need_id",
+          "need_status",
+          "top_n",
+          "frequencies",
+          "exists",
+          "enabled",
+          "frequency",
+          "new_count",
+          "new",
+          "new_refs",
+          "in_top",
+          "computed_at",
+          "baseline_at"
+        ],
+        "title": "SubscriptionOut",
+        "type": "object"
+      },
+      "SubscriptionsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "new_total": {
+            "title": "New Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "new_total"
+        ],
+        "title": "SubscriptionsOut",
         "type": "object"
       },
       "SurveyIn": {
@@ -10531,6 +16029,108 @@
           }
         },
         "title": "WebhookIn",
+        "type": "object"
+      },
+      "WhatIfOut": {
+        "additionalProperties": true,
+        "description": "Что изменится в подборке, если ослабить требование.",
+        "properties": {
+          "cached": {
+            "title": "Cached",
+            "type": "boolean"
+          },
+          "confirmed_in_categories": {
+            "title": "Confirmed In Categories",
+            "type": "integer"
+          },
+          "criteria": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "cuts": {
+            "description": "Что отбрасывает выдачу: key, kind, title, cut",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Cuts",
+            "type": "array"
+          },
+          "ms": {
+            "title": "Ms",
+            "type": "number"
+          },
+          "options": {
+            "description": "Варианты ослабления: action, title, gain, result, apply",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "provisional_full": {
+            "title": "Provisional Full",
+            "type": "integer"
+          },
+          "salary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary"
+          },
+          "shown": {
+            "description": "Показывать ли блок (в большой выдаче не нужен)",
+            "title": "Shown",
+            "type": "boolean"
+          },
+          "strict": {
+            "description": "Сколько кандидатов подходит под все требования",
+            "title": "Strict",
+            "type": "integer"
+          },
+          "strict_apply": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Фильтры и требования для применения «только полностью подходящие»",
+            "title": "Strict Apply"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cached",
+          "shown",
+          "criteria",
+          "strict",
+          "strict_apply",
+          "confirmed_in_categories",
+          "provisional_full",
+          "threshold",
+          "cuts",
+          "options",
+          "ms",
+          "salary"
+        ],
+        "title": "WhatIfOut",
         "type": "object"
       },
       "WorkFormat": {
@@ -16089,9 +21689,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response My Attempts Api Candidate Assignments Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateAssignmentsOut"
                 }
               }
             },
@@ -16130,9 +21728,7 @@
                   "review_reminded": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Demo Next Week Api Candidate Assignments Demo Next Week Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/DemoNextWeekOut"
                 }
               }
             },
@@ -16211,9 +21807,7 @@
                   "window_days": 30
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Set Prefs Api Candidate Assignments Prefs Put",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FeedScheduleOut"
                 }
               }
             },
@@ -16268,9 +21862,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response One Attempt Api Candidate Assignments  Atid  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentCandidateAttemptOut"
                 }
               }
             },
@@ -16341,9 +21933,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Decline Api Candidate Assignments  Atid  Decline Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentCandidateAttemptOut"
                 }
               }
             },
@@ -16430,9 +22020,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Start Api Candidate Assignments  Atid  Start Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentCandidateAttemptOut"
                 }
               }
             },
@@ -16529,9 +22117,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Submit Api Candidate Assignments  Atid  Submit Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentCandidateAttemptOut"
                 }
               }
             },
@@ -16649,9 +22235,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cand Cups Api Candidate Cups Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateCupsOut"
                 }
               }
             },
@@ -16734,10 +22318,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/CupPassportRowOut"
                   },
-                  "title": "Response Cand Passport Api Candidate Cups Passport Get",
                   "type": "array"
                 }
               }
@@ -16852,9 +22434,7 @@
                   "to_review": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cand Cup Api Candidate Cups  Cup Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupCandidateOut"
                 }
               }
             },
@@ -17023,9 +22603,7 @@
                   "to_review": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cand Join Api Candidate Cups  Cup Id  Join Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupCandidateOut"
                 }
               }
             },
@@ -17125,9 +22703,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cand Leave Api Candidate Cups  Cup Id  Leave Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupCandidateOut"
                 }
               }
             },
@@ -17326,9 +22902,7 @@
                   "to_review": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cand Start Api Candidate Cups  Cup Id  Start Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupCandidateOut"
                 }
               }
             },
@@ -17556,9 +23130,7 @@
                   "to_review": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cand Submit Api Candidate Cups  Cup Id  Submit Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupCandidateOut"
                 }
               }
             },
@@ -18843,9 +24415,7 @@
                   "stage_title": "Контакты открыты"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Candidate State Api Candidate Invitations  Inv Id  Hiring Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringCandidateStateOut"
                 }
               }
             },
@@ -18936,9 +24506,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Choose Api Candidate Invitations  Inv Id  Interviews  Iid  Choose Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringCandidateStateOut"
                 }
               }
             },
@@ -19051,9 +24619,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Reschedule Api Candidate Invitations  Inv Id  Interviews  Iid  Reschedule Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringCandidateStateOut"
                 }
               }
             },
@@ -19146,9 +24712,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Offer Accept Api Candidate Invitations  Inv Id  Offer Accept Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringCandidateStateOut"
                 }
               }
             },
@@ -19245,9 +24809,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Offer Counter Api Candidate Invitations  Inv Id  Offer Counter Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringCandidateStateOut"
                 }
               }
             },
@@ -19350,9 +24912,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Offer Decline Api Candidate Invitations  Inv Id  Offer Decline Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringCandidateStateOut"
                 }
               }
             },
@@ -19606,7 +25166,9 @@
                   "place": null,
                   "to_confirm": []
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateWhyOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -19702,7 +25264,9 @@
                     "fastapi"
                   ]
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CandidatePrefsOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -19774,7 +25338,9 @@
                     "fastapi"
                   ]
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/CandidatePrefsOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -21242,10 +26808,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AssignmentOut"
                   },
-                  "title": "Response My Assignments Api Employer Assignments Get",
                   "type": "array"
                 }
               }
@@ -21408,9 +26972,7 @@
                   "vacancy_id": null
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Create Api Employer Assignments Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentOut"
                 }
               }
             },
@@ -21501,9 +27063,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Preview Api Employer Assignments Preview Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentPreviewOut"
                 }
               }
             },
@@ -21596,9 +27156,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response One Api Employer Assignments  Aid  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentDetailOut"
                 }
               }
             },
@@ -21705,9 +27263,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Review Api Employer Assignments  Aid  Attempts  Atid  Review Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentDetailOut"
                 }
               }
             },
@@ -21800,9 +27356,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Close Api Employer Assignments  Aid  Close Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentOut"
                 }
               }
             },
@@ -21899,9 +27453,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Send Api Employer Assignments  Aid  Send Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssignmentDetailOut"
                 }
               }
             },
@@ -25191,10 +30743,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/CupEmployerOut"
                   },
-                  "title": "Response My Cups Api Employer Cups Get",
                   "type": "array"
                 }
               }
@@ -25322,9 +30872,7 @@
                   "to_review": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Create Api Employer Cups Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupEmployerOut"
                 }
               }
             },
@@ -25401,9 +30949,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Options Api Employer Cups Options Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupOptionsOut"
                 }
               }
             },
@@ -25557,9 +31103,7 @@
                   "to_review": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Cup Api Employer Cups  Cup Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupEmployerOut"
                 }
               }
             },
@@ -25659,9 +31203,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cancel Api Employer Cups  Cup Id  Cancel Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupEmployerOut"
                 }
               }
             },
@@ -25768,9 +31310,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Score Api Employer Cups  Cup Id  Entries  Entry Id  Score Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupEmployerOut"
                 }
               }
             },
@@ -25959,9 +31499,7 @@
                   "to_review": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Finish Api Employer Cups  Cup Id  Finish Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CupEmployerOut"
                 }
               }
             },
@@ -26682,9 +32220,7 @@
                   "stage_title": "Контакты открыты"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Employer State Api Employer Invitations  Inv Id  Hiring Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -26781,9 +32317,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Propose Api Employer Invitations  Inv Id  Interviews Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -26896,9 +32430,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Cancel Api Employer Invitations  Inv Id  Interviews  Iid  Cancel Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -27005,9 +32537,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Done Api Employer Invitations  Inv Id  Interviews  Iid  Done Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -27104,9 +32634,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Offer Api Employer Invitations  Inv Id  Offer Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -27209,9 +32737,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Offer Counter Accept Api Employer Invitations  Inv Id  Offer Counter Accept Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -27308,9 +32834,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Offer Counter Decline Api Employer Invitations  Inv Id  Offer Counter Decline Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -27397,9 +32921,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Offer Withdraw Api Employer Invitations  Inv Id  Offer Withdraw Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -27496,9 +33018,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Outcome Api Employer Invitations  Inv Id  Outcome Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringEmployerStateOut"
                 }
               }
             },
@@ -27716,7 +33236,9 @@
                   "score": 0.0,
                   "title": "Вероятно, откажет"
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/OfferCheckOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -29052,9 +34574,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Compare Candidates Api Employer Needs  Need Id  Compare Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CompareOut"
                 }
               }
             },
@@ -29172,7 +34692,9 @@
                   "verdict_title": "не подходит",
                   "version": 1
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -30251,7 +35773,9 @@
                     "tasks": 0.05
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SelectionMutualOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -30345,7 +35869,9 @@
           "201": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/SelectionOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -30947,9 +36473,7 @@
                   "threshold": 5
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Selection What If Api Employer Needs  Need Id  Selections  Version  What If Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/WhatIfOut"
                 }
               }
             },
@@ -31036,7 +36560,12 @@
             "content": {
               "application/json": {
                 "example": [],
-                "schema": {}
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ShareOut"
+                  },
+                  "type": "array"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -31143,7 +36672,9 @@
                   "version": 3,
                   "views": 0
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ShareOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -31238,7 +36769,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ShareOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -31348,9 +36881,7 @@
                   "top_n": 10
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Subscription Api Employer Needs  Need Id  Subscription Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SubscriptionOut"
                 }
               }
             },
@@ -31473,9 +37004,7 @@
                   "top_n": 10
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Put Subscription Api Employer Needs  Need Id  Subscription Put",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SubscriptionOut"
                 }
               }
             },
@@ -31562,9 +37091,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Check Now Api Employer Needs  Need Id  Subscription Check Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SubscriptionOut"
                 }
               }
             },
@@ -31655,9 +37182,7 @@
                   "version": 4
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response New Version Api Employer Needs  Need Id  Subscription New Version Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SubscriptionNewVersionOut"
                 }
               }
             },
@@ -31786,9 +37311,7 @@
                   "top_n": 10
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Seen Api Employer Needs  Need Id  Subscription Seen Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SubscriptionOut"
                 }
               }
             },
@@ -32234,9 +37757,7 @@
                   "new_total": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response My Subscriptions Api Employer Subscriptions Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SubscriptionsOut"
                 }
               }
             },
@@ -35631,9 +41152,7 @@
                   "total": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Todo Api Hiring Todo Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HiringTodoOut"
                 }
               }
             },
@@ -37259,9 +42778,7 @@
                   "why": "без ответа 3 дня и отклик без решения 5 дней"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Fast Forward Api Jury Subs Fast Forward Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SubsFastForwardOut"
                 }
               }
             },
@@ -37399,9 +42916,7 @@
                   "top_n": 10
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Simulate Api Jury Subs Simulate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SubsSimulateOut"
                 }
               }
             },
@@ -42233,7 +47748,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PublicShareOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -42332,7 +47849,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ShareReactionOut"
+                }
               }
             },
             "description": "Успешный ответ."
