@@ -7,6 +7,11 @@ DIRECTIONS: dict[str, str] = {
     "qa": "QA",
     "security": "Информационная безопасность",
 }
+# Подписи всех направлений, включая расширение каталога (catalog/ext.py, CATALOG_EXT_ENABLED), — для показа уже
+# сохранённых данных. Перечень для выбора и проверок — DIRECTIONS (базовые) и ext.visible_directions().
+from app.modules.catalog.ext import EXT_DIRECTIONS as _EXT_TITLES  # noqa: E402
+
+DIRECTION_TITLES: dict[str, str] = {**DIRECTIONS, **_EXT_TITLES}
 # Грейды снизу вверх. «Стажёр» (intern) — ниже Junior, для начинающих участников ФСП (решение владельца 07.10).
 # Единственный источник правды о наборе грейдов на стороне платформы: другие модули импортируют отсюда,
 # «ровно три грейда» нигде не предполагается.

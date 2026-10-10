@@ -35,7 +35,7 @@ from app.modules.matching import whatif
 from app.modules.mydata import interest  # обезличенная отметка интереса для кандидата (md01)
 from app.modules.profiles.facts import card, load_bundles
 from app.modules.profiles.models import Company, EmployerProfile
-from app.modules.catalog.ext import DirectionId
+from app.modules.catalog.ext import EXT_SHORT_TITLES, DirectionId, hidden_ext
 
 router = APIRouter(prefix="/api/employer", tags=["employer"])
 AUTH = {401: err("Не выполнен вход"), 403: err("Только для работодателя"),
@@ -180,7 +180,7 @@ def _need_title(req: dict) -> str:
     категория + до трёх главных обязательных навыков (по весу), а у профессии вне справочника (coverage) — её название
     и ближайшая категория, по которой идёт подбор."""
     direction = {"backend": "Backend", "frontend": "Frontend", "data_ml": "Data/ML", "qa": "QA",
-                 "security": "ИБ"}.get(req.get("direction") or "")
+                 "security": "ИБ", **EXT_SHORT_TITLES}.get(req.get("direction") or "")
     grade = GRADES.get(req.get("grade") or "")
     cov = req.get("coverage") or {}
     if cov.get("title"):
@@ -478,7 +478,8 @@ def categories(user: User = Depends(employer), db: Session = Depends(get_db)) ->
     return [{"id": c.id, "title": c.title, "direction": c.direction_id, "grade": c.grade_id,
              "count": counts.get(c.id, 0), "provisional": prov.get(c.id, 0), "unconfirmed": unc.get(c.id, 0),
              "market_range": ranking._mr(c)}
-            for c in db.scalars(select(Category).order_by(Category.direction_id)).all()]
+            for c in db.scalars(select(Category).order_by(Category.direction_id)).all()
+            if c.direction_id not in hidden_ext()]  # направления расширения каталога — только видимые
 
 
 @router.get("/candidates/{ref}", summary="Карточка кандидата: факты с уровнями, история контактов, контакты после принятия",

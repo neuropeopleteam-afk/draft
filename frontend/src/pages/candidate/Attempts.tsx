@@ -1,7 +1,7 @@
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { AttemptsCompare, type Comparison } from "../../components/AttemptsCompare";
-import { Alert, DIRECTIONS, Empty, GRADES, Loading, dtt, num, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Empty, GRADES, Loading, dtt, num, signed, useApi } from "../../components/ui";
 
 /** Две попытки теста рядом (И26): θ ± погрешность, точность, грейд и статус, время, повторы заданий, что изменилось. */
 
@@ -49,7 +49,7 @@ export default function Attempts() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Две попытки рядом" subtitle={`${DIRECTIONS[data.direction ?? ""] ?? "Тест"}: что изменилось между попытками и почему. Повтор выдаётся из другого набора заданий банка.`} />
+      <PageTitle title="Две попытки рядом" subtitle={`${DIRECTION_TITLES[data.direction ?? ""] ?? "Тест"}: что изменилось между попытками и почему. Повтор выдаётся из другого набора заданий банка.`} />
       {items.length < 2 ? (
         <Empty title={items.length ? "Пока одна попытка" : "Попыток ещё нет"}
           text={items.length ? "Сравнение появится после второй завершённой попытки в этом направлении." : "Пройдите тест — затем повторите его, чтобы увидеть две попытки рядом."}

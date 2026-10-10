@@ -27,7 +27,7 @@ from app.core.db import as_aware, utcnow
 from app.core.errors import api_error
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES
 from app.modules.profiles.facts import DISCIPLINE_TITLES, LEVEL_TITLES, card, load_bundles
 from app.modules.profiles.models import CandidateProfile
 from app.passport import crypto
@@ -133,7 +133,7 @@ def build_content(db: Session, user_id: uuid.UUID) -> dict | None:
         "schema": crypto.SCHEMA,
         "subject": {"public_ref": p.public_ref},
         "category": {"id": p.current_category_id, "title": cat.title if cat else p.current_category_id,
-                     "direction": p.current_direction_id, "direction_title": DIRECTIONS.get(p.current_direction_id),
+                     "direction": p.current_direction_id, "direction_title": DIRECTION_TITLES.get(p.current_direction_id),
                      "grade": p.current_grade_id, "grade_title": GRADES.get(p.current_grade_id)},
         "grade_status": status,
         "assessment": assessment,
