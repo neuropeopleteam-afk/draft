@@ -19,7 +19,7 @@ GRADE_WORDS = {"intern": ["стажер", "стажёр", "intern", "стажи�
                "middle": ["middle", "мидл"],
                "senior": ["senior", "сеньор", "старший", "ведущий", "lead", "тимлид"]}
 
-_MOBILE = ["android", "ios", "flutter", "react native", "мобильн", "mobile", "swift"]
+_MOBILE = ["android", "ios", "flutter", "react native", "мобильн*", "mobile", "swift"]
 _DATA_ENG = ["data engineer", "инженер данных", "дата-инженер", "dwh", "etl", "big data", "data platform",
              "hadoop", "spark"]
 
@@ -35,7 +35,7 @@ HH_DIRECTIONS: dict[str, dict] = {
                  "not": ["react native", "fullstack", "full-stack", "backend", "бэкенд"]},
     "qa": {"title": "QA", "roles": ["124"], "words": None, "not": []},
     "data_ml": {"title": "Data/ML", "roles": ["165", "96"],
-                "words": ["data scientist", "ml", "machine learning", "дата-сайентист", "машинн", "nlp",
+                "words": ["data scientist", "ml", "machine learning", "дата-сайентист", "машинн*", "nlp",
                           "computer vision", "llm", "data science"],
                 "not": ["data engineer", "инженер данных", "devops"]},
     "security": {"title": "Информационная безопасность", "roles": ["116"], "words": None, "not": []},
