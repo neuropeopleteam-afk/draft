@@ -8,6 +8,12 @@
 Модель не вызывается (use_llm=False): путь правил. Без записи в docs/ по умолчанию; --out <файл> — сохранить JSON.
 
   cd backend && python ../tools/realdata/parse_compare.py --rev 601e2ba [--out /tmp/x.json]
+  cd backend && python ../tools/realdata/parse_compare.py --rev 601e2ba --corpus <файл.json> [--out /tmp/x.json]
+
+--corpus — любой корпус того же вида ({"vacancies": [{"id", "text", "expected"?, "expected_stack"?, "acceptable"?,
+"source_url"?}]}; по умолчанию docs/realdata/vacancies_50.json). Строки без разметки (`expected`) в точность полей и
+P/R стека не входят — по ним считаются только spread, изменения полей/весов и проверка цитат (цитата = текст по
+start:end), чтобы корпус без ручной разметки (hh.ru, Я12) тоже показывал «без ухудшения».
 """
 from __future__ import annotations
 
@@ -55,6 +61,20 @@ def spread(rows, results) -> dict:
             "max_gap": round(max((max(g) - min(g) for g in uneven), default=0.0), 2)}
 
 
+def quotes_check(rows, results) -> dict:
+    """Цитаты разбора: сколько всего и сколько не совпадают с текстом по start:end (для строк без разметки)."""
+    n = bad = 0
+    for row, req in zip(rows, results):
+        evs = list((req.get("evidence") or {}).values()) + [i.get("evidence") for i in
+                                                             req["stack_required"] + req["stack_desired"]]
+        for ev in evs:
+            if not ev:
+                continue
+            n += 1
+            bad += row["text"][ev.get("start", 0):ev.get("end", 0)] != ev.get("quote")
+    return {"quotes": n, "invalid_quotes": bad}
+
+
 def summary(m: dict) -> dict:
     return {**{f: f"{m['fields'][f]['correct']}/{m['fields'][f]['n']}" for f in FIELDS},
             "stack_P": m["stack_micro_precision"], "stack_R": m["stack_micro_recall"],
@@ -65,21 +85,26 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--rev", default="601e2ba")
     ap.add_argument("--out")
+    ap.add_argument("--corpus", default=str(ROOT / "docs/realdata/vacancies_50.json"))
     a = ap.parse_args()
-    rows = json.loads((ROOT / "docs/realdata/vacancies_50.json").read_text())["vacancies"]
+    rows = json.loads(Path(a.corpus).read_text())["vacancies"]
     before = [parser_at(a.rev)(r["text"], use_llm=False) for r in rows]
     after = [need_parser.parse_need(r["text"], use_llm=False) for r in rows]
-    mb, ma = measure(rows, before), measure(rows, after)
+    lab = [i for i, r in enumerate(rows) if r.get("expected")]  # размеченные строки — точность полей и стека
+    mb = measure([rows[i] for i in lab], [before[i] for i in lab]) if lab else None
+    ma = measure([rows[i] for i in lab], [after[i] for i in lab]) if lab else None
     changed = []
     for r, b, x in zip(rows, before, after):
-        d = {f: [b.get(f), x.get(f), r["expected"][f]] for f in FIELDS if b.get(f) != x.get(f)}
+        d = {f: [b.get(f), x.get(f), (r.get("expected") or {}).get(f)] for f in FIELDS if b.get(f) != x.get(f)}
         wb = {i["tag"]: i["weight"] for i in b["stack_required"] + b["stack_desired"]}
         wa = {i["tag"]: i["weight"] for i in x["stack_required"] + x["stack_desired"]}
         if wb != wa:
             d["weights"] = {t: [wb.get(t), wa.get(t)] for t in sorted(set(wb) | set(wa)) if wb.get(t) != wa.get(t)}
         if d:
             changed.append({"id": r["id"], **d})
-    out = {"rev": a.rev, "n": len(rows), "before": summary(mb), "after": summary(ma),
+    out = {"rev": a.rev, "corpus": Path(a.corpus).name, "n": len(rows), "n_labeled": len(lab),
+           "before": summary(mb) if mb else quotes_check(rows, before),
+           "after": summary(ma) if ma else quotes_check(rows, after),
            "spread_before": spread(rows, before), "spread_after": spread(rows, after),
            "fields_changed": [c for c in changed if set(c) - {"id", "weights"}],
            "weights_changed": sum("weights" in c for c in changed)}
