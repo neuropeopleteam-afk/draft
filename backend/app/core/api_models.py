@@ -678,7 +678,7 @@ RESPONSE_TYPES: dict[str, Any] = {
 
 
 # Модули с остальными моделями: у каждого своя таблица TYPES того же вида.
-MODULES = ("api_models_work", "api_models_integrations")
+MODULES = ("api_models_work", "api_models_integrations", "api_models_candidate")
 
 
 def all_types() -> dict[str, Any]:
