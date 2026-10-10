@@ -10,10 +10,11 @@ from pathlib import Path
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.exc import TimeoutError as DBPoolTimeout
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -116,6 +117,16 @@ def create_app() -> FastAPI:
         redoc_url=None,
         openapi_url="/api/openapi.json",
     )
+    @app.exception_handler(DBPoolTimeout)
+    async def db_busy(request, exc):  # noqa: ANN001 — пул соединений исчерпан (docs/LOAD.md, раздел 6)
+        """Нет свободного соединения с БД за DB_POOL_TIMEOUT_S: понятный 503 с Retry-After вместо 500 — фронтенд
+        повторяет GET через указанное время, Locust и nginx видят перегрузку, а не ошибку кода."""
+        logging.getLogger("app.db").warning("Пул соединений с БД исчерпан (%s %s): 503 db_busy", request.method,
+                                            request.url.path)
+        return JSONResponse(status_code=503, headers={"Retry-After": str(get_settings().db_busy_retry_after_s)},
+                            content={"detail": {"code": "db_busy",
+                                                "message": "Сервер сейчас перегружен — повторите через несколько секунд"}})
+
     app.add_middleware(JuryScopeMiddleware)  # песочница жюри из токена → видимость кандидатов и ответов
     app.include_router(fsp_registry_router)
     app.add_middleware(
