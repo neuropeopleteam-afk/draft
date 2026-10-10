@@ -2,7 +2,6 @@ import { Suspense } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
 import { JuryGuide } from "./components/JuryGuide";
-import { InterviewRoom } from "./components/Interview";  // Я15: разговор устной защиты и ИИ-интервью
 import { StudyDock } from "./components/study/StudyDock";
 import { RouteBoundary, RouteFallback } from "./components/Boot";  // Я16: загрузка экрана, ошибка загрузки — экран повтора
 import Landing from "./pages/Landing";
@@ -59,9 +58,11 @@ const pg = {
   liveScreen: () => import("./ideas/live/Screen"),
   passport: () => import("./passport/VerifyPage"),
   criteria: () => import("./pages/Criteria"),  // К1: проверка по критериям ТЗ
+  interview: () => import("./components/Interview"),  // Я15: разговор устной защиты и ИИ-интервью
 };
 
 const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
+const InterviewRoom = lazyNamed(pg.interview, "InterviewRoom");
 const StudyAbout = lazyNamed(pg.studyAbout, "default");
 const Expert = lazyNamed(pg.expert, "default");
 const ExpertAngoff = lazyNamed(pg.panel, "ExpertAngoff");
