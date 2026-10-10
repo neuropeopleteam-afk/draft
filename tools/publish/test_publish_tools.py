@@ -103,7 +103,7 @@ class Numbers(unittest.TestCase):
 
     def test_limits_match_compose(self) -> None:
         n = gen_numbers.static_numbers()
-        self.assertEqual(n["memory_limits_mib"]["api"], 1536)
+        self.assertEqual(n["memory_limits_mib"]["api"], 3072)
         self.assertEqual(len(n["migrations"]["heads"]), 1)
 
 
