@@ -27,6 +27,7 @@ from app.core.ratelimit import SlidingWindow, client_ip, hit
 from app.integrations.fsp_id.router import _optional_user
 from app.integrations.sus.models import SusResponse
 from app.modules.auth.models import User
+from app.modules.study.stats import SUS_MIN_N  # n < 5 — балл не показывается как результат
 
 router = APIRouter(prefix="/api/sus", tags=["sus"])
 admin_router = APIRouter(prefix="/api/admin", tags=["sus"])
@@ -173,7 +174,13 @@ def summary(include_demo: bool = Query(True), db: Session = Depends(get_db)) -> 
     bins = [0] * 10
     for s in scores:
         bins[min(9, int(s // 10))] += 1
-    return {**overall, "adjective": adjective(overall["mean"]) if overall["mean"] is not None else None,
+    enough = overall["n"] >= SUS_MIN_N
+    demo_n = sum(1 for r in rows if r.is_demo)
+    return {**overall, "min_n": SUS_MIN_N, "enough": enough, "demo_n": demo_n,
+            # n < 5 — число не результат: экраны пишут «пока недостаточно ответов (n = N)» с датой последней анкеты
+            "label": (None if enough else f"пока недостаточно ответов (n = {overall['n']})"),
+            "demo_note": ("ответы демо-учёток: в т. ч. автотесты и модельные персоны — модель, не люди" if demo_n else None),
+            "adjective": adjective(overall["mean"]) if overall["mean"] is not None else None,
             "grade": grade(overall["mean"]) if overall["mean"] is not None else None,
             "benchmark": 68.0, "by_role": by("role"), "by_context": by("context"), "items_mean": items,
             "histogram": [{"from": i * 10, "to": i * 10 + 10, "n": b} for i, b in enumerate(bins)],
