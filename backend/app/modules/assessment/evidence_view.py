@@ -35,18 +35,34 @@ VERDICT_TITLES = {"agree": "скептик согласился", "kept": "ск�
                   "решает эксперт", "failed": "проверка скептиком не выполнена — решает эксперт"}
 
 
-def _criteria(rubric: dict | None, ev: dict, final: dict | None) -> list[dict]:
+def _raised(second: dict | None) -> dict[str, dict]:
+    """Пункты, которые скептик повысил с цитатой, подтверждённой кодом (принятые изменения «вверх»)."""
+    if not second or second.get("kind") != "skeptic" or second.get("verdict") != "agree":
+        return {}
+    return {ch["criterion"]: ch for ch in second.get("changes") or []
+            if ch.get("accepted") and ch.get("direction") == "up" and ch.get("quote")}
+
+
+def _criteria(rubric: dict | None, ev: dict, final: dict | None, raised: dict[str, dict] | None = None) -> list[dict]:
+    """score — итог пункта (после скептика); cap_score — балл после правила «без цитаты — на шаг ниже» (до скептика).
+    Пункт, который скептик повысил с подтверждённой цитатой, показывает эту цитату (how = skeptic) и не помечается
+    «без подтверждённой цитаты»."""
     out = []
     crit = (rubric or {}).get("criteria") or []
     for n, c in enumerate(crit, 1):
         e = (ev.get("criteria") or {}).get(c["id"]) or {}
+        quotes = [{"text": q["text"][:400], "how": q.get("how")} for q in (e.get("quotes") or [])][:3]
+        up = (raised or {}).get(c["id"])
+        if up:
+            quotes = [*quotes[:2], {"text": str(up["quote"])[:400], "how": "skeptic"}]
         out.append({
             "n": n, "title": f"Пункт {n}", "weight": round(float(c.get("weight") or 0), 3),
             "score": (final or {}).get(c["id"], e.get("score")), "model_score": e.get("model_score"),
-            "quotes": [{"text": q["text"][:400], "how": q.get("how")} for q in (e.get("quotes") or [])][:3],
+            "cap_score": e.get("score"),
+            "quotes": quotes,
             "dropped": len(e.get("dropped") or []),
             "dropped_why": sorted({WHY_TITLES.get(d.get("why"), d.get("why")) for d in e.get("dropped") or []}),
-            "capped": bool(e.get("capped")),
+            "capped": bool(e.get("capped")) and not up,
         })
     return out
 
@@ -71,7 +87,7 @@ def items_view(state: dict) -> list[dict]:
         for part, g in enumerate(it.get("grading") or []):
             if not isinstance(g, dict) or not g.get("evidence"):
                 continue
-            criteria = _criteria(it.get("rubric"), g["evidence"], g.get("criteria"))
+            criteria = _criteria(it.get("rubric"), g["evidence"], g.get("criteria"), _raised(g.get("second")))
             ids = [c["id"] for c in (it.get("rubric") or {}).get("criteria") or []]
             sk = _skeptic(g.get("second"))
             if sk:

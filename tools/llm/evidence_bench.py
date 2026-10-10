@@ -1,6 +1,6 @@
 """Я13: замер доказательной оценки (GRADING_EVIDENCE) — флаг выкл/вкл на одних и тех же ответах набора оценщика.
 
-Набор — тот же, что у Я2 (reports_0910/rullm.md, docs/LLM.md §12): набор панели 06.10 (29 заданий, 406 ответов:
+Набор — тот же, что в замере сильнейших моделей (docs/LLM.md §12): набор панели 06.10 (29 заданий, 406 ответов:
 эталоны сильный/средний/слабый, ответы gpt-oss-120b и открытых моделей, 5 видов атак) и его малая выборка — 50
 ответов (по 5 из каждой из 10 групп; 25 честных, 25 атак). Эталон для честных ответов — как у Я2: среднее баллов
 других моделей замера без самой оцениваемой (все — модели, не люди); вариант «три семейства, есть сейчас» — Claude
@@ -53,6 +53,8 @@ STRONG = Path(os.environ.get("STRONG_DIR", "/tmp/strong"))
 WDIR = Path(os.environ.get("EVIDENCE_DIR", "/tmp/evidence"))
 OUT_OFFLINE = ROOT / "docs" / "llm" / "evidence_offline.json"
 OUT_BENCH = ROOT / "docs" / "llm" / "evidence_bench.json"
+OUT_FULL = ROOT / "docs" / "llm" / "evidence_full.json"  # полный набор 406 (report --full)
+OUT_ESTIMATE = ROOT / "docs" / "llm" / "evidence_full_estimate.json"
 V2_REPEAT = WDIR / "v2_rep_out.jsonl"  # повтор промпта v2 (флаг выкл) на тех же 50 — шум прогона
 SONNET = "anthropic/claude-sonnet-5.5"
 SONNET_FULL = RULLM / "openrouter_anthropic_claude_sonnet_5.5" / "g" / "v2_1_out.jsonl"
@@ -104,6 +106,18 @@ def _model_of(d: Path) -> str:
 
 def sample_ids() -> list[str]:
     return [json.loads(x)["req_id"] for x in open(SAMPLE_REQ, encoding="utf-8")]
+
+
+def run_ids(full: bool = False) -> list[str]:
+    """Ответы прогона: малая выборка (50) или полный набор (406: сначала те же 50, затем остальные по порядку
+    полного прогона Я2 — если деньги кончатся посреди, малая выборка уже посчитана)."""
+    s = sample_ids()
+    if not full:
+        return s
+    _, rows = _items_rows()
+    seen = set(s)
+    rest = [r for r in _read(SONNET_FULL) if r in rows and r not in seen]
+    return s + rest
 
 
 def model_files() -> dict[str, Path]:
@@ -284,7 +298,9 @@ def offline(out: Path = OUT_OFFLINE) -> dict:
     sn = {r: v for r, v in on_all[SONNET].items() if v.get("ok")}
     result["full_sonnet"] = {"n": len(so), "reference": "gpt-oss-120b (панель 06.10, одна модель)",
                              "off": quality(so, ref_g, rows), "on": quality(sn, ref_g, rows),
+                             "paired": {"on_minus_off": paired(sn, so, ref_g, rows)},
                              "quotes": qstats[SONNET]}
+    result["full_sonnet"]["decision"] = decide(result["full_sonnet"])
     out.write_text(json.dumps(result, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return result
 
@@ -310,14 +326,14 @@ def show_offline(d: dict) -> None:
 
 
 # ------------------------------------------------------------------ запросы (за деньги)
-def build(out: Path) -> None:
+def build(out: Path, full: bool = False) -> None:
     from app.modules.assessment import grader as G
 
     items, rows = _items_rows()
     out.parent.mkdir(parents=True, exist_ok=True)
     n = 0
     with open(out, "w", encoding="utf-8") as fh:
-        for rid in sample_ids():
+        for rid in run_ids(full):
             r = rows[rid]
             it = items[r["item"]]
             msgs = G.build_messages(stem=it["stem"], code=it["code"], step_prompt=it["step_prompt"],
@@ -332,7 +348,7 @@ def _first(o: dict | None, it: dict, ans: str) -> dict | None:
     return p if p.get("ok") else None
 
 
-def skeptic(res: Path, out: Path, high: float = 0.75) -> None:
+def skeptic(res: Path, out: Path, high: float = 0.75, full: bool = False) -> None:
     """Запросы скептика — как в продукте (grade_open, ветка флага): оценка ≥ high или есть причины сомнения."""
     from app.modules.assessment import evidence as EV, grader as G
 
@@ -340,7 +356,7 @@ def skeptic(res: Path, out: Path, high: float = 0.75) -> None:
     got = _read(res)
     n = 0
     with open(out, "w", encoding="utf-8") as fh:
-        for rid in sample_ids():
+        for rid in run_ids(full):
             r = rows[rid]
             it = items[r["item"]]
             ans = _answer(r)
@@ -416,12 +432,14 @@ def run(req: Path, out: Path, spec: str, func: str, cap: float, floor: float, co
 
 # ------------------------------------------------------------------ отчёт: флаг выкл (v2) против вкл (v3 + скептик)
 def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skeptic_label: str = "Claude Fable 5.1",
-           disagree: float = 0.25) -> dict:
+           disagree: float = 0.25, full: bool = False) -> dict:
+    """full — полный набор 406: эталон честных ответов — gpt-oss-120b панели 06.10 (как full_sonnet в offline;
+    судьи Я2 есть только на 50), плюс те же метрики на подмножестве 50 с эталоном судей Я2."""
     from app.modules.assessment import evidence as EV
     from app.modules.llm.client import _extract_json
 
     items, rows = _items_rows()
-    sample = sample_ids()
+    sample = run_ids(full)
     # эталон — как в offline: правило Я2 (судьи, их ответы v2 разобраны правилом флаг выкл)
     files = model_files()
     by_model = {}
@@ -436,6 +454,10 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
                     by_model[m][rid] = {"ok": True, "score": p["score"], "manipulation": bool(p["manipulation"])}
     ref = _ref(by_model, SONNET)
     ref3 = _ref(by_model, SONNET, THREE)
+    ref_j = ref  # эталон судей Я2 (есть только на малой выборке)
+    if full:
+        ref = {r: rows[r]["panel"]["gptoss"] for r in sample
+               if (rows[r].get("panel") or {}).get("gptoss") is not None and rows[r]["group"] in HONEST}
     off = by_model[SONNET]
     v3 = _read(v3_out)
     skq = {json.loads(x)["req_id"]: json.loads(x) for x in open(sk_req, encoding="utf-8")} if sk_req.exists() else {}
@@ -492,11 +514,16 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
             p = parse(got.get(rid), items[r["item"]], _answer(r), "v2")
             if p.get("ok"):
                 rep[rid] = {"ok": True, "score": p["score"], "manipulation": bool(p["manipulation"])}
+    s50 = set(sample_ids())
+    only50 = (lambda d: {r: v for r, v in d.items() if r in s50})
     res = {
-        "title": "Доказательная оценка: флаг GRADING_EVIDENCE выкл и вкл на одних и тех же 50 ответах",
+        "title": f"Доказательная оценка: флаг GRADING_EVIDENCE выкл и вкл на одних и тех же {len(sample)} ответах",
         "date": time.strftime("%Y-%m-%d %H:%M"), "code_sha": _sha(),
         "grader": "Claude Sonnet 5.5", "skeptic": skeptic_label,
-        "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro (модели, не люди)",
+        "reference": ("gpt-oss-120b (панель 06.10, одна модель; модель, не люди); на подмножестве 50 — судьи Я2"
+                      if full else "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro (модели, не люди)"),
+        **({"off_judges50": quality(only50(off), ref_j, rows), "on_judges50": quality(only50(final), ref_j, rows),
+            "paired_judges50": paired(only50(final), only50(off), ref_j, rows)} if full else {}),
         "n": len(sample), "answered_v3": len(first_only),
         "off": quality(off, ref, rows), "on_first": quality(first_only, ref, rows), "on": quality(final, ref, rows),
         "off_three": quality(off, ref3, rows), "on_three": quality(final, ref3, rows),
@@ -513,7 +540,70 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
         "latency_s": {k: {"p50": round(st.median(v), 2) if v else None,
                           "p90": round(sorted(v)[int(0.9 * (len(v) - 1))], 2) if v else None} for k, v in lat.items()},
     }
+    res["decision"] = decide(res)
     out.write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return res
+
+
+# Правило решения, записанное до полного прогона (10.10 вечер): флаг включать, только если «не хуже» по всем пунктам.
+NON_INFERIOR = {"d_mae_ci90_hi": 0.02, "kappa_w_drop": 0.02, "expert_share_rise": 0.05}
+
+
+def decide(res: dict) -> dict:
+    """Флаг вкл против выкл на одних и тех же ответах: MAE (парная разница, верх ДИ 90 % ≤ 0,02), κw (падение
+    ≤ 0,02), атаки (прошло не больше), порядок сильный > средний > слабый (не меньше на 1 и больше), доля честных
+    ответов «эксперту» (рост ≤ 5 п. п.). Все пункты — да → «включить»; иначе — «не включать» с причинами."""
+    off, on, pr = res["off"], res["on"], res["paired"]["on_minus_off"]
+    hi = (pr.get("ci90") or [None, None])[1]
+    eo, en = off["expert_honest"], on["expert_honest"]
+    checks = {
+        "mae": hi is not None and hi <= NON_INFERIOR["d_mae_ci90_hi"],
+        "kappa_w": (on["kappa_w"]["value"] or 0) >= (off["kappa_w"]["value"] or 0) - NON_INFERIOR["kappa_w_drop"],
+        "attacks": on["attacks_passed"] <= off["attacks_passed"],
+        "order": on["order_strict"]["value"] >= off["order_strict"]["value"] - 1,
+        "expert": (en["value"] / max(1, en["n"])) <= (eo["value"] / max(1, eo["n"])) + NON_INFERIOR["expert_share_rise"],
+    }
+    ok = all(checks.values())
+    return {"rule": NON_INFERIOR, "checks": checks, "non_inferior": ok,
+            "text": ("не хуже по всем пунктам правила" if ok else
+                     "«не хуже» не доказано по пунктам: " + ", ".join(k for k, v in checks.items() if not v))}
+
+
+def estimate(high: float = 0.75, margin: float = 0.1) -> dict:
+    """Стоимость полного прогона 406 без запросов: v3 — цена v2 того же ответа (полный прогон Я2 09.10) × отношение
+    v3/v2 на малой выборке; скептик — сколько ответов уйдёт к нему (правило продукта на разборе v3 уже полученных
+    ответов v2; на малой выборке так же получается 11 из 50, как в настоящем прогоне) × цена вызова на малой выборке."""
+    from app.modules.assessment import grader as G
+
+    b = json.loads(OUT_BENCH.read_text(encoding="utf-8"))
+    items, rows = _items_rows()
+    full = _read(SONNET_FULL)
+    ids = run_ids(True)
+    v2_all = sum((full.get(r) or {}).get("cost") or 0 for r in ids)
+    ratio = b["cost_usd"]["v3"] / b["cost_usd"]["v2"]
+    per_sk = b["cost_usd"]["skeptic"] / max(1, b["skeptic_calls"])
+
+    def triggered(rid: str) -> bool:
+        r = rows[rid]
+        it = items[r["item"]]
+        ans = _answer(r)
+        p = parse(full.get(rid), it, ans, "v3")
+        if not p.get("ok") or p["manipulation"]:
+            return False
+        rel = G.relevance(ans, it["stem"], it["code"], it["step_prompt"], it["rubric"])
+        return bool(G.doubts(p, ans, rel)) or (p["score"] or 0) >= high - 1e-9
+
+    sk_full = sum(1 for r in ids if triggered(r))
+    sk_50 = sum(1 for r in sample_ids() if triggered(r))
+    v3 = v2_all * ratio
+    sk = sk_full * per_sk
+    res = {"date": time.strftime("%Y-%m-%d %H:%M"), "code_sha": _sha(), "n": len(ids),
+           "v2_cost_406_usd": round(v2_all, 3), "v3_over_v2_on_50": round(ratio, 3), "v3_usd": round(v3, 2),
+           "skeptic_calls_est": sk_full, "skeptic_calls_est_on_50": sk_50, "skeptic_calls_real_on_50": b["skeptic_calls"],
+           "skeptic_per_call_usd": round(per_sk, 4), "skeptic_usd": round(sk, 2), "total_usd": round(v3 + sk, 2),
+           "total_with_margin_usd": round((v3 + sk) * (1 + margin), 2), "margin": margin,
+           "note": "без запросов к моделям; цены — фактические цены прогонов 09–10.10 через OpenRouter"}
+    OUT_ESTIMATE.write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return res
 
 
@@ -582,6 +672,7 @@ def main() -> None:
     sub.add_parser("offline")
     b = sub.add_parser("build")
     b.add_argument("--out", default=str(WDIR / "v3_1.jsonl"))
+    b.add_argument("--full", action="store_true", help="полный набор 406 вместо малой выборки 50")
     r = sub.add_parser("run")
     r.add_argument("--req", required=True)
     r.add_argument("--out", required=True)
@@ -592,26 +683,32 @@ def main() -> None:
     k = sub.add_parser("skeptic")
     k.add_argument("--res", default=str(WDIR / "v3_1_out.jsonl"))
     k.add_argument("--out", default=str(WDIR / "sk_1.jsonl"))
+    k.add_argument("--full", action="store_true")
     p = sub.add_parser("report")
     p.add_argument("--v3", default=str(WDIR / "v3_1_out.jsonl"))
     p.add_argument("--sk-req", default=str(WDIR / "sk_1.jsonl"))
     p.add_argument("--sk-out", default=str(WDIR / "sk_1_out.jsonl"))
     p.add_argument("--skeptic-label", default="Claude Fable 5.1")
+    p.add_argument("--full", action="store_true", help="полный набор 406 → docs/llm/evidence_full.json")
+    p.add_argument("--out", default=None, help="куда записать итог (по умолчанию docs/llm/evidence_bench|full.json)")
+    sub.add_parser("estimate", help="оценка стоимости полного прогона 406 (без запросов)")
     sub.add_parser("summary")
     a = ap.parse_args()
     if a.cmd == "offline":
         show_offline(offline())
     elif a.cmd == "build":
-        build(Path(a.out))
+        build(Path(a.out), full=a.full)
     elif a.cmd == "run":
         run(Path(a.req), Path(a.out), a.model, a.func, a.cap_usd, a.floor_usd)
     elif a.cmd == "skeptic":
-        skeptic(Path(a.res), Path(a.out))
+        skeptic(Path(a.res), Path(a.out), full=a.full)
+    elif a.cmd == "estimate":
+        print(json.dumps(estimate(), ensure_ascii=False, indent=1))
     elif a.cmd == "summary":
         print(json.dumps(summary(), ensure_ascii=False, indent=1)[:2500])
     elif a.cmd == "report":
-        print(json.dumps(report(Path(a.v3), Path(a.sk_req), Path(a.sk_out), skeptic_label=a.skeptic_label),
-                         ensure_ascii=False, indent=1)[:3000])
+        print(json.dumps(report(Path(a.v3), Path(a.sk_req), Path(a.sk_out), out=Path(a.out) if a.out else (OUT_FULL if a.full else OUT_BENCH),
+                                skeptic_label=a.skeptic_label, full=a.full), ensure_ascii=False, indent=1)[:3000])
 
 
 if __name__ == "__main__":
