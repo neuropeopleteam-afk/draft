@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { DIRECTIONS, GRADES, NB, dtt, num, pct, ruText, signed, useApi } from "./ui";
+import { DIRECTION_TITLES, GRADES, NB, dtt, num, pct, ruText, signed, useApi } from "./ui";
 
 /** Две попытки теста рядом (И26): кандидату — /candidate/attempts, работодателю — в карточке кандидата.
  *  Данные — GET /api/assessment/attempts и /api/employer/candidates/{ref}/attempts (app/modules/assessment/attempts.py). */
@@ -112,7 +112,7 @@ export function EmployerAttempts({ refId, direction }: { refId: string; directio
   return (
     <section className="card space-y-3" aria-label="Две попытки теста рядом">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-bold text-brand-night">Две попытки теста рядом · {DIRECTIONS[data.direction] ?? data.direction}</h2>
+        <h2 className="font-bold text-brand-night">Две попытки теста рядом · {DIRECTION_TITLES[data.direction] ?? data.direction}</h2>
         <span className="text-xs text-brand-ink/65">Попыток в направлении: {data.n_attempts}; показаны две последние</span>
       </div>
       <AttemptsCompare cmp={data.comparison} audience="employer" />

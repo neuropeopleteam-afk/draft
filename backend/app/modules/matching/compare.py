@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.core.enums import ProbeStatus
 from app.core.fmt import probe_title, quoted, ru_num
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_LEVEL, GRADES, STACK, category_title
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_LEVEL, STACK, category_title
 from app.modules.contact.salary import to_net
 from app.modules.invitations.models import Invitation, Probe
 from app.modules.invitations.service import cooldown_until, profile_by_ref
@@ -205,7 +205,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     want_grade = req.get("grade")
     want_title = (category_title(f"{req['direction']}.{want_grade}") if req.get("direction") and want_grade
-                  else GRADES.get(want_grade or "") or DIRECTIONS.get(req.get("direction") or ""))
+                  else GRADES.get(want_grade or "") or DIRECTION_TITLES.get(req.get("direction") or ""))
 
     rows: list[dict] = [
         {"key": "score", "group": "Итог", "title": "Соответствие потребности",

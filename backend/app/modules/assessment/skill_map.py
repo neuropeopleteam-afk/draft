@@ -111,13 +111,133 @@ _BY_DIRECTION: dict[str, dict[str, str]] = {
     },
 }
 
+# Направления расширения каталога (волна 7, app/modules/catalog/ext.py). Сведение действует только для семейств своих
+# направлений — у базовых направлений ничего не меняется. Навык без сопоставления ищется в _GLOBAL (sql, linux, docker…).
+_BY_DIRECTION.update({
+    "devops": {
+        "kubernetes": "kubernetes", "k8s": "kubernetes", "pods": "kubernetes", "deployments": "kubernetes",
+        "probes": "kubernetes", "resources": "kubernetes", "kubernetes_manifests": "kubernetes",
+        "rbac": "kubernetes", "scheduling": "kubernetes", "services": "kubernetes", "ingress": "kubernetes",
+        "helm": "helm", "helm_charts": "helm", "templating": "helm",
+        "terraform": "terraform", "iac": "terraform", "infrastructure_as_code": "terraform", "state": "terraform",
+        "ansible": "ansible", "configuration_management": "ansible", "idempotency": "ansible",
+        "ci": "ci-cd", "ci_cd": "ci-cd", "cicd": "ci-cd", "pipelines": "ci-cd", "github_actions": "ci-cd",
+        "gitlab_ci": "ci-cd", "deployment": "ci-cd", "release": "ci-cd", "artifacts": "ci-cd", "rollback": "ci-cd",
+        "monitoring": "monitoring", "prometheus": "monitoring", "promql": "monitoring", "alerting": "monitoring",
+        "metrics": "monitoring", "observability": "monitoring", "grafana": "monitoring", "logging": "monitoring",
+        "tracing": "monitoring",
+        "sre": "sre", "slo": "sre", "sli": "sre", "error_budget": "sre", "incident_response": "sre",
+        "incidents": "sre", "postmortem": "sre", "on_call": "sre", "capacity_planning": "sre", "reliability": "sre",
+        "networking": "networking", "dns": "networking", "tcp": "networking", "tcp_ip": "networking",
+        "routing": "networking", "firewall": "networking", "iptables": "networking", "subnets": "networking",
+        "tls": "networking", "network_debugging": "networking",
+        "nginx": "nginx", "load_balancing": "nginx", "reverse_proxy": "nginx",
+        "cloud": "cloud", "iam": "cloud", "object_storage": "cloud", "autoscaling": "cloud",
+        "systemd": "linux", "processes": "linux", "signals": "linux", "cron": "linux", "disk": "linux",
+        "containers": "docker", "images": "docker", "secrets": "kubernetes", "configmaps": "kubernetes",
+    },
+    "data_eng": {
+        "etl": "etl", "elt": "etl", "pipelines": "etl", "data_pipelines": "etl", "incremental_load": "etl",
+        "idempotency": "etl", "backfill": "etl", "deduplication": "etl", "cdc": "etl", "upsert": "etl",
+        "merge": "etl", "late_data": "etl",
+        "dwh": "dwh", "data_modeling": "dwh", "dimensional_modeling": "dwh", "star_schema": "dwh",
+        "data_vault": "dwh", "scd": "dwh", "slowly_changing_dimensions": "dwh", "slowly_changing_data": "dwh",
+        "partitioning": "dwh", "data_marts": "dwh", "normalization": "dwh", "lakehouse": "dwh",
+        "dbt": "dbt", "greenplum": "greenplum", "mpp": "greenplum", "distribution_keys": "greenplum",
+        "airflow": "airflow", "orchestration": "airflow", "dags": "airflow", "scheduling": "airflow",
+        "spark": "spark", "pyspark": "spark", "shuffles": "spark", "joins_distributed": "spark",
+        "streaming": "streaming", "stream_processing": "streaming", "windowing": "streaming",
+        "watermarks": "streaming", "exactly_once": "streaming", "flink": "streaming",
+        "kafka": "kafka", "kafka_partitions": "kafka", "kafka_offsets": "kafka", "kafka_consumer_groups": "kafka",
+        "clickhouse": "clickhouse", "columnar_storage": "clickhouse",
+        "data_quality": "data-quality", "data_validation": "data-quality", "data_contracts": "data-quality",
+        "data_testing": "data-quality", "anomaly_detection": "data-quality", "null_semantics": "sql",
+        "python": "python", "pandas": "pandas", "parquet": "dwh", "file_formats": "dwh",
+    },
+    "mobile": {
+        "android": "android", "android_lifecycle": "android", "activity_lifecycle": "android",
+        "fragments": "android", "intents": "android", "services": "android", "permissions": "android",
+        "workmanager": "android", "room": "android",
+        "ios": "ios", "uikit": "ios", "ios_lifecycle": "ios", "view_controllers": "ios", "app_lifecycle": "ios",
+        "swift": "swift", "optionals": "swift", "arc": "swift", "memory_management": "swift",
+        "retain_cycles": "swift", "swift_concurrency": "swift", "gcd": "swift", "actors": "swift",
+        "swiftui": "swiftui", "combine": "swiftui",
+        "kotlin": "kotlin", "coroutines": "kotlin", "kotlin_coroutines": "kotlin", "flow": "kotlin",
+        "null_safety": "kotlin", "kotlin_collections": "kotlin",
+        "jetpack_compose": "jetpack-compose", "compose": "jetpack-compose", "recomposition": "jetpack-compose",
+        "state_hoisting": "jetpack-compose",
+        "flutter": "flutter", "dart": "flutter", "widgets": "flutter",
+        "react_native": "react-native",
+        "javascript": "javascript", "typescript": "typescript", "async_await": "javascript", "promises": "javascript",
+        "event_loop": "javascript",
+        "architecture": "mobile-architecture", "mvvm": "mobile-architecture", "mvi": "mobile-architecture",
+        "clean_architecture": "mobile-architecture", "dependency_injection": "mobile-architecture",
+        "state_management": "mobile-architecture", "navigation": "mobile-architecture",
+        "lifecycle": "mobile-architecture", "ui_threading": "mobile-architecture", "main_thread": "mobile-architecture",
+        "offline_first": "mobile-architecture", "caching": "mobile-architecture", "storage": "mobile-architecture",
+        "persistence": "mobile-architecture",
+        "networking": "rest-api", "rest_api": "rest-api", "retries": "rest-api", "pagination": "rest-api",
+        "push_notifications": "android", "testing": "frontend-testing", "ui_testing": "frontend-testing",
+    },
+    "analyst": {
+        "requirements": "requirements", "requirements_analysis": "requirements", "elicitation": "requirements",
+        "functional_requirements": "requirements", "non_functional_requirements": "requirements", "nfr": "requirements",
+        "traceability": "requirements", "srs": "requirements", "ambiguity": "requirements",
+        "stakeholders": "requirements", "prioritization": "requirements", "moscow": "requirements",
+        "bpmn": "bpmn", "business_processes": "bpmn", "process_modeling": "bpmn", "gateways": "bpmn",
+        "uml": "uml", "sequence_diagrams": "uml", "activity_diagrams": "uml", "state_machines": "uml",
+        "use_cases": "uml", "class_diagrams": "uml", "plantuml": "uml",
+        "user_stories": "user-stories", "acceptance_criteria": "user-stories", "gherkin": "user-stories",
+        "bdd": "user-stories", "invest": "user-stories", "edge_cases": "user-stories",
+        "integrations": "integrations", "api_contracts": "integrations", "api_design": "integrations",
+        "openapi": "integrations", "json_schema": "integrations", "message_contracts": "integrations",
+        "idempotency": "integrations", "error_handling": "integrations", "versioning": "integrations",
+        "async_integration": "integrations", "webhooks": "integrations",
+        "er_modeling": "er-modeling", "data_modeling": "er-modeling", "erd": "er-modeling",
+        "normalization": "er-modeling", "keys": "er-modeling", "cardinality": "er-modeling",
+        "rest_api": "rest-api", "http": "http", "postgresql": "postgresql", "statistics": "statistics",
+        "test_design": "test-design", "boundary_value_analysis": "test-design",
+    },
+})
+
+
+_BY_DIRECTION["devops"].update({"exit_codes": "linux", "quoting": "linux", "rolling_update": "kubernetes"})
+_BY_DIRECTION["mobile"].update({"mobile_networking": "rest-api",
+    "closures": "swift", "timers": "javascript", "authentication": "rest-api", "background_execution":
+    "mobile-architecture", "ui_lists": "mobile-architecture", "deep_links": "mobile-architecture",
+    "concurrency": "mobile-architecture", "migrations": "mobile-architecture", "sqlite": "mobile-architecture"})
+# Префиксы навыков у направлений расширения каталога: «k8s_qos» → kubernetes, «mobile_threading» → мобильная архитектура
+_PREFIX_BY_DIRECTION: dict[str, tuple[tuple[str, str], ...]] = {
+    "devops": (("k8s_", "kubernetes"), ("kubernetes_", "kubernetes"), ("helm_", "helm"), ("terraform_", "terraform"),
+               ("ansible_", "ansible"), ("ci_", "ci-cd"), ("mon_", "monitoring"), ("prometheus_", "monitoring"),
+               ("net_", "networking"), ("sre_", "sre"), ("bash_", "linux"), ("linux_", "linux"),
+               ("nginx_", "nginx"), ("cloud_", "cloud"), ("docker_", "docker")),
+    "data_eng": (("etl_", "etl"), ("dwh_", "dwh"), ("dbt_", "dbt"), ("spark_", "spark"), ("kafka_", "kafka"),
+                 ("airflow_", "airflow"), ("dq_", "data-quality"), ("data_quality_", "data-quality"),
+                 ("stream_", "streaming"), ("streaming_", "streaming"), ("greenplum_", "greenplum"),
+                 ("clickhouse_", "clickhouse")),
+    "mobile": (("mobile_", "mobile-architecture"), ("android_", "android"), ("ios_", "ios"), ("swift_", "swift"),
+               ("swiftui_", "swiftui"), ("kotlin_", "kotlin"), ("compose_", "jetpack-compose"),
+               ("flutter_", "flutter"), ("dart_", "flutter"), ("rn_", "react-native")),
+    "analyst": (("req_", "requirements"), ("requirements_", "requirements"), ("bpmn_", "bpmn"), ("uml_", "uml"),
+                ("story_", "user-stories"), ("api_", "integrations"), ("integration_", "integrations"),
+                ("er_", "er-modeling")),
+}
+
+
+def _by_prefix(direction: str, skill: str) -> str | None:
+    for pre, tag in _PREFIX_BY_DIRECTION.get(direction, ()):
+        if skill.startswith(pre):
+            return tag
+    return None
+
 
 def to_stack_tags(direction: str, skills: list[str]) -> list[str]:
     """Стек-теги справочника для навыков семейства (без повторов, в порядке появления)."""
     out: list[str] = []
     local = _BY_DIRECTION.get(direction, {})
     for s in skills:
-        tag = local.get(s) or _GLOBAL.get(s)
+        tag = local.get(s) or _GLOBAL.get(s) or _by_prefix(direction, s)
         if tag and tag not in out:
             out.append(tag)
     return out
@@ -129,9 +249,15 @@ def to_stack_tags(direction: str, skills: list[str]) -> list[str]:
 STACK_GATED: frozenset[str] = frozenset({"go", "java", "django", "kafka", "docker"})
 
 
+# Для направлений расширения каталога часть «технологических» тегов — ядро профессии, а не выбор стека: Docker у
+# DevOps / SRE и Kafka у инженера данных выдаются всем кандидатам направления.
+UNGATED_BY_DIRECTION: dict[str, frozenset[str]] = {"devops": frozenset({"docker"}), "data_eng": frozenset({"kafka"})}
+
+
 def stack_gate(direction: str, skills: list[str]) -> frozenset[str]:
     """Стек-теги, без которых семейство кандидату не выдаётся (подмножество STACK_GATED; пусто — семейство для всех)."""
-    return frozenset(t for t in to_stack_tags(direction, skills) if t in STACK_GATED)
+    free = UNGATED_BY_DIRECTION.get(direction, frozenset())
+    return frozenset(t for t in to_stack_tags(direction, skills) if t in STACK_GATED and t not in free)
 
 
 def allowed_for_stack(direction: str, skills: list[str], stack: list[str] | set[str] | None) -> bool:

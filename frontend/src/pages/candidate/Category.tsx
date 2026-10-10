@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, GradeStatusNote } from "../../components/GradeStatus";
-import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, ruText, signed, useApi } from "../../components/ui";
 import { MarketNote } from "../../components/Salary";
 import { api } from "../../lib/api";
 import { Specializations } from "../../components/Specializations";
@@ -64,7 +64,7 @@ export default function Category() {
               {c.rank ? <p>Место в категории: <b>{c.rank}</b> из {c.category_size}.</p> : null}
               <MarketNote m={c.market_range} />
             </div>
-          ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTIONS[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADES[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
+          ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTION_TITLES[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADES[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
           {gs?.status === "unconfirmed" && <GradeStatusNote s={gs} className="mt-2" />}
           {gs?.status === "unconfirmed" && <p className="mt-1 text-xs text-brand-ink/65">Работодатели видят вас в поиске и подборках со статусом «грейд не подтверждён» — ниже всех подтверждённых. Категорию присваивает только тест.</p>}
         </div>
@@ -133,7 +133,7 @@ export default function Category() {
             <ul className="mt-3 space-y-3 text-sm">
               {s.grade_history.map((h: any, i: number) => (
                 <li key={i} className="border-l-2 border-brand-blush pl-3">
-                  <p className="font-semibold">{h.from ? `${GRADES[h.from]} → ` : ""}{GRADES[h.to]} · {DIRECTIONS[h.direction]}</p>
+                  <p className="font-semibold">{h.from ? `${GRADES[h.from]} → ` : ""}{GRADES[h.to]} · {DIRECTION_TITLES[h.direction]}</p>
                   <p className="text-brand-ink/65">{REASON[h.reason] ?? h.reason} · {dt(h.at)}</p>
                 </li>
               ))}
@@ -150,7 +150,7 @@ export default function Category() {
               {s.sessions.map((t: any) => (
                 <li key={t.id} className="flex items-start justify-between gap-3 border-l-2 border-brand-blush pl-3">
                   <div>
-                    <p className="font-semibold">{DIRECTIONS[t.direction]} · {GRADES[t.claimed_grade]}{MODE[t.mode] ? ` · ${MODE[t.mode]}` : ""}{t.is_sandbox ? " · демо" : ""}</p>
+                    <p className="font-semibold">{DIRECTION_TITLES[t.direction]} · {GRADES[t.claimed_grade]}{MODE[t.mode] ? ` · ${MODE[t.mode]}` : ""}{t.is_sandbox ? " · демо" : ""}</p>
                     <p className="text-brand-ink/65">{SESSION[t.status] ?? t.status} · {dtt(t.finished_at ?? t.started_at)}</p>
                     {t.theta != null && <p className="text-brand-ink/65">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADES[t.accepted_lower] ?? t.accepted_lower}` : t.provisional ? "предварительно" : "не подтверждён"}</p>}
                   </div>
@@ -165,7 +165,7 @@ export default function Category() {
       <section className="card">
         <h2 className="font-bold text-brand-night">История опроса</h2>
         <ul className="mt-3 flex flex-wrap gap-2 text-sm">
-          {s.surveys.map((x: any) => <li key={x.id} className="chip">{dt(x.at)} · {DIRECTIONS[x.direction]} · {GRADES[x.claimed_grade]}</li>)}
+          {s.surveys.map((x: any) => <li key={x.id} className="chip">{dt(x.at)} · {DIRECTION_TITLES[x.direction]} · {GRADES[x.claimed_grade]}</li>)}
         </ul>
       </section>
     </div>

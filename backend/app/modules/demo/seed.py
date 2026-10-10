@@ -39,7 +39,7 @@ from app.core.legal import CONSENT_VERSION
 from app.core.security import hash_password
 from app.modules.assessment.models import GradeHistory, SurveyResponse, SurveyStackTag, TestSession
 from app.modules.auth.models import Consent, User
-from app.modules.catalog.seed_data import GRADE_CUTS, STACK
+from app.modules.catalog.seed_data import GRADE_CUTS, direction_title, tag_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.matching import ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
@@ -159,7 +159,7 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     core = core_override or CORE[direction]
     k = {"intern": 3, "junior": 4, "middle": 6, "senior": 8}[grade]
     stack = list(dict.fromkeys(core[:3] + rnd.sample(core[3:], min(len(core) - 3, k - 2))))[:k]
-    roles = ["developer" if direction != "qa" else "tester"]
+    roles = [{"qa": "tester", "analyst": "analyst", "devops": "devops"}.get(direction, "developer")]
     if grade == "senior":
         roles += rnd.sample([r for r in ROLES[direction] if r not in roles], 1)
     if direction in ("data_ml", "security") and rnd.random() < 0.4:
@@ -263,7 +263,7 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
         # Consume RNG identically, but do not invent confirmation for unsupported new tags.
         if audience and t in {"kotlin", "csharp", "php", "kubernetes"}:
             continue
-        db.add(CandidateFact(user_id=u.id, kind="skill", key=t, title=STACK[t][0],
+        db.add(CandidateFact(user_id=u.id, kind="skill", key=t, title=tag_title(t),
                              value={"score": round(corr / total, 2), "correct": corr, "total": total},
                              evidence_level=EvidenceLevel.T1, source=FactSource.test,
                              source_ref=f"test_session:{ts.id}", created_at=created))
@@ -415,6 +415,85 @@ def seed(db: Session, rng_seed: int = 20261006) -> dict:
             "employers": len(employers), "needs": len(NEEDS) + len(INTERN_NEEDS)}
 
 
+# ------------------------------------------------------------------ расширение каталога (волна 7, catalog/ext.py)
+# Модельные кандидаты новых направлений: только для видимых направлений (CATALOG_EXT_ENABLED и проверенный банк),
+# с подписью «модель, не люди». Номера 501…580 закреплены за направлением (по 20), чтобы порядок включения
+# направлений не сдвигал кандидатов; 500 исходных демо-кандидатов не меняются.
+EXT_DEMO_FIRST = {"devops": 501, "data_eng": 521, "mobile": 541, "analyst": 561}
+EXT_DEMO_GRADES = ["intern"] * 4 + ["junior"] * 6 + ["middle"] * 6 + ["senior"] * 4
+CORE.update({
+    "devops": ["linux", "docker", "kubernetes", "ci-cd", "terraform", "monitoring", "ansible", "helm", "networking",
+               "nginx", "sre", "cloud", "bash", "python", "git", "postgresql"],
+    "data_eng": ["sql", "python", "etl", "dwh", "airflow", "spark", "kafka", "dbt", "clickhouse", "greenplum",
+                 "streaming", "data-quality", "postgresql", "git", "docker"],
+    "mobile": ["kotlin", "android", "jetpack-compose", "mobile-architecture", "swift", "ios", "swiftui", "flutter",
+               "react-native", "rest-api", "git", "frontend-testing", "ci-cd"],
+    "analyst": ["requirements", "bpmn", "uml", "user-stories", "integrations", "sql", "er-modeling", "rest-api", "http",
+                "postgresql", "test-design", "git"],
+})
+ROLES.update({"devops": ["devops", "tech_lead", "architect", "mentor"], "data_eng": ["developer", "architect", "mentor"],
+              "mobile": ["developer", "tech_lead", "mentor"], "analyst": ["analyst", "team_lead", "mentor"]})
+DISC_BY_DIR.update({"devops": ["product", "security"], "data_eng": ["product", "algorithmic"],
+                    "mobile": ["product"], "analyst": ["product"]})
+EXT_DEMO_NEEDS = {
+    "devops": (5, "DevOps-инженер middle: Kubernetes, Terraform, CI/CD, Prometheus и Grafana, Linux. Желательно Ansible "
+                  "и Helm. Екатеринбург или удалённо, 220–300 тыс. ₽"),
+    "data_eng": (1, "Инженер данных middle: Airflow, Spark, SQL, DWH и dbt; желательно Kafka и ClickHouse. Москва, гибрид."),
+    "mobile": (3, "Android-разработчик middle: Kotlin, Jetpack Compose, MVVM, работа с REST API. Казань или удалённо."),
+    "analyst": (0, "Системный аналитик middle: сбор требований, BPMN, UML, проектирование интеграций и API, SQL. "
+                   "Санкт-Петербург, гибрид."),
+}
+
+
+def extend_catalog_ext(db: Session, rng_seed: int = 20261010) -> dict:
+    """Идемпотентно: модельные кандидаты (по 20 на направление: 4 стажёра, 6 Junior, 6 Middle, 4 Senior) и по одной
+    демо-потребности у демо-компаний — только для видимых направлений расширения каталога. Без флага — ничего."""
+    from app.modules.catalog import ext
+
+    dirs = [d for d in EXT_DEMO_FIRST if ext.is_visible(d)]
+    if not dirs:
+        return {"added": 0, "directions": [], "needs": 0}
+    existing = set(db.scalars(select(User.email).where(User.email.like("demo-candidate-%@demo.invalid"))))
+    pwd_hash = hash_password(secrets.token_urlsafe(24))
+    added = 0
+    for d in dirs:
+        for k, grade in enumerate(EXT_DEMO_GRADES):
+            idx = EXT_DEMO_FIRST[d] + k
+            if f"demo-candidate-{idx:03d}@demo.invalid" in existing:
+                continue
+            rnd = random.Random(rng_seed + idx)
+            p = _candidate(db, rnd, idx, d, grade, pwd_hash, with_fsp=k % 3 == 0)
+            if p is not None:
+                p.headline = f"{direction_title(d)} · {grade} ({ext.MODEL_LABEL})"
+                p.about = (f"Модельный кандидат направления «{direction_title(d)}» ({ext.MODEL_LABEL}): синтетический "
+                           "профиль для показа подбора в новом направлении каталога.")
+                p.privacy = {"demo_audience": "model"}
+            added += 1
+        db.flush()
+    needs = 0
+    companies = db.scalars(select(Company).where(Company.is_demo.is_(True)).order_by(Company.name)).all()
+    by_name = {c.name: c for c in companies}
+    for d in dirs:
+        ci, text = EXT_DEMO_NEEDS[d]
+        c = by_name.get(COMPANIES[ci][0])
+        if c is None or db.scalar(select(EmployerNeed.id).where(EmployerNeed.company_id == c.id,
+                                                                EmployerNeed.raw_text == text)):
+            continue
+        req = parse_need(text, use_llm=False)
+        n = EmployerNeed(company_id=c.id, created_by=c.created_by, title=text.split(":")[0][:200], raw_text=text,
+                         requirements=req, direction_id=req.get("direction"), grade_id=req.get("grade"),
+                         salary_from=req.get("salary_from"), salary_to=req.get("salary_to"), status=NeedStatus.active)
+        db.add(n)
+        db.flush()
+        sel = ranking.build_selection(db, req, {})
+        db.add(SelectionVersion(need_id=n.id, version=1, parent_version=None, filters={"_meta": sel["meta"]},
+                                requirements=req, results=sel["results"], algorithm_version=sel["algorithm"],
+                                created_by=c.created_by))
+        needs += 1
+    db.commit()
+    return {"added": added, "directions": dirs, "needs": needs}
+
+
 def demo_pool_size(db: Session) -> int:
     """Демо-пользователи основных демо-данных — без учёток жюри и гостей живой демонстрации (@jury.example.com):
     их api создаёт сам при старте (общее демо, запасная песочница), и они не значат, что 150 кандидатов уже есть."""
@@ -461,6 +540,8 @@ def main() -> None:
                 print(f"Демо жюри, созданное до демо-данных, удалено (песочниц: {len(boxes)}) — создастся при входе")
             print(seed(db))
         print(f"Демо-вакансии: {vacancies_demo.ensure(db)}")  # отдельной командой их легко забыть
+        # модельные кандидаты новых направлений каталога (только при CATALOG_EXT_ENABLED и проверенном банке)
+        print(f"Модельные кандидаты новых направлений: {extend_catalog_ext(db)}")
 
 
 if __name__ == "__main__":

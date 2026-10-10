@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api } from "./api";
+import { DIRECTIONS, DIRECTION_TITLES } from "../components/ui";
 
 // Название продукта задаётся в одном месте — backend/app/core/config.py (product_name) — и приходит из /api/meta.
 export interface Meta {
@@ -15,6 +16,8 @@ export interface Meta {
   proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
+  // видимые направления каталога: 5 базовых и направления расширения с проверенным банком (CATALOG_EXT_ENABLED)
+  catalog?: { directions: string[]; ext: string[]; ext_enabled: boolean; ext_titles?: Record<string, string>; model_label?: string };
 }
 
 const Ctx = createContext<Meta | null>(null);
@@ -57,4 +60,11 @@ export function usePageTitle(title: string) {
 export function setScreenTitle(h: string | null) {
   if (ownTitle || !loaded) return;
   document.title = h ? `${h} · ${loaded.product_name}` : defaultTitle(loaded);
+}
+
+/** Направления для выбора (опрос, потребность, поиск): [id, подпись]. Без /api/meta или без расширения каталога —
+ * 5 базовых, как прежде; с CATALOG_EXT_ENABLED — ещё направления, чей банк прошёл проверку. */
+export function useDirectionEntries(): [string, string][] {
+  const ids = useContext(Ctx)?.catalog?.directions;
+  return (ids?.length ? ids : Object.keys(DIRECTIONS)).map((d) => [d, DIRECTION_TITLES[d] ?? d]);
 }

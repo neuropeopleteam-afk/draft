@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode } from "react";
-import { DIRECTIONS } from "../ui";
+import { DIRECTION_TITLES } from "../ui";
 import { ScrollX } from "../A11y";
 
 /* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в условиях конкурентов»
@@ -127,7 +127,7 @@ export function RetestSection({ sim }: { sim: any }) {
       <Table head={["Направление", `κ: до 06.10 → ${now}`, "Грейд совпал", "ICC по θ", "Заданий", `Потолок κ (${now})`]}
         rows={dirs.map((d) => {
           const v = sim.directions[d]; const a = v.retest ?? {}; const b = v.retest_legacy ?? {};
-          return [DIRECTIONS[d] ?? d, arrow(b.grade_kappa_quadratic, a.grade_kappa_quadratic), arrow(b.grade_exact_agreement, a.grade_exact_agreement, pct),
+          return [DIRECTION_TITLES[d] ?? d, arrow(b.grade_kappa_quadratic, a.grade_kappa_quadratic), arrow(b.grade_exact_agreement, a.grade_exact_agreement, pct),
             arrow(b.icc_theta, a.icc_theta), arrow(b.mean_items, a.mean_items, (x) => num(x, 1)), num(a.ceiling?.grade_kappa_quadratic)];
         })} />
       <p className="mt-2 text-xs text-brand-ink/65">Разброс между прогонами с другими seed — около ±0,02–0,03 по κ на направление, поэтому смотреть стоит на среднее.</p>
@@ -169,7 +169,7 @@ export function RetestSection({ sim }: { sim: any }) {
         <li>Ошибка предкалибровки — не главное: с параметрами без ошибки эксперта κ {num(rm.ideal_params?.grade_kappa_quadratic)} против {num(app.grade_kappa_quadratic)}.</li>
         {sa && <li>
           Чувствительность: если задания различают уровни сильнее (a × {num(sa.a_scale)} — медиана оценок панели LLM), на направлении
-          {" "}{DIRECTIONS[sa.direction] ?? sa.direction} κ {arrow(sa.legacy?.grade_kappa_quadratic, sa.app?.grade_kappa_quadratic)} при потолке {num(sa.app?.ceiling?.grade_kappa_quadratic)}.
+          {" "}{DIRECTION_TITLES[sa.direction] ?? sa.direction} κ {arrow(sa.legacy?.grade_kappa_quadratic, sa.app?.grade_kappa_quadratic)} при потолке {num(sa.app?.ceiling?.grade_kappa_quadratic)}.
           Это не заголовочная цифра: дискриминацию заданий для людей подтвердит только калибровка на ответах.
         </li>}
       </ul>
