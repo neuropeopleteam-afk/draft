@@ -40,15 +40,23 @@ from app.modules.profiles.facts import (
 )
 from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
-from app.modules.matching import must_have
+from app.modules.matching import core_skill, must_have
+from app.core.origin import NO_FSP
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
 ALGORITHM_VERSION = "match-v1"
 MUST_ALGORITHM = "match-v1.1"  # Ф2: match-v1 + ярусы обязательного (те же веса и балл), флаг MATCH_MUST_FIRST
 
 
+CORE_ALGORITHM = "match-v1.2"  # Я1: match-v1.1 + ядро роли (основной язык / фреймворк / специализация), RANK_CORE_SKILL
+
+
 def algorithm() -> str:
-    return MUST_ALGORITHM if must_have.enabled() else ALGORITHM_VERSION
+    from app.modules.matching import core_skill
+
+    if must_have.enabled():
+        return CORE_ALGORITHM if core_skill.enabled() else MUST_ALGORITHM
+    return f"{ALGORITHM_VERSION}+core" if core_skill.enabled() else ALGORITHM_VERSION
 WEIGHTS = {"test": 0.45, "stack_required": 0.35, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05}
 LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "подтверждено тестом или зондом", "T0": "заявлено кандидатом",
           "none": "нет данных"}
@@ -132,23 +140,27 @@ def unconfirmed_counts(db: Session) -> dict[str, int]:
     return out
 
 
-def category_counts(db: Session) -> dict[str, int]:
+def pool_counts(db: Session) -> tuple[dict[str, int], dict[str, int]]:
+    """(category_counts, provisional_counts) за одну загрузку видимого пула. Экран категорий и расчёт подборки звали
+    обе функции — пул (до 500 кандидатов с профилями) грузился дважды; под нагрузкой это CPU воркера (docs/LOAD.md)."""
     out: dict[str, int] = {}
+    prov: dict[str, int] = {}
     for b in load_bundles(db, [p.user_id for p in visible_pool(db)]).values():
         for r in b.specializations.values():
             if r.category_id and r.status in ("confirmed", "provisional"):
                 out[r.category_id] = out.get(r.category_id, 0) + 1
-    return out
+            if r.category_id and r.status == "provisional":
+                prov[r.category_id] = prov.get(r.category_id, 0) + 1
+    return out, prov
+
+
+def category_counts(db: Session) -> dict[str, int]:
+    return pool_counts(db)[0]
 
 
 def provisional_counts(db: Session) -> dict[str, int]:
     """Сколько в категории «предварительно» (только Junior: правило нижнего порога)."""
-    out: dict[str, int] = {}
-    for b in load_bundles(db, [p.user_id for p in visible_pool(db)]).values():
-        for r in b.specializations.values():
-            if r.category_id and r.status == "provisional":
-                out[r.category_id] = out.get(r.category_id, 0) + 1
-    return out
+    return pool_counts(db)[1]
 
 
 def recommended_categories(req: dict, counts: dict[str, int], cats: dict[str, Category]) -> list[dict]:
@@ -277,7 +289,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         extra = len(b.achievements)
         reasons.append({"requirement": "Достижения ФСП", "level": "T0" if extra else "none", "status": "neutral",
                         "text": (f"Заявлено достижений ФСП без подтверждения реестром: {extra} — в ранжирование не входит"
-                                 if extra else "Истории ФСП нет — нейтрально, без штрафа")})
+                                 if extra else NO_FSP)})  # Я8: одна фраза о без-ФСП (core/origin.py)
     integ = (t or {}).get("integrity")
     if integ:
         lvl = integ.get("level")
@@ -425,7 +437,7 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
 def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, include_refs: tuple = ()) -> dict:
     """include_refs: кандидаты, которые идут в results со своим настоящим местом, даже ниже limit (QR-демо жюри)."""
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
-    counts = category_counts(db)
+    counts, prov = pool_counts(db)
     recs = recommended_categories(req, counts, cats)
     cat_ids = filters.get("categories") or [r["id"] for r in recs if r["relation"] in ("exact", "direction", "all")]
     pool = visible_pool(db, category_ids=cat_ids)
@@ -449,16 +461,18 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     levels = must_have.declared_levels(db, [b.profile.user_id for _, b, _, _ in scored]) \
         if must_have.declared_counts() else {}
     must = must_have.tiers_for([b for _, b, _, _ in scored], req, levels)
-    scored.sort(key=lambda x: (tier(x[1]), must[x[1].profile.user_id]["tier"], -x[0], -(x[1].rating or 0),
-                               x[1].profile.public_ref or ""))
+    core = core_skill.assess_pool([b for _, b, _, _ in scored], req)  # Я1: ядро роли (порядок — флаг RANK_CORE_SKILL)
+    scored = selection_order(scored, must, core)
     results = []
     for rank, (s, b, comps, reasons) in enumerate(scored, start=1):
         if rank > limit and b.profile.public_ref not in include_refs:
             continue
+        ci = core.get(b.profile.user_id)
         results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
-                        "reasons": reasons, "category_id": b.category_id, "must": must[b.profile.user_id],
+                        "reasons": (reasons[:1] + [core_skill.reason(ci)] + reasons[1:]) if ci else reasons,
+                        "category_id": b.category_id, "must": must[b.profile.user_id], "core": ci,
                         "grade_status": b.grade_status, "card": card(b, cats)})
-    prov, unc = provisional_counts(db), unconfirmed_counts(db)
+    unc = unconfirmed_counts(db)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
         r["unconfirmed"] = unc.get(r["id"], 0)
@@ -466,14 +480,48 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
     conditions = {"applied": applied, "text": conditions_text(applied), "off": bool(filters.get("conditions_off")),
                   "from_need": need_conditions(req)["work_formats"] is not None,
                   "hidden": max(0, before_conditions - len(bundles))}
+    core_meta = core_meta_of(req, core)
     meta = {"categories": recs, "conditions": conditions, "must_first": must_have.enabled(),
-            "total_matched": len(scored)}
+            "total_matched": len(scored), "core": core_meta}
     return {"categories": recs, "results": results, "total_matched": len(scored), "algorithm": algorithm(),
-            "conditions": conditions, "must_first": must_have.enabled(), "meta": meta,
+            "conditions": conditions, "must_first": must_have.enabled(), "core": core_meta, "meta": meta,
             "weights": WEIGHTS, "provisional_penalty": PROVISIONAL_PENALTY,
             "provisional_matched": sum(1 for _, b, _, _ in scored if b.provisional),
             "unconfirmed_matched": sum(1 for _, b, _, _ in scored if b.unconfirmed),
             "confirmed_matched": sum(1 for _, b, _, _ in scored if b.grade_status == "confirmed")}
+
+
+def selection_order(scored: list, must: dict, core: dict, policy: str | None = None) -> list:
+    """Порядок подборки: ярус статуса грейда → [ядро роли, Я1, флаг RANK_CORE_SKILL] → ярус обязательного (Ф2) →
+    балл → рейтинг → ref. scored — [(балл, Bundle, …)]; must — must_have.tiers_for; core — core_skill.assess_pool
+    (key = 1 — ядра нет и признак действует; при выключенном флаге у всех 0 — порядок прежний, match-v1.1)."""
+    pol = policy or core_skill.POLICY
+
+    def key(x):
+        b = x[1]
+        uid = b.profile.user_id
+        ck = (core.get(uid) or {}).get("key", 0)
+        return (*core_skill.sort_key(tier(b), must[uid]["tier"], x[0], ck, pol), -(b.rating or 0),
+                b.profile.public_ref or "")
+
+    out = sorted(scored, key=key)
+    if pol == "cap" and core:
+        n0 = sum(1 for x in out if tier(x[1]) == tier(out[0][1]))  # потолок места — внутри первого яруса статуса грейда
+        absent = [bool((core.get(x[1].profile.user_id) or {}).get("key")) for x in out[:n0]]
+        if any(absent):
+            out = [out[i] for i in core_skill.cap_positions(absent)] + out[n0:]
+    return out
+
+
+def core_meta_of(req: dict, core: dict) -> dict | None:
+    """Сводка признака для шапки подборки: ядро, действует ли, сколько без ядра; None — ядра у потребности нет."""
+    c = core_skill.role_core(req)
+    if not c:
+        return None
+    vals = list(core.values())
+    return {"label": c["label"], "title": c["title"], "kind": c["kind"], "on": core_skill.enabled(),
+            "policy": core_skill.POLICY, "active": bool(vals and vals[0]["active"]),
+            "counts": {s: sum(1 for v in vals if v["state"] == s) for s in ("confirmed", "declared", "absent")}}
 
 
 def search(db: Session, *, direction=None, grade=None, category=None, stack: list[str] | None = None,

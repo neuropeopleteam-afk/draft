@@ -81,18 +81,27 @@ export function apiUrl(path: string): string {
   return `${window.location.origin}/api${path}`;
 }
 
+/** Пауза перед повтором GET после 5xx: Retry-After сервера (503 db_busy — пул БД занят, 10.10), иначе 1 с, 2 с;
+ *  не дольше 5 с. Мгновенный повтор под перегрузкой только добавлял бы запросов. */
+export function retryDelayMs(res: Response | null, attempt: number): number {
+  const ra = Number(res?.headers.get("Retry-After"));
+  return Math.min(5000, Number.isFinite(ra) && ra > 0 ? ra * 1000 : 1000 * (attempt + 1));
+}
+
 async function fetchRetry(url: string, init: RequestInit, tries = 3, timeoutMs = 15000): Promise<Response> {
   for (let i = 0; ; i++) {
     const ctl = new AbortController();
     const timer = setTimeout(() => ctl.abort(), timeoutMs);
+    let res: Response | null = null;
     try {
-      const res = await fetch(url, { ...init, signal: ctl.signal });
+      res = await fetch(url, { ...init, signal: ctl.signal });
       if (res.ok || res.status < 500 || i >= tries - 1) { await res.clone().arrayBuffer(); return res; }
     } catch (e) {
       if (i >= tries - 1) throw e;
     } finally {
       clearTimeout(timer);
     }
+    await new Promise((r) => setTimeout(r, retryDelayMs(res, i)));
   }
 }
 

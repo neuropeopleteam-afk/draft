@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import { PageTitle } from "../components/CabinetLayout";
 import { Alert, Empty, Field, Loading, Seg, Toggle, dtt, errText, num, useApi } from "../components/ui";
 import { api, apiDownload } from "../lib/api";
+import { OriginTag, type Origin } from "../components/Origin";
 
 interface Settings {
   auto_push: boolean;
@@ -14,7 +15,7 @@ interface Settings {
   stub: { connected: boolean; huntflow_base_url: string; webhook_url: string | null };
 }
 interface Provider {
-  code: "huntflow" | "talantix" | "potok"; title: string; docs_url: string; enabled: boolean; mode: "demo" | "real";
+  code: "huntflow" | "talantix" | "potok"; title: string; docs_url: string; enabled: boolean; mode: "demo" | "real"; origin?: Origin | null;
   base_url: string; real_base_url: string; custom_base_url?: string | null; token_set: boolean; token_masked: string | null;
   refresh_set?: boolean; token_expires_at?: string | null; refresh_expires_at?: string | null; token_refreshed_at?: string | null;
   vacancy_id: number | null; vacancy_title: string | null; stage_id: number | null; stage_title: string | null;
@@ -112,7 +113,7 @@ export function EmployerAts() {
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card flex flex-wrap items-center justify-between gap-4 border-brand-lavender/30 bg-[#FBFAFF]">
         <div className="max-w-xl">
-          <p className="font-bold text-brand-night">Демо без своих аккаунтов</p>
+          <p className="flex flex-wrap items-center gap-2 font-bold text-brand-night">Демо без своих аккаунтов <OriginTag kind="stub" /></p>
           <p className="text-sm text-brand-ink/65">Заглушки на нашем сервере повторяют API Talantix (GraphQL, OAuth-токены с автообновлением), «Потока» (REST v3) и Хантфлоу (API v2) и принимают вебхук с проверкой подписи. Платформа ходит к ним по настоящему HTTP тем же кодом, что и к реальным системам.</p>
         </div>
         <button className="btn-primary" disabled={busy} onClick={connectAll}>{busy ? "Подключаем…" : anyDemo ? "Переподключить все демо-ATS" : "Подключить все демо-ATS"}</button>
@@ -161,7 +162,7 @@ export function EmployerAts() {
 
       {anyDemo && (
         <section className="space-y-3">
-          <h2 className="font-bold text-brand-night">Тестовая ATS: что пришло</h2>
+          <h2 className="flex flex-wrap items-center gap-2 font-bold text-brand-night">Тестовая ATS: что пришло <OriginTag kind="stub" note="записи приняла наша заглушка ATS, не внешняя система" /></h2>
           {!records.data?.length ? <Empty title="Пока пусто" text="Отправьте приглашение демо-кандидату и примите его — записи появятся здесь." /> : (
             <ul className="space-y-2">
               {records.data.map((r) => (
@@ -255,7 +256,7 @@ function ConnectionPanel({ p, onSaved, setMsg }: { p: Provider; onSaved: (p: Pro
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3 text-sm text-brand-ink/70">
         <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${p.enabled ? "bg-emerald-50 text-emerald-700" : "bg-[#F3F2FB] text-brand-ink/65"}`}>{p.enabled ? "подключено" : "выключено"}</span>
-        <span>{p.mode === "demo" ? "демо-заглушка" : "реальный API"}: <code className="text-xs">{p.base_url}</code></span>
+        <OriginTag o={p.origin} kind={p.mode === "demo" ? "stub" : "unverified"} /><span><code className="text-xs">{p.base_url}</code></span>
         {p.token_set && <span>токен {p.token_masked}{tx && p.refresh_set ? " + refresh" : ""}</span>}
         {tx && p.token_expires_at && <span>access до {dtt(p.token_expires_at)}{p.token_refreshed_at ? `, обновлён ${dtt(p.token_refreshed_at)}` : ""}</span>}
         {tx && p.refresh_expires_at && <span>refresh до {dtt(p.refresh_expires_at)}</span>}

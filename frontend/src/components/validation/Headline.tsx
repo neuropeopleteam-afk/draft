@@ -1,4 +1,5 @@
 import { Alert, Loading, NB, num, pct, signed, useApi } from "../ui";
+import { ProvenanceLine, RetestVsTruth } from "./Provenance";
 
 /** Первый экран /validation: «5 чисел, которые доказывают механику» (backend: app/modules/validation/headline.py).
  *  Каждое число — из расчёта с подписью мира; нет расчёта — нет числа. */
@@ -36,11 +37,13 @@ export default function Headline() {
             {it.note && <p className="mt-1 text-xs text-brand-ink/65">{it.note}</p>}
             <div className="mt-auto pt-3">
               <a href={`#${it.anchor}`} className="text-sm font-semibold text-brand-plum underline">Подробнее в разделе</a>
+              <ProvenanceLine p={it.provenance} className="mt-1.5" />
               <SignatureLine s={it.signature} className="mt-1" />
             </div>
           </li>
         ))}
       </ol>
+      <RetestVsTruth v={data.retest_vs_truth} className="mt-3" />
     </section>
   );
 }

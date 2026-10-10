@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
 import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, ruText, useApi } from "../../components/ui";
-import { InviteForm, ProbeForm, probeSentText } from "./Contact";
+import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
@@ -15,10 +15,13 @@ interface Cand {
   can_invite: boolean; invite_available_at: string | null; last_invitation_status: string | null; probe_active: boolean;
 }
 interface WhyF { level: string; points: number; text: string }
-interface Why { higher: string; lower: string; diff: number; summary: string; text: string; pro: WhyF[]; con: WhyF[] }
+interface Why { higher: string; lower: string; diff: number; summary: string; text: string; pro: WhyF[]; con: WhyF[]; core_note?: string | null }  // core_note — ядро роли (Я1), в балл не входит
 interface CompareOut { need: { id: string; title: string; raw_text: string; version: number | null; requirements: any }; rows: Row[]; candidates: Cand[]; selection_total: number; why: Why[] }
 
 const pts = (x: number) => Math.abs(x).toFixed(1).replace(".", ",");
+
+/** Код кандидата «C-8D3YPW» не переносится по дефису. */
+const nowrapRefs = (t: string) => t.split(/(C-[A-Z0-9]+)/).map((p, i) => (i % 2 ? <span key={i} className="whitespace-nowrap">{p}</span> : p));
 
 /** «Почему A выше B»: вклад подтверждённых фактов в разницу скоров. */
 function WhyBlock({ why }: { why: Why[] }) {
@@ -40,10 +43,11 @@ function WhyBlock({ why }: { why: Why[] }) {
             {w.con.map((f, i) => (
               <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><Level level={f.level} /><span className="flex-1">В пользу {w.lower}: {ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-brand-plum">−{pts(f.points)}</span></p>
             ))}
+            {w.core_note && <p className="mt-2 border-t border-brand-ink/10 pt-2 font-semibold text-amber-900" data-testid="why-core-note">{nowrapRefs(w.core_note)}.</p>}
           </li>
         ))}
       </ul>
-      <p className="text-xs text-brand-ink/65">Баллы из 100 — вклад фактора в разницу скоров. Учитываются только подтверждённые факты: тест и навыки (T1), ФСП из реестра (T2), оценённые зонды (T1).</p>
+      <p className="text-xs text-brand-ink/65">Баллы из 100 — вклад фактора в разницу скоров. Учитываются только подтверждённые факты: тест и навыки (T1), ФСП из реестра (T2), оценённые зонды (T1). Ядро роли (основной язык, фреймворк или специализация) в балл не входит — о нём отдельная строка.</p>
     </section>
   );
 }
@@ -112,7 +116,7 @@ export function Compare() {
                   <button className="btn-ghost !px-3 !py-1.5 text-xs" disabled={c.probe_active} title={c.probe_active ? "Зонд уже отправлен и ждёт ответа" : undefined} onClick={() => setProbe([c.ref])}>
                     {c.probe_active ? "Зонд отправлен" : "Зонд"}
                   </button>
-                  <button className="btn-primary !px-3 !py-1.5 text-xs" disabled={!c.can_invite} onClick={() => setInvite(c)}>Пригласить</button>
+                  <button className="btn-primary !px-3 !py-1.5 text-xs" disabled={!c.can_invite} title={c.can_invite ? undefined : inviteBlockedText(c)} onClick={() => setInvite(c)}>Пригласить</button>
                   <Link className="btn-ghost !px-3 !py-1.5 text-xs" to={`/employer/candidates/${c.ref}?need=${id}`}>Карточка</Link>
                 </div>
                 {!c.can_invite && <p className="text-xs text-brand-ink/65">Повторное приглашение — с {c.invite_available_at ? dt(c.invite_available_at) : "позже"}</p>}
@@ -158,7 +162,7 @@ export function Compare() {
         {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={(r) => { setProbe(null); setDone(probeSentText(r) ?? "Зонд никому не отправлен."); reload(); }} />}
       </Modal>
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение ${invite?.ref ?? ""}`}>
-        {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} needSalary={needSalary} onDone={() => { setInvite(null); setDone(`Приглашение ${invite.ref} отправлено. Контакты откроются после согласия кандидата.`); reload(); }} />}
+        {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} needSalary={needSalary} onDone={(inv) => { setInvite(null); setDone(inviteSentText(inv, invite.ref)); reload(); }} />}
       </Modal>
     </div>
   );

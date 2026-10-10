@@ -7,13 +7,14 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, T
 import { api } from "../../lib/api";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
-import { InviteForm, ProbeForm, probeSentText } from "./Contact";
+import { InviteForm, ProbeForm, inviteSentText, probeSentText } from "./Contact";
 import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
 import { ParseStatus, Suggestions, evSource, useFastParse } from "./parseFlow";  // И27: словарь сразу, модель в фоне
 import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // подписка на потребность (И25)
 import { NeedFileNote, NeedFileUpload, type NeedFileInfo } from "./NeedFile";  // Ф5: потребность из файла вакансии
+import { needPreset } from "../../lib/jury";  // Я9: заготовка своей потребности из проводника
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -29,6 +30,7 @@ export interface Req {
   work_formats?: string[] | null;
   unknown_terms?: { term: string; evidence?: Ev | null }[]; excluded?: { tag: string; evidence?: Ev | null }[];
   salary_note?: { text: string; evidence?: Ev | null } | null;
+  weight_rule?: string;  // Я11 (С3-3): правило весов разбора — показываем у «Настроить веса»
 }
 
 /** Что не попало в подбор и подсказки по требованиям (И18): честно, без блокировки. */
@@ -239,7 +241,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <input aria-label="Город присутствия" className="input max-w-xs" placeholder="для офиса и гибрида" value={req.city ?? ""}
           onChange={(e) => setScalar("city", { city: e.target.value || null })} />)}</ul>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-ink/65">
-        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}</p>
+        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}
+          {tune && req.weight_rule ? <span data-testid="weight-rule" className="mt-1 block">{req.weight_rule}</span> : null}</p>
         <button type="button" className="font-semibold text-brand-plum hover:underline" aria-expanded={tune} onClick={() => setTune((v) => !v)}>{tune ? "Скрыть веса" : "Настроить веса"}</button>
       </div>
       <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
@@ -298,6 +301,8 @@ export function Needs() {
     try { const r = await api<Req & { text?: string }>("/employer/needs/parse", { body: { text: t } }); setParsed(r.text ?? t); setReq(r); fp.start(r); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   useEffect(() => { if ((loc.state as any)?.text) parse((loc.state as any).text); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  // Я9: заготовка из проводника «Проверка за 12 минут» — в поле; разбор — кнопкой, как у своего текста
+  useEffect(() => needPreset.listen((t) => { setText(t); setReq(null); setFile(null); fp.reset(); }), []);  // eslint-disable-line react-hooks/exhaustive-deps
   function rewrite(t: string) { setText(t); parse(t); }
   async function create() {
     if (!req) return;
@@ -568,7 +573,10 @@ export function Selection() {
             <WhatIf needId={id!} version={s.version} next={(last ?? 0) + 1} busy={busy} onApply={applyWhatIf} />
             <Alert>{wErr}</Alert>
             {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
-              Порядок: сначала кандидаты, у которых всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и зонды поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+              Порядок: {s.core?.on && s.core?.active ? `сначала кандидаты, у которых ${s.core.label.toLowerCase()} (${s.core.title}) заявлен или подтверждён, затем — остальные. Внутри групп — сначала те, у кого` : "сначала кандидаты, у которых"} всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и зонды поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+            </p>}
+            {s.core && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="core-summary">
+              <b className="font-semibold text-brand-night">{s.core.label}: {s.core.title}.</b> Подтверждён тестом — {s.core.counts?.confirmed ?? 0}, заявлен — {s.core.counts?.declared ?? 0}, не заявлен — {s.core.counts?.absent ?? 0}{s.core.active ? (s.core.on ? ". Кандидаты без ядра роли (смежное направление) остаются в подборке, но идут ниже." : ". На порядок не влияет: признак выключен.") : ". В подборке ядро не заявлено ни у кого — на порядок не влияет."}
             </p>}
             {s.filters?.origin?.note && <Alert kind="info">v{s.version}: {s.filters.origin.note}</Alert>}
             <MutualToolbar needId={id!} version={s.version} mutual={mutual} />
@@ -581,7 +589,7 @@ export function Selection() {
             {invited && <Alert kind="ok">{invited}</Alert>}
             {!s.results.length ? <Empty title="Подходящих кандидатов нет"
               text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : mutual.sorted<any>(s.results).map((r: any, i: number) => (
-              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} compact collapsible expanded={expandAll || i === 0}
+              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} core={r.core} compact collapsible expanded={expandAll || i === 0}
                 badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
                 mutual={<MutualCardBlock needId={id!} version={s.version} cref={r.ref} mutual={mutual} />}
                 actions={
@@ -598,7 +606,7 @@ export function Selection() {
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение кандидату ${invite?.ref ?? ""}`}>
         {invite && <InviteForm cref={invite.ref} needId={id} market={invite.card?.market_range ?? s?.categories?.find((c: any) => c.relation === "exact")?.market_range}
           needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }}
-          onDone={() => { setInvited(`Приглашение ${invite.ref} отправлено. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`); setInvite(null); }} />}
+          onDone={(inv) => { setInvited(inviteSentText(inv, invite.ref)); setInvite(null); }} />}
       </Modal>
       {/* А11: обновление подборки (новая версия, пересчёт) — экранному диктору; последним элементом, чтобы не сдвигать space-y */}
       <p className="sr-only" role="status" aria-live="polite">{busy ? "Пересчитываем подборку" : s ? `Подборка v${s.version}: кандидатов ${s.total}` : ""}</p>

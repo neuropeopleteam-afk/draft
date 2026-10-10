@@ -15,10 +15,11 @@
 
 Выбор порога — по правилу в ``choose_cut`` (критерии заданы заранее, цифры — результат прогона): берётся самый
 низкий порог, при котором ложные подтверждения (истинное θ ≤ cut − 0,25) ≤ 10 %, ложные отказы (θ ≥ cut + 0,25)
-≤ 20 % и доля сессий, упёршихся в исчерпание пула или максимум заданий, ≤ 25 %. Правило применяется к банку
-с лёгкими семействами (целевое состояние после потока банка); для текущего банка ошибки показываются честно:
-на нём ни один порог правилу не удовлетворяет — у самых простых семейств Junior (b ≥ −0,9) мало информации
-при θ ≈ −2, SE не опускается ниже ≈ 0,48, и тест всегда доходит до максимума заданий.
+≤ 20 % и доля сессий, упёршихся в исчерпание пула или максимум заданий, ≤ 25 %. С 10.10 (решение штаба) правило
+применяется к ТЕКУЩЕМУ банку, без добавленных синтетических семейств: на банке 165 ему удовлетворяет −1,75 (порог
+продукта). Прогон с синтетическими лёгкими семействами остаётся справочным — что даст банк после добавления семейств
+для Стажёра; на выбор он не влияет. До 10.10 правило применялось к банку с лёгкими семействами: на прежнем банке
+ни один порог правилу не удовлетворял.
 """
 from __future__ import annotations
 
@@ -200,14 +201,21 @@ def run(n_per_theta: int = 10, seed: int = 20261007, directions=DIRECTIONS, cuts
             easy.append(summarize_cut({"cut": c, "rows": rows}))
         out["with_easy_families"] = {"per_block": 6, "by_cut": easy,
                                      "pool": {d: {str(c): pool_information(pool2, d, c) for c in cuts} for d in directions}}
-        out["chosen"] = {**choose_cut(easy), "basis": "with_easy_families"}
-    else:
-        out["chosen"] = {**out["current_bank_rule"], "basis": "current_bank"}
+        out["with_easy_families"]["rule"] = choose_cut(easy)  # справочно: что выбрало бы правило на таком банке
+    # выбор — по текущему банку без синтетических семейств (решение штаба 10.10)
+    out["chosen"] = {**out["current_bank_rule"], "basis": "current_bank"}
     chosen = out["chosen"]["cut"]
     for d in directions:
         out["retest"][d] = retest_agreement(pool, truth, d, chosen, base, rng, n=retest_n)
     out["families_used"] = sorted({f for rows in pooled.values() for r in rows for f in r["families"]})
     out["elapsed_s"] = round(time.time() - t0, 1)
+    # Я8: подпись расчёта (коммит кода, банк, seed) — для строки происхождения на /validation; на числа не влияет
+    from app.modules.validation.signature import signature
+    out["signature"] = signature(seed=seed, config={**out["config"], "cuts": list(cuts), "n_per_theta": n_per_theta,
+                                                    "synthetic": synthetic, "retest_n": retest_n, "quick": quick},
+                                 world="симуляция теста у порога Стажёра: синтетические кандидаты на сетке θ, "
+                                       "истина заданий = предкалибровка + ошибка эксперта",
+                                 command="make intern-cut", n=n_per_theta * len(THETA_GRID) * len(directions))
     return out
 
 
