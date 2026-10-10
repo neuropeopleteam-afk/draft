@@ -2592,6 +2592,1173 @@
         "title": "AssignmentStackItemOut",
         "type": "object"
       },
+      "AtsCheckOut": {
+        "additionalProperties": true,
+        "description": "Итог проверки связи с ATS.",
+        "properties": {
+          "account": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Владелец токена или организация",
+            "title": "Account"
+          },
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Talantix: идентификатор владельца",
+            "title": "Account Id"
+          },
+          "accounts": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Хантфлоу: организации (id, name)",
+            "title": "Accounts"
+          },
+          "details": {
+            "description": "Что проверено, по строкам",
+            "items": {
+              "type": "string"
+            },
+            "title": "Details",
+            "type": "array"
+          },
+          "me": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Хантфлоу: id и имя владельца токена",
+            "title": "Me"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "statuses": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Хантфлоу: этапы подбора (id, name, order)",
+            "title": "Statuses"
+          },
+          "token_expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Token Expires At"
+          },
+          "token_refreshed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Talantix: токен обновлён в ходе проверки",
+            "title": "Token Refreshed"
+          },
+          "vacancies_active": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Talantix и «Поток»: число активных вакансий",
+            "title": "Vacancies Active"
+          }
+        },
+        "required": [
+          "ok",
+          "account",
+          "details"
+        ],
+        "title": "AtsCheckOut",
+        "type": "object"
+      },
+      "AtsDeliveryOut": {
+        "additionalProperties": true,
+        "description": "Запись журнала передач кандидата в ATS.",
+        "properties": {
+          "already_sent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Только в ответе на «передать»: кандидат уже был передан, дубль не создан",
+            "title": "Already Sent"
+          },
+          "application_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Application Id"
+          },
+          "attempts": {
+            "title": "Attempts",
+            "type": "integer"
+          },
+          "candidate_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Candidate Ref"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "http_status": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Http Status"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "invitation_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Invitation Id"
+          },
+          "position_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Title"
+          },
+          "result": {
+            "additionalProperties": true,
+            "description": "Что сделано в ATS: шаги, идентификаторы, способ защиты от дубля",
+            "title": "Result",
+            "type": "object"
+          },
+          "status": {
+            "description": "sent, failed, pending, …",
+            "title": "Status",
+            "type": "string"
+          },
+          "target": {
+            "description": "huntflow, talantix, potok или webhook",
+            "title": "Target",
+            "type": "string"
+          },
+          "target_title": {
+            "title": "Target Title",
+            "type": "string"
+          },
+          "trigger": {
+            "description": "auto — автоматически, manual — вручную, retry — повтор",
+            "title": "Trigger",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "target",
+          "target_title",
+          "status",
+          "attempts",
+          "http_status",
+          "result",
+          "error",
+          "trigger",
+          "candidate_ref",
+          "position_title",
+          "invitation_id",
+          "application_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "AtsDeliveryOut",
+        "type": "object"
+      },
+      "AtsExportOut": {
+        "additionalProperties": true,
+        "description": "Выгрузка карточки кандидата для ATS: схема, контекст приглашения или отклика, контакты — только когда раскрыты.",
+        "properties": {
+          "candidate": {
+            "additionalProperties": true,
+            "description": "Кандидат: ref, category_id, category_title, card; contacts — после принятия приглашения",
+            "title": "Candidate",
+            "type": "object"
+          },
+          "company": {
+            "additionalProperties": true,
+            "description": "Компания: id, name, inn",
+            "title": "Company",
+            "type": "object"
+          },
+          "context": {
+            "additionalProperties": true,
+            "description": "Приглашение или отклик: type, id, status, position_title, вилка, даты",
+            "title": "Context",
+            "type": "object"
+          },
+          "evidence_levels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Уровни доказательства T0, T1, T2 — расшифровка",
+            "title": "Evidence Levels",
+            "type": "object"
+          },
+          "exported_at": {
+            "title": "Exported At",
+            "type": "string"
+          },
+          "links": {
+            "additionalProperties": true,
+            "description": "Ссылки: card, pdf",
+            "title": "Links",
+            "type": "object"
+          },
+          "schema": {
+            "description": "Версия схемы выгрузки",
+            "title": "Schema",
+            "type": "string"
+          },
+          "source": {
+            "additionalProperties": true,
+            "description": "Откуда выгрузка: platform, url",
+            "title": "Source",
+            "type": "object"
+          }
+        },
+        "required": [
+          "schema",
+          "exported_at",
+          "source",
+          "company",
+          "candidate",
+          "context",
+          "links",
+          "evidence_levels"
+        ],
+        "title": "AtsExportOut",
+        "type": "object"
+      },
+      "AtsHuntflowSettingsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Id"
+          },
+          "base_url": {
+            "title": "Base Url",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "status_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status Id"
+          },
+          "token_masked": {
+            "title": "Token Masked",
+            "type": "string"
+          },
+          "token_set": {
+            "title": "Token Set",
+            "type": "boolean"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          }
+        },
+        "required": [
+          "enabled",
+          "base_url",
+          "account_id",
+          "vacancy_id",
+          "status_id",
+          "token_set",
+          "token_masked"
+        ],
+        "title": "AtsHuntflowSettingsOut",
+        "type": "object"
+      },
+      "AtsPotokMoveOut": {
+        "additionalProperties": true,
+        "properties": {
+          "moved": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Запись кандидата на вакансии после перевода",
+            "title": "Moved"
+          },
+          "pipeline": {
+            "items": {
+              "$ref": "#/components/schemas/PotokPipelineRowOut"
+            },
+            "title": "Pipeline",
+            "type": "array"
+          }
+        },
+        "required": [
+          "moved",
+          "pipeline"
+        ],
+        "title": "AtsPotokMoveOut",
+        "type": "object"
+      },
+      "AtsProviderOut": {
+        "additionalProperties": true,
+        "description": "Подключение ATS: режим (демо или настоящая), маска токена, вакансия и этап для передачи, итог последней проверки.",
+        "properties": {
+          "account_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Хантфлоу: идентификатор организации",
+            "title": "Account Id"
+          },
+          "base_url": {
+            "description": "Адрес API, который используется сейчас",
+            "title": "Base Url",
+            "type": "string"
+          },
+          "candidates_linked": {
+            "description": "Сколько кандидатов уже связано с записями в ATS (повторная передача не создаёт дубль)",
+            "title": "Candidates Linked",
+            "type": "integer"
+          },
+          "code": {
+            "description": "huntflow, talantix или potok",
+            "title": "Code",
+            "type": "string"
+          },
+          "custom_base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Свой адрес API, если задан (иначе официальный)",
+            "title": "Custom Base Url"
+          },
+          "demo_base_url": {
+            "description": "Адрес встроенной заглушки (демо-режим)",
+            "title": "Demo Base Url",
+            "type": "string"
+          },
+          "docs_url": {
+            "description": "Документация API этой ATS",
+            "title": "Docs Url",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "last_check_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check At"
+          },
+          "last_check_info": {
+            "additionalProperties": true,
+            "description": "Итог последней проверки: account, vacancies_active, details, token_refreshed либо error",
+            "title": "Last Check Info",
+            "type": "object"
+          },
+          "last_check_ok": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Check Ok"
+          },
+          "mode": {
+            "description": "demo — встроенная заглушка, real — настоящая ATS",
+            "title": "Mode",
+            "type": "string"
+          },
+          "real_base_url": {
+            "description": "Официальный адрес API",
+            "title": "Real Base Url",
+            "type": "string"
+          },
+          "refresh_expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Refresh Expires At"
+          },
+          "refresh_set": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Talantix: сохранён ли refresh-токен",
+            "title": "Refresh Set"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Talantix: идентификатор источника «Встречный (ФСП)»",
+            "title": "Source Id"
+          },
+          "stage_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Этап (статус) подбора в ATS по умолчанию",
+            "title": "Stage Id"
+          },
+          "stage_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Title"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "token_expires_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Token Expires At"
+          },
+          "token_masked": {
+            "description": "Маска токена; сам токен не отдаётся",
+            "title": "Token Masked",
+            "type": "string"
+          },
+          "token_refreshed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Token Refreshed At"
+          },
+          "token_set": {
+            "title": "Token Set",
+            "type": "boolean"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Вакансия в ATS по умолчанию",
+            "title": "Vacancy Id"
+          },
+          "vacancy_map": {
+            "additionalProperties": true,
+            "description": "Вакансия платформы (uuid) → вакансия и этап в ATS",
+            "title": "Vacancy Map",
+            "type": "object"
+          },
+          "vacancy_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Title"
+          }
+        },
+        "required": [
+          "code",
+          "title",
+          "docs_url",
+          "real_base_url",
+          "demo_base_url",
+          "candidates_linked",
+          "enabled",
+          "mode",
+          "base_url",
+          "token_set",
+          "token_masked",
+          "vacancy_id",
+          "vacancy_title",
+          "stage_id",
+          "stage_title",
+          "vacancy_map",
+          "last_check_at",
+          "last_check_ok",
+          "last_check_info"
+        ],
+        "title": "AtsProviderOut",
+        "type": "object"
+      },
+      "AtsSettingsOut": {
+        "additionalProperties": true,
+        "description": "Настройки передачи кандидатов: Хантфлоу, вебхук, тестовая заглушка.",
+        "properties": {
+          "auto_push": {
+            "description": "Передавать кандидата автоматически, когда приглашение принято",
+            "title": "Auto Push",
+            "type": "boolean"
+          },
+          "huntflow": {
+            "$ref": "#/components/schemas/AtsHuntflowSettingsOut"
+          },
+          "stub": {
+            "$ref": "#/components/schemas/AtsStubSettingsOut"
+          },
+          "webhook": {
+            "$ref": "#/components/schemas/AtsWebhookSettingsOut"
+          }
+        },
+        "required": [
+          "auto_push",
+          "huntflow",
+          "webhook",
+          "stub"
+        ],
+        "title": "AtsSettingsOut",
+        "type": "object"
+      },
+      "AtsStageOut": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Название этапа (Talantix отдаёт name и position)",
+            "title": "Name"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Position"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Title"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "AtsStageOut",
+        "type": "object"
+      },
+      "AtsStageProviderOut": {
+        "additionalProperties": true,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "info": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Info"
+          },
+          "linked": {
+            "title": "Linked",
+            "type": "integer"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "synced_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synced At"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "title",
+          "enabled",
+          "mode",
+          "synced_at",
+          "info",
+          "linked"
+        ],
+        "title": "AtsStageProviderOut",
+        "type": "object"
+      },
+      "AtsStageSyncOut": {
+        "additionalProperties": true,
+        "properties": {
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "changed": {
+            "title": "Changed",
+            "type": "integer"
+          },
+          "checked": {
+            "title": "Checked",
+            "type": "integer"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "errors": {
+            "title": "Errors",
+            "type": "integer"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "ms": {
+            "title": "Ms",
+            "type": "integer"
+          },
+          "trigger": {
+            "title": "Trigger",
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "trigger",
+          "checked",
+          "changed",
+          "errors",
+          "mode",
+          "error",
+          "ms"
+        ],
+        "title": "AtsStageSyncOut",
+        "type": "object"
+      },
+      "AtsStagesOut": {
+        "additionalProperties": true,
+        "description": "Обратный канал: этапы кандидатов в ATS.",
+        "properties": {
+          "events": {
+            "description": "Последние смены этапов: кандидат, этап, время",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "poll_s": {
+            "description": "Как часто платформа опрашивает ATS, секунд",
+            "title": "Poll S",
+            "type": "integer"
+          },
+          "providers": {
+            "items": {
+              "$ref": "#/components/schemas/AtsStageProviderOut"
+            },
+            "title": "Providers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "poll_s",
+          "providers",
+          "events"
+        ],
+        "title": "AtsStagesOut",
+        "type": "object"
+      },
+      "AtsStubRecordOut": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "external_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "signature_valid": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signature Valid"
+          },
+          "system": {
+            "description": "Какую ATS изображает запись: Хантфлоу, Talantix, «Поток», вебхук",
+            "title": "System",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "system",
+          "external_id",
+          "signature_valid",
+          "payload",
+          "created_at"
+        ],
+        "title": "AtsStubRecordOut",
+        "type": "object"
+      },
+      "AtsStubSettingsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "connected": {
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "huntflow_base_url": {
+            "title": "Huntflow Base Url",
+            "type": "string"
+          },
+          "webhook_url": {
+            "title": "Webhook Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "connected",
+          "huntflow_base_url",
+          "webhook_url"
+        ],
+        "title": "AtsStubSettingsOut",
+        "type": "object"
+      },
+      "AtsVacancyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "department": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Department"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "salary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Вилка в ATS: from, to, currency",
+            "title": "Salary"
+          },
+          "stages": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Этапы вакансии (id, title) — «Поток»",
+            "title": "Stages"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status"
+        ],
+        "title": "AtsVacancyOut",
+        "type": "object"
+      },
+      "AtsWebhookReceivedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "received": {
+            "title": "Received",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "received"
+        ],
+        "title": "AtsWebhookReceivedOut",
+        "type": "object"
+      },
+      "AtsWebhookSecretOut": {
+        "additionalProperties": true,
+        "properties": {
+          "secret": {
+            "description": "Секрет подписи вебхука: показывается его владельцу — работодателю",
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "secret"
+        ],
+        "title": "AtsWebhookSecretOut",
+        "type": "object"
+      },
+      "AtsWebhookSettingsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "secret_masked": {
+            "title": "Secret Masked",
+            "type": "string"
+          },
+          "secret_set": {
+            "title": "Secret Set",
+            "type": "boolean"
+          },
+          "signature_header": {
+            "description": "Заголовок с подписью тела запроса (HMAC-SHA256)",
+            "title": "Signature Header",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "required": [
+          "enabled",
+          "url",
+          "secret_set",
+          "secret_masked",
+          "signature_header"
+        ],
+        "title": "AtsWebhookSettingsOut",
+        "type": "object"
+      },
       "AttackIn": {
         "properties": {
           "direction": {
@@ -4319,6 +5486,103 @@
         "title": "CompanyOut",
         "type": "object"
       },
+      "CompanyProfileOut": {
+        "additionalProperties": true,
+        "description": "Публичная карточка компании для кандидата: описание, вакансии, оценка надёжности.",
+        "properties": {
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Industry"
+          },
+          "inn": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Inn"
+          },
+          "is_demo": {
+            "title": "Is Demo",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "trust": {
+            "$ref": "#/components/schemas/TrustOut"
+          },
+          "vacancies": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyVacancyBriefOut"
+            },
+            "title": "Vacancies",
+            "type": "array"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "industry",
+          "description",
+          "website",
+          "city",
+          "inn",
+          "is_demo",
+          "trust",
+          "vacancies"
+        ],
+        "title": "CompanyProfileOut",
+        "type": "object"
+      },
       "CompanyUpdate": {
         "properties": {
           "city": {
@@ -4420,6 +5684,61 @@
           }
         },
         "title": "CompanyUpdate",
+        "type": "object"
+      },
+      "CompanyVacancyBriefOut": {
+        "additionalProperties": true,
+        "properties": {
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "salary_from",
+          "salary_to",
+          "category_id"
+        ],
+        "title": "CompanyVacancyBriefOut",
         "type": "object"
       },
       "CompareCandidateOut": {
@@ -7385,6 +8704,61 @@
         "title": "EmployerOut",
         "type": "object"
       },
+      "EmployerPassportLinkOut": {
+        "additionalProperties": true,
+        "description": "Ссылка работодателю на паспорт кандидата (только если кандидат открыл профиль).",
+        "properties": {
+          "grade_status": {
+            "title": "Grade Status",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "title": "Issued At",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "test_key": {
+            "title": "Test Key",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "valid_until": {
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "path",
+          "state",
+          "title",
+          "grade_status",
+          "issued_at",
+          "valid_until",
+          "test_key"
+        ],
+        "title": "EmployerPassportLinkOut",
+        "type": "object"
+      },
       "EmploymentTerms": {
         "properties": {
           "employer_acknowledged": {
@@ -8150,6 +9524,187 @@
           "title"
         ],
         "title": "FspDisciplineOut",
+        "type": "object"
+      },
+      "FspIdConfigOut": {
+        "additionalProperties": true,
+        "properties": {
+          "client_id": {
+            "title": "Client Id",
+            "type": "string"
+          },
+          "demo": {
+            "description": "Демо-режим: вход через встроенный имитатор ФСП ID",
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "demo_accounts": {
+            "description": "Демо-аккаунты имитатора",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Demo Accounts",
+            "type": "array"
+          },
+          "demo_password": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Пароль имитатора, только в демо-режиме",
+            "title": "Demo Password"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "flow": {
+            "title": "Flow",
+            "type": "string"
+          },
+          "issuer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Issuer"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "enabled",
+          "title",
+          "demo",
+          "issuer",
+          "client_id",
+          "flow",
+          "demo_accounts",
+          "demo_password",
+          "note"
+        ],
+        "title": "FspIdConfigOut",
+        "type": "object"
+      },
+      "FspIdResultOut": {
+        "additionalProperties": true,
+        "description": "Результат входа через ФСП ID: готов (токен) или нужно согласие на обработку данных.",
+        "properties": {
+          "created": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Аккаунт создан сейчас",
+            "title": "Created"
+          },
+          "email_taken": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Email Taken"
+          },
+          "intent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "login — вход, link — привязка к существующему аккаунту",
+            "title": "Intent"
+          },
+          "passport": {
+            "additionalProperties": true,
+            "description": "Что ФСП ID сообщил о человеке (предпросмотр)",
+            "title": "Passport",
+            "type": "object"
+          },
+          "registration_role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Registration Role"
+          },
+          "status": {
+            "description": "ok — вход выполнен, consent_required — нужно согласие",
+            "title": "Status",
+            "type": "string"
+          },
+          "token": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Токен доступа платформы: access_token, token_type, expires_in",
+            "title": "Token"
+          }
+        },
+        "required": [
+          "status",
+          "passport"
+        ],
+        "title": "FspIdResultOut",
+        "type": "object"
+      },
+      "FspIdStartOut": {
+        "additionalProperties": true,
+        "properties": {
+          "authorize_url": {
+            "title": "Authorize Url",
+            "type": "string"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "authorize_url",
+          "state"
+        ],
+        "title": "FspIdStartOut",
         "type": "object"
       },
       "FspLinkIn": {
@@ -8999,6 +10554,140 @@
         "title": "HiringTodoOut",
         "type": "object"
       },
+      "HuntflowAccountsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "description": "Организации: id, name, nick, member_type",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "HuntflowAccountsOut",
+        "type": "object"
+      },
+      "HuntflowApplicantOut": {
+        "additionalProperties": true,
+        "properties": {
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Company"
+          },
+          "created": {
+            "title": "Created",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "middle_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Middle Name"
+          },
+          "money": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Money"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "required": [
+          "id",
+          "created",
+          "first_name",
+          "last_name",
+          "middle_name",
+          "money",
+          "phone",
+          "email",
+          "position",
+          "company"
+        ],
+        "title": "HuntflowApplicantOut",
+        "type": "object"
+      },
       "HuntflowIn": {
         "properties": {
           "account_id": {
@@ -9069,6 +10758,157 @@
           }
         },
         "title": "HuntflowIn",
+        "type": "object"
+      },
+      "HuntflowMeOut": {
+        "additionalProperties": true,
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "locale": {
+            "title": "Locale",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "position",
+          "email",
+          "phone",
+          "locale"
+        ],
+        "title": "HuntflowMeOut",
+        "type": "object"
+      },
+      "HuntflowStatusesOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "description": "Этапы подбора: id, name, type, order, removed",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "HuntflowStatusesOut",
+        "type": "object"
+      },
+      "HuntflowVacanciesOut": {
+        "additionalProperties": true,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "description": "Вакансии: id, position, company, state, …",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "total_items": {
+            "title": "Total Items",
+            "type": "integer"
+          },
+          "total_pages": {
+            "title": "Total Pages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "page",
+          "count",
+          "total_pages",
+          "total_items",
+          "items"
+        ],
+        "title": "HuntflowVacanciesOut",
+        "type": "object"
+      },
+      "HuntflowVacancyLinkOut": {
+        "additionalProperties": true,
+        "properties": {
+          "changed": {
+            "title": "Changed",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "rejection_reason": {
+            "title": "Rejection Reason"
+          },
+          "status": {
+            "title": "Status",
+            "type": "integer"
+          },
+          "vacancy": {
+            "title": "Vacancy",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "changed",
+          "vacancy",
+          "status",
+          "rejection_reason"
+        ],
+        "title": "HuntflowVacancyLinkOut",
         "type": "object"
       },
       "ImportIn": {
@@ -11542,6 +13382,133 @@
         "title": "ParseIn",
         "type": "object"
       },
+      "PassportKeyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "alg": {
+            "title": "Alg",
+            "type": "string"
+          },
+          "crv": {
+            "title": "Crv",
+            "type": "string"
+          },
+          "kid": {
+            "title": "Kid",
+            "type": "string"
+          },
+          "kty": {
+            "title": "Kty",
+            "type": "string"
+          },
+          "test_key": {
+            "description": "Тестовый ключ стенда: подписи не имеют силы вне демонстрации",
+            "title": "Test Key",
+            "type": "boolean"
+          },
+          "use": {
+            "title": "Use",
+            "type": "string"
+          },
+          "x": {
+            "description": "Открытый ключ (Ed25519), base64url",
+            "title": "X",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kty",
+          "crv",
+          "x",
+          "kid",
+          "alg",
+          "use",
+          "test_key"
+        ],
+        "title": "PassportKeyOut",
+        "type": "object"
+      },
+      "PassportKeysOut": {
+        "additionalProperties": true,
+        "properties": {
+          "alg": {
+            "title": "Alg",
+            "type": "string"
+          },
+          "keys": {
+            "items": {
+              "$ref": "#/components/schemas/PassportKeyOut"
+            },
+            "title": "Keys",
+            "type": "array"
+          },
+          "schema": {
+            "description": "Версия формата паспорта",
+            "title": "Schema",
+            "type": "string"
+          }
+        },
+        "required": [
+          "alg",
+          "keys",
+          "schema"
+        ],
+        "title": "PassportKeysOut",
+        "type": "object"
+      },
+      "PassportPublicOut": {
+        "additionalProperties": true,
+        "description": "Публичная проверка паспорта: подписанный документ, подпись, статус и ключ.",
+        "properties": {
+          "canonicalization": {
+            "description": "Как строка документа получается из JSON — чтобы проверить подпись самостоятельно",
+            "title": "Canonicalization",
+            "type": "string"
+          },
+          "document": {
+            "description": "Подписанный документ строкой (канонический JSON)",
+            "title": "Document",
+            "type": "string"
+          },
+          "keys": {
+            "items": {
+              "$ref": "#/components/schemas/PassportKeyOut"
+            },
+            "title": "Keys",
+            "type": "array"
+          },
+          "passport": {
+            "additionalProperties": true,
+            "description": "Разобранный подписанный документ: категория, уровень, достижения, срок",
+            "title": "Passport",
+            "type": "object"
+          },
+          "signature": {
+            "additionalProperties": true,
+            "description": "alg, kid, value — подпись Ed25519",
+            "title": "Signature",
+            "type": "object"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PassportStatusOut"
+          },
+          "verify_url": {
+            "title": "Verify Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "passport",
+          "document",
+          "signature",
+          "status",
+          "keys",
+          "verify_url",
+          "canonicalization"
+        ],
+        "title": "PassportPublicOut",
+        "type": "object"
+      },
       "PassportStateOut": {
         "additionalProperties": true,
         "description": "Цифровой паспорт навыков: действующий документ с подписью, право на выпуск и история выпусков.",
@@ -11584,6 +13551,583 @@
           "history"
         ],
         "title": "PassportStateOut",
+        "type": "object"
+      },
+      "PassportStatusOut": {
+        "additionalProperties": true,
+        "description": "Статус паспорта по реестру: valid, revoked, expired или invalid_signature.",
+        "properties": {
+          "checked_at": {
+            "title": "Checked At",
+            "type": "string"
+          },
+          "issued_at": {
+            "title": "Issued At",
+            "type": "string"
+          },
+          "kid_known": {
+            "title": "Kid Known",
+            "type": "boolean"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Причина отзыва, если отозван",
+            "title": "Reason"
+          },
+          "reason_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Title"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "signature_valid": {
+            "title": "Signature Valid",
+            "type": "boolean"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "test_key": {
+            "title": "Test Key",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "valid_until": {
+            "title": "Valid Until",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "title",
+          "reason",
+          "reason_title",
+          "revoked_at",
+          "issued_at",
+          "valid_until",
+          "checked_at",
+          "signature_valid",
+          "kid_known",
+          "test_key"
+        ],
+        "title": "PassportStatusOut",
+        "type": "object"
+      },
+      "PassportVerifyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "kid_known": {
+            "title": "Kid Known",
+            "type": "boolean"
+          },
+          "kid_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Пояснение, если ключ с таким kid платформе неизвестен",
+            "title": "Kid Note"
+          },
+          "matches_registry": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Matches Registry"
+          },
+          "registry": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registry"
+          },
+          "signature_valid": {
+            "title": "Signature Valid",
+            "type": "boolean"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Статус в реестре, если паспорт выпущен платформой",
+            "title": "State"
+          },
+          "test_key": {
+            "title": "Test Key",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "signature_valid",
+          "kid_known",
+          "test_key",
+          "state",
+          "registry",
+          "matches_registry",
+          "kid_note"
+        ],
+        "title": "PassportVerifyOut",
+        "type": "object"
+      },
+      "PotokApplicantOut": {
+        "additionalProperties": true,
+        "properties": {
+          "ajs_joins": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Ajs Joins",
+            "type": "array"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "emails": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Emails",
+            "type": "array"
+          },
+          "first_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Name"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Name"
+          },
+          "middle_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Middle Name"
+          },
+          "phones": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Phones",
+            "type": "array"
+          },
+          "source_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Type"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "middle_name",
+          "emails",
+          "phones",
+          "source_type",
+          "created_at",
+          "ajs_joins"
+        ],
+        "title": "PotokApplicantOut",
+        "type": "object"
+      },
+      "PotokDeclineOut": {
+        "additionalProperties": true,
+        "properties": {
+          "result": {
+            "title": "Result",
+            "type": "string"
+          }
+        },
+        "required": [
+          "result"
+        ],
+        "title": "PotokDeclineOut",
+        "type": "object"
+      },
+      "PotokEventOut": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "created_at"
+        ],
+        "title": "PotokEventOut",
+        "type": "object"
+      },
+      "PotokJobOut": {
+        "additionalProperties": true,
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "company_department": {
+            "additionalProperties": true,
+            "title": "Company Department",
+            "type": "object"
+          },
+          "currency_type": {
+            "title": "Currency Type",
+            "type": "string"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "employment_type": {
+            "title": "Employment Type",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "key_skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Key Skills",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Salary To"
+          },
+          "stages": {
+            "description": "Этапы: id, name, serial, stage_type",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stages",
+            "type": "array"
+          },
+          "state_id": {
+            "description": "opened или closed",
+            "title": "State Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "state_id",
+          "archived",
+          "company_department",
+          "salary_from",
+          "salary_to",
+          "currency_type",
+          "city",
+          "employment_type",
+          "description",
+          "key_skills",
+          "stages"
+        ],
+        "title": "PotokJobOut",
+        "type": "object"
+      },
+      "PotokJobsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PotokJobOut"
+            },
+            "title": "Data",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "title": "PotokJobsOut",
+        "type": "object"
+      },
+      "PotokJoinOut": {
+        "additionalProperties": true,
+        "properties": {
+          "applicant": {
+            "additionalProperties": true,
+            "title": "Applicant",
+            "type": "object"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "job": {
+            "additionalProperties": true,
+            "title": "Job",
+            "type": "object"
+          },
+          "stage": {
+            "additionalProperties": true,
+            "title": "Stage",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "job",
+          "stage",
+          "applicant"
+        ],
+        "title": "PotokJoinOut",
+        "type": "object"
+      },
+      "PotokJoinsPageOut": {
+        "additionalProperties": true,
+        "properties": {
+          "has_next_page": {
+            "title": "Has Next Page",
+            "type": "boolean"
+          },
+          "objects": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Objects",
+            "type": "array"
+          },
+          "page_next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page Next Cursor"
+          }
+        },
+        "required": [
+          "objects",
+          "has_next_page",
+          "page_next_cursor"
+        ],
+        "title": "PotokJoinsPageOut",
+        "type": "object"
+      },
+      "PotokPipelineRowOut": {
+        "additionalProperties": true,
+        "description": "Кандидат на вакансии в демо-«Потоке» — как его видит рекрутёр.",
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "applicant": {
+            "title": "Applicant",
+            "type": "string"
+          },
+          "applicant_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Applicant Id"
+          },
+          "job_id": {
+            "title": "Job Id",
+            "type": "integer"
+          },
+          "job_name": {
+            "title": "Job Name",
+            "type": "string"
+          },
+          "join_id": {
+            "title": "Join Id",
+            "type": "integer"
+          },
+          "stage_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Id"
+          },
+          "stage_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stage Name"
+          },
+          "stages": {
+            "description": "Этапы воронки вакансии: id, name, stage_type",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Stages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "join_id",
+          "applicant_id",
+          "applicant",
+          "job_id",
+          "job_name",
+          "stage_id",
+          "stage_name",
+          "active",
+          "stages"
+        ],
+        "title": "PotokPipelineRowOut",
+        "type": "object"
+      },
+      "PotokStageChangeOut": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "stage": {
+            "additionalProperties": true,
+            "title": "Stage",
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "stage"
+        ],
+        "title": "PotokStageChangeOut",
         "type": "object"
       },
       "PrivacyIn": {
@@ -12011,6 +14555,32 @@
         "title": "PublicShareOut",
         "type": "object"
       },
+      "PushConfigOut": {
+        "additionalProperties": true,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "vapid_public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vapid Public Key"
+          }
+        },
+        "required": [
+          "enabled",
+          "vapid_public_key"
+        ],
+        "title": "PushConfigOut",
+        "type": "object"
+      },
       "PushIn": {
         "properties": {
           "application_id": {
@@ -12070,6 +14640,77 @@
           }
         },
         "title": "PushIn",
+        "type": "object"
+      },
+      "PushStatusOut": {
+        "additionalProperties": true,
+        "properties": {
+          "devices": {
+            "title": "Devices",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "last_success_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Success At"
+          }
+        },
+        "required": [
+          "enabled",
+          "devices",
+          "last_success_at"
+        ],
+        "title": "PushStatusOut",
+        "type": "object"
+      },
+      "PushSubscribedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "devices": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Devices"
+          },
+          "subscribed": {
+            "title": "Subscribed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "subscribed"
+        ],
+        "title": "PushSubscribedOut",
+        "type": "object"
+      },
+      "PushTestOut": {
+        "additionalProperties": true,
+        "properties": {
+          "sent": {
+            "title": "Sent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sent"
+        ],
+        "title": "PushTestOut",
         "type": "object"
       },
       "RatingIn": {
@@ -14470,6 +17111,34 @@
         "title": "SurveyIn",
         "type": "object"
       },
+      "SusAdminOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "description": "Отдельные ответы: роль, контекст, оценка, время",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/SusSummaryOut"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "summary",
+          "items"
+        ],
+        "title": "SusAdminOut",
+        "type": "object"
+      },
       "SusIn": {
         "properties": {
           "answers": {
@@ -14504,6 +17173,462 @@
           "answers"
         ],
         "title": "SusIn",
+        "type": "object"
+      },
+      "SusMineOut": {
+        "additionalProperties": true,
+        "properties": {
+          "answered": {
+            "title": "Answered",
+            "type": "boolean"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "At"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Score"
+          }
+        },
+        "required": [
+          "answered"
+        ],
+        "title": "SusMineOut",
+        "type": "object"
+      },
+      "SusQuestionOut": {
+        "additionalProperties": true,
+        "properties": {
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "positive": {
+            "description": "Утверждение в пользу удобства (иначе — обратное)",
+            "title": "Positive",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "n",
+          "text",
+          "positive"
+        ],
+        "title": "SusQuestionOut",
+        "type": "object"
+      },
+      "SusQuestionsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "formula": {
+            "title": "Formula",
+            "type": "string"
+          },
+          "questions": {
+            "items": {
+              "$ref": "#/components/schemas/SusQuestionOut"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "scale": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Шкала ответов 1…5",
+            "title": "Scale",
+            "type": "object"
+          }
+        },
+        "required": [
+          "questions",
+          "scale",
+          "formula"
+        ],
+        "title": "SusQuestionsOut",
+        "type": "object"
+      },
+      "SusStatOut": {
+        "additionalProperties": true,
+        "properties": {
+          "ci95": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ci95"
+          },
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "sd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sd"
+          }
+        },
+        "required": [
+          "n",
+          "mean",
+          "median",
+          "sd",
+          "ci95"
+        ],
+        "title": "SusStatOut",
+        "type": "object"
+      },
+      "SusSubmitOut": {
+        "additionalProperties": true,
+        "properties": {
+          "above_benchmark": {
+            "title": "Above Benchmark",
+            "type": "boolean"
+          },
+          "adjective": {
+            "title": "Adjective",
+            "type": "string"
+          },
+          "benchmark": {
+            "description": "Ориентир — средняя по отрасли (68)",
+            "title": "Benchmark",
+            "type": "number"
+          },
+          "grade": {
+            "title": "Grade",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "score": {
+            "description": "Оценка SUS, 0…100",
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "score",
+          "adjective",
+          "grade",
+          "benchmark",
+          "above_benchmark"
+        ],
+        "title": "SusSubmitOut",
+        "type": "object"
+      },
+      "SusSummaryOut": {
+        "additionalProperties": true,
+        "description": "Сводка опроса удобства SUS: среднее с доверительным интервалом, по ролям, распределение.",
+        "properties": {
+          "adjective": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Adjective"
+          },
+          "all": {
+            "additionalProperties": true,
+            "description": "Все ответы вместе: n, mean, median, sd, ci95",
+            "title": "All",
+            "type": "object"
+          },
+          "anonymous": {
+            "additionalProperties": true,
+            "description": "Ответы без входа: n, mean, median, sd, ci95, by_context, note",
+            "title": "Anonymous",
+            "type": "object"
+          },
+          "benchmark": {
+            "title": "Benchmark",
+            "type": "number"
+          },
+          "by_context": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SusStatOut"
+            },
+            "title": "By Context",
+            "type": "object"
+          },
+          "by_role": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/SusStatOut"
+            },
+            "title": "By Role",
+            "type": "object"
+          },
+          "ci95": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "95 % доверительный интервал среднего",
+            "title": "Ci95"
+          },
+          "grade": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade"
+          },
+          "histogram": {
+            "description": "Распределение: from, to, n",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Histogram",
+            "type": "array"
+          },
+          "items_mean": {
+            "description": "Среднее по каждому из 10 утверждений",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "title": "Items Mean",
+            "type": "array"
+          },
+          "mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mean"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "scope": {
+            "description": "Чьи ответы учтены",
+            "title": "Scope",
+            "type": "string"
+          },
+          "sd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sd"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "n",
+          "mean",
+          "median",
+          "sd",
+          "ci95",
+          "adjective",
+          "grade",
+          "benchmark",
+          "by_role",
+          "by_context",
+          "items_mean",
+          "histogram",
+          "updated_at",
+          "scope",
+          "anonymous",
+          "all",
+          "method"
+        ],
+        "title": "SusSummaryOut",
+        "type": "object"
+      },
+      "TalantixGraphqlOut": {
+        "additionalProperties": true,
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data"
+          },
+          "dataPresent": {
+            "title": "Datapresent",
+            "type": "boolean"
+          },
+          "errors": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Errors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "data",
+          "errors",
+          "dataPresent"
+        ],
+        "title": "TalantixGraphqlOut",
+        "type": "object"
+      },
+      "TalantixTokenOut": {
+        "additionalProperties": true,
+        "properties": {
+          "access_token": {
+            "description": "Токен доступа демо-Talantix (одноразовая пара с refresh-токеном)",
+            "title": "Access Token",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "integer"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "refresh_token": {
+            "title": "Refresh Token",
+            "type": "string"
+          },
+          "refresh_token_expires_in": {
+            "title": "Refresh Token Expires In",
+            "type": "integer"
+          },
+          "token_type": {
+            "title": "Token Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "access_token",
+          "expires_in",
+          "refresh_token",
+          "refresh_token_expires_in",
+          "token_type",
+          "created_at"
+        ],
+        "title": "TalantixTokenOut",
         "type": "object"
       },
       "ThreadBriefOut": {
@@ -14736,6 +17861,256 @@
           "user"
         ],
         "title": "TokenOut",
+        "type": "object"
+      },
+      "TrustBriefOut": {
+        "additionalProperties": true,
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "string"
+          },
+          "critical": {
+            "title": "Critical",
+            "type": "boolean"
+          },
+          "demo": {
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "level_title": {
+            "title": "Level Title",
+            "type": "string"
+          },
+          "offer_salary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offer Salary"
+          },
+          "preliminary": {
+            "title": "Preliminary",
+            "type": "boolean"
+          },
+          "score": {
+            "title": "Score",
+            "type": "integer"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "score",
+          "level",
+          "level_title",
+          "preliminary",
+          "critical",
+          "summary",
+          "offer_salary",
+          "demo",
+          "company_id"
+        ],
+        "title": "TrustBriefOut",
+        "type": "object"
+      },
+      "TrustCheckOut": {
+        "additionalProperties": true,
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "title",
+          "status",
+          "text"
+        ],
+        "title": "TrustCheckOut",
+        "type": "object"
+      },
+      "TrustFactorOut": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "max": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Max"
+          },
+          "points": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Points"
+          },
+          "status": {
+            "description": "ok, warn, bad или unknown",
+            "title": "Status",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "status",
+          "points",
+          "max",
+          "text"
+        ],
+        "title": "TrustFactorOut",
+        "type": "object"
+      },
+      "TrustOut": {
+        "additionalProperties": true,
+        "description": "Оценка надёжности компании по реестру (ЕГРЮЛ) и сравнению вилки с рынком — для кандидата и работодателя.",
+        "properties": {
+          "company_id": {
+            "title": "Company Id",
+            "type": "string"
+          },
+          "company_name": {
+            "title": "Company Name",
+            "type": "string"
+          },
+          "computed_at": {
+            "title": "Computed At",
+            "type": "string"
+          },
+          "critical": {
+            "description": "Есть критичный сигнал (ликвидация, свежая регистрация и т. п.)",
+            "title": "Critical",
+            "type": "boolean"
+          },
+          "demo": {
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "factors": {
+            "items": {
+              "$ref": "#/components/schemas/TrustFactorOut"
+            },
+            "title": "Factors",
+            "type": "array"
+          },
+          "level": {
+            "title": "Level",
+            "type": "string"
+          },
+          "level_title": {
+            "title": "Level Title",
+            "type": "string"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "offer_salary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Сравнение вилки приглашения с рынком: status, text",
+            "title": "Offer Salary"
+          },
+          "preliminary": {
+            "description": "Предварительная оценка: реестр недоступен или данных мало",
+            "title": "Preliminary",
+            "type": "boolean"
+          },
+          "registry": {
+            "additionalProperties": true,
+            "description": "Сведения реестра: name, registered_at, liquidated_at, director, ogrn, source, note, age_years",
+            "title": "Registry",
+            "type": "object"
+          },
+          "salary_checks": {
+            "items": {
+              "$ref": "#/components/schemas/TrustCheckOut"
+            },
+            "title": "Salary Checks",
+            "type": "array"
+          },
+          "score": {
+            "description": "0…100",
+            "title": "Score",
+            "type": "integer"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "company_id",
+          "company_name",
+          "score",
+          "level",
+          "level_title",
+          "preliminary",
+          "critical",
+          "demo",
+          "factors",
+          "registry",
+          "offer_salary",
+          "salary_checks",
+          "summary",
+          "computed_at",
+          "method"
+        ],
+        "title": "TrustOut",
         "type": "object"
       },
       "TwoFactorChallengeOut": {
@@ -15353,6 +18728,317 @@
         ],
         "title": "UserRole",
         "type": "string"
+      },
+      "VacancyImportItemOut": {
+        "additionalProperties": true,
+        "properties": {
+          "applicants": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Applicants"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Category Id"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "City"
+          },
+          "closed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Closed"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "created, updated или skipped (только в ответе на импорт)",
+            "title": "Result"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary From"
+          },
+          "salary_from_ats": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary From Ats"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary To"
+          },
+          "similar_vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Similar Vacancy Id"
+          },
+          "stack": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stack"
+          },
+          "state": {
+            "title": "State",
+            "type": "string"
+          },
+          "state_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "State Title"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Text"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          },
+          "work_format": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Work Format"
+          }
+        },
+        "required": [
+          "job_id",
+          "vacancy_id",
+          "title",
+          "state",
+          "notes"
+        ],
+        "title": "VacancyImportItemOut",
+        "type": "object"
+      },
+      "VacancyImportOut": {
+        "additionalProperties": true,
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VacancyImportItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "integer"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "created",
+          "updated",
+          "skipped",
+          "items"
+        ],
+        "title": "VacancyImportOut",
+        "type": "object"
+      },
+      "VacancyImportPreviewOut": {
+        "additionalProperties": true,
+        "properties": {
+          "demo": {
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/VacancyImportItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_title": {
+            "title": "Provider Title",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "provider",
+          "provider_title",
+          "demo",
+          "total",
+          "items"
+        ],
+        "title": "VacancyImportPreviewOut",
+        "type": "object"
       },
       "VacancyIn": {
         "properties": {
@@ -17300,9 +20986,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Admin Revoke Api Admin Passports  Pid  Revoke Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PassportStatusOut"
                 }
               }
             },
@@ -17409,9 +21093,7 @@
                   "total": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Admin List Api Admin Sus Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SusAdminOut"
                 }
               }
             },
@@ -18995,9 +22677,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Accounts Api Ats Stub Huntflow V2 Accounts Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HuntflowAccountsOut"
                 }
               }
             },
@@ -19059,9 +22739,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Create Applicant Api Ats Stub Huntflow V2 Accounts  Account Id  Applicants Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HuntflowApplicantOut"
                 }
               }
             },
@@ -19148,9 +22826,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Add To Vacancy Api Ats Stub Huntflow V2 Accounts  Account Id  Applicants  Applicant Id  Vacancy Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HuntflowVacancyLinkOut"
                 }
               }
             },
@@ -19228,9 +22904,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Hf Vacancies Api Ats Stub Huntflow V2 Accounts  Account Id  Vacancies Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HuntflowVacanciesOut"
                 }
               }
             },
@@ -19292,9 +22966,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Statuses Api Ats Stub Huntflow V2 Accounts  Account Id  Vacancies Statuses Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HuntflowStatusesOut"
                 }
               }
             },
@@ -19347,9 +23019,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Me Api Ats Stub Huntflow V2 Me Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HuntflowMeOut"
                 }
               }
             },
@@ -19417,7 +23087,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokJoinOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -19493,7 +23165,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokStageChangeOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -19560,7 +23234,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokApplicantOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -19639,7 +23315,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokApplicantOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -19709,7 +23387,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokEventOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -19806,7 +23486,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokJobsOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -19882,7 +23564,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokJobOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -19987,7 +23671,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokJoinsPageOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -20075,7 +23761,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/PotokDeclineOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -20207,7 +23895,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TalantixGraphqlOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -20243,7 +23933,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TalantixTokenOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -20294,9 +23986,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Webhook Api Ats Stub Webhook  Stub Key  Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsWebhookReceivedOut"
                 }
               }
             },
@@ -23376,8 +27066,9 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Invitations Trust Api Candidate Invitations Trust Get",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/TrustBriefOut"
+                  },
                   "type": "object"
                 }
               }
@@ -25062,9 +28753,7 @@
                   "summary": "жалоб за полгода: 1 из 2 приглашений (другое — 1)"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Invitation Trust Api Candidate Invitations  Inv Id  Trust Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TrustOut"
                 }
               }
             },
@@ -26092,9 +29781,7 @@
                   "website": "https://severny-platezh.jury.example.com"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Company Profile Api Companies  Company Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CompanyProfileOut"
                 }
               }
             },
@@ -26231,7 +29918,9 @@
                     "url": "http://localhost:8080"
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AtsExportOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -27563,10 +31252,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AtsDeliveryOut"
                   },
-                  "title": "Response Deliveries Api Employer Ats Deliveries Get",
                   "type": "array"
                 }
               }
@@ -27629,10 +31316,8 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AtsDeliveryOut"
                   },
-                  "title": "Response Retry Delivery Api Employer Ats Deliveries  Delivery Id  Retry Post",
                   "type": "array"
                 }
               }
@@ -27750,10 +31435,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AtsProviderOut"
                   },
-                  "title": "Response Demo Connect All Api Employer Ats Demo Connect All Post",
                   "type": "array"
                 }
               }
@@ -27813,9 +31496,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Huntflow Check Api Employer Ats Huntflow Check Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsCheckOut"
                 }
               }
             },
@@ -27941,10 +31622,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AtsProviderOut"
                   },
-                  "title": "Response Get Providers Api Employer Ats Providers Get",
                   "type": "array"
                 }
               }
@@ -28056,9 +31735,7 @@
                   "vacancy_title": "Backend-разработчик (платежи)"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Put Provider Api Employer Ats Providers  Code  Put",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsProviderOut"
                 }
               }
             },
@@ -28150,9 +31827,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Provider Check Api Employer Ats Providers  Code  Check Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsCheckOut"
                 }
               }
             },
@@ -28296,9 +31971,7 @@
                   "vacancy_title": "Backend-разработчик (платежи)"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Provider Demo Api Employer Ats Providers  Code  Demo Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsProviderOut"
                 }
               }
             },
@@ -28385,10 +32058,8 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AtsVacancyOut"
                   },
-                  "title": "Response Provider Vacancies Api Employer Ats Providers  Code  Vacancies Get",
                   "type": "array"
                 }
               }
@@ -28514,10 +32185,8 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AtsStageOut"
                   },
-                  "title": "Response Provider Stages Api Employer Ats Providers  Code  Vacancies  Vacancy Id  Stages Get",
                   "type": "array"
                 }
               }
@@ -28633,10 +32302,8 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AtsDeliveryOut"
                   },
-                  "title": "Response Push Api Employer Ats Push Post",
                   "type": "array"
                 }
               }
@@ -28749,9 +32416,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Settings  Api Employer Ats Settings Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsSettingsOut"
                 }
               }
             },
@@ -28835,9 +32500,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Put Settings Api Employer Ats Settings Put",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsSettingsOut"
                 }
               }
             },
@@ -28917,9 +32580,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stage Journal Api Employer Ats Stages Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsStagesOut"
                 }
               }
             },
@@ -28990,9 +32651,7 @@
                   "trigger": "manual"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stage Sync Api Employer Ats Stages Sync Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsStageSyncOut"
                 }
               }
             },
@@ -29113,9 +32772,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stub Connect Api Employer Ats Stub Connect Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsSettingsOut"
                 }
               }
             },
@@ -29174,9 +32831,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stub Potok Move Api Employer Ats Stub Potok Move Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsPotokMoveOut"
                 }
               }
             },
@@ -29253,10 +32908,8 @@
                 "example": [],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/PotokPipelineRowOut"
                   },
-                  "title": "Response Stub Potok Pipeline Api Employer Ats Stub Potok Pipeline Get",
                   "type": "array"
                 }
               }
@@ -29308,10 +32961,8 @@
                 "example": [],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/AtsStubRecordOut"
                   },
-                  "title": "Response Stub Records Api Employer Ats Stub Records Get",
                   "type": "array"
                 }
               }
@@ -29364,9 +33015,7 @@
                   "secret": "<скрыто>"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Webhook Secret Api Employer Ats Webhook Secret Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AtsWebhookSecretOut"
                 }
               }
             },
@@ -30279,9 +33928,7 @@
                   "valid_until": "2027-10-09T00:00:00Z"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Candidate Passport Api Employer Candidates  Ref  Passport Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EmployerPassportLinkOut"
                 }
               }
             },
@@ -30530,9 +34177,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Registry Check Api Employer Company Registry Check Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TrustOut"
                 }
               }
             },
@@ -30657,9 +34302,7 @@
                   "summary": "жалоб за полгода: 1 из 2 приглашений (другое — 1)"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response My Trust Api Employer Company Trust Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TrustOut"
                 }
               }
             },
@@ -32098,7 +35741,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/AtsExportOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -38051,9 +41696,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Import From Potok Api Employer Vacancies Import Potok Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/VacancyImportOut"
                 }
               }
             },
@@ -38144,9 +41787,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Import Preview Api Employer Vacancies Import Potok Preview Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/VacancyImportPreviewOut"
                 }
               }
             },
@@ -40778,9 +44419,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Complete Api Fsp Id Complete Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspIdResultOut"
                 }
               }
             },
@@ -40861,9 +44500,7 @@
                   "title": "ФСП ID"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Config Api Fsp Id Config Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspIdConfigOut"
                 }
               }
             },
@@ -40895,9 +44532,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Exchange Api Fsp Id Exchange Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspIdResultOut"
                 }
               }
             },
@@ -40955,9 +44590,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Start Api Fsp Id Start Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspIdStartOut"
                 }
               }
             },
@@ -46544,9 +50177,7 @@
                   "schema": "vstrechny.grade-passport/1"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Keys Api Passport Keys Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PassportKeysOut"
                 }
               }
             },
@@ -46578,9 +50209,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Verify File Api Passport Verify Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PassportVerifyOut"
                 }
               }
             },
@@ -46652,9 +50281,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Passport Api Passport  Pid  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PassportPublicOut"
                 }
               }
             },
@@ -47519,9 +51146,7 @@
                   "vapid_public_key": null
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Config Api Push Config Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PushConfigOut"
                 }
               }
             },
@@ -47548,9 +51173,7 @@
                   "last_success_at": null
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Status Api Push Status Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PushStatusOut"
                 }
               }
             },
@@ -47590,9 +51213,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Subscribe Api Push Subscribe Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PushSubscribedOut"
                 }
               }
             },
@@ -47632,9 +51253,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Test Api Push Test Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PushTestOut"
                 }
               }
             },
@@ -47696,9 +51315,7 @@
                   "subscribed": false
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Unsubscribe Api Push Unsubscribe Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PushSubscribedOut"
                 }
               }
             },
@@ -48478,9 +52095,7 @@
                   "score": 50.0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Submit Api Sus Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SusSubmitOut"
                 }
               }
             },
@@ -48538,9 +52153,7 @@
                   "score": 50.0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Mine Api Sus Mine Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SusMineOut"
                 }
               }
             },
@@ -48589,9 +52202,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Questions Api Sus Questions Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SusQuestionsOut"
                 }
               }
             },
@@ -48745,9 +52356,7 @@
                   "updated_at": "2026-10-09T14:59:50.903877"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Summary Api Sus Summary Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SusSummaryOut"
                 }
               }
             },
