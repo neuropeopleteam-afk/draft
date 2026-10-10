@@ -36,8 +36,9 @@ function Body({ r }: { r: any }) {
     ["Грейд (слово в названии)", `${a.grade?.correct} из ${a.grade?.n} — ${pct(a.grade?.share)}`, q && pct(q.accuracy?.grade?.share)],
     ["Опыт внутри поля «опыт» hh.ru", `${a.experience?.consistent} из ${a.experience?.found} найденных — ${pct(a.experience?.share_of_found)}`, q && pct(q.accuracy?.experience?.share_of_found)],
     ["Формат внутри поля «формат» hh.ru", `${a.work_format?.consistent} из ${a.work_format?.found} найденных — ${pct(a.work_format?.share_of_found)}`, q && pct(q.accuracy?.work_format?.share_of_found)],
-    ["«Опыт не требуется» → опыт 0", `${ng.neg_exp?.correct} из ${ng.neg_exp?.n} — ${pct(ng.neg_exp?.share)}`, q && pct(q.negations?.neg_exp?.share)],
-    ["«Удалёнка не предусмотрена», «только офис» → офис", `${ng.neg_remote?.correct} из ${ng.neg_remote?.n} — ${pct(ng.neg_remote?.share)}`, q && pct(q.negations?.neg_remote?.share)],
+    ["«Опыт не требуется» → не требует опыта", `${ng.neg_exp?.correct} из ${ng.neg_exp?.n} — ${pct(ng.neg_exp?.share)}`, q && pct(q.negations?.neg_exp?.share)],
+    ["«Нет опыта» в hh.ru → не требует опыта", `${ng.noexp_field?.correct} из ${ng.noexp_field?.n} — ${pct(ng.noexp_field?.share)}`, q && pct(q.negations?.noexp_field?.share)],
+    ["«Удалёнка не предусмотрена», «только офис» → не «удалённо»", `${ng.neg_remote?.correct} из ${ng.neg_remote?.n} — ${pct(ng.neg_remote?.share)}`, q && pct(q.negations?.neg_remote?.share)],
     ["Только «на месте» в hh.ru → не «удалённо»", `${ng.onsite_only?.correct} из ${ng.onsite_only?.n} — ${pct(ng.onsite_only?.share)}`, q && pct(q.negations?.onsite_only?.share)],
     ["Ключевые навыки hh.ru найдены в тексте", `${sk.key_skills_found} из ${sk.key_skills_total} — ${pct(sk.key_skills_recall)}`, q && pct(q.skills?.key_skills_recall)],
   ];
@@ -60,8 +61,8 @@ function Body({ r }: { r: any }) {
         </ScrollX>
       </div>
       <p className="mt-3 text-sm text-brand-ink/70">Полнота полей (что разбор нашёл в тексте): {Object.entries<number>(p.completeness ?? {}).map(([k, v]) => `${FIELD[k] ?? k} ${pct(v)}`).join(" · ")}.</p>
-      {r.import?.n ? <p className="mt-1 text-sm text-brand-ink/70">Черновик импорта (текст + поля hh.ru): категория {pct(r.import.category)}, вилка из hh.ru {pct(r.import.salary_from_hh)}, формат {pct(r.import.work_format)}, город {pct(r.import.city)}, стек {pct(r.import.stack)}.</p> : null}
-      <p className="mt-2 text-xs text-brand-ink/65">«Опыт» и «формат» — доля среди вакансий, где разбор нашёл значение: значение внутри поля hh.ru («3–6 лет» → 3…6). Подробно и расхождения — docs/validation/HH_PARSE.md.</p>
+      {r.import?.n ? <p className="mt-1 text-sm text-brand-ink/70">Черновик импорта (текст + поля hh.ru): категория {pct(r.import.category)}, вилка из hh.ru {pct(r.import.salary_from_hh)} (ещё {pct(r.import.salary_partial)} — частично: только «от» или «до», либо шире 1,5; с пометкой «уточните»), формат {pct(r.import.work_format)}, город {pct(r.import.city)}, стек {pct(r.import.stack)}.</p> : null}
+      <p className="mt-2 text-xs text-brand-ink/65">«Опыт» и «формат» — доля среди вакансий, где разбор нашёл значение: значение внутри поля hh.ru («3–6 лет» → 3…6). Отрицания: «верно» — разбор не требует опыта (0 или не указан) и не пишет «удалённо». Подробно и расхождения — docs/validation/HH_PARSE.md.</p>
     </>
   );
 }

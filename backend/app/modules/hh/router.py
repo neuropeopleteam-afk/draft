@@ -72,7 +72,9 @@ class HhPreviewOut(BaseModel):
     salary_from: int
     salary_to: int
     salary_basis: str = Field(description="gross — до вычета НДФЛ, net — на руки")
-    salary_from_hh: bool = Field(description="Вилка взята из hh.ru (иначе — рыночный диапазон категории)")
+    salary_from_hh: bool = Field(description="Вилка взята из hh.ru целиком")
+    salary_source: str = Field("market", description="hh — вилка из hh.ru; hh_partial — только «от»/«до» или шире 1,5, "
+                                                    "вторая граница достроена; market — рыночный диапазон категории")
     work_format: str
     city: str | None
     description_preview: str

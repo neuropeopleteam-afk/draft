@@ -143,14 +143,21 @@ def test_map_fixture_vacancies():
         m = importer.map_vacancy(db, fx["90000001"])
         assert m.category_id == "backend.middle" and m.city == "Санкт-Петербург" and m.work_format == "hybrid"
         assert {"python", "django", "postgresql", "docker"} <= set(m.stack) and "redis" in m.stack
-        assert m.salary_from_hh and (m.salary_from, m.salary_to, m.salary_basis) == (220000, 300000, "gross")
+        assert m.salary_from_hh and m.salary_source == "hh" and (m.salary_from, m.salary_to, m.salary_basis) == (220000, 300000, "gross")
         assert "<p>" not in m.description and "Условия с hh.ru — опыт: от 3 до 6 лет · график: 5/2, 8 часов" in m.description
         assert m.key_skills[:2] == ["Python", "Django Framework"] and not m.notes
 
         q = importer.map_vacancy(db, fx["90000002"])  # только «от», на руки, офис, «опыт не требуется»
         assert q.category_id == "qa.junior" and q.work_format == "office" and q.city == "Москва"
-        assert not q.salary_from_hh and q.salary_basis == "net" and 0 < q.salary_from <= q.salary_to <= q.salary_from * 1.5
-        assert any("указана только «от» (от 90\u00a0000 ₽ на руки)" in n for n in q.notes)
+        assert not q.salary_from_hh and q.salary_source == "hh_partial"
+        assert (q.salary_from, q.salary_to, q.salary_basis) == (90000, 112000, "net")  # «до» = «от» × 1,25
+        assert any("указана только «от» (от 90\u00a0000 ₽ на руки)" in n and "уточните" in n for n in q.notes)
+        wide = importer.map_vacancy(db, {**fx["90000001"], "salary_range": {"from": 100000, "to": 250000, "currency": "RUR",
+                                                                             "gross": True, "mode": {"id": "MONTH"}}})
+        assert wide.salary_source == "hh_partial" and (wide.salary_from, wide.salary_to) == (100000, 150000)
+        only_to = importer.map_vacancy(db, {**fx["90000001"], "salary_range": {"from": None, "to": 250000, "currency": "RUR",
+                                                                                "gross": True, "mode": {"id": "MONTH"}}})
+        assert only_to.salary_source == "hh_partial" and (only_to.salary_from, only_to.salary_to) == (200000, 250000)
         assert "Опыт не требуется" in q.description
 
         f = importer.map_vacancy(db, fx["90000003"])  # валюта — не рубли

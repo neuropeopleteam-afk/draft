@@ -57,16 +57,22 @@ GRADE_RX = [("intern", re.compile(r"стаж[её]р|intern|trainee|стажир
             ("junior", re.compile(r"junior|джун|младш", re.I)),
             ("middle", re.compile(r"middle|мидл", re.I)),
             ("senior", re.compile(r"senior|сеньор|синьор|старш|ведущ|\blead\b|тимлид|team ?lead", re.I))]
-NEG_EXP = re.compile(r"опыт[а-я]*(?: работы)? не (?:требуется|обязател|нужен|важен)|без опыта работы|можно без опыта|"
-                     r"рассмотрим (?:кандидатов )?без опыта", re.I)
-NEG_REMOTE = re.compile(r"удал[её]нн?\w*(?: работ\w*| формат\w*)? не (?:предусмотрен|рассматрива|практику|возможн)|"
-                        r"без удал[её]нк|только (?:в )?офис|исключительно (?:в )?офис|строго (?:в )?офис|"
-                        r"удал[её]нк\w* нет|не удал[её]нн", re.I)
+# Отрицания в тексте (метка «в тексте есть отрицание», по ней проверяем разбор). «Обязательное посещение офиса для
+# городов, где есть офис» — не отрицание удалёнки (для остальных — удалённо), такие фразы не берём.
+_REM = r"(?:удал[её]нн\w*|удал[её]нк\w*)"
+NEG_EXP = re.compile(r"опыт\w*(?:\s+[а-яё]+){0,3}\s+не\s+(?:требуется|обязател|нужен|важен)|без\s+опыта", re.I)
+NEG_REMOTE = re.compile(
+    _REM + r"(?:\s+(?:и|или)\s+гибридн\w*)?(?:\s+(?:работ\w*|формат\w*))*\s+не\s+(?:предусмотрен|рассматрива|возможн)|"
+    + _REM + r"[^.!\n]{0,40}не\s+рассматрива|не\s+рассматрива\w*[^.!\n]{0,25}удал[её]н|"
+    r"(?:только|исключительно|строго)\s+(?:в\s+)?офис|без\s+удал[её]нк", re.I)
+# Выборки с отрицаниями: фраза ищется только в описании (search_field=description), иначе hh.ru находит «Не требуется»
+# в поле опыта, а не в тексте
 NEG_QUERIES = [("neg_exp", '"опыт не требуется"', ["96", "124", "165", "116"]),
-               ("neg_exp", '"без опыта работы"', ["96", "124"]),
+               ("neg_exp", '"без опыта"', ["96", "124", "165", "116"]),
+               ("neg_exp", '"опыт работы не обязателен"', ["96", "124", "165", "116"]),
                ("neg_remote", '"удаленная работа не предусмотрена"', ["96", "124", "165", "116"]),
-               ("neg_remote", '"только офис"', ["96", "124", "116"]),
-               ("neg_remote", '"удаленка не предусмотрена"', ["96", "124"])]
+               ("neg_remote", '"только офис"', ["96", "124", "165", "116"]),
+               ("neg_remote", '"удаленку не рассматриваем"', ["96", "124", "165", "116"])]
 FIELDS = ["direction", "grade", "experience_years_min", "work_format"]
 
 
@@ -139,6 +145,18 @@ def _search(cl: HhClient, params: list) -> list[dict]:
         return []
 
 
+def relabel() -> None:
+    """Пересчитать метки по локальному кэшу текстов (без запросов к hh.ru): номера и выборки те же."""
+    corpus = json.loads(CORPUS.read_text(encoding="utf-8"))
+    for it in corpus["items"]:
+        p = CACHE / "raw" / f"{it['id']}.json"
+        if p.exists():
+            v = json.loads(p.read_text(encoding="utf-8"))
+            it["labels"] = labels(v, it["bucket"])
+    CORPUS.write_text(json.dumps(corpus, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    print("метки пересчитаны:", len(corpus["items"]))
+
+
 def collect(per: int, extra: int) -> None:
     cl = client()
     picked: dict[str, str] = {}
@@ -154,7 +172,7 @@ def collect(per: int, extra: int) -> None:
                     n += 1
             print(f"{d}.{g}: {n}")
     for bucket, phrase, roles in NEG_QUERIES:
-        params = [("text", phrase)] + [("professional_role", r) for r in roles] + [
+        params = [("text", phrase), ("search_field", "description")] + [("professional_role", r) for r in roles] + [
             ("area", "113"), ("per_page", "30"), ("order_by", "publication_time")]
         n = 0
         for it in _search(cl, params):
@@ -225,7 +243,7 @@ def _pct(a: int, b: int) -> float | None:
 def measure(items: list[dict], raws: dict[str, dict], parse) -> dict:
     c, tot = Counter(), Counter()
     tp = fn = fp_conf = n_req = 0
-    neg = {"neg_exp": [0, 0], "neg_remote": [0, 0], "noexp_field": [0, 0], "onsite_only": [0, 0]}
+    neg = {k: [0, 0, 0] for k in ("neg_exp", "noexp_field", "neg_remote", "onsite_only")}  # верно, всего, явно
     mism = []
     for it in items:
         v = raws.get(it["id"])
@@ -280,18 +298,29 @@ def measure(items: list[dict], raws: dict[str, dict], parse) -> dict:
         n_req += len(req)
         fp_conf += len(req & ks)
         # отрицания
+        # отрицания: «верно» — разбор не требует опыта (0 или не указан) / не пишет «удалённо»; явный 0 и «офис» — отдельно
+        x = r.get("experience_years_min")
+        remote = r.get("work_format") == "remote" or "remote" in (r.get("work_formats") or [])
         if lb["neg_exp"]:
             neg["neg_exp"][1] += 1
-            neg["neg_exp"][0] += r.get("experience_years_min") in (0, 0.0)
+            neg["neg_exp"][0] += x in (0, 0.0, None)
+            neg["neg_exp"][2] += x in (0, 0.0)
+            if x not in (0, 0.0, None):
+                mism.append({"id": it["id"], "field": "neg_exp", "expected": 0, "actual": x})
         if lb["experience"] == "noExperience":
             neg["noexp_field"][1] += 1
-            neg["noexp_field"][0] += r.get("experience_years_min") in (0, 0.0, None)
+            neg["noexp_field"][0] += x in (0, 0.0, None)
+            neg["noexp_field"][2] += x in (0, 0.0)
         if lb["neg_remote"]:
             neg["neg_remote"][1] += 1
-            neg["neg_remote"][0] += r.get("work_format") == "office" and "remote" not in (r.get("work_formats") or [])
+            neg["neg_remote"][0] += not remote
+            neg["neg_remote"][2] += r.get("work_format") == "office"
+            if remote:
+                mism.append({"id": it["id"], "field": "neg_remote", "expected": "не remote", "actual": r.get("work_format")})
         if lb["work_formats"] == ["office"]:
             neg["onsite_only"][1] += 1
-            neg["onsite_only"][0] += r.get("work_format") != "remote"
+            neg["onsite_only"][0] += not remote
+            neg["onsite_only"][2] += r.get("work_format") == "office"
     n = tot["n"]
     return {
         "n": n,
@@ -306,7 +335,8 @@ def measure(items: list[dict], raws: dict[str, dict], parse) -> dict:
         "skills": {"vacancies_with_key_skills": tot["ks_items"], "key_skills_recall": _pct(tp, tp + fn),
                    "key_skills_found": tp, "key_skills_total": tp + fn,
                    "required_confirmed_by_key_skills": _pct(fp_conf, n_req), "required_total": n_req},
-        "negations": {k: {"correct": a, "n": b, "share": _pct(a, b)} for k, (a, b) in neg.items()},
+        "negations": {k: {"correct": a, "n": b, "share": _pct(a, b), "explicit": e, "explicit_share": _pct(e, b)}
+                      for k, (a, b, e) in neg.items()},
         "mismatches": mism[:60]}
 
 
@@ -336,14 +366,15 @@ def import_completeness(items: list[dict], raws: dict[str, dict]) -> dict:
         m = map_vacancy(db, v)
         n += 1
         c["category"] += m.category_id is not None
-        c["salary_from_hh"] += m.salary_from_hh
+        c["salary_from_hh"] += m.salary_source == "hh"
+        c["salary_partial"] += m.salary_source == "hh_partial"
         c["work_format"] += m.work_format != "any"
         c["city"] += bool(m.city)
         c["stack"] += bool(m.stack)
         c["conditions"] += bool(m.conditions)
         c["no_notes"] += not m.notes
-    return {"n": n, **{k: _pct(c[k], n) for k in ("category", "salary_from_hh", "work_format", "city", "stack",
-                                                    "conditions", "no_notes")}}
+    return {"n": n, **{k: _pct(c[k], n) for k in ("category", "salary_from_hh", "salary_partial", "work_format", "city",
+                                                    "stack", "conditions", "no_notes")}}
 
 
 def run(rev: str | None, refetch: bool) -> None:
@@ -360,7 +391,8 @@ def run(rev: str | None, refetch: bool) -> None:
                      "даются). Метки — структурированные поля hh.ru: роль → направление, слово грейда в названии → "
                      "грейд, experience → диапазон лет, work_format → формат, key_skills → теги справочника. "
                      "Опыт и формат: «согласовано» — значение парсера внутри поля hh.ru (доля от найденных); "
-                     "отрицания — текст с «опыт не требуется» → 0 лет, «удалёнка не предусмотрена / только офис» → офис.",
+                     "отрицания — текст с «опыт не требуется» → разбор не требует опыта, «удалёнка не предусмотрена / только офис» → "
+                     "не «удалённо» (явные 0 лет и «офис» — отдельно).",
            "parser": measure(items, raws, need_parser.parse_need), "import": import_completeness(items, raws),
            "baseline_note": "Я11 (fix/sup3): тот же замер на 50 вакансиях — reports_0910/sup3.md; здесь — корпус hh.ru."}
     if rev:
@@ -413,16 +445,20 @@ def render_md(r: dict) -> str:
               f"{sk['key_skills_total']} — {_s(sk['key_skills_recall'])} ({sk['vacancies_with_key_skills']} вакансий с key_skills).",
               f"- Обязательные навыки разбора, которые работодатель указал и в key_skills: {_s(sk['required_confirmed_by_key_skills'])} "
               f"из {sk['required_total']} (остальные — в тексте, но не в key_skills: это не обязательно ошибка).", "",
-              "## Отрицания", "", "| Случай | Верно |", "|---|---|",
-              f"| «опыт не требуется» / «без опыта» в тексте → опыт 0 | {ng['neg_exp']['correct']} из {ng['neg_exp']['n']} — {_s(ng['neg_exp']['share'])} |",
-              f"| experience = «нет опыта» → разбор не требует опыта (0 или не указан) | {ng['noexp_field']['correct']} из {ng['noexp_field']['n']} — {_s(ng['noexp_field']['share'])} |",
-              f"| «удалёнка не предусмотрена» / «только офис» → формат «офис» | {ng['neg_remote']['correct']} из {ng['neg_remote']['n']} — {_s(ng['neg_remote']['share'])} |",
-              f"| work_format = только «на месте» → разбор не пишет «удалённо» | {ng['onsite_only']['correct']} из {ng['onsite_only']['n']} — {_s(ng['onsite_only']['share'])} |"]
+              "## Отрицания", "",
+              "«Верно» — разбор не требует опыта (0 или не указан) / не пишет «удалённо»; «явно» — опыт 0 / формат «офис».", "",
+              "| Случай | Верно | Явно |", "|---|---|---|",
+              f"| «опыт не требуется» / «без опыта» в тексте | {ng['neg_exp']['correct']} из {ng['neg_exp']['n']} — {_s(ng['neg_exp']['share'])} | {_s(ng['neg_exp']['explicit_share'])} |",
+              f"| experience = «нет опыта» в hh.ru | {ng['noexp_field']['correct']} из {ng['noexp_field']['n']} — {_s(ng['noexp_field']['share'])} | {_s(ng['noexp_field']['explicit_share'])} |",
+              f"| «удалёнка не предусмотрена» / «только офис» в тексте | {ng['neg_remote']['correct']} из {ng['neg_remote']['n']} — {_s(ng['neg_remote']['share'])} | {_s(ng['neg_remote']['explicit_share'])} |",
+              f"| work_format = только «на месте» в hh.ru | {ng['onsite_only']['correct']} из {ng['onsite_only']['n']} — {_s(ng['onsite_only']['share'])} | {_s(ng['onsite_only']['explicit_share'])} |"]
     if r.get("import"):
         im = r["import"]
         lines += ["", "## Черновик импорта (текст + поля hh.ru)", "",
-                  f"На {im['n']} вакансиях: категория {_s(im['category'])}, вилка из hh.ru (рубли, месяц, ширина ≤ 1,5) "
-                  f"{_s(im['salary_from_hh'])}, формат {_s(im['work_format'])}, город {_s(im['city'])}, стек {_s(im['stack'])}, "
+                  f"На {im['n']} вакансиях: категория {_s(im['category'])}, вилка из hh.ru целиком (рубли, месяц, ширина ≤ 1,5) "
+                  f"{_s(im['salary_from_hh'])}, частично из hh.ru (только «от» или «до», либо шире 1,5) с пометкой «уточните» {_s(im.get('salary_partial'))} "
+                  "(в остальных зарплаты в hh.ru нет или она не в рублях за месяц — рыночный диапазон категории), "
+                  f"формат {_s(im['work_format'])}, город {_s(im['city'])}, стек {_s(im['stack'])}, "
                   f"строка «Условия с hh.ru» {_s(im['conditions'])}, без пометок «уточните» {_s(im['no_notes'])}."]
     if r.get("compare"):
         q = r["compare"]["parser"]
@@ -432,7 +468,8 @@ def render_md(r: dict) -> str:
             lines.append(f"| {t} | {_s(a[k]['share'])} | {_s(q['accuracy'][k]['share'])} |")
         for k, t in (("experience", "опыт (доля найденных)"), ("work_format", "формат (доля найденных)")):
             lines.append(f"| {t} | {_s(a[k]['share_of_found'])} ({a[k]['found']}) | {_s(q['accuracy'][k]['share_of_found'])} ({q['accuracy'][k]['found']}) |")
-        for k, t in (("neg_exp", "«опыт не требуется» → 0"), ("neg_remote", "«удалёнка не предусмотрена» → офис"),
+        for k, t in (("neg_exp", "«опыт не требуется» → не требует опыта"), ("noexp_field", "«нет опыта» в hh.ru → не требует опыта"),
+                     ("neg_remote", "«удалёнка не предусмотрена» → не «удалённо»"),
                      ("onsite_only", "только «на месте» → не «удалённо»")):
             lines.append(f"| {t} | {_s(ng[k]['share'])} ({ng[k]['n']}) | {_s(q['negations'][k]['share'])} ({q['negations'][k]['n']}) |")
         lines.append(f"| key_skills найдены в тексте | {_s(sk['key_skills_recall'])} | {_s(q['skills']['key_skills_recall'])} |")
@@ -444,14 +481,17 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
     c = sub.add_parser("collect")
-    c.add_argument("--per", type=int, default=9, help="вакансий на направление × грейд")
-    c.add_argument("--extra", type=int, default=6, help="вакансий на запрос с отрицанием")
+    c.add_argument("--per", type=int, default=8, help="вакансий на направление × грейд")
+    c.add_argument("--extra", type=int, default=7, help="вакансий на запрос с отрицанием")
+    sub.add_parser("relabel", help="пересчитать метки по локальному кэшу")
     r = sub.add_parser("run")
     r.add_argument("--rev", help="сравнить с need_parser.py этой ревизии (например fix/sup3)")
     r.add_argument("--refetch", action="store_true", help="дочитать отсутствующие тексты с hh.ru (нужен токен)")
     a = ap.parse_args()
     if a.cmd == "collect":
         collect(a.per, a.extra)
+    elif a.cmd == "relabel":
+        relabel()
     else:
         run(a.rev, a.refetch)
 
