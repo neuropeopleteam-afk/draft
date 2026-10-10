@@ -68,6 +68,8 @@ REDBUTTON = int(os.environ.get("LT_REDBUTTON", "2"))        # пользоват
 RESUME_USERS = int(os.environ.get("LT_RESUME", "1"))        # пользователей с загрузкой резюме
 # Подпись запросов в журнале nginx стенда: run_load.py nginx сверяет число запросов Locust с тем, что дошло до сервера
 UA = f"spectrek-load/{os.environ.get('LT_TAG', 'run')}"
+# 429 на страницах — limit_req nginx хоста (10 запросов/с с адреса): у генератора один адрес, это защита, не отказ
+NGINX_429 = "429 лимит nginx для одного адреса (страницы)"
 
 
 def _xlink() -> str:
@@ -151,9 +153,13 @@ class JuryUser(HttpUser):
                 if r.status_code in (200, 302, 303) and "fsp_x" in r.cookies.keys() | self.client.cookies.keys():
                     r.success()
                     self._xcookie = True
+                elif r.status_code == 429:
+                    r.failure(NGINX_429)
                 else:
                     r.failure(f"{r.status_code} (личная ссылка)")
         with self.client.get(f"{base}{path}", name=f"страница: {label} (HTML)", catch_response=True) as r:
+            if r.status_code == 429:
+                return r.failure(NGINX_429)
             if r.status_code != 200 or '<div id="root">' not in r.text:
                 return r.failure(f"{r.status_code} нет SPA")
             assets = re.findall(r'(?:src|href)="(/assets/[^"]+\.(?:js|css))"', r.text)
