@@ -69,12 +69,12 @@ locust -f tools/loadtest/locustfile.py --host https://fsp.neuropeople.pro --head
 <!-- limits:begin -->
 | Контейнер | Лимит сейчас, МиБ |
 |---|---:|
-| api (FastAPI) | 3072 (с 10.10 вечера; 08.10–10.10 — 1536) |
+| api (FastAPI) | 3072 |
 | db (PostgreSQL 16) | 320 |
 | web (nginx) | 32 |
 | keycloak (ФСП ID, демо, профиль `fsp-id`) | 576 |
-| **Весь стек без `fsp-id`** | **1888** |
-| **Весь стек с `fsp-id`** | **2464** |
+| **Весь стек без `fsp-id`** | **3424** |
+| **Весь стек с `fsp-id`** | **4000** |
 <!-- limits:end -->
 
 **Находка 07.10: OOM api при 640 МиБ.** В 13:18 МСК воркер uvicorn убит ядром по лимиту памяти: `memory.peak`
