@@ -29,7 +29,8 @@ from app.modules.catalog.dictionary import (
     find_stack_spans,
     find_unsupported_spans,
 )
-from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, STACK
+from app.modules.catalog import levels as grade_levels
+from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, GRADES_EXT, STACK
 from app.modules.llm.client import chat_json
 from app.modules.matching import bias as bias_filter
 
@@ -716,6 +717,11 @@ def normalize(req: dict, method: str) -> dict:
     dirs = tag_directions()
     d = req.get("direction") if req.get("direction") in DIRECTIONS else None
     g = req.get("grade") if req.get("grade") in GRADES else None
+    g_capped = None
+    if GRADES_EXT and g:  # Lead/Principal — только там, где банк направления их проверяет (catalog.levels)
+        g_top = grade_levels.cap(d, g)
+        if g_top != g:
+            g, g_capped = g_top, g
     seen: set[str] = set()
 
     def clean(items, default_w) -> list[dict]:
@@ -769,13 +775,15 @@ def normalize(req: dict, method: str) -> dict:
         "evidence": {k: v for k, v in evidence.items() if v},
         "review": review,
         "method": method,
-    }
+    } | ({"grade_capped_from": g_capped} if g_capped else {})
 
 
 LLM_SYSTEM = (
     "Ты помогаешь структурировать описание вакансии в ИТ. Верни только JSON без пояснений: "
     '{"direction": одно из ["backend","frontend","data_ml","qa","security"] или null, '
-    '"grade": одно из ["intern","junior","middle","senior"] или null (intern — стажёр, без опыта), '
+    '"grade": одно из [' + ",".join(f'"{g}"' for g in GRADES) + '] или null (intern — стажёр, без опыта'
+    + ('; lead — тимлид, техлид, архитектор; principal — principal или staff-инженер, главный архитектор' if GRADES_EXT
+       else '') + '), '
     '"stack_required": [{"tag": id, "weight": 0.1..1.0, "quote": "точный фрагмент текста"}], '
     '"stack_desired": [{"tag": id, "weight": 0.1..0.5, "quote": "точный фрагмент текста"}], '
     '"experience_years_min": число или null, "work_format": "office"|"hybrid"|"remote"|null, '

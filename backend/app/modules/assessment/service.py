@@ -25,6 +25,7 @@ from app.modules.assessment.models import (GradeHistory, SandboxTestStart, Surve
 from app.modules.auth.models import User
 from app.modules.assessment.rules import (GRADE_LEVEL, GradeOutcome, accept_lower_allowed, apply_result,
                                           check_can_start, retake_locks)
+from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.seed_data import GRADES, tag_title
 from app.modules.profiles.facts import refresh_rating
 from app.modules.profiles.models import CandidateFact, CandidateProfile
@@ -148,6 +149,12 @@ def start_session(db: Session, user_id: uuid.UUID, claimed_grade: str, engine_na
     sandbox = is_sandbox(profile)
     specialization = ensure_specialization(db, profile, survey.direction_id)
     confirm_src = None
+    if mode != "confirm" and not grade_levels.is_available(survey.direction_id, claimed_grade):
+        # Lead/Principal (флаг GRADES_EXT_ENABLED) — только там, где банк направления их проверяет (FTT.4)
+        raise api_error(422, "grade_unavailable",
+                        f"Уровень {GRADES.get(claimed_grade, claimed_grade)} в этом направлении тест пока не проверяет: "
+                        "в банке направления нет проверенных заданий этого уровня. Доступно: "
+                        + ", ".join(GRADES[g] for g in grade_levels.available_grades(survey.direction_id)) + ".")
     if mode == "express" and not sandbox:
         raise api_error(409, "express_sandbox_only",
                         "Экспресс-тест доступен только в демо-режиме жюри: категорию живым кандидатам присваивает полный тест")
@@ -662,6 +669,12 @@ def _write_t1_facts(db: Session, ts: TestSession, res, extra: dict | None = None
         ))
 
 
+def _grades_ext_status(direction: str | None) -> dict:
+    av = grade_levels.available_grades(direction)
+    return {"grades": list(av), "grades_titles": {g: GRADES[g] for g in av},
+            "grades_hidden": [g for g in GRADES if g not in av]}
+
+
 def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dict:
     from app.modules.assessment import provisional
     from app.modules.profiles.facts import grade_status
@@ -740,6 +753,9 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         "express_available": sandbox and get_engine().name.startswith("bank"),
         "express": {"min_items": st_.assessment_express_min_items, "max_items": st_.assessment_express_max_items,
                     "by_grade": {g: express_params(st_, g) for g in ("intern", "junior", "middle", "senior")}},
+        # Lead/Principal (флаг GRADES_EXT_ENABLED): уровни, которые тест проверяет в выбранном направлении (по банку);
+        # без флага ключей нет — экран выбора показывает прежние 4 уровня
+        **(_grades_ext_status(selected) if grade_levels.enabled() else {}),
         "active_session_id": str(active.id) if active else None,
         "active_grade": active.claimed_grade_id if active else None,
         "active_mode": _mode(active) if active else None,
