@@ -808,6 +808,14 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       {(r.second_opinions?.pending > 0 || r.second_opinions?.revised > 0) && <p className="mt-2 text-xs text-brand-ink/65" data-testid="second-opinions">{r.second_opinions.pending > 0 ? `Вторая оценка спорных ответов: ${r.second_opinions.pending} — выполняется в фоне, итог теста её не ждёт; если оценки разойдутся, ответ проверит эксперт. ` : ""}{r.second_opinions.revised > 0 ? `Пересмотрено второй моделью: ${r.second_opinions.revised}${r.second_opinions.disputed ? `, передано эксперту: ${r.second_opinions.disputed}` : ""}.` : ""}</p>}
       {/* Ф6 (В2): итог камеры — один раз, в блоке камеры ниже (в пометке достоверности не повторяется) */}
       {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={meta?.proctor_camera === false ? r.integrity : { ...r.integrity, camera: null }} /></div>}
+      {/* Я11 (С3-11): демо-режим жюри — что именно снизило достоверность (причины работодателя; вне демо-режима их нет, Р27) */}
+      {r.integrity_jury?.reasons?.length > 0 && (
+        <div className="mt-2 rounded-lg bg-[#F3F2FB] px-2.5 py-1.5 text-xs text-brand-night" data-testid="result-integrity-jury">
+          <p className="font-semibold">Что именно отмечено</p>
+          <ul className="mt-0.5 list-disc space-y-0.5 pl-4">{r.integrity_jury.reasons.map((t: string, i: number) => <li key={i}>{t}</li>)}</ul>
+          <p className="mt-0.5 text-brand-ink/70">{r.integrity_jury.note}</p>
+        </div>
+      )}
       <CameraReport sessionId={sessionId} />
       {r.accept_lower_available && r.accept_lower_grade && (
         <div className="card mt-4 border-brand/30 bg-brand-blush/20 text-sm" data-testid="accept-lower">

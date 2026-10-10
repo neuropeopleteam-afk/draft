@@ -125,6 +125,18 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: 
 
 const FORMAT_TITLES: Record<string, string> = { employment: "Работа", internship: "Стажировка", light_work: "Лёгкий труд (для 16–17 лет)" };
 
+/** Я11 (С3-6): подтверждение сразу после ответа POST — кому, что и когда; контакты — после согласия. */
+export const inviteSentText = (inv: any, cref: string) => {
+  const at = inv?.created_at ? new Date(inv.created_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : null;
+  const pos = inv?.position_title ? ` «${inv.position_title}»` : "";
+  const fork = inv?.salary_from && inv?.salary_to ? `, вилка ${salaryText(inv.salary_from, inv.salary_to, inv.salary_basis)}` : "";
+  return `Приглашение${pos} отправлено кандидату ${cref}${at ? ` в ${at}` : ""}${fork}. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`;
+};
+
+/** Я11 (С3-6): почему «Пригласить» неактивна — для подсказки у кнопки (title и текст рядом). */
+export const inviteBlockedText = (c: any) =>
+  `Приглашение этому кандидату уже отправлено. Следующее — с ${c?.invite_available_at ? dt(c.invite_available_at) : "окончания срока"}${c?.invitation_cooldown_days ? ` (не чаще раза в ${c.invitation_cooldown_days} дней)` : ""}.`;
+
 export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }: { cref: string; needId?: string | null; probeId?: string | null; market: Market; needSalary?: NeedSalary; onDone: (inv: any) => void }) {
   const candidate = useApi<any>(`/employer/candidates/${cref}`);
   const safety = candidate.data?.employment_safety;
@@ -142,13 +154,17 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
   const [to, setTo] = useState(() => defaultRange(market, needSalary)[1]);
   const [basis, setBasis] = useState<Basis>(() => basisOf(needSalary));
   const [err, setErr] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);  // Я11 (С3-6): «Отправляем…» сразу, повторное нажатие не шлёт второй POST
+  const inFlight = useRef(false);
   async function send() {
+    if (inFlight.current) return;
     const se = salaryError(from, to);
     if (se) { setErr(se); return; }
     setErr(null);
+    inFlight.current = true; setSending(true);
     try {
       onDone(await api<any>("/employer/invitations", { body: { candidate_ref: cref, need_id: needId ?? null, probe_id: probeId ?? null, position_title: title, offer_description: desc, contact_method: contact, salary_from: Number(from), salary_to: Number(to), employment_terms: { format, reduced_time: reduced, employer_acknowledged: ack }, salary_basis: basis } }));
-    } catch (e) { setErr(errText(e)); }
+    } catch (e) { setErr(errText(e)); } finally { inFlight.current = false; setSending(false); }
   }
   return (
     <div className="space-y-4">
@@ -165,7 +181,8 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       {safety?.minor && <Toggle checked={ack} onChange={setAck} label="Проверю документы и ограничения перед оформлением" />}
       <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. {rules ? `Одно приглашение кандидату — не чаще раза в ${daysText(rules.invitation_cooldown_days)}. ` : ""}До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
       <Alert>{err}</Alert>
-      <button className="btn-primary" disabled={candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>Отправить приглашение</button>
+      <button className="btn-primary" aria-busy={sending || undefined} disabled={sending || candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>{sending ? "Отправляем приглашение…" : "Отправить приглашение"}</button>
+      <p className="sr-only" role="status" aria-live="polite">{sending ? `Отправляем приглашение кандидату ${cref}` : ""}</p>
       {candidate.error && <Alert>{candidate.error}</Alert>}
     </div>
   );
