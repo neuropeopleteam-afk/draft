@@ -277,10 +277,15 @@ def test_relay_route(monkeypatch):
     assert r.url == "https://relay.example:18743/v1/listen?model=nova-3"
     assert r.headers["X-Relay-Host"] == "api.deepgram.com" and r.headers["X-Relay-Token"] == "rt" and r.headers["Authorization"] == "Token k"
     monkeypatch.delenv("INTERVIEW_RELAY_URL")
-    monkeypatch.setattr(relay, "get_settings", lambda: type("S", (), {"llm_relay_url": None, "llm_relay_token": None,
+    monkeypatch.setattr(relay, "get_settings", lambda: type("S", (), {"llm_relay_url": "https://relay.example:18743/api/v1", "llm_relay_token": "lt",
                                                                     "llm_relay_ca_file": None, "llm_relay_ca_pem_b64": None})())
     e.reset_interview_settings()
+    r2 = relay.route("api.anam.ai", "/v1/auth/session-token")  # общий LLM_RELAY_URL: хвост /api/v1 отрезается
+    assert r2.url == "https://relay.example:18743/v1/auth/session-token" and r2.headers["X-Relay-Token"] == "lt" and r2.verify is True
+    monkeypatch.setattr(relay, "get_settings", lambda: type("S", (), {"llm_relay_url": None, "llm_relay_token": None,
+                                                                    "llm_relay_ca_file": None, "llm_relay_ca_pem_b64": None})())
     assert relay.route("api.anam.ai", "/v1/auth/session-token").url == "https://api.anam.ai/v1/auth/session-token"
+    assert relay.relay_root("https://r:1/api/v1/") == "https://r:1" and relay.relay_root("https://r:1") == "https://r:1"
 
 
 def _fake_request(monkeypatch, handler):
@@ -330,6 +335,7 @@ def test_avatar_live(monkeypatch):
     assert t.session_token == "tok" and t.relay_only and t.persona_name == "Интервьюер" and t.max_seconds == 600
     pc = calls[0]["json"]["personaConfig"]
     assert pc["avatarId"] == "av-1" and pc["enableAudioPassthrough"] is True and pc["name"] == "Интервьюер" and "voiceId" not in pc
+    assert calls[0]["json"]["sessionOptions"]["showAIAvatarDisclosure"] is True
     assert calls[0]["headers"]["Authorization"] == "Bearer k"
     assert t.ice_servers[0] == {"urls": ["stun:1.2.3.4:3478"]}
     turn = t.ice_servers[1]

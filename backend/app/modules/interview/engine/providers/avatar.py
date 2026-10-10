@@ -48,10 +48,12 @@ def avatar_token(persona_name: str | None = None) -> AvatarToken:
     name = persona_name or s.interviewer_name
     if s.interview_stub or not s.anam_api_key or not s.anam_avatar_id:
         raise EngineError("avatar_unavailable", "Аватар не настроен — доступны каналы «голос» и «текст»")
+    # Режим передачи звука: Anam рисует только лицо; голос — наш синтез, поэтому voiceId здесь не нужен (голос персоны
+    # записан в самой персоне ANAM_PERSONA_ID на стороне поставщика). Выбор региона у организации недоступен — не шлём.
     body = {"personaConfig": {"name": name, "avatarId": s.anam_avatar_id, "avatarModel": "cara-4",
-                              "enableAudioPassthrough": True}}
-    if s.anam_voice_id:
-        body["personaConfig"]["voiceId"] = s.anam_voice_id
+                              "enableAudioPassthrough": True},
+            "sessionOptions": {"showAIAvatarDisclosure": True},  # честная плашка поставщика «это ИИ-аватар»
+            "clientLabel": "draft-interview"}
     try:
         resp = relay.request("POST", HOST, "/v1/auth/session-token",
                              headers={"Authorization": f"Bearer {s.anam_api_key}", "Content-Type": "application/json"},

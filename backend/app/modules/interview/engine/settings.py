@@ -27,8 +27,8 @@ class InterviewSettings(BaseSettings):
     deepgram_api_key: str | None = None
     deepgram_model: str = "nova-3"
     anam_api_key: str | None = None
-    anam_avatar_id: str | None = None  # стоковый аватар поставщика, создан 10.10.2026 (engine/DEPLOY.md)
-    anam_voice_id: str | None = None
+    anam_avatar_id: str | None = None  # стоковый образ поставщика (engine/DEPLOY.md)
+    anam_persona_id: str | None = None  # персона «Интервьюер», создана 10.10.2026 через API (для учёта; в сессии не нужна)
     anam_max_session_s: int = 600
 
     interview_turn_urls: str | None = None  # stun:/turn:/turns: через запятую, адреса по IP
