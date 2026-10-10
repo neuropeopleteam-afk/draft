@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { GUIDE_EVENT, guide, isJury, juryLogin, juryReset, personaOf, STEPS } from "../lib/jury";
+import { GUIDE_EVENT, guide, isJury, juryLogin, juryReset, personaOf, quick, STEPS, type GuideMode, type Persona } from "../lib/jury";
+import { QuickGuide, useQuickStep, useQuickSteps } from "./JuryQuick";  // Я9 «Проверка за 12 минут»
 import { api } from "../lib/api";
 import { errText } from "./ui";
 
@@ -82,9 +83,12 @@ export function JuryGuide() {
   const [sim, setSim] = useState<any>(null);  // результат «смоделировать нового кандидата» (И25)
   const [ff, setFf] = useState<string | null>(null);  // «перемотать время»: напоминания Н6
   const active = guide.on() || isJury(me?.email);
+  const [mode, setMode] = useState<GuideMode>(quick.mode());  // Я9: «12 минут» или справочник
+  const qSteps = useQuickSteps(), QUICK_LEN = qSteps.length;  // 8 или 9 (устная защита по флагу)
+  const [q, setQ] = useQuickStep(qSteps, mode, loc.pathname, me?.email);
   // «Показать проводник» с главной и «Скрыть» в другой вкладке — состояние берём из хранилища
   useEffect(() => {
-    const sync = () => setHidden(guide.hidden());
+    const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); setQ(quick.step()); };
     window.addEventListener(GUIDE_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => { window.removeEventListener(GUIDE_EVENT, sync); window.removeEventListener("storage", sync); };
@@ -109,13 +113,14 @@ export function JuryGuide() {
         className={slot === slots.sidebar
           ? "mb-3 w-full rounded-xl bg-brand-night px-3 py-2 text-left text-sm font-semibold text-white hover:bg-brand-plum"
           : "ml-auto shrink-0 whitespace-nowrap rounded-full bg-brand-night px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-plum"}>
-        {slot === slots.sidebar ? `Проводник жюри · шаг ${step + 1}/${STEPS.length}` : `Проводник ${step + 1}/${STEPS.length}`}
+        {mode === "quick" ? (slot === slots.sidebar ? `Проводник жюри · 12 минут · шаг ${q + 1}/${QUICK_LEN}` : `12 минут · ${q + 1}/${QUICK_LEN}`)
+          : slot === slots.sidebar ? `Проводник жюри · шаг ${step + 1}/${STEPS.length}` : `Проводник ${step + 1}/${STEPS.length}`}
       </button>, slot);
     return (
       <button ref={setBox} className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm"
         onClick={() => guide.show()} aria-label="Показать проводник для жюри">
-        <span className="sm:hidden">Проводник · {step + 1}/{STEPS.length}</span>
-        <span className="hidden sm:inline">Проводник жюри · шаг {step + 1}/{STEPS.length}</span>
+        <span className="sm:hidden">{mode === "quick" ? `12 минут · ${q + 1}/${QUICK_LEN}` : `Проводник · ${step + 1}/${STEPS.length}`}</span>
+        <span className="hidden sm:inline">{mode === "quick" ? `Проводник жюри · 12 минут · шаг ${q + 1}/${QUICK_LEN}` : `Проводник жюри · шаг ${step + 1}/${STEPS.length}`}</span>
       </button>
     );
   }
@@ -126,11 +131,15 @@ export function JuryGuide() {
   async function go(i: number) {
     const t = STEPS[i];
     setStep(i); guide.setStep(i); setMsg(null);
-    let to = t.path;
-    if (t.persona && personaOf(me?.email) !== t.persona) {
+    await open(t.path, t.persona);
+  }
+  /** Переход на экран шага; под другой персоной — сначала вход в один клик в свою копию демо. */
+  async function open(path: string, persona: Persona | null) {
+    let to = path;
+    if (persona && personaOf(me?.email) !== persona) {
       setBusy(true);
       // персона с включённым вторым фактором — сначала экран кода (/login/2fa), затем шаг
-      try { to = await juryLogin(t.persona, signIn, t.path); } catch (e) { setMsg(errText(e)); setBusy(false); return; }
+      try { to = await juryLogin(persona, signIn, path); } catch (e) { setMsg(errText(e)); setBusy(false); return; }
       setBusy(false);
     }
     navigate(to);
@@ -156,13 +165,24 @@ export function JuryGuide() {
     catch (e) { setMsg(errText(e)); } finally { setBusy(false); }
   }
 
+  const panel = "fixed inset-x-2 bottom-2 z-40 max-h-[min(38vh,24rem)] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-3.5 text-white shadow-2xl ring-1 ring-white/10 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-h-[min(36vh,22rem)] xl:max-h-[calc(100vh-6rem)] sm:w-[min(24rem,calc(100vw-2rem))] sm:p-4";
+  const header = (
+    <div className="flex items-center justify-between gap-2">
+      <ModeSwitch mode={mode} />
+      <button className="rounded px-2 py-1 text-sm text-white/75 hover:text-white" onClick={() => guide.hide()} aria-label="Скрыть проводник">Скрыть</button>
+    </div>
+  );
+  if (mode === "quick") return (
+    <aside ref={setBox} className={panel} aria-label="Проводник для экспертов жюри">
+      {header}
+      <QuickGuide q={q} setQ={setQ} busy={busy} msg={msg} setMsg={setMsg} open={open} onReset={reset} who={me ? whoAmI(me.email) : null} />
+    </aside>
+  );
   return (
-    <aside ref={setBox} className="fixed inset-x-2 bottom-2 z-40 max-h-[min(38vh,24rem)] overflow-y-auto overscroll-contain rounded-2xl bg-brand-night p-3.5 text-white shadow-2xl ring-1 ring-white/10 sm:inset-x-auto sm:bottom-4 sm:right-4 sm:max-h-[min(36vh,22rem)] xl:max-h-[calc(100vh-6rem)] sm:w-[min(24rem,calc(100vw-2rem))] sm:p-4"
+    <aside ref={setBox} className={panel}
       aria-label="Проводник для экспертов жюри">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>
-        <button className="rounded px-2 py-1 text-sm text-white/75 hover:text-white" onClick={() => guide.hide()} aria-label="Скрыть проводник">Скрыть</button>
-      </div>
+      {header}
+      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-brand-blush">Проводник жюри · шаг {step + 1} из {STEPS.length}</p>
       <div className="mt-2 flex gap-1" aria-hidden>
         {STEPS.map((_, i) => <span key={i} className={`h-1 flex-1 rounded-full ${i < step ? "bg-brand-soft" : i === step ? "bg-white" : "bg-white/20"}`} />)}
       </div>
@@ -206,4 +226,13 @@ export function JuryGuide() {
       </div>
     </aside>
   );
+}
+
+/** Я9: выбор режима в шапке проводника — «Проверка за 12 минут» или полный справочник по всем функциям. */
+function ModeSwitch({ mode }: { mode: GuideMode }) {
+  const b = (m: GuideMode, t: string) => (
+    <button type="button" aria-pressed={mode === m} onClick={() => quick.setMode(m)}
+      className={`rounded-md px-2.5 py-1 ${mode === m ? "bg-white text-brand-night" : "text-white/80 hover:text-white"}`}>{t}</button>
+  );
+  return <div className="flex rounded-lg bg-white/10 p-0.5 text-xs font-semibold" role="group" aria-label="Режим проводника">{b("quick", "Проверка за 12 минут")}{b("full", "Справочник")}</div>;
 }
