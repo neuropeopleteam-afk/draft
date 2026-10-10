@@ -149,3 +149,44 @@ def test_test_retest_doc_has_same_phrase():
     assert md == P.markdown(rep)
     v = retest_vs_truth(rep)
     assert v["lead"] in md and v["cost"] in md
+
+
+def test_criteria_every_proof_has_provenance_line():
+    """Я8 п. 5: у каждого доказательства /criteria — строка происхождения той же формы, что у чисел /validation."""
+    from pathlib import Path
+
+    from app.modules.validation import criteria
+    from app.modules.validation.provenance import KINDS, SNAPSHOT_TEXT, stamp
+
+    items = [it for c in criteria.build()["criteria"] for it in c["items"]]
+    assert len(items) >= 25
+    for it in items:
+        pv = it["proof"]["provenance"]
+        assert pv and pv["kind"] in KINDS and pv["kind_label"] == KINDS[pv["kind"]], it["id"]
+        assert pv["snapshot"] in SNAPSHOT_TEXT, it["id"]
+        if it["proof"]["kind"] == "metric":
+            assert pv == stamp(it["proof"]["src"]), it["id"]
+            assert pv["command"].startswith("make "), it["id"]
+    by_id = {it["id"]: it for it in items}
+    assert by_id["c5-2"]["proof"]["provenance"]["kind"] == "live"  # «красная кнопка» — по базе при запросе
+    assert by_id["c4-1"]["proof"]["provenance"]["kind"] == "tests"
+    # c2-4: ссылка на экспертов подписана «модельная панель (не люди)»
+    assert any("Модельная панель (не люди)" == g["label"] for g in by_id["c2-4"]["do"])
+    md = (Path(criteria.__file__).resolve().parents[4] / "docs" / "CRITERIA.md").read_text(encoding="utf-8")
+    rows = [ln for ln in md.splitlines() if ln.startswith("| ") and ln[2:3].isdigit()]
+    assert len(rows) == len(items) and all("Происхождение: " in ln for ln in rows)
+    src = (Path(criteria.__file__).resolve().parents[4] / "frontend" / "src" / "pages" / "Criteria.tsx").read_text(encoding="utf-8")
+    assert src.count("<ProvenanceLine p={p.provenance}") == 3
+
+
+def test_provenance_doc_matches_generator_and_exposure_k_stamp():
+    """docs/validation/PROVENANCE.md — из реестра расчётов; K Sympson — Hetter движка — со своей строкой (дата, банк)."""
+    from pathlib import Path
+
+    from app.modules.validation import provenance as pv
+
+    doc = Path(pv.__file__).resolve().parents[4] / "docs" / "validation" / "PROVENANCE.md"
+    assert doc.read_text(encoding="utf-8") == pv.markdown()
+    k = pv.stamp("exposure_k")
+    assert k["date"] and k["bank"] and k["snapshot"] in ("current", "historical")
+    assert pv.provenance({"bank": {}})["exposure_k"]["src"] == "exposure_k"
