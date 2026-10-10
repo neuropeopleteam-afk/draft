@@ -16,6 +16,7 @@ Opus 5.5 + GPT-6.1 Sol Pro + Gemini 3.1 Pro. Метрики — MAE, κw (ква
   run      — отправка запросов в OpenRouter (пол баланса, потолок на прогон; печатается только число остатка).
   skeptic  — запросы скептика для высоких и спорных первых оценок v3.
   report   — флаг выкл (ответы v2 Я2) против флага вкл (v3 + скептик + итог по правилам кода) → docs/llm/evidence_bench.json.
+  summary  — короткая сводка для /validation → backend/app/modules/validation/data/evidence_bench.json.
 
     python tools/llm/evidence_bench.py offline
     python tools/llm/evidence_bench.py build --out /tmp/evidence/v3_1.jsonl
@@ -516,6 +517,65 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
     return res
 
 
+SUMMARY = ROOT / "backend" / "app" / "modules" / "validation" / "data" / "evidence_bench.json"
+
+
+def _row(label: str, q: dict) -> dict:
+    return {"label": label, "mae": q["mae"]["value"], "mae_ci90": q["mae"]["ci90"], "kappa_w": q["kappa_w"]["value"],
+            "kappa_w_ci90": q["kappa_w"]["ci90"], "bias": q["bias"]["value"], "attacks_passed": q["attacks_passed"],
+            "attacks_n": q["attacks_n"], "order": q["order_strict"], "expert": q["expert_honest"]}
+
+
+def summary(second_share: float | None = None, second_cost: float | None = None) -> dict:
+    b = json.loads(OUT_BENCH.read_text(encoding="utf-8"))
+    o = json.loads(OUT_OFFLINE.read_text(encoding="utf-8"))
+    g = json.loads((ROOT / "docs" / "llm" / "evidence_v2_guard_diff.json").read_text(encoding="utf-8"))
+    n = b["n"]
+    if second_share is None:  # доля второй оценки (флаг выкл) на тех же 50 и её цена — прогон Я2 09.10
+        sec = RULLM / "openrouter_anthropic_claude_sonnet_5.5" / "g"
+        req = {json.loads(x)["req_id"] for x in open(sec / "v2_2.jsonl", encoding="utf-8")}
+        got = _read(sec / "v2_2_out.jsonl")
+        ids = [r for r in sample_ids() if r in req]
+        second_share = len(ids) / n
+        cs = [got[r].get("cost") or 0 for r in ids if r in got]
+        second_cost = sum(cs) / max(1, len(cs))
+    fs = o["full_sonnet"]
+    res = {
+        "title": "Доказательная оценка (GRADING_EVIDENCE): флаг выкл и вкл на одних и тех же ответах",
+        "date": b["date"], "code_sha": b["code_sha"], "world": "оценщик и эталон — модели, не люди",
+        "set": "набор оценщика Я2 (панель 06.10): малая выборка 50 ответов — 25 честных, 25 атак",
+        "grader": b["grader"], "skeptic": b["skeptic"], "reference": b["reference"],
+        "rows": [_row("Флаг выкл: промпт v2, вторая оценка спорных", b["off"]),
+                 *([_row("Флаг выкл, повтор того же прогона (шум)", b["off_repeat"])] if b.get("off_repeat") else []),
+                 _row("Флаг вкл: промпт v3, цитаты сверены кодом", b["on_first"]),
+                 _row("Флаг вкл: + скептик, итог по правилам кода", b["on"])],
+        "paired": b["paired"],
+        "skeptic_runs": {"calls": b["skeptic_calls"], "share": round(b["skeptic_calls"] / n, 3),
+                         "verdicts": b["verdicts"], "changes": b["changes"]},
+        "quotes": b["evidence"],
+        "cost_per_answer_usd": {
+            "off": round((b["cost_usd"]["v2"] + second_share * n * (second_cost or 0)) / n, 4),
+            "on": round((b["cost_usd"]["v3"] + b["cost_usd"]["skeptic"]) / n, 4),
+            "note": (f"флаг выкл: оценка + вторая оценка Fable у {round(100 * second_share)} % ответов; флаг вкл: "
+                     f"оценка + скептик Fable у {round(100 * b['skeptic_calls'] / n)} %")},
+        "latency_s": b["latency_s"],
+        "latency_note": "скептик работает в фоне (как вторая оценка) — кандидат его не ждёт",
+        "offline_full": {"n": fs["n"], "reference": fs["reference"], "mae_off": fs["off"]["mae"]["value"],
+                         "mae_on": fs["on"]["mae"]["value"], "kappa_w_off": fs["off"]["kappa_w"]["value"],
+                         "kappa_w_on": fs["on"]["kappa_w"]["value"], "dropped": fs["quotes"]["dropped"],
+                         "quotes": fs["quotes"]["quotes"], "answers_changed": fs["quotes"]["answers_changed"],
+                         "note": "те же ответы модели (v2), флаг вкл — только строгая сверка кодом, без скептика"},
+        "default_path_fix": {"replies": g["replies"], "quotes": g["quotes_checked"], "changed": g["answers_changed"],
+                             "text": ("Исправлено в пути по умолчанию: цитата с другим «не», чем в ответе, не "
+                                      "подтверждается (находка судьи 10.10)")},
+        "decision": ("Флаг выключен по умолчанию. На 50 ответах флаг вкл в пределах погрешности не хуже, но и не "
+                     "лучше: MAE +0,008 (парный ДИ 90 % от 0 до 0,024; различаются 2 ответа из 25), κw как у повтора "
+                     "прогона без изменений, атаки 0 из 25 в обоих. Включение — решение штаба."),
+    }
+    SUMMARY.write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    return res
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -537,6 +597,7 @@ def main() -> None:
     p.add_argument("--sk-req", default=str(WDIR / "sk_1.jsonl"))
     p.add_argument("--sk-out", default=str(WDIR / "sk_1_out.jsonl"))
     p.add_argument("--skeptic-label", default="Claude Fable 5.1")
+    sub.add_parser("summary")
     a = ap.parse_args()
     if a.cmd == "offline":
         show_offline(offline())
@@ -546,6 +607,8 @@ def main() -> None:
         run(Path(a.req), Path(a.out), a.model, a.func, a.cap_usd, a.floor_usd)
     elif a.cmd == "skeptic":
         skeptic(Path(a.res), Path(a.out))
+    elif a.cmd == "summary":
+        print(json.dumps(summary(), ensure_ascii=False, indent=1)[:2500])
     elif a.cmd == "report":
         print(json.dumps(report(Path(a.v3), Path(a.sk_req), Path(a.sk_out), skeptic_label=a.skeptic_label),
                          ensure_ascii=False, indent=1)[:3000])
