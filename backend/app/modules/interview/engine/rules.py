@@ -60,6 +60,9 @@ def rules_turn(spec: SessionSpec, transcript: Transcript, kind: str, k: int | No
     return prefix + q
 
 
+VAGUE = ("в целом главное", "наверное", "подробно не скажу", "как то", "какой то", "обычно помогает", "так принято")
+
+
 def rules_levels(spec: SessionSpec, transcript: Transcript) -> dict:
     """Сырая оценка в формате аналитика: уровень по длине ответа и пересечению значимых слов с письменным ответом."""
     answers = {u.n: u.text for u in transcript.items if u.who == "candidate" and u.n}
@@ -73,11 +76,16 @@ def rules_levels(spec: SessionSpec, transcript: Transcript) -> dict:
         if spec.mode == "defense":
             t = task_by_id(spec, item.task_id)
             share = overlap(text, t.answer if t else "")
+            low = normalize(text)
             if length < 40:
                 level, why = "no_data", "Ответа нет или он слишком короткий."
-            elif length < 160 and any(w in normalize(text) for w in ("не помню", "не знаю", "затрудняюсь", "не писал", "не мой")):
+            elif length < 200 and any(w in low for w in ("не помню", "не знаю", "затрудняюсь", "не писал", "не мой")):
                 level, why = "discrepancy", "Собеседник говорит, что не помнит или не знает содержание собственного ответа."
-            elif length >= 80 and share >= 0.15:
+            elif share >= 0.6 and length < 200:
+                level, why = "partial", f"Почти дословный пересказ письменного ответа без объяснения (пересечение {round(share * 100)} %)."
+            elif any(w in low for w in VAGUE):
+                level, why = "partial", "Общие слова без причин и деталей."
+            elif length >= 120 and share >= 0.2:
                 level, why = "confirmed", f"Объяснение развёрнутое ({length} знаков), пересечение значимых слов с письменным ответом {round(share * 100)} %."
             else:
                 level, why = "partial", f"Объяснение короткое или мало связано с письменным ответом (пересечение {round(share * 100)} %)."
