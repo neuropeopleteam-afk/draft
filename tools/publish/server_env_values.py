@@ -11,14 +11,14 @@
 VACANCY_ID в имени длиной от 6 символов; адреса (http/https), `*_FILE`, `*_URL`, `*PUBLIC_KEY`, `*_PORT` пропускаются.
 К каждому значению добавляются варианты кодирования: URL, JSON, base64 пары `demo:<значение>` (заголовок Basic).
 
-Шаг в чек-листе публикации (в памяти, без вывода; команды — в reports_0910/pubrepo_decisions.md):
+Шаг в чек-листе публикации (в памяти, без вывода; <…> — подставить по месту):
 
     umask 077; VALS=$(mktemp -p /dev/shm)
-    python3 reports_0910/pubrepo_tools/extract_secret_values.py "$VALS"          # значения из .secrets и файлов передачи
-    ssh <сервер, только чтение> 'cd /opt/spectrek_fsp && for f in secrets/*.env app/.env secrets/*.pw; do echo "##FILE $f"; cat "$f"; done' \\
+    <сборщик значений из локальных файлов секретов> "$VALS"                   # то, что лежит вне репозитория
+    ssh <сервер, только чтение> 'cd <каталог развёртывания> && for f in secrets/*.env app/.env secrets/*.pw; do echo "##FILE $f"; cat "$f"; done' \\
       | python3 tools/publish/server_env_values.py >> "$VALS"
     ops/publish_repo.sh --remote <адрес> --branch main --values "$VALS"          # dry-run, затем --execute
-    shred -u "$VALS"
+    shred -u "$VALS" "$(dirname "$VALS")/.ips"
 Код выхода: 0 — значения выданы, 2 — вывод в терминал или пустой вход.
 """
 from __future__ import annotations
