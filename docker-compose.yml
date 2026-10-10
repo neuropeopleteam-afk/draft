@@ -79,6 +79,11 @@ services:
       # chmod 600). Нет файла — эфемерный «тестовый ключ» процесса, страница проверки /verify/<id> так и пишет.
       - path: ${PASSPORT_ENV_FILE:-./secrets/passport.env}
         required: false
+      # hh.ru (docs/INTEGRATIONS.md): HH_APP_TOKEN — токен приложения работодателя, HH_USER_AGENT. client id/secret не
+      # нужны и не хранятся (повторный запрос токена отзывает действующий). Функции включает HH_ENABLED=true в .env;
+      # нет файла или флага — импорт с hh.ru и «Рынок по hh.ru» скрыты, остальное работает.
+      - path: ${HH_ENV_FILE:-./secrets/hh.env}
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-fsp}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-fsp}
       # Пусто — кнопка «Войти через ФСП ID» скрыта. Прод: https://fsp.neuropeople.pro/auth/realms/fsp
