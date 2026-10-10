@@ -139,7 +139,7 @@ class Verdict(BaseModel):
 class AudioOut(BaseModel):
     data: bytes
     mime: str
-    format: Literal["mp3", "pcm_24000"]
+    format: Literal["mp3", "pcm_16000"]
     sample_rate: int | None
     chars: int
     cost_usd: float
