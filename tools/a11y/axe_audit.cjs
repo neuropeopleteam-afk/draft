@@ -54,7 +54,14 @@ async function prepare() {
   const ver = detail.selections?.[0]?.version ?? detail.versions?.[0]?.version ?? 1;
   const sel = await jreq(`/employer/needs/${need.id}/selections/${ver}`, tokens.employer).catch(() => null);
   const ref = findRef(sel) ?? "C-0001";
-  return { sid, tokens, needId: need.id, ref };
+  // Я10: потребность вне каталога (DevOps) — блок «Проверено тестом / НЕ проверено» и окно вопроса зондом
+  let offcatId = null;
+  if (!ONLY.length || ONLY.some((x) => x.startsWith("selection_offcat"))) {
+    const text = "DevOps-инженер middle: Kubernetes, Terraform, Linux, Docker, CI/CD, мониторинг Prometheus. Удалённо, 200–260 тыс.";
+    const { method: _a, bias: _b, suggested_text: _c, llm: _d, salary_net: _e, ...req } = await jreq("/employer/needs/parse", tokens.employer, { body: { text } });
+    offcatId = (await jreq("/employer/needs", tokens.employer, { body: { text, requirements: req } })).id;
+  }
+  return { sid, tokens, needId: need.id, ref, offcatId };
 }
 
 // Экраны: persona = чей токен (null — без входа), path или go(page) — как открыть, ready — что дождаться.
@@ -97,6 +104,14 @@ function screens(ctx) {
     { id: "cand_mydata", persona: "candidate", path: "/candidate/mydata" },
     { id: "cand_attempts", persona: "candidate", path: "/candidate/attempts" },
     { id: "emp_hiring", persona: "employer", path: "/employer/invitations" },  // с блоком «Найм» (Н8)
+    // Я10: компактная подборка — «Показать ещё», потребность вне каталога и окно вопроса зондом на непроверенный навык
+    { id: "selection_more", persona: "employer", path: `/employer/needs/${ctx.needId}`,
+      go: async (page) => { await page.getByRole("button", { name: /^Показать (ещё \d+|всех \(\d+\))$/ }).first().click({ timeout: 15000 }).catch(() => null); } },
+    ...(ctx.offcatId ? [
+      { id: "selection_offcat", persona: "employer", path: `/employer/needs/${ctx.offcatId}` },
+      { id: "selection_offcat_ask", persona: "employer", path: `/employer/needs/${ctx.offcatId}`,
+        go: async (page) => { await page.getByRole("button", { name: /^Задать вопрос зондом/ }).click({ timeout: 15000 }); await page.waitForSelector('[role="dialog"]', { timeout: 8000 }); } },
+    ] : []),
   ].filter((s) => !ONLY.length || ONLY.includes(s.id));
 }
 

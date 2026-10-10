@@ -24,6 +24,7 @@ from app.modules.invitations.models import Invitation, Probe
 from app.modules.invitations.service import cooldown_until, profile_by_ref
 from app.modules.matching import core_skill, ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
+from app.core.origin import NO_FSP, NO_FSP_SHORT
 from app.modules.profiles.facts import (GRADE_CUTS, card, fmt_count, load_bundles, skill_check_text, skill_confirmed,
                                        skill_evidence_text)
 from app.modules.profiles.models import Company
@@ -239,7 +240,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                      "quote": ((req.get("evidence") or {}).get("work_format") or {}).get("quote")})
     rows += [
         {"key": "fsp", "group": "Паспорт ФСП", "title": "Достижения ФСП",
-         "hint": "Только подтверждённые реестром (T2); нет истории — нейтрально, без штрафа"},
+         "hint": "Только подтверждённые реестром (T2); нет истории — " + NO_FSP_SHORT},
         {"key": "probe", "group": "Зонды", "title": "Зонды"},
         {"key": "market", "group": "Рынок", "title": "Ожидания по рынку категории",
          "requirement": _salary_req(req.get("salary_from"), req.get("salary_to")),
@@ -361,7 +362,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         else:
             extra = fsp.get("unverified_count") or 0
             cells["fsp"] = {"level": "none", "status": "neutral",
-                            "text": "Истории ФСП нет — нейтрально, без штрафа"
+                            "text": NO_FSP
                                     + (f"; заявлено без подтверждения: {extra} — не учитывается" if extra else "")}
         if b.probes_t1:
             best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))

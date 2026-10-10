@@ -89,8 +89,8 @@ def _vac_out(db: Session, v: Vacancy, *, company: Company | None = None, with_tr
            "salary_from": v.salary_from, "salary_to": v.salary_to, "work_format": v.work_format, "city": v.city,
            "status": v.status, "published_at": v.published_at.isoformat() if v.published_at else None,
            "updated_at": v.updated_at.isoformat(), "is_demo": v.is_demo, **basis_out(v.salary_basis),
-           # И23: импорт из ATS — бейдж «из «Потока»», ссылка, правилась ли после импорта
-           "source": v.source, "source_title": ats_import.SOURCE_TITLE if v.source == ats_import.SOURCE else None,
+           # И23: импорт из ATS — бейдж «из «Потока»», ссылка, правилась ли после импорта; Я12: «с hh.ru» (source = 'hh')
+           "source": v.source, "source_title": {ats_import.SOURCE: ats_import.SOURCE_TITLE, "hh": "hh.ru"}.get(v.source or ""),
            "external_id": v.external_id, "external_url": v.external_url,
            "imported_at": v.imported_at.isoformat() if v.imported_at else None,
            "edited_after_import": ats_import.edited_after_import(v) if v.source else None,

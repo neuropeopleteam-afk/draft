@@ -13,6 +13,7 @@ import re
 import jwt
 
 from app.core.fmt import quoted, ru_num
+from app.core.origin import NO_FSP
 from app.integrations.settings import get_isettings
 
 PDF_LINK_DAYS = 180
@@ -165,7 +166,7 @@ def sections(d: dict) -> list[tuple[str, list[str]]]:
     if f["hidden"]:
         t2 = ["Кандидат скрыл блок ФСП"]
     elif not f["linked"]:
-        t2 = ["Паспорт ФСП не привязан — без истории ФСП (нейтрально, без штрафа)"]
+        t2 = ["Паспорт ФСП не привязан. " + NO_FSP]
     else:
         t2 = [f"Паспорт ФСП привязан, источник: {f['source']}"] + [f"ФСП: {a}" for a in f["achievements"][:5]]
         if not f["achievements"]:

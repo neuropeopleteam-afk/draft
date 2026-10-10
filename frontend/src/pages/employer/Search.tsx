@@ -6,10 +6,11 @@ import { StatusCounts } from "../../components/GradeStatus";
 import { Alert, Empty, Field, GRADES, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi } from "../../components/ui";
 import { apiDownload } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
-import { InviteForm, ProbeForm, probeSentText } from "./Contact";
+import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { useTags } from "./Needs";
 import { PassportEmployerBadge } from "../../passport/Share";
 import { EmployerAttempts } from "../../components/AttemptsCompare";
+import { EmployerEvidence } from "../../components/OpenEvidence";  // Я13: цитаты из ответа
 
 const PAGE = 20;
 
@@ -141,16 +142,18 @@ export function CandidateDetail() {
       )}
       <CandidateCard c={c} score={c.match?.score} reasons={c.match?.reasons} must={c.match?.must} core={c.match?.core}
         actions={
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <button className="btn-ghost" onClick={() => setModal("probe")}>Отправить зонд</button>
-            <button className="btn-primary" disabled={!c.can_invite} onClick={() => setModal("invite")}>Пригласить</button>
+            <button className="btn-primary" disabled={!c.can_invite} title={c.can_invite ? undefined : inviteBlockedText(c)} aria-describedby={c.can_invite ? undefined : "invite-why"} onClick={() => setModal("invite")}>Пригласить</button>
+            {/* Я11 (С3-6): почему «Пригласить» неактивна — рядом с кнопкой, а не только ниже по странице */}
+            {!c.can_invite && <p id="invite-why" className="basis-full text-xs text-brand-ink/65">{inviteBlockedText(c)}</p>}
           </div>
         } />
       {/* Ф6: итог зонда/приглашения — сразу под кнопками, где был клик */}
       {msg && <Alert kind="ok">{msg}</Alert>}
       <PassportEmployerBadge refId={c.ref} />
       <EmployerAttempts refId={c.ref} direction={c.direction ?? direction} />
-      {!c.can_invite && <Alert kind="info">Приглашение этому кандидату уже отправлялось. Следующее — с {dt(c.invite_available_at)} (не чаще раза в {c.invitation_cooldown_days} дней).</Alert>}
+      <EmployerEvidence refId={c.ref} direction={c.direction ?? direction} />
       {(c.my_invitations.length > 0 || c.my_probes.length > 0) && (
         <section className="card text-sm">
           <h2 className="font-bold text-brand-night">Ваши взаимодействия</h2>
@@ -164,7 +167,7 @@ export function CandidateDetail() {
         <ProbeForm refs={[c.ref]} needId={need ?? undefined} market={c.market_range} needSalary={needSalary} onDone={(r) => { setModal(""); setMsg(probeSentText(r)); void reload(); }} />
       </Modal>
       <Modal open={modal === "invite"} onClose={() => setModal("")} title="Приглашение-оффер">
-        <InviteForm cref={c.ref} needId={need} market={c.market_range} needSalary={needSalary} onDone={() => { setModal(""); setMsg("Приглашение отправлено. Кандидат получит письмо; контакты откроются после принятия."); void reload(); }} />
+        <InviteForm cref={c.ref} needId={need} market={c.market_range} needSalary={needSalary} onDone={(inv) => { setModal(""); setMsg(inviteSentText(inv, c.ref)); void reload(); }} />
       </Modal>
     </div>
   );
