@@ -32,11 +32,13 @@ DEFAULT_PRIVACY = {
     "show_city": True, "show_experience": True, "show_work_format": True, "show_roles": True,
     "show_stack": True, "show_soft_skills": True, "show_fsp": True,
     "show_attempts": True,  # И26: сравнение двух попыток теста в карточке у работодателя
+    "show_evidence": True,  # Я13: цитаты из развёрнутых ответов (доказательства оценки) в карточке у работодателя
 }
 PRIVACY_TITLES = {
     "show_city": "Город", "show_experience": "Стаж", "show_work_format": "Формат работы", "show_roles": "Роли",
     "show_stack": "Заявленный стек", "show_soft_skills": "Софт-скиллы из резюме", "show_fsp": "Достижения ФСП",
     "show_attempts": "Сравнение попыток теста",
+    "show_evidence": "Цитаты из ответов теста (доказательства оценки)",
 }
 WORK_FORMAT_TITLES = {"office": "Офис", "hybrid": "Гибрид", "remote": "Удалённо", "any": "Любой"}
 DISCIPLINE_TITLES = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
