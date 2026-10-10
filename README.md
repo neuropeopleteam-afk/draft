@@ -20,7 +20,7 @@
 | Подбор (модель, не люди) | P@5 **0,764** [0,728; 0,797], nDCG@10 **0,561** [0,534; 0,587], MRR 0,878; синтетический мир со скрытой истиной, 200 потребностей × 2000 кандидатов, seed 20261006, алгоритм `match-v1.1` | `make bench`, `docs/validation/MATCHING_BENCH.md`, `docs/validation/matching_bench.json` |
 | Отчёт страницы `/validation` (симуляция теста, повтор, утечка) | посчитан 06.10; **на банке из 128 семейств, а в банке сейчас 165: пересчёт `make validate` (≈ 10 мин на 8 ядрах) даст другие числа симуляции, повтора и утечки**; константы показа `exposure_k.json` — 06.10 на 128 семействах | `make validate`, `backend/app/modules/validation/data/report.json` |
 | Сквозные сценарии (Playwright) | 35 сценариев в 16 файлах (число в коде, не результат прогона) | `e2e/tests`, `make e2e` |
-| Лимиты памяти контейнеров | db 320 МиБ, api 1536 МиБ, web 32 МиБ, keycloak 576 МиБ; профиль llm-local — 8 ГиБ | `docker-compose.yml`, разбор — `docs/LOAD_TEST.md` |
+| Лимиты памяти контейнеров | db 320 МиБ, api 3072 МиБ (с 10.10), web 32 МиБ, keycloak 576 МиБ; профиль llm-local — 8 ГиБ | `docker-compose.yml`, разбор — `docs/LOAD_TEST.md` |
 <!-- numbers:end -->
 
 Один набор чисел для README, [docs/testing.md](docs/testing.md) и [docs/LOAD_TEST.md](docs/LOAD_TEST.md): его считает
@@ -113,7 +113,7 @@ make validate     # пересчёт метрик страницы /validation (
 * Интеграции демонстрационные: «ФСП ID» — демо-Keycloak, ATS (Talantix, «Поток», Хантфлоу) — контрактные заглушки внутри API, почта в
   режиме разработки; проверка работодателя по ЕГРЮЛ обращается к открытому сервису ФНС (`EGRUL_DISABLED=true` отключает).
 * Часть расчётов использует материалы вне репозитория (экспертные разметки, исходный репозиторий банка заданий): `tools/must_have/evaluate.py`,
-  `tools/realdata/audit_expert_ranking.py`, `tools/sync_bank.py` на чистом клоне не запустятся. Воспроизводимы `make bench`, `make validate`,
+  `tools/core_skill/evaluate.py`, `tools/realdata/audit_expert_ranking.py`, `tools/sync_bank.py` на чистом клоне не запустятся. Воспроизводимы `make bench`, `make validate`,
   `make test`, `make test-bank` и сквозные сценарии.
 * Лицензии зависимостей и вендорных файлов — [THIRD_PARTY.md](THIRD_PARTY.md); сам код — MIT, [LICENSE](LICENSE).
 
