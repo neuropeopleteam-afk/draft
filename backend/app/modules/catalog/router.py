@@ -6,6 +6,7 @@ from app.core.db import get_db
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.models import Category, Direction, Grade, StackTag
 from app.modules.catalog.schemas import CatalogOut, StackTagOut
+from app.modules.catalog.seed_data import GRADE_ORDER
 
 router = APIRouter(prefix="/api/catalog", tags=["catalog"])
 
@@ -14,8 +15,10 @@ router = APIRouter(prefix="/api/catalog", tags=["catalog"])
 def get_catalog(db: Session = Depends(get_db)) -> CatalogOut:
     return CatalogOut(
         directions=db.scalars(select(Direction).order_by(Direction.sort_order)).all(),
-        grades=db.scalars(select(Grade).order_by(Grade.level)).all(),
-        categories=db.scalars(select(Category).order_by(Category.id)).all(),
+        # уровни платформы (seed_data.GRADE_ORDER): Lead/Principal — только с флагом GRADES_EXT_ENABLED, даже если
+        # строки справочника остались в БД после выключения флага
+        grades=db.scalars(select(Grade).where(Grade.id.in_(GRADE_ORDER)).order_by(Grade.level)).all(),
+        categories=db.scalars(select(Category).where(Category.grade_id.in_(GRADE_ORDER)).order_by(Category.id)).all(),
         stack_tags=db.scalars(select(StackTag).order_by(StackTag.direction_id, StackTag.sort_order)).all(),
         fsp_disciplines=FSP_DISCIPLINES,
     )
