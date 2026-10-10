@@ -33,7 +33,7 @@ cd backend
 PA=~/.local/pipaudit-venv/bin/pip-audit
 $PA --progress-spinner off -r requirements.txt -r requirements-dev.txt --no-deps --disable-pip   # пины
 $PA --progress-spinner off -r assessment_bank/BANK_requirements.txt --no-deps --disable-pip       # пины банка
-$PA --progress-spinner off --path /home/user/workspace/spectrek/.venv/lib/python3.12/site-packages # окружение
+$PA --progress-spinner off --path <каталог рабочего места>/.venv/lib/python3.12/site-packages # окружение
 ```
 
 | Проверка | Пакетов | Уязвимостей | Детали |
