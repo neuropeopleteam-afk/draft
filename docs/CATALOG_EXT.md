@@ -41,7 +41,8 @@
   Jetpack Compose, SwiftUI, Flutter, React Native, BPMN, UML, user story…) распознаются; вакансии «DevOps-инженер», «SRE»,
   «Data Engineer / инженер данных», «Android/iOS-разработчик», «системный / бизнес-аналитик» получают своё направление
   вместо «ближайшей категории» с пометкой о частичном соответствии. «Аналитик данных» и «продуктовый аналитик» остаются
-  в Data/ML. «React Native» не засчитывается как React.
+  в Data/ML. «React Native» не засчитывается как React. Слово «SPA» засчитывается Frontend только отдельным словом
+  (без флага — как подстрока, поэтому «Data Engineer… Spark» уходил во Frontend).
 - **Демо.** `python -m app.modules.demo.seed` добавляет модельных кандидатов новых направлений (по 20 на направление:
   4 стажёра, 6 Junior, 6 Middle, 4 Senior; номера 501–580) и по одной демо-потребности — с подписью
   «модель, не люди». Без флага ничего не добавляется.
@@ -51,15 +52,17 @@
 
 - `backend/tests/test_catalog_ext.py` — без флага всё как прежде; флаг без готового банка — направления скрыты; правило
   готовности; 9 направлений и 36 категорий; разбор вакансий новых направлений; опрос в новом направлении.
-- Повтор пути по новым направлениям: `cd backend && python -m app.modules.validation.path_retest --directions
-  devops,data_eng,mobile,analyst` → `backend/app/modules/validation/data/path_retest_ext.json`,
+- Повтор пути по новым направлениям: `make path-retest-ext DIRS=devops,mobile` (то же — `cd backend &&
+  CATALOG_EXT_ENABLED=1 python -m app.modules.validation.path_retest --directions devops,mobile`) → `backend/app/modules/validation/data/path_retest_ext.json`,
   `docs/validation/TEST_RETEST_EXT.md` (основной отчёт повтора не меняется).
 - Калибровка новых семейств: до прогона панели — априорная трудность (`prior_difficulty`, «априорная трудность»
   в отчётах банка); после прогона — по `bank/calibration/README.md`.
 
 ## Включение на стенде
 
-1. Банк новых направлений синхронизирован (`python3 tools/sync_bank.py`), в `BANK_SYNC.json` есть `directions_verified`.
+1. Банк новых направлений синхронизирован (`python3 tools/sync_bank.py`; валидатор банка можно прогнать на сервере
+   проверок и передать готовый отчёт: `--validation-report <validation_report.json>`), в `BANK_SYNC.json` есть
+   `directions_verified`.
 2. Миграции применены (`alembic upgrade head` — `ce01` идемпотентна).
 3. `CATALOG_EXT_ENABLED=1` в `.env`, перезапуск api.
 4. По желанию — модельные кандидаты: `python -m app.modules.demo.seed`.
