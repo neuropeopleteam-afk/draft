@@ -27,9 +27,11 @@ def test_every_source_has_kind_date_commit_bank_command():
         if p["bank"]:
             assert p["bank_current"] is (p["bank"] == m["content_hash"]), src
             assert p["snapshot"] == ("current" if p["bank_current"] else "historical"), src
-    # отчёт make validate подписи не пишет: коммит честно «не записан», банк — из отчёта, дата — отчёта
+    # отчёт make validate: с 10.10 — подпись (коммит, дата), раньше подписи не было — коммит честно «не записан»
     r, rep = PV.stamp("report"), _json("report")
-    assert r["commit"] is None and r["bank"] == rep["bank"]["content_hash"] and r["date"] == rep["generated_at"]
+    sig = rep.get("signature") or {}
+    assert r["commit"] == (sig.get("commit") or None) and r["bank"] == rep["bank"]["content_hash"]
+    assert r["date"] == (sig.get("generated_at") or rep["generated_at"])
     assert r["bank_families"] == rep["bank"]["n_families"]
     assert PV.stamp("demo")["kind"] == "rules"  # демо-500: метки правилами, не синтетика со скрытой истиной
     assert PV.stamp("grader")["kind"] == "model"  # оценщик сверяется с моделью-эталоном, не с людьми
@@ -89,7 +91,9 @@ def test_retest_vs_truth_from_saved_json():
 
 def test_routes_expose_provenance(client):
     d = client.get("/api/validation/provenance").json()
-    assert [s["src"] for s in d["sources"]] == list(PV.SOURCES)
+    # настройка движка (K Sympson — Hetter) — отдельно от чисел страницы и не входит в one_snapshot
+    assert [s["src"] for s in d["sources"]] == [k for k, v in PV.SOURCES.items() if v.get("role") != "config"]
+    assert [s["src"] for s in d["config"]] == ["exposure_k"] and d["config"][0]["note"]
     assert d["bank_now"]["content_hash"] == bank_manifest()["content_hash"] and d["code_commit"]
     hist = [s["src"] for s in d["sources"] if s["snapshot"] == "historical"]
     assert d["one_snapshot"] is (not hist and all(s["snapshot"] in ("current", "no_bank") for s in d["sources"]))
