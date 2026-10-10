@@ -57,10 +57,10 @@ export function Countdown({ until, onEnd, endedText }: { until: string; onEnd?: 
 export function CodeBlock({ code, numbered }: { code: string; numbered?: boolean }) {
   const lines = code.replace(/\n$/, "").split("\n");
   return (
-    <pre className="mt-3 overflow-x-auto rounded-xl bg-brand-night p-4 text-xs leading-relaxed text-white">
+    <pre tabIndex={0} aria-label="Код" className="mt-3 overflow-x-auto rounded-xl bg-brand-night p-4 text-xs leading-relaxed text-white">
       {lines.map((l, i) => (
         <div key={i} className="whitespace-pre">
-          {numbered && <span className="mr-4 inline-block w-6 select-none text-right text-white/40">{i + 1}</span>}
+          {numbered && <span className="mr-4 inline-block w-6 select-none text-right text-white/60">{i + 1}</span>}
           {l || " "}
         </div>
       ))}

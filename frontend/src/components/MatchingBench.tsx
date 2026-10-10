@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTIONS, GRADES, Loading, useApi } from "./ui";
+import { ScrollX } from "./A11y";
 
 /** Блок /validation: бенчмарк подбора со скрытой истиной (backend: app/modules/validation/matching_bench.py, make bench). */
 
@@ -201,10 +202,10 @@ function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: s
 
 function Table({ head, rows, hi }: { head: string[]; rows: ReactNode[][]; hi?: number }) {
   return (
-    <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+    <ScrollX label="Таблица" className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[44rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
-          <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
+          <tr>{head.map((h) => <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h || <span className="sr-only">Строка</span>}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
@@ -214,6 +215,6 @@ function Table({ head, rows, hi }: { head: string[]; rows: ReactNode[][]; hi?: n
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollX>
   );
 }
