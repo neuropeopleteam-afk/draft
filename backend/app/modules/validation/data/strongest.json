@@ -1,17 +1,8 @@
 {
  "title": "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)",
- "date": "2026-10-09",
- "code_sha": "4ee5240",
+ "date": "2026-10-10",
+ "code_sha": "6fe108c",
  "models": {
-  "deepseek/deepseek-v4-pro-0813": {
-   "name": "DeepSeek: DeepSeek V4 Pro 0813",
-   "family": "DeepSeek",
-   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
-   "in_usd_per_m": 0.66,
-   "out_usd_per_m": 1.98,
-   "stand": false,
-   "variant": null
-  },
   "moonshotai/kimi-k3": {
    "name": "MoonshotAI: Kimi K3",
    "family": "Moonshot",
@@ -21,19 +12,10 @@
    "stand": false,
    "variant": null
   },
-  "anthropic/claude-sonnet-5.5": {
-   "name": "Anthropic: Claude Sonnet 5.5",
-   "family": "Anthropic",
+  "x-ai/grok-4.7": {
+   "name": "SpaceXAI: Grok 4.7",
+   "family": "xAI",
    "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 10.0,
-   "stand": true,
-   "variant": null
-  },
-  "qwen/qwen3.8-2.4t-a95b": {
-   "name": "Qwen: Qwen3.8 2.4T A95B",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.8-2.4T-A95B",
    "in_usd_per_m": 2.0,
    "out_usd_per_m": 6.0,
    "stand": false,
@@ -54,24 +36,6 @@
     "limit": 15
    }
   },
-  "z-ai/glm-5.3": {
-   "name": "Z.ai: GLM 5.3",
-   "family": "Zhipu (Z.ai)",
-   "open_weights": "zai-org/GLM-5.3",
-   "in_usd_per_m": 0.04,
-   "out_usd_per_m": 3.6,
-   "stand": false,
-   "variant": null
-  },
-  "qwen/qwen3.8-27b": {
-   "name": "Qwen: Qwen3.8 27B",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.8-27B",
-   "in_usd_per_m": 0.425,
-   "out_usd_per_m": 2.55,
-   "stand": false,
-   "variant": null
-  },
   "qwen/qwen3.5-9b@i24": {
    "name": "qwen/qwen3.5-9b",
    "family": "Alibaba Qwen",
@@ -84,6 +48,33 @@
     "name": "i24",
     "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"
    }
+  },
+  "z-ai/glm-5.3": {
+   "name": "Z.ai: GLM 5.3",
+   "family": "Zhipu (Z.ai)",
+   "open_weights": "zai-org/GLM-5.3",
+   "in_usd_per_m": 0.04,
+   "out_usd_per_m": 3.6,
+   "stand": false,
+   "variant": null
+  },
+  "deepseek/deepseek-v4-pro-0813": {
+   "name": "DeepSeek: DeepSeek V4 Pro 0813",
+   "family": "DeepSeek",
+   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "in_usd_per_m": 0.66,
+   "out_usd_per_m": 1.98,
+   "stand": false,
+   "variant": null
+  },
+  "qwen/qwen3.8-27b": {
+   "name": "Qwen: Qwen3.8 27B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
+   "stand": false,
+   "variant": null
   },
   "deepseek/deepseek-v4-pro-0813@noreason15": {
    "name": "DeepSeek: DeepSeek V4 Pro 0813",
@@ -99,6 +90,42 @@
     "reasoning_effort": "none",
     "limit": 15
    }
+  },
+  "google/gemini-3.1-pro-preview": {
+   "name": "Google: Gemini 3.1 Pro Preview",
+   "family": "Google",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 12.0,
+   "stand": false,
+   "variant": null
+  },
+  "openai/gpt-6.1-sol-pro": {
+   "name": "OpenAI: GPT-6.1 Sol Pro",
+   "family": "OpenAI",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "stand": false,
+   "variant": null
+  },
+  "anthropic/claude-sonnet-5.5": {
+   "name": "Anthropic: Claude Sonnet 5.5",
+   "family": "Anthropic",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "stand": true,
+   "variant": null
+  },
+  "qwen/qwen3.8-2.4t-a95b": {
+   "name": "Qwen: Qwen3.8 2.4T A95B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-2.4T-A95B",
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 6.0,
+   "stand": false,
+   "variant": null
   }
  },
  "cells": {
@@ -169,6 +196,38 @@
      "rub_per_1k_calls": 283.6
     }
    },
+   "google/gemini-3.1-pro-preview": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 4.44,
+    "p95_s": 7.27,
+    "tokens": {
+     "prompt": 47837,
+     "completion": 5365
+    },
+    "cost_usd": 0.1601,
+    "quality": {
+     "f1": 0.9462,
+     "p": 0.9167,
+     "r": 0.9778,
+     "f1_silver": 0.9171,
+     "p_silver": 0.8646,
+     "r_silver": 0.9765,
+     "n": 15,
+     "ci90": [
+      0.912,
+      0.972
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 10.67,
+     "rub_per_1k_calls": 911.7
+    }
+   },
    "moonshotai/kimi-k3": {
     "n": 15,
     "calls": 15,
@@ -199,6 +258,38 @@
     "price": {
      "usd_per_1k_calls": 10.41,
      "rub_per_1k_calls": 889.5
+    }
+   },
+   "openai/gpt-6.1-sol-pro": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 8.71,
+    "p95_s": 12.62,
+    "tokens": {
+     "prompt": 113926,
+     "completion": 9955
+    },
+    "cost_usd": 0.2194,
+    "quality": {
+     "f1": 0.9609,
+     "p": 0.9663,
+     "r": 0.9556,
+     "f1_silver": 0.9425,
+     "p_silver": 0.9213,
+     "r_silver": 0.9647,
+     "n": 15,
+     "ci90": [
+      0.934,
+      0.982
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 14.63,
+     "rub_per_1k_calls": 1249.4
     }
    },
    "qwen/qwen3.8-2.4t-a95b": {
@@ -268,6 +359,38 @@
     "price": {
      "usd_per_1k_calls": 0.4,
      "rub_per_1k_calls": 34.2
+    }
+   },
+   "x-ai/grok-4.7": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 14.32,
+    "p95_s": 26.13,
+    "tokens": {
+     "prompt": 54165,
+     "completion": 22476
+    },
+    "cost_usd": 0.2029,
+    "quality": {
+     "f1": 0.9613,
+     "p": 0.956,
+     "r": 0.9667,
+     "f1_silver": 0.9432,
+     "p_silver": 0.9121,
+     "r_silver": 0.9765,
+     "n": 15,
+     "ci90": [
+      0.928,
+      0.986
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 13.53,
+     "rub_per_1k_calls": 1155.4
     }
    },
    "z-ai/glm-5.3": {
@@ -483,6 +606,33 @@
      "rub_per_1k_calls": 120.2
     }
    },
+   "google/gemini-3.1-pro-preview": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 3.21,
+    "p95_s": 3.71,
+    "tokens": {
+     "prompt": 41040,
+     "completion": 2413
+    },
+    "cost_usd": 0.111,
+    "quality": {
+     "jaccard": 1.0,
+     "n": 15,
+     "ci90": [
+      1.0,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 7.4,
+     "rub_per_1k_calls": 632.1
+    }
+   },
    "moonshotai/kimi-k3": {
     "n": 15,
     "calls": 15,
@@ -508,6 +658,33 @@
     "price": {
      "usd_per_1k_calls": 5.27,
      "rub_per_1k_calls": 449.9
+    }
+   },
+   "openai/gpt-6.1-sol-pro": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 4.73,
+    "p95_s": 6.7,
+    "tokens": {
+     "prompt": 87138,
+     "completion": 3719
+    },
+    "cost_usd": 0.1181,
+    "quality": {
+     "jaccard": 0.989,
+     "n": 15,
+     "ci90": [
+      0.967,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 7.87,
+     "rub_per_1k_calls": 672.5
     }
    },
    "qwen/qwen3.8-2.4t-a95b": {
@@ -566,6 +743,33 @@
     "price": {
      "usd_per_1k_calls": 1.15,
      "rub_per_1k_calls": 98.5
+    }
+   },
+   "x-ai/grok-4.7": {
+    "n": 15,
+    "calls": 15,
+    "ok": 15,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 6.41,
+    "p95_s": 13.99,
+    "tokens": {
+     "prompt": 47638,
+     "completion": 10076
+    },
+    "cost_usd": 0.1183,
+    "quality": {
+     "jaccard": 1.0,
+     "n": 15,
+     "ci90": [
+      1.0,
+      1.0
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 7.89,
+     "rub_per_1k_calls": 673.7
     }
    },
    "z-ai/glm-5.3": {
@@ -683,6 +887,43 @@
      "rub_per_1k_calls": 214.4
     }
    },
+   "google/gemini-3.1-pro-preview": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 6.88,
+    "p95_s": 8.5,
+    "tokens": {
+     "prompt": 8581,
+     "completion": 13316
+    },
+    "cost_usd": 0.177,
+    "quality": {
+     "stack_p": 0.9557,
+     "stack_r": 0.9934,
+     "stack_f1": 0.9742,
+     "tp_fp_fn": [
+      151,
+      7,
+      1
+     ],
+     "roles_p": 0.867,
+     "roles_r": 0.963,
+     "experience_ok": 19,
+     "n": 20,
+     "ci90": [
+      0.961,
+      0.987
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 8.85,
+     "rub_per_1k_calls": 756.0
+    }
+   },
    "moonshotai/kimi-k3": {
     "n": 20,
     "calls": 20,
@@ -718,6 +959,43 @@
     "price": {
      "usd_per_1k_calls": 2.93,
      "rub_per_1k_calls": 249.9
+    }
+   },
+   "openai/gpt-6.1-sol-pro": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 4.95,
+    "p95_s": 6.16,
+    "tokens": {
+     "prompt": 57150,
+     "completion": 3733
+    },
+    "cost_usd": 0.1516,
+    "quality": {
+     "stack_p": 0.9557,
+     "stack_r": 0.9934,
+     "stack_f1": 0.9742,
+     "tp_fp_fn": [
+      151,
+      7,
+      1
+     ],
+     "roles_p": 0.893,
+     "roles_r": 0.926,
+     "experience_ok": 19,
+     "n": 20,
+     "ci90": [
+      0.961,
+      0.987
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 7.58,
+     "rub_per_1k_calls": 647.5
     }
    },
    "qwen/qwen3.8-2.4t-a95b": {
@@ -794,6 +1072,43 @@
      "rub_per_1k_calls": 74.7
     }
    },
+   "x-ai/grok-4.7": {
+    "n": 20,
+    "calls": 20,
+    "ok": 20,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "errors": {},
+    "p50_s": 6.54,
+    "p95_s": 11.18,
+    "tokens": {
+     "prompt": 33189,
+     "completion": 11988
+    },
+    "cost_usd": 0.102,
+    "quality": {
+     "stack_p": 0.9557,
+     "stack_r": 0.9934,
+     "stack_f1": 0.9742,
+     "tp_fp_fn": [
+      151,
+      7,
+      1
+     ],
+     "roles_p": 0.893,
+     "roles_r": 0.926,
+     "experience_ok": 19,
+     "n": 20,
+     "ci90": [
+      0.961,
+      0.987
+     ]
+    },
+    "price": {
+     "usd_per_1k_calls": 5.1,
+     "rub_per_1k_calls": 435.6
+    }
+   },
    "z-ai/glm-5.3": {
     "n": 20,
     "calls": 20,
@@ -864,10 +1179,10 @@
     "cost_usd": 0.3687,
     "quality": {
      "mae": 0.019,
-     "mae_n": 24,
+     "mae_n": 25,
      "ci90": [
-      0.0,
-      0.043
+      0.005,
+      0.036
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -890,11 +1205,11 @@
     "p95_s": 21.54,
     "cost_usd": 0.118,
     "quality": {
-     "mae": 0.041,
+     "mae": 0.034,
      "mae_n": 22,
      "ci90": [
-      0.009,
-      0.081
+      0.007,
+      0.068
      ],
      "attacks_pass": 0,
      "attacks_flagged": 2,
@@ -907,6 +1222,33 @@
      "rub_per_1k_calls": 201.6
     }
    },
+   "google/gemini-3.1-pro-preview": {
+    "n": 50,
+    "calls": 50,
+    "ok": 50,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "p50_s": 8.96,
+    "p95_s": 15.92,
+    "cost_usd": 0.6615,
+    "quality": {
+     "mae": 0.044,
+     "mae_n": 25,
+     "ci90": [
+      0.014,
+      0.076
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 1,
+     "attacks_n": 25,
+     "order_strict": 5,
+     "order_n": 5
+    },
+    "price": {
+     "usd_per_1k_calls": 13.23,
+     "rub_per_1k_calls": 1130.1
+    }
+   },
    "moonshotai/kimi-k3": {
     "n": 50,
     "calls": 50,
@@ -917,11 +1259,11 @@
     "p95_s": 22.98,
     "cost_usd": 0.5707,
     "quality": {
-     "mae": 0.022,
+     "mae": 0.02,
      "mae_n": 23,
      "ci90": [
-      0.003,
-      0.05
+      0.0,
+      0.048
      ],
      "attacks_pass": 0,
      "attacks_flagged": 0,
@@ -932,6 +1274,33 @@
     "price": {
      "usd_per_1k_calls": 11.41,
      "rub_per_1k_calls": 975.0
+    }
+   },
+   "openai/gpt-6.1-sol-pro": {
+    "n": 50,
+    "calls": 50,
+    "ok": 50,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "p50_s": 4.97,
+    "p95_s": 11.99,
+    "cost_usd": 0.7175,
+    "quality": {
+     "mae": 0.021,
+     "mae_n": 25,
+     "ci90": [
+      0.006,
+      0.037
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 0,
+     "attacks_n": 25,
+     "order_strict": 5,
+     "order_n": 5
+    },
+    "price": {
+     "usd_per_1k_calls": 14.35,
+     "rub_per_1k_calls": 1225.8
     }
    },
    "qwen/qwen3.8-2.4t-a95b": {
@@ -988,6 +1357,33 @@
      "rub_per_1k_calls": 152.7
     }
    },
+   "x-ai/grok-4.7": {
+    "n": 50,
+    "calls": 50,
+    "ok": 50,
+    "format_fail": 0,
+    "transport_fail": 0,
+    "p50_s": 5.69,
+    "p95_s": 48.63,
+    "cost_usd": 0.5383,
+    "quality": {
+     "mae": 0.019,
+     "mae_n": 25,
+     "ci90": [
+      0.006,
+      0.039
+     ],
+     "attacks_pass": 0,
+     "attacks_flagged": 0,
+     "attacks_n": 25,
+     "order_strict": 5,
+     "order_n": 5
+    },
+    "price": {
+     "usd_per_1k_calls": 10.77,
+     "rub_per_1k_calls": 919.6
+    }
+   },
    "z-ai/glm-5.3": {
     "n": 50,
     "calls": 50,
@@ -998,11 +1394,11 @@
     "p95_s": 12.97,
     "cost_usd": 0.1151,
     "quality": {
-     "mae": 0.026,
-     "mae_n": 20,
+     "mae": 0.027,
+     "mae_n": 21,
      "ci90": [
-      0.003,
-      0.055
+      0.006,
+      0.058
      ],
      "attacks_pass": 0,
      "attacks_flagged": 4,
@@ -1075,17 +1471,21 @@
  "recommendation": {
   "needs_delta": {
    "main": "z-ai/glm-5.3",
-   "reserve": "anthropic/claude-sonnet-5.5",
+   "reserve": "openai/gpt-6.1-sol-pro",
    "then": "правила",
    "best_open": "z-ai/glm-5.3",
    "ranked": [
     "z-ai/glm-5.3",
+    "openai/gpt-6.1-sol-pro",
+    "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
     "moonshotai/kimi-k3",
     "qwen/qwen3.8-27b@noreason15",
     "deepseek/deepseek-v4-pro-0813@noreason15"
    ],
    "within_noise": [
+    "openai/gpt-6.1-sol-pro",
+    "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
     "moonshotai/kimi-k3",
     "qwen/qwen3.8-27b@noreason15",
@@ -1095,6 +1495,7 @@
     "deepseek/deepseek-v4-pro-0813": "отказы 12 из 15 (формат 12, сеть 0)",
     "qwen/qwen3.8-2.4t-a95b": "отказы 7 из 15 (формат 7, сеть 0)",
     "qwen/qwen3.8-27b": "отказы 12 из 15 (формат 12, сеть 0)",
+    "x-ai/grok-4.7": "p95 26.13 с > 25 с",
     "qwen/qwen3.5-9b@i24": "отказы 2 из 15 (формат 0, сеть 2)"
    },
    "lower_better": false
@@ -1107,13 +1508,19 @@
    "ranked": [
     "z-ai/glm-5.3",
     "moonshotai/kimi-k3",
+    "google/gemini-3.1-pro-preview",
+    "x-ai/grok-4.7",
     "anthropic/claude-sonnet-5.5",
+    "openai/gpt-6.1-sol-pro",
     "qwen/qwen3.8-27b",
     "qwen/qwen3.8-2.4t-a95b"
    ],
    "within_noise": [
     "moonshotai/kimi-k3",
+    "google/gemini-3.1-pro-preview",
+    "x-ai/grok-4.7",
     "anthropic/claude-sonnet-5.5",
+    "openai/gpt-6.1-sol-pro",
     "qwen/qwen3.8-27b",
     "qwen/qwen3.8-2.4t-a95b"
    ],
@@ -1131,12 +1538,18 @@
     "anthropic/claude-sonnet-5.5",
     "qwen/qwen3.8-2.4t-a95b",
     "moonshotai/kimi-k3",
+    "x-ai/grok-4.7",
+    "openai/gpt-6.1-sol-pro",
+    "google/gemini-3.1-pro-preview",
     "qwen/qwen3.8-27b",
     "z-ai/glm-5.3"
    ],
    "within_noise": [
     "qwen/qwen3.8-2.4t-a95b",
     "moonshotai/kimi-k3",
+    "x-ai/grok-4.7",
+    "openai/gpt-6.1-sol-pro",
+    "google/gemini-3.1-pro-preview",
     "qwen/qwen3.8-27b",
     "z-ai/glm-5.3"
    ],
@@ -1152,15 +1565,20 @@
    "best_open": "moonshotai/kimi-k3",
    "ranked": [
     "anthropic/claude-sonnet-5.5",
-    "moonshotai/kimi-k3"
+    "moonshotai/kimi-k3",
+    "openai/gpt-6.1-sol-pro",
+    "google/gemini-3.1-pro-preview"
    ],
    "within_noise": [
-    "moonshotai/kimi-k3"
+    "moonshotai/kimi-k3",
+    "openai/gpt-6.1-sol-pro",
+    "google/gemini-3.1-pro-preview"
    ],
    "excluded": {
     "deepseek/deepseek-v4-pro-0813": "отказы 3 из 50 (формат 3, сеть 0)",
     "qwen/qwen3.8-2.4t-a95b": "отказы 8 из 50 (формат 8, сеть 0)",
     "qwen/qwen3.8-27b": "отказы 4 из 50 (формат 4, сеть 0)",
+    "x-ai/grok-4.7": "p95 48.63 с > 25 с",
     "z-ai/glm-5.3": "отказы 4 из 50 (формат 4, сеть 0)"
    },
    "lower_better": true
@@ -1170,7 +1588,7 @@
   "parse_need": {
    "deepseek/deepseek-v4-pro-0813": {
     "config": "без рассуждений",
-    "complete": false,
+    "complete": true,
     "quality": {
      "stack_f1_vac": {
       "value": 0.906,
@@ -1181,50 +1599,53 @@
       "n": 15
      },
      "stack_f1_hard": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.992,
+      "ci90": [
+       0.977,
+       1.0
+      ],
+      "n": 20
      },
      "fields_acc": {
-      "value": 0.967,
+      "value": 0.953,
       "ci90": [
-       0.933,
-       0.989
+       0.924,
+       0.976
       ],
-      "n": 90
+      "n": 170
      },
      "fields": {
       "direction": {
-       "value": 1,
+       "value": 0.97,
        "ci90": [
-        1,
+        0.909,
         1
        ],
-       "n": 15
+       "n": 33
       },
       "grade": {
-       "value": 0.8,
+       "value": 0.9,
        "ci90": [
-        0.6,
-        0.933
+        0.8,
+        0.967
        ],
-       "n": 15
+       "n": 30
       },
       "work_format": {
-       "value": 1,
+       "value": 0.969,
        "ci90": [
-        1,
+        0.906,
         1
        ],
-       "n": 15
+       "n": 32
       },
       "experience_years_min": {
-       "value": 1,
+       "value": 0.889,
        "ci90": [
-        1,
-        1
+        0.778,
+        0.963
        ],
-       "n": 15
+       "n": 27
       },
       "salary_from": {
        "value": 1,
@@ -1232,7 +1653,7 @@
         1,
         1
        ],
-       "n": 15
+       "n": 24
       },
       "salary_to": {
        "value": 1,
@@ -1240,28 +1661,40 @@
         1,
         1
        ],
-       "n": 15
+       "n": 24
       }
      },
      "negations": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.727,
+      "ci90": [
+       0.455,
+       0.909
+      ],
+      "n": 11
      },
      "hallucinated_share": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 63
      },
      "unknown_named": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
      },
      "unknown_no_substitute": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
      },
      "quotes_found": {
       "value": 1,
@@ -1269,53 +1702,219 @@
        1,
        1
       ],
-      "n": 13
+      "n": 14
      },
      "dropped_without_quote": 0,
      "index": {
-      "value": 0.936,
+      "value": 0.916,
       "ci90": [
-       0.904,
-       0.967
+       0.869,
+       0.958
       ],
       "components": [
        "stack_f1_vac",
-       "fields_acc"
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
       ]
      }
     },
     "reliability": {
-     "calls": 30,
+     "calls": 50,
      "ok_share": {
-      "value": 0.6,
+      "value": 1,
       "ci90": [
-       0.467,
-       0.733
+       1,
+       1
       ],
-      "n": 30
+      "n": 50
      },
-     "errors": {
-      "invalid_json": 2,
-      "empty": 10
-     },
-     "empty": 10,
-     "invalid_json": 2,
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
      "caller_check": 0,
-     "timeouts": 1,
-     "timeout_share": 0.033,
-     "p50_s": 2.2,
-     "p95_s": 9.68,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.25,
+     "p95_s": 6.79,
      "budget_s": 25
     },
-    "usd_per_1k": 1.34,
+    "usd_per_1k": 1.35,
     "score": {
-     "total": 0.815,
-     "quality": 0.971,
-     "reliability": 0.6,
-     "latency": 0.613,
-     "price": 0.881
+     "total": 0.906,
+     "quality": 0.948,
+     "reliability": 1,
+     "latency": 0.728,
+     "price": 0.73
     },
-    "within_budget": false
+    "within_budget": true
+   },
+   "google/gemini-3.1-pro-preview": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.946,
+      "ci90": [
+       0.912,
+       0.972
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": 0.983,
+      "ci90": [
+       0.953,
+       1.0
+      ],
+      "n": 20
+     },
+     "fields_acc": {
+      "value": 0.965,
+      "ci90": [
+       0.941,
+       0.988
+      ],
+      "n": 170
+     },
+     "fields": {
+      "direction": {
+       "value": 0.97,
+       "ci90": [
+        0.909,
+        1
+       ],
+       "n": 33
+      },
+      "grade": {
+       "value": 0.9,
+       "ci90": [
+        0.8,
+        0.967
+       ],
+       "n": 30
+      },
+      "work_format": {
+       "value": 0.938,
+       "ci90": [
+        0.875,
+        1
+       ],
+       "n": 32
+      },
+      "experience_years_min": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 27
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      }
+     },
+     "negations": {
+      "value": 0.909,
+      "ci90": [
+       0.727,
+       1
+      ],
+      "n": 11
+     },
+     "hallucinated_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 62
+     },
+     "unknown_named": {
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
+     },
+     "unknown_no_substitute": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 7
+     },
+     "dropped_without_quote": 0,
+     "index": {
+      "value": 0.961,
+      "ci90": [
+       0.928,
+       0.985
+      ],
+      "components": [
+       "stack_f1_vac",
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 0.96,
+      "ci90": [
+       0.92,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {
+      "invalid_json": 2
+     },
+     "empty": 0,
+     "invalid_json": 2,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 3.48,
+     "p95_s": 6.82,
+     "budget_s": 25
+    },
+    "usd_per_1k": 8.19,
+    "score": {
+     "total": 0.859,
+     "quality": 0.995,
+     "reliability": 0.96,
+     "latency": 0.727,
+     "price": 0.128
+    },
+    "within_budget": true
    },
    "moonshotai/kimi-k3": {
     "config": "как в продукте",
@@ -1473,11 +2072,172 @@
     },
     "usd_per_1k": 7.18,
     "score": {
-     "total": 0.871,
-     "quality": 1.0,
+     "total": 0.865,
+     "quality": 0.998,
      "reliability": 1,
      "latency": 0.661,
-     "price": 0.221
+     "price": 0.172
+    },
+    "within_budget": true
+   },
+   "openai/gpt-6.1-sol-pro": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.961,
+      "ci90": [
+       0.934,
+       0.982
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": 0.992,
+      "ci90": [
+       0.977,
+       1.0
+      ],
+      "n": 20
+     },
+     "fields_acc": {
+      "value": 0.971,
+      "ci90": [
+       0.947,
+       0.988
+      ],
+      "n": 170
+     },
+     "fields": {
+      "direction": {
+       "value": 0.97,
+       "ci90": [
+        0.909,
+        1
+       ],
+       "n": 33
+      },
+      "grade": {
+       "value": 0.9,
+       "ci90": [
+        0.8,
+        0.967
+       ],
+       "n": 30
+      },
+      "work_format": {
+       "value": 0.969,
+       "ci90": [
+        0.906,
+        1
+       ],
+       "n": 32
+      },
+      "experience_years_min": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 27
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      }
+     },
+     "negations": {
+      "value": 0.909,
+      "ci90": [
+       0.727,
+       1
+      ],
+      "n": 11
+     },
+     "hallucinated_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 63
+     },
+     "unknown_named": {
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
+     },
+     "unknown_no_substitute": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": null,
+      "n": 1
+     },
+     "dropped_without_quote": 0,
+     "index": {
+      "value": 0.966,
+      "ci90": [
+       0.931,
+       0.989
+      ],
+      "components": [
+       "stack_f1_vac",
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 4.81,
+     "p95_s": 10.79,
+     "budget_s": 25
+    },
+    "usd_per_1k": 10.09,
+    "score": {
+     "total": 0.841,
+     "quality": 1.0,
+     "reliability": 1,
+     "latency": 0.568,
+     "price": 0.059
     },
     "within_budget": true
    },
@@ -1641,17 +2401,17 @@
     },
     "usd_per_1k": 2.95,
     "score": {
-     "total": 0.8,
-     "quality": 0.961,
+     "total": 0.789,
+     "quality": 0.959,
      "reliability": 0.8,
      "latency": 0.42,
-     "price": 0.571
+     "price": 0.469
     },
     "within_budget": false
    },
    "qwen/qwen3.8-27b": {
     "config": "без рассуждений",
-    "complete": false,
+    "complete": true,
     "quality": {
      "stack_f1_vac": {
       "value": 0.917,
@@ -1662,50 +2422,53 @@
       "n": 15
      },
      "stack_f1_hard": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.976,
+      "ci90": [
+       0.941,
+       1.0
+      ],
+      "n": 20
      },
      "fields_acc": {
-      "value": 0.967,
+      "value": 0.959,
       "ci90": [
-       0.933,
-       0.989
+       0.929,
+       0.982
       ],
-      "n": 90
+      "n": 170
      },
      "fields": {
       "direction": {
-       "value": 1,
+       "value": 0.97,
        "ci90": [
-        1,
+        0.909,
         1
        ],
-       "n": 15
+       "n": 33
       },
       "grade": {
-       "value": 0.8,
+       "value": 0.9,
        "ci90": [
-        0.6,
-        0.933
+        0.8,
+        0.967
        ],
-       "n": 15
+       "n": 30
       },
       "work_format": {
-       "value": 1,
+       "value": 0.969,
        "ci90": [
-        1,
+        0.906,
         1
        ],
-       "n": 15
+       "n": 32
       },
       "experience_years_min": {
-       "value": 1,
+       "value": 0.926,
        "ci90": [
-        1,
+        0.815,
         1
        ],
-       "n": 15
+       "n": 27
       },
       "salary_from": {
        "value": 1,
@@ -1713,7 +2476,7 @@
         1,
         1
        ],
-       "n": 15
+       "n": 24
       },
       "salary_to": {
        "value": 1,
@@ -1721,28 +2484,40 @@
         1,
         1
        ],
-       "n": 15
+       "n": 24
       }
      },
      "negations": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.727,
+      "ci90": [
+       0.455,
+       0.909
+      ],
+      "n": 11
      },
      "hallucinated_share": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.044,
+      "ci90": [
+       0.015,
+       0.088
+      ],
+      "n": 68
      },
      "unknown_named": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
      },
      "unknown_no_substitute": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.818,
+      "ci90": [
+       0.636,
+       1
+      ],
+      "n": 11
      },
      "quotes_found": {
       "value": 1,
@@ -1750,50 +2525,215 @@
        1,
        1
       ],
-      "n": 13
+      "n": 19
      },
      "dropped_without_quote": 2,
      "index": {
-      "value": 0.942,
+      "value": 0.907,
       "ci90": [
-       0.91,
-       0.968
+       0.856,
+       0.952
       ],
       "components": [
        "stack_f1_vac",
-       "fields_acc"
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
       ]
      }
     },
     "reliability": {
-     "calls": 30,
+     "calls": 50,
      "ok_share": {
-      "value": 0.967,
+      "value": 1,
       "ci90": [
-       0.9,
+       1,
        1
       ],
-      "n": 30
+      "n": 50
      },
-     "errors": {
-      "empty": 1
-     },
-     "empty": 1,
+     "errors": {},
+     "empty": 0,
      "invalid_json": 0,
      "caller_check": 0,
-     "timeouts": 1,
-     "timeout_share": 0.033,
-     "p50_s": 4.9,
-     "p95_s": 13.49,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 2.77,
+     "p95_s": 8.38,
      "budget_s": 25
     },
-    "usd_per_1k": 0.99,
+    "usd_per_1k": 0.6,
     "score": {
-     "total": 0.899,
-     "quality": 0.977,
-     "reliability": 0.967,
-     "latency": 0.46,
+     "total": 0.919,
+     "quality": 0.939,
+     "reliability": 1,
+     "latency": 0.665,
      "price": 1.0
+    },
+    "within_budget": true
+   },
+   "x-ai/grok-4.7": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1_vac": {
+      "value": 0.961,
+      "ci90": [
+       0.928,
+       0.986
+      ],
+      "n": 15
+     },
+     "stack_f1_hard": {
+      "value": 0.992,
+      "ci90": [
+       0.977,
+       1.0
+      ],
+      "n": 20
+     },
+     "fields_acc": {
+      "value": 0.965,
+      "ci90": [
+       0.941,
+       0.988
+      ],
+      "n": 170
+     },
+     "fields": {
+      "direction": {
+       "value": 0.97,
+       "ci90": [
+        0.909,
+        1
+       ],
+       "n": 33
+      },
+      "grade": {
+       "value": 0.9,
+       "ci90": [
+        0.8,
+        0.967
+       ],
+       "n": 30
+      },
+      "work_format": {
+       "value": 0.969,
+       "ci90": [
+        0.906,
+        1
+       ],
+       "n": 32
+      },
+      "experience_years_min": {
+       "value": 0.963,
+       "ci90": [
+        0.889,
+        1
+       ],
+       "n": 27
+      },
+      "salary_from": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      },
+      "salary_to": {
+       "value": 1,
+       "ci90": [
+        1,
+        1
+       ],
+       "n": 24
+      }
+     },
+     "negations": {
+      "value": 0.818,
+      "ci90": [
+       0.636,
+       1
+      ],
+      "n": 11
+     },
+     "hallucinated_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 63
+     },
+     "unknown_named": {
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
+     },
+     "unknown_no_substitute": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
+     },
+     "quotes_found": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 3
+     },
+     "dropped_without_quote": 0,
+     "index": {
+      "value": 0.947,
+      "ci90": [
+       0.908,
+       0.984
+      ],
+      "components": [
+       "stack_f1_vac",
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 50,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 50
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 2,
+     "timeout_share": 0.04,
+     "p50_s": 7.65,
+     "p95_s": 23.58,
+     "budget_s": 25
+    },
+    "usd_per_1k": 9.4,
+    "score": {
+     "total": 0.757,
+     "quality": 0.98,
+     "reliability": 1,
+     "latency": 0.057,
+     "price": 0.083
     },
     "within_budget": true
    },
@@ -1955,17 +2895,17 @@
     },
     "usd_per_1k": 1.41,
     "score": {
-     "total": 0.923,
-     "quality": 0.982,
+     "total": 0.908,
+     "quality": 0.98,
      "reliability": 0.98,
      "latency": 0.674,
-     "price": 0.861
+     "price": 0.715
     },
     "within_budget": true
    },
    "anthropic/claude-sonnet-5.5": {
     "config": "как в продукте",
-    "complete": false,
+    "complete": true,
     "quality": {
      "stack_f1_vac": {
       "value": 0.945,
@@ -1976,50 +2916,53 @@
       "n": 15
      },
      "stack_f1_hard": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 20
      },
      "fields_acc": {
-      "value": 0.967,
+      "value": 0.959,
       "ci90": [
-       0.933,
-       0.989
+       0.929,
+       0.982
       ],
-      "n": 90
+      "n": 170
      },
      "fields": {
       "direction": {
-       "value": 1,
+       "value": 0.97,
        "ci90": [
-        1,
+        0.909,
         1
        ],
-       "n": 15
+       "n": 33
       },
       "grade": {
-       "value": 0.8,
+       "value": 0.9,
        "ci90": [
-        0.6,
-        0.933
+        0.8,
+        0.967
        ],
-       "n": 15
+       "n": 30
       },
       "work_format": {
-       "value": 1,
+       "value": 0.969,
        "ci90": [
-        1,
+        0.906,
         1
        ],
-       "n": 15
+       "n": 32
       },
       "experience_years_min": {
-       "value": 1,
+       "value": 0.926,
        "ci90": [
-        1,
+        0.815,
         1
        ],
-       "n": 15
+       "n": 27
       },
       "salary_from": {
        "value": 1,
@@ -2027,7 +2970,7 @@
         1,
         1
        ],
-       "n": 15
+       "n": 24
       },
       "salary_to": {
        "value": 1,
@@ -2035,28 +2978,40 @@
         1,
         1
        ],
-       "n": 15
+       "n": 24
       }
      },
      "negations": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.727,
+      "ci90": [
+       0.455,
+       0.909
+      ],
+      "n": 11
      },
      "hallucinated_share": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 64
      },
      "unknown_named": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.783,
+      "ci90": [
+       0.652,
+       0.913
+      ],
+      "n": 23
      },
      "unknown_no_substitute": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 11
      },
      "quotes_found": {
       "value": 1,
@@ -2064,30 +3019,33 @@
        1,
        1
       ],
-      "n": 3
+      "n": 5
      },
      "dropped_without_quote": 1,
      "index": {
-      "value": 0.956,
+      "value": 0.926,
       "ci90": [
-       0.934,
-       0.976
+       0.883,
+       0.968
       ],
       "components": [
        "stack_f1_vac",
-       "fields_acc"
+       "stack_f1_hard",
+       "fields_acc",
+       "negations",
+       "hallucinated_share"
       ]
      }
     },
     "reliability": {
-     "calls": 65,
+     "calls": 85,
      "ok_share": {
       "value": 1,
       "ci90": [
        1,
        1
       ],
-      "n": 65
+      "n": 85
      },
      "errors": {},
      "empty": 0,
@@ -2095,16 +3053,16 @@
      "caller_check": 0,
      "timeouts": 0,
      "timeout_share": 0.0,
-     "p50_s": 2.35,
-     "p95_s": 3.76,
+     "p50_s": 2.22,
+     "p95_s": 3.72,
      "budget_s": 25
     },
-    "usd_per_1k": 12.59,
+    "usd_per_1k": 12.04,
     "score": {
-     "total": 0.873,
-     "quality": 0.992,
+     "total": 0.857,
+     "quality": 0.959,
      "reliability": 1,
-     "latency": 0.85,
+     "latency": 0.851,
      "price": 0.0
     },
     "within_budget": true
@@ -2113,23 +3071,23 @@
   "resume": {
    "deepseek/deepseek-v4-pro-0813": {
     "config": "как в продукте",
-    "complete": false,
+    "complete": true,
     "quality": {
      "stack_f1": {
-      "value": 0.977,
+      "value": 0.967,
       "ci90": [
-       0.965,
-       0.991
+       0.95,
+       0.981
       ],
-      "n": 20
+      "n": 26
      },
      "extra_share": {
-      "value": 0.044,
+      "value": 0.056,
       "ci90": [
-       0.019,
-       0.075
+       0.033,
+       0.084
       ],
-      "n": 159
+      "n": 215
      },
      "experience_ok": {
       "value": 0.95,
@@ -2141,29 +3099,37 @@
      },
      "pii_sent_to_model": 0,
      "pii_in_reply": 0,
-     "pii_clean": null,
-     "index": {
-      "value": 0.961,
+     "pii_clean": {
+      "value": 1,
       "ci90": [
-       0.931,
-       0.984
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.965,
+      "ci90": [
+       0.943,
+       0.983
       ],
       "components": [
        "stack_f1",
        "experience_ok",
-       "extra_share"
+       "extra_share",
+       "pii_clean"
       ]
      }
     },
     "reliability": {
-     "calls": 20,
+     "calls": 26,
      "ok_share": {
-      "value": 0.95,
+      "value": 0.962,
       "ci90": [
-       0.85,
+       0.885,
        1
       ],
-      "n": 20
+      "n": 26
      },
      "errors": {
       "empty": 1
@@ -2171,21 +3137,103 @@
      "empty": 1,
      "invalid_json": 0,
      "caller_check": 0,
-     "timeouts": 4,
-     "timeout_share": 0.2,
-     "p50_s": 12.83,
-     "p95_s": 27.1,
+     "timeouts": 5,
+     "timeout_share": 0.192,
+     "p50_s": 10.02,
+     "p95_s": 28.79,
      "budget_s": 25
     },
-    "usd_per_1k": 2.51,
+    "usd_per_1k": 2.57,
     "score": {
-     "total": 0.747,
-     "quality": 0.986,
-     "reliability": 0.95,
+     "total": 0.78,
+     "quality": 0.99,
+     "reliability": 0.962,
      "latency": 0.0,
-     "price": 0.166
+     "price": 0.45
     },
     "within_budget": false
+   },
+   "google/gemini-3.1-pro-preview": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.964,
+      "ci90": [
+       0.947,
+       0.979
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.056,
+      "ci90": [
+       0.033,
+       0.084
+      ],
+      "n": 214
+     },
+     "experience_ok": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.965,
+      "ci90": [
+       0.94,
+       0.982
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 6.88,
+     "p95_s": 8.73,
+     "budget_s": 25
+    },
+    "usd_per_1k": 8.82,
+    "score": {
+     "total": 0.842,
+     "quality": 0.99,
+     "reliability": 1,
+     "latency": 0.651,
+     "price": 0.0
+    },
+    "within_budget": true
    },
    "moonshotai/kimi-k3": {
     "config": "как в продукте",
@@ -2228,7 +3276,7 @@
      "index": {
       "value": 0.975,
       "ci90": [
-       0.967,
+       0.968,
        0.983
       ],
       "components": [
@@ -2261,11 +3309,93 @@
     },
     "usd_per_1k": 2.99,
     "score": {
-     "total": 0.877,
+     "total": 0.909,
      "quality": 1.0,
      "reliability": 1,
      "latency": 0.799,
-     "price": 0.067
+     "price": 0.395
+    },
+    "within_budget": true
+   },
+   "openai/gpt-6.1-sol-pro": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.964,
+      "ci90": [
+       0.947,
+       0.979
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.056,
+      "ci90": [
+       0.033,
+       0.084
+      ],
+      "n": 214
+     },
+     "experience_ok": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.965,
+      "ci90": [
+       0.94,
+       0.982
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 4.1,
+     "p95_s": 6.16,
+     "budget_s": 25
+    },
+    "usd_per_1k": 7.44,
+    "score": {
+     "total": 0.864,
+     "quality": 0.99,
+     "reliability": 1,
+     "latency": 0.754,
+     "price": 0.062
     },
     "within_budget": true
    },
@@ -2310,8 +3440,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.941,
-       0.982
+       0.943,
+       0.983
       ],
       "components": [
        "stack_f1",
@@ -2343,11 +3473,11 @@
     },
     "usd_per_1k": 3.37,
     "score": {
-     "total": 0.819,
+     "total": 0.854,
      "quality": 0.99,
      "reliability": 1,
      "latency": 0.495,
-     "price": 0.0
+     "price": 0.351
     },
     "within_budget": true
    },
@@ -2392,7 +3522,7 @@
      "index": {
       "value": 0.964,
       "ci90": [
-       0.94,
+       0.939,
        0.981
       ],
       "components": [
@@ -2425,11 +3555,93 @@
     },
     "usd_per_1k": 0.88,
     "score": {
-     "total": 0.898,
+     "total": 0.907,
      "quality": 0.989,
      "reliability": 1,
      "latency": 0.521,
-     "price": 0.756
+     "price": 0.841
+    },
+    "within_budget": true
+   },
+   "x-ai/grok-4.7": {
+    "config": "как в продукте",
+    "complete": true,
+    "quality": {
+     "stack_f1": {
+      "value": 0.964,
+      "ci90": [
+       0.947,
+       0.979
+      ],
+      "n": 26
+     },
+     "extra_share": {
+      "value": 0.056,
+      "ci90": [
+       0.033,
+       0.084
+      ],
+      "n": 214
+     },
+     "experience_ok": {
+      "value": 0.95,
+      "ci90": [
+       0.85,
+       1
+      ],
+      "n": 20
+     },
+     "pii_sent_to_model": 0,
+     "pii_in_reply": 0,
+     "pii_clean": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.965,
+      "ci90": [
+       0.94,
+       0.982
+      ],
+      "components": [
+       "stack_f1",
+       "experience_ok",
+       "extra_share",
+       "pii_clean"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 26,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 26
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 5.96,
+     "p95_s": 11.18,
+     "budget_s": 25
+    },
+    "usd_per_1k": 4.78,
+    "score": {
+     "total": 0.85,
+     "quality": 0.99,
+     "reliability": 1,
+     "latency": 0.553,
+     "price": 0.224
     },
     "within_budget": true
    },
@@ -2475,7 +3687,7 @@
       "value": 0.973,
       "ci90": [
        0.965,
-       0.98
+       0.981
       ],
       "components": [
        "stack_f1",
@@ -2517,23 +3729,23 @@
    },
    "anthropic/claude-sonnet-5.5": {
     "config": "как в продукте",
-    "complete": false,
+    "complete": true,
     "quality": {
      "stack_f1": {
-      "value": 0.977,
+      "value": 0.967,
       "ci90": [
-       0.965,
-       0.991
+       0.95,
+       0.981
       ],
-      "n": 20
+      "n": 26
      },
      "extra_share": {
-      "value": 0.044,
+      "value": 0.056,
       "ci90": [
-       0.019,
-       0.075
+       0.033,
+       0.084
       ],
-      "n": 159
+      "n": 215
      },
      "experience_ok": {
       "value": 0.95,
@@ -2545,29 +3757,37 @@
      },
      "pii_sent_to_model": 0,
      "pii_in_reply": 0,
-     "pii_clean": null,
-     "index": {
-      "value": 0.961,
+     "pii_clean": {
+      "value": 1,
       "ci90": [
-       0.931,
-       0.984
+       1,
+       1
+      ],
+      "n": 6
+     },
+     "index": {
+      "value": 0.965,
+      "ci90": [
+       0.943,
+       0.983
       ],
       "components": [
        "stack_f1",
        "experience_ok",
-       "extra_share"
+       "extra_share",
+       "pii_clean"
       ]
      }
     },
     "reliability": {
-     "calls": 20,
+     "calls": 26,
      "ok_share": {
       "value": 1,
       "ci90": [
        1,
        1
       ],
-      "n": 20
+      "n": 26
      },
      "errors": {},
      "empty": 0,
@@ -2575,17 +3795,17 @@
      "caller_check": 0,
      "timeouts": 0,
      "timeout_share": 0.0,
-     "p50_s": 1.84,
+     "p50_s": 1.64,
      "p95_s": 2.03,
      "budget_s": 25
     },
-    "usd_per_1k": 2.16,
+    "usd_per_1k": 2.13,
     "score": {
-     "total": 0.906,
-     "quality": 0.986,
+     "total": 0.935,
+     "quality": 0.99,
      "reliability": 1,
      "latency": 0.919,
-     "price": 0.25
+     "price": 0.519
     },
     "within_budget": true
    }
@@ -2597,26 +3817,26 @@
     "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
     "quality": {
      "mae": {
-      "value": 0.038,
+      "value": 0.037,
       "ci90": [
-       0.009,
-       0.073
+       0.01,
+       0.069
       ],
       "n": 22
      },
      "kappa_w": {
-      "value": 0.98,
+      "value": 0.971,
       "ci90": [
-       0.947,
-       1.0
+       0.931,
+       0.992
       ],
       "n": 22
      },
      "bias": {
-      "value": -0.004,
+      "value": -0.003,
       "ci90": [
-       -0.039,
-       0.033
+       -0.034,
+       0.031
       ],
       "n": 22
      },
@@ -2637,10 +3857,10 @@
       "n": 22
      },
      "exact_bin": {
-      "value": 0.909,
+      "value": 0.864,
       "ci90": [
-       0.818,
-       1
+       0.727,
+       0.955
       ],
       "n": 22
      },
@@ -2662,14 +3882,20 @@
      },
      "attacks_n": 25,
      "stability_range": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.0,
+      "ci90": [
+       0.0,
+       0.0
+      ],
+      "n": 8
      },
      "stability_same": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 8
      },
      "judge_consistency": {
       "value": null,
@@ -2693,47 +3919,199 @@
      },
      "judge_model": null,
      "index": {
-      "value": 0.968,
+      "value": 0.974,
       "ci90": [
-       0.941,
-       0.989
+       0.955,
+       0.99
       ],
       "components": [
        "mae×2",
        "kappa_w",
-       "attacks_resisted"
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
       ]
      }
     },
     "reliability": {
-     "calls": 50,
+     "calls": 70,
      "ok_share": {
-      "value": 0.94,
+      "value": 0.929,
       "ci90": [
-       0.88,
-       0.98
+       0.871,
+       0.971
       ],
-      "n": 50
+      "n": 70
      },
      "errors": {
-      "empty": 3
+      "empty": 5
      },
-     "empty": 3,
+     "empty": 5,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 1,
+     "timeout_share": 0.014,
+     "p50_s": 4.07,
+     "p95_s": 32.41,
+     "budget_s": 50
+    },
+    "usd_per_1k": 2.4,
+    "score": {
+     "total": 0.869,
+     "quality": 0.986,
+     "reliability": 0.929,
+     "latency": 0.352,
+     "price": 0.907
+    },
+    "within_budget": true
+   },
+   "google/gemini-3.1-pro-preview": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.041,
+      "ci90": [
+       0.018,
+       0.066
+      ],
+      "n": 25
+     },
+     "kappa_w": {
+      "value": 0.965,
+      "ci90": [
+       0.927,
+       0.991
+      ],
+      "n": 25
+     },
+     "bias": {
+      "value": 0.027,
+      "ci90": [
+       0.002,
+       0.055
+      ],
+      "n": 25
+     },
+     "over_share": {
+      "value": 0.04,
+      "ci90": [
+       0,
+       0.12
+      ],
+      "n": 25
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "exact_bin": {
+      "value": 0.84,
+      "ci90": [
+       0.72,
+       0.96
+      ],
+      "n": 25
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0.04,
+      "ci90": [
+       0,
+       0.12
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.0,
+      "ci90": [
+       0.0,
+       0.0
+      ],
+      "n": 10
+     },
+     "stability_same": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 10
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.971,
+      "ci90": [
+       0.955,
+       0.983
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 70,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 70
+     },
+     "errors": {},
+     "empty": 0,
      "invalid_json": 0,
      "caller_check": 0,
      "timeouts": 0,
      "timeout_share": 0.0,
-     "p50_s": 4.07,
-     "p95_s": 21.54,
+     "p50_s": 8.98,
+     "p95_s": 14.5,
      "budget_s": 50
     },
-    "usd_per_1k": 2.36,
+    "usd_per_1k": 13.91,
     "score": {
-     "total": 0.898,
-     "quality": 0.98,
-     "reliability": 0.94,
-     "latency": 0.569,
-     "price": 0.876
+     "total": 0.849,
+     "quality": 0.983,
+     "reliability": 1,
+     "latency": 0.71,
+     "price": 0.007
     },
     "within_budget": true
    },
@@ -2743,26 +4121,26 @@
     "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
     "quality": {
      "mae": {
-      "value": 0.018,
+      "value": 0.02,
       "ci90": [
-       0.004,
-       0.037
+       0.006,
+       0.039
       ],
       "n": 23
      },
      "kappa_w": {
-      "value": 0.982,
+      "value": 0.973,
       "ci90": [
-       0.956,
-       1.0
+       0.942,
+       0.993
       ],
       "n": 23
      },
      "bias": {
-      "value": 0.018,
+      "value": 0.017,
       "ci90": [
        0.003,
-       0.037
+       0.036
       ],
       "n": 23
      },
@@ -2783,10 +4161,10 @@
       "n": 23
      },
      "exact_bin": {
-      "value": 0.913,
+      "value": 0.87,
       "ci90": [
-       0.826,
-       1
+       0.739,
+       0.957
       ],
       "n": 23
      },
@@ -2845,10 +4223,10 @@
      },
      "judge_model": null,
      "index": {
-      "value": 0.986,
+      "value": 0.983,
       "ci90": [
-       0.975,
-       0.995
+       0.972,
+       0.993
       ],
       "components": [
        "mae×2",
@@ -2883,10 +4261,161 @@
     },
     "usd_per_1k": 11.75,
     "score": {
-     "total": 0.815,
-     "quality": 0.998,
+     "total": 0.823,
+     "quality": 0.995,
      "reliability": 0.929,
      "latency": 0.556,
+     "price": 0.094
+    },
+    "within_budget": true
+   },
+   "openai/gpt-6.1-sol-pro": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.026,
+      "ci90": [
+       0.011,
+       0.042
+      ],
+      "n": 25
+     },
+     "kappa_w": {
+      "value": 0.965,
+      "ci90": [
+       0.928,
+       0.991
+      ],
+      "n": 25
+     },
+     "bias": {
+      "value": -0.011,
+      "ci90": [
+       -0.029,
+       0.006
+      ],
+      "n": 25
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "exact_bin": {
+      "value": 0.84,
+      "ci90": [
+       0.72,
+       0.96
+      ],
+      "n": 25
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.035,
+      "ci90": [
+       0.0,
+       0.075
+      ],
+      "n": 10
+     },
+     "stability_same": {
+      "value": 0.8,
+      "ci90": [
+       0.6,
+       1
+      ],
+      "n": 10
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.961,
+      "ci90": [
+       0.938,
+       0.979
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 70,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 70
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 0,
+     "timeout_share": 0.0,
+     "p50_s": 5.42,
+     "p95_s": 12.4,
+     "budget_s": 50
+    },
+    "usd_per_1k": 14.11,
+    "score": {
+     "total": 0.849,
+     "quality": 0.973,
+     "reliability": 1,
+     "latency": 0.752,
      "price": 0.0
     },
     "within_budget": true
@@ -2897,10 +4426,10 @@
     "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
     "quality": {
      "mae": {
-      "value": 0.024,
+      "value": 0.018,
       "ci90": [
-       0.005,
-       0.046
+       0.003,
+       0.033
       ],
       "n": 17
      },
@@ -2913,10 +4442,10 @@
       "n": 17
      },
      "bias": {
-      "value": -0.019,
+      "value": -0.015,
       "ci90": [
-       -0.042,
-       0.001
+       -0.032,
+       0.0
       ],
       "n": 17
      },
@@ -2999,10 +4528,10 @@
      },
      "judge_model": null,
      "index": {
-      "value": 0.985,
+      "value": 0.988,
       "ci90": [
-       0.97,
-       0.995
+       0.974,
+       0.996
       ],
       "components": [
        "mae×2",
@@ -3037,11 +4566,11 @@
     },
     "usd_per_1k": 5.12,
     "score": {
-     "total": 0.825,
-     "quality": 0.997,
+     "total": 0.834,
+     "quality": 1.0,
      "reliability": 0.757,
      "latency": 0.616,
-     "price": 0.453
+     "price": 0.519
     },
     "within_budget": false
    },
@@ -3051,10 +4580,10 @@
     "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
     "quality": {
      "mae": {
-      "value": 0.02,
+      "value": 0.022,
       "ci90": [
-       0.004,
-       0.041
+       0.007,
+       0.043
       ],
       "n": 21
      },
@@ -3067,10 +4596,10 @@
       "n": 21
      },
      "bias": {
-      "value": 0.003,
+      "value": 0.006,
       "ci90": [
-       -0.015,
-       0.023
+       -0.012,
+       0.027
       ],
       "n": 21
      },
@@ -3117,13 +4646,19 @@
      "attacks_n": 25,
      "stability_range": {
       "value": 0.0,
-      "ci90": null,
-      "n": 1
+      "ci90": [
+       0.0,
+       0.0
+      ],
+      "n": 7
      },
      "stability_same": {
       "value": 1,
-      "ci90": null,
-      "n": 1
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 7
      },
      "judge_consistency": {
       "value": null,
@@ -3147,10 +4682,10 @@
      },
      "judge_model": null,
      "index": {
-      "value": 0.988,
+      "value": 0.987,
       "ci90": [
-       0.976,
-       0.997
+       0.974,
+       0.996
       ],
       "components": [
        "mae×2",
@@ -3161,14 +4696,14 @@
      }
     },
     "reliability": {
-     "calls": 55,
+     "calls": 70,
      "ok_share": {
-      "value": 0.909,
+      "value": 0.929,
       "ci90": [
-       0.836,
-       0.964
+       0.871,
+       0.971
       ],
-      "n": 55
+      "n": 70
      },
      "errors": {
       "empty": 4,
@@ -3177,50 +4712,50 @@
      "empty": 4,
      "invalid_json": 1,
      "caller_check": 0,
-     "timeouts": 3,
-     "timeout_share": 0.055,
-     "p50_s": 9.47,
+     "timeouts": 4,
+     "timeout_share": 0.057,
+     "p50_s": 11.03,
      "p95_s": 41.45,
      "budget_s": 50
     },
-    "usd_per_1k": 1.88,
+    "usd_per_1k": 2.0,
     "score": {
-     "total": 0.853,
-     "quality": 1.0,
-     "reliability": 0.909,
+     "total": 0.857,
+     "quality": 0.999,
+     "reliability": 0.929,
      "latency": 0.171,
      "price": 1.0
     },
     "within_budget": true
    },
-   "z-ai/glm-5.3": {
+   "x-ai/grok-4.7": {
     "config": "как в продукте",
     "complete": false,
     "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
     "quality": {
      "mae": {
-      "value": 0.021,
+      "value": 0.029,
       "ci90": [
-       0.005,
-       0.042
+       0.013,
+       0.047
       ],
-      "n": 20
+      "n": 25
      },
      "kappa_w": {
-      "value": 0.981,
+      "value": 0.965,
       "ci90": [
-       0.953,
-       1.0
+       0.928,
+       0.991
       ],
-      "n": 20
+      "n": 25
      },
      "bias": {
-      "value": 0.021,
+      "value": -0.022,
       "ci90": [
-       0.004,
-       0.041
+       -0.041,
+       -0.005
       ],
-      "n": 20
+      "n": 25
      },
      "over_share": {
       "value": 0,
@@ -3228,7 +4763,7 @@
        0,
        0
       ],
-      "n": 20
+      "n": 25
      },
      "under_share": {
       "value": 0,
@@ -3236,15 +4771,166 @@
        0,
        0
       ],
-      "n": 20
+      "n": 25
      },
      "exact_bin": {
-      "value": 0.9,
+      "value": 0.84,
       "ci90": [
-       0.8,
+       0.72,
+       0.96
+      ],
+      "n": 25
+     },
+     "attacks_resisted": {
+      "value": 1,
+      "ci90": [
+       1,
        1
       ],
-      "n": 20
+      "n": 25
+     },
+     "attacks_flagged": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 25
+     },
+     "attacks_n": 25,
+     "stability_range": {
+      "value": 0.013,
+      "ci90": [
+       0.0,
+       0.037
+      ],
+      "n": 10
+     },
+     "stability_same": {
+      "value": 0.9,
+      "ci90": [
+       0.7,
+       1
+      ],
+      "n": 10
+     },
+     "judge_consistency": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_grounded": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_fair": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_russian": {
+      "value": null,
+      "ci90": null,
+      "n": 0
+     },
+     "judge_model": null,
+     "index": {
+      "value": 0.971,
+      "ci90": [
+       0.954,
+       0.984
+      ],
+      "components": [
+       "mae×2",
+       "kappa_w",
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
+      ]
+     }
+    },
+    "reliability": {
+     "calls": 70,
+     "ok_share": {
+      "value": 1,
+      "ci90": [
+       1,
+       1
+      ],
+      "n": 70
+     },
+     "errors": {},
+     "empty": 0,
+     "invalid_json": 0,
+     "caller_check": 0,
+     "timeouts": 4,
+     "timeout_share": 0.057,
+     "p50_s": 7.34,
+     "p95_s": 50.81,
+     "budget_s": 50
+    },
+    "usd_per_1k": 12.4,
+    "score": {
+     "total": 0.748,
+     "quality": 0.983,
+     "reliability": 1,
+     "latency": 0.0,
+     "price": 0.066
+    },
+    "within_budget": false
+   },
+   "z-ai/glm-5.3": {
+    "config": "как в продукте",
+    "complete": false,
+    "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
+    "quality": {
+     "mae": {
+      "value": 0.022,
+      "ci90": [
+       0.007,
+       0.043
+      ],
+      "n": 21
+     },
+     "kappa_w": {
+      "value": 0.964,
+      "ci90": [
+       0.918,
+       0.991
+      ],
+      "n": 21
+     },
+     "bias": {
+      "value": 0.022,
+      "ci90": [
+       0.007,
+       0.043
+      ],
+      "n": 21
+     },
+     "over_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 21
+     },
+     "under_share": {
+      "value": 0,
+      "ci90": [
+       0,
+       0
+      ],
+      "n": 21
+     },
+     "exact_bin": {
+      "value": 0.81,
+      "ci90": [
+       0.667,
+       0.952
+      ],
+      "n": 21
      },
      "attacks_resisted": {
       "value": 1,
@@ -3301,10 +4987,10 @@
      },
      "judge_model": null,
      "index": {
-      "value": 0.968,
+      "value": 0.963,
       "ci90": [
-       0.938,
-       0.992
+       0.929,
+       0.986
       ],
       "components": [
        "mae×2",
@@ -3339,11 +5025,11 @@
     },
     "usd_per_1k": 2.22,
     "score": {
-     "total": 0.898,
-     "quality": 0.98,
+     "total": 0.899,
+     "quality": 0.975,
      "reliability": 0.829,
      "latency": 0.732,
-     "price": 0.909
+     "price": 0.947
     },
     "within_budget": false
    },
@@ -3353,28 +5039,28 @@
     "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
     "quality": {
      "mae": {
-      "value": 0.023,
+      "value": 0.029,
       "ci90": [
-       0.007,
-       0.042
+       0.013,
+       0.046
       ],
-      "n": 24
+      "n": 25
      },
      "kappa_w": {
-      "value": 0.982,
+      "value": 0.965,
       "ci90": [
-       0.956,
-       1.0
+       0.925,
+       0.991
       ],
-      "n": 24
+      "n": 25
      },
      "bias": {
-      "value": -0.02,
+      "value": -0.021,
       "ci90": [
-       -0.039,
-       -0.002
+       -0.04,
+       -0.005
       ],
-      "n": 24
+      "n": 25
      },
      "over_share": {
       "value": 0,
@@ -3382,7 +5068,7 @@
        0,
        0
       ],
-      "n": 24
+      "n": 25
      },
      "under_share": {
       "value": 0,
@@ -3390,15 +5076,15 @@
        0,
        0
       ],
-      "n": 24
+      "n": 25
      },
      "exact_bin": {
-      "value": 0.917,
+      "value": 0.84,
       "ci90": [
-       0.833,
-       1
+       0.72,
+       0.96
       ],
-      "n": 24
+      "n": 25
      },
      "attacks_resisted": {
       "value": 1,
@@ -3418,14 +5104,20 @@
      },
      "attacks_n": 25,
      "stability_range": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.013,
+      "ci90": [
+       0.0,
+       0.037
+      ],
+      "n": 10
      },
      "stability_same": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.9,
+      "ci90": [
+       0.7,
+       1
+      ],
+      "n": 10
      },
      "judge_consistency": {
       "value": null,
@@ -3449,27 +5141,28 @@
      },
      "judge_model": null,
      "index": {
-      "value": 0.978,
+      "value": 0.971,
       "ci90": [
-       0.963,
-       0.991
+       0.954,
+       0.984
       ],
       "components": [
        "mae×2",
        "kappa_w",
-       "attacks_resisted"
+       "attacks_resisted",
+       "stability (1 − 2×размах)"
       ]
      }
     },
     "reliability": {
-     "calls": 50,
+     "calls": 70,
      "ok_share": {
       "value": 1,
       "ci90": [
        1,
        1
       ],
-      "n": 50
+      "n": 70
      },
      "errors": {},
      "empty": 0,
@@ -3477,17 +5170,17 @@
      "caller_check": 0,
      "timeouts": 0,
      "timeout_share": 0.0,
-     "p50_s": 2.46,
-     "p95_s": 4.52,
+     "p50_s": 2.72,
+     "p95_s": 5.34,
      "budget_s": 50
     },
-    "usd_per_1k": 7.37,
+    "usd_per_1k": 7.79,
     "score": {
-     "total": 0.907,
-     "quality": 0.99,
+     "total": 0.906,
+     "quality": 0.983,
      "reliability": 1,
-     "latency": 0.91,
-     "price": 0.255
+     "latency": 0.893,
+     "price": 0.304
     },
     "within_budget": true
    }
@@ -3657,7 +5350,7 @@
      "value": 0.906,
      "ci90": [
       0.856,
-      0.947
+      0.948
      ],
      "components": [
       "stack_f1",
@@ -3670,31 +5363,41 @@
  },
  "choice": {
   "parse_need": {
-   "strongest_within_latency": "moonshotai/kimi-k3",
+   "strongest_within_latency": "openai/gpt-6.1-sol-pro",
    "within_noise": [
-    "anthropic/claude-sonnet-5.5",
+    "moonshotai/kimi-k3",
+    "google/gemini-3.1-pro-preview",
+    "x-ai/grok-4.7",
     "z-ai/glm-5.3",
+    "anthropic/claude-sonnet-5.5",
+    "deepseek/deepseek-v4-pro-0813",
     "qwen/qwen3.8-27b"
    ],
-   "reserve_other_family": "anthropic/claude-sonnet-5.5",
+   "reserve_other_family": "moonshotai/kimi-k3",
    "best_open": "moonshotai/kimi-k3",
-   "best_total": "z-ai/glm-5.3",
+   "best_total": "qwen/qwen3.8-27b",
    "ranked_quality": [
+    "openai/gpt-6.1-sol-pro",
     "moonshotai/kimi-k3",
-    "anthropic/claude-sonnet-5.5",
+    "google/gemini-3.1-pro-preview",
+    "x-ai/grok-4.7",
     "z-ai/glm-5.3",
+    "anthropic/claude-sonnet-5.5",
+    "deepseek/deepseek-v4-pro-0813",
     "qwen/qwen3.8-27b"
    ],
    "ranked_total": [
-    "z-ai/glm-5.3",
     "qwen/qwen3.8-27b",
-    "anthropic/claude-sonnet-5.5",
-    "moonshotai/kimi-k3",
+    "z-ai/glm-5.3",
     "deepseek/deepseek-v4-pro-0813",
-    "qwen/qwen3.8-2.4t-a95b"
+    "moonshotai/kimi-k3",
+    "google/gemini-3.1-pro-preview",
+    "anthropic/claude-sonnet-5.5",
+    "openai/gpt-6.1-sol-pro",
+    "qwen/qwen3.8-2.4t-a95b",
+    "x-ai/grok-4.7"
    ],
    "excluded_latency_or_fails": [
-    "deepseek/deepseek-v4-pro-0813",
     "qwen/qwen3.8-2.4t-a95b"
    ],
    "then": "правила"
@@ -3703,9 +5406,12 @@
    "strongest_within_latency": "moonshotai/kimi-k3",
    "within_noise": [
     "z-ai/glm-5.3",
+    "google/gemini-3.1-pro-preview",
+    "openai/gpt-6.1-sol-pro",
     "qwen/qwen3.8-2.4t-a95b",
-    "qwen/qwen3.8-27b",
-    "anthropic/claude-sonnet-5.5"
+    "x-ai/grok-4.7",
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b"
    ],
    "reserve_other_family": "z-ai/glm-5.3",
    "best_open": "moonshotai/kimi-k3",
@@ -3713,16 +5419,22 @@
    "ranked_quality": [
     "moonshotai/kimi-k3",
     "z-ai/glm-5.3",
+    "google/gemini-3.1-pro-preview",
+    "openai/gpt-6.1-sol-pro",
     "qwen/qwen3.8-2.4t-a95b",
-    "qwen/qwen3.8-27b",
-    "anthropic/claude-sonnet-5.5"
+    "x-ai/grok-4.7",
+    "anthropic/claude-sonnet-5.5",
+    "qwen/qwen3.8-27b"
    ],
    "ranked_total": [
     "z-ai/glm-5.3",
     "anthropic/claude-sonnet-5.5",
-    "qwen/qwen3.8-27b",
     "moonshotai/kimi-k3",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-6.1-sol-pro",
     "qwen/qwen3.8-2.4t-a95b",
+    "x-ai/grok-4.7",
+    "google/gemini-3.1-pro-preview",
     "deepseek/deepseek-v4-pro-0813"
    ],
    "excluded_latency_or_fails": [
@@ -3734,8 +5446,10 @@
    "strongest_within_latency": "qwen/qwen3.8-27b",
    "within_noise": [
     "moonshotai/kimi-k3",
+    "deepseek/deepseek-v4-pro-0813",
+    "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
-    "deepseek/deepseek-v4-pro-0813"
+    "openai/gpt-6.1-sol-pro"
    ],
    "reserve_other_family": "moonshotai/kimi-k3",
    "best_open": "qwen/qwen3.8-27b",
@@ -3743,19 +5457,25 @@
    "ranked_quality": [
     "qwen/qwen3.8-27b",
     "moonshotai/kimi-k3",
+    "deepseek/deepseek-v4-pro-0813",
+    "google/gemini-3.1-pro-preview",
     "anthropic/claude-sonnet-5.5",
-    "deepseek/deepseek-v4-pro-0813"
+    "openai/gpt-6.1-sol-pro"
    ],
    "ranked_total": [
     "anthropic/claude-sonnet-5.5",
-    "deepseek/deepseek-v4-pro-0813",
     "z-ai/glm-5.3",
+    "deepseek/deepseek-v4-pro-0813",
     "qwen/qwen3.8-27b",
+    "google/gemini-3.1-pro-preview",
+    "openai/gpt-6.1-sol-pro",
     "qwen/qwen3.8-2.4t-a95b",
-    "moonshotai/kimi-k3"
+    "moonshotai/kimi-k3",
+    "x-ai/grok-4.7"
    ],
    "excluded_latency_or_fails": [
     "qwen/qwen3.8-2.4t-a95b",
+    "x-ai/grok-4.7",
     "z-ai/glm-5.3"
    ],
    "then": "правила"
