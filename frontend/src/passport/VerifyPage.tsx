@@ -104,7 +104,7 @@ function Body({ d }: { d: PassportPublic }) {
               </li>
             ))}
           </ul>
-        ) : <p className="mt-2 text-sm text-brand-ink/70">Нет или скрыты кандидатом. Отсутствие истории ФСП — нейтральное состояние.</p>}
+        ) : <p className="mt-2 text-sm text-brand-ink/70">Нет или скрыты кандидатом. Нет истории ФСП — без штрафа; подтверждённые достижения ФСП дают бонус.</p>}
       </section>
 
       <Signature d={d} />
