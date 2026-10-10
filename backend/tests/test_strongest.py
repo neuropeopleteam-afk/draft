@@ -165,3 +165,17 @@ def test_reliability_counts_timeouts_and_percentiles():
     assert r["calls"] == 7 and r["empty"] == 1 and r["invalid_json"] == 1
     assert r["timeouts"] == 1 and r["p50_s"] == 3 and r["p95_s"] == 60
     assert abs(r["ok_share"]["value"] - 5 / 7) < 1e-3
+
+
+def test_llm_md_section12_matches_json():
+    """Таблица docs/LLM.md §12 собрана из того же strongest.json (не текстом вручную)."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "tools" / "llm"))
+    import strongest_summary as S
+
+    d = json.loads((ROOT / "docs/llm/strongest.json").read_text(encoding="utf-8"))
+    text = (ROOT / "docs/LLM.md").read_text(encoding="utf-8")
+    block = text.split(S.MD_BEGIN, 1)[1].split(S.MD_END, 1)[0]
+    assert block.strip() == S.md_table(d).strip(), "пересобрать: python tools/llm/strongest_summary.py /tmp/strong"
+    assert "модель, не люди" in block
