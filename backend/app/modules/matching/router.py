@@ -233,8 +233,7 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         recs = meta["categories"]  # снимок на момент расчёта версии — без пересчёта пула (Ф2, п. 4)
     else:  # версии до Ф2: считаем и сохраняем снимок, следующие открытия — без пересчёта
         cats = {c.id: c for c in db.scalars(select(Category)).all()}
-        counts = ranking.category_counts(db)
-        prov, unc = ranking.provisional_counts(db), ranking.unconfirmed_counts(db)
+        (counts, prov), unc = ranking.pool_counts(db), ranking.unconfirmed_counts(db)
         recs = ranking.recommended_categories(v.requirements, counts, cats)
         for r in recs:
             r["provisional"], r["unconfirmed"] = prov.get(r["id"], 0), unc.get(r["id"], 0)
@@ -473,8 +472,7 @@ def search_candidates(
 
 @router.get("/categories", summary="Категории с числом видимых кандидатов и рыночным диапазоном", responses=AUTH)
 def categories(user: User = Depends(employer), db: Session = Depends(get_db)) -> list[dict]:
-    counts = ranking.category_counts(db)
-    prov, unc = ranking.provisional_counts(db), ranking.unconfirmed_counts(db)
+    (counts, prov), unc = ranking.pool_counts(db), ranking.unconfirmed_counts(db)  # пул — одной загрузкой
     return [{"id": c.id, "title": c.title, "direction": c.direction_id, "grade": c.grade_id,
              "count": counts.get(c.id, 0), "provisional": prov.get(c.id, 0), "unconfirmed": unc.get(c.id, 0),
              "market_range": ranking._mr(c)}

@@ -132,23 +132,27 @@ def unconfirmed_counts(db: Session) -> dict[str, int]:
     return out
 
 
-def category_counts(db: Session) -> dict[str, int]:
+def pool_counts(db: Session) -> tuple[dict[str, int], dict[str, int]]:
+    """(category_counts, provisional_counts) за одну загрузку видимого пула. Экран категорий и расчёт подборки звали
+    обе функции — пул (до 500 кандидатов с профилями) грузился дважды; под нагрузкой это CPU воркера (docs/LOAD.md)."""
     out: dict[str, int] = {}
+    prov: dict[str, int] = {}
     for b in load_bundles(db, [p.user_id for p in visible_pool(db)]).values():
         for r in b.specializations.values():
             if r.category_id and r.status in ("confirmed", "provisional"):
                 out[r.category_id] = out.get(r.category_id, 0) + 1
-    return out
+            if r.category_id and r.status == "provisional":
+                prov[r.category_id] = prov.get(r.category_id, 0) + 1
+    return out, prov
+
+
+def category_counts(db: Session) -> dict[str, int]:
+    return pool_counts(db)[0]
 
 
 def provisional_counts(db: Session) -> dict[str, int]:
     """Сколько в категории «предварительно» (только Junior: правило нижнего порога)."""
-    out: dict[str, int] = {}
-    for b in load_bundles(db, [p.user_id for p in visible_pool(db)]).values():
-        for r in b.specializations.values():
-            if r.category_id and r.status == "provisional":
-                out[r.category_id] = out.get(r.category_id, 0) + 1
-    return out
+    return pool_counts(db)[1]
 
 
 def recommended_categories(req: dict, counts: dict[str, int], cats: dict[str, Category]) -> list[dict]:
@@ -425,7 +429,7 @@ def apply_filters(bundles: list[Bundle], f: dict) -> list[Bundle]:
 def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, include_refs: tuple = ()) -> dict:
     """include_refs: кандидаты, которые идут в results со своим настоящим местом, даже ниже limit (QR-демо жюри)."""
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
-    counts = category_counts(db)
+    counts, prov = pool_counts(db)
     recs = recommended_categories(req, counts, cats)
     cat_ids = filters.get("categories") or [r["id"] for r in recs if r["relation"] in ("exact", "direction", "all")]
     pool = visible_pool(db, category_ids=cat_ids)
@@ -458,7 +462,7 @@ def build_selection(db: Session, req: dict, filters: dict, limit: int = 30, incl
         results.append({"ref": b.profile.public_ref, "rank": rank, "score": s, "components": comps,
                         "reasons": reasons, "category_id": b.category_id, "must": must[b.profile.user_id],
                         "grade_status": b.grade_status, "card": card(b, cats)})
-    prov, unc = provisional_counts(db), unconfirmed_counts(db)
+    unc = unconfirmed_counts(db)
     for r in recs:
         r["provisional"] = prov.get(r["id"], 0)
         r["unconfirmed"] = unc.get(r["id"], 0)
