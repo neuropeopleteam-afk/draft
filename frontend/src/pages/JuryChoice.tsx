@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, errText, NB } from "../components/ui";
 import { useAuth } from "../lib/auth";
+import { useQuickSteps } from "../components/JuryQuick";
 import { guide, quick, QUICK, QUICK_MINUTES, startQuick, STEPS } from "../lib/jury";
 import { usePageTitle } from "../lib/meta";
 
@@ -14,6 +15,7 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const steps = useQuickSteps();  // с устной защитой (флаг Я15) — 8 + 1 по желанию
 
   async function startQ() {
     setBusy(true); setErr(null);
@@ -37,15 +39,15 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
         {err && <div className="mt-4"><Alert>{err}</Alert></div>}
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
           <section className="card flex flex-col p-5 sm:p-6" aria-labelledby="quick-t" data-testid="choice-quick">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{QUICK.length} шагов · около {QUICK_MINUTES} минут</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{QUICK.length} шагов{steps.length > QUICK.length ? ` + ${steps.length - QUICK.length} по желанию` : ""} · около {QUICK_MINUTES} минут</p>
             <h2 id="quick-t" className="mt-1 text-xl font-extrabold text-brand-night">Проверка за 12 минут</h2>
             <p className="mt-1.5 text-sm leading-relaxed text-brand-ink/75">Главный сценарий ТЗ своими руками: вы пишете свою потребность, приглашаете кандидата из подборки и отвечаете за него, проходите экспресс-тест и открываете доказательства.</p>
             <ol className="mt-4 space-y-2 text-sm">
-              {QUICK.map((s, i) => (
+              {steps.map((s, i) => (
                 <li key={s.title} className="flex gap-3">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-night text-[11px] font-bold text-white">{i + 1}</span>
+                  <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${s.optional ? "border border-dashed border-brand-night text-brand-night" : "bg-brand-night text-white"}`}>{i + 1}</span>
                   <span className="min-w-0">
-                    <b className="text-brand-night">{s.title}</b> <span className="tabular-nums text-brand-ink/65">≈{NB}{String(s.min).replace(".", ",")}{NB}мин</span>
+                    <b className="text-brand-night">{s.title}</b> <span className="tabular-nums text-brand-ink/65">≈{NB}{String(s.min).replace(".", ",")}{NB}мин{s.optional ? " сверх плана" : ""}</span>
                     <span className="block text-xs leading-snug text-brand-ink/70">Проверяет {s.checks}. Критерий {s.crit}.</span>
                   </span>
                 </li>

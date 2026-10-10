@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../lib/auth";
 import { GUIDE_EVENT, guide, isJury, juryLogin, juryReset, personaOf, quick, STEPS, type GuideMode, type Persona } from "../lib/jury";
-import { QuickGuide, QUICK_LEN, useQuickStep } from "./JuryQuick";  // Я9 «Проверка за 12 минут»
+import { QuickGuide, useQuickStep, useQuickSteps } from "./JuryQuick";  // Я9 «Проверка за 12 минут»
 import { api } from "../lib/api";
 import { errText } from "./ui";
 
@@ -84,7 +84,8 @@ export function JuryGuide() {
   const [ff, setFf] = useState<string | null>(null);  // «перемотать время»: напоминания Н6
   const active = guide.on() || isJury(me?.email);
   const [mode, setMode] = useState<GuideMode>(quick.mode());  // Я9: «12 минут» или справочник
-  const [q, setQ] = useQuickStep(mode, loc.pathname, me?.email);
+  const qSteps = useQuickSteps(), QUICK_LEN = qSteps.length;  // 8 или 9 (устная защита по флагу)
+  const [q, setQ] = useQuickStep(qSteps, mode, loc.pathname, me?.email);
   // «Показать проводник» с главной и «Скрыть» в другой вкладке — состояние берём из хранилища
   useEffect(() => {
     const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); setQ(quick.step()); };
