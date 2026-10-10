@@ -54,11 +54,14 @@ function Body({ r }: { r: any }) {
       <ul className="mt-3 max-w-4xl list-disc space-y-1 pl-5 text-sm text-brand-ink/75">
         <li>Парная разница MAE «вкл − выкл»: {signed(p.d_mae, 3)} (ДИ 90 % {ci(p.ci90)}), различаются {p.answers_differ} из {p.n} честных ответов.</li>
         <li>Цитат в ответах оценщика: {r.quotes?.quotes}, отброшено кодом: {r.quotes?.dropped}. Скептик вызывался для {r.skeptic_runs?.calls} из 50 ответов ({num((r.skeptic_runs?.share ?? 0) * 100, 0)} %).</li>
+        {r.full && (
+          <li>Все {r.full.n} ответов, промпт v3 + скептик: парная разница MAE {signed(r.full.paired?.on_minus_off?.d_mae, 3)} (ДИ 90 % {ci(r.full.paired?.on_minus_off?.ci90)}); цитат {r.full.quotes?.quotes}, отброшено кодом {r.full.quotes?.dropped}; скептик положен {r.full.skeptic_calls} ответам, ответил {r.full.skeptic_answered} (согласился {r.full.verdicts?.agree ?? 0}, не согласился — эксперту {r.full.verdicts?.disagree ?? 0}; поправок вниз {r.full.changes?.down}, вверх с подтверждённой цитатой {r.full.changes?.up}).</li>
+        )}
         <li>Все 406 ответов набора, только строгая сверка кодом на прежних ответах модели: MAE {n3(f.mae_off)} → {n3(f.mae_on)}, κw {n3(f.kappa_w_off)} → {n3(f.kappa_w_on)}; отброшено {f.dropped} из {f.quotes} цитат.</li>
         <li>Стоимость на ответ: {num(r.cost_per_answer_usd?.off, 4)} $ → {num(r.cost_per_answer_usd?.on, 4)} $ ({r.cost_per_answer_usd?.note}). Задержка оценки: медиана {num(r.latency_s?.v3?.p50, 1)} с; {r.latency_note}.</li>
         <li>{fix.text}: на {fix.replies} сохранённых ответах моделей итог изменился у {fix.changed}.</li>
       </ul>
-      <p className="mt-2 text-xs text-brand-ink/65">Замер {r.date} UTC, код {r.code_sha}. Данные: docs/llm/evidence_bench.json, evidence_offline.json, evidence_v2_guard_diff.json; пересчёт — tools/llm/evidence_bench.py.</p>
+      <p className="mt-2 text-xs text-brand-ink/65">Замер {r.date} UTC, код {r.code_sha}. Данные: docs/llm/evidence_bench.json, evidence_full.json, evidence_offline.json, evidence_v2_guard_diff.json; пересчёт — tools/llm/evidence_bench.py.</p>
     </>
   );
 }
