@@ -177,14 +177,23 @@ def test_verdict_table(mode, levels, answers, chars, expected):
 def test_evaluate_stub_defense_confirmed_and_lowering():
     spec = e.normalize_spec(defense_spec())
     spec, out = run_dialog(spec, [
-        "Я добавил индекс по user_id, потому что все запросы фильтруют по ней, а план показывал полный просмотр; проверял EXPLAIN ANALYZE.",
-        "Очередь развязывает производителя и потребителя, при пике сообщения копятся, обработчик разгребает в своём темпе; гонял нагрузочный тест.",
-        "Альтернатива индексу — денормализация, но она усложнила бы запись, поэтому выбрал индекс и партиционирование не делал.",
+        "Запросы всегда фильтруют по user_id, а план показывал seq scan — поэтому поставил btree-индекс именно на эту колонку. Сравнивал через EXPLAIN ANALYZE: было около 800 мс, стало единицы миллисекунд.",
+        "Очередь буферизует пик: производитель кладёт сообщения и не ждёт, а обработчик забирает их со своей скоростью. Гонял нагрузочный тест на десяти тысячах сообщений, задержка была стабильной.",
+        "Денормализацию отбросил, потому что при каждой записи пришлось бы обновлять копии данных — это усложняет запись и даёт шанс рассинхронизации; индекс дешевле.",
     ])
     v = e.evaluate(spec, out.transcript)
     assert v.verdict == "confirmed" and v.verdict_label == "подтверждено устно" and v.score and v.score >= 70
     assert v.source == "stub" and v.coverage == 100 and all(q.quotes for q in v.questions)
-    assert v.questions[0].question.startswith("Здравствуйте") and v.questions[0].answer_excerpt.startswith("Я добавил")
+    assert v.questions[0].question.startswith("Здравствуйте") and v.questions[0].answer_excerpt.startswith("Запросы всегда")
+
+
+def test_rules_verbatim_and_vague_are_partial():
+    spec = e.normalize_spec(defense_spec())
+    spec, out = run_dialog(spec, [LONG[:150], "В целом главное, чтобы очередь работала быстро, наверное, так и сделал бы, подробно не скажу.",
+                                  "Я добавил индекс по колонке user_id, потому что все запросы фильтруют по ней, а план показывал полный просмотр."])
+    v = e.evaluate(spec, out.transcript)
+    assert [q.level for q in v.questions] == ["partial", "partial", "partial"] and v.verdict == "insufficient"
+    assert "дословный" in v.questions[0].reasoning and "Общие слова" in v.questions[1].reasoning
 
 
 def test_evaluate_short_dialog_insufficient():
