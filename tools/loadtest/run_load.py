@@ -33,7 +33,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "docs" / "loadtest"
+OUT = Path(os.environ.get("LT_OUT", ROOT / "docs" / "loadtest"))  # отладочные прогоны — LT_OUT=/tmp/…, не в репозиторий
 STATE = Path(os.environ.get("LT_STATE", "/tmp/lt_jury_state.json"))
 LOCUST = os.environ.get("LOCUST", "/tmp/lt/bin/locust")
 KPY = os.environ.get("KPY", "")
@@ -199,7 +199,7 @@ def run(a) -> None:
         t.join(timeout=dur + 400)
     meta.update(end=time.strftime("%Y-%m-%dT%H:%M:%S%z"), locust_exit=p.returncode)
     (OUT / f"{a.tag}_meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1))
-    print(f"Locust завершён (код {p.returncode}) за {time.time() - t0:.0f} с; CSV — docs/loadtest/{a.tag}_*.csv")
+    print(f"Locust завершён (код {p.returncode}) за {time.time() - t0:.0f} с; CSV — {OUT}/{a.tag}_*.csv")
 
 
 def _scrub(s: str) -> str:
@@ -308,7 +308,7 @@ def preflight(a) -> None:
         print(f"{'OK ' if good else 'ERR'} {text}")
 
     v = subprocess.run([LOCUST, "--version"], capture_output=True, text=True) if Path(LOCUST).exists() else None
-    line(bool(v and v.returncode == 0), f"Locust: {(v.stdout or v.stderr).strip()[:60] if v else 'нет ' + LOCUST}")
+    line(bool(v and v.returncode == 0), f"Locust: {(v.stdout or v.stderr).strip().split(' from ')[0][:40] if v else 'нет ' + LOCUST}")
     c, body, _ = _get(f"{a.host}/api/health")
     line(c == 200 and '"ok"' in body, f"/api/health: {c}")
     c, body, _ = _get(f"{a.host}/api/meta")
@@ -356,6 +356,9 @@ def preflight(a) -> None:
 def nginx(a) -> None:
     """Сверка с журналом nginx стенда (только чтение): сколько запросов с User-Agent прогона дошло до сервера, коды
     ответа, неуспешные — по началу пути. Печатаются только счётчики (без адресов, токенов и чужих строк)."""
+    if not KPY:
+        print("KPY не задан — журнал nginx стенда не прочитан, сверки нет")
+        return
     meta = json.loads((OUT / f"{a.tag}_meta.json").read_text()) if (OUT / f"{a.tag}_meta.json").exists() else {}
     ua = meta.get("user_agent", f"spectrek-load/{a.tag}")
     awk = ("awk '{st=$9; path=$7; sub(/\\?.*/, \"\", path); n=split(path, s, \"/\"); "
