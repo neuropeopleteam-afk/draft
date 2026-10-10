@@ -19,6 +19,21 @@ Actions (`.github/workflows/ci.yml`, `e2e.yml`) и теми же команда�
 | E2E, локальный стек | 6 из 6 на свежем стеке с чистой базой | 42 с (при соседней нагрузке 1,5 мин) |
 | E2E, стенд | 6 из 6, после прогона демо жюри сброшено | 3,1 мин |
 
+## Состояние после слияния волны 4 (9 октября 2026 г., ветка integ/wave4)
+
+Поверх волны 3 (integ/0710 `580b982`) слиты feat/org-answers (И23), feat/file-parse (Ф5), feat/my-data (Д3), feat/hiring (Н8), feat/user-study (У1),
+feat/criteria-page (К1), feat/llm-local (И24), feat/fast-parse (И27), feat/attempts (И26), fix/fresh-look (Ф6), fix/pii-mask (П1), fix/a11y (А11);
+голова миграций `fp01` (`mu01 → oa01 → md01 → hr01 → us01 → fp01`). Числа подбора и ретеста — строки `make bench` / `make path-retest` / guard
+выше по тексту таблицы волны 3 пересчитаны на голове волны 4 (`ae87c00`, числа продукта совпали). Остальное на итоговой голове:
+
+| Что | Результат |
+|---|---|
+| Бэкенд, SQLite (`pytest`, без `-q`, сервер проверок, xdist) | **1222 из 1222 (+2 пропуска)**, 4,4 мин (снимок `1a2199e`; на `916cc4a`, где менялся только фронтенд, — 1221 + 1 падение `test_retake_seen::test_service_passes_all_previous_attempts_with_age`, повтор файла — 8 из 8: нестабилен под нагрузкой) |
+| Миграции Alembic | одна голова `fp01`; цепочка на PostgreSQL 16 (`pg16_09_chain.log`) — ок |
+| Фронтенд | `npm run build` — ок, 12–20 с; `tsc --noEmit` без ошибок |
+| E2E против `vite preview` (SQLite, uvicorn :8146, preview :5146) | **16 спеков, 35 сценариев, `E2E_STRICT=1` — 35 из 35** (пачками по 3–5 спеков под `flock`; `13-freshfix` — отдельно от `02`: в одной песочнице прогона приглашение из 02 даёт кандидату карточки Ф6 период тишины, и «Пригласить» неактивна — это правило продукта, не дефект) |
+| axe-core 4.10 (`tools/a11y/axe_audit.cjs`, 33 экрана × 1440/390, в т. ч. новые /criteria, /jury/go, /study, /candidate/mydata, /candidate/attempts, «Найм») | critical 0, serious 0, moderate 0, minor 0; горизонтальной прокрутки нет (после `contrast_fix.sh` один раз и правок `916cc4a`) |
+
 ## Состояние после слияния волны 3 (9 октября 2026 г., ветка integ/0710)
 
 Поверх волны 2 слиты feat/jury-match (И18), feat/must-have (Ф2), feat/validation (ВЛ), feat/subs (И25/Н6), feat/tasks2 (К5),
