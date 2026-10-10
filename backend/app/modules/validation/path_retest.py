@@ -712,6 +712,11 @@ def markdown(rep: dict) -> str:
           f"дотестирование у порога — в {_pc(ps['extension_share'])} сессий.",
           f"- «Junior (предварительно)», у которых доказан Стажёр (путь «принять Стажёра»): {ps['provisional_intern_proved']}.",
           ""]
+    from app.modules.validation.headline import retest_vs_truth  # Я8: та же фраза, что рядом с κ на /validation
+
+    v = retest_vs_truth(rep)
+    if v:
+        L += ["**Повтор ≠ точность.** " + v["lead"], "", v["cost"], ""]
     L += _sweep_section()
     bg = rep["block_gap"]
     L += ["## Флаг «общий блок сильнее направления» (консилиум 07.10, п. 7.4)", "",

@@ -434,6 +434,7 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
     flag_modified(ts, "result")
     db.commit()
     second_op.schedule(ts.id, second_todo)
+    _jury_integrity(result, profile, (res.details or {}).get("integrity"))  # в ответ, не в сохранённый итог
     return result
 
 
@@ -569,7 +570,18 @@ def result(db: Session, ts: TestSession) -> dict:
                 "sandbox": is_sandbox(profile), "retake_same_grade_days": get_settings().retake_same_grade_days,
                 "locked_until": (as_aware(specialization.locked_until).isoformat()
                                  if specialization.locked_until else None)})
+    _jury_integrity(out, profile, (er.get("details") or {}).get("integrity"))
     return out
+
+
+def _jury_integrity(out: dict, profile: CandidateProfile, integ: dict | None) -> None:
+    """Я11 (С3-11): подробные причины достоверности — только в демо-режиме жюри (is_sandbox), иначе ключа нет (Р27)."""
+    from app.modules.assessment.integrity import jury_view
+
+    out.pop("integrity_jury", None)
+    jv = jury_view(integ) if is_sandbox(profile) else None
+    if jv:
+        out["integrity_jury"] = jv
 
 
 def accept_lower_grade(db: Session, ts: TestSession) -> dict:

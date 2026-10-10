@@ -1,12 +1,13 @@
 import { createContext, useContext, type ReactNode } from "react";
 import { DIRECTIONS } from "../ui";
 import { ScrollX } from "../A11y";
+import { ProvenanceLine, type Prov } from "./Provenance";
 
 /* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в других условиях»
    и атаку утечкой по доле слитых вариантов. Данные — simulation из validation/report.json (make validate). */
 
 /** Ф6 (Н7): вместо «сейчас» — дата отчёта и мир, на котором он посчитан (задаёт Validation.tsx из provenance). */
-export const AsOf = createContext<{ date: string; world: string }>({ date: "", world: "" });
+export const AsOf = createContext<{ date: string; world: string; prov?: Prov | null }>({ date: "", world: "" });  // Я8: prov — строка происхождения
 const useNow = () => { const a = useContext(AsOf); return a.date ? `отчёт ${a.date}` : "текущая механика"; };
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
@@ -52,6 +53,7 @@ export function Conditions({ children }: { children: ReactNode }) {
   return (
     <p className="mt-2 rounded-xl bg-[#F3F2FB] px-3 py-2 text-xs leading-relaxed text-brand-night/80">
       <b>Условия: </b>{children}{a.world && <span className="block text-brand-night/65">Мир: {a.world}</span>}
+      {a.prov && <ProvenanceLine p={a.prov} className="mt-1" />}
     </p>
   );
 }
@@ -63,7 +65,9 @@ const lengthText = (c: any) => c?.ext_items
 const errorText = "ошибка параметров: трудность семейства — предкалибровка + N(0; 0,5), a × LogN(0; 0,25)";
 
 /** Условия для раздела «Тест»: заменяет прежнюю оговорку про немоделируемое дотестирование. */
-export function SimConditions({ sim, kind }: { sim: any; kind: "test" | "exposure" | "leak" }) {
+export function SimConditions({ sim, kind, kDate, runDate }: { sim: any; kind: "test" | "exposure" | "leak"; kDate?: string; runDate?: string }) {
+  // Я8: пересчитывались ли K перед этим снимком — по датам из отчёта (K старше запуска больше чем на сутки — нет)
+  const kOld = !!(kDate && runDate) && Date.parse(runDate) - Date.parse(kDate) > 86_400_000;
   const c = sim?.conditions ?? {};
   const m = sim?.mean ?? {};
   if (kind === "test") return (
@@ -76,7 +80,7 @@ export function SimConditions({ sim, kind }: { sim: any; kind: "test" | "exposur
   if (kind === "exposure") return (
     <Conditions>
       те же {c.n_per_direction} сессий на направление, что в разделе «Тест»; коэффициенты Sympson — Hetter
-      откалиброваны отдельно для каждой механики (make validate пересчитывает их до симуляции).
+      откалиброваны отдельно для каждой механики{kOld ? "; перед этим снимком не пересчитывались — симуляция идёт с K, которые сейчас читает движок (строка K выше)" : " (make validate пересчитывает их до симуляции)"}.
     </Conditions>
   );
   return (
@@ -259,17 +263,21 @@ export function ExposureNote({ sim }: { sim: any }) {
   const e = sim?.exposure_mean ?? {};
   const ext = sim?.retest_mean?.app?.mean_ext_items;
   const now = useNow();
+  // Я8: размер пула — из расчёта (семейств на направление), а не прежним числом текста
+  const fam = Object.values(sim?.directions ?? {}).map((d: any) => d?.exposure?.app?.families).filter((x: any) => typeof x === "number") as number[];
+  const half = fam.length ? `${Math.round(Math.min(...fam) / 2)}–${Math.round(Math.max(...fam) / 2)}` : "—";
+  const reached = typeof e.app?.max_rate === "number" && e.app.max_rate <= (e.app?.r_max ?? 0.3);
   return (
     <div className="mt-3">
       <Table head={["Механика", "Макс. частота", "Средняя", "Доля > 0,3", "Не используются"]}
         rows={[["До 06.10", num(e.legacy?.max_rate), num(e.legacy?.mean_rate), pct(e.legacy?.share_over_rmax), pct(e.legacy?.unused_share)],
           [`С 06.10 (${now})`, num(e.app?.max_rate), num(e.app?.mean_rate), pct(e.app?.share_over_rmax), pct(e.app?.unused_share)]]} />
       <p className="mt-2 text-sm leading-relaxed text-brand-ink/70">
-        Честно: цель 0,3 не достигнута ни до 06.10, ни в {now}. С двумя субпулами по ~20 семейств и 16 заданиями субпул почти исчерпывается; дотестирование у
+        {reached ? `Цель 0,3 достигнута в ${now}.` : `Честно: цель 0,3 не достигнута ни до 06.10, ни в ${now}.`} С двумя субпулами по {half} семейств на направление (общие и своего блока) и 16 заданиями значимая часть субпула показывается почти каждому; дотестирование у
         порога добавляет в среднем {num(ext, 1)} коротких задания, и самые информативные у порогов показываются чаще — это плата за стабильность грейда.
         Чтобы её ограничить, дотестирование сначала берёт свободные задания своего субпула. Защита от «слива» держится не на частоте семейства, а на
-        уникальном варианте у каждого кандидата, канарейках и карантине субпула (см. таблицу атаки ниже). Чтобы опустить частоту до 0,3, нужен банк
-        ≈ 200 семейств или 3 субпула.
+        уникальном варианте у каждого кандидата, канарейках и карантине субпула (см. таблицу атаки ниже). Опустить частоту могут больше семейств
+        в банке, третий субпул или пересчёт K Sympson — Hetter на текущем банке (строка K ниже); каждое из этих изменений меняет выбор заданий в продукте.
       </p>
     </div>
   );

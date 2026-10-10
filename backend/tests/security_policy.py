@@ -138,6 +138,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     # сброс/удаление песочницы отзывает токены всех её персон и имеет кулдаун — проверяем работодателями A и B
     ("POST", "/api/jury/reset"): ("jury_demo", {"jury_candidate": SKIP, "jury_expert": SKIP, "jury_fsp": SKIP,
                                                 "jury_other_candidate": SKIP}),
+    ("GET", "/api/jury/quick"): "jury_demo",  # Я9: демо-персоны своей песочницы для «Проверки за 12 минут»
     ("DELETE", "/api/jury/sandbox"): ("jury_demo", {"jury_candidate": SKIP, "jury_expert": SKIP, "jury_fsp": SKIP,
                                                     "jury_other_candidate": SKIP}),  # feat/jury-test
     # живая демонстрация: зал по QR — гости без регистрации (свой гостевой токен), экран — работодатель жюри
@@ -392,11 +393,14 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/junior-stability"): "open",  # feat/status
     ("GET", "/api/validation/grader-check"): "open",  # feat/integrity
     ("GET", "/api/validation/llm-models"): "open",  # feat/llm-local
+    ("GET", "/api/validation/ru-llm"): "open",  # замер «только российская модель»
+    ("GET", "/api/validation/strongest"): "open",  # сильнейшие модели по функциям
     ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
     ("GET", "/api/validation/attempts-repeat"): "open",  # feat/attempts (И26)
     ("GET", "/api/validation/test-length"): "open",  # Ф6 (Н8): длина теста на экране старта
+    ("GET", "/api/validation/provenance"): "open",  # Я8: происхождение чисел /validation
     ("POST", "/api/validation/self-check"): "auth",  # feat/jury-test
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",

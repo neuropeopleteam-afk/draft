@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTIONS, GRADES, Loading, NB, num, pct, useApi } from "../ui";
 import { SignatureLine } from "./Headline";
+import { ProvenanceLine, RetestVsTruth } from "./Provenance";
 import { ScrollX } from "../A11y";
 
 /** Блоки /validation: test–retest всего пути кандидата, дискриминативность семейств, карточка калибровки
@@ -69,6 +70,7 @@ function Body({ r }: { r: any }) {
         <K label="ICC(2,1) по θ̂" value={num(t.icc_theta, 3)} hint={<>95{NB}% ДИ {ci(t.icc_theta_ci)}; первая сессия, тот же заявленный грейд</>} />
         <K label="Семейства второй попытки уже были" value={pct(t.overlap_all?.mean)} hint={<>хотя бы одно — у {pct(t.overlap_all?.any_share)}; варианты при этом новые</>} />
       </div>
+      <RetestVsTruth v={r.vs_truth} className="mt-3" />
       <h3 className="mt-6 font-bold text-brand-night">Уверенные и у порога</h3>
       <p className="mt-1 max-w-4xl text-sm text-brand-ink/70">Граница решения выше номинального порога на z(0,8)·SE ≈ {num(sp.boundary_shift, 2)}: и подтверждение, и «уровень ниже» требуют P{NB}≥{NB}0,8. Поэтому «у порога» считается от этой границы; разрез по номинальному порогу — для сравнения.</p>
       <div className="mt-2"><T caption="Совпадение итогового грейда по группам" head={["Группа", "Доля", "Точно", "±1", "κ, 95 % ДИ"]} rows={[
@@ -94,7 +96,8 @@ function Body({ r }: { r: any }) {
       </div>
       <p className="mt-4 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Для сравнения, другой мир и другая процедура: Прототип А — κ {num(cr.kappa_w, 3)}, точно {pct(cr.exact)}, ±1 {pct(cr.within_1)}; 4 ступени, {cr.length} заданий, подтверждение при {cr.confirm_rule}, ошибка параметров {cr.param_error}, без доверительных интервалов и ICC. У нас 5 ступеней со Стажёром, подтверждение при P{NB}≥{NB}0,8 и ошибка параметров σ{NB}={NB}0,5 — числа напрямую не сравнимы.</p>
       <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">{r.caveat}</p>
-      <SignatureLine s={r.signature} className="mt-2" />
+      <ProvenanceLine p={r.provenance} className="mt-2" />
+      <SignatureLine s={r.signature} className="mt-1" />
       <BlockGap g={r.block_gap} />
       <Discrimination d={r.discrimination} />
     </>
