@@ -8,7 +8,8 @@
 | Возраст компании (дата регистрации) | 15 | ЕГРЮЛ: ≥ 3 лет — 15, ≥ 1 года — 10, ≥ 3 мес. — 5 |
 | Название в профиле совпадает с ЕГРЮЛ | 5 | ЕГРЮЛ |
 | Корпоративная почта на домене сайта компании | 15 | почта работодателя vs сайт |
-| Реалистичность вилок относительно рынка категории | 15 | приглашения и вакансии vs p25–p75 Хабр Карьеры |
+| Реалистичность вилок относительно рынка категории | 15 | приглашения и вакансии vs p25–p75 Хабр Карьеры; при HH_ENABLED —
+| | | vs медиана и p25–p75 вилок hh.ru по роли и региону (снимок с n и датой; n < 10 — без вывода, тогда Хабр) |
 | Доля принятых приглашений | 10 | история приглашений |
 | Скорость ответа работодателя | 10 | отклики и зонды |
 | Жалобы кандидатов на приглашения | штраф до −25 | нереальная вилка, не та роль, спам — за 180 дней |
@@ -121,6 +122,24 @@ def salary_check(salary_from: int, salary_to: int, cat: Category | None,
         return "warn", (f"низ вилки {_rub(salary_from)}{' (≈ ' + _rub(f_net) + ' на руки)' if gross else ''} "
                         f"заметно ниже рынка ({rng})")
     return "ok", f"вилка {_rub(salary_from)} – {_rub(salary_to)}{note} в разумных пределах ({rng})"
+
+
+def salary_check_market(salary_from: int, salary_to: int, cat: Category | None, basis: str | None = "gross", *,
+                        city: str | None = None, remote: bool = False) -> tuple[str, str, dict | None]:
+    """Я12б: вилка против рынка hh.ru (снимок app.modules.hh.snapshot: медиана, p25–p75 по роли и региону, n и дата)
+    при HH_ENABLED. n ≥ 10 — вывод по hh.ru; меньше — «мало данных, без вывода» и вывод по Хабр Карьере, как раньше.
+    Без флага — ровно salary_check (третий элемент None)."""
+    st, txt = salary_check(salary_from, salary_to, cat, basis)
+    from app.modules.hh import snapshot as hh_snapshot
+
+    if cat is None or not hh_snapshot.enabled():
+        return st, txt, None
+    hh = hh_snapshot.salary_vs_hh(salary_from, salary_to, basis, cat.id, city, remote=remote)
+    if hh is None:
+        return st, txt, None
+    if hh["conclusive"]:
+        return hh["status"], hh["text"], hh
+    return st, f"{txt}; {hh['text']}", hh
 
 
 def _demo_registry_factors(company: Company) -> tuple[list[dict], dict, bool, bool]:
@@ -244,12 +263,13 @@ def salary_factor(db: Session, company: Company, cats: dict[str, Category]) -> t
         if ids else {}
     for inv in invs:
         cp = cps.get(inv.candidate_user_id)
-        st, txt = salary_check(inv.salary_from, inv.salary_to, cats.get(cp.current_category_id) if cp else None,
-                               inv.salary_basis)
-        checks.append({"kind": "invitation", "title": inv.position_title, "status": st, "text": txt})
+        st, txt, hh = salary_check_market(inv.salary_from, inv.salary_to,
+                                          cats.get(cp.current_category_id) if cp else None, inv.salary_basis)
+        checks.append({"kind": "invitation", "title": inv.position_title, "status": st, "text": txt, "hh": hh})
     for v in db.scalars(select(Vacancy).where(Vacancy.company_id == company.id, Vacancy.status != "draft")).all():
-        st, txt = salary_check(v.salary_from, v.salary_to, cats.get(v.category_id), v.salary_basis)
-        checks.append({"kind": "vacancy", "title": v.title, "status": st, "text": txt})
+        st, txt, hh = salary_check_market(v.salary_from, v.salary_to, cats.get(v.category_id), v.salary_basis,
+                                          city=v.city, remote=v.work_format == "remote")
+        checks.append({"kind": "vacancy", "title": v.title, "status": st, "text": txt, "hh": hh})
     known = [c for c in checks if c["status"] != "unknown"]
     if not known:
         return _factor("salary", "Реалистичность вилок", "unknown", 7.5, 15,
@@ -257,11 +277,15 @@ def salary_factor(db: Session, company: Company, cats: dict[str, Category]) -> t
     bad = [c for c in known if c["status"] == "warn"]
     share_ok = 1 - len(bad) / len(known)
     pts = 15 * share_ok
+    by_hh = sum(1 for c in known if (c.get("hh") or {}).get("conclusive"))
+    src = (f" (по hh.ru — {by_hh} из {len(known)}, остальные — по Хабр Карьере)" if 0 < by_hh < len(known)
+           else " (рынок hh.ru по роли и региону)" if by_hh else "")
     if not bad:
         return _factor("salary", "Реалистичность вилок", "ok", pts, 15,
-                       (f"все вилки ({len(known)}) в пределах рынка категорий" if len(known) > 1 else "вилка в пределах рынка категории")), checks
+                       (f"все вилки ({len(known)}) в пределах рынка категорий" if len(known) > 1 else "вилка в пределах рынка категории")
+                       + src), checks
     return _factor("salary", "Реалистичность вилок", "warn", pts, 15,
-                   f"{len(bad)} из {len(known)} вилок вне рынка: {bad[0]['text']}"), checks
+                   f"{len(bad)} из {len(known)} вилок вне рынка{src}: {bad[0]['text']}"), checks
 
 
 def acceptance_factor(db: Session, company: Company) -> dict:
@@ -366,13 +390,13 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
     offer = None
     if invitation is not None:
         cp = db.get(CandidateProfile, invitation.candidate_user_id)
-        st, txt = salary_check(invitation.salary_from, invitation.salary_to,
-                               cats.get(cp.current_category_id) if cp else None, invitation.salary_basis)
-        offer = {"status": st, "text": txt}
+        st, txt, hh = salary_check_market(invitation.salary_from, invitation.salary_to,
+                                          cats.get(cp.current_category_id) if cp else None, invitation.salary_basis)
+        offer = {"status": st, "text": txt, **({"hh": hh} if hh else {})}
     elif vacancy is not None:
-        st, txt = salary_check(vacancy.salary_from, vacancy.salary_to, cats.get(vacancy.category_id),
-                               vacancy.salary_basis)
-        offer = {"status": st, "text": txt}
+        st, txt, hh = salary_check_market(vacancy.salary_from, vacancy.salary_to, cats.get(vacancy.category_id),
+                                          vacancy.salary_basis, city=vacancy.city, remote=vacancy.work_format == "remote")
+        offer = {"status": st, "text": txt, **({"hh": hh} if hh else {})}
     reasons_bad = [f for f in factors if f["status"] in ("bad", "warn")]
     reasons_ok = [f for f in factors if f["status"] == "ok"]
     return {
