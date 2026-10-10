@@ -310,6 +310,8 @@ def build(wdir: Path) -> dict:
 
 # ------------------------------------------------------------------ функции продукта: качество прежде всего
 W = {"quality": 0.5, "reliability": 0.25, "latency": 0.15, "price": 0.10}
+ERR_RU = {"empty": "пустой", "invalid_json": "невалидный JSON", "invalid_reply": "проверка вызывающего",
+          "schema_rejected": "схема отклонена", "timeout": "тайм-аут"}
 FUNC_RU = {"parse_need": "Разбор потребности", "resume": "Разбор резюме", "grade": "Оценка развёрнутых ответов"}
 
 
@@ -600,12 +602,130 @@ def recommend(d: dict) -> dict:
     return out
 
 
+# ------------------------------------------------------------------ таблица docs/LLM.md, раздел 12
+LLM_MD = ROOT / "docs" / "LLM.md"
+MD_BEGIN, MD_END = "<!-- strongest:begin -->", "<!-- strongest:end -->"
+FUNC_RU = {"parse_need": "Разбор потребности (вакансии)", "resume": "Разбор резюме",
+           "grade": "Оценка развёрнутых ответов"}
+
+
+def _n(x, d: int = 3, pct: bool = False, sign: bool = False) -> str:
+    if x is None:
+        return "—"
+    if pct:
+        s = f"{x * 100:.0f} %"
+    else:
+        s = f"{x:+.{d}f}" if sign else f"{x:.{d}f}"
+    return s.replace(".", ",")
+
+
+def _mv(m: dict | None, d: int = 3, pct: bool = False, sign: bool = False, ci: bool = False) -> str:
+    if not m or m.get("value") is None:
+        return "—"
+    s = _n(m["value"], d, pct, sign)
+    if ci and m.get("ci90"):
+        s += f" [{_n(m['ci90'][0], d, pct)}–{_n(m['ci90'][1], d, pct)}]"
+    return s
+
+
+def label(d: dict, key: str) -> str:
+    """Короткое имя модели для таблиц: без префикса поставщика каталога; вариант — в скобках."""
+    if key == "rules":
+        return "Правила (без LLM)"
+    meta = d["models"].get(key) or d["models"].get(key.split("@")[0]) or {}
+    name = (meta.get("name") or key).split(": ", 1)[-1]
+    var = key.split("@", 1)[1] if "@" in key else None
+    return name + (f" ({var})" if var else "")
+
+
+def quality_line(f: str, q: dict) -> str:
+    if f == "parse_need":
+        return (f"F1 стека: вакансии {_mv(q.get('stack_f1_vac'))}, трудные {_mv(q.get('stack_f1_hard'))}; поля "
+                f"{_mv(q.get('fields_acc'))}; отрицания {_mv(q.get('negations'), 2)}; выдуманные навыки "
+                f"{_mv(q.get('hallucinated_share'), pct=True)}; незнакомые названы {_mv(q.get('unknown_named'), 2)}")
+    if f == "resume":
+        pii = "—" if q.get("pii_sent_to_model") is None else f"в запрос {q['pii_sent_to_model']}, в ответе " \
+            f"{q.get('pii_in_reply') if q.get('pii_in_reply') is not None else '—'}"
+        return (f"F1 навыков {_mv(q.get('stack_f1'))}; лишние {_mv(q.get('extra_share'), pct=True)}; стаж ±0,5 г. "
+                f"{_mv(q.get('experience_ok'), 2)}; ПДн: {pii}")
+    j = "—" if not (q.get("judge_consistency") or {}).get("value") else \
+        f"{_mv(q.get('judge_consistency'), 2)} / рус. {_mv(q.get('judge_russian'), 1)} из 5"
+    return (f"MAE {_mv(q.get('mae'))}; κw {_mv(q.get('kappa_w'))}; смещение {_mv(q.get('bias'), sign=True)}; "
+            f"точная корзина {_mv(q.get('exact_bin'), 2)}; атаки отбиты {_mv(q.get('attacks_resisted'), pct=True)}; "
+            f"размах 3 оценок {_mv(q.get('stability_range'), 2)}; обоснование (судья) {j}")
+
+
+def md_table(d: dict) -> str:
+    """Раздел 12 docs/LLM.md из strongest.json: по функции — таблица моделей и выбор."""
+    out = [f"Сводка `docs/llm/strongest.json` от {d['date']} (код `{d['code_sha']}`). Оценка моделью по эталону из "
+           f"моделей — модель, не люди. Интервал — бутстреп 90 % по входам. Сводная оценка: качество "
+           f"{_n(d['weights']['quality'], 2)} · надёжность {_n(d['weights']['reliability'], 2)} · задержка "
+           f"{_n(d['weights']['latency'], 2)} · цена {_n(d['weights']['price'], 2)}; «в бюджете» — p95 не больше "
+           f"тайм-аута стенда и успешных ответов не меньше 90 %.", ""]
+    rules = d.get("functions_rules") or {}
+    for f, cells in d.get("functions", {}).items():
+        out += [f"#### {FUNC_RU.get(f, f)} (тайм-аут стенда {d['budget_s'][f]} с)", "",
+                "| Модель | Индекс качества [90 %] | Метрики качества | Успешно | p50 / p95, с | $ за 1000 | Сводная | "
+                "В бюджете |", "|---|---|---|---|---|---|---|---|"]
+        for m, c in sorted(cells.items(), key=lambda kv: -(kv[1]["quality"]["index"]["value"] or 0)):
+            r = c["reliability"]
+            errs = ", ".join(f"{ERR_RU.get(k, k)} {v}" for k, v in sorted(r["errors"].items())) if r["errors"] else "без отказов"
+            cfg = "" if c.get("config") == "как в продукте" else f" — {c['config']}"
+            part = "" if c.get("complete") else " (не все наборы)"
+            out.append(f"| {label(d, m)}{cfg}{part} | {_mv(c['quality']['index'], ci=True)} | "
+                       f"{quality_line(f, c['quality'])} | {_mv(r['ok_share'], pct=True)} из {r['calls']} ({errs}) | "
+                       f"{_n(r['p50_s'], 1)} / {_n(r['p95_s'], 1)} | {_n(c['usd_per_1k'], 2)} | "
+                       f"{_n(c['score']['total'])} | {'да' if c['within_budget'] else 'нет'} |")
+        if f in rules:
+            q = rules[f]["quality"]
+            out.append(f"| Правила (без LLM) | {_mv(q['index'], ci=True)} | {quality_line(f, q)} | 100 % | <0,1 | 0 | "
+                       f"— | да |")
+        ch = (d.get("choice") or {}).get(f)
+        if ch:
+            noise = ", ".join(label(d, m) for m in ch["within_noise"]) or "нет"
+            excl = ", ".join(label(d, m) for m in ch["excluded_latency_or_fails"]) or "нет"
+            out += ["", f"Сильнейшая в пределах задержки: **{label(d, ch['strongest_within_latency'])}**; в пределах "
+                        f"шума (интервалы пересекаются): {noise}. Резерв другой семьи: "
+                        f"{label(d, ch['reserve_other_family']) if ch['reserve_other_family'] else '—'}; лучшая "
+                        f"открытая: {label(d, ch['best_open']) if ch['best_open'] else '—'}; лучшая по сводной: "
+                        f"{label(d, ch['best_total'])}; затем {ch['then']}. Вне бюджета задержки или с отказами "
+                        f"> 10 %: {excl}."]
+        if f == "grade" and cells:
+            refs = sorted({c.get("reference") for c in cells.values() if c.get("reference")})
+            out += ["", "Эталон оценщика: " + "; ".join(refs) + "."]
+        out.append("")
+    ag = d.get("judges_agreement") or []
+    if ag:
+        out.append("Согласие эталона между собой (честные ответы): " + "; ".join(
+            f"{label(d, a['a'])} — {label(d, a['b'])}: MAE {_mv(a['mae'])}, κw {_mv(a['kappa_w'])} (n = {a['n']})"
+            for a in ag) + ".")
+        out.append("")
+    out.append("Условия: " + " ".join(d.get("conditions") or []))
+    if d.get("pending"):
+        out += ["", "Ещё не замерено: " + d["pending"]]
+    nm = d.get("not_measured") or []
+    if nm:
+        out += ["", "Не мерили: " + "; ".join(f"{x['model']} — {x['why']}" for x in nm) + "."]
+    return "\n".join(out).rstrip() + "\n"
+
+
+def write_md(d: dict, path: Path = LLM_MD) -> bool:
+    """Заменить блок между метками в docs/LLM.md; меток нет — ничего не делать (False)."""
+    text = path.read_text(encoding="utf-8")
+    if MD_BEGIN not in text or MD_END not in text:
+        return False
+    head, rest = text.split(MD_BEGIN, 1)
+    _, tail = rest.split(MD_END, 1)
+    path.write_text(head + MD_BEGIN + "\n" + md_table(d) + MD_END + tail, encoding="utf-8")
+    return True
+
+
 def write(wdir: Path) -> dict:
     d = build(wdir)
     text = json.dumps(d, ensure_ascii=False, indent=1)
     OUT.write_text(text, encoding="utf-8")
     DATA_COPY.write_text(text, encoding="utf-8")
-    print("→", OUT, DATA_COPY)
+    print("→", OUT, DATA_COPY, "| docs/LLM.md §12:", "обновлён" if write_md(d) else "нет меток")
     return d
 
 
