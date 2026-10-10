@@ -139,3 +139,43 @@ def test_sweep_task_small():
     r4 = gs.run_task((gs._p(levels=4, misspec=0.35, decision="point"), 0, "backend", 3))
     assert all(0 <= v <= 3 for v in r4["l1"] + r4["true"])
     assert np.isfinite(r4["min1"]).all()
+
+
+def test_confirm_level_setting(monkeypatch):
+    """Порог уверенности — из настройки ASSESSMENT_CONFIRM_LEVEL (по умолчанию 0,6 по перебору); 0,8 — прежнее правило."""
+    from app.modules.assessment.grades import GRADE_CUTS, confirm_level, confirm_pct, decide_grade, p_at_least
+
+    assert get_settings().assessment_confirm_level == pytest.approx(0.6)
+    se = 0.33
+    th = GRADE_CUTS["middle"] + 0.5 * se  # P(θ ≥ порога Middle) ≈ 0,69: подтверждён при 0,6, не при 0,8
+    assert 0.6 < p_at_least(th, se, "middle") < 0.8
+    assert decide_grade(th, se, "middle").confirmed
+    assert not decide_grade(th, se, "middle", confirm_level=0.8).confirmed
+    monkeypatch.setenv("ASSESSMENT_CONFIRM_LEVEL", "0.8")
+    get_settings.cache_clear()
+    try:
+        assert confirm_level() == pytest.approx(0.8) and confirm_pct() == 80
+        assert not decide_grade(th, se, "middle").confirmed
+    finally:
+        monkeypatch.delenv("ASSESSMENT_CONFIRM_LEVEL")
+        get_settings.cache_clear()
+
+
+def test_meta_confirm_pct(client):
+    r = client.get("/api/meta")
+    assert r.status_code == 200
+    assert r.json()["rules"]["confirm_pct"] == round(100 * get_settings().assessment_confirm_level)
+
+
+def test_grade_accuracy_endpoint(client):
+    r = client.get("/api/validation/grade-accuracy")
+    assert r.status_code == 200
+    d = r.json()
+    if d.get("missing"):
+        pytest.skip("grade_sweep.json не посчитан")
+    assert d["baseline"]["label"].startswith("прежняя конфигурация")
+    ch = d["choice"]["row"]
+    assert ch["feasible"] and ch["exact"] > d["baseline"]["exact"]
+    assert ch["over"] <= d["constraints"]["max_over"]
+    assert ch["point"]["confirm_level"] == pytest.approx(get_settings().assessment_confirm_level)
+    assert d["pareto"] and d["worlds"] and d["key_rows"]

@@ -712,6 +712,7 @@ def markdown(rep: dict) -> str:
           f"дотестирование у порога — в {_pc(ps['extension_share'])} сессий.",
           f"- «Junior (предварительно)», у которых доказан Стажёр (путь «принять Стажёра»): {ps['provisional_intern_proved']}.",
           ""]
+    L += _sweep_section()
     bg = rep["block_gap"]
     L += ["## Флаг «общий блок сильнее направления» (консилиум 07.10, п. 7.4)", "",
           f"Проверка правила: доля верных в блоке направления ниже, чем в общем, на ≥ {_f(GAP_SHARE, 1)} при ≥ "
@@ -756,13 +757,56 @@ def markdown(rep: dict) -> str:
     return "\n".join(L)
 
 
+def _sweep_section() -> list[str]:
+    """Я22: итог перебора правил теста (data/grade_sweep.json, make grade-sweep) — коротко; таблицы — GRADE_ACCURACY.md."""
+    sp = OUT.parent / "grade_sweep.json"
+    if not sp.exists():
+        return []
+    gs = json.loads(sp.read_text(encoding="utf-8"))
+    pts = {q["key"]: q for q in gs["points"]}
+    base, ch = pts.get(gs["baseline_key"]), pts.get((gs.get("choice") or {}).get("key"))
+    if not base or not ch:
+        return []
+    b, c = base["metrics"], ch["metrics"]
+    strict = pts.get((gs.get("choice_strict_over_6") or {}).get("key"))
+
+    def pc(x: float) -> str:
+        return f"{_f(100 * x, 1)} %"
+
+    def m(x: dict) -> str:
+        return (f"точно {pc(x['exact'])}, выше {pc(x['over'])}, ниже {pc(x['under'])}, без категории {pc(x['none'])}, "
+                f"совпадение при повторе {pc(x['retest_exact'])}, κw {_f(x['retest_kappa'])}, {_f(x['minutes_mean'], 0)} мин")
+    L = ["## Правило решения: перебор на симуляции (10.10)", "",
+         f"Перебрано {len(gs['points'])} вариантов правил теста на тех же кандидатах (общие случайные числа, 5 × 500, "
+         f"коммит `{gs['signature']['commit']}`): порог уверенности 0,5–0,8, решение по лучшей оценке θ̂, дотестирование у "
+         "границы 0–12 заданий, минимум и максимум заданий, остановка по SE, z классификации, «уровень выше в сессии», "
+         "исключение семейств с низкой информацией, частичный балл, вес «информация на минуту», мир с ошибкой параметров "
+         "σ 0,35 и 4 ступени, как у FSP Talent. Модель, не люди. Таблицы и Парето — `docs/validation/GRADE_ACCURACY.md`, "
+         "блок `/validation#grade-accuracy`.", "",
+         f"- Было (P ≥ 0,8): {m(b)}.",
+         f"- Выбрано и действует по умолчанию (`ASSESSMENT_CONFIRM_LEVEL` = {_f(ch['point']['confirm_level'], 2)}): {m(c)}.",
+         ]
+    if strict and strict["key"] != ch["key"]:
+        L.append(f"- При завышении ≤ 6 % (карточка Я22) — P ≥ {_f(strict['point']['confirm_level'], 2)}: {m(strict['metrics'])}.")
+    L += ["- Длина теста, дотестирование, остановка по SE и z меняют точность в пределах ±2 п. п.: тест упирается в 60 "
+          "минут, SE в конце ≈ 0,33. Почти две трети «ниже» — кандидаты, заявившие грейд ниже своего: тест подтверждает "
+          "заявленный грейд и выше не поднимает.",
+          "- Решение по лучшей оценке θ̂ без запаса уверенности даёт ≈ 65 % точно, но завышение 15–18 % — не проходит.", ""]
+    return L
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="Test–retest всего пути и дискриминативность → data/path_retest.json")
     ap.add_argument("--n", type=int, default=500, help="кандидатов на направление")
     ap.add_argument("--pilot", type=int, default=1000, help="человек в симулированном пилоте на направление")
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--no-write", action="store_true")
+    ap.add_argument("--md-only", action="store_true", help="только пересобрать TEST_RETEST.md из data/path_retest.json")
     a = ap.parse_args()
+    if a.md_only:
+        DOCS_MD.write_text(markdown(json.loads(OUT.read_text(encoding="utf-8"))), encoding="utf-8")
+        print(f"→ {DOCS_MD}")
+        return 0
     rep = run(a.n, a.quick, not a.no_write, a.pilot)
     pg = rep["total"]["path_grade"]
     print(f"итог: κw {pg['kappa_w']} {pg.get('kappa_w_ci')}, точно {pg['exact']}, ±1 {pg['within_1']}, "

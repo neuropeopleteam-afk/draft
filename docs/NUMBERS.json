@@ -66,6 +66,31 @@
   "exposure_bank_families": 128,
   "report_matches_bank": false
  },
+ "grade_accuracy": {
+  "confirm_level": 0.6,
+  "path_retest_commit": "59cb381",
+  "path_retest_at": "2026-10-10",
+  "sweep_commit": "36e4f02",
+  "sweep_points": 72,
+  "before": {
+   "exact": 0.575,
+   "over": 0.049,
+   "under": 0.348,
+   "none": 0.054,
+   "retest_exact": 0.77,
+   "retest_kappa": 0.844,
+   "minutes_mean": 56.632
+  },
+  "now": {
+   "exact": 0.641,
+   "over": 0.065,
+   "under": 0.28,
+   "none": 0.034,
+   "retest_exact": 0.804,
+   "retest_kappa": 0.874,
+   "minutes_mean": 56.563
+  }
+ },
  "tests": {
   "failed": 0,
   "passed": 1222,
