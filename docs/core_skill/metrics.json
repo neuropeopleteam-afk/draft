@@ -1,0 +1,2485 @@
+{
+ "expert_v1": {
+  "n_needs": 10,
+  "n_pairs": 109,
+  "raters": "E1, E2, E3 (медиана), модель, не люди",
+  "summary": {
+   "p@5": {
+    "off": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "group": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "within": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "cap_5": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "cap_3": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "penalty_0.2": {
+     "mean": 0.66,
+     "lo": 0.5,
+     "hi": 0.82,
+     "n": 10
+    },
+    "diff_group": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    },
+    "diff_within": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    },
+    "diff_cap_5": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    },
+    "diff_cap_3": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    },
+    "diff_penalty_0.2": {
+     "mean": 0.0,
+     "lo": 0.0,
+     "hi": 0.0,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 0
+    }
+   },
+   "ndcg@5": {
+    "off": {
+     "mean": 0.86,
+     "lo": 0.739,
+     "hi": 0.961,
+     "n": 10
+    },
+    "group": {
+     "mean": 0.864,
+     "lo": 0.743,
+     "hi": 0.966,
+     "n": 10
+    },
+    "within": {
+     "mean": 0.864,
+     "lo": 0.743,
+     "hi": 0.966,
+     "n": 10
+    },
+    "cap_5": {
+     "mean": 0.864,
+     "lo": 0.743,
+     "hi": 0.966,
+     "n": 10
+    },
+    "cap_3": {
+     "mean": 0.864,
+     "lo": 0.743,
+     "hi": 0.966,
+     "n": 10
+    },
+    "penalty_0.2": {
+     "mean": 0.864,
+     "lo": 0.743,
+     "hi": 0.966,
+     "n": 10
+    },
+    "diff_group": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.013,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    },
+    "diff_within": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.013,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    },
+    "diff_cap_5": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.013,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    },
+    "diff_cap_3": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.013,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    },
+    "diff_penalty_0.2": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.013,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    }
+   },
+   "ndcg@10": {
+    "off": {
+     "mean": 0.928,
+     "lo": 0.867,
+     "hi": 0.979,
+     "n": 10
+    },
+    "group": {
+     "mean": 0.932,
+     "lo": 0.87,
+     "hi": 0.984,
+     "n": 10
+    },
+    "within": {
+     "mean": 0.932,
+     "lo": 0.87,
+     "hi": 0.984,
+     "n": 10
+    },
+    "cap_5": {
+     "mean": 0.932,
+     "lo": 0.87,
+     "hi": 0.984,
+     "n": 10
+    },
+    "cap_3": {
+     "mean": 0.932,
+     "lo": 0.87,
+     "hi": 0.984,
+     "n": 10
+    },
+    "penalty_0.2": {
+     "mean": 0.932,
+     "lo": 0.87,
+     "hi": 0.984,
+     "n": 10
+    },
+    "diff_group": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.011,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    },
+    "diff_within": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.011,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    },
+    "diff_cap_5": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.011,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    },
+    "diff_cap_3": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.011,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    },
+    "diff_penalty_0.2": {
+     "mean": 0.004,
+     "lo": 0.0,
+     "hi": 0.011,
+     "n": 10,
+     "wilcoxon_p": null,
+     "worse_needs": 0,
+     "better_needs": 1
+    }
+   }
+  },
+  "per_need": [
+   {
+    "need": "N00",
+    "text": "Ищем бэкенд-разработчика уровня middle: обязательно Python, FastAPI и PostgreSQL, опыт с Redis. Будет плюсом Kafka. Удалённо, 220–300 тыс.",
+    "pairs": 11,
+    "relevant": 4,
+    "core": "Python",
+    "core_active": true,
+    "states": {
+     "3b827f49-e7ab-4e15-acf0-3806269d258e": "confirmed",
+     "0873b576-a33b-49de-a34b-30636b2931d6": "confirmed",
+     "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa": "confirmed",
+     "e091b323-5710-412b-99e0-c04802bb1283": "confirmed",
+     "28dfbd00-a7df-49c3-b26a-ed260024d354": "confirmed",
+     "1c091fb1-c60e-4178-b7f3-42c140259c8f": null,
+     "eac98615-cb19-43ed-ab6b-f15137a616b0": null,
+     "2ba813d1-9272-4941-ba58-1168db8de006": null,
+     "1e6f9c35-7e3e-490b-afa2-0ab3e5ed581c": null,
+     "72d9d2df-5285-4063-9741-6ad21871f58d": null,
+     "db968d52-5ebf-4d13-975b-b0e84e1a5533": null
+    },
+    "off": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "ndcg@10": 0.7719,
+     "top5": [
+      [
+       "3b827f49-e7ab-4e15-acf0-3806269d258e",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "e091b323-5710-412b-99e0-c04802bb1283",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0873b576-a33b-49de-a34b-30636b2931d6",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "28dfbd00-a7df-49c3-b26a-ed260024d354",
+       1.0,
+       "confirmed"
+      ],
+      [
+       "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa",
+       1.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "ndcg@10": 0.7719,
+     "top5": [
+      [
+       "3b827f49-e7ab-4e15-acf0-3806269d258e",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "e091b323-5710-412b-99e0-c04802bb1283",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0873b576-a33b-49de-a34b-30636b2931d6",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "28dfbd00-a7df-49c3-b26a-ed260024d354",
+       1.0,
+       "confirmed"
+      ],
+      [
+       "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa",
+       1.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "ndcg@10": 0.7719,
+     "top5": [
+      [
+       "3b827f49-e7ab-4e15-acf0-3806269d258e",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "e091b323-5710-412b-99e0-c04802bb1283",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0873b576-a33b-49de-a34b-30636b2931d6",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "28dfbd00-a7df-49c3-b26a-ed260024d354",
+       1.0,
+       "confirmed"
+      ],
+      [
+       "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa",
+       1.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "ndcg@10": 0.7719,
+     "top5": [
+      [
+       "3b827f49-e7ab-4e15-acf0-3806269d258e",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "e091b323-5710-412b-99e0-c04802bb1283",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0873b576-a33b-49de-a34b-30636b2931d6",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "28dfbd00-a7df-49c3-b26a-ed260024d354",
+       1.0,
+       "confirmed"
+      ],
+      [
+       "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa",
+       1.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "ndcg@10": 0.7719,
+     "top5": [
+      [
+       "3b827f49-e7ab-4e15-acf0-3806269d258e",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "e091b323-5710-412b-99e0-c04802bb1283",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0873b576-a33b-49de-a34b-30636b2931d6",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "28dfbd00-a7df-49c3-b26a-ed260024d354",
+       1.0,
+       "confirmed"
+      ],
+      [
+       "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa",
+       1.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 0.6,
+     "ndcg@5": 0.5973,
+     "ndcg@10": 0.7719,
+     "top5": [
+      [
+       "3b827f49-e7ab-4e15-acf0-3806269d258e",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "e091b323-5710-412b-99e0-c04802bb1283",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0873b576-a33b-49de-a34b-30636b2931d6",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "28dfbd00-a7df-49c3-b26a-ed260024d354",
+       1.0,
+       "confirmed"
+      ],
+      [
+       "b94c09c6-10f7-4634-8f18-8b3a6b04f7aa",
+       1.0,
+       "confirmed"
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N02",
+    "text": "Data Scientist middle: Python, pandas, scikit-learn, статистика, SQL. Желательно Airflow и ClickHouse. 200–280 тыс. ₽",
+    "pairs": 11,
+    "relevant": 5,
+    "core": null,
+    "core_active": false,
+    "states": {
+     "a0c80d3a-97da-4e9b-b659-d9e02bd90427": null,
+     "0db01f10-f147-4ae8-9ade-99221cf8fbd1": null,
+     "91e7ad1f-32d8-417b-bff2-6b18b866fa75": null,
+     "ea30edc2-66d4-42be-8a27-b69743c5520b": null,
+     "4ba3af4d-7658-45ca-9005-a721715872e6": null,
+     "d0b54e31-4873-4bf5-814e-15a8b335445b": null,
+     "eaa7d5f9-143a-4db8-98eb-dac76dd35a34": null,
+     "ecfd7322-c6ab-4e95-8fab-d3216b3039ca": null,
+     "bb142539-479f-4df2-801e-35957dd7f768": null,
+     "59aa1707-639f-4757-8bd9-c6e6d74c3b20": null,
+     "2cccdbf0-0f46-466f-9225-a010a4a9692f": null
+    },
+    "off": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "ndcg@10": 0.9639,
+     "top5": [
+      [
+       "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+       2.0,
+       null
+      ],
+      [
+       "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+       2.0,
+       null
+      ],
+      [
+       "ea30edc2-66d4-42be-8a27-b69743c5520b",
+       2.0,
+       null
+      ],
+      [
+       "4ba3af4d-7658-45ca-9005-a721715872e6",
+       1.0,
+       null
+      ],
+      [
+       "a0c80d3a-97da-4e9b-b659-d9e02bd90427",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "ndcg@10": 0.9639,
+     "top5": [
+      [
+       "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+       2.0,
+       null
+      ],
+      [
+       "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+       2.0,
+       null
+      ],
+      [
+       "ea30edc2-66d4-42be-8a27-b69743c5520b",
+       2.0,
+       null
+      ],
+      [
+       "4ba3af4d-7658-45ca-9005-a721715872e6",
+       1.0,
+       null
+      ],
+      [
+       "a0c80d3a-97da-4e9b-b659-d9e02bd90427",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "ndcg@10": 0.9639,
+     "top5": [
+      [
+       "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+       2.0,
+       null
+      ],
+      [
+       "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+       2.0,
+       null
+      ],
+      [
+       "ea30edc2-66d4-42be-8a27-b69743c5520b",
+       2.0,
+       null
+      ],
+      [
+       "4ba3af4d-7658-45ca-9005-a721715872e6",
+       1.0,
+       null
+      ],
+      [
+       "a0c80d3a-97da-4e9b-b659-d9e02bd90427",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "ndcg@10": 0.9639,
+     "top5": [
+      [
+       "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+       2.0,
+       null
+      ],
+      [
+       "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+       2.0,
+       null
+      ],
+      [
+       "ea30edc2-66d4-42be-8a27-b69743c5520b",
+       2.0,
+       null
+      ],
+      [
+       "4ba3af4d-7658-45ca-9005-a721715872e6",
+       1.0,
+       null
+      ],
+      [
+       "a0c80d3a-97da-4e9b-b659-d9e02bd90427",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "ndcg@10": 0.9639,
+     "top5": [
+      [
+       "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+       2.0,
+       null
+      ],
+      [
+       "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+       2.0,
+       null
+      ],
+      [
+       "ea30edc2-66d4-42be-8a27-b69743c5520b",
+       2.0,
+       null
+      ],
+      [
+       "4ba3af4d-7658-45ca-9005-a721715872e6",
+       1.0,
+       null
+      ],
+      [
+       "a0c80d3a-97da-4e9b-b659-d9e02bd90427",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 0.6,
+     "ndcg@5": 0.8152,
+     "ndcg@10": 0.9639,
+     "top5": [
+      [
+       "0db01f10-f147-4ae8-9ade-99221cf8fbd1",
+       2.0,
+       null
+      ],
+      [
+       "91e7ad1f-32d8-417b-bff2-6b18b866fa75",
+       2.0,
+       null
+      ],
+      [
+       "ea30edc2-66d4-42be-8a27-b69743c5520b",
+       2.0,
+       null
+      ],
+      [
+       "4ba3af4d-7658-45ca-9005-a721715872e6",
+       1.0,
+       null
+      ],
+      [
+       "a0c80d3a-97da-4e9b-b659-d9e02bd90427",
+       1.0,
+       null
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N03",
+    "text": "Junior аналитик данных/ML: Python, pandas, SQL; будет плюсом опыт с numpy. Офис в Москве или гибрид.",
+    "pairs": 11,
+    "relevant": 3,
+    "core": null,
+    "core_active": false,
+    "states": {
+     "317a6a00-8ac1-401b-a7bf-88b248e942b4": null,
+     "91968da3-ac02-4473-899a-b1ca65409051": null,
+     "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70": null,
+     "12761a19-f7bc-4291-80a6-1d58e89e9f7f": null,
+     "f30d7311-d2cf-4c16-8596-d2ec9c568f89": null,
+     "77feb384-98da-440b-9497-f6aef33a3fb3": null,
+     "c4759d83-bdc2-4d8d-bf02-300e161cca2e": null,
+     "3326dece-f956-4ebc-9a69-b3a6df4fa654": null,
+     "5a4cac9b-2cea-4626-a6ac-58cc3ee35114": null,
+     "8786dc90-7689-4f56-95eb-8af668ab19cb": null,
+     "c1540863-6674-46b7-af53-6b15e22fdb70": null
+    },
+    "off": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "ndcg@10": 0.7235,
+     "top5": [
+      [
+       "91968da3-ac02-4473-899a-b1ca65409051",
+       1.0,
+       null
+      ],
+      [
+       "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+       1.0,
+       null
+      ],
+      [
+       "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+       2.0,
+       null
+      ],
+      [
+       "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+       0.0,
+       null
+      ],
+      [
+       "317a6a00-8ac1-401b-a7bf-88b248e942b4",
+       0.0,
+       null
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "ndcg@10": 0.7235,
+     "top5": [
+      [
+       "91968da3-ac02-4473-899a-b1ca65409051",
+       1.0,
+       null
+      ],
+      [
+       "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+       1.0,
+       null
+      ],
+      [
+       "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+       2.0,
+       null
+      ],
+      [
+       "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+       0.0,
+       null
+      ],
+      [
+       "317a6a00-8ac1-401b-a7bf-88b248e942b4",
+       0.0,
+       null
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "ndcg@10": 0.7235,
+     "top5": [
+      [
+       "91968da3-ac02-4473-899a-b1ca65409051",
+       1.0,
+       null
+      ],
+      [
+       "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+       1.0,
+       null
+      ],
+      [
+       "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+       2.0,
+       null
+      ],
+      [
+       "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+       0.0,
+       null
+      ],
+      [
+       "317a6a00-8ac1-401b-a7bf-88b248e942b4",
+       0.0,
+       null
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "ndcg@10": 0.7235,
+     "top5": [
+      [
+       "91968da3-ac02-4473-899a-b1ca65409051",
+       1.0,
+       null
+      ],
+      [
+       "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+       1.0,
+       null
+      ],
+      [
+       "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+       2.0,
+       null
+      ],
+      [
+       "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+       0.0,
+       null
+      ],
+      [
+       "317a6a00-8ac1-401b-a7bf-88b248e942b4",
+       0.0,
+       null
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "ndcg@10": 0.7235,
+     "top5": [
+      [
+       "91968da3-ac02-4473-899a-b1ca65409051",
+       1.0,
+       null
+      ],
+      [
+       "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+       1.0,
+       null
+      ],
+      [
+       "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+       2.0,
+       null
+      ],
+      [
+       "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+       0.0,
+       null
+      ],
+      [
+       "317a6a00-8ac1-401b-a7bf-88b248e942b4",
+       0.0,
+       null
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 0.2,
+     "ndcg@5": 0.4342,
+     "ndcg@10": 0.7235,
+     "top5": [
+      [
+       "91968da3-ac02-4473-899a-b1ca65409051",
+       1.0,
+       null
+      ],
+      [
+       "12761a19-f7bc-4291-80a6-1d58e89e9f7f",
+       1.0,
+       null
+      ],
+      [
+       "f30d7311-d2cf-4c16-8596-d2ec9c568f89",
+       2.0,
+       null
+      ],
+      [
+       "5cd9d3e2-0b43-48e9-a17a-758f4e5e2b70",
+       0.0,
+       null
+      ],
+      [
+       "317a6a00-8ac1-401b-a7bf-88b248e942b4",
+       0.0,
+       null
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N04",
+    "text": "Специалист по ИБ middle: OWASP, Burp Suite, пентест веб-приложений, сетевая безопасность. Желательно CTF.",
+    "pairs": 9,
+    "relevant": 5,
+    "core": null,
+    "core_active": false,
+    "states": {
+     "bc70ecf4-00b9-4a6f-96ba-7cb157b451db": null,
+     "6675bd78-7f2d-4404-a1be-b902dfa8c1a6": null,
+     "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7": null,
+     "e8af9e2b-733f-438d-b8ff-e998d89539cb": null,
+     "07fbccc0-b17c-4c6b-9663-92d32bbaf15d": null,
+     "c6373d91-4eee-4d6b-a77d-ce70b047fcf3": null,
+     "4cd9a236-cb49-4e20-81cc-26b35278b31b": null,
+     "0bb46b2b-91c4-4ed5-8c61-09b5933c409b": null,
+     "bc124dc5-d315-46b1-b510-06ae2761afe3": null
+    },
+    "off": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9171,
+     "ndcg@10": 0.9883,
+     "top5": [
+      [
+       "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+       2.5,
+       null
+      ],
+      [
+       "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+       2.5,
+       null
+      ],
+      [
+       "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+       2.0,
+       null
+      ],
+      [
+       "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+       1.5,
+       null
+      ],
+      [
+       "07fbccc0-b17c-4c6b-9663-92d32bbaf15d",
+       1.5,
+       null
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9171,
+     "ndcg@10": 0.9883,
+     "top5": [
+      [
+       "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+       2.5,
+       null
+      ],
+      [
+       "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+       2.5,
+       null
+      ],
+      [
+       "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+       2.0,
+       null
+      ],
+      [
+       "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+       1.5,
+       null
+      ],
+      [
+       "07fbccc0-b17c-4c6b-9663-92d32bbaf15d",
+       1.5,
+       null
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9171,
+     "ndcg@10": 0.9883,
+     "top5": [
+      [
+       "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+       2.5,
+       null
+      ],
+      [
+       "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+       2.5,
+       null
+      ],
+      [
+       "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+       2.0,
+       null
+      ],
+      [
+       "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+       1.5,
+       null
+      ],
+      [
+       "07fbccc0-b17c-4c6b-9663-92d32bbaf15d",
+       1.5,
+       null
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9171,
+     "ndcg@10": 0.9883,
+     "top5": [
+      [
+       "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+       2.5,
+       null
+      ],
+      [
+       "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+       2.5,
+       null
+      ],
+      [
+       "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+       2.0,
+       null
+      ],
+      [
+       "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+       1.5,
+       null
+      ],
+      [
+       "07fbccc0-b17c-4c6b-9663-92d32bbaf15d",
+       1.5,
+       null
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9171,
+     "ndcg@10": 0.9883,
+     "top5": [
+      [
+       "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+       2.5,
+       null
+      ],
+      [
+       "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+       2.5,
+       null
+      ],
+      [
+       "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+       2.0,
+       null
+      ],
+      [
+       "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+       1.5,
+       null
+      ],
+      [
+       "07fbccc0-b17c-4c6b-9663-92d32bbaf15d",
+       1.5,
+       null
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9171,
+     "ndcg@10": 0.9883,
+     "top5": [
+      [
+       "bc70ecf4-00b9-4a6f-96ba-7cb157b451db",
+       2.5,
+       null
+      ],
+      [
+       "1cdad03f-78f7-42b5-8cbe-9aa85a07a4a7",
+       2.5,
+       null
+      ],
+      [
+       "e8af9e2b-733f-438d-b8ff-e998d89539cb",
+       2.0,
+       null
+      ],
+      [
+       "6675bd78-7f2d-4404-a1be-b902dfa8c1a6",
+       1.5,
+       null
+      ],
+      [
+       "07fbccc0-b17c-4c6b-9663-92d32bbaf15d",
+       1.5,
+       null
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N05",
+    "text": "Senior SOC-аналитик: SIEM/SOC, форензика, сетевая безопасность, Linux. Удалённо.",
+    "pairs": 12,
+    "relevant": 3,
+    "core": null,
+    "core_active": false,
+    "states": {
+     "ce019233-806a-4370-82a0-88fc54924912": null,
+     "ce9e0d12-400d-49b2-902d-09a2d9eb0d05": null,
+     "a153c3f8-96bb-4d63-bca5-8bfd143e1336": null,
+     "1dd139d1-3f6c-459d-a9c8-6efd373d56f4": null,
+     "8b5bd8db-299a-4f9f-b832-97cf84decb70": null,
+     "f8fa7243-1007-424b-a6b5-190fb11508ca": null,
+     "bdc72d5d-40b5-47a9-8366-de0eebb7ffeb": null,
+     "22ab00bf-d3d7-4b21-a272-ab38ca1c4af1": null,
+     "8d2f12bc-1837-455c-ab8c-28ffa0ab35d8": null,
+     "c6c6a76a-518d-4dbf-ae10-c0c909f59981": null,
+     "8689b9f5-dca5-4262-9cce-3987f067a68b": null,
+     "45d94a5e-e2fd-425a-a3c3-c44079bff30c": null
+    },
+    "off": {
+     "p@5": 0.6,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+       2.0,
+       null
+      ],
+      [
+       "ce019233-806a-4370-82a0-88fc54924912",
+       2.0,
+       null
+      ],
+      [
+       "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+       2.0,
+       null
+      ],
+      [
+       "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+       1.5,
+       null
+      ],
+      [
+       "8b5bd8db-299a-4f9f-b832-97cf84decb70",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 0.6,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+       2.0,
+       null
+      ],
+      [
+       "ce019233-806a-4370-82a0-88fc54924912",
+       2.0,
+       null
+      ],
+      [
+       "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+       2.0,
+       null
+      ],
+      [
+       "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+       1.5,
+       null
+      ],
+      [
+       "8b5bd8db-299a-4f9f-b832-97cf84decb70",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 0.6,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+       2.0,
+       null
+      ],
+      [
+       "ce019233-806a-4370-82a0-88fc54924912",
+       2.0,
+       null
+      ],
+      [
+       "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+       2.0,
+       null
+      ],
+      [
+       "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+       1.5,
+       null
+      ],
+      [
+       "8b5bd8db-299a-4f9f-b832-97cf84decb70",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 0.6,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+       2.0,
+       null
+      ],
+      [
+       "ce019233-806a-4370-82a0-88fc54924912",
+       2.0,
+       null
+      ],
+      [
+       "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+       2.0,
+       null
+      ],
+      [
+       "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+       1.5,
+       null
+      ],
+      [
+       "8b5bd8db-299a-4f9f-b832-97cf84decb70",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 0.6,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+       2.0,
+       null
+      ],
+      [
+       "ce019233-806a-4370-82a0-88fc54924912",
+       2.0,
+       null
+      ],
+      [
+       "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+       2.0,
+       null
+      ],
+      [
+       "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+       1.5,
+       null
+      ],
+      [
+       "8b5bd8db-299a-4f9f-b832-97cf84decb70",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 0.6,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "ce9e0d12-400d-49b2-902d-09a2d9eb0d05",
+       2.0,
+       null
+      ],
+      [
+       "ce019233-806a-4370-82a0-88fc54924912",
+       2.0,
+       null
+      ],
+      [
+       "1dd139d1-3f6c-459d-a9c8-6efd373d56f4",
+       2.0,
+       null
+      ],
+      [
+       "a153c3f8-96bb-4d63-bca5-8bfd143e1336",
+       1.5,
+       null
+      ],
+      [
+       "8b5bd8db-299a-4f9f-b832-97cf84decb70",
+       1.0,
+       null
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N06",
+    "text": "Frontend-разработчик middle: React, TypeScript, HTML/CSS обязательно; Next.js будет плюсом. 180–250 тыс.",
+    "pairs": 12,
+    "relevant": 9,
+    "core": "React",
+    "core_active": true,
+    "states": {
+     "af5605e5-f7d5-4dcb-8d24-60ba91e51067": "confirmed",
+     "f711165e-bbf3-4df9-967b-ac529ecd24f8": "confirmed",
+     "49b1b6ce-0977-4c23-95bc-03af187315a4": "confirmed",
+     "a10fdeed-bb94-4b0a-b6aa-e330b0081a67": "confirmed",
+     "d0b6066a-15f6-470d-a903-e777c6549e2f": "confirmed",
+     "cc1347f7-578b-4011-a498-cb4dbd62f73f": "declared",
+     "92c8ee8b-640a-4eba-bdc4-0f50e03add72": "confirmed",
+     "9edae0ad-d638-4e51-b2ed-e816b22c5f63": null,
+     "a07927f4-8e54-4cf6-8d0d-deb412f80bc7": null,
+     "57dee7bb-37d9-43de-b42c-072f80464474": null,
+     "4fff66c1-539c-43de-9a66-76dfec7e6911": null,
+     "db67888d-1164-4b45-bd09-f12e7f928653": null
+    },
+    "off": {
+     "p@5": 1.0,
+     "ndcg@5": 0.984,
+     "ndcg@10": 0.9738,
+     "top5": [
+      [
+       "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "49b1b6ce-0977-4c23-95bc-03af187315a4",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "a10fdeed-bb94-4b0a-b6aa-e330b0081a67",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "d0b6066a-15f6-470d-a903-e777c6549e2f",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 1.0,
+     "ndcg@5": 0.984,
+     "ndcg@10": 0.9738,
+     "top5": [
+      [
+       "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "49b1b6ce-0977-4c23-95bc-03af187315a4",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "a10fdeed-bb94-4b0a-b6aa-e330b0081a67",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "d0b6066a-15f6-470d-a903-e777c6549e2f",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 1.0,
+     "ndcg@5": 0.984,
+     "ndcg@10": 0.9738,
+     "top5": [
+      [
+       "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "49b1b6ce-0977-4c23-95bc-03af187315a4",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "a10fdeed-bb94-4b0a-b6aa-e330b0081a67",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "d0b6066a-15f6-470d-a903-e777c6549e2f",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 1.0,
+     "ndcg@5": 0.984,
+     "ndcg@10": 0.9738,
+     "top5": [
+      [
+       "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "49b1b6ce-0977-4c23-95bc-03af187315a4",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "a10fdeed-bb94-4b0a-b6aa-e330b0081a67",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "d0b6066a-15f6-470d-a903-e777c6549e2f",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 1.0,
+     "ndcg@5": 0.984,
+     "ndcg@10": 0.9738,
+     "top5": [
+      [
+       "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "49b1b6ce-0977-4c23-95bc-03af187315a4",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "a10fdeed-bb94-4b0a-b6aa-e330b0081a67",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "d0b6066a-15f6-470d-a903-e777c6549e2f",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 1.0,
+     "ndcg@5": 0.984,
+     "ndcg@10": 0.9738,
+     "top5": [
+      [
+       "af5605e5-f7d5-4dcb-8d24-60ba91e51067",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "f711165e-bbf3-4df9-967b-ac529ecd24f8",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "49b1b6ce-0977-4c23-95bc-03af187315a4",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "a10fdeed-bb94-4b0a-b6aa-e330b0081a67",
+       3.0,
+       "confirmed"
+      ],
+      [
+       "d0b6066a-15f6-470d-a903-e777c6549e2f",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N08",
+    "text": "QA-инженер middle: тест-дизайн, API-тестирование, pytest; желательно Playwright и Allure.",
+    "pairs": 11,
+    "relevant": 8,
+    "core": null,
+    "core_active": false,
+    "states": {
+     "6a20b4ad-d822-432f-a31d-c34293f367fe": null,
+     "957ad6ef-b066-4cbe-8ea8-58c7d677fba4": null,
+     "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec": null,
+     "c9122d92-84cf-4072-b72b-62678e14a359": null,
+     "5f9b8144-48ee-4718-b647-2a05150ebdf9": null,
+     "efde5793-ef60-4170-a687-880313aac71c": null,
+     "3c70f884-880c-4473-a5bb-045aca61b7d3": null,
+     "170beb48-002c-46e1-afa9-e657f0903565": null,
+     "6740ed73-69a7-4a08-a56b-fdc8af8087f5": null,
+     "a2e8b8dd-7145-41f5-8e1b-22b3a87a9382": null,
+     "7e269d51-d6f3-4c47-9366-5c9cc1dd60e3": null
+    },
+    "off": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.9947,
+     "top5": [
+      [
+       "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+       2.0,
+       null
+      ],
+      [
+       "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+       2.0,
+       null
+      ],
+      [
+       "c9122d92-84cf-4072-b72b-62678e14a359",
+       2.0,
+       null
+      ],
+      [
+       "5f9b8144-48ee-4718-b647-2a05150ebdf9",
+       2.0,
+       null
+      ],
+      [
+       "efde5793-ef60-4170-a687-880313aac71c",
+       2.0,
+       null
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.9947,
+     "top5": [
+      [
+       "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+       2.0,
+       null
+      ],
+      [
+       "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+       2.0,
+       null
+      ],
+      [
+       "c9122d92-84cf-4072-b72b-62678e14a359",
+       2.0,
+       null
+      ],
+      [
+       "5f9b8144-48ee-4718-b647-2a05150ebdf9",
+       2.0,
+       null
+      ],
+      [
+       "efde5793-ef60-4170-a687-880313aac71c",
+       2.0,
+       null
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.9947,
+     "top5": [
+      [
+       "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+       2.0,
+       null
+      ],
+      [
+       "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+       2.0,
+       null
+      ],
+      [
+       "c9122d92-84cf-4072-b72b-62678e14a359",
+       2.0,
+       null
+      ],
+      [
+       "5f9b8144-48ee-4718-b647-2a05150ebdf9",
+       2.0,
+       null
+      ],
+      [
+       "efde5793-ef60-4170-a687-880313aac71c",
+       2.0,
+       null
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.9947,
+     "top5": [
+      [
+       "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+       2.0,
+       null
+      ],
+      [
+       "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+       2.0,
+       null
+      ],
+      [
+       "c9122d92-84cf-4072-b72b-62678e14a359",
+       2.0,
+       null
+      ],
+      [
+       "5f9b8144-48ee-4718-b647-2a05150ebdf9",
+       2.0,
+       null
+      ],
+      [
+       "efde5793-ef60-4170-a687-880313aac71c",
+       2.0,
+       null
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.9947,
+     "top5": [
+      [
+       "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+       2.0,
+       null
+      ],
+      [
+       "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+       2.0,
+       null
+      ],
+      [
+       "c9122d92-84cf-4072-b72b-62678e14a359",
+       2.0,
+       null
+      ],
+      [
+       "5f9b8144-48ee-4718-b647-2a05150ebdf9",
+       2.0,
+       null
+      ],
+      [
+       "efde5793-ef60-4170-a687-880313aac71c",
+       2.0,
+       null
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 1.0,
+     "ndcg@5": 1.0,
+     "ndcg@10": 0.9947,
+     "top5": [
+      [
+       "dbc35404-2fb3-4c8e-8ae5-2e456782c3ec",
+       2.0,
+       null
+      ],
+      [
+       "957ad6ef-b066-4cbe-8ea8-58c7d677fba4",
+       2.0,
+       null
+      ],
+      [
+       "c9122d92-84cf-4072-b72b-62678e14a359",
+       2.0,
+       null
+      ],
+      [
+       "5f9b8144-48ee-4718-b647-2a05150ebdf9",
+       2.0,
+       null
+      ],
+      [
+       "efde5793-ef60-4170-a687-880313aac71c",
+       2.0,
+       null
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N09",
+    "text": "Senior Go-разработчик для маршрутизации: Go, PostgreSQL, Kafka, Docker. От 5 лет опыта.",
+    "pairs": 11,
+    "relevant": 2,
+    "core": "Go",
+    "core_active": true,
+    "states": {
+     "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b": "confirmed",
+     "466e9ffb-26fb-446e-b667-0aa60e6b3f0f": "absent",
+     "33de790a-343e-4148-8ec8-25f8896c6f54": "confirmed",
+     "4f323b02-47df-4ba0-9710-da63f0948360": "absent",
+     "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb": "absent",
+     "7c1df45e-3a93-444a-9b1b-56ce0b11f0bb": null,
+     "fb46b19a-2518-4a50-bfb6-9147aecf903e": null,
+     "28210e96-59ee-4f83-b4a5-7edb7fb0ecf5": null,
+     "4c52cbdc-a1ed-4300-a396-2deca0c08f49": null,
+     "784372bd-043f-458c-92d3-ad9ecf501a12": null,
+     "68a20010-6dab-4093-b732-17070b4cf2dc": null
+    },
+    "off": {
+     "p@5": 0.4,
+     "ndcg@5": 0.9578,
+     "ndcg@10": 0.962,
+     "top5": [
+      [
+       "33de790a-343e-4148-8ec8-25f8896c6f54",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+       1.0,
+       "absent"
+      ],
+      [
+       "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "4f323b02-47df-4ba0-9710-da63f0948360",
+       1.0,
+       "absent"
+      ],
+      [
+       "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb",
+       1.0,
+       "absent"
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 0.4,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "33de790a-343e-4148-8ec8-25f8896c6f54",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+       1.0,
+       "absent"
+      ],
+      [
+       "4f323b02-47df-4ba0-9710-da63f0948360",
+       1.0,
+       "absent"
+      ],
+      [
+       "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb",
+       1.0,
+       "absent"
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 0.4,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "33de790a-343e-4148-8ec8-25f8896c6f54",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+       1.0,
+       "absent"
+      ],
+      [
+       "4f323b02-47df-4ba0-9710-da63f0948360",
+       1.0,
+       "absent"
+      ],
+      [
+       "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb",
+       1.0,
+       "absent"
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 0.4,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "33de790a-343e-4148-8ec8-25f8896c6f54",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+       1.0,
+       "absent"
+      ],
+      [
+       "4f323b02-47df-4ba0-9710-da63f0948360",
+       1.0,
+       "absent"
+      ],
+      [
+       "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb",
+       1.0,
+       "absent"
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 0.4,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "33de790a-343e-4148-8ec8-25f8896c6f54",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+       1.0,
+       "absent"
+      ],
+      [
+       "4f323b02-47df-4ba0-9710-da63f0948360",
+       1.0,
+       "absent"
+      ],
+      [
+       "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb",
+       1.0,
+       "absent"
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 0.4,
+     "ndcg@5": 1.0,
+     "ndcg@10": 1.0,
+     "top5": [
+      [
+       "33de790a-343e-4148-8ec8-25f8896c6f54",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "64f8ffc2-9c3c-4a43-bd2c-4987f182ea7b",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "466e9ffb-26fb-446e-b667-0aa60e6b3f0f",
+       1.0,
+       "absent"
+      ],
+      [
+       "4f323b02-47df-4ba0-9710-da63f0948360",
+       1.0,
+       "absent"
+      ],
+      [
+       "34fc1f49-5f67-4abd-9e9b-d0cb64489eeb",
+       1.0,
+       "absent"
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N12",
+    "text": "Senior frontend: TypeScript, React, state management, доступность (a11y), тестирование фронтенда.",
+    "pairs": 10,
+    "relevant": 6,
+    "core": "React",
+    "core_active": true,
+    "states": {
+     "2132747d-960b-4eb6-a9e2-7ddf636dd3f7": "confirmed",
+     "0d34a6f6-c906-4498-870c-bedb81b56d7f": "confirmed",
+     "ef804918-3018-4e9d-8aee-67a951bf9bd1": "confirmed",
+     "216d709c-8644-4299-85da-258e25eb6a2a": "confirmed",
+     "3e3264f3-4780-469b-989a-9d5d71cac0f1": "confirmed",
+     "cfab5723-a321-453b-a9ae-fdaa8320c19c": "confirmed",
+     "f70809b8-9f4d-4922-940a-c4ed84c27937": null,
+     "e5d2dc03-d2d6-443d-a985-b919cae4f98f": null,
+     "a6526f11-b9e3-42cd-b4de-129965e99da3": null,
+     "761e85bb-0d61-4aa9-a91e-a5f449936d83": null
+    },
+    "off": {
+     "p@5": 1.0,
+     "ndcg@5": 0.9102,
+     "ndcg@10": 0.9208,
+     "top5": [
+      [
+       "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "216d709c-8644-4299-85da-258e25eb6a2a",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0d34a6f6-c906-4498-870c-bedb81b56d7f",
+       2.5,
+       "confirmed"
+      ],
+      [
+       "cfab5723-a321-453b-a9ae-fdaa8320c19c",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 1.0,
+     "ndcg@5": 0.9102,
+     "ndcg@10": 0.9208,
+     "top5": [
+      [
+       "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "216d709c-8644-4299-85da-258e25eb6a2a",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0d34a6f6-c906-4498-870c-bedb81b56d7f",
+       2.5,
+       "confirmed"
+      ],
+      [
+       "cfab5723-a321-453b-a9ae-fdaa8320c19c",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 1.0,
+     "ndcg@5": 0.9102,
+     "ndcg@10": 0.9208,
+     "top5": [
+      [
+       "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "216d709c-8644-4299-85da-258e25eb6a2a",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0d34a6f6-c906-4498-870c-bedb81b56d7f",
+       2.5,
+       "confirmed"
+      ],
+      [
+       "cfab5723-a321-453b-a9ae-fdaa8320c19c",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 1.0,
+     "ndcg@5": 0.9102,
+     "ndcg@10": 0.9208,
+     "top5": [
+      [
+       "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "216d709c-8644-4299-85da-258e25eb6a2a",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0d34a6f6-c906-4498-870c-bedb81b56d7f",
+       2.5,
+       "confirmed"
+      ],
+      [
+       "cfab5723-a321-453b-a9ae-fdaa8320c19c",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 1.0,
+     "ndcg@5": 0.9102,
+     "ndcg@10": 0.9208,
+     "top5": [
+      [
+       "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "216d709c-8644-4299-85da-258e25eb6a2a",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0d34a6f6-c906-4498-870c-bedb81b56d7f",
+       2.5,
+       "confirmed"
+      ],
+      [
+       "cfab5723-a321-453b-a9ae-fdaa8320c19c",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 1.0,
+     "ndcg@5": 0.9102,
+     "ndcg@10": 0.9208,
+     "top5": [
+      [
+       "2132747d-960b-4eb6-a9e2-7ddf636dd3f7",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "3e3264f3-4780-469b-989a-9d5d71cac0f1",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "216d709c-8644-4299-85da-258e25eb6a2a",
+       2.0,
+       "confirmed"
+      ],
+      [
+       "0d34a6f6-c906-4498-870c-bedb81b56d7f",
+       2.5,
+       "confirmed"
+      ],
+      [
+       "cfab5723-a321-453b-a9ae-fdaa8320c19c",
+       2.0,
+       "confirmed"
+      ]
+     ]
+    }
+   },
+   {
+    "need": "N13",
+    "text": "Junior QA: ручное тестирование, тест-дизайн, SQL, основы API-тестирования. Самара, офис.",
+    "pairs": 11,
+    "relevant": 3,
+    "core": null,
+    "core_active": false,
+    "states": {
+     "c914991f-f6d1-407e-95be-a837ce6a9933": null,
+     "aa2ce7b6-6521-454a-a000-c951e2cbec7e": null,
+     "9962a1b5-5268-479c-a792-3161d610bf9d": null,
+     "9fcffe77-f833-4f8c-8c3c-bca74480338e": null,
+     "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1": null,
+     "a5d8b5ce-f23c-4ebc-9e4a-bc1267153712": null,
+     "b7bb6b4e-2a0a-4119-8b4d-c7cb324d44a1": null,
+     "24e61e2f-d1a5-45ae-8c96-347aaae7c5b9": null,
+     "77434031-29f7-47b3-9749-e11d4690d7b8": null,
+     "1be445b0-7279-4c39-9f12-1df118adfb18": null,
+     "7344c0f2-72f5-4d1a-bd39-73f9193c6e84": null
+    },
+    "off": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9808,
+     "ndcg@10": 0.9831,
+     "top5": [
+      [
+       "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+       2.0,
+       null
+      ],
+      [
+       "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+       2.0,
+       null
+      ],
+      [
+       "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1",
+       1.0,
+       null
+      ],
+      [
+       "c914991f-f6d1-407e-95be-a837ce6a9933",
+       2.0,
+       null
+      ],
+      [
+       "9962a1b5-5268-479c-a792-3161d610bf9d",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "group": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9808,
+     "ndcg@10": 0.9831,
+     "top5": [
+      [
+       "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+       2.0,
+       null
+      ],
+      [
+       "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+       2.0,
+       null
+      ],
+      [
+       "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1",
+       1.0,
+       null
+      ],
+      [
+       "c914991f-f6d1-407e-95be-a837ce6a9933",
+       2.0,
+       null
+      ],
+      [
+       "9962a1b5-5268-479c-a792-3161d610bf9d",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "within": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9808,
+     "ndcg@10": 0.9831,
+     "top5": [
+      [
+       "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+       2.0,
+       null
+      ],
+      [
+       "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+       2.0,
+       null
+      ],
+      [
+       "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1",
+       1.0,
+       null
+      ],
+      [
+       "c914991f-f6d1-407e-95be-a837ce6a9933",
+       2.0,
+       null
+      ],
+      [
+       "9962a1b5-5268-479c-a792-3161d610bf9d",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "cap_5": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9808,
+     "ndcg@10": 0.9831,
+     "top5": [
+      [
+       "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+       2.0,
+       null
+      ],
+      [
+       "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+       2.0,
+       null
+      ],
+      [
+       "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1",
+       1.0,
+       null
+      ],
+      [
+       "c914991f-f6d1-407e-95be-a837ce6a9933",
+       2.0,
+       null
+      ],
+      [
+       "9962a1b5-5268-479c-a792-3161d610bf9d",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "cap_3": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9808,
+     "ndcg@10": 0.9831,
+     "top5": [
+      [
+       "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+       2.0,
+       null
+      ],
+      [
+       "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+       2.0,
+       null
+      ],
+      [
+       "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1",
+       1.0,
+       null
+      ],
+      [
+       "c914991f-f6d1-407e-95be-a837ce6a9933",
+       2.0,
+       null
+      ],
+      [
+       "9962a1b5-5268-479c-a792-3161d610bf9d",
+       1.0,
+       null
+      ]
+     ]
+    },
+    "penalty_0.2": {
+     "p@5": 0.6,
+     "ndcg@5": 0.9808,
+     "ndcg@10": 0.9831,
+     "top5": [
+      [
+       "aa2ce7b6-6521-454a-a000-c951e2cbec7e",
+       2.0,
+       null
+      ],
+      [
+       "9fcffe77-f833-4f8c-8c3c-bca74480338e",
+       2.0,
+       null
+      ],
+      [
+       "0ca52ed7-b74e-4ed0-8cde-1ea6d284b4f1",
+       1.0,
+       null
+      ],
+      [
+       "c914991f-f6d1-407e-95be-a837ce6a9933",
+       2.0,
+       null
+      ],
+      [
+       "9962a1b5-5268-479c-a792-3161d610bf9d",
+       1.0,
+       null
+      ]
+     ]
+    }
+   }
+  ],
+  "caveat": "Оценка на размеченном пуле пакета v1 (объединение топ-5 match-v1, топ-5 BM25 и 2 случайных): кандидатов вне пула нельзя считать нерелевантными, поэтому порядок сравнивается внутри пула."
+ },
+ "demo_500_rules": {
+  "off": {
+   "p@5": {
+    "platform": 0.84,
+    "platform_no_fsp": 0.853,
+    "bm25": 0.52,
+    "keywords": 0.587,
+    "random": 0.325
+   },
+   "ndcg@5": {
+    "platform": 0.859,
+    "platform_no_fsp": 0.869,
+    "bm25": 0.709,
+    "keywords": 0.764,
+    "random": 0.408
+   },
+   "ndcg@10": {
+    "platform": 0.915,
+    "platform_no_fsp": 0.918,
+    "bm25": 0.81,
+    "keywords": 0.844,
+    "random": 0.493
+   },
+   "within_category_ndcg@3": {
+    "platform": 0.778,
+    "platform_no_fsp": 0.792,
+    "bm25": 0.923,
+    "keywords": 0.945,
+    "random": 0.717
+   },
+   "within_category_needs": 12
+  },
+  "group": {
+   "p@5": {
+    "platform": 0.88,
+    "platform_no_fsp": 0.893,
+    "bm25": 0.52,
+    "keywords": 0.587,
+    "random": 0.325
+   },
+   "ndcg@5": {
+    "platform": 0.903,
+    "platform_no_fsp": 0.911,
+    "bm25": 0.709,
+    "keywords": 0.764,
+    "random": 0.408
+   },
+   "ndcg@10": {
+    "platform": 0.924,
+    "platform_no_fsp": 0.928,
+    "bm25": 0.81,
+    "keywords": 0.844,
+    "random": 0.493
+   },
+   "within_category_ndcg@3": {
+    "platform": 0.828,
+    "platform_no_fsp": 0.831,
+    "bm25": 0.923,
+    "keywords": 0.945,
+    "random": 0.717
+   },
+   "within_category_needs": 12
+  },
+  "within": {
+   "p@5": {
+    "platform": 0.88,
+    "platform_no_fsp": 0.893,
+    "bm25": 0.52,
+    "keywords": 0.587,
+    "random": 0.325
+   },
+   "ndcg@5": {
+    "platform": 0.903,
+    "platform_no_fsp": 0.911,
+    "bm25": 0.709,
+    "keywords": 0.764,
+    "random": 0.408
+   },
+   "ndcg@10": {
+    "platform": 0.924,
+    "platform_no_fsp": 0.928,
+    "bm25": 0.81,
+    "keywords": 0.844,
+    "random": 0.493
+   },
+   "within_category_ndcg@3": {
+    "platform": 0.828,
+    "platform_no_fsp": 0.831,
+    "bm25": 0.923,
+    "keywords": 0.945,
+    "random": 0.717
+   },
+   "within_category_needs": 12
+  }
+ }
+}
