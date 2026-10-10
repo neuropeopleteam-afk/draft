@@ -61966,6 +61966,26 @@
         ]
       }
     },
+    "/api/validation/provenance": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "validation_provenance_api_validation_provenance_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Происхождение чисел /validation: синтетика/модель/люди, дата, SHA, банк, команда",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
     "/api/validation/report": {
       "get": {
         "description": "Ответ кэшируется на воркер на VALIDATION_REPORT_TTL_S секунд (живые счётчики — с этой задержкой).\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
