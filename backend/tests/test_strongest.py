@@ -200,3 +200,52 @@ def test_llm_md_section12_matches_json():
     block = text.split(S.MD_BEGIN, 1)[1].split(S.MD_END, 1)[0]
     assert block.strip() == S.md_table(d).strip(), "пересобрать: python tools/llm/strongest_summary.py /tmp/strong"
     assert "модель, не люди" in block
+
+
+def _cell(q: float, ci: tuple[float, float], ok: bool = True) -> dict:
+    return {"quality": {"index": {"value": q, "ci90": list(ci)}}, "within_budget": ok, "score": {"total": q}}
+
+
+def _rel(ok: float, calls: int, p95: float, budget: int = 50, errors: dict | None = None) -> dict:
+    return {"calls": calls, "ok_share": {"value": ok}, "p95_s": p95, "budget_s": budget, "errors": errors or {}}
+
+
+def test_full_run_rejects_small_sample_leader():
+    """Полный прогон проверяет выбор малой выборки: лидер, не уложившийся в порог на всех входах (успешных < 90 % или
+    p95 > тайм-аута), исключается с причиной; основная — следующая по качеству; лидер малой выборки сохранён."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "tools" / "llm"))
+    import strongest_summary as S
+
+    meta = {"a/x": {"family": "a", "open_weights": "a/x"}, "a/y": {"family": "a", "open_weights": None},
+            "b/z": {"family": "b", "open_weights": None}}
+    cells = {"a/x": _cell(0.99, (0.98, 1.0)), "a/y": _cell(0.98, (0.97, 0.99)), "b/z": _cell(0.97, (0.95, 0.99))}
+    d = {"models": meta, "functions": {"grade": cells}, "choice": {"grade": S._choose(cells, meta)},
+         "full_run": {"a/x": {"grade": {"reliability": _rel(0.478, 406, 54.5, errors={"timeout": 157, "invalid_json": 55})}},
+                      "b/z": {"grade": {"reliability": _rel(0.998, 406, 4.9)}}}}
+    assert d["choice"]["grade"]["strongest_within_latency"] == "a/x"
+    S.apply_full_run(d)
+    ch = d["choice"]["grade"]
+    assert ch["strongest_within_latency"] == "a/y" and ch["small_sample_leader"] == "a/x"
+    assert ch["main_full_run"] == "не прогонялась" and ch["full_run_confirmed"] == ["b/z"]
+    (rej,) = ch["full_run_rejected"]
+    assert rej["model"] == "a/x" and "успешных 48 % из 406" in rej["why"] and "p95 54,5 с > 50 с" in rej["why"]
+    assert ch["reserve_other_family"] == "b/z" and "a/x" in ch["excluded_latency_or_fails"]
+    assert d["full_run"]["a/x"]["grade"]["within_budget"] is False and d["full_run"]["b/z"]["grade"]["within_budget"]
+
+
+def test_full_run_confirms_leader():
+    import sys
+
+    sys.path.insert(0, str(ROOT / "tools" / "llm"))
+    import strongest_summary as S
+
+    meta = {"a/x": {"family": "a", "open_weights": None}, "b/z": {"family": "b", "open_weights": None}}
+    cells = {"a/x": _cell(0.99, (0.98, 1.0)), "b/z": _cell(0.97, (0.95, 0.99))}
+    d = {"models": meta, "functions": {"parse_need": cells}, "choice": {"parse_need": S._choose(cells, meta)},
+         "full_run": {"a/x": {"parse_need": {"reliability": _rel(1.0, 50, 14.4, budget=25)}}}}
+    S.apply_full_run(d)
+    ch = d["choice"]["parse_need"]
+    assert ch["strongest_within_latency"] == "a/x" and ch["main_full_run"] == "подтверждена"
+    assert ch["full_run_rejected"] == []

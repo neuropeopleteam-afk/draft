@@ -46,7 +46,7 @@ def fails(r: dict) -> str:
     return f"{bad} из {r['calls']}" + (f" (тайм-аутов {r['timeouts']})" if r.get("timeouts") else "")
 
 
-def md(d: dict) -> str:
+def md(d: dict, png_name: str = "strongest_slide.png") -> str:
     out = [f"# Сильнейшие модели по функциям — замер {d['date']} (код {d['code_sha']})", "",
            f"_{CAPTION}_", "",
            "| Функция | Модель | Качество [90 %] | Отказы | p50 / p95, с | $ за 1000 | В бюджете стенда |",
@@ -73,12 +73,18 @@ def md(d: dict) -> str:
                    f"{', '.join(label(d, m) for m in ch['within_noise']) or '—'} | "
                    f"{label(d, ch['reserve_other_family']) if ch['reserve_other_family'] else '—'} | "
                    f"{label(d, ch['best_open']) if ch['best_open'] else '—'} | {ch['then']} |")
+    for f, ch in d["choice"].items():
+        if ch.get("full_run_rejected"):
+            out += ["", f"**Полный прогон ({FUNC_RU.get(f, f)}, все входы) исключил:** " + "; ".join(
+                f"{label(d, x['model'])} — {x['why']}" for x in ch["full_run_rejected"]) +
+                f" (лидер малой выборки — {label(d, ch['small_sample_leader'])}); основная в полном прогоне: "
+                f"{ch.get('main_full_run') or '—'}."]
     out += ["", "Сводная оценка: качество 0,5 · надёжность 0,25 · задержка 0,15 · цена 0,1. «В бюджете» — p95 не больше "
             "тайм-аута стенда (разбор и резюме 25 с, оценка 50 с) и успешных ответов не меньше 90 %.", "",
             "Условия: " + " ".join(d.get("conditions") or []), ""]
     if d.get("pending"):
         out += ["Ещё не замерено: " + d["pending"], ""]
-    out += ["![Качество против цены](rullm_slide.png)", ""]
+    out += [f"![Качество против цены]({png_name})", ""]
     return "\n".join(out)
 
 
@@ -194,7 +200,7 @@ def main() -> None:
     a = ap.parse_args()
     d = json.loads(Path(a.src).read_text(encoding="utf-8"))
     out = Path(a.out)
-    out.with_suffix(".md").write_text(md(d), encoding="utf-8")
+    out.with_suffix(".md").write_text(md(d, out.with_suffix(".png").name), encoding="utf-8")
     png(d, out.with_suffix(".png"))
     print("→", out.with_suffix(".md"), out.with_suffix(".png"))
 
