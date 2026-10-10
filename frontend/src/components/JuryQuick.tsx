@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
+import { isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_INTERVIEW_LIVE, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
   type QuickPersona, type QuickStep } from "../lib/jury";
 import { useMeta } from "../lib/meta";
 
 /** Я9 «Проверка за 12 минут»: короткий режим проводника жюри (шаги — lib/jury.ts, QUICK). Своя потребность →
  *  первые три → сравнение → приглашение с вилкой → ответ кандидата → экспресс-тест (краткий режим жюри) → категория →
  *  доказательства. У шага — что он проверяет и какой критерий ТЗ, ориентир времени; таймер — ориентир, не ограничение. */
-/** Шаги по флагу сервера: с устной защитой (Я15, /api/meta interview_enabled) — 9, иначе 8. */
-export const useQuickSteps = (): QuickStep[] => quickSteps(!!useMeta()?.interview_enabled);
+/** Шаги по флагу сервера: с устной защитой (Я15, /api/meta interview.enabled) — 9, иначе 8. */
+export const useQuickSteps = (): QuickStep[] => quickSteps(useMeta()?.interview);
 const SELECTION = 1, COMPARE = 2, INVITE = 3, ANSWER = 4;
 /** Минуты к концу шага по плану 12 минут: шаг «по желанию» в план не входит (у него — свой ориентир). */
 const planOf = (steps: QuickStep[]) => steps.reduce<number[]>((a, s) => [...a, (a.at(-1) ?? 0) + (s.optional ? 0 : s.min)], []);
@@ -61,6 +61,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const { me } = useAuth();
   const loc = useLocation();
   const steps = useQuickSteps();
+  const ivStub = !!useMeta()?.interview?.stub;
   const LAST = steps.length - 1, PLAN = planOf(steps);
   const [now, setNow] = useState(Date.now());
   const [info, setInfo] = useState<QuickPersona[] | null>(null);
@@ -79,7 +80,8 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const ans = answerer(info);
   const persona = q === ANSWER ? ans.persona : s.persona;
   const needLogin = !!persona && personaOf(me?.email) !== persona;
-  const here = s.match.test(loc.pathname) && !needLogin;
+  // шаг «по желанию»: свой и на экране живого запуска (там вы — кандидат), чтобы «Дальше» оставалась на виду
+  const here = (s.match.test(loc.pathname) && !needLogin) || (!!s.optional && loc.pathname.startsWith(QUICK_INTERVIEW_LIVE));
   const t0 = quick.t0() ?? now;
   // шаг «по желанию» добавляет к ориентиру свои минуты — тем, кто его прошёл, таймер не «краснеет» за него
   const optBefore = steps.slice(0, q + 1).reduce((a, x) => a + (x.optional ? x.min : 0), 0);
@@ -95,6 +97,12 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
       const r = jury ? await quickInfo(quick.need()).catch(() => null) : null;
       if (r) setInfo(r.personas);
       p = answerer(r?.personas ?? info).persona;
+    }
+    if (steps[i].optional) {  // готовый пример — карточка Марии (демо-персона «candidate») у работодателя своей копии
+      const r = jury ? await quickInfo(quick.need()).catch(() => null) : null;
+      const m = r?.personas.find((x) => x.persona === "candidate");
+      const n = quick.need();
+      if (m) return open(`/employer/candidates/${m.ref}${n ? `?need=${n}` : ""}`, p);
     }
     await open(pathOf(steps, i), p);
   }
@@ -153,6 +161,13 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
         <p className="mt-2 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs leading-relaxed text-white/85" data-testid="quick-optional">
           Есть время? <button type="button" className="font-semibold text-brand-blush underline underline-offset-2 hover:text-white" disabled={busy}
             onClick={() => go(opt)}>{steps[opt].title.split(" · ")[0]}</button> — по желанию, ≈{"\u00A0"}{mins(steps[opt].min)} сверх плана; или сразу дальше.
+        </p>
+      )}
+      {s.optional && (
+        <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/80" data-testid="quick-live">
+          <button type="button" className="font-semibold text-brand-blush underline underline-offset-2 hover:text-white" disabled={busy}
+            onClick={() => open(QUICK_INTERVIEW_LIVE, "candidate_new")}>Пройти самому</button>
+          <span>кандидатом «Пройдите тест сами»; для копий жюри — с ограничением числа запусков{ivStub ? ". Сейчас движок — заглушка: вопросы и итог тестовые, так и подписано" : ""}</span>
         </p>
       )}
       {q === LAST && (

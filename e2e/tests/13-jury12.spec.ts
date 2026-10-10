@@ -5,8 +5,8 @@
  * доказательства → справочник. У каждого шага — «Проверяет» и «Критерий ТЗ», таймер-ориентир и прогресс.
  * 390: проводник не перекрывает действия шага (поле, «Разобрать требования», «Сохранить…», «Пригласить»), кнопки
  * проводника видны без прокрутки панели, горизонтальной прокрутки нет; свёрнутый — в шапке.
- * Флаг устной защиты (Я15, /api/meta interview_enabled): шаг «по желанию» перед доказательствами, в план 12 минут не
- * входит; без флага шагов 8 (два теста выше).
+ * Флаг устной защиты (Я15, /api/meta interview.enabled): шаг «по желанию» перед доказательствами, в план 12 минут не
+ * входит, ведёт к готовому примеру (карточка Марии у работодателя) и к живому запуску; без флага шагов 8 (два теста выше).
  */
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "../lib/fixtures";
@@ -248,7 +248,7 @@ test("устная защита по флагу (Я15): шаг «по желан
   // флаг сервера INTERVIEW_ENABLED по умолчанию выключен — включаем его только в ответе /api/meta этой страницы
   await page.route("**/api/meta", async (route) => {
     const r = await route.fetch();
-    await route.fulfill({ response: r, json: { ...(await r.json()), interview_enabled: true } });
+    await route.fulfill({ response: r, json: { ...(await r.json()), interview: { enabled: true, stub: true, defense_minutes: 3 } } });
   });
   await page.goto("/jury/go");
   const choice = page.getByTestId("choice-quick");
@@ -268,8 +268,11 @@ test("устная защита по флагу (Я15): шаг «по желан
   const opt = g.getByTestId("quick-optional");
   await expect(opt).toContainText("по желанию");
   await opt.getByRole("button", { name: "Устная защита ответа" }).click();
-  await expect(page).toHaveURL(/\/candidate\/attempts/);
-  await expect(g.getByText(/^Шаг 8 из 9 · по желанию/)).toBeVisible();
+  // готовый пример — карточка Марии Королёвой у работодателя своей копии (вход за работодателя — сам)
+  await expect(page).toHaveURL(/\/employer\/candidates\/C-[A-Z0-9]+/, { timeout: 60_000 });
+  await expect(g.getByText(/^Шаг 8 из 9 · по желанию, ≈\s3\sмин/)).toBeVisible();
+  await expect(g.getByTestId("quick-live").getByRole("button", { name: "Пройти самому" })).toBeVisible();
+  await expect(g.getByTestId("quick-live")).toContainText("движок — заглушка");
   await expect(g.getByText("Устная защита ответа · по желанию", { exact: true })).toBeVisible();
   await expect(g).toContainText("Грейд не меняет; оценивает модель, не человек");
   await expect(g.getByTestId("quick-timer")).toContainText("сверх плана 12");
