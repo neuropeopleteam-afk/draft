@@ -45,8 +45,8 @@ HERE = Path(__file__).resolve().parent
 OUT = HERE / "data" / "grade_sweep.json"
 DOCS_MD = pr.REPO / "docs" / "validation" / "GRADE_ACCURACY.md"
 
-# ограничения выбора (карточка Я22)
-MAX_OVER = 0.07          # штаб 10.10 вечер: завышение ≤ 7 % (карточка — ≤ 6 %; доля ≤ 6 % отмечена отдельно)
+# ограничения выбора
+MAX_OVER = 0.07          # решение владельца 10.10: завышение ≤ 7 % (прежний ориентир ≤ 6 % — выбор отмечен отдельно)
 MAX_OVER_STRICT = 0.06
 MIN_KAPPA = 0.84
 MAX_MINUTES = 60.0
