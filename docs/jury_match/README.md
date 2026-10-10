@@ -13,7 +13,7 @@
 - Скрипт: `cd backend && DATABASE_URL=sqlite:////tmp/x.db LLM_DISABLED=1 python ../tools/jury_match/audit.py OUT.json`
   (база — `alembic upgrade head` + `python -m app.modules.demo.seed --reset`, 500 демо-кандидатов; LLM выключена — меряются правила).
 - Результат до правок — [`audit_before.json`](audit_before.json), после — [`audit_after.json`](audit_after.json); таблица с оценкой
-  и список правок по весу — `reports_0810/match_audit.md`.
+  и список правок по весу — внутренний отчёт разработки.
 
 ## Разбор потребности (`matching/need_parser.py`, `catalog/dictionary.py`, `matching/coverage.py`)
 

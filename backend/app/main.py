@@ -10,12 +10,14 @@ from pathlib import Path
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.exc import TimeoutError as DBPoolTimeout
 from sqlalchemy.orm import Session
 
+from app.core.api_docs import install_openapi
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.legal import OPERATOR
@@ -76,6 +78,11 @@ TAGS = [
     {"name": "legal", "description": "Тексты согласий и реквизиты оператора персональных данных"},
     {"name": "expert-panel", "description": "Экспертная разметка: вход по ссылке, пары, ответы, Ангофф"},
     {"name": "system", "description": "Служебные методы"},
+    {"name": "expert", "description": "Проверка развёрнутых ответов теста по рубрике: очередь, оценка, согласованность экспертов"},
+    {"name": "jury", "description": "Жюри: вход в один клик, личная песочница с демо-данными, сброс и удаление песочницы"},
+    {"name": "my-data", "description": "«Мои данные»: что хранится о пользователе, выгрузка JSON, удаление, отзыв раскрытых контактов"},
+    {"name": "validation", "description": "Публичные метрики качества: валидация теста и подбора, критерии ТЗ, проверка своих данных"},
+    {"name": "fsp-registry", "description": "Предложение контракта реестра ФСП и его синтетический мок (не официальный API ФСП)"},
 ] + subs_api.TAGS
 
 
@@ -109,7 +116,12 @@ def create_app() -> FastAPI:
         description=(
             "Платформа подбора ИТ-специалистов с обратной механикой: работодатель находит проверенного "
             "кандидата по категории «направление · грейд» и приглашает с зарплатой.\n\n"
-            "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
+            "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`; "
+            "ошибки проверки полей запроса (422) — в формате FastAPI `{\"detail\": [{\"loc\", \"msg\", \"type\"}]}`.\n\n"
+            "Вход: `POST /api/auth/token` (форма) или `POST /api/auth/login` (JSON), далее заголовок "
+            "`Authorization: Bearer <JWT>`; кнопка Authorize в Swagger UI принимает ту же пару «почта — пароль». "
+            "К каждому методу описаны требуемая роль, коды ошибок и их `detail.code`. Файл спецификации без запуска "
+            "сервера — `docs/api/openapi.json` в репозитории (обзор — `docs/API.md`)."
         ),
         openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
                       + mutual.TAGS + study_api.TAGS + interview.TAGS),
@@ -117,6 +129,16 @@ def create_app() -> FastAPI:
         redoc_url=None,
         openapi_url="/api/openapi.json",
     )
+    @app.exception_handler(DBPoolTimeout)
+    async def db_busy(request, exc):  # noqa: ANN001 — пул соединений исчерпан (docs/LOAD.md, раздел 6)
+        """Нет свободного соединения с БД за DB_POOL_TIMEOUT_S: понятный 503 с Retry-After вместо 500 — фронтенд
+        повторяет GET через указанное время, Locust и nginx видят перегрузку, а не ошибку кода."""
+        logging.getLogger("app.db").warning("Пул соединений с БД исчерпан (%s %s): 503 db_busy", request.method,
+                                            request.url.path)
+        return JSONResponse(status_code=503, headers={"Retry-After": str(get_settings().db_busy_retry_after_s)},
+                            content={"detail": {"code": "db_busy",
+                                                "message": "Сервер сейчас перегружен — повторите через несколько секунд"}})
+
     app.add_middleware(JuryScopeMiddleware)  # песочница жюри из токена → видимость кандидатов и ответов
     app.include_router(fsp_registry_router)
     app.add_middleware(
@@ -140,6 +162,7 @@ def create_app() -> FastAPI:
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
+    install_openapi(app)  # ошибки по коду методов и строка «Доступ» в схему (app/core/api_docs.py; поведение API не меняется)
     app.mount("/api/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     @app.get("/api/docs", include_in_schema=False)

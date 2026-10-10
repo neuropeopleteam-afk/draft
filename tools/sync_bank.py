@@ -205,7 +205,8 @@ def main() -> int:
     old_hash = tree_hash(DST) if DST.exists() else None
     new_hash = tree_hash(pkg)
     manifest = {
-        "source": str(src), **git_info(src), "content_hash": new_hash,
+        # путь рабочего места в манифест не пишем: банк — соседний репозиторий
+        "source": "../bank", **git_info(src), "content_hash": new_hash,
         "synced_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "n_families": final["n_families"], "by_direction": final["by_direction"],
         "excluded": excluded, "validation": validation,

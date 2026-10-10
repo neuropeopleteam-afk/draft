@@ -2,8 +2,7 @@
 
 Решение владельца 09.10: основная модель — Claude Sonnet 5.5 через OpenRouter (разрешено организаторами), запасная —
 YandexGPT; данные хранятся на сервере в Москве. Прежняя формулировка «языковая модель — Yandex AI Studio (РФ)» была неверной.
-Поле storage в текст согласий не входит, поэтому редакция согласия (CONSENT_VERSION) не меняется — повторного подтверждения
-у пользователей не требуется.
+Поле storage в текст согласий не входит, поэтому его правка редакцию согласия (CONSENT_VERSION) не меняет.
 """
 from app.core import legal
 
@@ -18,8 +17,8 @@ def test_meta_storage_is_honest_about_models_and_location(client):
 
 
 def test_consent_texts_do_not_depend_on_storage_field(client):
-    # версия согласий прежняя — пользователи стенда не получат повторный запрос согласия из-за правки storage
-    assert legal.CONSENT_VERSION == "2026-10-06"
+    # версия согласий — единая (legal.CONSENT_VERSION; 10.10 повышена из-за реквизитов оператора, а не из-за storage):
+    # правка поля storage версию не меняет
     for kind in ("processing", "publication"):
         c = client.get(f"/api/legal/consents/{kind}").json()
         assert c["version"] == legal.CONSENT_VERSION

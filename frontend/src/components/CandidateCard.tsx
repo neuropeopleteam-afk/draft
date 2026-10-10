@@ -20,6 +20,17 @@ export function MustLine({ m }: { m?: { missing?: string[]; missing_more?: numbe
   );
 }
 
+/** Я1: ядро роли — «Основной язык роли — Go: не заявлен» (подтверждён тестом / заявлен / не заявлен). */
+export function CoreLine({ k }: { k?: { headline?: string; state?: string; text?: string; key?: number } | null }) {
+  if (!k?.headline) return null;
+  const cls = k.state === "confirmed" ? "text-emerald-800" : k.state === "absent" ? "text-amber-900" : "text-brand-ink/75";
+  return (
+    <p data-testid="core-line" data-state={k.state} className={`mt-1 max-w-2xl text-sm font-semibold ${cls}`} title={k.text}>
+      {k.headline}{k.state === "absent" && k.key ? " — ниже в подборке" : ""}
+    </p>
+  );
+}
+
 /** Ф6 (Н5): навык проверен тестом или заданием, но порог не набран — не значок T1, а нейтральная пометка. */
 export function ReasonLevel({ r }: { r: { level?: string | null; status?: string; weight?: number | null } }) {
   if (r.level === "T1" && r.status === "mismatch" && r.weight != null) {
@@ -68,8 +79,8 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
   );
 }
 
-export function CandidateCard({ c, score, reasons, actions, must, compact = false, badge, mutual, collapsible = false, expanded = false }: {
-  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9)
+export function CandidateCard({ c, score, reasons, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false }: {
+  c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; core?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9); core — ядро роли (Я1)
   collapsible?: boolean; expanded?: boolean;  // Ф6 (Н9): короткая карточка с раскрытием по клику
 }) {
   const t = c.test;
@@ -93,6 +104,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
               {badge}
             </div>
             <MustLine m={must} />
+            <CoreLine k={core} />
             <p className="mt-0.5 text-sm text-brand-ink/65">
               {c.rank_in_category ? `Место ${c.rank_in_category} из ${c.category_size} в категории · ` : ""}
               {c.experience_years != null ? `стаж ${years(c.experience_years)} · ` : ""}
@@ -124,6 +136,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
             {badge}
           </div>
           <MustLine m={must} />
+          <CoreLine k={core} />
           <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
           {c.confirmed_by && <p className="mt-1 text-xs text-brand-ink/70">Грейд был предварительным и подтверждён {c.confirmed_by.title}{c.confirmed_by.ref_title ? ` («${c.confirmed_by.ref_title}»)` : ""}</p>}
           <p className="mt-0.5 text-sm text-brand-ink/65">
