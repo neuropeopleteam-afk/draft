@@ -20,7 +20,7 @@ from __future__ import annotations
 import math
 import re
 
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import STACK, known_tag
 
 ALGORITHM = "mutual-v1"
 WEIGHTS = {"format": 0.25, "location": 0.15, "salary": 0.30, "stack": 0.15, "tasks": 0.05, "readiness": 0.10}
@@ -183,7 +183,7 @@ def offer_fit(*, work_format: str, city: str | None, relocation: bool, salary_mi
 
     # ---- интерес к стеку
     need_tags = list(dict.fromkeys(i["tag"] for i in (req.get("stack_required") or []) + (req.get("stack_desired") or [])))
-    explicit = [t for t in prefs.get("interest_tags") or [] if t in STACK]
+    explicit = [t for t in prefs.get("interest_tags") or [] if known_tag(t)]
     if explicit:
         interest, source = set(explicit), "ваших интересах" if me else "интересах кандидата"
     else:

@@ -33,12 +33,13 @@ from app.core.fmt import ru_num, theta_se
 from app.modules.assessment.models import TestSession
 from app.modules.auth.models import User
 from app.modules.catalog.seed_data import DIRECTIONS, GRADES
+from app.modules.catalog.ext import DirectionId
 
 Z95 = 1.96
 STATUS_TITLES = {"confirmed": "подтверждён", "accepted_lower": "принят уровень ниже", "provisional": "предварительно",
                  "unconfirmed": "не подтверждён"}
 MODE_TITLES = {"full": "полный тест", "express": "экспресс-тест", "confirm": "дотестирование"}
-Direction = Literal["backend", "frontend", "data_ml", "qa", "security"]
+Direction = DirectionId
 
 
 # ------------------------------------------------------------------ одна попытка

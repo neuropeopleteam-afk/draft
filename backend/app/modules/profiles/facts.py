@@ -21,7 +21,7 @@ from app.core.fmt import probe_title, theta_se
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK, category_title, tag_title
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, category_title, known_tag, tag_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
@@ -60,8 +60,8 @@ def set_t0_facts(db: Session, user_id: uuid.UUID, source: FactSource, *, stack: 
     db.execute(delete(CandidateFact).where(CandidateFact.user_id == user_id, CandidateFact.source == source,
                                            CandidateFact.evidence_level == EvidenceLevel.T0))
     for t in stack or []:
-        if t in STACK:
-            db.add(CandidateFact(user_id=user_id, kind="stack", key=t, title=STACK[t][0], value={},
+        if known_tag(t):
+            db.add(CandidateFact(user_id=user_id, kind="stack", key=t, title=tag_title(t), value={},
                                  evidence_level=EvidenceLevel.T0, source=source))
     for r in roles or []:
         if r in ROLE_TITLES:

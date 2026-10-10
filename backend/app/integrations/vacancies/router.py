@@ -23,7 +23,7 @@ from app.integrations.vacancies.models import Vacancy, VacancyApplication
 from app.modules.assignments import service as assignments  # задание к вакансии (И7)
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import STACK, category_title
+from app.modules.catalog.seed_data import STACK, category_title, known_tag
 from app.modules.contact.salary import basis_out
 from app.modules.contact.service import application_thread_summary
 from app.modules.invitations.service import candidate_contacts, check_salary
@@ -137,7 +137,7 @@ def _in_pool(db: Session, v: Vacancy) -> bool:
 def _check_refs(db: Session, category_id: str | None, stack: list[str] | None) -> None:
     if category_id and db.get(Category, category_id) is None:
         raise api_error(422, "category_unknown", "Неизвестная категория")
-    bad = [t for t in stack or [] if t not in STACK]
+    bad = [t for t in stack or [] if not known_tag(t)]
     if bad:
         raise api_error(422, "stack_unknown", f"Неизвестные технологии: {', '.join(bad[:5])}")
 

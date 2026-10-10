@@ -178,6 +178,68 @@ _COMPILED: dict[str, list[re.Pattern]] = {
 _SHORT = {k: re.compile(rf"(?<![\w\-])(?:{rx})(?![\w\-])") for k, rx in CASE_SENSITIVE_SHORT.items()}
 
 
+def _visible_ext_tags() -> tuple[str, ...]:
+    from app.modules.catalog.ext import visible_stack
+
+    return tuple(visible_stack())
+
+
+def direction_keywords() -> dict[str, list[str]]:
+    """Ключевые слова направлений с учётом расширения каталога (ext.py): без видимых направлений расширения — ровно
+    DIRECTION_KEYWORDS; с ними — свои слова у DevOps/SRE, инженера данных, мобильной разработки и аналитика, а
+    «data engineer» уходит из Data/ML к инженеру данных (раньше вёл в ближайшую категорию)."""
+    from app.modules.catalog.ext import EXT_DIRECTION_KEYWORDS, EXT_TAKES_KEYWORDS, visible_ext
+
+    vis = visible_ext()
+    if not vis:
+        return DIRECTION_KEYWORDS
+    taken = {w for d in vis for words in EXT_TAKES_KEYWORDS.get(d, {}).values() for w in words}
+    out = {d: [w for w in words if w not in taken] for d, words in DIRECTION_KEYWORDS.items()}
+    out.update({d: EXT_DIRECTION_KEYWORDS[d] for d in vis})
+    return out
+
+
+def _ext_spans(text: str, found: dict[str, tuple[int, int]]) -> None:
+    """Стек-теги видимых направлений расширения (на месте в found). React Native — не React: синоним базового тега
+    внутри фрагмента тега расширения не считается упоминанием базового тега (EXT_SHADOWS)."""
+    tags = _visible_ext_tags()
+    if not tags:
+        return
+    from app.modules.catalog.ext import EXT_SHADOWS
+
+    for tag in tags:
+        for p in _ext_compiled().get(tag, ()):
+            m = p.search(text)
+            if m and (tag not in found or m.start() < found[tag][0]):
+                found[tag] = (m.start(), m.end())
+    for tag, shadowed in EXT_SHADOWS.items():
+        if tag in found and shadowed in found:
+            masked = text
+            for p in _ext_compiled()[tag]:
+                masked = p.sub(lambda m: " " * (m.end() - m.start()), masked)
+            first = None
+            for p in _COMPILED.get(shadowed, ()):
+                m = p.search(masked)
+                if m and (first is None or m.start() < first[0]):
+                    first = (m.start(), m.end())
+            if first is None:
+                found.pop(shadowed)
+            else:
+                found[shadowed] = first
+
+
+_EXT_COMPILED: dict[str, list[re.Pattern]] | None = None
+
+
+def _ext_compiled() -> dict[str, list[re.Pattern]]:
+    global _EXT_COMPILED
+    if _EXT_COMPILED is None:
+        from app.modules.catalog.ext import EXT_ALIASES
+
+        _EXT_COMPILED = {tag: [_alias_regex(a) for a in aliases] for tag, aliases in EXT_ALIASES.items()}
+    return _EXT_COMPILED
+
+
 def find_stack_spans(text: str) -> dict[str, tuple[int, int]]:
     """Стек-теги в тексте → (начало, конец) первого упоминания: цитата, на основании которой тег извлечён."""
     found: dict[str, tuple[int, int]] = {}
@@ -193,6 +255,7 @@ def find_stack_spans(text: str) -> dict[str, tuple[int, int]]:
         tag = SHORT_TAG[short]
         if m and (tag not in found or m.start() < found[tag][0]):
             found[tag] = (m.start(), m.end())
+    _ext_spans(text, found)
     return found
 
 
