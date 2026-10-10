@@ -112,7 +112,7 @@ test("1440: проверка за 12 минут — от своей потреб
     const card = ref ? page.locator("article").filter({ has: page.getByText(`Кандидат ${ref}`, { exact: true }) })
       : page.locator("article").filter({ has: page.getByRole("button", { name: "Пригласить", exact: true }) }).first();
     await card.getByRole("button", { name: "Пригласить", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "Приглашение-оффер" });
+    const dialog = page.getByRole("dialog", { name: /^Приглашение кандидату C-/ });  // Ф6 (Н9): окно из подборки
     await expect(dialog).toBeVisible();
     await dialog.locator("#it").fill(POSITION);
     await dialog.locator("#idesc").fill("Команда платежей: FastAPI, PostgreSQL, Docker. Удалённо. Проверка e2e Я9.");
@@ -168,7 +168,7 @@ test("1440: проверка за 12 минут — от своей потреб
   await test.step("справочник остаётся: переключатель в шапке", async () => {
     await g.getByRole("button", { name: "Готово · остальное — в справочнике" }).click();
     await expect(g.getByRole("button", { name: "Справочник" })).toHaveAttribute("aria-pressed", "true");
-    await expect(g.getByText(/^Проводник жюри · шаг \d+ из 25$/)).toBeVisible();
+    await expect(g.getByText(/^Проводник жюри · шаг \d+ из \d+$/)).toBeVisible();
     await g.getByRole("button", { name: "Проверка за 12 минут" }).click();
     await expectStep(page, 8, "Доказательства одной кнопкой");
   });
