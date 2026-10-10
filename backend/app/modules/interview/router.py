@@ -107,6 +107,7 @@ class SessionOut(BaseModel):
     skills: list[str] = []
     note: str | None = None
     transcript: list[TurnOut] | None = Field(None, description="Только работодателю и только текст")
+    return_to: str = Field(description="Куда вернуть кандидата после разговора")
     error: str | None = None
 
 

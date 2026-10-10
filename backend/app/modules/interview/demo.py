@@ -36,6 +36,9 @@ def _attempt(db: Session, user_id) -> TestSession | None:
 
 
 def _example(db: Session, user_id, honest: bool) -> InterviewSession | None:
+    from app.modules.auth.models import User
+    from app.modules.jury import scope
+
     ts = _attempt(db, user_id)
     if ts is None:
         return None
@@ -59,6 +62,7 @@ def _example(db: Session, user_id, honest: bool) -> InterviewSession | None:
     raw["stub"] = False
     row = InterviewSession(id=uuid.uuid4(), mode="defense", candidate_user_id=user_id, test_session_id=ts.id,
                            status="in_progress", engine="example", is_example=True, minutes=3, max_questions=3,
+                           jury_scope=scope.key_of((db.get(User, user_id) or User()).email),
                            context_meta=meta, transcript=transcript, consent_version=svc.CONSENT_VERSION,
                            started_at=utcnow(), duration_s=150, channel="voice", result={},
                            state={"channels_log": ["avatar", "voice"]})
