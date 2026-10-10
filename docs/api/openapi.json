@@ -4051,6 +4051,406 @@
         "title": "Body_upload_resume_api_me_resume_post",
         "type": "object"
       },
+      "CabinetCupOut": {
+        "additionalProperties": true,
+        "properties": {
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accepted"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Category Id"
+          },
+          "category_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Category Title"
+          },
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "ends_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ends At"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "invite_top_n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invite Top N"
+          },
+          "invited": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invited"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Mode"
+          },
+          "participants": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Participants"
+          },
+          "passport_pending": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Passport Pending"
+          },
+          "passport_written": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Passport Written"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Phase"
+          },
+          "placed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Placed"
+          },
+          "salary_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary From"
+          },
+          "salary_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Salary To"
+          },
+          "score_median_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Медиана результата, %; скрыта в малых группах",
+            "title": "Score Median Pct"
+          },
+          "starts_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Starts At"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "company"
+        ],
+        "title": "CabinetCupOut",
+        "type": "object"
+      },
+      "CabinetDemandOut": {
+        "additionalProperties": true,
+        "description": "Спрос работодателей по категориям и навыкам против предложения.",
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/DemandCategoryOut"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "needs_without_grade": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Потребности без грейда по направлениям",
+            "title": "Needs Without Grade",
+            "type": "object"
+          },
+          "skills": {
+            "items": {
+              "$ref": "#/components/schemas/DemandSkillOut"
+            },
+            "title": "Skills",
+            "type": "array"
+          }
+        },
+        "required": [
+          "categories",
+          "needs_without_grade",
+          "skills"
+        ],
+        "title": "CabinetDemandOut",
+        "type": "object"
+      },
+      "CabinetFunnelOut": {
+        "additionalProperties": true,
+        "description": "Воронка от кандидата с категорией до принятого приглашения: все, с ФСП, без ФСП, участники кубков.",
+        "properties": {
+          "all": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStepOut"
+            },
+            "title": "All",
+            "type": "array"
+          },
+          "cups": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStepOut"
+            },
+            "title": "Cups",
+            "type": "array"
+          },
+          "fsp": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStepOut"
+            },
+            "title": "Fsp",
+            "type": "array"
+          },
+          "no_fsp": {
+            "items": {
+              "$ref": "#/components/schemas/FunnelStepOut"
+            },
+            "title": "No Fsp",
+            "type": "array"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "all",
+          "fsp",
+          "no_fsp",
+          "cups",
+          "note"
+        ],
+        "title": "CabinetFunnelOut",
+        "type": "object"
+      },
+      "CabinetReportOut": {
+        "additionalProperties": true,
+        "description": "Полный отчёт кабинета ФСП за период: те же разделы, что и отдельные запросы, и методология. Только агрегаты.",
+        "properties": {
+          "cups": {
+            "items": {
+              "$ref": "#/components/schemas/CabinetCupOut"
+            },
+            "title": "Cups",
+            "type": "array"
+          },
+          "demand": {
+            "$ref": "#/components/schemas/CabinetDemandOut"
+          },
+          "fsp_effect": {
+            "$ref": "#/components/schemas/FspEffectOut"
+          },
+          "funnel": {
+            "$ref": "#/components/schemas/CabinetFunnelOut"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "string"
+          },
+          "k": {
+            "title": "K",
+            "type": "integer"
+          },
+          "methodology": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Methodology",
+            "type": "array"
+          },
+          "overview": {
+            "$ref": "#/components/schemas/FspOverviewOut"
+          },
+          "period_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Days"
+          },
+          "salaries": {
+            "$ref": "#/components/schemas/CabinetSalariesOut"
+          }
+        },
+        "required": [
+          "generated_at",
+          "k",
+          "period_days",
+          "overview",
+          "demand",
+          "fsp_effect",
+          "salaries",
+          "funnel",
+          "cups",
+          "methodology"
+        ],
+        "title": "CabinetReportOut",
+        "type": "object"
+      },
+      "CabinetSalariesOut": {
+        "additionalProperties": true,
+        "description": "Зарплатные вилки предложений по категориям и направлениям; группы меньше порога скрыты.",
+        "properties": {
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/SalaryCategoryOut"
+            },
+            "title": "Categories",
+            "type": "array"
+          },
+          "directions": {
+            "items": {
+              "$ref": "#/components/schemas/SalaryDirectionOut"
+            },
+            "title": "Directions",
+            "type": "array"
+          },
+          "rules": {
+            "additionalProperties": true,
+            "description": "Пороги скрытия: min_offers, min_candidates, min_companies",
+            "title": "Rules",
+            "type": "object"
+          }
+        },
+        "required": [
+          "categories",
+          "directions",
+          "rules"
+        ],
+        "title": "CabinetSalariesOut",
+        "type": "object"
+      },
       "CandidateAssignmentsOut": {
         "additionalProperties": true,
         "properties": {
@@ -5468,6 +5868,167 @@
           "slot_id"
         ],
         "title": "ChooseIn",
+        "type": "object"
+      },
+      "ClosedSetNeedResultOut": {
+        "additionalProperties": true,
+        "properties": {
+          "eligible": {
+            "description": "Сколько профилей прошло фильтр по направлению и грейду",
+            "title": "Eligible",
+            "type": "integer"
+          },
+          "label_coverage": {
+            "description": "Доля профилей с разметкой релевантности",
+            "title": "Label Coverage",
+            "type": "number"
+          },
+          "metrics": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "p@k, nDCG@k — только если разметка полная",
+            "title": "Metrics"
+          },
+          "need_id": {
+            "title": "Need Id",
+            "type": "string"
+          },
+          "requirements": {
+            "additionalProperties": true,
+            "description": "Разобранные требования потребности",
+            "title": "Requirements",
+            "type": "object"
+          },
+          "results": {
+            "description": "Выдача: candidate_id, rank, score, components, reasons, relevance",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "need_id",
+          "requirements",
+          "eligible",
+          "returned",
+          "label_coverage",
+          "metrics",
+          "results"
+        ],
+        "title": "ClosedSetNeedResultOut",
+        "type": "object"
+      },
+      "ClosedSetResultOut": {
+        "additionalProperties": true,
+        "description": "Подбор на закрытом наборе жюри: выдача по каждой потребности и метрики. Данные обрабатываются в памяти запроса.",
+        "properties": {
+          "algorithm": {
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "evaluated_needs": {
+            "title": "Evaluated Needs",
+            "type": "integer"
+          },
+          "k": {
+            "title": "K",
+            "type": "integer"
+          },
+          "n_candidates": {
+            "title": "N Candidates",
+            "type": "integer"
+          },
+          "n_needs": {
+            "title": "N Needs",
+            "type": "integer"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "per_need": {
+            "items": {
+              "$ref": "#/components/schemas/ClosedSetNeedResultOut"
+            },
+            "title": "Per Need",
+            "type": "array"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Средние p@k и nDCG@k по потребностям с полной разметкой",
+            "title": "Summary"
+          }
+        },
+        "required": [
+          "algorithm",
+          "n_needs",
+          "n_candidates",
+          "k",
+          "evaluated_needs",
+          "summary",
+          "per_need",
+          "note"
+        ],
+        "title": "ClosedSetResultOut",
+        "type": "object"
+      },
+      "ClosedSetTemplateOut": {
+        "additionalProperties": true,
+        "description": "Шаблон анонимного набора жюри. Формат `csv` отдаёт те же данные таблицей с колонкой `kind`; здесь — вид `json`.",
+        "properties": {
+          "candidates": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "labels": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "needs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Needs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "needs",
+          "candidates",
+          "labels"
+        ],
+        "title": "ClosedSetTemplateOut",
         "type": "object"
       },
       "CompanyOut": {
@@ -8112,6 +8673,271 @@
         "title": "DeleteResultOut",
         "type": "object"
       },
+      "DemandCategoryOut": {
+        "additionalProperties": true,
+        "properties": {
+          "accept_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accept Rate"
+          },
+          "accepted_candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accepted Candidates"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "companies": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Companies"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "grade": {
+            "title": "Grade",
+            "type": "string"
+          },
+          "invitations": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invitations"
+          },
+          "invitations_per_10": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invitations Per 10"
+          },
+          "invite_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invite Rate"
+          },
+          "invited_candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invited Candidates"
+          },
+          "market_median": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Market Median"
+          },
+          "needs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Needs"
+          },
+          "supply": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сколько кандидатов подтвердили категорию",
+            "title": "Supply"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category_id",
+          "title",
+          "direction",
+          "grade"
+        ],
+        "title": "DemandCategoryOut",
+        "type": "object"
+      },
+      "DemandSkillOut": {
+        "additionalProperties": true,
+        "properties": {
+          "companies": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Companies"
+          },
+          "demand_weight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Demand Weight"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Direction"
+          },
+          "invite_rate_with_skill": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invite Rate With Skill"
+          },
+          "invited_with_skill": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invited With Skill"
+          },
+          "needs_desired": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Needs Desired"
+          },
+          "needs_required": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Needs Required"
+          },
+          "supply_confirmed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Supply Confirmed"
+          },
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "title"
+        ],
+        "title": "DemandSkillOut",
+        "type": "object"
+      },
       "DemoNextWeekOut": {
         "additionalProperties": true,
         "properties": {
@@ -9302,6 +10128,811 @@
         "title": "Evidence",
         "type": "object"
       },
+      "ExpertAgreementOut": {
+        "additionalProperties": true,
+        "description": "Согласие оценок языковой модели и экспертов на ответах, которые оценили оба.",
+        "properties": {
+          "mae": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Средняя абсолютная разница баллов",
+            "title": "Mae"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "within_025": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Доля пар, где баллы различаются не более чем на 0,25",
+            "title": "Within 025"
+          }
+        },
+        "required": [
+          "n"
+        ],
+        "title": "ExpertAgreementOut",
+        "type": "object"
+      },
+      "ExpertEnterOut": {
+        "additionalProperties": true,
+        "description": "Вход эксперта по ссылке: токен доступа. Если подключён второй фактор — вместо токена промежуточный токен и методы.",
+        "properties": {
+          "access_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Access Token"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Код эксперта в панели",
+            "title": "Code"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Email"
+          },
+          "expires_in": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Expires In"
+          },
+          "landing": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Landing"
+          },
+          "methods": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Methods"
+          },
+          "pending_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Только при втором факторе: токен для POST /api/auth/2fa/verify",
+            "title": "Pending Token"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Role"
+          },
+          "setup_required": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Required"
+          },
+          "token_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Token Type"
+          }
+        },
+        "title": "ExpertEnterOut",
+        "type": "object"
+      },
+      "ExpertInviteOut": {
+        "additionalProperties": true,
+        "description": "Приглашение эксперта. Токен показывается один раз — в базе только хеш.",
+        "properties": {
+          "assigned": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Сколько объектов назначено в блоках A, B, C",
+            "title": "Assigned",
+            "type": "object"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "slot": {
+            "title": "Slot",
+            "type": "string"
+          },
+          "team_size": {
+            "title": "Team Size",
+            "type": "integer"
+          },
+          "token": {
+            "description": "Одноразовый секрет персональной ссылки",
+            "title": "Token",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "slot",
+          "team_size",
+          "created",
+          "token",
+          "url",
+          "assigned"
+        ],
+        "title": "ExpertInviteOut",
+        "type": "object"
+      },
+      "ExpertLabelSavedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "item_id": {
+            "title": "Item Id",
+            "type": "string"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/ExpertProgressBlockOut"
+          },
+          "saved": {
+            "title": "Saved",
+            "type": "boolean"
+          },
+          "value": {
+            "additionalProperties": true,
+            "title": "Value",
+            "type": "object"
+          }
+        },
+        "required": [
+          "saved",
+          "item_id",
+          "value",
+          "progress"
+        ],
+        "title": "ExpertLabelSavedOut",
+        "type": "object"
+      },
+      "ExpertPanelItemsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "description": "Объекты назначения вслепую (id, n, group, содержимое) и сохранённая оценка label",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "kind": {
+            "description": "A, B или C",
+            "title": "Kind",
+            "type": "string"
+          },
+          "progress": {
+            "$ref": "#/components/schemas/ExpertProgressBlockOut"
+          }
+        },
+        "required": [
+          "kind",
+          "items",
+          "progress"
+        ],
+        "title": "ExpertPanelItemsOut",
+        "type": "object"
+      },
+      "ExpertPanelMeOut": {
+        "additionalProperties": true,
+        "description": "Эксперт панели: код, прогресс по блокам A, B, C. Не в панели — только `in_panel: false`.",
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Code"
+          },
+          "in_panel": {
+            "title": "In Panel",
+            "type": "boolean"
+          },
+          "instructions_ack_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Instructions Ack At"
+          },
+          "is_demo": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Is Demo"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Name"
+          },
+          "pack": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pack"
+          },
+          "progress": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/ExpertProgressBlockOut"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Progress"
+          }
+        },
+        "required": [
+          "in_panel"
+        ],
+        "title": "ExpertPanelMeOut",
+        "type": "object"
+      },
+      "ExpertPanelStatusOut": {
+        "additionalProperties": true,
+        "properties": {
+          "panel": {
+            "items": {
+              "$ref": "#/components/schemas/ExpertPanelStatusRowOut"
+            },
+            "title": "Panel",
+            "type": "array"
+          }
+        },
+        "required": [
+          "panel"
+        ],
+        "title": "ExpertPanelStatusOut",
+        "type": "object"
+      },
+      "ExpertPanelStatusRowOut": {
+        "additionalProperties": true,
+        "properties": {
+          "active": {
+            "title": "Active",
+            "type": "boolean"
+          },
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "last_seen_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Seen At"
+          },
+          "progress": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "description": "По блокам A, B, C: done, total",
+            "title": "Progress",
+            "type": "object"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Role"
+          },
+          "source": {
+            "description": "people или model",
+            "title": "Source",
+            "type": "string"
+          },
+          "source_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Model"
+          },
+          "started": {
+            "title": "Started",
+            "type": "boolean"
+          },
+          "uniform": {
+            "description": "Блоки, где все оценки одинаковы",
+            "items": {
+              "type": "string"
+            },
+            "title": "Uniform",
+            "type": "array"
+          }
+        },
+        "required": [
+          "code",
+          "active",
+          "started",
+          "source",
+          "source_model",
+          "role",
+          "progress",
+          "uniform",
+          "last_seen_at"
+        ],
+        "title": "ExpertPanelStatusRowOut",
+        "type": "object"
+      },
+      "ExpertProgressBlockOut": {
+        "additionalProperties": true,
+        "properties": {
+          "done": {
+            "title": "Done",
+            "type": "integer"
+          },
+          "minutes_left": {
+            "title": "Minutes Left",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "done",
+          "minutes_left"
+        ],
+        "title": "ExpertProgressBlockOut",
+        "type": "object"
+      },
+      "ExpertQueueItemOut": {
+        "additionalProperties": true,
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "candidate_ref": {
+            "title": "Candidate Ref",
+            "type": "string"
+          },
+          "claimed_grade": {
+            "title": "Claimed Grade",
+            "type": "string"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Code"
+          },
+          "code_language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Code Language"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "expert": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expert"
+          },
+          "format": {
+            "title": "Format",
+            "type": "string"
+          },
+          "llm": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method"
+          },
+          "part": {
+            "title": "Part",
+            "type": "integer"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "rubric": {
+            "additionalProperties": true,
+            "title": "Rubric",
+            "type": "object"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "session_status": {
+            "title": "Session Status",
+            "type": "string"
+          },
+          "skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "stem": {
+            "title": "Stem",
+            "type": "string"
+          },
+          "step_prompt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Step Prompt"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "part",
+          "format",
+          "position",
+          "stem",
+          "rubric",
+          "answer",
+          "skills",
+          "status",
+          "method",
+          "score",
+          "expert",
+          "llm",
+          "session_id",
+          "session_status",
+          "candidate_ref",
+          "direction",
+          "claimed_grade",
+          "at"
+        ],
+        "title": "ExpertQueueItemOut",
+        "type": "object"
+      },
+      "ExpertQueueOut": {
+        "additionalProperties": true,
+        "description": "Очередь развёрнутых ответов на оценку по рубрике (ответы без ФИО).",
+        "properties": {
+          "counts": {
+            "additionalProperties": true,
+            "description": "Сколько ответов в каждой очереди: pending, llm, reviewed",
+            "title": "Counts",
+            "type": "object"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExpertQueueItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "mode": {
+            "description": "pending, llm или reviewed",
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "counts",
+          "items"
+        ],
+        "title": "ExpertQueueOut",
+        "type": "object"
+      },
+      "ExpertReviewOut": {
+        "additionalProperties": true,
+        "properties": {
+          "confirmed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Confirmed"
+          },
+          "confirmed_before": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Confirmed Before"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Message"
+          },
+          "pending_left": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Pending Left"
+          },
+          "recomputed": {
+            "description": "Сессия завершена, оценка применена — результат пересчитан",
+            "title": "Recomputed",
+            "type": "boolean"
+          },
+          "review": {
+            "additionalProperties": true,
+            "description": "Принятая оценка: баллы по критериям, итог, эксперт, время",
+            "title": "Review",
+            "type": "object"
+          },
+          "se": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Se"
+          },
+          "theta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Только при пересчёте",
+            "title": "Theta"
+          }
+        },
+        "required": [
+          "review",
+          "recomputed"
+        ],
+        "title": "ExpertReviewOut",
+        "type": "object"
+      },
       "FastForwardIn": {
         "properties": {
           "days": {
@@ -9852,6 +11483,326 @@
           "title"
         ],
         "title": "FspDisciplineOut",
+        "type": "object"
+      },
+      "FspEffectCellOut": {
+        "additionalProperties": true,
+        "properties": {
+          "accept_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accept Rate"
+          },
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accepted"
+          },
+          "adjusted_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "То же с поправкой на категорию",
+            "title": "Adjusted Ratio"
+          },
+          "candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Candidates"
+          },
+          "invitations_per_candidate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invitations Per Candidate"
+          },
+          "invite_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invite Rate"
+          },
+          "invited": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invited"
+          },
+          "lift_vs_no_fsp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Во сколько раз чаще приглашают, чем без достижений ФСП",
+            "title": "Lift Vs No Fsp"
+          }
+        },
+        "title": "FspEffectCellOut",
+        "type": "object"
+      },
+      "FspEffectDirectionOut": {
+        "additionalProperties": true,
+        "properties": {
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "fsp": {
+            "$ref": "#/components/schemas/FspEffectCellOut"
+          },
+          "no_fsp": {
+            "$ref": "#/components/schemas/FspEffectCellOut"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction",
+          "title",
+          "fsp",
+          "no_fsp"
+        ],
+        "title": "FspEffectDirectionOut",
+        "type": "object"
+      },
+      "FspEffectOut": {
+        "additionalProperties": true,
+        "description": "Эффект достижений ФСП на приглашения: группы, дисциплины, разряды, результаты, уровни, направления.",
+        "properties": {
+          "base_invite_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Доля приглашённых среди кандидатов без достижений ФСП",
+            "title": "Base Invite Rate"
+          },
+          "by_direction": {
+            "items": {
+              "$ref": "#/components/schemas/FspEffectDirectionOut"
+            },
+            "title": "By Direction",
+            "type": "array"
+          },
+          "disciplines": {
+            "items": {
+              "$ref": "#/components/schemas/FspEffectRowOut"
+            },
+            "title": "Disciplines",
+            "type": "array"
+          },
+          "groups": {
+            "items": {
+              "$ref": "#/components/schemas/FspEffectRowOut"
+            },
+            "title": "Groups",
+            "type": "array"
+          },
+          "levels": {
+            "items": {
+              "$ref": "#/components/schemas/FspEffectRowOut"
+            },
+            "title": "Levels",
+            "type": "array"
+          },
+          "ranks": {
+            "items": {
+              "$ref": "#/components/schemas/FspEffectRowOut"
+            },
+            "title": "Ranks",
+            "type": "array"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/FspEffectRowOut"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": [
+          "groups",
+          "disciplines",
+          "ranks",
+          "results",
+          "levels",
+          "by_direction"
+        ],
+        "title": "FspEffectOut",
+        "type": "object"
+      },
+      "FspEffectRowOut": {
+        "additionalProperties": true,
+        "properties": {
+          "accept_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accept Rate"
+          },
+          "accepted": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accepted"
+          },
+          "adjusted_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "То же с поправкой на категорию",
+            "title": "Adjusted Ratio"
+          },
+          "candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Candidates"
+          },
+          "invitations_per_candidate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invitations Per Candidate"
+          },
+          "invite_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invite Rate"
+          },
+          "invited": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Invited"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "lift_vs_no_fsp": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Во сколько раз чаще приглашают, чем без достижений ФСП",
+            "title": "Lift Vs No Fsp"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title"
+        ],
+        "title": "FspEffectRowOut",
         "type": "object"
       },
       "FspIdConfigOut": {
@@ -10474,6 +12425,50 @@
           "linked"
         ],
         "title": "FspStatusOut",
+        "type": "object"
+      },
+      "FunnelStepOut": {
+        "additionalProperties": true,
+        "properties": {
+          "conversion": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Доля от предыдущего шага",
+            "title": "Conversion"
+          },
+          "count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Count"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title"
+        ],
+        "title": "FunnelStepOut",
         "type": "object"
       },
       "GradeHintOut": {
@@ -12221,6 +14216,142 @@
         "title": "JuryModeOut",
         "type": "object"
       },
+      "JuryResetOut": {
+        "additionalProperties": true,
+        "description": "Сброс песочницы жюри: пересозданные персонажи и вход под выбранной ролью (токен — обычный JWT демо-учётки).",
+        "properties": {
+          "access_token": {
+            "title": "Access Token",
+            "type": "string"
+          },
+          "candidate": {
+            "additionalProperties": true,
+            "title": "Candidate",
+            "type": "object"
+          },
+          "candidate_junior": {
+            "additionalProperties": true,
+            "title": "Candidate Junior",
+            "type": "object"
+          },
+          "candidate_new": {
+            "additionalProperties": true,
+            "title": "Candidate New",
+            "type": "object"
+          },
+          "candidate_nofsp": {
+            "additionalProperties": true,
+            "title": "Candidate Nofsp",
+            "type": "object"
+          },
+          "deleted_users": {
+            "title": "Deleted Users",
+            "type": "integer"
+          },
+          "employer": {
+            "additionalProperties": true,
+            "title": "Employer",
+            "type": "object"
+          },
+          "expert": {
+            "additionalProperties": true,
+            "title": "Expert",
+            "type": "object"
+          },
+          "expires_in": {
+            "title": "Expires In",
+            "type": "integer"
+          },
+          "landing": {
+            "title": "Landing",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "persona": {
+            "title": "Persona",
+            "type": "string"
+          },
+          "scenario": {
+            "title": "Scenario",
+            "type": "string"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          },
+          "shared": {
+            "title": "Shared",
+            "type": "boolean"
+          },
+          "token_type": {
+            "title": "Token Type",
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserBriefOut"
+          }
+        },
+        "required": [
+          "ok",
+          "candidate",
+          "candidate_nofsp",
+          "candidate_junior",
+          "candidate_new",
+          "employer",
+          "expert",
+          "scenario",
+          "seconds",
+          "deleted_users",
+          "access_token",
+          "token_type",
+          "expires_in",
+          "user",
+          "persona",
+          "landing",
+          "shared"
+        ],
+        "title": "JuryResetOut",
+        "type": "object"
+      },
+      "JurySandboxDeletedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "deleted_users": {
+            "title": "Deleted Users",
+            "type": "integer"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "scenario": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scenario"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ok",
+          "scenario",
+          "deleted_users",
+          "seconds"
+        ],
+        "title": "JurySandboxDeletedOut",
+        "type": "object"
+      },
       "JuryStatusOut": {
         "additionalProperties": true,
         "properties": {
@@ -12414,6 +14545,633 @@
           "storage"
         ],
         "title": "LegalOperatorOut",
+        "type": "object"
+      },
+      "LiveCountersOut": {
+        "additionalProperties": true,
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "declined": {
+            "title": "Declined",
+            "type": "integer"
+          },
+          "finished": {
+            "title": "Finished",
+            "type": "integer"
+          },
+          "invited": {
+            "title": "Invited",
+            "type": "integer"
+          },
+          "joined": {
+            "title": "Joined",
+            "type": "integer"
+          },
+          "push_delivered": {
+            "title": "Push Delivered",
+            "type": "integer"
+          },
+          "selected": {
+            "title": "Selected",
+            "type": "integer"
+          },
+          "testing": {
+            "title": "Testing",
+            "type": "integer"
+          },
+          "with_category": {
+            "title": "With Category",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "joined",
+          "testing",
+          "finished",
+          "with_category",
+          "selected",
+          "invited",
+          "accepted",
+          "declined",
+          "push_delivered"
+        ],
+        "title": "LiveCountersOut",
+        "type": "object"
+      },
+      "LiveDirectionOut": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "need": {
+            "description": "Название потребности, под которую подбирают гостя этого направления",
+            "title": "Need",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "need"
+        ],
+        "title": "LiveDirectionOut",
+        "type": "object"
+      },
+      "LiveEventOut": {
+        "additionalProperties": true,
+        "properties": {
+          "at": {
+            "title": "At",
+            "type": "string"
+          },
+          "guest": {
+            "title": "Guest",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "ref": {
+            "title": "Ref",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "at",
+          "kind",
+          "guest",
+          "label",
+          "ref",
+          "text"
+        ],
+        "title": "LiveEventOut",
+        "type": "object"
+      },
+      "LiveGuestOut": {
+        "additionalProperties": true,
+        "description": "Состояние гостя: для его телефона (своё задание, доказательства) или для большого экрана (без задания, с номером).",
+        "properties": {
+          "answered": {
+            "title": "Answered",
+            "type": "integer"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "direction_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction Title"
+          },
+          "finished_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Finished At"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Идентификатор гостя (только для большого экрана)",
+            "title": "Id"
+          },
+          "invite": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Приглашение: должность, вилка, push, отправлено, просмотрено; для телефона — компания и индекс доверия",
+            "title": "Invite"
+          },
+          "invite_failed": {
+            "title": "Invite Failed",
+            "type": "boolean"
+          },
+          "item": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Текущее задание (только для телефона гостя, пока идёт тест)",
+            "title": "Item"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "ref": {
+            "description": "Обезличенный номер кандидата",
+            "title": "Ref",
+            "type": "string"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Итог: theta, se, grade, category_id, category_title, skills, preliminary…",
+            "title": "Result"
+          },
+          "selection": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Место в подборке: need_title, rank, total, score, reasons, components, top (для экрана)",
+            "title": "Selection"
+          },
+          "stage": {
+            "description": "testing, finished, selected, invited, accepted или declined",
+            "title": "Stage",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "number",
+          "label",
+          "ref",
+          "direction",
+          "direction_title",
+          "stage",
+          "answered",
+          "total",
+          "created_at",
+          "finished_at",
+          "result",
+          "selection",
+          "invite",
+          "invite_failed"
+        ],
+        "title": "LiveGuestOut",
+        "type": "object"
+      },
+      "LiveGuestStartOut": {
+        "additionalProperties": true,
+        "properties": {
+          "guest": {
+            "$ref": "#/components/schemas/LiveGuestOut"
+          },
+          "token": {
+            "description": "Токен гостя: передаётся в заголовке X-Guest-Token",
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "guest"
+        ],
+        "title": "LiveGuestStartOut",
+        "type": "object"
+      },
+      "LivePushConfigOut": {
+        "additionalProperties": true,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "vapid_public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vapid Public Key"
+          }
+        },
+        "required": [
+          "enabled",
+          "vapid_public_key"
+        ],
+        "title": "LivePushConfigOut",
+        "type": "object"
+      },
+      "LivePushSubscribedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "devices": {
+            "title": "Devices",
+            "type": "integer"
+          },
+          "subscribed": {
+            "title": "Subscribed",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "subscribed",
+          "devices"
+        ],
+        "title": "LivePushSubscribedOut",
+        "type": "object"
+      },
+      "LiveRoomClearedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "deleted": {
+            "description": "Сколько гостей удалено",
+            "title": "Deleted",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "deleted"
+        ],
+        "title": "LiveRoomClearedOut",
+        "type": "object"
+      },
+      "LiveRoomFeedOut": {
+        "additionalProperties": true,
+        "description": "Лента зала для большого экрана. `changed: false` — ничего не изменилось, остальных полей нет.",
+        "properties": {
+          "changed": {
+            "title": "Changed",
+            "type": "boolean"
+          },
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Code"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Company"
+          },
+          "counters": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LiveCountersOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "events": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/LiveEventOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Events"
+          },
+          "guests": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/LiveGuestOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Guests"
+          },
+          "items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Items"
+          },
+          "next_reveal_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Когда на экране появится следующий результат",
+            "title": "Next Reveal At"
+          },
+          "now": {
+            "title": "Now",
+            "type": "string"
+          },
+          "push": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LivePushConfigOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "qr_png": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Qr Png"
+          },
+          "qr_svg": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Qr Svg"
+          },
+          "rev": {
+            "title": "Rev",
+            "type": "integer"
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rule"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          }
+        },
+        "required": [
+          "changed",
+          "rev",
+          "now"
+        ],
+        "title": "LiveRoomFeedOut",
+        "type": "object"
+      },
+      "LiveRoomOut": {
+        "additionalProperties": true,
+        "description": "Зал песочницы жюри: код, ссылка и QR для экрана.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "items": {
+            "title": "Items",
+            "type": "integer"
+          },
+          "push": {
+            "$ref": "#/components/schemas/LivePushConfigOut"
+          },
+          "qr_png": {
+            "description": "Путь к QR-коду в PNG",
+            "title": "Qr Png",
+            "type": "string"
+          },
+          "qr_svg": {
+            "description": "Путь к QR-коду в SVG",
+            "title": "Qr Svg",
+            "type": "string"
+          },
+          "rule": {
+            "title": "Rule",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "url",
+          "qr_svg",
+          "qr_png",
+          "rule",
+          "company",
+          "items",
+          "push"
+        ],
+        "title": "LiveRoomOut",
+        "type": "object"
+      },
+      "LiveRoomPublicOut": {
+        "additionalProperties": true,
+        "description": "Зал по коду из QR: открыт ли, направления, правило приглашения.",
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "directions": {
+            "items": {
+              "$ref": "#/components/schemas/LiveDirectionOut"
+            },
+            "title": "Directions",
+            "type": "array"
+          },
+          "items": {
+            "description": "Сколько заданий в мини-тесте",
+            "title": "Items",
+            "type": "integer"
+          },
+          "open": {
+            "title": "Open",
+            "type": "boolean"
+          },
+          "push": {
+            "$ref": "#/components/schemas/LivePushConfigOut"
+          },
+          "rule": {
+            "title": "Rule",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "company",
+          "open",
+          "items",
+          "rule",
+          "push",
+          "directions"
+        ],
+        "title": "LiveRoomPublicOut",
         "type": "object"
       },
       "MapItem": {
@@ -17130,6 +19888,185 @@
         "title": "RevokeIn",
         "type": "object"
       },
+      "SalaryCategoryOut": {
+        "additionalProperties": true,
+        "properties": {
+          "accepted_mid_median": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Accepted Mid Median"
+          },
+          "category_id": {
+            "title": "Category Id",
+            "type": "string"
+          },
+          "declined_mid_median": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Declined Mid Median"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "grade": {
+            "title": "Grade",
+            "type": "string"
+          },
+          "market_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Market From"
+          },
+          "market_median": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Market Median"
+          },
+          "market_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Market Source"
+          },
+          "market_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Market To"
+          },
+          "offers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Offers"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reason"
+          },
+          "suppressed": {
+            "description": "Группа мала: цифры скрыты",
+            "title": "Suppressed",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "category_id",
+          "title",
+          "direction",
+          "grade",
+          "suppressed"
+        ],
+        "title": "SalaryCategoryOut",
+        "type": "object"
+      },
+      "SalaryDirectionOut": {
+        "additionalProperties": true,
+        "properties": {
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "offers": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Offers"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reason"
+          },
+          "suppressed": {
+            "title": "Suppressed",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction",
+          "title",
+          "suppressed"
+        ],
+        "title": "SalaryDirectionOut",
+        "type": "object"
+      },
       "ScoreIn": {
         "properties": {
           "comment": {
@@ -21688,6 +24625,139 @@
         "title": "VacancyPatch",
         "type": "object"
       },
+      "ValidationAttackOut": {
+        "additionalProperties": true,
+        "description": "Результат атаки «Красной кнопки»: что делали, что ожидалось и что получилось. Ничего не записывается.",
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "expected": {
+            "title": "Expected",
+            "type": "string"
+          },
+          "fact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Итог одной строкой, который показывают жюри",
+            "title": "Fact"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "need": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Текст потребности, на которой запускалась атака",
+            "title": "Need"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "action",
+          "expected",
+          "seconds"
+        ],
+        "title": "ValidationAttackOut",
+        "type": "object"
+      },
+      "ValidationAttemptsRepeatOut": {
+        "additionalProperties": true,
+        "description": "Доля повторов заданий между попытками теста: по базе платформы и по синтетике.",
+        "properties": {
+          "live": {
+            "additionalProperties": true,
+            "title": "Live",
+            "type": "object"
+          },
+          "synthetic": {
+            "additionalProperties": true,
+            "title": "Synthetic",
+            "type": "object"
+          }
+        },
+        "required": [
+          "synthetic",
+          "live"
+        ],
+        "title": "ValidationAttemptsRepeatOut",
+        "type": "object"
+      },
+      "ValidationCriteriaOut": {
+        "additionalProperties": true,
+        "description": "Страница критериев ТЗ: критерий → что сделать → что увидите → чем доказано.",
+        "properties": {
+          "criteria": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Criteria",
+            "type": "array"
+          },
+          "how_to_read": {
+            "title": "How To Read",
+            "type": "string"
+          },
+          "personas": {
+            "additionalProperties": true,
+            "title": "Personas",
+            "type": "object"
+          },
+          "pitch": {
+            "additionalProperties": true,
+            "title": "Pitch",
+            "type": "object"
+          },
+          "total_weight": {
+            "title": "Total Weight",
+            "type": "integer"
+          },
+          "unique": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Unique",
+            "type": "array"
+          }
+        },
+        "required": [
+          "criteria",
+          "pitch",
+          "unique",
+          "how_to_read",
+          "personas",
+          "total_weight"
+        ],
+        "title": "ValidationCriteriaOut",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -21728,6 +24798,323 @@
         "title": "ValidationError",
         "type": "object"
       },
+      "ValidationFspRatingOut": {
+        "additionalProperties": true,
+        "description": "Парный регрессионный бенчмарк формулы рейтинга ФСП (версии v1 и v2).",
+        "properties": {
+          "candidates": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Candidates"
+          },
+          "interpretation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Interpretation"
+          },
+          "metrics": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Metrics"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Missing"
+          },
+          "needs": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Needs"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seed"
+          },
+          "truth_changed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Truth Changed"
+          },
+          "weights_changed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Weights Changed"
+          }
+        },
+        "title": "ValidationFspRatingOut",
+        "type": "object"
+      },
+      "ValidationGraderCheckOut": {
+        "additionalProperties": true,
+        "description": "Оценщик открытых ответов на наборе панели: инъекции и завышение, до и после защиты.",
+        "properties": {
+          "attack_filter_caught": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Attack Filter Caught"
+          },
+          "conditions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Conditions"
+          },
+          "dataset": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Dataset"
+          },
+          "disagree": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Доля расхождений с эталоном",
+            "title": "Disagree"
+          },
+          "filter_false_positives": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Filter False Positives"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Generated At"
+          },
+          "llm_how": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Llm How"
+          },
+          "llm_pending": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Llm Pending"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Missing"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Model"
+          },
+          "prompt_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Prompt Version"
+          },
+          "reference": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reference"
+          },
+          "routes_v2": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Routes V2"
+          },
+          "strip_meta_false_positives": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Strip Meta False Positives"
+          },
+          "tokens": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Tokens"
+          },
+          "worst_attacks_v2": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Worst Attacks V2"
+          }
+        },
+        "title": "ValidationGraderCheckOut",
+        "type": "object"
+      },
       "ValidationHeadlineOut": {
         "additionalProperties": true,
         "properties": {
@@ -21755,6 +25142,1392 @@
           "how_to_read"
         ],
         "title": "ValidationHeadlineOut",
+        "type": "object"
+      },
+      "ValidationJuniorStabilityOut": {
+        "additionalProperties": true,
+        "description": "Стабильность статуса «Junior (предварительно)» на симулированных кандидатах.",
+        "properties": {
+          "caveat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Caveat"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Config"
+          },
+          "directions": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Directions"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Generated At"
+          },
+          "how_to_read": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "How To Read"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Missing"
+          },
+          "n_per_direction": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "N Per Direction"
+          },
+          "quick": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Quick"
+          },
+          "rule": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rule"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seconds"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seed"
+          },
+          "signature": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Signature"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          }
+        },
+        "title": "ValidationJuniorStabilityOut",
+        "type": "object"
+      },
+      "ValidationLlmModelsOut": {
+        "additionalProperties": true,
+        "description": "Какая модель где работает: облачные модели, открытая модель на CPU и правила — на одних и тех же наборах.",
+        "properties": {
+          "caveat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Caveat"
+          },
+          "cpu": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cpu"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Date"
+          },
+          "how": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "How"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Missing"
+          },
+          "rows": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Rows"
+          }
+        },
+        "title": "ValidationLlmModelsOut",
+        "type": "object"
+      },
+      "ValidationMatchingBenchOut": {
+        "additionalProperties": true,
+        "description": "Бенчмарк подбора со скрытой истиной: методы, метрики, парные разности, чувствительность, абляции.",
+        "properties": {
+          "ablations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ablations"
+          },
+          "algorithm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Algorithm"
+          },
+          "breakdown": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Breakdown"
+          },
+          "caveat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Оговорка: на чём получены цифры",
+            "title": "Caveat"
+          },
+          "command": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Команда, которой отчёт воспроизводится",
+            "title": "Command"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Config"
+          },
+          "config_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Config Hash"
+          },
+          "fsp_rating": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Версия и параметры рейтинга ФСП",
+            "title": "Fsp Rating"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Generated At"
+          },
+          "groups": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Groups"
+          },
+          "heldout_weights": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Heldout Weights"
+          },
+          "junior": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Junior"
+          },
+          "methods": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Methods"
+          },
+          "metrics": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Metrics"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "true — отчёт ещё не собран (make bench)",
+            "title": "Missing"
+          },
+          "must_have": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Must Have"
+          },
+          "paired_platform_minus": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Парные разности платформы с базовыми методами и доверительные интервалы",
+            "title": "Paired Platform Minus"
+          },
+          "score_rebuild_max_error": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Score Rebuild Max Error"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seconds"
+          },
+          "seeds": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seeds"
+          },
+          "sensitivity": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sensitivity"
+          },
+          "signature": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Подпись расчёта: команда, коммит, конфигурация",
+            "title": "Signature"
+          },
+          "truth_rules": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Правила, по которым в мире симуляции задана «истина»",
+            "title": "Truth Rules"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Version"
+          },
+          "weights": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Веса компонентов подбора",
+            "title": "Weights"
+          },
+          "world": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "World"
+          },
+          "world2": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Второй мир симуляции для проверки устойчивости",
+            "title": "World2"
+          }
+        },
+        "title": "ValidationMatchingBenchOut",
+        "type": "object"
+      },
+      "ValidationPathRetestOut": {
+        "additionalProperties": true,
+        "description": "Повторное тестирование всего пути кандидата (test–retest) и характеристики заданий.",
+        "properties": {
+          "block_gap": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Block Gap"
+          },
+          "by_claimed": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "By Claimed"
+          },
+          "by_direction": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "By Direction"
+          },
+          "caveat": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Caveat"
+          },
+          "claimed": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Распределение по заявленным грейдам",
+            "title": "Claimed"
+          },
+          "competitor_reference": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Опубликованные показатели других платформ для сравнения",
+            "title": "Competitor Reference"
+          },
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Config"
+          },
+          "directions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Directions"
+          },
+          "discrimination": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Discrimination"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Missing"
+          },
+          "n_per_direction": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "N Per Direction"
+          },
+          "procedure": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Procedure"
+          },
+          "quick": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Quick"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Seconds"
+          },
+          "signature": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Signature"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Итоговые метрики по всем направлениям",
+            "title": "Total"
+          },
+          "transitions": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Матрица переходов между грейдами при повторном прохождении",
+            "title": "Transitions"
+          },
+          "true_grades": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "True Grades"
+          }
+        },
+        "title": "ValidationPathRetestOut",
+        "type": "object"
+      },
+      "ValidationReportOut": {
+        "additionalProperties": true,
+        "description": "Метрики валидации: банк заданий, калибровка, подбор, симуляция, живые данные, атаки, эксперты.",
+        "properties": {
+          "attacks": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Перечень атак «Красной кнопки»: id, title, action, expected",
+            "title": "Attacks"
+          },
+          "bank": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Банк заданий: размер, охват тем, уровни",
+            "title": "Bank"
+          },
+          "calibration": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Калибровка параметров заданий",
+            "title": "Calibration"
+          },
+          "experts": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сводка по экспертной панели (без имён)",
+            "title": "Experts"
+          },
+          "exposure_calibration": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Контроль частоты показа заданий",
+            "title": "Exposure Calibration"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Generated At"
+          },
+          "intern_cut": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Порог уровня «Стажёр»",
+            "title": "Intern Cut"
+          },
+          "live": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Живые данные платформы: число сеансов, уровни добросовестности",
+            "title": "Live"
+          },
+          "matching": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Метрики подбора",
+            "title": "Matching"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "true — отчёт ещё не собран (make validate); других полей нет",
+            "title": "Missing"
+          },
+          "n_per_direction": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сколько симулированных кандидатов на направление",
+            "title": "N Per Direction"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Чем получено: команда, коммит, конфигурация, хеш",
+            "title": "Provenance"
+          },
+          "quick": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Быстрый прогон (меньше выборка)",
+            "title": "Quick"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сколько секунд считался отчёт",
+            "title": "Seconds"
+          },
+          "self_check": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сводка самопроверки теста",
+            "title": "Self Check"
+          },
+          "simulation": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Симуляция тестирования: точность оценки, длина теста, доля подтверждений",
+            "title": "Simulation"
+          }
+        },
+        "title": "ValidationReportOut",
+        "type": "object"
+      },
+      "ValidationSelfCheckOut": {
+        "additionalProperties": true,
+        "description": "Самопроверка теста на синтетическом кандидате с заданной способностью: сколько заданий, какая оценка, чем закончилось.",
+        "properties": {
+          "assigned": {
+            "additionalProperties": true,
+            "title": "Assigned",
+            "type": "object"
+          },
+          "claimed_grade": {
+            "title": "Claimed Grade",
+            "type": "string"
+          },
+          "confirm_rate": {
+            "title": "Confirm Rate",
+            "type": "number"
+          },
+          "correct_share": {
+            "title": "Correct Share",
+            "type": "number"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "expected": {
+            "additionalProperties": true,
+            "title": "Expected",
+            "type": "object"
+          },
+          "extension_share": {
+            "title": "Extension Share",
+            "type": "number"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          },
+          "n_items": {
+            "additionalProperties": true,
+            "title": "N Items",
+            "type": "object"
+          },
+          "point_grade": {
+            "additionalProperties": true,
+            "title": "Point Grade",
+            "type": "object"
+          },
+          "repeat": {
+            "title": "Repeat",
+            "type": "boolean"
+          },
+          "retest": {
+            "additionalProperties": true,
+            "title": "Retest",
+            "type": "object"
+          },
+          "runs": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Runs",
+            "type": "array"
+          },
+          "runs_total": {
+            "title": "Runs Total",
+            "type": "integer"
+          },
+          "se": {
+            "additionalProperties": true,
+            "title": "Se",
+            "type": "object"
+          },
+          "seconds": {
+            "title": "Seconds",
+            "type": "number"
+          },
+          "stops": {
+            "additionalProperties": true,
+            "title": "Stops",
+            "type": "object"
+          },
+          "strategy": {
+            "title": "Strategy",
+            "type": "string"
+          },
+          "theta": {
+            "title": "Theta",
+            "type": "number"
+          },
+          "theta_hat": {
+            "additionalProperties": true,
+            "title": "Theta Hat",
+            "type": "object"
+          },
+          "theta_hat_max": {
+            "title": "Theta Hat Max",
+            "type": "number"
+          },
+          "time_min": {
+            "additionalProperties": true,
+            "title": "Time Min",
+            "type": "object"
+          },
+          "verdict": {
+            "additionalProperties": true,
+            "title": "Verdict",
+            "type": "object"
+          }
+        },
+        "required": [
+          "strategy",
+          "theta",
+          "direction",
+          "claimed_grade",
+          "mode",
+          "n",
+          "repeat",
+          "runs_total",
+          "seconds",
+          "expected",
+          "confirm_rate",
+          "assigned",
+          "point_grade",
+          "theta_hat",
+          "se",
+          "n_items",
+          "time_min",
+          "extension_share",
+          "correct_share",
+          "stops",
+          "theta_hat_max",
+          "runs",
+          "retest",
+          "verdict"
+        ],
+        "title": "ValidationSelfCheckOut",
+        "type": "object"
+      },
+      "ValidationTestLengthOut": {
+        "additionalProperties": true,
+        "description": "Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди).",
+        "properties": {
+          "ext_items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сколько заданий можно добавить при продлении",
+            "title": "Ext Items"
+          },
+          "ext_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ext Minutes"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Generated At"
+          },
+          "max_items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Items"
+          },
+          "max_minutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Minutes"
+          },
+          "min_items": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Items"
+          },
+          "sim_directions": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sim Directions"
+          },
+          "sim_extension_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Доля симулированных тестов, где потребовалось продление",
+            "title": "Sim Extension Share"
+          },
+          "sim_mean_items": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sim Mean Items"
+          },
+          "sim_n_per_direction": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Sim N Per Direction"
+          },
+          "world": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "World"
+          }
+        },
+        "title": "ValidationTestLengthOut",
         "type": "object"
       },
       "VerifyEmailIn": {
@@ -44480,7 +49253,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertPanelMeOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -44537,7 +49312,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertEnterOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -44593,7 +49370,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertInviteOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -44679,7 +49458,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertPanelItemsOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -44746,7 +49527,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertLabelSavedOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -44819,7 +49602,9 @@
                 "example": {
                   "in_panel": false
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertPanelMeOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -44853,7 +49638,9 @@
                 "example": {
                   "panel": []
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertPanelStatusOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -44887,7 +49674,9 @@
                 "example": {
                   "n": 0
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertAgreementOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -45003,7 +49792,9 @@
                   ],
                   "mode": "pending"
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertQueueOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -45054,7 +49845,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ExpertReviewOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -45198,10 +49991,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/CabinetCupOut"
                   },
-                  "title": "Response Cups Api Fsp Cabinet Cups Get",
                   "type": "array"
                 }
               }
@@ -45322,9 +50113,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Demand Api Fsp Cabinet Demand Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CabinetDemandOut"
                 }
               }
             },
@@ -45662,9 +50451,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Fsp Effect Api Fsp Cabinet Fsp Effect Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspEffectOut"
                 }
               }
             },
@@ -45788,9 +50575,7 @@
                   "note": "Воронка «соревнование → приглашение → принятие»: участники соревнований ФСП (T2), кандидаты без истории ФСП и…"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Funnel Api Fsp Cabinet Funnel Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CabinetFunnelOut"
                 }
               }
             },
@@ -46224,9 +51009,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Report Api Fsp Cabinet Report Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CabinetReportOut"
                 }
               }
             },
@@ -46340,9 +51123,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Salaries Api Fsp Cabinet Salaries Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CabinetSalariesOut"
                 }
               }
             },
@@ -46447,7 +51228,7 @@
           }
         ],
         "responses": {
-          "307": {
+          "303": {
             "description": "Успешный ответ."
           },
           "404": {
@@ -46932,9 +51713,7 @@
                   "rule": "Правило демо-работодателя на защите: приглашение получает каждый, кому мини-тест дал экспресс-категорию; вилк…"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Room Public Api Jury Live J  Code  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LiveRoomPublicOut"
                 }
               }
             },
@@ -47019,9 +51798,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Answer Api Jury Live J  Code  Answer Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LiveGuestOut"
                 }
               }
             },
@@ -47205,9 +51982,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Me Api Jury Live J  Code  Me Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LiveGuestOut"
                 }
               }
             },
@@ -47308,9 +52083,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Push Subscribe Api Jury Live J  Code  Push Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LivePushSubscribedOut"
                 }
               }
             },
@@ -47556,9 +52329,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Respond Api Jury Live J  Code  Respond Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LiveGuestOut"
                 }
               }
             },
@@ -47672,9 +52443,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Start Api Jury Live J  Code  Start Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LiveGuestStartOut"
                 }
               }
             },
@@ -47780,9 +52549,7 @@
                   "url": "http://testserver/j/mkcbfy"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Room Api Jury Live Room Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LiveRoomOut"
                 }
               }
             },
@@ -47847,9 +52614,7 @@
                   "deleted": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Clear Api Jury Live Room Clear Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LiveRoomClearedOut"
                 }
               }
             },
@@ -47976,9 +52741,7 @@
                   "url": "http://testserver/j/mkcbfy"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Feed Api Jury Live Room Feed Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LiveRoomFeedOut"
                 }
               }
             },
@@ -48226,7 +52989,9 @@
                     "role": "employer"
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/JuryResetOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -48356,7 +53121,9 @@
                   "scenario": "6506e74072",
                   "seconds": 0.0
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/JurySandboxDeletedOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -54901,7 +59668,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationAttackOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -55165,7 +59934,9 @@
                     }
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationAttemptsRepeatOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -55195,7 +59966,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ClosedSetResultOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -55287,11 +60060,13 @@
         "responses": {
           "200": {
             "content": {
-              "application/json": {
-                "schema": {}
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
               }
             },
-            "description": "Успешный ответ."
+            "description": "Выдача и метрики закрытого набора в CSV (UTF-8 с BOM): по строке на каждое место выдачи, ячейки с формулами экранируются."
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
@@ -55443,7 +60218,9 @@
                     }
                   ]
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ClosedSetTemplateOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -55597,7 +60374,9 @@
                     }
                   ]
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationCriteriaOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -55672,7 +60451,9 @@
                   "truth_changed": false,
                   "weights_changed": false
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationFspRatingOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -56142,7 +60923,9 @@
                   },
                   "worst_attacks_v2": []
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationGraderCheckOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -56566,7 +61349,9 @@
                     }
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationJuniorStabilityOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -56644,7 +61429,9 @@
                     }
                   ]
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationLlmModelsOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -56746,7 +61533,9 @@
                     "test": 0.45
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationMatchingBenchOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -57058,7 +61847,9 @@
                     "senior": 373
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationPathRetestOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -57258,7 +62049,9 @@
                     "population": "θ ~ N(0, 1), n = 400 на направление; истинные параметры = предкалибро…"
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationReportOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -57389,7 +62182,9 @@
                     "text": "Подтверждений 80 % при модельном ожидании 57 %: разрыв 23 п. п. при шуме выборки ± 22 п. п. (2 σ на 20 прогон…"
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationSelfCheckOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -57472,7 +62267,9 @@
                   "sim_n_per_direction": 400,
                   "world": "симуляция на синтетических кандидатах (модель ответов), не замер на людях"
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationTestLengthOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."

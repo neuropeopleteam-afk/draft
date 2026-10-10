@@ -106,6 +106,7 @@ _BIN = {"type": "string", "format": "binary"}
 _TXT = {"type": "string"}
 FILE_RESPONSES: dict[str, tuple[str, dict, str]] = {
     "GET /api/fsp-cabinet/export/{section}.csv": ("text/csv", _TXT, "Таблица раздела в CSV (UTF-8 с BOM, разделитель — запятая): только агрегаты."),
+    "POST /api/validation/closed-set/export": ("text/csv", _TXT, "Выдача и метрики закрытого набора в CSV (UTF-8 с BOM): по строке на каждое место выдачи, ячейки с формулами экранируются."),
     "GET /api/jury/live/j/{code}/qr.svg": ("image/svg+xml", _TXT, "QR-код ссылки на мини-тест зала в SVG."),
     "GET /api/jury/live/j/{code}/qr.png": ("image/png", _BIN, "QR-код ссылки на мини-тест зала в PNG."),
     "GET /api/jury/live/j/{code}/manifest.webmanifest": ("application/manifest+json", {"type": "object"},
