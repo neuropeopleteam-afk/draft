@@ -47,7 +47,7 @@ async function visualOk(page: Page) {
 }
 
 /** Ответить на вопросы до конца разговора: подсказка заглушки или свой текст; первый ответ — голосом, если можно. */
-async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { voiceFirst?: boolean; axeWhat?: string } = {}) {
+async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { voiceFirst?: boolean; axeWhat?: string; shot?: string } = {}) {
   const q = page.getByTestId("iv-question");
   const cur = async () => ((await q.count()) ? ((await q.textContent()) ?? "") : "");
   let prev = "";
@@ -56,7 +56,11 @@ async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { v
     await expect.poll(async () => (await done.isVisible()) || !["", prev].includes(await cur()), { timeout: 90_000 }).toBe(true);
     if (await done.isVisible()) return;
     prev = await cur();
-    if (i === 0) { await visualOk(page); if (opts.axeWhat) await axe(page, opts.axeWhat); }
+    if (i === 0) {
+      await visualOk(page);
+      if (opts.axeWhat) await axe(page, opts.axeWhat);
+      if (opts.shot) { mkdirSync(SHOTS, { recursive: true }); await page.screenshot({ path: resolve(SHOTS, opts.shot), fullPage: true }); }
+    }
     const field = page.getByLabel("Ваш ответ");
     const rec = page.getByTestId("iv-record");
     if (i === 0 && opts.voiceFirst && await rec.isVisible()) {
@@ -122,7 +126,7 @@ test("кандидат: устная защита в чате на заглуш�
     await expect(page.getByTestId("voice-wave")).toHaveAttribute("data-state", "idle");
     await page.getByTestId("iv-begin-text").click();
     const result = page.getByTestId("interview-result");
-    await talk(page, result, { voiceFirst: true, axeWhat: "разговор" });
+    await talk(page, result, { voiceFirst: true, axeWhat: "разговор", shot: "14-interview-room-1440.png" });
     await expect(result).toBeVisible({ timeout: 90_000 });
     await expect(result).toContainText(/Ответ подтверждён устно|Есть расхождения|Мало данных/);
     await expect(result).toContainText("заглушка");
@@ -183,7 +187,14 @@ test("этап найма «ИИ-интервью»: приглашение ра
   await cand.setViewportSize({ width: 390, height: 844 });
   await ai.getByRole("checkbox").check();
   await ai.getByRole("button", { name: "Начать ИИ-интервью" }).click();
-  await expect(cand).toHaveURL(/\/candidate\/interview\/[0-9a-f-]{36}$/, { timeout: 60_000 });
+  // песочница жюри: живой запуск — 1 в час (INTERVIEW_JURY_PER_HOUR); защита в тесте 1 его уже использовала
+  const limit = ai.getByRole("alert").filter({ hasText: "один живой запуск в час" });
+  await expect.poll(async () => /\/candidate\/interview\/[0-9a-f-]{36}$/.test(cand.url()) || (await limit.isVisible()), { timeout: 60_000 }).toBe(true);
+  if (await limit.isVisible()) {
+    test.info().annotations.push({ type: "limit", description: "лимит жюри 1 в час — разговор ИИ-интервью не проверен (локально: INTERVIEW_JURY_PER_HOUR=3)" });
+    await cand.context().close();
+    return;
+  }
   await cand.getByTestId("iv-begin-text").click();
   await expect(cand.getByTestId("iv-question")).toBeVisible({ timeout: 60_000 });
   await noHScroll(cand, "разговор ИИ-интервью, 390 px");

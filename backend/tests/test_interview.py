@@ -179,6 +179,30 @@ def test_jury_limit_one_live_per_hour(client, on, monkeypatch):
     assert r.status_code == 429 and r.json()["detail"]["code"] == "jury_limit"
 
 
+def test_jury_limit_engine_contract(client, on, monkeypatch):
+    """Живой движок: лимит жюри — функцией движка по списку сессий песочницы за час (контракт, раздел 4) → 429 jury_limit."""
+    from app.modules.interview.engine.limits import check_limits as real_check
+
+    eng = _fake_engine()
+    calls = []
+
+    def check(jury, recent, spent):
+        calls.append([r["active"] for r in (recent or [])])
+        real_check(jury, recent, spent)
+
+    eng.check_limits = check
+    monkeypatch.setattr(pt, "get_port", lambda: pt.EnginePort(eng))
+    monkeypatch.setattr(get_settings(), "interview_jury_per_hour", 5)  # продуктовый предел выше — срабатывает движок
+    t = candidate_with_category(client)
+    ts = _with_open_answers(client, t)
+    monkeypatch.setattr(svc, "jury_key", lambda user: "sbxtest02")
+    sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Мария", "consent": True}, headers=H(t)).json()["id"]
+    assert client.post(f"/api/interview/sessions/{sid}/finish", headers=H(t)).json()["status"] == "cancelled"
+    r = client.post(f"/api/interview/defense/{ts}", json={"name": "Мария", "consent": True}, headers=H(t))
+    assert r.status_code == 429 and r.json()["detail"]["code"] == "jury_limit"
+    assert calls == [[], [False]]  # вторая видит сессию песочницы за час (список по контракту, не число)
+
+
 def test_example_seed_label_and_badge(client, on):
     t = candidate_with_category(client)
     _with_open_answers(client, t)
@@ -332,7 +356,7 @@ def test_engine_port_channels_and_quote_check(client, on, monkeypatch):
     assert s["status"] == "completed" and s["verdict"] == "confirmed" and not s["stub"]
     q = s["questions"][0]
     assert [c["text"] for c in q["quotes"]] == ["Потому что индекс по дате уско"]  # выдуманная цитата отброшена
-    assert eng.limits["calls"] == [(False, 0, 0.0)]  # лимиты движка спрошены при создании
+    assert eng.limits["calls"] == [(False, [], 0.0)]  # лимиты движка спрошены при создании
     with SessionLocal() as db:
         row = db.get(InterviewSession, uuid.UUID(sid))
         assert row.result["quotes_dropped"] == 1 and row.result["channels"] == ["voice", "text", "voice", "text"]
