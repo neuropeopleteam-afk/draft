@@ -1,59 +1,142 @@
+import { Suspense } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-import { CabinetLayout } from "./components/CabinetLayout";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
 import { JuryGuide } from "./components/JuryGuide";
 import { StudyDock } from "./components/study/StudyDock";
-import StudyAbout from "./pages/StudyAbout";
-import Expert from "./pages/Expert";
-import { ExpertAngoff, ExpertAnswers, ExpertHome, ExpertInvite, ExpertPairs, panelSections } from "./pages/expert/Panel";
-import Validation from "./pages/Validation";
+import { RouteBoundary, RouteFallback } from "./components/Boot";  // Я16: загрузка экрана, ошибка загрузки — экран повтора
 import Landing from "./pages/Landing";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import { TwoFactorLogin, TwoFactorSettings } from "./pages/Security";
-import Verify from "./pages/Verify";
-import Assessment, { TestRun } from "./pages/candidate/Assessment";
-import Category from "./pages/candidate/Category";
-import Attempts from "./pages/candidate/Attempts";  // И26: две попытки теста рядом
-import Feedback from "./pages/candidate/Feedback";
-import { Invitations, Probes } from "./pages/candidate/Contact";
-import { Messages } from "./pages/Messages";
-import CandidateOverview from "./pages/candidate/Overview";
-import MyData from "./pages/candidate/MyData";
-import Profile from "./pages/candidate/Profile";
-import { Fsp, Settings } from "./pages/candidate/Settings";
 import { candidateSections } from "./pages/candidate/sections";
-import { EmployerInvitations, EmployerProbes } from "./pages/employer/Contact";
-import { Compare, CompareLanding } from "./pages/employer/Compare";
-import { Needs, Selection } from "./pages/employer/Needs";
-import { MutualEntry } from "./pages/mutual/Employer";  // взаимный подбор, ссылка руководителю (Н9, Н2, Н3)
-import { SharePage } from "./pages/mutual/Share";
-import EmployerOverview, { Company } from "./pages/employer/Overview";
-import { CandidateDetail, Search } from "./pages/employer/Search";
 import { employerSections } from "./pages/employer/sections";
-import { AppSection, InstallPage } from "./integrations/AppInstall";
-import Notifications from "./pages/Notifications";
-import { EmployerAts } from "./integrations/Ats";
-import { CompanyPublic } from "./integrations/CompanyPublic";
-import { FspIdDone } from "./integrations/FspId";
-import { AdminSus, SusPage } from "./integrations/Sus";
-import { CandidateVacancies, EmployerVacancies } from "./integrations/Vacancies";
-import { CandidateAssignment, CandidateAssignments } from "./pages/assignments/Candidate";  // задания работодателя (И7)
-import { EmployerAssignment, EmployerAssignments } from "./pages/assignments/Employer";
-import { CandidateCup, CandidateCups } from "./ideas/cup/Candidate";
-import { EmployerCup, EmployerCups } from "./ideas/cup/Employer";
-import { FspCups, FspDemand, FspEffect, FspFunnel, FspMethod, FspOverview, FspReportLayout, FspSalaries } from "./ideas/fsp/Cabinet";
+import { panelSections } from "./pages/expert/sections";
 import { fspSections } from "./ideas/fsp/sections";
-import LiveGuest from "./ideas/live/Guest";
-import LiveScreen from "./ideas/live/Screen";
-import PassportVerify from "./passport/VerifyPage";
-import Criteria, { JuryGo } from "./pages/Criteria";  // К1: проверка по критериям ТЗ
 import { HashScroll } from "./lib/hashScroll";
+import { lazyNamed } from "./lib/lazyPage";
+
+// Я16: стартовый JS — общий код и главная (первый экран жюри). Остальные экраны — ленивыми файлами сборки по
+// модулям: роли (кандидат, работодатель, эксперт, ФСП) и тяжёлые экраны (валидация, критерии, графики) грузятся
+// при первом переходе. Один модуль = один файл, сколько бы экранов из него ни брали.
+const pg = {
+  cabinet: () => import("./components/CabinetLayout"),
+  studyAbout: () => import("./pages/StudyAbout"),
+  expert: () => import("./pages/Expert"),
+  panel: () => import("./pages/expert/Panel"),
+  validation: () => import("./pages/Validation"),
+  login: () => import("./pages/Login"),
+  register: () => import("./pages/Register"),
+  security: () => import("./pages/Security"),
+  verify: () => import("./pages/Verify"),
+  assessment: () => import("./pages/candidate/Assessment"),
+  category: () => import("./pages/candidate/Category"),
+  attempts: () => import("./pages/candidate/Attempts"),  // И26: две попытки теста рядом
+  feedback: () => import("./pages/candidate/Feedback"),
+  contact: () => import("./pages/candidate/Contact"),
+  messages: () => import("./pages/Messages"),
+  candOverview: () => import("./pages/candidate/Overview"),
+  myData: () => import("./pages/candidate/MyData"),
+  profile: () => import("./pages/candidate/Profile"),
+  settings: () => import("./pages/candidate/Settings"),
+  empContact: () => import("./pages/employer/Contact"),
+  compare: () => import("./pages/employer/Compare"),
+  needs: () => import("./pages/employer/Needs"),
+  mutual: () => import("./pages/mutual/Employer"),  // взаимный подбор, ссылка руководителю (Н9, Н2, Н3)
+  share: () => import("./pages/mutual/Share"),
+  empOverview: () => import("./pages/employer/Overview"),
+  search: () => import("./pages/employer/Search"),
+  appInstall: () => import("./integrations/AppInstall"),
+  notifications: () => import("./pages/Notifications"),
+  ats: () => import("./integrations/Ats"),
+  companyPublic: () => import("./integrations/CompanyPublic"),
+  fspId: () => import("./integrations/FspId"),
+  sus: () => import("./integrations/Sus"),
+  vacancies: () => import("./integrations/Vacancies"),
+  assignCand: () => import("./pages/assignments/Candidate"),  // задания работодателя (И7)
+  assignEmp: () => import("./pages/assignments/Employer"),
+  cupCand: () => import("./ideas/cup/Candidate"),
+  cupEmp: () => import("./ideas/cup/Employer"),
+  fsp: () => import("./ideas/fsp/Cabinet"),
+  liveGuest: () => import("./ideas/live/Guest"),
+  liveScreen: () => import("./ideas/live/Screen"),
+  passport: () => import("./passport/VerifyPage"),
+  criteria: () => import("./pages/Criteria"),  // К1: проверка по критериям ТЗ
+};
+
+const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
+const StudyAbout = lazyNamed(pg.studyAbout, "default");
+const Expert = lazyNamed(pg.expert, "default");
+const ExpertAngoff = lazyNamed(pg.panel, "ExpertAngoff");
+const ExpertAnswers = lazyNamed(pg.panel, "ExpertAnswers");
+const ExpertHome = lazyNamed(pg.panel, "ExpertHome");
+const ExpertInvite = lazyNamed(pg.panel, "ExpertInvite");
+const ExpertPairs = lazyNamed(pg.panel, "ExpertPairs");
+const Validation = lazyNamed(pg.validation, "default");
+const Login = lazyNamed(pg.login, "default");
+const Register = lazyNamed(pg.register, "default");
+const TwoFactorLogin = lazyNamed(pg.security, "TwoFactorLogin");
+const TwoFactorSettings = lazyNamed(pg.security, "TwoFactorSettings");
+const Verify = lazyNamed(pg.verify, "default");
+const Assessment = lazyNamed(pg.assessment, "default");
+const TestRun = lazyNamed(pg.assessment, "TestRun");
+const Category = lazyNamed(pg.category, "default");
+const Attempts = lazyNamed(pg.attempts, "default");
+const Feedback = lazyNamed(pg.feedback, "default");
+const Invitations = lazyNamed(pg.contact, "Invitations");
+const Probes = lazyNamed(pg.contact, "Probes");
+const Messages = lazyNamed(pg.messages, "Messages");
+const CandidateOverview = lazyNamed(pg.candOverview, "default");
+const MyData = lazyNamed(pg.myData, "default");
+const Profile = lazyNamed(pg.profile, "default");
+const Fsp = lazyNamed(pg.settings, "Fsp");
+const Settings = lazyNamed(pg.settings, "Settings");
+const EmployerInvitations = lazyNamed(pg.empContact, "EmployerInvitations");
+const EmployerProbes = lazyNamed(pg.empContact, "EmployerProbes");
+const Compare = lazyNamed(pg.compare, "Compare");
+const CompareLanding = lazyNamed(pg.compare, "CompareLanding");
+const Needs = lazyNamed(pg.needs, "Needs");
+const Selection = lazyNamed(pg.needs, "Selection");
+const MutualEntry = lazyNamed(pg.mutual, "MutualEntry");
+const SharePage = lazyNamed(pg.share, "SharePage");
+const EmployerOverview = lazyNamed(pg.empOverview, "default");
+const Company = lazyNamed(pg.empOverview, "Company");
+const CandidateDetail = lazyNamed(pg.search, "CandidateDetail");
+const Search = lazyNamed(pg.search, "Search");
+const AppSection = lazyNamed(pg.appInstall, "AppSection");
+const InstallPage = lazyNamed(pg.appInstall, "InstallPage");
+const Notifications = lazyNamed(pg.notifications, "default");
+const EmployerAts = lazyNamed(pg.ats, "EmployerAts");
+const CompanyPublic = lazyNamed(pg.companyPublic, "CompanyPublic");
+const FspIdDone = lazyNamed(pg.fspId, "FspIdDone");
+const AdminSus = lazyNamed(pg.sus, "AdminSus");
+const SusPage = lazyNamed(pg.sus, "SusPage");
+const CandidateVacancies = lazyNamed(pg.vacancies, "CandidateVacancies");
+const EmployerVacancies = lazyNamed(pg.vacancies, "EmployerVacancies");
+const CandidateAssignment = lazyNamed(pg.assignCand, "CandidateAssignment");
+const CandidateAssignments = lazyNamed(pg.assignCand, "CandidateAssignments");
+const EmployerAssignment = lazyNamed(pg.assignEmp, "EmployerAssignment");
+const EmployerAssignments = lazyNamed(pg.assignEmp, "EmployerAssignments");
+const CandidateCup = lazyNamed(pg.cupCand, "CandidateCup");
+const CandidateCups = lazyNamed(pg.cupCand, "CandidateCups");
+const EmployerCup = lazyNamed(pg.cupEmp, "EmployerCup");
+const EmployerCups = lazyNamed(pg.cupEmp, "EmployerCups");
+const FspCups = lazyNamed(pg.fsp, "FspCups");
+const FspDemand = lazyNamed(pg.fsp, "FspDemand");
+const FspEffect = lazyNamed(pg.fsp, "FspEffect");
+const FspFunnel = lazyNamed(pg.fsp, "FspFunnel");
+const FspMethod = lazyNamed(pg.fsp, "FspMethod");
+const FspOverview = lazyNamed(pg.fsp, "FspOverview");
+const FspReportLayout = lazyNamed(pg.fsp, "FspReportLayout");
+const FspSalaries = lazyNamed(pg.fsp, "FspSalaries");
+const LiveGuest = lazyNamed(pg.liveGuest, "default");
+const LiveScreen = lazyNamed(pg.liveScreen, "default");
+const PassportVerify = lazyNamed(pg.passport, "default");
+const Criteria = lazyNamed(pg.criteria, "default");
+const JuryGo = lazyNamed(pg.criteria, "JuryGo");
 
 export default function App() {
   return (
     <>
     <SkipLink />
+    <RouteBoundary>
+    <Suspense fallback={<RouteFallback />}>
     <Routes>
       <Route path="/" element={<Landing />} />
       <Route path="/validation" element={<Validation />} />
@@ -143,6 +226,8 @@ export default function App() {
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
+    </Suspense>
+    </RouteBoundary>
     <JuryGuide />
     <HashScroll />
     <StudyDock />
