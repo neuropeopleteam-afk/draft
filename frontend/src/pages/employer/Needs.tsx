@@ -677,7 +677,7 @@ export function Selection() {
           <select id="scope-ask" className="input" value={askOpt.id} onChange={(e) => setAsk(e.target.value)}>
             {askOpts.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
           </select>
-          <p className="mt-1 text-xs text-brand-ink/65">Кому: {askRefs.join(", ")} — {picked.length ? "отмеченные «Сравнить»" : "первые три подборки"}. Оценённый ответ становится подтверждённым фактом (T1) в карточке.</p>
+          <p className="mt-1 text-xs text-brand-ink/65">Кому: {askRefs.join(", ")} — {picked.length ? "отмеченные «Сравнить»" : "первые три подборки"}.</p>
         </div>}
         {ask && askOpt && <ProbeForm key={askOpt.id} refs={askRefs} needId={id} init={askOpt.probe} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setAsk(null); setPicked([]); setInvited(probeSentText(r)); sel.reload(); }} />}
       </Modal>
