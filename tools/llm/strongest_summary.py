@@ -291,7 +291,7 @@ def build(wdir: Path) -> dict:
     d = {"title": "Сильнейшие модели: замер по функциям (малая выборка)", "date": time.strftime("%Y-%m-%d"),
          "code_sha": sha, "models": meta, "cells": cells, "grade_reference": gref,
          "sample": {"needs_delta": len(ref), "needs_jury": 15, "resume": len(gold), "grade": len(sample_ids)},
-         "conditions": CONDITIONS, "pending": PENDING, "probes": probes, "not_measured": NOT_MEASURED}
+         "conditions": CONDITIONS, "pending": None, "probes": probes, "not_measured": NOT_MEASURED}
     d["recommendation"] = recommend(d)
     dirs = {mid: [dd] for mid, dd in models}
     dirs[sonnet] = [SONNET_DIR, wdir / B.slug("openrouter=" + sonnet)]
@@ -309,6 +309,7 @@ def build(wdir: Path) -> dict:
              json.loads((ROOT / "docs/llm/extra_tags_judgement.json").read_text())["vacancies"]}
     vac = B._vacancies()
     d["full_run"] = full_view(wdir, ref50, Q.vac_expected(vac), {v["id"]: v["text"] for v in vac})
+    d["pending"] = pending_text(d)
     d["title"] = "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)"
     return d
 
@@ -607,17 +608,45 @@ CONDITIONS = [
     "резюме — low, оценка — по умолчанию модели); 4 запроса параллельно; песочница → OpenRouter напрямую.",
     "Разметки — модели, не люди: вакансии — исправленная разметка (silver И8 + лишние теги, подтверждённые GPT 6.1 Sol; "
     "лишние теги новых моделей не проверялись — их точность занижена), резюме — автор набора (модель Claude), "
-    "оценщик — согласие сильнейших моделей (медиана, без самой оцениваемой).",
+    "оценщик — среднее трёх моделей разных семейств (Claude Opus 5.5, Claude Fable 5.1, GPT-6 Astra Pro) без самой "
+    "оцениваемой; разметка панели v2 — Fable 5.1 (риск той же семьи для моделей Anthropic).",
     "Интервал — бутстреп 90 % по входам: на 15–50 входах разница в несколько сотых — в пределах шума.",
-    "Цена — фактическая (usage.cost OpenRouter) на 1000 вызовов функции; рубли — по курсу ЦБ РФ на 09.10.2026.",
+    "Цена — фактическая (usage.cost OpenRouter) на 1000 вызовов функции, $.",
 ]
 NOT_MEASURED = [
     {"model": "YandexGPT 5.1", "why": "не цель после смены задачи 09.10 (решение штаба); ключ Yandex AI Studio в песочницу "
                                      "не передан. Прежний замер 08.10 — docs/LLM.md, разделы 6 и 11"},
     {"model": "Объяснения подборки, «почему», ранжирование, категория", "why": "модель не вызывается — правила"},
 ]
-PENDING = ("Дорогие модели (Claude Fable 5.1, GPT-6 Astra Pro, Claude Opus 5.5) — после пополнения баланса; до этого "
-           "эталон оценщика — медиана остальных моделей замера.")
+PLANNED = ["z-ai/glm-5.3", "moonshotai/kimi-k3", "qwen/qwen3.8-2.4t-a95b", "qwen/qwen3.8-27b", "deepseek/deepseek-v4-pro-0813",
+           "anthropic/claude-sonnet-5.5", "openai/gpt-6.1-sol-pro", "x-ai/grok-4.7", "google/gemini-3.1-pro-preview",
+           "anthropic/claude-opus-5.5", "anthropic/claude-fable-5.1", "openai/gpt-6-astra-pro"]
+
+
+def pending_text(d: dict) -> str | None:
+    """Что из плана замера ещё не готово (вычисляется по данным, не текстом вручную)."""
+    fs = d.get("functions") or {}
+    pr = (_load(PRICES) or {"models": {}})["models"]
+
+    def names(ms):
+        return ", ".join(label(d, m) if m in d["models"] else (pr.get(m, {}).get("name") or m).split(": ", 1)[-1]
+                         for m in ms)
+
+    miss = [m for m in PLANNED if not all(m in fs.get(f, {}) for f in ("parse_need", "resume", "grade"))]
+    part = [m for m in PLANNED if m not in miss and not all(fs[f][m].get("complete") for f in fs if m in fs[f])]
+    nojudge = [m for m in PLANNED if m in fs.get("grade", {}) and
+               not ((fs["grade"][m]["quality"].get("judge_consistency") or {}).get("value") is not None)]
+    out = []
+    if miss:
+        out.append(f"не начаты — {names(miss)} (ждут пополнения баланса)")
+    if part:
+        out.append(f"не все наборы — {names(part)}")
+    if nojudge:
+        out.append(f"без судьи обоснований — {names(nojudge)}")
+    if len((d.get("grade_reference") or {}).get("judges") or []) < 3:
+        out.append("эталон оценщика из трёх семейств ещё не полный — где нет двух моделей эталона, эталон — среднее "
+                   "остальных моделей замера")
+    return ("; ".join(out) + ".") if out else None
 
 
 def _ok(c: dict, f: str) -> bool:
