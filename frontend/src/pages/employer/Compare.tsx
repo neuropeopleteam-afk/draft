@@ -15,7 +15,7 @@ interface Cand {
   can_invite: boolean; invite_available_at: string | null; last_invitation_status: string | null; probe_active: boolean;
 }
 interface WhyF { level: string; points: number; text: string }
-interface Why { higher: string; lower: string; diff: number; summary: string; text: string; pro: WhyF[]; con: WhyF[] }
+interface Why { higher: string; lower: string; diff: number; summary: string; text: string; pro: WhyF[]; con: WhyF[]; core_note?: string | null }  // core_note — ядро роли (Я1), в балл не входит
 interface CompareOut { need: { id: string; title: string; raw_text: string; version: number | null; requirements: any }; rows: Row[]; candidates: Cand[]; selection_total: number; why: Why[] }
 
 const pts = (x: number) => Math.abs(x).toFixed(1).replace(".", ",");
@@ -40,10 +40,11 @@ function WhyBlock({ why }: { why: Why[] }) {
             {w.con.map((f, i) => (
               <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><Level level={f.level} /><span className="flex-1">В пользу {w.lower}: {ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-brand-plum">−{pts(f.points)}</span></p>
             ))}
+            {w.core_note && <p className="mt-2 border-t border-brand-ink/10 pt-2 font-semibold text-amber-900" data-testid="why-core-note">{w.core_note}.</p>}
           </li>
         ))}
       </ul>
-      <p className="text-xs text-brand-ink/65">Баллы из 100 — вклад фактора в разницу скоров. Учитываются только подтверждённые факты: тест и навыки (T1), ФСП из реестра (T2), оценённые зонды (T1).</p>
+      <p className="text-xs text-brand-ink/65">Баллы из 100 — вклад фактора в разницу скоров. Учитываются только подтверждённые факты: тест и навыки (T1), ФСП из реестра (T2), оценённые зонды (T1). Ядро роли (основной язык, фреймворк или специализация) в балл не входит — о нём отдельная строка.</p>
     </section>
   );
 }
