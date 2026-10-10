@@ -266,6 +266,7 @@ POLICY: dict[tuple[str, str], Policy] = {
                                                                              "jury_employer": OK404}),  # feat/passport
     ("POST", "/api/employer/needs/parse"): "employer",
     ("POST", "/api/employer/needs/file"): "employer",  # Ф5: текст потребности из файла вакансии
+    ("POST", "/api/employer/needs/voice"): "employer",  # надиктованная потребность → текст (выкл. — 409)
     ("GET", "/api/employer/needs/parse/{job_id}"): "employer_own404",  # И27: задача фонового разбора, чужая — 404
     ("GET", "/api/employer/needs"): "employer",
     ("POST", "/api/employer/needs"): "employer",

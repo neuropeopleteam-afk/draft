@@ -53,6 +53,7 @@ from app.modules.subs import router as subs_api
 from app.modules.subs import runner as subs_runner
 from app.modules.study import router as study_api
 from app.modules.validation.router import router as validation_router
+from app.modules.voice import router as voice  # голосовой ввод потребности (VOICE_NEED_ENABLED)
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.passport.router import TAGS as PASSPORT_TAGS
 from app.passport.router import router as passport_router
@@ -134,7 +135,8 @@ def create_app() -> FastAPI:
               subs_api.employer_router, subs_api.notify_router, subs_api.jury_router,  # подписка, уведомления (И25)
               attempts_employer_router,  # две попытки теста рядом (И26)
               mutual.employer_router, mutual.candidate_router, mutual.public_router,  # взаимный подбор (Н9, Н2, Н3)
-              study_api.router):  # статистика прохождения: живые пользователи (У1)
+              study_api.router,  # статистика прохождения: живые пользователи (У1)
+              voice.router):  # «Надиктовать» потребность (за флагом VOICE_NEED_ENABLED)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
@@ -169,7 +171,8 @@ def create_app() -> FastAPI:
                 # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
                 "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,  # на запросе, как proctor_camera
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
-                          "invitation_cooldown_days": get_settings().invitation_cooldown_days}}
+                          "invitation_cooldown_days": get_settings().invitation_cooldown_days},
+                "voice_need": voice.meta()}  # кнопка «Надиктовать»: флаг, заглушка, предел секунд, версия согласия
 
     class HealthOut(BaseModel):
         status: str
