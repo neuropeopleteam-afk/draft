@@ -13,7 +13,7 @@ interface HhPreview {
   hh_id: string; url: string; title: string; employer_name: string | null; own_company: boolean | null; confirm_required: boolean;
   archived: boolean; experience: string | null; conditions: string; salary_hh: string; key_skills: string[]; category_id: string | null;
   stack: string[]; stack_titles: string[]; stack_from_key_skills: string[]; salary_from: number; salary_to: number; salary_basis: string;
-  salary_from_hh: boolean; work_format: string; city: string | null; description_preview: string; notes: string[];
+  salary_from_hh: boolean; salary_source?: "hh" | "hh_partial" | "market"; work_format: string; city: string | null; description_preview: string; notes: string[];
   state: "new" | "same" | "changed" | "edited"; state_title: string; vacancy_id: string | null; fetched_at: string | null; stub: boolean;
 }
 type HhImported = HhPreview & { result: "created" | "updated" | "skipped"; text: string; imported_at?: string | null };
@@ -78,7 +78,7 @@ function HhImportModal({ open, onClose, onDone }: { open: boolean; onClose: () =
             <dl className="grid gap-x-4 gap-y-1 sm:grid-cols-[auto_1fr]">
               <dt className="text-brand-ink/65">Работодатель в hh.ru</dt><dd className="min-w-0 break-words">{p.employer_name ?? "—"}{p.own_company ? " · совпадает с вашей компанией" : ""}</dd>
               <dt className="text-brand-ink/65">Зарплата в hh.ru</dt><dd>{p.salary_hh}</dd>
-              <dt className="text-brand-ink/65">В черновик</dt><dd>{p.category_id ? catTitle(p.category_id) : "категория не определена"} · {salaryText(p.salary_from, p.salary_to, p.salary_basis)}{p.salary_from_hh ? "" : " (рынок, уточните)"} · {FORMAT[p.work_format] ?? p.work_format}{p.city ? ` · ${p.city}` : ""}</dd>
+              <dt className="text-brand-ink/65">В черновик</dt><dd>{p.category_id ? catTitle(p.category_id) : "категория не определена"} · {salaryText(p.salary_from, p.salary_to, p.salary_basis)}{p.salary_from_hh ? "" : p.salary_source === "hh_partial" ? " (частично из hh.ru, уточните)" : " (рынок, уточните)"} · {FORMAT[p.work_format] ?? p.work_format}{p.city ? ` · ${p.city}` : ""}</dd>
               <dt className="text-brand-ink/65">Стек</dt><dd className="min-w-0 break-words">{p.stack_titles.join(", ") || "—"}{p.stack_from_key_skills.length ? ` (из ключевых навыков hh.ru: ${p.stack_from_key_skills.length})` : ""}</dd>
               {p.conditions && <><dt className="text-brand-ink/65">Условия</dt><dd className="min-w-0 break-words">{p.conditions.replace(/^Условия с hh\.ru — /, "")}</dd></>}
             </dl>

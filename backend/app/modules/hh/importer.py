@@ -10,7 +10,8 @@
 добавляются к стеку как навыки, указанные работодателем. Опыт, график и занятость — строкой «Условия с hh.ru» в
 описании (отдельных полей у вакансии нет), опыт — ещё и подсказка грейда, если грейда нет в тексте. Вилка — из
 ``salary_range`` (``salary``), если обе границы в рублях за месяц и ширина ≤ 1,5; основание — ``gross`` hh.ru
-(до вычета НДФЛ / на руки). Иначе — рыночный диапазон категории (на руки) с пометкой «уточните вилку».
+(до вычета НДФЛ / на руки). Только «от» (или «до») или шире 1,5 — вторая граница достраивается (× 1,25 / обрезка
+до 1,5 × «от») с пометкой «уточните»; нет суммы или не рубли за месяц — рыночный диапазон категории (на руки).
 """
 from __future__ import annotations
 
@@ -32,6 +33,7 @@ from app.modules.hh.client import HhClient, HhError
 SOURCE = "hh"
 SOURCE_TITLE = "hh.ru"
 MAX_RATIO = 1.5
+PARTIAL_RATIO = 1.25  # только «от» (или «до») в hh.ru: вторая граница черновика — × (÷) 1,25, с пометкой «уточните»
 FORMAT_MAP = {"REMOTE": "remote", "ON_SITE": "office", "HYBRID": "hybrid"}
 FORMAT_TITLES = {"remote": "удалённо", "office": "офис", "hybrid": "гибрид", "any": "любой"}
 _ID_RE = re.compile(r"^\s*(\d{5,12})\s*$")
@@ -145,6 +147,7 @@ class Mapped:
     key_skills: list[str]
     salary_hh: str
     conditions: str
+    salary_source: str = "market"  # hh — вилка из hh.ru, hh_partial — достроена по одной границе, market — рынок
     notes: list[str] = field(default_factory=list)
     parsed: dict = field(default_factory=dict)
 
@@ -185,8 +188,26 @@ def map_vacancy(db: Session, v: dict) -> Mapped:
     lo, hi = (sal or {}).get("from"), (sal or {}).get("to")
     rub = bool(sal) and sal["currency"] in ("RUR", "RUB") and sal["mode"] == "MONTH"
     from_hh = bool(rub and lo and hi and 0 < int(lo) <= int(hi) <= int(lo) * MAX_RATIO)
+    source = "hh" if from_hh else "market"
     if from_hh:
         lo, hi, basis = int(lo), int(hi), ("net" if sal.get("gross") is False else "gross")
+    elif rub and (lo or hi) and (not (lo and hi) or 0 < int(lo) <= int(hi)):
+        # частично из hh.ru: только «от» / только «до» / шире 1,5 — достраиваем вторую границу, основание то же
+        basis, source = ("net" if sal.get("gross") is False else "gross"), "hh_partial"
+        if lo and not hi:
+            lo, hi = int(lo), int(int(lo) * PARTIAL_RATIO) // 1000 * 1000
+            how = f"«до» подставлено как «от» × {PARTIAL_RATIO:.2f}".replace(".", ",")
+        elif hi and not lo:
+            hi = int(hi)
+            lo = -(-int(hi / PARTIAL_RATIO) // 1000) * 1000
+            how = f"«от» подставлено как «до» ÷ {PARTIAL_RATIO:.2f}".replace(".", ",")
+        else:
+            lo = int(lo)
+            hi = int(lo * MAX_RATIO) // 1000 * 1000
+            how = f"«до» уменьшено до {hi:,} ₽".replace(",", "\u00a0")
+        why = "указана только «от»" if not sal.get("to") else "указана только «до»" if not sal.get("from") else "шире 1,5 раза"
+        notes.append(f"Вилка в hh.ru {why} ({salary_text(sal)}) — {how}; уточните «от–до» перед публикацией "
+                     "(вилка обязательна, «до» не больше 1,5 × «от»)")
     else:
         m = _market(db, category_id) or (100_000, 150_000)
         why = ("не указана" if not sal or not (lo or hi) else "указана не в рублях за месяц" if not rub
@@ -209,7 +230,8 @@ def map_vacancy(db: Session, v: dict) -> Mapped:
         notes.append("В hh.ru вакансия в архиве — проверьте, актуальна ли она, перед публикацией")
     return Mapped(external_id=vid, title=title, description=body[:5000], category_id=category_id, stack=stack,
                   stack_from_key_skills=[t for t in dict.fromkeys(from_ks) if t not in from_text],
-                  salary_from=lo, salary_to=hi, salary_basis=basis, salary_from_hh=from_hh, work_format=work_format,
+                  salary_from=lo, salary_to=hi, salary_basis=basis, salary_from_hh=from_hh, salary_source=source,
+                  work_format=work_format,
                   city=city, archived=archived, employer_name=(v.get("employer") or {}).get("name"),
                   experience=(v.get("experience") or {}).get("name"), key_skills=skills, salary_hh=salary_text(sal),
                   conditions=cond, notes=notes, parsed=parsed)
@@ -254,6 +276,7 @@ def _summary(m: Mapped, company, raw: dict, meta: dict, existing: Vacancy | None
             "stack_from_key_skills": m.stack_from_key_skills,
             "stack_titles": [STACK.get(t, (t,))[0] for t in m.stack], "salary_from": m.salary_from,
             "salary_to": m.salary_to, "salary_basis": m.salary_basis, "salary_from_hh": m.salary_from_hh,
+            "salary_source": m.salary_source,
             "work_format": m.work_format, "city": m.city, "description_preview": m.description[:600],
             "parse_method": m.parsed.get("method") or "rules", "notes": notes, "state": st, "state_title": STATE_TITLES[st],
             "vacancy_id": str(existing.id) if existing else None, "fetched_at": meta.get("fetched_at"),
