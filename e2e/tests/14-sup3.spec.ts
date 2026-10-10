@@ -123,7 +123,8 @@ test("С3-6: «Пригласить» — «Отправляем…», одно 
   await expect(busy).toBeVisible();
   await expect(busy).toBeDisabled();
   await busy.click({ force: true }).catch(() => undefined);  // второй клик — второго POST нет
-  await expect(dialog).toBeHidden({ timeout: 10_000 });
+  // локально (SQLite) POST ждёт записи запасной песочницы жюри после входа — до ~9 с; на время ожидания — «Отправляем…»
+  await expect(dialog).toBeHidden({ timeout: 30_000 });
   const ok = page.getByRole("status").filter({ hasText: `Приглашение отправлено кандидату ${ref}` });
   await expect(ok).toBeVisible();
   await expect(ok).toContainText("«Python-разработчик, проверка Я11»");
