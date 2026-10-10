@@ -671,7 +671,8 @@ def _decision_text(b: dict, fs: dict, full: dict | None, est: dict | None) -> st
                  if full.get("skeptic_not_run") else "")
         df = full.get("decision_first")
         first = (f" Без скептика (только промпт v3) κw {_ru(full['off']['kappa_w']['value'])} → "
-                 f"{_ru(full['on_first']['kappa_w']['value'])} — {df['text']}: флаг — только вместе со скептиком."
+                 f"{_ru(full['on_first']['kappa_w']['value'])} — «не хуже» не доказано ({df['text'].split(': ', 1)[-1]}), "
+                 f"поэтому флаг — только вместе со скептиком."
                  if df and not df["non_inferior"] else "")
         return (rule + code + small + f" Полный прогон {full['n']} ответов (промпт v3 + скептик, {full['date']} UTC, "
                 f"код {full['code_sha']}): MAE {_ru(full['off']['mae']['value'])} → {_ru(full['on']['mae']['value'])} "
@@ -704,7 +705,7 @@ def summary(second_share: float | None = None, second_cost: float | None = None,
     fs = o["full_sonnet"]
     res = {
         "title": "Доказательная оценка (GRADING_EVIDENCE): флаг выкл и вкл на одних и тех же ответах",
-        "date": b["date"], "code_sha": b["code_sha"], "world": "оценщик и эталон — модели, не люди",
+        "date": b["date"], "code_sha": b["code_sha"], "world": "Оценщик и эталон — модели, не люди",
         "set": ("набор оценщика (панель 06.10): 406 ответов, из них 145 атак; малая выборка — 50 ответов, 25 честных и "
                 "25 атак"),
         "grader": b["grader"], "skeptic": b["skeptic"],
@@ -720,7 +721,11 @@ def summary(second_share: float | None = None, second_cost: float | None = None,
         "full": ({"n": full["n"], "date": full["date"], "code_sha": full["code_sha"], "paired": full["paired"],
                   "decision": full["decision"], "skeptic_calls": full["skeptic_calls"], "cost_usd": full["cost_usd"],
                   "skeptic_answered": full["skeptic_answered"], "verdicts": full["verdicts"],
-                  "changes": full["changes"], "quotes": full["evidence"], "latency_s": full["latency_s"]}
+                  "changes": full["changes"], "quotes": full["evidence"], "latency_s": full["latency_s"],
+                  # v3 на ответ + скептик по средней цене ответившего, если бы ответил всем, кому положен
+                  "cost_per_answer_on": round((full["cost_usd"]["v3"] + full["cost_usd"]["skeptic"]
+                                               / max(1, full["skeptic_answered"]) * full["skeptic_calls"])
+                                              / full["n"], 4)}
                  if full else None),
         "full_estimate_usd": est["total_usd"] if est else None,
         "paired": b["paired"],
