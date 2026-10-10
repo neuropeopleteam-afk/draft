@@ -16,10 +16,11 @@ from app.core.db import Base, UUIDPk, utcnow
 MODES = ("defense", "interview")
 # invited — работодатель пригласил, кандидат ещё не начал; created — сессия заведена, разговор не начат;
 # in_progress — идёт разговор; evaluating — разговор окончен, идёт оценка; completed — есть результат;
-# failed / expired / cancelled — без результата
-STATUSES = ("invited", "created", "in_progress", "evaluating", "completed", "failed", "expired", "cancelled")
+# failed / expired / cancelled — без результата; deleted — содержимое удалено по просьбе кандидата (остаётся отметка о
+# факте сессии без текста и результата — чтобы удаление не давало повторную защиту той же попытки)
+STATUSES = ("invited", "created", "in_progress", "evaluating", "completed", "failed", "expired", "cancelled", "deleted")
 ACTIVE = ("created", "in_progress")
-FINAL = ("completed", "failed", "expired", "cancelled")
+FINAL = ("completed", "failed", "expired", "cancelled", "deleted")
 VERDICTS = ("confirmed", "discrepancies", "insufficient")
 
 

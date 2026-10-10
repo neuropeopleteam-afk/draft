@@ -81,7 +81,7 @@ class TaskRef(BaseModel):
 class SessionOut(BaseModel):
     id: str
     mode: Literal["defense", "interview"]
-    status: Literal["invited", "created", "in_progress", "evaluating", "completed", "failed", "expired", "cancelled"]
+    status: Literal["invited", "created", "in_progress", "evaluating", "completed", "failed", "expired", "cancelled", "deleted"]
     status_title: str
     verdict: str | None = Field(None, description="defense: confirmed | discrepancies | insufficient; interview: strong | "
                                                   "medium | weak | insufficient. Оценивает модель; грейд не меняется")
