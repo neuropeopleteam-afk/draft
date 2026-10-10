@@ -20,17 +20,18 @@
 ```bash
 sudo cp /opt/fsp_relay/relay.py /opt/fsp_relay/relay.py.bak-$(date +%F)
 sudo cp infra/relay/relay.py /opt/fsp_relay/relay.py
-sudo systemctl edit fsp-relay      # drop-in, при необходимости:
+sudo systemctl edit fsp-relay      # drop-in; RELAY_ALLOWED_IPS — обязательно (без него ретранслятор отвечает 403 всем):
 #   [Service]
 #   Environment=RELAY_HOSTS=openrouter.ai,api.elevenlabs.io,api.deepgram.com,api.anam.ai
-#   Environment=RELAY_ALLOWED_IPS=198.51.100.1
+#   Environment=RELAY_ALLOWED_IPS=<IP стенда>
 #   Environment=RELAY_MAX_BODY=8388608
 sudo systemctl restart fsp-relay && systemctl status fsp-relay --no-pager
 ```
 
 Юнит `fsp-relay` (DynamicUser, `LoadCredential=token:…`, `cert:…`, `key:…`) менять не нужно: файл читает те же
 учётные данные из `$CREDENTIALS_DIRECTORY`. Переменные `RELAY_PORT`, `RELAY_ALLOWED_IPS`, `RELAY_HOSTS`,
-`RELAY_MAX_BODY`, `RELAY_UPSTREAM_TIMEOUT`, `RELAY_LEGACY_HOST`, `RELAY_LEGACY_PREFIX` — необязательные.
+`RELAY_MAX_BODY`, `RELAY_UPSTREAM_TIMEOUT`, `RELAY_LEGACY_HOST`, `RELAY_LEGACY_PREFIX` — необязательные, кроме
+`RELAY_ALLOWED_IPS` (IP стенда; по умолчанию пусто — доступ закрыт).
 
 Проверка с «Москвы» (токен — из `secrets/llm_relay.env`, не печатать):
 

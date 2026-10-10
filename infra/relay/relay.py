@@ -24,7 +24,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlsplit
 
 PORT = int(os.environ.get("RELAY_PORT", "18743"))
-ALLOWED_IPS = {ip.strip() for ip in os.environ.get("RELAY_ALLOWED_IPS", "198.51.100.1").split(",") if ip.strip()}
+ALLOWED_IPS = {ip.strip() for ip in os.environ.get("RELAY_ALLOWED_IPS", "").split(",") if ip.strip()}  # обязательно; пусто — 403 всем
 HOSTS = {h.strip().lower() for h in os.environ.get(
     "RELAY_HOSTS", "openrouter.ai,api.elevenlabs.io,api.deepgram.com,api.anam.ai").split(",") if h.strip()}
 LEGACY_HOST = os.environ.get("RELAY_LEGACY_HOST", "openrouter.ai")

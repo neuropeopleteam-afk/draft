@@ -6,7 +6,7 @@
 дата, SHA ветки, модели. Результаты — tools/interview_autocheck/results/<дата>_<sha>.{md,json} (без ключей).
 
 Запуск из корня репозитория (ключи в окружении, не печатать):
-  set -a; . ~/.private/openrouter.env; set +a
+  export OPENROUTER_API_KEY=...   # ключ только в окружении
   LLM_CHAIN=openrouter INTERVIEW_STUB=0 python3 tools/interview_autocheck/run.py --n 2
   python3 tools/interview_autocheck/run.py --stub      # без сети: сценарные реплики и оценка по правилам (CI)
 """

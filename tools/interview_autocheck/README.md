@@ -4,7 +4,7 @@
 (`fixtures.py`), движок `backend/app/modules/interview/engine` ведёт разговор и оценивает. Роли — `personas.py`.
 
 ```bash
-set -a; . ~/.private/openrouter.env; set +a        # ключи только в окружении
+export OPENROUTER_API_KEY=...                        # ключ только в окружении, не в файлах репозитория
 LLM_CHAIN=openrouter INTERVIEW_STUB=0 python3 tools/interview_autocheck/run.py --n 2
 python3 tools/interview_autocheck/run.py --stub   # без сети, для CI: сценарные реплики, оценка по правилам
 ```
