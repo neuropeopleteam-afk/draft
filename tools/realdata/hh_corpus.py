@@ -385,7 +385,7 @@ def run(rev: str | None, refetch: bool) -> None:
                   and hashlib.sha256(text_of(raws[it["id"]]).encode()).hexdigest() != it["text_sha256"])
     res = {"generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "code_commit": code_commit(),
            "corpus_collected_at": corpus["collected_at"], "n_corpus": len(items), "n": len(raws),
-           "missing": len(items) - len(raws), "text_changed_since_collect": changed,
+           "n_missing": len(items) - len(raws), "text_changed_since_collect": changed,
            "buckets": dict(Counter(it["bucket"].split(".")[0] if "." in it["bucket"] else it["bucket"] for it in items)),
            "method": "Путь правил need_parser.parse_need(use_llm=False) на названии и описании (key_skills парсеру не "
                      "даются). Метки — структурированные поля hh.ru: роль → направление, слово грейда в названии → "
@@ -417,7 +417,7 @@ def render_md(r: dict) -> str:
     lines = [
         "# Разбор потребности на вакансиях hh.ru (Я12)", "",
         f"Корпус собран {r['corpus_collected_at']}: {r['n_corpus']} вакансий (в прогоне {r['n']}, недоступно "
-        f"{r['missing']}, текст изменился с даты сбора: {r['text_changed_since_collect']}). Прогон "
+        f"{r['n_missing']}, текст изменился с даты сбора: {r['text_changed_since_collect']}). Прогон "
         f"{r['generated_at'][:10]}, код `{r['code_commit']}`. Пересчёт: `cd backend && python "
         "../tools/realdata/hh_corpus.py run` (нужен токен приложения hh.ru; тексты — в локальном кэше).", "",
         "Корпус — только для проверки разбора (ответ организаторов FTT.6: парсинг допустим для тестовых данных, не "
