@@ -7,7 +7,8 @@
  *     одна автоматическая повторная загрузка (?r=метка), после неё приложение открылось, метка убрана из адреса;
  *   - второй сбой подряд → только кнопка, без цикла перезагрузок;
  *   - CSS завис → экран загрузки всё равно рисуется (стили сборки не блокируют первую отрисовку);
- *   - файл ленивого экрана оборвался → «Раздел не загрузился» → повторная загрузка → экран открылся;
+ *   - файл ленивого экрана оборвался → «Раздел не загрузился» → повторная загрузка → экран открылся; если автоповтор
+ *     уже был — только кнопка «Обновить»;
  *   - 500/503/обрыв на /api/me, /api/meta → экран повтора, вход сохранён; «Повторить» → кабинет; 503 db_busy
  *     с Retry-After (пул БД занят, ветка ops/load) → «перегружен», повтор сам через Retry-After;
  *   - axe (WCAG 2.1 A/AA) на экранах сбоя, 390 и 1440 без горизонтальной прокрутки;
@@ -102,8 +103,8 @@ test("основной файл завис → сообщение, одна ав
   await expect(page.getByText("Если включён VPN — отключите его и обновите страницу.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Обновить" })).toBeVisible();
   await expect(page.getByText("Пробуем загрузить ещё раз…")).toBeVisible();
-  await noHorizontalScroll(page);
-  await axe(page, "сторож: страница не загрузилась");
+  // axe и прокрутка экрана сторожа — в сценарии «второй сбой подряд» (экран стоит, без автоповтора): здесь через 1,2 с
+  // идёт перезагрузка, и проверка под нагрузкой песочницы попадала на смену документа (Execution context was destroyed)
   // повторная загрузка — сама, с меткой обхода кэша; после запуска метка убрана из адреса
   await page.waitForURL(/[?&]r=\d+/, { timeout: 10_000, waitUntil: "commit" });
   await landing(page);
@@ -136,8 +137,7 @@ test("основной файл пришёл обрезанным (16 КБ) → 
   expect(main.n).toBe(2);
 });
 
-test("второй сбой подряд — без цикла: только кнопка «Обновить»; по кнопке — открылось", async ({ page }) => {
-  desktopOnly();
+test("второй сбой подряд — без цикла: только кнопка «Обновить»; по кнопке — открылось; axe", async ({ page }) => {
   await mockApi(page);
   const main = await breakAsset(page, MAIN_JS, "hang", 2);
   await page.goto("/", { waitUntil: "commit" });
@@ -145,6 +145,9 @@ test("второй сбой подряд — без цикла: только к�
   const h = page.getByRole("heading", { level: 1, name: "Страница не загрузилась" });
   await expect(h).toBeVisible({ timeout: 12_000 });
   await expect(page.getByText("Пробуем загрузить ещё раз…")).toHaveCount(0);
+  await expect(page.getByText("Если включён VPN — отключите его и обновите страницу.")).toBeVisible();
+  await noHorizontalScroll(page);
+  await axe(page, "сторож: страница не загрузилась");
   await page.waitForTimeout(4_000);
   expect(main.n, "третьей автоматической загрузки нет").toBe(2);
   await page.getByRole("button", { name: "Обновить" }).click();
@@ -173,11 +176,30 @@ test("файл ленивого экрана оборвался → «Разде
   await page.goto("/validation", { waitUntil: "commit" });
   await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByRole("button", { name: "Обновить" })).toBeVisible();
-  await axe(page, "раздел не загрузился");
+  await expect(page.getByText("Пробуем загрузить ещё раз…")).toBeVisible();
   await page.waitForURL(/[?&]r=\d+/, { timeout: 10_000, waitUntil: "commit" });
   await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toHaveCount(0, { timeout: 15_000 });
   await expect(page.locator("main h1").first()).toBeVisible();
   expect(chunk.n).toBe(2);
+});
+
+test("раздел не загрузился, автоповтор уже был → только кнопка; axe; «Обновить» → экран открылся", async ({ page }) => {
+  await mockApi(page);
+  // автоповтор был только что (метка сторожа в sessionStorage) — экран стоит, решает человек
+  await page.addInitScript(() => sessionStorage.setItem("fsp_boot_retry", String(Date.now())));
+  const chunk = await breakAsset(page, /\/assets\/Validation-[^/]+\.js$/, "reset");
+  await page.goto("/validation", { waitUntil: "commit" });
+  await expect(page.getByRole("heading", { level: 1, name: "Раздел не загрузился" })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("Если включён VPN — отключите его и обновите страницу.", { exact: false })).toBeVisible();
+  await expect(page.getByText("Пробуем загрузить ещё раз…")).toHaveCount(0);
+  await noHorizontalScroll(page);
+  await axe(page, "раздел не загрузился");
+  await page.waitForTimeout(2_500);
+  expect(chunk.n, "автоматической повторной загрузки нет").toBe(1);
+  await page.getByRole("button", { name: "Обновить" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible({ timeout: 15_000 });
+  expect(chunk.n).toBe(2);
+  await noHorizontalScroll(page);
 });
 
 test("500 на /api/me → экран повтора, вход сохранён; «Повторить» → кабинет", async ({ page }) => {
