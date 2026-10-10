@@ -253,11 +253,16 @@ def _stem(w: str) -> str:
 
 def quote_supported(quote: str, answer: str) -> bool:
     """Цитата модели действительно взята из ответа: точное вхождение после нормализации или ≥ 70 % её
-    значимых слов (по основам) есть в ответе. Модель часто слегка перефразирует — точного совпадения мало."""
+    значимых слов (по основам) есть в ответе. Модель часто слегка перефразирует — точного совпадения мало.
+    Отрицания сверяются отдельно (evidence.negation_consistent): «не» в цитате и в ответе — при тех же словах."""
     q, a = _norm(quote), _norm(answer)
     if len(q) < 3:
         return False
-    if q in a:
+    from app.modules.assessment.evidence import negation_consistent
+
+    if not negation_consistent(quote, answer):  # «не» добавлено или потеряно — смысл обратный (находка Я5, 10.10)
+        return False
+    if f" {q} " in f" {a} ":  # целыми словами: «не следует» не входит в «мне следует»
         return True
     words = [w for w in q.split() if len(w) > 2]
     if len(words) < 2:
@@ -345,8 +350,9 @@ def build_messages(*, stem: str, code: str | None, step_prompt: str | None, rubr
 def parse_reply(data, rubric: dict, answer: str, *, version: str = PROMPT_VERSION, task_text: str = "") -> dict:
     """Ответ модели → {ok, error, score, criteria, quotes, level, comment, manipulation, unsupported[], no_quotes}.
 
-    v2: оценка критерия выше 0 без цитаты, найденной в ответе, обнуляется (unsupported). Если модель вообще не
-    вернула цитат (старый формат «id: число») — оценки не обнуляются, но это причина сомнения (no_quotes).
+    v2: оценка критерия выше 0 без цитаты, найденной в ответе, обнуляется (unsupported); цитата с другим отрицанием,
+    чем в ответе, не найдена. Если модель вообще не вернула цитат (старый формат «id: число») — каждый пункт выше 0
+    опускается на шаг (1 → 0,5, 0,5 → 0; без доказательства полного балла нет) и это причина сомнения (no_quotes).
     v3 (Я13, GRADING_EVIDENCE): цитаты сверяет evidence.verify_criteria — строго, без перефраза; пункт без
     подтверждённой цитаты опускается на шаг (unsupported), сверка по пунктам — в evidence."""
     out = {"ok": False, "error": None, "score": None, "criteria": {}, "quotes": {}, "level": None, "comment": None,
@@ -382,7 +388,15 @@ def parse_reply(data, rubric: dict, answer: str, *, version: str = PROMPT_VERSIO
             "criteria", "capped", "dropped_total", "quotes_total")}}
     elif version != "v1":
         if not any_quote and any(v > 0 for v in scores.values()):
+            # старый формат «id: число» без цитат — полный балл без доказательства не ставится (находка Я5, 10.10):
+            # пункт опускается на шаг, как в evidence.verify_criteria, и это причина сомнения (вторая оценка)
+            from app.modules.assessment.evidence import step_down
+
             out["no_quotes"] = True
+            for cid, v in scores.items():
+                if v > 0:
+                    scores[cid] = step_down(v)
+                    out["unsupported"].append(cid)
         else:
             for cid, v in scores.items():
                 if v > 0 and not quote_supported(quotes[cid], answer):
