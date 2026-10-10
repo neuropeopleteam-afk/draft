@@ -261,7 +261,7 @@ def test_status_has_no_secrets(monkeypatch):
 # --- адаптеры поставщиков (HTTP подменён) -------------------------------------------------------------------------------
 
 def test_stub_providers():
-    a = e.tts("Проверка связи", "pcm_24000")
+    a = e.tts("Проверка связи", "pcm_16000")
     assert a.stub and a.sample_rate == 16000 and len(a.data) > 0 and a.cost_usd == 0
     assert e.tts("x", "mp3").stub
     with pytest.raises(e.EngineError):
@@ -312,7 +312,7 @@ def _fake_request(monkeypatch, handler):
 def test_tts_live(monkeypatch):
     _live(monkeypatch, ELEVENLABS_API_KEY="k", ELEVENLABS_VOICE_ID="v1")
     calls = _fake_request(monkeypatch, lambda c: httpx.Response(200, content=b"\x01\x02" * 100))
-    a = e.tts("Здравствуйте", "pcm_24000")
+    a = e.tts("Здравствуйте", "pcm_16000")
     assert not a.stub and a.data == b"\x01\x02" * 100 and a.cost_usd == pytest.approx(0.15 * 12 / 1000)
     assert calls[0]["host"] == "api.elevenlabs.io" and "/v1/text-to-speech/v1?output_format=pcm_16000" == calls[0]["path"]
     assert calls[0]["headers"]["xi-api-key"] == "k" and calls[0]["json"]["text"] == "Здравствуйте"

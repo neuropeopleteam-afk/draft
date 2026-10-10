@@ -128,11 +128,11 @@ class Verdict(BaseModel):
 class AudioOut(BaseModel):               # синтез речи
     data: bytes                          # аудио
     mime: str                            # "audio/mpeg" | "audio/pcm" (s16le)
-    format: Literal["mp3", "pcm_24000"]
-    sample_rate: int | None              # 24000 для pcm
+    format: Literal["mp3", "pcm_16000"]  # pcm — s16le моно 16 кГц, формат потока звука аватара Anam
+    sample_rate: int | None              # 16000 для pcm, None для mp3
     chars: int
     cost_usd: float
-    stub: bool = False                   # заглушка: data пустая — клиент показывает текст без звука
+    stub: bool = False                   # заглушка: mp3 — data пустая (клиент показывает текст), pcm — тишина нужной длины
 
 class Transcription(BaseModel):          # распознавание
     text: str
@@ -161,12 +161,12 @@ class Cost(BaseModel):                   # агрегат для ответа р
 | `evaluate(spec, transcript) -> Verdict` | Аналитик (модель `INTERVIEW_MODEL_JUDGE`, по умолчанию Fable 5.1) → скептик → **сборка кодом** (замечания скептика применяются детерминированно) → **сверка цитат кодом** → уровни → балл → вердикт | модель недоступна → правила (уровень по длине и пересечению слов с письменным ответом), `source="rules"`; мало данных → `insufficient` без вызова модели |
 | `verify_quotes(quotes, transcript) -> tuple[list[Quote], int]` | Чистая сверка: цитата должна (после нормализации регистра/ё/пунктуации) содержаться в реплике `n`, иначе ищется в любой; короче 8 знаков — отбрасывается. Возвращает оставшиеся и число убранных | чисто |
 | `verdict_from_levels(mode, levels, answers, chars) -> tuple[str, int \| None, str]` | Чистая таблица вердикта (раздел 3) | чисто |
-| `tts(text, fmt="mp3") -> AudioOut` | ElevenLabs через ретранслятор (`providers/tts.py`), голос `ELEVENLABS_VOICE_ID` — **стоковый голос поставщика** | нет ключа/ошибка → `stub=True`, `data=b""` (клиент → текст) |
-| `stt(audio: bytes, mime) -> Transcription` | Deepgram (предзаписанный кусок, «нажми и говори») через ретранслятор | нет ключа/ошибка → `EngineError("stt_unavailable")` (модуль отвечает 503, клиент → текст) |
-| `avatar_token(session_key, max_seconds) -> AvatarToken` | Токен сессии Anam (**стоковый аватар** `ANAM_AVATAR_ID`, стоковый голос, имя «Интервьюер», наш звук) через ретранслятор + учётные данные TURN (coturn use-auth-secret, 2 ч) | нет ключа/ошибка → `EngineError("avatar_unavailable")` (модуль 503, клиент → голос) |
+| `tts(text, fmt="mp3") -> AudioOut` | ElevenLabs через ретранслятор (`providers/tts.py`), `fmt` = `mp3` (канал «голос») или `pcm_16000` (канал «аватар»); голос `ELEVENLABS_VOICE_ID` — **стоковый голос поставщика**, текст обрезается до 1200 знаков | нет ключа → `stub=True` (mp3: `data=b""`, клиент → текст); ошибка поставщика → `EngineError("bad_request", status=503)` |
+| `stt(audio: bytes, mime="audio/webm", *, stub_text=None) -> Transcription` | Deepgram `nova-3`, ru (предзаписанный кусок до 6 МБ, «нажми и говори») через ретранслятор | нет ключа → `stub=True`, `text=stub_text or ""`; ошибка → `EngineError("stt_unavailable")` (модуль 503, клиент → текст) |
+| `avatar_token(persona_name=None) -> AvatarToken` | Токен сессии Anam (**стоковый аватар** `ANAM_AVATAR_ID`, модель `cara-4`, режим передачи звука — реплики озвучивает наш `tts(..., "pcm_16000")`, имя `INTERVIEWER_NAME`, плашка поставщика «ИИ-аватар» включена) через ретранслятор; `max_seconds` = `ANAM_MAX_SESSION_S`; `ice_servers` — наш TURN по IP с временными учётными данными (coturn use-auth-secret, 1 ч), `None` — ICE поставщика | нет ключа/ID или ошибка/сеть → `EngineError("avatar_unavailable")` (модуль 503, клиент → голос) |
 | `check_limits(jury, sandbox_sessions_last_hour, spent_today_usd) -> None` | Лимиты (раздел 4), данные даёт модуль из своей БД | бросает `EngineError("jury_limit" \| "daily_cap", retry_after=…)` |
 | `estimate_cost(kind, qty) -> float` | Ставки: `INTERVIEW_PRICE_TTS_1000`, `INTERVIEW_PRICE_STT_MIN`, `INTERVIEW_PRICE_AVATAR_MIN` | чисто |
-| `status() -> dict` | Для `/api/meta`: `{"stub": bool, "keys": {"llm","tts","stt","avatar","relay","turn"}, "models": {...}}` — без секретов | чисто |
+| `status() -> dict` | Для `/api/interview/status` и `/api/meta`: `{"stub", "channels": {"text","voice","stt","avatar"}, "models": {"turn","judge"}, "relay", "turn_ice", "interviewer_name", "limits", "daily_cap_usd", "label": "модель, не люди"}` — без секретов | чисто |
 | `is_stub() -> bool` | `INTERVIEW_STUB=1` **или** нет ключа модели: реплики и оценка детерминированы, поставщики не вызываются | — |
 
 `EngineError(code: str, message: str, *, status: int = 400, retry_after: int | None = None)` — коды: `insufficient_context` (422),
@@ -213,7 +213,8 @@ class Cost(BaseModel):                   # агрегат для ответа р
 `INTERVIEW_STUB`, `INTERVIEW_MODEL_TURN` (anthropic/claude-sonnet-4.6), `INTERVIEW_MODEL_JUDGE` (anthropic/claude-fable-5.1),
 `INTERVIEW_RELAY_URL` (пусто — `LLM_RELAY_URL`), `INTERVIEW_RELAY_TOKEN` (пусто — `LLM_RELAY_TOKEN`), `LLM_RELAY_CA_FILE`
 (общий закреплённый CA), `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ELEVENLABS_MODEL`, `DEEPGRAM_API_KEY`, `ANAM_API_KEY`,
-`ANAM_AVATAR_ID`, `ANAM_VOICE_ID`, `INTERVIEW_TURN_URLS`, `INTERVIEW_TURN_SECRET`, `INTERVIEW_TURN_ONLY`,
+`ANAM_AVATAR_ID`, `ANAM_PERSONA_ID` (для учёта), `ANAM_MAX_SESSION_S` (600), `INTERVIEW_TURN_TIMEOUT_S` (25),
+`INTERVIEW_JUDGE_TIMEOUT_S` (90), `INTERVIEW_TURN_URLS`, `INTERVIEW_TURN_SECRET`, `INTERVIEW_TURN_ONLY`,
 `INTERVIEW_JURY_AVATAR`, `INTERVIEW_DAILY_CAP_USD`, `INTERVIEW_PRICE_TTS_1000`, `INTERVIEW_PRICE_STT_MIN`,
 `INTERVIEW_PRICE_AVATAR_MIN`, `INTERVIEWER_NAME` («Интервьюер»). Флаг продукта `INTERVIEW_ENABLED` — у модуля (Я15).
 Ключи на стенде — `secrets/interview.env` (env_file у `api`, см. `engine/DEPLOY.md`).
@@ -222,6 +223,8 @@ class Cost(BaseModel):                   # агрегат для ответа р
 
 `is_stub()` — реплики ведущего из шаблонов по плану (приветствие по имени + вопрос 1 … прощание), оценка — правила
 (`source="stub"`), поставщики не вызываются, `tts` отдаёт `stub=True`. Для e2e продукта в заглушке подойдут любые
-тексты ответов; «честный» ответ — ≥ 80 знаков с ≥ 15 % общих значимых слов с письменным ответом → `confirmed`.
+тексты ответов; «честный» ответ в правилах — ≥ 120 знаков, ≥ 20 % общих значимых слов (по основам) с письменным ответом,
+не почти дословный (< 60 % при < 200 знаках) и без общих слов («в целом главное», «наверное», «подробно не скажу») →
+`confirmed`; «не помню / не знаю» в коротком ответе → `discrepancy`. Готовые реплики трёх ролей — `tools/interview_autocheck/personas.py` (SCRIPTED).
 Тесты движка — `tests/test_interview_engine.py` (чистые функции, заглушка, сверка цитат, таблица вердикта, адаптеры с
 подменой HTTP). Автопроверка на модельных кандидатах — `tools/interview_autocheck/` (модель, не люди).
