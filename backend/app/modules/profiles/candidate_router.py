@@ -28,6 +28,7 @@ from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, achievem
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 from app.modules.profiles.models import CandidateSpecialization
 from app.modules.profiles.specializations import ensure_specialization
+from app.core.origin import NO_FSP, fsp_origin
 
 router = APIRouter(prefix="/api/me", tags=["candidate"])
 # Резюме: попытки (в т. ч. неудачные) — не больше 10 в час на пользователя; одновременно — один разбор на воркер
@@ -315,7 +316,7 @@ def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> di
                    else "Свяжите профиль через ФСП ID (OIDC)") + ": достижения придут с уровнем T2. ")
                  if integration.fsp_enabled else
                  "Связь через ФСП ID (OIDC, Keycloak) появится после подключения реестра. ")
-                + "Без истории ФСП — нейтральное состояние: бонуса нет, штрафа нет.",
+                + NO_FSP + ".", "origin": fsp_origin(b.passport.link_source.value, b.passport.raw) if b.passport else None,
     }
 
 

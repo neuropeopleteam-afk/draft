@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTIONS, Loading, useApi } from "../ui";
 import { ScrollX } from "../A11y";
+import { ProvenanceLine } from "./Provenance";
 
 /** Блок /validation: стабильность статуса «Junior (предварительно)» на симуляции теста
  *  (backend: app/modules/validation/junior_stability.py, make stability). */
@@ -15,6 +16,7 @@ export default function JuniorStability() {
   return (
     <section id="junior" className="mt-12 scroll-mt-20" aria-labelledby="junior-t">
       <h2 id="junior-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Junior у порога: статус «предварительно»</h2>
+      {r?.provenance && <ProvenanceLine p={r.provenance} className="mt-1.5" />}
       <div className="mt-4">
         {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !r || r.missing
           ? <Alert kind="info">Расчёт ещё не выполнен: запустите make stability.</Alert>
