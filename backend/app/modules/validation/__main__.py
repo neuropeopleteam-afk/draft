@@ -292,6 +292,13 @@ def main() -> int:
     rep["exposure_calibration"] = {k: exp.get(k) for k in ("method", "r_max", "sessions_per_iteration", "iterations",
                                                            "history", "generated_at")}
     rep["seconds"] = round(time.time() - t0, 1)
+    # Я8: подпись расчёта, как у остальных JSON /validation — коммит кода, банк, seed, конфигурация (только метаданные)
+    from app.modules.validation.signature import signature
+    rep["signature"] = signature(
+        seed=20261006, config={"n": a.n, "quick": a.quick, "simulation": rep["simulation"].get("config"),
+                               "exposure_k_generated_at": exp.get("generated_at")},
+        world="симуляция теста на синтетических кандидатах (θ ~ N(0; 1), истина заданий = предкалибровка + ошибка "
+              "эксперта) и подбор на демо-данных (метки правилами)", command="make validate", n=a.n)
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"4/4 → {REPORT} ({rep['seconds']} с)")
