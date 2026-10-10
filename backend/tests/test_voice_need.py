@@ -231,3 +231,16 @@ def test_openapi_describes_route(client):
     op = client.get("/api/openapi.json").json()["paths"][URL]["post"]
     assert {"409", "413", "415", "422", "429", "503", "504"} <= set(op["responses"])
     assert op["responses"]["200"]["content"]["application/json"]["schema"]["$ref"].endswith("VoiceNeedOut")
+
+
+def test_criteria_lists_voice_only_when_enabled(client, monkeypatch):
+    """/criteria: пункт «Надиктовать потребность» в «Что можно проверить только здесь» — только при включённом флаге;
+    в docs/CRITERIA.md — заметка после раздела 6 (флаг выкл. по умолчанию)."""
+    from app.modules.validation import criteria as C
+
+    env(monkeypatch, VOICE_NEED_ENABLED="false")
+    assert all(u["title"] != "Надиктовать потребность" for u in client.get("/api/validation/criteria").json()["unique"])
+    env(monkeypatch)
+    u = [u for u in client.get("/api/validation/criteria").json()["unique"] if u["title"] == "Надиктовать потребность"]
+    assert len(u) == 1 and u[0]["do"][0]["to"] == "/employer/needs#need" and u[0]["do"][0]["as"] == "employer"
+    assert "VOICE_NEED_ENABLED" in C.VOICE_NOTE and "docs/VOICE.md" in C.VOICE_NOTE
