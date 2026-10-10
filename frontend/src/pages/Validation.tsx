@@ -117,7 +117,7 @@ function Report({ r }: { r: any }) {
         <p className="mt-2 text-xs text-brand-ink/70">Коэффициенты K, которые сейчас читает движок теста:</p>
         <ProvenanceLine p={r.provenance?.exposure_k} className="mt-0.5" />
         {r.provenance?.exposure_k?.note && <p className="mt-1 max-w-4xl text-xs leading-relaxed text-brand-ink/70">{r.provenance.exposure_k.note}</p>}
-        <SimConditions sim={sim} kind="exposure" />
+        <SimConditions sim={sim} kind="exposure" kDate={r.exposure_calibration?.generated_at} runDate={r.generated_at} />
       </Section>
 
       <Section id="leak" title="Устойчивость к утечке части банка"

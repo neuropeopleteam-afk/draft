@@ -65,7 +65,9 @@ const lengthText = (c: any) => c?.ext_items
 const errorText = "ошибка параметров: трудность семейства — предкалибровка + N(0; 0,5), a × LogN(0; 0,25)";
 
 /** Условия для раздела «Тест»: заменяет прежнюю оговорку про немоделируемое дотестирование. */
-export function SimConditions({ sim, kind }: { sim: any; kind: "test" | "exposure" | "leak" }) {
+export function SimConditions({ sim, kind, kDate, runDate }: { sim: any; kind: "test" | "exposure" | "leak"; kDate?: string; runDate?: string }) {
+  // Я8: пересчитывались ли K перед этим снимком — по датам из отчёта (K старше запуска больше чем на сутки — нет)
+  const kOld = !!(kDate && runDate) && Date.parse(runDate) - Date.parse(kDate) > 86_400_000;
   const c = sim?.conditions ?? {};
   const m = sim?.mean ?? {};
   if (kind === "test") return (
@@ -78,7 +80,7 @@ export function SimConditions({ sim, kind }: { sim: any; kind: "test" | "exposur
   if (kind === "exposure") return (
     <Conditions>
       те же {c.n_per_direction} сессий на направление, что в разделе «Тест»; коэффициенты Sympson — Hetter
-      откалиброваны отдельно для каждой механики (make validate пересчитывает их до симуляции).
+      откалиброваны отдельно для каждой механики{kOld ? "; перед этим снимком не пересчитывались — симуляция идёт с K, которые сейчас читает движок (строка K выше)" : " (make validate пересчитывает их до симуляции)"}.
     </Conditions>
   );
   return (

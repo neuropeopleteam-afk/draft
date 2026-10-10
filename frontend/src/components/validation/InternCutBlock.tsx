@@ -89,8 +89,10 @@ export function InternCutSection({ ic }: { ic: any }) {
         <Table head={["Направление", "Семейств в тесте (текущий банк)", "Информация у порога", "Минимальная SE", "С лёгкими семействами: семейств / SE", "Согласие решения при повторе", "r(θ) повтора"]}
           rows={dirs.map((d) => {
             const p = poolNow[d] ?? {};
-            const pn = ic.pool?.[d]?.[String(chosen)] ?? {};
-            const pe = easyPool[d]?.[String(chosen)] ?? {};
+            // Я8: ключи JSON — «-2.0», а String(-2) — «-2»: ищем по обоим написаниям
+            const ck = (o: any) => o?.[String(chosen)] ?? o?.[Number(chosen).toFixed(1)] ?? o?.[Number(chosen).toFixed(2)] ?? {};
+            const pn = ck(ic.pool?.[d]);
+            const pe = ck(easyPool[d]);
             const rt = ic.retest?.[d] ?? {};
             return [DIRECTIONS[d] ?? d, `${(p.n_common ?? 0) + (p.n_direction ?? 0)} (общих ${p.n_common ?? 0})`, num(pn.info_at_cut, 1), num(pn.min_se),
               `${pe.n_families ?? "—"} / ${num(pe.min_se)}`, pct(rt.decision_agreement), num(rt.r_theta)];
