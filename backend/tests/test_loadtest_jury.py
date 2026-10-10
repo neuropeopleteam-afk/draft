@@ -123,7 +123,7 @@ def test_run_load_scrub_and_summary(tmp_path, capsys, monkeypatch):
 
 
 def test_heavy_actions_resume_docx_and_red_button(client):
-    """Тяжёлые действия по письму штаба: DOCX резюме модельного кандидата принимается разбором, «Красная кнопка» —
+    """Тяжёлые действия (всплески памяти api, LLM): DOCX резюме модельного кандидата принимается разбором, «Красная кнопка» —
     по телу flows.attack_body; новый текст потребности не совпадает с базовым (кэш разбора не срабатывает)."""
     sid = _login(client, "employer", "new")["scenario"]
     tok = _login(client, "candidate_nofsp", sid)["access_token"]
@@ -135,3 +135,52 @@ def test_heavy_actions_resume_docx_and_red_button(client):
         a = client.post(f"/api/validation/attacks/{aid}", headers=_h(tok), json=flows.attack_body(aid))
         assert a.status_code == 200, a.text
     assert flows.need_text_variant(0) != flows.NEED_TEXTS[0] and flows.need_text_variant(0).startswith(flows.NEED_TEXTS[0])
+
+
+def test_run_load_nginx_counts_only_tagged_lines(tmp_path, monkeypatch):
+    """Сверка с журналом nginx: считаются только строки с User-Agent прогона (всплеск — отдельно), токен личной
+    ссылки и адреса в вывод не попадают, разница «отправлено Locust − дошло до nginx» — по запросам без событий LLM."""
+    import subprocess
+
+    m = _run_load()
+    logs, out = tmp_path / "nginx", tmp_path / "out"
+    logs.mkdir()
+    out.mkdir()
+    ln = '203.0.113.7 - - [10/Oct/2026:22:00:0{i} +0300] "{req} HTTP/1.1" {code} 12 "-" "{ua}"\n'
+    rows = [("GET /api/assessment/status", 200, "spectrek-load/t"), ("POST /api/jury/login", 200, "spectrek-load/t"),
+            ("GET /x/SeCrEtToKeN0123456789 ", 302, "spectrek-load/t"), ("GET /criteria?x=1", 429, "spectrek-load/t"),
+            ("GET /api/employer/needs/7/compare", 502, "spectrek-load/t"),
+            ("POST /api/jury/login", 200, "spectrek-load/t-burst"), ("GET /", 200, "Mozilla/5.0"),
+            ("GET /api/meta", 200, "spectrek-load/t2")]
+    (logs / "access.log").write_text("".join(ln.format(i=i, req=r, code=c, ua=u) for i, (r, c, u) in enumerate(rows)))
+    monkeypatch.setattr(m, "OUT", out)
+    monkeypatch.setattr(m, "NGINX_LOG_DIR", str(logs))
+    monkeypatch.setattr(m, "_remote", lambda s, timeout=120: subprocess.run(["bash", "-c", s], capture_output=True,
+                                                                            text=True).stdout)
+    head = "Type,Name,Request Count,Failure Count\n"
+    (out / "t_stats.csv").write_text(head + "GET,a,5,1\nLLM,потребность: модель уточнила разбор (фон),2,0\n,Aggregated,8,1\n")
+    (out / "t_failures.csv").write_text("Method,Name,Error,Occurrences\nGET,a,\"ConnectionError('reset')\",1\n")
+    m.nginx(type("A", (), {"tag": "t"})())
+    txt = (out / "t_nginx.txt").read_text()
+    assert "Прогон: строк журнала 5; коды: 200 — 2, 302 — 1, 429 — 1, 502 — 1" in txt
+    assert "Всплеск: строк журнала 1" in txt
+    assert "429 /criteria: 1" in txt and "502 /api/employer/needs: 1" in txt
+    assert "запросов 6 (без событий фоновой модели 2), из них без ответа (код 0, обрыв связи) 1; дошло до nginx 5 — " \
+           "разница +1" in txt
+    assert "SeCrEtToKeN" not in txt and "203.0.113.7" not in txt
+
+
+def test_run_load_preflight_without_server(capsys, monkeypatch):
+    """preflight без KPY: проверяет Locust, health, meta (LLM), личную ссылку; при ошибке — код 1 и «не начинать»."""
+    m = _run_load()
+    monkeypatch.setattr(m, "KPY", "")
+    monkeypatch.setattr(m, "LOCUST", "/nonexistent/locust")
+    monkeypatch.setattr(m, "_get", lambda url: (200, '{"status": "ok"}', {}) if url.endswith("/health") else
+                        (200, '{"llm": {"configured": false, "chain": []}}', {}))
+    try:
+        m.preflight(type("A", (), {"host": "http://h", "xlink_file": ""})())
+    except SystemExit as e:
+        assert e.code == 1
+    out = capsys.readouterr().out
+    assert "ERR Locust: нет /nonexistent/locust" in out and "OK  /api/health: 200" in out
+    assert "LLM выкл." in out and "KPY не задан" in out and "прогон не начинать" in out
