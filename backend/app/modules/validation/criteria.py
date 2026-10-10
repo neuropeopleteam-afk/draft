@@ -18,6 +18,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from app.core.origin import NO_FSP
+
 HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
 SOURCES = {  # источник → файл расчёта и команда пересчёта (как на /validation)
@@ -225,7 +227,7 @@ CRITERIA: list[dict] = [
          {"tz": "корректная обработка профиля кандидата без истории ФСП",
           "do": [go("Кандидат без ФСП", "/candidate/category", "candidate_nofsp"),
                  go("Атака «Убрать историю ФСП»", "/validation#red-button")],
-          "see": "Нет истории ФСП — нейтрально: категория и место по тесту, без штрафа.",
+          "see": NO_FSP + ": категория и место — по тесту.",
           "proof": link("Атака «Убрать историю ФСП»: скор падает ровно на бонус", "/validation#red-button"),
           "limit": "У участников ФСП бонус в выдаче, у остальных его нет; реестр — модельные данные."},
          {"tz": "соответствие функциональным требованиям",
