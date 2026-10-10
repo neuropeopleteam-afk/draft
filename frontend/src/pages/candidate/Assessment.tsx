@@ -605,7 +605,8 @@ export function TestRun() {
     const seg = c.fsSince ? now - c.fsSince : 0;
     const cv = t.n >= 10 && t.mean > 0 ? Math.round((Math.sqrt(t.m2 / (t.n - 1)) / t.mean) * 100) : 0;
     const base = { focus_lost: c.focus_lost, hidden_ms: c.hidden_ms + extra, paste: c.paste, paste_chars: c.paste_chars, copy: c.copy,
-      fs_exit: c.fs_exit, fs_ms: c.fs_ms + (c.fsOn ? seg : 0), fs_out_ms: c.fs_out_ms + (c.fsOn ? 0 : seg), fs_na: fsOk ? 0 : 1 };
+      // Я11 (С3-5): без полноэкранного режима (телефон) время «вне его» не копится — это не выход из режима
+      fs_exit: c.fs_exit, fs_ms: c.fs_ms + (c.fsOn ? seg : 0), fs_out_ms: fsOk ? c.fs_out_ms + (c.fsOn ? 0 : seg) : 0, fs_na: fsOk ? 0 : 1 };
     if (s?.item?.answer_kind !== "text" || s?.item?.format === "predict_output") return base;
     return { ...base, typed: t.typed, inserted: t.inserted, dropped: t.dropped, deleted: t.deleted, keys: t.keys, ik_cv: cv, active_ms: t.active_ms };
   }

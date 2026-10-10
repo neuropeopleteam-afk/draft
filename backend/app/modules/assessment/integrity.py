@@ -421,8 +421,11 @@ def proctoring_source(done: list[dict], extra: dict) -> tuple[list[tuple[int, st
     reasons: list[tuple[int, str, str]] = []
     with_sig = [i for i in done if i.get("signals") is not None]
     fs_items = [i for i in with_sig if "fs_ms" in i["signals"] or "fs_na" in i["signals"]]
-    fs_exits = sum((i["signals"].get("fs_exit") or 0) for i in fs_items)
-    fs_out_s = sum((i["signals"].get("fs_out_ms") or 0) for i in fs_items) / 1000.0
+    # Я11 (С3-5): задание, где режим недоступен (fs_na, телефон), — не «вне полноэкранного режима»: прежний клиент
+    # присылал там всё время задания как fs_out_ms («Выход … 0 раз, вне его 5 мин» на iPhone)
+    fs_avail = [i for i in fs_items if not i["signals"].get("fs_na")]
+    fs_exits = sum((i["signals"].get("fs_exit") or 0) for i in fs_avail)
+    fs_out_s = sum((i["signals"].get("fs_out_ms") or 0) for i in fs_avail) / 1000.0
     fs_never = bool(fs_items) and all((i["signals"].get("fs_ms") or 0) == 0 and not i["signals"].get("fs_na")
                                       for i in fs_items)
     if fs_never:
