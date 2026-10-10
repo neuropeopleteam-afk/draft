@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTIONS, Loading, useApi } from "../ui";
+import { ScrollX } from "../A11y";
 
 /** Блок /validation: стабильность статуса «Junior (предварительно)» на симуляции теста
  *  (backend: app/modules/validation/junior_stability.py, make stability). */
@@ -102,7 +103,7 @@ function Body({ r }: { r: any }) {
 function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <div className="rounded-2xl bg-white p-4 ring-1 ring-brand-night/10">
-      <div className="text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/60">{label}</div>
+      <div className="text-xs font-medium uppercase tracking-[0.06em] text-brand-ink/65">{label}</div>
       <div className="mt-1 text-2xl font-extrabold tabular-nums text-brand-night">{value}</div>
       {hint && <div className="mt-1 text-xs text-brand-ink/65">{hint}</div>}
     </div>
@@ -111,10 +112,10 @@ function Kpi({ label, value, hint }: { label: string; value: ReactNode; hint?: s
 
 function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
   return (
-    <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+    <ScrollX label="Таблица" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
       <table className="w-full min-w-[44rem] text-left text-sm">
         <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
-          <tr>{head.map((h, i) => <th key={i} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>)}</tr>
+          <tr>{head.map((h, i) => <th key={i} scope="col" className="px-3 py-2.5 font-semibold">{h || <span className="sr-only">Строка</span>}</th>)}</tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
@@ -124,6 +125,6 @@ function Table({ head, rows }: { head: string[]; rows: ReactNode[][] }) {
           ))}
         </tbody>
       </table>
-    </div>
+    </ScrollX>
   );
 }

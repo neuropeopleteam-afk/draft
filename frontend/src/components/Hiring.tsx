@@ -63,7 +63,7 @@ function Steps({ stage, outcome }: { stage: string; outcome?: any }) {
         const done = !closed ? k < cur : false;
         const now = closed ? k === 2 : k === cur;
         const c = done ? "border-emerald-200 bg-emerald-50 text-emerald-800" : now ? (closed ? "border-gray-200 bg-gray-100 text-gray-700" : "border-brand/30 bg-brand-blush text-brand-night")
-          : "border-brand-night/10 bg-white text-brand-ink/55";
+          : "border-brand-night/10 bg-white text-brand-ink/65";
         return <li key={t} className={`min-w-0 rounded-lg border px-2 py-1.5 font-semibold ${c}`} aria-current={now ? "step" : undefined}><span className="hidden truncate sm:block">{k + 1}. {t}</span><span className="block truncate sm:hidden">{short[k]}</span></li>;
       })}
     </ol>
@@ -81,7 +81,7 @@ function SlotLine({ s }: { s: Slot }) {
   return (
     <span className="min-w-0">
       <b className="text-brand-night">{mskText(s.starts_at)}</b>, {s.duration_min}{NB}мин · {FORMAT[s.format] ?? s.format}
-      {s.place && <> · {isLink(s.place) ? <a className="break-all font-semibold text-brand hover:underline" href={s.place} target="_blank" rel="noreferrer">ссылка на встречу</a> : <span className="break-words">{s.place}</span>}</>}
+      {s.place && <> · {isLink(s.place) ? <a className="break-all font-semibold text-brand-deep hover:underline" href={s.place} target="_blank" rel="noreferrer">ссылка на встречу</a> : <span className="break-words">{s.place}</span>}</>}
     </span>
   );
 }
@@ -169,7 +169,7 @@ export function EmployerHiring({ inv, onChange }: { inv: any; onChange?: () => v
   const lastDone = st.interviews?.find((x: any) => x.status === "done");
   const transfers = (st.ats ?? []).filter((a: any) => a.target !== "webhook");
   return (
-    <section className="space-y-3 rounded-xl border border-brand-night/10 bg-white p-3 sm:p-4" aria-label="Найм">
+    <section className="space-y-3 rounded-xl border border-brand-night/10 bg-white p-3 sm:p-4" aria-label={`Найм: ${inv.position_title ?? ""} · ${inv.candidate_ref ?? inv.id}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-semibold text-brand-night">Найм</p>
         <span className="text-xs font-semibold text-brand-ink/65">{st.stage_title}</span>
@@ -203,7 +203,7 @@ export function EmployerHiring({ inv, onChange }: { inv: any; onChange?: () => v
             <button className="btn-ghost !py-2" disabled={busy} onClick={() => setForm("slots")}>Перенести</button>
             <button className="btn-ghost !py-2" disabled={busy} onClick={() => go(`interviews/${iv.id}/cancel`)}>Отменить</button>
           </div>
-          {st.rules?.demo_done_anytime && <p className="text-xs text-brand-ink/60">Демо-компания: отметить «прошло» можно до начала, чтобы пройти путь за минуту.</p>}
+          {st.rules?.demo_done_anytime && <p className="text-xs text-brand-ink/65">Демо-компания: отметить «прошло» можно до начала, чтобы пройти путь за минуту.</p>}
         </div>
       )}
       {form === "slots" ? <SlotsForm st={st} busy={busy} onSubmit={(b) => act("interviews", b).then((ok) => { if (ok) setForm(""); return ok; })} onCancel={() => setForm("")} />
@@ -276,7 +276,7 @@ export function CandidateHiring({ inv, onChange }: { inv: any; onChange?: () => 
   const lastDone = st.interviews?.find((x: any) => x.status === "done");
   const quiet = st.stage === "contact" && !lastDone && !o && !st.outcome;
   return (
-    <section className="space-y-3 rounded-xl border border-brand-night/10 p-3 sm:p-4" aria-label="Найм">
+    <section className="space-y-3 rounded-xl border border-brand-night/10 p-3 sm:p-4" aria-label={`Собеседование и оффер: ${inv.position_title ?? inv.id}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="font-semibold text-brand-night">Собеседование и оффер</p>
         <span className="text-xs font-semibold text-brand-ink/65">{st.stage_title}</span>

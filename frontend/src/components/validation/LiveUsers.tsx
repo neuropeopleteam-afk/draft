@@ -65,11 +65,11 @@ export default function LiveUsers({ data: d }: { data: any }) {
         <T caption="Прохождение и оценки по ролям" min="34rem" head={["Роль", "Начали", "Завершили", "Доля завершивших", "Медиана пути", "SUS"]}
           rows={roles.map((r) => {
             const c = share.by_role?.[r]; const t = d.time?.by_role?.[r]; const s = sus.by_role?.[r];
-            const small = <span className="text-xs text-brand-ink/60">мало данных (меньше {d.min_n})</span>;
+            const small = <span className="text-xs text-brand-ink/65">мало данных (меньше {d.min_n})</span>;
             return [ROLE[r], d.n.by_role[r].enrolled, d.n.by_role[r].done,
-              c ? <>{pct(c.share?.share)}{c.share?.ci && <span className="block text-xs text-brand-ink/60">{ci(c.share.ci, (v) => pct(v))}</span>}</> : small,
+              c ? <>{pct(c.share?.share)}{c.share?.ci && <span className="block text-xs text-brand-ink/65">{ci(c.share.ci, (v) => pct(v))}</span>}</> : small,
               t?.median_s != null ? `${fmtMin(t.median_s)}${NB}мин` : small,
-              s?.mean != null ? <>{num(s.mean, 1)}{s.ci && <span className="block text-xs text-brand-ink/60">{ci(s.ci)}</span>}</> : <span className="text-xs text-brand-ink/60">{s?.n ? `ответов: ${s.n}` : "нет ответов"}</span>];
+              s?.mean != null ? <>{num(s.mean, 1)}{s.ci && <span className="block text-xs text-brand-ink/65">{ci(s.ci)}</span>}</> : <span className="text-xs text-brand-ink/65">{s?.n ? `ответов: ${s.n}` : "нет ответов"}</span>];
           })} />
       </div>
 
@@ -101,7 +101,7 @@ export default function LiveUsers({ data: d }: { data: any }) {
         <>
           <h3 className="mt-6 text-base font-bold text-brand-night">Что мешало</h3>
           <ul className="mt-2 flex flex-wrap gap-2">
-            {Object.entries<number>(d.blockers).map(([t, n]) => <li key={t} className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-brand-night ring-1 ring-brand-night/10">{t} <span className="tabular-nums text-brand-ink/60">· {n}</span></li>)}
+            {Object.entries<number>(d.blockers).map(([t, n]) => <li key={t} className="rounded-full bg-white px-3 py-1.5 text-xs font-medium text-brand-night ring-1 ring-brand-night/10">{t} <span className="tabular-nums text-brand-ink/65">· {n}</span></li>)}
           </ul>
         </>
       )}

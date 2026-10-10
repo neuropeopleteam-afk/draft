@@ -53,7 +53,7 @@ function SigLine({ s }: { s?: Sig }) {
   const commit = s.commit && !["unknown", "не записан"].includes(s.commit) ? s.commit : null;
   const parts = [s.world, s.n != null && !s.seed ? `n${NB}=${NB}${s.n}` : null, s.seed != null ? `seed${NB}${s.seed}` : null,
     commit ? `коммит ${commit}` : "коммит не записан", s.generated_at ? `расчёт ${s.generated_at.slice(8, 10)}.${s.generated_at.slice(5, 7)}` : null];
-  return <p className="mt-1 text-[11px] leading-snug text-brand-ink/55 [overflow-wrap:anywhere]" data-testid="criteria-signature">Мир: {parts.filter(Boolean).join(" · ")}</p>;
+  return <p className="mt-1 text-[11px] leading-snug text-brand-ink/65 [overflow-wrap:anywhere]" data-testid="criteria-signature">Мир: {parts.filter(Boolean).join(" · ")}</p>;
 }
 
 function ProofView({ p }: { p: Proof }) {
@@ -72,7 +72,7 @@ function ProofView({ p }: { p: Proof }) {
     );
   }
   if (p.kind === "doc") {
-    return <p className="text-sm text-brand-ink/80">{p.label}<span className="mt-0.5 block text-xs text-brand-ink/60">в репозитории: <code className="[overflow-wrap:anywhere]">{p.path}</code></span></p>;
+    return <p className="text-sm text-brand-ink/80">{p.label}<span className="mt-0.5 block text-xs text-brand-ink/65">в репозитории: <code className="[overflow-wrap:anywhere]">{p.path}</code></span></p>;
   }
   return <ProofLink to={p.anchor} text={p.label} />;
 }
@@ -87,7 +87,7 @@ export default function Criteria() {
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
       <SiteHeader />
-      <main className="mx-auto max-w-content px-4 py-10 sm:px-6">
+      <main id="main" className="mx-auto max-w-content px-4 py-10 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night md:text-4xl">Проверьте нас по критериям ТЗ</h1>
         {loading ? <div className="mt-8"><Loading /></div> : error || !data ? <div className="mt-8"><Alert>{error ?? "Нет данных"}</Alert></div> : <Body d={data} />}
@@ -105,7 +105,7 @@ function Body({ d }: { d: Out }) {
         <a href="#unique" className="rounded-full bg-brand-night px-3 py-1.5 font-semibold text-white hover:bg-brand-plum">Только здесь</a>
         {d.criteria.map((c) => (
           <a key={c.id} href={`#${c.id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">
-            {c.n}. {c.short} <span className="tabular-nums text-brand-ink/60">{c.weight}{NB}%</span>
+            {c.n}. {c.short} <span className="tabular-nums text-brand-ink/65">{c.weight}{NB}%</span>
           </a>
         ))}
       </nav>
@@ -148,16 +148,16 @@ function Row({ it, personas }: { it: Item; personas: Record<string, string> }) {
     <article id={it.id} className="grid scroll-mt-20 gap-3 border-t border-brand-night/10 py-4 first:border-t-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)] lg:gap-6" data-testid="criteria-item">
       <div className="min-w-0">
         <p className="text-sm font-semibold leading-snug text-brand-night"><span className="mr-1.5 tabular-nums text-brand-lavender">{it.n}</span>«{it.tz}»</p>
-        <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink/55">Что сделать</p>
+        <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink/65">Что сделать</p>
         <div className="mt-1 flex flex-wrap gap-1.5">{it.do.map((g) => <GoLink key={g.label} g={g} personas={personas} />)}</div>
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink/55">Что увидите</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink/65">Что увидите</p>
         <p className="mt-1 text-sm leading-snug text-brand-ink/85">{it.see}</p>
         <p className="mt-2 text-xs leading-snug text-brand-ink/65"><b className="font-semibold text-brand-ink/80">Ограничение:</b> {it.limit}</p>
       </div>
       <div className="min-w-0" data-testid={`proof-${it.id}`}>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink/55">Чем доказано</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-brand-ink/65">Чем доказано</p>
         <div className="mt-1"><ProofView p={it.proof} /></div>
       </div>
     </article>
@@ -202,7 +202,9 @@ export function JuryGo() {
     return () => { off = true; };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center" role="status">
+    <main id="main" className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+      <h1 className="sr-only">Вход в копию демо для жюри</h1>
+      <div className="flex flex-col items-center gap-4" role="status">
       {err ? (
         <>
           <p className="max-w-sm text-sm text-brand-ink/80">{err}</p>
@@ -213,6 +215,7 @@ export function JuryGo() {
           </div>
         </>
       ) : <p className="text-sm text-brand-ink/70" aria-busy="true">Входим в вашу копию демо…</p>}
-    </div>
+      </div>
+    </main>
   );
 }

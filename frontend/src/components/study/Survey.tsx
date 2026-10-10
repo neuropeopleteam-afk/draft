@@ -113,7 +113,7 @@ export function SurveyModal({ open, onClose, role }: { open: boolean; onClose: (
               <ul className="mt-3 space-y-3">
                 {shown.map((x) => (
                   <li key={x.ref} className="rounded-xl bg-[#F3F2FB] p-3">
-                    <p className="text-sm font-semibold text-brand-night">{x.rank}. {x.category ?? "Кандидат"} <span className="font-normal text-brand-ink/60">· {x.ref}</span></p>
+                    <p className="text-sm font-semibold text-brand-night">{x.rank}. {x.category ?? "Кандидат"} <span className="font-normal text-brand-ink/65">· {x.ref}</span></p>
                     {x.reasons.length > 0 && <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-brand-ink/75">{x.reasons.map((r, i) => <li key={i}>{r}</li>)}</ul>}
                     <div className="mt-2"><Scale value={rate[x.ref] ?? null} label={`Оценка кандидата ${x.rank}`} titles={form.rel.scale} onChange={(v) => setRate((a) => ({ ...a, [x.ref]: v }))} /></div>
                   </li>
