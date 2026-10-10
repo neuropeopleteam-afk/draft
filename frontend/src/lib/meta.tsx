@@ -15,6 +15,7 @@ export interface Meta {
   proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
+  hh?: { enabled: boolean; stub: boolean }; // Я12: импорт своей вакансии с hh.ru и «Рынок по hh.ru» (HH_ENABLED и токен)
 }
 
 const Ctx = createContext<Meta | null>(null);
