@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
 from app.modules.hh import snapshot
+from app.modules.hh.directions import HH_DIRECTIONS
 
 TOP = 8
 STATUS_TITLES = {"confirmed": "подтверждён тестом (T1)", "weak": "проверен, результат ниже 50 %",
@@ -33,6 +34,10 @@ def _task_tags(direction: str, grade: str | None, tags: list[str]) -> set[str]:
         return set(coverage_for(direction, grade, tags)["covered"])
     except Exception:  # банк недоступен — без ссылки на задание, тест остаётся
         return set()
+
+
+def _dir_title(d: str) -> str:
+    return DIRECTIONS.get(d) or HH_DIRECTIONS.get(d, {}).get("title") or d
 
 
 def block(direction: str | None, grade: str | None, bundle, test_tags: frozenset[str] | set[str]) -> dict | None:
@@ -61,8 +66,8 @@ def block(direction: str | None, grade: str | None, bundle, test_tags: frozenset
                           "text": "заданий на этот навык пока нет — подтвердить можно задачей-зондом работодателя"}
         items.append({"tag": t, "title": STACK[t][0], "share": x["share"], "n": x["n"], "status": st,
                       "status_title": STATUS_TITLES[st], "action": action})
-    scope_title = (f"категория {DIRECTIONS.get(direction, direction)} · {GRADES.get(grade, grade)}"
-                   if s["scope"] == "category" else f"направление {DIRECTIONS.get(direction, direction)}")
+    scope_title = (f"категория {_dir_title(direction)} · {GRADES.get(grade, grade)}"
+                   if s["scope"] == "category" else f"направление {_dir_title(direction)}")
     return {"source": "hh.ru", "scope": s["scope"], "scope_title": scope_title, "n": s["n"], "as_of": s["as_of"],
             "items": items, "not_confirmed": todo,
             "note": (f"Доля из {s['n']} вакансий hh.ru ({s['as_of'][8:10]}.{s['as_of'][5:7]}.{s['as_of'][:4]}), где навык "
