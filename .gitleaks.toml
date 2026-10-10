@@ -21,7 +21,7 @@ paths = [
 # Тестовые фикстуры: секрет подписи JWT в backend/tests/conftest.py задан строкой с явной пометкой.
 [[allowlists]]
 description = "Тестовые фикстуры"
-regexes = ['''test-secret-not-for-prod''']
+regexes = ['''test-secret-not-for-prod''', '''abcDEF123456''']  # вторая — вымышленное значение в тесте tools/publish
 
 # Шаблоны переменных окружения (.env.example): пустое значение `JWT_SECRET=` заставляет generic-api-key
 # захватить следующую строку (`JWT_TTL_MINUTES=720`) как «секрет». Исключается именно такая пара строк,
