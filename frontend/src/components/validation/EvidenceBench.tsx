@@ -52,7 +52,7 @@ function Body({ r }: { r: any }) {
         </table>
       </ScrollX>
       <ul className="mt-3 max-w-4xl list-disc space-y-1 pl-5 text-sm text-brand-ink/75">
-        <li>{r.n} ответов, парная разница MAE «вкл − выкл»: {signed(p.d_mae, 3)} (ДИ 90 % {ci(p.ci90)}), различаются {p.answers_differ} из {p.n} честных ответов.</li>
+        <li>Малая выборка 50 ответов, парная разница MAE «вкл − выкл»: {signed(p.d_mae, 3)} (ДИ 90 % {ci(p.ci90)}), различаются {p.answers_differ} из {p.n} честных ответов.</li>
         <li>Цитат в ответах оценщика: {r.quotes?.quotes}, отброшено кодом: {r.quotes?.dropped}. Скептик вызывался для {r.skeptic_runs?.calls} из 50 ответов ({num((r.skeptic_runs?.share ?? 0) * 100, 0)} %).</li>
         {r.full && (
           <li>Все {r.full.n} ответов, промпт v3 + скептик: парная разница MAE {signed(r.full.paired?.on_minus_off?.d_mae, 3)} (ДИ 90 % {ci(r.full.paired?.on_minus_off?.ci90)}); цитат {r.full.quotes?.quotes}, отброшено кодом {r.full.quotes?.dropped}; скептик положен {r.full.skeptic_calls} ответам, ответил {r.full.skeptic_answered} (согласился {r.full.verdicts?.agree ?? 0}, не согласился — эксперту {r.full.verdicts?.disagree ?? 0}; поправок вниз {r.full.changes?.down}, вверх с подтверждённой цитатой {r.full.changes?.up}); стоимость с флагом — {num(r.full.cost_per_answer_on, 4)} $ на ответ.</li>
