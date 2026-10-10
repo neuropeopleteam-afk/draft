@@ -25,7 +25,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-fsp}
       POSTGRES_USER: ${POSTGRES_USER:-fsp}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Задайте POSTGRES_PASSWORD в .env (см. .env.example)}
-    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=50", "-c", "work_mem=8MB"]
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=${PG_MAX_CONNECTIONS:-50}", "-c", "work_mem=8MB"]
     volumes:
       - db_data:/var/lib/postgresql/data
       # Отдельная база keycloak для ФСП ID (только при создании тома)
@@ -95,7 +95,11 @@ services:
         condition: service_healthy
     ports:
       - "127.0.0.1:${API_PORT:-8141}:8000"
-    mem_limit: 1536m  # 08.10: было 768m (77 % при спокойной проверке, OOM 07.10 при 640m); сервер 7,9 ГБ, свободно 5,5 ГБ
+    # 08.10: было 768m (77 % при спокойной проверке, OOM 07.10 при 640m); сервер 7,9 ГБ, свободно 5,5 ГБ.
+    # 10.10, 100 пользователей: memory.peak 1471 МиБ при 2 воркерах. API_WORKERS (Dockerfile) больше 2 — поднять и
+    # API_MEM_LIMIT (≈ 700 МиБ на воркер), и сверить пул БД: API_WORKERS × (DB_POOL_SIZE + DB_MAX_OVERFLOW) ≤
+    # PG_MAX_CONNECTIONS − 14 (docs/LOAD.md, раздел 8)
+    mem_limit: ${API_MEM_LIMIT:-1536m}
 
   web:
     build: ./frontend
