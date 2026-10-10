@@ -4,7 +4,7 @@ import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { errText } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { guide, juryLogin, juryReset, quick, QUICK, startQuick, type Persona } from "../lib/jury";
-import { daysText, useRules } from "../lib/meta";
+import { daysText, useMeta, useRules } from "../lib/meta";
 
 type Rules = NonNullable<ReturnType<typeof useRules>>;
 
@@ -180,6 +180,7 @@ function JuryBlock() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const interview = !!useMeta()?.interview_enabled;  // Я15: шаг «по желанию» в «12 минутах»
 
   async function enter(p: Persona) {
     setBusy(p); setMsg(null);
@@ -220,7 +221,7 @@ function JuryBlock() {
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-night p-4 text-white sm:p-5" data-testid="jury-quick">
           <div className="min-w-0 max-w-3xl">
             <p className="text-lg font-bold">Мало времени? Проверка за 12 минут</p>
-            <p className="mt-1 text-sm leading-relaxed text-white/80">{QUICK.length} шагов: {QUICK.map((s) => s.title.split(" · ")[0].toLowerCase()).join(" → ")}. У каждого шага — что он проверяет и какой критерий ТЗ.</p>
+            <p className="mt-1 text-sm leading-relaxed text-white/80">{QUICK.length} шагов: {QUICK.map((s) => s.title.split(" · ")[0].toLowerCase()).join(" → ")}{interview ? "; по желанию — устная защита ответа" : ""}. У каждого шага — что он проверяет и какой критерий ТЗ.</p>
           </div>
           <button type="button" className="btn-primary shrink-0" disabled={!!busy} onClick={quickStart}>{busy === "quick" ? "Входим…" : "Начать проверку за 12 минут"}</button>
         </div>

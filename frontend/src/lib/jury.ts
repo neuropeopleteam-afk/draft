@@ -155,7 +155,7 @@ export const QUICK_MINUTES = 12;
 export const quick = {
   mode: (): GuideMode => (localStorage.getItem(KEY_MODE) === "full" ? "full" : "quick"),
   setMode: (m: GuideMode) => { localStorage.setItem(KEY_MODE, m); notify(); },
-  step: () => Math.min(Number(localStorage.getItem(KEY_QSTEP) ?? "0") || 0, QUICK.length - 1),
+  step: () => Math.min(Number(localStorage.getItem(KEY_QSTEP) ?? "0") || 0, QUICK.length),  // +1 — шаг «по желанию»
   setStep: (n: number) => { localStorage.setItem(KEY_QSTEP, String(n)); },
   /** начало прохода (мс) — таймер-ориентир; null — ещё не начат */
   t0: () => Number(localStorage.getItem(KEY_T0)) || null,
@@ -165,7 +165,7 @@ export const quick = {
   need: () => localStorage.getItem(KEY_NEED),
   setNeed: (id: string) => localStorage.setItem(KEY_NEED, id),
 };
-export interface QuickStep extends GuideStep { checks: string; crit: string; min: number }
+export interface QuickStep extends GuideStep { checks: string; crit: string; min: number; optional?: boolean }
 const C1 = "1. Новая механика подбора · 35 %", C2 = "2. Тестирование и категоризация · 25 %";
 export const QUICK: QuickStep[] = [
   { title: "Своя потребность своими словами", persona: "employer", path: "/employer/needs", match: /^\/employer\/needs\/?$/, cta: "Войти как работодатель", min: 2,
@@ -193,6 +193,16 @@ export const QUICK: QuickStep[] = [
     text: "/criteria — каждый подпункт раздела 6 ТЗ: что сделать, что увидите, чем доказано, ограничение. /validation — метрики с подписью мира (синтетика и модельная разметка, людей нет), повтор теста и «Красная кнопка».",
     checks: "процедуру валидации, её результаты и честные ограничения", crit: `${C2}; ${C1} — доля релевантных в топе; 5. Документация · 6 %` },
 ];
+/** Шаг «по желанию» — устная защита ответа (Я15, флаг INTERVIEW_ENABLED → /api/meta `interview_enabled`; по умолчанию
+ *  выключен — шага нет): между категорией и доказательствами, в счёт 12 минут не входит. Экран — по согласованию с Я15. */
+export const QUICK_INTERVIEW: QuickStep = {
+  title: "Устная защита ответа · по желанию", optional: true, persona: "candidate_new", path: "/candidate/attempts",
+  match: /^\/candidate\/(attempts|interview)/, cta: "Открыть устную защиту", min: 3,
+  text: "Около 3 минут, можно пропустить. На результате попытки — «Подтвердите авторство ответа»: модель задаёт вопросы по развёрнутому ответу и сверяет, что он ваш; работодатель видит «ответ подтверждён устно» или «расхождения» с цитатами. Грейд не меняет; оценивает модель, не человек. В копии жюри есть готовый пример — модельный кандидат, не человек.",
+  checks: "проверку ответов на списывание: авторство развёрнутого ответа", crit: `${C2} — самостоятельность ответов; 6. Доп. функции · 7 %` };
+/** Шаги короткого режима: без флага устной защиты — 8, с ним — 9 (шаг «по желанию» перед доказательствами). */
+export const quickSteps = (interview: boolean): QuickStep[] =>
+  interview ? [...QUICK.slice(0, -1), QUICK_INTERVIEW, QUICK[QUICK.length - 1]] : QUICK;
 /** Заготовки своей потребности (шаг 1): отрицание, нестандартный стек, роль вне каталога. Эксперт правит текст сам. */
 export const NEED_PRESETS = [
   { label: "Python, с отрицанием", text: "Ищем Python-разработчика middle: FastAPI, PostgreSQL, Docker. Django не нужен, PHP не нужен. Желательно Redis. Удалённо, 200–260 тыс. ₽" },

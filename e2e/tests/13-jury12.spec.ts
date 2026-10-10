@@ -5,9 +5,12 @@
  * доказательства → справочник. У каждого шага — «Проверяет» и «Критерий ТЗ», таймер-ориентир и прогресс.
  * 390: проводник не перекрывает действия шага (поле, «Разобрать требования», «Сохранить…», «Пригласить»), кнопки
  * проводника видны без прокрутки панели, горизонтальной прокрутки нет; свёрнутый — в шапке.
+ * Флаг устной защиты (Я15, /api/meta interview_enabled): шаг «по желанию» перед доказательствами, в план 12 минут не
+ * входит; без флага шагов 8 (два теста выше).
  */
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "../lib/fixtures";
+import { juryEnter } from "../lib/ui";
 
 const PY = "Ищем Python-разработчика middle: FastAPI, PostgreSQL, Docker. Django не нужен, PHP не нужен. Желательно Redis. Удалённо, 200–260 тыс. ₽";
 const POSITION = "Python-разработчик (Я9, 12 минут)";
@@ -236,5 +239,52 @@ test("390: проводник «12 минут» не перекрывает де
     expect(await pill.evaluate((el) => getComputedStyle(el).position)).toBe("static");
     await pill.click();
     await expect(g).toBeVisible();
+  });
+});
+
+test("устная защита по флагу (Я15): шаг «по желанию» перед доказательствами, 1440 и 390", async ({ page }) => {
+  test.setTimeout(180_000);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  // флаг сервера INTERVIEW_ENABLED по умолчанию выключен — включаем его только в ответе /api/meta этой страницы
+  await page.route("**/api/meta", async (route) => {
+    const r = await route.fetch();
+    await route.fulfill({ response: r, json: { ...(await r.json()), interview_enabled: true } });
+  });
+  await page.goto("/jury/go");
+  const choice = page.getByTestId("choice-quick");
+  await expect(choice.locator("ol > li")).toHaveCount(9);
+  await expect(choice).toContainText("8 шагов + 1 по желанию · около 12 минут");
+  await expect(choice.locator("ol > li").nth(7)).toContainText("Устная защита ответа · по желанию");
+  await expect(choice.locator("ol > li").nth(8)).toContainText("Доказательства одной кнопкой");
+
+  await juryEnter(page, "candidate_new");
+  await page.getByRole("button", { name: "Показать проводник для жюри" }).click();
+  const g = guideOf(page);
+  await expect(g.getByRole("button", { name: "Проверка за 12 минут" })).toHaveAttribute("aria-pressed", "true");
+  await page.goto("/candidate/category");
+  await expect(g.getByText(/^Шаг 7 из 9/)).toBeVisible({ timeout: 30_000 });
+  // обязательный путь не удлиняется: «Дальше» ведёт к доказательствам, устная защита — отдельной ссылкой
+  await expect(g.getByRole("button", { name: "Дальше: Доказательства одной кнопкой" })).toBeVisible();
+  const opt = g.getByTestId("quick-optional");
+  await expect(opt).toContainText("по желанию");
+  await opt.getByRole("button", { name: "Устная защита ответа" }).click();
+  await expect(page).toHaveURL(/\/candidate\/attempts/);
+  await expect(g.getByText(/^Шаг 8 из 9 · по желанию/)).toBeVisible();
+  await expect(g.getByText("Устная защита ответа · по желанию", { exact: true })).toBeVisible();
+  await expect(g).toContainText("Грейд не меняет; оценивает модель, не человек");
+  await expect(g.getByTestId("quick-timer")).toContainText("сверх плана 12");
+  await expect(g.getByText(/^Проверяет:/)).toBeVisible();
+  await expect(g.getByText(/^Критерий ТЗ 2\./)).toBeVisible();
+
+  await test.step("390: шаг «по желанию» помещается, кнопки на виду", async () => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForTimeout(300);  // ResizeObserver проводника пересчитывает место
+    const nextBtn = g.getByRole("button", { name: "Дальше: Доказательства одной кнопкой" });
+    expect(await onScreen(nextBtn), "«Дальше» видна без прокрутки панели").toBe(true);
+    expect((await g.boundingBox())!.height, "проводник не выше 40 % экрана").toBeLessThanOrEqual(844 * 0.4);
+    expect(await noHScroll(page), "без горизонтальной прокрутки").toBe(true);
+    await nextBtn.click();
+    await expect(page).toHaveURL(/\/criteria/);
+    await expect(g.getByText(/^Шаг 9 из 9/)).toBeVisible();
   });
 });
