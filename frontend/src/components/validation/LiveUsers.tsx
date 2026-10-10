@@ -38,6 +38,7 @@ export default function LiveUsers({ data: d }: { data: any }) {
   const roles = Object.keys(d.n.by_role).filter((r) => d.n.by_role[r].enrolled > 0);
   const share = d.completion;
   const sus = d.sus;
+  const susMin = d.sus_min_n ?? 5;  // n < 5 — балл SUS не результат (Я17)
   const p5 = d.p5;
   const steps = (ro: string) => d.step_titles?.[ro] ?? {};
   const stepKeys = (ro: string) => Object.keys(steps(ro));
@@ -57,7 +58,7 @@ export default function LiveUsers({ data: d }: { data: any }) {
         <K label="Медиана пути" value={d.time?.median_s != null ? `${fmtMin(d.time.median_s)}${NB}мин` : "—"}
           hint={d.time?.iqr_s ? `от начала сбора до конца пути · квартили ${fmtMin(d.time.iqr_s[0])} … ${fmtMin(d.time.iqr_s[1])}` : "от начала сбора до конца пути"} />
         <K label="SUS, 0–100" value={sus?.mean != null ? num(sus.mean, 1) : "—"}
-          hint={sus?.mean != null ? `n = ${sus.n}${sus.ci ? ` · ДИ 95 % ${ci(sus.ci)}` : ""} · ориентир ${num(sus.benchmark ?? d.scale?.sus_benchmark, 0)}` : `ответов: ${sus?.n ?? 0}, показываем от ${d.min_n}`} />
+          hint={sus?.mean != null ? `n = ${sus.n}${sus.ci ? ` · ДИ 95 % ${ci(sus.ci)}` : ""} · ориентир ${num(sus.benchmark ?? d.scale?.sus_benchmark, 0)}` : `пока недостаточно ответов (n = ${sus?.n ?? 0}), балл — от ${susMin} анкет`} />
       </div>
 
       <h3 className="mt-6 text-base font-bold text-brand-night">По ролям</h3>
@@ -69,7 +70,7 @@ export default function LiveUsers({ data: d }: { data: any }) {
             return [ROLE[r], d.n.by_role[r].enrolled, d.n.by_role[r].done,
               c ? <>{pct(c.share?.share)}{c.share?.ci && <span className="block text-xs text-brand-ink/65">{ci(c.share.ci, (v) => pct(v))}</span>}</> : small,
               t?.median_s != null ? `${fmtMin(t.median_s)}${NB}мин` : small,
-              s?.mean != null ? <>{num(s.mean, 1)}{s.ci && <span className="block text-xs text-brand-ink/65">{ci(s.ci)}</span>}</> : <span className="text-xs text-brand-ink/65">{s?.n ? `ответов: ${s.n}` : "нет ответов"}</span>];
+              s?.mean != null ? <>{num(s.mean, 1)}{s.ci && <span className="block text-xs text-brand-ink/65">{ci(s.ci)}</span>}</> : <span className="text-xs text-brand-ink/65">{s?.n ? `пока недостаточно ответов (n = ${s.n})` : `балл — от ${susMin} анкет`}</span>];
           })} />
       </div>
 
