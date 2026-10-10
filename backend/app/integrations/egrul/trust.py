@@ -35,6 +35,7 @@ from sqlalchemy.orm import Session
 from app.core.db import as_aware, utcnow
 from app.core.enums import InvitationStatus, ProbeStatus
 from app.core.fmt import ru_num
+from app.core.origin import fns_origin
 from app.integrations.egrul import demo as demo_mod
 from app.integrations.egrul.client import age_years, check_inn
 from app.integrations.egrul.models import RegistryCheck
@@ -375,6 +376,7 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
         "level_title": title, "preliminary": preliminary, "critical": critical,
         "demo": demo_mod.is_demo_company(company),  # сведения ФНС — демо (пометка «демо» в интерфейсе)
         "factors": factors, "registry": registry, "offer_salary": offer,
+        "origin": fns_origin(registry),  # Я8: сведения ФНС — модельные данные / реальный запрос / не проверено
         "salary_checks": salary_checks[:10],
         "summary": (reasons_bad[0]["text"] if reasons_bad else (reasons_ok[0]["text"] if reasons_ok else "")),
         "computed_at": utcnow().isoformat(),
@@ -383,4 +385,5 @@ def compute(db: Session, company: Company, *, invitation: Invitation | None = No
 
 
 def short(t: dict) -> dict:
-    return {k: t.get(k) for k in ("score", "level", "level_title", "preliminary", "critical", "summary", "offer_salary", "demo")}
+    return {k: t.get(k) for k in ("score", "level", "level_title", "preliminary", "critical", "summary", "offer_salary", "demo",
+                                  "origin")}
