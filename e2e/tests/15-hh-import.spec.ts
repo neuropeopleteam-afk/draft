@@ -24,6 +24,16 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: file, fullPage: true });
   await test.info().attach(name, { path: file, contentType: "image/png" });
 }
+/** Снимок блока; если страница ещё догружает соседние блоки (элемент «не стабилен») — снимок окна. */
+async function blockShot(page: Page, sec: Locator, name: string): Promise<void> {
+  await page.waitForLoadState("networkidle").catch(() => undefined);
+  try {
+    await sec.screenshot({ path: join(DIR, name), animations: "disabled", timeout: 30_000 });
+  } catch {
+    await sec.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(DIR, name) });
+  }
+}
 const noHScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
 
 /** axe-core по контейнеру: нарушений critical/serious нет (остальные — в отчёт). */
@@ -185,12 +195,12 @@ test("/validation: «Подбор на реальных вакансиях hh.ru
   await expect(page.getByRole("navigation", { name: "Разделы" }).getByRole("link", { name: "Подбор на hh.ru" })).toBeVisible();
   await sec.scrollIntoViewIfNeeded();
   expect(await noHScroll(page)).toBe(true);
-  await sec.screenshot({ path: join(DIR, "validation-match-1440.png") });
+  await blockShot(page, sec, "validation-match-1440.png");
   await axe(page, "section#hh-match", "блок подбора /validation 1440");
   await page.setViewportSize({ width: 390, height: 844 });
   await sec.scrollIntoViewIfNeeded();
   expect(await noHScroll(page), "/validation#hh-match, 390 px").toBe(true);
-  await sec.screenshot({ path: join(DIR, "validation-match-390.png") });
+  await blockShot(page, sec, "validation-match-390.png");
 });
 
 test("Кандидат: «Что сейчас просит рынок» в карте навыков — навыки hh.ru, статус и ссылка, 1440 и 390 (Я12б)", async ({ page }) => {
@@ -208,10 +218,10 @@ test("Кандидат: «Что сейчас просит рынок» в ка�
   if (await links.count()) await expect(links.first()).toHaveAttribute("href", /\/candidate\/(assessment|assignments)$/);
   await sec.scrollIntoViewIfNeeded();
   expect(await noHScroll(page)).toBe(true);
-  await sec.screenshot({ path: join(DIR, "feedback-market-1440.png") });
+  await blockShot(page, sec, "feedback-market-1440.png");
   await axe(page, "[data-testid=hh-market-skills]", "«Что просит рынок» 1440");
   await page.setViewportSize({ width: 390, height: 844 });
   await sec.scrollIntoViewIfNeeded();
   expect(await noHScroll(page), "/candidate/feedback, 390 px").toBe(true);
-  await sec.screenshot({ path: join(DIR, "feedback-market-390.png") });
+  await blockShot(page, sec, "feedback-market-390.png");
 });
