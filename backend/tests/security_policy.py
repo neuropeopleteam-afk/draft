@@ -194,7 +194,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/assessment/attempts"): "candidate",  # feat/attempts (И26): свои попытки; чужие a/b — 404
     ("GET", "/api/assessment/grade-hint"): "candidate",  # feat/jury-test
     ("GET", "/api/assessment/sessions/{session_id}/result"): "candidate_own",
-    ("GET", "/api/assessment/sessions/{session_id}/evidence"): "candidate_own",  # feat/evidence-grade (Я13)
+    ("GET", "/api/assessment/sessions/{session_id}/evidence"): "candidate_own",  # feat/evidence-grade
     ("POST", "/api/assessment/sessions/{session_id}/accept-lower"): "candidate_own",
     # камера по согласию (feat/proctor, pc01): только кандидат; сессия — своя (чужая → 404); работодателю API нет,
     # агрегат ФСП — аналитик и администратор (в песочнице жюри — персона «Федерация»)
@@ -266,7 +266,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/employer/candidates/{ref}"): "employer_ref",
     ("GET", "/api/employer/candidates/{ref}/profile.pdf"): "employer_ref",
     ("GET", "/api/employer/candidates/{ref}/attempts"): "employer_ref",  # feat/attempts (И26)
-    ("GET", "/api/employer/candidates/{ref}/evidence"): "employer_ref",  # feat/evidence-grade (Я13)
+    ("GET", "/api/employer/candidates/{ref}/evidence"): "employer_ref",  # feat/evidence-grade
     ("GET", "/api/employer/candidates/{ref}/passport"): ("employer_ref", {"employer": OK404, "employer_other": OK404,
                                                                              "jury_employer": OK404}),  # feat/passport
     ("POST", "/api/employer/needs/parse"): "employer",
@@ -401,7 +401,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("POST", "/api/validation/attacks/{attack_id}"): "auth404",  # attack_id=nope: вход проверяется, атаки нет
     ("GET", "/api/validation/junior-stability"): "open",  # feat/status
     ("GET", "/api/validation/grader-check"): "open",  # feat/integrity
-    ("GET", "/api/validation/evidence"): "open",  # feat/evidence-grade (Я13)
+    ("GET", "/api/validation/evidence"): "open",  # feat/evidence-grade
     ("GET", "/api/validation/llm-models"): "open",  # feat/llm-local
     ("GET", "/api/validation/ru-llm"): "open",  # замер «только российская модель»
     ("GET", "/api/validation/strongest"): "open",  # сильнейшие модели по функциям
