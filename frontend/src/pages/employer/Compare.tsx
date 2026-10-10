@@ -20,6 +20,9 @@ interface CompareOut { need: { id: string; title: string; raw_text: string; vers
 
 const pts = (x: number) => Math.abs(x).toFixed(1).replace(".", ",");
 
+/** Код кандидата «C-8D3YPW» не переносится по дефису. */
+const nowrapRefs = (t: string) => t.split(/(C-[A-Z0-9]+)/).map((p, i) => (i % 2 ? <span key={i} className="whitespace-nowrap">{p}</span> : p));
+
 /** «Почему A выше B»: вклад подтверждённых фактов в разницу скоров. */
 function WhyBlock({ why }: { why: Why[] }) {
   if (!why?.length) return null;
@@ -40,7 +43,7 @@ function WhyBlock({ why }: { why: Why[] }) {
             {w.con.map((f, i) => (
               <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><Level level={f.level} /><span className="flex-1">В пользу {w.lower}: {ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-brand-plum">−{pts(f.points)}</span></p>
             ))}
-            {w.core_note && <p className="mt-2 border-t border-brand-ink/10 pt-2 font-semibold text-amber-900" data-testid="why-core-note">{w.core_note}.</p>}
+            {w.core_note && <p className="mt-2 border-t border-brand-ink/10 pt-2 font-semibold text-amber-900" data-testid="why-core-note">{nowrapRefs(w.core_note)}.</p>}
           </li>
         ))}
       </ul>
