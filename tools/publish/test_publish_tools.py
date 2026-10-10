@@ -112,6 +112,32 @@ class ThirdParty(unittest.TestCase):
         r = run(str(HERE / "gen_third_party.py"), "--check", cwd=ROOT)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
+class ServerEnvValues(unittest.TestCase):
+    ENV = ("##FILE secrets/llm.env\nLLM_API_KEY=abcDEF123456\nLLM_BASE_URL=https://api.example.invalid/v1\nLLM_MODEL=short\n"
+           "##FILE app/.env\n# комментарий\nJWT_SECRET=\nPOSTGRES_PASSWORD=pg-пароль-1234\nVAPID_PUBLIC_KEY=pubpubpubpub\nAPP_PORT=8141\n"
+           "##FILE secrets/stand.pw\nstand-pass-777\n")
+
+    def test_parse_takes_secret_keys_only(self) -> None:
+        sys.path.insert(0, str(HERE))
+        import server_env_values as sev
+
+        got = sev.parse(self.ENV)
+        self.assertEqual(set(got), {"abcDEF123456", "pg-пароль-1234", "stand-pass-777"})
+        self.assertEqual(got["abcDEF123456"], "server:secrets/llm.env:LLM_API_KEY")
+        self.assertEqual(got["stand-pass-777"], "server:secrets/stand.pw")
+        variants = sev.with_variants(got)
+        self.assertGreater(len(variants), len(got))  # URL, JSON и Basic-варианты
+        self.assertTrue(any(src.endswith("+basic") for src in variants.values()))
+
+    def test_stdout_is_json_lines_and_terminal_is_refused(self) -> None:
+        r = subprocess.run([sys.executable, str(HERE / "server_env_values.py")], input=self.ENV, capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        rows = [json.loads(x) for x in r.stdout.splitlines()]
+        self.assertTrue(all({"v", "src"} <= set(x) for x in rows))
+        self.assertNotIn("abcDEF123456", r.stderr)  # значения не попадают в сообщения
+        empty = subprocess.run([sys.executable, str(HERE / "server_env_values.py")], input="нет значений\n", capture_output=True, text=True)
+        self.assertEqual(empty.returncode, 2)
+
 
 if __name__ == "__main__":
     unittest.main()
