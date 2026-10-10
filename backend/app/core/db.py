@@ -71,15 +71,26 @@ SessionLocal = sessionmaker(autoflush=False, expire_on_commit=False)
 
 def init_engine(url: str | None = None) -> Engine:
     global _engine
-    url = url or get_settings().database_url
+    s = get_settings()
+    url = url or s.database_url
     kwargs: dict = {"pool_pre_ping": True}
     if url.startswith("sqlite"):
         # timeout — ожидание снятия блокировки файла (по умолчанию 5 с): фоновые потоки (подготовка песочницы жюри,
         # лента заданий, подписки) пишут параллельно с запросами, и локальный стенд на SQLite ловил «database is locked»
         kwargs = {"connect_args": {"check_same_thread": False, "timeout": 30}}
+    if url != "sqlite://" and ":memory:" not in url:  # у файла SQLite и PostgreSQL — QueuePool (в памяти — другой пул)
+        # размер пула на воркер и ожидание соединения — config.py (db_pool_size …): дольше ожидания — 503 db_busy
+        kwargs |= {"pool_size": s.db_pool_size, "max_overflow": s.db_max_overflow, "pool_timeout": s.db_pool_timeout_s}
     _engine = create_engine(url, **kwargs)
     SessionLocal.configure(bind=_engine)
     return _engine
+
+
+def release(db: Session) -> None:
+    """Вернуть соединение в пул до долгой работы без БД (вызов модели, расчёт на CPU): фиксирует транзакцию, объекты
+    остаются доступны (expire_on_commit=False), следующий запрос к БД возьмёт соединение заново. 10.10 под нагрузкой
+    запросы держали соединение всё время расчёта, и пул (на воркер) исчерпывался."""
+    db.commit()
 
 
 def get_engine() -> Engine:

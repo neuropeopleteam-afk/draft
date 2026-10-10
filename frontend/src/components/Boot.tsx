@@ -1,7 +1,7 @@
 // Я16: устойчивая загрузка — ни одного белого экрана. Сторож до запуска — встроенный скрипт index.html
 // (window.__fspBoot); здесь — то, что видно после запуска: загрузка ленивого экрана, ошибка загрузки экрана,
 // падение экрана (ErrorBoundary верхнего уровня и по маршруту), сервер не отвечает на старте (StartupError).
-// Соединения из-за рубежа (VPN, облачные браузеры) с сервером в Москве обрываются на ~16 КБ (замер штаба 10.10):
+// Соединения из-за рубежа (VPN, облачные браузеры) с сервером в Москве обрываются на ~16 КБ (замер 10.10):
 // при обрыве помогают только понятное сообщение и повтор — отсюда подсказка про VPN.
 import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
@@ -55,10 +55,20 @@ function Screen({ title, text, children, note, full = true }: { title: string; t
     : <div data-boot-screen className={`${cls} min-h-[50vh]`}>{body}</div>;
 }
 
-/** Экран ошибки загрузки или падения. Ошибка загрузки файла экрана — одна автоматическая повторная загрузка. */
+/** Пауза перед автоматической повторной загрузкой: человек успевает прочитать, что происходит (как у сторожа
+ *  index.html), а не видит мигание страницы. */
+const AUTO_RELOAD_MS = 1500;
+
+/** Экран ошибки загрузки или падения. Ошибка загрузки файла экрана — одна автоматическая повторная загрузка
+ *  (через 1,5 с; лимит — сторож index.html: не чаще раза в 2 мин), дальше — только по кнопке. */
 function CrashScreen({ error, full, onRetry }: { error: unknown; full?: boolean; onRetry?: () => void }) {
   const chunk = isChunkError(error);
-  const [auto] = useState(() => chunk && !!window.__fspBoot?.retry());
+  const [auto] = useState(() => chunk && !!window.__fspBoot?.canAuto());
+  useEffect(() => {
+    if (!auto) return;
+    const t = window.setTimeout(() => { window.__fspBoot?.retry(); }, AUTO_RELOAD_MS);
+    return () => window.clearTimeout(t);
+  }, [auto]);
   if (chunk) {
     return (
       <Screen full={full} title="Раздел не загрузился"
@@ -90,17 +100,19 @@ export class AppErrorBoundary extends Component<{ children: ReactNode }, BState>
   }
 }
 
-class KeyedBoundary extends Component<{ children: ReactNode; resetKey: string; full: boolean }, BState> {
+/** ErrorBoundary со сбросом по ключу (адрес страницы): переход по меню — новая попытка без перезагрузки.
+ *  Он же — ErrorBoundary из components/ErrorBoundary.tsx (ветка ops/load): экран ошибки один на всё приложение. */
+export class KeyedBoundary extends Component<{ children: ReactNode; resetKey?: string; full?: boolean }, BState> {
   state: BState = { error: null };
   static getDerivedStateFromError(error: unknown): Partial<BState> { return { error }; }
-  static getDerivedStateFromProps(p: { resetKey: string }, s: BState): Partial<BState> | null {
+  static getDerivedStateFromProps(p: { resetKey?: string }, s: BState): Partial<BState> | null {
     // переход на другой адрес — новая попытка (ошибка одного экрана не закрывает остальные)
     return s.key !== p.resetKey ? { error: null, key: p.resetKey } : null;
   }
   componentDidCatch(error: unknown, info: ErrorInfo) { console.error("Экран упал:", error, info.componentStack); }
   render() {
     return this.state.error != null
-      ? <CrashScreen error={this.state.error} full={this.props.full} onRetry={isChunkError(this.state.error) ? undefined : () => this.setState({ error: null })} />
+      ? <CrashScreen error={this.state.error} full={this.props.full ?? true} onRetry={isChunkError(this.state.error) ? undefined : () => this.setState({ error: null })} />
       : this.props.children;
   }
 }
@@ -114,19 +126,25 @@ export function RouteBoundary({ children, inline = false }: { children: ReactNod
 const SLOW_MS = 10_000;
 
 /** Пока грузится файл экрана (React.lazy): «Загружаем…» (через 0,3 с — без мигания на быстрой сети);
- *  через 10 с — сообщение, «Обновить страницу» и одна автоматическая повторная загрузка (сторож index.html). */
+ *  через 10 с — сообщение, «Обновить страницу» и через 1,5 с одна автоматическая повторная загрузка (сторож index.html). */
 export function RouteFallback({ inline = false }: { inline?: boolean }) {
   const [stage, setStage] = useState<"quiet" | "wait" | "slow">("quiet");
   const [auto, setAuto] = useState(false);
   useEffect(() => {
     const a = window.setTimeout(() => setStage("wait"), 300);
-    const b = window.setTimeout(() => { setStage("slow"); setAuto(!!window.__fspBoot?.retry()); }, SLOW_MS);
-    return () => { window.clearTimeout(a); window.clearTimeout(b); };
+    let c = 0;
+    const b = window.setTimeout(() => {
+      setStage("slow");
+      const can = !!window.__fspBoot?.canAuto();
+      setAuto(can);
+      if (can) c = window.setTimeout(() => { window.__fspBoot?.retry(); }, AUTO_RELOAD_MS);
+    }, SLOW_MS);
+    return () => { window.clearTimeout(a); window.clearTimeout(b); window.clearTimeout(c); };
   }, []);
   if (stage === "slow") {
     return (
       <Screen full={!inline} title="Раздел загружается дольше обычного"
-        text="Связь с сервером медленная или прервалась. Обычно помогает обновление страницы."
+        text={`Связь с сервером медленная или прервалась. ${VPN}`}
         note={auto ? "Пробуем загрузить ещё раз…" : undefined}>
         <button type="button" className="btn-primary" onClick={hardReload}>Обновить</button>
       </Screen>

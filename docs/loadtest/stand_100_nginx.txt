@@ -1,0 +1,20 @@
+# Журнал nginx стенда: запросы с User-Agent «spectrek-load/stand_100» (всплеск — «spectrek-load/stand_100-burst»)
+
+Прогон: строк журнала 8261; коды: 200 — 8120, 201 — 55, 302 — 37, 409 — 1, 429 — 5, 500 — 35, 504 — 8
+    500 /api/employer/needs: 7
+    504 /api/validation/report: 7
+    429 /api/validation/attacks: 5
+    500 /api/candidate/invitations: 4
+    500 /api/assessment/status: 4
+    500 /api/assessment/feedback: 3
+    500 /api/assessment/sessions: 3
+    500 /api/validation/report: 2
+    500 /api/employer/categories: 2
+    500 /api/study/summary: 2
+    500 /api/candidate/probes: 2
+    500 /api/employer/invitations: 1
+    500 /api/employer/candidates: 1
+    504 /api/validation/attacks: 1
+    500 /api/assessment/attempts: 1
+Всплеск: строк журнала 15; коды: 200 — 15
+Locust: запросов 8217 (без событий фоновой модели 6), из них без ответа (код 0, обрыв связи) 0; дошло до nginx 8261 — разница -44
