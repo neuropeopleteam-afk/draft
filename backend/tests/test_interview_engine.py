@@ -338,8 +338,18 @@ def test_stt_live(monkeypatch):
         e.stt(b"x" * (stt.MAX_BYTES + 1))
 
 
+def test_avatar_disabled_by_default(monkeypatch):
+    _live(monkeypatch, ANAM_API_KEY="k", ANAM_AVATAR_ID="av-1")
+    assert e.get_interview_settings().interview_avatar_enabled is False
+    with pytest.raises(e.EngineError) as ei:
+        e.avatar_token()
+    assert ei.value.code == "avatar_unavailable" and "выключен" in ei.value.message
+    st = e.status()
+    assert st["channels"]["avatar"] is False and st["avatar_enabled"] is False and st["channels"]["voice"] is False
+
+
 def test_avatar_live(monkeypatch):
-    _live(monkeypatch, ANAM_API_KEY="k", ANAM_AVATAR_ID="av-1", INTERVIEW_TURN_URLS="stun:1.2.3.4:3478,turn:1.2.3.4:3478?transport=udp",
+    _live(monkeypatch, INTERVIEW_AVATAR_ENABLED="1", ANAM_API_KEY="k", ANAM_AVATAR_ID="av-1", INTERVIEW_TURN_URLS="stun:1.2.3.4:3478,turn:1.2.3.4:3478?transport=udp",
           INTERVIEW_TURN_SECRET="s3", INTERVIEW_TURN_ONLY="1", INTERVIEWER_NAME="Интервьюер")
     calls = _fake_request(monkeypatch, lambda c: httpx.Response(200, json={"sessionToken": "tok"}))
     t = e.avatar_token()
