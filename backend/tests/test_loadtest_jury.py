@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import random
 import sys
 from pathlib import Path
@@ -152,7 +153,11 @@ def test_run_load_nginx_counts_only_tagged_lines(tmp_path, monkeypatch):
             ("GET /api/employer/needs/7/compare", 502, "spectrek-load/t"),
             ("POST /api/jury/login", 200, "spectrek-load/t-burst"), ("GET /", 200, "Mozilla/5.0"),
             ("GET /api/meta", 200, "spectrek-load/t2")]
-    (logs / "access.log").write_text("".join(ln.format(i=i, req=r, code=c, ua=u) for i, (r, c, u) in enumerate(rows)))
+    # строка прерванного прогона с тем же тегом раньше окна (start − 5 с) — не считается
+    old = '203.0.113.7 - - [10/Oct/2026:21:50:00 +0300] "GET /api/meta HTTP/1.1" 500 12 "-" "spectrek-load/t"\n'
+    (logs / "access.log").write_text(old + "".join(ln.format(i=i, req=r, code=c, ua=u) for i, (r, c, u) in enumerate(rows)))
+    (out / "t_meta.json").write_text(json.dumps({"user_agent": "spectrek-load/t", "start": "2026-10-10T19:00:00+0000",
+                                                "end": "2026-10-10T22:00:30+0300"}))
     monkeypatch.setattr(m, "OUT", out)
     monkeypatch.setattr(m, "NGINX_LOG_DIR", str(logs))
     monkeypatch.setattr(m, "KPY", "k.py")

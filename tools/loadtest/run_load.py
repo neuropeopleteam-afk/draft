@@ -31,6 +31,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -394,7 +395,23 @@ def nginx(a) -> None:
         return
     meta = json.loads((OUT / f"{a.tag}_meta.json").read_text()) if (OUT / f"{a.tag}_meta.json").exists() else {}
     ua = meta.get("user_agent", f"spectrek-load/{a.tag}")
-    awk = ("awk '{st=$9; path=$7; sub(/\\?.*/, \"\", path); n=split(path, s, \"/\"); "
+    # Окно времени прогона из meta (start − 5 с … end + 60 с): прерванный прогон с тем же тегом (10.10: первая попытка
+    # stand_100 в 12:53) иначе добавлял свои строки к сверке. Время строки — по $4 и смещению $5 ([10/Oct/2026:10:05:31
+    # +0300]), в секунды эпохи — арифметикой (mktime есть не во всех awk).
+    lo, hi = 0, 10 ** 11
+    try:
+        lo = int(datetime.strptime(meta["start"], "%Y-%m-%dT%H:%M:%S%z").timestamp()) - 5
+        hi = int(datetime.strptime(meta["end"], "%Y-%m-%dT%H:%M:%S%z").timestamp()) + 60
+    except (KeyError, ValueError):
+        pass
+    win = ("BEGIN{split(\"Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec\", M, \" \"); for (i=1;i<=12;i++) mm[M[i]]=i} "
+           "{t=substr($4,2); y=substr(t,8,4)+0; mo=mm[substr(t,4,3)]; d=substr(t,1,2)+0; "
+           "z=substr($5,1,5); off=(substr(z,2,2)*3600+substr(z,4,2)*60)*(substr(z,1,1)==\"-\" ? -1 : 1); "
+           "yy=y-(mo<=2); era=int(yy/400); yoe=yy-era*400; doy=int((153*(mo+(mo>2 ? -3 : 9))+2)/5)+d-1; "
+           "doe=yoe*365+int(yoe/4)-int(yoe/100)+doy; "
+           "ep=(era*146097+doe-719468)*86400+substr(t,13,2)*3600+substr(t,16,2)*60+substr(t,19,2)-off; "
+           f"if (ep<{lo} || ep>{hi}) next}} ")
+    awk = ("awk '" + win + "{st=$9; path=$7; sub(/\\?.*/, \"\", path); n=split(path, s, \"/\"); "
            "pre=(s[2]==\"x\") ? \"/x/<токен>\" : ((s[2]==\"api\") ? \"/\" s[2] \"/\" s[3] \"/\" s[4] : \"/\" s[2]); "
            "c[st]++; if (st !~ /^[23]/) f[st \" \" pre]++} END {for (k in c) print \"code\", k, c[k]; "
            "for (k in f) print \"fail\", k, f[k]}'")
