@@ -70,7 +70,7 @@ test("потребность: ст. 64 → цитаты и предупрежд�
   await test.step("сравнение трёх кандидатов рядом", async () => {
     const compare = main.getByRole("button", { name: /^Сравнить выбранных \(\d\)$/ });
     await expect(compare).toBeDisabled();
-    const picks = main.getByRole("checkbox", { name: "выбрать", exact: true });
+    const picks = main.getByRole("checkbox", { name: "Сравнить", exact: true });  // Я10: галочка «Сравнить» на компактной карточке
     for (let i = 0; i < 3; i++) await picks.nth(i).check();
     await expect(compare).toHaveText("Сравнить выбранных (3)");
     await compare.click();
