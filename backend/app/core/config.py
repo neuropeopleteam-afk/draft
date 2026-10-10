@@ -170,6 +170,13 @@ class Settings(BaseSettings):
     # И27: вторая оценка спорных ответов — в фоне (итог теста её не ждёт, результат дописывается в оценку с пометкой
     # «пересмотрено второй моделью»); false — как раньше, синхронно внутри ответа кандидата
     llm_grading_second_async: bool = True
+    # Я13 (assessment/evidence.py, docs/LLM.md «Доказательная оценка»): цитаты по пунктам рубрики, сверенные кодом
+    # (пункт без подтверждённой цитаты — на шаг ниже), «скептик» для высоких (≥ GRADING_SKEPTIC_HIGH) и спорных
+    # оценок со сборкой итога кодом; выключено — промпт v2 и вторая оценка, как раньше. Модель скептика — цепочка
+    # grade_second или явная GRADING_SKEPTIC_MODEL (одна попытка, без цепочки)
+    grading_evidence: bool = False
+    grading_skeptic_high: float = 0.75
+    grading_skeptic_model: str | None = None
     # И27: кэш разбора потребности по нормализованному тексту (таблица need_parse_jobs), с; 0 — без кэша
     parse_cache_ttl_s: int = 3600
 
