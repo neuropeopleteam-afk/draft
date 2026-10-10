@@ -105,12 +105,18 @@ def _find_seq(hay: list[str], needle: list[str], start: int = 0) -> int:
     return -1
 
 
-def _match(at: list[str], qt: list[str], start: int = 0) -> tuple[int, bool]:
+def _neg_before(toks: list[str], sp: list[tuple[int, int]], text: str, i: int) -> bool:
+    """Перед словом i стоит отрицание, отделённое только пробелом («не следует»); «Нет: в READ COMMITTED …» —
+    ответ на вопрос, а не отрицание следующих слов."""
+    return i > 0 and toks[i - 1] in NEG and not text[sp[i - 1][1]:sp[i][0]].strip()
+
+
+def _match(at: list[str], sp: list[tuple[int, int]], text: str, qt: list[str], start: int = 0) -> tuple[int, bool]:
     """Первое вхождение без отрицания прямо перед ним → (позиция | -1, встречалось ли вхождение после отрицания)."""
     negated = False
     i = _find_seq(at, qt, start)
     while i >= 0:
-        if i == 0 or at[i - 1] not in NEG:
+        if not _neg_before(at, sp, text, i):
             return i, negated
         negated = True
         i = _find_seq(at, qt, i + 1)
@@ -129,19 +135,18 @@ def verify_quote(quote: str, answer: str, task_text: str = "") -> dict:
     qt = _toks(q)
     if len(qt) < MIN_TOKENS or len("".join(qt)) < MIN_CHARS:
         return {"ok": False, "how": None, "why": "too_short"}
-    at, sp = _spans(answer or "")
+    answer = answer or ""
+    at, sp = _spans(answer)
     parts = [p for p in (_toks(x) for x in _ELLIPSIS.split(q)) if p]
-    how, spans, negated = None, [], False
-    if len(parts) <= 1:
-        i, negated = _match(at, qt)
-        if i >= 0:
-            spans = [(sp[i][0], sp[i + len(qt) - 1][1])]
-            core = _ELLIPSIS.sub(" ", q).strip(" \"'.,;:")
-            how = "exact" if norm_text(answer[spans[0][0]:spans[0][1]]) == core else "tokens"
-    elif all(len(p) >= MIN_TOKENS for p in parts):
+    how, spans = None, []
+    i, negated = _match(at, sp, answer, qt)  # сначала — все слова подряд («…» бывает и в самом ответе, в коде)
+    if i >= 0:
+        spans = [(sp[i][0], sp[i + len(qt) - 1][1])]
+        how = "exact" if norm_text(answer[spans[0][0]:spans[0][1]]) == q.strip(" \"'.,;:") else "tokens"
+    elif len(parts) >= 2 and all(len(p) >= MIN_TOKENS for p in parts):
         pos = 0
         for p in parts:
-            i, neg = _match(at, p, pos)
+            i, neg = _match(at, sp, answer, p, pos)
             negated = negated or neg
             if i < 0:
                 spans = []
@@ -161,15 +166,16 @@ def negation_consistent(quote: str, answer: str) -> bool:
     """Для прежней нечёткой сверки (промпт v2, флаг выключен): слово цитаты, перед которым в цитате стоит отрицание,
     должно хоть раз стоять с отрицанием и в ответе, и наоборот. Ловит «данные НЕ следует удалять» при ответе «данные
     следует удалять» и «следует удалять» при ответе «не следует удалять» (находка судьи Я5, 10.10)."""
-    qt, at = _toks(quote), _toks(answer)
+    quote, answer = quote or "", answer or ""
+    (qt, qs), (at, asp) = _spans(quote), _spans(answer)
     states: dict[str, set[bool]] = {}
     for i, w in enumerate(at):
         if w not in NEG:
-            states.setdefault(w, set()).add(i > 0 and at[i - 1] in NEG)
+            states.setdefault(w, set()).add(_neg_before(at, asp, answer, i))
     for i, w in enumerate(qt):
         if w in NEG or w not in states:
             continue
-        if (i > 0 and qt[i - 1] in NEG) not in states[w]:
+        if _neg_before(qt, qs, quote, i) not in states[w]:
             return False
     return True
 

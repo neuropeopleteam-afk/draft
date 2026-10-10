@@ -1,7 +1,7 @@
 {
  "title": "Флаг GRADING_EVIDENCE выкл/вкл на одних и тех же ответах моделей (без скептика, без запросов)",
- "date": "2026-10-10 10:57",
- "code_sha": "a52a6ca",
+ "date": "2026-10-10 11:05",
+ "code_sha": "888bf29",
  "note": "Ответы моделей — прогоны Я2 09–10.10 (промпт v2, одна цитата на пункт); флаг вкл здесь — только код: строгая сверка цитат и шаг вниз без подтверждённой цитаты; скептик и промпт v3 — в evidence_bench.json. Эталон — модели, не люди.",
  "sample": {
   "n": 50,
@@ -12,14 +12,13 @@
    "quotes": {
     "answers": 406,
     "quotes": 502,
-    "dropped": 9,
+    "dropped": 4,
     "dropped_why": {
-     "not_found": 7,
-     "negation": 2
+     "not_found": 4
     },
-    "capped_criteria": 9,
-    "answers_changed": 8,
-    "abs_change_sum": 1.725
+    "capped_criteria": 4,
+    "answers_changed": 4,
+    "abs_change_sum": 0.775
    },
    "sample_off": {
     "mae": {
@@ -75,26 +74,26 @@
    },
    "sample_on": {
     "mae": {
-     "value": 0.03,
+     "value": 0.015,
      "ci90": [
-      0.009,
-      0.057
+      0.007,
+      0.024
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.952,
+     "value": 0.991,
      "ci90": [
-      0.868,
+      0.971,
       1.0
      ],
      "n": 25
     },
     "bias": {
-     "value": -0.021,
+     "value": -0.006,
      "ci90": [
-      -0.051,
-      0.0
+      -0.016,
+      0.003
      ],
      "n": 25
     },
@@ -107,9 +106,9 @@
      "n": 25
     },
     "exact_bin": {
-     "value": 0.92,
+     "value": 0.96,
      "ci90": [
-      0.84,
+      0.88,
       1
      ],
      "n": 25
@@ -179,26 +178,26 @@
    },
    "sample_on_three": {
     "mae": {
-     "value": 0.046,
+     "value": 0.031,
      "ci90": [
-      0.021,
-      0.076
+      0.016,
+      0.048
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.936,
+     "value": 0.974,
      "ci90": [
-      0.852,
-      0.99
+      0.941,
+      0.993
      ],
      "n": 25
     },
     "bias": {
-     "value": -0.034,
+     "value": -0.019,
      "ci90": [
-      -0.065,
-      -0.006
+      -0.037,
+      -0.002
      ],
      "n": 25
     },
@@ -211,9 +210,9 @@
      "n": 25
     },
     "exact_bin": {
-     "value": 0.84,
+     "value": 0.88,
      "ci90": [
-      0.72,
+      0.76,
       0.96
      ],
      "n": 25
@@ -235,14 +234,11 @@
    "quotes": {
     "answers": 50,
     "quotes": 44,
-    "dropped": 3,
-    "dropped_why": {
-     "not_found": 2,
-     "negation": 1
-    },
-    "capped_criteria": 3,
-    "answers_changed": 2,
-    "abs_change_sum": 0.575
+    "dropped": 0,
+    "dropped_why": {},
+    "capped_criteria": 0,
+    "answers_changed": 0,
+    "abs_change_sum": 0.0
    },
    "sample_off": {
     "mae": {
@@ -298,26 +294,26 @@
    },
    "sample_on": {
     "mae": {
-     "value": 0.035,
+     "value": 0.02,
      "ci90": [
-      0.013,
-      0.063
+      0.009,
+      0.032
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.952,
+     "value": 0.982,
      "ci90": [
-      0.871,
+      0.957,
       1.0
      ],
      "n": 25
     },
     "bias": {
-     "value": -0.017,
+     "value": 0.006,
      "ci90": [
-      -0.046,
-      0.007
+      -0.008,
+      0.02
      ],
      "n": 25
     },
@@ -402,26 +398,26 @@
    },
    "sample_on_three": {
     "mae": {
-     "value": 0.051,
+     "value": 0.028,
      "ci90": [
-      0.025,
-      0.081
+      0.015,
+      0.043
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.936,
+     "value": 0.983,
      "ci90": [
-      0.856,
-      0.988
+      0.955,
+      1.0
      ],
      "n": 25
     },
     "bias": {
-     "value": -0.032,
+     "value": -0.009,
      "ci90": [
-      -0.064,
-      -0.002
+      -0.025,
+      0.008
      ],
      "n": 25
     },
@@ -434,10 +430,10 @@
      "n": 25
     },
     "exact_bin": {
-     "value": 0.84,
+     "value": 0.92,
      "ci90": [
-      0.72,
-      0.96
+      0.84,
+      1
      ],
      "n": 25
     },
@@ -900,14 +896,13 @@
    "quotes": {
     "answers": 50,
     "quotes": 42,
-    "dropped": 4,
+    "dropped": 2,
     "dropped_why": {
-     "not_found": 3,
-     "negation": 1
+     "not_found": 2
     },
-    "capped_criteria": 4,
-    "answers_changed": 3,
-    "abs_change_sum": 0.775
+    "capped_criteria": 2,
+    "answers_changed": 2,
+    "abs_change_sum": 0.4
    },
    "sample_off": {
     "mae": {
@@ -963,26 +958,26 @@
    },
    "sample_on": {
     "mae": {
-     "value": 0.08,
+     "value": 0.07,
      "ci90": [
-      0.046,
-      0.123
+      0.04,
+      0.106
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.934,
+     "value": 0.955,
      "ci90": [
-      0.843,
-      0.988
+      0.91,
+      0.982
      ],
      "n": 25
     },
     "bias": {
-     "value": 0.003,
+     "value": 0.018,
      "ci90": [
-      -0.044,
-      0.048
+      -0.019,
+      0.058
      ],
      "n": 25
     },
@@ -995,10 +990,10 @@
      "n": 25
     },
     "exact_bin": {
-     "value": 0.84,
+     "value": 0.8,
      "ci90": [
-      0.68,
-      0.96
+      0.64,
+      0.92
      ],
      "n": 25
     },
@@ -1067,26 +1062,26 @@
    },
    "sample_on_three": {
     "mae": {
-     "value": 0.082,
+     "value": 0.067,
      "ci90": [
-      0.047,
-      0.123
+      0.038,
+      0.103
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.927,
+     "value": 0.965,
      "ci90": [
-      0.838,
-      0.98
+      0.924,
+      0.991
      ],
      "n": 25
     },
     "bias": {
-     "value": 0.001,
+     "value": 0.016,
      "ci90": [
-      -0.046,
-      0.047
+      -0.021,
+      0.055
      ],
      "n": 25
     },
@@ -1099,10 +1094,10 @@
      "n": 25
     },
     "exact_bin": {
-     "value": 0.8,
+     "value": 0.84,
      "ci90": [
-      0.64,
-      0.92
+      0.68,
+      0.96
      ],
      "n": 25
     },
@@ -1123,14 +1118,13 @@
    "quotes": {
     "answers": 48,
     "quotes": 40,
-    "dropped": 4,
+    "dropped": 2,
     "dropped_why": {
-     "not_found": 3,
-     "negation": 1
+     "not_found": 2
     },
-    "capped_criteria": 4,
-    "answers_changed": 2,
-    "abs_change_sum": 0.7
+    "capped_criteria": 2,
+    "answers_changed": 1,
+    "abs_change_sum": 0.325
    },
    "sample_off": {
     "mae": {
@@ -1186,26 +1180,26 @@
    },
    "sample_on": {
     "mae": {
-     "value": 0.051,
+     "value": 0.041,
      "ci90": [
-      0.013,
-      0.095
+      0.012,
+      0.074
      ],
      "n": 23
     },
     "kappa_w": {
-     "value": 0.943,
+     "value": 0.963,
      "ci90": [
-      0.855,
-      0.992
+      0.924,
+      0.99
      ],
      "n": 23
     },
     "bias": {
-     "value": -0.01,
+     "value": 0.007,
      "ci90": [
-      -0.055,
-      0.032
+      -0.028,
+      0.041
      ],
      "n": 23
     },
@@ -1218,9 +1212,9 @@
      "n": 23
     },
     "exact_bin": {
-     "value": 0.87,
+     "value": 0.826,
      "ci90": [
-      0.739,
+      0.696,
       0.957
      ],
      "n": 23
@@ -1290,26 +1284,26 @@
    },
    "sample_on_three": {
     "mae": {
-     "value": 0.056,
+     "value": 0.039,
      "ci90": [
-      0.021,
-      0.099
+      0.015,
+      0.067
      ],
      "n": 23
     },
     "kappa_w": {
-     "value": 0.935,
+     "value": 0.973,
      "ci90": [
-      0.847,
-      0.99
+      0.94,
+      0.993
      ],
      "n": 23
     },
     "bias": {
-     "value": -0.016,
+     "value": 0.0,
      "ci90": [
-      -0.062,
-      0.022
+      -0.031,
+      0.029
      ],
      "n": 23
     },
@@ -1322,9 +1316,9 @@
      "n": 23
     },
     "exact_bin": {
-     "value": 0.826,
+     "value": 0.87,
      "ci90": [
-      0.696,
+      0.739,
       0.957
      ],
      "n": 23
@@ -1566,13 +1560,11 @@
    "quotes": {
     "answers": 50,
     "quotes": 44,
-    "dropped": 1,
-    "dropped_why": {
-     "not_found": 1
-    },
-    "capped_criteria": 1,
-    "answers_changed": 1,
-    "abs_change_sum": 0.2
+    "dropped": 0,
+    "dropped_why": {},
+    "capped_criteria": 0,
+    "answers_changed": 0,
+    "abs_change_sum": 0.0
    },
    "sample_off": {
     "mae": {
@@ -1628,26 +1620,26 @@
    },
    "sample_on": {
     "mae": {
-     "value": 0.038,
+     "value": 0.03,
      "ci90": [
       0.013,
-      0.069
+      0.052
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.937,
+     "value": 0.965,
      "ci90": [
-      0.858,
-      0.988
+      0.924,
+      0.99
      ],
      "n": 25
     },
     "bias": {
-     "value": -0.016,
+     "value": -0.007,
      "ci90": [
-      -0.048,
-      0.013
+      -0.03,
+      0.014
      ],
      "n": 25
     },
@@ -1732,26 +1724,26 @@
    },
    "sample_on_three": {
     "mae": {
-     "value": 0.04,
+     "value": 0.032,
      "ci90": [
-      0.018,
-      0.069
+      0.017,
+      0.05
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.947,
+     "value": 0.974,
      "ci90": [
-      0.87,
+      0.943,
       0.992
      ],
      "n": 25
     },
     "bias": {
-     "value": -0.026,
+     "value": -0.018,
      "ci90": [
-      -0.056,
-      0.0
+      -0.036,
+      0.002
      ],
      "n": 25
     },
@@ -2008,13 +2000,11 @@
    "quotes": {
     "answers": 46,
     "quotes": 33,
-    "dropped": 1,
-    "dropped_why": {
-     "not_found": 1
-    },
-    "capped_criteria": 1,
-    "answers_changed": 1,
-    "abs_change_sum": 0.2
+    "dropped": 0,
+    "dropped_why": {},
+    "capped_criteria": 0,
+    "answers_changed": 0,
+    "abs_change_sum": 0.0
    },
    "sample_off": {
     "mae": {
@@ -2070,26 +2060,26 @@
    },
    "sample_on": {
     "mae": {
-     "value": 0.03,
+     "value": 0.021,
      "ci90": [
-      0.01,
-      0.054
+      0.004,
+      0.04
      ],
      "n": 21
     },
     "kappa_w": {
-     "value": 0.98,
+     "value": 0.99,
      "ci90": [
-      0.951,
+      0.968,
       1.0
      ],
      "n": 21
     },
     "bias": {
-     "value": -0.003,
+     "value": 0.006,
      "ci90": [
-      -0.029,
-      0.023
+      -0.011,
+      0.028
      ],
      "n": 21
     },
@@ -2102,9 +2092,9 @@
      "n": 21
     },
     "exact_bin": {
-     "value": 0.905,
+     "value": 0.952,
      "ci90": [
-      0.81,
+      0.857,
       1
      ],
      "n": 21
@@ -2174,26 +2164,26 @@
    },
    "sample_on_three": {
     "mae": {
-     "value": 0.036,
+     "value": 0.027,
      "ci90": [
-      0.014,
-      0.063
+      0.009,
+      0.05
      ],
      "n": 21
     },
     "kappa_w": {
-     "value": 0.98,
+     "value": 0.99,
      "ci90": [
-      0.951,
+      0.968,
       1.0
      ],
      "n": 21
     },
     "bias": {
-     "value": -0.004,
+     "value": 0.005,
      "ci90": [
-      -0.031,
-      0.026
+      -0.015,
+      0.032
      ],
      "n": 21
     },
@@ -2206,9 +2196,9 @@
      "n": 21
     },
     "exact_bin": {
-     "value": 0.905,
+     "value": 0.952,
      "ci90": [
-      0.81,
+      0.857,
       1
      ],
      "n": 21
@@ -2230,13 +2220,13 @@
    "quotes": {
     "answers": 50,
     "quotes": 42,
-    "dropped": 5,
+    "dropped": 3,
     "dropped_why": {
-     "not_found": 5
+     "not_found": 3
     },
-    "capped_criteria": 5,
-    "answers_changed": 4,
-    "abs_change_sum": 0.925
+    "capped_criteria": 3,
+    "answers_changed": 2,
+    "abs_change_sum": 0.525
    },
    "sample_off": {
     "mae": {
@@ -2292,26 +2282,26 @@
    },
    "sample_on": {
     "mae": {
-     "value": 0.049,
+     "value": 0.038,
      "ci90": [
-      0.024,
-      0.079
+      0.016,
+      0.066
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.971,
+     "value": 0.973,
      "ci90": [
-      0.937,
+      0.938,
       0.992
      ],
      "n": 25
     },
     "bias": {
-     "value": -0.044,
+     "value": -0.028,
      "ci90": [
-      -0.076,
-      -0.018
+      -0.058,
+      -0.004
      ],
      "n": 25
     },
@@ -2396,26 +2386,26 @@
    },
    "sample_on_three": {
     "mae": {
-     "value": 0.061,
+     "value": 0.045,
      "ci90": [
-      0.035,
-      0.092
+      0.021,
+      0.073
      ],
      "n": 25
     },
     "kappa_w": {
-     "value": 0.954,
+     "value": 0.974,
      "ci90": [
-      0.914,
-      0.981
+      0.938,
+      0.993
      ],
      "n": 25
     },
     "bias": {
-     "value": -0.057,
+     "value": -0.041,
      "ci90": [
-      -0.089,
-      -0.03
+      -0.07,
+      -0.016
      ],
      "n": 25
     },
@@ -2428,10 +2418,10 @@
      "n": 25
     },
     "exact_bin": {
-     "value": 0.8,
+     "value": 0.88,
      "ci90": [
-      0.68,
-      0.92
+      0.76,
+      0.96
      ],
      "n": 25
     },
@@ -2452,14 +2442,13 @@
    "quotes": {
     "answers": 46,
     "quotes": 37,
-    "dropped": 3,
+    "dropped": 2,
     "dropped_why": {
-     "not_found": 2,
-     "negation": 1
+     "not_found": 2
     },
-    "capped_criteria": 3,
-    "answers_changed": 3,
-    "abs_change_sum": 0.55
+    "capped_criteria": 2,
+    "answers_changed": 2,
+    "abs_change_sum": 0.375
    },
    "sample_off": {
     "mae": {
@@ -2515,26 +2504,26 @@
    },
    "sample_on": {
     "mae": {
-     "value": 0.053,
+     "value": 0.045,
      "ci90": [
-      0.023,
-      0.085
+      0.017,
+      0.077
      ],
      "n": 21
     },
     "kappa_w": {
-     "value": 0.95,
+     "value": 0.961,
      "ci90": [
-      0.899,
-      0.981
+      0.915,
+      0.99
      ],
      "n": 21
     },
     "bias": {
-     "value": 0.001,
+     "value": 0.009,
      "ci90": [
-      -0.034,
-      0.04
+      -0.021,
+      0.045
      ],
      "n": 21
     },
@@ -2547,10 +2536,10 @@
      "n": 21
     },
     "exact_bin": {
-     "value": 0.762,
+     "value": 0.81,
      "ci90": [
-      0.619,
-      0.905
+      0.667,
+      0.952
      ],
      "n": 21
     },
@@ -2619,26 +2608,26 @@
    },
    "sample_on_three": {
     "mae": {
-     "value": 0.05,
+     "value": 0.042,
      "ci90": [
-      0.024,
-      0.077
+      0.017,
+      0.068
      ],
      "n": 21
     },
     "kappa_w": {
-     "value": 0.952,
+     "value": 0.963,
      "ci90": [
-      0.907,
-      0.981
+      0.922,
+      0.99
      ],
      "n": 21
     },
     "bias": {
-     "value": -0.009,
+     "value": -0.0,
      "ci90": [
-      -0.042,
-      0.024
+      -0.03,
+      0.029
      ],
      "n": 21
     },
@@ -2651,10 +2640,10 @@
      "n": 21
     },
     "exact_bin": {
-     "value": 0.762,
+     "value": 0.81,
      "ci90": [
-      0.619,
-      0.905
+      0.667,
+      0.952
      ],
      "n": 21
     },
@@ -2729,26 +2718,26 @@
   },
   "on": {
    "mae": {
-    "value": 0.118,
+    "value": 0.115,
     "ci90": [
-     0.105,
-     0.133
+     0.101,
+     0.129
     ],
     "n": 261
    },
    "kappa_w": {
-    "value": 0.826,
+    "value": 0.837,
     "ci90": [
-     0.789,
-     0.857
+     0.801,
+     0.867
     ],
     "n": 261
    },
    "bias": {
-    "value": -0.085,
+    "value": -0.082,
     "ci90": [
-     -0.103,
-     -0.069
+     -0.099,
+     -0.066
     ],
     "n": 261
    },
@@ -2761,10 +2750,10 @@
     "n": 261
    },
    "exact_bin": {
-    "value": 0.59,
+    "value": 0.602,
     "ci90": [
-     0.54,
-     0.64
+     0.552,
+     0.651
     ],
     "n": 261
    },
@@ -2782,14 +2771,13 @@
   "quotes": {
    "answers": 406,
    "quotes": 502,
-   "dropped": 9,
+   "dropped": 4,
    "dropped_why": {
-    "not_found": 7,
-    "negation": 2
+    "not_found": 4
    },
-   "capped_criteria": 9,
-   "answers_changed": 8,
-   "abs_change_sum": 1.7249999999999999
+   "capped_criteria": 4,
+   "answers_changed": 4,
+   "abs_change_sum": 0.775
   }
  }
 }
