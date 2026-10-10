@@ -9,6 +9,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+import uuid
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Request
@@ -188,3 +189,56 @@ def delete_sandbox(user: User = Depends(get_current_user), db: Session = Depends
         _state.pop(sid, None)
     log.info("jury: песочница %s удалена по запросу (%d учёток)", sid, n)
     return {"ok": True, "scenario": sid, "deleted_users": n, "seconds": round(time.time() - t0, 1)}
+
+
+# Я9 «Проверка за 12 минут» (короткий проводник жюри): своя потребность → подборка → приглашение → ответ кандидата.
+# Карточки подборки обезличены, поэтому эксперту не видно, кто из кандидатов — демо-персона его копии, за которую
+# можно войти и ответить на своё же приглашение. Маршрут называет только персон СВОЕЙ песочницы (демо-данные):
+# место в подборке и последнее приглашение компании песочницы; чужая потребность — как будто её нет.
+QUICK_PERSONAS = ("candidate", "candidate_nofsp", "candidate_junior", "candidate_new")
+
+
+@router.get("/quick", summary="Проверка за 12 минут: демо-кандидаты своей копии в подборке и приглашения им",
+            description="Только демо-персоны жюри. need — id своей потребности: место каждой демо-персоны в версии "
+                        "подборки (version, по умолчанию последней). can_invite — компании песочницы можно пригласить "
+                        "персону сейчас (одно приглашение в 30 дней); invitation — последнее приглашение компании персоне.",
+            responses={401: err("Не выполнен вход"), 403: err("Только для демо-персон жюри")})
+def quick(need: uuid.UUID | None = None, version: int | None = None, user: User = Depends(get_current_user),
+          db: Session = Depends(get_db)):
+    from app.modules.invitations.models import Invitation
+    from app.modules.invitations.service import cooldown_until
+    from app.modules.matching.models import EmployerNeed, SelectionVersion
+    from app.modules.profiles.models import CandidateProfile, EmployerProfile
+
+    _available()
+    persona, sid = scope.parse(user.email)
+    if persona is None or not user.is_demo:
+        raise api_error(403, "jury_only", "Только для демо-персон жюри")
+    em = scope.emails(sid)
+    users = {u.email: u for u in db.scalars(select(User).where(User.email.in_(list(em.values())))).all()}
+    emp = users.get(em["employer"])
+    company_id = db.scalar(select(EmployerProfile.company_id).where(EmployerProfile.user_id == emp.id)) if emp else None
+    ranks: dict[str, int] = {}
+    need_out = None
+    n = db.get(EmployerNeed, need) if need else None
+    if n is not None and company_id is not None and n.company_id == company_id:
+        q = select(SelectionVersion).where(SelectionVersion.need_id == n.id)
+        q = q.where(SelectionVersion.version == version) if version else q.order_by(SelectionVersion.version.desc())
+        v = db.scalar(q.limit(1))
+        res = (v.results or []) if v else []
+        ranks = {r.get("ref"): int(r.get("rank") or i + 1) for i, r in enumerate(res) if r.get("ref")}
+        need_out = {"id": str(n.id), "title": n.title, "version": v.version if v else None, "total": len(res)}
+    out = []
+    for p in QUICK_PERSONAS:
+        u = users.get(em[p])
+        prof = db.get(CandidateProfile, u.id) if u else None
+        if prof is None:
+            continue
+        inv = db.scalar(select(Invitation).where(Invitation.company_id == company_id, Invitation.candidate_user_id == u.id)
+                        .order_by(Invitation.created_at.desc()).limit(1)) if company_id else None
+        out.append({"persona": p, "name": prof.full_name, "ref": prof.public_ref, "rank": ranks.get(prof.public_ref),
+                    "can_invite": bool(company_id) and cooldown_until(db, company_id, u.id) is None,
+                    "invitation": {"id": str(inv.id), "status": getattr(inv.status, "value", inv.status),
+                                   "need_id": str(inv.need_id) if inv.need_id else None,
+                                   "created_at": inv.created_at.isoformat()} if inv else None})
+    return {"scenario": sid or None, "need": need_out, "personas": out}

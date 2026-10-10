@@ -27,32 +27,32 @@
  },
  "memory_limits_mib": {
   "db": 320,
-  "api": 1536,
+  "api": 3072,
   "web": 32,
   "keycloak": 576,
   "llm-local": 8192
  },
  "matching": {
-  "algorithm": "match-v1.1",
+  "algorithm": "match-v1.2",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "ae87c00",
+  "bench_commit": "fff0a5c",
   "bank_hash": "76c4164b6ce83743",
-  "generated_at": "2026-10-09T13:54:11+00:00",
+  "generated_at": "2026-10-10T09:22:12+00:00",
   "p5": {
-   "mean": 0.764,
-   "lo": 0.728,
-   "hi": 0.797
+   "mean": 0.776,
+   "lo": 0.74,
+   "hi": 0.81
   },
   "ndcg10": {
-   "mean": 0.561,
-   "lo": 0.534,
-   "hi": 0.587
+   "mean": 0.573,
+   "lo": 0.546,
+   "hi": 0.599
   },
   "mrr": {
-   "mean": 0.878,
-   "lo": 0.843,
-   "hi": 0.91
+   "mean": 0.888,
+   "lo": 0.853,
+   "hi": 0.918
   }
  },
  "e2e_in_code": {

@@ -6,6 +6,7 @@ import { api, ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { juryLogin, type Persona } from "../lib/jury";
 import { usePageTitle } from "../lib/meta";
+import JuryChoice from "./JuryChoice";  // Я9
 
 /** «Проверьте нас по критериям ТЗ» (К1): раздел 6 ТЗ дословно по подпунктам → что сделать → что увидите → чем доказано
  *  → ограничение. Тексты и числа — из GET /api/validation/criteria (backend/app/modules/validation/criteria.py, тот же
@@ -171,6 +172,12 @@ const safePath = (to: string | null) => (to && to.startsWith("/") && !to.startsW
  *  жюри — вход в один клик под персоной (как на главной) и переход на экран. need — открыть подборку демо-потребности:
  *  у каждой песочницы свои id, поэтому потребность ищется по названию. */
 export function JuryGo() {
+  const [sp] = useSearchParams();
+  // Я9: без роли и экрана — выбор режима проводника («Проверка за 12 минут» или справочник); ?tour=12|full — сразу
+  return sp.get("as") || sp.get("to") ? <JuryGoLink /> : <JuryChoice tour={sp.get("tour")} />;
+}
+
+function JuryGoLink() {
   const [sp] = useSearchParams();
   const { signIn } = useAuth();
   const navigate = useNavigate();

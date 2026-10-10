@@ -14,6 +14,7 @@ import { WhatIf } from "../../components/WhatIf";
 import { ParseStatus, Suggestions, evSource, useFastParse } from "./parseFlow";  // И27: словарь сразу, модель в фоне
 import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // подписка на потребность (И25)
 import { NeedFileNote, NeedFileUpload, type NeedFileInfo } from "./NeedFile";  // Ф5: потребность из файла вакансии
+import { needPreset } from "../../lib/jury";  // Я9: заготовка своей потребности из проводника
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -298,6 +299,8 @@ export function Needs() {
     try { const r = await api<Req & { text?: string }>("/employer/needs/parse", { body: { text: t } }); setParsed(r.text ?? t); setReq(r); fp.start(r); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   useEffect(() => { if ((loc.state as any)?.text) parse((loc.state as any).text); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  // Я9: заготовка из проводника «Проверка за 12 минут» — в поле; разбор — кнопкой, как у своего текста
+  useEffect(() => needPreset.listen((t) => { setText(t); setReq(null); setFile(null); fp.reset(); }), []);  // eslint-disable-line react-hooks/exhaustive-deps
   function rewrite(t: string) { setText(t); parse(t); }
   async function create() {
     if (!req) return;
