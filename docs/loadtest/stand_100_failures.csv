@@ -1,0 +1,7 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+POST,/validation: красная кнопка (leak_bank),CatchResponseError('504 <html>\r\n<head><title>504 Gateway Time-out</title></head>\r\n<body>\r\n<center><h1>504 Gateway Time-out</h1></center>\r\n<hr><c'),1,2026-10-10T09:55:07Z,2026-10-10T09:55:07Z
+POST,тест: завершить (итог),"CatchResponseError('401 {""detail"":{""code"":""invalid_token"",""message"":""Токен недействителен или истёк""}}')",1,2026-10-10T09:57:43Z,2026-10-10T09:57:43Z
+GET,работодатель: категории с рынком,HTTPError('401 Client Error: Unauthorized for url: работодатель: категории с рынком'),1,2026-10-10T09:57:42Z,2026-10-10T09:57:42Z
+GET,кандидат: вакансии,HTTPError('500 Server Error: Internal Server Error for url: кандидат: вакансии'),2,2026-10-10T09:57:44Z,2026-10-10T09:57:44Z
+POST,тест: ответ,"CatchResponseError('401 {""detail"":{""code"":""invalid_token"",""message"":""Токен недействителен или истёк""}}')",1,2026-10-10T09:57:43Z,2026-10-10T09:57:43Z
+GET,тест: получить задание,HTTPError('401 Client Error: Unauthorized for url: тест: получить задание'),1,2026-10-10T09:57:43Z,2026-10-10T09:57:43Z
