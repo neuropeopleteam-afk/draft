@@ -16,7 +16,7 @@ export interface IvSession {
   score?: number | null; summary?: string | null; questions: Question[]; flags: string[]; duration_s?: number | null; minutes: number;
   max_questions: number; conversation?: Conversation | null; created_at: string; completed_at?: string | null; example: boolean;
   example_label?: string | null; stub: boolean; jury: boolean; tasks: { id: string; title?: string | null }[]; skills: string[];
-  note?: string | null; transcript?: { who: string; text: string; n?: number }[] | null; error?: string | null; return_to: string;
+  note?: string | null; transcript?: { who: string; text: string; n?: number }[] | null; error?: string | null; return_to: string; result_hidden?: boolean;
 }
 interface Consent { version: string; items: string[] }
 interface DefenseState {
@@ -424,7 +424,7 @@ export function InterviewRoom() {
         </section>
       )}
       {s.status === "evaluating" && <section className="card" role="status"><p className="font-semibold text-brand-night">Разговор окончен — модель оценивает ответы…</p></section>}
-      {s.status === "completed" && <section className="card"><SessionResult s={s} /></section>}
+      {s.status === "completed" && <section className="card">{s.result_hidden ? <p className="font-semibold text-brand-night" data-testid="iv-done">Спасибо! Разговор окончен. Итог и расшифровку видит только пригласившая компания.</p> : <SessionResult s={s} />}</section>}
       {["failed", "expired", "cancelled"].includes(s.status) && <Alert kind="info">{s.status_title}{s.error ? `: ${s.error}` : ""}.</Alert>}
       <Alert>{err}</Alert>
       {!["created", "in_progress"].includes(s.status) && <Link className="btn-ghost" to={s.return_to}>Вернуться</Link>}

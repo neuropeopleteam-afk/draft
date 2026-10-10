@@ -218,9 +218,11 @@ def test_hiring_ai_interview_stage(client, on):
     assert r.status_code == 201, r.text
     long = "В прошлом проекте я настраивал консьюмеров Kafka с ручным коммитом смещений, разбирал задержки и " * 3
     s = _talk(client, tc, r.json()["id"], [long, "Делал ревью каждый день, договаривались о правилах в команде."])
-    assert s["status"] == "completed" and s["verdict"] in ("strong", "medium"), s
+    # кандидату — только статус: итог ИИ-интервью видит пригласившая компания
+    assert s["status"] == "completed" and s["result_hidden"] and s["verdict"] is None and not s["questions"], s
     st = client.get(f"/api/employer/invitations/{inv['id']}/ai-interview", headers=H(te)).json()
     assert st["session"]["status"] == "completed" and st["session"]["transcript"] and st["session"]["note"]
+    assert st["session"]["verdict"] in ("strong", "medium") and not st["session"]["result_hidden"]
     d = client.get(f"/api/interview/candidates/{my_ref(client, tc)}", headers=H(te)).json()
     assert d["interviews"] and d["interviews"][0]["mode"] == "interview"
     # другая компания результата не видит
