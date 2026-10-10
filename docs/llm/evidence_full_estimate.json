@@ -1,0 +1,17 @@
+{
+ "date": "2026-10-10 16:55",
+ "code_sha": "9db1cb5",
+ "n": 406,
+ "v2_cost_406_usd": 3.154,
+ "v3_over_v2_on_50": 1.044,
+ "v3_usd": 3.29,
+ "skeptic_calls_est": 113,
+ "skeptic_calls_est_on_50": 11,
+ "skeptic_calls_real_on_50": 11,
+ "skeptic_per_call_usd": 0.0436,
+ "skeptic_usd": 4.92,
+ "total_usd": 8.21,
+ "total_with_margin_usd": 9.04,
+ "margin": 0.1,
+ "note": "без запросов к моделям; цены — фактические цены прогонов 09–10.10 через OpenRouter"
+}
