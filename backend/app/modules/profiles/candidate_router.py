@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.db import get_db, utcnow
+from app.core.db import get_db, release, utcnow
 from app.core.deps import require_role
 from app.core.enums import ConsentKind, FactSource, UserRole, WorkFormat
 from app.core.errors import api_error, err
@@ -28,6 +28,7 @@ from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, achievem
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 from app.modules.profiles.models import CandidateSpecialization
 from app.modules.profiles.specializations import ensure_specialization
+from app.core.origin import NO_FSP, fsp_origin
 
 router = APIRouter(prefix="/api/me", tags=["candidate"])
 # Резюме: попытки (в т. ч. неудачные) — не больше 10 в час на пользователя; одновременно — один разбор на воркер
@@ -315,7 +316,7 @@ def my_fsp(user: User = Depends(candidate), db: Session = Depends(get_db)) -> di
                    else "Свяжите профиль через ФСП ID (OIDC)") + ": достижения придут с уровнем T2. ")
                  if integration.fsp_enabled else
                  "Связь через ФСП ID (OIDC, Keycloak) появится после подключения реестра. ")
-                + "Без истории ФСП — нейтральное состояние: бонуса нет, штрафа нет.",
+                + NO_FSP + ".", "origin": fsp_origin(b.passport.link_source.value, b.passport.raw) if b.passport else None,
     }
 
 
@@ -399,6 +400,7 @@ def upload_resume(file: UploadFile = File(...), user: User = Depends(candidate),
                        .where(CandidateResume.user_id == user.id, CandidateResume.created_at >= since)) or 0
     if recent >= s.resume_uploads_per_hour:
         raise api_error(429, "resume_rate", f"Не больше {s.resume_uploads_per_hour} загрузок резюме в час. Повторите позже")
+    release(db)  # разбор файла, NER и модель — секунды без БД: соединение в пул (docs/LOAD.md, раздел 8)
     data = file.file.read(s.resume_max_bytes + 1)
     try:
         ft = file_to_text(data, ("pdf", "docx"), max_bytes=s.resume_max_bytes, max_pages=s.resume_max_pages,

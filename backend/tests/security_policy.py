@@ -39,7 +39,7 @@
 Изменяющие состояние маршруты, после которых другие проверки могут сломаться (сброс песочницы, завершение теста,
 отзыв согласия), перечислите в LAST — они выполняются в конце.
 Политики для маршрутов веток, ещё не влитых в integ (contact, passport, infra2, tasks, status, realdata, jury-test,
-integrity, proctor, 2fa), уже добавлены — несуществующие маршруты тест пропускает молча (см. отчёт reports_0710/security.md).
+integrity, proctor, 2fa), уже добавлены — несуществующие маршруты тест пропускает молча (внутренний отчёт разработки).
 """
 from __future__ import annotations
 
@@ -138,6 +138,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     # сброс/удаление песочницы отзывает токены всех её персон и имеет кулдаун — проверяем работодателями A и B
     ("POST", "/api/jury/reset"): ("jury_demo", {"jury_candidate": SKIP, "jury_expert": SKIP, "jury_fsp": SKIP,
                                                 "jury_other_candidate": SKIP}),
+    ("GET", "/api/jury/quick"): "jury_demo",  # Я9: демо-персоны своей песочницы для «Проверки за 12 минут»
     ("DELETE", "/api/jury/sandbox"): ("jury_demo", {"jury_candidate": SKIP, "jury_expert": SKIP, "jury_fsp": SKIP,
                                                     "jury_other_candidate": SKIP}),  # feat/jury-test
     # живая демонстрация: зал по QR — гости без регистрации (свой гостевой токен), экран — работодатель жюри
@@ -398,6 +399,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
     ("GET", "/api/validation/attempts-repeat"): "open",  # feat/attempts (И26)
     ("GET", "/api/validation/test-length"): "open",  # Ф6 (Н8): длина теста на экране старта
+    ("GET", "/api/validation/provenance"): "open",  # Я8: происхождение чисел /validation
     ("POST", "/api/validation/self-check"): "auth",  # feat/jury-test
     ("GET", "/api/validation/closed-set/template/{format}"): "open",  # feat/realdata
     ("POST", "/api/validation/closed-set/evaluate"): "sandbox_employer",

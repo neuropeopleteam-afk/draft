@@ -598,3 +598,17 @@ def test_cli_status_report_summary_and_reset(client, capsys, monkeypatch):
     assert main(["reset-study", "--yes", "--include-declined"]) == 0
     with SessionLocal() as db:
         assert db.scalar(select(func.count()).select_from(StudyParticipant)) == 0
+
+
+def test_cli_in_separate_process():
+    """`python -m app.modules.study status` отдельным процессом (как на сервере): движок БД инициализируется сам —
+    раньше UnboundExecutionError (SessionLocal без привязки). База — та же, что у тестов (DATABASE_URL из conftest)."""
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    r = subprocess.run([sys.executable, "-m", "app.modules.study", "status"], cwd=Path(__file__).resolve().parents[1],
+                       env={**os.environ}, capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0, r.stderr[-2000:]
+    assert "UnboundExecutionError" not in r.stderr and ("В статистике" in r.stdout)

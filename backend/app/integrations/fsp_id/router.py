@@ -111,7 +111,7 @@ def _done(**q) -> RedirectResponse:
 
 
 @router.get("/callback", summary="Возврат из Keycloak: обмен кода, проверка id_token, одноразовый билет",
-            include_in_schema=True, response_class=RedirectResponse)
+            include_in_schema=True, response_class=RedirectResponse, status_code=303)
 def callback(state: str | None = None, code: str | None = None, error: str | None = None,
              error_description: str | None = None, db: Session = Depends(get_db)) -> RedirectResponse:
     st = db.scalar(select(OidcLoginState).where(OidcLoginState.state == (state or "")))
