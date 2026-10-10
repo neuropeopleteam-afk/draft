@@ -20,13 +20,8 @@ const TASKS: { kind: Kind; path: string; title: string; text: string }[] = [
   { kind: "C", path: "angoff", title: "Пороги грейдов", text: "Сколько из 100 пограничных кандидатов решат задание: метод Ангоффа." },
 ];
 
-export const panelSections = [
-  { path: "pairs", title: "A · Пары", description: "Соответствие кандидата потребности" },
-  { path: "answers", title: "B · Ответы", description: "Оценка ответов по рубрике" },
-  { path: "angoff", title: "C · Пороги грейдов", description: "Метод Ангоффа" },
-  { path: "review", title: "Очередь проверки", description: "Ответы кандидатов на проверке" },
-  { path: "security", title: "Безопасность входа", description: "Второй фактор: код из приложения-аутентификатора" },
-];
+// Я16: разделы — в лёгком модуле ./sections (меню кабинета грузится без этого экрана), здесь — для прежних импортов
+export { panelSections } from "./sections";
 
 function Bar({ done, total, label = "Размечено" }: { done: number; total: number; label?: string }) {
   const pct = total ? Math.round((done / total) * 100) : 0;
@@ -460,7 +455,8 @@ function Task({ it }: { it: any }) {
   const opts: any[] = it.options ?? [];
   const Opt = ({ o, ok }: { o: any; ok: boolean }) => (
     <li className={`rounded-xl border p-2.5 text-sm ${ok ? "border-emerald-300 bg-emerald-50" : "border-brand-night/10"}`}>
-      <span className="font-bold">{o.id}.</span> {o.text}{ok && <span className="ml-2 text-xs font-semibold text-emerald-700">верный</span>}
+      {/* Я11 (С3-9): пометка — через пробел и разделитель, иначе в тексте (копирование, экранный диктор) «Failedверный» */}
+      <span className="font-bold">{o.id}.</span> {o.text}{ok && <>{" "}<span className="ml-1 whitespace-nowrap text-xs font-semibold text-emerald-700">· верный</span></>}
       {o.code && <pre className="mt-2 overflow-auto rounded-lg bg-brand-ink p-2 text-xs text-[#FFD6E4]"><code>{o.code}</code></pre>}
     </li>
   );

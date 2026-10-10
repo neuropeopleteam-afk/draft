@@ -28,6 +28,7 @@ from app.modules.catalog.dictionary import (
     find_stack,
     find_stack_spans,
     find_unsupported_spans,
+    kw_pattern,
 )
 from app.modules.catalog import ext as catalog_ext
 from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, active_stack, known_tag
@@ -55,13 +56,22 @@ _FORMAT_RE = {
     "hybrid": re.compile(r"гибрид\w*|hybrid", re.I),
     "office": re.compile(r"(?<![\w-])офис\w*|(?<![\w-])office\b|on-?site|на(?:\s|\u00a0)месте работодателя", re.I),
 }
-_NOT_FORMAT_AFTER = re.compile(r"^\w*\s+(?:пакет|приложен|программ|техник|мебел|365|suite)", re.I)
+_NOT_FORMAT_AFTER = re.compile(r"^\w*\s+(?:пакет|приложен|программ|техник|мебел|365|suite)"
+                               r"|^офис\w*\s*(?:№\s*)?\d+(?![\d\s]*(?:дн|раз|day))", re.I)  # «офис 15» в адресе (Я11)
 _NOT_FORMAT_BEFORE = re.compile(r"(?:\bms|microsoft|\bback|бэк|фронт|front)[\s-]*$", re.I)
 _FMT_NEG_BEFORE = re.compile(r"(?:\bкроме|\bбез|\bисключая|\bexcept|\bno|\bnot|\bnon|\bне\s+(?:рассматрива\w*|предлага\w*)"
                          r"|(?<!\w)не)\s*(?:(?:полн\w*|чист\w*|full|fully)\s+)?[«\"]?$", re.I)
-_FMT_NEG_AFTER = re.compile(r"^[»\"]?\s*(?:[—–-]\s*|:\s*)?(?:не\s+(?:рассматрива|предлага|подход|возможн|обсужда|вариант|"
-                        r"интересн|допуска)|нет\b|исключ|запрещ|невозможн|is not|not (?:possible|available|an option))",
-                        re.I)
+# Я11 (С3-1): «Удалёнка не предусмотрена», «удалённой работы нет», «удалённый формат у нас не практикуется»,
+# «удалённо не работаем» — между упоминанием и отрицанием до двух служебных слов («работы», «формат», «у нас», «пока»)
+_FMT_NEG_AFTER = re.compile(r"^[»\"]?\s*(?:[—–-]\s*|:\s*)?"
+                        r"(?:(?:работ\w*|формат\w*|режим\w*|вариант\w*|у\s+нас|в\s+компании|пока|к\s+сожалению|"
+                        r"сейчас|тоже|также)[\s,]+){0,2}"
+                        r"(?:не\s+(?:рассматрива|предлага|подход|возможн|обсужда|вариант|интересн|допуска|предусм|"
+                        r"практику|планиру|работа|получ|бывает|будет)|нет\b|отсутству|исключ|запрещ|невозможн|"
+                        r"is not|not (?:possible|available|an option|offered))", re.I)
+# «только офис», «работа исключительно из офиса», «строго on-site» — допустим только этот формат (Я11, С3-1)
+_FMT_ONLY_BEFORE = re.compile(r"(?:\bтолько|\bисключительно|\bстрого|\bonly|\bstrictly)\s+(?:(?:в|из|на|in|from)\s+)?"
+                              r"(?:(?:формат\w*|режим\w*)\s+)?[«\"]?$", re.I)
 _HYBRID_DAYS = re.compile(r"(?:\d|один|два|две|три|четыре)\s*(?:дн\w*|раз\w*)\s+в\s+неделю[^.;\n]{0,30}(?:удал|офис|дома)"
                           r"|(?:удал|офис|дома)\w*[^.;\n]{0,30}?(?:\d|один|два|две|три|четыре)\s*(?:дн\w*|раз\w*)\s+в\s+неделю",
                           re.I)
@@ -78,7 +88,7 @@ def format_mentions(text: str) -> list[tuple[str, int, int, bool]]:
             s, e = m.span()
             if fmt == "office" and (_NOT_FORMAT_AFTER.match(text[s:s + 40]) or _NOT_FORMAT_BEFORE.search(text[max(0, s - 12):s])):
                 continue
-            neg = bool(_FMT_NEG_BEFORE.search(text[max(0, s - 32):s]) or _FMT_NEG_AFTER.match(text[e:e + 40]))
+            neg = bool(_FMT_NEG_BEFORE.search(text[max(0, s - 32):s]) or _FMT_NEG_AFTER.match(text[e:e + 60]))
             out.append((fmt, s, e, neg))
     out.sort(key=lambda x: x[1])
     # «гибридный график с офисом», «гибрид (3 дня офис / 2 дня удалённо)» — офис и удалёнка здесь описывают гибрид
@@ -95,9 +105,15 @@ def parse_conditions(text: str) -> dict:
     mentions = format_mentions(text)
     pos = list(dict.fromkeys(f for f, _, _, neg in mentions if not neg))
     neg = {f for f, _, _, n in mentions if n} - set(pos)
+    only = list(dict.fromkeys(f for f, s, _, n in mentions if not n and _FMT_ONLY_BEFORE.search(text[max(0, s - 30):s])))
+    if only:  # «только офис»: остальные форматы исключены, даже если упомянуты без отрицания
+        neg |= set(pos) - set(only)
+        pos = only
+        mentions = [m for m in mentions if m[0] in only]
     any_m = _ANY_FORMAT.search(text)
     if any_m and not neg:
-        return {"work_format": None, "work_formats": None, "city": None, "format_span": None, "city_span": None}
+        return {"work_format": None, "work_formats": None, "city": None, "format_span": None, "city_span": None,
+                "formats_excluded": []}
     if any_m or (not pos and neg):
         allowed = [f for f in (pos or []) + ["office", "hybrid", "remote"] if f not in neg]
     else:
@@ -121,7 +137,8 @@ def parse_conditions(text: str) -> dict:
         span = (s0, max([e0, *ends]))
     return {"work_format": allowed[0] if allowed else None,
             "work_formats": allowed if len(allowed) > 1 else None,
-            "city": city, "format_span": span, "city_span": city_pos}
+            "city": city, "format_span": span, "city_span": city_pos,
+            "formats_excluded": sorted({"office", "hybrid", "remote"} - set(allowed)) if allowed else sorted(neg)}
 
 
 _TZ_BEFORE = re.compile(r"(?:\b(?:по|до|с)|\bврем\w*|\bчас\w*|\bграфик\w*|\d)[\s(]*$", re.I)
@@ -181,7 +198,16 @@ _EXP_RE = re.compile(r"(?:опыт\w*[^\n]{0,100}?|коммерческ\w*[^\n]{
                      re.IGNORECASE)
 _WORD_EXP_RE = re.compile(r"опыт\w*[^.\n]{0,90}?(?:от|не менее)\s+"
                           r"(полугода|года|одного|двух|трех|трёх|четырех|четырёх|пяти|полутора)\s*(?:лет|год\w*)?", re.I)
-_ZERO_EXP_RE = re.compile(r"опыт\s+работы\s*:\s*не\s+требуется", re.I)
+# «Опыт работы: не требуется», «опыт не требуется», «опыт не обязателен», «можно без опыта», «без опыта — научим»;
+# «без опыта кандидаты не рассматриваются» — наоборот, не ноль (Я11, С3-2)
+_ZERO_EXP_RE = re.compile(
+    r"опыт(?:\s+работы)?\s*(?::\s*|[—–-]\s*)?(?:не\s+(?:требуется|обязателен|обязательно|нужен|важен|критичен|принципиален)"
+    r"|необязателен)"
+    r"|(?:можно|рассмотрим|рассматриваем|подойд\w*|возьм\w*|берём|берем|готовы\s+взять|ждём|ждем)[^.;\n]{0,40}?"
+    r"без\s+опыта(?:\s+работы)?"
+    r"|(?<![\w-])без\s+опыта(?:\s+работы)?(?=\s*(?:[.,;!)\n—–-]|$|тоже|также|можно|научим|подойд|подход|рассматрива))"
+    r"(?![^.;\n]{0,30}\bне\s+(?:рассматр|подход|подойд|берём|берем|возьм))"
+    r"|no\s+(?:prior\s+)?experience\s+(?:is\s+)?(?:required|needed)", re.I)
 _TOTAL_EXP_RE = re.compile(r"(?:общий|суммарный)\s+опыт\s+(?:от\s*)?(\d+(?:[.,]\d+)?)\s*(?:лет|год)", re.I)
 _REVERSE_EXP_RE = re.compile(r"(?:от\s*)?(\d+(?:[.,]\d+)?)\s*(?:[-–]\s*\d+)?\s*(?:лет|год\w*)"
                             r"\s+коммерческ\w*\s+(?:опыт\w*|разработ\w*)", re.I)
@@ -307,8 +333,9 @@ def parse_experience(text: str) -> float | None:
 
 def experience_span(text: str) -> tuple[float | None, tuple[int, int] | None]:
     clean = text.replace("*", " ").replace("`", " ")
-    if m := _ZERO_EXP_RE.search(clean):
-        return 0.0, m.span()
+    for m in _ZERO_EXP_RE.finditer(clean):  # «не возьмём без опыта» — не ноль (Я11)
+        if not re.search(r"(?<![а-яё])(?:не(?:\s+\w+)?|нельзя)\s*$", clean[max(0, m.start() - 25):m.start()], re.I):
+            return 0.0, m.span()
     if m := _TOTAL_EXP_RE.search(clean):
         return float(m.group(1).replace(",", ".")), m.span()
     if m := _REVERSE_EXP_RE.search(clean):
@@ -459,7 +486,7 @@ def negated_directions(text: str) -> str:
     low, out = text.lower(), list(text)
     for words in direction_keywords().values():
         for w in words:
-            for m in re.finditer(re.escape(w), low):
+            for m in re.finditer(kw_pattern(w), low):
                 s, e = m.start(), m.end()
                 while e < len(text) and text[e].isalpha():
                     e += 1
@@ -468,6 +495,85 @@ def negated_directions(text: str) -> str:
                         or _DIR_NEG_BEFORE.search(text[max(0, s - 30):s]):
                     out[s:e] = " " * (e - s)
     return "".join(out)
+
+
+# ---------------------------------------------------------------- веса навыков по перечислениям (Я11, С3-3)
+ORDER_WEIGHT_RULE = ("Вес навыка — по правилу, одинаково для словаря и модели: обязательные — по порядку упоминания в "
+                     "тексте: 1,0; 0,9; 0,8 … не ниже 0,6; общий навык (Git, SQL, Linux, Docker, HTTP, алгоритмы) — ×0,8: "
+                     "он есть почти у всех; «желательно» — 0,3. Модель находит навыки и цитаты, вес не задаёт. Поправить "
+                     "вес можно вручную.")
+LIST_WEIGHT_RULE = ("Вес навыка — по правилу, одинаково для словаря и модели: навыки одного перечисления «обязательно» "
+                    "(одно предложение или один список под заголовком) — один вес; первое перечисление — 1,0, каждое "
+                    "следующее — на 0,1 ниже, не ниже 0,6; «желательно» — 0,3. Модель находит навыки и цитаты, вес "
+                    "не задаёт. Поправить вес можно вручную.")
+_BULLET = re.compile(r"^\s*(?:[-–—•*·▪●◦]|\d{1,2}[.)])\s+")
+
+
+def list_weights_on() -> bool:
+    """Флаг NEED_LIST_WEIGHTS (по умолчанию выключен): «1» — один вес на перечисление (LIST_WEIGHT_RULE), иначе —
+    по порядку упоминания (ORDER_WEIGHT_RULE, прежнее правило). По умолчанию выключен: на бенчмарке MRR −0,005 в двух мирах
+    (docs/LLM.md, раздел 10.4, «Замер»)."""
+    import os
+
+    return os.environ.get("NEED_LIST_WEIGHTS", "0").strip().lower() in ("1", "true", "yes", "on")
+
+
+def weight_rule() -> str:
+    """Текст действующего правила весов — для подсказки у весов в карточке потребности."""
+    return LIST_WEIGHT_RULE if list_weights_on() else ORDER_WEIGHT_RULE
+
+
+def enumerations(text: str) -> list[tuple[int, int]]:
+    """Границы перечислений: предложение до «.», «!», «?» или конца строки (точка с запятой перечисление не
+    рвёт); строки-пункты списка («- Python», «2) SQL») подряд и под заголовком с двоеточием — одно перечисление."""
+    out: list[tuple[int, int]] = []
+    pos, prev_joinable = 0, False
+    for part in re.split(r"(?<=[.!?\n])", text):
+        s, e = pos, pos + len(part)
+        pos = e
+        if not part.strip():
+            continue
+        bullet = bool(_BULLET.match(part))
+        if out and bullet and prev_joinable:
+            out[-1] = (out[-1][0], e)
+        else:
+            out.append((s, e))
+        prev_joinable = bullet or part.rstrip().endswith(":")
+    return out
+
+
+def apply_list_weights(text: str, required: list[dict], desired: list[dict]) -> None:
+    """Веса по LIST_WEIGHT_RULE (на месте). Навык без цитаты (добавлен вручную) — с прежним весом."""
+    bounds = enumerations(text)
+
+    def group(it: dict) -> int | None:
+        s = (it.get("evidence") or {}).get("start")
+        if s is None:
+            return None
+        return next((i for i, (a, b) in enumerate(bounds) if a <= s < b), len(bounds))
+
+    order = sorted({g for it in required if (g := group(it)) is not None})
+    rank = {g: i for i, g in enumerate(order)}
+    for it in required:
+        g = group(it)
+        if g is not None:
+            it["weight"] = round(max(0.6, 1.0 - 0.1 * rank[g]), 2)
+    for it in desired:
+        if group(it) is not None:
+            it["weight"] = 0.3
+
+
+def apply_weights(text: str, required: list[dict], desired: list[dict]) -> None:
+    """Веса по действующему правилу (weight_rule) на месте; навык без цитаты (добавлен вручную) — с прежним весом."""
+    if list_weights_on():
+        apply_list_weights(text, required, desired)
+        return
+    pos = [it for it in required if (it.get("evidence") or {}).get("start") is not None]
+    for i, it in enumerate(sorted(pos, key=lambda it: it["evidence"]["start"])):
+        it["weight"] = round(max(0.6, 1.0 - 0.1 * i) * (0.8 if it["tag"] in COMMON_TAGS else 1.0), 2)
+    for it in desired:
+        if (it.get("evidence") or {}).get("start") is not None:
+            it["weight"] = 0.3
 
 
 def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | None = None) -> dict:
@@ -551,14 +657,16 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
             desired.append(item)
         else:
             required.append(item)
-    # Веса: обязательные 1.0 → 0.6 по порядку упоминания (первое — важнее), общий блок ×0.8; желательные 0.3
-    for i, it in enumerate(required):
-        w = max(0.6, 1.0 - 0.1 * i)
-        if it["tag"] in COMMON_TAGS:
-            w *= 0.8
-        it["weight"] = round(w, 2)
-    for it in desired:
-        it["weight"] = 0.3
+    if list_weights_on():
+        apply_list_weights(text, required, desired)
+    else:  # прежнее правило (флаг NEED_LIST_WEIGHTS=0): 1.0 → 0.6 по порядку упоминания, общий навык ×0.8
+        for i, it in enumerate(required):
+            w = max(0.6, 1.0 - 0.1 * i)
+            if it["tag"] in COMMON_TAGS:
+                w *= 0.8
+            it["weight"] = round(w, 2)
+        for it in desired:
+            it["weight"] = 0.3
 
     cond = parse_conditions(text)  # Ф2: объединение форматов, отрицания, «любой формат»
     work_format, work_formats, city = cond["work_format"], cond["work_formats"], cond["city"]
@@ -799,6 +907,8 @@ def _llm_review(merged: dict, rules: dict, llm: dict, raw: dict, masked: str, hi
         v = llm.get(key)
         if key == "work_format" and v in (rules.get("work_formats") or []):
             continue  # «офис или гибрид»: словарь уже принял несколько форматов — замена одним сузила бы условие
+        if key == "work_format" and v in parse_conditions(masked)["formats_excluded"]:
+            continue  # Я11: «удалёнка не предусмотрена» — формат, исключённый текстом, модель не предлагает
         if v is not None and not hints.get(key) and rules.get(key) is not None and v != rules[key] \
                 and llm["evidence"].get(key):
             suggest.append({"field": key, "value": v, "current": rules[key], "evidence": llm["evidence"][key]})
@@ -934,6 +1044,7 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
     elif not hint_direction and (own := own_direction(text)) and merged.get("direction") != own["direction"]:
         merged["direction"] = own["direction"]  # расширение каталога: своё направление вместо ближайшего
         merged["evidence"]["direction"] = own["evidence"]
+    merged["weight_rule"] = weight_rule()  # Я11 (С3-3): правило весов — рядом с весами в карточке
     return merged
 
 
@@ -972,7 +1083,7 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
         if not hint and not rules[key] and llm[key] and llm["evidence"].get(key):
             ev[key] = llm["evidence"][key]
     if llm["stack_required"] or llm["stack_desired"]:
-        # Объединяем: тег из правил сохраняет зону и цитату, вес — среднее; новые теги LLM — со своей цитатой
+        # Объединяем: тег из правил сохраняет зону, цитату и вес; новые теги LLM — со своей цитатой
         by_tag = {i["tag"]: ("required", i) for i in rules["stack_required"]}
         by_tag.update({i["tag"]: ("desired", i) for i in rules["stack_desired"]})
         for zone, items in (("required", llm["stack_required"]), ("desired", llm["stack_desired"])):
@@ -982,10 +1093,7 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
                     replaced |= over
                     same_fragment += 1
                     continue
-                if i["tag"] in by_tag:
-                    z, cur = by_tag[i["tag"]]
-                    by_tag[i["tag"]] = (z, {**cur, "weight": round((cur["weight"] + i["weight"]) / 2, 2)})
-                else:
+                if i["tag"] not in by_tag:  # Я11 (С3-3): у тега словаря вес не усредняется с весом модели (был 0,53)
                     by_tag[i["tag"]] = (zone, {**i, "status": "extracted"})
         merged["stack_required"] = [i for z, i in by_tag.values() if z == "required"]
         merged["stack_desired"] = [i for z, i in by_tag.values() if z == "desired"]
@@ -995,6 +1103,13 @@ def _merge_llm(masked: str, rules: dict, hint_direction: str | None, hint_grade:
         merged[key] = rules[key] if rules[key] is not None else llm[key]
         if rules[key] is None and llm[key] is not None and llm["evidence"].get(key):
             ev[key] = llm["evidence"][key]
+    # Я11 (С3-3): навыкам, добавленным моделью, — вес по тому же правилу (weight_rule) по месту в тексте; навыки словаря
+    # сохраняют свой вес
+    rules_w = {i["tag"]: i["weight"] for i in rules["stack_required"] + rules["stack_desired"]}
+    apply_weights(masked, merged["stack_required"], merged["stack_desired"])
+    for i in merged["stack_required"] + merged["stack_desired"]:
+        if i["tag"] in rules_w:
+            i["weight"] = rules_w[i["tag"]]
     excluded = {x["tag"] for x in rules.get("excluded") or []}
     if excluded:  # «Angular не нужен»: тег, исключённый отрицанием в тексте, LLM обратно не добавляет (И18)
         merged["stack_required"] = [i for i in merged["stack_required"] if i["tag"] not in excluded]

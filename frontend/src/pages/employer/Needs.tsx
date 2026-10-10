@@ -1,20 +1,23 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
-import { CandidateCard } from "../../components/CandidateCard";
+import { CandidateCard, SCORE_HINT } from "../../components/CandidateCard";
+import { CompactCard } from "../../components/CompactCard";  // Я10: компактная подборка
+import { NeedScope, scopeOptions } from "../../components/NeedScope";  // Я10: что проверено тестом по потребности
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, range, useApi } from "../../components/ui";
+import { Alert, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, plural, range, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
-import { InviteForm, ProbeForm, probeSentText } from "./Contact";
+import { InviteForm, ProbeForm, inviteSentText, probeSentText } from "./Contact";
 import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
 import { ParseStatus, Suggestions, evSource, useFastParse } from "./parseFlow";  // И27: словарь сразу, модель в фоне
 import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // подписка на потребность (И25)
 import { NeedFileNote, NeedFileUpload, type NeedFileInfo } from "./NeedFile";  // Ф5: потребность из файла вакансии
+import { needPreset } from "../../lib/jury";  // Я9: заготовка своей потребности из проводника
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -30,6 +33,7 @@ export interface Req {
   work_formats?: string[] | null;
   unknown_terms?: { term: string; evidence?: Ev | null }[]; excluded?: { tag: string; evidence?: Ev | null }[];
   salary_note?: { text: string; evidence?: Ev | null } | null;
+  weight_rule?: string;  // Я11 (С3-3): правило весов разбора — показываем у «Настроить веса»
 }
 
 /** Что не попало в подбор и подсказки по требованиям (И18): честно, без блокировки. */
@@ -241,7 +245,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <input aria-label="Город присутствия" className="input max-w-xs" placeholder="для офиса и гибрида" value={req.city ?? ""}
           onChange={(e) => setScalar("city", { city: e.target.value || null })} />)}</ul>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-ink/65">
-        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}</p>
+        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}
+          {tune && req.weight_rule ? <span data-testid="weight-rule" className="mt-1 block">{req.weight_rule}</span> : null}</p>
         <button type="button" className="font-semibold text-brand-plum hover:underline" aria-expanded={tune} onClick={() => setTune((v) => !v)}>{tune ? "Скрыть веса" : "Настроить веса"}</button>
       </div>
       <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
@@ -300,6 +305,8 @@ export function Needs() {
     try { const r = await api<Req & { text?: string }>("/employer/needs/parse", { body: { text: t } }); setParsed(r.text ?? t); setReq(r); fp.start(r); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   useEffect(() => { if ((loc.state as any)?.text) parse((loc.state as any).text); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  // Я9: заготовка из проводника «Проверка за 12 минут» — в поле; разбор — кнопкой, как у своего текста
+  useEffect(() => needPreset.listen((t) => { setText(t); setReq(null); setFile(null); fp.reset(); }), []);  // eslint-disable-line react-hooks/exhaustive-deps
   function rewrite(t: string) { setText(t); parse(t); }
   async function create() {
     if (!req) return;
@@ -398,6 +405,8 @@ function Conditions({ c, busy, onToggle }: { c?: any; busy: boolean; onToggle: (
 
 const REL: Record<string, string> = { exact: "точное совпадение", direction: "направление", below: "грейд ниже", above: "грейд выше", all: "все" };
 
+const TOP = 5, MORE = 10, WIDE_PX = 1000;  // Я10: первый экран подборки — 5 компактных карточек
+
 /** Подборка по потребности: категории, карточки с объяснениями, уточнение без потери версий. */
 export function Selection() {
   const { id, version } = useParams();
@@ -421,7 +430,20 @@ export function Selection() {
   const [wErr, setWErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { if (sel.data) { setFilters(sel.data.filters ?? {}); setPicked([]); } }, [sel.data]);
+  useEffect(() => { if (sel.data) { setFilters(sel.data.filters ?? {}); setPicked([]); setShown(TOP); setOpen({}); setActive(null); } }, [sel.data]);
+  // Я10: первые TOP — компактно, остальные свёрнуты («Показать ещё»); на широком блоке (≥ 1000 px) доказательства — справа
+  const [shown, setShown] = useState(TOP);
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [active, setActive] = useState<string | null>(null);
+  const [ask, setAsk] = useState<string | null>(null);  // Я10: вопрос-зонд из блока «НЕ проверено» (id варианта: роль или навык)
+  const [box, setBox] = useState<HTMLDivElement | null>(null);
+  const [wide, setWide] = useState(false);
+  useEffect(() => {
+    if (!box) return;
+    const ro = new ResizeObserver(() => setWide(box.clientWidth >= WIDE_PX));
+    ro.observe(box);
+    return () => ro.disconnect();
+  }, [box]);
 
   async function refine() {
     setErr(null); setBusy(true);
@@ -468,25 +490,35 @@ export function Selection() {
   const condOn = !!s?.conditions && !s.conditions.off && !!s.conditions.text;
   const toggleArr = (k: string, t: string) => { const cur: string[] = filters[k] ?? []; setFilters({ ...filters, [k]: cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t] }); };
 
+  const ordered: any[] = s ? mutual.sorted<any>(s.results) : [];
+  const visible = ordered.slice(0, Math.max(TOP, shown));
+  const rest = ordered.length - visible.length;
+  const askRefs = picked.length ? picked : ordered.slice(0, 3).map((r) => r.ref);
+  const activeRow = ordered.find((r) => r.ref === active) ?? visible[0];
+  const evidence = (r: any) => <CandidateCard bare c={r.card} reasons={r.reasons} must={r.must} compact
+    mutual={<MutualCardBlock needId={id!} version={s!.version} cref={r.ref} mutual={mutual} />} />;
+  const togglePick = (ref: string) => setPicked(picked.includes(ref) ? picked.filter((x) => x !== ref) : [...picked, ref]);
+  const hasBias = !!reqOf?.bias?.length;
+  const side = wide && !expandAll;  // «Подробно у всех» на широком — раскрытие в карточках, без панели справа
+  const expandBtn = <button type="button" className="text-sm font-semibold text-brand hover:underline" aria-pressed={expandAll} onClick={() => { setExpandAll(!expandAll); setOpen({}); }}>{expandAll ? "Коротко у всех" : "Подробно у всех"}</button>;
+  const askOpts = scopeOptions(s?.scope);
+  const askOpt = askOpts.find((o) => o.id === ask) ?? askOpts[0];
+
   return (
-    <div className="max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <PageTitle title={need.data.title} subtitle="Подборка по подтверждённым фактам: тест платформы (T1), зонды и ФСП (T2). Заявленное кандидатом (T0) показано отдельно и в скор не входит." />
-        <Link to="/employer/needs" className="btn-ghost">Все потребности</Link>
-      </div>
-      <section className="card space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-bold text-brand-night">Текст потребности</h2>
-          <span className="text-xs text-brand-ink/65">подсвечены фрагменты, из которых извлечены требования{reqOf?.bias?.length ? "; волнистой линией — не учитываемые (ст. 64 ТК РФ)" : ""}</span>
+    <div className="max-w-6xl space-y-5">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        {/* Я10: подзаголовок мельче на телефоне — первая карточка выше (PageTitle — та же разметка h1) */}
+        <div>
+          <h1 className="text-xl font-extrabold tracking-tight text-brand-night sm:text-2xl">{need.data.title}</h1>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">В балле — только подтверждённое: тест (T1), зонды и ФСП (T2); заявленное (T0) — отдельно.</p>
         </div>
-        <QuotedText text={need.data.raw_text} marks={reqMarks(reqOf, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
-        <BiasPanel bias={reqOf?.bias ?? []} suggested={reqOf?.suggested_text} rewriteLabel="Создать потребность из исправленного текста"
-          onRewrite={(t) => navigate("/employer/needs", { state: { text: t } })} focus={focus} onFocus={setFocus} />
-        {/* И27, Н2: частичное соответствие и требования вне справочника видны и в каждой версии подборки */}
-        {cov && <p className="rounded-lg bg-brand-blush/25 px-3 py-2 text-sm" data-testid="sel-coverage"><b className="font-semibold">{cov.message}</b> Не проверяется: {cov.not_tested}.</p>}
-        {reqOf && <ReqNotes req={{ ...reqOf, unknown_terms: reqOf.unknown_terms ?? need.data.requirements?.unknown_terms }} title={(t) => tags[t]?.title ?? t} />}
-      </section>
+        <Link to="/employer/needs" className="btn-ghost hidden sm:inline-flex">Все потребности</Link>
+      </div>
+      {/* И27, Н2: частичное соответствие и требования вне справочника видны и в каждой версии подборки */}
+      {/* Я10 (п. 2): у заголовка — проверено тестом / НЕ проверено и вопрос-зонд на непроверенный навык */}
+      <NeedScope key={s?.version ?? 0} scope={s?.scope} cov={s && "scope" in s ? null : cov} recipients={askRefs} picked={picked.length > 0} onAsk={setAsk} needId={id} />
       <div className="flex flex-wrap items-center gap-2 text-sm">
+        <Link to="/employer/needs" className="font-semibold text-brand hover:underline sm:hidden">Все потребности</Link>
         <span className="text-brand-ink/65">Версии подборки:</span>
         {need.data.versions.map((x: any) => (
           <Link key={x.version} to={`/employer/needs/${id}/v/${x.version}`} title={x.filters?.relaxation ? `из v${x.parent_version}: ${x.filters.relaxation}` : undefined} className={`rounded-full px-3 py-1 font-semibold ${x.version === v ? "bg-brand-strong text-white" : "bg-brand-blush/60 text-brand-plum hover:bg-brand-blush"}`}>
@@ -494,10 +526,72 @@ export function Selection() {
           </Link>
         ))}
       </div>
-      {id && <SubscriptionPanel needId={id} sub={sub} versionNo={last} onNewVersion={async (n) => { await need.reload(); navigate(`/employer/needs/${id}/v/${n}`); }} />}
       {!s ? <Loading /> : (
-        <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-          <aside className="space-y-4">
+        <div className="min-w-0 space-y-4" ref={setBox}>
+            <section className="space-y-3" aria-labelledby="top-picks-h" data-testid="top-picks">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 id="top-picks-h" className="text-lg font-bold text-brand-night">{ordered.length ? `Кого пригласить первым: ${Math.min(TOP, ordered.length)} из ${s.total}` : "Кандидаты"}</h2>
+                  <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}{ordered.length > 0 && !wide && <> · {expandBtn}</>}</p>
+                </div>
+                {ordered.length > 0 && wide && expandBtn}
+              </div>
+              {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
+                <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Балл — доля требований, подтверждённых тестом; порядок подборки не меняется. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
+              </div>}
+              {invited && <Alert kind="ok">{invited}</Alert>}
+              {!ordered.length ? <Empty title="Подходящих кандидатов нет"
+                text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» ниже — там видно, какое условие отсекает больше всего, — или ослабьте фильтры и выберите соседнюю категорию. Прежние версии сохранены.`} /> : (
+                <div className={side ? "grid items-start gap-4 grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]" : ""}>
+                  <div className="min-w-0 space-y-3">
+                    {visible.map((r: any, i: number) => {
+                      const isOpen = open[r.ref] ?? expandAll;
+                      return (
+                        <CompactCard key={r.ref} r={r} rank={i + 1} fit={mutual.data?.items[r.ref]} needId={id}
+                          picked={picked.includes(r.ref)} pickDisabled={picked.length >= 3} onPick={() => togglePick(r.ref)}
+                          onInvite={() => { setInvited(null); setInvite(r); }}
+                          badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
+                          side={side} active={side && activeRow?.ref === r.ref}
+                          open={!side && isOpen} onToggle={() => (side ? setActive(r.ref) : setOpen({ ...open, [r.ref]: !isOpen }))}
+                          details={evidence(r)} />
+                      );
+                    })}
+                    {ordered.length > TOP && (
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl border border-dashed border-brand-night/15 px-3 py-2 text-sm" data-testid="show-more">
+                        {rest > 0 ? <>
+                          <span className="text-brand-ink/70">Ещё {rest} {plural(rest, "кандидат", "кандидата", "кандидатов")} — свёрнуты, порядок тот же</span>
+                          <button type="button" className="font-semibold text-brand hover:underline" onClick={() => setShown(visible.length + MORE)}>Показать ещё {Math.min(MORE, rest)}</button>
+                          {rest > MORE && <button type="button" className="font-semibold text-brand hover:underline" onClick={() => setShown(ordered.length)}>Показать всех ({ordered.length})</button>}
+                        </> : <span className="text-brand-ink/70">Показаны все {ordered.length}</span>}
+                        {visible.length > TOP && <button type="button" className="font-semibold text-brand hover:underline" onClick={() => setShown(TOP)}>Свернуть до первых {TOP}</button>}
+                      </div>
+                    )}
+                  </div>
+                  {side && activeRow && <aside className="card sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain !p-4" aria-label={`Подробно: кандидат ${activeRow.ref}`} data-testid="side-details">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-night/10 pb-3">
+                      <p className="font-bold text-brand-night">Подробно: кандидат {activeRow.ref} <span className="font-normal text-brand-ink/65">· №{ordered.indexOf(activeRow) + 1}</span></p>
+                      <button type="button" className="btn-primary !px-4 !py-2" onClick={() => { setInvited(null); setInvite(activeRow); }}>Пригласить {activeRow.ref}</button>
+                    </div>
+                    <div className="pt-3">{evidence(activeRow)}</div>
+                  </aside>}
+                </div>
+              )}
+              {/* Я10: действия с отмеченными — под карточками; пока кто-то отмечен, панель прилипает к низу экрана */}
+              <div className={`flex flex-wrap items-center gap-2 ${picked.length ? "sticky bottom-2 z-30 rounded-2xl bg-white/95 p-2 shadow-lg ring-1 ring-brand-night/10 backdrop-blur" : ""}`} data-testid="pick-toolbar">
+                {picked.length > 0 && <span className="px-1 text-sm text-brand-ink/70">Отмечено: {picked.join(", ")}{picked.length < 2 ? " — отметьте ещё одного" : ""}</span>}
+                <button className="btn-ghost !px-3 !py-1.5 text-sm" disabled={picked.length < 2 || picked.length > 3} title="Отметьте «Сравнить» у 2–3 кандидатов"
+                    onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
+                <button className="btn-ghost !px-3 !py-1.5 text-sm" disabled={!picked.length} title={picked.length ? "Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length}) · необязательно</button>
+                  <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
+                {picked.length > 0 && <button type="button" className="text-sm font-semibold text-brand hover:underline" onClick={() => setPicked([])}>Снять отметки</button>}
+              </div>
+              <div className="text-sm">
+                  <StatusCounts confirmed={s.confirmed_matched} provisional={s.provisional_matched} unconfirmed={s.unconfirmed_matched} hiddenNote={!!s.filters?.confirmed_only} />
+                  <Conditions c={s.conditions} busy={busy} onToggle={toggleConditions} />
+              </div>
+            </section>
+            {/* Я10: фильтры и уточнение — после решения «кого пригласить»; две колонки на ≥ 768 px */}
+            <div className="grid items-start gap-4 md:grid-cols-2" data-testid="refine-panel">
             <section className="card">
               <h2 className="text-sm font-bold text-brand-night">Подходящие категории</h2>
               <ul className="mt-3 space-y-2 text-sm">
@@ -550,23 +644,8 @@ export function Selection() {
               <button className="btn-primary w-full" disabled={busy} onClick={refine}>{busy ? "Пересчитываем…" : `Сохранить как v${(last ?? 0) + 1}`}</button>
               <p className="text-xs text-brand-ink/65">Прежние версии подборки сохраняются.</p>
             </section>
-          </aside>
-          <div className="space-y-4">
-            {refineReq && <section className="card"><h2 className="mb-4 font-bold text-brand-night">Требования для новой версии</h2><ReqEditor req={refineReq} onChange={setRefineReq} /></section>}
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
-                <StatusCounts confirmed={s.confirmed_matched} provisional={s.provisional_matched} unconfirmed={s.unconfirmed_matched} hiddenNote={!!s.filters?.confirmed_only} />
-                <Conditions c={s.conditions} busy={busy} onToggle={toggleConditions} />
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button className="btn-ghost" disabled={picked.length < 2 || picked.length > 3} title="Отметьте 2–3 кандидатов"
-                  onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
-                <button className="btn-ghost" disabled={!picked.length} title={picked.length ? "Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length}) · необязательно</button>
-                <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
-              </div>
             </div>
-            <p className="text-xs text-brand-ink/65">Отметьте 2–3 кандидатов, чтобы сравнить их рядом по требованиям потребности, или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>сравните первых трёх</Link>.</p>
+            {refineReq && <section className="card"><h2 className="mb-4 font-bold text-brand-night">Требования для новой версии</h2><ReqEditor req={refineReq} onChange={setRefineReq} /></section>}
             <WhatIf needId={id!} version={s.version} next={(last ?? 0) + 1} busy={busy} onApply={applyWhatIf} />
             <Alert>{wErr}</Alert>
             {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
@@ -578,35 +657,40 @@ export function Selection() {
             {s.filters?.origin?.note && <Alert kind="info">v{s.version}: {s.filters.origin.note}</Alert>}
             <MutualToolbar needId={id!} version={s.version} mutual={mutual} />
             <LevelLegend />
-            {/* Ф6 (Н3, Н9): что значит балл и какие условия жёсткие; карточки короткие, детали — по клику */}
-            {s.results.length > 0 && <div className="flex flex-wrap items-start justify-between gap-2 rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75" data-testid="score-legend">
-              <p className="min-w-0 flex-1 basis-72"><b className="font-semibold text-brand-night">Как читать балл.</b> Соответствие из 100 — доля требований, подтверждённых тестом (обязательные весят больше). Обязательные навыки — мягкое условие: без подтверждения кандидат остаётся в подборке с пометкой «не хватает обязательного»{s.must_first ? " и идёт ниже" : ""}. Формат и город — жёсткое: не прошедшие скрыты. Первая карточка раскрыта, остальные коротко — «Подробнее» в карточке. Главный шаг — «Пригласить» с вилкой; зонд — по желанию.</p>
-              <button type="button" className="font-semibold text-brand hover:underline" aria-pressed={expandAll} onClick={() => setExpandAll(!expandAll)}>{expandAll ? "Коротко у всех" : "Подробно у всех"}</button>
-            </div>}
-            {invited && <Alert kind="ok">{invited}</Alert>}
-            {!s.results.length ? <Empty title="Подходящих кандидатов нет"
-              text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : mutual.sorted<any>(s.results).map((r: any, i: number) => (
-              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} core={r.core} compact collapsible expanded={expandAll || i === 0}
-                badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
-                mutual={<MutualCardBlock needId={id!} version={s.version} cref={r.ref} mutual={mutual} />}
-                actions={
-                  <div className="flex flex-wrap items-center gap-3">
-                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="accent-brand" checked={picked.includes(r.ref)} onChange={() => setPicked(picked.includes(r.ref) ? picked.filter((x) => x !== r.ref) : [...picked, r.ref])} />выбрать</label>
-                    <Link className="btn-ghost !py-2" to={`/employer/candidates/${r.ref}?need=${id}`}>Открыть</Link>
-                    <button type="button" className="btn-primary !py-2" onClick={() => { setInvited(null); setInvite(r); }}>Пригласить</button>
-                  </div>
-                } />
-            ))}
-          </div>
+            <p className="text-xs leading-relaxed text-brand-ink/65">{SCORE_HINT}</p>
         </div>
       )}
+      {/* Я10: текст потребности с цитатами и подписка — после решения «кого пригласить»; при находках ст. 64 раскрыт */}
+      <details className="card group" open={hasBias || undefined} data-testid="need-text">
+        <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-bold text-brand-night">Текст потребности и откуда взяты требования</span>
+          <span className="text-xs text-brand-ink/65">подсвечены фрагменты, из которых извлечены требования{hasBias ? "; волнистой линией — не учитываемые (ст. 64 ТК РФ)" : ""}</span>
+        </summary>
+        <div className="mt-3 space-y-3">
+          <QuotedText text={need.data.raw_text} marks={reqMarks(reqOf, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
+          <BiasPanel bias={reqOf?.bias ?? []} suggested={reqOf?.suggested_text} rewriteLabel="Создать потребность из исправленного текста"
+            onRewrite={(t) => navigate("/employer/needs", { state: { text: t } })} focus={focus} onFocus={setFocus} />
+          {reqOf && <ReqNotes req={{ ...reqOf, unknown_terms: reqOf.unknown_terms ?? need.data.requirements?.unknown_terms }} title={(t) => tags[t]?.title ?? t} />}
+        </div>
+      </details>
+      {id && <SubscriptionPanel needId={id} sub={sub} versionNo={last} onNewVersion={async (n) => { await need.reload(); navigate(`/employer/needs/${id}/v/${n}`); }} />}
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение кандидату ${invite?.ref ?? ""}`}>
         {invite && <InviteForm cref={invite.ref} needId={id} market={invite.card?.market_range ?? s?.categories?.find((c: any) => c.relation === "exact")?.market_range}
           needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }}
-          onDone={() => { setInvited(`Приглашение ${invite.ref} отправлено. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`); setInvite(null); }} />}
+          onDone={(inv) => { setInvited(inviteSentText(inv, invite.ref)); setInvite(null); }} />}
       </Modal>
       {/* А11: обновление подборки (новая версия, пересчёт) — экранному диктору; последним элементом, чтобы не сдвигать space-y */}
       <p className="sr-only" role="status" aria-live="polite">{busy ? "Пересчитываем подборку" : s ? `Подборка v${s.version}: кандидатов ${s.total}` : ""}</p>
+      <Modal open={!!ask} onClose={() => setAsk(null)} title={`Вопрос зондом: ${askRefs.length} канд.`}>
+        {ask && askOpt && <div className="mb-4">
+          <label className="label" htmlFor="scope-ask">Вопрос: типовая задача роли или навык, который тест не проверяет</label>
+          <select id="scope-ask" className="input" value={askOpt.id} onChange={(e) => setAsk(e.target.value)}>
+            {askOpts.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+          </select>
+          <p className="mt-1 text-xs text-brand-ink/65">Кому: {askRefs.join(", ")} — {picked.length ? "отмеченные «Сравнить»" : "первые три подборки"}.</p>
+        </div>}
+        {ask && askOpt && <ProbeForm key={askOpt.id} refs={askRefs} needId={id} init={askOpt.probe} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setAsk(null); setPicked([]); setInvited(probeSentText(r)); sel.reload(); }} />}
+      </Modal>
       <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Зонд для ${picked.length} канд.`}>
         <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setProbeOpen(false); setPicked([]); setInvited(probeSentText(r)); }} />
       </Modal>

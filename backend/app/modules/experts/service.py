@@ -284,8 +284,23 @@ def source_summary(panel: list[dict]) -> dict | None:
         caption = (f"Разметка выполнена {who} в {_RUNS.get(len(panel), f'{len(panel)} прогонах')}{with_roles}, "
                    "без доступа к коду ранжирования и друг к другу; это проверка конвейера и методики, а не замена "
                    "экспертной панели — реальных экспертов подключаем на этапе доработки.")
-    return {"kind": kinds.pop() if len(kinds) == 1 else "mixed", "title": title, "models": models,
-            "model_panel": model_panel, "caption": caption}
+    kind = kinds.pop() if len(kinds) == 1 else "mixed"
+    # Я8 (судья: «Разметка завершена» принята за людей): кто размечал — в заголовке блока, не только в подписи
+    heading = (f"Модельная панель ({title.removeprefix('модель ')}) — не люди" if model_panel
+               else "Экспертная разметка людьми" if kind == "people" else f"Смешанная панель: {title}")
+    return {"kind": kind, "title": title, "models": models, "model_panel": model_panel, "caption": caption,
+            "heading": heading, "role_note": model_role_note(models) if kind != "people" else None}
+
+
+def model_role_note(models: list[str]) -> str:
+    """Модель разметки по протоколу ≠ модель продукта — одной строкой, из конфигурации LLM (находка С3-8)."""
+    from app.modules.llm.client import OPENROUTER_DEFAULTS, model_label
+
+    main, second = model_label(OPENROUTER_DEFAULTS["grade"]), model_label(OPENROUTER_DEFAULTS["grade_second"])
+    who = ", ".join(models) or "Языковая модель"
+    extra = f"; {second} в продукте — только вторая оценка спорных ответов" if second in models else ""
+    return (f"{who} здесь — модель, выполнявшая разметку по экспертному протоколу, а не основная модель продукта: "
+            f"в продукте — {main} через OpenRouter, резерв — YandexGPT{extra} (docs/LLM.md).")
 
 
 def panel_status(db: Session, pack: str = P.PACK) -> list[dict]:

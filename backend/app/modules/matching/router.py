@@ -228,6 +228,20 @@ def split_filters(stored: dict | None) -> tuple[dict, dict | None]:
     return f, f.pop(META, None)
 
 
+def _scope_out(db: Session, v: SelectionVersion) -> dict | None:
+    """Я10: «проверено тестом / НЕ проверено» по требованиям версии и счётчик зондов по этой потребности."""
+    from app.modules.matching.coverage import scope
+
+    sc = scope(v.requirements)
+    if sc is None:
+        return None
+    rows = db.scalars(select(Probe.status).where(Probe.need_id == v.need_id)).all()
+    st = [getattr(x, "value", x) for x in rows]
+    sc["probes"] = {"total": len(st), "answered": sum(1 for x in st if x in ("submitted", "reviewed")),
+                    "reviewed": sum(1 for x in st if x == "reviewed")}
+    return sc
+
+
 def _version_out(db: Session, v: SelectionVersion) -> dict:
     filters, meta = split_filters(v.filters)
     if meta and meta.get("categories") is not None:
@@ -248,6 +262,7 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         # Ф2: условия потребности, применённые к версии, и сколько кандидатов они скрыли (None — версия до Ф2)
         "conditions": meta.get("conditions"), "must_first": meta.get("must_first"),
         "core": meta.get("core"),  # Я1: ядро роли версии (None — у потребности нет ядра или версия до Я1)
+        "scope": _scope_out(db, v),  # Я10: что тест проверяет / НЕ проверяет и зонды по потребности (не меняет порядок)
         "weights": ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
         "categories": recs,
         "total": len(v.results), "results": v.results,

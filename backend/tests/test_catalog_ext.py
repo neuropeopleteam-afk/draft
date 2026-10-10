@@ -234,3 +234,27 @@ def test_criteria_mentions_catalog_only_with_flag(monkeypatch):
         monkeypatch.delenv("CATALOG_EXT_ENABLED")
         monkeypatch.delenv("CATALOG_EXT_FORCE_READY")
         get_settings.cache_clear()
+
+
+def test_spa_inside_spark_only_fixed_with_flag(monkeypatch):
+    """«spa» внутри «Spark» не голосует за Frontend — с флагом; без флага поведение прежнее (правка — под флагом)."""
+    from app.modules.matching.need_parser import parse_need
+
+    text = "Data Engineer (Middle)\nSpark, Airflow, SQL"
+    assert parse_need(text, use_llm=False)["direction"] == "frontend"  # прежнее поведение без флага
+    monkeypatch.setenv("CATALOG_EXT_ENABLED", "1")
+    monkeypatch.setenv("CATALOG_EXT_MIN_FAMILIES", "100000")  # банк «не готов»: новых направлений нет
+    get_settings.cache_clear()
+    ext.reset_cache()
+    try:
+        assert parse_need(text, use_llm=False)["direction"] == "data_ml"
+        r = parse_need("Frontend-разработчик SPA на React\nTypeScript", use_llm=False)
+        assert r["direction"] == "frontend"
+        from app.modules.catalog.dictionary import direction_keywords, find_keys
+
+        assert find_keys("SPA на React, не Spark", direction_keywords()).get("frontend") == 1
+    finally:
+        monkeypatch.delenv("CATALOG_EXT_ENABLED")
+        monkeypatch.delenv("CATALOG_EXT_MIN_FAMILIES")
+        get_settings.cache_clear()
+        ext.reset_cache()

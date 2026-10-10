@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
 import { InlineThread } from "../../components/Chat";
@@ -8,6 +8,7 @@ import { api } from "../../lib/api";
 import { daysText, useRules } from "../../lib/meta";
 import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
+import { HhMarketNote } from "../../integrations/HhImport";  // Я12: «Рынок по hh.ru» у вилки (только при HH_ENABLED)
 import { EmployerHiring, HiringChip, HiringReminders } from "../../components/Hiring";
 import { OfferFitHint } from "../mutual/Employer";  // подсказка до отправки: подходит ли предложение кандидату (Н9)
 
@@ -16,8 +17,9 @@ type Market = { from: number; to: number; median?: number | null } | null | unde
 export type NeedSalary = { from?: number | null; to?: number | null; net?: boolean | null } | null | undefined;
 const basisOf = (need: NeedSalary): Basis => (need?.net ? "net" : "gross");
 
-function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market }: {
+function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market, hh }: {
   from: string; to: string; setFrom: (v: string) => void; setTo: (v: string) => void; basis: Basis; setBasis: (b: Basis) => void; market: Market;
+  hh?: { cref?: string | null; needId?: string | null };
 }) {
   const f = Number(from), t = Number(to);
   const wide = f > 0 && t > f * SALARY_MAX_RATIO;
@@ -36,6 +38,7 @@ function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market }: {
         </p>
       </div>
       <MarketNote m={market} extra="Минимум кандидата вам не показывается." />
+      {hh && <HhMarketNote cref={hh.cref} needId={hh.needId} />}
     </div>
   );
 }
@@ -78,9 +81,9 @@ export const probeSentText = (r: any) => r?.created?.length
   ? `Зонд отправлен: ${r.created.length} ${plural(r.created.length, "кандидату", "кандидатам", "кандидатам")}. Ответ появится в разделе «Зонды»; контакты не раскрываются.`
   : null;
 
-export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: (res?: any) => void }) {
-  const [title, setTitle] = useState("");
-  const [task, setTask] = useState("");
+export function ProbeForm({ refs, needId, market, needSalary, onDone, init }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: (res?: any) => void; init?: { title?: string; task?: string } | null }) {
+  const [title, setTitle] = useState(init?.title ?? "");  // Я10: заготовка вопроса на навык, который тест не проверяет
+  const [task, setTask] = useState(init?.task ?? "");
   const [mode, setMode] = useState<"any" | "solution" | "approach">("any");
   const [mins, setMins] = useState("30");
   const [from, setFrom] = useState(() => defaultRange(market, needSalary)[0]);
@@ -125,6 +128,18 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: 
 
 const FORMAT_TITLES: Record<string, string> = { employment: "Работа", internship: "Стажировка", light_work: "Лёгкий труд (для 16–17 лет)" };
 
+/** Я11 (С3-6): подтверждение сразу после ответа POST — кому, что и когда; контакты — после согласия. */
+export const inviteSentText = (inv: any, cref: string) => {
+  const at = inv?.created_at ? new Date(inv.created_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : null;
+  const pos = inv?.position_title ? ` «${inv.position_title}»` : "";
+  const fork = inv?.salary_from && inv?.salary_to ? `, вилка ${salaryText(inv.salary_from, inv.salary_to, inv.salary_basis)}` : "";
+  return `Приглашение отправлено кандидату ${cref}${at ? ` в ${at}` : ""}:${pos}${fork}. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`;
+};
+
+/** Я11 (С3-6): почему «Пригласить» неактивна — для подсказки у кнопки (title и текст рядом). */
+export const inviteBlockedText = (c: any) =>
+  `Приглашение этому кандидату уже отправлено. Следующее — с ${c?.invite_available_at ? dt(c.invite_available_at) : "окончания срока"}${c?.invitation_cooldown_days ? ` (не чаще раза в ${c.invitation_cooldown_days} дней)` : ""}.`;
+
 export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }: { cref: string; needId?: string | null; probeId?: string | null; market: Market; needSalary?: NeedSalary; onDone: (inv: any) => void }) {
   const candidate = useApi<any>(`/employer/candidates/${cref}`);
   const safety = candidate.data?.employment_safety;
@@ -142,20 +157,24 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
   const [to, setTo] = useState(() => defaultRange(market, needSalary)[1]);
   const [basis, setBasis] = useState<Basis>(() => basisOf(needSalary));
   const [err, setErr] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);  // Я11 (С3-6): «Отправляем…» сразу, повторное нажатие не шлёт второй POST
+  const inFlight = useRef(false);
   async function send() {
+    if (inFlight.current) return;
     const se = salaryError(from, to);
     if (se) { setErr(se); return; }
     setErr(null);
+    inFlight.current = true; setSending(true);
     try {
       onDone(await api<any>("/employer/invitations", { body: { candidate_ref: cref, need_id: needId ?? null, probe_id: probeId ?? null, position_title: title, offer_description: desc, contact_method: contact, salary_from: Number(from), salary_to: Number(to), employment_terms: { format, reduced_time: reduced, employer_acknowledged: ack }, salary_basis: basis } }));
-    } catch (e) { setErr(errText(e)); }
+    } catch (e) { setErr(errText(e)); } finally { inFlight.current = false; setSending(false); }
   }
   return (
     <div className="space-y-4">
       <Field label="Позиция" htmlFor="it"><input id="it" className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Python-разработчик в команду платежей" /></Field>
       <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className="input min-h-[110px]" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" /></Field>
       <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className="input" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
-      <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} basis={basis} setBasis={setBasis} market={market} />
+      <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} basis={basis} setBasis={setBasis} market={market} hh={{ cref, needId }} />
       <OfferFitHint cref={cref} needId={needId} from={Number(from) || undefined} to={Number(to) || undefined} basis={basis} />
       {safety?.minor && <Alert kind="info">{safety.warning} {!safety.offer_allowed && "Оффер недоступен: возраст 14–15 лет или ещё нет отметки согласия."}</Alert>}
       <Field label="Формат предложения" htmlFor="offer-format"><select id="offer-format" className="input" value={format} onChange={e => setFormat(e.target.value)}>
@@ -165,14 +184,17 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       {safety?.minor && <Toggle checked={ack} onChange={setAck} label="Проверю документы и ограничения перед оформлением" />}
       <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. {rules ? `Одно приглашение кандидату — не чаще раза в ${daysText(rules.invitation_cooldown_days)}. ` : ""}До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
       <Alert>{err}</Alert>
-      <button className="btn-primary" disabled={candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>Отправить приглашение</button>
+      <button className="btn-primary" aria-busy={sending || undefined} disabled={sending || candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>{sending ? "Отправляем приглашение…" : "Отправить приглашение"}</button>
+      <p className="sr-only" role="status" aria-live="polite">{sending ? `Отправляем приглашение кандидату ${cref}` : ""}</p>
       {candidate.error && <Alert>{candidate.error}</Alert>}
     </div>
   );
 }
 
 export function EmployerProbes() {
-  const { data, loading, error, reload } = useApi<any[]>("/employer/probes");
+  const { data: all, loading, error, reload } = useApi<any[]>("/employer/probes");
+  const need = new URLSearchParams(useLocation().search).get("need");  // Я10: из подборки — «зонды по этой потребности»
+  const data = need && all ? all.filter((p) => p.need_id === need) : all;
   const [err, setErr] = useState<string | null>(null);
   const [comment, setComment] = useState<Record<string, string>>({});
   async function review(id: string, verdict: string) {
@@ -183,6 +205,7 @@ export function EmployerProbes() {
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Зонды" subtitle="Короткие задачи с вилкой зарплаты до раскрытия контактов. Оценка ответа становится фактом T1 в профиле кандидата." />
       <p className="text-sm text-brand-ink/70">Рядом с зондом со свободным ответом — <Link className="font-semibold text-brand hover:underline" to="/employer/assignments">задания с автопроверкой</Link>: 3–5 заданий банка по стеку потребности, проверяет система.</p>
+      {need && all && <p className="text-sm text-brand-ink/70" data-testid="probes-need-filter">Показаны зонды по одной потребности: {data?.length ?? 0} из {all.length}. <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${need}`}>К подборке</Link> · <Link className="font-semibold text-brand hover:underline" to="/employer/probes">Все зонды</Link></p>}
       <Alert>{err}</Alert>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Зондов пока нет" text="Отметьте кандидатов в подборке и отправьте им короткую задачу." action={<Link to="/employer/needs" className="btn-primary">К подборкам</Link>} />
@@ -214,9 +237,15 @@ export function EmployerProbes() {
   );
 }
 
+/** Ответ POST по приглашению (та же форма, что строка списка) — сразу в список, без ожидания повторного GET (В-2). */
+export const replaceInvitation = (list: any[] | null, inv: any): any[] | null =>
+  list && inv?.id ? list.map((x) => (x.id === inv.id ? inv : x)) : list;
+
 export function EmployerInvitations() {
-  const { data, loading, error, reload } = useApi<any[]>("/employer/invitations");
+  const { data, loading, error, reload, setData } = useApi<any[]>("/employer/invitations");
   const [err, setErr] = useState<string | null>(null);
+  // карточка обновляется ответом POST сразу; полный список (передачи в ATS после принятия) — следом, в фоне
+  const applyUpdated = (inv?: any) => { if (inv?.id) setData((d) => replaceInvitation(d, inv)); void reload(); };
   async function withdraw(id: string) {
     try { await api(`/employer/invitations/${id}/withdraw`, { method: "POST" }); await reload(); } catch (e) { setErr(errText(e)); }
   }
@@ -248,7 +277,7 @@ export function EmployerInvitations() {
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Кандидат отозвал доступ к контактам {i.contacts_revoked_at ? dt(i.contacts_revoked_at) : ""} — карточка снова обезличена, передача в ATS и PDF с контактами закрыты. Переписка — в формате «вопрос — ответ». Вернуть доступ может только кандидат.</p>
           ) : <p className="text-brand-ink/65">Контакты откроются после принятия приглашения.</p>}
           <EmploymentTermsText terms={i.employment_terms} />
-          <CounterDecision inv={i} onDone={reload} />
+          <CounterDecision inv={i} onDone={applyUpdated} />
           <AtsInvitationActions invitationId={i.id} status={i.contacts_revoked ? "contacts_revoked" : i.status} candidateRef={i.candidate_ref} transfers={i.ats_transfers} onChanged={reload} />
           <EmployerHiring inv={i} onChange={reload} />
           {i.complaint ? (
@@ -264,16 +293,22 @@ export function EmployerInvitations() {
 }
 
 /** Встречное предложение кандидата: принять (вилка заменяется, приглашение принято, контакты открыты) или отклонить. */
-function CounterDecision({ inv, onDone }: { inv: any; onDone: () => void }) {
+function CounterDecision({ inv, onDone }: { inv: any; onDone: (updated?: any) => void }) {
   const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"" | "accept" | "decline">("");
   const [err, setErr] = useState<string | null>(null);
+  const inFlight = useRef(false);  // второй клик до ответа сервера не уходит вторым POST
   const c = inv.counter;
   const decided = (inv.counters ?? []).filter((x: any) => x.status !== "pending");
   async function decide(kind: "accept" | "decline") {
-    setBusy(true); setErr(null);
-    try { await api(`/employer/invitations/${inv.id}/counter/${kind}`, { body: { note: note || null } }); setNote(""); onDone(); }
-    catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+    if (inFlight.current) return;
+    inFlight.current = true; setBusy(kind); setErr(null);
+    try {
+      // В-2: ответ — обновлённое приглашение (статус, контакты, история): карточка меняется сразу, без перезагрузки
+      const updated = await api<any>(`/employer/invitations/${inv.id}/counter/${kind}`, { body: { note: note || null } });
+      setNote(""); onDone(updated);
+    }
+    catch (e) { setErr(errText(e)); } finally { inFlight.current = false; setBusy(""); }
   }
   if (!c) {
     const last = decided[decided.length - 1];
@@ -299,8 +334,8 @@ function CounterDecision({ inv, onDone }: { inv: any; onDone: () => void }) {
       <p className="text-xs text-brand-ink/70">Если принять — вилка приглашения заменится на встречную, приглашение станет принятым и откроются контакты кандидата (он согласился на это, отправляя встречное). Если отклонить — приглашение останется открытым с вашей вилкой: кандидат сможет принять её, отказаться или предложить ещё раз.</p>
       <input className="input" placeholder="Комментарий кандидату (необязательно)" aria-label="Комментарий кандидату к решению по встречному" maxLength={1000} value={note} onChange={(e) => setNote(e.target.value)} />
       <div className="flex flex-wrap gap-2">
-        <button className="btn-primary !py-2" disabled={busy} onClick={() => decide("accept")}>Принять встречное</button>
-        <button className="btn-ghost !py-2" disabled={busy} onClick={() => decide("decline")}>Отклонить встречное</button>
+        <button className="btn-primary !py-2" disabled={!!busy} aria-busy={busy === "accept"} onClick={() => decide("accept")}>{busy === "accept" ? "Принимаем…" : "Принять встречное"}</button>
+        <button className="btn-ghost !py-2" disabled={!!busy} aria-busy={busy === "decline"} onClick={() => decide("decline")}>{busy === "decline" ? "Отклоняем…" : "Отклонить встречное"}</button>
       </div>
       <Alert>{err}</Alert>
     </section>
