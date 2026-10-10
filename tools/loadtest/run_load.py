@@ -37,6 +37,7 @@ OUT = ROOT / "docs" / "loadtest"
 STATE = Path(os.environ.get("LT_STATE", "/tmp/lt_jury_state.json"))
 LOCUST = os.environ.get("LOCUST", "/tmp/lt/bin/locust")
 KPY = os.environ.get("KPY", "")
+NGINX_LOG_DIR = os.environ.get("LT_NGINX_LOG_DIR", "/var/log/nginx")  # журнал nginx хоста стенда (формат combined)
 UA = "spectrek-load/prepare"  # User-Agent запросов этого скрипта; run и burst ставят свой тег
 
 
@@ -339,12 +340,13 @@ def preflight(a) -> None:
                       "docker inspect -f '{{.State.StartedAt}}' spectrek_fsp-api-1; "
                       "docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' spectrek_fsp-api-1 "
                       "| grep -E '^JURY_SPARE_SANDBOXES=' || echo 'JURY_SPARE_SANDBOXES не задан (по умолчанию 1)'; "
-                      "pgrep -af 'deploy|docker compose (up|build)|docker-compose' | grep -v pgrep | wc -l")
+                      "echo deploying=$(pgrep -af 'deploy|docker compose (up|build)|docker-compose' | grep -vc pgrep)")
         print("Сервер стенда (только чтение):")
         for ln in out.strip().splitlines():
             print("   ", ln)
-        busy = out.strip().splitlines()[-1:] or ["?"]
-        line(busy[0].strip() == "0", f"выкладка или сборка на сервере: {'нет' if busy[0].strip() == '0' else 'идёт — подождать'}")
+        m = re.search(r"^deploying=(\d+)", out, re.M)
+        busy = int(m.group(1)) if m else -1
+        line(busy == 0, f"выкладка или сборка на сервере: {'нет' if busy == 0 else ('идёт — подождать' if busy > 0 else 'не проверено')}")
     else:
         print("KPY не задан — сервер стенда не проверен")
     print("Готово к прогону" if ok else "Есть ошибки — прогон не начинать")
@@ -362,7 +364,7 @@ def nginx(a) -> None:
            "for (k in f) print \"fail\", k, f[k]}'")
     out = {}
     for kind, agent in (("main", ua), ("burst", ua + "-burst")):
-        script = (f"cd /var/log/nginx && zcat -f access.log access.log.1 2>/dev/null | grep -aF '\"{agent}\"' | {awk}")
+        script = (f"cd {NGINX_LOG_DIR} && zcat -f access.log access.log.1 2>/dev/null | grep -aF '\"{agent}\"' | {awk}")
         out[kind] = _remote(script, timeout=300)
     lines = [f"# Журнал nginx стенда: запросы с User-Agent «{ua}» (всплеск — «{ua}-burst»)", ""]
     total = {}
