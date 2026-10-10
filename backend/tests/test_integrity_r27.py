@@ -256,6 +256,9 @@ def test_candidate_and_anonymous_api_hide_mechanics(client, bank_api):
     assert any("невидимая метка" in t for t in raw["reasons"])
     assert fin["integrity"]["level"] == "low" and "Признаки использования подсказок" in fin["integrity"]["reasons"]
     assert "n_canaries" not in fin["details"]
+    # Я11 (С3-11): персона жюри — в демо-режиме, подробные причины для жюри отдельным ключом (как у работодателя);
+    # вне демо-режима ключа нет — tests/test_sup3_integrity.py
+    assert fin.pop("integrity_jury")["note"].startswith("Демо-режим жюри")
     assert_candidate_safe(fin, "итог теста")
     payloads = {"итог теста": fin}
 

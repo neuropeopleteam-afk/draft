@@ -236,7 +236,8 @@ export function Integrity({ v, compact = false }: { v: { level: string; title: s
       {v.note && !compact && <p className="mt-0.5 opacity-80">{v.note}</p>}{/* версия для самого кандидата (Р27) */}
       {/* И16: итог камеры (по согласию кандидата) — только заголовок и до трёх замечаний; без камеры — нейтрально */}
       {v.camera && <p className="mt-0.5 text-[11px] opacity-90" data-testid="camera-title">{v.camera.title}{!compact && v.camera.remarks.length ? `: ${v.camera.remarks.join("; ")}` : ""}{!compact && v.camera.notes.length ? ` · ${v.camera.notes.join("; ")}` : ""}</p>}
-      {v.level !== "high" && <p className="mt-0.5 opacity-80">Не блокирует: на место в подборке не влияет, решение за вами — можно пригласить или проверить зондом.</p>}
+      {/* подсказка работодателю; у версии для кандидата (с note, Р27) — не показывается (Я11, С3-11) */}
+      {v.level !== "high" && !v.note && <p className="mt-0.5 opacity-80">Не блокирует: на место в подборке не влияет, решение за вами — можно пригласить или проверить зондом.</p>}
     </div>
   );
 }
