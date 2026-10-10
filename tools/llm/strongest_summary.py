@@ -304,6 +304,11 @@ def build(wdir: Path) -> dict:
     fv = functions_view(dirs, grade_in, {k: list(v["corrected_stack"]) for k, v in ref.items()}, gold, sample_ids,
                         d["models"])
     d.update(fv)
+    import strongest_quality as Q
+    ref50 = {v["vacancy_id"]: list(v["corrected_stack"]) for v in
+             json.loads((ROOT / "docs/llm/extra_tags_judgement.json").read_text())["vacancies"]}
+    vac = B._vacancies()
+    d["full_run"] = full_view(wdir, ref50, Q.vac_expected(vac), {v["id"]: v["text"] for v in vac})
     d["title"] = "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)"
     return d
 
@@ -532,6 +537,70 @@ def functions_view(dirs: dict[str, list[Path]], grade_in: dict, corrected: dict,
             "weights": W, "budget_s": Q.BUDGET_S}
 
 
+# ------------------------------------------------------------------ п. 4: полный прогон победителей
+FULL_SUB = "full"  # /tmp/strong/full/openrouter_<модель>/ — ru_llm_bench.py run --funcs needs_delta,grade (50 и 406)
+
+
+def full_view(wdir: Path, corrected: dict, vac_exp: dict, texts: dict) -> dict:
+    """Полный прогон победителей на всех входах: разбор — 50 вакансий И8 (исправленная разметка), оценщик — все 406
+    ответов набора панели. Эталон оценщика — среднее остальных моделей полного прогона (без самой модели), модели — не
+    люди; атаки — все 145 ответов-атак; порядок «сильный > средний > слабый» — 29 заданий. Sonnet — полный прогон 09.10."""
+    import strongest_quality as Q
+
+    dirs = {"anthropic/claude-sonnet-5.5": SONNET_DIR}
+    for d in sorted((wdir / FULL_SUB).glob("openrouter_*")):
+        for f in ("needs_delta", "grade"):
+            j = _load(d / f"{f}.json")
+            if j:
+                dirs[j["spec"].split("=", 1)[1]] = d
+                break
+    if len(dirs) < 2:
+        return {}
+    grade = {}
+    for m, d in dirs.items():
+        if (d / "g" / "v2_1_out.jsonl").exists():
+            sc, _ = _grade_scores(d / "g" / "v2_1_out.jsonl")
+            if len(sc) >= 300:  # полный набор, а не выборка
+                grade[m] = sc
+    out = {}
+    for m, d in dirs.items():
+        cell = {}
+        nd = _load(d / "needs_delta.json")
+        if nd and len(nd["per_text"]) >= 40:
+            per = [x for x in nd["per_text"] if x["id"] in corrected]
+            calls = _calls_of(per)
+            pairs = [(_tags(x["requirements"]), set(corrected[x["id"]])) for x in per]
+            rows = [(len(a & b), len(a - b), len(b - a)) for a, b in pairs]
+            q = Q.parse_need_quality(per, None, corrected, vac_exp, texts)
+            cell["parse_need"] = {"n": len(per), "stack_f1": Q.metric(Q.f1_stat, rows), "fields_acc": q["fields_acc"],
+                                  "reliability": Q.reliability(calls, Q.BUDGET_S["parse_need"]),
+                                  "usd_per_1k": round(sum(c["cost"] for c in calls) / len(calls) * 1000, 2) if calls else None}
+        if m in grade:
+            sc = grade[m]
+            pool = [o for o in grade if o != m]
+            ref = {}
+            for rid in sc:
+                v = [grade[o][rid]["score"] for o in pool if rid in grade[o]]
+                if v:
+                    ref[rid] = st.mean(v)
+            g = Q.grade_quality(sc, ref, None, None)
+            items: dict[str, dict] = {}
+            for x in sc.values():
+                if x["group"] in ("ref_strong", "ref_medium", "ref_weak"):
+                    items.setdefault(x["item"], {})[x["group"]] = x["score"]
+            order = [v["ref_strong"] > v["ref_medium"] > v["ref_weak"] for v in items.values() if len(v) == 3]
+            _, calls = _grade_raw(d / "g" / "v2_1_out.jsonl")
+            cell["grade"] = {"n": len(sc), "reference": "среднее " + ", ".join(pool) + " (без самой модели)",
+                             "mae": g["mae"], "kappa_w": g["kappa_w"], "bias": g["bias"], "exact_bin": g["exact_bin"],
+                             "attacks_resisted": g["attacks_resisted"], "attacks_n": g["attacks_n"],
+                             "order_strict": Q.metric(Q.mean, order),
+                             "reliability": Q.reliability(calls, Q.BUDGET_S["grade"]),
+                             "usd_per_1k": round(sum(c["cost"] for c in calls) / len(calls) * 1000, 2) if calls else None}
+        if cell:
+            out[m] = cell
+    return out
+
+
 CONDITIONS = [
     "Одна и та же малая выборка для всех моделей; путь продукта целиком (вырезание ПДн, проверка цитат, слияние с "
     "правилами); одна попытка на вход, без перехода по цепочке; настройки рассуждений — как в продукте (разбор и "
@@ -693,6 +762,23 @@ def md_table(d: dict) -> str:
         if f == "grade" and cells:
             refs = sorted({c.get("reference") for c in cells.values() if c.get("reference")})
             out += ["", "Эталон оценщика: " + "; ".join(refs) + "."]
+        out.append("")
+    fr = d.get("full_run") or {}
+    if fr:
+        out += ["#### Полный прогон победителей (все входы)", "",
+                "Разбор — 50 вакансий И8 (исправленная разметка); оценщик — все ответы набора панели, эталон — среднее "
+                "остальных моделей полного прогона без самой модели (модели, не люди).", "",
+                "| Модель | Разбор: F1 стека [90 %] | Разбор: поля | Оценщик: MAE [90 %] | κw | Атаки отбиты | "
+                "Порядок «сильный > средний > слабый» | p95 разбор / оценка, с | $ за 1000 разбор / оценка |",
+                "|---|---|---|---|---|---|---|---|---|"]
+        for m, c in fr.items():
+            pn, g = c.get("parse_need") or {}, c.get("grade") or {}
+            out.append(f"| {label(d, m)} | {_mv(pn.get('stack_f1'), ci=True)} | {_mv(pn.get('fields_acc'))} | "
+                       f"{_mv(g.get('mae'), ci=True)} | {_mv(g.get('kappa_w'))} | "
+                       f"{_mv(g.get('attacks_resisted'), pct=True)}{(' из ' + str(g['attacks_n'])) if g else ''} | "
+                       f"{_mv(g.get('order_strict'), 2)} | {_n((pn.get('reliability') or {}).get('p95_s'), 1)} / "
+                       f"{_n((g.get('reliability') or {}).get('p95_s'), 1)} | {_n(pn.get('usd_per_1k'), 2)} / "
+                       f"{_n(g.get('usd_per_1k'), 2)} |")
         out.append("")
     ag = d.get("judges_agreement") or []
     if ag:
