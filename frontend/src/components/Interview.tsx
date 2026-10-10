@@ -112,6 +112,12 @@ function ConsentBox({ c, name, setName, agree, setAgree, idp }: { c: Consent; na
   );
 }
 
+/** «3 минуты», «5 минут», «1 минута». */
+export function minutes(n: number): string {
+  const d = n % 10, h = n % 100;
+  return `${n} ${d === 1 && h !== 11 ? "минута" : d >= 2 && d <= 4 && (h < 12 || h > 14) ? "минуты" : "минут"}`;
+}
+
 /** Кандидат: на результате попытки — «Подтвердите авторство ответа». sessionId — попытка теста. */
 export function DefensePanel({ sessionId }: { sessionId: string }) {
   const on = useInterviewOn();
@@ -139,7 +145,7 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
   }
   return (
     <section id="defense" className="card mt-4 space-y-3 scroll-mt-24" aria-labelledby={`defense-h-${sessionId}`} data-testid="defense-panel">
-      <h2 id={`defense-h-${sessionId}`} className="font-bold text-brand-night">Подтвердите авторство ответа: устная защита {st.minutes} минуты, по желанию</h2>
+      <h2 id={`defense-h-${sessionId}`} className="font-bold text-brand-night">Подтвердите авторство ответа: устная защита {minutes(st.minutes)}, по желанию</h2>
       <p className="text-sm text-brand-ink/75">
         ИИ-интервьюер задаст до {st.max_questions} вопросов по вашим развёрнутым ответам{st.answers_n ? ` (${st.answers_n})` : ""} — голосом или в чате.
         Работодатель увидит «ответ подтверждён устно» или «есть расхождения» с цитатами. Грейд не меняется; оценивает модель, решение — за людьми.
@@ -160,7 +166,7 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
         <div className="space-y-3 rounded-xl border border-brand-night/10 p-3">
           <ConsentBox c={st.consent} name={name} setName={setName} agree={agree} setAgree={setAgree} idp={`def-${sessionId}`} />
           <div className="flex flex-wrap gap-2">
-            <button className="btn-primary" disabled={busy || !agree || !name.trim()} onClick={start}>{busy ? "Готовим вопросы…" : "Начать устную защиту"}</button>
+            <button className="btn-primary" disabled={busy || !agree || !name.trim()} onClick={start} data-testid="interview-defense-start">{busy ? "Готовим вопросы…" : "Начать устную защиту"}</button>
             <button className="btn-ghost" onClick={() => setOpen(false)}>Не сейчас</button>
           </div>
           {st.attempts_left != null && <p className="text-xs text-brand-ink/65">Сессий для этой попытки: {st.attempts_left} (при сбое связи можно ещё раз).</p>}
@@ -223,7 +229,7 @@ export function AiInterviewEmployer({ inv }: { inv: { id: string; status: string
   const s = st.session;
   return (
     <section className="space-y-2 rounded-xl border border-brand-night/10 bg-white p-3 sm:p-4 text-sm" aria-label={`ИИ-интервью: ${inv.id}`} data-testid="ai-interview-employer">
-      <p className="font-semibold text-brand-night">ИИ-интервью · {st.minutes} минут, по навыкам, которые тест не подтвердил</p>
+      <p className="font-semibold text-brand-night">ИИ-интервью · {minutes(st.minutes)}, по навыкам, которые тест не подтвердил</p>
       {s ? (s.status === "completed" ? <SessionResult s={s} employer /> : <p>{s.status_title}{s.skills.length ? ` · навыки: ${s.skills.join(", ")}` : ""}</p>) : null}
       {st.can_invite && (
         <div className="space-y-2">
