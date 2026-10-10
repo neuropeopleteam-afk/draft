@@ -42,6 +42,13 @@ export class ApiError extends Error {
   constructor(public status: number, public code: string, message: string) { super(message); }
 }
 
+/** Я16: сбой сети или сервера (5xx, обрыв, тайм-аут, 408/429), а не ответ «нельзя» (401/403/404): имеет смысл
+ *  повторить, вход и введённые данные не сбрасывать. */
+export function isTransient(e: unknown): boolean {
+  if (e instanceof ApiError) return e.status >= 500 || e.status === 0 || e.status === 408 || e.status === 429;
+  return e instanceof TypeError || (typeof DOMException !== "undefined" && e instanceof DOMException && (e.name === "AbortError" || e.name === "TimeoutError"));
+}
+
 const TOKEN_KEY = "fsp_token";
 export const tokenStore = {
   get: () => localStorage.getItem(TOKEN_KEY),
