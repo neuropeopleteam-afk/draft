@@ -355,8 +355,14 @@ def skeptic(res: Path, out: Path, high: float = 0.75, full: bool = False) -> Non
     items, rows = _items_rows()
     got = _read(res)
     n = 0
+    order = run_ids(full)
+    if full:  # потолок расхода может оборвать скептика посреди: сначала малая выборка, затем остальные вперемешку
+        s50 = set(sample_ids())  # (фиксированное зерно) — пройденная часть остаётся случайной выборкой
+        rest = [r for r in order if r not in s50]
+        random.Random(13).shuffle(rest)
+        order = [r for r in order if r in s50] + rest
     with open(out, "w", encoding="utf-8") as fh:
-        for rid in run_ids(full):
+        for rid in order:
             r = rows[rid]
             it = items[r["item"]]
             ans = _answer(r)
@@ -466,6 +472,7 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
     cost = {"v2": 0.0, "v3": 0.0, "skeptic": 0.0}
     lat = {"v3": [], "skeptic": []}
     verdicts: dict[str, int] = {}
+    not_run: list[str] = []
     changes = {"down": 0, "up": 0, "up_rejected": 0}
     ev_stats = {"quotes": 0, "dropped": 0, "capped": 0}
     for rid in sample:
@@ -488,9 +495,11 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
         if man or rid not in skq:
             continue
         so = sko.get(rid)
-        if so:
-            cost["skeptic"] += so.get("cost") or 0
-            lat["skeptic"].append(so.get("latency_call") or 0)
+        if so is None:  # скептик не запускался (потолок расхода прогона) — первая оценка, учитывается отдельно
+            not_run.append(rid)
+            continue
+        cost["skeptic"] += so.get("cost") or 0
+        lat["skeptic"].append(so.get("latency_call") or 0)
         sk = EV.parse_skeptic(_extract_json(so.get("text") or "") if so and not so.get("error") else None, it["rubric"])
         a = EV.assemble({"criteria": p["criteria"], "score": p["score"]}, sk, it["rubric"], ans, _task(it),
                         disagree=disagree, disputed=skq[rid]["disputed"])
@@ -535,14 +544,29 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
                                   if r in off and final[r]["score"] is not None
                                   and abs(final[r]["score"] - off[r]["score"]) > 1e-9), key=lambda x: x[0]),
         "skeptic_calls": len(skq), "skeptic_answered": sum(1 for r in skq if r in sko and not sko[r].get("error")),
+        "skeptic_not_run": len(not_run),
+        **({"complete": _complete(final, off, first_only, set(not_run), ref, rows)} if not_run else {}),
         "verdicts": verdicts, "changes": changes, "evidence": ev_stats,
         "cost_usd": {k: round(v, 4) for k, v in cost.items()},
         "latency_s": {k: {"p50": round(st.median(v), 2) if v else None,
                           "p90": round(sorted(v)[int(0.9 * (len(v) - 1))], 2) if v else None} for k, v in lat.items()},
     }
     res["decision"] = decide(res)
+    res["decision_first"] = decide({"off": res["off"], "on": res["on_first"],
+                                    "paired": {"on_minus_off": paired(first_only, off, ref, rows)}})
+    if res.get("complete"):  # подмножество, где скептик не нужен или ответил
+        c = res["complete"]
+        res["decision_complete"] = decide({"off": c["off"], "on": c["on"], "paired": {"on_minus_off": c["paired"]}})
     out.write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return res
+
+
+def _complete(final: dict, off: dict, first: dict, skip: set, ref: dict, rows: dict) -> dict:
+    """Подмножество, где путь флага вкл пройден целиком (скептик не нужен или ответил): те же метрики и парная разница."""
+    f = {r: v for r, v in final.items() if r not in skip}
+    o = {r: v for r, v in off.items() if r in f}
+    return {"n": len(f), "off": quality(o, ref, rows), "on": quality(f, ref, rows),
+            "paired": paired(f, o, ref, rows)}
 
 
 # Правило решения, записанное до полного прогона (10.10 вечер): флаг включать, только если «не хуже» по всем пунктам.
@@ -619,7 +643,13 @@ def _row(label: str, q: dict) -> dict:
 
 
 def _ru(v: float, k: int = 3) -> str:
-    return f"{v:+.{k}f}".replace(".", ",") if v < 0 or k < 0 else f"{v:.{k}f}".replace(".", ",")
+    """Число по-русски: запятая, минус — настоящий знак «−»; k < 0 — три знака."""
+    k = 3 if k < 0 else k
+    return f"{v:.{k}f}".replace(".", ",").replace("-", "−")
+
+
+def _sg(v: float) -> str:
+    return ("+" if v >= 0 else "") + _ru(v)
 
 
 def _decision_text(b: dict, fs: dict, full: dict | None, est: dict | None) -> str:
@@ -629,19 +659,27 @@ def _decision_text(b: dict, fs: dict, full: dict | None, est: dict | None) -> st
             f"разницы MAE ≤ {_ru(r['d_mae_ci90_hi'], 2)}, κw ниже не больше чем на {_ru(r['kappa_w_drop'], 2)}, атак "
             f"прошло не больше, порядок сильный > средний > слабый и доля ответов «эксперту» — не хуже.")
     po = fs["paired"]["on_minus_off"]
-    code = (f" Все {fs['n']} ответов, только строгая сверка кодом: {fs['decision']['text']} (MAE +{_ru(po['d_mae'])}, "
+    code = (f" Все {fs['n']} ответов, только строгая сверка кодом: {fs['decision']['text']} (MAE {_sg(po['d_mae'])}, "
             f"ДИ 90 % {_ru(po['ci90'][0])}…{_ru(po['ci90'][1])}).")
     pb, db = b["paired"]["on_minus_off"], decide(b)
-    small = (f" {b['n']} ответов, промпт v3 + скептик: MAE +{_ru(pb['d_mae'])} (ДИ 90 % {_ru(pb['ci90'][0])}…"
+    small = (f" {b['n']} ответов, промпт v3 + скептик: MAE {_sg(pb['d_mae'])} (ДИ 90 % {_ru(pb['ci90'][0])}…"
              f"{_ru(pb['ci90'][1])}) — {db['text']} (выборка мала: {b['off']['mae']['n']} честных).")
     if full:
         d, pf = full["decision"], full["paired"]["on_minus_off"]
+        cover = (f" Скептик ответил для {full['skeptic_answered']} из {full['skeptic_calls']} ответов, которым он "
+                 f"положен (остальные — потолок расхода прогона; для них — первая оценка)."
+                 if full.get("skeptic_not_run") else "")
+        df = full.get("decision_first")
+        first = (f" Без скептика (только промпт v3) κw {_ru(full['off']['kappa_w']['value'])} → "
+                 f"{_ru(full['on_first']['kappa_w']['value'])} — {df['text']}: флаг — только вместе со скептиком."
+                 if df and not df["non_inferior"] else "")
         return (rule + code + small + f" Полный прогон {full['n']} ответов (промпт v3 + скептик, {full['date']} UTC, "
                 f"код {full['code_sha']}): MAE {_ru(full['off']['mae']['value'])} → {_ru(full['on']['mae']['value'])} "
-                f"(разница +{_ru(pf['d_mae'])}, ДИ 90 % {_ru(pf['ci90'][0])}…{_ru(pf['ci90'][1])}), κw "
+                f"(парная разница {_sg(pf['d_mae'])}, ДИ 90 % "
+                f"{_ru(pf['ci90'][0])}…{_ru(pf['ci90'][1])}), κw "
                 f"{_ru(full['off']['kappa_w']['value'])} → {_ru(full['on']['kappa_w']['value'])}, атаки "
                 f"{full['off']['attacks_passed']} → {full['on']['attacks_passed']} из {full['on']['attacks_n']} — "
-                f"{d['text']}: " + ("флаг можно включать." if d["non_inferior"] else "флаг не включаем."))
+                f"{d['text']}." + cover + first)
     return (rule + code + small + f" Полный прогон {fs['n']} ответов с промптом v3 и скептиком ещё не сделан — "
             "до него флаг не включаем.")
 
@@ -672,14 +710,17 @@ def summary(second_share: float | None = None, second_cost: float | None = None,
         "grader": b["grader"], "skeptic": b["skeptic"],
         "reference": ("на малой выборке — среднее судей Claude Opus 5.5 / Claude Fable 5.1 / GPT-6 Astra Pro без "
                       "самой модели; на всех 406 — gpt-oss-120b панели 06.10"),
-        "rows": [_row("Флаг выкл: промпт v2, вторая оценка спорных", b["off"]),
-                 *([_row("Флаг выкл, повтор того же прогона (шум)", b["off_repeat"])] if b.get("off_repeat") else []),
-                 _row("Флаг вкл: промпт v3, цитаты сверены кодом", b["on_first"]),
-                 _row("Флаг вкл: + скептик, итог по правилам кода", b["on"]),
-                 *([_row(f"Все {full['n']}: флаг выкл", full["off"]),
-                    _row(f"Все {full['n']}: флаг вкл, v3 + скептик", full["on"])] if full else [])],
+        "rows": [_row("50 · флаг выкл: промпт v2, вторая оценка спорных", b["off"]),
+                 *([_row("50 · флаг выкл, повтор того же прогона (шум)", b["off_repeat"])] if b.get("off_repeat") else []),
+                 _row("50 · флаг вкл: промпт v3, цитаты сверены кодом", b["on_first"]),
+                 _row("50 · флаг вкл: + скептик, итог по правилам кода", b["on"]),
+                 *([_row(f"{full['n']} · флаг выкл (эталон gpt-oss-120b)", full["off"]),
+                    _row(f"{full['n']} · флаг вкл: только промпт v3", full["on_first"]),
+                    _row(f"{full['n']} · флаг вкл: v3 + скептик", full["on"])] if full else [])],
         "full": ({"n": full["n"], "date": full["date"], "code_sha": full["code_sha"], "paired": full["paired"],
-                  "decision": full["decision"], "skeptic_calls": full["skeptic_calls"], "cost_usd": full["cost_usd"]}
+                  "decision": full["decision"], "skeptic_calls": full["skeptic_calls"], "cost_usd": full["cost_usd"],
+                  "skeptic_answered": full["skeptic_answered"], "verdicts": full["verdicts"],
+                  "changes": full["changes"], "quotes": full["evidence"], "latency_s": full["latency_s"]}
                  if full else None),
         "full_estimate_usd": est["total_usd"] if est else None,
         "paired": b["paired"],
