@@ -492,6 +492,8 @@ export function Selection() {
     mutual={<MutualCardBlock needId={id!} version={s!.version} cref={r.ref} mutual={mutual} />} />;
   const togglePick = (ref: string) => setPicked(picked.includes(ref) ? picked.filter((x) => x !== ref) : [...picked, ref]);
   const hasBias = !!reqOf?.bias?.length;
+  const side = wide && !expandAll;  // «Подробно у всех» на широком — раскрытие в карточках, без панели справа
+  const expandBtn = <button type="button" className="text-sm font-semibold text-brand hover:underline" aria-pressed={expandAll} onClick={() => { setExpandAll(!expandAll); setOpen({}); }}>{expandAll ? "Коротко у всех" : "Подробно у всех"}</button>;
   const askOpts = scopeOptions(s?.scope);
   const askOpt = askOpts.find((o) => o.id === ask) ?? askOpts[0];
 
@@ -500,7 +502,7 @@ export function Selection() {
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         {/* Я10: подзаголовок мельче на телефоне — первая карточка выше (PageTitle — та же разметка h1) */}
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-brand-night">{need.data.title}</h1>
+          <h1 className="text-xl font-extrabold tracking-tight text-brand-night sm:text-2xl">{need.data.title}</h1>
           <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">В балле — только подтверждённое: тест (T1), зонды и ФСП (T2); заявленное (T0) — отдельно.</p>
         </div>
         <Link to="/employer/needs" className="btn-ghost hidden sm:inline-flex">Все потребности</Link>
@@ -523,9 +525,9 @@ export function Selection() {
               <div className="flex flex-wrap items-end justify-between gap-3">
                 <div className="min-w-0">
                   <h2 id="top-picks-h" className="text-lg font-bold text-brand-night">{ordered.length ? `Кого пригласить первым: ${Math.min(TOP, ordered.length)} из ${s.total}` : "Кандидаты"}</h2>
-                  <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}</p>
+                  <p className="text-sm text-brand-ink/70">v{s.version}{s.parent_version ? ` (из v${s.parent_version}${s.filters?.relaxation ? `: ${s.filters.relaxation[0].toLowerCase()}${s.filters.relaxation.slice(1)}` : ""})` : ""} · кандидатов: <b>{s.total}</b> · {dtt(s.created_at)}{ordered.length > 0 && !wide && <> · {expandBtn}</>}</p>
                 </div>
-                {ordered.length > 0 && <button type="button" className="text-sm font-semibold text-brand hover:underline" aria-pressed={expandAll} onClick={() => { setExpandAll(!expandAll); setOpen({}); }}>{expandAll ? "Коротко у всех" : "Подробно у всех"}</button>}
+                {ordered.length > 0 && wide && expandBtn}
               </div>
               {ordered.length > 0 && <div className="hidden rounded-xl bg-[#F7F6FB] px-3 py-2 text-xs leading-relaxed text-brand-ink/75 sm:block" data-testid="score-legend">
                 <p className="min-w-0 flex-1 basis-60"><b className="font-semibold text-brand-night">Как читать.</b> Балл — доля требований, подтверждённых тестом; порядок подборки не меняется. Доказательства — «Подробнее». Сравнить: отметьте 2–3 или <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${id}/compare?v=${s.version}`}>первых трёх</Link>.</p>
@@ -533,7 +535,7 @@ export function Selection() {
               {invited && <Alert kind="ok">{invited}</Alert>}
               {!ordered.length ? <Empty title="Подходящих кандидатов нет"
                 text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» ниже — там видно, какое условие отсекает больше всего, — или ослабьте фильтры и выберите соседнюю категорию. Прежние версии сохранены.`} /> : (
-                <div className={wide ? "grid items-start gap-4 grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]" : ""}>
+                <div className={side ? "grid items-start gap-4 grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]" : ""}>
                   <div className="min-w-0 space-y-3">
                     {visible.map((r: any, i: number) => {
                       const isOpen = open[r.ref] ?? expandAll;
@@ -542,8 +544,8 @@ export function Selection() {
                           picked={picked.includes(r.ref)} pickDisabled={picked.length >= 3} onPick={() => togglePick(r.ref)}
                           onInvite={() => { setInvited(null); setInvite(r); }}
                           badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
-                          side={wide} active={wide && activeRow?.ref === r.ref}
-                          open={!wide && isOpen} onToggle={() => (wide ? setActive(r.ref) : setOpen({ ...open, [r.ref]: !isOpen }))}
+                          side={side} active={side && activeRow?.ref === r.ref}
+                          open={!side && isOpen} onToggle={() => (side ? setActive(r.ref) : setOpen({ ...open, [r.ref]: !isOpen }))}
                           details={evidence(r)} />
                       );
                     })}
@@ -558,7 +560,7 @@ export function Selection() {
                       </div>
                     )}
                   </div>
-                  {wide && activeRow && <aside className="card sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain !p-4" aria-label={`Подробно: кандидат ${activeRow.ref}`} data-testid="side-details">
+                  {side && activeRow && <aside className="card sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain !p-4" aria-label={`Подробно: кандидат ${activeRow.ref}`} data-testid="side-details">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-night/10 pb-3">
                       <p className="font-bold text-brand-night">Подробно: кандидат {activeRow.ref} <span className="font-normal text-brand-ink/65">· №{ordered.indexOf(activeRow) + 1}</span></p>
                       <button type="button" className="btn-primary !px-4 !py-2" onClick={() => { setInvited(null); setInvite(activeRow); }}>Пригласить {activeRow.ref}</button>
