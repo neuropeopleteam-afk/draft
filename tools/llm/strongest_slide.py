@@ -30,6 +30,17 @@ def label(d: dict, key: str) -> str:
     return name + (f" ({key.split('@', 1)[1]})" if "@" in key else "")
 
 
+SHORT = {"anthropic/claude-sonnet-5.5": "Sonnet 5.5", "anthropic/claude-opus-5.5": "Opus 5.5",
+         "anthropic/claude-fable-5.1": "Fable 5.1", "openai/gpt-6.1-sol-pro": "Sol Pro", "openai/gpt-6-astra-pro": "Astra Pro",
+         "x-ai/grok-4.7": "Grok 4.7", "google/gemini-3.1-pro-preview": "Gemini 3.1", "moonshotai/kimi-k3": "Kimi K3",
+         "z-ai/glm-5.3": "GLM 5.3", "qwen/qwen3.8-27b": "Qwen-27B", "qwen/qwen3.8-2.4t-a95b": "Qwen-2.4T",
+         "deepseek/deepseek-v4-pro-0813": "DeepSeek V4"}
+
+
+def short(d: dict, key: str) -> str:
+    return SHORT.get(key.split("@")[0]) or label(d, key)
+
+
 def fails(r: dict) -> str:
     bad = r["calls"] - round((r["ok_share"]["value"] or 0) * r["calls"])
     return f"{bad} из {r['calls']}" + (f" (тайм-аутов {r['timeouts']})" if r.get("timeouts") else "")
@@ -75,9 +86,10 @@ def png(d: dict, path: Path) -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    import matplotlib.transforms  # noqa: F401
 
     funcs = [f for f in ("parse_need", "resume", "grade") if f in d["functions"]]
-    fig, axes = plt.subplots(1, len(funcs), figsize=(5.2 * len(funcs), 4.8), dpi=160)
+    fig, axes = plt.subplots(1, len(funcs), figsize=(5.6 * len(funcs), 5.2), dpi=160)
     axes = [axes] if len(funcs) == 1 else list(axes)
     fam_color = {}
     palette = ["#4B3FD1", "#D14B3F", "#1F9D6B", "#C98A00", "#7A4FA0", "#2C7FB8", "#B84F7A", "#5E6B2C", "#444444"]
@@ -98,11 +110,25 @@ def png(d: dict, path: Path) -> None:
             ax.errorbar([x], [q["value"]], yerr=[[q["value"] - lo], [hi - q["value"]]], fmt="o", color=col,
                         mfc=col if c["within_budget"] else "white", ms=7, capsize=2, lw=1)
             pts.append((m, x, q["value"]))
+        ys = [p[2] for p in pts] + [lo for m in cells for lo in ((cells[m]["quality"]["index"].get("ci90") or [None])[:1])
+                                     if lo is not None]
         rq = (d.get("functions_rules") or {}).get(f)
-        if rq and rq["quality"]["index"]["value"] is not None:
-            ax.axhline(rq["quality"]["index"]["value"], color="#888888", ls="--", lw=1)
-            ax.text(0.99, rq["quality"]["index"]["value"], "правила (без LLM)", fontsize=7, color="#666666",
-                    va="bottom", ha="right", transform=ax.get_yaxis_transform())
+        rv = rq["quality"]["index"]["value"] if rq else None
+        if ys:
+            y0 = min(ys) - 0.006
+            if rv is not None and rv >= y0 - 0.012:
+                y0 = min(y0, rv - 0.004)
+            his = [hi for m in cells for hi in ((cells[m]["quality"]["index"].get("ci90") or [None, None])[1:])
+                   if hi is not None] + [p[2] for p in pts]
+            ax.set_ylim(y0, min(1.003, max(his) + 0.005))
+        if rv is not None:
+            if rv >= ax.get_ylim()[0]:
+                ax.axhline(rv, color="#888888", ls="--", lw=1)
+                ax.text(0.99, rv, "правила (без LLM)", fontsize=7, color="#666666", va="bottom", ha="right",
+                        transform=ax.get_yaxis_transform())
+            else:
+                ax.text(0.99, 0.02, f"правила (без LLM): {rv:.3f}".replace(".", ",") + " — ниже шкалы", fontsize=7,
+                        color="#666666", ha="right", transform=ax.transAxes)
         ax.set_xscale("log")
         ax.xaxis.set_major_locator(LogLocator(base=10, subs=(1, 2, 5)))
         ax.xaxis.set_minor_formatter(NullFormatter())
@@ -114,21 +140,38 @@ def png(d: dict, path: Path) -> None:
         # подписи без наложения: сверху вниз по качеству, сдвиг вниз, пока рамка пересекается с уже поставленными
         fig.canvas.draw()
         rend = fig.canvas.get_renderer()
+        axbb = ax.get_window_extent(rend)
         placed = []
+        for _, x, y in pts:  # маркеры — тоже препятствия для подписей
+            px, py = ax.transData.transform((x, y))
+            placed.append(matplotlib.transforms.Bbox([[px - 5, py - 5], [px + 5, py + 5]]))
+        cands = [(5, 3, "left"), (-5, 3, "right"), (5, -11, "left"), (-5, -11, "right"), (5, 14, "left"),
+                 (-5, 14, "right"), (5, -22, "left"), (-5, -22, "right"), (5, 25, "left"), (-5, 25, "right"),
+                 (5, -33, "left"), (-5, -33, "right"), (5, 36, "left"), (-5, 36, "right")]
+        unplaced: list[str] = []
         for m, x, y in sorted(pts, key=lambda p: -p[2]):
             star = m == ch.get("strongest_within_latency")
-            for dy in [3, -14, 14, -26, 26, -38, 38, -50, 50, -62]:
-                t = ax.annotate(label(d, m) + (" ★" if star else ""), (x, y), xytext=(5, dy), textcoords="offset points",
-                                fontsize=7, fontweight="bold" if star else "normal", color="#222222",
-                                arrowprops=None if dy == 3 else dict(arrowstyle="-", color="#aaaaaa", lw=0.5))
-                bb = t.get_window_extent(rend).expanded(1.02, 1.1)
-                if not any(bb.overlaps(o) for o in placed):
-                    placed.append(bb)
+            best = None
+            for dx, dy, ha in cands:
+                t = ax.annotate(short(d, m) + (" ★" if star else ""), (x, y), xytext=(dx, dy), textcoords="offset points",
+                                ha=ha, fontsize=7, fontweight="bold" if star else "normal", color="#222222",
+                                arrowprops=None if abs(dy) <= 3 else dict(arrowstyle="-", color="#aaaaaa", lw=0.5))
+                bb = t.get_window_extent(rend).expanded(1.02, 1.08)
+                inside = axbb.x0 <= bb.x0 and bb.x1 <= axbb.x1 and axbb.y0 <= bb.y0 and bb.y1 <= axbb.y1
+                if inside and not any(bb.overlaps(o) for o in placed):
+                    best = bb
                     break
                 t.remove()
-            else:
-                placed.append(bb)
-                ax.add_artist(t)
+            if best is None:  # места нет — номер у точки, имя — в сноске внутри графика
+                unplaced.append(short(d, m) + (" ★" if star else ""))
+                t = ax.annotate(str(len(unplaced)), (x, y), xytext=(4, 2), textcoords="offset points", fontsize=7,
+                                color="#222222")
+                best = t.get_window_extent(rend)
+            placed.append(best)
+        if unplaced:
+            ax.text(0.02, 0.02, "\n".join(f"{i}. {n}" for i, n in enumerate(unplaced, 1)), fontsize=6.5,
+                    color="#333333", transform=ax.transAxes, va="bottom",
+                    bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="#dddddd", alpha=0.9))
         ax.set_title(FUNC_RU.get(f, f), fontsize=11)
         ax.set_xlabel("$ за 1000 вызовов (лог. шкала)", fontsize=9)
         ax.grid(alpha=0.25)
@@ -136,10 +179,11 @@ def png(d: dict, path: Path) -> None:
     axes[0].set_ylabel("Индекс качества [90 %]", fontsize=9)
     handles = [plt.Line2D([], [], marker="o", ls="", color=c, label=fam) for fam, c in fam_color.items()]
     handles.append(plt.Line2D([], [], marker="o", ls="", color="#444444", mfc="white", label="вне бюджета стенда"))
-    fig.legend(handles=handles, loc="lower center", ncol=min(6, len(handles)), fontsize=8, frameon=False)
+    fig.legend(handles=handles, loc="lower center", ncol=len(handles), fontsize=8, frameon=False,
+               bbox_to_anchor=(0.5, 0.045))
     fig.suptitle(f"Качество против цены по функциям — замер {d['date']}", fontsize=13)
-    fig.text(0.5, 0.075, CAPTION + " ★ — сильнейшая в пределах задержки.", ha="center", fontsize=8, color="#444444")
-    fig.tight_layout(rect=(0, 0.11, 1, 0.95))
+    fig.text(0.5, 0.012, CAPTION + " ★ — сильнейшая в пределах задержки.", ha="center", fontsize=8, color="#444444")
+    fig.tight_layout(rect=(0, 0.1, 1, 0.95))
     fig.savefig(path)
 
 
