@@ -346,8 +346,16 @@ def pareto(points: list[dict]) -> list[str]:
     return front
 
 
+NEAR_EXACT = 0.01
+
+
+def n_changed(pt: dict) -> int:
+    b = baseline_point()
+    return sum(1 for k in PARAMS if k != "misspec" and pt.get(k) != b.get(k))
+
+
 def choose(points: list[dict], base_key: str) -> dict:
-    """Лучшая допустимая точка по точности; при равенстве (±0,5 п. п.) — меньше завышение, затем меньше минут."""
+    """Лучшая допустимая точка по точности (см. NEAR_EXACT)."""
     base = next((p for p in points if p["key"] == base_key), None)
     if base is None:
         return {"key": None, "better_on_all": False, "reason": "текущей конфигурации нет среди точек"}
@@ -355,8 +363,11 @@ def choose(points: list[dict], base_key: str) -> dict:
     if not feas:
         return {"key": base_key, "better_on_all": False, "reason": "нет допустимых точек"}
     best_exact = max(p["metrics"]["exact"] for p in feas)
-    near = [p for p in feas if p["metrics"]["exact"] >= best_exact - 0.005]
-    best = sorted(near, key=lambda p: (p["metrics"]["over"], p["metrics"]["minutes_mean"], -p["metrics"]["exact"]))[0]
+    # в пределах 1 п. п. от лучшей (≈ половина ширины ДИ — различие не значимо) — проще (меньше изменённых параметров),
+    # затем меньше завышение и минуты
+    near = [p for p in feas if p["metrics"]["exact"] >= best_exact - NEAR_EXACT]
+    best = sorted(near, key=lambda p: (n_changed(p["point"]), p["metrics"]["over"], p["metrics"]["minutes_mean"],
+                                       -p["metrics"]["exact"]))[0]
     bm, m = base["metrics"], best["metrics"]
     better = bool(m["exact"] > bm["exact"] and m["feasible"])
     return {"key": best["key"], "point": best["point"], "better_on_all": better,
@@ -431,6 +442,44 @@ def run(stages: list[str], n: int = 500, workers: int | None = None, write: bool
     return rep
 
 
+# ---------------------------------------------------------------- для страницы /validation
+
+def _label(pt: dict) -> str:
+    return _diff(pt, baseline_point())
+
+
+def compact(rep: dict) -> dict:
+    """Сводка для /validation#grade-accuracy: строки — точки с подписью отличий от прежней конфигурации."""
+    pts = {p["key"]: p for p in rep["points"]}
+    keep = ("exact", "exact_ci", "over", "under", "none", "within_1", "retest_kappa", "retest_kappa_ci", "retest_exact",
+            "minutes_mean", "minutes_p90", "items_mean", "under_claimed_below", "feasible", "borderline")
+
+    def row(p: dict) -> dict:
+        return {"label": _label(p["point"]), "point": p["point"], "pareto": p.get("pareto", False),
+                **{k: p["metrics"].get(k) for k in keep}}
+    base = pts.get(rep["baseline_key"])
+    ch = rep.get("choice") or {}
+    main = [p for p in rep["points"] if p["point"]["misspec"] == 0.5 and p["point"].get("levels", 5) == 5]
+    front = sorted([p for p in main if p.get("pareto")], key=lambda p: -p["metrics"]["exact"])
+    comp = [p for p in rep["points"] if p["point"].get("levels", 5) == 4 or p["point"]["misspec"] != 0.5]
+    keyrows = [p for p in main if _label(p["point"]) in KEY_ROWS]
+    return {"signature": rep["signature"], "constraints": rep["constraints"], "caveat": rep.get("caveat"),
+            "baseline": row(base) if base else None,
+            "choice": {**ch, "row": row(pts[ch["key"]]) if ch.get("key") in pts else None},
+            "key_rows": [row(p) for p in sorted(keyrows, key=lambda p: -p["metrics"]["exact"])],
+            "pareto": [row(p) for p in front[:12]],
+            "worlds": [row(p) for p in sorted(comp, key=lambda p: (p["point"].get("levels", 5), -p["point"]["misspec"],
+                                                                    -p["metrics"]["exact"]))],
+            "n_points": len(rep["points"])}
+
+
+KEY_ROWS = ("прежняя конфигурация (P ≥ 0,8, до 10.10)", "порог уверенности P 0,5", "порог уверенности P 0,6", "порог уверенности P 0,7",
+            "решение по лучшей оценке θ̂ (точечный грейд)", "дотестирование, заданий 12", "максимум заданий 20",
+            "правило остановки se", "уровень выше в сессии (P) 0,8",
+            "порог уверенности P 0,6; без семейств с низкой информацией (доля) 0,1",
+            "решение по лучшей оценке θ̂ (точечный грейд); частичный балл: критериев 3")
+
+
 # ---------------------------------------------------------------- документация
 
 def _pc(v, d: int = 1) -> str:
@@ -446,9 +495,12 @@ def _diff(pt: dict, base: dict) -> str:
     for k in PARAMS:
         if pt[k] != base[k]:
             v = pt[k]
+            if k == "decision":
+                parts.append(DECISION_RU.get(v, v) if v != "point" else "решение по лучшей оценке θ̂ (точечный грейд)")
+                continue
             v = "нет" if v is None else (str(v).replace(".", ",") if isinstance(v, float) else str(v))
             parts.append(f"{PARAM_RU[k]} {v}")
-    return "; ".join(parts) or "текущая конфигурация"
+    return "; ".join(parts) or "прежняя конфигурация (P ≥ 0,8, до 10.10)"
 
 
 def _row(p: dict, base: dict) -> str:
@@ -470,15 +522,15 @@ def markdown(rep: dict) -> str:
             "Заданий | Ограничения |", "|---|---|---|---|---|---|---|---|---|"]
     L = ["# Точность уровня: перебор параметров теста (Парето)", "",
          f"Подпись мира: {sig['world']}; seed {sig['seed']}, конфигурация `{sig['config_hash']}`, коммит "
-         f"`{sig['commit']}`, банк `{sig['bank']}`. Пересчёт: `{sig['command']}` ({_f(rep['seconds'], 0)} с на "
-         "сервере проверок).", "", f"> {rep['caveat']}", "",
+         f"`{sig['commit']}`, банк `{sig['bank']}`. Пересчёт: `{sig['command']}` (этапы screen, competitor, pool, time, "
+         "refine — `SWEEP_ARGS=\"--stage <этап> --merge\"`; ≈ 30 мин на 8 ядрах сервера проверок).", "", f"> {rep['caveat']}", "",
          "Точка = вся процедура `make path-retest` (опрос → тест → решение → «уровень ниже» или тест ступенью ниже → "
          "повтор) с изменёнными параметрами; одни и те же кандидаты и ответы (общие случайные числа), поэтому разница "
          "между точками — от правил, а не от шума выборки.", "",
          f"Ограничения выбора: завышение (грейд выше истинного) ≤ {_pc(c['max_over'], 0)}, κw повтора всего пути ≥ "
          f"{_f(c['min_retest_kappa'], 2)}, время пути ≤ {_f(c['max_minutes_mean'], 0)} мин в среднем; цель — максимум "
          "точных попаданий в истинный уровень (первая попытка). Правило «Стажёр» (порог −1,75) не менялось.", "",
-         "## Текущая конфигурация", "", *head, _row(base, bp), ""]
+         "## Прежняя конфигурация (до 10.10)", "", *head, _row(base, bp), ""]
     m = base["metrics"]
     L += [f"Из «ниже истинного» {_pc(m['under'])} — {_pc(m['under_claimed_below'])} у тех, кто заявил грейд ниже "
           "своего уровня: тест подтверждает заявленный грейд и выше его не поднимает (смена грейда вверх — новым "

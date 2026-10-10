@@ -231,6 +231,20 @@ def path_retest():
     return d
 
 
+GRADE_SWEEP = Path(__file__).resolve().parent / "data" / "grade_sweep.json"
+
+
+@router.get("/grade-accuracy", summary="Точность уровня: перебор параметров теста, Парето и выбор (пересчёт: make grade-sweep)")
+def grade_accuracy():
+    """Я22: компактно для страницы — текущая и прежняя конфигурация, выбор, Парето-фронт основного мира (σ = 0,5),
+    условия конкурента (4 ступени, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой. Полный список точек — в JSON."""
+    if not GRADE_SWEEP.exists():
+        return {"missing": True}
+    from app.modules.validation.grade_sweep import compact
+
+    return compact(json.loads(GRADE_SWEEP.read_text(encoding="utf-8")))
+
+
 @router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
 def test_length_route():
     from app.modules.validation.provenance import length_info  # Ф6 (Н8)
