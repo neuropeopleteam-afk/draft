@@ -130,7 +130,7 @@ export const inviteSentText = (inv: any, cref: string) => {
   const at = inv?.created_at ? new Date(inv.created_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }) : null;
   const pos = inv?.position_title ? ` «${inv.position_title}»` : "";
   const fork = inv?.salary_from && inv?.salary_to ? `, вилка ${salaryText(inv.salary_from, inv.salary_to, inv.salary_basis)}` : "";
-  return `Приглашение${pos} отправлено кандидату ${cref}${at ? ` в ${at}` : ""}${fork}. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`;
+  return `Приглашение отправлено кандидату ${cref}${at ? ` в ${at}` : ""}:${pos}${fork}. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`;
 };
 
 /** Я11 (С3-6): почему «Пригласить» неактивна — для подсказки у кнопки (title и текст рядом). */
