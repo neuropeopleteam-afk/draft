@@ -35,6 +35,13 @@ test("главная → «Проверить по критериям ТЗ»: 6 
     }
   }
   expect(metrics).toBeGreaterThanOrEqual(7);
+  // Я8 п. 5: у каждого доказательства — строка происхождения (вид данных из API), как у чисел /validation
+  for (const c of d.criteria) for (const it of c.items) {
+    if (!it.proof.provenance) continue;
+    const line = page.getByTestId(`proof-${it.id}`).getByTestId("provenance-line");
+    await expect(line).toHaveAttribute("data-kind", it.proof.provenance.kind);
+    await expect(line).toContainText(it.proof.provenance.kind_label, { ignoreCase: true });
+  }
 });
 
 // экраны, которые сами переводят дальше: «Сравнение» открывает сравнение первой потребности

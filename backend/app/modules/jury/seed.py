@@ -59,7 +59,7 @@ PERSONAS = [
     {"id": "candidate", "role": "candidate", "title": "Кандидат с паспортом ФСП",
      "description": "Мария Королёва · Backend · Middle и Frontend · Junior. Два отдельных теста, достижения ФСП (T2)."},
     {"id": "candidate_nofsp", "role": "candidate", "title": "Кандидат без ФСП",
-     "description": "Илья Сергеев · Backend · Middle. Истории ФСП нет — нейтрально. Ждёт входящее приглашение."},
+     "description": "Илья Сергеев · Backend · Middle. Истории ФСП нет — без штрафа. Ждёт входящее приглашение."},
     {"id": "candidate_junior", "role": "candidate", "title": "Кандидат «Junior (предварительно)»",
      "description": "Артём Лебедев · Backend · Junior (предварительно). Тест у порога Junior: грейд не подтверждён, но и "
                     "не доказанно ниже — вероятность уровня, короткое дотестирование у порога, статус у работодателя."},
