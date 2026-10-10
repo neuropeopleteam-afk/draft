@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-08T15:35:59",
+ "generated_at": "2026-10-10T10:25:35",
  "seed": 20261007,
  "n_per_theta": 10,
  "theta_grid": [
@@ -46,22 +46,22 @@
   {
    "cut": -1.5,
    "n_sessions": 550,
-   "false_confirm": 0.06,
-   "false_reject": 0.305,
-   "band_confirm": 0.31,
-   "band_upgrade": 0.0,
-   "junior_zone_upgrade": 0.36,
-   "mean_items": 20.33,
-   "mean_time_min": 36.6,
-   "mean_se": 0.454,
-   "extension_share": 0.865,
-   "exhausted_share": 0.178,
+   "false_confirm": 0.043,
+   "false_reject": 0.32,
+   "band_confirm": 0.33,
+   "band_upgrade": 0.01,
+   "junior_zone_upgrade": 0.26,
+   "mean_items": 20.37,
+   "mean_time_min": 37.2,
+   "mean_se": 0.455,
+   "extension_share": 0.876,
+   "exhausted_share": 0.191,
    "stop_reasons": {
-    "classified": 60,
-    "extension_classified": 39,
-    "extension_done": 353,
-    "extension_pool_exhausted": 84,
-    "max_items": 14
+    "classified": 57,
+    "extension_classified": 45,
+    "extension_done": 343,
+    "extension_pool_exhausted": 94,
+    "max_items": 11
    },
    "pop_share_band": 0.092,
    "pop_share_below": 0.067,
@@ -70,178 +70,178 @@
      "theta": -3.0,
      "confirm_rate": 0.0,
      "upgrade_rate": 0.0,
-     "mean_items": 16.6,
-     "mean_se": 0.538
+     "mean_items": 16.7,
+     "mean_se": 0.539
     },
     {
      "theta": -2.75,
      "confirm_rate": 0.0,
      "upgrade_rate": 0.0,
-     "mean_items": 17.2,
-     "mean_se": 0.532
+     "mean_items": 17.5,
+     "mean_se": 0.529
     },
     {
      "theta": -2.5,
-     "confirm_rate": 0.02,
+     "confirm_rate": 0.0,
      "upgrade_rate": 0.0,
-     "mean_items": 19.2,
-     "mean_se": 0.496
+     "mean_items": 18.5,
+     "mean_se": 0.51
     },
     {
      "theta": -2.25,
-     "confirm_rate": 0.08,
+     "confirm_rate": 0.02,
      "upgrade_rate": 0.0,
-     "mean_items": 19.7,
-     "mean_se": 0.48
+     "mean_items": 20.0,
+     "mean_se": 0.481
     },
     {
      "theta": -2.0,
-     "confirm_rate": 0.04,
+     "confirm_rate": 0.08,
      "upgrade_rate": 0.0,
-     "mean_items": 20.8,
-     "mean_se": 0.459
+     "mean_items": 21.3,
+     "mean_se": 0.453
     },
     {
      "theta": -1.75,
-     "confirm_rate": 0.22,
+     "confirm_rate": 0.16,
      "upgrade_rate": 0.0,
-     "mean_items": 21.7,
-     "mean_se": 0.434
+     "mean_items": 21.3,
+     "mean_se": 0.44
     },
     {
      "theta": -1.5,
-     "confirm_rate": 0.2,
+     "confirm_rate": 0.26,
      "upgrade_rate": 0.0,
-     "mean_items": 21.3,
-     "mean_se": 0.437
+     "mean_items": 21.8,
+     "mean_se": 0.428
     },
     {
      "theta": -1.25,
-     "confirm_rate": 0.42,
-     "upgrade_rate": 0.0,
-     "mean_items": 21.8,
-     "mean_se": 0.416
+     "confirm_rate": 0.4,
+     "upgrade_rate": 0.02,
+     "mean_items": 21.7,
+     "mean_se": 0.42
     },
     {
      "theta": -1.0,
-     "confirm_rate": 0.66,
-     "upgrade_rate": 0.08,
-     "mean_items": 21.8,
+     "confirm_rate": 0.74,
+     "upgrade_rate": 0.12,
+     "mean_items": 21.6,
      "mean_se": 0.407
     },
     {
      "theta": -0.75,
-     "confirm_rate": 0.74,
-     "upgrade_rate": 0.24,
+     "confirm_rate": 0.76,
+     "upgrade_rate": 0.22,
      "mean_items": 21.8,
-     "mean_se": 0.4
+     "mean_se": 0.402
     },
     {
      "theta": -0.5,
-     "confirm_rate": 0.96,
-     "upgrade_rate": 0.48,
+     "confirm_rate": 0.82,
+     "upgrade_rate": 0.3,
      "mean_items": 21.8,
-     "mean_se": 0.395
+     "mean_se": 0.401
     }
    ]
   },
   {
    "cut": -1.75,
    "n_sessions": 550,
-   "false_confirm": 0.088,
-   "false_reject": 0.204,
-   "band_confirm": 0.507,
-   "band_upgrade": 0.027,
-   "junior_zone_upgrade": 0.33,
-   "mean_items": 21.51,
-   "mean_time_min": 38.4,
-   "mean_se": 0.443,
-   "extension_share": 0.964,
-   "exhausted_share": 0.216,
+   "false_confirm": 0.056,
+   "false_reject": 0.2,
+   "band_confirm": 0.467,
+   "band_upgrade": 0.0,
+   "junior_zone_upgrade": 0.29,
+   "mean_items": 21.56,
+   "mean_time_min": 38.8,
+   "mean_se": 0.446,
+   "extension_share": 0.98,
+   "exhausted_share": 0.205,
    "stop_reasons": {
-    "classified": 5,
-    "extension_classified": 10,
-    "extension_done": 416,
-    "extension_pool_exhausted": 104,
-    "max_items": 15
+    "classified": 6,
+    "extension_classified": 16,
+    "extension_done": 415,
+    "extension_pool_exhausted": 108,
+    "max_items": 5
    },
    "pop_share_band": 0.119,
    "pop_share_below": 0.04,
    "by_theta": [
     {
      "theta": -3.0,
-     "confirm_rate": 0.0,
+     "confirm_rate": 0.02,
      "upgrade_rate": 0.0,
      "mean_items": 21.3,
-     "mean_se": 0.495
+     "mean_se": 0.489
     },
     {
      "theta": -2.75,
-     "confirm_rate": 0.0,
+     "confirm_rate": 0.04,
      "upgrade_rate": 0.0,
-     "mean_items": 20.5,
-     "mean_se": 0.499
+     "mean_items": 21.0,
+     "mean_se": 0.497
     },
     {
      "theta": -2.5,
      "confirm_rate": 0.04,
      "upgrade_rate": 0.0,
      "mean_items": 21.2,
-     "mean_se": 0.476
+     "mean_se": 0.485
     },
     {
      "theta": -2.25,
-     "confirm_rate": 0.12,
+     "confirm_rate": 0.04,
      "upgrade_rate": 0.0,
      "mean_items": 21.3,
-     "mean_se": 0.47
+     "mean_se": 0.481
     },
     {
      "theta": -2.0,
-     "confirm_rate": 0.28,
+     "confirm_rate": 0.14,
      "upgrade_rate": 0.0,
-     "mean_items": 21.7,
-     "mean_se": 0.45
+     "mean_items": 21.5,
+     "mean_se": 0.458
     },
     {
      "theta": -1.75,
-     "confirm_rate": 0.32,
+     "confirm_rate": 0.22,
      "upgrade_rate": 0.0,
-     "mean_items": 21.6,
-     "mean_se": 0.443
+     "mean_items": 21.8,
+     "mean_se": 0.442
     },
     {
      "theta": -1.5,
-     "confirm_rate": 0.54,
-     "upgrade_rate": 0.02,
+     "confirm_rate": 0.5,
+     "upgrade_rate": 0.0,
      "mean_items": 21.8,
      "mean_se": 0.429
     },
     {
      "theta": -1.25,
-     "confirm_rate": 0.66,
-     "upgrade_rate": 0.06,
+     "confirm_rate": 0.68,
+     "upgrade_rate": 0.0,
      "mean_items": 21.8,
-     "mean_se": 0.416
+     "mean_se": 0.421
     },
     {
      "theta": -1.0,
-     "confirm_rate": 0.86,
-     "upgrade_rate": 0.2,
+     "confirm_rate": 0.9,
+     "upgrade_rate": 0.04,
      "mean_items": 21.8,
      "mean_se": 0.405
     },
     {
      "theta": -0.75,
      "confirm_rate": 0.94,
-     "upgrade_rate": 0.26,
+     "upgrade_rate": 0.16,
      "mean_items": 21.8,
-     "mean_se": 0.399
+     "mean_se": 0.401
     },
     {
      "theta": -0.5,
      "confirm_rate": 0.98,
-     "upgrade_rate": 0.4,
+     "upgrade_rate": 0.42,
      "mean_items": 21.8,
      "mean_se": 0.396
     }
@@ -250,13 +250,13 @@
   {
    "cut": -2.0,
    "n_sessions": 550,
-   "false_confirm": 0.145,
-   "false_reject": 0.15,
-   "band_confirm": 0.67,
-   "band_upgrade": 0.02,
+   "false_confirm": 0.13,
+   "false_reject": 0.163,
+   "band_confirm": 0.61,
+   "band_upgrade": 0.025,
    "junior_zone_upgrade": 0.33,
    "mean_items": 21.79,
-   "mean_time_min": 38.8,
+   "mean_time_min": 39.8,
    "mean_se": 0.444,
    "extension_share": 1.0,
    "exhausted_share": 0.2,
@@ -270,181 +270,181 @@
    "by_theta": [
     {
      "theta": -3.0,
-     "confirm_rate": 0.06,
+     "confirm_rate": 0.02,
      "upgrade_rate": 0.0,
-     "mean_items": 21.7,
+     "mean_items": 21.8,
      "mean_se": 0.508
     },
     {
      "theta": -2.75,
-     "confirm_rate": 0.12,
+     "confirm_rate": 0.06,
      "upgrade_rate": 0.0,
      "mean_items": 21.8,
-     "mean_se": 0.49
+     "mean_se": 0.498
     },
     {
      "theta": -2.5,
-     "confirm_rate": 0.08,
+     "confirm_rate": 0.14,
      "upgrade_rate": 0.0,
      "mean_items": 21.8,
-     "mean_se": 0.483
+     "mean_se": 0.477
     },
     {
      "theta": -2.25,
-     "confirm_rate": 0.32,
+     "confirm_rate": 0.3,
      "upgrade_rate": 0.0,
      "mean_items": 21.8,
-     "mean_se": 0.466
+     "mean_se": 0.463
     },
     {
      "theta": -2.0,
-     "confirm_rate": 0.5,
+     "confirm_rate": 0.36,
      "upgrade_rate": 0.0,
      "mean_items": 21.8,
-     "mean_se": 0.454
+     "mean_se": 0.451
     },
     {
      "theta": -1.75,
-     "confirm_rate": 0.66,
+     "confirm_rate": 0.48,
      "upgrade_rate": 0.0,
      "mean_items": 21.8,
-     "mean_se": 0.437
+     "mean_se": 0.449
     },
     {
      "theta": -1.5,
-     "confirm_rate": 0.68,
+     "confirm_rate": 0.76,
      "upgrade_rate": 0.02,
      "mean_items": 21.8,
-     "mean_se": 0.429
+     "mean_se": 0.425
     },
     {
      "theta": -1.25,
      "confirm_rate": 0.84,
-     "upgrade_rate": 0.06,
+     "upgrade_rate": 0.08,
      "mean_items": 21.8,
-     "mean_se": 0.416
+     "mean_se": 0.415
     },
     {
      "theta": -1.0,
-     "confirm_rate": 0.98,
-     "upgrade_rate": 0.08,
+     "confirm_rate": 0.96,
+     "upgrade_rate": 0.18,
      "mean_items": 21.8,
-     "mean_se": 0.406
+     "mean_se": 0.404
     },
     {
      "theta": -0.75,
-     "confirm_rate": 0.94,
+     "confirm_rate": 0.98,
      "upgrade_rate": 0.2,
      "mean_items": 21.8,
-     "mean_se": 0.4
+     "mean_se": 0.397
     },
     {
      "theta": -0.5,
      "confirm_rate": 1.0,
      "upgrade_rate": 0.46,
      "mean_items": 21.8,
-     "mean_se": 0.396
+     "mean_se": 0.398
     }
    ]
   },
   {
    "cut": -2.25,
    "n_sessions": 550,
-   "false_confirm": 0.26,
-   "false_reject": 0.117,
-   "band_confirm": 0.756,
-   "band_upgrade": 0.016,
-   "junior_zone_upgrade": 0.3,
-   "mean_items": 21.56,
-   "mean_time_min": 38.5,
-   "mean_se": 0.446,
-   "extension_share": 0.998,
-   "exhausted_share": 0.173,
+   "false_confirm": 0.313,
+   "false_reject": 0.071,
+   "band_confirm": 0.796,
+   "band_upgrade": 0.008,
+   "junior_zone_upgrade": 0.24,
+   "mean_items": 21.47,
+   "mean_time_min": 39.2,
+   "mean_se": 0.445,
+   "extension_share": 0.995,
+   "exhausted_share": 0.176,
    "stop_reasons": {
-    "extension_classified": 62,
-    "extension_done": 393,
+    "extension_classified": 74,
+    "extension_done": 379,
     "extension_pool_exhausted": 94,
-    "max_items": 1
+    "max_items": 3
    },
    "pop_share_band": 0.146,
    "pop_share_below": 0.012,
    "by_theta": [
     {
      "theta": -3.0,
-     "confirm_rate": 0.1,
+     "confirm_rate": 0.18,
      "upgrade_rate": 0.0,
-     "mean_items": 21.7,
-     "mean_se": 0.511
+     "mean_items": 21.6,
+     "mean_se": 0.502
     },
     {
      "theta": -2.75,
-     "confirm_rate": 0.32,
+     "confirm_rate": 0.28,
      "upgrade_rate": 0.0,
-     "mean_items": 21.6,
-     "mean_se": 0.485
+     "mean_items": 21.5,
+     "mean_se": 0.492
     },
     {
      "theta": -2.5,
-     "confirm_rate": 0.36,
+     "confirm_rate": 0.48,
      "upgrade_rate": 0.0,
-     "mean_items": 21.5,
-     "mean_se": 0.484
+     "mean_items": 21.3,
+     "mean_se": 0.479
     },
     {
      "theta": -2.25,
-     "confirm_rate": 0.56,
+     "confirm_rate": 0.46,
      "upgrade_rate": 0.0,
      "mean_items": 21.4,
-     "mean_se": 0.466
+     "mean_se": 0.471
     },
     {
      "theta": -2.0,
-     "confirm_rate": 0.56,
+     "confirm_rate": 0.8,
      "upgrade_rate": 0.0,
-     "mean_items": 21.5,
-     "mean_se": 0.462
+     "mean_items": 21.2,
+     "mean_se": 0.453
     },
     {
      "theta": -1.75,
-     "confirm_rate": 0.74,
-     "upgrade_rate": 0.02,
-     "mean_items": 21.1,
-     "mean_se": 0.452
+     "confirm_rate": 0.82,
+     "upgrade_rate": 0.0,
+     "mean_items": 21.3,
+     "mean_se": 0.443
     },
     {
      "theta": -1.5,
      "confirm_rate": 0.94,
      "upgrade_rate": 0.02,
-     "mean_items": 21.5,
-     "mean_se": 0.43
+     "mean_items": 21.4,
+     "mean_se": 0.432
     },
     {
      "theta": -1.25,
-     "confirm_rate": 0.98,
-     "upgrade_rate": 0.04,
+     "confirm_rate": 0.96,
+     "upgrade_rate": 0.02,
      "mean_items": 21.5,
-     "mean_se": 0.414
+     "mean_se": 0.424
     },
     {
      "theta": -1.0,
-     "confirm_rate": 0.96,
-     "upgrade_rate": 0.06,
-     "mean_items": 21.8,
-     "mean_se": 0.406
+     "confirm_rate": 0.98,
+     "upgrade_rate": 0.1,
+     "mean_items": 21.6,
+     "mean_se": 0.409
     },
     {
      "theta": -0.75,
      "confirm_rate": 1.0,
-     "upgrade_rate": 0.14,
-     "mean_items": 21.8,
-     "mean_se": 0.4
+     "upgrade_rate": 0.12,
+     "mean_items": 21.7,
+     "mean_se": 0.402
     },
     {
      "theta": -0.5,
      "confirm_rate": 1.0,
-     "upgrade_rate": 0.46,
+     "upgrade_rate": 0.36,
      "mean_items": 21.8,
-     "mean_se": 0.396
+     "mean_se": 0.394
     }
    ]
   }
@@ -452,24 +452,24 @@
  "pool": {
   "backend": {
    "-1.5": {
-    "n_families": 31,
-    "info_at_cut": 6.41,
-    "min_se": 0.367
+    "n_families": 32,
+    "info_at_cut": 6.55,
+    "min_se": 0.364
    },
    "-1.75": {
-    "n_families": 31,
-    "info_at_cut": 5.63,
-    "min_se": 0.388
+    "n_families": 32,
+    "info_at_cut": 5.75,
+    "min_se": 0.385
    },
    "-2.0": {
-    "n_families": 31,
-    "info_at_cut": 4.84,
-    "min_se": 0.414
+    "n_families": 32,
+    "info_at_cut": 4.94,
+    "min_se": 0.41
    },
    "-2.25": {
-    "n_families": 31,
-    "info_at_cut": 4.08,
-    "min_se": 0.444
+    "n_families": 32,
+    "info_at_cut": 4.17,
+    "min_se": 0.44
    }
   },
   "frontend": {
@@ -564,28 +564,28 @@
  "retest": {
   "backend": {
    "n": 40,
-   "decision_agreement": 0.75,
-   "r_theta": 0.525
+   "decision_agreement": 0.625,
+   "r_theta": 0.327
   },
   "frontend": {
    "n": 40,
-   "decision_agreement": 0.575,
-   "r_theta": 0.195
+   "decision_agreement": 0.7,
+   "r_theta": 0.542
   },
   "data_ml": {
    "n": 40,
-   "decision_agreement": 0.65,
-   "r_theta": 0.497
+   "decision_agreement": 0.6,
+   "r_theta": 0.39
   },
   "qa": {
    "n": 40,
-   "decision_agreement": 0.625,
-   "r_theta": 0.316
+   "decision_agreement": 0.725,
+   "r_theta": 0.463
   },
   "security": {
    "n": 40,
-   "decision_agreement": 0.55,
-   "r_theta": 0.397
+   "decision_agreement": 0.675,
+   "r_theta": 0.329
   }
  },
  "by_direction": {
@@ -593,21 +593,21 @@
    "-1.5": {
     "cut": -1.5,
     "n_sessions": 110,
-    "false_confirm": 0.05,
-    "false_reject": 0.325,
-    "band_confirm": 0.45,
+    "false_confirm": 0.067,
+    "false_reject": 0.25,
+    "band_confirm": 0.25,
     "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.4,
-    "mean_items": 19.95,
-    "mean_time_min": 38.6,
-    "mean_se": 0.45,
-    "extension_share": 0.791,
-    "exhausted_share": 0.036,
+    "junior_zone_upgrade": 0.45,
+    "mean_items": 20.17,
+    "mean_time_min": 38.0,
+    "mean_se": 0.445,
+    "extension_share": 0.818,
+    "exhausted_share": 0.027,
     "stop_reasons": {
-     "classified": 19,
+     "classified": 17,
      "extension_classified": 10,
-     "extension_done": 77,
-     "max_items": 4
+     "extension_done": 80,
+     "max_items": 3
     },
     "pop_share_band": 0.092,
     "pop_share_below": 0.067
@@ -615,20 +615,20 @@
    "-1.75": {
     "cut": -1.75,
     "n_sessions": 110,
-    "false_confirm": 0.14,
-    "false_reject": 0.16,
+    "false_confirm": 0.1,
+    "false_reject": 0.12,
     "band_confirm": 0.533,
-    "band_upgrade": 0.067,
+    "band_upgrade": 0.0,
     "junior_zone_upgrade": 0.5,
-    "mean_items": 21.62,
-    "mean_time_min": 40.4,
-    "mean_se": 0.432,
-    "extension_share": 0.955,
+    "mean_items": 21.53,
+    "mean_time_min": 39.8,
+    "mean_se": 0.433,
+    "extension_share": 0.945,
     "exhausted_share": 0.0,
     "stop_reasons": {
-     "classified": 5,
-     "extension_classified": 2,
-     "extension_done": 103
+     "classified": 6,
+     "extension_classified": 4,
+     "extension_done": 100
     },
     "pop_share_band": 0.119,
     "pop_share_below": 0.04
@@ -636,14 +636,14 @@
    "-2.0": {
     "cut": -2.0,
     "n_sessions": 110,
-    "false_confirm": 0.125,
-    "false_reject": 0.2,
-    "band_confirm": 0.6,
-    "band_upgrade": 0.05,
-    "junior_zone_upgrade": 0.25,
+    "false_confirm": 0.15,
+    "false_reject": 0.117,
+    "band_confirm": 0.675,
+    "band_upgrade": 0.025,
+    "junior_zone_upgrade": 0.65,
     "mean_items": 21.95,
-    "mean_time_min": 39.5,
-    "mean_se": 0.431,
+    "mean_time_min": 41.3,
+    "mean_se": 0.429,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
     "stop_reasons": {
@@ -656,19 +656,20 @@
    "-2.25": {
     "cut": -2.25,
     "n_sessions": 110,
-    "false_confirm": 0.267,
-    "false_reject": 0.143,
-    "band_confirm": 0.7,
-    "band_upgrade": 0.02,
-    "junior_zone_upgrade": 0.25,
-    "mean_items": 21.54,
-    "mean_time_min": 38.8,
-    "mean_se": 0.434,
-    "extension_share": 1.0,
-    "exhausted_share": 0.0,
+    "false_confirm": 0.333,
+    "false_reject": 0.086,
+    "band_confirm": 0.8,
+    "band_upgrade": 0.0,
+    "junior_zone_upgrade": 0.4,
+    "mean_items": 21.55,
+    "mean_time_min": 40.4,
+    "mean_se": 0.428,
+    "extension_share": 0.991,
+    "exhausted_share": 0.009,
     "stop_reasons": {
-     "extension_classified": 15,
-     "extension_done": 95
+     "extension_classified": 16,
+     "extension_done": 93,
+     "max_items": 1
     },
     "pop_share_band": 0.146,
     "pop_share_below": 0.012
@@ -678,20 +679,20 @@
    "-1.5": {
     "cut": -1.5,
     "n_sessions": 110,
-    "false_confirm": 0.067,
-    "false_reject": 0.425,
-    "band_confirm": 0.2,
+    "false_confirm": 0.033,
+    "false_reject": 0.325,
+    "band_confirm": 0.25,
     "band_upgrade": 0.0,
     "junior_zone_upgrade": 0.15,
-    "mean_items": 21.05,
-    "mean_time_min": 36.0,
-    "mean_se": 0.451,
+    "mean_items": 20.9,
+    "mean_time_min": 35.1,
+    "mean_se": 0.458,
     "extension_share": 0.918,
     "exhausted_share": 0.0,
     "stop_reasons": {
      "classified": 9,
-     "extension_classified": 8,
-     "extension_done": 93
+     "extension_classified": 14,
+     "extension_done": 87
     },
     "pop_share_band": 0.092,
     "pop_share_below": 0.067
@@ -699,19 +700,19 @@
    "-1.75": {
     "cut": -1.75,
     "n_sessions": 110,
-    "false_confirm": 0.14,
-    "false_reject": 0.16,
-    "band_confirm": 0.6,
-    "band_upgrade": 0.033,
+    "false_confirm": 0.1,
+    "false_reject": 0.14,
+    "band_confirm": 0.567,
+    "band_upgrade": 0.0,
     "junior_zone_upgrade": 0.2,
-    "mean_items": 21.92,
-    "mean_time_min": 37.6,
-    "mean_se": 0.44,
+    "mean_items": 21.89,
+    "mean_time_min": 35.4,
+    "mean_se": 0.447,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
     "stop_reasons": {
-     "extension_classified": 3,
-     "extension_done": 107
+     "extension_classified": 4,
+     "extension_done": 106
     },
     "pop_share_band": 0.119,
     "pop_share_below": 0.04
@@ -719,14 +720,14 @@
    "-2.0": {
     "cut": -2.0,
     "n_sessions": 110,
-    "false_confirm": 0.175,
-    "false_reject": 0.083,
-    "band_confirm": 0.75,
-    "band_upgrade": 0.0,
+    "false_confirm": 0.075,
+    "false_reject": 0.133,
+    "band_confirm": 0.675,
+    "band_upgrade": 0.075,
     "junior_zone_upgrade": 0.35,
     "mean_items": 22.0,
-    "mean_time_min": 38.2,
-    "mean_se": 0.444,
+    "mean_time_min": 38.0,
+    "mean_se": 0.45,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
     "stop_reasons": {
@@ -739,18 +740,18 @@
     "cut": -2.25,
     "n_sessions": 110,
     "false_confirm": 0.267,
-    "false_reject": 0.086,
-    "band_confirm": 0.8,
+    "false_reject": 0.057,
+    "band_confirm": 0.78,
     "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.3,
-    "mean_items": 21.77,
-    "mean_time_min": 36.8,
-    "mean_se": 0.448,
+    "junior_zone_upgrade": 0.2,
+    "mean_items": 21.71,
+    "mean_time_min": 37.1,
+    "mean_se": 0.451,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
     "stop_reasons": {
-     "extension_classified": 8,
-     "extension_done": 102
+     "extension_classified": 10,
+     "extension_done": 100
     },
     "pop_share_band": 0.146,
     "pop_share_below": 0.012
@@ -760,20 +761,20 @@
    "-1.5": {
     "cut": -1.5,
     "n_sessions": 110,
-    "false_confirm": 0.033,
-    "false_reject": 0.25,
-    "band_confirm": 0.35,
-    "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.45,
-    "mean_items": 20.75,
-    "mean_time_min": 39.2,
-    "mean_se": 0.45,
-    "extension_share": 0.936,
+    "false_confirm": 0.017,
+    "false_reject": 0.325,
+    "band_confirm": 0.4,
+    "band_upgrade": 0.05,
+    "junior_zone_upgrade": 0.25,
+    "mean_items": 20.2,
+    "mean_time_min": 39.4,
+    "mean_se": 0.462,
+    "extension_share": 0.882,
     "exhausted_share": 0.0,
     "stop_reasons": {
-     "classified": 7,
-     "extension_classified": 12,
-     "extension_done": 91
+     "classified": 13,
+     "extension_classified": 11,
+     "extension_done": 86
     },
     "pop_share_band": 0.092,
     "pop_share_below": 0.067
@@ -781,19 +782,19 @@
    "-1.75": {
     "cut": -1.75,
     "n_sessions": 110,
-    "false_confirm": 0.08,
-    "false_reject": 0.24,
+    "false_confirm": 0.0,
+    "false_reject": 0.2,
     "band_confirm": 0.467,
     "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.25,
-    "mean_items": 21.51,
-    "mean_time_min": 38.2,
-    "mean_se": 0.445,
-    "extension_share": 0.918,
-    "exhausted_share": 0.082,
+    "junior_zone_upgrade": 0.2,
+    "mean_items": 21.84,
+    "mean_time_min": 42.4,
+    "mean_se": 0.446,
+    "extension_share": 0.973,
+    "exhausted_share": 0.027,
     "stop_reasons": {
-     "extension_done": 101,
-     "max_items": 9
+     "extension_done": 107,
+     "max_items": 3
     },
     "pop_share_band": 0.119,
     "pop_share_below": 0.04
@@ -802,12 +803,12 @@
     "cut": -2.0,
     "n_sessions": 110,
     "false_confirm": 0.125,
-    "false_reject": 0.1,
-    "band_confirm": 0.75,
-    "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.3,
+    "false_reject": 0.15,
+    "band_confirm": 0.6,
+    "band_upgrade": 0.025,
+    "junior_zone_upgrade": 0.2,
     "mean_items": 22.0,
-    "mean_time_min": 40.2,
+    "mean_time_min": 42.1,
     "mean_se": 0.443,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
@@ -820,19 +821,19 @@
    "-2.25": {
     "cut": -2.25,
     "n_sessions": 110,
-    "false_confirm": 0.233,
-    "false_reject": 0.143,
-    "band_confirm": 0.72,
-    "band_upgrade": 0.06,
-    "junior_zone_upgrade": 0.35,
-    "mean_items": 21.73,
-    "mean_time_min": 39.5,
-    "mean_se": 0.442,
+    "false_confirm": 0.2,
+    "false_reject": 0.114,
+    "band_confirm": 0.76,
+    "band_upgrade": 0.0,
+    "junior_zone_upgrade": 0.45,
+    "mean_items": 21.53,
+    "mean_time_min": 42.6,
+    "mean_se": 0.449,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
     "stop_reasons": {
-     "extension_classified": 16,
-     "extension_done": 94
+     "extension_classified": 19,
+     "extension_done": 91
     },
     "pop_share_band": 0.146,
     "pop_share_below": 0.012
@@ -842,20 +843,20 @@
    "-1.5": {
     "cut": -1.5,
     "n_sessions": 110,
-    "false_confirm": 0.1,
-    "false_reject": 0.25,
-    "band_confirm": 0.35,
+    "false_confirm": 0.033,
+    "false_reject": 0.325,
+    "band_confirm": 0.3,
     "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.45,
-    "mean_items": 20.73,
-    "mean_time_min": 37.1,
-    "mean_se": 0.455,
-    "extension_share": 0.909,
+    "junior_zone_upgrade": 0.25,
+    "mean_items": 20.55,
+    "mean_time_min": 38.5,
+    "mean_se": 0.458,
+    "extension_share": 0.891,
     "exhausted_share": 0.0,
     "stop_reasons": {
-     "classified": 10,
+     "classified": 12,
      "extension_classified": 8,
-     "extension_done": 92
+     "extension_done": 90
     },
     "pop_share_band": 0.092,
     "pop_share_below": 0.067
@@ -864,18 +865,18 @@
     "cut": -1.75,
     "n_sessions": 110,
     "false_confirm": 0.04,
-    "false_reject": 0.2,
-    "band_confirm": 0.433,
-    "band_upgrade": 0.033,
-    "junior_zone_upgrade": 0.35,
-    "mean_items": 21.77,
-    "mean_time_min": 39.2,
-    "mean_se": 0.449,
+    "false_reject": 0.28,
+    "band_confirm": 0.5,
+    "band_upgrade": 0.0,
+    "junior_zone_upgrade": 0.25,
+    "mean_items": 21.64,
+    "mean_time_min": 39.3,
+    "mean_se": 0.455,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
     "stop_reasons": {
-     "extension_classified": 5,
-     "extension_done": 105
+     "extension_classified": 8,
+     "extension_done": 102
     },
     "pop_share_band": 0.119,
     "pop_share_below": 0.04
@@ -883,14 +884,14 @@
    "-2.0": {
     "cut": -2.0,
     "n_sessions": 110,
-    "false_confirm": 0.225,
-    "false_reject": 0.133,
-    "band_confirm": 0.725,
+    "false_confirm": 0.2,
+    "false_reject": 0.183,
+    "band_confirm": 0.575,
     "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.55,
+    "junior_zone_upgrade": 0.15,
     "mean_items": 22.0,
-    "mean_time_min": 38.6,
-    "mean_se": 0.447,
+    "mean_time_min": 41.2,
+    "mean_se": 0.448,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
     "stop_reasons": {
@@ -902,19 +903,19 @@
    "-2.25": {
     "cut": -2.25,
     "n_sessions": 110,
-    "false_confirm": 0.233,
-    "false_reject": 0.086,
-    "band_confirm": 0.82,
-    "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.45,
-    "mean_items": 21.93,
-    "mean_time_min": 38.1,
-    "mean_se": 0.45,
+    "false_confirm": 0.4,
+    "false_reject": 0.043,
+    "band_confirm": 0.84,
+    "band_upgrade": 0.02,
+    "junior_zone_upgrade": 0.1,
+    "mean_items": 21.79,
+    "mean_time_min": 38.6,
+    "mean_se": 0.447,
     "extension_share": 1.0,
     "exhausted_share": 0.0,
     "stop_reasons": {
-     "extension_classified": 8,
-     "extension_done": 102
+     "extension_classified": 15,
+     "extension_done": 95
     },
     "pop_share_band": 0.146,
     "pop_share_below": 0.012
@@ -924,21 +925,21 @@
    "-1.5": {
     "cut": -1.5,
     "n_sessions": 110,
-    "false_confirm": 0.05,
-    "false_reject": 0.275,
-    "band_confirm": 0.2,
+    "false_confirm": 0.067,
+    "false_reject": 0.375,
+    "band_confirm": 0.45,
     "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.35,
-    "mean_items": 19.15,
-    "mean_time_min": 31.9,
-    "mean_se": 0.465,
-    "extension_share": 0.773,
-    "exhausted_share": 0.855,
+    "junior_zone_upgrade": 0.2,
+    "mean_items": 20.02,
+    "mean_time_min": 35.1,
+    "mean_se": 0.454,
+    "extension_share": 0.873,
+    "exhausted_share": 0.927,
     "stop_reasons": {
-     "classified": 15,
-     "extension_classified": 1,
-     "extension_pool_exhausted": 84,
-     "max_items": 10
+     "classified": 6,
+     "extension_classified": 2,
+     "extension_pool_exhausted": 94,
+     "max_items": 8
     },
     "pop_share_band": 0.092,
     "pop_share_below": 0.067
@@ -948,17 +949,17 @@
     "n_sessions": 110,
     "false_confirm": 0.04,
     "false_reject": 0.26,
-    "band_confirm": 0.5,
+    "band_confirm": 0.267,
     "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.35,
-    "mean_items": 20.73,
-    "mean_time_min": 36.5,
-    "mean_se": 0.451,
-    "extension_share": 0.945,
+    "junior_zone_upgrade": 0.3,
+    "mean_items": 20.91,
+    "mean_time_min": 37.1,
+    "mean_se": 0.449,
+    "extension_share": 0.982,
     "exhausted_share": 1.0,
     "stop_reasons": {
-     "extension_pool_exhausted": 104,
-     "max_items": 6
+     "extension_pool_exhausted": 108,
+     "max_items": 2
     },
     "pop_share_band": 0.119,
     "pop_share_below": 0.04
@@ -966,14 +967,14 @@
    "-2.0": {
     "cut": -2.0,
     "n_sessions": 110,
-    "false_confirm": 0.075,
+    "false_confirm": 0.1,
     "false_reject": 0.233,
     "band_confirm": 0.525,
-    "band_upgrade": 0.05,
-    "junior_zone_upgrade": 0.2,
+    "band_upgrade": 0.0,
+    "junior_zone_upgrade": 0.3,
     "mean_items": 21.0,
-    "mean_time_min": 37.3,
-    "mean_se": 0.456,
+    "mean_time_min": 36.2,
+    "mean_se": 0.451,
     "extension_share": 1.0,
     "exhausted_share": 1.0,
     "stop_reasons": {
@@ -985,20 +986,20 @@
    "-2.25": {
     "cut": -2.25,
     "n_sessions": 110,
-    "false_confirm": 0.3,
-    "false_reject": 0.129,
-    "band_confirm": 0.74,
-    "band_upgrade": 0.0,
-    "junior_zone_upgrade": 0.15,
-    "mean_items": 20.83,
-    "mean_time_min": 39.3,
-    "mean_se": 0.456,
-    "extension_share": 0.991,
-    "exhausted_share": 0.864,
+    "false_confirm": 0.367,
+    "false_reject": 0.057,
+    "band_confirm": 0.8,
+    "band_upgrade": 0.02,
+    "junior_zone_upgrade": 0.05,
+    "mean_items": 20.79,
+    "mean_time_min": 37.1,
+    "mean_se": 0.452,
+    "extension_share": 0.982,
+    "exhausted_share": 0.873,
     "stop_reasons": {
-     "extension_classified": 15,
+     "extension_classified": 14,
      "extension_pool_exhausted": 94,
-     "max_items": 1
+     "max_items": 2
     },
     "pop_share_band": 0.146,
     "pop_share_below": 0.012
@@ -1007,8 +1008,10 @@
  },
  "current_bank_rule": {
   "cut": -1.75,
-  "all_pass": false,
-  "passing": []
+  "all_pass": true,
+  "passing": [
+   -1.75
+  ]
  },
  "with_easy_families": {
   "per_block": 6,
@@ -1016,20 +1019,21 @@
    {
     "cut": -1.5,
     "n_sessions": 550,
-    "false_confirm": 0.053,
-    "false_reject": 0.25,
-    "band_confirm": 0.4,
-    "band_upgrade": 0.04,
-    "junior_zone_upgrade": 0.35,
-    "mean_items": 19.7,
-    "mean_time_min": 34.3,
-    "mean_se": 0.445,
+    "false_confirm": 0.04,
+    "false_reject": 0.22,
+    "band_confirm": 0.44,
+    "band_upgrade": 0.01,
+    "junior_zone_upgrade": 0.31,
+    "mean_items": 19.89,
+    "mean_time_min": 33.6,
+    "mean_se": 0.441,
     "extension_share": 0.811,
-    "exhausted_share": 0.0,
+    "exhausted_share": 0.005,
     "stop_reasons": {
-     "classified": 104,
-     "extension_classified": 70,
-     "extension_done": 376
+     "classified": 101,
+     "extension_classified": 65,
+     "extension_done": 381,
+     "max_items": 3
     },
     "pop_share_band": 0.092,
     "pop_share_below": 0.067,
@@ -1038,76 +1042,76 @@
       "theta": -3.0,
       "confirm_rate": 0.0,
       "upgrade_rate": 0.0,
-      "mean_items": 14.3,
-      "mean_se": 0.537
+      "mean_items": 15.9,
+      "mean_se": 0.51
      },
      {
       "theta": -2.75,
-      "confirm_rate": 0.04,
+      "confirm_rate": 0.0,
       "upgrade_rate": 0.0,
-      "mean_items": 16.0,
-      "mean_se": 0.508
+      "mean_items": 17.4,
+      "mean_se": 0.488
      },
      {
       "theta": -2.5,
       "confirm_rate": 0.0,
       "upgrade_rate": 0.0,
-      "mean_items": 17.3,
-      "mean_se": 0.489
+      "mean_items": 16.9,
+      "mean_se": 0.493
      },
      {
       "theta": -2.25,
       "confirm_rate": 0.02,
       "upgrade_rate": 0.0,
-      "mean_items": 19.6,
-      "mean_se": 0.455
+      "mean_items": 17.8,
+      "mean_se": 0.479
      },
      {
       "theta": -2.0,
-      "confirm_rate": 0.06,
+      "confirm_rate": 0.1,
       "upgrade_rate": 0.0,
-      "mean_items": 20.1,
-      "mean_se": 0.445
+      "mean_items": 21.0,
+      "mean_se": 0.431
      },
      {
       "theta": -1.75,
-      "confirm_rate": 0.2,
+      "confirm_rate": 0.12,
       "upgrade_rate": 0.0,
-      "mean_items": 20.4,
-      "mean_se": 0.437
+      "mean_items": 20.6,
+      "mean_se": 0.435
      },
      {
       "theta": -1.5,
-      "confirm_rate": 0.34,
-      "upgrade_rate": 0.04,
+      "confirm_rate": 0.26,
+      "upgrade_rate": 0.0,
       "mean_items": 21.3,
       "mean_se": 0.42
      },
      {
       "theta": -1.25,
-      "confirm_rate": 0.46,
-      "upgrade_rate": 0.04,
-      "mean_items": 21.7,
-      "mean_se": 0.41
+      "confirm_rate": 0.62,
+      "upgrade_rate": 0.02,
+      "mean_items": 21.9,
+      "mean_se": 0.404
      },
      {
       "theta": -1.0,
-      "confirm_rate": 0.74,
-      "upgrade_rate": 0.12,
+      "confirm_rate": 0.72,
+      "upgrade_rate": 0.1,
       "mean_items": 22.0,
-      "mean_se": 0.4
+      "mean_se": 0.399
      },
      {
       "theta": -0.75,
       "confirm_rate": 0.8,
-      "upgrade_rate": 0.24,
+      "upgrade_rate": 0.2,
       "mean_items": 22.0,
-      "mean_se": 0.397
+      "mean_se": 0.396
      },
      {
       "theta": -0.5,
-      "confirm_rate": 1.0,
-      "upgrade_rate": 0.46,
+      "confirm_rate": 0.98,
+      "upgrade_rate": 0.42,
       "mean_items": 22.0,
       "mean_se": 0.394
      }
@@ -1116,21 +1120,21 @@
    {
     "cut": -1.75,
     "n_sessions": 550,
-    "false_confirm": 0.096,
-    "false_reject": 0.196,
-    "band_confirm": 0.513,
-    "band_upgrade": 0.04,
-    "junior_zone_upgrade": 0.35,
-    "mean_items": 21.02,
-    "mean_time_min": 35.4,
-    "mean_se": 0.428,
+    "false_confirm": 0.076,
+    "false_reject": 0.168,
+    "band_confirm": 0.547,
+    "band_upgrade": 0.013,
+    "junior_zone_upgrade": 0.33,
+    "mean_items": 21.07,
+    "mean_time_min": 34.6,
+    "mean_se": 0.427,
     "extension_share": 0.92,
-    "exhausted_share": 0.011,
+    "exhausted_share": 0.013,
     "stop_reasons": {
-     "classified": 38,
-     "extension_classified": 45,
-     "extension_done": 461,
-     "max_items": 6
+     "classified": 37,
+     "extension_classified": 43,
+     "extension_done": 463,
+     "max_items": 7
     },
     "pop_share_band": 0.119,
     "pop_share_below": 0.04,
@@ -1139,76 +1143,76 @@
       "theta": -3.0,
       "confirm_rate": 0.0,
       "upgrade_rate": 0.0,
-      "mean_items": 18.2,
-      "mean_se": 0.489
+      "mean_items": 18.3,
+      "mean_se": 0.484
      },
      {
       "theta": -2.75,
-      "confirm_rate": 0.04,
+      "confirm_rate": 0.0,
       "upgrade_rate": 0.0,
-      "mean_items": 19.6,
-      "mean_se": 0.464
+      "mean_items": 19.2,
+      "mean_se": 0.471
      },
      {
       "theta": -2.5,
-      "confirm_rate": 0.04,
+      "confirm_rate": 0.08,
       "upgrade_rate": 0.0,
-      "mean_items": 19.7,
-      "mean_se": 0.461
+      "mean_items": 19.6,
+      "mean_se": 0.463
      },
      {
       "theta": -2.25,
       "confirm_rate": 0.08,
       "upgrade_rate": 0.0,
-      "mean_items": 21.0,
-      "mean_se": 0.437
+      "mean_items": 21.5,
+      "mean_se": 0.431
      },
      {
       "theta": -2.0,
-      "confirm_rate": 0.32,
+      "confirm_rate": 0.22,
       "upgrade_rate": 0.0,
-      "mean_items": 21.1,
-      "mean_se": 0.43
+      "mean_items": 21.3,
+      "mean_se": 0.429
      },
      {
       "theta": -1.75,
-      "confirm_rate": 0.3,
-      "upgrade_rate": 0.02,
-      "mean_items": 21.8,
-      "mean_se": 0.419
+      "confirm_rate": 0.28,
+      "upgrade_rate": 0.0,
+      "mean_items": 22.0,
+      "mean_se": 0.416
      },
      {
       "theta": -1.5,
-      "confirm_rate": 0.46,
+      "confirm_rate": 0.62,
       "upgrade_rate": 0.0,
-      "mean_items": 21.7,
-      "mean_se": 0.415
+      "mean_items": 22.0,
+      "mean_se": 0.409
      },
      {
       "theta": -1.25,
-      "confirm_rate": 0.78,
-      "upgrade_rate": 0.1,
+      "confirm_rate": 0.74,
+      "upgrade_rate": 0.04,
       "mean_items": 22.0,
-      "mean_se": 0.403
+      "mean_se": 0.405
      },
      {
       "theta": -1.0,
-      "confirm_rate": 0.86,
+      "confirm_rate": 0.9,
       "upgrade_rate": 0.06,
       "mean_items": 22.0,
-      "mean_se": 0.402
+      "mean_se": 0.401
      },
      {
       "theta": -0.75,
-      "confirm_rate": 0.94,
-      "upgrade_rate": 0.18,
+      "confirm_rate": 0.9,
+      "upgrade_rate": 0.26,
       "mean_items": 22.0,
       "mean_se": 0.397
      },
      {
       "theta": -0.5,
-      "confirm_rate": 0.98,
-      "upgrade_rate": 0.52,
+      "confirm_rate": 1.0,
+      "upgrade_rate": 0.4,
       "mean_items": 22.0,
       "mean_se": 0.393
      }
@@ -1217,202 +1221,202 @@
    {
     "cut": -2.0,
     "n_sessions": 550,
-    "false_confirm": 0.105,
-    "false_reject": 0.113,
-    "band_confirm": 0.7,
-    "band_upgrade": 0.02,
-    "junior_zone_upgrade": 0.29,
-    "mean_items": 21.46,
-    "mean_time_min": 36.6,
-    "mean_se": 0.423,
-    "extension_share": 0.945,
-    "exhausted_share": 0.015,
+    "false_confirm": 0.1,
+    "false_reject": 0.163,
+    "band_confirm": 0.645,
+    "band_upgrade": 0.0,
+    "junior_zone_upgrade": 0.34,
+    "mean_items": 21.56,
+    "mean_time_min": 36.7,
+    "mean_se": 0.422,
+    "extension_share": 0.953,
+    "exhausted_share": 0.02,
     "stop_reasons": {
-     "classified": 22,
-     "extension_classified": 18,
-     "extension_done": 502,
-     "max_items": 8
+     "classified": 15,
+     "extension_classified": 13,
+     "extension_done": 511,
+     "max_items": 11
     },
     "pop_share_band": 0.136,
     "pop_share_below": 0.023,
     "by_theta": [
      {
       "theta": -3.0,
-      "confirm_rate": 0.0,
+      "confirm_rate": 0.02,
       "upgrade_rate": 0.0,
-      "mean_items": 19.6,
-      "mean_se": 0.467
+      "mean_items": 19.5,
+      "mean_se": 0.47
      },
      {
       "theta": -2.75,
-      "confirm_rate": 0.06,
+      "confirm_rate": 0.02,
       "upgrade_rate": 0.0,
-      "mean_items": 20.2,
-      "mean_se": 0.459
+      "mean_items": 20.6,
+      "mean_se": 0.453
      },
      {
       "theta": -2.5,
-      "confirm_rate": 0.1,
+      "confirm_rate": 0.18,
       "upgrade_rate": 0.0,
-      "mean_items": 20.7,
-      "mean_se": 0.448
+      "mean_items": 21.3,
+      "mean_se": 0.436
      },
      {
       "theta": -2.25,
-      "confirm_rate": 0.26,
+      "confirm_rate": 0.18,
       "upgrade_rate": 0.0,
-      "mean_items": 21.7,
+      "mean_items": 21.8,
       "mean_se": 0.429
      },
      {
       "theta": -2.0,
       "confirm_rate": 0.46,
       "upgrade_rate": 0.0,
-      "mean_items": 21.9,
-      "mean_se": 0.42
+      "mean_items": 22.0,
+      "mean_se": 0.422
      },
      {
       "theta": -1.75,
-      "confirm_rate": 0.62,
+      "confirm_rate": 0.58,
       "upgrade_rate": 0.0,
       "mean_items": 22.0,
       "mean_se": 0.415
      },
      {
       "theta": -1.5,
-      "confirm_rate": 0.8,
-      "upgrade_rate": 0.02,
+      "confirm_rate": 0.7,
+      "upgrade_rate": 0.0,
       "mean_items": 22.0,
-      "mean_se": 0.413
+      "mean_se": 0.414
      },
      {
       "theta": -1.25,
-      "confirm_rate": 0.92,
-      "upgrade_rate": 0.06,
+      "confirm_rate": 0.84,
+      "upgrade_rate": 0.0,
       "mean_items": 22.0,
-      "mean_se": 0.405
+      "mean_se": 0.409
      },
      {
       "theta": -1.0,
-      "confirm_rate": 0.98,
-      "upgrade_rate": 0.06,
+      "confirm_rate": 0.9,
+      "upgrade_rate": 0.04,
       "mean_items": 22.0,
-      "mean_se": 0.401
+      "mean_se": 0.404
      },
      {
       "theta": -0.75,
       "confirm_rate": 1.0,
-      "upgrade_rate": 0.18,
+      "upgrade_rate": 0.24,
       "mean_items": 22.0,
       "mean_se": 0.398
      },
      {
       "theta": -0.5,
       "confirm_rate": 1.0,
-      "upgrade_rate": 0.4,
+      "upgrade_rate": 0.44,
       "mean_items": 22.0,
-      "mean_se": 0.396
+      "mean_se": 0.393
      }
     ]
    },
    {
     "cut": -2.25,
     "n_sessions": 550,
-    "false_confirm": 0.24,
-    "false_reject": 0.094,
-    "band_confirm": 0.788,
-    "band_upgrade": 0.024,
-    "junior_zone_upgrade": 0.4,
-    "mean_items": 21.31,
+    "false_confirm": 0.253,
+    "false_reject": 0.069,
+    "band_confirm": 0.82,
+    "band_upgrade": 0.004,
+    "junior_zone_upgrade": 0.29,
+    "mean_items": 21.21,
     "mean_time_min": 35.8,
-    "mean_se": 0.425,
-    "extension_share": 0.969,
-    "exhausted_share": 0.022,
+    "mean_se": 0.426,
+    "extension_share": 0.978,
+    "exhausted_share": 0.018,
     "stop_reasons": {
-     "classified": 5,
-     "extension_classified": 80,
-     "extension_done": 453,
-     "max_items": 12
+     "classified": 2,
+     "extension_classified": 107,
+     "extension_done": 431,
+     "max_items": 10
     },
     "pop_share_band": 0.146,
     "pop_share_below": 0.012,
     "by_theta": [
      {
       "theta": -3.0,
-      "confirm_rate": 0.1,
+      "confirm_rate": 0.08,
       "upgrade_rate": 0.0,
-      "mean_items": 21.2,
-      "mean_se": 0.456
+      "mean_items": 21.0,
+      "mean_se": 0.457
      },
      {
       "theta": -2.75,
-      "confirm_rate": 0.24,
+      "confirm_rate": 0.22,
       "upgrade_rate": 0.0,
-      "mean_items": 21.1,
-      "mean_se": 0.447
+      "mean_items": 21.4,
+      "mean_se": 0.448
      },
      {
       "theta": -2.5,
-      "confirm_rate": 0.38,
+      "confirm_rate": 0.46,
       "upgrade_rate": 0.0,
-      "mean_items": 20.9,
-      "mean_se": 0.444
+      "mean_items": 20.8,
+      "mean_se": 0.442
      },
      {
       "theta": -2.25,
-      "confirm_rate": 0.6,
+      "confirm_rate": 0.58,
       "upgrade_rate": 0.0,
-      "mean_items": 20.7,
-      "mean_se": 0.443
+      "mean_items": 20.9,
+      "mean_se": 0.437
      },
      {
       "theta": -2.0,
-      "confirm_rate": 0.66,
+      "confirm_rate": 0.7,
       "upgrade_rate": 0.0,
-      "mean_items": 21.2,
-      "mean_se": 0.43
+      "mean_items": 20.3,
+      "mean_se": 0.442
      },
      {
       "theta": -1.75,
-      "confirm_rate": 0.72,
+      "confirm_rate": 0.86,
       "upgrade_rate": 0.0,
-      "mean_items": 20.9,
-      "mean_se": 0.431
+      "mean_items": 21.1,
+      "mean_se": 0.427
      },
      {
       "theta": -1.5,
-      "confirm_rate": 0.98,
+      "confirm_rate": 0.96,
       "upgrade_rate": 0.0,
-      "mean_items": 21.0,
-      "mean_se": 0.419
+      "mean_items": 20.9,
+      "mean_se": 0.425
      },
      {
       "theta": -1.25,
-      "confirm_rate": 0.98,
-      "upgrade_rate": 0.12,
-      "mean_items": 21.5,
+      "confirm_rate": 1.0,
+      "upgrade_rate": 0.02,
+      "mean_items": 21.7,
       "mean_se": 0.411
      },
      {
       "theta": -1.0,
       "confirm_rate": 1.0,
-      "upgrade_rate": 0.04,
-      "mean_items": 21.9,
-      "mean_se": 0.401
+      "upgrade_rate": 0.14,
+      "mean_items": 21.3,
+      "mean_se": 0.41
      },
      {
       "theta": -0.75,
       "confirm_rate": 1.0,
-      "upgrade_rate": 0.34,
-      "mean_items": 22.0,
-      "mean_se": 0.395
+      "upgrade_rate": 0.22,
+      "mean_items": 21.9,
+      "mean_se": 0.396
      },
      {
       "theta": -0.5,
       "confirm_rate": 1.0,
-      "upgrade_rate": 0.46,
+      "upgrade_rate": 0.36,
       "mean_items": 22.0,
-      "mean_se": 0.394
+      "mean_se": 0.396
      }
     ]
    }
@@ -1420,24 +1424,24 @@
   "pool": {
    "backend": {
     "-1.5": {
-     "n_families": 43,
-     "info_at_cut": 9.07,
-     "min_se": 0.315
+     "n_families": 44,
+     "info_at_cut": 9.22,
+     "min_se": 0.313
     },
     "-1.75": {
-     "n_families": 43,
-     "info_at_cut": 8.43,
-     "min_se": 0.326
+     "n_families": 44,
+     "info_at_cut": 8.56,
+     "min_se": 0.323
     },
     "-2.0": {
-     "n_families": 43,
-     "info_at_cut": 7.71,
-     "min_se": 0.339
+     "n_families": 44,
+     "info_at_cut": 7.81,
+     "min_se": 0.337
     },
     "-2.25": {
-     "n_families": 43,
-     "info_at_cut": 6.93,
-     "min_se": 0.355
+     "n_families": 44,
+     "info_at_cut": 7.02,
+     "min_se": 0.353
     }
    },
    "frontend": {
@@ -1531,10 +1535,11 @@
   }
  },
  "chosen": {
-  "cut": -1.75,
+  "cut": -2.0,
   "all_pass": true,
   "passing": [
-   -1.75
+   -1.75,
+   -2.0
   ],
   "basis": "with_easy_families"
  },
@@ -1547,6 +1552,7 @@
   "backend.go.slice_append_output",
   "backend.java.hashcode_bug",
   "backend.java.list_remove_loop_fix",
+  "backend.java.session_registry_leak_fix",
   "backend.java.string_equals_bug",
   "backend.kafka.consumer_group_mcq",
   "backend.kafka.offset_commit_mcq",
@@ -1603,5 +1609,15 @@
   "security.web.cookie_policy_mcq",
   "security.web.html_escape_fix"
  ],
- "elapsed_s": 29.2
+ "elapsed_s": 70.3,
+ "signature": {
+  "world": "симуляция теста у порога Стажёра: синтетические кандидаты на сетке θ, истина заданий = предкалибровка + ошибка эксперта",
+  "seed": 20261007,
+  "config_hash": "ed1efd0560ac",
+  "commit": "f2d853e",
+  "bank": "76c4164b6ce83743",
+  "n": 550,
+  "command": "make intern-cut",
+  "generated_at": "2026-10-10T10:26:45+00:00"
+ }
 }
