@@ -101,11 +101,15 @@ test("С3-6: «Пригласить» — «Отправляем…», одно 
   }
   expect(ref, "есть кандидат без недавнего приглашения").toMatch(/^C-/);
   let posts = 0;
+  let serverMs = 0;
   await page.route("**/api/employer/invitations", async (route) => {
     if (route.request().method() !== "POST") return route.continue();
     posts++;
     await new Promise((r) => setTimeout(r, 1500));  // «медленный» ответ, как на стенде
-    await route.continue();
+    const t0 = Date.now();
+    const resp = await route.fetch();  // время самого POST на сервере (без искусственной задержки)
+    serverMs = Date.now() - t0;
+    await route.fulfill({ response: resp });
   });
   await page.getByRole("button", { name: "Пригласить", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "Приглашение-оффер" });
@@ -125,6 +129,7 @@ test("С3-6: «Пригласить» — «Отправляем…», одно 
   await expect(ok).toContainText("«Python-разработчик, проверка Я11»");
   await expect(ok).toContainText(/вилка 240\s000\s₽\s–\s280\s000\s₽/);
   expect(posts, "один POST на одно приглашение").toBe(1);
+  console.log(`[С3-6] POST /api/employer/invitations на сервере: ${serverMs} мс`);
   const again = page.getByRole("button", { name: "Пригласить", exact: true });
   await expect(again).toBeDisabled();
   await expect(again).toHaveAttribute("title", /уже отправлено\. Следующее — с /);
