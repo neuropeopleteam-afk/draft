@@ -69,7 +69,7 @@ locust -f tools/loadtest/locustfile.py --host https://fsp.neuropeople.pro --head
 <!-- limits:begin -->
 | Контейнер | Лимит сейчас, МиБ |
 |---|---:|
-| api (FastAPI) | 1536 |
+| api (FastAPI) | 3072 (с 10.10 вечера; 08.10–10.10 — 1536) |
 | db (PostgreSQL 16) | 320 |
 | web (nginx) | 32 |
 | keycloak (ФСП ID, демо, профиль `fsp-id`) | 576 |
