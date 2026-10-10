@@ -90,7 +90,7 @@ function Report({ r }: { r: any }) {
         <div className="mt-4"><Alert kind="info">
           <b>Калибровка: </b>
           {r.calibration?.status === "ready"
-            ? `предварительная, на панели моделей (${r.calibration.panel}) — ${cal.n_families ?? r.calibration.n_families} из ${cal.of_families ?? r.bank?.n_families} семейств банка; людей в ней нет, в решение по грейду её параметры не переносятся. Решение принимается по экспертной предкалибровке; калибровка на людях — после пилота.`
+            ? `предварительная, на панели моделей (${r.calibration.panels?.length ? `${r.calibration.panels.length} прогонов, последний ${r.calibration.panel}` : r.calibration.panel}) — ${cal.n_families ?? r.calibration.n_families} из ${cal.of_families ?? r.bank?.n_families} семейств банка; людей в ней нет, в решение по грейду её параметры не переносятся. Решение принимается по экспертной предкалибровке; калибровка на людях — после пилота.`
             : r.calibration?.note}
         </Alert></div>
       </Section>
@@ -116,6 +116,7 @@ function Report({ r }: { r: any }) {
         <ExposureNote sim={sim} />
         <p className="mt-2 text-xs text-brand-ink/70">Коэффициенты K, которые сейчас читает движок теста:</p>
         <ProvenanceLine p={r.provenance?.exposure_k} className="mt-0.5" />
+        {r.provenance?.exposure_k?.note && <p className="mt-1 max-w-4xl text-xs leading-relaxed text-brand-ink/70">{r.provenance.exposure_k.note}</p>}
         <SimConditions sim={sim} kind="exposure" />
       </Section>
 

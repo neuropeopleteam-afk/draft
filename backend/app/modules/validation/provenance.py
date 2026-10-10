@@ -34,7 +34,7 @@ def provenance(report: dict) -> dict:
                         "used_in_decision": False},
         "code_commit": git_commit(),
         "stamp": stamp("report", report), "demo": stamp("demo", report),  # Я8: строка происхождения блоков отчёта
-        "exposure_k": stamp("exposure_k"),  # Я8: K Sympson — Hetter, которые сейчас читает движок теста
+        "exposure_k": {**stamp("exposure_k"), "note": config_note("exposure_k")},  # Я8: K, которые читает движок
     }
 
 
@@ -85,7 +85,7 @@ SOURCES: dict[str, dict] = {
     # K Sympson — Hetter, которые читает движок теста (assessment/exposure_k.json): дата и банк калибровки
     "exposure_k": {"file": "exposure_k.json", "dir": "assessment", "command": "make validate (tools/calibrate_exposure.py)",
                    "kind": "synthetic", "title": "Коэффициенты K Sympson — Hetter (движок теста)",
-                   "sections": ["exposure"]},
+                   "sections": ["exposure"], "role": "config"},  # настройка движка, а не число страницы
 }
 _cache: dict[str, tuple[float, dict | None]] = {}
 
@@ -143,6 +143,23 @@ def stamp(src: str, d: dict | None = None) -> dict:
     return out
 
 
+def config_note(src: str) -> str | None:
+    """Пояснение к настройке движка (K Sympson — Hetter): на каком банке откалибровано и что с новыми семействами."""
+    if src != "exposure_k":
+        return None
+    st, m = stamp(src), bank_manifest()
+    if st["snapshot"] == "missing":
+        return "Файла K нет — частота показа не ограничивается (K = 1)."
+    if st["bank_current"]:
+        return "K откалиброваны на банке, который сейчас в продукте."
+    d = str(st.get("date") or "")
+    when = f"{d[8:10]}.{d[5:7]}.{d[:4]}" if d else "без даты"
+    return (f"K откалиброваны {when} на банке {st.get('bank_families') or '—'} семейств (сейчас {m.get('n_families')}): "
+            "у семейств, добавленных позже, K = 1 — частота их показа не ограничена. Числа страницы посчитаны с этими "
+            "K — так движок работает сейчас; пересчёт K (make validate) меняет выбор заданий в продукте — решение "
+            "штаба, сравнение — в docs/validation/EXPOSURE_K_RECALC.md.")
+
+
 def experts_stamp(ex: dict | None) -> dict:
     """Разметка /validation#experts считается по базе при запросе: вид — кто размечал (модельная панель / люди)."""
     src = (ex or {}).get("source") or {}
@@ -157,11 +174,12 @@ def experts_stamp(ex: dict | None) -> dict:
 def snapshots() -> dict:
     """GET /api/validation/provenance: банк и код сейчас + строка происхождения каждого расчёта /validation."""
     m = bank_manifest()
-    rows = [stamp(s) for s in SOURCES]
+    rows = [stamp(s) for s in SOURCES if SOURCES[s].get("role") != "config"]
+    config = [{**stamp(s), "note": config_note(s)} for s in SOURCES if SOURCES[s].get("role") == "config"]
     cur = [r for r in rows if r["snapshot"] == "current"]
     return {"bank_now": {"content_hash": m.get("content_hash"), "n_families": m.get("n_families"),
                          "commit": m.get("commit"), "synced_at": m.get("synced_at")},
-            "code_commit": git_commit(), "kinds": KINDS, "sources": rows,
+            "code_commit": git_commit(), "kinds": KINDS, "sources": rows, "config": config,
             "one_snapshot": all(r["snapshot"] in ("current", "no_bank") for r in rows),
             "current_commits": sorted({r["commit"] for r in cur if r["commit"]}),
             "how_to_read": ("Каждое число — из сохранённого расчёта. «Текущий снимок» — посчитан на банке, который "
@@ -251,9 +269,11 @@ def markdown() -> str:
            + (f" (расчёты на коммитах {', '.join('`' + c + '`' for c in s['current_commits'])})."
               if s["current_commits"] else "."), "",
            "| Расчёт | Блоки /validation | Строка происхождения |", "|---|---|---|"]
-    for r in s["sources"]:
+    for r in s["sources"] + s["config"]:
         out.append(f"| {r['title']} (`{SOURCES[r['src']]['file']}`) | {', '.join('#' + x for x in r['sections'])} | "
                    f"{stamp_text(r)} |")
+    for r in s["config"]:
+        out += ["", f"**{r['title']}.** {r['note']}"]
     out += ["", PROSE_TAIL.strip(), ""]
     return "\n".join(out)
 
