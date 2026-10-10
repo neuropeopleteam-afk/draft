@@ -109,6 +109,10 @@ def resume_cell(per: list[dict], gold: dict, with_calls: bool = True) -> dict:
     return c
 
 
+# HTTP 402 OpenRouter — на ключе кончился баланс (наша сторона, не ответ модели): такая запись попыткой модели не считается
+NOT_MODEL_ERRORS = ("http_402",)
+
+
 def _grade_scores(out_path: Path) -> tuple[dict, dict]:
     """Оценки модели по выборке: балл после проверки цитат (как в продукте, без второй оценки) и вызовы."""
     from app.modules.assessment import grader as G
@@ -119,6 +123,8 @@ def _grade_scores(out_path: Path) -> tuple[dict, dict]:
     first: dict[str, dict] = {}
     for line in (open(out_path, encoding="utf-8") if out_path.exists() else []):
         o = json.loads(line)
+        if o.get("error") in NOT_MODEL_ERRORS:
+            continue  # не ответ модели: на ключе кончились деньги — вход запрошен повторно докачкой
         first.setdefault(o["req_id"], o)  # первая попытка на вход
     scores, calls = {}, {"n": len(first), "ok": 0, "format_fail": 0, "transport_fail": 0, "lat": [], "cost": 0.0}
     for rid, o in first.items():
@@ -352,6 +358,8 @@ def _grade_raw(path: Path, strip_rep: bool = False) -> tuple[dict, list[dict]]:
     first: dict[str, dict] = {}
     for line in (open(path, encoding="utf-8") if path.exists() else []):
         o = json.loads(line)
+        if o.get("error") in NOT_MODEL_ERRORS:
+            continue
         first.setdefault(o["req_id"], o)
     scores: dict[str, list] = {}
     calls = []

@@ -249,3 +249,22 @@ def test_full_run_confirms_leader():
     ch = d["choice"]["parse_need"]
     assert ch["strongest_within_latency"] == "a/x" and ch["main_full_run"] == "подтверждена"
     assert ch["full_run_rejected"] == []
+
+
+def test_http_402_is_not_a_model_attempt(tmp_path):
+    """HTTP 402 (на ключе кончился баланс) — не ответ модели: в сводке попыткой не считается, берётся докачка."""
+    import sys
+
+    sys.path.insert(0, str(ROOT / "tools" / "llm"))
+    import strongest_summary as S
+    from app.modules.validation import grader_check as GC
+
+    _, rows = GC.load()
+    rid = rows[0]["id"]
+    p = tmp_path / "out.jsonl"
+    p.write_text(json.dumps({"req_id": rid, "error": "http_402", "text": None}) + "\n" +
+                 json.dumps({"req_id": rid, "error": "timeout", "text": None}) + "\n", encoding="utf-8")
+    sc, calls = S._grade_scores(p)
+    assert calls["n"] == 1 and calls["transport_fail"] == 1  # первая попытка модели — тайм-аут, 402 пропущен
+    _, raw_calls = S._grade_raw(p)
+    assert len(raw_calls) == 1
