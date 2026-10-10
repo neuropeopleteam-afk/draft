@@ -20,13 +20,8 @@ const TASKS: { kind: Kind; path: string; title: string; text: string }[] = [
   { kind: "C", path: "angoff", title: "Пороги грейдов", text: "Сколько из 100 пограничных кандидатов решат задание: метод Ангоффа." },
 ];
 
-export const panelSections = [
-  { path: "pairs", title: "A · Пары", description: "Соответствие кандидата потребности" },
-  { path: "answers", title: "B · Ответы", description: "Оценка ответов по рубрике" },
-  { path: "angoff", title: "C · Пороги грейдов", description: "Метод Ангоффа" },
-  { path: "review", title: "Очередь проверки", description: "Ответы кандидатов на проверке" },
-  { path: "security", title: "Безопасность входа", description: "Второй фактор: код из приложения-аутентификатора" },
-];
+// Я16: разделы — в лёгком модуле ./sections (меню кабинета грузится без этого экрана), здесь — для прежних импортов
+export { panelSections } from "./sections";
 
 function Bar({ done, total, label = "Размечено" }: { done: number; total: number; label?: string }) {
   const pct = total ? Math.round((done / total) * 100) : 0;
