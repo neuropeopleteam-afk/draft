@@ -129,6 +129,15 @@ def test_defense_stub_flow_badge_and_pii(client, on):
     assert client.delete(f"/api/interview/sessions/{sid}", headers=H(t)).json() == {"deleted": True}
     card = client.get(f"/api/employer/candidates/{ref}", headers=H(te)).json()
     assert card["test"]["defense"]["verdict"] is None and card["test"]["defense"]["title"] == "Устную защиту не проходил"
+    # удалённый итог не даёт повторной защиты той же попытки; содержимого не осталось
+    st = client.get(f"/api/interview/defense/{ts}", headers=H(t)).json()
+    assert not st["can_start"] and st["session"]["status"] == "deleted" and not st["session"]["questions"]
+    assert client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True},
+                       headers=H(t)).json()["detail"]["code"] == "defense_done"
+    with SessionLocal() as db:
+        row = db.get(InterviewSession, uuid.UUID(sid))
+        assert row.transcript is None and row.result == {} and row.state == {} and row.context_meta == {}
+    assert client.get(f"/api/interview/candidates/{ref}", headers=H(te)).json()["defense"] is None
 
 
 def test_defense_discrepancies_and_not_eligible(client, on):

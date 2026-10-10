@@ -34,7 +34,8 @@ VERDICT_TITLES = {"confirmed": "Ответ подтверждён устно", "
 LEVEL_TITLES = {"confirmed": "подтверждено", "partial": "частично", "discrepancy": "расхождение", "no_data": "нет данных",
                 "strong": "уверенно", "medium": "в целом", "weak": "слабо"}
 STATUS_TITLES = {"invited": "Приглашение отправлено", "created": "Можно начинать", "in_progress": "Идёт разговор",
-                 "evaluating": "Оценивается моделью", "completed": "Готово", "failed": "Не удалось", "expired": "Срок ссылки истёк", "cancelled": "Прервано"}
+                 "evaluating": "Оценивается моделью", "completed": "Готово", "failed": "Не удалось", "expired": "Срок ссылки истёк", "cancelled": "Прервано",
+                 "deleted": "Запись удалена по просьбе кандидата"}
 
 
 def enabled() -> bool:
@@ -337,7 +338,9 @@ def defense_state(db: Session, user: User, ts: TestSession) -> dict:
                                                            InterviewSession.jury_scope == jkey)
                               .order_by(InterviewSession.created_at).limit(1))
     used = sum(1 for r in _defense_rows(db, ts.id) if not r.is_example)
-    done = live is not None and live.status == "completed"
+    # итог уже был (в том числе удалённый кандидатом) — повторной защиты этой попытки нет
+    done = any(r.status == "completed" or (r.status == "deleted" and r.completed_at) for r in _defense_rows(db, ts.id)
+               if not r.is_example)
     can = enabled() and not reason and not (live is not None and live.status in ACTIVE) and \
         (bool(jkey) or (not done and used < s.interview_defense_attempts))
     minutes = min(s.interview_defense_minutes, s.interview_jury_minutes) if jkey else s.interview_defense_minutes
@@ -603,11 +606,17 @@ def own_session(db: Session, user: User, sid: uuid.UUID) -> InterviewSession:
 
 
 def delete_session(db: Session, row: InterviewSession) -> None:
-    """Удалить запись по просьбе кандидата (ПДн): строка и сводка в факте теста."""
+    """Удалить запись по просьбе кандидата (ПДн): текст разговора, результат, контекст и сводку в факте теста.
+    Остаётся отметка о факте сессии (статус deleted, без содержимого): иначе удаление «расхождений» давало бы повторную
+    защиту той же попытки, а лимиты считались бы заново."""
     from app.modules.profiles.models import CandidateFact
 
     ts_id = row.test_session_id
-    db.delete(row)
+    was_done = row.status == "completed"
+    row.status, row.verdict, row.score, row.transcript, row.result = "deleted", None, None, None, {}
+    row.state, row.context_meta, row.note, row.error = {}, {}, None, None
+    if not was_done:
+        row.completed_at = None
     db.flush()
     if ts_id:
         f = db.scalar(select(CandidateFact).where(CandidateFact.kind == "test_result",
