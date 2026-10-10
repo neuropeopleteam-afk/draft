@@ -192,7 +192,9 @@ def create_app() -> FastAPI:
                 # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
                 "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,  # на запросе, как proctor_camera
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
-                          "invitation_cooldown_days": get_settings().invitation_cooldown_days}}
+                          "invitation_cooldown_days": get_settings().invitation_cooldown_days,
+                          # Я22: порог уверенности решения по грейду, % (подтверждение и «уровень ниже»)
+                          "confirm_pct": round(100 * get_settings().assessment_confirm_level)}}
 
     class HealthOut(BaseModel):
         status: str
