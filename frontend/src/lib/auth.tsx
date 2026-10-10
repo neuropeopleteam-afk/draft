@@ -6,6 +6,8 @@ interface AuthState {
   loading: boolean;
   /** Я16: /api/me не ответил из-за сети или сервера (5xx, обрыв): вход сохранён, кабинет показывает экран повтора. */
   error: unknown | null;
+  /** сколько стартовых попыток подряд не удалось (для автоповтора экрана StartupError) */
+  failures: number;
   retry: () => void;
   signIn: (token: string) => Promise<MeOut>;
   signOut: () => void;
@@ -18,14 +20,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<MeOut | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown | null>(null);
+  const [failures, setFailures] = useState(0);
 
   const refresh = useCallback(async () => {
     if (!tokenStore.get()) { setMe(null); setError(null); setLoading(false); return; }
-    try { setMe(await api<MeOut>("/me")); setError(null); }
+    try { setMe(await api<MeOut>("/me")); setError(null); setFailures(0); }
     catch (e) {
       // Я16: 5xx и обрыв сети — не повод выходить из учётки (раньше токен стирался и кабинет уводил на /login)
-      if (isTransient(e)) setError(e);
-      else { tokenStore.clear(); setMe(null); setError(null); }
+      if (isTransient(e)) { setError(e); setFailures((n) => n + 1); }
+      else { tokenStore.clear(); setMe(null); setError(null); setFailures(0); }
     }
     finally { setLoading(false); }
   }, []);
@@ -41,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
   const signOut = () => { tokenStore.clear(); setMe(null); setError(null); };
 
-  return <Ctx.Provider value={{ me, loading, error, retry, signIn, signOut, refresh }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ me, loading, error, failures, retry, signIn, signOut, refresh }}>{children}</Ctx.Provider>;
 }
 
 export function useAuth() {
