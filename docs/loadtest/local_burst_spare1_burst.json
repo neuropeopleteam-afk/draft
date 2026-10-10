@@ -1,0 +1,38 @@
+{
+ "n": 5,
+ "at": "2026-10-09T14:37:56+0000",
+ "results": [
+  {
+   "persona": "employer",
+   "login_s": 112.81,
+   "first_screen_s": 112.85,
+   "created": true,
+   "shared": false
+  },
+  {
+   "persona": "candidate",
+   "login_s": 107.72,
+   "first_screen_s": 107.83,
+   "created": true,
+   "shared": false
+  },
+  {
+   "persona": "candidate_new",
+   "login_s": 0.11,
+   "first_screen_s": 2.08,
+   "created": true,
+   "shared": false
+  },
+  {
+   "error": "HTTPError: HTTP Error 500: Internal Server Error",
+   "login_s": 39.95
+  },
+  {
+   "persona": "candidate_nofsp",
+   "login_s": 113.75,
+   "first_screen_s": 113.77,
+   "created": true,
+   "shared": false
+  }
+ ]
+}
