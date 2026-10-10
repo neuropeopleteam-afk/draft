@@ -64,6 +64,9 @@ test("В-2: «Принять встречное» — карточка обно�
   });
 
   const accept = target.getByRole("button", { name: "Принять встречное" });
+  // локально (SQLite) POST может ждать записи запасной песочницы жюри после входа — отсчёт «сразу» идёт от ответа POST
+  const accepted = page.waitForResponse((r) => r.url().includes("/counter/accept") && r.request().method() === "POST",
+                                        { timeout: 30_000 });
   await accept.click();
   const busy = target.getByRole("button", { name: "Принимаем…" });
   await expect(busy).toBeVisible();
@@ -74,7 +77,8 @@ test("В-2: «Принять встречное» — карточка обно�
   // ответ POST пришёл — карточка уже «Принято» с контактами, хотя GET списка ещё висит
   const done = page.locator("article").filter({ has: page.getByRole("link", { name: ref, exact: true }) })
     .filter({ hasText: "Принято на условиях встречного предложения кандидата" }).first();
-  await expect(done).toBeVisible({ timeout: 5_000 });
+  await accepted;
+  await expect(done).toBeVisible({ timeout: 3_000 });  // GET списка задержан на 15 с — обновление только из ответа POST
   await expect(done.getByText("Контакты кандидата")).toBeVisible();
   await expect(done.getByText("Встречное ждёт решения")).toHaveCount(0);
   await expect(done.getByRole("button", { name: "Принять встречное" })).toHaveCount(0);
