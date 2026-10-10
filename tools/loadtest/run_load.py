@@ -41,6 +41,24 @@ LOCUST = os.environ.get("LOCUST", "/tmp/lt/bin/locust")
 KPY = os.environ.get("KPY", "")
 NGINX_LOG_DIR = os.environ.get("LT_NGINX_LOG_DIR", "/var/log/nginx")  # журнал nginx хоста стенда (формат combined)
 UA = "spectrek-load/prepare"  # User-Agent запросов этого скрипта; run и burst ставят свой тег
+# Маршрут генератора: LT_SOCKS=127.0.0.1:1080 — весь трафик к стенду через SOCKS5 (имена разрешает прокси): запросы
+# этого скрипта (urllib) — через PySocks, Locust — через HTTPS_PROXY=socks5h://… (requests + PySocks). Маршрут
+# записывается в meta и сводку: задержки через прокси и напрямую не сравниваются без пометки.
+SOCKS = os.environ.get("LT_SOCKS", "")
+if SOCKS:
+    import socket
+
+    import socks  # PySocks
+
+    _sh, _sp = SOCKS.rsplit(":", 1)
+
+    def _socks_connection(address, timeout=socket._GLOBAL_DEFAULT_TIMEOUT, source_address=None, **_kw):
+        # http.client разрешает имя сам (create_connection) — прокси пропускает только имя стенда, не адрес
+        return socks.create_connection(address, None if timeout is socket._GLOBAL_DEFAULT_TIMEOUT else timeout,
+                                       source_address, proxy_type=socks.SOCKS5, proxy_addr=_sh, proxy_port=int(_sp),
+                                       proxy_rdns=True)
+
+    socket.create_connection = _socks_connection
 
 
 def _remote(script: str, timeout: int = 120) -> str:
@@ -176,6 +194,8 @@ def run(a) -> None:
         env["LT_XLINK_FILE"] = a.xlink_file
     if a.web:
         env["LT_WEB"] = a.web
+    if SOCKS:
+        env["HTTPS_PROXY"] = env["HTTP_PROXY"] = f"socks5h://{SOCKS}"
     dur = _seconds(a.time)
     stop = threading.Event()
     threads = [threading.Thread(target=_client_stats, args=(dur + 60, OUT / f"{a.tag}_client.txt", stop), daemon=True)]
@@ -193,7 +213,7 @@ def run(a) -> None:
     t0 = time.time()
     meta = {"tag": a.tag, "host": a.host, "users": a.users, "ramp_per_s": a.ramp, "time": a.time,
             "burst_at_s": a.burst_at, "burst_n": a.burst_n if a.burst_at else 0, "user_agent": f"spectrek-load/{a.tag}",
-            "start": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
+            "start": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "route": f"SOCKS5 {SOCKS}" if SOCKS else "напрямую"}
     raw = Path(tempfile.mkstemp(prefix=f"lt_{a.tag}_", suffix=".log")[1])  # сырой журнал — вне репозитория
     with raw.open("w") as lf:
         p = subprocess.Popen(cmd, env=env, cwd=ROOT, stdout=lf, stderr=subprocess.STDOUT, text=True)
@@ -250,7 +270,8 @@ def summary(a) -> None:
     if mf.exists():
         meta = json.loads(mf.read_text())
         print(f"Пользователей одновременно: задано {meta.get('users')}, после разгона {meta.get('users_after_ramp', '—')}, "
-              f"макс. {meta.get('users_max', '—')}" + (f"; {meta['aborted']}" if meta.get("aborted") else "") + "\n")
+              f"макс. {meta.get('users_max', '—')}" + (f"; {meta['aborted']}" if meta.get("aborted") else "")
+              + (f"; маршрут генератора: {meta['route']}" if meta.get("route") else "") + "\n")
     print(f"| Операция | Запросов | Ошибок | p50, мс | p95, мс | p99, мс | Макс., мс |\n|---|---:|---:|---:|---:|---:|---:|")
     agg = None
     for r in sorted(rows, key=lambda r: -int(r["Request Count"] or 0)):
