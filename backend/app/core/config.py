@@ -170,6 +170,19 @@ class Settings(BaseSettings):
     # И27: кэш разбора потребности по нормализованному тексту (таблица need_parse_jobs), с; 0 — без кэша
     parse_cache_ttl_s: int = 3600
 
+    # Уровни Lead и Principal (решение владельца 10.10, вариант Б — 6 уровней; app/modules/catalog/levels.py).
+    # Выключено — 4 уровня, всё как раньше. Включено — шкала 6 уровней, но Lead/Principal видны в направлении, только
+    # если в синхронизированном банке (все семейства в нём прошли валидатор) у направления есть семейства этого уровня:
+    # своих — не меньше GRADES_EXT_MIN_OWN и вместе с общим блоком — не меньше GRADES_EXT_MIN_TOTAL (FTT.4: уровень
+    # присваивает только тест). Читается при старте процесса (seed_data), переключение — перезапуском службы.
+    grades_ext_enabled: bool = False
+    grades_ext_min_own: int = 1
+    grades_ext_min_total: int = 3
+    # Lead/Principal — только полным тестом: не меньше N оценённых заданий и погрешность не больше SE (короче или
+    # шире — категория не выше Senior); экспресс-тест жюри и мини-тест QR Lead/Principal не присваивают
+    grades_ext_min_items: int = 8
+    grades_ext_max_se: float = 0.6
+
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"
     # Невидимая «ИИ-метка» в тексте развёрнутых заданий (assessment/ai_mark.py) — сигнал достоверности
