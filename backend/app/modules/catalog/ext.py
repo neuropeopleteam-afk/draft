@@ -31,6 +31,9 @@ EXT_DIRECTIONS: dict[str, str] = {
     "mobile": "Мобильная разработка",
     "analyst": "Системный / бизнес-аналитик",
 }
+# Короткие подписи для автоимени потребности («DevOps · Middle — Terraform, Kubernetes»)
+EXT_SHORT_TITLES: dict[str, str] = {"devops": "DevOps", "data_eng": "Инженер данных", "mobile": "Mobile",
+                                    "analyst": "Аналитик"}
 EXT_DESCRIPTIONS: dict[str, str] = {
     "devops": "Эксплуатация и надёжность: Linux, контейнеры, Kubernetes, CI/CD, инфраструктура как код, мониторинг, инциденты",
     "data_eng": "Инженерия данных: SQL-аналитика, ETL/ELT, модели хранилищ, оркестрация, потоковая обработка, качество данных",

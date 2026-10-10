@@ -21,7 +21,7 @@ from app.core.fmt import probe_title, theta_se
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, category_title, known_tag, tag_title
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_CUTS, category_title, known_tag, tag_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
@@ -500,7 +500,7 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
         "claimed": ({"direction": cd, "grade": cg, "category_id": f"{cd}.{cg}",
                      "title": category_title(f"{cd}.{cg}")} if cat is None and cd and cg else None),
         "direction": b.direction,
-        "direction_title": DIRECTIONS.get(b.direction or "", None),
+        "direction_title": DIRECTION_TITLES.get(b.direction or "", None),
         "grade": b.grade,
         "grade_title": prov.title(GRADES.get(b.grade or "", None), is_prov),
         # «Junior (предварительно)»: уровень доказанности (вероятность уровня не ниже Junior), причина, попытки

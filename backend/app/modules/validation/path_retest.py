@@ -59,7 +59,9 @@ from app.modules.validation.signature import signature
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[3]
 OUT = HERE / "data" / "path_retest.json"
+OUT_EXT = HERE / "data" / "path_retest_ext.json"  # направления расширения каталога (--directions)
 DOCS_MD = REPO / "docs" / "validation" / "TEST_RETEST.md"
+DOCS_MD_EXT = REPO / "docs" / "validation" / "TEST_RETEST_EXT.md"
 
 SEED = 20261006          # мир симуляции теста /validation (make validate, бенчмарк подбора — тот же seed)
 LEVELS = ("none",) + tuple(GRADE_ORDER)   # 0 — без категории, 1 — Стажёр, …, 4 — Senior
@@ -504,12 +506,16 @@ def splits(cands, r1, r2, seed: int) -> dict:
             "decided_both": sub(sure), "undecided_any": sub(~sure)}
 
 
-def run(n: int = 500, quick: bool = False, write: bool = True, pilot_n: int = 1000) -> dict:
+def run(n: int = 500, quick: bool = False, write: bool = True, pilot_n: int = 1000,
+        directions: tuple[str, ...] | None = None) -> dict:
+    """directions — свой набор направлений (направления расширения каталога: --directions devops,mobile); такой
+    прогон пишется отдельно (data/path_retest_ext.json, docs/validation/path_retest_ext.md), основной не меняется."""
     t0 = time.time()
     cfg = sim.app_config_from_settings()
     pool = sim.make_pool(cfg.subpools)
     k_all = (exposure_table() or {}).get("k", {})
-    dirs = sim.DIRECTIONS[:2] if quick else sim.DIRECTIONS
+    dirs = tuple(directions) if directions else sim.DIRECTIONS[:2] if quick else sim.DIRECTIONS
+    out, docs_md = (OUT_EXT, DOCS_MD_EXT) if directions else (OUT, DOCS_MD)
     if quick:
         n, pilot_n = min(n, 60), min(pilot_n, 300)
     all_c, all_1, all_2 = [], [], []
@@ -558,11 +564,11 @@ def run(n: int = 500, quick: bool = False, write: bool = True, pilot_n: int = 10
     }
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
-        OUT.parent.mkdir(parents=True, exist_ok=True)
-        OUT.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
-        DOCS_MD.parent.mkdir(parents=True, exist_ok=True)
-        DOCS_MD.write_text(markdown(rep), encoding="utf-8")
-        print(f"→ {OUT.relative_to(REPO)}, {DOCS_MD.relative_to(REPO)} ({rep['seconds']} с)", flush=True)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
+        docs_md.parent.mkdir(parents=True, exist_ok=True)
+        docs_md.write_text(markdown(rep), encoding="utf-8")
+        print(f"→ {out.relative_to(REPO)}, {docs_md.relative_to(REPO)} ({rep['seconds']} с)", flush=True)
     return rep
 
 
@@ -746,8 +752,11 @@ def main() -> int:
     ap.add_argument("--pilot", type=int, default=1000, help="человек в симулированном пилоте на направление")
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--no-write", action="store_true")
+    ap.add_argument("--directions", default="", help="направления через запятую (расширение каталога: "
+                                                     "devops,data_eng,mobile,analyst) → data/path_retest_ext.json")
     a = ap.parse_args()
-    rep = run(a.n, a.quick, not a.no_write, a.pilot)
+    dirs = tuple(x.strip() for x in a.directions.split(",") if x.strip()) or None
+    rep = run(a.n, a.quick, not a.no_write, a.pilot, directions=dirs)
     pg = rep["total"]["path_grade"]
     print(f"итог: κw {pg['kappa_w']} {pg.get('kappa_w_ci')}, точно {pg['exact']}, ±1 {pg['within_1']}, "
           f"ICC {rep['total'].get('icc_theta')} {rep['total'].get('icc_theta_ci')}, слабых семейств "
