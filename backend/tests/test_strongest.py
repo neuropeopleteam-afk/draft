@@ -1,5 +1,5 @@
-"""Я2: сильнейшие модели — несколько моделей одного провайдера в LLM_MODEL_<FUNC> («a|b»: резерв другого поставщика
-внутри OpenRouter), рассуждения «none», блок /validation#strongest из docs/llm/strongest.json.
+"""Сильнейшие модели — несколько моделей одного провайдера в LLM_MODEL_<FUNC> («a|b»: резерв другого поставщика
+внутри OpenRouter), рассуждения «none», блок /validation#strongest из backend/app/modules/validation/data/strongest.json.
 
 Сеть не используется: транспорт httpx подменён (как в test_llm_chain.py), ответы — фиктивные.
 """
@@ -66,10 +66,31 @@ def test_api_strongest(client):
     assert SECRET_OR not in raw and "sk-or" not in raw and "Bearer" not in raw
 
 
-def test_strongest_data_copy_matches_docs():
-    a = json.loads((ROOT / "docs/llm/strongest.json").read_text(encoding="utf-8"))
-    b = json.loads((ROOT / "backend/app/modules/validation/data/strongest.json").read_text(encoding="utf-8"))
-    assert a == b, "пересобрать: python tools/llm/strongest_summary.py /tmp/strong"
+DATA = ROOT / "backend/app/modules/validation/data"
+
+
+def test_strongest_single_copy():
+    """Одна копия сводки — данные /api/validation/*, без дубля в docs/ (иначе две копии расходятся при пересборке)."""
+    assert (DATA / "strongest.json").is_file() and (DATA / "ru_llm.json").is_file()
+    assert not (ROOT / "docs/llm/strongest.json").exists() and not (ROOT / "docs/realdata/ru_llm.json").exists()
+
+
+def test_strongest_public_texts_clean():
+    """Сводки, разделы 11–12 docs/LLM.md и инструменты замера — без путей рабочего места и секретов, ссылок на
+    внутренние отчёты и внутренних обозначений исполнителей (дерево публикуется как открытый код)."""
+    import re
+
+    bad = re.compile(r"/srv/work/|/srv/work/|\.private\b|reports_0\d{3}|tasks_0\d{3}|(?<![а-яё])штаб|песочниц"
+                     r"|(?<![\w-])[ЯИ]\d{1,2}(?![\w.])", re.I)
+    text = (ROOT / "docs/LLM.md").read_text(encoding="utf-8")
+    parts = {"docs/LLM.md §11–12": text[text.index("## 11. Режим «только российская модель»"):]}
+    for n in ("strongest.json", "ru_llm.json"):
+        parts[n] = (DATA / n).read_text(encoding="utf-8")
+    for n in ("ru_llm_bench.py", "ru_llm_summary.py", "strongest_bench.py", "strongest_summary.py", "strongest_slide.py",
+              "strongest_quality.py", "grade_vs_reference.py"):
+        parts[n] = (ROOT / "tools/llm" / n).read_text(encoding="utf-8")
+    hits = {n: sorted({m.group(0) for m in bad.finditer(t)}) for n, t in parts.items()}
+    assert not {n: h for n, h in hits.items() if h}
 
 
 def test_api_strongest_functions_and_choice(client):
@@ -174,7 +195,7 @@ def test_llm_md_section12_matches_json():
     sys.path.insert(0, str(ROOT / "tools" / "llm"))
     import strongest_summary as S
 
-    d = json.loads((ROOT / "docs/llm/strongest.json").read_text(encoding="utf-8"))
+    d = json.loads((DATA / "strongest.json").read_text(encoding="utf-8"))
     text = (ROOT / "docs/LLM.md").read_text(encoding="utf-8")
     block = text.split(S.MD_BEGIN, 1)[1].split(S.MD_END, 1)[0]
     assert block.strip() == S.md_table(d).strip(), "пересобрать: python tools/llm/strongest_summary.py /tmp/strong"

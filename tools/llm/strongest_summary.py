@@ -1,8 +1,8 @@
-"""Я2: сводка замера сильнейших моделей (strongest_bench.py) → docs/llm/strongest.json (+ копия для /validation и
-таблица docs/LLM.md, раздел 12).
+"""Сводка замера сильнейших моделей (strongest_bench.py) → backend/app/modules/validation/data/strongest.json (одна копия:
+её отдаёт GET /api/validation/strongest, docs/ в образ api не входит) и таблица docs/LLM.md, раздел 12.
 
 Все метрики — на одной малой выборке для всех моделей (Sonnet и правила — тот же срез из полного прогона 09.10).
-Разметки — модели, не люди: вакансии — silver И8 и исправленная (silver + лишние теги, подтверждённые GPT 6.1 Sol),
+Разметки — модели, не люди: вакансии — silver-разметка набора 50 вакансий и исправленная (silver + лишние теги, подтверждённые GPT 6.1 Sol),
 резюме — автор синтетического набора (модель), оценщик — согласие сильнейших моделей (медиана, без самой модели).
 Интервал — бутстреп 90 % по входам (1000 повторов): на 15–50 входах разница в несколько сотых — шум.
 """
@@ -23,8 +23,7 @@ sys.path.insert(0, str(ROOT / "tools" / "realdata"))
 
 import ru_llm_summary as RS  # noqa: E402
 
-OUT = ROOT / "docs" / "llm" / "strongest.json"
-DATA_COPY = ROOT / "backend/app/modules/validation/data/strongest.json"
+OUT = ROOT / "backend/app/modules/validation/data/strongest.json"
 PRICES = ROOT / "docs" / "llm" / "strongest_prices.json"
 SONNET_DIR = Path("/tmp/rullm/openrouter_anthropic_claude_sonnet_5.5")
 RULES_DIR = Path("/tmp/rullm/rules")
@@ -251,13 +250,13 @@ def build(wdir: Path) -> dict:
             else:
                 probes.append({"model": mid, **info, "ok": c["ok"], "calls": c["calls"], "errors": c["errors"],
                                "p50_s": c["p50_s"], "p95_s": c["p95_s"]})
-    i24 = _load(ROOT / "docs/llm/needs_qwen_tags.json")  # И24: Qwen3.5-9B (те же веса, что профиль llm-local на CPU)
-    if i24:
-        per = [{**x, "called": True} for x in i24["per_text"]]
-        key = "qwen/qwen3.5-9b@i24"
+    qloc = _load(ROOT / "docs/llm/needs_qwen_tags.json")  # Qwen3.5-9B — те же веса, что профиль llm-local на CPU
+    if qloc:
+        per = [{**x, "called": True} for x in qloc["per_text"]]
+        key = "qwen/qwen3.5-9b@llm-local"
         cells["needs_delta"][key] = needs_cell(per, ref)
-        variants[key] = {"base": "qwen/qwen3.5-9b", "name": "i24",
-                         "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, "
+        variants[key] = {"base": "qwen/qwen3.5-9b", "name": "llm-local",
+                         "note": "09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, "
                                  "что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"}
     rules_needs = _load(RULES_DIR / "needs.json")
     if rules_needs:
@@ -543,7 +542,7 @@ FULL_SUB = "full"  # /tmp/strong/full/openrouter_<модель>/ — ru_llm_benc
 
 
 def full_view(wdir: Path, corrected: dict, vac_exp: dict, texts: dict) -> dict:
-    """Полный прогон победителей на всех входах: разбор — 50 вакансий И8 (исправленная разметка), оценщик — все 406
+    """Полный прогон победителей на всех входах: разбор — 50 реальных вакансий (исправленная разметка), оценщик — все 406
     ответов набора панели. Эталон оценщика — среднее остальных моделей полного прогона (без самой модели), модели — не
     люди; атаки — все 145 ответов-атак; порядок «сильный > средний > слабый» — 29 заданий. Sonnet — полный прогон 09.10."""
     import strongest_quality as Q
@@ -605,8 +604,8 @@ def full_view(wdir: Path, corrected: dict, vac_exp: dict, texts: dict) -> dict:
 CONDITIONS = [
     "Одна и та же малая выборка для всех моделей; путь продукта целиком (вырезание ПДн, проверка цитат, слияние с "
     "правилами); одна попытка на вход, без перехода по цепочке; настройки рассуждений — как в продукте (разбор и "
-    "резюме — low, оценка — по умолчанию модели); 4 запроса параллельно; песочница → OpenRouter напрямую.",
-    "Разметки — модели, не люди: вакансии — исправленная разметка (silver И8 + лишние теги, подтверждённые GPT 6.1 Sol; "
+    "резюме — low, оценка — по умолчанию модели); 4 запроса параллельно; с машины замера в OpenRouter напрямую.",
+    "Разметки — модели, не люди: вакансии — исправленная разметка (silver-разметка + лишние теги, подтверждённые GPT 6.1 Sol; "
     "лишние теги новых моделей не проверялись — их точность занижена), резюме — автор набора (модель Claude), "
     "оценщик — среднее трёх сильнейших моделей двух семейств (Claude Opus 5.5 и Claude Fable 5.1 — Anthropic, "
     "GPT-6 Astra Pro — OpenAI) без самой оцениваемой; разметка панели v2 — Fable 5.1. Риск: для моделей Anthropic "
@@ -615,8 +614,8 @@ CONDITIONS = [
     "Цена — фактическая (usage.cost OpenRouter) на 1000 вызовов функции, $.",
 ]
 NOT_MEASURED = [
-    {"model": "YandexGPT 5.1", "why": "не цель после смены задачи 09.10 (решение штаба); ключ Yandex AI Studio в песочницу "
-                                     "не передан. Прежний замер 08.10 — docs/LLM.md, разделы 6 и 11"},
+    {"model": "YandexGPT 5.1", "why": "ключ Yandex AI Studio хранится только на сервере стенда, на машине замера его нет; "
+                                     "прежний замер 08.10 и режим LLM_CHAIN=yandex — docs/LLM.md, разделы 6 и 11"},
     {"model": "Объяснения подборки, «почему», ранжирование, категория", "why": "модель не вызывается — правила"},
 ]
 PLANNED = ["z-ai/glm-5.3", "moonshotai/kimi-k3", "qwen/qwen3.8-2.4t-a95b", "qwen/qwen3.8-27b", "deepseek/deepseek-v4-pro-0813",
@@ -639,7 +638,7 @@ def pending_text(d: dict) -> str | None:
                not ((fs["grade"][m]["quality"].get("judge_consistency") or {}).get("value") is not None)]
     out = []
     if miss:
-        out.append(f"не начаты — {names(miss)} (ждут пополнения баланса)")
+        out.append(f"не начаты — {names(miss)} (не замерены)")
     if part:
         out.append(f"не все наборы — {names(part)}")
     if nojudge:
@@ -756,7 +755,7 @@ def quality_line(f: str, q: dict) -> str:
 
 def md_table(d: dict) -> str:
     """Раздел 12 docs/LLM.md из strongest.json: по функции — таблица моделей и выбор."""
-    out = [f"Сводка `docs/llm/strongest.json` от {d['date']} (код `{d['code_sha']}`). Оценка моделью по эталону из "
+    out = [f"Сводка `backend/app/modules/validation/data/strongest.json` от {d['date']} (код `{d['code_sha']}`). Оценка моделью по эталону из "
            f"моделей — модель, не люди. Интервал — бутстреп 90 % по входам. Сводная оценка: качество "
            f"{_n(d['weights']['quality'], 2)} · надёжность {_n(d['weights']['reliability'], 2)} · задержка "
            f"{_n(d['weights']['latency'], 2)} · цена {_n(d['weights']['price'], 2)}; «в бюджете» — p95 не больше "
@@ -796,7 +795,7 @@ def md_table(d: dict) -> str:
     fr = d.get("full_run") or {}
     if fr:
         out += ["#### Полный прогон победителей (все входы)", "",
-                "Разбор — 50 вакансий И8 (исправленная разметка); оценщик — все ответы набора панели, эталон — среднее "
+                "Разбор — 50 реальных вакансий (исправленная разметка); оценщик — все ответы набора панели, эталон — среднее "
                 "остальных моделей полного прогона без самой модели (модели, не люди).", "",
                 "| Модель | Разбор: F1 стека [90 %] | Разбор: поля | Оценщик: MAE [90 %] | κw | Атаки отбиты | "
                 "Порядок «сильный > средний > слабый» | p95 разбор / оценка, с | $ за 1000 разбор / оценка |",
@@ -838,10 +837,8 @@ def write_md(d: dict, path: Path = LLM_MD) -> bool:
 
 def write(wdir: Path) -> dict:
     d = build(wdir)
-    text = json.dumps(d, ensure_ascii=False, indent=1)
-    OUT.write_text(text, encoding="utf-8")
-    DATA_COPY.write_text(text, encoding="utf-8")
-    print("→", OUT, DATA_COPY, "| docs/LLM.md §12:", "обновлён" if write_md(d) else "нет меток")
+    OUT.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
+    print("→", OUT, "| docs/LLM.md §12:", "обновлён" if write_md(d) else "нет меток")
     return d
 
 

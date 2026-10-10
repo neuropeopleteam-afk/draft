@@ -1,8 +1,9 @@
-"""Я2: «только российская модель» — все LLM-функции продукта на одних и тех же входах: Claude Sonnet 5.5
-(OpenRouter) против YandexGPT 5.1 (Yandex AI Studio) против правил. Результат — docs/realdata/ru_llm.json.
+"""«Только российская модель» — все LLM-функции продукта на одних и тех же входах: Claude Sonnet 5.5
+(OpenRouter) против YandexGPT 5.1 (Yandex AI Studio) против правил. Результат — backend/app/modules/validation/data/ru_llm.json.
 
 Функции и наборы (без ПДн: синтетика или опубликованные тексты вакансий, ПДн вырезаются продуктом до модели):
-  needs_delta  разбор потребности, путь продукта (И27: словарь + запрос-дельта) — 50 вакансий И8, silver-разметка;
+  needs_delta  разбор потребности, путь продукта (быстрый разбор: словарь + запрос-дельта) — 50 реальных
+               вакансий (docs/realdata/vacancies_50.json), silver-разметка;
   needs_full   прежний полный разбор (mode=full) — те же 50 вакансий;
   needs_jury   15 демо- и «жюрийных» потребностей (сленг, английский стек) — без разметки: доля ответов, задержка,
                согласие итоговых тегов с Sonnet;
@@ -18,7 +19,7 @@ docs — сводка.
 
     python tools/llm/ru_llm_bench.py run --model openrouter=anthropic/claude-sonnet-5.5 --dir /tmp/rullm
     python tools/llm/ru_llm_bench.py run --model yandex=yandexgpt-5.1/latest --dir /tmp/rullm
-    python tools/llm/ru_llm_bench.py summary --dir /tmp/rullm --out docs/realdata/ru_llm.json
+    python tools/llm/ru_llm_bench.py summary --dir /tmp/rullm   # → backend/app/modules/validation/data/ru_llm.json
 """
 from __future__ import annotations
 
@@ -327,7 +328,7 @@ def grade_summary(spec: str, wdir: Path, second: str | None = None) -> dict:
 
 # ------------------------------------------------------------------ запуск
 def cmd_run(a) -> None:
-    if a.cap_usd:  # Я2 п. 4: потолок расходов процесса и пол баланса ключа (как strongest_bench.py)
+    if a.cap_usd:  # потолок расходов процесса и пол баланса ключа (как strongest_bench.py)
         import strongest_bench as SB
 
         bal = SB.balance_usd()
@@ -347,7 +348,7 @@ def cmd_run(a) -> None:
         t0 = time.time()
         if f == "needs_delta":
             r = run_needs(a.model, a.conc, full=False)
-        elif f == "needs_delta_schema":  # Я2 п.4: та же дельта с JSON-схемой и у Yandex (LLM_YANDEX_JSON_SCHEMA)
+        elif f == "needs_delta_schema":  # та же дельта с JSON-схемой и у Yandex (LLM_YANDEX_JSON_SCHEMA)
             os.environ["LLM_YANDEX_JSON_SCHEMA"] = "true"
             try:
                 r = run_needs(a.model, a.conc, full=False)
@@ -393,13 +394,13 @@ def main() -> None:
     r.add_argument("--limit-per-group", type=int, default=0, help="оценщик: не больше N ответов на группу (проба)")
     s = sub.add_parser("summary")
     s.add_argument("--dir", required=True)
-    s.add_argument("--out", required=True)
+    s.add_argument("--out", default=None, help="по умолчанию — backend/app/modules/validation/data/ru_llm.json")
     s.add_argument("--regrade", action="store_true", help="пересчитать grade.json по сохранённым ответам (без вызовов)")
     a = ap.parse_args()
     if a.cmd == "run":
         cmd_run(a)
     else:
-        from ru_llm_summary import write_summary  # tools/llm/ru_llm_summary.py
+        from ru_llm_summary import DATA, write_summary  # tools/llm/ru_llm_summary.py
 
         if a.regrade:
             for gj in sorted(Path(a.dir).glob("*/grade.json")):
@@ -409,7 +410,7 @@ def main() -> None:
                 new["date"] = old.get("date", new["date"])
                 gj.write_text(json.dumps(new, ensure_ascii=False, indent=1), encoding="utf-8")
                 print("пересчитано:", gj)
-        write_summary(Path(a.dir), Path(a.out))
+        write_summary(Path(a.dir), Path(a.out) if a.out else DATA)
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@
   {
    "key": "yandex",
    "spec": "yandex=yandexgpt-5.1/latest",
-   "label": "YandexGPT 5.1 Pro",
+   "label": "YandexGPT 5.1",
    "where": "Yandex AI Studio (РФ)",
    "role": "режим LLM_CHAIN=yandex; на стенде — запасная"
   },
@@ -30,7 +30,7 @@
    "key": "needs_delta",
    "func": "parse_need",
    "title": "Разбор потребности (путь продукта: словарь + дельта модели)",
-   "set": "50 реальных вакансий И8 (опубликованные тексты), silver-разметка — не экспертная",
+   "set": "50 реальных вакансий (опубликованные тексты, docs/realdata/vacancies_50.json), silver-разметка — не экспертная",
    "metric": "F1 стека (модель + правила)",
    "rows": {
     "sonnet": {
@@ -368,10 +368,10 @@
  "inventory": [
   {
    "func": "parse_need",
-   "what": "разбор потребности/вакансии: дельта к словарю в фоне (И27) и полный запрос (mode=full)",
+   "what": "разбор потребности/вакансии: дельта к словарю в фоне (быстрый разбор, раздел 10 docs/LLM.md) и полный запрос (mode=full)",
    "code": "matching/need_parser.py (_call_llm), matching/fast_parse.py",
    "no_llm": "словарь стек-тегов и правила",
-   "bench": "needs_delta, needs_full (50 вакансий И8), needs_jury (15 текстов)"
+   "bench": "needs_delta, needs_full (50 реальных вакансий), needs_jury (15 текстов)"
   },
   {
    "func": "resume",
@@ -404,10 +404,10 @@
  ],
  "conditions": [
   "Одна попытка на вход, без перехода по цепочке и без автомата-выключателя; путь продукта целиком (вырезание ПДн, проверка цитат, слияние с правилами); параллельно 4 запроса.",
-  "Sonnet — песочница → OpenRouter напрямую (на стенде — через ретранслятор, там задержка больше); YandexGPT — Yandex AI Studio, OpenAI-совместимый API.",
+  "Sonnet — с машины замера в OpenRouter напрямую (на стенде — через ретранслятор, там задержка больше); YandexGPT — Yandex AI Studio, OpenAI-совместимый API.",
   "Задержка p50/p95 — по принятым ответам модели (без правил); «формат» — ответ получен, но продукт его не принял (не JSON, нет баллов по критериям, не объект); «сеть» — тайм-аут, HTTP ≠ 200.",
-  "Цена — на 1000 вызовов: OpenRouter — фактическая (usage.cost), YandexGPT 5.1 Pro — токены × 0,8 ₽ за 1000 (вход и выход, синхронный режим, с НДС, тариф AI Studio на 09.10.2026); рубли для Sonnet — по курсу ЦБ РФ на 09.10.2026 (85,42 ₽ за $).",
-  "Разметки: вакансии — silver И8 (модель + ручная сверка), резюме — автор набора (модель), оценщик — эталон gpt-oss-120b. Ни одна не экспертная; модели семейства Claude участвовали в разметке атак и резюме — согласие Sonnet с ними может быть завышено."
+  "Цена — на 1000 вызовов: OpenRouter — фактическая (usage.cost), YandexGPT 5.1 — токены × 0,8 ₽ за 1000 (вход и выход, синхронный режим, с НДС, тариф AI Studio на 09.10.2026); рубли для Sonnet — по курсу ЦБ РФ на 09.10.2026 (85,42 ₽ за $).",
+  "Разметки: вакансии — silver-разметка набора (модель + ручная сверка), резюме — автор набора (модель), оценщик — эталон gpt-oss-120b. Ни одна не экспертная; модели семейства Claude участвовали в разметке атак и резюме — согласие Sonnet с ними может быть завышено."
  ],
  "ref_0810": {
   "label": "YandexGPT 5.1, 08.10 (полный разбор, код c1c248e)",
@@ -419,7 +419,7 @@
    "stack_p": 0.853,
    "stack_r": 0.96,
    "stack_f1": 0.903,
-   "source": "docs/LLM.md раздел 6, <внутренний документ>"
+   "source": "docs/LLM.md, раздел 6"
   }
  },
  "how_to_enable": {
@@ -430,8 +430,8 @@
    "LLM_MODEL_GRADE=yandex=yandexgpt-5.1/latest",
    "LLM_MODEL_GRADE_SECOND=yandex=yandexgpt-5.1/latest"
   ],
-  "where": ".env сервера (/opt/spectrek_fsp/app/.env) + ключ Yandex AI Studio в llm.env (LLM_PROVIDER=yandex_ai_studio, LLM_BASE_URL, LLM_API_KEY, LLM_FOLDER_ID, LLM_MODEL); пересоздать api",
+  "where": ".env сервера (рядом с docker-compose.yml) + ключ Yandex AI Studio в llm.env (LLM_PROVIDER=yandex_ai_studio, LLM_BASE_URL, LLM_API_KEY, LLM_FOLDER_ID, LLM_MODEL); пересоздать api",
   "check": "/api/meta → llm.chain = [{provider: yandex, configured: true}], functions.*.models[0].label = YandexGPT 5.1"
  },
- "pending_note": "YandexGPT ещё не замерена на этих входах: ключ Yandex AI Studio есть только на сервере «Москва», в песочницу не передан. Прогон — одной командой, когда ключ будет: tools/llm/ru_llm_bench.py run --model yandex=yandexgpt-5.1/latest. До этого — замер 08.10 (полный разбор 50 вакансий, код c1c248e)."
+ "pending_note": "YandexGPT ещё не замерена на этих входах: ключ Yandex AI Studio хранится только на сервере стенда, на машине замера его нет. Прогон — одной командой, когда ключ будет: tools/llm/ru_llm_bench.py run --model yandex=yandexgpt-5.1/latest. До этого — замер 08.10 (полный разбор 50 вакансий, код c1c248e)."
 }
