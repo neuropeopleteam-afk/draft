@@ -1,8 +1,32 @@
 {
  "title": "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)",
  "date": "2026-10-10",
- "code_sha": "d7dbd5e",
+ "code_sha": "8146fe8",
  "models": {
+  "deepseek/deepseek-v4-pro-0813@noreason15": {
+   "name": "DeepSeek: DeepSeek V4 Pro 0813",
+   "family": "DeepSeek",
+   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "in_usd_per_m": 0.66,
+   "out_usd_per_m": 1.98,
+   "stand": false,
+   "variant": {
+    "base": "deepseek/deepseek-v4-pro-0813",
+    "name": "noreason15",
+    "max_tokens": 900,
+    "reasoning_effort": "none",
+    "limit": 15
+   }
+  },
+  "openai/gpt-6.1-sol-pro": {
+   "name": "OpenAI: GPT-6.1 Sol Pro",
+   "family": "OpenAI",
+   "open_weights": null,
+   "in_usd_per_m": 2.0,
+   "out_usd_per_m": 10.0,
+   "stand": false,
+   "variant": null
+  },
   "qwen/qwen3.8-2.4t-a95b": {
    "name": "Qwen: Qwen3.8 2.4T A95B",
    "family": "Alibaba Qwen",
@@ -36,6 +60,55 @@
     "limit": 15
    }
   },
+  "anthropic/claude-opus-5.5": {
+   "name": "Anthropic: Claude Opus 5.5",
+   "family": "Anthropic",
+   "open_weights": null,
+   "in_usd_per_m": 4.0,
+   "out_usd_per_m": 20.0,
+   "stand": false,
+   "variant": null
+  },
+  "deepseek/deepseek-v4-pro-0813": {
+   "name": "DeepSeek: DeepSeek V4 Pro 0813",
+   "family": "DeepSeek",
+   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
+   "in_usd_per_m": 0.66,
+   "out_usd_per_m": 1.98,
+   "stand": false,
+   "variant": null
+  },
+  "qwen/qwen3.8-27b": {
+   "name": "Qwen: Qwen3.8 27B",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.8-27B",
+   "in_usd_per_m": 0.425,
+   "out_usd_per_m": 2.55,
+   "stand": false,
+   "variant": null
+  },
+  "moonshotai/kimi-k3": {
+   "name": "MoonshotAI: Kimi K3",
+   "family": "Moonshot",
+   "open_weights": "moonshotai/Kimi-K3",
+   "in_usd_per_m": 0.5,
+   "out_usd_per_m": 12.0,
+   "stand": false,
+   "variant": null
+  },
+  "qwen/qwen3.5-9b@i24": {
+   "name": "qwen/qwen3.5-9b",
+   "family": "Alibaba Qwen",
+   "open_weights": "Qwen/Qwen3.5-9B",
+   "in_usd_per_m": null,
+   "out_usd_per_m": null,
+   "stand": false,
+   "variant": {
+    "base": "qwen/qwen3.5-9b",
+    "name": "i24",
+    "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"
+   }
+  },
   "x-ai/grok-4.7": {
    "name": "SpaceXAI: Grok 4.7",
    "family": "xAI",
@@ -54,64 +127,6 @@
    "stand": true,
    "variant": null
   },
-  "deepseek/deepseek-v4-pro-0813": {
-   "name": "DeepSeek: DeepSeek V4 Pro 0813",
-   "family": "DeepSeek",
-   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
-   "in_usd_per_m": 0.66,
-   "out_usd_per_m": 1.98,
-   "stand": false,
-   "variant": null
-  },
-  "anthropic/claude-opus-5.5": {
-   "name": "Anthropic: Claude Opus 5.5",
-   "family": "Anthropic",
-   "open_weights": null,
-   "in_usd_per_m": 4.0,
-   "out_usd_per_m": 20.0,
-   "stand": false,
-   "variant": null
-  },
-  "qwen/qwen3.8-27b": {
-   "name": "Qwen: Qwen3.8 27B",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.8-27B",
-   "in_usd_per_m": 0.425,
-   "out_usd_per_m": 2.55,
-   "stand": false,
-   "variant": null
-  },
-  "openai/gpt-6.1-sol-pro": {
-   "name": "OpenAI: GPT-6.1 Sol Pro",
-   "family": "OpenAI",
-   "open_weights": null,
-   "in_usd_per_m": 2.0,
-   "out_usd_per_m": 10.0,
-   "stand": false,
-   "variant": null
-  },
-  "qwen/qwen3.5-9b@i24": {
-   "name": "qwen/qwen3.5-9b",
-   "family": "Alibaba Qwen",
-   "open_weights": "Qwen/Qwen3.5-9B",
-   "in_usd_per_m": null,
-   "out_usd_per_m": null,
-   "stand": false,
-   "variant": {
-    "base": "qwen/qwen3.5-9b",
-    "name": "i24",
-    "note": "И24, 09.10: полный запрос (не дельта), провайдер local, OpenRouter bf16 — те же веса, что профиль llm-local на CPU (docs/llm/needs_qwen_tags.json)"
-   }
-  },
-  "moonshotai/kimi-k3": {
-   "name": "MoonshotAI: Kimi K3",
-   "family": "Moonshot",
-   "open_weights": "moonshotai/Kimi-K3",
-   "in_usd_per_m": 0.5,
-   "out_usd_per_m": 12.0,
-   "stand": false,
-   "variant": null
-  },
   "google/gemini-3.1-pro-preview": {
    "name": "Google: Gemini 3.1 Pro Preview",
    "family": "Google",
@@ -120,21 +135,6 @@
    "out_usd_per_m": 12.0,
    "stand": false,
    "variant": null
-  },
-  "deepseek/deepseek-v4-pro-0813@noreason15": {
-   "name": "DeepSeek: DeepSeek V4 Pro 0813",
-   "family": "DeepSeek",
-   "open_weights": "deepseek-ai/DeepSeek-V4-Pro-0813",
-   "in_usd_per_m": 0.66,
-   "out_usd_per_m": 1.98,
-   "stand": false,
-   "variant": {
-    "base": "deepseek/deepseek-v4-pro-0813",
-    "name": "noreason15",
-    "max_tokens": 900,
-    "reasoning_effort": "none",
-    "limit": 15
-   }
   }
  },
  "cells": {
@@ -1563,7 +1563,7 @@
   "Интервал — бутстреп 90 % по входам: на 15–50 входах разница в несколько сотых — в пределах шума.",
   "Цена — фактическая (usage.cost OpenRouter) на 1000 вызовов функции, $."
  ],
- "pending": "не начаты — Claude Fable 5.1, GPT-6 Astra Pro (ждут пополнения баланса); не все наборы — Qwen3.8 2.4T A95B, Grok 4.7; без судьи обоснований — Qwen3.8 2.4T A95B, Grok 4.7; эталон оценщика из трёх семейств ещё не полный — где нет двух моделей эталона, эталон — среднее остальных моделей замера.",
+ "pending": "не начаты — Claude Fable 5.1, GPT-6 Astra Pro (ждут пополнения баланса); эталон оценщика из трёх семейств ещё не полный — где нет двух моделей эталона, эталон — среднее остальных моделей замера.",
  "probes": [
   {
    "model": "qwen/qwen3.8-27b",
@@ -3416,8 +3416,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.942,
-       0.983
+       0.941,
+       0.982
       ],
       "components": [
        "stack_f1",
@@ -3498,8 +3498,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.942,
-       0.983
+       0.941,
+       0.982
       ],
       "components": [
        "stack_f1",
@@ -3557,7 +3557,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.084
+       0.079
       ],
       "n": 214
      },
@@ -3582,7 +3582,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.94,
+       0.939,
        0.982
       ],
       "components": [
@@ -3664,7 +3664,7 @@
      "index": {
       "value": 0.975,
       "ci90": [
-       0.968,
+       0.967,
        0.983
       ],
       "components": [
@@ -3721,7 +3721,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.084
+       0.079
       ],
       "n": 214
      },
@@ -3746,7 +3746,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.94,
+       0.939,
        0.982
       ],
       "components": [
@@ -3828,8 +3828,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.942,
-       0.983
+       0.941,
+       0.982
       ],
       "components": [
        "stack_f1",
@@ -3910,7 +3910,7 @@
      "index": {
       "value": 0.964,
       "ci90": [
-       0.94,
+       0.939,
        0.981
       ],
       "components": [
@@ -3967,7 +3967,7 @@
       "value": 0.056,
       "ci90": [
        0.033,
-       0.084
+       0.079
       ],
       "n": 214
      },
@@ -3992,7 +3992,7 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.94,
+       0.939,
        0.982
       ],
       "components": [
@@ -4049,7 +4049,7 @@
       "value": 0.065,
       "ci90": [
        0.037,
-       0.098
+       0.093
       ],
       "n": 215
      },
@@ -4156,8 +4156,8 @@
      "index": {
       "value": 0.965,
       "ci90": [
-       0.942,
-       0.983
+       0.941,
+       0.982
       ],
       "components": [
        "stack_f1",
@@ -4355,8 +4355,8 @@
     },
     "usd_per_1k": 16.86,
     "score": {
-     "total": 0.858,
-     "quality": 0.975,
+     "total": 0.86,
+     "quality": 0.978,
      "reliability": 1,
      "latency": 0.805,
      "price": 0.0
@@ -4521,8 +4521,8 @@
     },
     "usd_per_1k": 2.4,
     "score": {
-     "total": 0.87,
-     "quality": 0.987,
+     "total": 0.871,
+     "quality": 0.99,
      "reliability": 0.929,
      "latency": 0.352,
      "price": 0.914
@@ -4685,8 +4685,8 @@
     },
     "usd_per_1k": 13.91,
     "score": {
-     "total": 0.858,
-     "quality": 0.986,
+     "total": 0.86,
+     "quality": 0.989,
      "reliability": 1,
      "latency": 0.71,
      "price": 0.09
@@ -4852,8 +4852,8 @@
     },
     "usd_per_1k": 11.75,
     "score": {
-     "total": 0.83,
-     "quality": 0.994,
+     "total": 0.831,
+     "quality": 0.997,
      "reliability": 0.929,
      "latency": 0.556,
      "price": 0.169
@@ -5016,8 +5016,8 @@
     },
     "usd_per_1k": 14.11,
     "score": {
-     "total": 0.852,
-     "quality": 0.961,
+     "total": 0.853,
+     "quality": 0.964,
      "reliability": 1,
      "latency": 0.752,
      "price": 0.084
@@ -5026,7 +5026,7 @@
    },
    "qwen/qwen3.8-2.4t-a95b": {
     "config": "как в продукте",
-    "complete": false,
+    "complete": true,
     "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
     "quality": {
      "mae": {
@@ -5111,37 +5111,50 @@
       "n": 5
      },
      "judge_consistency": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.944,
+      "ci90": [
+       0.833,
+       1.0
+      ],
+      "n": 9
      },
      "judge_grounded": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 9
      },
      "judge_fair": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 9
      },
      "judge_russian": {
-      "value": null,
-      "ci90": null,
-      "n": 0
-     },
-     "judge_model": null,
-     "index": {
-      "value": 0.992,
+      "value": 5,
       "ci90": [
-       0.985,
+       5,
+       5
+      ],
+      "n": 9
+     },
+     "judge_model": "openai_gpt_6.1_sol_pro",
+     "index": {
+      "value": 0.988,
+      "ci90": [
+       0.978,
        0.997
       ],
       "components": [
        "mae×2",
        "kappa_w",
        "attacks_resisted",
-       "stability (1 − 2×размах)"
+       "stability (1 − 2×размах)",
+       "обоснование (судья)"
       ]
      }
     },
@@ -5170,8 +5183,8 @@
     },
     "usd_per_1k": 5.12,
     "score": {
-     "total": 0.838,
-     "quality": 1.0,
+     "total": 0.837,
+     "quality": 0.999,
      "reliability": 0.757,
      "latency": 0.616,
      "price": 0.559
@@ -5337,8 +5350,8 @@
     },
     "usd_per_1k": 2.0,
     "score": {
-     "total": 0.856,
-     "quality": 0.997,
+     "total": 0.858,
+     "quality": 1.0,
      "reliability": 0.929,
      "latency": 0.171,
      "price": 1.0
@@ -5347,7 +5360,7 @@
    },
    "x-ai/grok-4.7": {
     "config": "как в продукте",
-    "complete": false,
+    "complete": true,
     "reference": "среднее всех остальных моделей замера (эталон из трёх ещё не замерен)",
     "quality": {
      "mae": {
@@ -5432,37 +5445,50 @@
       "n": 10
      },
      "judge_consistency": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 15
      },
      "judge_grounded": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 0.9,
+      "ci90": [
+       0.8,
+       0.967
+      ],
+      "n": 15
      },
      "judge_fair": {
-      "value": null,
-      "ci90": null,
-      "n": 0
+      "value": 1.0,
+      "ci90": [
+       1.0,
+       1.0
+      ],
+      "n": 15
      },
      "judge_russian": {
-      "value": null,
-      "ci90": null,
-      "n": 0
-     },
-     "judge_model": null,
-     "index": {
-      "value": 0.975,
+      "value": 5,
       "ci90": [
-       0.959,
-       0.986
+       5,
+       5
+      ],
+      "n": 15
+     },
+     "judge_model": "openai_gpt_6.1_sol_pro",
+     "index": {
+      "value": 0.98,
+      "ci90": [
+       0.968,
+       0.99
       ],
       "components": [
        "mae×2",
        "kappa_w",
        "attacks_resisted",
-       "stability (1 − 2×размах)"
+       "stability (1 − 2×размах)",
+       "обоснование (судья)"
       ]
      }
     },
@@ -5488,8 +5514,8 @@
     },
     "usd_per_1k": 12.4,
     "score": {
-     "total": 0.756,
-     "quality": 0.983,
+     "total": 0.76,
+     "quality": 0.991,
      "reliability": 1,
      "latency": 0.0,
      "price": 0.144
@@ -5655,8 +5681,8 @@
     },
     "usd_per_1k": 2.22,
     "score": {
-     "total": 0.899,
-     "quality": 0.973,
+     "total": 0.9,
+     "quality": 0.976,
      "reliability": 0.829,
      "latency": 0.732,
      "price": 0.951
@@ -5819,8 +5845,8 @@
     },
     "usd_per_1k": 7.79,
     "score": {
-     "total": 0.91,
-     "quality": 0.979,
+     "total": 0.911,
+     "quality": 0.982,
      "reliability": 1,
      "latency": 0.893,
      "price": 0.362
@@ -5992,8 +6018,8 @@
     "index": {
      "value": 0.906,
      "ci90": [
-      0.859,
-      0.947
+      0.856,
+      0.948
      ],
      "components": [
       "stack_f1",
