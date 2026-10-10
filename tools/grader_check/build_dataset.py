@@ -1,6 +1,6 @@
 """Сборка проверочного набора оценщика открытых ответов из панели 06.10 (один раз, результат лежит в репозитории).
 
-Источник — оценщик по рубрике второй панели (`bank/calibration/rubric_grade.py`, отчёт reports_0610/panel.md):
+Источник — оценщик по рубрике второй панели (`bank/calibration/rubric_grade.py`, внутренний отчёт разработки):
 * набор A — 232 ответа на 29 развёрнутых заданий: эталоны рубрики strong / medium / weak, атака-инъекция,
   «общие слова», 87 ответов gpt-oss-120b;
 * набор B — ответы открытых моделей панели (слот 0), которые на панели оценили и YandexGPT, и gpt-oss-120b
@@ -55,7 +55,7 @@ def main() -> None:
             v = variant(fid, int(seed))
             items[x["item"]] = {"family_id": fid, "seed": int(seed), "format": v["format"], "stem": v["stem"],
                                 "code": v["code"], "step_prompt": v["step_prompt"], "rubric": v["rubric"]}
-    out = {"source": "panel 06.10 (bank 1631167), reports_0610/panel.md",
+    out = {"source": "panel 06.10 (bank 1631167), внутренний отчёт разработки",
            "note": "A: эталоны, инъекция, общие слова, ответы gpt-oss-120b; B: ответы открытых моделей (слот 0)",
            "items": items, "answers": sorted(answers.values(), key=lambda x: x["id"])}
     with gzip.open(a.out, "wt", encoding="utf-8") as fh:
