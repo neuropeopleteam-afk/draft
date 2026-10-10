@@ -6,7 +6,7 @@
  * 390: проводник не перекрывает действия шага (поле, «Разобрать требования», «Сохранить…», «Пригласить»), кнопки
  * проводника видны без прокрутки панели, горизонтальной прокрутки нет; свёрнутый — в шапке.
  * Флаг устной защиты (Я15, /api/meta interview.enabled): шаг «по желанию» перед доказательствами, в план 12 минут не
- * входит, ведёт к готовому примеру (карточка Марии у работодателя) и к живому запуску; без флага шагов 8 (два теста выше).
+ * входит: кандидатом — «Две попытки рядом» (панель Я15), «Как видит работодатель» — карточка Марии; без флага шагов 8.
  */
 import type { Locator, Page } from "@playwright/test";
 import { expect, test } from "../lib/fixtures";
@@ -268,11 +268,14 @@ test("устная защита по флагу (Я15): шаг «по желан
   const opt = g.getByTestId("quick-optional");
   await expect(opt).toContainText("по желанию");
   await opt.getByRole("button", { name: "Устная защита ответа" }).click();
-  // готовый пример — карточка Марии Королёвой у работодателя своей копии (вход за работодателя — сам)
-  await expect(page).toHaveURL(/\/employer\/candidates\/C-[A-Z0-9]+/, { timeout: 60_000 });
+  // кандидатом «Пройдите тест сами» — «Две попытки рядом», там панель Я15 «Подтвердите авторство ответа»
+  await expect(page).toHaveURL(/\/candidate\/attempts/);
   await expect(g.getByText(/^Шаг 8 из 9 · по желанию, ≈\s3\sмин/)).toBeVisible();
-  await expect(g.getByTestId("quick-live").getByRole("button", { name: "Пройти самому" })).toBeVisible();
   await expect(g.getByTestId("quick-live")).toContainText("движок — заглушка");
+  // та же ступень глазами работодателя своей копии: карточка Марии Королёвой (вход за работодателя — сам)
+  await g.getByTestId("quick-live").getByRole("button", { name: "Как видит работодатель" }).click();
+  await expect(page).toHaveURL(/\/employer\/candidates\/C-[A-Z0-9]+/, { timeout: 60_000 });
+  await expect(g.getByText(/^Шаг 8 из 9 · по желанию/)).toBeVisible();
   await expect(g.getByText("Устная защита ответа · по желанию", { exact: true })).toBeVisible();
   await expect(g).toContainText("Грейд не меняет; оценивает модель, не человек");
   await expect(g.getByTestId("quick-timer")).toContainText("сверх плана 12");
