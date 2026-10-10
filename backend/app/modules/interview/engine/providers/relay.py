@@ -61,7 +61,7 @@ def route(host: str, path: str, headers: dict[str, str] | None = None) -> Route:
 def relay_root(url: str) -> str:
     """LLM_RELAY_URL задан как база OpenRouter (…/api/v1); адаптерам нужен корень ретранслятора."""
     root = url.rstrip("/")
-    return root[: -len("/api/v1")] if root.endswith("/api/v1") else root
+    return root.removesuffix("/api/v1")
 
 
 def request(method: str, host: str, path: str, *, headers: dict[str, str] | None = None, json: object | None = None,
