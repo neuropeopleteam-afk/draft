@@ -294,7 +294,7 @@ def test_model_labels():
     assert llm.model_label("anthropic/claude-sonnet-5.5") == "Claude Sonnet 5.5"
     assert llm.model_label("anthropic/claude-fable-5.1:batch") == "Claude Fable 5.1"
     assert llm.model_label("gpt://b1abc/yandexgpt/latest") == "YandexGPT"
-    assert llm.model_label("yandexgpt-5.1/latest") == "yandexgpt-5.1"
+    assert llm.model_label("yandexgpt-5.1/latest") == "YandexGPT 5.1"  # подпись в режиме LLM_CHAIN=yandex
     assert llm.model_label("gpt-oss-120b/latest") == "gpt-oss-120b"
     assert llm.model_label(None) == ""
 
