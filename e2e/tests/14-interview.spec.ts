@@ -49,7 +49,8 @@ async function visualOk(page: Page) {
 /** Ответить на вопросы до конца разговора: подсказка заглушки или свой текст; первый ответ — голосом, если можно. */
 async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { voiceFirst?: boolean; axeWhat?: string; shot?: string } = {}) {
   const q = page.getByTestId("iv-question");
-  const cur = async () => ((await q.count()) ? ((await q.textContent()) ?? "") : "");
+  // вопрос может смениться или исчезнуть (конец разговора) между проверками — короткое ожидание, без 20 с по умолчанию
+  const cur = async () => (await q.first().textContent({ timeout: 1_000 }).catch(() => "")) ?? "";
   let prev = "";
   for (let i = 0; i < 8; i++) {
     // следующий вопрос (не прежний) или конец разговора
