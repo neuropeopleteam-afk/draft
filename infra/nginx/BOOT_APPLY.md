@@ -26,7 +26,7 @@ cd /opt/spectrek_fsp/app && docker compose build web && docker compose up -d web
 BASIC_USER=demo BASIC_PASSWORD="$(cat <файл с паролем стенда>)" bash infra/nginx/check-boot.sh https://fsp.neuropeople.pro
 bash infra/nginx/check-boot.sh http://127.0.0.1:8140      # контейнер напрямую, без внешнего nginx
 ```
-Ожидаемо: «проваленных проверок: 0», стартовый JS на проводе ≈ 95,6 КБ (index ≈ 41,8 КБ + vendor ≈ 53,8 КБ).
+Ожидаемо: «проваленных проверок: 0», стартовый JS на проводе ≈ 95,7 КБ (index ≈ 41,9 КБ + vendor ≈ 53,8 КБ).
 На стенде до выкладки та же проверка даёт 5 провалов (сторожа нет, блокирующий recover.js, chunked без
 Content-Length, два Cache-Control) — docs/BOOT.md, раздел «Проверка раздачи».
 
@@ -52,7 +52,7 @@ listen 443 ssl http2;
 Если владелец решит включить — после выкладки 5, с проверкой `curl --http2 -I` и снимком стенда из РФ и через VPN.
 
 ## Шаг В — по желанию, не до сдачи: brotli
-`.br` уже лежат в образе (стартовый JS 80,9 КБ против 95,6 КБ gzip), но в `nginx:1.27-alpine` нет модуля
+`.br` уже лежат в образе (стартовый JS 81,0 КБ против 95,7 КБ gzip), но в `nginx:1.27-alpine` нет модуля
 ngx_brotli, а внешний nginx (1.24 Ubuntu, без модуля) проксирует в контейнер и файлов не видит. Варианты: образ web
 со сборкой ngx_brotli (+ `brotli_static on;` в frontend/nginx.conf) либо раздача `/assets/` внешним nginx с диска
 (`libnginx-mod-http-brotli-static`). Оба — правка выкладки; −15 КБ на старте не стоят риска до 11.10.
