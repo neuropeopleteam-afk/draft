@@ -26,7 +26,7 @@ interface DefenseState {
 }
 interface Stage { enabled: boolean; stub: boolean; minutes: number; can_invite: boolean; reason?: string | null; skills: string[]; skills_reason?: string | null; name_hint?: string | null; consent?: Consent | null; session?: IvSession | null }
 
-const MODEL_NOTE = "Оценивает модель, не человек; грейд по тесту не меняется. Решение — за работодателем.";
+const MODEL_NOTE = "Оценка — модель, не люди; грейд по тесту не меняется. Решение — за работодателем.";
 const STYLE: Record<string, string> = {
   confirmed: "bg-emerald-50 text-emerald-800 ring-emerald-200", strong: "bg-emerald-50 text-emerald-800 ring-emerald-200",
   discrepancies: "bg-amber-50 text-amber-900 ring-amber-200", weak: "bg-amber-50 text-amber-900 ring-amber-200",
