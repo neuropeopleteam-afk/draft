@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { CandidateCard, SCORE_HINT } from "../../components/CandidateCard";
 import { CompactCard } from "../../components/CompactCard";  // Я10: компактная подборка
-import { NeedScope } from "../../components/NeedScope";  // Я10: что проверено тестом по потребности
+import { NeedScope, scopeOptions } from "../../components/NeedScope";  // Я10: что проверено тестом по потребности
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, plural, range, useApi } from "../../components/ui";
@@ -428,7 +428,7 @@ export function Selection() {
   const [shown, setShown] = useState(TOP);
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [active, setActive] = useState<string | null>(null);
-  const [ask, setAsk] = useState<{ title: string; task: string } | null>(null);  // Я10: вопрос-зонд из блока «НЕ проверено»
+  const [ask, setAsk] = useState<string | null>(null);  // Я10: вопрос-зонд из блока «НЕ проверено» (id варианта: роль или навык)
   const [box, setBox] = useState<HTMLDivElement | null>(null);
   const [wide, setWide] = useState(false);
   useEffect(() => {
@@ -492,16 +492,22 @@ export function Selection() {
     mutual={<MutualCardBlock needId={id!} version={s!.version} cref={r.ref} mutual={mutual} />} />;
   const togglePick = (ref: string) => setPicked(picked.includes(ref) ? picked.filter((x) => x !== ref) : [...picked, ref]);
   const hasBias = !!reqOf?.bias?.length;
+  const askOpts = scopeOptions(s?.scope);
+  const askOpt = askOpts.find((o) => o.id === ask) ?? askOpts[0];
 
   return (
     <div className="max-w-6xl space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-        <PageTitle title={need.data.title} subtitle="В балле — только подтверждённое: тест (T1), зонды и ФСП (T2); заявленное (T0) — отдельно." />
+        {/* Я10: подзаголовок мельче на телефоне — первая карточка выше (PageTitle — та же разметка h1) */}
+        <div>
+          <h1 className="text-2xl font-extrabold tracking-tight text-brand-night">{need.data.title}</h1>
+          <p className="mt-1 max-w-3xl text-sm leading-relaxed text-brand-ink/70 sm:mt-2 sm:text-base">В балле — только подтверждённое: тест (T1), зонды и ФСП (T2); заявленное (T0) — отдельно.</p>
+        </div>
         <Link to="/employer/needs" className="btn-ghost hidden sm:inline-flex">Все потребности</Link>
       </div>
       {/* И27, Н2: частичное соответствие и требования вне справочника видны и в каждой версии подборки */}
       {/* Я10 (п. 2): у заголовка — проверено тестом / НЕ проверено и вопрос-зонд на непроверенный навык */}
-      <NeedScope key={s?.version ?? 0} scope={s?.scope} cov={s && "scope" in s ? null : cov} recipients={askRefs} picked={picked.length > 0} onAsk={(p) => setAsk(p)} />
+      <NeedScope key={s?.version ?? 0} scope={s?.scope} cov={s && "scope" in s ? null : cov} recipients={askRefs} picked={picked.length > 0} onAsk={setAsk} />
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Link to="/employer/needs" className="font-semibold text-brand hover:underline sm:hidden">Все потребности</Link>
         <span className="text-brand-ink/65">Версии подборки:</span>
@@ -664,7 +670,14 @@ export function Selection() {
       {/* А11: обновление подборки (новая версия, пересчёт) — экранному диктору; последним элементом, чтобы не сдвигать space-y */}
       <p className="sr-only" role="status" aria-live="polite">{busy ? "Пересчитываем подборку" : s ? `Подборка v${s.version}: кандидатов ${s.total}` : ""}</p>
       <Modal open={!!ask} onClose={() => setAsk(null)} title={`Вопрос зондом: ${askRefs.length} канд.`}>
-        {ask && <ProbeForm refs={askRefs} needId={id} init={ask} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setAsk(null); setPicked([]); setInvited(probeSentText(r)); sel.reload(); }} />}
+        {ask && askOpt && <div className="mb-4">
+          <label className="label" htmlFor="scope-ask">Вопрос: типовая задача роли или навык, который тест не проверяет</label>
+          <select id="scope-ask" className="input" value={askOpt.id} onChange={(e) => setAsk(e.target.value)}>
+            {askOpts.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+          </select>
+          <p className="mt-1 text-xs text-brand-ink/65">Кому: {askRefs.join(", ")} — {picked.length ? "отмеченные «Сравнить»" : "первые три подборки"}. Оценённый ответ становится подтверждённым фактом (T1) в карточке.</p>
+        </div>}
+        {ask && askOpt && <ProbeForm key={askOpt.id} refs={askRefs} needId={id} init={askOpt.probe} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setAsk(null); setPicked([]); setInvited(probeSentText(r)); sel.reload(); }} />}
       </Modal>
       <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Зонд для ${picked.length} канд.`}>
         <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setProbeOpen(false); setPicked([]); setInvited(probeSentText(r)); }} />

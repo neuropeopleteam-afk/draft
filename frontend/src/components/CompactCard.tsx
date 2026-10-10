@@ -20,9 +20,14 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
   const c = r.card ?? {};
   const stack = reasons.filter((x) => SKILL.test(x.requirement ?? ""));
   const matched = stack.filter((x) => x.status === "confirmed").map((x) => skillName(x) + (isMust(x) ? "" : " (желательно)"));
-  const unchecked = stack.filter((x) => x.status === "declared" || x.status === "missing")
-    .sort((a, b) => Number(isMust(b)) - Number(isMust(a)))
-    .map((x) => `${skillName(x)}${isMust(x) ? "" : " (желательно)"} — ${x.status === "declared" ? "только заявлено" : "не проверялось"}`);
+  // по состоянию, обязательные первыми: «Go — только заявлен; Kubernetes, CI/CD — не проверялись»
+  const label = (x: any) => skillName(x) + (isMust(x) ? "" : " (желательно)");
+  const unchecked = (["declared", "missing"] as const).map((st) => {
+    const xs = stack.filter((x) => x.status === st).sort((a, b) => Number(isMust(b)) - Number(isMust(a))).map(label);
+    if (!xs.length) return null;
+    const one = xs.length === 1;
+    return `${xs.join(", ")} — ${st === "declared" ? (one ? "только заявлен" : "только заявлены") : (one ? "не проверялся" : "не проверялись")}`;
+  }).filter((x): x is string => !!x);
   const risks: string[] = [];
   const below = stack.filter((x) => x.status === "mismatch").map(skillName);
   if (below.length) risks.push(`ниже порога теста: ${below.join(", ")}`);
@@ -83,7 +88,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
       </div>
       <ul className="mt-2 space-y-1 text-sm" data-testid="compact-lines">
         <Line label="Совпало" tone="text-emerald-800" testid="compact-matched">{f.matched.length ? <>подтверждено тестом: {f.matched.join(", ")}</> : "тестом из требований ничего не подтверждено"}</Line>
-        {f.unchecked.length > 0 && <Line label="Не проверено" tone="text-brand-ink/65" testid="compact-unchecked">{f.unchecked.join("; ")} — можно задать вопрос зондом</Line>}
+        {f.unchecked.length > 0 && <Line label="Не проверено" tone="text-brand-ink/65" testid="compact-unchecked">{f.unchecked.join("; ")}<span className="hidden sm:inline"> — можно задать вопрос зондом</span></Line>}
         <Line label="Риск" tone="text-amber-900" testid="compact-risk">{f.risks.length ? f.risks.join("; ") : "по подтверждённым данным не виден"}</Line>
         {f.salary && <Line label="Зарплата" tone="text-brand-plum" testid="compact-salary">{f.salary}{fit && fit.level !== "low" ? <span className="ml-2 align-middle"><FitBadge fit={fit} short /></span> : null}</Line>}
       </ul>
