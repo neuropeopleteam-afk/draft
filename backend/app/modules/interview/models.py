@@ -52,7 +52,7 @@ class InterviewSession(UUIDPk, Base):
     engine: Mapped[str] = mapped_column(sa.String(8), default="stub")
     # состояние разговора у движка (контекст, план вопросов, номер вопроса) — между репликами; после оценки очищается
     state: Mapped[dict] = mapped_column(default=dict)
-    channel: Mapped[str | None] = mapped_column(sa.String(8))  # avatar | voice | text — последний использованный
+    channel: Mapped[str | None] = mapped_column(sa.String(8))  # voice | text — последний использованный
     # песочница жюри (sid или shared) — лимит живых запусков; is_example — готовый пример «модельный кандидат»
     jury_scope: Mapped[str | None] = mapped_column(sa.String(16), index=True)
     is_example: Mapped[bool] = mapped_column(default=False)

@@ -29,7 +29,7 @@ employer = require_role(UserRole.employer)
 
 AUTH = {401: err("Нужен вход"), 403: err("Не та роль")}
 OFF = {409: err("Выключено флагом (interview_disabled) или сессия в другом состоянии")}
-Channel = Literal["avatar", "voice", "text"]
+Channel = Literal["voice", "text"]
 
 
 class QuoteOut(BaseModel):
@@ -57,8 +57,8 @@ class TurnOut(BaseModel):
 
 
 class ChannelsOut(BaseModel):
-    avatar: bool
-    voice: bool
+    voice: bool = Field(description="Голос ведущего (синтез речи, mp3)")
+    stt: bool = Field(description="«Нажми и говори»: запись ответа → распознанный текст")
     text: bool
 
 
@@ -173,11 +173,7 @@ class AnswerIn(BaseModel):
 
 class TranscribeOut(BaseModel):
     text: str
-
-
-class AvatarOut(BaseModel):
-    session_token: str
-    ice_servers: list[dict] | None = None
+    stub: bool = Field(False, description="Заглушка распознавания (только e2e/демо): подставлено начало письменного ответа")
 
 
 class InviteIn(BaseModel):
@@ -270,13 +266,16 @@ async def session_transcribe(session_id: uuid.UUID, request: Request, user: User
         raise api_error(413, "audio_too_large", "Запись слишком длинная — ответьте короче или текстом")
     if not audio:
         raise api_error(422, "empty_audio", "Пустая запись")
+    port = pt.get_port()
+    st = row.state or {}
+    hint = port.hint(st.get("engine") or {}, int(st.get("n") or 0)) if port.is_stub() and st.get("engine") else None
     try:
-        text, usd = pt.get_port().transcribe(audio, request.headers.get("content-type") or "audio/webm")
+        text, usd, stub = port.transcribe(audio, request.headers.get("content-type") or "audio/webm", stub_text=hint)
     except pt.EngineUnavailable:
         raise api_error(503, "stt_unavailable", "Распознавание речи недоступно — ответьте текстом") from None
     svc.add_cost(row, "stt_usd", usd)  # запись не хранится — только текст и стоимость
     db.commit()
-    return {"text": svc._scrub(db, row.candidate_user_id, text)[:3000]}
+    return {"text": svc._scrub(db, row.candidate_user_id, text)[:3000], "stub": stub}
 
 
 @router.get("/sessions/{session_id}/speech", summary="Голос интервьюера: текущий вопрос (аудио)",
@@ -296,24 +295,7 @@ def session_speech(session_id: uuid.UUID, user: User = Depends(candidate), db: S
     return Response(audio, media_type=mime, headers={"Cache-Control": "no-store"})
 
 
-@router.post("/sessions/{session_id}/avatar", summary="Токен сессии видео-аватара (Anam JS SDK, на 1 час)",
-             response_model=AvatarOut, responses={**AUTH, **OFF, 404: err("Сессия не найдена"),
-                                                  503: err("Аватар недоступен — голос или текст")})
-def session_avatar(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
-    from app.core.config import get_settings
-
-    row = svc.own_session(db, user, session_id)
-    svc.require_enabled()
-    if row.status not in ("created", "in_progress"):
-        raise api_error(409, "interview_closed", "Разговор не идёт")
-    tok = pt.get_port().avatar_token(max_seconds=row.minutes * 60 + 120) if get_settings().interview_avatar else None
-    if not tok or not tok.get("session_token"):
-        raise api_error(503, "avatar_unavailable", "Видео-аватар недоступен — продолжим голосом или текстом")
-    # SDK Anam — npm-зависимость фронтенда (ленивый чанк), внешний CDN не нужен
-    return {"session_token": tok["session_token"], "ice_servers": tok.get("ice_servers")}
-
-
-@router.post("/sessions/{session_id}/channel", summary="Сменить канал (отказ аватара → голос → текст)",
+@router.post("/sessions/{session_id}/channel", summary="Сменить канал (отказ голоса → текст)",
              response_model=SessionOut, responses={**AUTH, 404: err("Сессия не найдена")})
 def session_channel(session_id: uuid.UUID, body: BeginIn, user: User = Depends(candidate),
                     db: Session = Depends(get_db)) -> dict:
