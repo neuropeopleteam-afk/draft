@@ -81,7 +81,10 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up llm-local llm-local-logs down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
-.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest
+grade-sweep: ## Перебор параметров теста ради точности уровня (Парето, два мира σ 0,5 / 0,35) → data/grade_sweep.json, docs/validation/GRADE_ACCURACY.md (≈ 20 мин на 8 ядрах)
+	cd backend && python -m app.modules.validation.grade_sweep $(SWEEP_ARGS)
+
+.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest grade-sweep
 
 # подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
 GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)

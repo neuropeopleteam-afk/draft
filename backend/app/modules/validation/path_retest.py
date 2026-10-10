@@ -49,7 +49,7 @@ from assessment_bank.simulation import Person, TrueFamily, _timed, make_responde
 from app.modules.assessment.bank_engine import stack_excluded
 from app.modules.assessment.exposure import choose_subpool, exposure_table
 from app.modules.assessment.grade_hint import grade_by_years
-from app.modules.assessment.grades import cuts_tuple, decide_grade, point_grade
+from app.modules.assessment.grades import CONFIRM_LEVEL, cuts_tuple, decide_grade, p_at_least, point_grade
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.rules import accept_lower_allowed
 from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
@@ -145,7 +145,8 @@ def _block_gap(sess, res, direction: str) -> dict:
 
 
 def run_session(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, claimed: str, history: list[dict],
-                rng: np.random.Generator, det: CanaryDetector, responder=None) -> tuple[dict, object]:
+                rng: np.random.Generator, det: CanaryDetector, responder=None,
+                confirm_level: float = CONFIRM_LEVEL) -> tuple[dict, object]:
     d = cand.direction
     prev_sp = [h["subpool"] for h in history if h["subpool"] is not None]
     sp = choose_subpool(cfg.subpools, int(rng.integers(2 ** 31)), prev_sp)
@@ -168,7 +169,7 @@ def run_session(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, claim
         if ex and len(ex) < len(idx):
             theta, se = (float(v) for v in sess.rescore(ex))
             rescored = True
-    dec = decide_grade(theta, se, claimed)
+    dec = decide_grade(theta, se, claimed, confirm_level=confirm_level)
     fams = [a.family_id for a in res.administered if not a.canary]
     history.insert(0, {"subpool": sp, "families": fams})
     rec = {"claimed": claimed, "theta": round(theta, 4), "se": round(se, 4), "n_items": int(res.n_items),
@@ -179,22 +180,35 @@ def run_session(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, claim
 
 
 def run_path(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, history: list[dict], rng: np.random.Generator,
-             det: CanaryDetector) -> dict:
-    """Весь путь: тест на заявленный грейд → решение → принять доказанный уровень ниже или один тест ступенью ниже."""
+             det: CanaryDetector, confirm_level: float = CONFIRM_LEVEL, award_above: float | None = None,
+             decision: str = "claimed") -> dict:
+    """Весь путь: тест на заявленный грейд → решение → принять доказанный уровень ниже или один тест ступенью ниже.
+    confirm_level — порог уверенности подтверждения и «уровня ниже» (в продукте 0,8); award_above — абляция перебора
+    Я22: подтверждён и P(θ ≥ порога следующего грейда) ≥ award_above → следующий грейд в той же сессии (в продукте нет);
+    decision="point" — итог = грейд по лучшей оценке θ̂ одной сессии (точечный грейд: P ≥ 0,5 к ближайшему порогу),
+    без «уровня ниже» и второго теста."""
     g = cand.claimed
     tests = []
     final, status, intern_proved = "none", "none", False
     for step in range(2):
-        rec, dec = run_session(pool, cand, truth, cfg, counter, g, history, rng, det)
+        rec, dec = run_session(pool, cand, truth, cfg, counter, g, history, rng, det, confirm_level=confirm_level)
         tests.append(rec)
+        if decision == "point":
+            final = point_grade(rec["theta"])
+            status = "none" if final == "none" else "point"
+            break
         if dec.confirmed:
             final, status = g, "confirmed"
+            i = GRADE_ORDER.index(g)
+            if award_above is not None and i + 1 < len(GRADE_ORDER) and \
+                    p_at_least(rec["theta"], rec["se"], GRADE_ORDER[i + 1]) >= award_above:
+                final, status = GRADE_ORDER[i + 1], "confirmed_above"
             break
         if dec.provisional:
-            lower, _ = accept_lower_allowed(None, g, False, dec.probabilities, provisional=True)
+            lower, _ = accept_lower_allowed(None, g, False, dec.probabilities, provisional=True, level=confirm_level)
             final, status, intern_proved = "junior", "provisional", lower == "intern"
             break
-        lower, _ = accept_lower_allowed(None, g, False, dec.probabilities)
+        lower, _ = accept_lower_allowed(None, g, False, dec.probabilities, level=confirm_level)
         if lower:
             final, status = lower, "accepted_lower"
             break
