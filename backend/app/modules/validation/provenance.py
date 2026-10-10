@@ -157,7 +157,7 @@ def config_note(src: str) -> str | None:
     return (f"K откалиброваны {when} на банке {st.get('bank_families') or '—'} семейств (сейчас {m.get('n_families')}): "
             "у семейств, добавленных позже, K = 1 — частота их показа не ограничена. Числа страницы посчитаны с этими "
             "K — так движок работает сейчас; пересчёт K (make validate) меняет выбор заданий в продукте — решение "
-            "штаба, сравнение — в docs/validation/EXPOSURE_K_RECALC.md.")
+            "команды, сравнение — в docs/validation/EXPOSURE_K_RECALC.md.")
 
 
 def experts_stamp(ex: dict | None) -> dict:
