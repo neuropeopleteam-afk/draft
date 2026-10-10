@@ -52,6 +52,7 @@ STRONG = Path(os.environ.get("STRONG_DIR", "/tmp/strong"))
 WDIR = Path(os.environ.get("EVIDENCE_DIR", "/tmp/evidence"))
 OUT_OFFLINE = ROOT / "docs" / "llm" / "evidence_offline.json"
 OUT_BENCH = ROOT / "docs" / "llm" / "evidence_bench.json"
+V2_REPEAT = WDIR / "v2_rep_out.jsonl"  # повтор промпта v2 (флаг выкл) на тех же 50 — шум прогона
 SONNET = "anthropic/claude-sonnet-5.5"
 SONNET_FULL = RULLM / "openrouter_anthropic_claude_sonnet_5.5" / "g" / "v2_1_out.jsonl"
 SAMPLE_REQ = STRONG / "openrouter_anthropic_claude_sonnet_5.5" / "g" / "v2_1.jsonl"
@@ -185,6 +186,15 @@ def quality(scores: dict[str, dict], ref: dict[str, float], rows: dict[str, dict
         "order_strict": {"value": sum(order), "n": len(order)},
         "expert_honest": {"value": sum(1 for r in honest if scores[r].get("score") is None), "n": len(honest)},
     }
+
+
+def paired(a: dict[str, dict], b: dict[str, dict], ref: dict[str, float], rows: dict[str, dict]) -> dict:
+    """Разница MAE a − b на одних и тех же честных ответах (парный бутстрэп, ДИ 90 %)."""
+    ids = [r for r in a if r in b and r in ref and rows[r]["group"] in HONEST
+           and a[r].get("score") is not None and b[r].get("score") is not None]
+    d = [abs(a[r]["score"] - ref[r]) - abs(b[r]["score"] - ref[r]) for r in ids]
+    return {"d_mae": round(_mean(d), 3) if d else None, "ci90": _boot(_mean, d) if d else None, "n": len(d),
+            "answers_differ": sum(1 for r in ids if abs(a[r]["score"] - b[r]["score"]) > 1e-9)}
 
 
 def _ref(by_model: dict[str, dict[str, dict]], me: str, pool: tuple[str, ...] | None = None) -> dict[str, float]:
@@ -471,10 +481,16 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
                 changes["up_rejected"] += 1
         final[rid] = {"ok": True, "score": a["score"] if a["verdict"] in ("agree", "kept") else None,
                       "manipulation": a["verdict"] == "manipulation"}
-    for rid in sample:
-        o = _read(SONNET_FULL).get(rid) if not cost["v2"] else None
-        if o:
-            cost["v2"] += o.get("cost") or 0
+    full = _read(SONNET_FULL)
+    cost["v2"] = sum((full.get(rid) or {}).get("cost") or 0 for rid in sample)
+    rep = {}
+    if V2_REPEAT.exists():  # повтор v2 на тех же 50 — шум «прогон к прогону» без изменений в коде
+        got = _read(V2_REPEAT)
+        for rid in sample:
+            r = rows[rid]
+            p = parse(got.get(rid), items[r["item"]], _answer(r), "v2")
+            if p.get("ok"):
+                rep[rid] = {"ok": True, "score": p["score"], "manipulation": bool(p["manipulation"])}
     res = {
         "title": "Доказательная оценка: флаг GRADING_EVIDENCE выкл и вкл на одних и тех же 50 ответах",
         "date": time.strftime("%Y-%m-%d %H:%M"), "code_sha": _sha(),
@@ -483,6 +499,13 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
         "n": len(sample), "answered_v3": len(first_only),
         "off": quality(off, ref, rows), "on_first": quality(first_only, ref, rows), "on": quality(final, ref, rows),
         "off_three": quality(off, ref3, rows), "on_three": quality(final, ref3, rows),
+        "off_repeat": quality(rep, ref, rows) if rep else None,
+        "paired": {"on_minus_off": paired(final, off, ref, rows),
+                   "repeat_minus_off": paired(rep, off, ref, rows) if rep else None,
+                   "on_minus_repeat": paired(final, rep, ref, rows) if rep else None},
+        "changed_vs_off": sorted(([r, off[r]["score"], final[r]["score"]] for r in final
+                                  if r in off and final[r]["score"] is not None
+                                  and abs(final[r]["score"] - off[r]["score"]) > 1e-9), key=lambda x: x[0]),
         "skeptic_calls": len(skq), "skeptic_answered": sum(1 for r in skq if r in sko and not sko[r].get("error")),
         "verdicts": verdicts, "changes": changes, "evidence": ev_stats,
         "cost_usd": {k: round(v, 4) for k, v in cost.items()},
