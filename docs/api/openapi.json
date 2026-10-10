@@ -61863,7 +61863,7 @@
     },
     "/api/validation/report": {
       "get": {
-        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Ответ кэшируется на воркер на VALIDATION_REPORT_TTL_S секунд (живые счётчики — с этой задержкой).\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "report_api_validation_report_get",
         "responses": {
           "200": {
