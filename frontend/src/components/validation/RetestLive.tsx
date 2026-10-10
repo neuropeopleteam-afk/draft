@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { DIRECTIONS, dtt, num, pct, plural, useApi } from "../ui";
 import { Conditions } from "./StabilityBlocks";
+import { ScrollX } from "../A11y";
 
 /* /validation (И26): доля повторов заданий между попытками — живая по базе стенда и синтетика по протоколу продукта
    «после» (с 09.10: семейства всех прошлых попыток исключены, при исчерпании — LRU) и «до» на том же мире.
@@ -42,7 +43,7 @@ export default function RetestLive() {
         не остаётся, сначала берутся новые семейства другого субпула, затем — те, что кандидат видел давнее всего, и всегда
         с новым вариантом (другие числа и код). Кандидат видит то же сравнение на экране «Две попытки рядом».
       </p>
-      <div className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
+      <ScrollX label="Таблица повторов заданий между попытками" className="mt-3 overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
         <table className="w-full min-w-[40rem] text-left text-sm">
           <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
             <tr>{["Пары попыток", "Пар", "Повторилось семейств", "До 09.10", "Пар хотя бы с одним повтором", "Макс. в одной попытке"].map((h) =>
@@ -73,7 +74,7 @@ export default function RetestLive() {
             })}
           </tbody>
         </table>
-      </div>
+      </ScrollX>
       {dirs.length > 0 && (
         <p className="mt-3 text-sm leading-relaxed text-brand-ink/75">
           Третья против первой по направлениям (число — оцениваемых семейств направления вместе с общим блоком в банке):{" "}
