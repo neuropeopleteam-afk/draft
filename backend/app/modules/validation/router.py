@@ -161,6 +161,7 @@ def run_attack(attack_id: str, data: AttackIn | None = None, user: User = Depend
     hit(_per_user, str(user.id), "attack_rate", "Слишком часто: не больше 12 атак в минуту")
     hit(_global, "all", "attack_rate_global", "Красную кнопку сейчас нажимают слишком часто")
     if attack_id == "leak_bank":
+        release(db)  # симуляция утечки — без БД (кэш на процесс), секунды CPU: соединение в пул
         try:
             return attacks.run(db, attack_id, None, {"leak_share": data.leak_share, "direction": data.direction})
         except attacks.AttackBusy:

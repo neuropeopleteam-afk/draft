@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.db import get_db
+from app.core.db import get_db, release
 from app.core.deps import require_role
 from app.core.enums import NeedStatus, UserRole
 from app.core.errors import api_error, err
@@ -284,6 +284,7 @@ def _need_out(db: Session, n: EmployerNeed) -> dict:
              responses=AUTH)
 def parse(data: ParseIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     if data.mode == "full":
+        release(db)  # синхронный разбор с моделью — секунды без БД: соединение в пул
         return parse_need(data.text, data.direction, data.grade, full=True)
     return fast_parse.start(db, data.text, data.direction, data.grade, user.id)
 
@@ -341,6 +342,8 @@ def need_from_file(file: UploadFile = File(...), user: User = Depends(employer))
 @router.post("/needs", status_code=201, summary="Создать потребность и первую версию подборки", responses=AUTH)
 def create_need(data: NeedIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
+    if not data.requirements:
+        release(db)  # разбор текста (возможно, с моделью) — без БД: соединение в пул
     req = _req_dict(data.requirements, data.text) if data.requirements else parse_need(data.text)
     n = EmployerNeed(company_id=c.id, created_by=user.id, title=(data.title or _need_title(req))[:200],
                      raw_text=data.text, requirements=req, direction_id=req.get("direction"),
