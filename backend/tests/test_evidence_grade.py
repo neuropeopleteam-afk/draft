@@ -115,8 +115,14 @@ def test_y5_negation_probes_flag_off_v2():
     assert G.quote_supported("сначала не удалять, потом удалить", "Сначала не удалять, а потом удалить.")
     p = G.parse_reply({"criteria": {"x": {"score": 1, "quote": "данные не следует удалять"}}}, Y5_RUBRIC, Y5_ANSWER)
     assert p["ok"] and p["score"] == 0.0 and p["unsupported"] == ["x"]
-    p = G.parse_reply({"criteria": {"x": 1}}, Y5_RUBRIC, Y5_ANSWER)  # число без цитаты — не полный балл
-    assert p["ok"] and p["score"] == 0.5 and p["no_quotes"] and "no_quotes" in G.doubts(p, Y5_ANSWER, 5)
+    # число без цитаты при выключенном флаге — прежнее правило: балл не снижается, но это причина сомнения (вторая
+    # оценка); «без подтверждённой цитаты — не полный балл» — под GRADING_EVIDENCE (решение штаба 10.10, до замера)
+    p = G.parse_reply({"criteria": {"x": 1}}, Y5_RUBRIC, Y5_ANSWER)
+    assert p["ok"] and p["score"] == 1.0 and p["no_quotes"] and "no_quotes" in G.doubts(p, Y5_ANSWER, 5)
+    a = "Нет: в READ COMMITTED каждый SELECT видит данные. Не следует удалять данные."
+    assert G.quote_supported("в READ COMMITTED каждый SELECT видит данные", a)  # «Нет:» — ответ, не отрицание
+    assert G.quote_supported("не следует удалять данные", a)
+    assert G.quote_supported("следует удалять данные", a) is False
 
 
 def test_y5_negation_probes_flag_on_v3():
@@ -127,6 +133,11 @@ def test_y5_negation_probes_flag_on_v3():
                                                                              "why": "negation"}
     assert EV.verify_quote("следует удалять", "Не следует хранить. Следует удалять сразу.")["ok"]  # есть без «не»
     assert EV.verify_quote("удалять следует данные", Y5_ANSWER)["why"] == "not_found"  # порядок слов
+    a = "Нет: в READ COMMITTED каждый SELECT видит данные. Варианты: SELECT ... FROM events WHERE id = $1 FOR UPDATE."
+    assert EV.verify_quote("в READ COMMITTED каждый SELECT видит данные", a)["ok"]  # «Нет:» — ответ на вопрос
+    assert EV.verify_quote("SELECT … FROM events WHERE id = $1 FOR UPDATE", a)["how"] == "tokens"  # «…» из кода
+    code = "При открытии файла — флаг O_NOFOLLOW (в Python open(..., opener=…) или os.open)."
+    assert EV.verify_quote("флаг O_NOFOLLOW (в Python open(..., opener=…) или os.open)", code)["ok"]
     assert EV.verify_quote("не следует удалять", "мне следует удалять данные")["why"] == "not_found"
     assert EV.verify_quote("исправление здесь … блокировка строки",
                            "Исправление здесь — не блокировка строки, а очередь.")["why"] == "negation"

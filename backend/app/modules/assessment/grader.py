@@ -351,8 +351,8 @@ def parse_reply(data, rubric: dict, answer: str, *, version: str = PROMPT_VERSIO
     """Ответ модели → {ok, error, score, criteria, quotes, level, comment, manipulation, unsupported[], no_quotes}.
 
     v2: оценка критерия выше 0 без цитаты, найденной в ответе, обнуляется (unsupported); цитата с другим отрицанием,
-    чем в ответе, не найдена. Если модель вообще не вернула цитат (старый формат «id: число») — каждый пункт выше 0
-    опускается на шаг (1 → 0,5, 0,5 → 0; без доказательства полного балла нет) и это причина сомнения (no_quotes).
+    чем в ответе, не найдена. Если модель вообще не вернула цитат (старый формат «id: число») — оценки не обнуляются,
+    но это причина сомнения (no_quotes); правило «без подтверждённой цитаты — на шаг ниже» — в v3 (флаг).
     v3 (Я13, GRADING_EVIDENCE): цитаты сверяет evidence.verify_criteria — строго, без перефраза; пункт без
     подтверждённой цитаты опускается на шаг (unsupported), сверка по пунктам — в evidence."""
     out = {"ok": False, "error": None, "score": None, "criteria": {}, "quotes": {}, "level": None, "comment": None,
@@ -388,15 +388,7 @@ def parse_reply(data, rubric: dict, answer: str, *, version: str = PROMPT_VERSIO
             "criteria", "capped", "dropped_total", "quotes_total")}}
     elif version != "v1":
         if not any_quote and any(v > 0 for v in scores.values()):
-            # старый формат «id: число» без цитат — полный балл без доказательства не ставится (находка Я5, 10.10):
-            # пункт опускается на шаг, как в evidence.verify_criteria, и это причина сомнения (вторая оценка)
-            from app.modules.assessment.evidence import step_down
-
-            out["no_quotes"] = True
-            for cid, v in scores.items():
-                if v > 0:
-                    scores[cid] = step_down(v)
-                    out["unsupported"].append(cid)
+            out["no_quotes"] = True  # шаг вниз без доказательства — только под флагом GRADING_EVIDENCE (v3)
         else:
             for cid, v in scores.items():
                 if v > 0 and not quote_supported(quotes[cid], answer):
