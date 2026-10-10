@@ -277,6 +277,7 @@ def test_relay_route(monkeypatch):
     assert r.url == "https://relay.example:18743/v1/listen?model=nova-3"
     assert r.headers["X-Relay-Host"] == "api.deepgram.com" and r.headers["X-Relay-Token"] == "rt" and r.headers["Authorization"] == "Token k"
     monkeypatch.delenv("INTERVIEW_RELAY_URL")
+    monkeypatch.delenv("INTERVIEW_RELAY_TOKEN")
     monkeypatch.setattr(relay, "get_settings", lambda: type("S", (), {"llm_relay_url": "https://relay.example:18743/api/v1", "llm_relay_token": "lt",
                                                                     "llm_relay_ca_file": None, "llm_relay_ca_pem_b64": None})())
     e.reset_interview_settings()
