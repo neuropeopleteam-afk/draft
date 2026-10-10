@@ -13,10 +13,9 @@ export interface Meta {
   };
   operator: Record<string, string>;
   proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
-  // Я15: устная защита ответа (INTERVIEW_ENABLED, по умолчанию выключена; stub — движок-заглушка); Я9 — шаг «по желанию» в «12 минутах»
-  interview?: { enabled: boolean; stub?: boolean; defense_minutes?: number };
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
+  interview?: { enabled: boolean; stub: boolean; defense_minutes: number }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.)
 }
 
 const Ctx = createContext<Meta | null>(null);

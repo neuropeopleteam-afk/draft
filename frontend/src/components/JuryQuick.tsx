@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_INTERVIEW_LIVE, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
+import { isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
   type QuickPersona, type QuickStep } from "../lib/jury";
 import { useMeta } from "../lib/meta";
 
@@ -33,7 +33,8 @@ export function useQuickStep(steps: QuickStep[], mode: GuideMode, pathname: stri
     const m = NEED_RE.exec(pathname);
     if (m) quick.setNeed(m[1]);
     const who = personaOf(email);
-    const fits = (i: number) => steps[i].match.test(pathname) && (!steps[i].persona || i === ANSWER || steps[i].persona === who);
+    const fits = (i: number) => (steps[i].match.test(pathname) && (!steps[i].persona || i === ANSWER || steps[i].persona === who))
+      || !!steps[i].alt?.test(pathname);
     const cur = Math.min(quick.step(), steps.length - 1);
     if (fits(cur)) { setQ(cur); return; }
     const all = steps.map((_, i) => i).filter(fits);
@@ -80,8 +81,8 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const ans = answerer(info);
   const persona = q === ANSWER ? ans.persona : s.persona;
   const needLogin = !!persona && personaOf(me?.email) !== persona;
-  // шаг «по желанию»: свой и на экране живого запуска (там вы — кандидат), чтобы «Дальше» оставалась на виду
-  const here = (s.match.test(loc.pathname) && !needLogin) || (!!s.optional && loc.pathname.startsWith(QUICK_INTERVIEW_LIVE));
+  // шаг «по желанию»: и у работодателя (alt — карточка Марии), чтобы «Дальше» оставалась на виду
+  const here = (s.match.test(loc.pathname) && !needLogin) || !!s.alt?.test(loc.pathname);
   const t0 = quick.t0() ?? now;
   // шаг «по желанию» добавляет к ориентиру свои минуты — тем, кто его прошёл, таймер не «краснеет» за него
   const optBefore = steps.slice(0, q + 1).reduce((a, x) => a + (x.optional ? x.min : 0), 0);
@@ -90,6 +91,13 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const opt = steps[q + 1]?.optional ? q + 1 : -1;
   const nextI = opt >= 0 ? q + 2 : q + 1;
 
+  /** Шаг «по желанию» глазами работодателя своей копии: карточка Марии (демо-персона «candidate», ref — /api/jury/quick). */
+  async function employerView() {
+    const r = jury ? await quickInfo(quick.need()).catch(() => null) : null;
+    const m = r?.personas.find((x) => x.persona === "candidate");
+    const n = quick.need();
+    await open(m ? `/employer/candidates/${m.ref}${n ? `?need=${n}` : ""}` : "/employer/search", "employer");
+  }
   async function go(i: number) {
     setQ(i); setMsg(null);
     let p = steps[i].persona;
@@ -97,12 +105,6 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
       const r = jury ? await quickInfo(quick.need()).catch(() => null) : null;
       if (r) setInfo(r.personas);
       p = answerer(r?.personas ?? info).persona;
-    }
-    if (steps[i].optional) {  // готовый пример — карточка Марии (демо-персона «candidate») у работодателя своей копии
-      const r = jury ? await quickInfo(quick.need()).catch(() => null) : null;
-      const m = r?.personas.find((x) => x.persona === "candidate");
-      const n = quick.need();
-      if (m) return open(`/employer/candidates/${m.ref}${n ? `?need=${n}` : ""}`, p);
     }
     await open(pathOf(steps, i), p);
   }
@@ -166,8 +168,8 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
       {s.optional && (
         <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-white/80" data-testid="quick-live">
           <button type="button" className="font-semibold text-brand-blush underline underline-offset-2 hover:text-white" disabled={busy}
-            onClick={() => open(QUICK_INTERVIEW_LIVE, "candidate_new")}>Пройти самому</button>
-          <span>кандидатом «Пройдите тест сами»; для копий жюри — с ограничением числа запусков{ivStub ? ". Сейчас движок — заглушка: вопросы и итог тестовые, так и подписано" : ""}</span>
+            onClick={employerView}>Как видит работодатель</button>
+          <span>карточка Марии Королёвой: значок и подробности (пример, модельный кандидат){ivStub ? "; сейчас движок — заглушка, так и подписано" : ""}</span>
         </p>
       )}
       {q === LAST && (
