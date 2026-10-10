@@ -84,6 +84,9 @@ def schema_kind(schema: dict | None) -> str:
         return "typed"
     if schema.get("type") == "array":
         return {"typed": "typed", "generic": "generic"}.get(schema_kind(schema.get("items")), "generic")
+    extra = schema.get("additionalProperties")
+    if isinstance(extra, dict) and schema.get("type") == "object":  # словарь «ключ → модель»
+        return schema_kind(extra)
     for key in ("anyOf", "oneOf", "allOf"):
         if key in schema:
             kinds = {schema_kind(x) for x in schema[key] if x.get("type") != "null"}
