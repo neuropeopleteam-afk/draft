@@ -43,7 +43,7 @@ export function ReasonLevel({ r }: { r: { level?: string | null; status?: string
 /** Ф6 (Н3): рядом с баллом — покрытие обязательного тестом; подсказка — что балл значит и какие условия жёсткие. */
 export const SCORE_HINT = "Соответствие из 100 — взвешенная доля требований потребности, подтверждённых тестом (T1); обязательные весят больше желательных, ФСП и зонды добавляют немного. Заявленное кандидатом (T0) в балл не входит. Обязательные навыки — мягкое условие: без подтверждения кандидат не исключается, но помечен и идёт ниже. Формат и город — жёсткое условие: не прошедшие скрыты (можно показать всех).";
 
-function ScoreBox({ score, must }: { score: number; must?: any }) {
+export function ScoreBox({ score, must }: { score: number; must?: any }) {
   const req = must?.required_total ?? 0, miss = must?.missing_total ?? 0;
   return (
     <div className="text-right" title={SCORE_HINT}>
@@ -78,9 +78,10 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
   );
 }
 
-export function CandidateCard({ c, score, reasons, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false }: {
+export function CandidateCard({ c, score, reasons, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false, bare = false }: {
   c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; core?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9); core — ядро роли (Я1)
   collapsible?: boolean; expanded?: boolean;  // Ф6 (Н9): короткая карточка с раскрытием по клику
+  bare?: boolean;  // Я10: только доказательства — без рамки и шапки (раскрытие компактной карточки подборки)
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
@@ -122,9 +123,10 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
       </article>
     );
   }
+  const Box = bare ? "div" : "article";  // Я10: вложенная в компактную карточку — div, шапка уже есть в ней
   return (
-    <article className="card" data-testid="candidate-card">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Box className={bare ? "" : "card"} data-testid={bare ? "candidate-evidence" : "candidate-card"}>
+      {!bare && <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -145,7 +147,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
           </p>
         </div>
         {score != null && <ScoreBox score={score} must={must} />}
-      </div>
+      </div>}
       {mutual}
 
       {c.specializations?.length > 1 && <div className="mt-4"><Specializations items={c.specializations} /></div>}
@@ -216,7 +218,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
         {actions}
       </div>
       {toggle && <div className="mt-3 border-t border-brand-night/5 pt-2">{toggle}</div>}
-    </article>
+    </Box>
   );
 }
 
