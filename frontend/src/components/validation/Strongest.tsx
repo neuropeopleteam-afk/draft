@@ -194,8 +194,14 @@ export default function Strongest() {
       </p>
       {ORDER.filter((f) => d.functions[f]).map((f) => <Func key={f} d={d} f={f} />)}
       {d.full_run && Object.keys(d.full_run).length > 1 && <Full d={d} />}
+      {!!d.judges_agreement?.length && (
+        <p className="mt-3 text-sm text-brand-ink/75" data-testid="strongest-agreement">
+          Согласие эталона оценщика между собой (честные ответы):{" "}
+          {d.judges_agreement.map((a) => `${label(d, a.a)} — ${label(d, a.b)}: MAE ${num(v(a.mae), 3)}, κw ${num(v(a.kappa_w), 2)} (n = ${a.n})`).join("; ")}.
+        </p>
+      )}
       {d.pending && <p className="mt-2 text-sm text-brand-ink/75" data-testid="strongest-pending">Ещё не готово: {d.pending}</p>}
-      <p className="mt-1 text-xs text-brand-ink/65">{d.conditions[0]} Подробно и как воспроизвести — docs/LLM.md, раздел 12.</p>
+      <p className="mt-1 text-xs text-brand-ink/65">{d.conditions.slice(0, 2).join(" ")} Подробно и как воспроизвести — docs/LLM.md, раздел 12.</p>
     </div>
   );
 }
