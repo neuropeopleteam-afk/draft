@@ -109,18 +109,36 @@ test("1440: проверка за 12 минут — от своей потреб
     const hint = g.getByTestId("quick-invite-hint");
     await expect(hint).toBeVisible({ timeout: 30_000 });
     const ref = /кандидата (C-[A-Z0-9]+)/.exec((await hint.textContent()) ?? "")?.[1];
-    const card = ref ? page.locator("article").filter({ has: page.getByText(`Кандидат ${ref}`, { exact: true }) })
-      : page.locator("article").filter({ has: page.getByRole("button", { name: "Пригласить", exact: true }) }).first();
-    await card.getByRole("button", { name: "Пригласить", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: /^Приглашение кандидату C-/ });  // Ф6 (Н9): окно из подборки
-    await expect(dialog).toBeVisible();
-    await dialog.locator("#it").fill(POSITION);
-    await dialog.locator("#idesc").fill("Команда платежей: FastAPI, PostgreSQL, Docker. Удалённо. Проверка e2e Я9.");
-    await dialog.locator("#ic").fill("hr@jury.example.com");
-    await dialog.locator("#sf").fill("200000");
-    await dialog.locator("#st").fill("260000");
-    await dialog.getByRole("button", { name: "Отправить приглашение" }).click();
-    await expect(dialog).toBeHidden({ timeout: 30_000 });
+    // демо-кандидат своей копии — по подсказке; нет такого (в той же песочнице его уже пригласил 02, период тишины) —
+    // первый из подборки, кому приглашение уходит (у кого период тишины — ошибка в окне, берём следующего)
+    const cards = ref ? page.locator("article").filter({ has: page.getByText(`Кандидат ${ref}`, { exact: true }) })
+      : page.locator("article").filter({ has: page.getByRole("button", { name: "Пригласить", exact: true }) });
+    let sent = false;
+    for (let i = 0; i < (ref ? 1 : 5) && !sent; i++) {
+      await cards.nth(i).getByRole("button", { name: "Пригласить", exact: true }).click();
+      const dialog = page.getByRole("dialog", { name: /^Приглашение кандидату C-/ });  // Ф6 (Н9): окно из подборки
+      await expect(dialog).toBeVisible();
+      await dialog.locator("#it").fill(POSITION);
+      await dialog.locator("#idesc").fill("Команда платежей: FastAPI, PostgreSQL, Docker. Удалённо. Проверка e2e Я9.");
+      await dialog.locator("#ic").fill("hr@jury.example.com");
+      await dialog.locator("#sf").fill("200000");
+      await dialog.locator("#st").fill("260000");
+      const send = dialog.getByRole("button", { name: "Отправить приглашение" });
+      // кнопка активна, когда карточка кандидата загружена; не активна совсем (ограничения оффера) — следующий
+      const ready = await expect(send).toBeEnabled({ timeout: 15_000 }).then(() => true, (e) => { if (ref) throw e; return false; });
+      if (!ready) { await dialog.getByRole("button", { name: "Закрыть" }).first().click(); await expect(dialog).toBeHidden(); continue; }
+      await send.click();
+      const err = dialog.getByRole("alert");
+      await expect.poll(async () => (await dialog.isHidden()) ? "sent" : (await err.count()) ? "error" : "wait",
+        { timeout: 30_000, message: "приглашение ушло или показана причина" }).not.toBe("wait");
+      sent = await dialog.isHidden();
+      if (!sent) {
+        expect(ref, `приглашение своему демо-кандидату ${ref} не ушло: ${await err.first().textContent()}`).toBeUndefined();
+        await dialog.getByRole("button", { name: "Закрыть" }).first().click();
+        await expect(dialog).toBeHidden();
+      }
+    }
+    expect(sent, "приглашение с вилкой отправлено").toBe(true);
     own = !!ref;
   });
 
