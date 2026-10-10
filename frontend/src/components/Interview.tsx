@@ -2,15 +2,16 @@
 // (по умолчанию выключен: компоненты ничего не рисуют). Честно: грейд не меняется, оценивает модель, решение — за людьми.
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ApiError, api, apiUrl, tokenStore } from "../lib/api";
+import { api, apiUrl, tokenStore } from "../lib/api";
 import { useMeta } from "../lib/meta";
 import { PageTitle } from "./CabinetLayout";
 import { Alert, Loading, dt, errText, useApi } from "./ui";
+import { VoiceRecordButton, VoiceWave, postAudio, useSpeechPlayer, type WaveState } from "./voice";
 
 type Verdict = "confirmed" | "discrepancies" | "insufficient" | "strong" | "medium" | "weak" | null;
 interface Quote { text: string }
 interface Question { n?: number; question: string; task_title?: string | null; skill?: string | null; level: string; level_title: string; quotes: Quote[]; reasoning?: string | null; lowered?: boolean }
-interface Conversation { n?: number; question?: string | null; asked: number; max_questions: number; deadline?: string | null; channels: { avatar: boolean; voice: boolean; text: boolean }; engine: "engine" | "stub"; hint?: string | null }
+interface Conversation { n?: number; question?: string | null; asked: number; max_questions: number; deadline?: string | null; channels: { voice: boolean; stt: boolean; text: boolean }; engine: "engine" | "stub"; hint?: string | null }
 export interface IvSession {
   id: string; mode: "defense" | "interview"; status: string; status_title: string; verdict: Verdict; verdict_title?: string | null;
   score?: number | null; summary?: string | null; questions: Question[]; flags: string[]; duration_s?: number | null; minutes: number;
@@ -285,10 +286,16 @@ export function AiInterviewCandidate({ inv }: { inv: { id: string; status: strin
 
 // ------------------------------------------------------------------ экран разговора
 
-type Ch = "avatar" | "voice" | "text";
+type Ch = "voice" | "text";
 const authHeaders = (): Record<string, string> => { const t = tokenStore.get(); return t ? { Authorization: `Bearer ${t}` } : {}; };
+const READ_MS = (q: string) => Math.max(1200, Math.min(4000, q.length * 35));
 
-/** /candidate/interview/:id — разговор: видео-аватар (Anam JS SDK) → голос → текст; ответ — «нажми и говори» или текстом. */
+/**
+ * /candidate/interview/:id — разговор голосом или в чате. Визуал собеседника — собственная анимация (VoiceWave: круг и
+ * волна голоса, состояния «говорю / слушаю / думаю»), без видео и изображений людей (регламент п. 5.11). Голос
+ * ведущего — /speech (mp3), ответ — «нажми и говори» (запись → распознанный текст в поле, человек проверяет) или текстом.
+ * Отказ голоса → текст; отказ микрофона/распознавания → текст.
+ */
 export function InterviewRoom() {
   const { id } = useParams();
   const [s, setS] = useState<IvSession | null>(null);
@@ -297,15 +304,16 @@ export function InterviewRoom() {
   const [ch, setCh] = useState<Ch>("text");
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
-  const [rec, setRec] = useState(false);
+  const [reading, setReading] = useState(false);
+  const [rec, setRec] = useState<"idle" | "recording" | "processing">("idle");
   const [left, setLeft] = useState<number | null>(null);
-  const anam = useRef<any>(null);
-  const media = useRef<MediaRecorder | null>(null);
-  const chunks = useRef<Blob[]>([]);
-  const audio = useRef<HTMLAudioElement | null>(null);
+  const mic = useRef<() => number>(() => 0);
+  const lastAudio = useRef<Blob | null>(null);
   const spoken = useRef<string>("");
+  const readTimer = useRef<number | null>(null);
+  const player = useSpeechPlayer();
   const load = async () => { try { setS(await api<IvSession>(`/interview/sessions/${id}`)); } catch (e) { setErr(errText(e)); } };
-  useEffect(() => { void load(); return () => { try { anam.current?.stopStreaming?.(); } catch { /* закрываем молча */ } }; }, [id]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void load(); return () => { player.stop(); if (readTimer.current) clearTimeout(readTimer.current); }; }, [id]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {  // оценка в фоне — опрос раз в 3 с
     if (s?.status !== "evaluating") return;
     const t = setInterval(() => { void load(); }, 3000);
@@ -321,104 +329,94 @@ export function InterviewRoom() {
   }, [s?.conversation?.deadline]);
   const q = s?.conversation?.question ?? null;
   useEffect(() => { if (q && s?.status === "in_progress" && spoken.current !== q) { spoken.current = q; void say(q); } }, [q, s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (s && s.status !== "in_progress") player.stop(); }, [s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fallback(next: Ch, why: string) {
     setNote(why); setCh(next);
     try { setS(await api<IvSession>(`/interview/sessions/${id}/channel`, { body: { channel: next } })); } catch { /* канал — только журнал */ }
   }
-  async function say(question: string) {
-    if (ch === "avatar" && anam.current) {
-      try { await anam.current.talk(question); return; } catch { await fallback("voice", "Видео-аватар отключился — продолжаем голосом."); }
-    }
-    if (ch === "avatar" || ch === "voice") {
-      try {
-        const r = await fetch(apiUrl(`/interview/sessions/${id}/speech`), { headers: authHeaders() });
-        if (!r.ok) throw new Error(String(r.status));
-        const url = URL.createObjectURL(await r.blob());
-        if (audio.current) { audio.current.src = url; await audio.current.play(); }
-      } catch { await fallback("text", "Голос недоступен — вопросы показаны текстом, отвечать можно текстом."); }
-    }
+  function readAloud(question: string) {  // канал «текст»: волна «говорит», пока человек читает вопрос
+    if (readTimer.current) clearTimeout(readTimer.current);
+    setReading(true);
+    readTimer.current = window.setTimeout(() => setReading(false), READ_MS(question));
   }
-  async function startAvatar(): Promise<boolean> {
-    try {
-      const tok = await api<{ session_token: string; ice_servers?: unknown[] | null }>(`/interview/sessions/${id}/avatar`, { method: "POST" });
-      const sdk: any = await import("@anam-ai/js-sdk");  // ленивый чанк Vite: грузится только при видео-аватаре
-      const client = sdk.createClient(tok.session_token, { disableInputAudio: true, ...(tok.ice_servers ? { iceServers: tok.ice_servers } : {}) });
-      await client.streamToVideoElement("iv-avatar-video");
-      anam.current = client;
-      return true;
-    } catch { anam.current = null; return false; }
+  async function say(question: string, again = false) {
+    if (ch === "voice") {
+      try {
+        let blob = again ? lastAudio.current : null;
+        if (!blob) {
+          const r = await fetch(apiUrl(`/interview/sessions/${id}/speech`), { headers: authHeaders() });
+          if (!r.ok) throw new Error(String(r.status));
+          blob = await r.blob();
+          lastAudio.current = blob;
+        }
+        await player.play(blob);
+        return;
+      } catch { await fallback("text", "Голос недоступен — вопросы показаны текстом, отвечать можно голосом или текстом."); }
+    }
+    readAloud(question);
   }
   async function begin(want: Ch) {
-    setBusy(true); setErr(null); setNote(null);
-    let use: Ch = want;
-    if (use === "avatar" && !(await startAvatar())) { use = s?.conversation?.channels.voice ? "voice" : "text"; setNote("Видео-аватар не подключился — продолжаем " + (use === "voice" ? "голосом." : "текстом.")); }
-    setCh(use);
-    try { setS(await api<IvSession>(`/interview/sessions/${id}/begin`, { body: { channel: use } })); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+    if (want === "voice") player.unlock();  // Web Audio — из нажатия (правило автозапуска)
+    setBusy(true); setErr(null); setNote(null); setCh(want);
+    try { setS(await api<IvSession>(`/interview/sessions/${id}/begin`, { body: { channel: want } })); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   async function send() {
     if (!text.trim()) return;
-    setBusy(true); setErr(null);
+    player.stop(); lastAudio.current = null;
+    setBusy(true); setErr(null); setNote(null);
     try { setS(await api<IvSession>(`/interview/sessions/${id}/answer`, { body: { text, channel: ch } })); setText(""); }
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   async function finish() {
+    player.stop();
     setBusy(true); setErr(null);
     try { setS(await api<IvSession>(`/interview/sessions/${id}/finish`, { method: "POST" })); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
-  }
-  async function toggleRec() {
-    if (rec) { media.current?.stop(); setRec(false); return; }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
-      chunks.current = [];
-      mr.ondataavailable = (e) => { if (e.data.size) chunks.current.push(e.data); };
-      mr.onstop = async () => {
-        stream.getTracks().forEach((t) => t.stop());
-        const blob = new Blob(chunks.current, { type: mr.mimeType || "audio/webm" });
-        setBusy(true);
-        try {
-          const r = await fetch(apiUrl(`/interview/sessions/${id}/transcribe`), { method: "POST", headers: { ...authHeaders(), "Content-Type": blob.type }, body: blob });
-          const b = await r.json().catch(() => null);
-          if (!r.ok) throw new ApiError(r.status, b?.detail?.code ?? "error", b?.detail?.message ?? "Распознавание недоступно — ответьте текстом");
-          setText((x) => (x ? `${x} ` : "") + (b?.text ?? ""));
-          setNote("Проверьте распознанный текст и отправьте ответ.");
-        } catch (e) { setNote(errText(e)); } finally { setBusy(false); }
-      };
-      media.current = mr; mr.start(); setRec(true);
-    } catch { setNote("Микрофон недоступен — ответьте текстом."); }
   }
 
   if (!s) return err ? <Alert>{err}</Alert> : <Loading />;
   const c = s.conversation;
   const title = s.mode === "defense" ? "Устная защита ответов" : "ИИ-интервью";
-  const voiceOk = !!c?.channels.voice && typeof MediaRecorder !== "undefined";
+  const live = s.status === "in_progress";
+  const wave: WaveState = s.status === "evaluating" || busy || rec === "processing" ? "thinking"
+    : !live ? "idle" : rec === "recording" ? "listening" : player.playing || reading ? "speaking" : "listening";
+  const level = () => (rec === "recording" ? mic.current() : player.level());
+  const caption = `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"}, без видео`;
   return (
     <div className="max-w-2xl space-y-4">
       <PageTitle title={title} subtitle={`${s.status_title}. ${MODEL_NOTE}`} />
-      {s.stub && <Alert kind="info">Заглушка: разговор по шаблону, без модели, голоса и аватара; оценка — правилом, итог помечен «заглушка».</Alert>}
-      <video id="iv-avatar-video" className={ch === "avatar" && s.status === "in_progress" ? "aspect-video w-full rounded-2xl bg-brand-night" : "hidden"} autoPlay playsInline aria-label="Видео интервьюера" />
-      <audio ref={audio} className="hidden" />
+      {s.stub && <Alert kind="info">Заглушка: разговор по шаблону, без модели и голоса; оценка — правилом, итог помечен «заглушка».</Alert>}
+      <audio ref={player.audioRef} className="hidden" />
+      {(s.status === "created" || live || s.status === "evaluating") && (
+        <div className="card flex justify-center !py-3" data-testid="iv-visual">
+          <VoiceWave state={wave} level={level} name="Интервьюер" caption={caption} size={120} />
+        </div>
+      )}
       {note && <p className="text-sm text-brand-ink/75" role="status">{note}</p>}
       {s.status === "created" && c && (
         <section className="card space-y-3" aria-label="Начало разговора">
-          <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте. Можно отвечать голосом («нажми и говори») или текстом; закончить — в любой момент.</p>
+          <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте.{c.channels.stt ? " Отвечать можно голосом («нажми и говори», текст можно поправить перед отправкой) или текстом" : " Отвечать — текстом"}; закончить — в любой момент.</p>
           <div className="flex flex-wrap gap-2">
-            {c.channels.avatar && <button className="btn-primary" disabled={busy} onClick={() => begin("avatar")}>Начать с видео-интервьюером</button>}
-            {c.channels.voice && <button className={c.channels.avatar ? "btn-ghost" : "btn-primary"} disabled={busy} onClick={() => begin("voice")}>Начать голосом</button>}
-            <button className={c.channels.avatar || c.channels.voice ? "btn-ghost" : "btn-primary"} disabled={busy} onClick={() => begin("text")} data-testid="iv-begin-text">Начать в чате</button>
+            {c.channels.voice && <button className="btn-primary" disabled={busy} onClick={() => begin("voice")} data-testid="iv-begin-voice">Начать голосом</button>}
+            <button className={c.channels.voice ? "btn-ghost" : "btn-primary"} disabled={busy} onClick={() => begin("text")} data-testid="iv-begin-text">Начать в чате</button>
           </div>
         </section>
       )}
-      {s.status === "in_progress" && c && (
+      {live && c && (
         <section className="card space-y-3" aria-label="Разговор">
           <p className="text-xs text-brand-ink/65">Вопрос {Math.min(c.n ?? c.asked, c.max_questions)} из {c.max_questions}{left != null ? ` · осталось ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : ""}</p>
           <p className="font-semibold text-brand-night" aria-live="polite" data-testid="iv-question">{c.question}</p>
           <label className="block" htmlFor="iv-answer"><span className="sr-only">Ваш ответ</span>
             <textarea id="iv-answer" className="input min-h-[8rem] w-full" value={text} onChange={(e) => setText(e.target.value)} placeholder="Ваш ответ своими словами" maxLength={3000} /></label>
           <div className="flex flex-wrap gap-2">
-            <button className="btn-primary" disabled={busy || !text.trim()} onClick={send} data-testid="iv-send">{busy ? "Отправляем…" : "Отправить ответ"}</button>
-            {voiceOk && <button className="btn-ghost" disabled={busy && !rec} onClick={toggleRec} aria-pressed={rec}>{rec ? "Остановить запись" : "Нажми и говори"}</button>}
+            <button className="btn-primary" disabled={busy || rec !== "idle" || !text.trim()} onClick={send} data-testid="iv-send">{busy ? "Отправляем…" : "Отправить ответ"}</button>
+            {c.channels.stt && (
+              <VoiceRecordButton testId="iv-record" disabled={busy && rec === "idle"} maxSeconds={90}
+                transcribe={(b) => postAudio(`/interview/sessions/${id}/transcribe`, b)}
+                onLevel={(f) => { mic.current = f; player.stop(); }} onState={setRec} onNote={setNote}
+                onText={(t, info) => { setText((x) => (x ? `${x} ` : "") + t); setNote(info.stub ? "Распознавание — заглушка: подставлен текст для проверки. Поправьте и отправьте." : "Проверьте распознанный текст и отправьте ответ."); }} />
+            )}
+            {ch === "voice" && <button className="btn-ghost" disabled={busy || player.playing} onClick={() => q && void say(q, true)} data-testid="iv-repeat">Повторить вопрос</button>}
             {c.engine === "stub" && c.hint && <button className="btn-ghost" onClick={() => setText(c.hint ?? "")} data-testid="iv-hint">Подставить начало письменного ответа (заглушка)</button>}
             <button className="btn-ghost" disabled={busy} onClick={finish}>Закончить</button>
           </div>

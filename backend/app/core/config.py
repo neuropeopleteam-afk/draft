@@ -283,7 +283,9 @@ class Settings(BaseSettings):
     # INTERVIEW_ENGINE=stub — заглушка продукта (тесты, CI, e2e): вопросы по шаблону, оценка правилом, «заглушка» в итоге.
     interview_enabled: bool = False
     interview_engine: str = "auto"  # auto — движок, если он есть и настроен, иначе заглушка; stub — всегда заглушка
-    interview_avatar: bool = True  # видео-аватар (Anam JS SDK) первым каналом, если движок выдаёт токен сессии
+    # Видео-аватара в продукте нет (решение владельца 10.10, регламент п. 5.11): визуал — своя анимация волны голоса;
+    # канал «аватар» остаётся только в движке за INTERVIEW_AVATAR_ENABLED (выкл.) и экраном не используется.
+    interview_stt_stub: bool = False  # e2e/демо: в заглушке «нажми и говори» отдаёт начало письменного ответа (stub=true)
     interview_audio_max_kb: int = 3072  # запись одного ответа «нажми и говори»
     interview_defense_minutes: int = 3
     interview_defense_max_questions: int = 3
