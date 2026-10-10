@@ -29,7 +29,7 @@ from app.core.enums import NeedStatus, TestSessionStatus
 from app.modules.assessment.integrity import candidate_view
 from app.modules.assessment.models import TestSession
 from app.modules.catalog.constants import FSP_DISCIPLINES
-from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_CUTS, GRADE_ORDER, STACK, tag_title
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_CUTS, GRADE_ORDER, tag_title, known_tag
 from app.modules.profiles.facts import load_bundles
 
 # Только рекомендации для тренировки навыков, не вес соревнований и не рейтинг ФСП.
@@ -343,11 +343,11 @@ def _demand(db: Session, direction: str, grade: str | None, bundle, topics: dict
                                                    EmployerNeed.direction_id == direction)).all():
         req = n.requirements or {}
         sources.append((n.grade_id or req.get("grade"),
-                        [s["tag"] for s in req.get("stack_required") or [] if s.get("tag") in STACK],
-                        [s["tag"] for s in req.get("stack_desired") or [] if s.get("tag") in STACK]))
+                        [s["tag"] for s in req.get("stack_required") or [] if known_tag(s.get("tag"))],
+                        [s["tag"] for s in req.get("stack_desired") or [] if known_tag(s.get("tag"))]))
     for v in db.scalars(select(Vacancy).where(Vacancy.status == "published",
                                               Vacancy.category_id.like(f"{direction}.%"))).all():
-        sources.append(((v.category_id or "").split(".")[-1] or None, [t for t in v.stack or [] if t in STACK], []))
+        sources.append(((v.category_id or "").split(".")[-1] or None, [t for t in v.stack or [] if known_tag(t)], []))
     sources = [s for s in sources if s[1] or s[2]]
     in_grade = [s for s in sources if grade and s[0] == grade]
     scope = "category" if len(in_grade) >= MIN_SOURCES_IN_GRADE else "direction"

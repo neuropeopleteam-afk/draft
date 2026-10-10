@@ -139,7 +139,7 @@ class Settings(BaseSettings):
     llm_timeout_resume: float | None = None
     llm_timeout_grade: float | None = None
     llm_timeout_grade_second: float | None = None
-    # Рассуждения моделей OpenRouter на функцию (у Sonnet 5.5 их нельзя выключить): low | medium | high | default
+    # Рассуждения моделей OpenRouter на функцию (у Sonnet 5.5 их нельзя выключить): none | minimal | low | medium | high | default
     # (параметр не передаётся). Разбор и резюме — low: извлечению рассуждения не нужны, а ответ в 2 раза дешевле и
     # не обрезается лимитом токенов (docs/LLM.md, «качество / время»)
     llm_reasoning_parse_need: str = "low"
@@ -147,6 +147,9 @@ class Settings(BaseSettings):
     llm_reasoning_grade: str = "default"
     llm_reasoning_grade_second: str = "low"  # Fable 5.1 по умолчанию рассуждает долго: ответ обрезался лимитом
     # Автомат-выключатель: после N ошибок подряд провайдер (с этой моделью) пропускается M секунд
+    # JSON-схема ответа (structured output) и для Yandex AI Studio — у запроса-дельты разбора потребности
+    # (Completions API AI Studio принимает response_format json_schema); HTTP 400 — повтор без схемы, как у OpenRouter
+    llm_yandex_json_schema: bool = False
     llm_breaker_failures: int = 3
     llm_breaker_cooldown_s: float = 60.0
     # Вторая оценка спорных ответов (grade_second, docs/LLM.md): «близко к порогу» — |балл − 0,5| ≤ LLM_GRADING_NEAR
@@ -167,6 +170,13 @@ class Settings(BaseSettings):
     # И27: вторая оценка спорных ответов — в фоне (итог теста её не ждёт, результат дописывается в оценку с пометкой
     # «пересмотрено второй моделью»); false — как раньше, синхронно внутри ответа кандидата
     llm_grading_second_async: bool = True
+    # Я13 (assessment/evidence.py, docs/LLM.md «Доказательная оценка»): цитаты по пунктам рубрики, сверенные кодом
+    # (пункт без подтверждённой цитаты — на шаг ниже), «скептик» для высоких (≥ GRADING_SKEPTIC_HIGH) и спорных
+    # оценок со сборкой итога кодом; выключено — промпт v2 и вторая оценка, как раньше. Модель скептика — цепочка
+    # grade_second или явная GRADING_SKEPTIC_MODEL (одна попытка, без цепочки)
+    grading_evidence: bool = False
+    grading_skeptic_high: float = 0.75
+    grading_skeptic_model: str | None = None
     # И27: кэш разбора потребности по нормализованному тексту (таблица need_parse_jobs), с; 0 — без кэша
     parse_cache_ttl_s: int = 3600
 
@@ -295,6 +305,26 @@ class Settings(BaseSettings):
     passport_signing_key: str | None = None
     passport_retired_public_keys: str = ""  # открытые ключи выведенных из оборота ключей (base64url через запятую)
     passport_ttl_days: int = 365
+
+    # hh.ru (app/modules/hh, docs/INTEGRATIONS.md): импорт своей вакансии работодателя и «Рынок по hh.ru» у вилки.
+    # Токен приложения и HH-User-Agent — только из secrets/hh.env на сервере (HH_APP_TOKEN, HH_USER_AGENT); client
+    # id/secret не нужны. HH_ENABLED=false (по умолчанию) или нет токена — функции скрыты. HH_STUB=1 — заглушка с
+    # фикстурой вместо api.hh.ru (тесты, CI, e2e). Не чаще 1 запроса в hh_min_interval_s на все воркеры, кэш на диске.
+    hh_enabled: bool = False
+    hh_stub: bool = False
+    hh_app_token: str | None = None
+    hh_user_agent: str | None = None
+    hh_base_url: str = "https://api.hh.ru"
+    hh_timeout_s: float = 10.0
+    hh_min_interval_s: float = 1.0
+    hh_cache_dir: str = "/tmp/hh_cache"
+    hh_vacancy_ttl_s: int = 600  # вакансия по номеру (предпросмотр → импорт)
+    hh_market_ttl_s: int = 24 * 3600  # «Рынок по hh.ru»: поиск живых вакансий с зарплатой
+
+    @property
+    def hh_available(self) -> bool:
+        """Функции hh.ru видны: флаг включён и есть токен приложения (или заглушка)."""
+        return bool(self.hh_enabled and (self.hh_stub or (self.hh_app_token and self.hh_user_agent)))
 
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None

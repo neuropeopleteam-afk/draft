@@ -190,13 +190,21 @@ def direction_keywords() -> dict[str, list[str]]:
     «data engineer» уходит из Data/ML к инженеру данных (раньше вёл в ближайшую категорию)."""
     from app.modules.catalog.ext import EXT_DIRECTION_KEYWORDS, EXT_TAKES_KEYWORDS, visible_ext
 
-    vis = visible_ext()
-    if not vis:
+    from app.modules.catalog.ext import enabled
+
+    if not enabled():
         return DIRECTION_KEYWORDS
+    vis = visible_ext()
     taken = {w for d in vis for words in EXT_TAKES_KEYWORDS.get(d, {}).values() for w in words}
-    out = {d: [w for w in words if w not in taken] for d, words in DIRECTION_KEYWORDS.items()}
+    # «spa» как подстрока срабатывал внутри «Spark», «space» (Data Engineer со Spark в заголовке уходил во Frontend):
+    # с флагом расширения каталога — только отдельным словом «SPA»
+    out = {d: [_SPA_WORD if w == "spa" else w for w in words if w not in taken]
+           for d, words in DIRECTION_KEYWORDS.items()}
     out.update({d: EXT_DIRECTION_KEYWORDS[d] for d in vis})
     return out
+
+
+_SPA_WORD = r"re:(?<![a-zа-яё])spa(?![a-zа-яё])"
 
 
 def _ext_spans(text: str, found: dict[str, tuple[int, int]]) -> None:
@@ -286,6 +294,11 @@ def find_key_span(text: str, words: list[str]) -> tuple[int, int] | None:
     low = text.lower()
     best = None
     for w in words:
+        if w.startswith("re:"):  # выражение (граница слова): только у расширения каталога, см. direction_keywords
+            m = re.search(w[3:], low)
+            if m and (best is None or m.start() < best[0]):
+                best = (m.start(), m.end())
+            continue
         i = low.find(w)
         if i >= 0 and (best is None or i < best[0]):
             best = (i, i + len(w.rstrip()))
@@ -297,11 +310,16 @@ def find_key_span(text: str, words: list[str]) -> tuple[int, int] | None:
     return best
 
 
+def kw_pattern(word: str) -> str:
+    """Регулярное выражение ключевого слова: «re:…» — уже выражение (граница слова и т. п.), иначе — как подстрока."""
+    return word[3:] if word.startswith("re:") else re.escape(word)
+
+
 def find_keys(text: str, table: dict[str, list[str]]) -> dict[str, int]:
     low = text.lower()
     out: dict[str, int] = {}
     for key, words in table.items():
-        hits = sum(low.count(w) for w in words)
+        hits = sum(len(re.findall(w[3:], low)) if w.startswith("re:") else low.count(w) for w in words)
         if hits:
             out[key] = hits
     return out

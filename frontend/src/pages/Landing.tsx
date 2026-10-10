@@ -3,8 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { errText } from "../components/ui";
 import { useAuth } from "../lib/auth";
-import { guide, juryLogin, juryReset, type Persona } from "../lib/jury";
-import { daysText, useRules } from "../lib/meta";
+import { guide, juryLogin, juryReset, quick, QUICK, startQuick, type Persona } from "../lib/jury";
+import { daysText, useMeta, useRules } from "../lib/meta";
 
 type Rules = NonNullable<ReturnType<typeof useRules>>;
 
@@ -106,7 +106,7 @@ export default function Landing() {
           <h2 className="text-3xl font-extrabold tracking-tight text-brand-night">Что считается доказательством</h2>
           <p className="mt-3 max-w-2xl text-brand-ink/70">
             Каждый факт о кандидате помечен уровнем доказанности. В подборку и рейтинг идут только T1 и T2.
-            Нет истории ФСП — нейтральное состояние, без штрафа.
+            Нет истории ФСП — без штрафа; подтверждённые достижения ФСП дают бонус.
           </p>
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {evidence.map(([code, title, text]) => (
@@ -165,7 +165,7 @@ function Rule({ title, text }: { title: string; text: string }) {
 
 const JURY: { id: Persona; title: string; text: string }[] = [
   { id: "candidate", title: "Кандидат с паспортом ФСП", text: "Мария Королёва · Backend · Middle. Тест пройден, достижения ФСП из реестра (T2), место в рейтинге и 2-е место в кубке работодателя." },
-  { id: "candidate_nofsp", title: "Кандидат без ФСП", text: "Илья Сергеев · Backend · Middle. Нет истории ФСП — нейтрально. Ждёт приглашение с вилкой." },
+  { id: "candidate_nofsp", title: "Кандидат без ФСП", text: "Илья Сергеев · Backend · Middle. Нет истории ФСП — без штрафа. Ждёт приглашение с вилкой." },
   { id: "candidate_junior", title: "Кандидат «Junior (предварительно)»", text: "Артём Лебедев · Backend · Junior у порога: грейд не подтверждён, но и не доказанно ниже. Вероятность уровня, короткое дотестирование, статус у работодателя." },
   { id: "candidate_new", title: "Пройдите тест сами", text: "Антон Лебедев · Backend · категории нет. Экспресс-тест около 5 минут или полный, подсказка грейда по резюме, путь до категории и подборки." },
   { id: "employer", title: "Работодатель", text: "«Северный платёж»: потребности текстом с цитатами, фильтр ст. 64 ТК РФ, подборки с объяснением, сравнение кандидатов, кубок с решениями на оценке." },
@@ -180,10 +180,16 @@ function JuryBlock() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const interview = !!useMeta()?.interview?.enabled;  // Я15: шаг «по желанию» в «12 минутах»
 
   async function enter(p: Persona) {
     setBusy(p); setMsg(null);
     try { navigate(await juryLogin(p, signIn)); }
+    catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
+  }
+  async function quickStart() {  // Я9: «Проверка за 12 минут» — вход работодателем своей копии
+    setBusy("quick"); setMsg(null);
+    try { navigate(await startQuick(signIn)); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
   }
   async function reset() {
@@ -200,7 +206,7 @@ function JuryBlock() {
             <h2 id="jury-title" className="mt-2 text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Вход в один клик и проводник по сценарию</h2>
             <p className="mt-2 max-w-3xl text-sm leading-relaxed text-brand-ink/75">
               Выберите роль — регистрация, опрос и тест у демо-учёток уже пройдены; у «Пройдите тест сами» теста нет — его проходите вы.
-              У каждого эксперта своя копия демо: ваши действия и сброс не видны другим. Проводник ведёт по сценарию: регистрация → тест → категория → поиск работодателем → контакт.
+              У каждого эксперта своя копия демо: ваши действия и сброс не видны другим. Проводник — «Проверка за 12 минут» или полный справочник по сценарию (регистрация → тест → категория → поиск работодателем → контакт), режим меняется в его шапке.
               <span className="font-semibold text-brand-night"> Логин и пароль стенда — в материалах сдачи.</span>
             </p>
           </div>
@@ -210,6 +216,14 @@ function JuryBlock() {
             <Link to="/validation" className="btn-ghost">Как мы проверяем себя</Link>
             <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
           </div>
+        </div>
+        {/* Я9: короткий путь эксперта — своя потребность → … → доказательства, 8 шагов с критериями ТЗ */}
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-night p-4 text-white sm:p-5" data-testid="jury-quick">
+          <div className="min-w-0 max-w-3xl">
+            <p className="text-lg font-bold">Мало времени? Проверка за 12 минут</p>
+            <p className="mt-1 text-sm leading-relaxed text-white/80">{QUICK.length} шагов: {QUICK.map((s) => s.title.split(" · ")[0].toLowerCase()).join(" → ")}{interview ? "; по желанию — устная защита ответа" : ""}. У каждого шага — что он проверяет и какой критерий ТЗ.</p>
+          </div>
+          <button type="button" className="btn-primary shrink-0" disabled={!!busy} onClick={quickStart}>{busy === "quick" ? "Входим…" : "Начать проверку за 12 минут"}</button>
         </div>
         {/* Ф6 (В1): три основных входа карточками, остальные роли — компактным рядом (те же кнопки, описание в подсказке и ниже) */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -242,7 +256,7 @@ function JuryBlock() {
           </details>
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { guide.enable(); guide.show(); guide.setStep(0); navigate("/register?role=candidate"); }}>
+          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { quick.setMode("full"); guide.enable(); guide.show(); guide.setStep(0); navigate("/register?role=candidate"); }}>
             Начать проводник с регистрации
           </button>
           <button className="font-semibold text-brand-plum underline-offset-2 hover:underline disabled:opacity-50" disabled={!!busy} onClick={reset}>

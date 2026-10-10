@@ -17,6 +17,7 @@ from app.core.enums import FspEventLevel
 from app.modules.assessment.rules import GRADE_LEVEL, GRADE_RU
 from app.modules.assessment.service import latest_survey
 from app.modules.fsp.models import FspAchievement, FspPassport
+from app.core.origin import NO_FSP_SHORT
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 
 _LEVEL_RANK = {FspEventLevel.regional: 1, FspEventLevel.interregional: 2, FspEventLevel.national: 3,
@@ -108,7 +109,7 @@ def build_hint(*, survey_years: float | None, resume: dict | None, achievements:
                                     "учитываются в рейтинге внутри категории."})
     else:
         signals.append({"source": "fsp", "title": "Паспорт ФСП", "grade": None,
-                        "text": "Подтверждённых достижений ФСП нет — нейтрально."})
+                        "text": "Подтверждённых достижений ФСП нет — " + NO_FSP_SHORT + "."})
 
     total = sum(votes.values())
     if total == 0:

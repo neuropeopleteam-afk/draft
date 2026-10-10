@@ -37,7 +37,13 @@ export function InternCutSection({ ic }: { ic: any }) {
   const chosen = ic.chosen?.cut;
   const row = (s: any) => [theta(s.cut), pct(s.false_confirm, 1), pct(s.false_reject, 1), pct(s.band_confirm), pct(s.band_upgrade, 1),
     num(s.mean_items, 1), num(s.mean_se), pct(s.exhausted_share), pct(s.pop_share_band, 1)];
-  const idx = cuts.findIndex((s) => s.cut === chosen);
+  // Я8: на банке 165 правило выполняется и на текущем банке — подписи из JSON расчёта, а не прежним текстом
+  const cur = ic.current_bank_rule ?? {};
+  const curOk = !!cur.all_pass;
+  const curRow = cuts.find((s) => s.cut === cur.cut) ?? {};
+  const idx = cuts.findIndex((s) => s.cut === (curOk ? cur.cut : chosen));
+  const basisNow = ic.chosen?.basis === "current_bank";  // с 10.10 порог выбирается по текущему банку
+  const easyRule = ic.with_easy_families?.rule ?? {};
   const idxE = easy.findIndex((s) => s.cut === chosen);
   const dirs = Object.keys(ic.retest ?? {});
   const poolNow = ic.pool_now ?? {};
@@ -52,36 +58,46 @@ export function InternCutSection({ ic }: { ic: any }) {
         не выше {pct(rule.max_false_confirm)}, ложные отказы (θ выше порога на 0,25 и более) не выше {pct(rule.max_false_reject)} и не больше {pct(rule.max_exhausted)} сессий
         упираются в исчерпание заданий. В продукте действует порог <b>θ = {theta(ic.cut_in_use)}</b>.
       </p>
-      <h3 className="mt-6 text-base font-bold text-brand-night">Текущий банк: лёгких семейств для Стажёра ещё нет, тест идёт по самым простым заданиям Junior</h3>
+      <h3 className="mt-6 text-base font-bold text-brand-night">{curOk ? `Текущий банк: правилу удовлетворяет порог ${(cur.passing ?? []).map(theta).join(", ")}` : "Текущий банк: лёгких семейств для Стажёра ещё нет, тест идёт по самым простым заданиям Junior"}</h3>
       <div className="mt-3">
         <Table head={["Порог", "Ложное подтверждение", "Ложный отказ", "Подтверждение в полосе Стажёра", "Предложен Junior в полосе", "Заданий", "SE", "Исчерпание пула", "Доля полосы, θ ~ N(0; 1)"]}
           rows={cuts.map(row)} mark={idx} />
       </div>
       <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+        {curOk ? <>На текущем банке правило выполнено при пороге {theta(cur.cut)}{cur.cut === ic.cut_in_use ? " — он и действует в продукте" : ""}: ложные подтверждения {pct(curRow.false_confirm, 1)},
+        ложные отказы {pct(curRow.false_reject, 1)} (предел {pct(rule.max_false_reject)} — запаса почти нет), исчерпание пула {pct(curRow.exhausted_share)}. Лёгкие семейства для Стажёра
+        в банке появились, но их немного: SE не опускается ниже ≈ {num(Math.min(...cuts.map((s) => s.mean_se ?? 1)))}, поэтому решение по Стажёру грубее, чем по другим грейдам. Порог выбирается по текущему банку, без добавленных синтетических семейств.</> : <>
         Ни один порог правилу на текущем банке не удовлетворяет: у самых простых семейств Junior трудность b не ниже −0,9, при θ ≈ −2 они дают мало
         информации, SE не опускается ниже ≈ {num(Math.min(...cuts.map((s) => s.mean_se ?? 1)))}, и почти каждая сессия доходит до максимума заданий. Поэтому решение
-        по Стажёру на текущем банке грубее, чем по другим грейдам, а порог выбран по банку с лёгкими семействами ниже.
+        по Стажёру на текущем банке грубее, чем по другим грейдам, а порог выбран по банку с лёгкими семействами ниже.</>}
       </p>
       {easy.length > 0 && (
         <>
           <h3 className="mt-6 text-base font-bold text-brand-night">Банк с лёгкими семействами: {ic.with_easy_families.per_block} синтетических семейств на блок, b от −2,5 до −1,5</h3>
           <div className="mt-3">
             <Table head={["Порог", "Ложное подтверждение", "Ложный отказ", "Подтверждение в полосе Стажёра", "Предложен Junior в полосе", "Заданий", "SE", "Исчерпание пула", "Доля полосы, θ ~ N(0; 1)"]}
-              rows={easy.map(row)} mark={idxE} />
+              rows={easy.map(row)} mark={basisNow ? -1 : idxE} />
           </div>
           <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
+            {basisNow ? <>Справочно: с синтетическими лёгкими семействами правилу удовлетворяли бы пороги {(easyRule.passing ?? []).map(theta).join(", ") || "—"}
+            {easyRule.cut != null && <>, самый низкий — {theta(easyRule.cut)}</>}. На выбор это не влияет: порог выбирается по текущему банку, без добавленных семейств.
+            Такие семейства (закрытые форматы, 90–180 с, трудность b ≈ −2) запрошены у банка заданий; появятся — попадут в тест Стажёра автоматически,
+            и пересчёт покажет, можно ли опустить порог.</> : curOk && chosen !== ic.cut_in_use ? <>С синтетическими лёгкими семействами правилу удовлетворяют пороги {ic.chosen?.passing?.map(theta).join(", ")}; самый низкий — {theta(chosen)} —
+            станет кандидатом, когда такие семейства появятся в банке (решение — после пересчёта). До этого действует {theta(ic.cut_in_use)}: он выполняет правило на текущем банке.</> : <>
             Правилу удовлетворяет {ic.chosen?.passing?.length === 1 ? "только порог" : "порог"} {ic.chosen?.passing?.map(theta).join(", ")}: он и выбран.
-            Такие семейства (закрытые форматы, 90–180 с, трудность b ≈ −2) запрошены у банка заданий; появятся — попадут в тест Стажёра автоматически.
+            Такие семейства (закрытые форматы, 90–180 с, трудность b ≈ −2) запрошены у банка заданий; появятся — попадут в тест Стажёра автоматически.</>}
           </p>
         </>
       )}
-      <h3 className="mt-6 text-base font-bold text-brand-night">Повтор и запас информации пула у выбранного порога</h3>
+      <h3 className="mt-6 text-base font-bold text-brand-night">Повтор и запас информации пула у порога {theta(chosen)}{curOk && chosen !== ic.cut_in_use ? " (выбран по банку с лёгкими семействами)" : ""}</h3>
       <div className="mt-3">
         <Table head={["Направление", "Семейств в тесте (текущий банк)", "Информация у порога", "Минимальная SE", "С лёгкими семействами: семейств / SE", "Согласие решения при повторе", "r(θ) повтора"]}
           rows={dirs.map((d) => {
             const p = poolNow[d] ?? {};
-            const pn = ic.pool?.[d]?.[String(chosen)] ?? {};
-            const pe = easyPool[d]?.[String(chosen)] ?? {};
+            // Я8: ключи JSON — «-2.0», а String(-2) — «-2»: ищем по обоим написаниям
+            const ck = (o: any) => o?.[String(chosen)] ?? o?.[Number(chosen).toFixed(1)] ?? o?.[Number(chosen).toFixed(2)] ?? {};
+            const pn = ck(ic.pool?.[d]);
+            const pe = ck(easyPool[d]);
             const rt = ic.retest?.[d] ?? {};
             return [DIRECTION_TITLES[d] ?? d, `${(p.n_common ?? 0) + (p.n_direction ?? 0)} (общих ${p.n_common ?? 0})`, num(pn.info_at_cut, 1), num(pn.min_se),
               `${pe.n_families ?? "—"} / ${num(pe.min_se)}`, pct(rt.decision_agreement), num(rt.r_theta)];

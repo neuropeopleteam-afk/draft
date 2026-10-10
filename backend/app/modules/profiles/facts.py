@@ -27,16 +27,19 @@ from app.modules.profiles.models import CandidateFact, CandidateProfile, Candida
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
 from app.modules.fsp import relevance as fsp_relevance
 from app.modules.fsp.rating import details as fsp_rating
+from app.core.origin import fsp_origin
 
 DEFAULT_PRIVACY = {
     "show_city": True, "show_experience": True, "show_work_format": True, "show_roles": True,
     "show_stack": True, "show_soft_skills": True, "show_fsp": True,
     "show_attempts": True,  # И26: сравнение двух попыток теста в карточке у работодателя
+    "show_evidence": True,  # Я13: цитаты из развёрнутых ответов (доказательства оценки) в карточке у работодателя
 }
 PRIVACY_TITLES = {
     "show_city": "Город", "show_experience": "Стаж", "show_work_format": "Формат работы", "show_roles": "Роли",
     "show_stack": "Заявленный стек", "show_soft_skills": "Софт-скиллы из резюме", "show_fsp": "Достижения ФСП",
     "show_attempts": "Сравнение попыток теста",
+    "show_evidence": "Цитаты из ответов теста (доказательства оценки)",
 }
 WORK_FORMAT_TITLES = {"office": "Офис", "hybrid": "Гибрид", "remote": "Удалённо", "any": "Любой"}
 DISCIPLINE_TITLES = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
@@ -527,6 +530,8 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
         "fsp": ({
             "linked": b.passport is not None, "level": "T2" if verified_achievements(b) else None,
             "source": b.passport.link_source.value if b.passport else None,
+            # Я8: метка происхождения паспорта — модельные данные / заглушка по спецификации / реальный запрос
+            "origin": fsp_origin(b.passport.link_source.value, b.passport.raw) if b.passport else None,
             "strength": b.fsp,
             "rating": fsp_rating(b.achievements, direction=b.direction if fsp_relevance_on() else None,
                                  relevance=fsp_relevance_on()),

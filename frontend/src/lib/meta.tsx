@@ -18,6 +18,8 @@ export interface Meta {
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
   // видимые направления каталога: 5 базовых и направления расширения с проверенным банком (CATALOG_EXT_ENABLED)
   catalog?: { directions: string[]; ext: string[]; ext_enabled: boolean; ext_titles?: Record<string, string>; model_label?: string };
+  interview?: { enabled: boolean; stub: boolean; defense_minutes: number }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.)
+  hh?: { enabled: boolean; stub: boolean }; // Я12: импорт своей вакансии с hh.ru и «Рынок по hh.ru» (HH_ENABLED и токен)
 }
 
 const Ctx = createContext<Meta | null>(null);
@@ -28,7 +30,13 @@ let ownTitle = false;  // экран задал свой заголовок (use
 export function MetaProvider({ children }: { children: ReactNode }) {
   const [meta, setMeta] = useState<Meta | null>(null);
   useEffect(() => {
-    api<Meta>("/meta", { auth: false }).then((m) => { loaded = m; setMeta(m); if (!ownTitle) document.title = defaultTitle(m); }).catch(() => setMeta(null));
+    // Я16: /api/meta не ответил (сервер перегружен, обрыв) — экраны работают без него, а мы тихо повторяем через 5, 15 и 45 с
+    let alive = true, t = 0;
+    const load = (n: number) => api<Meta>("/meta", { auth: false })
+      .then((m) => { if (!alive) return; loaded = m; setMeta(m); if (!ownTitle) document.title = defaultTitle(m); })
+      .catch(() => { if (alive && n < 3) t = window.setTimeout(() => load(n + 1), 5000 * 3 ** n); });
+    void load(0);
+    return () => { alive = false; window.clearTimeout(t); };
   }, []);
   return <Ctx.Provider value={meta}>{children}</Ctx.Provider>;
 }
