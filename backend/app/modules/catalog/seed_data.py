@@ -128,16 +128,44 @@ STACK: dict[str, tuple[str, str, str | None]] = {
 }
 
 
+def _ext():
+    from app.modules.catalog import ext
+
+    return ext
+
+
+def direction_title(direction: str | None) -> str:
+    """Название направления: базовые 5 и направления расширения каталога (ext.py; название есть всегда, видимость —
+    отдельно, ext.visible_directions)."""
+    if not direction:
+        return "—"
+    return DIRECTIONS.get(direction) or _ext().EXT_DIRECTIONS.get(direction) or direction
+
+
 def category_title(category_id: str | None) -> str:
     """«backend.middle» → «Backend · Middle»."""
     if not category_id or "." not in category_id:
         return category_id or "—"
     d, g = category_id.split(".", 1)
-    return f"{DIRECTIONS.get(d, d)} · {GRADES.get(g, g)}"
+    return f"{direction_title(d)} · {GRADES.get(g, g)}"
 
 
 def tag_direction(tag: str) -> str | None:
-    return STACK[tag][2] if tag in STACK else None
+    if tag in STACK:
+        return STACK[tag][2]
+    v = _ext().EXT_STACK.get(tag)
+    return v[2] if v else None
+
+
+def known_tag(tag: str) -> bool:
+    """Тег справочника, доступный сейчас: базовый или тег видимого направления расширения (без флага — как прежде)."""
+    return tag in STACK or tag in _ext().visible_stack()
+
+
+def active_stack() -> dict[str, tuple[str, str, str | None]]:
+    """Справочник стек-тегов с учётом видимых направлений расширения (без флага — ровно STACK)."""
+    extra = _ext().visible_stack()
+    return {**STACK, **extra} if extra else STACK
 
 
 OTHER_TOPIC_TITLE = "Прочие темы"  # служебный тег "other" (задание без стек-тега) никогда не показывается как есть
@@ -147,4 +175,6 @@ def tag_title(tag: str) -> str:
     """Название стек-тега для интерфейса; служебный «other» — «Прочие темы», неизвестный тег — как есть."""
     if tag in STACK:
         return STACK[tag][0]
+    if tag in _ext().EXT_STACK:
+        return _ext().EXT_STACK[tag][0]
     return OTHER_TOPIC_TITLE if tag == "other" else tag
