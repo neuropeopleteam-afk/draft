@@ -5,6 +5,7 @@
 // при обрыве помогают только понятное сообщение и повтор — отсюда подсказка про VPN.
 import { Component, useEffect, useRef, useState, type ErrorInfo, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
+import { ApiError } from "../lib/api";
 import { isChunkError } from "../lib/lazyPage";
 
 const VPN = "Если включён VPN — отключите его и обновите страницу.";
@@ -156,24 +157,26 @@ export function StartupLoading() {
 }
 
 /** Сервер не ответил на стартовый запрос (5xx, обрыв сети, тайм-аут): экран с повтором вместо пустоты.
- *  Повтор — по кнопке и сам через 10 с (до трёх раз; дальше — только по кнопке). */
-export function StartupError({ onRetry, inline = false, what = "Сервер" }: { onRetry: () => void; inline?: boolean; what?: string }) {
-  const [left, setLeft] = useState(10);
-  const tries = useRef(0);
+ *  Повтор — по кнопке и сам: через Retry-After сервера (503 db_busy — пул БД занят, ветка ops/load; 429), иначе
+ *  через 10 с; до трёх раз, дальше — только по кнопке. */
+export function StartupError({ error, onRetry, failures = 1, inline = false }: { error?: unknown; onRetry: () => void; failures?: number; inline?: boolean }) {
+  const ra = error instanceof ApiError ? error.retryAfterS : null;
+  const wait = ra != null ? Math.min(60, Math.max(2, Math.ceil(ra))) : 10;
+  const busy = error instanceof ApiError && (error.status === 503 || error.status === 429);
+  const auto = failures <= 3;  // экран создаётся заново после каждой попытки — счёт неудач ведёт AuthProvider
+  const [left, setLeft] = useState(wait);
   useEffect(() => {
-    if (tries.current >= 3) return;
-    const t = window.setInterval(() => setLeft((s) => s - 1), 1000);
-    return () => window.clearInterval(t);
-  }, []);
-  useEffect(() => {
-    if (left > 0 || tries.current >= 3) return;
-    tries.current++;
-    onRetry();
-  }, [left, onRetry]);
-  const autoOn = tries.current < 3 && left > 0;
+    if (!auto) return;
+    if (left <= 0) { onRetry(); return; }
+    const t = window.setTimeout(() => setLeft((s) => s - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [left, auto, onRetry]);
+  const autoOn = auto && left > 0;
   return (
-    <Screen full={!inline} title={`${what} временно не отвечает`}
-      text="Похоже на перегрузку или обрыв связи — данные не потеряны. Повторите через несколько секунд."
+    <Screen full={!inline} title="Сервер временно не отвечает"
+      text={busy
+        ? "Сервер сейчас перегружен — данные не потеряны, вход сохранён. Повторите через несколько секунд."
+        : "Похоже на перегрузку или обрыв связи — данные не потеряны, вход сохранён. Повторите через несколько секунд."}
       note={autoOn ? `Повторим сами через ${left} с` : undefined}>
       <button type="button" className="btn-primary" onClick={onRetry}>Повторить</button>
       <button type="button" className="btn-ghost" onClick={hardReload}>Обновить страницу</button>

@@ -14,7 +14,7 @@ export interface Section { path: string; title: string; description: string; day
 const SHORT: Partial<Record<Role, string>> = { candidate: "Кандидат", employer: "Работодатель", expert: "Эксперт", fsp_analyst: "ФСП", admin: "Администратор" };
 
 export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role: Role; sections: Section[]; title: string; alsoRoles?: Role[] }) {
-  const { me, loading, error, retry, signOut } = useAuth();
+  const { me, loading, error, failures, retry, signOut } = useAuth();
   const navigate = useNavigate();
   const loc = useLocation();
   const navRef = useRef<HTMLElement>(null);
@@ -37,7 +37,7 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
 
   if (loading) return <StartupLoading />;
   // Я16: сервер или сеть не дали ответ на /api/me — экран повтора (вход сохранён), а не пустота или /login
-  if (!me && error) return <StartupError onRetry={retry} />;
+  if (!me && error) return <StartupError error={error} failures={failures} onRetry={retry} />;
   if (!me) return <Navigate to="/login" replace />;
   if (me.role !== role && !alsoRoles.includes(me.role)) return <Navigate to={cabinetPath(me.role)} replace />;
   const base = cabinetPath(role);
