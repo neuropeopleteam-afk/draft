@@ -98,6 +98,8 @@ Policy = str | tuple[str, dict[str, object]]
 _UPSTREAM = {"employer": OK_UPSTREAM, "employer_other": OK_UPSTREAM, "jury_employer": OK_UPSTREAM,
              "jury_other_employer": OK_UPSTREAM}
 
+_HH_OFF = {"employer": OK404, "employer_other": OK404, "jury_employer": OK404, "jury_other_employer": OK404}
+
 POLICY: dict[tuple[str, str], Policy] = {
     # ---------------------------------------------------------------- система, документация, справочники
     ("GET", "/api/health"): "open",
@@ -315,6 +317,10 @@ POLICY: dict[tuple[str, str], Policy] = {
     # И23: импорт вакансий из «Потока» — своя компания; без токена 422, ATS недоступна — 502
     ("GET", "/api/employer/vacancies/import/potok/preview"): ("employer", _UPSTREAM),
     ("POST", "/api/employer/vacancies/import/potok"): ("employer", _UPSTREAM),
+    # Я12 hh.ru: по умолчанию выключено (HH_ENABLED) — работодателю 404 hh_disabled, роли проверяются раньше
+    ("GET", "/api/employer/vacancies/import/hh/preview"): ("employer", _HH_OFF),
+    ("POST", "/api/employer/vacancies/import/hh"): ("employer", _HH_OFF),
+    ("GET", "/api/employer/market/hh"): ("employer", _HH_OFF),
     ("POST", "/api/employer/applications/{app_id}/view"): "employer_own",
     ("POST", "/api/employer/applications/{app_id}/status"): "employer_own",
     ("GET", "/api/employer/applications/{app_id}/export.json"): "employer_own",
@@ -395,6 +401,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
+    ("GET", "/api/validation/hh-parse"): "open",  # Я12: замер разбора на корпусе hh.ru
     ("GET", "/api/validation/attempts-repeat"): "open",  # feat/attempts (И26)
     ("GET", "/api/validation/test-length"): "open",  # Ф6 (Н8): длина теста на экране старта
     ("POST", "/api/validation/self-check"): "auth",  # feat/jury-test
