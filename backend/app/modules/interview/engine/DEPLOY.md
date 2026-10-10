@@ -1,4 +1,4 @@
-# Движок ИИ-интервьюера — развёртывание (инструкция для штаба; серверы для исполнителей — только чтение)
+# Движок ИИ-интервьюера — развёртывание
 
 ## 1. Переменные окружения (`/opt/spectrek_fsp/secrets/interview.env` на «Москве»)
 
@@ -15,7 +15,7 @@
 | `INTERVIEW_TURN_TIMEOUT_S`, `INTERVIEW_JUDGE_TIMEOUT_S` | тайм-ауты модели: 25 с на реплику, 90 с на оценку |
 | `INTERVIEW_RELAY_URL` | корень ретранслятора, напр. `https://<мадрид>:18743`; пусто — берётся `LLM_RELAY_URL` без хвоста `/api/v1` |
 | `INTERVIEW_RELAY_TOKEN` | пусто — берётся `LLM_RELAY_TOKEN`; CA — общий `LLM_RELAY_CA_FILE` / `LLM_RELAY_CA_PEM_B64` |
-| `ELEVENLABS_API_KEY` | ключ ElevenLabs (у штаба в `.secrets/interview.env`) |
+| `ELEVENLABS_API_KEY` | ключ ElevenLabs (из хранилища секретов стенда) |
 | `ELEVENLABS_VOICE_ID` | `sRk0zCqhS2Cmv0bzx5wA` — стоковый голос библиотеки ElevenLabs «Felix — Calm, Clear and Friendly» (ru, мужской, спокойный); добавлен в аккаунт 10.10.2026 через API `POST /v1/voices/add` |
 | `ELEVENLABS_MODEL` | `eleven_multilingual_v2` (по умолчанию) |
 | `DEEPGRAM_API_KEY` | ключ Deepgram; модель `nova-3`, язык `ru`; режим «нажми и говори» — целый фрагмент за запрос |
