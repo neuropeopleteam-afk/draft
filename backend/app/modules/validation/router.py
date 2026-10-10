@@ -9,14 +9,18 @@ from __future__ import annotations
 from functools import lru_cache
 import json
 from pathlib import Path
+import threading
+import time
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.db import get_db
+from app.core.config import get_settings
+from app.core.db import get_db, release
 from app.core.deps import get_current_user
 from app.core.enums import TestSessionStatus, UserRole
 from app.core.errors import api_error, err
@@ -85,16 +89,52 @@ def _live(db: Session) -> dict:
                            "families_limited": {d: len(v) for d, v in (exp.get("k") or {}).items()}}}
 
 
-@router.get("/report", summary="Метрики валидации (пересчёт: make validate)")
-def report(db: Session = Depends(get_db)):
+def _report_body(db: Session) -> dict:
     from app.modules.experts.section import section as experts_section
 
-    from app.modules.validation.provenance import provenance  # Ф6 (Н7): подписи банка/отчёта/калибровки
+    from app.modules.validation.provenance import experts_stamp, provenance  # Ф6 (Н7), Я8: подписи и происхождение
 
-    return {**_report(), "provenance": provenance(_report()), "live": _live(db), "attacks": attacks.ATTACKS, "experts": experts_section(db),
+    ex = experts_section(db)
+    return {**_report(), "provenance": {**provenance(_report()), "experts": experts_stamp(ex)}, "live": _live(db),
+            "attacks": attacks.ATTACKS, "experts": ex,
             "intern_cut": _intern_cut(),
             "self_check": {"strategies": selfcheck.STRATEGIES, "max_n": selfcheck.MAX_N,
                            "directions": list(selfcheck.DIRECTIONS)}}
+
+
+# Готовый ответ /report (байты JSON) на воркер: VALIDATION_REPORT_TTL_S секунд. 10.10 под нагрузкой 100 пользователей
+# отчёт считался на каждый запрос (до 2000 сессий из БД, экспертный раздел, 105 КБ JSON): p50 4,1 с, p95 21 с, 504 —
+# и всё это время держал соединение с БД. Теперь считает один поток, остальные получают прошлый ответ (не старше TTL,
+# пока идёт пересчёт — прошлый); соединение возвращается в пул до сериализации. 0 — без кэша (тесты).
+_rep_cache: dict = {}
+_rep_lock = threading.Lock()
+
+
+def _report_bytes(db: Session) -> bytes:
+    data = _report_body(db)
+    release(db)  # дальше — только CPU: соединение не держим
+    return json.dumps(jsonable_encoder(data), ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode()
+
+
+@router.get("/report", summary="Метрики валидации (пересчёт: make validate)",
+            description="Ответ кэшируется на воркер на VALIDATION_REPORT_TTL_S секунд (живые счётчики — с этой задержкой).")
+def report(db: Session = Depends(get_db)):
+    ttl = get_settings().validation_report_ttl_s
+    if ttl <= 0:
+        return _report_body(db)
+    body, at = _rep_cache.get("body"), _rep_cache.get("at", 0.0)
+    if body is not None and time.monotonic() - at < ttl:
+        return Response(body, media_type="application/json")
+    if not _rep_lock.acquire(blocking=body is None):  # пересчёт уже идёт — прошлый ответ
+        return Response(body, media_type="application/json", headers={"X-Report-Stale": "1"})
+    try:
+        body, at = _rep_cache.get("body"), _rep_cache.get("at", 0.0)
+        if body is None or time.monotonic() - at >= ttl:  # пока ждали блокировку, мог посчитать другой поток
+            body = _report_bytes(db)
+            _rep_cache.update(body=body, at=time.monotonic())
+        return Response(body, media_type="application/json")
+    finally:
+        _rep_lock.release()
 
 
 class AttackIn(BaseModel):
@@ -123,6 +163,7 @@ def run_attack(attack_id: str, data: AttackIn | None = None, user: User = Depend
     hit(_per_user, str(user.id), "attack_rate", "Слишком часто: не больше 12 атак в минуту")
     hit(_global, "all", "attack_rate_global", "Красную кнопку сейчас нажимают слишком часто")
     if attack_id == "leak_bank":
+        release(db)  # симуляция утечки — без БД (кэш на процесс), секунды CPU: соединение в пул
         try:
             return attacks.run(db, attack_id, None, {"leak_share": data.leak_share, "direction": data.direction})
         except attacks.AttackBusy:
@@ -177,7 +218,10 @@ def _bench() -> dict:
 
 @router.get("/matching-bench", summary="Бенчмарк подбора со скрытой истиной (пересчёт: make bench)")
 def matching_bench():
-    return _bench()
+    from app.modules.validation.provenance import stamp  # Я8
+
+    b = _bench()
+    return b if b.get("missing") else {**b, "provenance": stamp("bench", b)}
 
 
 PATH_RETEST = Path(__file__).resolve().parent / "data" / "path_retest.json"
@@ -189,7 +233,10 @@ def path_retest():
         return {"missing": True}
     d = json.loads(PATH_RETEST.read_text(encoding="utf-8"))
     d.get("discrimination", {}).pop("families", None)  # полный список — в JSON репозитория, на страницу — слабые
-    return d
+    from app.modules.validation.headline import retest_vs_truth  # Я8: точность к истине рядом с κ
+    from app.modules.validation.provenance import stamp
+
+    return {**d, "vs_truth": retest_vs_truth(d), "provenance": stamp("path", d)}
 
 
 @router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
@@ -197,6 +244,13 @@ def test_length_route():
     from app.modules.validation.provenance import length_info  # Ф6 (Н8)
 
     return length_info(_report())
+
+
+@router.get("/provenance", summary="Происхождение чисел /validation: синтетика/модель/люди, дата, SHA, банк, команда")
+def validation_provenance():
+    from app.modules.validation.provenance import snapshots  # Я8: снимки расчётов, текущий банк и код
+
+    return snapshots()
 
 
 @router.get("/headline", summary="Первый экран /validation: 5 чисел с ДИ и подписью мира")
@@ -231,7 +285,10 @@ def _stability() -> dict:
 
 @router.get("/junior-stability", summary="Стабильность статуса «Junior (предварительно)» (пересчёт: make stability)")
 def junior_stability():
-    return _stability()
+    from app.modules.validation.provenance import stamp  # Я8
+
+    s = _stability()
+    return s if s.get("missing") else {**s, "provenance": stamp("stability", s)}
 
 
 GRADER = Path(__file__).resolve().parent / "data" / "grader_check.json"

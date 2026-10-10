@@ -1,0 +1,41 @@
+{
+ "n": 5,
+ "at": "2026-10-09T14:42:16+0000",
+ "results": [
+  {
+   "persona": "employer",
+   "login_s": 1.01,
+   "first_screen_s": 1.06,
+   "created": true,
+   "shared": false
+  },
+  {
+   "persona": "candidate",
+   "login_s": 1.01,
+   "first_screen_s": 1.05,
+   "created": true,
+   "shared": false
+  },
+  {
+   "persona": "candidate_new",
+   "login_s": 1.0,
+   "first_screen_s": 1.06,
+   "created": true,
+   "shared": false
+  },
+  {
+   "persona": "expert",
+   "login_s": 1.0,
+   "first_screen_s": 1.05,
+   "created": true,
+   "shared": false
+  },
+  {
+   "persona": "candidate_nofsp",
+   "login_s": 0.1,
+   "first_screen_s": 1.05,
+   "created": true,
+   "shared": false
+  }
+ ]
+}

@@ -18,6 +18,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from app.core.origin import NO_FSP
+
 HERE = Path(__file__).resolve().parent
 DATA = HERE / "data"
 SOURCES = {  # источник → файл расчёта и команда пересчёта (как на /validation)
@@ -139,7 +141,7 @@ CRITERIA: list[dict] = [
                           "/validation#discrimination", vs=("средний r_pb", "discrimination.summary.r_pb_mean")),
           "limit": "Пилот симулирован по авторским параметрам; панель моделей — не люди."},
          {"tz": "соответствие результата экспертной оценке или эталонной разметке команды",
-          "do": [go("Экспертная разметка", "/validation#experts"), go("Разметить самому", "/expert", "expert")],
+          "do": [go("Модельная панель (не люди)", "/validation#experts"), go("Разметить самому", "/expert", "expert")],
           "see": "Согласие с эталоном, статус панели и кто размечал: люди или модель в ролях экспертов.",
           "proof": metric("path", "total.truth.kappa_w_true", "κ с весами: грейд против истинного", "num3",
                           "/validation#path-retest", note="эталон — истина симуляции"),
@@ -227,7 +229,7 @@ CRITERIA: list[dict] = [
          {"tz": "корректная обработка профиля кандидата без истории ФСП",
           "do": [go("Кандидат без ФСП", "/candidate/category", "candidate_nofsp"),
                  go("Атака «Убрать историю ФСП»", "/validation#red-button")],
-          "see": "Нет истории ФСП — нейтрально: категория и место по тесту, без штрафа.",
+          "see": NO_FSP + ": категория и место — по тесту.",
           "proof": link("Атака «Убрать историю ФСП»: скор падает ровно на бонус", "/validation#red-button"),
           "limit": "У участников ФСП бонус в выдаче, у остальных его нет; реестр — модельные данные."},
          {"tz": "соответствие функциональным требованиям",
@@ -416,12 +418,19 @@ def resolve(spec: dict, db=None) -> dict:
             "signature": signature(spec["src"], d)}
 
 
+def _with_provenance(proof: dict) -> dict:
+    """Я8 п. 5: у каждого доказательства — строка происхождения, как у чисел /validation (provenance.proof_stamp)."""
+    from app.modules.validation.provenance import proof_stamp
+
+    return {**proof, "provenance": proof_stamp(proof)}
+
+
 def build(db=None) -> dict:
     """Ответ /api/validation/criteria и основа docs/CRITERIA.md."""
     crit = []
     for c in CRITERIA:
         items = [{"id": f"c{c['n']}-{i}", "n": f"{c['n']}.{i}", "tz": it["tz"], "do": it["do"], "see": it["see"],
-                  "proof": resolve(it["proof"], db), "limit": it["limit"]}
+                  "proof": _with_provenance(resolve(it["proof"], db)), "limit": it["limit"]}
                  for i, it in enumerate(c["items"], 1)]
         crit.append({"id": f"c{c['n']}", "n": c["n"], "title": c["title"], "short": c["short"], "weight": c["weight"],
                      "items": items})
@@ -451,6 +460,13 @@ def fmt(v: float | None, f: str) -> str:
 
 
 def proof_text(p: dict) -> str:
+    from app.modules.validation.provenance import stamp_text
+
+    pv = stamp_text(p.get("provenance"))
+    return _proof_text(p) + (f". Происхождение: {pv}" if pv else "")
+
+
+def _proof_text(p: dict) -> str:
     if p["kind"] == "metric":
         s = f"{p['label']}: **{fmt(p['value'], p['fmt'])}**"
         if p.get("ci"):

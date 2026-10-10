@@ -27,6 +27,7 @@ from app.modules.profiles.models import CandidateFact, CandidateProfile, Candida
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
 from app.modules.fsp import relevance as fsp_relevance
 from app.modules.fsp.rating import details as fsp_rating
+from app.core.origin import fsp_origin
 
 DEFAULT_PRIVACY = {
     "show_city": True, "show_experience": True, "show_work_format": True, "show_roles": True,
@@ -527,6 +528,8 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
         "fsp": ({
             "linked": b.passport is not None, "level": "T2" if verified_achievements(b) else None,
             "source": b.passport.link_source.value if b.passport else None,
+            # Я8: метка происхождения паспорта — модельные данные / заглушка по спецификации / реальный запрос
+            "origin": fsp_origin(b.passport.link_source.value, b.passport.raw) if b.passport else None,
             "strength": b.fsp,
             "rating": fsp_rating(b.achievements, direction=b.direction if fsp_relevance_on() else None,
                                  relevance=fsp_relevance_on()),

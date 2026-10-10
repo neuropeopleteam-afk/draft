@@ -1,0 +1,66 @@
+## старт 2026-10-09 17:24:37 MSK
+/dev/mapper/hk-root      118G   94G       19G  84% /
+Mem:            7918        2385         793         203        5253        5532
+0.27 0.23 0.20 1/413 482493
+## клон 63063cb Я7 п. 5: tools/ci/fresh_check.py — проверка …; .env: нет; node_modules: нет
+.env создан
+## проект fspscratch сервисы ['api', 'db', 'web']
+    api [('127.0.0.1', '5190')] cpus 1.5 mem 1610612736
+    db [] cpus 0.5 mem 335544320
+    web [('127.0.0.1', '8190')] cpus 0.25 mem 33554432
+## сборка без кэша 17:24:38
+build rc=0
+#30 DONE 0.0s
+ Image fspscratch-api Built 
+ Image fspscratch-web Built 
+## make up (= compose up -d --build) 17:26:57
+up rc=0
+curl: (56) Recv failure: Connection reset by peer
+## health {"status":"ok","db":"ok"}
+## проверка до демо-данных
+OK    1.12 с  health
+OK    0.00 с  страницы /, /validation, /criteria
+OK    0.57 с  /api/meta  — llm.configured=False
+OK   19.32 с  вход жюри в один клик  — своя песочница
+OK    0.57 с  экспресс-тест до итога  — 7 заданий, итог: есть
+OK    0.33 с  потребность → подборка → сравнение  — разбор rules, в подборке 2, сравнение 200
+OK    0.35 с  удалить песочницу проверки  — 200
+rc=0
+## демо-данные (README: docker compose exec -T api python -m app.modules.demo.seed, здесь с -p fspscratch)
+Демо жюри, созданное до демо-данных, удалено (песочниц: 2) — создастся при входе
+{'candidates': 500, 'interns': 10, 'with_fsp': 243, 'employers': 10, 'needs': 17}
+Демо-вакансии: {'created': 11, 'demo_companies': 10}
+## проверка с демо-данными
+OK    0.06 с  health
+OK    0.01 с  страницы /, /validation, /criteria
+OK    0.02 с  /api/meta  — llm.configured=False
+OK   32.15 с  вход жюри в один клик  — своя песочница
+OK    0.57 с  экспресс-тест до итога  — 7 заданий, итог: есть
+OK    2.08 с  потребность → подборка → сравнение  — разбор rules, в подборке 30, сравнение 200
+OK    0.24 с  удалить песочницу проверки  — 200
+rc=0
+fspscratch-api-1 Up 2 minutes (healthy)
+fspscratch-db-1 Up 2 minutes (healthy)
+fspscratch-web-1 Up 2 minutes
+fspscratch-web-1 0.00% 5.129MiB / 32MiB
+fspscratch-api-1 0.73% 393.7MiB / 1.5GiB
+fspscratch-db-1 0.05% 84.93MiB / 320MiB
+fspscratch-api:latest 911MB
+fspscratch-web:latest 95.4MB
+/dev/mapper/hk-root      118G   96G       18G  85% /
+## время: клон+env 1 с; сборка без кэша 139 с; up до health 38 с; проверка 23 с; демо-данные 55 с; проверка 35 с; всего 291 с
+## конец 2026-10-09 17:29:32 MSK
+## сборка: последние шаги
+#23 [api 5/7] RUN pip install -r requirements.txt -r requirements-dev.txt
+#24 DONE 0.2s
+#25 DONE 2.0s
+#23 [api 5/7] RUN pip install -r requirements.txt -r requirements-dev.txt
+#26 DONE 0.0s
+#23 [api 5/7] RUN pip install -r requirements.txt -r requirements-dev.txt
+#23 DONE 82.5s
+#27 DONE 0.6s
+#28 [api 7/7] RUN useradd --uid 10001 --no-create-home app && chown -R app /srv/backend
+#28 DONE 5.4s
+#29 DONE 35.3s
+#30 DONE 0.0s
+ 
