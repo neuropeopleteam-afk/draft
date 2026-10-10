@@ -74,6 +74,23 @@ def static_numbers() -> dict:
         "exposure_generated_at": exp.get("generated_at", "?")[:10], "exposure_bank_families": exp.get("bank", {}).get("n_families"),
         "report_matches_bank": rep.get("bank", {}).get("content_hash") == bank["content_hash"],
     }
+    # точность уровня (Я22): весь путь при действующем пороге (make path-retest) и перебор правил (make grade-sweep)
+    grade = None
+    pr_p = ROOT / "backend/app/modules/validation/data/path_retest.json"
+    gs_p = ROOT / "backend/app/modules/validation/data/grade_sweep.json"
+    if pr_p.exists() and gs_p.exists():
+        pr = json.loads(pr_p.read_text(encoding="utf-8"))
+        gs = json.loads(gs_p.read_text(encoding="utf-8"))
+        pts = {q["key"]: q["metrics"] for q in gs["points"]}
+        base, ch = pts.get(gs["baseline_key"], {}), pts.get((gs.get("choice") or {}).get("key"), {})
+        r3 = lambda x: round(x, 3) if isinstance(x, (int, float)) else x  # noqa: E731
+        grade = {
+            "confirm_level": pr["config"].get("confirm_level"), "path_retest_commit": pr["signature"]["commit"],
+            "path_retest_at": pr["signature"]["generated_at"][:10], "sweep_commit": gs["signature"]["commit"],
+            "sweep_points": len(gs["points"]),
+            "before": {k: r3(base.get(k)) for k in ("exact", "over", "under", "none", "retest_exact", "retest_kappa", "minutes_mean")},
+            "now": {k: r3(ch.get(k)) for k in ("exact", "over", "under", "none", "retest_exact", "retest_kappa", "minutes_mean")},
+        }
     # e2e в коде
     specs = sorted((ROOT / "e2e/tests").glob("*.spec.ts"))
     n_tests = sum(len(re.findall(r"^\s*test\(", p.read_text(encoding="utf-8"), re.M)) for p in specs)
@@ -95,6 +112,7 @@ def static_numbers() -> dict:
         },
         "e2e_in_code": {"spec_files": len(specs), "scenarios": n_tests},
         "validation_report": validation,
+        "grade_accuracy": grade,
     }
 
 
@@ -138,6 +156,18 @@ def validation_row(v: dict, families: int) -> str:
             f"{dm(v['exposure_generated_at'])} на {v['exposure_bank_families']} семействах | `make validate`, `backend/app/modules/validation/data/report.json` |")
 
 
+def grade_row(g: dict | None) -> list[str]:
+    if not g:
+        return []
+    b, c = g["before"], g["now"]
+    pc = lambda x: fnum(100 * x, 1) + " %"  # noqa: E731
+    return [f"| Точность уровня (модель, не люди) | порог уверенности P ≥ {fnum(g['confirm_level'], 1)}: точно истинный уровень "
+            f"**{pc(c['exact'])}** (было {pc(b['exact'])} при P ≥ 0,8), выше {pc(c['over'])}, ниже {pc(c['under'])}, без категории "
+            f"{pc(c['none'])}; повтор: совпало {pc(c['retest_exact'])}, κw {fnum(c['retest_kappa'])}; ≈ {fnum(c['minutes_mean'], 0)} мин "
+            f"| перебор {g['sweep_points']} вариантов, коммит `{g['sweep_commit']}`; путь — коммит `{g['path_retest_commit']}`, "
+            f"{g['path_retest_at']}; `make grade-sweep`, `docs/validation/GRADE_ACCURACY.md` |"]
+
+
 def render_numbers(n: dict) -> str:
     b, mg, ml, mt, e2 = n["bank"], n["migrations"], n["memory_limits_mib"], n["matching"], n["e2e_in_code"]
     t = n.get("tests", {})
@@ -161,6 +191,7 @@ def render_numbers(n: dict) -> str:
         f"синтетический мир со скрытой истиной, {mt['world'].split(': ')[-1]}, seed {mt['seed']}, алгоритм `{mt['algorithm']}` | "
         f"`make bench`, `docs/validation/MATCHING_BENCH.md`, `docs/validation/matching_bench.json` |",
         validation_row(n["validation_report"], b["families"]),
+        *grade_row(n.get("grade_accuracy")),
         f"| Сквозные сценарии (Playwright) | {e2['scenarios']} сценариев в {e2['spec_files']} файлах (число в коде, не результат прогона) | `e2e/tests`, `make e2e` |",
         f"| Лимиты памяти контейнеров | {lim} | `docker-compose.yml`, разбор — `docs/LOAD_TEST.md` |",
     ]
@@ -208,7 +239,7 @@ def main() -> int:
     new_json = json.dumps(n, ensure_ascii=False, indent=1) + "\n"
     if a.check:
         # сравниваем статическую часть (без тестов: они приходят из журнала) и тексты блоков
-        for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code", "validation_report"):
+        for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code", "validation_report", "grade_accuracy"):
             if old.get(k) != n[k]:
                 bad.append(f"docs/NUMBERS.json: раздел «{k}» устарел")
     else:
