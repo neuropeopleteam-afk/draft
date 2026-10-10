@@ -208,6 +208,13 @@ def run(n_per_theta: int = 10, seed: int = 20261007, directions=DIRECTIONS, cuts
         out["retest"][d] = retest_agreement(pool, truth, d, chosen, base, rng, n=retest_n)
     out["families_used"] = sorted({f for rows in pooled.values() for r in rows for f in r["families"]})
     out["elapsed_s"] = round(time.time() - t0, 1)
+    # Я8: подпись расчёта (коммит кода, банк, seed) — для строки происхождения на /validation; на числа не влияет
+    from app.modules.validation.signature import signature
+    out["signature"] = signature(seed=seed, config={**out["config"], "cuts": list(cuts), "n_per_theta": n_per_theta,
+                                                    "synthetic": synthetic, "retest_n": retest_n, "quick": quick},
+                                 world="симуляция теста у порога Стажёра: синтетические кандидаты на сетке θ, "
+                                       "истина заданий = предкалибровка + ошибка эксперта",
+                                 command="make intern-cut", n=n_per_theta * len(THETA_GRID) * len(directions))
     return out
 
 
