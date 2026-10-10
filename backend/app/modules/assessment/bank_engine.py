@@ -144,7 +144,7 @@ def express_params(settings, claimed_grade: str | None) -> dict:
     """Параметры экспресса по заявленному грейду: Junior/Middle — 5–7 заданий с лимитом ≤ 240 с; Senior — 8–12 с лимитом
     ≤ 360 с (консилиум 07.10, решение 5). Одна точка правды для движка, статуса и дедлайна сессии."""
     s = settings
-    if claimed_grade == "senior":
+    if claimed_grade in ("senior", "lead", "principal"):  # Lead/Principal экспресс не присваивает (grades.ceiling)
         return {"min_items": s.assessment_express_senior_min_items, "max_items": s.assessment_express_senior_max_items,
                 "item_time_s": s.assessment_express_senior_item_time_s,
                 "max_minutes": s.assessment_express_senior_max_minutes}
@@ -359,7 +359,7 @@ class BankEngine:
                 rescored, excluded = True, len(excl)
         scored = [i for i in done if not i["canary"]]
         # потолок категории по длине теста и погрешности — то же отображение θ → категория, что у мини-теста (grades)
-        dec = decide_grade(theta, se, claimed, n_items=len(scored))
+        dec = decide_grade(theta, se, claimed, n_items=len(scored), direction=state["direction"])
 
         new_scored = [i for i in state["items"] if i["done"] and not i["canary"]]
         pending = [i for i in scored if any(v is None for v in i["x"])]
@@ -425,7 +425,7 @@ class BankEngine:
                         for i in scored if i["format"] in ("open_answer", "open_book_3step")],
         }
         retake = dec.retake_lower
-        lvl = category_level(theta, se, len(scored))
+        lvl = category_level(theta, se, len(scored), direction=state["direction"])
         details["category_level"] = {"grade": lvl.grade, "ceiling": lvl.ceiling, "capped": lvl.capped,
                                      "claimed_above_ceiling": GRADES.index(claimed) > GRADES.index(lvl.ceiling)}
         # θ и погрешность округляются один раз (fmt.theta_round): итог, факты, подборка и приглашение — одинаково
@@ -450,7 +450,8 @@ class BankEngine:
         c = state["cfg"]
         ext = state.get("ext")
         # сессии, начатые до 06.10 (в cfg нет новых ключей), доигрываются по прежним правилам остановки и выбора
-        cuts = ((self.scale.cuts[c["cuts_only"]],) if c.get("cuts_only") else tuple(self.scale.cuts[g] for g in GRADES))
+        # пороги — уровней направления (Lead/Principal — только если они видны в направлении, catalog.levels)
+        cuts = ((self.scale.cuts[c["cuts_only"]],) if c.get("cuts_only") else cuts_tuple(state.get("direction")))
         return CATConfig(min_items=c["min_items"], max_items=c["max_items"], se_target=c["se_target"],
                          max_time_s=c["max_time_s"], cuts=cuts, start_theta=start_theta(),
                          canary_positions=tuple(c.get("canary_positions", (2, 6, 10))),
