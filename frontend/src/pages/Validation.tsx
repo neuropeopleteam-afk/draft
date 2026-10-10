@@ -114,6 +114,8 @@ function Report({ r }: { r: any }) {
         <Table head={["Направление", "Макс. частота", "Средняя", "Доля > 0,3", "Не используются", "День 2: макс.", "День 2: > 0,3", "День 2: не используются"]}
           rows={dirs.map((d) => { const e = sim.directions[d].exposure; return [DIRECTIONS[d], num(e.app.max_rate), num(e.app.mean_rate), pct(e.app.share_over_rmax), pct(e.app.unused_share), num(e.baseline_day2.max_rate), pct(e.baseline_day2.share_over_rmax), pct(e.baseline_day2.unused_share)]; })} />
         <ExposureNote sim={sim} />
+        <p className="mt-2 text-xs text-brand-ink/70">Коэффициенты K, которые сейчас читает движок теста:</p>
+        <ProvenanceLine p={r.provenance?.exposure_k} className="mt-0.5" />
         <SimConditions sim={sim} kind="exposure" />
       </Section>
 
