@@ -180,7 +180,7 @@ function JuryBlock() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const interview = !!useMeta()?.interview_enabled;  // Я15: шаг «по желанию» в «12 минутах»
+  const interview = !!useMeta()?.interview?.enabled;  // Я15: шаг «по желанию» в «12 минутах»
 
   async function enter(p: Persona) {
     setBusy(p); setMsg(null);
