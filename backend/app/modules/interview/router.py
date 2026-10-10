@@ -111,7 +111,7 @@ class SessionOut(BaseModel):
     error: str | None = None
 
 
-class ConsentOut(BaseModel):
+class InterviewConsentOut(BaseModel):
     version: str
     items: list[str]
 
@@ -133,7 +133,7 @@ class DefenseStateOut(BaseModel):
     can_start: bool
     jury: JuryOut | None = None
     name_hint: str
-    consent: ConsentOut
+    consent: InterviewConsentOut
     session: SessionOut | None = None
     example: SessionOut | None = None
 
@@ -147,7 +147,7 @@ class StageOut(BaseModel):
     skills: list[str] = []
     skills_reason: str | None = None
     name_hint: str | None = None
-    consent: ConsentOut | None = None
+    consent: InterviewConsentOut | None = None
     session: SessionOut | None = None
 
 
