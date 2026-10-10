@@ -1,0 +1,1026 @@
+{
+ "generated_at": "2026-10-10T11:17:52+00:00",
+ "code_commit": "ed93c28",
+ "corpus_collected_at": "2026-10-10",
+ "n_corpus": 193,
+ "n": 193,
+ "n_missing": 0,
+ "text_changed_since_collect": 0,
+ "buckets": {
+  "backend": 32,
+  "frontend": 29,
+  "qa": 32,
+  "data_ml": 32,
+  "security": 32,
+  "neg_exp": 18,
+  "neg_remote": 18
+ },
+ "method": "Путь правил need_parser.parse_need(use_llm=False) на названии и описании (key_skills парсеру не даются). Метки — структурированные поля hh.ru: роль → направление, слово грейда в названии → грейд, experience → диапазон лет, work_format → формат, key_skills → теги справочника. Опыт и формат: «согласовано» — значение парсера внутри поля hh.ru (доля от найденных); отрицания — текст с «опыт не требуется» → разбор не требует опыта, «удалёнка не предусмотрена / только офис» → не «удалённо» (явные 0 лет и «офис» — отдельно).",
+ "parser": {
+  "n": 193,
+  "completeness": {
+   "direction": 0.959,
+   "grade": 0.927,
+   "experience_years_min": 0.337,
+   "work_format": 0.767,
+   "stack": 0.927,
+   "salary": 0.13
+  },
+  "accuracy": {
+   "direction": {
+    "correct": 155,
+    "n": 170,
+    "share": 0.912
+   },
+   "grade": {
+    "correct": 153,
+    "n": 154,
+    "share": 0.994
+   },
+   "experience": {
+    "consistent": 48,
+    "found": 65,
+    "n": 193,
+    "share_of_found": 0.738
+   },
+   "work_format": {
+    "consistent": 109,
+    "found": 146,
+    "n": 191,
+    "share_of_found": 0.747
+   }
+  },
+  "skills": {
+   "vacancies_with_key_skills": 110,
+   "key_skills_recall": 0.8,
+   "key_skills_found": 347,
+   "key_skills_total": 434,
+   "required_confirmed_by_key_skills": 0.35,
+   "required_total": 965
+  },
+  "negations": {
+   "neg_exp": {
+    "correct": 10,
+    "n": 12,
+    "share": 0.833,
+    "explicit": 0,
+    "explicit_share": 0.0
+   },
+   "noexp_field": {
+    "correct": 51,
+    "n": 52,
+    "share": 0.981,
+    "explicit": 0,
+    "explicit_share": 0.0
+   },
+   "neg_remote": {
+    "correct": 9,
+    "n": 23,
+    "share": 0.391,
+    "explicit": 17,
+    "explicit_share": 0.739
+   },
+   "onsite_only": {
+    "correct": 83,
+    "n": 104,
+    "share": 0.798,
+    "explicit": 59,
+    "explicit_share": 0.567
+   }
+  },
+  "mismatches": [
+   {
+    "id": "138298584",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138122007",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138188773",
+    "field": "work_format",
+    "expected": [
+     "office"
+    ],
+    "actual": "remote"
+   },
+   {
+    "id": "137392814",
+    "field": "work_format",
+    "expected": [
+     "office",
+     "remote"
+    ],
+    "actual": "hybrid"
+   },
+   {
+    "id": "137535177",
+    "field": "experience_years_min",
+    "expected": "between3And6",
+    "actual": 7.0
+   },
+   {
+    "id": "137535177",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138294924",
+    "field": "grade",
+    "expected": "middle",
+    "actual": "senior"
+   },
+   {
+    "id": "138143805",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "data_ml"
+   },
+   {
+    "id": "137193871",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "data_ml"
+   },
+   {
+    "id": "137193871",
+    "field": "experience_years_min",
+    "expected": "moreThan6",
+    "actual": 3.0
+   },
+   {
+    "id": "137407983",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "frontend"
+   },
+   {
+    "id": "138218328",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138054059",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "137969554",
+    "field": "work_format",
+    "expected": [
+     "hybrid",
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "137905214",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "137748534",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "137849180",
+    "field": "experience_years_min",
+    "expected": "between3And6",
+    "actual": 2.0
+   },
+   {
+    "id": "138310906",
+    "field": "experience_years_min",
+    "expected": "between3And6",
+    "actual": 2.0
+   },
+   {
+    "id": "135155890",
+    "field": "experience_years_min",
+    "expected": "between3And6",
+    "actual": 0.5
+   },
+   {
+    "id": "138307588",
+    "field": "experience_years_min",
+    "expected": "noExperience",
+    "actual": 5.0
+   },
+   {
+    "id": "138306242",
+    "field": "direction",
+    "expected": "backend",
+    "actual": "frontend"
+   },
+   {
+    "id": "138266535",
+    "field": "experience_years_min",
+    "expected": "moreThan6",
+    "actual": 5.0
+   },
+   {
+    "id": "138263018",
+    "field": "work_format",
+    "expected": [
+     "hybrid"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138260902",
+    "field": "experience_years_min",
+    "expected": "moreThan6",
+    "actual": 5.0
+   },
+   {
+    "id": "138306799",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138227805",
+    "field": "work_format",
+    "expected": [
+     "office"
+    ],
+    "actual": "remote"
+   },
+   {
+    "id": "138227784",
+    "field": "work_format",
+    "expected": [
+     "office"
+    ],
+    "actual": "remote"
+   },
+   {
+    "id": "137605399",
+    "field": "experience_years_min",
+    "expected": "moreThan6",
+    "actual": 1.0
+   },
+   {
+    "id": "129586923",
+    "field": "experience_years_min",
+    "expected": "between3And6",
+    "actual": 2.0
+   },
+   {
+    "id": "129586923",
+    "field": "neg_remote",
+    "expected": "не remote",
+    "actual": "office"
+   },
+   {
+    "id": "137428120",
+    "field": "neg_remote",
+    "expected": "не remote",
+    "actual": "office"
+   },
+   {
+    "id": "137392697",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138311436",
+    "field": "experience_years_min",
+    "expected": "moreThan6",
+    "actual": 3.0
+   },
+   {
+    "id": "138309862",
+    "field": "experience_years_min",
+    "expected": "moreThan6",
+    "actual": 2.0
+   },
+   {
+    "id": "138309862",
+    "field": "work_format",
+    "expected": [
+     "hybrid"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138067675",
+    "field": "work_format",
+    "expected": [
+     "hybrid"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138010748",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "137633482",
+    "field": "work_format",
+    "expected": [
+     "hybrid"
+    ],
+    "actual": "remote"
+   },
+   {
+    "id": "137535328",
+    "field": "direction",
+    "expected": "data_ml",
+    "actual": "security"
+   },
+   {
+    "id": "137535328",
+    "field": "work_format",
+    "expected": [
+     "remote"
+    ],
+    "actual": "hybrid"
+   },
+   {
+    "id": "137905644",
+    "field": "direction",
+    "expected": "data_ml",
+    "actual": "backend"
+   },
+   {
+    "id": "137520258",
+    "field": "work_format",
+    "expected": [
+     "office"
+    ],
+    "actual": "hybrid"
+   },
+   {
+    "id": "138320505",
+    "field": "work_format",
+    "expected": [
+     "hybrid"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "137317982",
+    "field": "experience_years_min",
+    "expected": "moreThan6",
+    "actual": 3.0
+   },
+   {
+    "id": "137792022",
+    "field": "work_format",
+    "expected": [
+     "hybrid"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "136898522",
+    "field": "work_format",
+    "expected": [
+     "office"
+    ],
+    "actual": "hybrid"
+   },
+   {
+    "id": "137214252",
+    "field": "work_format",
+    "expected": [
+     "office"
+    ],
+    "actual": "hybrid"
+   },
+   {
+    "id": "137611084",
+    "field": "direction",
+    "expected": "data_ml",
+    "actual": "backend"
+   },
+   {
+    "id": "137611084",
+    "field": "work_format",
+    "expected": [
+     "office",
+     "remote"
+    ],
+    "actual": "hybrid"
+   },
+   {
+    "id": "138312596",
+    "field": "experience_years_min",
+    "expected": "moreThan6",
+    "actual": 5.0
+   },
+   {
+    "id": "138312596",
+    "field": "work_format",
+    "expected": [
+     "office"
+    ],
+    "actual": "hybrid"
+   },
+   {
+    "id": "138313312",
+    "field": "direction",
+    "expected": "security",
+    "actual": "backend"
+   },
+   {
+    "id": "138278809",
+    "field": "work_format",
+    "expected": [
+     "hybrid"
+    ],
+    "actual": "office"
+   },
+   {
+    "id": "138029689",
+    "field": "direction",
+    "expected": "security",
+    "actual": "backend"
+   },
+   {
+    "id": "136760085",
+    "field": "direction",
+    "expected": "security",
+    "actual": "qa"
+   },
+   {
+    "id": "134071500",
+    "field": "direction",
+    "expected": "security",
+    "actual": null
+   },
+   {
+    "id": "138181621",
+    "field": "neg_remote",
+    "expected": "не remote",
+    "actual": "office"
+   },
+   {
+    "id": "138149321",
+    "field": "experience_years_min",
+    "expected": "between3And6",
+    "actual": 2.0
+   },
+   {
+    "id": "138149321",
+    "field": "work_format",
+    "expected": [
+     "office"
+    ],
+    "actual": "remote"
+   },
+   {
+    "id": "138148877",
+    "field": "experience_years_min",
+    "expected": "between3And6",
+    "actual": 2.0
+   }
+  ]
+ },
+ "import": {
+  "n": 193,
+  "category": 0.959,
+  "salary_from_hh": 0.104,
+  "salary_partial": 0.326,
+  "work_format": 0.979,
+  "city": 1.0,
+  "stack": 0.938,
+  "conditions": 1.0,
+  "no_notes": 0.098
+ },
+ "baseline_note": "Тот же замер разбора на 50 вакансиях — docs/LLM.md, раздел 10.4; здесь — корпус hh.ru.",
+ "compare": {
+  "rev": "fix/sup3",
+  "parser": {
+   "n": 193,
+   "completeness": {
+    "direction": 0.959,
+    "grade": 0.927,
+    "experience_years_min": 0.373,
+    "work_format": 0.762,
+    "stack": 0.927,
+    "salary": 0.13
+   },
+   "accuracy": {
+    "direction": {
+     "correct": 155,
+     "n": 170,
+     "share": 0.912
+    },
+    "grade": {
+     "correct": 153,
+     "n": 154,
+     "share": 0.994
+    },
+    "experience": {
+     "consistent": 54,
+     "found": 72,
+     "n": 193,
+     "share_of_found": 0.75
+    },
+    "work_format": {
+     "consistent": 114,
+     "found": 145,
+     "n": 191,
+     "share_of_found": 0.786
+    }
+   },
+   "skills": {
+    "vacancies_with_key_skills": 110,
+    "key_skills_recall": 0.8,
+    "key_skills_found": 347,
+    "key_skills_total": 434,
+    "required_confirmed_by_key_skills": 0.35,
+    "required_total": 965
+   },
+   "negations": {
+    "neg_exp": {
+     "correct": 10,
+     "n": 12,
+     "share": 0.833,
+     "explicit": 7,
+     "explicit_share": 0.583
+    },
+    "noexp_field": {
+     "correct": 51,
+     "n": 52,
+     "share": 0.981,
+     "explicit": 6,
+     "explicit_share": 0.115
+    },
+    "neg_remote": {
+     "correct": 20,
+     "n": 23,
+     "share": 0.87,
+     "explicit": 20,
+     "explicit_share": 0.87
+    },
+    "onsite_only": {
+     "correct": 96,
+     "n": 104,
+     "share": 0.923,
+     "explicit": 64,
+     "explicit_share": 0.615
+    }
+   },
+   "mismatches": [
+    {
+     "id": "138298584",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138122007",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138188773",
+     "field": "work_format",
+     "expected": [
+      "office"
+     ],
+     "actual": "remote"
+    },
+    {
+     "id": "137392814",
+     "field": "work_format",
+     "expected": [
+      "office",
+      "remote"
+     ],
+     "actual": "hybrid"
+    },
+    {
+     "id": "137535177",
+     "field": "experience_years_min",
+     "expected": "between3And6",
+     "actual": 7.0
+    },
+    {
+     "id": "137535177",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138294924",
+     "field": "grade",
+     "expected": "middle",
+     "actual": "senior"
+    },
+    {
+     "id": "138143805",
+     "field": "direction",
+     "expected": "backend",
+     "actual": "data_ml"
+    },
+    {
+     "id": "137193871",
+     "field": "direction",
+     "expected": "backend",
+     "actual": "data_ml"
+    },
+    {
+     "id": "137193871",
+     "field": "experience_years_min",
+     "expected": "moreThan6",
+     "actual": 3.0
+    },
+    {
+     "id": "137407983",
+     "field": "direction",
+     "expected": "backend",
+     "actual": "frontend"
+    },
+    {
+     "id": "138218328",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138054059",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "137969554",
+     "field": "work_format",
+     "expected": [
+      "hybrid",
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "137905214",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "137748534",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "137849180",
+     "field": "experience_years_min",
+     "expected": "between3And6",
+     "actual": 2.0
+    },
+    {
+     "id": "138310906",
+     "field": "experience_years_min",
+     "expected": "between3And6",
+     "actual": 2.0
+    },
+    {
+     "id": "135155890",
+     "field": "experience_years_min",
+     "expected": "between3And6",
+     "actual": 0.5
+    },
+    {
+     "id": "138307588",
+     "field": "experience_years_min",
+     "expected": "noExperience",
+     "actual": 5.0
+    },
+    {
+     "id": "138306242",
+     "field": "direction",
+     "expected": "backend",
+     "actual": "frontend"
+    },
+    {
+     "id": "138266535",
+     "field": "experience_years_min",
+     "expected": "moreThan6",
+     "actual": 5.0
+    },
+    {
+     "id": "138263018",
+     "field": "work_format",
+     "expected": [
+      "hybrid"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138260902",
+     "field": "experience_years_min",
+     "expected": "moreThan6",
+     "actual": 5.0
+    },
+    {
+     "id": "138306799",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138227784",
+     "field": "work_format",
+     "expected": [
+      "office"
+     ],
+     "actual": "hybrid"
+    },
+    {
+     "id": "137605399",
+     "field": "experience_years_min",
+     "expected": "moreThan6",
+     "actual": 1.0
+    },
+    {
+     "id": "129586923",
+     "field": "experience_years_min",
+     "expected": "between3And6",
+     "actual": 2.0
+    },
+    {
+     "id": "137392697",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138311436",
+     "field": "experience_years_min",
+     "expected": "moreThan6",
+     "actual": 3.0
+    },
+    {
+     "id": "138309862",
+     "field": "experience_years_min",
+     "expected": "moreThan6",
+     "actual": 2.0
+    },
+    {
+     "id": "138309862",
+     "field": "work_format",
+     "expected": [
+      "hybrid"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138067675",
+     "field": "work_format",
+     "expected": [
+      "hybrid"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138010748",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "137633482",
+     "field": "work_format",
+     "expected": [
+      "hybrid"
+     ],
+     "actual": "remote"
+    },
+    {
+     "id": "137535328",
+     "field": "direction",
+     "expected": "data_ml",
+     "actual": "security"
+    },
+    {
+     "id": "137535328",
+     "field": "work_format",
+     "expected": [
+      "remote"
+     ],
+     "actual": "hybrid"
+    },
+    {
+     "id": "137905644",
+     "field": "direction",
+     "expected": "data_ml",
+     "actual": "backend"
+    },
+    {
+     "id": "137520258",
+     "field": "work_format",
+     "expected": [
+      "office"
+     ],
+     "actual": "hybrid"
+    },
+    {
+     "id": "138320505",
+     "field": "work_format",
+     "expected": [
+      "hybrid"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "137317982",
+     "field": "experience_years_min",
+     "expected": "moreThan6",
+     "actual": 3.0
+    },
+    {
+     "id": "137792022",
+     "field": "work_format",
+     "expected": [
+      "hybrid"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "136898522",
+     "field": "work_format",
+     "expected": [
+      "office"
+     ],
+     "actual": "hybrid"
+    },
+    {
+     "id": "137214252",
+     "field": "work_format",
+     "expected": [
+      "office"
+     ],
+     "actual": "hybrid"
+    },
+    {
+     "id": "137611084",
+     "field": "direction",
+     "expected": "data_ml",
+     "actual": "backend"
+    },
+    {
+     "id": "137611084",
+     "field": "work_format",
+     "expected": [
+      "office",
+      "remote"
+     ],
+     "actual": "hybrid"
+    },
+    {
+     "id": "138312596",
+     "field": "experience_years_min",
+     "expected": "moreThan6",
+     "actual": 5.0
+    },
+    {
+     "id": "138312596",
+     "field": "work_format",
+     "expected": [
+      "office"
+     ],
+     "actual": "hybrid"
+    },
+    {
+     "id": "138313312",
+     "field": "direction",
+     "expected": "security",
+     "actual": "backend"
+    },
+    {
+     "id": "138278809",
+     "field": "work_format",
+     "expected": [
+      "hybrid"
+     ],
+     "actual": "office"
+    },
+    {
+     "id": "138029689",
+     "field": "direction",
+     "expected": "security",
+     "actual": "backend"
+    },
+    {
+     "id": "136760085",
+     "field": "direction",
+     "expected": "security",
+     "actual": "qa"
+    },
+    {
+     "id": "134071500",
+     "field": "direction",
+     "expected": "security",
+     "actual": null
+    },
+    {
+     "id": "138149321",
+     "field": "experience_years_min",
+     "expected": "between3And6",
+     "actual": 2.0
+    },
+    {
+     "id": "138149321",
+     "field": "work_format",
+     "expected": [
+      "office"
+     ],
+     "actual": "remote"
+    },
+    {
+     "id": "138148877",
+     "field": "experience_years_min",
+     "expected": "between3And6",
+     "actual": 2.0
+    },
+    {
+     "id": "138148877",
+     "field": "work_format",
+     "expected": [
+      "office"
+     ],
+     "actual": "remote"
+    },
+    {
+     "id": "138191979",
+     "field": "direction",
+     "expected": "security",
+     "actual": null
+    },
+    {
+     "id": "138321976",
+     "field": "direction",
+     "expected": "security",
+     "actual": "backend"
+    },
+    {
+     "id": "134881609",
+     "field": "direction",
+     "expected": "backend",
+     "actual": "frontend"
+    }
+   ]
+  }
+ }
+}
