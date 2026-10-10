@@ -1,5 +1,6 @@
 """Синтез речи ElevenLabs (публичный REST: POST /v1/text-to-speech/{voice_id}?output_format=…). Форматы: mp3 для
-канала «голос» (проигрывается в браузере) и pcm_16000 — для канала «аватар» (Anam принимает pcm_s16le 16 кГц моно)."""
+канала «голос» (проигрывается в браузере) и pcm_16000 — для канала «аватар» (Anam принимает pcm_s16le 16 кГц моно,
+клиент режет на куски и шлёт в поток звука аватара)."""
 from __future__ import annotations
 
 import math
@@ -11,7 +12,7 @@ from ..settings import get_interview_settings
 from . import relay
 
 HOST = "api.elevenlabs.io"
-FORMATS = {"mp3": ("mp3_22050_32", "audio/mpeg", None), "pcm_24000": ("pcm_16000", "audio/pcm", 16000)}
+FORMATS = {"mp3": ("mp3_22050_32", "audio/mpeg", None), "pcm_16000": ("pcm_16000", "audio/pcm", 16000)}
 MAX_CHARS = 1200
 
 
@@ -21,7 +22,7 @@ def _stub_audio(text: str, fmt: str) -> AudioOut:
     if fmt == "mp3":
         return AudioOut(data=b"", mime="audio/mpeg", format="mp3", sample_rate=None, chars=len(text), cost_usd=0.0, stub=True)
     data = bytes(2 * int(16000 * seconds))
-    return AudioOut(data=data, mime="audio/pcm", format="pcm_24000", sample_rate=16000, chars=len(text), cost_usd=0.0, stub=True)
+    return AudioOut(data=data, mime="audio/pcm", format="pcm_16000", sample_rate=16000, chars=len(text), cost_usd=0.0, stub=True)
 
 
 def tts(text: str, fmt: str = "mp3") -> AudioOut:
