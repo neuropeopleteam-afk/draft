@@ -327,6 +327,15 @@ def grade_summary(spec: str, wdir: Path, second: str | None = None) -> dict:
 
 # ------------------------------------------------------------------ запуск
 def cmd_run(a) -> None:
+    if a.cap_usd:  # Я2 п. 4: потолок расходов процесса и пол баланса ключа (как strongest_bench.py)
+        import strongest_bench as SB
+
+        bal = SB.balance_usd()
+        if bal is not None:
+            print(f"баланс ключа: {bal} $, пол {a.floor_usd} $, потолок прогона {a.cap_usd} $", flush=True)
+            if bal - a.cap_usd < a.floor_usd:
+                sys.exit("отказ: прогон может опустить баланс ниже пола")
+        SPEND["cap"] = a.cap_usd
     wdir = Path(a.dir) / slug(a.model)
     wdir.mkdir(parents=True, exist_ok=True)
     funcs = a.funcs.split(",") if a.funcs else FUNCS
@@ -379,6 +388,8 @@ def main() -> None:
     r.add_argument("--force", action="store_true")
     r.add_argument("--second-model", default="", help="модель второй оценки (путь продукта openrouter: "
                    "openrouter=anthropic/claude-fable-5.1); пусто — та же, что первая (режим LLM_CHAIN=yandex)")
+    r.add_argument("--cap-usd", type=float, default=0.0, help="потолок расходов процесса, $ (0 — без потолка)")
+    r.add_argument("--floor-usd", type=float, default=3.0, help="пол баланса ключа OpenRouter, $ (с --cap-usd)")
     r.add_argument("--limit-per-group", type=int, default=0, help="оценщик: не больше N ответов на группу (проба)")
     s = sub.add_parser("summary")
     s.add_argument("--dir", required=True)
