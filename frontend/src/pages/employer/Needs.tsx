@@ -7,7 +7,7 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, T
 import { api } from "../../lib/api";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
-import { InviteForm, ProbeForm, probeSentText } from "./Contact";
+import { InviteForm, ProbeForm, inviteSentText, probeSentText } from "./Contact";
 import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
@@ -600,7 +600,7 @@ export function Selection() {
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение кандидату ${invite?.ref ?? ""}`}>
         {invite && <InviteForm cref={invite.ref} needId={id} market={invite.card?.market_range ?? s?.categories?.find((c: any) => c.relation === "exact")?.market_range}
           needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }}
-          onDone={() => { setInvited(`Приглашение ${invite.ref} отправлено. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`); setInvite(null); }} />}
+          onDone={(inv) => { setInvited(inviteSentText(inv, invite.ref)); setInvite(null); }} />}
       </Modal>
       {/* А11: обновление подборки (новая версия, пересчёт) — экранному диктору; последним элементом, чтобы не сдвигать space-y */}
       <p className="sr-only" role="status" aria-live="polite">{busy ? "Пересчитываем подборку" : s ? `Подборка v${s.version}: кандидатов ${s.total}` : ""}</p>

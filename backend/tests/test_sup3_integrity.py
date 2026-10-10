@@ -37,3 +37,32 @@ def test_desktop_rules_unchanged():
                            + [_item(fs_na=1, fs_out_ms=600_000)] * 4)
     assert mix["signals"]["fs_exits"] == 6 and mix["signals"]["fs_out_s"] == 80.0
     assert mix["points"] == 2 and "6 раз" in _fs_reasons(mix)[0]
+
+
+# ------------------------------------------------------------------ С3-11: что именно снизило достоверность (демо жюри)
+from app.core.config import get_settings  # noqa: E402
+from tests.test_integrity_r27 import H, _run_test_with_all_signals, assert_candidate_safe, bank_api  # noqa: E402,F401
+
+
+def test_jury_view_only_for_lowered_level():
+    assert integrity.jury_view(None) is None
+    assert integrity.jury_view(integrity.assess([_item(fs_na=1) for _ in range(6)])) is None  # высокая — нечего пояснять
+    medium = integrity.assess([_item(fs_na=0) for _ in range(6)])
+    jv = integrity.jury_view(medium)
+    assert medium["level"] == "medium" and jv["reasons"] == integrity.summary_for_employer(medium)["reasons"]
+    assert "без полноэкранного режима" in jv["reasons"][0] and "Р27" in jv["note"]
+
+
+def test_result_details_only_in_jury_demo_mode(client, bank_api, monkeypatch):
+    tok = client.post("/api/jury/login", json={"persona": "candidate"}).json()["access_token"]
+    sid, fin, _ = _run_test_with_all_signals(client, tok)
+    jury = fin["integrity_jury"]  # демо-режим жюри: те же причины, что у работодателя, — из уже собранных сигналов
+    assert fin["sandbox"] and fin["integrity"]["level"] == "low"
+    assert any("скопировать текст задания" in t for t in jury["reasons"]) and len(jury["reasons"]) <= 6
+    again = client.get(f"/api/assessment/sessions/{sid}/result", headers=H(tok)).json()
+    assert again["integrity_jury"] == jury
+    # вне демо-режима (Р27) — ни в итоге, ни при повторном запросе: только уровень и общая причина
+    monkeypatch.setattr(get_settings(), "jury_mode_available", False)
+    plain = client.get(f"/api/assessment/sessions/{sid}/result", headers=H(tok)).json()
+    assert not plain["sandbox"] and "integrity_jury" not in plain
+    assert_candidate_safe(plain, "итог теста вне демо-режима")

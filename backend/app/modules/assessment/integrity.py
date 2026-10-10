@@ -379,6 +379,19 @@ def candidate_view(integ: dict | None) -> dict | None:
     return {**out, "reasons": [KIND_TITLES[k] for k in order] or [KIND_TITLES["behavior"]], "note": CANDIDATE_NOTE}
 
 
+JURY_NOTE = ("Демо-режим жюри: так причины видит работодатель. Кандидат вне демо-режима видит только уровень и общую "
+             "причину (Р27).")
+
+
+def jury_view(integ: dict | None) -> dict | None:
+    """Я11 (С3-11): в демо-режиме жюри к итогу теста — подробные причины, как у работодателя (summary_for_employer):
+    из уже собранных событий, без новых правил. Кандидату вне демо-режима не отдаётся (Р27, service.finish_session)."""
+    emp = summary_for_employer(integ)
+    if not emp or emp.get("level") not in ("medium", "low") or not emp.get("reasons"):
+        return None
+    return {"reasons": emp["reasons"], "note": JURY_NOTE}
+
+
 def add_reasons(integ: dict, extra: list[tuple], *, kind: str = "camera", **attach: Any) -> dict:
     """Сигналы отдельных модулей (камера по согласию — app/modules/proctor, И16) в общую достоверность: баллы
     складываются, причины добавляются, уровень — по тем же порогам (≥ 3 — низкая, 1–2 — средняя). extra — пары
