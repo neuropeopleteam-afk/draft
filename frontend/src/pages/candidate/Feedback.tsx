@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, Empty, GRADES, Level, Loading, catTitle, dt, useApi } from "../../components/ui";
+import { Alert, Empty, GRADE_TITLE_ALL, Level, Loading, catTitle, dt, useApi } from "../../components/ui";
 
 /** Обратная связь после теста: карта навыков, спрос работодателей категории, маршрут роста, дисциплины ФСП. */
 
@@ -33,7 +33,7 @@ const DEMAND: Record<string, string> = {
 };
 const DEMAND_LEVEL: Record<string, string> = { confirmed: "T1", weak: "T1", declared: "T0", missing: "none" };
 const REL: Record<string, string> = { above: "выше ожидаемого для вашего уровня", below: "ниже ожидаемого для вашего уровня" };
-const GRADE_RU: Record<string, string> = { none: "без грейда", ...GRADES };
+const GRADE_RU: Record<string, string> = { none: "без грейда", ...GRADE_TITLE_ALL };
 const pct = (v: number | null | undefined) => (v == null ? "—" : `${Math.round(v * 100)}\u00A0%`);
 const tasks = (n: number) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? "задание" : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "задания" : "заданий"}`;
 

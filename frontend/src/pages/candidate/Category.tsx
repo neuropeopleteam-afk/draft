@@ -2,9 +2,11 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, GradeStatusNote } from "../../components/GradeStatus";
-import { Alert, DIRECTIONS, Empty, GRADES, Loading, Toggle, catTitle, dt, dtt, errText, num, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTIONS, Empty, GRADE_TITLE_ALL, Loading, Toggle, catTitle, dt, dtt, errText, num, ruText, signed, useApi } from "../../components/ui";
 import { MarketNote } from "../../components/Salary";
 import { api } from "../../lib/api";
+import { gradeIds } from "../../lib/grades";
+import { useMeta } from "../../lib/meta";
 import { Specializations } from "../../components/Specializations";
 import { PassportShare } from "../../passport/Share";
 import { AttemptsLink } from "../../components/AttemptsCompare";
@@ -19,12 +21,13 @@ const SESSION: Record<string, string> = { finished: "Завершён", in_progr
 export default function Category() {
   const { data: s, error, loading, reload } = useApi<any>("/assessment/status");
   const navigate = useNavigate();
+  const meta = useMeta();
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   if (loading && !s) return <Loading />;
   if (error || !s) return <Alert>{error}</Alert>;
   const c = s.current;
-  const grades = Object.keys(GRADES);
+  const grades = gradeIds(meta, c.direction);  // с флагом GRADES_EXT_ENABLED — и Lead/Principal направления
   const idx = c.grade ? grades.indexOf(c.grade) : -1;
   const pv = s.provisional;
   const gs = s.grade_status;
@@ -64,7 +67,7 @@ export default function Category() {
               {c.rank ? <p>Место в категории: <b>{c.rank}</b> из {c.category_size}.</p> : null}
               <MarketNote m={c.market_range} />
             </div>
-          ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTIONS[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADES[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
+          ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTIONS[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADE_TITLE_ALL[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
           {gs?.status === "unconfirmed" && <GradeStatusNote s={gs} className="mt-2" />}
           {gs?.status === "unconfirmed" && <p className="mt-1 text-xs text-brand-ink/65">Работодатели видят вас в поиске и подборках со статусом «грейд не подтверждён» — ниже всех подтверждённых. Категорию присваивает только тест.</p>}
         </div>
@@ -74,7 +77,7 @@ export default function Category() {
             ? <p className="mt-1 text-brand-ink/75">Смена грейда доступна с <b>{dt(s.locked_until).replace(/ г\.$/, "")}</b>.{s.sandbox_active && " Сейчас ограничение снято демо-режимом."}</p>
             : <p className="mt-1 text-brand-ink/75">{c.grade ? "Можно пройти тест на грейд выше или ниже." : "Ограничений нет — пройдите тест."}</p>}
           {Object.keys(s.retake_locks ?? {}).length > 0 && (
-            <p className="mt-1 text-brand-ink/75">Повтор после неподтверждённой попытки: {Object.entries(s.retake_locks as Record<string, string>).map(([g, at]) => `${GRADES[g]} — с ${dt(at).replace(/ г\.$/, "")}`).join(", ")}. Тест на грейд ниже — сразу.</p>
+            <p className="mt-1 text-brand-ink/75">Повтор после неподтверждённой попытки: {Object.entries(s.retake_locks as Record<string, string>).map(([g, at]) => `${GRADE_TITLE_ALL[g]} — с ${dt(at).replace(/ г\.$/, "")}`).join(", ")}. Тест на грейд ниже — сразу.</p>
           )}
           <p className="mt-1 text-xs text-brand-ink/65">Смена подтверждённого грейда — не чаще раза в {s.grade_change_interval_days ?? 90} дней; повтор на тот же грейд после неудачи — через {s.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу.</p>
           {s.jury_mode_available && s.jury_mode_allowed && (
@@ -116,9 +119,9 @@ export default function Category() {
       {s.confirmed_by && <Alert kind="ok">Грейд был присвоен предварительно и подтверждён {s.confirmed_by.title}{s.confirmed_by.ref_title ? ` («${s.confirmed_by.ref_title}»)` : ""}. Подтверждение — не смена грейда: правило 90 дней не начиналось заново.</Alert>}
       <Alert>{err}</Alert>
       <section className="flex flex-wrap gap-3">
-        {idx > 0 && <button className="btn-ghost" disabled={!s.can_retest_now} onClick={() => retest(grades[idx - 1])}>Тест на {GRADES[grades[idx - 1]]}</button>}
-        {idx >= 0 && idx < grades.length - 1 && <button className="btn-primary" disabled={!s.can_retest_now} onClick={() => retest(grades[idx + 1])}>Тест на {GRADES[grades[idx + 1]]}</button>}
-        {pv && <button className="btn-ghost" disabled={!s.can_retest_now} onClick={() => retest(c.grade)}>Пройти тест на {GRADES[c.grade]} заново</button>}
+        {idx > 0 && <button className="btn-ghost" disabled={!s.can_retest_now} onClick={() => retest(grades[idx - 1])}>Тест на {GRADE_TITLE_ALL[grades[idx - 1]]}</button>}
+        {idx >= 0 && idx < grades.length - 1 && <button className="btn-primary" disabled={!s.can_retest_now} onClick={() => retest(grades[idx + 1])}>Тест на {GRADE_TITLE_ALL[grades[idx + 1]]}</button>}
+        {pv && <button className="btn-ghost" disabled={!s.can_retest_now} onClick={() => retest(c.grade)}>Пройти тест на {GRADE_TITLE_ALL[c.grade]} заново</button>}
         {/* И26: в демо-режиме жюри вторая попытка — сразу (у жюри нет 30 дней); у обычных кандидатов правила как есть */}
         {s.sandbox_active && c.grade && !pv && <button className="btn-ghost" onClick={() => retest(c.grade)} title="В демо-режиме жюри правило 30/90 дней не действует; у обычных кандидатов — как обычно">Пройти ещё раз (демо)</button>}
         {idx < 0 && <Link className="btn-primary" to="/candidate/assessment">Выбрать грейд и начать тест</Link>}
@@ -133,7 +136,7 @@ export default function Category() {
             <ul className="mt-3 space-y-3 text-sm">
               {s.grade_history.map((h: any, i: number) => (
                 <li key={i} className="border-l-2 border-brand-blush pl-3">
-                  <p className="font-semibold">{h.from ? `${GRADES[h.from]} → ` : ""}{GRADES[h.to]} · {DIRECTIONS[h.direction]}</p>
+                  <p className="font-semibold">{h.from ? `${GRADE_TITLE_ALL[h.from]} → ` : ""}{GRADE_TITLE_ALL[h.to]} · {DIRECTIONS[h.direction]}</p>
                   <p className="text-brand-ink/65">{REASON[h.reason] ?? h.reason} · {dt(h.at)}</p>
                 </li>
               ))}
@@ -150,9 +153,9 @@ export default function Category() {
               {s.sessions.map((t: any) => (
                 <li key={t.id} className="flex items-start justify-between gap-3 border-l-2 border-brand-blush pl-3">
                   <div>
-                    <p className="font-semibold">{DIRECTIONS[t.direction]} · {GRADES[t.claimed_grade]}{MODE[t.mode] ? ` · ${MODE[t.mode]}` : ""}{t.is_sandbox ? " · демо" : ""}</p>
+                    <p className="font-semibold">{DIRECTIONS[t.direction]} · {GRADE_TITLE_ALL[t.claimed_grade]}{MODE[t.mode] ? ` · ${MODE[t.mode]}` : ""}{t.is_sandbox ? " · демо" : ""}</p>
                     <p className="text-brand-ink/65">{SESSION[t.status] ?? t.status} · {dtt(t.finished_at ?? t.started_at)}</p>
-                    {t.theta != null && <p className="text-brand-ink/65">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADES[t.accepted_lower] ?? t.accepted_lower}` : t.provisional ? "предварительно" : "не подтверждён"}</p>}
+                    {t.theta != null && <p className="text-brand-ink/65">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADE_TITLE_ALL[t.accepted_lower] ?? t.accepted_lower}` : t.provisional ? "предварительно" : "не подтверждён"}</p>}
                   </div>
                   {t.status === "in_progress" && <Link className="text-sm font-semibold text-brand" to={`/candidate/assessment/test/${t.id}`}>Продолжить</Link>}
                   {t.status === "finished" && <Link className="shrink-0 text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>}
@@ -165,7 +168,7 @@ export default function Category() {
       <section className="card">
         <h2 className="font-bold text-brand-night">История опроса</h2>
         <ul className="mt-3 flex flex-wrap gap-2 text-sm">
-          {s.surveys.map((x: any) => <li key={x.id} className="chip">{dt(x.at)} · {DIRECTIONS[x.direction]} · {GRADES[x.claimed_grade]}</li>)}
+          {s.surveys.map((x: any) => <li key={x.id} className="chip">{dt(x.at)} · {DIRECTIONS[x.direction]} · {GRADE_TITLE_ALL[x.claimed_grade]}</li>)}
         </ul>
       </section>
     </div>

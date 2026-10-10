@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Alert, DIRECTIONS, GRADES, Loading, NB, num, pct, useApi } from "../ui";
+import { Alert, DIRECTIONS, GRADE_TITLE_ALL, Loading, NB, num, pct, useApi } from "../ui";
 import { SignatureLine } from "./Headline";
 import { ProvenanceLine, RetestVsTruth } from "./Provenance";
 import { ScrollX } from "../A11y";
@@ -7,7 +7,7 @@ import { ScrollX } from "../A11y";
 /** Блоки /validation: test–retest всего пути кандидата, дискриминативность семейств, карточка калибровки
  *  (backend: app/modules/validation/path_retest.py, make path-retest). */
 
-const LEVEL: Record<string, string> = { none: "Без категории", ...GRADES };
+const LEVEL: Record<string, string> = { none: "Без категории", ...GRADE_TITLE_ALL };
 const LEVELS = ["none", "intern", "junior", "middle", "senior"];
 const ci = (c?: number[] | null, d = 3) => (c ? `${num(c[0], d)} … ${num(c[1], d)}` : "");
 const withCi = (v?: number | null, c?: number[] | null) => <>{num(v, 3)}{c && <span className="block text-xs text-brand-ink/65">{ci(c)}</span>}</>;
