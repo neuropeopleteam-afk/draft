@@ -213,3 +213,24 @@ def test_flag_on_onboarding_accepts_new_direction(client, ext_on):
     assert r.status_code == 200, r.text
     r = client.get("/api/me/onboarding", headers=h)
     assert r.json()["answers"]["direction"] == "devops"
+
+
+def test_criteria_mentions_catalog_only_with_flag(monkeypatch):
+    from app.modules.validation import criteria as C
+
+    def see():
+        items = [it for c in C.build()["criteria"] for it in c["items"] if it["tz"] == C.CATEGORIZATION_TZ]
+        assert len(items) == 1
+        return items[0]["see"]
+
+    assert "Каталог" not in see()
+    monkeypatch.setenv("CATALOG_EXT_ENABLED", "1")
+    monkeypatch.setenv("CATALOG_EXT_FORCE_READY", "devops,mobile")
+    get_settings.cache_clear()
+    try:
+        s = see()
+        assert "Каталог: 7 направлений" in s and len(s) <= 170
+    finally:
+        monkeypatch.delenv("CATALOG_EXT_ENABLED")
+        monkeypatch.delenv("CATALOG_EXT_FORCE_READY")
+        get_settings.cache_clear()
