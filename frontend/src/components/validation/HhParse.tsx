@@ -47,7 +47,7 @@ function Body({ r }: { r: any }) {
       <p className="max-w-4xl text-sm leading-relaxed text-brand-ink/70">
         {r.n} реальных ИТ-вакансий hh.ru (корпус от {d10(r.corpus_collected_at)}: 5 направлений × 4 грейда и выборки с отрицаниями). Разбор — правилами, как у потребности, только по названию и описанию; метки — из полей, которые работодатель заполнил на hh.ru (роль, опыт, формат, ключевые навыки), а не из того же текста. Корпус — только для проверки разбора: в репозитории номера, ссылки и метки, без текстов вакансий.
       </p>
-      <p className="mt-1 text-xs text-brand-ink/65" data-testid="hh-parse-signature">Прогон {d10(r.generated_at)} · код {r.code_commit} · недоступно с даты сбора: {r.missing} · метки серебряные (поля hh.ru, не эксперты)</p>
+      <p className="mt-1 text-xs text-brand-ink/65" data-testid="hh-parse-signature">Прогон {d10(r.generated_at)} · код {r.code_commit} · недоступно с даты сбора: {r.n_missing ?? 0} · текст изменился: {r.text_changed_since_collect ?? 0} · метки серебряные (поля hh.ru, не эксперты)</p>
       <div className="mt-4">
         <ScrollX label="Разбор на вакансиях hh.ru" className="overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10">
           <table className="w-full min-w-[36rem] text-left text-sm">
