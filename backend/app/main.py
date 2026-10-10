@@ -172,7 +172,8 @@ def create_app() -> FastAPI:
                 "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,  # на запросе, как proctor_camera
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
                           "invitation_cooldown_days": get_settings().invitation_cooldown_days},
-                "interview": interview.svc.meta()}  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
+                "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
+                "interview_enabled": interview.svc.enabled()}  # то же одним флагом — шаг проводника «12 минут» (Я9)
 
     class HealthOut(BaseModel):
         status: str

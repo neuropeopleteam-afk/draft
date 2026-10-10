@@ -9,6 +9,7 @@ import { daysText, useRules } from "../../lib/meta";
 import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
 import { EmployerHiring, HiringChip, HiringReminders } from "../../components/Hiring";
+import { AiInterviewEmployer } from "../../components/Interview";  // Я15: этап найма «ИИ-интервью»
 import { OfferFitHint } from "../mutual/Employer";  // подсказка до отправки: подходит ли предложение кандидату (Н9)
 
 type Market = { from: number; to: number; median?: number | null } | null | undefined;
@@ -251,6 +252,7 @@ export function EmployerInvitations() {
           <CounterDecision inv={i} onDone={reload} />
           <AtsInvitationActions invitationId={i.id} status={i.contacts_revoked ? "contacts_revoked" : i.status} candidateRef={i.candidate_ref} transfers={i.ats_transfers} onChanged={reload} />
           <EmployerHiring inv={i} onChange={reload} />
+          <AiInterviewEmployer inv={i} />
           {i.complaint ? (
             <p className="rounded-xl bg-amber-50 px-3 py-2 text-amber-900">Жалоба кандидата: <b>{i.complaint.reason_title.toLowerCase()}</b>. Жалобы снижают индекс доверия компании — его видят кандидаты.</p>
           ) : i.decline_reason && <p className="text-brand-ink/70">Причина отказа: «{i.decline_reason}»</p>}

@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { DefenseBadge, DefenseBriefLine } from "./Interview";  // Я15: значок устной защиты
 import { GradeBadge, GradeStatusNote } from "./GradeStatus";
 import { Level, num, pct, ruText, signed, years } from "./ui";
 import { Specializations } from "./Specializations";
@@ -60,6 +61,7 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
         <span className="text-brand-ink/80">Подтверждено: {[...okMust, ...okWant.map((x) => `${x} (желательно)`)].join(", ")}</span></li>}
       {gaps.length > 0 && <li className="flex items-start gap-2"><Level level="none" />
         <span className="text-brand-ink/80">Пробелы обязательного: {gaps.join(", ")} — можно проверить зондом</span></li>}
+      <DefenseBriefLine d={t?.defense} />
       <li className="flex items-start gap-2"><Level level={fsp.achievements?.length && !fsp.hidden ? "T2" : "none"} />
         <span className="text-brand-ink/80">{fsp.hidden ? "Паспорт ФСП скрыт кандидатом" : fsp.achievements?.length ? `ФСП: ${fsp.achievements[0].text}${fsp.achievements.length > 1 ? ` и ещё ${fsp.achievements.length - 1}` : ""}` : "Истории ФСП нет — нейтрально"}</span></li>
     </ul>
@@ -150,6 +152,7 @@ export function CandidateCard({ c, score, reasons, actions, must, compact = fals
             </p>
           )}
           {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
+          {t?.defense && <p className="mt-1"><DefenseBadge d={t.defense} /></p>}
           {c.skills_confirmed?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {c.skills_confirmed.map((s: any) => <span key={s.tag} className="rounded-md bg-white px-2 py-0.5 text-xs font-semibold text-brand-night">{s.title} {pct(s.score)}</span>)}
