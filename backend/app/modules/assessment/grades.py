@@ -43,11 +43,20 @@ SHORT_CEILING = "middle"
 PRELIMINARY_MAX_ITEMS = TOP_MIN_ITEMS - 1  # мини-тест QR (3 задания): категория всегда предварительная
 
 
-def confirm_level() -> float:
-    """Действующий порог уверенности подтверждения и «уровня ниже» (настройка ASSESSMENT_CONFIRM_LEVEL)."""
+# Широкий интервал (экспресс 5–12 коротких заданий, мини-тест QR, SE > 0,6): прежний порог 0,8 — перебор порога
+# уверенности считан на полном тесте (SE в конце ≈ 0,33), для коротких тестов он не проверялся.
+WIDE_SE = 0.6
+
+
+def confirm_level(se: float | None = None) -> float:
+    """Действующий порог уверенности подтверждения и «уровня ниже» (настройка ASSESSMENT_CONFIRM_LEVEL);
+    при SE > WIDE_SE — не ниже прежнего 0,8."""
     from app.core.config import get_settings
 
-    return float(get_settings().assessment_confirm_level)
+    lv = float(get_settings().assessment_confirm_level)
+    if se is not None and float(se) > WIDE_SE:
+        lv = max(lv, CONFIRM_LEVEL)
+    return lv
 
 
 def confirm_pct() -> int:
@@ -112,7 +121,7 @@ def category_level(theta: float, se: float, n_items: int | None = None,
                    confirm_level: float | None = None) -> CategoryLevel:
     """Единое отображение θ ± SE → категория для всех режимов (полный, экспресс, дотестирование, мини-тест)."""
     if confirm_level is None:
-        confirm_level = globals()["confirm_level"]()
+        confirm_level = globals()["confirm_level"](se)
     proven = "none"
     for g in GRADE_ORDER:  # P(θ ≥ порога) убывает с грейдом: наивысший — последний, где P ≥ уровня
         if p_at_least(theta, se, g) >= confirm_level:
@@ -138,7 +147,7 @@ def decide_grade(theta: float, se: float, claimed: str, confirm_level: float | N
     оценённых заданий (None — длина не ограничивает, только погрешность). confirm_level None — настройка
     assessment_confirm_level (Я22)."""
     if confirm_level is None:
-        confirm_level = globals()["confirm_level"]()
+        confirm_level = globals()["confirm_level"](se)
     dec = _decide(theta, se, claimed, confirm_level, upgrade_level)
     top = ceiling(n_items, se)
     if _rank(claimed) > _rank(top) and (dec.confirmed or dec.provisional):
