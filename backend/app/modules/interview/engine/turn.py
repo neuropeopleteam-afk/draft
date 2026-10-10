@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from app.core.config import get_settings
 
@@ -55,7 +55,7 @@ def _llm_turn(messages: list[dict], timeout_s: float) -> tuple[str | None, str |
 
 def next_turn(inp: TurnInput) -> TurnOutput:
     spec, tr = inp.spec, inp.transcript.model_copy(deep=True)
-    now = inp.now or datetime.now(timezone.utc)
+    now = inp.now or datetime.now(UTC)
     if any(u.kind == "closing" for u in tr.items if u.who == "interviewer"):
         raise EngineError("finished", "Разговор уже завершён")
     started = spec.started_at

@@ -1,15 +1,16 @@
 """Движок ИИ-интервьюера (backend/app/modules/interview/engine): чистые функции, заглушка, сверка цитат, таблица
 вердикта, адаптеры поставщиков с подменённым HTTP. Моделей и сети тесты не требуют."""
 import importlib
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import httpx
 import pytest
 
 from app.modules.interview import engine as e
+
 ev = importlib.import_module("app.modules.interview.engine.evaluate")  # функция evaluate затеняет подмодуль
 from app.modules.interview.engine.providers import avatar as av
-from app.modules.interview.engine.providers import relay, stt, tts
+from app.modules.interview.engine.providers import relay, stt
 from app.modules.interview.engine.rules import plural
 from app.modules.interview.engine.textnorm import contains, normalize, overlap
 
@@ -84,7 +85,7 @@ def test_plural():
 # --- ход разговора (заглушка) ------------------------------------------------------------------------------------------
 
 def run_dialog(spec, replies, step_s=40):
-    now = datetime(2026, 10, 10, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 10, 10, 12, 0, tzinfo=UTC)
     out = e.next_turn(e.TurnInput(spec=spec, transcript=e.Transcript(), now=now))
     assert out.kind == "opening" and out.k == 1 and not out.finished and out.started_at is None
     for i, r in enumerate(replies):
@@ -109,7 +110,7 @@ def test_turn_loop_stub_defense():
 
 def test_turn_time_limit_closes_early():
     spec = e.normalize_spec(defense_spec(max_questions=4))
-    now = datetime(2026, 10, 10, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 10, 10, 12, 0, tzinfo=UTC)
     out = e.next_turn(e.TurnInput(spec=spec, transcript=e.Transcript(), now=now))
     out = e.next_turn(e.TurnInput(spec=spec, transcript=out.transcript, candidate_text="ответ раз", now=now))
     spec = spec.model_copy(update={"started_at": out.started_at})
@@ -146,8 +147,8 @@ def test_textnorm():
 
 def test_verify_quotes_drops_unknown_and_relinks():
     tr = e.Transcript(items=[
-        e.Utterance(who="candidate", text="Поставил индекс по user_id, потому что фильтруем по колонке.", at=datetime.now(timezone.utc), n=1),
-        e.Utterance(who="candidate", text="Очередь развязывает производителя и потребителя.", at=datetime.now(timezone.utc), n=2),
+        e.Utterance(who="candidate", text="Поставил индекс по user_id, потому что фильтруем по колонке.", at=datetime.now(UTC), n=1),
+        e.Utterance(who="candidate", text="Очередь развязывает производителя и потребителя.", at=datetime.now(UTC), n=2),
     ])
     kept, removed = e.verify_quotes([{"n": 1, "text": "индекс по user_id"}, {"n": 1, "text": "развязывает производителя"},
                                      {"n": 2, "text": "этого не говорил"}, {"n": 9, "text": "кор"}, "мусор",
@@ -232,7 +233,7 @@ def test_build_lowers_level_without_quotes_and_skeptic_merge():
 # --- лимиты и стоимость -------------------------------------------------------------------------------------------------
 
 def test_limits():
-    now = datetime(2026, 10, 10, 12, 0, tzinfo=timezone.utc)
+    now = datetime(2026, 10, 10, 12, 0, tzinfo=UTC)
     e.check_limits(False, [{"created_at": now, "active": True}], 0.0, now)  # не жюри — без ограничения
     e.check_limits(True, [], 0.0, now)
     with pytest.raises(e.EngineError) as ei:
@@ -361,3 +362,110 @@ def test_turn_credentials_deterministic(monkeypatch):
     u, p = av.turn_credentials("secret", ttl_s=60, label="x")
     assert u == "1000060:x" and len(p) == 28  # base64 от 20 байт SHA-1
     assert av.turn_credentials("secret", ttl_s=60, label="x") == (u, p)
+
+
+# --- пути с моделью (llm.chat подменён) ----------------------------------------------------------------------------------
+
+class _Res:
+    def __init__(self, ok=True, data=None, text="", usage=None, error=None):
+        self.ok, self.data, self.text, self.usage, self.error = ok, data, text, usage, error
+
+    def info(self):
+        return {"provider": "openrouter", "model": "test", "latency_ms": 1}
+
+
+def _llm_on(monkeypatch):
+    monkeypatch.setenv("INTERVIEW_STUB", "0")
+    e.reset_interview_settings()
+    monkeypatch.setattr(turn_mod, "is_stub", lambda: False)
+    monkeypatch.setattr(ev, "is_stub", lambda: False)
+
+
+turn_mod = importlib.import_module("app.modules.interview.engine.turn")
+llm_client = importlib.import_module("app.modules.llm.client")
+
+
+def test_turn_llm_path_and_fallback(monkeypatch):
+    _llm_on(monkeypatch)
+    calls = []
+
+    def fake_chat(messages, **kw):
+        calls.append((messages, kw))
+        return _Res(data={"text": "**Иван**, добрый день! Расскажите, почему индекс?", "kind": "question"}, usage={"cost": 0.004})
+
+    monkeypatch.setattr(llm_client, "chat", fake_chat)
+    spec = e.normalize_spec(defense_spec())
+    out = e.next_turn(e.TurnInput(spec=spec, transcript=e.Transcript()))
+    assert out.source == "llm" and out.kind == "opening" and out.text == "Иван, добрый день! Расскажите, почему индекс?"
+    assert out.cost_usd == 0.004 and out.llm["model"] == "test"
+    msgs, kw = calls[0]
+    assert kw["model"] == e.get_interview_settings().interview_model_turn and kw["want_json"] is True
+    assert "Интервьюер" in msgs[0]["content"] and "служебно" in msgs[1]["content"] and "вопрос 1" in msgs[1]["content"]
+    assert "paste" not in msgs[1]["content"] and "вставка готового текста" in msgs[1]["content"]  # признак — словами
+    monkeypatch.setattr(llm_client, "chat", lambda messages, **kw: _Res(ok=False, error="timeout"))
+    out2 = e.next_turn(e.TurnInput(spec=spec, transcript=out.transcript, candidate_text="Потому что фильтр по user_id."))
+    assert out2.source == "rules" and out2.kind == "question" and out2.k == 2
+
+
+def test_evaluate_llm_path_with_skeptic(monkeypatch):
+    _llm_on(monkeypatch)
+    spec = e.normalize_spec(defense_spec())
+    spec, out = run_dialog(spec, ["Запросы фильтруют по user_id, план показывал seq scan, поэтому btree-индекс по этой колонке; сравнивал EXPLAIN ANALYZE.",
+                                  "Очередь буферизует пик, обработчик забирает в своём темпе; гонял нагрузочный тест на десяти тысячах сообщений.",
+                                  "Денормализацию отбросил: пришлось бы обновлять копии при каждой записи."])
+    analyst = {"questions": [{"k": 1, "level": "confirmed", "quotes": [{"n": 1, "text": "план показывал seq scan"}], "reasoning": "ок"},
+                             {"k": 2, "level": "confirmed", "quotes": [{"n": 2, "text": "этого в расшифровке нет"}], "reasoning": "ок"},
+                             {"k": 3, "level": "partial", "quotes": [{"n": 3, "text": "обновлять копии"}], "reasoning": "кратко"}],
+               "flags": [], "summary": "Итог аналитика.", "confidence": 80}
+    skeptic = {"remarks": [{"k": 3, "issue": "объяснил причину", "level": "confirmed", "quote": {"n": 3, "text": "Денормализацию отбросил"}}]}
+    seq = iter([_Res(data=analyst, text="{}", usage={"cost": 0.1}), _Res(data=skeptic, text="{}", usage={"cost": 0.05})])
+    monkeypatch.setattr(llm_client, "chat", lambda messages, **kw: next(seq))
+    v = e.evaluate(spec, out.transcript)
+    assert v.source == "llm" and v.cost_usd == pytest.approx(0.15) and v.summary == "Итог аналитика."
+    assert [q.level for q in v.questions] == ["confirmed", "no_data", "confirmed"]  # 2: цитата не нашлась → понижение
+    assert v.questions[1].lowered and v.removed_quotes == 1 and v.questions[2].quotes[-1].text == "Денормализацию отбросил"
+    assert v.verdict == "confirmed" and v.score == 100 and v.raw["skeptic"] == skeptic
+    # аналитик недоступен → правила
+    monkeypatch.setattr(llm_client, "chat", lambda messages, **kw: _Res(ok=False, error="http_503"))
+    v2 = e.evaluate(spec, out.transcript)
+    assert v2.source == "rules" and v2.llm["analyst"]["model"] == "test"
+    # мало данных — модель не вызывается
+    monkeypatch.setattr(llm_client, "chat", lambda messages, **kw: (_ for _ in ()).throw(AssertionError("не должно вызываться")))
+    short = e.Transcript(items=[e.Utterance(who="candidate", text="да", at=datetime.now(UTC), n=1)])
+    assert e.evaluate(spec, short).verdict == "insufficient"
+
+
+def test_relay_request_and_ca(monkeypatch, tmp_path):
+    _live(monkeypatch, INTERVIEW_RELAY_URL="https://relay.example:18743", INTERVIEW_RELAY_TOKEN="rt")
+    ca = tmp_path / "ca.pem"
+    ca.write_text("PEM")
+    monkeypatch.setattr(relay, "get_settings", lambda: type("S", (), {"llm_relay_url": None, "llm_relay_token": None,
+                                                                    "llm_relay_ca_file": str(ca), "llm_relay_ca_pem_b64": None})())
+    seen = {}
+
+    class FakeClient:
+        def __init__(self, timeout, verify):
+            seen["verify"] = verify
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def request(self, method, url, headers=None, json=None, content=None):
+            seen.update(method=method, url=url, headers=headers, content=content)
+            return httpx.Response(200, content=b"ok")
+
+    monkeypatch.setattr(relay.httpx, "Client", FakeClient)
+    r = relay.request("POST", "api.deepgram.com", "/v1/listen", headers={"Authorization": "Token k"}, content=b"abc")
+    assert r.status_code == 200 and seen["verify"] == str(ca) and seen["url"] == "https://relay.example:18743/v1/listen"
+    assert seen["headers"]["X-Relay-Host"] == "api.deepgram.com" and seen["content"] == b"abc"
+    # CA из base64 — во временный файл
+    import base64
+    monkeypatch.setattr(relay, "get_settings", lambda: type("S", (), {"llm_relay_url": None, "llm_relay_token": None,
+                                                                    "llm_relay_ca_file": None, "llm_relay_ca_pem_b64": base64.b64encode(b"PEM2").decode()})())
+    relay._ca_cache.clear()
+    p = relay._ca_path()
+    assert isinstance(p, str) and open(p, "rb").read() == b"PEM2" and relay._ca_path() == p
+    assert relay.via_relay()

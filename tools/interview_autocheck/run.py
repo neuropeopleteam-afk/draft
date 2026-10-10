@@ -18,15 +18,15 @@ import os
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from fixtures import SPEC  # noqa: E402
-from personas import COMMON, PERSONAS, SCRIPTED  # noqa: E402
+from fixtures import SPEC
+from personas import COMMON, PERSONAS, SCRIPTED
 
 CANDIDATE_MODEL = os.environ.get("AUTOCHECK_CANDIDATE_MODEL", "anthropic/claude-sonnet-4.6")
 
@@ -63,7 +63,7 @@ def run_session(persona: str, stub: bool) -> dict:
     from app.modules.interview import engine as e
 
     spec = e.normalize_spec(e.SessionSpec(**SPEC))
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     out = e.next_turn(e.TurnInput(spec=spec, transcript=e.Transcript(), now=now))
     history: list[dict] = []
     cost = out.cost_usd
@@ -110,7 +110,7 @@ def main() -> int:
     e.reset_interview_settings()
     stub = e.is_stub()
     s = e.get_interview_settings()
-    sha, started = git_sha(), datetime.now(timezone.utc)
+    sha, started = git_sha(), datetime.now(UTC)
     results = []
     for persona in [p.strip() for p in args.personas.split(",") if p.strip()]:
         for i in range(args.n):
