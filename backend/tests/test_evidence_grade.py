@@ -366,3 +366,80 @@ def test_run_dispatches_skeptic(monkeypatch):
     second_opinion.run("sid", "t1", 0)
     assert called["answer"] == ANSWER and called["disputed"] is False and called["first"]["score"] == 1.0
     assert called.get("commit") and it["x"] == [0.75]
+
+
+# ------------------------------------------------------------------ API: кандидат, работодатель, /validation (п. 3)
+def _inject_evidence(email: str) -> str:
+    """Добавляет в последний завершённый тест кандидата развёрнутый ответ, оценённый с цитатами (флаг вкл)."""
+    from sqlalchemy import select
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.core.db import SessionLocal
+    from app.modules.assessment.models import TestSession
+    from app.modules.auth.models import User
+
+    p = G.parse_reply({"criteria": {"cause": {"score": 1, "quotes": ["два запроса читают остаток одновременно",
+                                                                    "выдуманная цитата про очередь сообщений"]},
+                                    "fix": {"score": 1, "quotes": ["транзакция SERIALIZABLE решает всё"]}},
+                       "level": "strong"}, RUBRIC, ANSWER, version="v3")
+    with SessionLocal() as db:
+        uid = db.scalar(select(User.id).where(User.email == email))
+        ts = db.scalars(select(TestSession).where(TestSession.user_id == uid)
+                        .order_by(TestSession.created_at.desc())).first()
+        res = dict(ts.result or {})
+        state = dict(res.get("state") or {})
+        state["items"] = [*(state.get("items") or []), {
+            "token": "ev1", "position": 7, "parts": 1, "skills": ["python", "postgresql"], "rubric": RUBRIC,
+            "public": {"stem": "СЕКРЕТНОЕ УСЛОВИЕ", "code": None, "steps": []}, "x": [p["score"]],
+            "grading": [{"status": "scored", "method": "llm2", "score": p["score"], "criteria": p["criteria"],
+                         "evidence": p["evidence"], "model_label": "Claude Sonnet 5.5",
+                         "second": {"status": "done", "kind": "skeptic", "verdict": "agree",
+                                    "model_label": "Claude Fable 5.1",
+                                    "changes": [{"criterion": "fix", "from": 0.5, "to": 0.0, "accepted": True,
+                                                 "direction": "down"}]}}]}]
+        res["state"] = state
+        ts.result = res
+        flag_modified(ts, "result")
+        db.commit()
+        return str(ts.id)
+
+
+def test_evidence_api_candidate_employer_validation(client):
+    from tests.test_day2_rules import H, candidate_with_category, employer, my_ref
+
+    tc = candidate_with_category(client, email="ev-cand@example.com")
+    sid = _inject_evidence("ev-cand@example.com")
+    r = client.get(f"/api/assessment/sessions/{sid}/evidence", headers=H(tc))
+    assert r.status_code == 200, r.text
+    d = r.json()
+    assert d["title"] == "Доказательства: цитаты из ответа" and d["label"] == "оценка модели" and d["enabled"] is False
+    (it,) = d["items"]
+    assert it["position"] == 7 and it["method_title"] == "оценка модели, проверено скептиком"
+    c1, c2 = it["criteria"]
+    assert c1["title"] == "Пункт 1" and c1["quotes"][0]["text"] == "два запроса читают остаток одновременно"
+    assert c1["dropped"] == 1 and c1["score"] == 1.0 and not c1["capped"]
+    assert c2["capped"] and c2["quotes"] == [] and c2["score"] == 0.5 and c2["dropped_why"] == ["нет в ответе дословно"]
+    assert it["skeptic"]["changes"] == [{"n": 2, "from": 0.5, "to": 0.0, "accepted": True, "direction": "down"}]
+    body = json.dumps(d, ensure_ascii=False)  # закрытое: условие, тексты пунктов рубрики, эталоны
+    assert "СЕКРЕТНОЕ" not in body and "Названа причина" not in body and "ЭТАЛОН" not in body
+    other = candidate_with_category(client, email="ev-other@example.com")
+    assert client.get(f"/api/assessment/sessions/{sid}/evidence", headers=H(other)).status_code == 404
+    assert client.get(f"/api/assessment/sessions/{sid}/evidence").status_code == 401
+    # работодатель: последний тест, согласие кандидата (privacy.show_evidence), роли
+    te = employer(client, email="ev-hr@corp.ru")
+    ref = my_ref(client, tc)
+    d = client.get(f"/api/employer/candidates/{ref}/evidence", headers=H(te)).json()
+    assert d["available"] and d["items"][0]["criteria"][0]["quotes"] and "СЕКРЕТНОЕ" not in str(d)
+    assert "Тексты заданий и рубрик закрыты" in d["note"]
+    opts = client.get("/api/me/onboarding", headers=H(tc)).json()["options"]["privacy_fields"]
+    assert {"id": "show_evidence", "title": "Цитаты из ответов теста (доказательства оценки)"} in opts
+    assert client.put("/api/me/privacy", json={"privacy": {"show_evidence": False}}, headers=H(tc)).status_code == 200
+    d = client.get(f"/api/employer/candidates/{ref}/evidence", headers=H(te)).json()
+    assert d == {"available": False, "reason": "hidden_by_candidate", "items": [],
+                 "text": "Кандидат скрыл цитаты из ответов теста"}
+    assert client.get(f"/api/employer/candidates/{ref}/evidence", headers=H(tc)).status_code == 403
+    assert client.get(f"/api/employer/candidates/nope/evidence", headers=H(te)).status_code == 404
+    # /validation: сводка замера (открыто)
+    v = client.get("/api/validation/evidence").json()
+    assert v["enabled"] is False and len(v["rows"]) >= 3 and v["default_path_fix"]["changed"] == 0
+    assert "модели, не люди" in v["world"]
