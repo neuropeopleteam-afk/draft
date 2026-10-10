@@ -42,6 +42,8 @@ export function InternCutSection({ ic }: { ic: any }) {
   const curOk = !!cur.all_pass;
   const curRow = cuts.find((s) => s.cut === cur.cut) ?? {};
   const idx = cuts.findIndex((s) => s.cut === (curOk ? cur.cut : chosen));
+  const basisNow = ic.chosen?.basis === "current_bank";  // с 10.10 порог выбирается по текущему банку
+  const easyRule = ic.with_easy_families?.rule ?? {};
   const idxE = easy.findIndex((s) => s.cut === chosen);
   const dirs = Object.keys(ic.retest ?? {});
   const poolNow = ic.pool_now ?? {};
@@ -64,7 +66,7 @@ export function InternCutSection({ ic }: { ic: any }) {
       <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
         {curOk ? <>На текущем банке правило выполнено при пороге {theta(cur.cut)}{cur.cut === ic.cut_in_use ? " — он и действует в продукте" : ""}: ложные подтверждения {pct(curRow.false_confirm, 1)},
         ложные отказы {pct(curRow.false_reject, 1)} (предел {pct(rule.max_false_reject)} — запаса почти нет), исчерпание пула {pct(curRow.exhausted_share)}. Лёгкие семейства для Стажёра
-        в банке появились, но их немного: SE не опускается ниже ≈ {num(Math.min(...cuts.map((s) => s.mean_se ?? 1)))}, поэтому решение по Стажёру грубее, чем по другим грейдам.</> : <>
+        в банке появились, но их немного: SE не опускается ниже ≈ {num(Math.min(...cuts.map((s) => s.mean_se ?? 1)))}, поэтому решение по Стажёру грубее, чем по другим грейдам. Порог выбирается по текущему банку, без добавленных синтетических семейств.</> : <>
         Ни один порог правилу на текущем банке не удовлетворяет: у самых простых семейств Junior трудность b не ниже −0,9, при θ ≈ −2 они дают мало
         информации, SE не опускается ниже ≈ {num(Math.min(...cuts.map((s) => s.mean_se ?? 1)))}, и почти каждая сессия доходит до максимума заданий. Поэтому решение
         по Стажёру на текущем банке грубее, чем по другим грейдам, а порог выбран по банку с лёгкими семействами ниже.</>}
@@ -74,10 +76,13 @@ export function InternCutSection({ ic }: { ic: any }) {
           <h3 className="mt-6 text-base font-bold text-brand-night">Банк с лёгкими семействами: {ic.with_easy_families.per_block} синтетических семейств на блок, b от −2,5 до −1,5</h3>
           <div className="mt-3">
             <Table head={["Порог", "Ложное подтверждение", "Ложный отказ", "Подтверждение в полосе Стажёра", "Предложен Junior в полосе", "Заданий", "SE", "Исчерпание пула", "Доля полосы, θ ~ N(0; 1)"]}
-              rows={easy.map(row)} mark={idxE} />
+              rows={easy.map(row)} mark={basisNow ? -1 : idxE} />
           </div>
           <p className="mt-2 max-w-4xl text-sm leading-relaxed text-brand-ink/70">
-            {curOk && chosen !== ic.cut_in_use ? <>С синтетическими лёгкими семействами правилу удовлетворяют пороги {ic.chosen?.passing?.map(theta).join(", ")}; самый низкий — {theta(chosen)} —
+            {basisNow ? <>Справочно: с синтетическими лёгкими семействами правилу удовлетворяли бы пороги {(easyRule.passing ?? []).map(theta).join(", ") || "—"}
+            {easyRule.cut != null && <>, самый низкий — {theta(easyRule.cut)}</>}. На выбор это не влияет: порог выбирается по текущему банку, без добавленных семейств.
+            Такие семейства (закрытые форматы, 90–180 с, трудность b ≈ −2) запрошены у банка заданий; появятся — попадут в тест Стажёра автоматически,
+            и пересчёт покажет, можно ли опустить порог.</> : curOk && chosen !== ic.cut_in_use ? <>С синтетическими лёгкими семействами правилу удовлетворяют пороги {ic.chosen?.passing?.map(theta).join(", ")}; самый низкий — {theta(chosen)} —
             станет кандидатом, когда такие семейства появятся в банке (решение — после пересчёта). До этого действует {theta(ic.cut_in_use)}: он выполняет правило на текущем банке.</> : <>
             Правилу удовлетворяет {ic.chosen?.passing?.length === 1 ? "только порог" : "порог"} {ic.chosen?.passing?.map(theta).join(", ")}: он и выбран.
             Такие семейства (закрытые форматы, 90–180 с, трудность b ≈ −2) запрошены у банка заданий; появятся — попадут в тест Стажёра автоматически.</>}
