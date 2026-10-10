@@ -41,6 +41,7 @@ SKIP = re.compile(r"(^|/)(package-lock\.json|static/apidocs/|public/vendor/|.*\.
 # Пути к этим внешним входам оставлены намеренно; остальные правила для этих файлов действуют.
 ALLOW = {
     "tools/must_have/evaluate.py": {"путь рабочего места", "ссылка на внутренний отчёт или передачу дел"},
+    "tools/core_skill/evaluate.py": {"путь рабочего места", "ссылка на внутренний отчёт или передачу дел"},
     "tools/realdata/audit_expert_ranking.py": {"путь рабочего места", "ссылка на внутренний отчёт или передачу дел"},
 }
 IGNORE_SELF = {"tools/publish/check_public_tree.py", "tools/publish/scan_history_values.py", "tools/publish/test_publish_tools.py"}

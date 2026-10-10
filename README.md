@@ -113,7 +113,7 @@ make validate     # пересчёт метрик страницы /validation (
 * Интеграции демонстрационные: «ФСП ID» — демо-Keycloak, ATS (Talantix, «Поток», Хантфлоу) — контрактные заглушки внутри API, почта в
   режиме разработки; проверка работодателя по ЕГРЮЛ обращается к открытому сервису ФНС (`EGRUL_DISABLED=true` отключает).
 * Часть расчётов использует материалы вне репозитория (экспертные разметки, исходный репозиторий банка заданий): `tools/must_have/evaluate.py`,
-  `tools/realdata/audit_expert_ranking.py`, `tools/sync_bank.py` на чистом клоне не запустятся. Воспроизводимы `make bench`, `make validate`,
+  `tools/core_skill/evaluate.py`, `tools/realdata/audit_expert_ranking.py`, `tools/sync_bank.py` на чистом клоне не запустятся. Воспроизводимы `make bench`, `make validate`,
   `make test`, `make test-bank` и сквозные сценарии.
 * Лицензии зависимостей и вендорных файлов — [THIRD_PARTY.md](THIRD_PARTY.md); сам код — MIT, [LICENSE](LICENSE).
 
