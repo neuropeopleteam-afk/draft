@@ -3,12 +3,11 @@
 руководителя в коде и ответах API нет (на сайте они не опубликованы)."""
 from __future__ import annotations
 
-import json
-
 from app.core import legal
 from app.modules.proctor import service as proctor
 
 HIDDEN_KEYS = ("director", "actual_address")
+EXPECTED_FIELDS = {"full_name", "short_name", "inn", "kpp", "ogrn", "legal_address", "email", "email_general", "storage"}
 
 
 def test_operator_matches_company_site():
@@ -28,9 +27,10 @@ def test_no_director_and_actual_address_anywhere(client):
         c = client.get(f"/api/legal/consents/{kind}").json()
         assert not any(k in c["operator"] for k in HIDDEN_KEYS), kind
         assert c["version"] == legal.CONSENT_VERSION
-    # ни ФИО руководителя, ни фактический адрес не попадают в ответы целиком (проверка по ключам и по тексту)
-    blob = json.dumps([meta, client.get("/api/legal/consents/processing").json()], ensure_ascii=False)
-    assert "Пресненская" not in blob and "офис 445" not in blob
+    # в ответах — только перечень полей реквизитов с сайта компании, ничего сверх него
+    assert set(meta) == EXPECTED_FIELDS and set(legal.OPERATOR) == EXPECTED_FIELDS
+    for kind in ("processing", "publication"):
+        assert set(client.get(f"/api/legal/consents/{kind}").json()["operator"]) == EXPECTED_FIELDS
 
 
 def test_consent_texts_carry_site_requisites(client):
