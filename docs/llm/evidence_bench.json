@@ -4,7 +4,7 @@
  "code_sha": "b41a938",
  "grader": "Claude Sonnet 5.5",
  "skeptic": "Claude Fable 5.1",
- "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro (модели, не люди)",
+ "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro (модели, не люди)",
  "n": 50,
  "answered_v3": 50,
  "off": {

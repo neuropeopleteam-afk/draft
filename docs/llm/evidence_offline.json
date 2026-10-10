@@ -2,7 +2,7 @@
  "title": "Флаг GRADING_EVIDENCE выкл/вкл на одних и тех же ответах моделей (без скептика, без запросов)",
  "date": "2026-10-10 17:08",
  "code_sha": "9db1cb5",
- "note": "Ответы моделей — прогоны Я2 09–10.10 (промпт v2, одна цитата на пункт); флаг вкл здесь — только код: строгая сверка цитат и шаг вниз без подтверждённой цитаты; скептик и промпт v3 — в evidence_bench.json. Эталон — модели, не люди.",
+ "note": "Ответы моделей — прогоны замера моделей 09–10.10 (промпт v2, одна цитата на пункт); флаг вкл здесь — только код: строгая сверка цитат и шаг вниз без подтверждённой цитаты; скептик и промпт v3 — в evidence_bench.json. Эталон — модели, не люди.",
  "sample": {
   "n": 50,
   "honest": 25
@@ -228,7 +228,7 @@
      "n": 25
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "anthropic/claude-fable-5.1": {
    "quotes": {
@@ -448,7 +448,7 @@
      "n": 25
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "anthropic/claude-opus-5.5": {
    "quotes": {
@@ -668,7 +668,7 @@
      "n": 25
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "deepseek/deepseek-v4-pro-0813": {
    "quotes": {
@@ -890,7 +890,7 @@
      "n": 22
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "google/gemini-3.1-pro-preview": {
    "quotes": {
@@ -1112,7 +1112,7 @@
      "n": 25
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "moonshotai/kimi-k3": {
    "quotes": {
@@ -1334,7 +1334,7 @@
      "n": 23
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "openai/gpt-6.1-sol-pro": {
    "quotes": {
@@ -1554,7 +1554,7 @@
      "n": 25
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "openai/gpt-6-astra-pro": {
    "quotes": {
@@ -1774,7 +1774,7 @@
      "n": 25
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "qwen/qwen3.8-2.4t-a95b": {
    "quotes": {
@@ -1994,7 +1994,7 @@
      "n": 17
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "qwen/qwen3.8-27b": {
    "quotes": {
@@ -2214,7 +2214,7 @@
      "n": 21
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "x-ai/grok-4.7": {
    "quotes": {
@@ -2436,7 +2436,7 @@
      "n": 25
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   },
   "z-ai/glm-5.3": {
    "quotes": {
@@ -2658,7 +2658,7 @@
      "n": 21
     }
    },
-   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+   "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
   }
  },
  "full_sonnet": {
