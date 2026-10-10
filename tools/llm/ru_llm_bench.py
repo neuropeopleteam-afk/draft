@@ -299,6 +299,8 @@ def grade_summary(spec: str, wdir: Path, second: str | None = None) -> dict:
             pt += o.get("pt") or 0
             ct += o.get("ct") or 0
             cost += o.get("cost") or 0
+            if o.get("error") == "http_402":
+                continue  # на ключе кончился баланс — не попытка модели (вход запрошен повторно докачкой)
             if o["req_id"] in res:
                 retried += 1
                 continue
