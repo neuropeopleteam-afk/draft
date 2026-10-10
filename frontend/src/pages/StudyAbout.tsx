@@ -41,7 +41,7 @@ export default function StudyAbout() {
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-6 py-12">
+      <main id="main" className="mx-auto max-w-3xl px-6 py-12">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Статистика прохождения</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night">Статистика прохождения без личных данных, чтобы улучшать продукт</h1>
         <p className="mt-3 leading-relaxed text-brand-ink/75">
