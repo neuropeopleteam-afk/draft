@@ -191,19 +191,19 @@ class DeletedOut(BaseModel):
 
 # ------------------------------------------------------------------ кандидат: устная защита
 
-@router.get("/defense/{test_session_id}", summary="Устная защита попытки: можно ли, текущая сессия, пример для жюри",
+@router.get("/defense/{session_id}", summary="Устная защита попытки: можно ли, текущая сессия, пример для жюри",
             response_model=DefenseStateOut, responses={**AUTH, 404: err("Попытка не найдена")})
-def defense_state(test_session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
-    return svc.defense_state(db, user, svc.own_attempt(db, user, test_session_id))
+def defense_state(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    return svc.defense_state(db, user, svc.own_attempt(db, user, session_id))
 
 
-@router.post("/defense/{test_session_id}", status_code=201, response_model=SessionOut,
+@router.post("/defense/{session_id}", status_code=201, response_model=SessionOut,
              summary="Начать устную защиту развёрнутых ответов (по желанию; грейд не меняется)",
              responses={**AUTH, **OFF, 404: err("Попытка не найдена"), 422: err("Защищать нечего или нет согласия"),
                         429: err("Лимит сессий (жюри — 1 живой запуск в час на песочницу)")})
-def defense_start(test_session_id: uuid.UUID, body: StartIn, user: User = Depends(candidate),
+def defense_start(session_id: uuid.UUID, body: StartIn, user: User = Depends(candidate),
                   db: Session = Depends(get_db)) -> dict:
-    ts = svc.own_attempt(db, user, test_session_id)
+    ts = svc.own_attempt(db, user, session_id)
     return svc.view(svc.start_defense(db, user, ts, body.name, body.consent), "candidate")
 
 
@@ -221,16 +221,18 @@ def session_get(session_id: uuid.UUID, user: User = Depends(candidate), db: Sess
              responses={**AUTH, **OFF, 404: err("Сессия не найдена"), 503: err("Интервьюер недоступен")})
 def session_begin(session_id: uuid.UUID, body: BeginIn, user: User = Depends(candidate),
                   db: Session = Depends(get_db)) -> dict:
+    row = svc.own_session(db, user, session_id)  # сначала владение (404), потом флаг (409)
     svc.require_enabled()
-    return svc.view(svc.begin(db, svc.own_session(db, user, session_id), body.channel), "candidate")
+    return svc.view(svc.begin(db, row, body.channel), "candidate")
 
 
 @router.post("/sessions/{session_id}/answer", summary="Ответ кандидата (текстом или распознанный) → следующий вопрос",
              response_model=SessionOut, responses={**AUTH, **OFF, 404: err("Сессия не найдена"), 422: err("Пустой ответ")})
 def session_answer(session_id: uuid.UUID, body: AnswerIn, tasks: BackgroundTasks, user: User = Depends(candidate),
                    db: Session = Depends(get_db)) -> dict:
+    row = svc.own_session(db, user, session_id)
     svc.require_enabled()
-    row = svc.answer(db, svc.own_session(db, user, session_id), body.text, body.channel)
+    row = svc.answer(db, row, body.text, body.channel)
     if row.status == "evaluating":
         tasks.add_task(svc.evaluate_bg, row.id)
     return svc.view(row, "candidate")
@@ -259,8 +261,8 @@ async def session_transcribe(session_id: uuid.UUID, request: Request, user: User
                              db: Session = Depends(get_db)) -> dict:
     from app.core.config import get_settings
 
-    svc.require_enabled()
     row = svc.own_session(db, user, session_id)
+    svc.require_enabled()
     if row.status != "in_progress":
         raise api_error(409, "interview_closed", "Разговор не идёт")
     audio = await request.body()
@@ -300,8 +302,8 @@ def session_speech(session_id: uuid.UUID, user: User = Depends(candidate), db: S
 def session_avatar(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     from app.core.config import get_settings
 
-    svc.require_enabled()
     row = svc.own_session(db, user, session_id)
+    svc.require_enabled()
     if row.status not in ("created", "in_progress"):
         raise api_error(409, "interview_closed", "Разговор не идёт")
     tok = pt.get_port().avatar_token(max_seconds=row.minutes * 60 + 120) if get_settings().interview_avatar else None
@@ -358,42 +360,42 @@ def candidate_interviews(ref: str, direction: Literal["backend", "frontend", "da
 
 # ------------------------------------------------------------------ этап найма «ИИ-интервью»
 
-@employer_router.get("/invitations/{invitation_id}/ai-interview", summary="Этап «ИИ-интервью»: можно ли, навыки, итог",
+@employer_router.get("/invitations/{inv_id}/ai-interview", summary="Этап «ИИ-интервью»: можно ли, навыки, итог",
                      response_model=StageOut, responses={**AUTH, 404: err("Приглашение не найдено")})
-def stage_employer(invitation_id: uuid.UUID, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
+def stage_employer(inv_id: uuid.UUID, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     from app.modules.contact.router import _emp_inv
 
-    return svc.stage_state(db, _emp_inv(db, user, invitation_id), "employer")
+    return svc.stage_state(db, _emp_inv(db, user, inv_id), "employer")
 
 
-@employer_router.post("/invitations/{invitation_id}/ai-interview", status_code=201, response_model=StageOut,
+@employer_router.post("/invitations/{inv_id}/ai-interview", status_code=201, response_model=StageOut,
                       summary="Пригласить на ИИ-интервью по навыкам, которые тест не подтвердил",
                       responses={**AUTH, **OFF, 404: err("Приглашение не найдено"),
                                  422: err("Все навыки уже подтверждены — добавьте вручную")})
-def stage_invite(invitation_id: uuid.UUID, body: InviteIn, user: User = Depends(employer),
+def stage_invite(inv_id: uuid.UUID, body: InviteIn, user: User = Depends(employer),
                  db: Session = Depends(get_db)) -> dict:
     from app.modules.contact.router import _emp_inv
 
-    inv = _emp_inv(db, user, invitation_id)
+    inv = _emp_inv(db, user, inv_id)
     svc.invite_interview(db, user, inv, body.note, body.skills)
     return svc.stage_state(db, inv, "employer")
 
 
-@candidate_router.get("/invitations/{invitation_id}/ai-interview", summary="Приглашение на ИИ-интервью (кандидат)",
+@candidate_router.get("/invitations/{inv_id}/ai-interview", summary="Приглашение на ИИ-интервью (кандидат)",
                       response_model=StageOut, responses={**AUTH, 404: err("Приглашение не найдено")})
-def stage_candidate(invitation_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+def stage_candidate(inv_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     from app.modules.contact.router import _cand_inv
 
-    return svc.stage_state(db, _cand_inv(db, user, invitation_id), "candidate")
+    return svc.stage_state(db, _cand_inv(db, user, inv_id), "candidate")
 
 
-@candidate_router.post("/invitations/{invitation_id}/ai-interview", status_code=201, response_model=SessionOut,
+@candidate_router.post("/invitations/{inv_id}/ai-interview", status_code=201, response_model=SessionOut,
                        summary="Согласиться и начать ИИ-интервью", responses={
                            **AUTH, **OFF, 404: err("Приглашение не найдено"), 422: err("Нет согласия"),
                            429: err("Лимит сессий")})
-def stage_start(invitation_id: uuid.UUID, body: StartIn, user: User = Depends(candidate),
+def stage_start(inv_id: uuid.UUID, body: StartIn, user: User = Depends(candidate),
                 db: Session = Depends(get_db)) -> dict:
     from app.modules.contact.router import _cand_inv
 
-    inv = _cand_inv(db, user, invitation_id)
+    inv = _cand_inv(db, user, inv_id)
     return svc.view(svc.start_interview(db, user, inv, body.name, body.consent), "candidate")

@@ -9,7 +9,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from app.core.config import get_settings
 from app.core.db import SessionLocal
-from app.modules.assessment.models import TestSession
+from app.modules.assessment.models import TestSession as TSession  # без «Test» в имени — pytest не собирает
 from app.modules.interview import port as pt
 from app.modules.interview import service as svc
 from app.modules.interview.models import InterviewSession
@@ -45,8 +45,8 @@ def _with_open_answers(client, t, texts=(WRITTEN, WRITTEN2), email="cand@example
 
     with SessionLocal() as db:
         uid = db.scalar(select(User.id).where(User.email == email))
-        ts = db.scalars(select(TestSession).where(TestSession.user_id == uid)
-                        .order_by(TestSession.started_at.desc())).first()
+        ts = db.scalars(select(TSession).where(TSession.user_id == uid)
+                        .order_by(TSession.started_at.desc())).first()
         items = ts.result["state"].setdefault("items", [])
         items.append(_open_item(90, texts[0]))
         if len(texts) > 1:
@@ -356,7 +356,7 @@ def test_stub_channels_unavailable(client, on):
 
 def test_openapi_has_interview_models(client):
     sch = client.get("/api/openapi.json").json()
-    op = sch["paths"]["/api/interview/defense/{test_session_id}"]["post"]
+    op = sch["paths"]["/api/interview/defense/{session_id}"]["post"]
     assert op["tags"] == ["interview"] and "$ref" in str(op["responses"]["201"])
     assert any(t["name"] == "interview" for t in sch["tags"])
 
