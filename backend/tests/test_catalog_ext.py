@@ -69,15 +69,37 @@ def test_flag_off_onboarding_rejects_new_direction(client):
 
 def test_flag_on_bank_not_ready_still_hidden(monkeypatch, client):
     monkeypatch.setenv("CATALOG_EXT_ENABLED", "1")
+    monkeypatch.setenv("CATALOG_EXT_MIN_FAMILIES", "100000")  # банк любого размера «не готов»
     get_settings.cache_clear()
     ext.reset_cache()
     try:
-        assert ext.visible_ext() == ()  # заглушка теста: семейств новых направлений нет — банк не готов
+        assert ext.visible_ext() == ()
         assert [d["id"] for d in client.get("/api/catalog").json()["directions"]] == list(BASE)
+        assert client.get("/api/catalog/stack-tags", params={"direction": "mobile"}).json()
+        assert {t["direction_id"] for t in client.get("/api/catalog/stack-tags",
+                                                      params={"direction": "mobile"}).json()} == {None}
+        assert client.get("/api/meta").json()["catalog"]["ext"] == []
     finally:
         monkeypatch.delenv("CATALOG_EXT_ENABLED")
+        monkeypatch.delenv("CATALOG_EXT_MIN_FAMILIES")
         get_settings.cache_clear()
         ext.reset_cache()
+
+
+def test_sync_bank_rule_matches_settings():
+    """tools/sync_bank.py пишет directions_verified по тому же правилу, что catalog/ext.py."""
+    import importlib.util
+    from pathlib import Path
+
+    from app.core.config import Settings
+
+    path = Path(__file__).resolve().parents[2] / "tools" / "sync_bank.py"
+    spec = importlib.util.spec_from_file_location("sync_bank_mod", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    f = Settings.model_fields
+    assert mod.READY_MIN_FAMILIES == f["catalog_ext_min_families"].default
+    assert mod.READY_MIN_PER_GRADE == f["catalog_ext_min_per_grade"].default
 
 
 # ------------------------------------------------------------------ правило готовности банка
