@@ -36,7 +36,7 @@
 - Документация API (OpenAPI/Swagger): https://fsp.neuropeople.pro/api/docs
 - Проверка по критериям ТЗ: страница `/criteria` и [docs/CRITERIA.md](docs/CRITERIA.md) — подпункт ТЗ → что сделать → что увидите → чем доказано
 - Архитектура и модель данных: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Интеграции: [антифрод и индекс доверия](docs/ANTIFRAUD.md), [ФСП ID](docs/FSP_INTEGRATION.md), [ATS](docs/ATS.md), [подписка на потребность и напоминания](docs/SUBSCRIPTIONS.md), [нагрузочный тест](docs/LOAD_TEST.md), [задания работодателя: причина, рубрика, свежесть](docs/ASSIGNMENTS.md), [доступность: axe и клавиатура](docs/ACCESSIBILITY.md)
+- Интеграции: [антифрод и индекс доверия](docs/ANTIFRAUD.md), [ФСП ID](docs/FSP_INTEGRATION.md), [ATS](docs/ATS.md), [подписка на потребность и напоминания](docs/SUBSCRIPTIONS.md), [нагрузочный тест](docs/LOAD_TEST.md), [задания работодателя: причина, рубрика, свежесть](docs/ASSIGNMENTS.md), [доступность: axe и клавиатура](docs/ACCESSIBILITY.md), [взаимный подбор и ссылка для руководителя](docs/MUTUAL.md), [«Мои данные» кандидата](docs/MY_DATA.md), [рыночные диапазоны зарплат](docs/SALARY_SOURCES.md)
 
 ## Состав
 
