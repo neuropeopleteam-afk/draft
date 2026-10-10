@@ -73,17 +73,24 @@ test("кандидат: устная защита в чате на заглуш�
     await panel.getByTestId("interview-defense-start").click();
     await expect(page).toHaveURL(/\/candidate\/interview\/[0-9a-f-]{36}$/, { timeout: 60_000 });
     await page.getByTestId("iv-begin-text").click();
+    const q = page.getByTestId("iv-question");
+    const result = page.getByTestId("interview-result");
+    let prev = "";
     for (let i = 0; i < 6; i++) {
-      const q = page.getByTestId("iv-question");
-      if (!(await q.isVisible().catch(() => false))) break;
-      await axe(page, i === 0 ? "разговор" : "");
+      await expect(q.or(result)).toBeVisible({ timeout: 60_000 });
+      if (await result.isVisible()) break;
+      await expect(q).not.toHaveText(prev);  // следующий вопрос, а не прежний
+      prev = (await q.textContent()) ?? "";
+      if (i === 0) await axe(page, "разговор");
       const hint = page.getByTestId("iv-hint");
       if (await hint.isVisible()) await hint.click();
       else await page.getByLabel("Ваш ответ").fill("Отвечаю своими словами: сначала проверяю входные данные, затем выбираю структуру и объясняю почему.");
       await page.getByTestId("iv-send").click();
-      await page.waitForTimeout(400);
+      await expect(q.or(result)).toBeVisible({ timeout: 60_000 });
+      if (await result.isVisible()) break;
+      await expect(q).not.toHaveText(prev, { timeout: 60_000 });
+      prev = "";
     }
-    const result = page.getByTestId("interview-result");
     await expect(result).toBeVisible({ timeout: 90_000 });
     await expect(result).toContainText(/Ответ подтверждён устно|Есть расхождения|Мало данных/);
     await expect(result).toContainText("заглушка");

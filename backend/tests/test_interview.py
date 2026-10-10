@@ -308,7 +308,7 @@ def test_engine_port_channels_and_quote_check(client, on, monkeypatch):
     ts = _with_open_answers(client, t)
     sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
     a = client.post(f"/api/interview/sessions/{sid}/avatar", headers=H(t)).json()
-    assert a["session_token"] == "tok-test" and a["sdk_url"].startswith("https://")
+    assert a["session_token"] == "tok-test" and "sdk_url" not in a  # SDK — из бандла, не с CDN
     s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "avatar"}, headers=H(t)).json()
     assert s["conversation"]["channels"] == {"avatar": True, "voice": True, "text": True} and s["conversation"]["hint"] is None
     sp = client.get(f"/api/interview/sessions/{sid}/speech", headers=H(t))
@@ -359,3 +359,24 @@ def test_criteria_link_only_with_flag(on, monkeypatch):
     monkeypatch.setattr(get_settings(), "interview_enabled", False)
     assert C.INTERVIEW_GO not in C.build()["criteria"][1]["items"][0]["do"]
     assert "docs/INTERVIEW.md" in C.markdown()  # строка документа — всегда, от флага не зависит
+
+
+def test_auto_picks_engine_when_present(monkeypatch):
+    """INTERVIEW_ENGINE=auto: есть пакет engine/ (Я14) — порт движка, а не заглушка продукта; нет — заглушка."""
+    import sys
+
+    import app.modules.interview as pkg
+    from app.modules.interview import port as pt
+
+    monkeypatch.setattr(get_settings(), "interview_engine", "auto")
+    eng = _fake_engine()
+    monkeypatch.setattr(pkg, "engine", eng, raising=False)
+    monkeypatch.setitem(sys.modules, "app.modules.interview.engine", eng)
+    p = pt.get_port()
+    assert isinstance(p, pt.EnginePort) and p.name == "engine" and not pt.is_stub()
+    monkeypatch.setattr(get_settings(), "interview_engine", "stub")
+    assert isinstance(pt.get_port(), pt.StubPort)  # явная заглушка — всегда своя
+    monkeypatch.setattr(get_settings(), "interview_engine", "auto")
+    monkeypatch.delattr(pkg, "engine")
+    monkeypatch.setitem(sys.modules, "app.modules.interview.engine", None)  # пакета нет → ImportError
+    assert isinstance(pt.get_port(), pt.StubPort) and pt.is_stub()

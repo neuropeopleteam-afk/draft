@@ -151,7 +151,7 @@ def conversation(row: InterviewSession) -> dict | None:
     return {"n": st.get("n"), "question": st.get("q"), "asked": len([r for r in row.transcript or []
                                                                       if r.get("who") == "interviewer"]),
             "max_questions": row.max_questions, "deadline": _deadline(row), "channels": port.channels(),
-            "engine": "stub" if stub else "engine", "sdk_url": get_settings().interview_anam_sdk_url,
+            "engine": "stub" if stub else "engine",
             # заглушка: начало письменного ответа на задание текущего вопроса — «подставить» в e2e
             "hint": port.hint(st.get("engine") or {}, int(st.get("n") or 0)) if stub and st.get("engine") else None}
 
