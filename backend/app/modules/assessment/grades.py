@@ -32,7 +32,7 @@ from assessment_bank.psychometrics.grading import GRADE_ORDER as BANK_GRADES
 from app.core.fmt import ru_num, theta_se
 from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER, GRADES, GRADE_START_THETA
 
-CONFIRM_LEVEL = 0.8
+CONFIRM_LEVEL = 0.8  # прежний порог уверенности (до Я22); действующий — настройка assessment_confirm_level
 UPGRADE_LEVEL = 0.9
 GRADE_RU = {"none": "без грейда", **GRADES}
 # Потолок категории по длине теста и погрешности: крайний грейд (Senior) — только при ≥ 5 оценённых заданиях
@@ -41,6 +41,17 @@ TOP_MIN_ITEMS = 5
 TOP_MAX_SE = 0.75
 SHORT_CEILING = "middle"
 PRELIMINARY_MAX_ITEMS = TOP_MIN_ITEMS - 1  # мини-тест QR (3 задания): категория всегда предварительная
+
+
+def confirm_level() -> float:
+    """Действующий порог уверенности подтверждения и «уровня ниже» (настройка ASSESSMENT_CONFIRM_LEVEL)."""
+    from app.core.config import get_settings
+
+    return float(get_settings().assessment_confirm_level)
+
+
+def confirm_pct() -> int:
+    return round(100 * confirm_level())
 
 
 @lru_cache(maxsize=1)
@@ -98,8 +109,10 @@ class CategoryLevel:
 
 
 def category_level(theta: float, se: float, n_items: int | None = None,
-                   confirm_level: float = CONFIRM_LEVEL) -> CategoryLevel:
+                   confirm_level: float | None = None) -> CategoryLevel:
     """Единое отображение θ ± SE → категория для всех режимов (полный, экспресс, дотестирование, мини-тест)."""
+    if confirm_level is None:
+        confirm_level = globals()["confirm_level"]()
     proven = "none"
     for g in GRADE_ORDER:  # P(θ ≥ порога) убывает с грейдом: наивысший — последний, где P ≥ уровня
         if p_at_least(theta, se, g) >= confirm_level:
@@ -117,12 +130,15 @@ def probabilities(theta: float, se: float) -> dict[str, float]:
     return {g: round(at_least[i] - at_least[i + 1], 4) for i, g in enumerate(order)}
 
 
-def decide_grade(theta: float, se: float, claimed: str, confirm_level: float = CONFIRM_LEVEL,
+def decide_grade(theta: float, se: float, claimed: str, confirm_level: float | None = None,
                  upgrade_level: float = UPGRADE_LEVEL, n_items: int | None = None) -> GradeDecision:
     """Решение по заявленному грейду на полной шкале платформы (см. описание модуля) с потолком категории
     (``ceiling``): грейд выше потолка короткий или слишком неточный тест не подтверждает; уровень ниже, доказанный
     с той же уверенностью, остаётся доступным («пройти тест на …» / «принять уровень ниже»). n_items — число
-    оценённых заданий (None — длина не ограничивает, только погрешность)."""
+    оценённых заданий (None — длина не ограничивает, только погрешность). confirm_level None — настройка
+    assessment_confirm_level (Я22)."""
+    if confirm_level is None:
+        confirm_level = globals()["confirm_level"]()
     dec = _decide(theta, se, claimed, confirm_level, upgrade_level)
     top = ceiling(n_items, se)
     if _rank(claimed) > _rank(top) and (dec.confirmed or dec.provisional):

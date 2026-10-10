@@ -142,7 +142,16 @@ def stage_time() -> list[dict]:
     return pts
 
 
-STAGES = {"screen": stage_screen, "time": stage_time, "grid": stage_grid, "worlds": stage_worlds, "competitor": stage_competitor,
+def stage_refine() -> list[dict]:
+    """Уточнение около выбора (P ≥ 0,6) и он же в мире конкурента."""
+    return [_p(confirm_level=0.58), _p(confirm_level=0.62), _p(confirm_level=0.6, exclude_low=0.1),
+            _p(confirm_level=0.6, ext_items=9), _p(confirm_level=0.6, classify_z=1.0),
+            _p(confirm_level=0.6, time_weight=1.0, max_items=20, exclude_low=0.1),
+            _p(confirm_level=0.6, misspec=0.35), _p(confirm_level=0.6, misspec=0.35, levels=4),
+            _p(confirm_level=0.6, levels=4)]
+
+
+STAGES = {"screen": stage_screen, "time": stage_time, "refine": stage_refine, "grid": stage_grid, "worlds": stage_worlds, "competitor": stage_competitor,
           "pool": stage_pool}
 
 

@@ -286,7 +286,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
             if pv:  # «Junior (предварительно)»: грейд не подтверждён, но и уровень ниже не доказан
                 st = "partial"
                 rel += (f"; предварительно — вероятность уровня не ниже Junior {pv.get('p_pct', '—')} % "
-                        "(подтверждение — от 80 %)")
+                        f"(подтверждение — от {pv.get('confirm_pct', 80)} %)")
             cells["category"] = {"level": "T1", "status": st, "provisional": bool(pv),
                                  "text": f"{category_title(b.category_id)}{rel}; тест "
                                          f"{b.test.created_at:%d.%m.%Y}, {t.get('correct')} из {t.get('answered')} верно"}

@@ -49,7 +49,7 @@ from assessment_bank.simulation import Person, TrueFamily, _timed, make_responde
 from app.modules.assessment.bank_engine import stack_excluded
 from app.modules.assessment.exposure import choose_subpool, exposure_table
 from app.modules.assessment.grade_hint import grade_by_years
-from app.modules.assessment.grades import CONFIRM_LEVEL, cuts_tuple, decide_grade, p_at_least, point_grade
+from app.modules.assessment.grades import confirm_level as product_confirm_level, cuts_tuple, decide_grade, p_at_least, point_grade
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.rules import accept_lower_allowed
 from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
@@ -146,7 +146,7 @@ def _block_gap(sess, res, direction: str) -> dict:
 
 def run_session(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, claimed: str, history: list[dict],
                 rng: np.random.Generator, det: CanaryDetector, responder=None,
-                confirm_level: float = CONFIRM_LEVEL) -> tuple[dict, object]:
+                confirm_level: float | None = None) -> tuple[dict, object]:
     d = cand.direction
     prev_sp = [h["subpool"] for h in history if h["subpool"] is not None]
     sp = choose_subpool(cfg.subpools, int(rng.integers(2 ** 31)), prev_sp)
@@ -180,10 +180,10 @@ def run_session(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, claim
 
 
 def run_path(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, history: list[dict], rng: np.random.Generator,
-             det: CanaryDetector, confirm_level: float = CONFIRM_LEVEL, award_above: float | None = None,
+             det: CanaryDetector, confirm_level: float | None = None, award_above: float | None = None,
              decision: str = "claimed") -> dict:
     """Весь путь: тест на заявленный грейд → решение → принять доказанный уровень ниже или один тест ступенью ниже.
-    confirm_level — порог уверенности подтверждения и «уровня ниже» (в продукте 0,8); award_above — абляция перебора
+    confirm_level — порог уверенности подтверждения и «уровня ниже» (None — настройка продукта assessment_confirm_level); award_above — абляция перебора
     Я22: подтверждён и P(θ ≥ порога следующего грейда) ≥ award_above → следующий грейд в той же сессии (в продукте нет);
     decision="point" — итог = грейд по лучшей оценке θ̂ одной сессии (точечный грейд: P ≥ 0,5 к ближайшему порогу),
     без «уровня ниже» и второго теста."""
@@ -510,7 +510,7 @@ def splits(cands, r1, r2, seed: int) -> dict:
     # Граница решения сдвинута вверх от номинального порога: подтверждение и «уровень ниже» требуют P ≥ 0,8,
     # то есть θ̂ ≥ порог + z(0,8) · SE. Расстояние до этой эффективной границы — честный разрез «уверенные / у порога».
     se_med = float(np.median([r["tests"][0]["se"] for r in r1]))
-    shift = float(special.ndtri(0.8)) * se_med
+    shift = float(special.ndtri(product_confirm_level())) * se_med
     dist_eff = nearest_cut_distance(th - shift)
     return {"far_from_cut": sub(dist >= BORDER), "near_cut": sub(dist < BORDER),
             "far_from_boundary": sub(dist_eff >= BORDER), "near_boundary": sub(dist_eff < BORDER),
@@ -554,7 +554,7 @@ def run(n: int = 500, quick: bool = False, write: bool = True, pilot_n: int = 10
     cfg_d = {k: v for k, v in asdict(cfg).items()}
     world_cfg = {"app": cfg_d, "n_per_direction": n, "directions": list(dirs), "p_follow_hint": P_FOLLOW_HINT,
                  "self_sd": SELF_SD, "misspec": 0.5, "border": BORDER, "pilot_n": pilot_n,
-                 "cuts": dict(GRADE_CUTS), "n_families": len(pool)}
+                 "cuts": dict(GRADE_CUTS), "n_families": len(pool), "confirm_level": product_confirm_level()}
     rep = {
         "signature": signature(seed=SEED, config=world_cfg, n=len(all_c),
                                world=f"симуляция теста: {len(dirs)} направлений × {n} кандидатов, семейств в банке: {len(pool)}",
@@ -567,7 +567,7 @@ def run(n: int = 500, quick: bool = False, write: bool = True, pilot_n: int = 10
         "by_direction": by_dir, "by_claimed": by_claim,
         "transitions": _transitions(all_1, all_2),
         "block_gap": gap, "discrimination": disc,
-        "procedure": PROCEDURE, "caveat": CAVEAT,
+        "procedure": [x.replace("{c}", _f(product_confirm_level(), 1)) for x in PROCEDURE], "caveat": CAVEAT,
         "competitor_reference": COMPETITOR_REFERENCE,
     }
     rep["seconds"] = round(time.time() - t0, 1)
@@ -594,8 +594,8 @@ PROCEDURE = [
     "Стек опроса фильтрует семейства (Go, Java, Django, Kafka, Docker — только тем, у кого тег есть).",
     "Адаптивный тест платформы на банке: классификационная остановка, дотестирование у порога, контроль частоты, "
     "ротация субпулов по истории сессий; тест Стажёра — только лёгкие семейства, без ротации.",
-    "Детектор предзнания и пересчёт θ; решение: подтверждён при P ≥ 0,8, «Junior (предварительно)» при P от 0,10.",
-    "Не подтверждён: принять доказанный уровень ниже без нового теста (P ≥ 0,8), иначе один тест ступенью ниже, "
+    "Детектор предзнания и пересчёт θ; решение: подтверждён при P ≥ {c}, «Junior (предварительно)» при P от 0,10.",
+    "Не подтверждён: принять доказанный уровень ниже без нового теста (P ≥ {c}), иначе один тест ступенью ниже, "
     "иначе без категории.",
     "Повтор — вся процедура ещё раз: другой субпул, новые варианты; семейства всех прошлых сессий не берутся "
     "(новых нет — виденные давнее всего, в новом варианте).",
@@ -666,7 +666,8 @@ def markdown(rep: dict) -> str:
         "",
         f"Для сравнения (другой мир, другая процедура): FSP Talent — κw {_f(cr['kappa_w'])}, точно {_pc(cr['exact'])}, ±1 "
         f"{_pc(cr['within_1'])}; 4 ступени, 20 заданий, подтверждение при {cr['confirm_rule']}, ошибка параметров "
-        f"{cr['param_error']}, без ДИ и ICC ({cr['source']}). У нас — 5 ступеней (со Стажёром), подтверждение при P ≥ 0,8, "
+        f"{cr['param_error']}, без ДИ и ICC ({cr['source']}). У нас — 5 ступеней (со Стажёром), подтверждение при P ≥ "
+        f"{_f(rep['config'].get('confirm_level', 0.8), 1)}, "
         "ошибка параметров σ = 0,5: числа не сравнимы напрямую, сравнимы только методы внутри одного мира.",
         "",
         "## Уверенные и у порога",
@@ -683,8 +684,9 @@ def markdown(rep: dict) -> str:
         s = t["splits"][key]
         L.append(f"| {title} | {_pc(s['share'])} | {_pc(s.get('exact'))} | {_pc(s.get('within_1'))} | "
                  f"{_f(s.get('kappa_w'))}{_ci_s(s.get('kappa_w_ci'))} |")
-    L += ["", f"Граница решения выше номинального порога на z(0,8) · SE ≈ {_f(t['splits']['boundary_shift'], 2)}: подтверждение "
-          "и «уровень ниже» требуют P ≥ 0,8. Поэтому расхождения сосредоточены у этой границы, а разрез по номинальному "
+    cl = _f(rep['config'].get('confirm_level', 0.8), 1)
+    L += ["", f"Граница решения выше номинального порога на z({cl}) · SE ≈ {_f(t['splits']['boundary_shift'], 2)}: подтверждение "
+          f"и «уровень ниже» требуют P ≥ {cl}. Поэтому расхождения сосредоточены у этой границы, а разрез по номинальному "
           "порогу их почти не разделяет.", "", "## По направлениям", "", "| Направление | n | Точно | ±1 | κw [95 % ДИ] | ICC θ | Повтор семейств | Грейд = истинный |",
           "|---|---|---|---|---|---|---|---|"]
     for d, b in rep["by_direction"].items():

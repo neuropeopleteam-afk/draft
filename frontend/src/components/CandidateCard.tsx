@@ -160,7 +160,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
             <p className="mt-1 flex flex-wrap gap-1.5">
               {t.mode === "express" && <span className="chip" title="Экспресс-тест: 5–7 коротких заданий (за Senior — 8–12), интервал θ шире, чем у полного теста">экспресс-тест</span>}
               {t.mode === "mini" && <span className="chip" title="Мини-тест из 3 заданий: категория предварительная и не выше Middle, полный тест уточнит грейд">мини-тест · предварительно</span>}
-              {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом (P ≥ 80 %) и принят кандидатом">принят уровень ниже</span>}
+              {t.accepted_lower && <span className="chip" title="Заявленный грейд не подтвердился; уровень ниже доказан тестом с уверенностью порога подтверждения и принят кандидатом">принят уровень ниже</span>}
             </p>
           )}
           {t?.integrity && <Integrity v={t.integrity} compact={compact} />}
