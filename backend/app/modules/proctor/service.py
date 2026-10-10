@@ -26,7 +26,7 @@ from app.modules.proctor.models import ProctorEvent, ProctorSession
 
 log = logging.getLogger("app.proctor")
 
-CONSENT_VERSION = "2026-10-08"  # 08.10: формулировка «effect» без названий сигналов (Р27)
+CONSENT_VERSION = "2026-10-10"  # 10.10: строка оператора — как на сайте компании; 08.10: формулировка «effect» без названий сигналов (Р27)
 MAX_EVENTS_PER_SESSION = 2000
 MAX_OBSERVED_MS_SLACK = 120_000  # наблюдение по заданию не больше времени задания по часам сервера + запас
 

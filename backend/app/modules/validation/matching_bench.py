@@ -37,7 +37,7 @@ import numpy as np
 
 from app.modules.catalog.seed_data import GRADE_ORDER
 from app.modules.matching.need_parser import parse_need
-from app.modules.matching import must_have
+from app.modules.matching import core_skill, must_have
 from app.modules.matching.ranking import WEIGHTS, algorithm, requirement_priority, score_candidate
 from app.modules.profiles.facts import PROVISIONAL_PENALTY
 from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate, true_grade)
@@ -144,6 +144,18 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
             a = must_have.assess(b, r, avail)
             out["must_tier"][i, j] = a["tier"]
             out["must_full"][i, j] = a["missing_total"] == 0
+    # Я1: ядро роли (основной язык / фреймворк / специализация) — состояние у кандидата: −1 ядра нет, 0 подтверждено,
+    # 1 заявлено, 2 отсутствует; core_absent — «отсутствует» и признак действует (ядро заявлено хоть у кого-то в пуле)
+    out["core_state"] = np.full((n, m), -1, dtype=np.int8)
+    out["core_absent"] = np.zeros((n, m), dtype=np.int8)
+    for i, r in enumerate(reqs):
+        core = core_skill.role_core(r)
+        if not core:
+            continue
+        st = np.array([core_skill.STATE_ORDER[core_skill.state(b, core)["state"]] for b in bundles], dtype=np.int8)
+        out["core_state"][i] = st
+        if ((st < 2) & (out["vis"][i] == 2)).any():
+            out["core_absent"][i] = (st == 2).astype(np.int8)
     rebuilt = weighted(out, np.array([WEIGHTS[k] for k in COMP_KEYS]))
     out["max_rebuild_error"] = float(np.abs(rebuilt - prod).max()) if n else 0.0
     assert out["max_rebuild_error"] < 1e-3, "скор из компонент не совпал с ranking.score_candidate"
@@ -163,10 +175,12 @@ def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY, tran
 
 def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROVISIONAL_PENALTY, *,
                     experimental: bool = False, must_first: bool | None = None, transfer: bool = True,
-                    tier: bool = True) -> np.ndarray:
-    """Порядок как в build_selection: категория → ярус обязательного (Ф2, флаг MATCH_MUST_FIRST) → −скор (со штрафом
-    «предварительно») → −рейтинг → public_ref. experimental — прежний эксперимент И8 (число пробелов без ярусов);
-    transfer=False и tier=False — абляции ВЛ («без θ» без переноса веса, «без яруса грейда»)."""
+                    tier: bool = True, core: bool | None = None, core_policy: str | None = None) -> np.ndarray:
+    """Порядок как в build_selection: категория → [ядро роли, Я1] → ярус обязательного (Ф2, флаг MATCH_MUST_FIRST) →
+    −скор (со штрафом «предварительно») → −рейтинг → public_ref. experimental — прежний эксперимент И8 (число пробелов
+    без ярусов); transfer=False и tier=False — абляции ВЛ («без θ» без переноса веса, «без яруса грейда»).
+    core — признак «ядро роли» (по умолчанию флаг RANK_CORE_SKILL), core_policy — group / within / cap / penalty
+    (по умолчанию core_skill.POLICY)."""
     s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w, penalty, transfer)
     must_first = must_have.enabled() if must_first is None else must_first
     if experimental:
@@ -175,10 +189,28 @@ def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROV
         gaps = sc.get("must_tier", np.zeros_like(s))
     else:
         gaps = np.zeros_like(s)
+    core = core_skill.enabled() if core is None else core
+    policy = core_policy or core_skill.POLICY
+    absent = sc.get("core_absent") if core else None
+    if absent is None:
+        absent = np.zeros(s.shape, dtype=np.int8)
+    zero = np.zeros(s.shape[1], dtype=np.int8)
+    if policy == "penalty":
+        s = s - core_skill.PENALTY * absent
     # без яруса (абляция): кандидаты с категорией — одним списком по скору, без категории — в конце (их не видно)
     vis = sc["vis"] if tier else np.minimum(sc["vis"], 1)
-    return np.stack([np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], gaps[i], -vis[i]))
-                     for i in range(len(s))])
+    rows = []
+    for i in range(len(s)):
+        grp = absent[i] if policy == "group" else zero
+        inner = absent[i] if policy == "within" else zero
+        o = np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], inner, gaps[i], grp, -vis[i]))
+        if policy == "cap" and absent[i].any():
+            top = vis[i][o] == vis[i][o[0]]  # потолок места — внутри первого яруса (категория потребности)
+            n_top = int(top.sum())
+            pos = core_skill.cap_positions(list(absent[i][o[:n_top]].astype(bool)))
+            o = np.concatenate([o[:n_top][pos], o[n_top:]])
+        rows.append(o)
+    return np.stack(rows)
 
 
 class BM25Matrix:
@@ -368,7 +400,12 @@ def fast_ndcg10(sc: dict, rel: np.ndarray, rows: np.ndarray, w: np.ndarray, idea
     рейтинг (как в продукте; разбиение оставшихся ничьих по public_ref здесь не воспроизводится)."""
     sub = {"comps": sc["comps"][rows], "has_req": sc["has_req"][rows], "provisional": sc["provisional"]}
     tier = sc["must_tier"][rows] if must_have.enabled() and "must_tier" in sc else 0  # ярус обязательного (Ф2)
-    key = sc["vis"][rows] * 10.0 - tier * 3.0 + weighted(sub, w) + sc["rating"][None, :] * 1e-6
+    # Я1: ядро роли (флаг RANK_CORE_SKILL); потолок места (cap) здесь приближён группой
+    core = sc["core_absent"][rows] if core_skill.enabled() and "core_absent" in sc else 0
+    pol = core_skill.POLICY
+    s = weighted(sub, w) - (core_skill.PENALTY * core if pol == "penalty" else 0)
+    key = (sc["vis"][rows] * 100.0 - (core * 10.0 if pol in ("group", "cap") else 0) - tier * 3.0
+           - (core * 1.5 if pol == "within" else 0) + s + sc["rating"][None, :] * 1e-6)
     top = np.argpartition(-key, 10, axis=1)[:, :10]
     kt = np.take_along_axis(key, top, axis=1)
     top = np.take_along_axis(top, np.argsort(-kt, axis=1), axis=1)
@@ -394,7 +431,7 @@ def heldout(world: World, run: dict, world2: World, run2: dict, seed: int) -> di
     def full(sc_, rel_, rows, w):
         o = platform_orders({**sc_, "comps": sc_["comps"][rows], "has_req": sc_["has_req"][rows],
                              "vis": sc_["vis"][rows], "mandatory_gaps": sc_["mandatory_gaps"][rows],
-                             "must_tier": sc_["must_tier"][rows]}, w)
+                             "must_tier": sc_["must_tier"][rows], "core_absent": sc_["core_absent"][rows]}, w)
         return per_need(rel_[rows], o)["ndcg@10"]
 
     t_prod, t_best = full(sc, rel, test, w_prod), full(sc, rel, test, best)
@@ -643,7 +680,7 @@ def must_have_section(world: World, sc: dict, seed: int) -> dict:
     pn, cov = {}, {}
     req = sc["has_req"]
     for name, flag in (("before", False), ("after", True)):
-        o = platform_orders(sc, must_first=flag)
+        o = platform_orders(sc, must_first=flag, core=False)  # Ф2 отдельно от ядра роли (Я1): match-v1 против match-v1.1
         pn[name] = per_need(world.rel, o)
         cov[name] = np.array([sc["must_full"][i, o[i, :5]].mean() if req[i] else np.nan for i in range(len(o))])
     idx = boot_idx(len(world.needs), seed + 31)
@@ -655,13 +692,78 @@ def must_have_section(world: World, sc: dict, seed: int) -> dict:
     out["diff"] = {m: _ci(pn["after"][m] - pn["before"][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
     out["diff"]["top5_all_required_t1"] = _ci(cov["after"][req] - cov["before"][req], ridx)
     out["needs_changed_top5"] = int(sum(1 for i in range(len(world.needs))
-                                        if not np.array_equal(platform_orders({**sc, **_row(sc, i)}, must_first=False)[0, :5],
-                                                              platform_orders({**sc, **_row(sc, i)}, must_first=True)[0, :5])))
+                                        if not np.array_equal(platform_orders({**sc, **_row(sc, i)}, must_first=False, core=False)[0, :5],
+                                                              platform_orders({**sc, **_row(sc, i)}, must_first=True, core=False)[0, :5])))
+    return out
+
+
+GUARD_JSON = REPO / "docs" / "realdata" / "ranking_guard_500.json"
+CORE_V1_JSON = REPO / "docs" / "core_skill" / "metrics.json"
+CORE_V2_JSON = REPO / "docs" / "core_skill" / "v2_control.json"  # только числа: расчёт на сервере (ПДн не покидают его)
+
+
+def guard_summary() -> dict | None:
+    """Закрытый guard порядка (tools/realdata/ranking_guard.py, сохранённый json): одни и те же 500 профилей демо-мира
+    (разметка правилами) и мир 50 × 500 со скрытой истиной; столбцы — match-v1 без ярусов, продукт с ярусами
+    обязательного (MATCH_MUST_FIRST), то же + ядро роли (RANK_CORE_SKILL). Плюс v1-разметка ядра роли (модель, не
+    люди). Параметры по этим числам не подбирались."""
+    if not GUARD_JSON.exists():
+        return None
+    g = json.loads(GUARD_JSON.read_text(encoding="utf-8"))
+    cols = ("before", "after", "core_on")
+    out = {"source": str(GUARD_JSON.relative_to(REPO)), "command": "python tools/realdata/ranking_guard.py",
+           "demo_500": {k: {m: g["demo_500"][k][m]["platform"] for m in ("p@5", "ndcg@5", "ndcg@10")}
+                        for k in cols if k in g["demo_500"]},
+           "hidden_truth_500": {k: {m: g["hidden_truth_500"][k][m] for m in ("p@5", "ndcg@10", "mrr")}
+                                for k in cols if k in g["hidden_truth_500"]},
+           "n_pool": g["demo_500"].get("n_pool"), "n_needs": g["demo_500"].get("n_needs"),
+           "hidden_config": {k: g["hidden_truth_500"]["config"][k] for k in ("n_needs", "n_candidates")}}
+    if CORE_V1_JSON.exists():
+        v1 = json.loads(CORE_V1_JSON.read_text(encoding="utf-8"))["expert_v1"]
+        sm = v1["summary"]
+        out["expert_v1_core"] = {"n_needs": v1["n_needs"], "n_pairs": v1["n_pairs"], "raters": v1["raters"],
+                                 **{k: {m: sm[m][k]["mean"] for m in ("p@5", "ndcg@5", "ndcg@10")}
+                                    for k in ("off", core_skill.POLICY)},
+                                 "diff": {m: sm[m][f"diff_{core_skill.POLICY}"] for m in ("p@5", "ndcg@10")},
+                                 "source": str(CORE_V1_JSON.relative_to(REPO))}
+    if CORE_V2_JSON.exists():
+        v2 = json.loads(CORE_V2_JSON.read_text(encoding="utf-8"))
+        out["expert_v2_control"] = {
+            "command": v2["command"], "source": str(CORE_V2_JSON.relative_to(REPO)),
+            **{k: {p: {m: v2[k][p][m]["platform"]["mean"] for m in ("p@5", "ndcg@10")} | {"needs": v2[k][p]["needs"]}
+                   for p in ("v1", "v2", "all")} for k in ("frozen", "off", "on")},
+            "bm25": {p: {m: v2["off"][p][m]["bm25"]["mean"] for m in ("p@5", "ndcg@10")} for p in ("v1", "v2", "all")},
+            "diff": v2["on_minus_off"]}
+    return out
+
+
+def core_skill_section(world: World, sc: dict, seed: int) -> dict:
+    """Я1: признак «ядро роли» (основной язык / фреймворк / специализация) на этом же мире — продукт без признака
+    против продукта с признаком (политика core_skill.POLICY), парный бутстреп по потребностям; доля мест топ-5,
+    занятых кандидатами без ядра (по потребностям, где признак действует)."""
+    pn, absent = {}, {}
+    active = sc["core_absent"].any(1)
+    for name, flag in (("before", False), ("after", True)):
+        o = platform_orders(sc, core=flag)
+        pn[name] = per_need(world.rel, o)
+        absent[name] = np.array([sc["core_absent"][i, o[i, :5]].mean() if active[i] else np.nan for i in range(len(o))])
+    idx = boot_idx(len(world.needs), seed + 41)
+    aidx = boot_idx(max(int(active.sum()), 1), seed + 43)
+    out = {"enabled_in_product": core_skill.enabled(), "policy": core_skill.POLICY,
+           "needs_with_core": int((sc["core_state"] >= 0).any(1).sum()), "needs_active": int(active.sum())}
+    for name in ("before", "after"):
+        out[name] = {m: _ci(pn[name][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
+        out[name]["top5_core_absent"] = _ci(absent[name][active], aidx) if active.any() else None
+    out["diff"] = {m: _ci(pn["after"][m] - pn["before"][m], idx) for m in ("p@5", "ndcg@10", "mrr")}
+    out["diff"]["top5_core_absent"] = (_ci(absent["after"][active] - absent["before"][active], aidx)
+                                       if active.any() else None)
+    out["diff_active_needs"] = {m: round(float((pn["after"][m] - pn["before"][m])[active].mean()), 4)
+                                for m in ("p@5", "ndcg@10")} if active.any() else None
     return out
 
 
 def _row(sc: dict, i: int) -> dict:
-    return {k: sc[k][i:i + 1] for k in ("comps", "has_req", "vis", "mandatory_gaps", "must_tier")}
+    return {k: sc[k][i:i + 1] for k in ("comps", "has_req", "vis", "mandatory_gaps", "must_tier", "core_absent")}
 
 
 # ---------------------------------------------------------------- запуск
@@ -711,6 +813,8 @@ def run(cfg: BenchConfig, quick: bool = False, sens_size: tuple[int, int] | None
         "heldout_weights": ho, "sensitivity": sens, "junior": junior,
         "score_rebuild_max_error": r["scored"]["max_rebuild_error"],
         "must_have": must_have_section(world, r["scored"], cfg.seed),
+        "core_skill": core_skill_section(world, r["scored"], cfg.seed),
+        "guard": guard_summary(),
         "ablations": ablations(s),
         "signature": signature(seed=cfg.seed, config=cfg_d, n=cfg.n_needs * cfg.n_candidates,
                                world=f"бенчмарк подбора: {cfg.n_needs} потребностей × {cfg.n_candidates} кандидатов",
@@ -828,13 +932,19 @@ def findings(rep: dict) -> list[str]:
     return out
 
 
+def _signed(x: dict) -> str:
+    return ("+" if x["mean"] > 0 else "") + _cell(x)
+
+
 def _cell(x: dict) -> str:
     return f"{_f(x['mean'])} [{_f(x['lo'])}; {_f(x['hi'])}]"
 
 
 def _algo_label(algo: str) -> str:
     """Одна формулировка везде (docs, /validation): продукт — «match-v1 + ярусы обязательного (MATCH_MUST_FIRST)»."""
-    return f"{algo} (match-v1 + ярусы обязательного, MATCH_MUST_FIRST)" if algo == "match-v1.1" else algo
+    labels = {"match-v1.1": "match-v1 + ярусы обязательного, MATCH_MUST_FIRST",
+              "match-v1.2": "match-v1 + ярусы обязательного + ядро роли, MATCH_MUST_FIRST и RANK_CORE_SKILL"}
+    return f"{algo} ({labels[algo]})" if algo in labels else algo
 
 
 def markdown(rep: dict) -> str:
@@ -916,7 +1026,60 @@ def markdown(rep: dict) -> str:
                 + " |" for k, t in (("before", "match-v1 (без ярусов)"), ("after", "match-v1 + ярусы обязательного (MATCH_MUST_FIRST, match-v1.1)"),
                                     ("diff", "Разница"))],
               "", f"Топ-5 изменился у {mh['needs_changed_top5']} из {rep['world']['n_needs']} потребностей "
-                  f"(с обязательными навыками — {mh['needs_with_required']}).", ""]
+                  f"(с обязательными навыками — {mh['needs_with_required']}).", "",
+              f"**Компромисс, а не рост всех метрик.** Ярусы поднимают долю топ-5, где всё обязательное подтверждено "
+              f"тестом, на {_signed(mh['diff']['top5_all_required_t1'])}, и меняют nDCG@10 на "
+              f"{_signed(mh['diff']['ndcg@10'])} (p@5 {_signed(mh['diff']['p@5'])}). Скрытая истина засчитывает "
+              "заявленный без теста навык частично, а продукт обещает работодателю сначала проверенное обязательное — "
+              "правило включено осознанно, ради доли подтверждённого обязательного; веса и ярусы по бенчмарку не "
+              "подбирались. Закрытый guard — ниже.", ""]
+    cs = rep.get("core_skill")
+    if cs:
+        L += ["## Ядро роли: основной язык, фреймворк, специализация (Я1)", "",
+              "Ядро — из обязательных навыков потребности правилами и словарём направлений (Backend, QA, ИБ — основной "
+              "язык; Frontend — React/Vue/Angular; Data/ML — CV/NLP, иначе PyTorch). Кандидат без ядра (не заявлено и не "
+              "подтверждено тестом) — смежное направление: остаётся в выдаче, но идёт ниже кандидатов с ядром "
+              f"(политика {cs['policy']}). Тот же мир, парный бутстреп по потребностям; ядро есть у "
+              f"{cs['needs_with_core']} из {rep['world']['n_needs']} потребностей, признак действует у {cs['needs_active']}; "
+              f"в продукте признак {'включён' if cs['enabled_in_product'] else 'выключен'} (RANK_CORE_SKILL).", "",
+              "| | p@5 | nDCG@10 | MRR | Топ-5: доля без ядра роли |", "|---|---|---|---|---|",
+              *[f"| {t} | " + " | ".join(_cell(cs[k][mt]) if cs[k].get(mt) else "—"
+                                       for mt in ("p@5", "ndcg@10", "mrr", "top5_core_absent")) + " |"
+                for k, t in (("before", "Без признака (match-v1.1)" + ("" if cs["enabled_in_product"] else ", продукт")),
+                             ("after", "С признаком «ядро роли» (match-v1.2" + (", продукт)" if cs["enabled_in_product"] else ")")),
+                             ("diff", "Разница"))], ""]
+    gd = rep.get("guard")
+    if gd:
+        prod = core_skill.enabled()
+        titles = (("before", "match-v1 без ярусов"),
+                  ("after", "+ ярусы обязательного (match-v1.1" + (")" if prod else ", продукт)")),
+                  ("core_on", "+ ядро роли (match-v1.2" + (", продукт)" if prod else ")")))
+        L += ["## Guard порядка: те же профили, без подгонки", "",
+              f"`{gd['command']}` → `{gd['source']}`. Демо-мир: {gd['n_pool']} профилей, {gd['n_needs']} потребностей "
+              f"(разметка правилами); скрытая истина: {gd['hidden_config']['n_needs']} × "
+              f"{gd['hidden_config']['n_candidates']}. Это контроль, параметры по нему не выбирались.", "",
+              "| | Демо-500: p@5 | Демо-500: nDCG@10 | Истина 500: p@5 | Истина 500: nDCG@10 | Истина 500: MRR |",
+              "|---|---|---|---|---|---|",
+              *[f"| {t} | {_f(gd['demo_500'][k]['p@5'])} | {_f(gd['demo_500'][k]['ndcg@10'])} | "
+                f"{_f(gd['hidden_truth_500'][k]['p@5'])} | {_f(gd['hidden_truth_500'][k]['ndcg@10'])} | "
+                f"{_f(gd['hidden_truth_500'][k]['mrr'])} |" for k, t in titles if k in gd["demo_500"]], ""]
+        ev = gd.get("expert_v1_core")
+        if ev:
+            L += [f"Ядро роли на v1-разметке ({ev['n_needs']} потребностей, {ev['n_pairs']} пар, {ev['raters']}): p@5 "
+                  f"{_f(ev['off']['p@5'])} → {_f(ev[core_skill.POLICY]['p@5'])}, nDCG@10 {_f(ev['off']['ndcg@10'])} → "
+                  f"{_f(ev[core_skill.POLICY]['ndcg@10'])} (разница {_cell(ev['diff']['ndcg@10'])}).", ""]
+        v2 = gd.get("expert_v2_control")
+        if v2:
+            L += ["Контроль на разметке v2 (модель, не люди) — только на сервере, копия БД во временном PostgreSQL 16 "
+                  f"(`{v2['command']}`); места пересчитаны кодом подборки без признака и с признаком, метрики — тем же "
+                  "кодом, что раздел экспертов /validation. Смотрели один раз, после выбора параметров; по v2 ничего не "
+                  "подбиралось.", "",
+                  "| Пакет | P@5 без → с признаком | nDCG@10 без → с признаком | Разница nDCG@10 (лучше / хуже) | BM25: P@5, nDCG@10 |",
+                  "|---|---|---|---|---|",
+                  *[f"| {p} ({v2['off'][p]['needs']} потр.) | {_f(v2['off'][p]['p@5'])} → {_f(v2['on'][p]['p@5'])} | "
+                    f"{_f(v2['off'][p]['ndcg@10'])} → {_f(v2['on'][p]['ndcg@10'])} | {_cell(v2['diff'][p]['ndcg@10'])} "
+                    f"({v2['diff'][p]['ndcg@10']['better']} / {v2['diff'][p]['ndcg@10']['worse']}) | "
+                    f"{_f(v2['bm25'][p]['p@5'])}, {_f(v2['bm25'][p]['ndcg@10'])} |" for p in ("v1", "v2", "all")], ""]
     g = rep["groups"]
     fp = g["fsp"].get("platform", {})
     L += ["## Группы кандидатов", "",

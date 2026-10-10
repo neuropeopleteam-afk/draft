@@ -22,8 +22,9 @@ from app.modules.catalog.seed_data import DIRECTIONS, GRADE_LEVEL, GRADES, STACK
 from app.modules.contact.salary import to_net
 from app.modules.invitations.models import Invitation, Probe
 from app.modules.invitations.service import cooldown_until, profile_by_ref
-from app.modules.matching import ranking
+from app.modules.matching import core_skill, ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
+from app.core.origin import NO_FSP, NO_FSP_SHORT
 from app.modules.profiles.facts import (GRADE_CUTS, card, fmt_count, load_bundles, skill_check_text, skill_confirmed,
                                        skill_evidence_text)
 from app.modules.profiles.models import Company
@@ -160,7 +161,17 @@ def why_pairs(items: list[dict], req: dict) -> list[dict]:
         text = summary + (": " + "; ".join(f"{f['text']} (+{_pts(f['points'])})" for f in pro) if pro else "")
         if con:
             text += f". В пользу {b['ref']}: {con[0]['text']} (+{_pts(con[0]['points'])} ему)"
+        ca, cb = a.get("core"), b.get("core")
+        core_note = None
+        if ca and cb and ca["state"] != cb["state"]:  # Я1: ядро роли не входит в балл — отдельной фразой
+            word = {"confirmed": "подтверждён тестом", "declared": "заявлен", "absent": "не заявлен"}
+            core_note = (f"{ca['label']} — {ca['title']}: у {a['ref']} {word[ca['state']]}, у {b['ref']} "
+                         f"{word[cb['state']]}")
+            if core_skill.enabled() and "absent" in (ca["state"], cb["state"]):
+                core_note += " — в подборке кандидат без ядра идёт ниже независимо от балла"
+            text += f". {core_note}"
         out.append({"higher": a["ref"], "lower": b["ref"], "diff": round(diff, 2), "summary": summary, "text": text,
+                    "core_note": core_note,
                     "pro": [{**f, "points": round(f["points"], 2)} for f in pro],
                     "con": [{**f, "points": round(f["points"], 2)} for f in con],
                     "factors": [{**f, "points": round(f["points"], 2)} for f in factors]})
@@ -209,6 +220,12 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
          "hint": "θ — уровень по шкале теста, ± SE — стандартная ошибка; интервал — 95 %"},
         {"key": "integrity", "group": "Тест", "title": "Достоверность результата теста"},
     ]
+    core = core_skill.role_core(req)  # Я1: ядро роли — отдельной строкой перед стеком
+    if core:
+        rows.append({"key": "core", "group": "Ядро роли", "title": core["label"], "requirement": core["title"],
+                     "hint": "Основной язык (Frontend — фреймворк, Data/ML — специализация) среди обязательных навыков. "
+                             "Не заявлен и не подтверждён — смежное направление"
+                             + ("; при включённом признаке такой кандидат идёт ниже" if core_skill.enabled() else "")})
     for zone, label in (("stack_required", "Обязательно"), ("stack_desired", "Желательно")):
         for it in req.get(zone) or []:
             rows.append({"key": f"stack:{it['tag']}", "group": label, "title": STACK.get(it["tag"], (it["tag"],))[0],
@@ -223,7 +240,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                      "quote": ((req.get("evidence") or {}).get("work_format") or {}).get("quote")})
     rows += [
         {"key": "fsp", "group": "Паспорт ФСП", "title": "Достижения ФСП",
-         "hint": "Только подтверждённые реестром (T2); нет истории — нейтрально, без штрафа"},
+         "hint": "Только подтверждённые реестром (T2); нет истории — " + NO_FSP_SHORT},
         {"key": "probe", "group": "Зонды", "title": "Зонды"},
         {"key": "market", "group": "Рынок", "title": "Ожидания по рынку категории",
          "requirement": _salary_req(req.get("salary_from"), req.get("salary_to")),
@@ -302,6 +319,15 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                     cells["theta"] = {"level": "T0", "status": "unconfirmed",
                                       "text": f"Последняя попытка: θ = {_n(float(at['theta']), sign=True)} ± "
                                               f"{_n(float(at.get('se') or 0))} — грейд не подтверждён, в скор не входит"}
+        if core:
+            hit_core = (in_sel.get(p.public_ref) or {}).get("core")
+            ci = hit_core or core_skill.describe(b, req)
+            cells["core"] = {**core_skill.reason(ci), "state": ci["state"],
+                             "text": {"confirmed": "Подтверждён тестом", "declared": "Заявлен, тестом не подтверждён",
+                                      "absent": "Не заявлен — смежное направление"}[ci["state"]]
+                                     + (f" (через {ci['via']})" if ci.get("implied") and ci.get("via") else ""),
+                             "value": {"confirmed": 2.0, "declared": 1.0, "absent": 0.0}[ci["state"]]}
+            why_items[-1]["core"] = ci
         for zone in ("stack_required", "stack_desired"):
             for it in req.get(zone) or []:
                 cell, val = _stack_cell(b, it["tag"])
@@ -336,7 +362,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
         else:
             extra = fsp.get("unverified_count") or 0
             cells["fsp"] = {"level": "none", "status": "neutral",
-                            "text": "Истории ФСП нет — нейтрально, без штрафа"
+                            "text": NO_FSP
                                     + (f"; заявлено без подтверждения: {extra} — не учитывается" if extra else "")}
         if b.probes_t1:
             best = max(b.probes_t1, key=lambda f: f.value.get("score", 0))

@@ -451,7 +451,7 @@ export function FspCups() {
 export function FspMethod() {
   return (
     <div className="max-w-4xl space-y-6">
-      <Head title="Методика и выгрузки" subtitle="Как считаются показатели и что никогда не попадает в кабинет."
+      <Head title="Методика и выгрузки" subtitle="Как считаются показатели и что не попадает в кабинет."
         csv={[{ id: "demand", title: "категории" }, { id: "skills", title: "навыки" }, { id: "fsp", title: "ФСП" }, { id: "salaries", title: "зарплаты" }]} />
       <Body>{(rep) => (
         <>
