@@ -99,7 +99,8 @@ def salary_vs_hh(salary_from: int, salary_to: int, basis: str | None, category_i
         return None
     where = m["area_name"] + (f" (в регионе «{m['fallback']['area']}» мало данных: n = {m['fallback']['n']})"
                               if m["fallback"] else "")
-    head = f"hh.ru, {category_title(category_id)}, {where}, n = {m['n']}, на {_date(m['as_of'])}"
+    by = ", грейд — по опыту в вакансии" if m.get("by") == "experience" else ""
+    head = f"hh.ru, {category_title(category_id)}{by}, {where}, n = {m['n']}, на {_date(m['as_of'])}"
     base = {"source": "hh.ru", "n": m["n"], "median": m.get("median"), "p25": m.get("p25"), "p75": m.get("p75"),
             "area": m["area_name"], "as_of": m["as_of"], "fallback": m["fallback"], "conclusive": m["conclusive"]}
     if not m["conclusive"]:

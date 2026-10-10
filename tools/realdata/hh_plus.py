@@ -74,12 +74,17 @@ def code_commit() -> str:
         return "unknown"
 
 
-def search(cl: HhClient, params: list, ttl: int = 7 * 86400) -> dict:
-    try:
-        return cl.get("/vacancies", params, ttl_s=ttl)
-    except HhError as e:
-        print("поиск:", e.code, e.message)
-        return {"data": {"items": [], "found": 0}, "fetched_at": None}
+def search(cl: HhClient, params: list, ttl: int = 7 * 86400, tries: int = 4) -> dict:
+    """GET /vacancies с повтором при тайм-ауте и сбое hh.ru (до tries раз); неудача — пустой ответ с failed=True,
+    такая ячейка в снимок не попадает как «0 вакансий» (см. market_snapshot)."""
+    for i in range(tries):
+        try:
+            return cl.get("/vacancies", params, ttl_s=ttl)
+        except HhError as e:
+            print("поиск:", e.code, e.message, f"(попытка {i + 1} из {tries})")
+            if e.code not in ("hh_timeout", "hh_unavailable", "hh_rate_limited"):
+                break
+    return {"data": {"items": [], "found": 0}, "fetched_at": None, "failed": True}
 
 
 def detail(cl: HhClient | None, vid: str) -> dict | None:
@@ -181,8 +186,10 @@ def demand() -> None:
     out = {"as_of": as_of or datetime.now(timezone.utc).isoformat(timespec="seconds"), "source": "api.hh.ru GET /vacancies (found)",
            "method": "Число открытых вакансий в поиске hh.ru на дату: профессиональная роль + слова направления в названии "
                      "(backend/app/modules/hh/directions.py); грейд — слово грейда в названии; «без опыта» — "
-                     "experience=noExperience. Вакансия одной компании в нескольких городах считается hh.ru по-своему; "
-                     "направления пересекаются мало (слова-исключения), но не нулём.",
+                     "experience=noExperience. Для общих ролей («Программист, разработчик» и др.) это нижняя оценка: "
+                     "вакансия считается, только если слово направления есть в названии. Направления пересекаются мало "
+                     "(слова-исключения), но не нулём. Это поиск API hh.ru для приложения; на сайте hh.ru число может "
+                     "отличаться.",
            "directions": rows}
     DATA.mkdir(parents=True, exist_ok=True)
     (DATA / "demand.json").write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
@@ -223,7 +230,7 @@ def market_snapshot() -> None:
     from app.modules.hh.market import MIN_OK, _pct, _r1000, _stats
 
     cl = client()
-    cats, as_of = {}, None
+    cats, as_of, failed = {}, None, 0
     for d in HH_DIRECTIONS:
         for g in GRADES:
             for aid, aname in SNAPSHOT_AREAS:
@@ -234,6 +241,9 @@ def market_snapshot() -> None:
                     ps = search_params(d, g if by == "name" else None, aid, with_salary=True,
                                        experience=GRADE_EXPERIENCE[g] if by == "experience" else None)
                     res = search(cl, ps, ttl=86400)
+                    if res.get("failed"):
+                        failed += 1
+                        continue
                     st = _stats(res["data"].get("items") or [])
                     as_of = as_of or res.get("fetched_at")
                     cur = {"by": by, "st": st, "found": int(res["data"].get("found") or 0)}
@@ -242,6 +252,8 @@ def market_snapshot() -> None:
                     if len(st["vals"]) >= MIN_OK:
                         best = cur
                         break
+                if best is None:  # обе ступени не ответили — ячейки нет (а не «0 вакансий»)
+                    continue
                 vals = best["st"]["vals"]
                 e = {"n": len(vals), "by": best["by"], "found": best["found"],
                      "gross_share": round(best["st"]["gross"] / len(vals), 2) if vals else None}
@@ -249,14 +261,14 @@ def market_snapshot() -> None:
                     e.update(median=_r1000(int(statistics.median(vals))), p25=_r1000(_pct(vals, 0.25)),
                              p75=_r1000(_pct(vals, 0.75)))
                 cats.setdefault(f"{d}.{g}", {})[aid] = e
-            print(d, g, {a: cats[f"{d}.{g}"][a]["n"] for a, _ in SNAPSHOT_AREAS})
+            print(d, g, {a: x["n"] for a, x in cats.get(f"{d}.{g}", {}).items()})
     out = {"as_of": as_of or datetime.now(timezone.utc).isoformat(timespec="seconds"),
            "areas": dict(SNAPSHOT_AREAS), "basis": "net",
            "method": "Вилки в живых вакансиях hh.ru с зарплатой (only_with_salary, до 100 свежих на запрос): рубли за месяц, "
                      "у вилки — середина, у «от» — «от», у «до» — «до»; суммы до вычета НДФЛ приведены к «на руки». Грейд — "
                      "слово грейда в названии, если таких меньше 20 — опыт hh.ru как приближение. Это объявления "
                      "работодателей, не фактические зарплаты.",
-           "categories": cats}
+           "failed_requests": failed, "categories": cats}
     DATA.mkdir(parents=True, exist_ok=True)
     (DATA / "market_snapshot.json").write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print("снимок рынка →", (DATA / "market_snapshot.json").relative_to(ROOT))
@@ -445,7 +457,8 @@ def _summary(c: Counter, cv: list[float]) -> dict:
             "confirmed_right_direction": _share(c["confirmed_right_direction"], c["n"]),
             "req_coverage_best_top5": {"mean": round(statistics.mean(cv), 3) if cv else None, "n": len(cv)},
             "req_full_top5": _share(c["req_full_top5"], c["req_vac"]),
-            "req_full_top5_confirmed": _share(c["req_full_top5_conf"], c["req_vac"])}
+            "req_full_top5_confirmed": _share(c["req_full_top5_conf"], c["req_vac"]),
+            "required_mean": round(c["n_required"] / c["with_required"], 1) if c["with_required"] else None}
 
 
 def _p(x: dict | None) -> str:
@@ -478,6 +491,9 @@ def render_match(r: dict) -> str:
         lines.append(f"| {t} | {_p(k[key])} | {_p(o[key])} |")
     lines.append(f"| покрытие обязательных навыков у лучшего из пяти (среднее, T1) | {_m(k['req_coverage_best_top5'])} | "
                  f"{_m(o['req_coverage_best_top5'])} |")
+    if k.get("required_mean") is not None:
+        lines.append(f"| обязательных навыков в потребности (среднее, где они есть) | {str(k['required_mean']).replace('.', ',')} | "
+                     f"{str(o['required_mean']).replace('.', ',')} |")
     lines += ["", "## По направлениям", "",
               "| Направление | n | В каталоге | Разбор отнёс к | Направление верно | Грейд верно | Подтверждённые кандидаты | В направлении вакансии | Покрытие (лучший из 5) | Все обязательные в пятёрке |",
               "|---|---:|---|---|---|---|---|---|---|---|"]
