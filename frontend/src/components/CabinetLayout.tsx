@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { cabinetPath, useAuth } from "../lib/auth";
 import { api, type Role } from "../lib/api";
@@ -6,6 +6,7 @@ import { MESSAGES_CHANGED } from "./Chat";
 import { useHiringTodo } from "./Hiring";
 import { Logo } from "./Logo";
 import { GuideSlot } from "./JuryGuide";
+import { RouteBoundary, RouteFallback, StartupError, StartupLoading } from "./Boot";  // Я16
 
 export interface Section { path: string; title: string; description: string; day?: string; more?: boolean }
 
@@ -13,7 +14,7 @@ export interface Section { path: string; title: string; description: string; day
 const SHORT: Partial<Record<Role, string>> = { candidate: "Кандидат", employer: "Работодатель", expert: "Эксперт", fsp_analyst: "ФСП", admin: "Администратор" };
 
 export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role: Role; sections: Section[]; title: string; alsoRoles?: Role[] }) {
-  const { me, loading, signOut } = useAuth();
+  const { me, loading, error, failures, retry, signOut } = useAuth();
   const navigate = useNavigate();
   const loc = useLocation();
   const navRef = useRef<HTMLElement>(null);
@@ -34,7 +35,9 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
     void document.fonts?.ready.then(center);  // после загрузки Montserrat ширина пунктов меняется
   }, [loc.pathname, me]);
 
-  if (loading) return <div className="flex min-h-screen items-center justify-center text-brand-ink/70" aria-busy="true">Загрузка…</div>;
+  if (loading) return <StartupLoading />;
+  // Я16: сервер или сеть не дали ответ на /api/me — экран повтора (вход сохранён), а не пустота или /login
+  if (!me && error) return <StartupError error={error} failures={failures} onRetry={retry} />;
   if (!me) return <Navigate to="/login" replace />;
   if (me.role !== role && !alsoRoles.includes(me.role)) return <Navigate to={cabinetPath(me.role)} replace />;
   const base = cabinetPath(role);
@@ -72,7 +75,8 @@ export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role:
         </div>
       </aside>
       <main id="main" tabIndex={-1} className="min-w-0 px-4 pb-28 pt-6 outline-none sm:px-6 md:px-10 md:py-10">
-        <Outlet />
+        {/* Я16: раздел грузится отдельным файлом — меню остаётся, ошибка загрузки раздела — экран повтора внутри */}
+        <RouteBoundary inline><Suspense fallback={<RouteFallback inline />}><Outlet /></Suspense></RouteBoundary>
       </main>
     </div>
   );
