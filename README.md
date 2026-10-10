@@ -12,7 +12,7 @@
 - Развёрнутый прототип: https://fsp.neuropeople.pro
 - Доступ к стенду: логин и пароль — в материалах сдачи (базовая авторизация nginx; без неё открыты только `/api/*`, `/robots.txt`, манифест PWA, `sw.js`, иконки и страница гостя живой демонстрации `/j/<код>` со статикой `/assets/`, `/recover.js` — QR с телефона эксперта)
 - Для жюри: блок «Для экспертов жюри» на главной — вход в один клик за кандидата (с паспортом ФСП и без), работодателя и эксперта, проводник по сценарию, сброс демо; метрики — страница `/validation`
-- Документация API (OpenAPI/Swagger): https://fsp.neuropeople.pro/api/docs
+- Документация API (OpenAPI/Swagger): https://fsp.neuropeople.pro/api/docs; спецификация в репозитории — [docs/api/openapi.json](docs/api/openapi.json) (`make openapi`), обзор — [docs/API.md](docs/API.md)
 - Проверка по критериям ТЗ: страница `/criteria` и [docs/CRITERIA.md](docs/CRITERIA.md) — подпункт ТЗ → что сделать → что увидите → чем доказано
 - Архитектура и модель данных: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Интеграции: [антифрод и индекс доверия](docs/ANTIFRAUD.md), [ФСП ID](docs/FSP_INTEGRATION.md), [ATS](docs/ATS.md), [подписка на потребность и напоминания](docs/SUBSCRIPTIONS.md), [нагрузочный тест](docs/LOAD_TEST.md), [задания работодателя: причина, рубрика, свежесть](docs/ASSIGNMENTS.md), [доступность: axe и клавиатура](docs/ACCESSIBILITY.md)
