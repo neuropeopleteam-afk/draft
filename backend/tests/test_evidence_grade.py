@@ -442,6 +442,10 @@ def test_evidence_api_candidate_employer_validation(client):
     # /validation: сводка замера (открыто)
     v = client.get("/api/validation/evidence").json()
     assert v["enabled"] is False and len(v["rows"]) >= 3 and v["default_path_fix"]["changed"] == 0
+    # полный прогон 406 (если посчитан): решение — по правилу «не хуже», без номеров исполнителей в открытом тексте
+    if v.get("full"):
+        assert v["full"]["n"] == 406 and isinstance(v["full"]["decision"]["non_inferior"], bool)
+        assert v["full"]["decision"]["text"] in v["decision"] and "Я2" not in json.dumps(v, ensure_ascii=False)
     assert "модели, не люди" in v["world"]
 
 
