@@ -392,8 +392,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/junior-stability"): "open",  # feat/status
     ("GET", "/api/validation/grader-check"): "open",  # feat/integrity
     ("GET", "/api/validation/llm-models"): "open",  # feat/llm-local
-    ("GET", "/api/validation/ru-llm"): "open",  # feat/ru-llm (Я2)
-    ("GET", "/api/validation/strongest"): "open",  # feat/ru-llm (Я2): сильнейшие модели
+    ("GET", "/api/validation/ru-llm"): "open",  # замер «только российская модель»
+    ("GET", "/api/validation/strongest"): "open",  # сильнейшие модели по функциям
     ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)

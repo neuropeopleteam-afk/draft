@@ -259,7 +259,7 @@ def llm_models():
     return json.loads(LLM_MODELS.read_text(encoding="utf-8"))
 
 
-# --- Я2: режим «только российская модель» — все LLM-функции на YandexGPT против Sonnet и правил (tools/llm/ru_llm_bench.py) ---
+# --- режим «только российская модель» — все LLM-функции на YandexGPT против Sonnet и правил (tools/llm/ru_llm_bench.py) ---
 RU_LLM = Path(__file__).resolve().parent / "data" / "ru_llm.json"
 
 
@@ -270,7 +270,7 @@ def ru_llm():
     return json.loads(RU_LLM.read_text(encoding="utf-8"))
 
 
-# --- Я2: сильнейшие модели по функциям — качество, надёжность, задержка, цена (tools/llm/strongest_summary.py) ---
+# --- сильнейшие модели по функциям — качество, надёжность, задержка, цена (tools/llm/strongest_summary.py) ---
 STRONGEST = Path(__file__).resolve().parent / "data" / "strongest.json"
 
 

@@ -1,8 +1,8 @@
-"""Я2 (смена цели 09.10 17:40): сильнейшая модель для каждой LLM-функции — замер кандидатов OpenRouter на одних входах.
+"""Сильнейшая модель для каждой LLM-функции — замер кандидатов OpenRouter на одних входах.
 
 Функции и наборы — те же, что в ru_llm_bench.py (без ПДн: опубликованные вакансии, синтетические резюме, набор
 оценщика); малая выборка этапа 2:
-  needs_delta  первые 15 вакансий И8 (путь продукта: словарь + дельта модели), разметка — silver и исправленная
+  needs_delta  первые 15 из 50 реальных вакансий (путь продукта: словарь + дельта модели), разметка — silver и исправленная
                (silver + подтверждённые GPT 6.1 Sol лишние теги, docs/llm/extra_tags_judgement.json) — модели, не люди;
   needs_jury   15 демо- и «жюрийных» текстов (без разметки — согласие с другими моделями, доля ответов);
   resume       20 синтетических резюме (docs/llm/resume_synth.json);
@@ -35,7 +35,7 @@ sys.path.insert(0, str(ROOT / "tools" / "fastparse"))
 PRICES = ROOT / "docs" / "llm" / "strongest_prices.json"
 WDIR = Path(os.environ.get("STRONG_DIR", "/tmp/strong"))
 
-# кандидаты (id проверены штабом 09.10 17:35); open — веса опубликованы (hugging_face_id в каталоге OpenRouter)
+# кандидаты (id сверены с каталогом OpenRouter 09.10); open — веса опубликованы (hugging_face_id в каталоге OpenRouter)
 CANDIDATES = [
     ("anthropic/claude-fable-5.1", "closed", "дорогая"),
     ("openai/gpt-6-astra-pro", "closed", "дорогая"),
