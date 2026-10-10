@@ -29,4 +29,6 @@ for m,f in B.model_files().items():
                 if po['criteria'][cid]!=pn['criteria'][cid]:
                     tot["criteria_changed"]+=1
                     print(m, r['group'], cid, po['criteria'][cid],'→',pn['criteria'][cid],'| Q:',po['quotes'].get(cid,'')[:120])
-print(json.dumps(tot,ensure_ascii=False))
+tot["date"], tot["base"] = __import__("time").strftime("%Y-%m-%d %H:%M"), "main 2877ca9 → ветка feat/evidence-grade"
+print(json.dumps(tot, ensure_ascii=False))
+open("docs/llm/evidence_v2_guard_diff.json", "w", encoding="utf-8").write(json.dumps(tot, ensure_ascii=False, indent=1) + "\n")
