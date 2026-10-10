@@ -3,21 +3,21 @@
     "before": {
       "p@5": {
         "platform": 0.84,
-        "platform_no_fsp": 0.827,
+        "platform_no_fsp": 0.84,
         "bm25": 0.52,
         "keywords": 0.587,
         "random": 0.325
       },
       "ndcg@5": {
         "platform": 0.834,
-        "platform_no_fsp": 0.835,
+        "platform_no_fsp": 0.846,
         "bm25": 0.709,
         "keywords": 0.764,
         "random": 0.408
       },
       "ndcg@10": {
         "platform": 0.893,
-        "platform_no_fsp": 0.901,
+        "platform_no_fsp": 0.902,
         "bm25": 0.81,
         "keywords": 0.844,
         "random": 0.493
@@ -95,29 +95,29 @@
     },
     "product": {
       "p@5": {
-        "platform": 0.84,
-        "platform_no_fsp": 0.853,
+        "platform": 0.88,
+        "platform_no_fsp": 0.893,
         "bm25": 0.52,
         "keywords": 0.587,
         "random": 0.325
       },
       "ndcg@5": {
-        "platform": 0.859,
-        "platform_no_fsp": 0.869,
+        "platform": 0.903,
+        "platform_no_fsp": 0.911,
         "bm25": 0.709,
         "keywords": 0.764,
         "random": 0.408
       },
       "ndcg@10": {
-        "platform": 0.915,
-        "platform_no_fsp": 0.918,
+        "platform": 0.924,
+        "platform_no_fsp": 0.928,
         "bm25": 0.81,
         "keywords": 0.844,
         "random": 0.493
       },
       "within_category_ndcg@3": {
-        "platform": 0.778,
-        "platform_no_fsp": 0.792,
+        "platform": 0.828,
+        "platform_no_fsp": 0.831,
         "bm25": 0.923,
         "keywords": 0.945,
         "random": 0.717
@@ -401,9 +401,9 @@
           "ndcg@10": 0.768
         },
         "platform_no_fsp": {
-          "p@5": 0.0,
-          "ndcg@5": 0.596,
-          "ndcg@10": 0.759
+          "p@5": 0.2,
+          "ndcg@5": 0.752,
+          "ndcg@10": 0.768
         },
         "bm25": {
           "p@5": 0.2,
@@ -1855,7 +1855,7 @@
       42
     ],
     "core_policy": "group",
-    "core_enabled_in_product": false,
+    "core_enabled_in_product": true,
     "original_parser_product": {
       "p@5": 0.704,
       "p@10": 0.654,
@@ -1896,6 +1896,7 @@
       15,
       17,
       18,
+      19,
       20,
       21,
       22,
@@ -1914,7 +1915,6 @@
       37,
       38,
       39,
-      41,
       42,
       43,
       44,
