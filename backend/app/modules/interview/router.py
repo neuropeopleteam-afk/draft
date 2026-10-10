@@ -270,9 +270,11 @@ async def session_transcribe(session_id: uuid.UUID, request: Request, user: User
     if not audio:
         raise api_error(422, "empty_audio", "Пустая запись")
     try:
-        text = pt.get_port().transcribe(audio, request.headers.get("content-type") or "audio/webm")
+        text, usd = pt.get_port().transcribe(audio, request.headers.get("content-type") or "audio/webm")
     except pt.EngineUnavailable:
         raise api_error(503, "stt_unavailable", "Распознавание речи недоступно — ответьте текстом") from None
+    svc.add_cost(row, "stt_usd", usd)  # запись не хранится — только текст и стоимость
+    db.commit()
     return {"text": svc._scrub(db, row.candidate_user_id, text)[:3000]}
 
 
@@ -285,9 +287,11 @@ def session_speech(session_id: uuid.UUID, user: User = Depends(candidate), db: S
     if row.status != "in_progress" or not q:
         raise api_error(409, "interview_closed", "Разговор не идёт")
     try:
-        audio, mime = pt.get_port().speak(q)
+        audio, mime, usd = pt.get_port().speak(q)
     except pt.EngineUnavailable:
         raise api_error(503, "tts_unavailable", "Голос недоступен — вопрос показан текстом") from None
+    svc.add_cost(row, "tts_usd", usd)
+    db.commit()
     return Response(audio, media_type=mime, headers={"Cache-Control": "no-store"})
 
 
@@ -301,7 +305,7 @@ def session_avatar(session_id: uuid.UUID, user: User = Depends(candidate), db: S
     row = svc.own_session(db, user, session_id)
     if row.status not in ("created", "in_progress"):
         raise api_error(409, "interview_closed", "Разговор не идёт")
-    tok = pt.get_port().avatar_token() if get_settings().interview_avatar else None
+    tok = pt.get_port().avatar_token(max_seconds=row.minutes * 60 + 120) if get_settings().interview_avatar else None
     if not tok or not tok.get("session_token"):
         raise api_error(503, "avatar_unavailable", "Видео-аватар недоступен — продолжим голосом или текстом")
     return {"session_token": tok["session_token"], "sdk_url": get_settings().interview_anam_sdk_url,

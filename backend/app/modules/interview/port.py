@@ -1,8 +1,10 @@
 """Порт движка интервью: продукт ↔ app/modules/interview/engine (Я14) и заглушка продукта.
 
 Продукт хранит сессию, расшифровку и состояние разговора (InterviewSession.state) и на каждую реплику зовёт движок:
-start → первый вопрос; reply → следующий вопрос или конец; evaluate → итог (вердикт, вопросы с цитатами); transcribe /
-speak — распознавание и голос для канала «голос»; avatar_token — токен сессии видео-аватара (Anam JS SDK в браузере).
+start → первая реплика; reply → следующая реплика и признак конца; evaluate → итог (вердикт, вопросы с цитатами);
+transcribe / speak — распознавание и голос для канала «голос»; avatar_token — токен сессии видео-аватара (Anam JS SDK в
+браузере). Интерфейс движка — engine/CONTRACT.md v1.0 (Я14): normalize_spec, next_turn, evaluate, stt, tts, avatar_token,
+check_limits, status, is_stub.
 
 Заглушка (INTERVIEW_ENGINE=stub или движка нет): вопросы — по шаблону из собственного ответа кандидата и тем задания,
 оценка — правилом (совпадение ключевых слов устного и письменного ответа), без моделей, голоса и аватара; итог помечен
@@ -71,18 +73,30 @@ class StubPort:
                                         f"что именно сделали вы?"})
         return out
 
-    def start(self, mode: str, ctx: dict, *, max_questions: int, minutes: int, name: str) -> tuple[dict, str]:
+    def is_stub(self) -> bool:
+        return True
+
+    def start(self, mode: str, ctx: dict, *, max_questions: int, minutes: int, name: str, jury: bool = False,
+              channel: str = "text") -> tuple[dict, str, bool]:
         plan = self._plan(mode, ctx, max_questions)
         if not plan:
             raise EngineUnavailable("нет вопросов")
         hello = f"{name}, здравствуйте! Это заглушка интервью: разговор по шаблону, без модели. "
-        return {"mode": mode, "ctx": ctx, "plan": plan, "i": 0}, hello + plan[0]["question"]
+        return {"mode": mode, "ctx": ctx, "plan": plan, "i": 0}, hello + plan[0]["question"], False
 
-    def reply(self, state: dict, answer: str) -> tuple[dict, str | None]:
+    def reply(self, state: dict, answer: str, channel: str = "text") -> tuple[dict, str, bool]:
         i = int(state.get("i", 0)) + 1
         state = {**state, "i": i}
         plan = state.get("plan") or []
-        return state, plan[i]["question"] if i < len(plan) else None
+        if i < len(plan):
+            return state, plan[i]["question"], False
+        return state, "Спасибо, это все вопросы.", True
+
+    def hint(self, state: dict, n: int) -> str | None:
+        plan = state.get("plan") or []
+        tid = plan[n - 1].get("task_id") if 0 < n <= len(plan) else None
+        t = next((x for x in (state.get("ctx") or {}).get("tasks") or [] if x.get("id") == tid), None)
+        return (t.get("answer") or "")[:300] if t else None
 
     def evaluate(self, state: dict, transcript: list[dict]) -> dict:
         mode, ctx, plan = state.get("mode"), state.get("ctx") or {}, state.get("plan") or []
@@ -127,70 +141,131 @@ class StubPort:
                 "coverage": round(100 * sum(x != "no_data" for x in lv) / len(lv)) if lv else 0,
                 "cost": {"usd": 0.0, "estimated": False}, "stub": True}
 
-    def transcribe(self, audio: bytes, mime: str) -> str:
+    def transcribe(self, audio: bytes, mime: str) -> tuple[str, float]:
         raise EngineUnavailable("распознавание речи в заглушке не работает — ответьте текстом")
 
-    def speak(self, text: str) -> tuple[bytes, str]:
+    def speak(self, text: str) -> tuple[bytes, str, float]:
         raise EngineUnavailable("голос в заглушке не работает")
 
-    def avatar_token(self) -> dict | None:
+    def avatar_token(self, max_seconds: int = 300) -> dict | None:
+        return None
+
+    def check_limits(self, jury: bool, last_hour: int, spent_today_usd: float) -> None:
         return None
 
 
-# ------------------------------------------------------------------ движок Я14
+# ------------------------------------------------------------------ движок Я14 (engine/CONTRACT.md v1.0)
 
 class EnginePort:
-    """Адаптер к app/modules/interview/engine. Имена функций — по engine/CONTRACT.md (сверить при слиянии)."""
+    """Адаптер к app.modules.interview.engine: движок без состояния — продукт хранит spec и расшифровку в state."""
     name = "engine"
 
     def __init__(self, eng: Any):
         self.eng = eng
 
-    def _f(self, name: str):
-        f = getattr(self.eng, name, None)
-        if f is None:
-            raise EngineUnavailable(f"движок: нет {name}")
-        return f
+    def _err(self, e: Exception) -> EngineUnavailable:
+        return EngineUnavailable(getattr(e, "code", None) or type(e).__name__)
+
+    def is_stub(self) -> bool:
+        try:
+            return bool(self.eng.is_stub())
+        except Exception:  # noqa: BLE001
+            return True
 
     def channels(self) -> dict:
         try:
-            st = self._f("channels")()
+            ch = (self.eng.status() or {}).get("channels") or {}
         except Exception:  # noqa: BLE001
-            st = {}
-        return {"avatar": bool(st.get("avatar")) and get_settings().interview_avatar, "voice": bool(st.get("voice")),
-                "text": True}
+            ch = {}
+        return {"avatar": bool(ch.get("avatar")) and get_settings().interview_avatar,
+                "voice": bool(ch.get("voice")) and bool(ch.get("stt")), "text": True}
 
-    def start(self, mode: str, ctx: dict, *, max_questions: int, minutes: int, name: str) -> tuple[dict, str]:
-        r = self._f("start")(mode=mode, context=ctx, max_questions=max_questions, minutes=minutes, name=name)
-        return r["state"], r["question"]
+    def _spec(self, state: dict):
+        return self.eng.SessionSpec.model_validate(state["spec"])
 
-    def reply(self, state: dict, answer: str) -> tuple[dict, str | None]:
-        r = self._f("reply")(state=state, answer=answer)
-        return r["state"], r.get("question")
+    def _turn(self, state: dict, text: str | None, channel: str) -> tuple[dict, str, bool]:
+        e = self.eng
+        out = e.next_turn(e.TurnInput(spec=self._spec(state), transcript=e.Transcript.model_validate(state["transcript"]),
+                                      candidate_text=text, channel=channel))
+        spec = dict(state["spec"])
+        if out.started_at and not spec.get("started_at"):
+            spec["started_at"] = out.started_at.isoformat()
+        cost = dict(state.get("cost") or {})
+        cost["llm_usd"] = round(float(cost.get("llm_usd") or 0) + float(out.cost_usd or 0), 6)
+        st = {**state, "spec": spec, "transcript": out.transcript.model_dump(mode="json"), "cost": cost,
+              "source": out.source}
+        return st, out.text, bool(out.finished)
+
+    def start(self, mode: str, ctx: dict, *, max_questions: int, minutes: int, name: str, jury: bool = False,
+              channel: str = "text") -> tuple[dict, str, bool]:
+        e = self.eng
+        Ctx = e.DefenseContext if mode == "defense" else e.InterviewContext
+        try:
+            spec = e.normalize_spec(e.SessionSpec(mode=mode, candidate_name=name[:60] or "кандидат", duration_min=minutes,
+                                                  max_questions=max_questions, jury=jury, context=Ctx.model_validate(ctx)))
+            return self._turn({"spec": spec.model_dump(mode="json"), "transcript": {"items": []}}, None, channel)
+        except Exception as x:  # noqa: BLE001
+            raise self._err(x) from None
+
+    def reply(self, state: dict, answer: str, channel: str = "text") -> tuple[dict, str, bool]:
+        try:
+            return self._turn(state, answer, channel)
+        except Exception as x:  # noqa: BLE001
+            raise self._err(x) from None
 
     def evaluate(self, state: dict, transcript: list[dict]) -> dict:
-        return self._f("evaluate")(state=state, transcript=transcript)
+        e = self.eng
+        v = e.evaluate(self._spec(state), e.Transcript.model_validate(state["transcript"]))
+        cost = dict(state.get("cost") or {})
+        cost["llm_usd"] = round(float(cost.get("llm_usd") or 0) + float(v.cost_usd or 0), 6)
+        cost["usd"] = round(sum(float(cost.get(k) or 0) for k in ("llm_usd", "tts_usd", "stt_usd", "avatar_usd")), 6)
+        cost["estimated"] = True
+        return {"verdict": v.verdict, "verdict_label": v.verdict_label, "score": v.score, "summary": v.summary,
+                "questions": [{"n": q.k, "task_id": q.task_id, "skill": q.skill, "question": q.question,
+                               "answer_excerpt": q.answer_excerpt, "level": q.level, "reasoning": q.reasoning,
+                               "lowered": q.lowered, "quotes": [{"n": c.n, "text": c.text} for c in q.quotes]}
+                              for q in v.questions],
+                "flags": list(v.flags), "coverage": v.coverage, "cost": cost, "stub": v.source == "stub",
+                "source": v.source, "removed_quotes": v.removed_quotes}
 
-    def transcribe(self, audio: bytes, mime: str) -> str:
+    def transcribe(self, audio: bytes, mime: str) -> tuple[str, float]:
         try:
-            return str(self._f("transcribe")(audio=audio, mime=mime) or "")
-        except EngineUnavailable:
-            raise
-        except Exception as e:  # noqa: BLE001
-            raise EngineUnavailable(type(e).__name__) from None
+            t = self.eng.stt(audio, mime)
+        except Exception as x:  # noqa: BLE001
+            raise self._err(x) from None
+        if getattr(t, "stub", False) or not (t.text or "").strip():
+            raise EngineUnavailable("stt_unavailable")
+        return t.text, float(t.cost_usd or 0)
 
-    def speak(self, text: str) -> tuple[bytes, str]:
+    def speak(self, text: str) -> tuple[bytes, str, float]:
         try:
-            r = self._f("speak")(text=text)
-        except EngineUnavailable:
-            raise
-        except Exception as e:  # noqa: BLE001
-            raise EngineUnavailable(type(e).__name__) from None
-        return (r, "audio/mpeg") if isinstance(r, bytes) else (r["audio"], r.get("mime") or "audio/mpeg")
+            a = self.eng.tts(text, "mp3")
+        except Exception as x:  # noqa: BLE001
+            raise self._err(x) from None
+        if getattr(a, "stub", False) or not a.data:
+            raise EngineUnavailable("tts_unavailable")
+        return a.data, a.mime or "audio/mpeg", float(a.cost_usd or 0)
 
-    def avatar_token(self) -> dict | None:
+    def avatar_token(self, max_seconds: int = 300) -> dict | None:
         try:
-            return self._f("avatar_token")()
+            t = self.eng.avatar_token()
+        except Exception:  # noqa: BLE001
+            return None
+        return {"session_token": t.session_token, "ice_servers": t.ice_servers, "max_seconds": t.max_seconds,
+                "relay_only": t.relay_only, "persona_name": t.persona_name}
+
+    def check_limits(self, jury: bool, last_hour: int, spent_today_usd: float) -> None:
+        self.eng.check_limits(jury, last_hour, spent_today_usd)  # EngineError(jury_limit | daily_cap) — ловит сервис
+
+    def hint(self, state: dict, n: int) -> str | None:
+        """Только заглушка движка (e2e): начало письменного ответа задания текущего вопроса."""
+        try:
+            items = self.eng.plan(self._spec(state))
+            last = next((u for u in reversed(state["transcript"]["items"]) if u.get("who") == "interviewer"), None)
+            k = (last or {}).get("k") or n
+            tid = next((p.task_id for p in items if p.k == k), None)
+            t = next((x for x in state["spec"]["context"].get("tasks") or [] if x.get("id") == tid), None)
+            return (t.get("answer") or "")[:300] if t else None
         except Exception:  # noqa: BLE001
             return None
 
@@ -202,10 +277,11 @@ def get_port():
             from app.modules.interview import engine as eng  # type: ignore[attr-defined]  # Я14, feat/interview-engine
         except ImportError:
             eng = None
-        if eng is not None and getattr(eng, "available", lambda: True)():
+        if eng is not None and hasattr(eng, "next_turn"):
             return EnginePort(eng)
     return StubPort()
 
 
 def is_stub() -> bool:
-    return get_port().name == "stub"
+    """Заглушка продукта или движок в режиме заглушки (нет ключа модели / INTERVIEW_STUB=1)."""
+    return get_port().is_stub()
