@@ -160,7 +160,8 @@ def proved_lower(probabilities: dict[str, float] | None, claimed_grade: str, lev
 
 
 def accept_lower_allowed(current_grade: str | None, claimed_grade: str, confirmed: bool,
-                         probabilities: dict[str, float] | None, *, provisional: bool = False) -> tuple[str | None, str | None]:
+                         probabilities: dict[str, float] | None, *, provisional: bool = False,
+                         level: float = ACCEPT_LOWER_LEVEL) -> tuple[str | None, str | None]:
     """Можно ли принять уровень ниже по этому тесту: тест не подтвердил заявленный грейд, но уверенно доказал
     уровень ниже (P ≥ 0,8), и этот уровень выше текущего подтверждённого (или категории ещё нет).
     Предварительный грейд (provisional, консилиум 07.10 п. 7.3в) — не подтверждённый: сравнение идёт как при
@@ -168,7 +169,7 @@ def accept_lower_allowed(current_grade: str | None, claimed_grade: str, confirme
     Возвращает (доказанный грейд или None, причина отказа)."""
     if confirmed:
         return None, "confirmed"
-    lower = proved_lower(probabilities, claimed_grade)
+    lower = proved_lower(probabilities, claimed_grade, level)
     if lower is None:
         return None, "no_lower_proved"
     if provisional:
