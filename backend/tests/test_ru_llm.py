@@ -1,6 +1,6 @@
-"""Я2: режим «только российская модель» (LLM_CHAIN=yandex) — все четыре LLM-функции идут только в Yandex AI Studio,
+"""Режим «только российская модель» (LLM_CHAIN=yandex) — все четыре LLM-функции идут только в Yandex AI Studio,
 ответы в типичном для YandexGPT виде (пояснение + блок ```json) принимаются, вторая оценка — та же модель
-независимым вызовом; блок /validation#ru-llm отдаёт сводку замера (docs/realdata/ru_llm.json).
+независимым вызовом; блок /validation#ru-llm отдаёт сводку замера (backend/app/modules/validation/data/ru_llm.json).
 
 Сеть не используется: транспорт httpx подменён (как в test_llm_chain.py), ответы — фиктивные.
 """
@@ -145,12 +145,6 @@ def test_api_ru_llm(client):
     assert "Api-Key" not in raw and "sk-or" not in raw and "gpt://" not in raw  # ни ключей, ни каталога Yandex Cloud
 
 
-def test_ru_llm_data_copy_matches_docs():
-    a = json.loads((ROOT / "docs/realdata/ru_llm.json").read_text(encoding="utf-8"))
-    b = json.loads((ROOT / "backend/app/modules/validation/data/ru_llm.json").read_text(encoding="utf-8"))
-    assert a == b, "пересобрать: python tools/llm/ru_llm_bench.py summary --dir … --out docs/realdata/ru_llm.json"
-
-
 def test_ru_llm_docs_table_from_json():
     """Таблица docs/LLM.md, раздел 11 — из того же JSON (не текстом)."""
     import sys
@@ -158,5 +152,5 @@ def test_ru_llm_docs_table_from_json():
     sys.path.insert(0, str(ROOT / "tools" / "llm"))
     import ru_llm_summary as S
 
-    d = json.loads((ROOT / "docs/realdata/ru_llm.json").read_text(encoding="utf-8"))
+    d = json.loads((ROOT / "backend/app/modules/validation/data/ru_llm.json").read_text(encoding="utf-8"))
     assert S.md_table(d) in (ROOT / "docs/LLM.md").read_text(encoding="utf-8")

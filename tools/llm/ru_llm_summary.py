@@ -1,4 +1,5 @@
-"""Сводка замера «только российская модель» (tools/llm/ru_llm_bench.py) → docs/realdata/ru_llm.json.
+"""Сводка замера «только российская модель» (tools/llm/ru_llm_bench.py) → backend/app/modules/validation/data/ru_llm.json
+(одна копия: её отдаёт GET /api/validation/ru-llm; docs/ в образ api не входит) и таблица раздела 11 docs/LLM.md.
 
 Из рабочего каталога прогона (--dir): <модель>/{needs_delta,needs_full,needs_jury,resume,grade}.json и rules/*.json.
 В сводку попадают только метрики (без текстов ответов моделей и без ключей). Модель без прогона — status «pending»
@@ -17,13 +18,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(ROOT / "tools" / "realdata"))
 
-DATA_COPY = ROOT / "backend/app/modules/validation/data/ru_llm.json"
+DATA = ROOT / "backend/app/modules/validation/data/ru_llm.json"
 SONNET = "openrouter=anthropic/claude-sonnet-5.5"
 YANDEX = "yandex=yandexgpt-5.1/latest"
 MODELS = [
     {"key": "sonnet", "spec": SONNET, "label": "Claude Sonnet 5.5", "where": "OpenRouter (зарубежный провайдер)",
      "role": "основная модель стенда"},
-    {"key": "yandex", "spec": YANDEX, "label": "YandexGPT 5.1 Pro", "where": "Yandex AI Studio (РФ)",
+    {"key": "yandex", "spec": YANDEX, "label": "YandexGPT 5.1", "where": "Yandex AI Studio (РФ)",
      "role": "режим LLM_CHAIN=yandex; на стенде — запасная"},
     {"key": "rules", "spec": None, "label": "Правила и словари", "where": "наш сервер, без сети",
      "role": "последний рубеж у каждой функции"},
@@ -34,7 +35,7 @@ PRICE_RUB_PER_1K = {"yandexgpt-5.1": (0.8, 0.8), "yandexgpt": (1.2, 1.2)}
 
 FUNCS = [
     {"key": "needs_delta", "func": "parse_need", "title": "Разбор потребности (путь продукта: словарь + дельта модели)",
-     "set": "50 реальных вакансий И8 (опубликованные тексты), silver-разметка — не экспертная",
+     "set": "50 реальных вакансий (опубликованные тексты, docs/realdata/vacancies_50.json), silver-разметка — не экспертная",
      "metric": "F1 стека (модель + правила)"},
     {"key": "needs_full", "func": "parse_need", "title": "Разбор потребности, полный запрос (mode=full)",
      "set": "те же 50 вакансий", "metric": "F1 стека (модель + правила)"},
@@ -253,13 +254,16 @@ def write_summary(wdir: Path, out: Path) -> dict:
     y = [f["rows"].get("yandex", {}).get("status") for f in d["functions"]]
     if not all(s == "done" for s in y):
         d["pending_note"] = PENDING_NOTE
-    text = json.dumps(d, ensure_ascii=False, indent=1) + "\n"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(text, encoding="utf-8")
-    DATA_COPY.write_text(text, encoding="utf-8")  # то же для /api/validation/ru-llm (docs/ в образ api не входит)
-    write_md(d, ROOT / "docs" / "LLM.md")  # таблица раздела 11 — из того же JSON
-    print(f"→ {out}, {DATA_COPY}")
+    save(d, out)
     return d
+
+
+def save(d: dict, out: Path = DATA) -> None:
+    """Одна копия JSON (по умолчанию — данные /api/validation/ru-llm) и таблица раздела 11 из того же JSON."""
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(d, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    write_md(d, ROOT / "docs" / "LLM.md")
+    print(f"→ {out}")
 
 
 # ------------------------------------------------------------------ таблица для docs/LLM.md (раздел 11)
@@ -308,7 +312,7 @@ def _cell_md(fkey: str, c: dict, model: str) -> str:
 
 def md_table(d: dict) -> str:
     names = [m["label"] for m in d["models"]]
-    lines = [MD_BEGIN, "", f"Замер {d['date']}, код `{d['code_sha']}` (данные — `docs/realdata/ru_llm.json`).", "",
+    lines = [MD_BEGIN, "", f"Замер {d['date']}, код `{d['code_sha']}` (данные — `backend/app/modules/validation/data/ru_llm.json`, их же отдаёт `GET /api/validation/ru-llm`).", "",
              "| Функция и набор | " + " | ".join(names) + " |", "|---|" + "---|" * len(names)]
     for f in d["functions"]:
         cells = [_cell_md(f["key"], f["rows"].get(m["key"]), m["key"]) for m in d["models"]]
@@ -334,9 +338,9 @@ def write_md(d: dict, path: Path) -> None:
 
 
 INVENTORY = [
-    {"func": "parse_need", "what": "разбор потребности/вакансии: дельта к словарю в фоне (И27) и полный запрос (mode=full)",
+    {"func": "parse_need", "what": "разбор потребности/вакансии: дельта к словарю в фоне (быстрый разбор, раздел 10 docs/LLM.md) и полный запрос (mode=full)",
      "code": "matching/need_parser.py (_call_llm), matching/fast_parse.py", "no_llm": "словарь стек-тегов и правила",
-     "bench": "needs_delta, needs_full (50 вакансий И8), needs_jury (15 текстов)"},
+     "bench": "needs_delta, needs_full (50 реальных вакансий), needs_jury (15 текстов)"},
     {"func": "resume", "what": "разбор резюме после вырезания ПДн", "code": "resume/extract.py (extract)",
      "no_llm": "словари и регулярные выражения", "bench": "resume (20 синтетических резюме)"},
     {"func": "grade", "what": "оценка развёрнутого ответа теста, кубка, пакета экспертов", "code": "assessment/grader.py (grade_open)",
@@ -351,27 +355,27 @@ INVENTORY = [
 CONDITIONS = [
     "Одна попытка на вход, без перехода по цепочке и без автомата-выключателя; путь продукта целиком (вырезание ПДн, "
     "проверка цитат, слияние с правилами); параллельно 4 запроса.",
-    "Sonnet — песочница → OpenRouter напрямую (на стенде — через ретранслятор, там задержка больше); YandexGPT — "
+    "Sonnet — с машины замера в OpenRouter напрямую (на стенде — через ретранслятор, там задержка больше); YandexGPT — "
     "Yandex AI Studio, OpenAI-совместимый API.",
     "Задержка p50/p95 — по принятым ответам модели (без правил); «формат» — ответ получен, но продукт его не принял "
     "(не JSON, нет баллов по критериям, не объект); «сеть» — тайм-аут, HTTP ≠ 200.",
-    "Цена — на 1000 вызовов: OpenRouter — фактическая (usage.cost), YandexGPT 5.1 Pro — токены × 0,8 ₽ за 1000 "
+    "Цена — на 1000 вызовов: OpenRouter — фактическая (usage.cost), YandexGPT 5.1 — токены × 0,8 ₽ за 1000 "
     "(вход и выход, синхронный режим, с НДС, тариф AI Studio на 09.10.2026); рубли для Sonnet — по курсу ЦБ РФ на 09.10.2026 (85,42 ₽ за $).",
-    "Разметки: вакансии — silver И8 (модель + ручная сверка), резюме — автор набора (модель), оценщик — эталон "
+    "Разметки: вакансии — silver-разметка набора (модель + ручная сверка), резюме — автор набора (модель), оценщик — эталон "
     "gpt-oss-120b. Ни одна не экспертная; модели семейства Claude участвовали в разметке атак и резюме — согласие "
     "Sonnet с ними может быть завышено.",
 ]
 REF_0810 = {"label": "YandexGPT 5.1, 08.10 (полный разбор, код c1c248e)", "needs_full": {
     "ok": 50, "n": 50, "p50_s": 2.36, "p90_s": 3.51, "stack_p": 0.853, "stack_r": 0.960, "stack_f1": 0.903,
-    "source": "docs/LLM.md раздел 6, reports_0810/llm.md"}}
-PENDING_NOTE = ("YandexGPT ещё не замерена на этих входах: ключ Yandex AI Studio есть только на сервере «Москва», в "
-                "песочницу не передан. Прогон — одной командой, когда ключ будет: tools/llm/ru_llm_bench.py run --model "
+    "source": "docs/LLM.md, раздел 6"}}
+PENDING_NOTE = ("YandexGPT ещё не замерена на этих входах: ключ Yandex AI Studio хранится только на сервере стенда, на "
+                "машине замера его нет. Прогон — одной командой, когда ключ будет: tools/llm/ru_llm_bench.py run --model "
                 "yandex=yandexgpt-5.1/latest. До этого — замер 08.10 (полный разбор 50 вакансий, код c1c248e).")
 HOW = {
     "env": ["LLM_CHAIN=yandex", "LLM_MODEL_PARSE_NEED=yandex=yandexgpt-5.1/latest",
             "LLM_MODEL_RESUME=yandex=yandexgpt-5.1/latest", "LLM_MODEL_GRADE=yandex=yandexgpt-5.1/latest",
             "LLM_MODEL_GRADE_SECOND=yandex=yandexgpt-5.1/latest"],
-    "where": ".env сервера (/opt/spectrek_fsp/app/.env) + ключ Yandex AI Studio в llm.env (LLM_PROVIDER=yandex_ai_studio, "
+    "where": ".env сервера (рядом с docker-compose.yml) + ключ Yandex AI Studio в llm.env (LLM_PROVIDER=yandex_ai_studio, "
              "LLM_BASE_URL, LLM_API_KEY, LLM_FOLDER_ID, LLM_MODEL); пересоздать api",
     "check": "/api/meta → llm.chain = [{provider: yandex, configured: true}], functions.*.models[0].label = YandexGPT 5.1",
 }

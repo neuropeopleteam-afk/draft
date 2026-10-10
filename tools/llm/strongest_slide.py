@@ -1,9 +1,9 @@
-"""Я2: слайд для презентации из docs/llm/strongest.json — таблица «функция × модель: качество [интервал], отказы,
+"""Слайд для презентации из backend/app/modules/validation/data/strongest.json — таблица «функция × модель: качество [интервал], отказы,
 p50/p95, $ за 1000», рекомендация (основная, резерв, открытая, правила) и график «качество против цены».
 
-Запуск (нужен matplotlib — системный python3 песочницы):
-    python3 tools/llm/strongest_slide.py --out /home/user/workspace/spectrek/reports_0910/rullm_slide
-→ rullm_slide.md и rullm_slide.png. Числа — только из JSON; подпись — «оценка моделью по эталону из трёх моделей —
+Запуск (нужен matplotlib):
+    python3 tools/llm/strongest_slide.py --out /tmp/strongest_slide
+→ strongest_slide.md и strongest_slide.png. Числа — только из JSON; подпись — «оценка моделью по эталону из трёх моделей —
 модель, не люди».
 """
 from __future__ import annotations
@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "docs" / "llm" / "strongest.json"
+SRC = ROOT / "backend/app/modules/validation/data/strongest.json"
 FUNC_RU = {"parse_need": "Разбор потребности", "resume": "Разбор резюме", "grade": "Оценка развёрнутых ответов"}
 CAPTION = "Оценка моделью по эталону из трёх моделей — модель, не люди. Интервал — бутстреп 90 % по входам."
 
@@ -65,7 +65,7 @@ def md(d: dict) -> str:
             q = rq["quality"]["index"]
             out.append(f"| {FUNC_RU.get(f, f)} | Правила (без LLM) | {n(q['value'])} [{n(q['ci90'][0])}–{n(q['ci90'][1])}] | "
                        f"0 | < 0,1 | 0 | да |")
-    out += ["", "## Рекомендация (модель стенда меняется только решением владельца, выкладка 5)", "",
+    out += ["", "## Рекомендация (модель стенда меняется отдельным решением, не этим замером)", "",
             "| Функция | Основная (сильнейшая в пределах задержки) | В пределах шума | Резерв другой семьи | Лучшая открытая | Затем |",
             "|---|---|---|---|---|---|"]
     for f, ch in d["choice"].items():

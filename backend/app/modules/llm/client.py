@@ -97,7 +97,7 @@ def short_model(model: str | None) -> str:
 
 
 _LABELS = {"yandexgpt": "YandexGPT", "yandexgpt-lite": "YandexGPT Lite", "yandexgpt-5.1": "YandexGPT 5.1",
-           "gpt-oss-120b": "gpt-oss-120b", "gpt-oss-20b": "gpt-oss-20b"}  # Я2: «YandexGPT 5.1» на чипах режима LLM_CHAIN=yandex
+           "gpt-oss-120b": "gpt-oss-120b", "gpt-oss-20b": "gpt-oss-20b"}  # «YandexGPT 5.1» на чипах режима LLM_CHAIN=yandex
 
 
 def model_label(model: str | None) -> str:
@@ -183,7 +183,7 @@ def model_for(func: str | None, provider: str, s: Settings | None = None) -> str
             m = s.llm_local_model
     if not m:
         return None
-    # Я2: «a|b» — несколько моделей одного провайдера по порядку (резерв другого поставщика внутри OpenRouter)
+    # «a|b» — несколько моделей одного провайдера по порядку (резерв другого поставщика внутри OpenRouter)
     return "|".join(resolve_model(x.strip()) for x in m.split("|") if x.strip()) if provider == "yandex" else m
 
 
@@ -198,7 +198,7 @@ def timeout_for(func: str | None, s: Settings | None = None) -> float:
 def reasoning_for(func: str | None, s: Settings | None = None) -> str | None:
     s = s or get_settings()
     v = (getattr(s, f"llm_reasoning_{func}", None) if func in FUNCTIONS else None) or "default"
-    # Я2: none — без рассуждений (reasoning.effort=none): открытые модели с рассуждениями иначе тратят лимит
+    # none — без рассуждений (reasoning.effort=none): открытые модели с рассуждениями иначе тратят лимит
     # ответа-дельты (900 токенов) на ход мысли и возвращают пустой ответ (docs/LLM.md, раздел 12)
     return v if v in ("none", "minimal", "low", "medium", "high") else None
 
@@ -401,7 +401,7 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
     if want_json and route.provider == "local" and s.llm_local_json_mode:
         body["response_format"] = {"type": "json_object"}
     if response_format and _schema_ok(route, s):
-        body["response_format"] = response_format  # жёсткая JSON-схема ответа (structured output, И27; Yandex — Я2)
+        body["response_format"] = response_format  # жёсткая JSON-схема ответа (structured output, И27; Yandex — по флагу LLM_YANDEX_JSON_SCHEMA)
     name = short_model(route.model)
     t0 = time.monotonic()
     try:
