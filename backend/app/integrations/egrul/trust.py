@@ -236,9 +236,14 @@ def email_factor(db: Session, company: Company) -> dict:
 def salary_factor(db: Session, company: Company, cats: dict[str, Category]) -> tuple[dict, list[dict]]:
     since = utcnow() - timedelta(days=180)
     checks = []
-    for inv in db.scalars(select(Invitation).where(Invitation.company_id == company.id,
-                                                   Invitation.created_at > since)).all():
-        cp = db.get(CandidateProfile, inv.candidate_user_id)
+    invs = db.scalars(select(Invitation).where(Invitation.company_id == company.id, Invitation.created_at > since)).all()
+    # профили кандидатов — одним запросом: по одному на приглашение список вакансий делал ~300 запросов к БД, и под
+    # нагрузкой 100 пользователей (docs/LOAD.md, раздел 6) каждый запрос ждал свою очередь — p50 16 с
+    ids = {inv.candidate_user_id for inv in invs}
+    cps = {cp.user_id: cp for cp in db.scalars(select(CandidateProfile).where(CandidateProfile.user_id.in_(ids)))} \
+        if ids else {}
+    for inv in invs:
+        cp = cps.get(inv.candidate_user_id)
         st, txt = salary_check(inv.salary_from, inv.salary_to, cats.get(cp.current_category_id) if cp else None,
                                inv.salary_basis)
         checks.append({"kind": "invitation", "title": inv.position_title, "status": st, "text": txt})

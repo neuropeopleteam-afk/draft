@@ -1,0 +1,80 @@
+{
+ "bank": {
+  "families": 165,
+  "by_direction": {
+   "backend": 44,
+   "common": 34,
+   "data_ml": 23,
+   "frontend": 26,
+   "qa": 19,
+   "security": 19
+  },
+  "source_commit": "679823a",
+  "content_hash": "76c4164b6ce83743",
+  "pass": 147,
+  "warn": 18,
+  "fail": 0,
+  "checks": 1379,
+  "checks_failed": 0,
+  "variants": 3300,
+  "unique_variants": 3281
+ },
+ "migrations": {
+  "revisions": 31,
+  "heads": [
+   "fp01"
+  ]
+ },
+ "memory_limits_mib": {
+  "db": 320,
+  "api": 3072,
+  "web": 32,
+  "keycloak": 576,
+  "llm-local": 8192
+ },
+ "matching": {
+  "algorithm": "match-v1.2",
+  "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
+  "seed": 20261006,
+  "bench_commit": "fff0a5c",
+  "bank_hash": "76c4164b6ce83743",
+  "generated_at": "2026-10-10T09:22:12+00:00",
+  "p5": {
+   "mean": 0.776,
+   "lo": 0.74,
+   "hi": 0.81
+  },
+  "ndcg10": {
+   "mean": 0.573,
+   "lo": 0.546,
+   "hi": 0.599
+  },
+  "mrr": {
+   "mean": 0.888,
+   "lo": 0.853,
+   "hi": 0.918
+  }
+ },
+ "e2e_in_code": {
+  "spec_files": 16,
+  "scenarios": 35
+ },
+ "validation_report": {
+  "report_generated_at": "2026-10-06",
+  "report_bank_families": 128,
+  "exposure_generated_at": "2026-10-06",
+  "exposure_bank_families": 128,
+  "report_matches_bank": false
+ },
+ "tests": {
+  "failed": 0,
+  "passed": 1222,
+  "skipped": 2,
+  "seconds": 612.22,
+  "coverage_pct": 91.9,
+  "exit": 0,
+  "sha": "88cc2ed",
+  "date": "10.10.2026"
+ },
+ "note": "Числа посчитаны tools/publish/gen_numbers.py; тесты и покрытие — из журнала прогона. Подбор — синтетический мир со скрытой истиной (модель, не люди)."
+}

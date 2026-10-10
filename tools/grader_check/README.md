@@ -4,8 +4,8 @@
 которые строит `backend/app/modules/validation/grader_check.py`). Пересборка набора из сырых данных панели:
 
 ```
-/srv/work/srv/work/spectrek/.venv_bank/bin/python tools/grader_check/build_dataset.py \
-  --oldbank /tmp/ig09/oldbank --grading /srv/work/srv/work/spectrek/panel2_raw/grading \
+python tools/grader_check/build_dataset.py \
+  --oldbank /tmp/ig09/oldbank --grading $PRIVATE_DATA/panel2_raw/grading \
   --out docs/validation/grader_set_panel_20261006.json.gz
 # /tmp/ig09/oldbank — банк на коммите панели: git -C bank archive 1631167 | tar -x -C /tmp/ig09/oldbank
 ```
@@ -16,7 +16,7 @@
 cd backend && ../../../.venv/bin/python -m app.modules.validation.grader_check report --dir /tmp/ig09/empty
 ```
 
-## Прогон на YandexGPT внутри контейнера api (ключ уже там; запускает штаб)
+## Прогон на YandexGPT внутри контейнера api (ключ уже там; запускает руководитель проекта)
 
 ```
 bash tools/grader_check/run_in_container.sh                       # полный набор: 232 + 406 запросов + второй вызов
@@ -36,7 +36,7 @@ DRY=1 bash tools/grader_check/run_in_container.sh                 # только
 `doubts`, `combine`. Ключ не покидает сервер: на сервер уходят файлы запросов, обратно — ответы модели.
 
 ```
-PY=/srv/work/srv/work/spectrek/.venv/bin/python; K="python3 /srv/work/srv/work/tools/k.py"; D=/tmp/ig09/run
+PY=python; K="python3 $K_PY"; D=/tmp/ig09/run
 mkdir -p $D && cd backend
 $PY -m app.modules.validation.grader_check build --cond v1 --out $D/v1.jsonl        # 232 запроса, ≈ 0,32 млн токенов
 $PY -m app.modules.validation.grader_check build --cond v2 --out $D/v2_1.jsonl      # 406 запросов, ≈ 0,7 млн токенов

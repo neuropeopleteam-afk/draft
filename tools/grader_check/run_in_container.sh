@@ -4,21 +4,21 @@
 # в контейнер уходят файлы запросов (их строят те же функции, что в продукте — grader.build_messages), обратно —
 # ответы модели. Раннер — только стандартная библиотека Python, возобновляет прерванный прогон.
 #
-# Запуск — штаб, из рабочего дерева с этой веткой (на машине разработки, не на сервере):
+# Запуск — руководитель проекта, из рабочего дерева с этой веткой (на машине разработки, не на сервере):
 #   bash tools/grader_check/run_in_container.sh                       # полный набор: 232 + 406 + второй вызов
 #   bash tools/grader_check/run_in_container.sh --limit-per-group 10  # дешёвый вариант (≈ 60 + 100 запросов)
 #   DRY=1 bash tools/grader_check/run_in_container.sh                 # только показать команды к серверу
 # Итог: backend/app/modules/validation/data/grader_check.json (закоммитить), временные файлы удаляются.
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
-PY=${PY:-/srv/work/srv/work/spectrek/.venv/bin/python}
+PY=${PY:-python}
 C=${C:-spectrek_fsp-api-1}       # контейнер api
 D=${D:-/tmp/ig09/run}            # локальная папка прогона
 R=/tmp/ig09                      # папка на сервере и в контейнере
 MODEL=${MODEL:-yandexgpt/latest} # та же модель, что в продукте (LLM_MODEL контейнера)
 POLL=${POLL:-60}
 
-K() { if [ -n "${DRY:-}" ]; then printf 'k.py %s\n' "$*" >&2; echo ready; else python3 /srv/work/srv/work/tools/k.py "$@"; fi; }
+K() { if [ -n "${DRY:-}" ]; then printf 'k.py %s\n' "$*" >&2; echo ready; else python3 "${K_PY:?путь к скрипту доступа к серверу}" "$@"; fi; }
 L() { if [ -n "${DRY:-}" ]; then printf 'локально: %s\n' "$*" >&2; else "$@"; fi; }  # шаги по ответам модели
 to_c() { for f in "$@"; do K put "$D/$f" "$R/$f" >/dev/null; K cmd "docker exec -i $C sh -c 'cat > $R/$f' < $R/$f"; done; }
 from_c() { for f in "$@"; do K cmd "docker exec $C cat $R/$f > $R/$f"; K get "$R/$f" "$D/$f" >/dev/null; done; }

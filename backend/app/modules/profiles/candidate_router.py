@@ -13,7 +13,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.db import get_db, utcnow
+from app.core.db import get_db, release, utcnow
 from app.core.deps import require_role
 from app.core.enums import ConsentKind, FactSource, UserRole, WorkFormat
 from app.core.errors import api_error, err
@@ -399,6 +399,7 @@ def upload_resume(file: UploadFile = File(...), user: User = Depends(candidate),
                        .where(CandidateResume.user_id == user.id, CandidateResume.created_at >= since)) or 0
     if recent >= s.resume_uploads_per_hour:
         raise api_error(429, "resume_rate", f"Не больше {s.resume_uploads_per_hour} загрузок резюме в час. Повторите позже")
+    release(db)  # разбор файла, NER и модель — секунды без БД: соединение в пул (docs/LOAD.md, раздел 8)
     data = file.file.read(s.resume_max_bytes + 1)
     try:
         ft = file_to_text(data, ("pdf", "docx"), max_bytes=s.resume_max_bytes, max_pages=s.resume_max_pages,
