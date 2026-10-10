@@ -284,7 +284,6 @@ class Settings(BaseSettings):
     interview_enabled: bool = False
     interview_engine: str = "auto"  # auto — движок, если он есть и настроен, иначе заглушка; stub — всегда заглушка
     interview_avatar: bool = True  # видео-аватар (Anam JS SDK) первым каналом, если движок выдаёт токен сессии
-    interview_anam_sdk_url: str = "https://esm.sh/@anam-ai/js-sdk@4"  # SDK грузится браузером по требованию
     interview_audio_max_kb: int = 3072  # запись одного ответа «нажми и говори»
     interview_defense_minutes: int = 3
     interview_defense_max_questions: int = 3
