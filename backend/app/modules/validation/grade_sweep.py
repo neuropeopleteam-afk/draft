@@ -21,7 +21,9 @@ data/grade_sweep.json и docs/validation/GRADE_ACCURACY.md.
 from __future__ import annotations
 
 import argparse
-from concurrent.futures import ProcessPoolExecutor
+import subprocess
+import sys
+import tempfile
 from dataclasses import asdict, replace
 import json
 import os
@@ -169,6 +171,41 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
     return {"key": key(pt), "direction": d, **out}
 
 
+def run_parallel(tasks: list, workers: int, t0: float) -> list[dict]:
+    """Задачи — в отдельных процессах python (без multiprocessing: на сервере проверок /dev/shm закрыт для записи,
+    семафоры не создаются). Каждый процесс берёт свою долю задач и пишет итог в JSON во временный каталог."""
+    if workers <= 1 or len(tasks) <= 1:
+        return [run_task(t) for t in tasks]
+    with tempfile.TemporaryDirectory(prefix="grade_sweep_") as tmp:
+        procs = []
+        for w in range(workers):
+            part = tasks[w::workers]
+            if not part:
+                continue
+            tf, of = Path(tmp) / f"t{w}.json", Path(tmp) / f"o{w}.json"
+            tf.write_text(json.dumps(part, ensure_ascii=False), encoding="utf-8")
+            procs.append((subprocess.Popen([sys.executable, "-m", "app.modules.validation.grade_sweep", "--worker",
+                                            str(tf), str(of)], cwd=str(pr.REPO / "backend")), of))
+        out = []
+        for p, of in procs:
+            if p.wait() != 0:
+                raise RuntimeError(f"процесс перебора завершился с кодом {p.returncode}")
+            out += json.loads(of.read_text(encoding="utf-8"))
+        print(f"  задач {len(out)} ({time.time() - t0:.0f} с)", flush=True)
+        return out
+
+
+def _worker(task_file: str, out_file: str) -> int:
+    tasks = [tuple(t) for t in json.loads(Path(task_file).read_text(encoding="utf-8"))]
+    res = []
+    for j, t in enumerate(tasks):
+        res.append(run_task(t))
+        if (j + 1) % 10 == 0:
+            print(f"    [{os.getpid()}] {j + 1}/{len(tasks)}", flush=True)
+    Path(out_file).write_text(json.dumps(res, ensure_ascii=False), encoding="utf-8")
+    return 0
+
+
 # ---------------------------------------------------------------- метрики точки
 
 def metrics(rows: list[dict], boot: bool = True, seed: int = 0) -> dict:
@@ -251,14 +288,11 @@ def run(stages: list[str], n: int = 500, workers: int | None = None, write: bool
                if p.get("n_per_direction") == n}
     todo = [p for p in uniq if key(p) not in old]
     tasks = [(p, i, d, n) for p in todo for i, d in enumerate(sim.DIRECTIONS)]
-    workers = workers or max(1, (os.cpu_count() or 2))
+    workers = workers or min(8, len(os.sched_getaffinity(0)))
     print(f"точек: {len(uniq)} (новых {len(todo)}), задач: {len(tasks)}, процессов: {workers}", flush=True)
     by: dict[str, list[dict]] = {}
-    with ProcessPoolExecutor(max_workers=workers) as ex:
-        for j, r in enumerate(ex.map(run_task, tasks, chunksize=1)):
-            by.setdefault(r["key"], []).append(r)
-            if (j + 1) % 25 == 0:
-                print(f"  {j + 1}/{len(tasks)} ({time.time() - t0:.0f} с)", flush=True)
+    for r in run_parallel(tasks, workers, t0):
+        by.setdefault(r["key"], []).append(r)
     points = list(old.values())
     for p in todo:
         k = key(p)
@@ -363,6 +397,8 @@ def markdown(rep: dict) -> str:
 
 
 def main() -> int:
+    if len(sys.argv) == 4 and sys.argv[1] == "--worker":
+        return _worker(sys.argv[2], sys.argv[3])
     ap = argparse.ArgumentParser(description="Перебор параметров теста ради точности уровня → data/grade_sweep.json")
     ap.add_argument("--stage", default="all", help="screen | grid | all | none")
     ap.add_argument("--n", type=int, default=500)
