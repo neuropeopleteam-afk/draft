@@ -19,7 +19,12 @@ type Meta = { name: string; family: string; open_weights?: string | null; stand?
 type Data = { missing?: boolean; date: string; code_sha: string; models: Record<string, Meta>;
   functions: Record<string, Record<string, Cell>>; functions_rules?: Record<string, { quality: Cell["quality"] }>;
   choice: Record<string, Choice>; budget_s: Record<string, number>; conditions: string[]; pending?: string;
-  judges_agreement?: { a: string; b: string; n: number; mae: M; kappa_w: M }[] };
+  judges_agreement?: { a: string; b: string; n: number; mae: M; kappa_w: M }[];
+  full_run?: Record<string, { parse_need?: FullNeed; grade?: FullGrade }> };
+type Rel = { p95_s: number | null };
+type FullNeed = { n: number; stack_f1: M; fields_acc: M; reliability: Rel; usd_per_1k: number | null };
+type FullGrade = { n: number; mae: M; kappa_w: M; attacks_resisted: M; attacks_n: number; order_strict: M;
+  reliability: Rel; usd_per_1k: number | null };
 
 const TITLE: Record<string, string> = { parse_need: "Разбор потребности", resume: "Разбор резюме", grade: "Оценка развёрнутых ответов" };
 const ORDER = ["parse_need", "resume", "grade"];
@@ -140,6 +145,40 @@ function Func({ d, f }: { d: Data; f: string }) {
   );
 }
 
+function Full({ d }: { d: Data }) {
+  const rows = Object.entries(d.full_run ?? {});
+  const withCi = (m: M, digits = 3) => <>{num(v(m), digits)}{ci(m) && <span className="text-xs text-brand-ink/65"> [{ci(m)}]</span>}</>;
+  return (
+    <div className="mt-4 rounded-2xl bg-white p-4 ring-1 ring-brand-night/10" data-testid="strongest-full">
+      <h4 className="font-bold text-brand-night">Полный прогон победителей — все входы</h4>
+      <p className="mt-1 text-sm text-brand-ink/80">
+        Разбор — все вакансии И8 (исправленная разметка); оценщик — все ответы набора панели против среднего остальных
+        моделей полного прогона без самой модели (модели, не люди).
+      </p>
+      <ScrollX label="Полный прогон победителей" className="mt-3 overflow-x-auto">
+        <table className="w-full min-w-[46rem] text-left text-sm">
+          <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
+            <tr>{["Модель", "Разбор: F1 стека", "Оценщик: MAE", "κw", "Атаки отбиты", "Порядок сильный > средний > слабый"].map((h) => (
+              <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>))}</tr>
+          </thead>
+          <tbody>
+            {rows.map(([m, c]) => (
+              <tr key={m} className="border-t border-brand-night/5">
+                <th scope="row" className="px-3 py-2 text-left font-medium text-brand-night">{label(d, m)}</th>
+                <td className="whitespace-nowrap px-3 py-2 tabular-nums">{c.parse_need ? <>{withCi(c.parse_need.stack_f1)} <span className="text-xs text-brand-ink/65">n = {c.parse_need.n}</span></> : "—"}</td>
+                <td className="whitespace-nowrap px-3 py-2 tabular-nums">{c.grade ? <>{withCi(c.grade.mae)} <span className="text-xs text-brand-ink/65">n = {c.grade.n}</span></> : "—"}</td>
+                <td className="px-3 py-2 tabular-nums">{c.grade ? num(v(c.grade.kappa_w), 2) : "—"}</td>
+                <td className="whitespace-nowrap px-3 py-2 tabular-nums">{c.grade ? `${pct(v(c.grade.attacks_resisted), 0)} из ${c.grade.attacks_n}` : "—"}</td>
+                <td className="px-3 py-2 tabular-nums">{c.grade ? num(v(c.grade.order_strict), 2) : "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </ScrollX>
+    </div>
+  );
+}
+
 export default function Strongest() {
   const { data: d } = useApi<Data>("/validation/strongest", []);
   if (!d || d.missing || !d.functions) return null;
@@ -154,7 +193,8 @@ export default function Strongest() {
         Замер {d.date}, код {d.code_sha}. Модель стенда сейчас — Claude Sonnet 5.5; смена — только решением владельца.
       </p>
       {ORDER.filter((f) => d.functions[f]).map((f) => <Func key={f} d={d} f={f} />)}
-      {d.pending && <p className="mt-2 text-sm text-brand-ink/75" data-testid="strongest-pending">{d.pending}</p>}
+      {d.full_run && Object.keys(d.full_run).length > 1 && <Full d={d} />}
+      {d.pending && <p className="mt-2 text-sm text-brand-ink/75" data-testid="strongest-pending">Ещё не готово: {d.pending}</p>}
       <p className="mt-1 text-xs text-brand-ink/65">{d.conditions[0]} Подробно и как воспроизвести — docs/LLM.md, раздел 12.</p>
     </div>
   );
