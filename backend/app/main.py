@@ -183,6 +183,7 @@ def create_app() -> FastAPI:
     @app.get("/api/meta", tags=["system"], summary="Название продукта, оператор ПДн, статус LLM и движка теста")
     def meta() -> dict:
         from app.modules.assessment.engine import get_engine
+        from app.modules.catalog import ext as catalog_ext
         from app.modules.llm.client import status as llm_status
 
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
@@ -192,7 +193,9 @@ def create_app() -> FastAPI:
                 # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
                 "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,  # на запросе, как proctor_camera
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
-                          "invitation_cooldown_days": get_settings().invitation_cooldown_days}}
+                          "invitation_cooldown_days": get_settings().invitation_cooldown_days},
+                # видимые направления каталога (расширение за CATALOG_EXT_ENABLED и проверенным банком; ext.py)
+                "catalog": catalog_ext.meta()}
 
     class HealthOut(BaseModel):
         status: str

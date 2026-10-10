@@ -46,6 +46,9 @@ class MetaOut(Doc):
     assessment_engine: str = Field(description="Движок оценки (адаптивный тест)")
     rules: Obj = Field(description="Правила платформы в днях: grade_change_interval_days, retake_same_grade_days, "
                                    "invitation_cooldown_days")
+    catalog: Obj = Field(description="Видимые направления каталога: directions — все видимые (5 базовых и направления "
+                                     "расширения с проверенным банком), ext — видимые направления расширения, "
+                                     "ext_enabled — включён ли CATALOG_EXT_ENABLED")
 
 
 # ---------------------------------------------------------------- карточка кандидата

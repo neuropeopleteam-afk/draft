@@ -35,6 +35,7 @@ from app.modules.matching import whatif
 from app.modules.mydata import interest  # обезличенная отметка интереса для кандидата (md01)
 from app.modules.profiles.facts import card, load_bundles
 from app.modules.profiles.models import Company, EmployerProfile
+from app.modules.catalog.ext import DirectionId
 
 router = APIRouter(prefix="/api/employer", tags=["employer"])
 AUTH = {401: err("Не выполнен вход"), 403: err("Только для работодателя"),
@@ -82,7 +83,7 @@ class StackReq(BaseModel):
 
 
 class Requirements(BaseModel):
-    direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None
+    direction: DirectionId | None = None
     grade: Literal["intern", "junior", "middle", "senior"] | None = None
     stack_required: list[StackReq] = Field(default_factory=list, max_length=20)
     stack_desired: list[StackReq] = Field(default_factory=list, max_length=20)
@@ -455,7 +456,7 @@ def compare_candidates(need_id: uuid.UUID, refs: list[str] = Query(default_facto
 
 @router.get("/candidates", summary="Поиск по всей базе (только обезличенные карточки)", responses=AUTH)
 def search_candidates(
-    direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+    direction: DirectionId | None = None,
     grade: Literal["intern", "junior", "middle", "senior"] | None = None,
     category: str | None = None,
     stack: list[str] = Query(default_factory=list, description="Стек-теги (все должны быть)"),
@@ -483,7 +484,7 @@ def categories(user: User = Depends(employer), db: Session = Depends(get_db)) ->
 @router.get("/candidates/{ref}", summary="Карточка кандидата: факты с уровнями, история контактов, контакты после принятия",
             responses={**AUTH, 404: err("Кандидат не найден или скрыл профиль")})
 def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
-                     direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+                     direction: DirectionId | None = None,
                      user: User = Depends(employer),
                      db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
