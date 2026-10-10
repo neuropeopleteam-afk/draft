@@ -7,13 +7,14 @@ import { Alert, DIRECTIONS, Empty, Field, GRADES, LevelLegend, Loading, Modal, T
 import { api } from "../../lib/api";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
-import { InviteForm, ProbeForm, probeSentText } from "./Contact";
+import { InviteForm, ProbeForm, inviteSentText, probeSentText } from "./Contact";
 import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
 import { ParseStatus, Suggestions, evSource, useFastParse } from "./parseFlow";  // И27: словарь сразу, модель в фоне
 import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // подписка на потребность (И25)
 import { NeedFileNote, NeedFileUpload, type NeedFileInfo } from "./NeedFile";  // Ф5: потребность из файла вакансии
+import { needPreset } from "../../lib/jury";  // Я9: заготовка своей потребности из проводника
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -29,6 +30,7 @@ export interface Req {
   work_formats?: string[] | null;
   unknown_terms?: { term: string; evidence?: Ev | null }[]; excluded?: { tag: string; evidence?: Ev | null }[];
   salary_note?: { text: string; evidence?: Ev | null } | null;
+  weight_rule?: string;  // Я11 (С3-3): правило весов разбора — показываем у «Настроить веса»
 }
 
 /** Что не попало в подбор и подсказки по требованиям (И18): честно, без блокировки. */
@@ -239,7 +241,8 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <input aria-label="Город присутствия" className="input max-w-xs" placeholder="для офиса и гибрида" value={req.city ?? ""}
           onChange={(e) => setScalar("city", { city: e.target.value || null })} />)}</ul>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-brand-ink/65">
-        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}</p>
+        <p>{tune ? "Вес — доля навыка в балле соответствия, от 0,1 до 1: чем больше, тем сильнее навык влияет на балл и порядок." : "Обязательные навыки весят в балле больше желательных; веса по каждому навыку предложил разбор — их можно поправить."}
+          {tune && req.weight_rule ? <span data-testid="weight-rule" className="mt-1 block">{req.weight_rule}</span> : null}</p>
         <button type="button" className="font-semibold text-brand-plum hover:underline" aria-expanded={tune} onClick={() => setTune((v) => !v)}>{tune ? "Скрыть веса" : "Настроить веса"}</button>
       </div>
       <div><p className="label">Обязательный стек</p>{req.stack_required.length ? <ul className="space-y-2">{stackRows("stack_required")}</ul> : <p className="text-sm text-brand-ink/65">нет</p>}</div>
@@ -298,6 +301,8 @@ export function Needs() {
     try { const r = await api<Req & { text?: string }>("/employer/needs/parse", { body: { text: t } }); setParsed(r.text ?? t); setReq(r); fp.start(r); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   useEffect(() => { if ((loc.state as any)?.text) parse((loc.state as any).text); }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  // Я9: заготовка из проводника «Проверка за 12 минут» — в поле; разбор — кнопкой, как у своего текста
+  useEffect(() => needPreset.listen((t) => { setText(t); setReq(null); setFile(null); fp.reset(); }), []);  // eslint-disable-line react-hooks/exhaustive-deps
   function rewrite(t: string) { setText(t); parse(t); }
   async function create() {
     if (!req) return;
@@ -601,7 +606,7 @@ export function Selection() {
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение кандидату ${invite?.ref ?? ""}`}>
         {invite && <InviteForm cref={invite.ref} needId={id} market={invite.card?.market_range ?? s?.categories?.find((c: any) => c.relation === "exact")?.market_range}
           needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }}
-          onDone={() => { setInvited(`Приглашение ${invite.ref} отправлено. Кандидат увидит компанию, условия и вилку; контакты откроются после его согласия.`); setInvite(null); }} />}
+          onDone={(inv) => { setInvited(inviteSentText(inv, invite.ref)); setInvite(null); }} />}
       </Modal>
       {/* А11: обновление подборки (новая версия, пересчёт) — экранному диктору; последним элементом, чтобы не сдвигать space-y */}
       <p className="sr-only" role="status" aria-live="polite">{busy ? "Пересчитываем подборку" : s ? `Подборка v${s.version}: кандидатов ${s.total}` : ""}</p>

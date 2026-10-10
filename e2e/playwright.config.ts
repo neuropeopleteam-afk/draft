@@ -9,6 +9,8 @@
  *   E2E_KEEP_STATE=1    не сбрасывать песочницу после прогона (для разбора упавшего теста)
  *   E2E_STRICT=1        известные ошибки продукта (productIssue) валят тест, а не только отмечаются
  *   E2E_SHOTS_DIR       куда класть снимки экранов 390 px (по умолчанию reports/mobile)
+ *   E2E_PROXY           прокси браузера и запросов к API, например socks5://127.0.0.1:1080 (из песочницы до стенда —
+ *                       через «Мадрид»: прямые соединения из-за рубежа с «Москвой» обрываются на ~16 КБ)
  *
  * Один прогон = одна песочница жюри (вход с scenario "new"): все демо-персоны прогона — её учётки, браузер
  * получает её id в localStorage, как у эксперта жюри. В конце сбрасывается только она; общее демо и
@@ -44,6 +46,7 @@ export default defineConfig({
   use: {
     baseURL,
     httpCredentials: user && password ? { username: user, password, origin: new URL(baseURL).origin } : undefined,
+    proxy: process.env.E2E_PROXY ? { server: process.env.E2E_PROXY } : undefined,
     // service worker PWA не нужен тестам и уводил бы запросы мимо повтора GET (lib/net.ts)
     serviceWorkers: "block",
     locale: "ru-RU",

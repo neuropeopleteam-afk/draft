@@ -15,6 +15,7 @@ export interface Meta {
   proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number; confirm_pct?: number };
+  interview?: { enabled: boolean; stub: boolean; defense_minutes: number }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.)
 }
 
 const Ctx = createContext<Meta | null>(null);
@@ -25,7 +26,13 @@ let ownTitle = false;  // экран задал свой заголовок (use
 export function MetaProvider({ children }: { children: ReactNode }) {
   const [meta, setMeta] = useState<Meta | null>(null);
   useEffect(() => {
-    api<Meta>("/meta", { auth: false }).then((m) => { loaded = m; setMeta(m); if (!ownTitle) document.title = defaultTitle(m); }).catch(() => setMeta(null));
+    // Я16: /api/meta не ответил (сервер перегружен, обрыв) — экраны работают без него, а мы тихо повторяем через 5, 15 и 45 с
+    let alive = true, t = 0;
+    const load = (n: number) => api<Meta>("/meta", { auth: false })
+      .then((m) => { if (!alive) return; loaded = m; setMeta(m); if (!ownTitle) document.title = defaultTitle(m); })
+      .catch(() => { if (alive && n < 3) t = window.setTimeout(() => load(n + 1), 5000 * 3 ** n); });
+    void load(0);
+    return () => { alive = false; window.clearTimeout(t); };
   }, []);
   return <Ctx.Provider value={meta}>{children}</Ctx.Provider>;
 }

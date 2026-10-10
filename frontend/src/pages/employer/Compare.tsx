@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { PageTitle } from "../../components/CabinetLayout";
 import { GradeBadge, type GradeStatusInfo } from "../../components/GradeStatus";
 import { Alert, Empty, Level, LevelLegend, Loading, Modal, Status, dt, ruText, useApi } from "../../components/ui";
-import { InviteForm, ProbeForm, probeSentText } from "./Contact";
+import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { ReasonLevel } from "../../components/CandidateCard";  // Ф6 (Н5)
 
 interface Cell { level: string; status: string; text: string; value?: number; best?: boolean }
@@ -116,7 +116,7 @@ export function Compare() {
                   <button className="btn-ghost !px-3 !py-1.5 text-xs" disabled={c.probe_active} title={c.probe_active ? "Зонд уже отправлен и ждёт ответа" : undefined} onClick={() => setProbe([c.ref])}>
                     {c.probe_active ? "Зонд отправлен" : "Зонд"}
                   </button>
-                  <button className="btn-primary !px-3 !py-1.5 text-xs" disabled={!c.can_invite} onClick={() => setInvite(c)}>Пригласить</button>
+                  <button className="btn-primary !px-3 !py-1.5 text-xs" disabled={!c.can_invite} title={c.can_invite ? undefined : inviteBlockedText(c)} onClick={() => setInvite(c)}>Пригласить</button>
                   <Link className="btn-ghost !px-3 !py-1.5 text-xs" to={`/employer/candidates/${c.ref}?need=${id}`}>Карточка</Link>
                 </div>
                 {!c.can_invite && <p className="text-xs text-brand-ink/65">Повторное приглашение — с {c.invite_available_at ? dt(c.invite_available_at) : "позже"}</p>}
@@ -162,7 +162,7 @@ export function Compare() {
         {probe && <ProbeForm refs={probe} needId={id} market={market} needSalary={needSalary} onDone={(r) => { setProbe(null); setDone(probeSentText(r) ?? "Зонд никому не отправлен."); reload(); }} />}
       </Modal>
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение ${invite?.ref ?? ""}`}>
-        {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} needSalary={needSalary} onDone={() => { setInvite(null); setDone(`Приглашение ${invite.ref} отправлено. Контакты откроются после согласия кандидата.`); reload(); }} />}
+        {invite && <InviteForm cref={invite.ref} needId={id} market={invite.market_range ?? market} needSalary={needSalary} onDone={(inv) => { setInvite(null); setDone(inviteSentText(inv, invite.ref)); reload(); }} />}
       </Modal>
     </div>
   );
