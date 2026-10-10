@@ -66,14 +66,14 @@ export default function Attempts() {
                   </select>
                 </label>
               ))}
-              <p className="text-xs text-brand-ink/60 sm:col-span-2">По умолчанию — две последние попытки; порядок — по времени завершения.</p>
+              <p className="text-xs text-brand-ink/65 sm:col-span-2">По умолчанию — две последние попытки; порядок — по времени завершения.</p>
             </section>
           )}
-          {cmp && <section className="card"><AttemptsCompare cmp={cmp} /></section>}
+          {cmp && <section className="card"><AttemptsCompare cmp={cmp} level={2} /></section>}
           {retakeBox}
         </>
       )}
-      <p className="text-xs text-brand-ink/60">
+      <p className="text-xs text-brand-ink/65">
         Стабильность при повторе на синтетической популяции и доля повторов заданий между попытками — на <Link className="font-semibold text-brand" to="/validation#retest">/validation</Link> (модель, не люди).
       </p>
     </div>

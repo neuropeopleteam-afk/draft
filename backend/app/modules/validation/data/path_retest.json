@@ -2,12 +2,12 @@
  "signature": {
   "world": "симуляция теста: 5 направлений × 500 кандидатов, семейств в банке: 165",
   "seed": 20261006,
-  "config_hash": "a5797d8d33e4",
-  "commit": "03b9a22",
-  "bank": "180791bef2a67b72",
+  "config_hash": "3e8628124a9a",
+  "commit": "ae87c00",
+  "bank": "76c4164b6ce83743",
   "n": 2500,
   "command": "make path-retest",
-  "generated_at": "2026-10-09T10:40:49+00:00"
+  "generated_at": "2026-10-09T13:54:35+00:00"
  },
  "quick": false,
  "n_per_direction": 500,
@@ -38,6 +38,7 @@
    "ext_minutes": 20,
    "ext_own_first": true,
    "legacy_ext": 0,
+   "retake_seen": true,
    "claim_prior": false,
    "rotation": "subpool",
    "cuts": [
@@ -90,179 +91,179 @@
  "total": {
   "path_grade": {
    "n": 2500,
-   "exact": 0.764,
-   "within_1": 0.992,
-   "two_steps": 0.008,
-   "kappa_w": 0.839,
+   "exact": 0.77,
+   "within_1": 0.994,
+   "two_steps": 0.006,
+   "kappa_w": 0.844,
    "kappa_informative": true,
    "kappa_w_ci": [
-    0.824,
-    0.853
+    0.83,
+    0.858
    ],
    "exact_ci": [
-    0.748,
-    0.781
+    0.752,
+    0.786
    ]
   },
-  "icc_theta": 0.806,
-  "r_theta": 0.807,
+  "icc_theta": 0.798,
+  "r_theta": 0.798,
   "icc_theta_ci": [
-   0.792,
-   0.82
+   0.784,
+   0.811
   ],
   "point_grade": {
    "n": 2500,
-   "exact": 0.591,
-   "within_1": 0.981,
-   "two_steps": 0.019,
-   "kappa_w": 0.728,
+   "exact": 0.571,
+   "within_1": 0.98,
+   "two_steps": 0.02,
+   "kappa_w": 0.712,
    "kappa_informative": true
   },
   "point_grade_ceiling": {
-   "exact": 0.574,
-   "within_1": 0.976,
-   "kappa_w": 0.777
+   "exact": 0.573,
+   "within_1": 0.975,
+   "kappa_w": 0.776
   },
-  "status_agreement": 0.721,
+  "status_agreement": 0.731,
   "overlap_all": {
-   "mean": 0.194,
+   "mean": 0.182,
    "median": 0.0,
-   "any_share": 0.414,
+   "any_share": 0.24,
    "max": 1.0
   },
   "overlap_first": {
-   "mean": 0.191,
+   "mean": 0.18,
    "median": 0.0,
-   "any_share": 0.411,
+   "any_share": 0.234,
    "max": 1.0
   },
   "truth": {
    "n": 2500,
-   "exact": 0.574,
-   "exact_with_category": 0.577,
-   "over_share": 0.051,
+   "exact": 0.575,
+   "exact_with_category": 0.58,
+   "over_share": 0.049,
    "under_share": 0.348,
    "no_category_share": 0.054,
-   "kappa_w_true": 0.757
+   "kappa_w_true": 0.758
   },
   "path": {
    "status_share": {
-    "confirmed": 0.582,
-    "provisional": 0.097,
-    "accepted_lower": 0.271,
+    "confirmed": 0.58,
+    "provisional": 0.093,
+    "accepted_lower": 0.277,
     "none": 0.05
    },
    "sessions_per_path": 1.01,
-   "mean_items_per_session": 19.92,
-   "mean_items_per_path": 20.03,
-   "mean_time_min_per_path": 56.0,
-   "extension_share": 0.894,
+   "mean_items_per_session": 19.79,
+   "mean_items_per_path": 19.92,
+   "mean_time_min_per_path": 55.8,
+   "extension_share": 0.868,
    "rescored_share": 0.002,
-   "provisional_intern_proved": 457,
-   "block_gap_flag_share": 0.054
+   "provisional_intern_proved": 427,
+   "block_gap_flag_share": 0.061
   },
   "splits": {
    "far_from_cut": {
     "share": 0.504,
     "n": 1260,
-    "exact": 0.747,
-    "within_1": 0.995,
-    "two_steps": 0.005,
+    "exact": 0.745,
+    "within_1": 0.996,
+    "two_steps": 0.004,
     "kappa_w": 0.854,
     "kappa_informative": true,
     "kappa_w_ci": [
      0.836,
-     0.871
+     0.872
     ],
     "exact_ci": [
      0.721,
-     0.77
+     0.769
     ]
    },
    "near_cut": {
     "share": 0.496,
     "n": 1240,
-    "exact": 0.781,
-    "within_1": 0.989,
-    "two_steps": 0.011,
-    "kappa_w": 0.813,
+    "exact": 0.794,
+    "within_1": 0.993,
+    "two_steps": 0.007,
+    "kappa_w": 0.824,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.788,
-     0.836
+     0.802,
+     0.845
     ],
     "exact_ci": [
-     0.758,
-     0.805
+     0.771,
+     0.816
     ]
    },
    "far_from_boundary": {
     "share": 0.501,
     "n": 1252,
-    "exact": 0.784,
-    "within_1": 0.992,
-    "two_steps": 0.008,
-    "kappa_w": 0.868,
+    "exact": 0.805,
+    "within_1": 0.995,
+    "two_steps": 0.005,
+    "kappa_w": 0.883,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.85,
-     0.886
+     0.867,
+     0.898
     ],
     "exact_ci": [
-     0.761,
-     0.807
+     0.783,
+     0.827
     ]
    },
    "near_boundary": {
     "share": 0.499,
     "n": 1248,
-    "exact": 0.744,
-    "within_1": 0.992,
-    "two_steps": 0.008,
-    "kappa_w": 0.798,
+    "exact": 0.734,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.791,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.775,
-     0.819
+     0.767,
+     0.812
     ],
     "exact_ci": [
-     0.72,
-     0.768
+     0.708,
+     0.759
     ]
    },
    "boundary_shift": 0.337,
    "decided_both": {
-    "share": 0.786,
-    "n": 1965,
-    "exact": 0.758,
-    "within_1": 0.992,
-    "two_steps": 0.008,
-    "kappa_w": 0.802,
+    "share": 0.792,
+    "n": 1979,
+    "exact": 0.772,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.811,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.783,
-     0.822
+     0.791,
+     0.829
     ],
     "exact_ci": [
-     0.739,
-     0.777
+     0.754,
+     0.791
     ]
    },
    "undecided_any": {
-    "share": 0.214,
-    "n": 535,
-    "exact": 0.785,
-    "within_1": 0.993,
-    "two_steps": 0.007,
-    "kappa_w": 0.834,
+    "share": 0.208,
+    "n": 521,
+    "exact": 0.76,
+    "within_1": 0.996,
+    "two_steps": 0.004,
+    "kappa_w": 0.825,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.803,
-     0.863
+     0.795,
+     0.854
     ],
     "exact_ci": [
-     0.75,
-     0.819
+     0.722,
+     0.797
     ]
    }
   }
@@ -271,480 +272,480 @@
   "backend": {
    "path_grade": {
     "n": 500,
-    "exact": 0.764,
-    "within_1": 0.988,
-    "two_steps": 0.012,
-    "kappa_w": 0.812,
+    "exact": 0.816,
+    "within_1": 0.998,
+    "two_steps": 0.002,
+    "kappa_w": 0.861,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.772,
-     0.846
+     0.826,
+     0.889
     ],
     "exact_ci": [
-     0.726,
-     0.8
+     0.78,
+     0.85
     ]
    },
-   "icc_theta": 0.792,
-   "r_theta": 0.792,
+   "icc_theta": 0.806,
+   "r_theta": 0.805,
    "icc_theta_ci": [
-    0.757,
-    0.821
+    0.773,
+    0.834
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.598,
-    "within_1": 0.98,
-    "two_steps": 0.02,
+    "exact": 0.588,
+    "within_1": 0.988,
+    "two_steps": 0.012,
     "kappa_w": 0.716,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.575,
+    "exact": 0.576,
     "within_1": 0.977,
     "kappa_w": 0.766
    },
-   "status_agreement": 0.724,
+   "status_agreement": 0.772,
    "overlap_all": {
-    "mean": 0.165,
+    "mean": 0.156,
     "median": 0.0,
-    "any_share": 0.258,
+    "any_share": 0.208,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.159,
+    "mean": 0.153,
     "median": 0.0,
-    "any_share": 0.254,
+    "any_share": 0.198,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.564,
-    "exact_with_category": 0.562,
-    "over_share": 0.052,
-    "under_share": 0.366,
+    "exact": 0.546,
+    "exact_with_category": 0.543,
+    "over_share": 0.054,
+    "under_share": 0.382,
     "no_category_share": 0.046,
-    "kappa_w_true": 0.722
+    "kappa_w_true": 0.709
    },
    "path": {
     "status_share": {
-     "confirmed": 0.548,
-     "provisional": 0.124,
-     "accepted_lower": 0.286,
+     "confirmed": 0.538,
+     "provisional": 0.119,
+     "accepted_lower": 0.301,
      "none": 0.042
     },
     "sessions_per_path": 1.01,
-    "mean_items_per_session": 20.16,
-    "mean_items_per_path": 20.38,
-    "mean_time_min_per_path": 58.5,
-    "extension_share": 0.915,
-    "rescored_share": 0.004,
-    "provisional_intern_proved": 115,
+    "mean_items_per_session": 20.14,
+    "mean_items_per_path": 20.28,
+    "mean_time_min_per_path": 58.0,
+    "extension_share": 0.886,
+    "rescored_share": 0.002,
+    "provisional_intern_proved": 110,
     "block_gap_flag_share": 0.027
    }
   },
   "frontend": {
    "path_grade": {
     "n": 500,
-    "exact": 0.776,
+    "exact": 0.764,
     "within_1": 0.994,
     "two_steps": 0.006,
-    "kappa_w": 0.856,
+    "kappa_w": 0.843,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.823,
-     0.884
+     0.809,
+     0.871
     ],
     "exact_ci": [
-     0.738,
-     0.812
+     0.726,
+     0.802
     ]
    },
-   "icc_theta": 0.81,
-   "r_theta": 0.811,
+   "icc_theta": 0.806,
+   "r_theta": 0.809,
    "icc_theta_ci": [
-    0.779,
-    0.836
+    0.774,
+    0.831
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.596,
-    "within_1": 0.976,
-    "two_steps": 0.024,
-    "kappa_w": 0.735,
+    "exact": 0.56,
+    "within_1": 0.982,
+    "two_steps": 0.018,
+    "kappa_w": 0.72,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.578,
+    "exact": 0.577,
     "within_1": 0.976,
     "kappa_w": 0.777
    },
-   "status_agreement": 0.75,
+   "status_agreement": 0.732,
    "overlap_all": {
-    "mean": 0.193,
+    "mean": 0.19,
     "median": 0.0,
-    "any_share": 0.304,
+    "any_share": 0.252,
     "max": 1.0
    },
    "overlap_first": {
     "mean": 0.189,
     "median": 0.0,
-    "any_share": 0.3,
+    "any_share": 0.25,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.57,
-    "exact_with_category": 0.572,
-    "over_share": 0.044,
-    "under_share": 0.36,
+    "exact": 0.584,
+    "exact_with_category": 0.589,
+    "over_share": 0.04,
+    "under_share": 0.348,
     "no_category_share": 0.056,
-    "kappa_w_true": 0.767
+    "kappa_w_true": 0.769
    },
    "path": {
     "status_share": {
-     "confirmed": 0.615,
-     "provisional": 0.084,
-     "accepted_lower": 0.248,
+     "confirmed": 0.599,
+     "provisional": 0.092,
+     "accepted_lower": 0.256,
      "none": 0.053
     },
     "sessions_per_path": 1.01,
-    "mean_items_per_session": 19.8,
-    "mean_items_per_path": 19.98,
-    "mean_time_min_per_path": 56.8,
-    "extension_share": 0.892,
+    "mean_items_per_session": 19.75,
+    "mean_items_per_path": 19.93,
+    "mean_time_min_per_path": 56.7,
+    "extension_share": 0.859,
     "rescored_share": 0.0,
-    "provisional_intern_proved": 78,
-    "block_gap_flag_share": 0.091
+    "provisional_intern_proved": 86,
+    "block_gap_flag_share": 0.1
    }
   },
   "data_ml": {
    "path_grade": {
     "n": 500,
-    "exact": 0.714,
-    "within_1": 0.99,
-    "two_steps": 0.01,
-    "kappa_w": 0.818,
+    "exact": 0.718,
+    "within_1": 0.996,
+    "two_steps": 0.004,
+    "kappa_w": 0.832,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.783,
-     0.848
+     0.802,
+     0.858
     ],
     "exact_ci": [
-     0.674,
-     0.754
+     0.678,
+     0.756
     ]
    },
-   "icc_theta": 0.792,
+   "icc_theta": 0.794,
    "r_theta": 0.794,
    "icc_theta_ci": [
-    0.759,
-    0.821
+    0.763,
+    0.822
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.55,
-    "within_1": 0.984,
-    "two_steps": 0.016,
-    "kappa_w": 0.727,
+    "exact": 0.554,
+    "within_1": 0.978,
+    "two_steps": 0.022,
+    "kappa_w": 0.722,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.571,
-    "within_1": 0.975,
-    "kappa_w": 0.782
+    "exact": 0.57,
+    "within_1": 0.974,
+    "kappa_w": 0.78
    },
-   "status_agreement": 0.668,
+   "status_agreement": 0.684,
    "overlap_all": {
-    "mean": 0.198,
+    "mean": 0.187,
     "median": 0.0,
-    "any_share": 0.388,
+    "any_share": 0.236,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.196,
+    "mean": 0.185,
     "median": 0.0,
-    "any_share": 0.388,
+    "any_share": 0.23,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.526,
-    "exact_with_category": 0.538,
-    "over_share": 0.042,
-    "under_share": 0.384,
-    "no_category_share": 0.078,
-    "kappa_w_true": 0.745
+    "exact": 0.544,
+    "exact_with_category": 0.566,
+    "over_share": 0.038,
+    "under_share": 0.358,
+    "no_category_share": 0.088,
+    "kappa_w_true": 0.762
    },
    "path": {
     "status_share": {
-     "confirmed": 0.558,
-     "provisional": 0.101,
+     "confirmed": 0.566,
+     "provisional": 0.09,
      "accepted_lower": 0.275,
-     "none": 0.066
+     "none": 0.069
     },
     "sessions_per_path": 1.0,
-    "mean_items_per_session": 20.64,
-    "mean_items_per_path": 20.72,
+    "mean_items_per_session": 20.46,
+    "mean_items_per_path": 20.57,
     "mean_time_min_per_path": 54.5,
-    "extension_share": 0.921,
-    "rescored_share": 0.0,
-    "provisional_intern_proved": 95,
-    "block_gap_flag_share": 0.038
+    "extension_share": 0.868,
+    "rescored_share": 0.001,
+    "provisional_intern_proved": 77,
+    "block_gap_flag_share": 0.05
    }
   },
   "qa": {
    "path_grade": {
     "n": 500,
     "exact": 0.802,
-    "within_1": 0.998,
-    "two_steps": 0.002,
-    "kappa_w": 0.886,
+    "within_1": 0.99,
+    "two_steps": 0.01,
+    "kappa_w": 0.866,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.861,
-     0.908
+     0.834,
+     0.894
     ],
     "exact_ci": [
-     0.766,
+     0.768,
      0.836
     ]
    },
-   "icc_theta": 0.824,
-   "r_theta": 0.825,
+   "icc_theta": 0.803,
+   "r_theta": 0.803,
    "icc_theta_ci": [
-    0.794,
-    0.85
+    0.767,
+    0.834
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.612,
-    "within_1": 0.976,
-    "two_steps": 0.024,
-    "kappa_w": 0.737,
+    "exact": 0.574,
+    "within_1": 0.98,
+    "two_steps": 0.02,
+    "kappa_w": 0.701,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.574,
+    "exact": 0.573,
     "within_1": 0.975,
     "kappa_w": 0.791
    },
-   "status_agreement": 0.758,
+   "status_agreement": 0.76,
    "overlap_all": {
-    "mean": 0.249,
-    "median": 0.05,
-    "any_share": 0.582,
+    "mean": 0.229,
+    "median": 0.0,
+    "any_share": 0.286,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.249,
-    "median": 0.05,
-    "any_share": 0.582,
+    "mean": 0.228,
+    "median": 0.0,
+    "any_share": 0.284,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.612,
-    "exact_with_category": 0.613,
+    "exact": 0.628,
+    "exact_with_category": 0.622,
     "over_share": 0.044,
-    "under_share": 0.318,
-    "no_category_share": 0.064,
-    "kappa_w_true": 0.801
+    "under_share": 0.316,
+    "no_category_share": 0.048,
+    "kappa_w_true": 0.806
    },
    "path": {
     "status_share": {
-     "confirmed": 0.627,
-     "provisional": 0.065,
-     "accepted_lower": 0.251,
-     "none": 0.057
+     "confirmed": 0.637,
+     "provisional": 0.057,
+     "accepted_lower": 0.26,
+     "none": 0.046
     },
     "sessions_per_path": 1.0,
-    "mean_items_per_session": 19.55,
-    "mean_items_per_path": 19.57,
-    "mean_time_min_per_path": 54.1,
-    "extension_share": 0.849,
-    "rescored_share": 0.003,
-    "provisional_intern_proved": 65,
-    "block_gap_flag_share": 0.048
+    "mean_items_per_session": 19.4,
+    "mean_items_per_path": 19.43,
+    "mean_time_min_per_path": 53.6,
+    "extension_share": 0.846,
+    "rescored_share": 0.004,
+    "provisional_intern_proved": 55,
+    "block_gap_flag_share": 0.055
    }
   },
   "security": {
    "path_grade": {
     "n": 500,
-    "exact": 0.764,
-    "within_1": 0.99,
-    "two_steps": 0.01,
-    "kappa_w": 0.811,
+    "exact": 0.748,
+    "within_1": 0.994,
+    "two_steps": 0.006,
+    "kappa_w": 0.819,
     "kappa_informative": true,
     "kappa_w_ci": [
-     0.769,
-     0.846
+     0.781,
+     0.85
     ],
     "exact_ci": [
-     0.728,
-     0.8
+     0.71,
+     0.784
     ]
    },
-   "icc_theta": 0.813,
-   "r_theta": 0.813,
+   "icc_theta": 0.779,
+   "r_theta": 0.779,
    "icc_theta_ci": [
-    0.779,
-    0.84
+    0.743,
+    0.81
    ],
    "point_grade": {
     "n": 500,
-    "exact": 0.6,
-    "within_1": 0.99,
-    "two_steps": 0.01,
-    "kappa_w": 0.719,
+    "exact": 0.58,
+    "within_1": 0.972,
+    "two_steps": 0.028,
+    "kappa_w": 0.693,
     "kappa_informative": true
    },
    "point_grade_ceiling": {
-    "exact": 0.572,
-    "within_1": 0.975,
-    "kappa_w": 0.763
+    "exact": 0.569,
+    "within_1": 0.974,
+    "kappa_w": 0.761
    },
-   "status_agreement": 0.704,
+   "status_agreement": 0.706,
    "overlap_all": {
-    "mean": 0.166,
-    "median": 0.048,
-    "any_share": 0.536,
+    "mean": 0.148,
+    "median": 0.0,
+    "any_share": 0.22,
     "max": 1.0
    },
    "overlap_first": {
-    "mean": 0.164,
-    "median": 0.047,
-    "any_share": 0.532,
+    "mean": 0.144,
+    "median": 0.0,
+    "any_share": 0.208,
     "max": 1.0
    },
    "truth": {
     "n": 500,
-    "exact": 0.596,
-    "exact_with_category": 0.601,
-    "over_share": 0.074,
-    "under_share": 0.314,
-    "no_category_share": 0.028,
-    "kappa_w_true": 0.74
+    "exact": 0.574,
+    "exact_with_category": 0.578,
+    "over_share": 0.07,
+    "under_share": 0.338,
+    "no_category_share": 0.034,
+    "kappa_w_true": 0.732
    },
    "path": {
     "status_share": {
-     "confirmed": 0.562,
-     "provisional": 0.11,
-     "accepted_lower": 0.295,
-     "none": 0.033
+     "confirmed": 0.559,
+     "provisional": 0.108,
+     "accepted_lower": 0.294,
+     "none": 0.039
     },
-    "sessions_per_path": 1.0,
-    "mean_items_per_session": 19.44,
-    "mean_items_per_path": 19.5,
-    "mean_time_min_per_path": 56.4,
-    "extension_share": 0.891,
+    "sessions_per_path": 1.01,
+    "mean_items_per_session": 19.19,
+    "mean_items_per_path": 19.37,
+    "mean_time_min_per_path": 56.3,
+    "extension_share": 0.883,
     "rescored_share": 0.003,
-    "provisional_intern_proved": 104,
-    "block_gap_flag_share": 0.068
+    "provisional_intern_proved": 99,
+    "block_gap_flag_share": 0.073
    }
   }
  },
  "by_claimed": {
   "intern": {
    "n": 456,
-   "exact": 0.787,
+   "exact": 0.768,
    "within_1": 1.0,
    "two_steps": 0.0,
-   "kappa_w": 0.458,
+   "kappa_w": 0.412,
    "kappa_informative": true,
    "kappa_w_ci": [
-    0.369,
-    0.552
+    0.314,
+    0.497
    ],
    "exact_ci": [
-    0.752,
-    0.825
+    0.728,
+    0.805
    ]
   },
   "junior": {
    "n": 825,
-   "exact": 0.976,
-   "within_1": 0.996,
-   "two_steps": 0.004,
-   "kappa_w": 0.347,
+   "exact": 0.966,
+   "within_1": 0.998,
+   "two_steps": 0.002,
+   "kappa_w": 0.091,
    "kappa_informative": false,
    "kappa_w_ci": [
-    -0.01,
-    0.61
+    -0.02,
+    0.269
    ],
    "exact_ci": [
-    0.966,
-    0.985
+    0.953,
+    0.978
    ]
   },
   "middle": {
    "n": 804,
-   "exact": 0.609,
-   "within_1": 0.985,
-   "two_steps": 0.015,
-   "kappa_w": 0.392,
+   "exact": 0.632,
+   "within_1": 0.994,
+   "two_steps": 0.006,
+   "kappa_w": 0.399,
    "kappa_informative": true,
    "kappa_w_ci": [
-    0.329,
-    0.448
+    0.339,
+    0.457
    ],
    "exact_ci": [
-    0.575,
-    0.642
+    0.601,
+    0.664
    ]
   },
   "senior": {
    "n": 415,
-   "exact": 0.617,
-   "within_1": 0.988,
-   "two_steps": 0.012,
-   "kappa_w": 0.481,
+   "exact": 0.648,
+   "within_1": 0.983,
+   "two_steps": 0.017,
+   "kappa_w": 0.498,
    "kappa_informative": true,
    "kappa_w_ci": [
-    0.402,
-    0.555
+    0.422,
+    0.571
    ],
    "exact_ci": [
-    0.571,
-    0.665
+    0.6,
+    0.694
    ]
   }
  },
  "transitions": [
   [
-   74,
-   62,
+   70,
+   66,
    0,
    0,
    0
   ],
   [
-   37,
-   294,
-   44,
-   6,
+   41,
+   287,
+   34,
+   5,
    0
   ],
   [
-   4,
-   30,
-   1021,
-   139,
-   2
+   2,
+   32,
+   1043,
+   141,
+   3
   ],
   [
    0,
-   6,
-   160,
-   445,
-   46
+   2,
+   166,
+   444,
+   38
   ],
   [
    0,
    0,
    2,
-   52,
-   76
+   44,
+   80
   ]
  ],
  "block_gap": {
@@ -3715,7 +3716,7 @@
   "Адаптивный тест платформы на банке: классификационная остановка, дотестирование у порога, контроль частоты, ротация субпулов по истории сессий; тест Стажёра — только лёгкие семейства, без ротации.",
   "Детектор предзнания и пересчёт θ; решение: подтверждён при P ≥ 0,8, «Junior (предварительно)» при P от 0,10.",
   "Не подтверждён: принять доказанный уровень ниже без нового теста (P ≥ 0,8), иначе один тест ступенью ниже, иначе без категории.",
-  "Повтор — вся процедура ещё раз: другой субпул, новые варианты, семейства прошлой сессии не в дотестировании."
+  "Повтор — вся процедура ещё раз: другой субпул, новые варианты; семейства всех прошлых сессий не берутся (новых нет — виденные давнее всего, в новом варианте)."
  ],
  "caveat": "Синтетика: истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5, люди — модель ответов 2PL; проверяется механика всей процедуры, а не качество заданий на людях. «Предварительно» считается ступенью Junior. Дискриминативность — на симулированном пилоте с авторскими параметрами: она показывает замысел автора, а не поведение людей; r_pb панели моделей — независимая проверка на ответах моделей, шкала моделей не равна шкале людей.",
  "competitor_reference": {
@@ -3734,5 +3735,5 @@
   "ci": null,
   "icc": null
  },
- "seconds": 23.8
+ "seconds": 24.6
 }

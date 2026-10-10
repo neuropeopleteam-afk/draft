@@ -1,4 +1,5 @@
 import { Alert, Loading, num, signed, useApi } from "../ui";
+import { ScrollX } from "../A11y";
 
 /** Блок /validation: оценщик открытых ответов на наборе панели 06.10 — инъекции и завышение, до и после
  * (backend: app/modules/validation/grader_check.py → data/grader_check.json). */
@@ -57,7 +58,7 @@ function Body({ r }: { r: any }) {
           Цифры «после» для самой модели (промпт v2 с цитатами-доказательствами и второй оценкой) появятся после прогона на YandexGPT: ключ есть только на сервере стенда, запросы и разбор готовы. Сейчас показано то, что считается без модели: фильтр, вырезание утверждений об оценке и тексты, которые доходят до модели.
         </Alert></div>
       )}
-      <div className="mt-4 overflow-x-auto">
+      <ScrollX label="Проверка оценщика" className="mt-4 overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead><tr className="border-b border-brand-night/10 text-xs uppercase tracking-wide text-brand-lavender">
             <th className="py-2 pr-3">Ответы</th><th className="py-2 pr-3">Ожидание</th>
@@ -66,14 +67,14 @@ function Body({ r }: { r: any }) {
           <tbody>
             {groups.map(([g, meta]) => (
               <tr key={g} className="border-b border-brand-night/5 align-top">
-                <td className="py-2 pr-3 font-medium text-brand-night">{meta.title} <span className="text-brand-ink/50">({meta.n})</span></td>
+                <td className="py-2 pr-3 font-medium text-brand-night">{meta.title} <span className="text-brand-ink/65">({meta.n})</span></td>
                 <td className="py-2 pr-3 text-brand-ink/70">{meta.expect}</td>
                 {conds.map((k) => <td key={k} className="py-2 pr-3 text-brand-ink/80">{cell(c[k].groups?.[g])}</td>)}
               </tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollX>
       <p className="mt-2 text-xs text-brand-ink/65">
         В ячейке — средний балл 0–1 и сколько ответов получили ≥ 0,5. «Эксперту» — ответ не оценён автоматически и передан эксперту (фильтр инструкций, только утверждения об оценке, расхождение двух оценок). Порядок эталонов «сильный &gt; средний &gt; слабый» без фильтра соблюдён на {before?.ordering?.strict ?? "—"} из {before?.ordering?.items ?? "—"} заданий. Набор: docs/validation/grader_set_panel_20261006.json.gz, пересчёт — python -m app.modules.validation.grader_check report.
       </p>
