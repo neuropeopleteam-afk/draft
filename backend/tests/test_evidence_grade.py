@@ -54,7 +54,15 @@ def test_verify_quote_rejects_paraphrase_invented_and_short():
     assert EV.verify_quote("гонка данных при одновременной записи", a) == {"ok": False, "how": None,
                                                                          "why": "not_found"}
     assert EV.verify_quote("используется SELECT FOR UPDATE и уровень SERIALIZABLE", a)["why"] == "not_found"
-    assert EV.verify_quote("читают остаток одновременно блокировка строки", a)["why"] == "not_found"  # склейка
+    # нечёткого совпадения нет: склейка без многоточия, обратный порядок, пропуск или замена слова — не дословно
+    assert EV.verify_quote("читают остаток одновременно блокировка строки", a)["why"] == "not_found"
+    assert EV.verify_quote("блокировка строки два запроса читают остаток", a)["why"] == "not_found"
+    assert EV.verify_quote("два запроса не читают остаток одновременно", a)["why"] == "not_found"  # смысл обратный
+    long_a = "Итак, функция `daily_revenue` должна принять три параметра: `orders`, `day` и `timezone`."
+    assert EV.verify_quote("функция должна принять три параметра: orders, day и timezone", long_a)["ok"] is False
+    assert EV.verify_quote("функция … должна принять три параметра: orders, day и timezone", long_a)["ok"] is False
+    assert EV.verify_quote("должна принять три параметра: orders, day и timezone", long_a)["how"] == "tokens"
+    assert EV.verify_quote("метод обязан принять три параметра: orders, day и timezone", long_a)["ok"] is False
     assert EV.verify_quote("блокировка … идемпотентность ключа", a)["why"] == "not_found"  # часть не из ответа
     assert EV.verify_quote("гонка", a)["why"] == "too_short"
     assert EV.verify_quote("", a)["why"] == "too_short"
@@ -91,6 +99,64 @@ def test_parse_reply_v3_and_v2_unchanged():
     v2 = {"criteria": {k: {"score": v["score"], "quote": v["quotes"][0]} for k, v in data["criteria"].items()}}
     p2 = G.parse_reply(v2, RUBRIC, ANSWER)  # флаг выключен — прежнее правило v2 (нечёткое совпадение, обнуление)
     assert p2["evidence"] is None and p2["criteria"]["fix"] == 0.0
+
+
+# ------------------------------------------------------------------ пробы судьи Я5 (10.10): отрицание и цитата без доказательства
+Y5_RUBRIC = {"criteria": [{"id": "x", "weight": 1, "description": "Решение о данных"}]}
+Y5_ANSWER = "данные следует удалять"
+
+
+def test_y5_negation_probes_flag_off_v2():
+    assert G.quote_supported("данные не следует удалять", Y5_ANSWER) is False  # было True: «не» короче 3 букв
+    assert G.quote_supported("данные следует удалять", "данные не следует удалять") is False  # «не» потеряно
+    assert G.quote_supported("следует удалять", "данные не следует удалять") is False
+    assert G.quote_supported("не следует удалять", "мне следует удалять данные") is False  # целыми словами
+    assert G.quote_supported("данные следует удалять", Y5_ANSWER)
+    assert G.quote_supported("сначала не удалять, потом удалить", "Сначала не удалять, а потом удалить.")
+    p = G.parse_reply({"criteria": {"x": {"score": 1, "quote": "данные не следует удалять"}}}, Y5_RUBRIC, Y5_ANSWER)
+    assert p["ok"] and p["score"] == 0.0 and p["unsupported"] == ["x"]
+    p = G.parse_reply({"criteria": {"x": 1}}, Y5_RUBRIC, Y5_ANSWER)  # число без цитаты — не полный балл
+    assert p["ok"] and p["score"] == 0.5 and p["no_quotes"] and "no_quotes" in G.doubts(p, Y5_ANSWER, 5)
+
+
+def test_y5_negation_probes_flag_on_v3():
+    v = EV.verify_quote("данные не следует удалять", Y5_ANSWER)
+    assert v == {"ok": False, "how": None, "why": "not_found"}
+    assert EV.verify_quote("данные следует удалять", "данные не следует удалять")["why"] == "not_found"
+    assert EV.verify_quote("следует удалять", "данные не следует удалять") == {"ok": False, "how": None,
+                                                                             "why": "negation"}
+    assert EV.verify_quote("следует удалять", "Не следует хранить. Следует удалять сразу.")["ok"]  # есть без «не»
+    assert EV.verify_quote("удалять следует данные", Y5_ANSWER)["why"] == "not_found"  # порядок слов
+    assert EV.verify_quote("не следует удалять", "мне следует удалять данные")["why"] == "not_found"
+    assert EV.verify_quote("исправление здесь … блокировка строки",
+                           "Исправление здесь — не блокировка строки, а очередь.")["why"] == "negation"
+    for reply in ({"x": {"score": 1, "quotes": ["данные не следует удалять"]}}, {"x": 1}):
+        p = G.parse_reply({"criteria": reply}, Y5_RUBRIC, Y5_ANSWER, version="v3")
+        assert p["ok"] and p["score"] == 0.5 and p["unsupported"] == ["x"]  # без доказательства — не полный балл
+    p = G.parse_reply({"criteria": {"x": {"score": 1, "quotes": ["данные следует удалять"]}}}, Y5_RUBRIC, Y5_ANSWER,
+                      version="v3")
+    assert p["score"] == 1.0
+
+
+def test_spans_point_to_original_answer():
+    a = "Причина —\u00a0«Гонка»: ДВА  запроса читают остаток. Ёлка ещё растёт."
+    for q in ("два запроса читают остаток", "«гонка» два запроса", "елка еще растет", "причина гонка … читают остаток"):
+        v = EV.verify_quote(q, a)
+        assert v["ok"], q
+        assert EV.tokens(" ".join(a[s:e] for s, e in v["spans"])) == EV.tokens(q), q
+    assert EV.verify_quote("«Гонка»: ДВА запроса", a)["how"] == "exact"
+
+
+def test_no_evidence_or_invalid_output_goes_to_expert(monkeypatch, net):
+    _on(monkeypatch)
+    net.on("or.test", SONNET, lambda req, b: reply(json.dumps({"criteria": {"cause": 1, "fix": 1}}), b["model"]))
+    net.on("or.test", FABLE, lambda req, b: reply("не JSON", b["model"]))
+    g = _go()  # числа без цитат: на шаг ниже, причина сомнения, скептик не ответил → эксперт
+    assert g.status == "pending" and g.score is None and g.error == "second_opinion_failed"
+    assert "no_quotes" in g.checks and g.criteria == {"cause": 0.5, "fix": 0.5}
+    net.on("or.test", SONNET, lambda req, b: reply("не JSON", b["model"]))
+    g = _go()
+    assert g.status == "pending" and g.score is None and g.error
 
 
 # ------------------------------------------------------------------ флаг

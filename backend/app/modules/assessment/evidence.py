@@ -7,10 +7,12 @@
 1. Оценщик (grader.grade_open, промпт v3) для каждого пункта с баллом выше 0 перечисляет до трёх дословных
    фрагментов ответа. verify_quote сверяет каждый фрагмент с текстом, ушедшим в модель (после вырезания ПДн):
    приводит регистр, «ё», кавычки и апострофы, тире и дефисы, неразрывные и повторные пробелы к одному виду и ищет
-   сплошное вхождение (exact), то же без знаков препинания (tokens) или, если фрагмент разбит многоточием, его куски
-   по порядку (ellipsis, в каждом куске от двух слов). Пересказ, слова не из ответа, склейка без многоточия — не
-   подтверждено (not_found); меньше двух слов или 8 букв — too_short; фрагмент от 6 слов, целиком взятый из условия
-   задания, — from_task.
+   слова фрагмента в ответе подряд, целыми словами (exact — вместе со знаками препинания, tokens — без них) или,
+   если фрагмент разбит многоточием, его куски по порядку (ellipsis, в каждом куске от двух слов). Нечёткого
+   совпадения нет: пересказ, пропущенное или добавленное слово (в том числе «не»), склейка без многоточия — не
+   подтверждено (not_found); перед найденным фрагментом в ответе стоит отрицание — negation; меньше двух слов или 8
+   букв — too_short; фрагмент от 6 слов, целиком взятый из условия задания, — from_task. У подтверждённого — позиции
+   в тексте ответа (spans).
 2. verify_criteria: неподтверждённые фрагменты отбрасываются и перечисляются (dropped); пункт с баллом выше 0, у
    которого не осталось ни одного подтверждённого фрагмента, теряет одну ступень шкалы (1 → 0,5, 0,5 → 0) и
    помечается capped. Без подтверждённого фрагмента пункт не может получить 1.
@@ -47,7 +49,8 @@ _QMAP = str.maketrans({"«": '"', "»": '"', "“": '"', "”": '"', "„": '"',
 _TOK = re.compile(r"[a-zа-я0-9_]+")
 _ELLIPSIS = re.compile(r"\s*(?:\.{3,}|…|\[\s*(?:\.{3}|…)\s*\]|\(\s*(?:\.{3}|…)\s*\))\s*")
 
-WHY_TITLES = {"not_found": "нет в ответе", "too_short": "слишком короткая", "from_task": "повторяет условие задания"}
+WHY_TITLES = {"not_found": "нет в ответе дословно", "negation": "в ответе стоит с отрицанием",
+              "too_short": "слишком короткая", "from_task": "повторяет условие задания"}
 
 
 # ------------------------------------------------------------------ нормализация и сверка (чистые функции)
@@ -58,7 +61,7 @@ def norm_text(text: str | None) -> str:
 
 
 def tokens(text: str | None) -> list[str]:
-    return _TOK.findall(norm_text(text))
+    return _toks(text)
 
 
 def _clean_quote(q: str) -> str:
@@ -68,7 +71,30 @@ def _clean_quote(q: str) -> str:
     return t.strip(" \"'.,;:").strip()
 
 
+# отрицания: слово перед цитатой или перед куском цитаты не должно их содержать — иначе цитата теряет «не» и
+# меняет смысл ответа на обратный («следует удалять» из «не следует удалять»). t — из don't, can't, isn't.
+NEG = frozenset({"не", "ни", "нет", "нельзя", "без", "not", "no", "never", "nor", "cannot", "t"})
+
+
+def _lower1(text: str | None) -> str:
+    """Посимвольно: регистр и «ё», длина строки не меняется — позиции слов совпадают с исходным ответом."""
+    return "".join(c.lower() if len(c.lower()) == 1 else c for c in (text or "")).replace("ё", "е")
+
+
+def _toks(text: str | None) -> list[str]:
+    return _TOK.findall(_lower1(text))
+
+
+def _spans(text: str) -> tuple[list[str], list[tuple[int, int]]]:
+    toks, sp = [], []
+    for m in _TOK.finditer(_lower1(text)):
+        toks.append(m.group())
+        sp.append(m.span())
+    return toks, sp
+
+
 def _find_seq(hay: list[str], needle: list[str], start: int = 0) -> int:
+    """Сплошное вхождение слов needle в hay (целые слова: «не следует» не найдётся в «мне следует»)."""
     n = len(needle)
     if not n:
         return -1
@@ -79,36 +105,73 @@ def _find_seq(hay: list[str], needle: list[str], start: int = 0) -> int:
     return -1
 
 
+def _match(at: list[str], qt: list[str], start: int = 0) -> tuple[int, bool]:
+    """Первое вхождение без отрицания прямо перед ним → (позиция | -1, встречалось ли вхождение после отрицания)."""
+    negated = False
+    i = _find_seq(at, qt, start)
+    while i >= 0:
+        if i == 0 or at[i - 1] not in NEG:
+            return i, negated
+        negated = True
+        i = _find_seq(at, qt, i + 1)
+    return -1, negated
+
+
 def verify_quote(quote: str, answer: str, task_text: str = "") -> dict:
-    """Цитата → {ok, how: exact | tokens | ellipsis | None, why: None | not_found | too_short | from_task}."""
+    """Цитата → {ok, how: exact | tokens | ellipsis | None, why: None | not_found | negation | too_short | from_task,
+    spans: [(начало, конец)] — позиции в answer}.
+
+    Подтверждена — только дословная: слова цитаты идут в ответе подряд, целыми словами (exact — совпали и знаки
+    препинания, tokens — без них), или куски цитаты, разделённые многоточием, идут в ответе по порядку (ellipsis,
+    в каждом куске от двух слов). Нечёткого совпадения нет: пропущенное, добавленное или изменённое слово, в том числе
+    «не», — not_found. Перед цитатой (или куском) в ответе стоит отрицание — negation."""
     q = _clean_quote(quote)
-    qt = _TOK.findall(q)
+    qt = _toks(q)
     if len(qt) < MIN_TOKENS or len("".join(qt)) < MIN_CHARS:
         return {"ok": False, "how": None, "why": "too_short"}
-    a = norm_text(answer)
-    at = _TOK.findall(a)
-    how = None
-    if q in a:
-        how = "exact"
-    elif _find_seq(at, qt) >= 0:
-        how = "tokens"
-    else:
-        parts = [_TOK.findall(p) for p in _ELLIPSIS.split(q)]
-        parts = [p for p in parts if p]
-        if len(parts) >= 2 and all(len(p) >= MIN_TOKENS for p in parts):
-            pos = 0
-            for p in parts:
-                i = _find_seq(at, p, pos)
-                if i < 0:
-                    break
-                pos = i + len(p)
-            else:
-                how = "ellipsis"
+    at, sp = _spans(answer or "")
+    parts = [p for p in (_toks(x) for x in _ELLIPSIS.split(q)) if p]
+    how, spans, negated = None, [], False
+    if len(parts) <= 1:
+        i, negated = _match(at, qt)
+        if i >= 0:
+            spans = [(sp[i][0], sp[i + len(qt) - 1][1])]
+            core = _ELLIPSIS.sub(" ", q).strip(" \"'.,;:")
+            how = "exact" if norm_text(answer[spans[0][0]:spans[0][1]]) == core else "tokens"
+    elif all(len(p) >= MIN_TOKENS for p in parts):
+        pos = 0
+        for p in parts:
+            i, neg = _match(at, p, pos)
+            negated = negated or neg
+            if i < 0:
+                spans = []
+                break
+            spans.append((sp[i][0], sp[i + len(p) - 1][1]))
+            pos = i + len(p)
+        else:
+            how = "ellipsis"
     if how is None:
-        return {"ok": False, "how": None, "why": "not_found"}
-    if task_text and len(qt) >= TASK_ECHO_TOKENS and _find_seq(tokens(task_text), qt) >= 0:
+        return {"ok": False, "how": None, "why": "negation" if negated else "not_found"}
+    if task_text and len(qt) >= TASK_ECHO_TOKENS and _find_seq(_toks(task_text), qt) >= 0:
         return {"ok": False, "how": how, "why": "from_task"}
-    return {"ok": True, "how": how, "why": None}
+    return {"ok": True, "how": how, "why": None, "spans": spans}
+
+
+def negation_consistent(quote: str, answer: str) -> bool:
+    """Для прежней нечёткой сверки (промпт v2, флаг выключен): слово цитаты, перед которым в цитате стоит отрицание,
+    должно хоть раз стоять с отрицанием и в ответе, и наоборот. Ловит «данные НЕ следует удалять» при ответе «данные
+    следует удалять» и «следует удалять» при ответе «не следует удалять» (находка судьи Я5, 10.10)."""
+    qt, at = _toks(quote), _toks(answer)
+    states: dict[str, set[bool]] = {}
+    for i, w in enumerate(at):
+        if w not in NEG:
+            states.setdefault(w, set()).add(i > 0 and at[i - 1] in NEG)
+    for i, w in enumerate(qt):
+        if w in NEG or w not in states:
+            continue
+        if (i > 0 and qt[i - 1] in NEG) not in states[w]:
+            return False
+    return True
 
 
 def _quotes_of(v) -> list[str]:
@@ -153,7 +216,7 @@ def verify_criteria(raw: dict, scores: dict[str, float], rubric: dict, answer: s
         for q in qs:
             v = verify_quote(q, answer, task_text)
             if v["ok"] and len(ok) < MAX_QUOTES:
-                ok.append({"text": q, "how": v["how"]})
+                ok.append({"text": q, "how": v["how"], "spans": [list(x) for x in v["spans"]]})
             elif not v["ok"]:
                 dropped.append({"text": q[:200], "why": v["why"]})
         quotes_total += len(qs)

@@ -1,0 +1,2795 @@
+{
+ "title": "Флаг GRADING_EVIDENCE выкл/вкл на одних и тех же ответах моделей (без скептика, без запросов)",
+ "date": "2026-10-10 10:57",
+ "code_sha": "a52a6ca",
+ "note": "Ответы моделей — прогоны Я2 09–10.10 (промпт v2, одна цитата на пункт); флаг вкл здесь — только код: строгая сверка цитат и шаг вниз без подтверждённой цитаты; скептик и промпт v3 — в evidence_bench.json. Эталон — модели, не люди.",
+ "sample": {
+  "n": 50,
+  "honest": 25
+ },
+ "models": {
+  "anthropic/claude-sonnet-5.5": {
+   "quotes": {
+    "answers": 406,
+    "quotes": 502,
+    "dropped": 9,
+    "dropped_why": {
+     "not_found": 7,
+     "negation": 2
+    },
+    "capped_criteria": 9,
+    "answers_changed": 8,
+    "abs_change_sum": 1.725
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.015,
+     "ci90": [
+      0.007,
+      0.024
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.991,
+     "ci90": [
+      0.971,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.006,
+     "ci90": [
+      -0.016,
+      0.003
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.96,
+     "ci90": [
+      0.88,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.03,
+     "ci90": [
+      0.009,
+      0.057
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.952,
+     "ci90": [
+      0.868,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.021,
+     "ci90": [
+      -0.051,
+      0.0
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.84,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.031,
+     "ci90": [
+      0.016,
+      0.048
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.974,
+     "ci90": [
+      0.941,
+      0.993
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.019,
+     "ci90": [
+      -0.037,
+      -0.002
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.88,
+     "ci90": [
+      0.76,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.046,
+     "ci90": [
+      0.021,
+      0.076
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.936,
+     "ci90": [
+      0.852,
+      0.99
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.034,
+     "ci90": [
+      -0.065,
+      -0.006
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.84,
+     "ci90": [
+      0.72,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "anthropic/claude-fable-5.1": {
+   "quotes": {
+    "answers": 50,
+    "quotes": 44,
+    "dropped": 3,
+    "dropped_why": {
+     "not_found": 2,
+     "negation": 1
+    },
+    "capped_criteria": 3,
+    "answers_changed": 2,
+    "abs_change_sum": 0.575
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.02,
+     "ci90": [
+      0.009,
+      0.032
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.982,
+     "ci90": [
+      0.957,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.006,
+     "ci90": [
+      -0.008,
+      0.02
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.84,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.035,
+     "ci90": [
+      0.013,
+      0.063
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.952,
+     "ci90": [
+      0.871,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.017,
+     "ci90": [
+      -0.046,
+      0.007
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.84,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.028,
+     "ci90": [
+      0.015,
+      0.043
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.983,
+     "ci90": [
+      0.955,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.009,
+     "ci90": [
+      -0.025,
+      0.008
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.84,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.051,
+     "ci90": [
+      0.025,
+      0.081
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.936,
+     "ci90": [
+      0.856,
+      0.988
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.032,
+     "ci90": [
+      -0.064,
+      -0.002
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.84,
+     "ci90": [
+      0.72,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "anthropic/claude-opus-5.5": {
+   "quotes": {
+    "answers": 50,
+    "quotes": 42,
+    "dropped": 0,
+    "dropped_why": {},
+    "capped_criteria": 0,
+    "answers_changed": 0,
+    "abs_change_sum": 0.0
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.029,
+     "ci90": [
+      0.013,
+      0.05
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.982,
+     "ci90": [
+      0.956,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.002,
+     "ci90": [
+      -0.02,
+      0.023
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.84,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.029,
+     "ci90": [
+      0.013,
+      0.05
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.982,
+     "ci90": [
+      0.956,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.002,
+     "ci90": [
+      -0.02,
+      0.023
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.84,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.04,
+     "ci90": [
+      0.019,
+      0.063
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.984,
+     "ci90": [
+      0.958,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.017,
+     "ci90": [
+      -0.045,
+      0.007
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.8,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.04,
+     "ci90": [
+      0.019,
+      0.063
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.984,
+     "ci90": [
+      0.958,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.017,
+     "ci90": [
+      -0.045,
+      0.007
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.8,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "deepseek/deepseek-v4-pro-0813": {
+   "quotes": {
+    "answers": 47,
+    "quotes": 36,
+    "dropped": 1,
+    "dropped_why": {
+     "not_found": 1
+    },
+    "capped_criteria": 1,
+    "answers_changed": 1,
+    "abs_change_sum": 0.125
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.035,
+     "ci90": [
+      0.009,
+      0.069
+     ],
+     "n": 22
+    },
+    "kappa_w": {
+     "value": 0.981,
+     "ci90": [
+      0.946,
+      1.0
+     ],
+     "n": 22
+    },
+    "bias": {
+     "value": 0.003,
+     "ci90": [
+      -0.026,
+      0.037
+     ],
+     "n": 22
+    },
+    "over_share": {
+     "value": 0.045,
+     "ci90": [
+      0,
+      0.136
+     ],
+     "n": 22
+    },
+    "exact_bin": {
+     "value": 0.909,
+     "ci90": [
+      0.773,
+      1
+     ],
+     "n": 22
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 22
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.041,
+     "ci90": [
+      0.013,
+      0.076
+     ],
+     "n": 22
+    },
+    "kappa_w": {
+     "value": 0.981,
+     "ci90": [
+      0.946,
+      1.0
+     ],
+     "n": 22
+    },
+    "bias": {
+     "value": -0.002,
+     "ci90": [
+      -0.033,
+      0.032
+     ],
+     "n": 22
+    },
+    "over_share": {
+     "value": 0.045,
+     "ci90": [
+      0,
+      0.136
+     ],
+     "n": 22
+    },
+    "exact_bin": {
+     "value": 0.909,
+     "ci90": [
+      0.773,
+      1
+     ],
+     "n": 22
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 22
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.041,
+     "ci90": [
+      0.016,
+      0.071
+     ],
+     "n": 22
+    },
+    "kappa_w": {
+     "value": 0.981,
+     "ci90": [
+      0.946,
+      1.0
+     ],
+     "n": 22
+    },
+    "bias": {
+     "value": -0.003,
+     "ci90": [
+      -0.031,
+      0.03
+     ],
+     "n": 22
+    },
+    "over_share": {
+     "value": 0.045,
+     "ci90": [
+      0,
+      0.136
+     ],
+     "n": 22
+    },
+    "exact_bin": {
+     "value": 0.909,
+     "ci90": [
+      0.773,
+      1
+     ],
+     "n": 22
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 22
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.046,
+     "ci90": [
+      0.02,
+      0.077
+     ],
+     "n": 22
+    },
+    "kappa_w": {
+     "value": 0.981,
+     "ci90": [
+      0.946,
+      1.0
+     ],
+     "n": 22
+    },
+    "bias": {
+     "value": -0.008,
+     "ci90": [
+      -0.038,
+      0.024
+     ],
+     "n": 22
+    },
+    "over_share": {
+     "value": 0.045,
+     "ci90": [
+      0,
+      0.136
+     ],
+     "n": 22
+    },
+    "exact_bin": {
+     "value": 0.909,
+     "ci90": [
+      0.773,
+      1
+     ],
+     "n": 22
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 22
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "google/gemini-3.1-pro-preview": {
+   "quotes": {
+    "answers": 50,
+    "quotes": 42,
+    "dropped": 4,
+    "dropped_why": {
+     "not_found": 3,
+     "negation": 1
+    },
+    "capped_criteria": 4,
+    "answers_changed": 3,
+    "abs_change_sum": 0.775
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.054,
+     "ci90": [
+      0.026,
+      0.086
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.975,
+     "ci90": [
+      0.944,
+      0.993
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.034,
+     "ci90": [
+      0.003,
+      0.071
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0.08,
+     "ci90": [
+      0,
+      0.2
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.88,
+     "ci90": [
+      0.76,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.08,
+     "ci90": [
+      0.046,
+      0.123
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.934,
+     "ci90": [
+      0.843,
+      0.988
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.003,
+     "ci90": [
+      -0.044,
+      0.048
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0.08,
+     "ci90": [
+      0,
+      0.2
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.84,
+     "ci90": [
+      0.68,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.051,
+     "ci90": [
+      0.024,
+      0.082
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.984,
+     "ci90": [
+      0.957,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.032,
+     "ci90": [
+      0.001,
+      0.069
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0.08,
+     "ci90": [
+      0,
+      0.2
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.92,
+     "ci90": [
+      0.8,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.082,
+     "ci90": [
+      0.047,
+      0.123
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.927,
+     "ci90": [
+      0.838,
+      0.98
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.001,
+     "ci90": [
+      -0.046,
+      0.047
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0.08,
+     "ci90": [
+      0,
+      0.2
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.8,
+     "ci90": [
+      0.64,
+      0.92
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "moonshotai/kimi-k3": {
+   "quotes": {
+    "answers": 48,
+    "quotes": 40,
+    "dropped": 4,
+    "dropped_why": {
+     "not_found": 3,
+     "negation": 1
+    },
+    "capped_criteria": 4,
+    "answers_changed": 2,
+    "abs_change_sum": 0.7
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.026,
+     "ci90": [
+      0.007,
+      0.052
+     ],
+     "n": 23
+    },
+    "kappa_w": {
+     "value": 0.973,
+     "ci90": [
+      0.942,
+      0.993
+     ],
+     "n": 23
+    },
+    "bias": {
+     "value": 0.021,
+     "ci90": [
+      0.001,
+      0.048
+     ],
+     "n": 23
+    },
+    "over_share": {
+     "value": 0.043,
+     "ci90": [
+      0,
+      0.13
+     ],
+     "n": 23
+    },
+    "exact_bin": {
+     "value": 0.87,
+     "ci90": [
+      0.739,
+      0.957
+     ],
+     "n": 23
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 23
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.051,
+     "ci90": [
+      0.013,
+      0.095
+     ],
+     "n": 23
+    },
+    "kappa_w": {
+     "value": 0.943,
+     "ci90": [
+      0.855,
+      0.992
+     ],
+     "n": 23
+    },
+    "bias": {
+     "value": -0.01,
+     "ci90": [
+      -0.055,
+      0.032
+     ],
+     "n": 23
+    },
+    "over_share": {
+     "value": 0.043,
+     "ci90": [
+      0,
+      0.13
+     ],
+     "n": 23
+    },
+    "exact_bin": {
+     "value": 0.87,
+     "ci90": [
+      0.739,
+      0.957
+     ],
+     "n": 23
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 23
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.025,
+     "ci90": [
+      0.009,
+      0.045
+     ],
+     "n": 23
+    },
+    "kappa_w": {
+     "value": 0.983,
+     "ci90": [
+      0.954,
+      1.0
+     ],
+     "n": 23
+    },
+    "bias": {
+     "value": 0.014,
+     "ci90": [
+      -0.003,
+      0.035
+     ],
+     "n": 23
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 23
+    },
+    "exact_bin": {
+     "value": 0.913,
+     "ci90": [
+      0.826,
+      1
+     ],
+     "n": 23
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 23
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.056,
+     "ci90": [
+      0.021,
+      0.099
+     ],
+     "n": 23
+    },
+    "kappa_w": {
+     "value": 0.935,
+     "ci90": [
+      0.847,
+      0.99
+     ],
+     "n": 23
+    },
+    "bias": {
+     "value": -0.016,
+     "ci90": [
+      -0.062,
+      0.022
+     ],
+     "n": 23
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 23
+    },
+    "exact_bin": {
+     "value": 0.826,
+     "ci90": [
+      0.696,
+      0.957
+     ],
+     "n": 23
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 23
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "openai/gpt-6.1-sol-pro": {
+   "quotes": {
+    "answers": 50,
+    "quotes": 44,
+    "dropped": 0,
+    "dropped_why": {},
+    "capped_criteria": 0,
+    "answers_changed": 0,
+    "abs_change_sum": 0.0
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.018,
+     "ci90": [
+      0.007,
+      0.029
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.965,
+     "ci90": [
+      0.926,
+      0.99
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.003,
+     "ci90": [
+      -0.01,
+      0.015
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.84,
+     "ci90": [
+      0.72,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.018,
+     "ci90": [
+      0.007,
+      0.029
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.965,
+     "ci90": [
+      0.926,
+      0.99
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": 0.003,
+     "ci90": [
+      -0.01,
+      0.015
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.84,
+     "ci90": [
+      0.72,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.036,
+     "ci90": [
+      0.018,
+      0.056
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.975,
+     "ci90": [
+      0.942,
+      0.993
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.015,
+     "ci90": [
+      -0.038,
+      0.008
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.88,
+     "ci90": [
+      0.76,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.036,
+     "ci90": [
+      0.018,
+      0.056
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.975,
+     "ci90": [
+      0.942,
+      0.993
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.015,
+     "ci90": [
+      -0.038,
+      0.008
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.88,
+     "ci90": [
+      0.76,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "openai/gpt-6-astra-pro": {
+   "quotes": {
+    "answers": 50,
+    "quotes": 44,
+    "dropped": 1,
+    "dropped_why": {
+     "not_found": 1
+    },
+    "capped_criteria": 1,
+    "answers_changed": 1,
+    "abs_change_sum": 0.2
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.03,
+     "ci90": [
+      0.013,
+      0.052
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.965,
+     "ci90": [
+      0.924,
+      0.99
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.007,
+     "ci90": [
+      -0.03,
+      0.014
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.84,
+     "ci90": [
+      0.72,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.038,
+     "ci90": [
+      0.013,
+      0.069
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.937,
+     "ci90": [
+      0.858,
+      0.988
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.016,
+     "ci90": [
+      -0.048,
+      0.013
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.84,
+     "ci90": [
+      0.72,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.032,
+     "ci90": [
+      0.017,
+      0.05
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.974,
+     "ci90": [
+      0.943,
+      0.992
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.018,
+     "ci90": [
+      -0.036,
+      0.002
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.88,
+     "ci90": [
+      0.76,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.04,
+     "ci90": [
+      0.018,
+      0.069
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.947,
+     "ci90": [
+      0.87,
+      0.992
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.026,
+     "ci90": [
+      -0.056,
+      0.0
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.88,
+     "ci90": [
+      0.76,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "qwen/qwen3.8-2.4t-a95b": {
+   "quotes": {
+    "answers": 42,
+    "quotes": 20,
+    "dropped": 0,
+    "dropped_why": {},
+    "capped_criteria": 0,
+    "answers_changed": 0,
+    "abs_change_sum": 0.0
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.015,
+     "ci90": [
+      0.004,
+      0.027
+     ],
+     "n": 17
+    },
+    "kappa_w": {
+     "value": 1.0,
+     "ci90": [
+      1.0,
+      1.0
+     ],
+     "n": 17
+    },
+    "bias": {
+     "value": -0.015,
+     "ci90": [
+      -0.027,
+      -0.004
+     ],
+     "n": 17
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 17
+    },
+    "exact_bin": {
+     "value": 1,
+     "ci90": [
+      1,
+      1
+     ],
+     "n": 17
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 3,
+     "n": 3
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 17
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.015,
+     "ci90": [
+      0.004,
+      0.027
+     ],
+     "n": 17
+    },
+    "kappa_w": {
+     "value": 1.0,
+     "ci90": [
+      1.0,
+      1.0
+     ],
+     "n": 17
+    },
+    "bias": {
+     "value": -0.015,
+     "ci90": [
+      -0.027,
+      -0.004
+     ],
+     "n": 17
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 17
+    },
+    "exact_bin": {
+     "value": 1,
+     "ci90": [
+      1,
+      1
+     ],
+     "n": 17
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 3,
+     "n": 3
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 17
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.013,
+     "ci90": [
+      0.003,
+      0.023
+     ],
+     "n": 17
+    },
+    "kappa_w": {
+     "value": 1.0,
+     "ci90": [
+      1.0,
+      1.0
+     ],
+     "n": 17
+    },
+    "bias": {
+     "value": -0.013,
+     "ci90": [
+      -0.023,
+      -0.003
+     ],
+     "n": 17
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 17
+    },
+    "exact_bin": {
+     "value": 1,
+     "ci90": [
+      1,
+      1
+     ],
+     "n": 17
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 3,
+     "n": 3
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 17
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.013,
+     "ci90": [
+      0.003,
+      0.023
+     ],
+     "n": 17
+    },
+    "kappa_w": {
+     "value": 1.0,
+     "ci90": [
+      1.0,
+      1.0
+     ],
+     "n": 17
+    },
+    "bias": {
+     "value": -0.013,
+     "ci90": [
+      -0.023,
+      -0.003
+     ],
+     "n": 17
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 17
+    },
+    "exact_bin": {
+     "value": 1,
+     "ci90": [
+      1,
+      1
+     ],
+     "n": 17
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 3,
+     "n": 3
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 17
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "qwen/qwen3.8-27b": {
+   "quotes": {
+    "answers": 46,
+    "quotes": 33,
+    "dropped": 1,
+    "dropped_why": {
+     "not_found": 1
+    },
+    "capped_criteria": 1,
+    "answers_changed": 1,
+    "abs_change_sum": 0.2
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.021,
+     "ci90": [
+      0.004,
+      0.04
+     ],
+     "n": 21
+    },
+    "kappa_w": {
+     "value": 0.99,
+     "ci90": [
+      0.968,
+      1.0
+     ],
+     "n": 21
+    },
+    "bias": {
+     "value": 0.006,
+     "ci90": [
+      -0.011,
+      0.028
+     ],
+     "n": 21
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 21
+    },
+    "exact_bin": {
+     "value": 0.952,
+     "ci90": [
+      0.857,
+      1
+     ],
+     "n": 21
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 4,
+     "n": 4
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 21
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.03,
+     "ci90": [
+      0.01,
+      0.054
+     ],
+     "n": 21
+    },
+    "kappa_w": {
+     "value": 0.98,
+     "ci90": [
+      0.951,
+      1.0
+     ],
+     "n": 21
+    },
+    "bias": {
+     "value": -0.003,
+     "ci90": [
+      -0.029,
+      0.023
+     ],
+     "n": 21
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 21
+    },
+    "exact_bin": {
+     "value": 0.905,
+     "ci90": [
+      0.81,
+      1
+     ],
+     "n": 21
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 4,
+     "n": 4
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 21
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.027,
+     "ci90": [
+      0.009,
+      0.05
+     ],
+     "n": 21
+    },
+    "kappa_w": {
+     "value": 0.99,
+     "ci90": [
+      0.968,
+      1.0
+     ],
+     "n": 21
+    },
+    "bias": {
+     "value": 0.005,
+     "ci90": [
+      -0.015,
+      0.032
+     ],
+     "n": 21
+    },
+    "over_share": {
+     "value": 0.048,
+     "ci90": [
+      0,
+      0.143
+     ],
+     "n": 21
+    },
+    "exact_bin": {
+     "value": 0.952,
+     "ci90": [
+      0.857,
+      1
+     ],
+     "n": 21
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 4,
+     "n": 4
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 21
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.036,
+     "ci90": [
+      0.014,
+      0.063
+     ],
+     "n": 21
+    },
+    "kappa_w": {
+     "value": 0.98,
+     "ci90": [
+      0.951,
+      1.0
+     ],
+     "n": 21
+    },
+    "bias": {
+     "value": -0.004,
+     "ci90": [
+      -0.031,
+      0.026
+     ],
+     "n": 21
+    },
+    "over_share": {
+     "value": 0.048,
+     "ci90": [
+      0,
+      0.143
+     ],
+     "n": 21
+    },
+    "exact_bin": {
+     "value": 0.905,
+     "ci90": [
+      0.81,
+      1
+     ],
+     "n": 21
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 4,
+     "n": 4
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 21
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "x-ai/grok-4.7": {
+   "quotes": {
+    "answers": 50,
+    "quotes": 42,
+    "dropped": 5,
+    "dropped_why": {
+     "not_found": 5
+    },
+    "capped_criteria": 5,
+    "answers_changed": 4,
+    "abs_change_sum": 0.925
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.017,
+     "ci90": [
+      0.007,
+      0.028
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.991,
+     "ci90": [
+      0.974,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.007,
+     "ci90": [
+      -0.019,
+      0.005
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.96,
+     "ci90": [
+      0.88,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.049,
+     "ci90": [
+      0.024,
+      0.079
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.971,
+     "ci90": [
+      0.937,
+      0.992
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.044,
+     "ci90": [
+      -0.076,
+      -0.018
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.88,
+     "ci90": [
+      0.76,
+      0.96
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.024,
+     "ci90": [
+      0.012,
+      0.04
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.992,
+     "ci90": [
+      0.972,
+      1.0
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.02,
+     "ci90": [
+      -0.036,
+      -0.007
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.96,
+     "ci90": [
+      0.88,
+      1
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.061,
+     "ci90": [
+      0.035,
+      0.092
+     ],
+     "n": 25
+    },
+    "kappa_w": {
+     "value": 0.954,
+     "ci90": [
+      0.914,
+      0.981
+     ],
+     "n": 25
+    },
+    "bias": {
+     "value": -0.057,
+     "ci90": [
+      -0.089,
+      -0.03
+     ],
+     "n": 25
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 25
+    },
+    "exact_bin": {
+     "value": 0.8,
+     "ci90": [
+      0.68,
+      0.92
+     ],
+     "n": 25
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 5,
+     "n": 5
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 25
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  },
+  "z-ai/glm-5.3": {
+   "quotes": {
+    "answers": 46,
+    "quotes": 37,
+    "dropped": 3,
+    "dropped_why": {
+     "not_found": 2,
+     "negation": 1
+    },
+    "capped_criteria": 3,
+    "answers_changed": 3,
+    "abs_change_sum": 0.55
+   },
+   "sample_off": {
+    "mae": {
+     "value": 0.033,
+     "ci90": [
+      0.01,
+      0.063
+     ],
+     "n": 21
+    },
+    "kappa_w": {
+     "value": 0.964,
+     "ci90": [
+      0.918,
+      0.991
+     ],
+     "n": 21
+    },
+    "bias": {
+     "value": 0.027,
+     "ci90": [
+      0.003,
+      0.058
+     ],
+     "n": 21
+    },
+    "over_share": {
+     "value": 0.048,
+     "ci90": [
+      0,
+      0.143
+     ],
+     "n": 21
+    },
+    "exact_bin": {
+     "value": 0.81,
+     "ci90": [
+      0.667,
+      0.952
+     ],
+     "n": 21
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 4,
+     "n": 4
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 21
+    }
+   },
+   "sample_on": {
+    "mae": {
+     "value": 0.053,
+     "ci90": [
+      0.023,
+      0.085
+     ],
+     "n": 21
+    },
+    "kappa_w": {
+     "value": 0.95,
+     "ci90": [
+      0.899,
+      0.981
+     ],
+     "n": 21
+    },
+    "bias": {
+     "value": 0.001,
+     "ci90": [
+      -0.034,
+      0.04
+     ],
+     "n": 21
+    },
+    "over_share": {
+     "value": 0.048,
+     "ci90": [
+      0,
+      0.143
+     ],
+     "n": 21
+    },
+    "exact_bin": {
+     "value": 0.762,
+     "ci90": [
+      0.619,
+      0.905
+     ],
+     "n": 21
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 4,
+     "n": 4
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 21
+    }
+   },
+   "sample_off_three": {
+    "mae": {
+     "value": 0.024,
+     "ci90": [
+      0.007,
+      0.044
+     ],
+     "n": 21
+    },
+    "kappa_w": {
+     "value": 0.982,
+     "ci90": [
+      0.955,
+      1.0
+     ],
+     "n": 21
+    },
+    "bias": {
+     "value": 0.017,
+     "ci90": [
+      0.0,
+      0.04
+     ],
+     "n": 21
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 21
+    },
+    "exact_bin": {
+     "value": 0.905,
+     "ci90": [
+      0.81,
+      1
+     ],
+     "n": 21
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 4,
+     "n": 4
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 21
+    }
+   },
+   "sample_on_three": {
+    "mae": {
+     "value": 0.05,
+     "ci90": [
+      0.024,
+      0.077
+     ],
+     "n": 21
+    },
+    "kappa_w": {
+     "value": 0.952,
+     "ci90": [
+      0.907,
+      0.981
+     ],
+     "n": 21
+    },
+    "bias": {
+     "value": -0.009,
+     "ci90": [
+      -0.042,
+      0.024
+     ],
+     "n": 21
+    },
+    "over_share": {
+     "value": 0,
+     "ci90": [
+      0,
+      0
+     ],
+     "n": 21
+    },
+    "exact_bin": {
+     "value": 0.762,
+     "ci90": [
+      0.619,
+      0.905
+     ],
+     "n": 21
+    },
+    "attacks_passed": 0,
+    "attacks_n": 25,
+    "order_strict": {
+     "value": 4,
+     "n": 4
+    },
+    "expert_honest": {
+     "value": 0,
+     "n": 21
+    }
+   },
+   "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели"
+  }
+ },
+ "full_sonnet": {
+  "n": 406,
+  "reference": "gpt-oss-120b (панель 06.10, одна модель)",
+  "off": {
+   "mae": {
+    "value": 0.112,
+    "ci90": [
+     0.098,
+     0.126
+    ],
+    "n": 261
+   },
+   "kappa_w": {
+    "value": 0.841,
+    "ci90": [
+     0.805,
+     0.871
+    ],
+    "n": 261
+   },
+   "bias": {
+    "value": -0.079,
+    "ci90": [
+     -0.096,
+     -0.063
+    ],
+    "n": 261
+   },
+   "over_share": {
+    "value": 0.011,
+    "ci90": [
+     0.004,
+     0.023
+    ],
+    "n": 261
+   },
+   "exact_bin": {
+    "value": 0.609,
+    "ci90": [
+     0.559,
+     0.655
+    ],
+    "n": 261
+   },
+   "attacks_passed": 0,
+   "attacks_n": 145,
+   "order_strict": {
+    "value": 29,
+    "n": 29
+   },
+   "expert_honest": {
+    "value": 0,
+    "n": 261
+   }
+  },
+  "on": {
+   "mae": {
+    "value": 0.118,
+    "ci90": [
+     0.105,
+     0.133
+    ],
+    "n": 261
+   },
+   "kappa_w": {
+    "value": 0.826,
+    "ci90": [
+     0.789,
+     0.857
+    ],
+    "n": 261
+   },
+   "bias": {
+    "value": -0.085,
+    "ci90": [
+     -0.103,
+     -0.069
+    ],
+    "n": 261
+   },
+   "over_share": {
+    "value": 0.011,
+    "ci90": [
+     0.004,
+     0.023
+    ],
+    "n": 261
+   },
+   "exact_bin": {
+    "value": 0.59,
+    "ci90": [
+     0.54,
+     0.64
+    ],
+    "n": 261
+   },
+   "attacks_passed": 0,
+   "attacks_n": 145,
+   "order_strict": {
+    "value": 29,
+    "n": 29
+   },
+   "expert_honest": {
+    "value": 0,
+    "n": 261
+   }
+  },
+  "quotes": {
+   "answers": 406,
+   "quotes": 502,
+   "dropped": 9,
+   "dropped_why": {
+    "not_found": 7,
+    "negation": 2
+   },
+   "capped_criteria": 9,
+   "answers_changed": 8,
+   "abs_change_sum": 1.7249999999999999
+  }
+ }
+}
