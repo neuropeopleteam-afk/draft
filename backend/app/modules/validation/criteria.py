@@ -383,6 +383,21 @@ def _sus(db) -> dict | None:
     return s if s.get("n") else None
 
 
+def _ru_date(iso: str | None) -> str | None:
+    """ISO-время → «05.10.2026» по Москве (дата последней анкеты в подписи SUS)."""
+    if not iso:
+        return None
+    from datetime import datetime, timedelta, timezone
+
+    try:
+        dt = datetime.fromisoformat(iso)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone(timedelta(hours=3))).strftime("%d.%m.%Y")
+
+
 def resolve(spec: dict, db=None) -> dict:
     """«Чем доказано» → значение с интервалом и подписью или ссылка (нет расчёта — нет числа)."""
     kind = spec["kind"]
@@ -395,9 +410,15 @@ def resolve(spec: dict, db=None) -> dict:
         if not s:
             return {"kind": "link", "label": "Анкета SUS: ответов на этом стенде пока нет", "anchor": spec["anchor"],
                     "missing": True}
+        if not s.get("enough", s["n"] >= 5):  # n < 5: число не результат, только «недостаточно ответов» с датой
+            when = _ru_date(s.get("updated_at"))
+            return {"kind": "link", "label": f"Анкета SUS: пока недостаточно ответов (n = {s['n']}{', на ' + when if when else ''})"
+                    " — балл не показываем", "anchor": spec["anchor"], "missing": True}
         return {"kind": "metric", "label": spec["label"], "fmt": "num1", "value": s["mean"], "ci": s.get("ci95"),
                 "vs": {"label": "среднее по отрасли", "value": s.get("benchmark"), "fmt": "num1"}, "anchor": spec["anchor"],
-                "note": "из 100; живые данные этого стенда, демо-учётки жюри включены",
+                "note": "из 100; живые данные этого стенда, демо-учётки жюри включены"
+                        + (f" (их ответов {s['demo_n']}: в т. ч. автотесты и модельные персоны — модель, не люди)"
+                           if s.get("demo_n") else ""),
                 "signature": {"world": "живые анкеты этого стенда", "n": s["n"], "generated_at": s.get("updated_at")}}
     d = _load(spec["src"])
     value = _get(d, spec["path"]) if d else None
