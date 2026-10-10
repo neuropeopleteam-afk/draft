@@ -63,7 +63,8 @@ DOCS_MD = REPO / "docs" / "validation" / "TEST_RETEST.md"
 
 SEED = 20261006          # мир симуляции теста /validation (make validate, бенчмарк подбора — тот же seed)
 LEVELS = ("none",) + tuple(GRADE_ORDER)   # 0 — без категории, 1 — Стажёр, …, 4 — Senior
-LEVEL_RU = {"none": "без категории", "intern": "Стажёр", "junior": "Junior", "middle": "Middle", "senior": "Senior"}
+LEVEL_RU = {"none": "без категории", "intern": "Стажёр", "junior": "Junior", "middle": "Middle", "senior": "Senior",
+            "lead": "Lead", "principal": "Principal"}  # Lead/Principal — прогон с флагом GRADES_EXT_ENABLED
 P_FOLLOW_HINT = 0.5      # доля заявляющих грейд по подсказке опроса (остальные — по самооценке)
 SELF_SD = 0.6            # шум самооценки, как в assessment_bank.simulation.make_population
 BORDER = 0.25            # «у порога»: |θ − ближайший порог| < 0,25 (как у FSP Talent)

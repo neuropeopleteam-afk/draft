@@ -1,4 +1,5 @@
-"""Демо-данные: 500 кандидатов, 10 работодателей, 15 потребностей.
+"""Демо-данные: 500 кандидатов, 10 работодателей, 15 потребностей (с флагом GRADES_EXT_ENABLED — плюс модельные
+Lead/Principal с номера 501 в направлениях, где эти уровни проверяет банк).
 
 Исходные 150 кандидатов и их идентификаторы сохраняются; extend_candidates добавляет только 151..500.
 Обе аудитории: школьники/студенты ФСП и опытные специалисты. Все результаты — синтетическое демо,
@@ -51,7 +52,12 @@ from app.modules.profiles.refs import new_public_ref
 DIRECTIONS = ["backend", "frontend", "data_ml", "qa", "security"]
 GRADES = ["junior", "middle", "senior"]  # 150 исходных демо-кандидатов (по 10 на категорию); их состав не меняется
 CUT = GRADE_CUTS
-EXP = {"intern": (0.0, 0.4), "junior": (0.5, 1.9), "middle": (2.0, 4.9), "senior": (5.0, 11.0)}
+EXP = {"intern": (0.0, 0.4), "junior": (0.5, 1.9), "middle": (2.0, 4.9), "senior": (5.0, 11.0),
+       "lead": (7.5, 14.0), "principal": (10.0, 18.0)}  # Lead/Principal — только модельные кандидаты под флагом
+# Lead/Principal (флаг GRADES_EXT_ENABLED): модельные демо-кандидаты с номерами после 500 — только в направлениях, где
+# эти уровни проверяет банк (catalog.levels); без флага их нет, состав 500 прежних не меняется
+EXT_FIRST = 501
+EXT_PER_DIRECTION = {"lead": 3, "principal": 2}
 # Стажёры — новые демо-кандидаты поверх исходных 150 (отдельный поток случайности, номера с 151)
 INTERN_PER_DIRECTION = 2
 INTERN_NEEDS = [
@@ -157,17 +163,20 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
     name = f"{rnd.choice(FIRST_F if female else FIRST_M)} {last}"
     exp = round(rnd.uniform(*EXP[grade]), 1)
     core = core_override or CORE[direction]
-    k = {"intern": 3, "junior": 4, "middle": 6, "senior": 8}[grade]
+    k = {"intern": 3, "junior": 4, "middle": 6, "senior": 8, "lead": 9, "principal": 10}[grade]
     stack = list(dict.fromkeys(core[:3] + rnd.sample(core[3:], min(len(core) - 3, k - 2))))[:k]
     roles = ["developer" if direction != "qa" else "tester"]
-    if grade == "senior":
+    if grade in ("senior", "lead", "principal"):
         roles += rnd.sample([r for r in ROLES[direction] if r not in roles], 1)
+    if grade in ("lead", "principal"):  # модельный Lead/Principal: роль лидера команды или архитектора
+        roles += [r for r in ("tech_lead", "team_lead", "architect") if r in ROLES[direction]][:1]
     if direction in ("data_ml", "security") and rnd.random() < 0.4:
         roles.append(rnd.choice(["researcher", "analyst"]))
     roles = list(dict.fromkeys(roles))
     city = rnd.choice(CITIES)
     wf = rnd.choice([WorkFormat.remote, WorkFormat.remote, WorkFormat.hybrid, WorkFormat.office, WorkFormat.any])
-    base = {"intern": 45_000, "junior": 70_000, "middle": 160_000, "senior": 280_000}[grade]
+    base = {"intern": 45_000, "junior": 70_000, "middle": 160_000, "senior": 280_000, "lead": 380_000,
+            "principal": 520_000}[grade]
     p = CandidateProfile(
         user_id=u.id, full_name=name, phone=f"+7 900 {rnd.randint(100, 999)}-{rnd.randint(10, 99)}-{rnd.randint(10, 99)}",
         telegram=f"@demo_{idx:03d}", city=city, work_format=wf, relocation=rnd.random() < 0.3, experience_years=exp,
@@ -176,6 +185,10 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
         headline=f"{direction} · {grade} (демо)" if status == "confirmed" else f"{direction} (демо)",
     )
     db.add(p)
+    if grade in ("lead", "principal"):
+        p.about = (f"Модельный кандидат уровня {grade.capitalize()} — модель, не люди: синтетический профиль для показа "
+                   "подбора на уровни Lead и Principal; результат теста тоже модельный.")
+        p.privacy = {"demo_model": True}
     if audience:
         p.about = {"school": "Школьник, участник ФСП. Учебные проекты и соревнования (синтетическое демо).",
                    "student": "Студент, участник ФСП. Стажировка и командные проекты (синтетическое демо).",
@@ -215,6 +228,11 @@ def _candidate(db: Session, rnd: random.Random, idx: int, direction: str, grade:
         theta = round(CUT[grade] + 0.85 * se + rnd.uniform(0.02, 0.45), 2)
         answered = 16
         correct = max(5, int(round(answered * 0.45 + rnd.randint(-2, 2))))
+    if grade in ("lead", "principal") and confirmed:  # модельный Lead/Principal: P(θ ≥ порога) ≥ 0,8, полный тест,
+        # θ̂ ниже порога следующего уровня (иначе уровень был бы выше)
+        se = round(rnd.uniform(0.36, 0.46), 2)
+        theta = round(CUT[grade] + 0.85 * se + rnd.uniform(0.02, 0.2), 2)
+        answered = 18
     ts = TestSession(user_id=u.id, survey_id=survey.id, direction_id=direction, claimed_grade_id=grade,
                      status=TestSessionStatus.finished, form_seed=rnd.randint(1, 2**30), is_sandbox=False,
                      started_at=created, finished_at=created + timedelta(minutes=rnd.randint(18, 40)),
@@ -327,8 +345,37 @@ def extend_candidates(db: Session, rng_seed: int = 20261007, *, base_seed: int =
         if added % 50 == 0:
             db.flush()
     db.flush()
+    ext = ext_candidates(db, rng_seed, pwd_hash, existing)
+    added += ext
     # existing уже включает добавленных выше 151…171; audiences — только расширение И8
-    return {"added": added, "total": len(existing) + sum(audiences.values()), "audiences_added": audiences}
+    return {"added": added, "total": len(existing) + sum(audiences.values()) + ext, "audiences_added": audiences,
+            "ext_added": ext}
+
+
+def ext_candidates(db: Session, rng_seed: int, pwd_hash: str, existing: set[str]) -> int:
+    """Модельные демо-кандидаты Lead/Principal (флаг GRADES_EXT_ENABLED): номера с 501, по направлению — 3 Lead и
+    2 Principal, только если уровень виден в направлении (в банке есть его проверенные семейства). Идемпотентно:
+    номер закреплён за (направление, уровень, i), отсутствующие добавляются после появления семейств в банке."""
+    from app.modules.catalog import levels
+    from app.modules.catalog.levels_seed import ensure
+
+    if not levels.enabled():
+        return 0
+    ensure(db)  # грейды и категории Lead/Principal в справочнике
+    added = 0
+    idx = EXT_FIRST
+    for d in DIRECTIONS:
+        for g, n in EXT_PER_DIRECTION.items():
+            for i in range(n):
+                email = f"demo-candidate-{idx:03d}@demo.invalid"
+                if email not in existing and levels.is_available(d, g):
+                    rnd = random.Random(rng_seed + 7000 + idx)
+                    _candidate(db, rnd, idx, d, g, pwd_hash, with_fsp=(i == 0))
+                    existing.add(email)
+                    added += 1
+                idx += 1
+    db.flush()
+    return added
 
 
 PROVISIONAL_DEMO = (("backend", True), ("frontend", False), ("data_ml", False), ("qa", True), ("security", False))

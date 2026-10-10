@@ -27,14 +27,14 @@ from app.core.db import as_aware, utcnow
 from app.core.errors import api_error
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES
+from app.modules.catalog.seed_data import DIRECTIONS, GRADES, GRADE_ORDER as _PLATFORM_GRADE_ORDER
 from app.modules.profiles.facts import DISCIPLINE_TITLES, LEVEL_TITLES, card, load_bundles
 from app.modules.profiles.models import CandidateProfile
 from app.passport import crypto
 from app.passport.models import GradePassport, PassportKey
 
 log = logging.getLogger(__name__)
-GRADE_ORDER = ["junior", "middle", "senior"]
+GRADE_ORDER = [g for g in _PLATFORM_GRADE_ORDER if g != "intern"]  # junior … senior (с флагом — и Lead, Principal)
 STATUS_TITLES = {"confirmed": "подтверждён", "preliminary": "предварительно"}
 REASONS = {
     "superseded": "заменён новым паспортом после пересдачи или обновления данных",
