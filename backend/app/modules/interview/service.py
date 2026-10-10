@@ -81,9 +81,18 @@ def _limits(db: Session, user: User, jkey: str | None) -> None:
         *live, InterviewSession.created_at >= now - timedelta(days=1)))
     if day >= s.interview_total_day:
         raise api_error(429, "interview_daily_cap", "Дневной лимит сессий исчерпан — попробуйте завтра")
+    hour = db.scalar(select(func.count()).select_from(InterviewSession).where(
+        *live, InterviewSession.jury_scope == jkey, InterviewSession.created_at >= now - timedelta(hours=1))) if jkey else 0
+    spent = sum(float((c or {}).get("usd") or 0) for c in db.scalars(select(InterviewSession.cost).where(
+        InterviewSession.created_at >= now - timedelta(days=1), InterviewSession.cost.is_not(None)).limit(5000)))
+    try:
+        pt.get_port().check_limits(bool(jkey), hour, spent)  # лимиты движка: жюри 1 в час, дневной потолок расходов
+    except Exception as e:  # noqa: BLE001 — EngineError движка
+        code = getattr(e, "code", "interview_busy")
+        raise api_error(429, code if code in ("jury_limit", "daily_cap") else "interview_busy",
+                        "Дневной потолок расходов на интервью исчерпан — попробуйте завтра" if code == "daily_cap"
+                        else "В песочнице жюри — один живой запуск в час; готовый пример — ниже") from None
     if jkey:
-        hour = db.scalar(select(func.count()).select_from(InterviewSession).where(
-            *live, InterviewSession.jury_scope == jkey, InterviewSession.created_at >= now - timedelta(hours=1)))
         if hour >= s.interview_jury_per_hour:
             raise api_error(429, "jury_limit", "В песочнице жюри — один живой запуск в час; готовый пример — ниже")
         return
@@ -138,21 +147,24 @@ def conversation(row: InterviewSession) -> dict | None:
         return None
     st = row.state or {}
     port = pt.get_port()
+    stub = port.is_stub()
     return {"n": st.get("n"), "question": st.get("q"), "asked": len([r for r in row.transcript or []
                                                                       if r.get("who") == "interviewer"]),
             "max_questions": row.max_questions, "deadline": _deadline(row), "channels": port.channels(),
-            "engine": port.name, "sdk_url": get_settings().interview_anam_sdk_url,
-            "hint": _stub_hint(row) if port.name == "stub" else None}
+            "engine": "stub" if stub else "engine", "sdk_url": get_settings().interview_anam_sdk_url,
+            # заглушка: начало письменного ответа на задание текущего вопроса — «подставить» в e2e
+            "hint": port.hint(st.get("engine") or {}, int(st.get("n") or 0)) if stub and st.get("engine") else None}
 
 
-def _stub_hint(row: InterviewSession) -> str | None:
-    """Заглушка: начало письменного ответа на задание текущего вопроса — «подставить за кандидата» в e2e."""
-    st = row.state or {}
-    plan = (st.get("engine") or {}).get("plan") or []
-    n = int(st.get("n") or 0)
-    tid = plan[n - 1].get("task_id") if 0 < n <= len(plan) else None
-    t = next((x for x in (st.get("ctx") or {}).get("tasks") or [] if x.get("id") == tid), None)
-    return (t.get("answer") or "")[:300] if t else None
+def add_cost(row: InterviewSession, kind: str, usd: float) -> None:
+    """Доли стоимости, которые считает продукт (распознавание, голос), — к итогу движка."""
+    if not usd:
+        return
+    st = dict(row.state or {})
+    extra = dict(st.get("cost_extra") or {})
+    extra[kind] = round(float(extra.get(kind) or 0) + float(usd), 6)
+    st["cost_extra"] = extra
+    row.state = st
 
 
 def begin(db: Session, row: InterviewSession, channel: str) -> InterviewSession:
@@ -163,9 +175,11 @@ def begin(db: Session, row: InterviewSession, channel: str) -> InterviewSession:
     st = dict(row.state or {})
     port = pt.get_port()
     try:
-        est, q = port.start(row.mode, st.get("ctx") or {}, max_questions=row.max_questions, minutes=row.minutes,
-                            name=st.pop("name", "") or "кандидат")
-    except pt.EngineUnavailable:
+        est, q, _ = port.start(row.mode, st.get("ctx") or {}, max_questions=row.max_questions, minutes=row.minutes,
+                               name=st.pop("name", "") or "кандидат", jury=bool(row.jury_scope), channel=channel)
+    except pt.EngineUnavailable as e:
+        if str(e) == "insufficient_context":
+            raise api_error(422, "insufficient_context", "Защищать нечего: нет развёрнутых ответов от 120 знаков") from None
         raise api_error(503, "interview_unavailable", "Интервьюер сейчас недоступен — попробуйте позже") from None
     row.state = {**st, "engine": est, "n": 1, "q": q, "port": port.name, "channels_log": [channel]}
     row.engine = port.name
@@ -189,19 +203,22 @@ def answer(db: Session, row: InterviewSession, text: str, channel: str) -> Inter
     if not log_ or log_[-1] != channel:
         st["channels_log"] = log_ + [channel]
     late = _deadline(row) is not None and utcnow() > _deadline(row)
-    q = None
+    q, fin = None, True
     if not late and n < row.max_questions + 2:
         try:
-            est, q = pt.get_port().reply(st.get("engine") or {}, t)
+            est, q, fin = pt.get_port().reply(st.get("engine") or {}, t, channel)
             st["engine"] = est
         except pt.EngineUnavailable:
-            q = None
-    if q:
+            q, fin = None, True
+    if q and not fin:
         st.update(n=n + 1, q=q)
         row.transcript = tr + [{"who": "interviewer", "text": q, "n": n + 1}]
         row.state = st
         db.commit()
         return row
+    if q:  # прощание ведущего — в расшифровку
+        tr = tr + [{"who": "interviewer", "text": q, "n": None}]
+        row.transcript = tr
     row.state = {**st, "q": None}
     _close(db, row, inline=pt.get_port().name == "stub")
     return row
@@ -269,10 +286,17 @@ def apply_result(db: Session, row: InterviewSession, raw: dict) -> None:
         verdict = "insufficient"
     score = raw.get("score")
     row.verdict, row.score = verdict, float(score) if isinstance(score, (int, float)) else None
-    row.cost = raw.get("cost") if isinstance(raw.get("cost"), dict) else None
+    cost = dict(raw.get("cost") or {}) if isinstance(raw.get("cost"), dict) else {}
+    for k, v in ((row.state or {}).get("cost_extra") or {}).items():
+        cost[k] = round(float(cost.get(k) or 0) + float(v), 6)
+    if cost:
+        cost["usd"] = round(sum(float(cost.get(k) or 0) for k in ("llm_usd", "tts_usd", "stt_usd", "avatar_usd"))
+                            or float(cost.get("usd") or 0), 6)
+    row.cost = cost or None
     row.result = {"summary": str(raw.get("summary") or "")[:1200], "questions": qs,
                   "flags": [str(f)[:600] for f in raw.get("flags") or [] if f][:8], "coverage": raw.get("coverage"),
                   "stub": bool(raw.get("stub")), "quotes_dropped": dropped,
+                  "quotes_removed_by_engine": int(raw.get("removed_quotes") or 0), "source": raw.get("source"),
                   "channels": (row.state or {}).get("channels_log") or []}
     row.state = {}  # контекст и состояние движка больше не нужны (меньше хранимых данных)
     row.status, row.completed_at, row.error = "completed", utcnow(), None

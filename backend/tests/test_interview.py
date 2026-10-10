@@ -229,40 +229,79 @@ def test_hiring_ai_interview_stage(client, on):
     assert client.get(f"/api/interview/candidates/{my_ref(client, tc)}", headers=H(te2)).json()["interviews"] == []
 
 
-class _FakeEngine:
-    """Движок-дублёр: порт продукта зовёт его функции; оценка возвращает и выдуманную цитату (её надо отбросить)."""
+def _fake_engine():
+    """Дублёр движка по engine/CONTRACT.md v1.0 (Я14): те же имена и формы, без моделей."""
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
 
-    def available(self):
-        return True
+    from pydantic import BaseModel
 
-    def channels(self):
-        return {"avatar": True, "voice": True}
+    class Transcript(BaseModel):
+        items: list[dict] = []
 
-    def start(self, mode, context, max_questions, minutes, name):
-        return {"state": {"i": 0, "tasks": [x["id"] for x in context.get("tasks", [])]}, "question": "Почему так?"}
+    class Ctx(BaseModel):
+        model_config = {"extra": "allow"}
 
-    def reply(self, state, answer):
-        i = state["i"] + 1
-        return {"state": {**state, "i": i}, "question": None if i >= 2 else "А что если строже?"}
+    class SessionSpec(BaseModel):
+        mode: str
+        candidate_name: str
+        duration_min: int
+        max_questions: int
+        jury: bool = False
+        context: Ctx
+        started_at: datetime | None = None
 
-    def evaluate(self, state, transcript):
-        said = [r["text"] for r in transcript if r["who"] == "candidate"]
-        return {"verdict": "confirmed", "score": 81, "summary": "Уверенно.", "cost": {"usd": 0.12, "estimated": True},
-                "questions": [{"n": 1, "task_id": "t90", "question": "Почему так?", "level": "confirmed",
-                               "quotes": [{"text": said[0][:30]}, {"text": "этого кандидат не говорил"}]}]}
+    class TurnInput(BaseModel):
+        spec: SessionSpec
+        transcript: Transcript
+        candidate_text: str | None = None
+        channel: str = "text"
 
-    def transcribe(self, audio, mime):
-        return "распознанный ответ про индексы"
+    def next_turn(ti):
+        items = list(ti.transcript.items)
+        if ti.candidate_text:
+            items.append({"who": "candidate", "text": ti.candidate_text, "n": sum(i["who"] == "candidate" for i in items) + 1})
+        asked = sum(i["who"] == "interviewer" and i.get("kind") == "question" for i in items)
+        fin = asked >= 2
+        text = "Спасибо, всё." if fin else ("Почему так?" if asked == 0 else "А что если строже?")
+        items.append({"who": "interviewer", "text": text, "kind": "closing" if fin else "question", "k": asked + 1})
+        return SimpleNamespace(text=text, finished=fin, transcript=Transcript(items=items), source="llm", cost_usd=0.01,
+                               started_at=datetime.now(timezone.utc) if ti.candidate_text else None)
 
-    def speak(self, text):
-        return b"ID3fake"
+    def evaluate(spec, tr):
+        said = [i["text"] for i in tr.items if i["who"] == "candidate"]
+        q = SimpleNamespace(k=1, task_id="t90", skill=None, question="Почему так?", answer_excerpt=said[0][:400],
+                            level="confirmed", reasoning="совпадает", lowered=False,
+                            quotes=[SimpleNamespace(n=1, text=said[0][:30]), SimpleNamespace(n=1, text="этого не говорил")])
+        return SimpleNamespace(verdict="confirmed", verdict_label="подтверждено устно", score=81, summary="Уверенно.",
+                               questions=[q], flags=[], coverage=100, removed_quotes=2, source="llm", cost_usd=0.1)
 
-    def avatar_token(self):
-        return {"session_token": "tok-test", "ice_servers": [{"urls": "turn:example"}]}
+    def stt(audio, mime):
+        return SimpleNamespace(text="распознанный ответ про индексы", seconds=3.0, cost_usd=0.002, stub=False)
+
+    def tts(text, fmt="mp3"):
+        return SimpleNamespace(data=b"ID3fake", mime="audio/mpeg", cost_usd=0.003, stub=False)
+
+    def avatar_token():
+        return SimpleNamespace(session_token="tok-test", ice_servers=[{"urls": "turn:example"}], max_seconds=420,
+                               relay_only=False, persona_name="Интервьюер")
+
+    limits = {"calls": []}
+
+    def check_limits(jury, last_hour, spent):
+        limits["calls"].append((jury, last_hour, spent))
+
+    return SimpleNamespace(
+        Transcript=Transcript, SessionSpec=SessionSpec, TurnInput=TurnInput, DefenseContext=Ctx, InterviewContext=Ctx,
+        normalize_spec=lambda spec: spec, next_turn=next_turn, evaluate=evaluate, stt=stt, tts=tts,
+        avatar_token=avatar_token, check_limits=check_limits, is_stub=lambda: False, limits=limits,
+        status=lambda: {"stub": False, "channels": {"text": True, "voice": True, "stt": True, "avatar": True}},
+        plan=lambda spec: [])
 
 
 def test_engine_port_channels_and_quote_check(client, on, monkeypatch):
-    monkeypatch.setattr(pt, "get_port", lambda: pt.EnginePort(_FakeEngine()))
+    eng = _fake_engine()
+    monkeypatch.setattr(pt, "get_port", lambda: pt.EnginePort(eng))
     t = candidate_with_category(client)
     ts = _with_open_answers(client, t)
     sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
@@ -284,10 +323,13 @@ def test_engine_port_channels_and_quote_check(client, on, monkeypatch):
     assert s["status"] == "completed" and s["verdict"] == "confirmed" and not s["stub"]
     q = s["questions"][0]
     assert [c["text"] for c in q["quotes"]] == ["Потому что индекс по дате уско"]  # выдуманная цитата отброшена
+    assert eng.limits["calls"] == [(False, 0, 0.0)]  # лимиты движка спрошены при создании
     with SessionLocal() as db:
         row = db.get(InterviewSession, uuid.UUID(sid))
         assert row.result["quotes_dropped"] == 1 and row.result["channels"] == ["avatar", "voice", "text"]
-        assert row.state == {} and row.cost["usd"] == 0.12
+        assert row.result["quotes_removed_by_engine"] == 2 and row.result["source"] == "llm"
+        # модель: 3 хода по 0,01 + оценка 0,1; распознавание 0,002 и голос 0,003 — посчитаны продуктом
+        assert row.state == {} and row.cost["usd"] == pytest.approx(0.135) and row.cost["stt_usd"] == 0.002
 
 
 def test_stub_channels_unavailable(client, on):
