@@ -70,7 +70,6 @@ class ConversationOut(BaseModel):
     deadline: datetime | None = None
     channels: ChannelsOut
     engine: Literal["engine", "stub"]
-    sdk_url: str
     hint: str | None = Field(None, description="Только заглушка: начало письменного ответа — «подставить» в e2e")
 
 
@@ -178,7 +177,6 @@ class TranscribeOut(BaseModel):
 
 class AvatarOut(BaseModel):
     session_token: str
-    sdk_url: str
     ice_servers: list[dict] | None = None
 
 
@@ -309,8 +307,8 @@ def session_avatar(session_id: uuid.UUID, user: User = Depends(candidate), db: S
     tok = pt.get_port().avatar_token(max_seconds=row.minutes * 60 + 120) if get_settings().interview_avatar else None
     if not tok or not tok.get("session_token"):
         raise api_error(503, "avatar_unavailable", "Видео-аватар недоступен — продолжим голосом или текстом")
-    return {"session_token": tok["session_token"], "sdk_url": get_settings().interview_anam_sdk_url,
-            "ice_servers": tok.get("ice_servers")}
+    # SDK Anam — npm-зависимость фронтенда (ленивый чанк), внешний CDN не нужен
+    return {"session_token": tok["session_token"], "ice_servers": tok.get("ice_servers")}
 
 
 @router.post("/sessions/{session_id}/channel", summary="Сменить канал (отказ аватара → голос → текст)",

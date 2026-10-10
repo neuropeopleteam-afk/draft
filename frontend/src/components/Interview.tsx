@@ -10,7 +10,7 @@ import { Alert, Loading, dt, errText, useApi } from "./ui";
 type Verdict = "confirmed" | "discrepancies" | "insufficient" | "strong" | "medium" | "weak" | null;
 interface Quote { text: string }
 interface Question { n?: number; question: string; task_title?: string | null; skill?: string | null; level: string; level_title: string; quotes: Quote[]; reasoning?: string | null; lowered?: boolean }
-interface Conversation { n?: number; question?: string | null; asked: number; max_questions: number; deadline?: string | null; channels: { avatar: boolean; voice: boolean; text: boolean }; engine: "engine" | "stub"; sdk_url: string; hint?: string | null }
+interface Conversation { n?: number; question?: string | null; asked: number; max_questions: number; deadline?: string | null; channels: { avatar: boolean; voice: boolean; text: boolean }; engine: "engine" | "stub"; hint?: string | null }
 export interface IvSession {
   id: string; mode: "defense" | "interview"; status: string; status_title: string; verdict: Verdict; verdict_title?: string | null;
   score?: number | null; summary?: string | null; questions: Question[]; flags: string[]; duration_s?: number | null; minutes: number;
@@ -340,8 +340,8 @@ export function InterviewRoom() {
   }
   async function startAvatar(): Promise<boolean> {
     try {
-      const tok = await api<{ session_token: string; sdk_url: string; ice_servers?: unknown[] | null }>(`/interview/sessions/${id}/avatar`, { method: "POST" });
-      const sdk: any = await import(/* @vite-ignore */ tok.sdk_url);
+      const tok = await api<{ session_token: string; ice_servers?: unknown[] | null }>(`/interview/sessions/${id}/avatar`, { method: "POST" });
+      const sdk: any = await import("@anam-ai/js-sdk");  // ленивый чанк Vite: грузится только при видео-аватаре
       const client = sdk.createClient(tok.session_token, { disableInputAudio: true, ...(tok.ice_servers ? { iceServers: tok.ice_servers } : {}) });
       await client.streamToVideoElement("iv-avatar-video");
       anam.current = client;
@@ -411,7 +411,7 @@ export function InterviewRoom() {
       )}
       {s.status === "in_progress" && c && (
         <section className="card space-y-3" aria-label="Разговор">
-          <p className="text-xs text-brand-ink/65">Вопрос {c.n ?? c.asked} · не больше {c.max_questions + 1}{left != null ? ` · осталось ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : ""}</p>
+          <p className="text-xs text-brand-ink/65">Вопрос {Math.min(c.n ?? c.asked, c.max_questions)} из {c.max_questions}{left != null ? ` · осталось ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : ""}</p>
           <p className="font-semibold text-brand-night" aria-live="polite" data-testid="iv-question">{c.question}</p>
           <label className="block" htmlFor="iv-answer"><span className="sr-only">Ваш ответ</span>
             <textarea id="iv-answer" className="input min-h-[8rem] w-full" value={text} onChange={(e) => setText(e.target.value)} placeholder="Ваш ответ своими словами" maxLength={3000} /></label>
