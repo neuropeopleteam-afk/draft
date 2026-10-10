@@ -15,7 +15,7 @@
       (review.submit → recompute, метка recomputed_at) — как для любого ответа «на проверке».
 Путь без LLM и таймауты — прежние: модель не ответила → verdict failed → эксперт.
 
-Я13 (GRADING_EVIDENCE): тем же механизмом в фоне работает скептик (second.kind = skeptic, evidence.skeptic_review)
+Доказательная оценка (GRADING_EVIDENCE): тем же механизмом в фоне работает скептик (second.kind = skeptic, evidence.skeptic_review)
 для высоких и спорных оценок. Тест идёт: agree с изменениями → балл по правилам evidence.assemble, без изменений или
 kept (скептик не ответил на высокую оценку без сомнений) → первая оценка; disagree / manipulation / failed → эксперт.
 После итога — как у второй оценки: балл не меняется, спорный (не agree/kept) ответ уходит эксперту (disputed).
@@ -100,10 +100,10 @@ def apply(ts, token: str, part: int, res: dict) -> bool:
         return False
     g["second"] = {**g["second"], **res}
     expert_done = g.get("method") == "expert" or (it.get("expert_reviews") or {}).get(str(part))
-    agree = res.get("verdict") in ("agree", "kept")  # kept — Я13: скептик не ответил на высокую оценку без сомнений
+    agree = res.get("verdict") in ("agree", "kept")  # kept — скептик не ответил на высокую оценку без сомнений
     skeptic = res.get("kind") == "skeptic"
     if ts.status == TestSessionStatus.in_progress and not expert_done:
-        if agree and skeptic:  # Я13: итог — по правилам evidence.assemble (без замечаний — первая оценка)
+        if agree and skeptic:  # итог — по правилам evidence.assemble (без замечаний — первая оценка)
             comb = res["combined"]
             if res.get("verdict") == "agree" and res.get("changes"):
                 it["x"][part] = comb["score"]
@@ -153,7 +153,7 @@ def run(session_id: uuid.UUID, token: str, part: int) -> None:
         if g is None or (g.get("second") or {}).get("status") != "pending":
             return
         first = {"score": g.get("score"), "criteria": g.get("criteria") or {}, "evidence": g.get("evidence")}
-        if g["second"].get("kind") == "skeptic":  # Я13: скептик для высоких и спорных, итог — правилами кода
+        if g["second"].get("kind") == "skeptic":  # скептик для высоких и спорных, итог — правилами кода
             from app.modules.assessment import evidence
 
             res = evidence.skeptic_review(**_inputs(it, part), first=first,
