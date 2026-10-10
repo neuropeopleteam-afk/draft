@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-10-08T15:57:39+00:00",
+ "generated_at": "2026-10-10T10:24:13+00:00",
  "n_per_direction": 400,
  "quick": false,
  "seed": 20261007,
@@ -22,6 +22,7 @@
   "ext_minutes": 20,
   "ext_own_first": true,
   "legacy_ext": 0,
+  "retake_seen": true,
   "claim_prior": false,
   "rotation": "subpool",
   "cuts": [
@@ -51,59 +52,59 @@
     "app": {
      "before": {
       "n_claimed_junior": 185,
-      "n_true_below": 68,
-      "n_true_junior_or_above": 117,
-      "confirmed": 102,
+      "n_true_below": 69,
+      "n_true_junior_or_above": 116,
+      "confirmed": 113,
       "provisional": 0,
-      "rejected": 83,
+      "rejected": 72,
       "share": {
-       "confirmed": 0.551,
+       "confirmed": 0.611,
        "provisional": 0.0,
-       "rejected": 0.449
+       "rejected": 0.389
       },
-      "false_confirmed": 7,
-      "false_confirmed_share": 0.103,
+      "false_confirmed": 10,
+      "false_confirmed_share": 0.145,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
-      "false_rejected": 22,
-      "false_rejected_share": 0.188
+      "false_rejected": 13,
+      "false_rejected_share": 0.112
      },
      "after": {
       "n_claimed_junior": 185,
-      "n_true_below": 68,
-      "n_true_junior_or_above": 117,
-      "confirmed": 102,
-      "provisional": 67,
-      "rejected": 16,
+      "n_true_below": 69,
+      "n_true_junior_or_above": 116,
+      "confirmed": 113,
+      "provisional": 57,
+      "rejected": 15,
       "share": {
-       "confirmed": 0.551,
-       "provisional": 0.362,
-       "rejected": 0.086
+       "confirmed": 0.611,
+       "provisional": 0.308,
+       "rejected": 0.081
       },
-      "false_confirmed": 7,
-      "false_confirmed_share": 0.103,
-      "false_provisional": 45,
-      "false_provisional_share": 0.672,
+      "false_confirmed": 10,
+      "false_confirmed_share": 0.145,
+      "false_provisional": 44,
+      "false_provisional_share": 0.772,
       "false_rejected": 0,
       "false_rejected_share": 0.0
      },
      "confirm": {
-      "n_provisional": 67,
+      "n_provisional": 57,
       "attempts": [
        {
         "attempt": 1,
-        "confirmed_total": 7,
-        "still_provisional": 60,
+        "confirmed_total": 0,
+        "still_provisional": 57,
         "still_provisional_true_below": 44,
-        "confirmed_true_below": 1,
-        "mean_new_items": 5.4
+        "confirmed_true_below": 0,
+        "mean_new_items": 5.6
        },
        {
         "attempt": 2,
-        "confirmed_total": 8,
-        "still_provisional": 59,
+        "confirmed_total": 0,
+        "still_provisional": 57,
         "still_provisional_true_below": 44,
-        "confirmed_true_below": 1,
+        "confirmed_true_below": 0,
         "mean_new_items": 4.8
        }
       ]
@@ -112,23 +113,23 @@
       {
        "p_from": 0.1,
        "p_to": 0.25,
-       "n": 19,
-       "true_below": 16,
-       "true_below_share": 0.842
+       "n": 14,
+       "true_below": 13,
+       "true_below_share": 0.929
       },
       {
        "p_from": 0.25,
        "p_to": 0.4,
-       "n": 7,
-       "true_below": 5,
-       "true_below_share": 0.714
+       "n": 15,
+       "true_below": 14,
+       "true_below_share": 0.933
       },
       {
        "p_from": 0.4,
        "p_to": 0.5,
-       "n": 8,
-       "true_below": 6,
-       "true_below_share": 0.75
+       "n": 6,
+       "true_below": 3,
+       "true_below_share": 0.5
       },
       {
        "p_from": 0.5,
@@ -140,50 +141,50 @@
       {
        "p_from": 0.65,
        "p_to": 0.8,
-       "n": 19,
-       "true_below": 8,
-       "true_below_share": 0.421
+       "n": 8,
+       "true_below": 4,
+       "true_below_share": 0.5
       }
      ]
     },
     "legacy_sim": {
      "before": {
       "n_claimed_junior": 185,
-      "n_true_below": 68,
-      "n_true_junior_or_above": 117,
-      "confirmed": 93,
+      "n_true_below": 69,
+      "n_true_junior_or_above": 116,
+      "confirmed": 102,
       "provisional": 0,
-      "rejected": 92,
+      "rejected": 83,
       "share": {
-       "confirmed": 0.503,
+       "confirmed": 0.551,
        "provisional": 0.0,
-       "rejected": 0.497
+       "rejected": 0.449
       },
       "false_confirmed": 7,
-      "false_confirmed_share": 0.103,
+      "false_confirmed_share": 0.101,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
-      "false_rejected": 31,
-      "false_rejected_share": 0.265
+      "false_rejected": 21,
+      "false_rejected_share": 0.181
      },
      "after": {
       "n_claimed_junior": 185,
-      "n_true_below": 68,
-      "n_true_junior_or_above": 117,
-      "confirmed": 93,
-      "provisional": 80,
-      "rejected": 12,
+      "n_true_below": 69,
+      "n_true_junior_or_above": 116,
+      "confirmed": 102,
+      "provisional": 72,
+      "rejected": 11,
       "share": {
-       "confirmed": 0.503,
-       "provisional": 0.432,
-       "rejected": 0.065
+       "confirmed": 0.551,
+       "provisional": 0.389,
+       "rejected": 0.059
       },
       "false_confirmed": 7,
-      "false_confirmed_share": 0.103,
-      "false_provisional": 50,
-      "false_provisional_share": 0.625,
-      "false_rejected": 1,
-      "false_rejected_share": 0.009
+      "false_confirmed_share": 0.101,
+      "false_provisional": 51,
+      "false_provisional_share": 0.708,
+      "false_rejected": 0,
+      "false_rejected_share": 0.0
      }
     }
    }
@@ -193,61 +194,61 @@
    "policies": {
     "app": {
      "before": {
-      "n_claimed_junior": 207,
-      "n_true_below": 61,
-      "n_true_junior_or_above": 146,
-      "confirmed": 130,
+      "n_claimed_junior": 213,
+      "n_true_below": 65,
+      "n_true_junior_or_above": 148,
+      "confirmed": 135,
       "provisional": 0,
-      "rejected": 77,
+      "rejected": 78,
       "share": {
-       "confirmed": 0.628,
+       "confirmed": 0.634,
        "provisional": 0.0,
-       "rejected": 0.372
+       "rejected": 0.366
       },
-      "false_confirmed": 10,
-      "false_confirmed_share": 0.164,
+      "false_confirmed": 13,
+      "false_confirmed_share": 0.2,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
       "false_rejected": 26,
-      "false_rejected_share": 0.178
+      "false_rejected_share": 0.176
      },
      "after": {
-      "n_claimed_junior": 207,
-      "n_true_below": 61,
-      "n_true_junior_or_above": 146,
-      "confirmed": 130,
-      "provisional": 69,
+      "n_claimed_junior": 213,
+      "n_true_below": 65,
+      "n_true_junior_or_above": 148,
+      "confirmed": 135,
+      "provisional": 70,
       "rejected": 8,
       "share": {
-       "confirmed": 0.628,
-       "provisional": 0.333,
-       "rejected": 0.039
+       "confirmed": 0.634,
+       "provisional": 0.329,
+       "rejected": 0.038
       },
-      "false_confirmed": 10,
-      "false_confirmed_share": 0.164,
-      "false_provisional": 43,
-      "false_provisional_share": 0.623,
+      "false_confirmed": 13,
+      "false_confirmed_share": 0.2,
+      "false_provisional": 44,
+      "false_provisional_share": 0.629,
       "false_rejected": 0,
       "false_rejected_share": 0.0
      },
      "confirm": {
-      "n_provisional": 69,
+      "n_provisional": 70,
       "attempts": [
        {
         "attempt": 1,
-        "confirmed_total": 8,
-        "still_provisional": 61,
+        "confirmed_total": 15,
+        "still_provisional": 55,
         "still_provisional_true_below": 43,
-        "confirmed_true_below": 0,
-        "mean_new_items": 5.7
+        "confirmed_true_below": 1,
+        "mean_new_items": 5.4
        },
        {
         "attempt": 2,
-        "confirmed_total": 11,
-        "still_provisional": 58,
-        "still_provisional_true_below": 43,
-        "confirmed_true_below": 0,
-        "mean_new_items": 5.2
+        "confirmed_total": 16,
+        "still_provisional": 54,
+        "still_provisional_true_below": 42,
+        "confirmed_true_below": 2,
+        "mean_new_items": 5.4
        }
       ]
      },
@@ -255,78 +256,78 @@
       {
        "p_from": 0.1,
        "p_to": 0.25,
-       "n": 12,
-       "true_below": 9,
-       "true_below_share": 0.75
+       "n": 9,
+       "true_below": 8,
+       "true_below_share": 0.889
       },
       {
        "p_from": 0.25,
        "p_to": 0.4,
        "n": 15,
-       "true_below": 13,
-       "true_below_share": 0.867
+       "true_below": 14,
+       "true_below_share": 0.933
       },
       {
        "p_from": 0.4,
        "p_to": 0.5,
-       "n": 11,
+       "n": 10,
        "true_below": 6,
-       "true_below_share": 0.545
+       "true_below_share": 0.6
       },
       {
        "p_from": 0.5,
        "p_to": 0.65,
-       "n": 7,
-       "true_below": 4,
-       "true_below_share": 0.571
+       "n": 10,
+       "true_below": 5,
+       "true_below_share": 0.5
       },
       {
        "p_from": 0.65,
        "p_to": 0.8,
-       "n": 24,
+       "n": 26,
        "true_below": 11,
-       "true_below_share": 0.458
+       "true_below_share": 0.423
       }
      ]
     },
     "legacy_sim": {
      "before": {
-      "n_claimed_junior": 207,
-      "n_true_below": 61,
-      "n_true_junior_or_above": 146,
-      "confirmed": 124,
+      "n_claimed_junior": 213,
+      "n_true_below": 65,
+      "n_true_junior_or_above": 148,
+      "confirmed": 133,
       "provisional": 0,
-      "rejected": 83,
+      "rejected": 80,
       "share": {
-       "confirmed": 0.599,
+       "confirmed": 0.624,
        "provisional": 0.0,
-       "rejected": 0.401
+       "rejected": 0.376
       },
-      "false_confirmed": 5,
-      "false_confirmed_share": 0.082,
+      "false_confirmed": 12,
+      "false_confirmed_share": 0.185,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
       "false_rejected": 27,
-      "false_rejected_share": 0.185
+      "false_rejected_share": 0.182
      },
      "after": {
-      "n_claimed_junior": 207,
-      "n_true_below": 61,
-      "n_true_junior_or_above": 146,
-      "confirmed": 124,
-      "provisional": 76,
-      "rejected": 7,
+      "n_claimed_junior": 213,
+      "n_true_below": 65,
+      "n_true_junior_or_above": 148,
+      "confirmed": 133,
+      "provisional": 74,
+      "rejected": 6,
       "share": {
-       "confirmed": 0.599,
-       "provisional": 0.367,
-       "rejected": 0.034
+       "confirmed": 0.624,
+       "provisional": 0.347,
+       "rejected": 0.028
       },
-      "false_confirmed": 5,
-      "false_confirmed_share": 0.082,
-      "false_provisional": 50,
-      "false_provisional_share": 0.658,
-      "false_rejected": 1,
-      "false_rejected_share": 0.007
+      "false_confirmed": 12,
+      "false_confirmed_share": 0.185,
+      "false_provisional": 47,
+      "false_provisional_share": 0.635,
+      "false_rejected": 0,
+      "false_rejected_share": 0.0
      }
     }
    }
@@ -336,61 +337,61 @@
    "policies": {
     "app": {
      "before": {
-      "n_claimed_junior": 200,
-      "n_true_below": 62,
+      "n_claimed_junior": 206,
+      "n_true_below": 68,
       "n_true_junior_or_above": 138,
-      "confirmed": 111,
+      "confirmed": 133,
       "provisional": 0,
-      "rejected": 89,
+      "rejected": 73,
       "share": {
-       "confirmed": 0.555,
+       "confirmed": 0.646,
        "provisional": 0.0,
-       "rejected": 0.445
+       "rejected": 0.354
       },
-      "false_confirmed": 6,
-      "false_confirmed_share": 0.097,
+      "false_confirmed": 14,
+      "false_confirmed_share": 0.206,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
-      "false_rejected": 33,
-      "false_rejected_share": 0.239
+      "false_rejected": 19,
+      "false_rejected_share": 0.138
      },
      "after": {
-      "n_claimed_junior": 200,
-      "n_true_below": 62,
+      "n_claimed_junior": 206,
+      "n_true_below": 68,
       "n_true_junior_or_above": 138,
-      "confirmed": 111,
-      "provisional": 71,
-      "rejected": 18,
+      "confirmed": 133,
+      "provisional": 68,
+      "rejected": 5,
       "share": {
-       "confirmed": 0.555,
-       "provisional": 0.355,
-       "rejected": 0.09
+       "confirmed": 0.646,
+       "provisional": 0.33,
+       "rejected": 0.024
       },
-      "false_confirmed": 6,
-      "false_confirmed_share": 0.097,
-      "false_provisional": 39,
-      "false_provisional_share": 0.549,
-      "false_rejected": 1,
-      "false_rejected_share": 0.007
+      "false_confirmed": 14,
+      "false_confirmed_share": 0.206,
+      "false_provisional": 49,
+      "false_provisional_share": 0.721,
+      "false_rejected": 0,
+      "false_rejected_share": 0.0
      },
      "confirm": {
-      "n_provisional": 71,
+      "n_provisional": 68,
       "attempts": [
        {
         "attempt": 1,
-        "confirmed_total": 7,
-        "still_provisional": 64,
-        "still_provisional_true_below": 39,
-        "confirmed_true_below": 0,
-        "mean_new_items": 5.7
+        "confirmed_total": 6,
+        "still_provisional": 62,
+        "still_provisional_true_below": 47,
+        "confirmed_true_below": 2,
+        "mean_new_items": 5.4
        },
        {
         "attempt": 2,
-        "confirmed_total": 16,
-        "still_provisional": 55,
-        "still_provisional_true_below": 38,
-        "confirmed_true_below": 1,
-        "mean_new_items": 5.2
+        "confirmed_total": 6,
+        "still_provisional": 62,
+        "still_provisional_true_below": 47,
+        "confirmed_true_below": 2,
+        "mean_new_items": 4.6
        }
       ]
      },
@@ -398,76 +399,76 @@
       {
        "p_from": 0.1,
        "p_to": 0.25,
-       "n": 8,
-       "true_below": 7,
-       "true_below_share": 0.875
+       "n": 15,
+       "true_below": 15,
+       "true_below_share": 1.0
       },
       {
        "p_from": 0.25,
        "p_to": 0.4,
        "n": 16,
-       "true_below": 13,
-       "true_below_share": 0.812
+       "true_below": 10,
+       "true_below_share": 0.625
       },
       {
        "p_from": 0.4,
        "p_to": 0.5,
-       "n": 14,
-       "true_below": 9,
-       "true_below_share": 0.643
+       "n": 8,
+       "true_below": 6,
+       "true_below_share": 0.75
       },
       {
        "p_from": 0.5,
        "p_to": 0.65,
-       "n": 20,
-       "true_below": 7,
-       "true_below_share": 0.35
+       "n": 17,
+       "true_below": 11,
+       "true_below_share": 0.647
       },
       {
        "p_from": 0.65,
        "p_to": 0.8,
-       "n": 13,
-       "true_below": 3,
-       "true_below_share": 0.231
+       "n": 12,
+       "true_below": 7,
+       "true_below_share": 0.583
       }
      ]
     },
     "legacy_sim": {
      "before": {
-      "n_claimed_junior": 200,
-      "n_true_below": 62,
+      "n_claimed_junior": 206,
+      "n_true_below": 68,
       "n_true_junior_or_above": 138,
-      "confirmed": 114,
+      "confirmed": 121,
       "provisional": 0,
-      "rejected": 86,
+      "rejected": 85,
       "share": {
-       "confirmed": 0.57,
+       "confirmed": 0.587,
        "provisional": 0.0,
-       "rejected": 0.43
+       "rejected": 0.413
       },
-      "false_confirmed": 11,
-      "false_confirmed_share": 0.177,
+      "false_confirmed": 15,
+      "false_confirmed_share": 0.221,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
-      "false_rejected": 35,
-      "false_rejected_share": 0.254
+      "false_rejected": 32,
+      "false_rejected_share": 0.232
      },
      "after": {
-      "n_claimed_junior": 200,
-      "n_true_below": 62,
+      "n_claimed_junior": 206,
+      "n_true_below": 68,
       "n_true_junior_or_above": 138,
-      "confirmed": 114,
-      "provisional": 79,
-      "rejected": 7,
+      "confirmed": 121,
+      "provisional": 76,
+      "rejected": 9,
       "share": {
-       "confirmed": 0.57,
-       "provisional": 0.395,
-       "rejected": 0.035
+       "confirmed": 0.587,
+       "provisional": 0.369,
+       "rejected": 0.044
       },
-      "false_confirmed": 11,
-      "false_confirmed_share": 0.177,
+      "false_confirmed": 15,
+      "false_confirmed_share": 0.221,
       "false_provisional": 44,
-      "false_provisional_share": 0.557,
+      "false_provisional_share": 0.579,
       "false_rejected": 0,
       "false_rejected_share": 0.0
      }
@@ -479,61 +480,61 @@
    "policies": {
     "app": {
      "before": {
-      "n_claimed_junior": 207,
-      "n_true_below": 61,
-      "n_true_junior_or_above": 146,
-      "confirmed": 139,
+      "n_claimed_junior": 208,
+      "n_true_below": 60,
+      "n_true_junior_or_above": 148,
+      "confirmed": 132,
       "provisional": 0,
-      "rejected": 68,
+      "rejected": 76,
       "share": {
-       "confirmed": 0.671,
+       "confirmed": 0.635,
        "provisional": 0.0,
-       "rejected": 0.329
+       "rejected": 0.365
       },
-      "false_confirmed": 17,
-      "false_confirmed_share": 0.279,
+      "false_confirmed": 14,
+      "false_confirmed_share": 0.233,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
-      "false_rejected": 24,
-      "false_rejected_share": 0.164
+      "false_rejected": 30,
+      "false_rejected_share": 0.203
      },
      "after": {
-      "n_claimed_junior": 207,
-      "n_true_below": 61,
-      "n_true_junior_or_above": 146,
-      "confirmed": 139,
-      "provisional": 56,
-      "rejected": 12,
+      "n_claimed_junior": 208,
+      "n_true_below": 60,
+      "n_true_junior_or_above": 148,
+      "confirmed": 132,
+      "provisional": 66,
+      "rejected": 10,
       "share": {
-       "confirmed": 0.671,
-       "provisional": 0.271,
-       "rejected": 0.058
+       "confirmed": 0.635,
+       "provisional": 0.317,
+       "rejected": 0.048
       },
-      "false_confirmed": 17,
-      "false_confirmed_share": 0.279,
-      "false_provisional": 32,
-      "false_provisional_share": 0.571,
+      "false_confirmed": 14,
+      "false_confirmed_share": 0.233,
+      "false_provisional": 36,
+      "false_provisional_share": 0.545,
       "false_rejected": 0,
       "false_rejected_share": 0.0
      },
      "confirm": {
-      "n_provisional": 56,
+      "n_provisional": 66,
       "attempts": [
        {
         "attempt": 1,
-        "confirmed_total": 11,
-        "still_provisional": 45,
-        "still_provisional_true_below": 32,
-        "confirmed_true_below": 0,
-        "mean_new_items": 5.3
+        "confirmed_total": 14,
+        "still_provisional": 52,
+        "still_provisional_true_below": 33,
+        "confirmed_true_below": 3,
+        "mean_new_items": 5.6
        },
        {
         "attempt": 2,
-        "confirmed_total": 16,
-        "still_provisional": 40,
-        "still_provisional_true_below": 32,
-        "confirmed_true_below": 0,
-        "mean_new_items": 4.3
+        "confirmed_total": 15,
+        "still_provisional": 51,
+        "still_provisional_true_below": 33,
+        "confirmed_true_below": 3,
+        "mean_new_items": 4.5
        }
       ]
      },
@@ -541,76 +542,76 @@
       {
        "p_from": 0.1,
        "p_to": 0.25,
-       "n": 15,
+       "n": 18,
        "true_below": 14,
-       "true_below_share": 0.933
+       "true_below_share": 0.778
       },
       {
        "p_from": 0.25,
        "p_to": 0.4,
        "n": 9,
-       "true_below": 8,
-       "true_below_share": 0.889
+       "true_below": 6,
+       "true_below_share": 0.667
       },
       {
        "p_from": 0.4,
        "p_to": 0.5,
-       "n": 4,
-       "true_below": 1,
-       "true_below_share": 0.25
+       "n": 7,
+       "true_below": 3,
+       "true_below_share": 0.429
       },
       {
        "p_from": 0.5,
        "p_to": 0.65,
-       "n": 14,
-       "true_below": 6,
-       "true_below_share": 0.429
+       "n": 8,
+       "true_below": 3,
+       "true_below_share": 0.375
       },
       {
        "p_from": 0.65,
        "p_to": 0.8,
-       "n": 14,
-       "true_below": 3,
-       "true_below_share": 0.214
+       "n": 24,
+       "true_below": 10,
+       "true_below_share": 0.417
       }
      ]
     },
     "legacy_sim": {
      "before": {
-      "n_claimed_junior": 207,
-      "n_true_below": 61,
-      "n_true_junior_or_above": 146,
-      "confirmed": 123,
+      "n_claimed_junior": 208,
+      "n_true_below": 60,
+      "n_true_junior_or_above": 148,
+      "confirmed": 120,
       "provisional": 0,
-      "rejected": 84,
+      "rejected": 88,
       "share": {
-       "confirmed": 0.594,
+       "confirmed": 0.577,
        "provisional": 0.0,
-       "rejected": 0.406
+       "rejected": 0.423
       },
-      "false_confirmed": 7,
-      "false_confirmed_share": 0.115,
+      "false_confirmed": 8,
+      "false_confirmed_share": 0.133,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
-      "false_rejected": 30,
-      "false_rejected_share": 0.205
+      "false_rejected": 36,
+      "false_rejected_share": 0.243
      },
      "after": {
-      "n_claimed_junior": 207,
-      "n_true_below": 61,
-      "n_true_junior_or_above": 146,
-      "confirmed": 123,
-      "provisional": 81,
-      "rejected": 3,
+      "n_claimed_junior": 208,
+      "n_true_below": 60,
+      "n_true_junior_or_above": 148,
+      "confirmed": 120,
+      "provisional": 82,
+      "rejected": 6,
       "share": {
-       "confirmed": 0.594,
-       "provisional": 0.391,
-       "rejected": 0.014
+       "confirmed": 0.577,
+       "provisional": 0.394,
+       "rejected": 0.029
       },
-      "false_confirmed": 7,
-      "false_confirmed_share": 0.115,
-      "false_provisional": 51,
-      "false_provisional_share": 0.63,
+      "false_confirmed": 8,
+      "false_confirmed_share": 0.133,
+      "false_provisional": 46,
+      "false_provisional_share": 0.561,
       "false_rejected": 0,
       "false_rejected_share": 0.0
      }
@@ -622,61 +623,61 @@
    "policies": {
     "app": {
      "before": {
-      "n_claimed_junior": 219,
-      "n_true_below": 63,
-      "n_true_junior_or_above": 156,
-      "confirmed": 131,
+      "n_claimed_junior": 221,
+      "n_true_below": 64,
+      "n_true_junior_or_above": 157,
+      "confirmed": 125,
       "provisional": 0,
-      "rejected": 88,
+      "rejected": 96,
       "share": {
-       "confirmed": 0.598,
+       "confirmed": 0.566,
        "provisional": 0.0,
-       "rejected": 0.402
+       "rejected": 0.434
       },
-      "false_confirmed": 9,
-      "false_confirmed_share": 0.143,
+      "false_confirmed": 5,
+      "false_confirmed_share": 0.078,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
-      "false_rejected": 34,
-      "false_rejected_share": 0.218
+      "false_rejected": 37,
+      "false_rejected_share": 0.236
      },
      "after": {
-      "n_claimed_junior": 219,
-      "n_true_below": 63,
-      "n_true_junior_or_above": 156,
-      "confirmed": 131,
-      "provisional": 78,
-      "rejected": 10,
+      "n_claimed_junior": 221,
+      "n_true_below": 64,
+      "n_true_junior_or_above": 157,
+      "confirmed": 125,
+      "provisional": 73,
+      "rejected": 23,
       "share": {
-       "confirmed": 0.598,
-       "provisional": 0.356,
-       "rejected": 0.046
+       "confirmed": 0.566,
+       "provisional": 0.33,
+       "rejected": 0.104
       },
-      "false_confirmed": 9,
-      "false_confirmed_share": 0.143,
-      "false_provisional": 44,
-      "false_provisional_share": 0.564,
-      "false_rejected": 0,
-      "false_rejected_share": 0.0
+      "false_confirmed": 5,
+      "false_confirmed_share": 0.078,
+      "false_provisional": 37,
+      "false_provisional_share": 0.507,
+      "false_rejected": 1,
+      "false_rejected_share": 0.006
      },
      "confirm": {
-      "n_provisional": 78,
+      "n_provisional": 73,
       "attempts": [
        {
         "attempt": 1,
-        "confirmed_total": 15,
-        "still_provisional": 63,
-        "still_provisional_true_below": 42,
+        "confirmed_total": 11,
+        "still_provisional": 62,
+        "still_provisional_true_below": 35,
         "confirmed_true_below": 2,
         "mean_new_items": 5.5
        },
        {
         "attempt": 2,
-        "confirmed_total": 18,
-        "still_provisional": 60,
-        "still_provisional_true_below": 40,
-        "confirmed_true_below": 4,
-        "mean_new_items": 5.0
+        "confirmed_total": 15,
+        "still_provisional": 58,
+        "still_provisional_true_below": 35,
+        "confirmed_true_below": 2,
+        "mean_new_items": 5.1
        }
       ]
      },
@@ -684,78 +685,78 @@
       {
        "p_from": 0.1,
        "p_to": 0.25,
-       "n": 13,
-       "true_below": 11,
-       "true_below_share": 0.846
+       "n": 12,
+       "true_below": 8,
+       "true_below_share": 0.667
       },
       {
        "p_from": 0.25,
        "p_to": 0.4,
-       "n": 17,
-       "true_below": 14,
-       "true_below_share": 0.824
+       "n": 14,
+       "true_below": 11,
+       "true_below_share": 0.786
       },
       {
        "p_from": 0.4,
        "p_to": 0.5,
-       "n": 14,
-       "true_below": 9,
-       "true_below_share": 0.643
+       "n": 13,
+       "true_below": 7,
+       "true_below_share": 0.538
       },
       {
        "p_from": 0.5,
        "p_to": 0.65,
-       "n": 11,
-       "true_below": 3,
-       "true_below_share": 0.273
+       "n": 16,
+       "true_below": 6,
+       "true_below_share": 0.375
       },
       {
        "p_from": 0.65,
        "p_to": 0.8,
-       "n": 23,
-       "true_below": 7,
-       "true_below_share": 0.304
+       "n": 18,
+       "true_below": 5,
+       "true_below_share": 0.278
       }
      ]
     },
     "legacy_sim": {
      "before": {
-      "n_claimed_junior": 219,
-      "n_true_below": 63,
-      "n_true_junior_or_above": 156,
-      "confirmed": 135,
+      "n_claimed_junior": 221,
+      "n_true_below": 64,
+      "n_true_junior_or_above": 157,
+      "confirmed": 129,
       "provisional": 0,
-      "rejected": 84,
+      "rejected": 92,
       "share": {
-       "confirmed": 0.616,
+       "confirmed": 0.584,
        "provisional": 0.0,
-       "rejected": 0.384
+       "rejected": 0.416
       },
-      "false_confirmed": 16,
-      "false_confirmed_share": 0.254,
+      "false_confirmed": 7,
+      "false_confirmed_share": 0.109,
       "false_provisional": 0,
       "false_provisional_share": 0.0,
-      "false_rejected": 37,
-      "false_rejected_share": 0.237
+      "false_rejected": 35,
+      "false_rejected_share": 0.223
      },
      "after": {
-      "n_claimed_junior": 219,
-      "n_true_below": 63,
-      "n_true_junior_or_above": 156,
-      "confirmed": 135,
-      "provisional": 79,
-      "rejected": 5,
+      "n_claimed_junior": 221,
+      "n_true_below": 64,
+      "n_true_junior_or_above": 157,
+      "confirmed": 129,
+      "provisional": 84,
+      "rejected": 8,
       "share": {
-       "confirmed": 0.616,
-       "provisional": 0.361,
-       "rejected": 0.023
+       "confirmed": 0.584,
+       "provisional": 0.38,
+       "rejected": 0.036
       },
-      "false_confirmed": 16,
-      "false_confirmed_share": 0.254,
-      "false_provisional": 42,
-      "false_provisional_share": 0.532,
-      "false_rejected": 0,
-      "false_rejected_share": 0.0
+      "false_confirmed": 7,
+      "false_confirmed_share": 0.109,
+      "false_provisional": 50,
+      "false_provisional_share": 0.595,
+      "false_rejected": 1,
+      "false_rejected_share": 0.006
      }
     }
    }
@@ -764,60 +765,60 @@
  "total": {
   "app": {
    "before": {
-    "n_claimed_junior": 1018,
-    "n_true_below": 315,
-    "n_true_junior_or_above": 703,
-    "confirmed": 613,
+    "n_claimed_junior": 1033,
+    "n_true_below": 326,
+    "n_true_junior_or_above": 707,
+    "confirmed": 638,
     "provisional": 0,
-    "rejected": 405,
-    "false_confirmed": 49,
+    "rejected": 395,
+    "false_confirmed": 56,
     "false_provisional": 0,
-    "false_rejected": 139,
+    "false_rejected": 125,
     "share": {
-     "confirmed": 0.602,
+     "confirmed": 0.618,
      "provisional": 0.0,
-     "rejected": 0.398
+     "rejected": 0.382
     },
-    "false_confirmed_share": 0.156,
+    "false_confirmed_share": 0.172,
     "false_provisional_share": 0.0,
-    "false_rejected_share": 0.198
+    "false_rejected_share": 0.177
    },
    "after": {
-    "n_claimed_junior": 1018,
-    "n_true_below": 315,
-    "n_true_junior_or_above": 703,
-    "confirmed": 613,
-    "provisional": 341,
-    "rejected": 64,
-    "false_confirmed": 49,
-    "false_provisional": 203,
+    "n_claimed_junior": 1033,
+    "n_true_below": 326,
+    "n_true_junior_or_above": 707,
+    "confirmed": 638,
+    "provisional": 334,
+    "rejected": 61,
+    "false_confirmed": 56,
+    "false_provisional": 210,
     "false_rejected": 1,
     "share": {
-     "confirmed": 0.602,
-     "provisional": 0.335,
-     "rejected": 0.063
+     "confirmed": 0.618,
+     "provisional": 0.323,
+     "rejected": 0.059
     },
-    "false_confirmed_share": 0.156,
-    "false_provisional_share": 0.595,
+    "false_confirmed_share": 0.172,
+    "false_provisional_share": 0.629,
     "false_rejected_share": 0.001
    },
    "confirm": {
-    "n_provisional": 341,
+    "n_provisional": 334,
     "attempts": [
      {
       "attempt": 1,
-      "confirmed_total": 48,
-      "still_provisional": 293,
-      "still_provisional_true_below": 200,
-      "confirmed_true_below": 3,
+      "confirmed_total": 46,
+      "still_provisional": 288,
+      "still_provisional_true_below": 202,
+      "confirmed_true_below": 8,
       "mean_new_items": 5.5
      },
      {
       "attempt": 2,
-      "confirmed_total": 69,
-      "still_provisional": 272,
-      "still_provisional_true_below": 197,
-      "confirmed_true_below": 6,
+      "confirmed_total": 52,
+      "still_provisional": 282,
+      "still_provisional_true_below": 201,
+      "confirmed_true_below": 9,
       "mean_new_items": 4.9
      }
     ]
@@ -826,78 +827,78 @@
     {
      "p_from": 0.1,
      "p_to": 0.25,
-     "n": 67,
-     "true_below": 57,
-     "true_below_share": 0.851
+     "n": 68,
+     "true_below": 58,
+     "true_below_share": 0.853
     },
     {
      "p_from": 0.25,
      "p_to": 0.4,
-     "n": 64,
-     "true_below": 53,
-     "true_below_share": 0.828
+     "n": 69,
+     "true_below": 55,
+     "true_below_share": 0.797
     },
     {
      "p_from": 0.4,
      "p_to": 0.5,
-     "n": 51,
-     "true_below": 31,
-     "true_below_share": 0.608
+     "n": 44,
+     "true_below": 25,
+     "true_below_share": 0.568
     },
     {
      "p_from": 0.5,
      "p_to": 0.65,
-     "n": 66,
-     "true_below": 30,
-     "true_below_share": 0.455
+     "n": 65,
+     "true_below": 35,
+     "true_below_share": 0.538
     },
     {
      "p_from": 0.65,
      "p_to": 0.8,
-     "n": 93,
-     "true_below": 32,
-     "true_below_share": 0.344
+     "n": 88,
+     "true_below": 37,
+     "true_below_share": 0.42
     }
    ]
   },
   "legacy_sim": {
    "before": {
-    "n_claimed_junior": 1018,
-    "n_true_below": 315,
-    "n_true_junior_or_above": 703,
-    "confirmed": 589,
+    "n_claimed_junior": 1033,
+    "n_true_below": 326,
+    "n_true_junior_or_above": 707,
+    "confirmed": 605,
     "provisional": 0,
-    "rejected": 429,
-    "false_confirmed": 46,
+    "rejected": 428,
+    "false_confirmed": 49,
     "false_provisional": 0,
-    "false_rejected": 160,
+    "false_rejected": 151,
     "share": {
-     "confirmed": 0.579,
+     "confirmed": 0.586,
      "provisional": 0.0,
-     "rejected": 0.421
+     "rejected": 0.414
     },
-    "false_confirmed_share": 0.146,
+    "false_confirmed_share": 0.15,
     "false_provisional_share": 0.0,
-    "false_rejected_share": 0.228
+    "false_rejected_share": 0.214
    },
    "after": {
-    "n_claimed_junior": 1018,
-    "n_true_below": 315,
-    "n_true_junior_or_above": 703,
-    "confirmed": 589,
-    "provisional": 395,
-    "rejected": 34,
-    "false_confirmed": 46,
-    "false_provisional": 237,
-    "false_rejected": 2,
+    "n_claimed_junior": 1033,
+    "n_true_below": 326,
+    "n_true_junior_or_above": 707,
+    "confirmed": 605,
+    "provisional": 388,
+    "rejected": 40,
+    "false_confirmed": 49,
+    "false_provisional": 238,
+    "false_rejected": 1,
     "share": {
-     "confirmed": 0.579,
-     "provisional": 0.388,
-     "rejected": 0.033
+     "confirmed": 0.586,
+     "provisional": 0.376,
+     "rejected": 0.039
     },
-    "false_confirmed_share": 0.146,
-    "false_provisional_share": 0.6,
-    "false_rejected_share": 0.003
+    "false_confirmed_share": 0.15,
+    "false_provisional_share": 0.613,
+    "false_rejected_share": 0.001
    }
   }
  },
@@ -905,13 +906,13 @@
  "signature": {
   "world": "симуляция теста: 5 направлений × 400 человек",
   "seed": 20261007,
-  "config_hash": "955555bf2820",
-  "commit": "bb12871",
-  "bank": "57033ea404b8efae",
+  "config_hash": "282e5c0301e6",
+  "commit": "f2d853e",
+  "bank": "76c4164b6ce83743",
   "n": 2000,
   "command": "make stability",
-  "generated_at": "2026-10-08T15:57:59+00:00"
+  "generated_at": "2026-10-10T10:25:32+00:00"
  },
- "seconds": 19.9,
+ "seconds": 82.6,
  "caveat": "Синтетика: те же люди и те же сессии для «до» и «после», меняется только правило решения; качество заданий на людях здесь не проверяется. Истинный уровень ниже порога определяется по θ истинному, а не по θ̂."
 }

@@ -41,6 +41,7 @@ from app.modules.profiles.facts import (
 from app.modules.assignments import signal as assignment_signal
 from app.modules.jury import scope as jury_scope
 from app.modules.matching import core_skill, must_have
+from app.core.origin import NO_FSP
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
 ALGORITHM_VERSION = "match-v1"
@@ -288,7 +289,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         extra = len(b.achievements)
         reasons.append({"requirement": "Достижения ФСП", "level": "T0" if extra else "none", "status": "neutral",
                         "text": (f"Заявлено достижений ФСП без подтверждения реестром: {extra} — в ранжирование не входит"
-                                 if extra else "Истории ФСП нет — нейтрально, без штрафа")})
+                                 if extra else NO_FSP)})  # Я8: одна фраза о без-ФСП (core/origin.py)
     integ = (t or {}).get("integrity")
     if integ:
         lvl = integ.get("level")

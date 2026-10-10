@@ -56,15 +56,15 @@
   }
  },
  "e2e_in_code": {
-  "spec_files": 16,
-  "scenarios": 35
+  "spec_files": 18,
+  "scenarios": 43
  },
  "validation_report": {
-  "report_generated_at": "2026-10-06",
-  "report_bank_families": 128,
+  "report_generated_at": "2026-10-10",
+  "report_bank_families": 165,
   "exposure_generated_at": "2026-10-06",
   "exposure_bank_families": 128,
-  "report_matches_bank": false
+  "report_matches_bank": true
  },
  "grade_accuracy": {
   "confirm_level": 0.6,
