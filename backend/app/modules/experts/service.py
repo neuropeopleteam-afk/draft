@@ -293,7 +293,7 @@ def source_summary(panel: list[dict]) -> dict | None:
 
 
 def model_role_note(models: list[str]) -> str:
-    """Я8 (штаб, С2 С3-8): модель разметки по протоколу ≠ модель продукта — одной строкой, из конфигурации LLM."""
+    """Модель разметки по протоколу ≠ модель продукта — одной строкой, из конфигурации LLM (находка С3-8)."""
     from app.modules.llm.client import OPENROUTER_DEFAULTS, model_label
 
     main, second = model_label(OPENROUTER_DEFAULTS["grade"]), model_label(OPENROUTER_DEFAULTS["grade_second"])
