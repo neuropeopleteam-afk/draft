@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.db import get_db
+from app.core.db import get_db, release
 from app.core.deps import require_role
 from app.core.enums import NeedStatus, UserRole
 from app.core.errors import api_error, err
@@ -233,8 +233,7 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         recs = meta["categories"]  # снимок на момент расчёта версии — без пересчёта пула (Ф2, п. 4)
     else:  # версии до Ф2: считаем и сохраняем снимок, следующие открытия — без пересчёта
         cats = {c.id: c for c in db.scalars(select(Category)).all()}
-        counts = ranking.category_counts(db)
-        prov, unc = ranking.provisional_counts(db), ranking.unconfirmed_counts(db)
+        (counts, prov), unc = ranking.pool_counts(db), ranking.unconfirmed_counts(db)
         recs = ranking.recommended_categories(v.requirements, counts, cats)
         for r in recs:
             r["provisional"], r["unconfirmed"] = prov.get(r["id"], 0), unc.get(r["id"], 0)
@@ -284,6 +283,7 @@ def _need_out(db: Session, n: EmployerNeed) -> dict:
              responses=AUTH)
 def parse(data: ParseIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     if data.mode == "full":
+        release(db)  # синхронный разбор с моделью — секунды без БД: соединение в пул
         return parse_need(data.text, data.direction, data.grade, full=True)
     return fast_parse.start(db, data.text, data.direction, data.grade, user.id)
 
@@ -341,6 +341,8 @@ def need_from_file(file: UploadFile = File(...), user: User = Depends(employer))
 @router.post("/needs", status_code=201, summary="Создать потребность и первую версию подборки", responses=AUTH)
 def create_need(data: NeedIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
+    if not data.requirements:
+        release(db)  # разбор текста (возможно, с моделью) — без БД: соединение в пул
     req = _req_dict(data.requirements, data.text) if data.requirements else parse_need(data.text)
     n = EmployerNeed(company_id=c.id, created_by=user.id, title=(data.title or _need_title(req))[:200],
                      raw_text=data.text, requirements=req, direction_id=req.get("direction"),
@@ -470,8 +472,7 @@ def search_candidates(
 
 @router.get("/categories", summary="Категории с числом видимых кандидатов и рыночным диапазоном", responses=AUTH)
 def categories(user: User = Depends(employer), db: Session = Depends(get_db)) -> list[dict]:
-    counts = ranking.category_counts(db)
-    prov, unc = ranking.provisional_counts(db), ranking.unconfirmed_counts(db)
+    (counts, prov), unc = ranking.pool_counts(db), ranking.unconfirmed_counts(db)  # пул — одной загрузкой
     return [{"id": c.id, "title": c.title, "direction": c.direction_id, "grade": c.grade_id,
              "count": counts.get(c.id, 0), "provisional": prov.get(c.id, 0), "unconfirmed": unc.get(c.id, 0),
              "market_range": ranking._mr(c)}

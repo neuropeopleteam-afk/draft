@@ -1,0 +1,22 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+GET,/validation: attempts-repeat,HTTPError('500 Server Error: Internal Server Error for url: /validation: attempts-repeat'),1,2026-10-10T10:08:28Z,2026-10-10T10:08:28Z
+GET,кандидат: зонды,HTTPError('500 Server Error: Internal Server Error for url: кандидат: зонды'),2,2026-10-10T10:07:22Z,2026-10-10T10:07:39Z
+POST,/validation: красная кнопка (leak_bank),CatchResponseError('504 <html>\r\n<head><title>504 Gateway Time-out</title></head>\r\n<body>\r\n<center><h1>504 Gateway Time-out</h1></center>\r\n<hr><c'),1,2026-10-10T10:08:17Z,2026-10-10T10:08:17Z
+GET,подборка: версия,HTTPError('500 Server Error: Internal Server Error for url: подборка: версия'),2,2026-10-10T10:07:42Z,2026-10-10T10:07:44Z
+GET,кандидат: обратная связь,CatchResponseError('500'),3,2026-10-10T10:07:56Z,2026-10-10T10:08:38Z
+GET,кандидат: статус категории,HTTPError('500 Server Error: Internal Server Error for url: кандидат: статус категории'),4,2026-10-10T10:08:04Z,2026-10-10T10:08:29Z
+POST,кандидат: резюме DOCX (разбор),CatchResponseError('500 Internal Server Error'),1,2026-10-10T10:07:40Z,2026-10-10T10:07:40Z
+GET,подборка: сравнение 2–3,CatchResponseError('500'),2,2026-10-10T10:07:56Z,2026-10-10T10:08:14Z
+POST,тест: ответ,CatchResponseError('500 Internal Server Error'),3,2026-10-10T10:07:47Z,2026-10-10T10:08:35Z
+GET,/validation: summary,HTTPError('500 Server Error: Internal Server Error for url: /validation: summary'),1,2026-10-10T10:07:54Z,2026-10-10T10:07:54Z
+GET,/validation: report,HTTPError('504 Server Error: Gateway Time-out for url: /validation: report'),7,2026-10-10T10:06:50Z,2026-10-10T10:08:02Z
+GET,работодатель: приглашения,HTTPError('500 Server Error: Internal Server Error for url: работодатель: приглашения'),1,2026-10-10T10:08:39Z,2026-10-10T10:08:39Z
+GET,/validation: report,HTTPError('500 Server Error: Internal Server Error for url: /validation: report'),2,2026-10-10T10:07:55Z,2026-10-10T10:08:50Z
+GET,работодатель: категории с рынком,HTTPError('500 Server Error: Internal Server Error for url: работодатель: категории с рынком'),2,2026-10-10T10:07:34Z,2026-10-10T10:07:44Z
+GET,кандидат: приглашения,HTTPError('500 Server Error: Internal Server Error for url: кандидат: приглашения'),4,2026-10-10T10:07:27Z,2026-10-10T10:08:07Z
+GET,подборка: что если,HTTPError('500 Server Error: Internal Server Error for url: подборка: что если'),1,2026-10-10T10:07:34Z,2026-10-10T10:07:34Z
+GET,подборка: карточка кандидата,HTTPError('500 Server Error: Internal Server Error for url: подборка: карточка кандидата'),1,2026-10-10T10:07:32Z,2026-10-10T10:07:32Z
+GET,публичное: живые пользователи,HTTPError('500 Server Error: Internal Server Error for url: публичное: живые пользователи'),1,2026-10-10T10:08:47Z,2026-10-10T10:08:47Z
+GET,кандидат: две попытки рядом,HTTPError('500 Server Error: Internal Server Error for url: кандидат: две попытки рядом'),1,2026-10-10T10:08:07Z,2026-10-10T10:08:07Z
+POST,потребность: создать + подборка v1,CatchResponseError('500 Internal Server Error'),1,2026-10-10T10:08:39Z,2026-10-10T10:08:39Z
+POST,/validation: красная кнопка (rename),CatchResponseError('500 Internal Server Error'),1,2026-10-10T10:08:07Z,2026-10-10T10:08:07Z

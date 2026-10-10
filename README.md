@@ -265,6 +265,27 @@ make env && NO_SEED=1 make up          # порты публикуются то�
 Страница QR без пароля — `sudo bash infra/nginx/apply-public-snippets.sh` (копия файла сайта, `nginx -t`, откат при
 ошибке, проверка адресов). Мониторинг с письмом владельцу — раздел 11.1 в [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
+### Проверено с нуля (09.10)
+
+Чистый клон без `.env` и кэша сборки → `make env && make up` → демо-данные → вход жюри в один клик, экспресс-тест до
+итога, потребность → подборка → сравнение: **около 5 минут** на сервере 4 vCPU (сборка образов без кэша — 2 мин 19 с,
+базовые образы Docker уже скачаны; запуск до `/api/health` — 38 с; демо-данные — 55 с). Проверка пути эксперта одной
+командой: `python3 tools/ci/fresh_check.py --base http://127.0.0.1:8140 --expect-candidates`. Подробности —
+[docs/LOAD.md](docs/LOAD.md), раздел «Развёртывание с нуля».
+
+- **Нет `make`** (Ubuntu Server ставится без него): `sudo apt install make` или те же команды вручную:
+  ```bash
+  test -f .env || { cp .env.example .env && sed -i "s/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=$(openssl rand -hex 24)/; s/^JWT_SECRET=$/JWT_SECRET=$(openssl rand -hex 32)/" .env; }
+  docker compose up -d --build
+  docker compose exec -T api python -m app.modules.demo.seed
+  ```
+- **Вторая копия на том же сервере.** В `docker-compose.yml` задано имя проекта `spectrek_fsp`: без своего имени вторая
+  копия заменит контейнеры первой, а `docker compose exec … demo.seed --reset` или `make down` сработают по первой.
+  До первой команды задайте своё имя и порты — `export COMPOSE_PROJECT_NAME=fspcopy WEB_PORT=8190 API_PORT=8191`
+  (переменная важнее имени из файла: все `make` и `docker compose` в этом терминале пойдут во вторую копию).
+- Первый вход жюри сразу после запуска или после демо-данных — до 20–30 с: создаётся песочница эксперта (запасная
+  готовится в фоне, следующие входы — мгновенно).
+
 ## Лицензия
 
 MIT — см. [LICENSE](LICENSE). Код открытый, без обфускации.
