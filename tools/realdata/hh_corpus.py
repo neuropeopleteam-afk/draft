@@ -44,7 +44,7 @@ from app.modules.matching import need_parser  # noqa: E402
 CORPUS = ROOT / "docs/realdata/hh_corpus.json"
 OUT_JSON = ROOT / "backend/app/modules/validation/data/hh_parse.json"
 OUT_MD = ROOT / "docs/validation/HH_PARSE.md"
-CACHE = Path(os.environ.get("HH_CORPUS_DIR", "/srv/work/srv/work/spectrek/data_local/hh_corpus"))
+CACHE = Path(os.environ.get("HH_CORPUS_DIR", str(ROOT.parent / "data_local" / "hh_corpus")))  # сырые ответы hh.ru — вне репозитория
 GRADES = ["intern", "junior", "middle", "senior"]
 EXP_RANGE = {"noExperience": (0, 0), "between1And3": (1, 3), "between3And6": (3, 6), "moreThan6": (6, 99)}
 FORMAT = {"REMOTE": "remote", "ON_SITE": "office", "HYBRID": "hybrid"}
@@ -394,7 +394,7 @@ def run(rev: str | None, refetch: bool) -> None:
                      "отрицания — текст с «опыт не требуется» → разбор не требует опыта, «удалёнка не предусмотрена / только офис» → "
                      "не «удалённо» (явные 0 лет и «офис» — отдельно).",
            "parser": measure(items, raws, need_parser.parse_need), "import": import_completeness(items, raws),
-           "baseline_note": "Я11 (fix/sup3): тот же замер на 50 вакансиях — <внутренний документ>; здесь — корпус hh.ru."}
+           "baseline_note": "Тот же замер разбора на 50 вакансиях — docs/LLM.md, раздел 10.4; здесь — корпус hh.ru."}
     if rev:
         res["compare"] = {"rev": rev, "parser": measure(items, raws, parser_at(rev))}
     OUT_JSON.parent.mkdir(parents=True, exist_ok=True)
