@@ -13,7 +13,7 @@ import argparse
 import json
 import sys
 
-from app.core.db import SessionLocal
+from app.core.db import SessionLocal, get_engine
 from app.modules.study import report, service, texts
 from app.modules.study.models import StudyAnswer, StudyEvent, StudyParticipant
 
@@ -101,6 +101,7 @@ def main(argv: list[str] | None = None) -> int:
     rs.add_argument("--include-declined", action="store_true")
     rs.set_defaults(fn=cmd_reset)
     a = ap.parse_args(argv)
+    get_engine()  # отдельный процесс (docker compose exec api python -m …): без этого SessionLocal не привязан к базе
     return a.fn(a)
 
 
