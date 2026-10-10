@@ -81,8 +81,9 @@ test("1440: проверка за 12 минут — от своей потреб
     const main = page.locator("main");
     await expect(main.getByRole("heading", { level: 2, name: "Требования", exact: true })).toBeVisible({ timeout: 60_000 });
     // отрицания — в «исключено», с цитатой из текста
-    await expect(main.getByText(/Исключено по тексту/)).toContainText("Django («Django не нужен»)");
-    await expect(main.getByText(/Исключено по тексту/)).toContainText("PHP («PHP не нужен»)");
+    const excluded = main.locator("li").filter({ hasText: /^Исключено по тексту:/ });
+    await expect(excluded).toContainText("Django («Django не нужен»)");
+    await expect(excluded).toContainText("PHP («PHP не нужен»)");
     await main.getByRole("button", { name: "Подтвердить все" }).click();
     await page.getByRole("button", { name: "Сохранить и показать подборку" }).click();
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+$/, { timeout: 60_000 });
