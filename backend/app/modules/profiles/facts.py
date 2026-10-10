@@ -480,6 +480,7 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
     from app.modules.assessment import provisional as prov
+    from app.modules.interview.service import badge as defense_badge  # Я15: устная защита (None — флаг выключен)
 
     p, pv = b.profile, b.privacy
     cat = categories.get(b.category_id or "")
@@ -515,6 +516,7 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "level": "T1", "theta": t.get("theta"), "se": t.get("se"), "correct": t.get("correct"),
             "answered": t.get("answered"), "engine": t.get("engine"), "date": b.test.created_at.date().isoformat(),
             "integrity": integrity_summary(t.get("integrity")),
+            "defense": defense_badge(t),  # Я15: «ответ подтверждён устно / расхождения / не проходил»
             # экспресс-тест жюри (5–7 заданий, интервал шире) и принятый уровень ниже — видны работодателю честно
             "mode": t.get("mode", "full"), "accepted_lower": bool(t.get("accepted_lower")), "grade": t.get("grade"),
         } if t else None,

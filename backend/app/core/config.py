@@ -278,6 +278,26 @@ class Settings(BaseSettings):
     fsp_oidc_issuer: str | None = None
     fsp_oidc_client_id: str | None = None
 
+    # Я15: «устная защита» ответов теста и «ИИ-интервью» как этап найма (app/modules/interview). По умолчанию выключено.
+    # Движок разговора и оценки — app/modules/interview/engine (Я14, свой интерфейс engine/CONTRACT.md); пока его нет или
+    # INTERVIEW_ENGINE=stub — заглушка продукта (тесты, CI, e2e): вопросы по шаблону, оценка правилом, «заглушка» в итоге.
+    interview_enabled: bool = False
+    interview_engine: str = "auto"  # auto — движок, если он есть и настроен, иначе заглушка; stub — всегда заглушка
+    interview_avatar: bool = True  # видео-аватар (Anam JS SDK) первым каналом, если движок выдаёт токен сессии
+    interview_anam_sdk_url: str = "https://esm.sh/@anam-ai/js-sdk@4"  # SDK грузится браузером по требованию
+    interview_audio_max_kb: int = 3072  # запись одного ответа «нажми и говори»
+    interview_defense_minutes: int = 3
+    interview_defense_max_questions: int = 3
+    interview_defense_min_chars: int = 120  # развёрнутый ответ короче — защищать нечего
+    interview_defense_max_tasks: int = 4
+    interview_defense_attempts: int = 2  # сессий на одну попытку теста (сбой связи — можно ещё раз)
+    interview_hiring_minutes: int = 10
+    interview_hiring_max_questions: int = 6
+    interview_per_user_day: int = 4
+    interview_total_day: int = 300  # всех новых сессий за сутки — потолок расходов со стороны продукта
+    interview_jury_minutes: int = 5  # режим жюри: живой запуск не длиннее, не чаще раза в час на песочницу
+    interview_jury_per_hour: int = 1
+
     @property
     def postbox_configured(self) -> bool:
         return bool(self.postbox_access_key_id and self.postbox_secret_access_key)
