@@ -55,7 +55,13 @@ def route(host: str, path: str, headers: dict[str, str] | None = None) -> Route:
     h["X-Relay-Host"] = host
     if token:
         h["X-Relay-Token"] = token
-    return Route(url=relay.rstrip("/") + path, headers=h, verify=_ca_path())
+    return Route(url=relay_root(relay) + path, headers=h, verify=_ca_path())
+
+
+def relay_root(url: str) -> str:
+    """LLM_RELAY_URL задан как база OpenRouter (…/api/v1); адаптерам нужен корень ретранслятора."""
+    root = url.rstrip("/")
+    return root[: -len("/api/v1")] if root.endswith("/api/v1") else root
 
 
 def request(method: str, host: str, path: str, *, headers: dict[str, str] | None = None, json: object | None = None,
