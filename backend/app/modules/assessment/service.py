@@ -591,8 +591,10 @@ def accept_lower_grade(db: Session, ts: TestSession) -> dict:
     lower, why = accept_lower_allowed(current, ts.claimed_grade_id, bool(er.get("confirmed")), er.get("probabilities"),
                                       provisional=cur_prov)
     if lower is None:
+        from app.modules.assessment.grades import confirm_pct
+
         msg = {"confirmed": "Заявленный грейд подтверждён — принимать уровень ниже незачем",
-               "no_lower_proved": "Тест не доказал уверенно ни один уровень ниже заявленного (нужно P ≥ 80 %)",
+               "no_lower_proved": f"Тест не доказал уверенно ни один уровень ниже заявленного (нужно P ≥ {confirm_pct()} %)",
                "not_above_current": "Доказанный уровень не выше текущего подтверждённого грейда"}[why]
         raise api_error(409, "accept_lower_unavailable", msg)
     now = utcnow()
