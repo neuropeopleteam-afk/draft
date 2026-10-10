@@ -17,6 +17,7 @@ export async function apiContext(): Promise<APIRequestContext> {
   return request.newContext({
     baseURL: BASE_URL,
     httpCredentials: user && password ? { username: user, password, origin: new URL(BASE_URL).origin } : undefined,
+    proxy: process.env.E2E_PROXY ? { server: process.env.E2E_PROXY } : undefined,  // тот же прокси, что у браузера
     timeout: 120_000,
   });
 }
