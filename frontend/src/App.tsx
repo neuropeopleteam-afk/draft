@@ -2,6 +2,7 @@ import { Link, Route, Routes } from "react-router-dom";
 import { CabinetLayout } from "./components/CabinetLayout";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
 import { JuryGuide } from "./components/JuryGuide";
+import { InterviewRoom } from "./components/Interview";  // Я15: разговор устной защиты и ИИ-интервью
 import { StudyDock } from "./components/study/StudyDock";
 import StudyAbout from "./pages/StudyAbout";
 import Expert from "./pages/Expert";
@@ -89,6 +90,7 @@ export default function App() {
         <Route path="assessment/test/:id" element={<TestRun />} />
         <Route path="category" element={<Category />} />
         <Route path="attempts" element={<Attempts />} />
+        <Route path="interview/:id" element={<InterviewRoom />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="profile" element={<Profile />} />
         <Route path="invitations" element={<Invitations />} />

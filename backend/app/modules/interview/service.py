@@ -308,6 +308,10 @@ def defense_state(db: Session, user: User, ts: TestSession) -> dict:
     if live is not None:
         _expire(db, live)
     jkey = jury_key(user)
+    if example is None and jkey:  # жюри без своего примера (экспресс-тест без развёрнутых ответов) — пример песочницы
+        example = db.scalar(select(InterviewSession).where(InterviewSession.is_example.is_(True),
+                                                           InterviewSession.jury_scope == jkey)
+                              .order_by(InterviewSession.created_at).limit(1))
     used = sum(1 for r in _defense_rows(db, ts.id) if not r.is_example)
     done = live is not None and live.status == "completed"
     can = enabled() and not reason and not (live is not None and live.status in ACTIVE) and \
@@ -429,6 +433,7 @@ def view(row: InterviewSession, audience: str, *, transcript: bool = False) -> d
             "tasks": [{"id": t["id"], "title": t.get("title")} for t in meta_.get("tasks") or []],
             "skills": [s_["name"] for s_ in meta_.get("skills") or []], "note": row.note if audience == "employer" else None,
             "transcript": row.transcript if transcript and done and audience == "employer" else None,
+            "return_to": "/candidate/category#defense" if row.mode == "defense" else "/candidate/invitations",
             "error": row.error if row.status == "failed" else None}
 
 
