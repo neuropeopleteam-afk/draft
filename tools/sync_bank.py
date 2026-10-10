@@ -20,7 +20,8 @@
 
 Пакет банка скрипт не меняет: читает только рабочее дерево.
 
-    python3 tools/sync_bank.py [--src ../bank] [--seeds 20] [--verify-seeds 3] [--no-validate] [--commit]
+    python3 tools/sync_bank.py [--src ../bank] [--seeds 20] [--verify-seeds 3] [--no-validate]
+                               [--validation-report <validation_report.json>] [--commit]
 """
 from __future__ import annotations
 
@@ -147,6 +148,9 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, default=20, help="seed на семейство для валидатора банка")
     ap.add_argument("--verify-seeds", type=int, default=3, help="на скольких seed исполнять проверки ключа")
     ap.add_argument("--no-validate", action="store_true", help="без валидатора банка (только проверка генерации)")
+    ap.add_argument("--validation-report", default=None,
+                    help="готовый validation_report.json того же дерева банка (валидатор прогнан на сервере проверок: "
+                         "remote-bank <банк> validate --seeds 20 --verify-seeds 3 --out <каталог>) — локально не гонять")
     ap.add_argument("--commit", action="store_true")
     a = ap.parse_args()
 
@@ -188,13 +192,18 @@ def main() -> int:
 
     validation = None
     if not a.no_validate:
-        out_dir = stage / "_validation"
-        r = run_py(["-m", "assessment_bank", "validate", "--seeds", str(a.seeds), "--verify-seeds",
-                    str(a.verify_seeds), "--out", str(out_dir)], cwd=stage, timeout=1800)
-        rep = out_dir / "validation_report.json"
+        if a.validation_report:  # отчёт валидатора с сервера проверок (то же дерево банка), в песочнице не гоняем
+            rep = Path(a.validation_report).resolve()
+            r = subprocess.CompletedProcess([], 0, "", f"нет файла {rep}")
+        else:
+            out_dir = stage / "_validation"
+            r = run_py(["-m", "assessment_bank", "validate", "--seeds", str(a.seeds), "--verify-seeds",
+                        str(a.verify_seeds), "--out", str(out_dir)], cwd=stage, timeout=1800)
+            rep = out_dir / "validation_report.json"
         if rep.exists():
             data = json.loads(rep.read_text(encoding="utf-8"))
-            validation = {"summary": data.get("summary"), "seeds": a.seeds, "verify_seeds": a.verify_seeds}
+            validation = {"summary": data.get("summary"), "seeds": a.seeds, "verify_seeds": a.verify_seeds,
+                          **({"where": "сервер проверок (готовый отчёт)"} if a.validation_report else {})}
             fams = data.get("families") or []
             if isinstance(fams, dict):
                 fams = [{"family_id": k, **v} for k, v in fams.items()]
