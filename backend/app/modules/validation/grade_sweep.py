@@ -1,0 +1,389 @@
+"""Перебор параметров теста ради точности уровня — на симуляции всего пути (path_retest), тот же мир и seed.
+
+    make grade-sweep                       # cd backend && python -m app.modules.validation.grade_sweep [--stage all]
+    python -m app.modules.validation.grade_sweep --stage screen --n 500 --workers 8
+
+Что перебирается (по одному от текущей конфигурации, затем сетка по влиятельным):
+порог уверенности подтверждения и «уровня ниже» (0,6–0,8), дотестирование у порога (число заданий и запас минут),
+минимум и максимум заданий, остановка по SE (se_target) и классификационная остановка (z), абляция «уровень выше в
+той же сессии». Правило «Стажёр» (порог −1,75) не меняется — без данных на людях его не трогаем.
+
+Метрики каждой точки (первая попытка против истины, повтор всего пути — против первой попытки):
+точно истинный уровень, выше истинного (завышение), ниже (категория есть), без категории, ±1; κw повтора пути
+(5 ступеней) с бутстрэп-ДИ; минуты и задания на путь (среднее и 90-й перцентиль), сессий на путь.
+Ограничения выбора (карточка Я22): завышение ≤ 6 %, κw повтора ≥ 0,84, время пути ≤ 60 мин (среднее);
+цель — максимум точных попаданий. Парето — по (точно ↑, завышение ↓, κw ↑, минуты ↓).
+
+Всё синтетическое (как path_retest): истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5, люди —
+модель ответов 2PL; это сравнение правил внутри одного мира, а не точность на людях. Результат —
+data/grade_sweep.json и docs/validation/GRADE_ACCURACY.md.
+"""
+from __future__ import annotations
+
+import argparse
+from concurrent.futures import ProcessPoolExecutor
+from dataclasses import asdict, replace
+import json
+import os
+from pathlib import Path
+import time
+
+import numpy as np
+
+from assessment_bank.psychometrics import CanaryDetector, ExposureControl
+from assessment_bank.simulation import make_truth
+
+from app.modules.assessment.exposure import exposure_table
+from app.modules.assessment.grades import CONFIRM_LEVEL, GRADE_ORDER, p_at_least, point_grade
+from app.modules.validation import path_retest as pr
+from app.modules.validation import sim
+from app.modules.validation.signature import signature
+
+HERE = Path(__file__).resolve().parent
+OUT = HERE / "data" / "grade_sweep.json"
+DOCS_MD = pr.REPO / "docs" / "validation" / "GRADE_ACCURACY.md"
+
+# ограничения выбора (карточка Я22)
+MAX_OVER = 0.07          # штаб 10.10 вечер: завышение ≤ 7 % (карточка — ≤ 6 %; доля ≤ 6 % отмечена отдельно)
+MAX_OVER_STRICT = 0.06
+MIN_KAPPA = 0.84
+MAX_MINUTES = 60.0
+N_BOOT = 1000
+
+PARAMS = ("decision", "confirm_level", "ext_items", "ext_minutes", "min_items", "max_items", "se_target",
+          "classify_z", "stop_rule", "award_above", "misspec")
+PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items": "дотестирование, заданий",
+            "ext_minutes": "дотестирование, мин", "min_items": "минимум заданий", "max_items": "максимум заданий",
+            "se_target": "остановка по SE", "classify_z": "z классификации", "stop_rule": "правило остановки",
+            "award_above": "уровень выше в сессии (P)", "decision": "решение",
+            "misspec": "мир: ошибка параметров σ"}
+DECISION_RU = {"claimed": "заявленный грейд, P ≥ порога уверенности", "point": "по лучшей оценке θ̂ (точечный грейд)"}
+
+
+def baseline_point() -> dict:
+    """Текущая конфигурация платформы (настройки) — точка отсчёта."""
+    c = sim.app_config_from_settings()
+    return {"decision": "claimed", "misspec": 0.5, "confirm_level": CONFIRM_LEVEL, "ext_items": c.ext_items, "ext_minutes": c.ext_minutes,
+            "min_items": c.min_items, "max_items": c.max_items, "se_target": c.se_target,
+            "classify_z": c.classify_z, "stop_rule": c.stop_rule, "award_above": None}
+
+
+def _p(**kw) -> dict:
+    return {**baseline_point(), **kw}
+
+
+def stage_screen() -> list[dict]:
+    """По одному параметру от текущей конфигурации (мир σ = 0,5)."""
+    pts = [_p()]
+    pts += [_p(confirm_level=v) for v in (0.5, 0.55, 0.6, 0.65, 0.7, 0.75)]
+    pts += [_p(ext_items=v) for v in (0, 3, 9, 12)]
+    pts += [_p(ext_minutes=v) for v in (10, 30)]
+    pts += [_p(min_items=v) for v in (6, 10, 12)]
+    pts += [_p(max_items=v) for v in (12, 14, 18, 20)]
+    pts += [_p(se_target=v) for v in (0.25, 0.30, 0.40, 0.45)]
+    pts += [_p(classify_z=v) for v in (1.0, 1.15, 1.44, 1.64)]
+    pts += [_p(stop_rule="se")]
+    pts += [_p(award_above=v) for v in (0.8, 0.9)]
+    pts += [_p(decision="point")]
+    return pts
+
+
+def stage_grid() -> list[dict]:
+    """Сетка по влиятельным параметрам: решение × порог уверенности × дотестирование × z × длина."""
+    pts = []
+    for z in (1.0, 1.28, 1.64):
+        for ext in (3, 6, 9):
+            for mn, mx in ((8, 16), (6, 14), (10, 18)):
+                pts.append(_p(decision="point", classify_z=z, ext_items=ext, min_items=mn, max_items=mx))
+                for c in (0.5, 0.6, 0.7):
+                    for up in (None, 0.8):
+                        pts.append(_p(confirm_level=c, award_above=up, classify_z=z, ext_items=ext,
+                                      min_items=mn, max_items=mx))
+    return pts
+
+
+def stage_worlds() -> list[dict]:
+    """Мир конкурента (σ = 0,35): Парето-точки мира σ = 0,5 пересчитываются в stage «worlds» отдельно (см. run)."""
+    return [_p(misspec=0.35), _p(misspec=0.35, decision="point"), _p(misspec=0.35, confirm_level=0.5)]
+
+
+STAGES = {"screen": stage_screen, "grid": stage_grid, "worlds": stage_worlds}
+
+
+def key(pt: dict) -> str:
+    return ";".join(f"{k}={pt[k]}" for k in PARAMS)
+
+
+def borderline(grade: str, theta: float, se: float, level: float = 0.8) -> bool:
+    """«На границе»: итоговый уровень не доказан с P ≥ 0,8 или следующий не исключён (P > 0,2)."""
+    if grade == "none":
+        return p_at_least(theta, se, GRADE_ORDER[0]) > 1 - level
+    i = GRADE_ORDER.index(grade)
+    up = p_at_least(theta, se, GRADE_ORDER[i + 1]) if i + 1 < len(GRADE_ORDER) else 0.0
+    return bool(p_at_least(theta, se, grade) < level or up > 1 - level)
+
+
+# ---------------------------------------------------------------- один (точка, направление)
+
+_CACHE: dict = {}
+
+
+def _pool(n_subpools: int):
+    if n_subpools not in _CACHE:
+        _CACHE[n_subpools] = sim.make_pool(n_subpools)
+    return _CACHE[n_subpools]
+
+
+def run_task(args: tuple[dict, int, str, int]) -> dict:
+    """Путь дважды для кандидатов одного направления при параметрах pt — те же rng, что path_retest.direction_run."""
+    pt, i, d, n = args
+    base = sim.app_config_from_settings()
+    cfg = replace(base, ext_items=int(pt["ext_items"]), ext_minutes=int(pt["ext_minutes"]),
+                  min_items=int(pt["min_items"]), max_items=int(pt["max_items"]), se_target=float(pt["se_target"]),
+                  classify_z=float(pt["classify_z"]), stop_rule=str(pt["stop_rule"]))
+    pool = _pool(cfg.subpools)
+    k = (exposure_table() or {}).get("k", {}).get(d, {})
+    rng0 = pr._rng(i, 0)
+    truth = make_truth(pool, rng0, misspec=float(pt["misspec"]))
+    cands = pr.make_candidates(n, d, rng0)
+    counter = ExposureControl(0.3, k=dict(k))
+    det = CanaryDetector()
+    rng = pr._rng(i, 1)
+    out = {"true": [], "claimed": [], "l1": [], "l2": [], "min1": [], "items1": [], "sess1": [], "status1": [],
+           "border1": []}
+    for c in cands:
+        hist: list[dict] = []
+        r1 = pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"], pt["award_above"],
+                         pt["decision"])
+        r2 = pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"], pt["award_above"],
+                         pt["decision"])
+        out["true"].append(pr.LEVELS.index(point_grade(c.theta)))
+        out["claimed"].append(pr.LEVELS.index(c.claimed))
+        out["l1"].append(r1["level"])
+        out["l2"].append(r2["level"])
+        out["min1"].append(sum(t["time_s"] for t in r1["tests"]) / 60)
+        out["items1"].append(sum(t["n_items"] for t in r1["tests"]))
+        out["sess1"].append(len(r1["tests"]))
+        out["status1"].append(r1["status"])
+        out["border1"].append(borderline(r1["grade"], r1["tests"][-1]["theta"], r1["tests"][-1]["se"]))
+    return {"key": key(pt), "direction": d, **out}
+
+
+# ---------------------------------------------------------------- метрики точки
+
+def metrics(rows: list[dict], boot: bool = True, seed: int = 0) -> dict:
+    cat = {k: np.concatenate([np.asarray(r[k]) for r in rows]) for k in ("true", "claimed", "l1", "l2", "min1",
+                                                                         "items1", "sess1", "border1")}
+    status = [s for r in rows for s in r["status1"]]
+    t, g, g2 = cat["true"], cat["l1"], cat["l2"]
+    has = g > 0
+    under = (g < t) & has
+    m = {"n": int(len(t)),
+         "exact": float(np.mean(g == t)), "over": float(np.mean(g > t)), "under": float(np.mean(under)),
+         "none": float(np.mean(~has)), "within_1": float(np.mean(np.abs(g - t) <= 1)),
+         "kappa_true": float(pr.kappa_w(t, g)),
+         # из «ниже истинного»: заявил ниже истинного уровня (тест на заявленный грейд выше не поднимает)
+         "under_claimed_below": float(np.mean(under & (cat["claimed"] < t))),
+         "retest_kappa": float(pr.kappa_w(g, g2)), "retest_exact": float(np.mean(g == g2)),
+         "minutes_mean": float(cat["min1"].mean()), "minutes_p90": float(np.percentile(cat["min1"], 90)),
+         "minutes_over_60": float(np.mean(cat["min1"] > 60.0)),
+         "items_mean": float(cat["items1"].mean()), "sessions_mean": float(cat["sess1"].mean()),
+         "borderline": float(np.mean(cat["border1"])),
+         "status": {s: round(status.count(s) / len(status), 4) for s in sorted(set(status))}}
+    if boot:
+        idx = np.random.default_rng(seed).integers(0, len(t), size=(N_BOOT, len(t)))
+        m["exact_ci"] = pr._ci(np.array([np.mean(g[i] == t[i]) for i in idx]))
+        m["over_ci"] = pr._ci(np.array([np.mean(g[i] > t[i]) for i in idx]))
+        m["retest_kappa_ci"] = pr._ci(np.array([pr.kappa_w(g[i], g2[i]) for i in idx]))
+    m["feasible"] = bool(m["over"] <= MAX_OVER and m["retest_kappa"] >= MIN_KAPPA and m["minutes_mean"] <= MAX_MINUTES)
+    m["feasible_strict"] = bool(m["feasible"] and m["over"] <= MAX_OVER_STRICT)
+    return {k: (round(v, 4) if isinstance(v, float) else v) for k, v in m.items()}
+
+
+def pareto(points: list[dict]) -> list[str]:
+    """Недоминируемые точки по (точно ↑, завышение ↓, κw повтора ↑, минуты ↓)."""
+    def vec(p):
+        m = p["metrics"]
+        return np.array([m["exact"], -m["over"], m["retest_kappa"], -m["minutes_mean"]])
+    vs = [vec(p) for p in points]
+    front = []
+    for i, v in enumerate(vs):
+        dom = any(np.all(w >= v) and np.any(w > v) for j, w in enumerate(vs) if j != i)
+        if not dom:
+            front.append(points[i]["key"])
+    return front
+
+
+def choose(points: list[dict], base_key: str) -> dict:
+    """Лучшая допустимая точка по точности; при равенстве (±0,5 п. п.) — меньше завышение, затем меньше минут."""
+    base = next(p for p in points if p["key"] == base_key)
+    feas = [p for p in points if p["metrics"]["feasible"]]
+    if not feas:
+        return {"key": base_key, "better_on_all": False, "reason": "нет допустимых точек"}
+    best_exact = max(p["metrics"]["exact"] for p in feas)
+    near = [p for p in feas if p["metrics"]["exact"] >= best_exact - 0.005]
+    best = sorted(near, key=lambda p: (p["metrics"]["over"], p["metrics"]["minutes_mean"], -p["metrics"]["exact"]))[0]
+    bm, m = base["metrics"], best["metrics"]
+    better = bool(m["exact"] > bm["exact"] and m["feasible"])
+    return {"key": best["key"], "point": best["point"], "better_on_all": better,
+            "delta_exact": round(m["exact"] - bm["exact"], 4), "delta_over": round(m["over"] - bm["over"], 4),
+            "delta_kappa": round(m["retest_kappa"] - bm["retest_kappa"], 4),
+            "delta_minutes": round(m["minutes_mean"] - bm["minutes_mean"], 2)}
+
+
+# ---------------------------------------------------------------- прогон
+
+def run(stages: list[str], n: int = 500, workers: int | None = None, write: bool = True,
+        extra: list[dict] | None = None, merge: bool = False) -> dict:
+    t0 = time.time()
+    pts: list[dict] = []
+    for st in stages:
+        pts += STAGES[st]()
+    pts += extra or []
+    seen, uniq = set(), []
+    for p in pts:
+        if key(p) not in seen:
+            seen.add(key(p))
+            uniq.append(p)
+    old = {}
+    if merge and OUT.exists():
+        old = {p["key"]: p for p in json.loads(OUT.read_text(encoding="utf-8")).get("points", [])
+               if p.get("n_per_direction") == n}
+    todo = [p for p in uniq if key(p) not in old]
+    tasks = [(p, i, d, n) for p in todo for i, d in enumerate(sim.DIRECTIONS)]
+    workers = workers or max(1, (os.cpu_count() or 2))
+    print(f"точек: {len(uniq)} (новых {len(todo)}), задач: {len(tasks)}, процессов: {workers}", flush=True)
+    by: dict[str, list[dict]] = {}
+    with ProcessPoolExecutor(max_workers=workers) as ex:
+        for j, r in enumerate(ex.map(run_task, tasks, chunksize=1)):
+            by.setdefault(r["key"], []).append(r)
+            if (j + 1) % 25 == 0:
+                print(f"  {j + 1}/{len(tasks)} ({time.time() - t0:.0f} с)", flush=True)
+    points = list(old.values())
+    for p in todo:
+        k = key(p)
+        points.append({"key": k, "point": p, "n_per_direction": n, "metrics": metrics(by[k], seed=pr.SEED)})
+    base_key = key(baseline_point())
+    front: list[str] = []
+    worlds = sorted({p["point"]["misspec"] for p in points}, reverse=True)
+    for w in worlds:
+        front += pareto([p for p in points if p["point"]["misspec"] == w])
+    for p in points:
+        p["pareto"] = p["key"] in front
+    main_world = [p for p in points if p["point"]["misspec"] == 0.5]
+    choice = choose(main_world, base_key)
+    strict = [p for p in main_world if p["metrics"]["feasible_strict"] or p["key"] == base_key]
+    choice_strict = choose(strict, base_key)
+    cfg = sim.app_config_from_settings()
+    rep = {"signature": signature(seed=pr.SEED, config={"base": asdict(cfg), "n": n, "stages": stages},
+                                  n=n * len(sim.DIRECTIONS),
+                                  world=f"симуляция всего пути: {len(sim.DIRECTIONS)} направлений × {n} кандидатов, "
+                                        f"точек перебора: {len(points)}",
+                                  command="make grade-sweep"),
+           "constraints": {"max_over": MAX_OVER, "min_retest_kappa": MIN_KAPPA, "max_minutes_mean": MAX_MINUTES},
+           "baseline_key": base_key, "choice": choice, "choice_strict_over_6": choice_strict, "pareto": front,
+           "points": points,
+           "caveat": pr.CAVEAT, "seconds": round(time.time() - t0, 1)}
+    if write:
+        OUT.parent.mkdir(parents=True, exist_ok=True)
+        OUT.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
+        DOCS_MD.write_text(markdown(rep), encoding="utf-8")
+        print(f"→ {OUT.relative_to(pr.REPO)}, {DOCS_MD.relative_to(pr.REPO)} ({rep['seconds']} с)", flush=True)
+    return rep
+
+
+# ---------------------------------------------------------------- документация
+
+def _pc(v, d: int = 1) -> str:
+    return "—" if v is None else f"{100 * v:.{d}f} %".replace(".", ",")
+
+
+def _f(v, d: int = 3) -> str:
+    return "—" if v is None else f"{v:.{d}f}".replace(".", ",")
+
+
+def _diff(pt: dict, base: dict) -> str:
+    parts = []
+    for k in PARAMS:
+        if pt[k] != base[k]:
+            v = pt[k]
+            v = "нет" if v is None else (str(v).replace(".", ",") if isinstance(v, float) else str(v))
+            parts.append(f"{PARAM_RU[k]} {v}")
+    return "; ".join(parts) or "текущая конфигурация"
+
+
+def _row(p: dict, base: dict) -> str:
+    m = p["metrics"]
+    mark = ("**допустима**" if m["feasible"] else "нет") + (" · Парето" if p.get("pareto") else "")
+    return (f"| {_diff(p['point'], base)} | {_pc(m['exact'])} | {_pc(m['over'])} | {_pc(m['under'])} | "
+            f"{_pc(m['none'])} | {_f(m['retest_kappa'])} | {_f(m['minutes_mean'], 1)} / {_f(m['minutes_p90'], 0)} | "
+            f"{_f(m['items_mean'], 1)} | {mark} |")
+
+
+def markdown(rep: dict) -> str:
+    pts = {p["key"]: p for p in rep["points"]}
+    base = pts[rep["baseline_key"]]
+    bp = base["point"]
+    ch = rep["choice"]
+    sig = rep["signature"]
+    c = rep["constraints"]
+    head = ["| Отличие от текущей конфигурации | Точно | Выше | Ниже | Без категории | κw повтора | Минуты (ср. / p90) | "
+            "Заданий | Ограничения |", "|---|---|---|---|---|---|---|---|---|"]
+    L = ["# Точность уровня: перебор параметров теста (Парето)", "",
+         f"Подпись мира: {sig['world']}; seed {sig['seed']}, конфигурация `{sig['config_hash']}`, коммит "
+         f"`{sig['commit']}`, банк `{sig['bank']}`. Пересчёт: `{sig['command']}` ({_f(rep['seconds'], 0)} с на "
+         "сервере проверок).", "", f"> {rep['caveat']}", "",
+         "Точка = вся процедура `make path-retest` (опрос → тест → решение → «уровень ниже» или тест ступенью ниже → "
+         "повтор) с изменёнными параметрами; одни и те же кандидаты и ответы (общие случайные числа), поэтому разница "
+         "между точками — от правил, а не от шума выборки.", "",
+         f"Ограничения выбора: завышение (грейд выше истинного) ≤ {_pc(c['max_over'], 0)}, κw повтора всего пути ≥ "
+         f"{_f(c['min_retest_kappa'], 2)}, время пути ≤ {_f(c['max_minutes_mean'], 0)} мин в среднем; цель — максимум "
+         "точных попаданий в истинный уровень (первая попытка). Правило «Стажёр» (порог −1,75) не менялось.", "",
+         "## Текущая конфигурация", "", *head, _row(base, bp), ""]
+    m = base["metrics"]
+    L += [f"Из «ниже истинного» {_pc(m['under'])} — {_pc(m['under_claimed_below'])} у тех, кто заявил грейд ниже "
+          "своего уровня: тест подтверждает заявленный грейд и выше его не поднимает (смена грейда вверх — новым "
+          "тестом). Остальное — правило P ≥ 0,8: у самой границы уровня подтверждение требует запаса.", ""]
+    if ch.get("point"):
+        cm = pts[ch["key"]]["metrics"]
+        L += ["## Выбор", "", *head, _row(pts[ch["key"]], bp), "",
+              f"- Точно: {_pc(cm['exact'])} {('[' + _pc(cm['exact_ci'][0]) + '; ' + _pc(cm['exact_ci'][1]) + ']') if cm.get('exact_ci') else ''}"
+              f" против {_pc(m['exact'])}; завышение {_pc(cm['over'])} (ограничение ≤ {_pc(c['max_over'], 0)}); κw повтора "
+              f"{_f(cm['retest_kappa'])} {('[' + _f(cm['retest_kappa_ci'][0]) + '; ' + _f(cm['retest_kappa_ci'][1]) + ']') if cm.get('retest_kappa_ci') else ''}; "
+              f"минут на путь {_f(cm['minutes_mean'], 1)}.",
+              f"- Лучше текущей по всем ограничениям: {'да' if ch['better_on_all'] else 'нет'}.", ""]
+    front = [pts[k] for k in rep["pareto"]]
+    front.sort(key=lambda p: -p["metrics"]["exact"])
+    L += ["## Парето-фронт (недоминируемые по точности, завышению, κw и минутам)", "", *head]
+    L += [_row(p, bp) for p in front]
+    L += ["", "## Все точки", "", *head]
+    L += [_row(p, bp) for p in sorted(rep["points"], key=lambda p: -p["metrics"]["exact"])]
+    L += ["", "Полные данные: `backend/app/modules/validation/data/grade_sweep.json`.", ""]
+    return "\n".join(L)
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Перебор параметров теста ради точности уровня → data/grade_sweep.json")
+    ap.add_argument("--stage", default="all", help="screen | grid | all | none")
+    ap.add_argument("--n", type=int, default=500)
+    ap.add_argument("--workers", type=int, default=None)
+    ap.add_argument("--points", default=None, help="JSON-файл со списком дополнительных точек (частичные словари)")
+    ap.add_argument("--merge", action="store_true", help="дописать к уже посчитанным точкам data/grade_sweep.json")
+    ap.add_argument("--no-write", action="store_true")
+    a = ap.parse_args()
+    stages = list(STAGES) if a.stage == "all" else ([] if a.stage == "none" else a.stage.split(","))
+    extra = [_p(**e) for e in json.loads(Path(a.points).read_text(encoding="utf-8"))] if a.points else None
+    rep = run(stages, a.n, a.workers, not a.no_write, extra, a.merge)
+    print("выбор:", json.dumps(rep["choice"], ensure_ascii=False))
+    pts = {p["key"]: p for p in rep["points"]}
+    for p in sorted(rep["points"], key=lambda p: -p["metrics"]["exact"])[:40]:
+        m = p["metrics"]
+        print(f"  {m['exact']:.3f} выше {m['over']:.3f} ниже {m['under']:.3f} нет {m['none']:.3f} ±1 {m['within_1']:.3f} "
+              f"κw {m['retest_kappa']:.3f} мин {m['minutes_mean']:.1f}/{m['minutes_p90']:.0f} гр {m['borderline']:.2f} "
+              f"{'OK' if m['feasible'] else '--'} {_diff(p['point'], baseline_point())}")
+    _ = pts
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
