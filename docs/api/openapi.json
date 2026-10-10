@@ -62188,6 +62188,26 @@
         ]
       }
     },
+    "/api/validation/ru-llm": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "ru_llm_api_validation_ru_llm_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Режим «только российская модель»: YandexGPT 5.1 против Claude Sonnet 5.5 и правил на одних входах",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
     "/api/validation/self-check": {
       "post": {
         "description": "Настоящий BankEngine, настоящие варианты заданий и ключи, адаптивный выбор, канарейки, дотестирование и правило решения — как у живого кандидата; в БД ничего не пишется. Развёрнутые ответы синтетический кандидат не пишет — их балл задаёт стратегия, время расчётное. Один расчёт за раз (иначе 429 self_check_busy).\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
@@ -62366,6 +62386,26 @@
           }
         ],
         "summary": "«Проверьте сами»: синтетический кандидат проходит N тестов на настоящем движке банка (вход обязателен)",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
+    "/api/validation/strongest": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "strongest_api_validation_strongest_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Какая модель где и почему: качество, отказы, задержка и цена каждой модели по LLM-функциям",
         "tags": [
           "validation"
         ]
