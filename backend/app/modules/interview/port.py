@@ -2,13 +2,13 @@
 
 Продукт хранит сессию, расшифровку и состояние разговора (InterviewSession.state) и на каждую реплику зовёт движок:
 start → первая реплика; reply → следующая реплика и признак конца; evaluate → итог (вердикт, вопросы с цитатами);
-transcribe / speak — распознавание и голос для канала «голос»; avatar_token — токен сессии видео-аватара (Anam JS SDK в
-браузере). Интерфейс движка — engine/CONTRACT.md v1.0 (Я14): normalize_spec, next_turn, evaluate, stt, tts, avatar_token,
-check_limits, status, is_stub.
+transcribe / speak — распознавание («нажми и говори») и голос ведущего. Видео-аватара в продукте нет (регламент п. 5.11):
+визуал — собственная анимация волны голоса на экране. Интерфейс движка — engine/CONTRACT.md v1.0 (Я14): normalize_spec,
+next_turn, evaluate, stt, tts, check_limits, status, is_stub.
 
 Заглушка (INTERVIEW_ENGINE=stub или движка нет): вопросы — по шаблону из собственного ответа кандидата и тем задания,
-оценка — правилом (совпадение ключевых слов устного и письменного ответа), без моделей, голоса и аватара; итог помечен
-stub=true. Нужна тестам, CI, e2e и стенду до выкладки движка.
+оценка — правилом (совпадение ключевых слов устного и письменного ответа), без моделей и голоса; итог помечен stub=true.
+INTERVIEW_STT_STUB=true (только e2e/демо) — «нажми и говори» в заглушке отдаёт начало письменного ответа текущего вопроса. Нужна тестам, CI, e2e и стенду до выкладки движка.
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ log = logging.getLogger("interview.port")
 
 
 class EngineUnavailable(Exception):
-    """Канал или движок недоступен — продукт переключает канал (аватар → голос → текст) или показывает ошибку."""
+    """Канал или движок недоступен — продукт переключает канал (голос → текст) или показывает ошибку."""
 
 
 # ------------------------------------------------------------------ заглушка продукта
@@ -50,7 +50,7 @@ class StubPort:
     name = "stub"
 
     def channels(self) -> dict:
-        return {"avatar": False, "voice": False, "text": True}
+        return {"voice": False, "stt": bool(get_settings().interview_stt_stub), "text": True}
 
     def _plan(self, mode: str, ctx: dict, max_q: int) -> list[dict]:
         out: list[dict] = []
@@ -141,14 +141,13 @@ class StubPort:
                 "coverage": round(100 * sum(x != "no_data" for x in lv) / len(lv)) if lv else 0,
                 "cost": {"usd": 0.0, "estimated": False}, "stub": True}
 
-    def transcribe(self, audio: bytes, mime: str) -> tuple[str, float]:
+    def transcribe(self, audio: bytes, mime: str, stub_text: str | None = None) -> tuple[str, float, bool]:
+        if get_settings().interview_stt_stub and (stub_text or "").strip():
+            return stub_text.strip(), 0.0, True
         raise EngineUnavailable("распознавание речи в заглушке не работает — ответьте текстом")
 
     def speak(self, text: str) -> tuple[bytes, str, float]:
         raise EngineUnavailable("голос в заглушке не работает")
-
-    def avatar_token(self, max_seconds: int = 300) -> dict | None:
-        return None
 
     def check_limits(self, jury: bool, last_hour: int, spent_today_usd: float) -> None:
         return None
@@ -177,8 +176,8 @@ class EnginePort:
             ch = (self.eng.status() or {}).get("channels") or {}
         except Exception:  # noqa: BLE001
             ch = {}
-        return {"avatar": bool(ch.get("avatar")) and get_settings().interview_avatar,
-                "voice": bool(ch.get("voice")) and bool(ch.get("stt")), "text": True}
+        stt = bool(ch.get("stt")) or (self.is_stub() and get_settings().interview_stt_stub)
+        return {"voice": bool(ch.get("voice")), "stt": stt, "text": True}
 
     def _spec(self, state: dict):
         return self.eng.SessionSpec.model_validate(state["spec"])
@@ -228,14 +227,16 @@ class EnginePort:
                 "flags": list(v.flags), "coverage": v.coverage, "cost": cost, "stub": v.source == "stub",
                 "source": v.source, "removed_quotes": v.removed_quotes}
 
-    def transcribe(self, audio: bytes, mime: str) -> tuple[str, float]:
+    def transcribe(self, audio: bytes, mime: str, stub_text: str | None = None) -> tuple[str, float, bool]:
+        stub_ok = get_settings().interview_stt_stub
         try:
-            t = self.eng.stt(audio, mime)
+            t = self.eng.stt(audio, mime, stub_text=stub_text if stub_ok else None)
         except Exception as x:  # noqa: BLE001
             raise self._err(x) from None
-        if getattr(t, "stub", False) or not (t.text or "").strip():
+        stub = bool(getattr(t, "stub", False))
+        if (stub and not stub_ok) or not (t.text or "").strip():
             raise EngineUnavailable("stt_unavailable")
-        return t.text, float(t.cost_usd or 0)
+        return t.text, float(t.cost_usd or 0), stub
 
     def speak(self, text: str) -> tuple[bytes, str, float]:
         try:
@@ -245,14 +246,6 @@ class EnginePort:
         if getattr(a, "stub", False) or not a.data:
             raise EngineUnavailable("tts_unavailable")
         return a.data, a.mime or "audio/mpeg", float(a.cost_usd or 0)
-
-    def avatar_token(self, max_seconds: int = 300) -> dict | None:
-        try:
-            t = self.eng.avatar_token()
-        except Exception:  # noqa: BLE001
-            return None
-        return {"session_token": t.session_token, "ice_servers": t.ice_servers, "max_seconds": t.max_seconds,
-                "relay_only": t.relay_only, "persona_name": t.persona_name}
 
     def check_limits(self, jury: bool, last_hour: int, spent_today_usd: float) -> None:
         self.eng.check_limits(jury, last_hour, spent_today_usd)  # EngineError(jury_limit | daily_cap) — ловит сервис

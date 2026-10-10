@@ -287,15 +287,11 @@ def _fake_engine():
         return SimpleNamespace(verdict="confirmed", verdict_label="подтверждено устно", score=81, summary="Уверенно.",
                                questions=[q], flags=[], coverage=100, removed_quotes=2, source="llm", cost_usd=0.1)
 
-    def stt(audio, mime):
+    def stt(audio, mime, stub_text=None):
         return SimpleNamespace(text="распознанный ответ про индексы", seconds=3.0, cost_usd=0.002, stub=False)
 
     def tts(text, fmt="mp3"):
         return SimpleNamespace(data=b"ID3fake", mime="audio/mpeg", cost_usd=0.003, stub=False)
-
-    def avatar_token():
-        return SimpleNamespace(session_token="tok-test", ice_servers=[{"urls": "turn:example"}], max_seconds=420,
-                               relay_only=False, persona_name="Интервьюер")
 
     limits = {"calls": []}
 
@@ -305,7 +301,7 @@ def _fake_engine():
     return SimpleNamespace(
         Transcript=Transcript, SessionSpec=SessionSpec, TurnInput=TurnInput, DefenseContext=Ctx, InterviewContext=Ctx,
         normalize_spec=lambda spec: spec, next_turn=next_turn, evaluate=evaluate, stt=stt, tts=tts,
-        avatar_token=avatar_token, check_limits=check_limits, is_stub=lambda: False, limits=limits,
+        check_limits=check_limits, is_stub=lambda: False, limits=limits,
         status=lambda: {"stub": False, "channels": {"text": True, "voice": True, "stt": True, "avatar": True}},
         plan=lambda spec: [])
 
@@ -316,15 +312,17 @@ def test_engine_port_channels_and_quote_check(client, on, monkeypatch):
     t = candidate_with_category(client)
     ts = _with_open_answers(client, t)
     sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
-    a = client.post(f"/api/interview/sessions/{sid}/avatar", headers=H(t)).json()
-    assert a["session_token"] == "tok-test" and "sdk_url" not in a  # SDK — из бандла, не с CDN
-    s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "avatar"}, headers=H(t)).json()
-    assert s["conversation"]["channels"] == {"avatar": True, "voice": True, "text": True} and s["conversation"]["hint"] is None
+    # видео-аватара в продукте нет (регламент п. 5.11): маршрута нет, канал «avatar» не принимается
+    assert client.post(f"/api/interview/sessions/{sid}/avatar", headers=H(t)).status_code in (404, 405)
+    assert client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "avatar"}, headers=H(t)).status_code == 422
+    s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "voice"}, headers=H(t)).json()
+    assert s["conversation"]["channels"] == {"voice": True, "stt": True, "text": True} and s["conversation"]["hint"] is None
     sp = client.get(f"/api/interview/sessions/{sid}/speech", headers=H(t))
     assert sp.status_code == 200 and sp.headers["content-type"] == "audio/mpeg"
     tr = client.post(f"/api/interview/sessions/{sid}/transcribe", content=b"\x1a\x45\xdf\xa3",
                      headers={**H(t), "Content-Type": "audio/webm"})
-    assert tr.json() == {"text": "распознанный ответ про индексы"}
+    assert tr.json() == {"text": "распознанный ответ про индексы", "stub": False}
+    client.post(f"/api/interview/sessions/{sid}/channel", json={"channel": "text"}, headers=H(t))
     client.post(f"/api/interview/sessions/{sid}/channel", json={"channel": "voice"}, headers=H(t))
     client.post(f"/api/interview/sessions/{sid}/answer", json={"text": "Потому что индекс по дате ускоряет отчёт",
                                                                "channel": "voice"}, headers=H(t))
@@ -337,7 +335,7 @@ def test_engine_port_channels_and_quote_check(client, on, monkeypatch):
     assert eng.limits["calls"] == [(False, 0, 0.0)]  # лимиты движка спрошены при создании
     with SessionLocal() as db:
         row = db.get(InterviewSession, uuid.UUID(sid))
-        assert row.result["quotes_dropped"] == 1 and row.result["channels"] == ["avatar", "voice", "text"]
+        assert row.result["quotes_dropped"] == 1 and row.result["channels"] == ["voice", "text", "voice", "text"]
         assert row.result["quotes_removed_by_engine"] == 2 and row.result["source"] == "llm"
         # модель: 3 хода по 0,01 + оценка 0,1; распознавание 0,002 и голос 0,003 — посчитаны продуктом
         assert row.state == {} and row.cost["usd"] == pytest.approx(0.135) and row.cost["stt_usd"] == 0.002
@@ -347,11 +345,28 @@ def test_stub_channels_unavailable(client, on):
     t = candidate_with_category(client)
     ts = _with_open_answers(client, t)
     sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
-    assert client.post(f"/api/interview/sessions/{sid}/avatar", headers=H(t)).status_code == 503
-    client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "text"}, headers=H(t))
+    s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "text"}, headers=H(t)).json()
+    assert s["conversation"]["channels"] == {"voice": False, "stt": False, "text": True}
     assert client.get(f"/api/interview/sessions/{sid}/speech", headers=H(t)).status_code == 503
     r = client.post(f"/api/interview/sessions/{sid}/transcribe", content=b"x", headers={**H(t), "Content-Type": "audio/webm"})
     assert r.status_code == 503 and r.json()["detail"]["code"] == "stt_unavailable"
+
+
+def test_stub_stt_for_e2e(client, on, monkeypatch):
+    """INTERVIEW_STT_STUB (только e2e/демо): «нажми и говори» в заглушке отдаёт начало письменного ответа, stub=true."""
+    monkeypatch.setattr(get_settings(), "interview_stt_stub", True)
+    t = candidate_with_category(client)
+    ts = _with_open_answers(client, t)
+    sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
+    s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "text"}, headers=H(t)).json()
+    assert s["conversation"]["channels"] == {"voice": False, "stt": True, "text": True}
+    r = client.post(f"/api/interview/sessions/{sid}/transcribe", content=b"\x1a\x45\xdf\xa3",
+                    headers={**H(t), "Content-Type": "audio/webm"})
+    assert r.status_code == 200 and r.json()["stub"] is True
+    assert r.json()["text"] and r.json()["text"] == s["conversation"]["hint"][:3000].strip()
+    big = b"x" * (get_settings().interview_audio_max_kb * 1024 + 1)
+    assert client.post(f"/api/interview/sessions/{sid}/transcribe", content=big,
+                       headers={**H(t), "Content-Type": "audio/webm"}).status_code == 413
 
 
 def test_openapi_has_interview_models(client):

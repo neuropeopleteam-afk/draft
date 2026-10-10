@@ -65,7 +65,7 @@ def _example(db: Session, user_id, honest: bool) -> InterviewSession | None:
                            jury_scope=scope.key_of((db.get(User, user_id) or User()).email),
                            context_meta=meta, transcript=transcript, consent_version=svc.CONSENT_VERSION,
                            started_at=utcnow(), duration_s=150, channel="voice", result={},
-                           state={"channels_log": ["avatar", "voice"]})
+                           state={"channels_log": ["voice", "text"]})
     db.add(row)
     db.flush()
     svc.apply_result(db, row, raw)
