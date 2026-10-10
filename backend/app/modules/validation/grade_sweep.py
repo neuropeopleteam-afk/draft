@@ -53,12 +53,14 @@ MAX_MINUTES = 60.0
 N_BOOT = 1000
 
 PARAMS = ("decision", "confirm_level", "ext_items", "ext_minutes", "min_items", "max_items", "se_target",
-          "classify_z", "stop_rule", "award_above", "misspec")
+          "classify_z", "stop_rule", "award_above", "misspec", "levels", "max_minutes", "exclude_low", "partial")
+OPEN_FORMATS = ("open_answer", "open_book_3step")
 PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items": "дотестирование, заданий",
             "ext_minutes": "дотестирование, мин", "min_items": "минимум заданий", "max_items": "максимум заданий",
             "se_target": "остановка по SE", "classify_z": "z классификации", "stop_rule": "правило остановки",
             "award_above": "уровень выше в сессии (P)", "decision": "решение",
-            "misspec": "мир: ошибка параметров σ"}
+            "misspec": "мир: ошибка параметров σ", "levels": "ступеней", "max_minutes": "лимит основной части, мин",
+            "exclude_low": "без семейств с низкой информацией (доля)", "partial": "частичный балл: критериев"}
 DECISION_RU = {"claimed": "заявленный грейд, P ≥ порога уверенности", "point": "по лучшей оценке θ̂ (точечный грейд)"}
 
 
@@ -67,7 +69,8 @@ def baseline_point() -> dict:
     c = sim.app_config_from_settings()
     return {"decision": "claimed", "misspec": 0.5, "confirm_level": CONFIRM_LEVEL, "ext_items": c.ext_items, "ext_minutes": c.ext_minutes,
             "min_items": c.min_items, "max_items": c.max_items, "se_target": c.se_target,
-            "classify_z": c.classify_z, "stop_rule": c.stop_rule, "award_above": None}
+            "classify_z": c.classify_z, "stop_rule": c.stop_rule, "award_above": None, "levels": 5,
+            "max_minutes": c.max_minutes, "exclude_low": 0.0, "partial": 1}
 
 
 def _p(**kw) -> dict:
@@ -109,7 +112,26 @@ def stage_worlds() -> list[dict]:
     return [_p(misspec=0.35), _p(misspec=0.35, decision="point"), _p(misspec=0.35, confirm_level=0.5)]
 
 
-STAGES = {"screen": stage_screen, "grid": stage_grid, "worlds": stage_worlds}
+def stage_competitor() -> list[dict]:
+    """«Яблоко к яблоку» с FSP Talent: 4 ступени (без Стажёра), σ параметров 0,35, 20 заданий, подтверждение при
+    P ≥ 0,5 — нашей процедурой (опрос, ротация, детектор, повтор всего пути); рядом — наша текущая и по лучшей оценке."""
+    fixed = dict(levels=4, misspec=0.35, min_items=20, max_items=20, ext_items=0, max_minutes=90)
+    return [_p(**fixed, confirm_level=0.5), _p(**fixed, decision="point"),
+            _p(levels=4, misspec=0.35), _p(levels=4, misspec=0.35, decision="point"),
+            _p(levels=4), _p(levels=4, decision="point")]
+
+
+def stage_pool() -> list[dict]:
+    """Без семейств с низкой информацией и частичный балл развёрнутых ответов — от текущей и от «по лучшей оценке»."""
+    pts = []
+    for dec in ("claimed", "point"):
+        pts += [_p(decision=dec, exclude_low=q) for q in (0.1, 0.2, 0.3)]
+        pts += [_p(decision=dec, partial=k) for k in (2, 3)]
+    return pts
+
+
+STAGES = {"screen": stage_screen, "grid": stage_grid, "worlds": stage_worlds, "competitor": stage_competitor,
+          "pool": stage_pool}
 
 
 def key(pt: dict) -> str:
@@ -136,39 +158,90 @@ def _pool(n_subpools: int):
     return _CACHE[n_subpools]
 
 
+def low_info_families(pool, q: float) -> set[str]:
+    """Доля q семейств каждого блока с наименьшей наибольшей информацией (сумма a_eff² / 4 по частям, предкалибровка)."""
+    if q <= 0:
+        return set()
+    out: set[str] = set()
+    for block in sorted({i.block for i in pool}):
+        blk = sorted([i for i in pool if i.block == block and not i.canary], key=lambda i: float(np.sum(i.a_eff ** 2)))
+        out |= {i.family_id for i in blk[:int(round(q * len(blk)))]}
+    return out
+
+
+def partial_responder(k: int):
+    """Частичный балл: у развёрнутых ответов (open_answer, текстовый шаг open_book_3step) итог части — доля из k
+    независимых критериев той же трудности (оценка сверху: критерии рубрики на деле связаны)."""
+    from assessment_bank.psychometrics.irt import prob
+
+    def factory(person, truth, leak=None):
+        def respond(item, rng):
+            tf = truth[item.family_id]
+            delta = rng.normal(0, tf.sigma)
+            p = prob(person.theta, tf.a, tf.mu + delta)
+            x = (rng.random(len(tf.mu)) < p).astype(float)
+            if item.format in OPEN_FORMATS:
+                for j in ([len(p) - 1] if item.format == "open_book_3step" else range(len(p))):
+                    x[j] = float((rng.random(k) < p[j]).mean())
+            log_t = float(rng.normal(tf.beta_time - person.tau, 1 / tf.alpha_time))
+            return x, min(log_t, float(np.log(tf.time_limit_s)))
+        return respond
+    return factory
+
+
 def run_task(args: tuple[dict, int, str, int]) -> dict:
     """Путь дважды для кандидатов одного направления при параметрах pt — те же rng, что path_retest.direction_run."""
     pt, i, d, n = args
+    pt = {**baseline_point(), **pt}
     base = sim.app_config_from_settings()
     cfg = replace(base, ext_items=int(pt["ext_items"]), ext_minutes=int(pt["ext_minutes"]),
                   min_items=int(pt["min_items"]), max_items=int(pt["max_items"]), se_target=float(pt["se_target"]),
-                  classify_z=float(pt["classify_z"]), stop_rule=str(pt["stop_rule"]))
-    pool = _pool(cfg.subpools)
+                  classify_z=float(pt["classify_z"]), stop_rule=str(pt["stop_rule"]),
+                  max_minutes=int(pt["max_minutes"]))
+    four = int(pt["levels"]) == 4
+    if four:  # 4 ступени, как у FSP Talent: без Стажёра (ниже Junior — без категории)
+        cfg = replace(cfg, cuts=tuple(c for g, c in zip(GRADE_ORDER, cfg.cuts) if g != "intern"))
+    pool_all = _pool(cfg.subpools)
     k = (exposure_table() or {}).get("k", {}).get(d, {})
     rng0 = pr._rng(i, 0)
-    truth = make_truth(pool, rng0, misspec=float(pt["misspec"]))
+    truth = make_truth(pool_all, rng0, misspec=float(pt["misspec"]))
     cands = pr.make_candidates(n, d, rng0)
+    if four:
+        cands = [replace(c, claimed="junior") if c.claimed == "intern" else c for c in cands]
+    low = low_info_families(pool_all, float(pt["exclude_low"]))
+    pool = [it for it in pool_all if it.family_id not in low]
     counter = ExposureControl(0.3, k=dict(k))
     det = CanaryDetector()
     rng = pr._rng(i, 1)
+    saved = pr.make_responder
+    if int(pt["partial"]) > 1:
+        pr.make_responder = partial_responder(int(pt["partial"]))
+
+    def lv(level: int) -> int:
+        return max(level - 1, 0) if four else level
     out = {"true": [], "claimed": [], "l1": [], "l2": [], "min1": [], "items1": [], "sess1": [], "status1": [],
            "border1": []}
-    for c in cands:
-        hist: list[dict] = []
-        r1 = pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"], pt["award_above"],
-                         pt["decision"])
-        r2 = pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"], pt["award_above"],
-                         pt["decision"])
-        out["true"].append(pr.LEVELS.index(point_grade(c.theta)))
-        out["claimed"].append(pr.LEVELS.index(c.claimed))
-        out["l1"].append(r1["level"])
-        out["l2"].append(r2["level"])
+    try:
+        rows = []
+        for c in cands:
+            hist: list[dict] = []
+            rows.append((c, pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"],
+                                        pt["award_above"], pt["decision"]),
+                         pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"],
+                                     pt["award_above"], pt["decision"])))
+    finally:
+        pr.make_responder = saved
+    for c, r1, r2 in rows:
+        out["true"].append(lv(pr.LEVELS.index(point_grade(c.theta))))
+        out["claimed"].append(lv(pr.LEVELS.index(c.claimed)))
+        out["l1"].append(lv(r1["level"]))
+        out["l2"].append(lv(r2["level"]))
         out["min1"].append(sum(t["time_s"] for t in r1["tests"]) / 60)
         out["items1"].append(sum(t["n_items"] for t in r1["tests"]))
         out["sess1"].append(len(r1["tests"]))
         out["status1"].append(r1["status"])
         out["border1"].append(borderline(r1["grade"], r1["tests"][-1]["theta"], r1["tests"][-1]["se"]))
-    return {"key": key(pt), "direction": d, **out}
+    return {"key": key(pt), "direction": d, "n_excluded": len(low), **out}
 
 
 def run_parallel(tasks: list, workers: int, t0: float) -> list[dict]:
@@ -277,6 +350,7 @@ def run(stages: list[str], n: int = 500, workers: int | None = None, write: bool
     for st in stages:
         pts += STAGES[st]()
     pts += extra or []
+    pts = [{**baseline_point(), **p} for p in pts]
     seen, uniq = set(), []
     for p in pts:
         if key(p) not in seen:
