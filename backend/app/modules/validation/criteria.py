@@ -444,8 +444,26 @@ def build(db=None) -> dict:
                  for i, it in enumerate(c["items"], 1)]
         crit.append({"id": f"c{c['n']}", "n": c["n"], "title": c["title"], "short": c["short"], "weight": c["weight"],
                      "items": items})
-    return {"criteria": crit, "pitch": PITCH, "unique": UNIQUE, "how_to_read": HOW_TO_READ,
+    return {"criteria": crit, "pitch": PITCH, "unique": UNIQUE + _voice_unique(), "how_to_read": HOW_TO_READ,
             "personas": PERSONA_TITLE, "total_weight": sum(c["weight"] for c in CRITERIA) + PITCH["weight"]}
+
+
+# Я17: «Надиктовать» потребность — за флагом VOICE_NEED_ENABLED (по умолчанию выкл.), docs/VOICE.md.
+VOICE_UNIQUE = {"title": "Надиктовать потребность",
+                "text": "У поля «Кого вы ищете» — до 60 с голосом; текст появляется в поле, его правят и разбирают как "
+                        "обычно. Запись не хранится, без согласия микрофон не включается.",
+                "do": [go("Надиктовать", "/employer/needs#need", "employer")]}
+VOICE_NOTE = ("Голосовой ввод потребности (флаг `VOICE_NEED_ENABLED`, по умолчанию выкл.; при включённом — пункт в "
+              "«Что можно проверить только здесь»): «Надиктовать» у поля потребности, до 60 с, распознавание речи "
+              "функцией движка интервью (Deepgram через ретранслятор); текст появляется в поле для правки, разбор — "
+              "прежний и только по кнопке; ни запись, ни текст не сохраняются. Отказ микрофона, старый браузер, сбой "
+              "распознавания — сообщение и ввод с клавиатуры. Механика, лимиты и проверка — `docs/VOICE.md`.")
+
+
+def _voice_unique() -> list[dict]:
+    from app.core.config import get_settings
+
+    return [VOICE_UNIQUE] if getattr(get_settings(), "voice_need_enabled", False) else []
 
 
 def all_links(data: dict | None = None) -> list[dict]:
@@ -515,6 +533,7 @@ def markdown(data: dict | None = None) -> str:
             out.append("| " + " | ".join([it["n"], f"«{it['tz']}»", "<br>".join(_do_text(g) for g in it["do"]),
                                           it["see"], proof_text(it["proof"]), it["limit"]]).replace("\n", " ") + " |")
     p = data["pitch"]
+    out += ["", VOICE_NOTE]  # Я17: голосовой ввод потребности — после раздела 6 «Дополнительный функционал»
     out += ["", f"## {p['n']}. {p['title']} — {p['weight']} %", "", f"«{p['tz']}» В продукте не проверяется.", ""]
     return "\n".join(out)
 
