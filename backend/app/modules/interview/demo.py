@@ -47,7 +47,7 @@ def _example(db: Session, user_id, honest: bool) -> InterviewSession | None:
         return None
     ctx, meta = cx.defense_context(ts, good[:2])
     port = pt.StubPort()
-    est, first = port.start("defense", ctx, max_questions=3, minutes=3, name="Мария")
+    est, _, _ = port.start("defense", ctx, max_questions=3, minutes=3, name="Мария")
     plan = est["plan"]
     by_task = {t["id"]: t for t in ctx["tasks"]}
     transcript = []
