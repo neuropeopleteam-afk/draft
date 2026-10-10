@@ -12,6 +12,10 @@ from app.core.enums import UserRole
 from app.core.errors import err
 from app.modules.assessment import service
 from app.modules.auth.models import User
+from app.modules.catalog.seed_data import GRADE_ORDER as _GRADE_ORDER
+
+# уровни платформы: 4 (Стажёр–Senior), с флагом GRADES_EXT_ENABLED — 6 (+ Lead, Principal; catalog.levels)
+GradeId = Literal[_GRADE_ORDER]  # type: ignore[valid-type]
 
 router = APIRouter(prefix="/api/assessment", tags=["assessment"])
 AUTH = {401: err("Не выполнен вход"), 403: err("Только для кандидата")}
@@ -21,7 +25,7 @@ candidate = require_role(UserRole.candidate)
 class StartIn(BaseModel):
     direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = Field(
         None, description="Направление опроса; без параметра — основное")
-    claimed_grade: Literal["intern", "junior", "middle", "senior"] = Field(
+    claimed_grade: GradeId = Field(
         description="Предполагаемый грейд, выбранный кандидатом (intern — Стажёр, ниже Junior)")
     integrity_ack: bool = Field(False, description="Кандидат согласился с проверкой самостоятельности выполнения: "
                                                    "результат может получить пометку «достоверность результата». "
