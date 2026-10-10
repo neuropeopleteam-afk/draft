@@ -56,15 +56,28 @@ function Row({ d, f, m, c, main }: { d: Data; f: string; m: string; c: Cell; mai
         {c.config !== "как в продукте" && <><br /><span className="text-xs font-normal text-brand-ink/65">{c.config}</span></>}
         {!c.complete && <><br /><span className="text-xs font-normal text-brand-ink/65">не все наборы</span></>}
       </th>
-      <td className="px-3 py-2 align-top tabular-nums">
+      <td className="whitespace-nowrap px-3 py-2 align-top tabular-nums">
         <b>{num(v(c.quality.index), 3)}</b>{ci(c.quality.index) && <span className="text-xs text-brand-ink/65"> [{ci(c.quality.index)}]</span>}
       </td>
       <td className="px-3 py-2 align-top text-xs text-brand-ink/80">{key3(f, c.quality)}</td>
-      <td className="px-3 py-2 align-top tabular-nums">{pct(v(r.ok_share), 0)} <span className="text-xs text-brand-ink/65">из {r.calls}</span></td>
-      <td className="px-3 py-2 align-top tabular-nums">{num(r.p50_s, 1)} / {num(r.p95_s, 1)}</td>
+      <td className="whitespace-nowrap px-3 py-2 align-top tabular-nums">{pct(v(r.ok_share), 0)} <span className="text-xs text-brand-ink/65">из {r.calls}</span></td>
+      <td className="whitespace-nowrap px-3 py-2 align-top tabular-nums">{num(r.p50_s, 1)} / {num(r.p95_s, 1)}</td>
       <td className="px-3 py-2 align-top tabular-nums">{num(c.usd_per_1k, 2)}</td>
       <td className="px-3 py-2 align-top">{c.within_budget ? "да" : <span className="text-brand-plum">нет</span>}</td>
     </tr>
+  );
+}
+
+function Card({ d, f, m, c, main }: { d: Data; f: string; m: string; c: Cell; main: boolean }) {
+  return (
+    <li className={`rounded-xl p-2.5 text-sm ring-1 ring-brand-night/10 ${main ? "bg-emerald-50/70" : ""}`} data-testid={`strongest-m-${f}`}>
+      <div className="font-medium text-brand-night">{label(d, m)}{main && " · выбор"}</div>
+      <div className="tabular-nums text-brand-ink/80">
+        качество <b>{num(v(c.quality.index), 3)}</b>{ci(c.quality.index) && ` [${ci(c.quality.index)}]`} · успешно {pct(v(c.reliability.ok_share), 0)} ·
+        p95 {num(c.reliability.p95_s, 1)} с · {num(c.usd_per_1k, 2)} $ за 1000{c.within_budget ? "" : " · вне бюджета"}
+      </div>
+      <div className="text-xs text-brand-ink/65">{key3(f, c.quality)}</div>
+    </li>
   );
 }
 
@@ -100,7 +113,7 @@ function Func({ d, f }: { d: Data; f: string }) {
             {rules && (
               <tr className="border-t border-brand-night/5 text-brand-ink/80">
                 <th scope="row" className="px-3 py-2 text-left font-medium text-brand-night">Правила (без LLM)</th>
-                <td className="px-3 py-2 tabular-nums"><b>{num(v(rules.quality.index), 3)}</b>{ci(rules.quality.index) && <span className="text-xs text-brand-ink/65"> [{ci(rules.quality.index)}]</span>}</td>
+                <td className="whitespace-nowrap px-3 py-2 tabular-nums"><b>{num(v(rules.quality.index), 3)}</b>{ci(rules.quality.index) && <span className="text-xs text-brand-ink/65"> [{ci(rules.quality.index)}]</span>}</td>
                 <td className="px-3 py-2 text-xs">{key3(f, rules.quality)}</td>
                 <td className="px-3 py-2">100 %</td><td className="px-3 py-2">&lt; 0,1</td><td className="px-3 py-2">0</td><td className="px-3 py-2">да</td>
               </tr>
@@ -108,19 +121,18 @@ function Func({ d, f }: { d: Data; f: string }) {
           </tbody>
         </table>
       </ScrollX>
-      <ul className="mt-3 space-y-2 md:hidden">
-        {rows.map(([m, c]) => (
-          <li key={m} className={`rounded-xl p-2.5 text-sm ring-1 ring-brand-night/10 ${m === main ? "bg-emerald-50/70" : ""}`} data-testid={`strongest-m-${f}`}>
-            <div className="font-medium text-brand-night">{label(d, m)}{m === main && " · выбор"}</div>
-            <div className="tabular-nums text-brand-ink/80">
-              качество <b>{num(v(c.quality.index), 3)}</b>{ci(c.quality.index) && ` [${ci(c.quality.index)}]`} · успешно {pct(v(c.reliability.ok_share), 0)} ·
-              p95 {num(c.reliability.p95_s, 1)} с · {num(c.usd_per_1k, 2)} $ за 1000{c.within_budget ? "" : " · вне бюджета"}
-            </div>
-            <div className="text-xs text-brand-ink/65">{key3(f, c.quality)}</div>
-          </li>
-        ))}
-        {rules && <li className="rounded-xl p-2.5 text-sm ring-1 ring-brand-night/10">Правила (без LLM): качество <b>{num(v(rules.quality.index), 3)}</b>, без сети</li>}
-      </ul>
+      <div className="mt-3 md:hidden">
+        <ul className="space-y-2">{rows.slice(0, 3).map(([m, c]) => <Card key={m} d={d} f={f} m={m} c={c} main={m === main} />)}</ul>
+        {rows.length > 3 && (
+          <details className="mt-2">
+            <summary className="cursor-pointer text-sm font-semibold text-brand-deep">Ещё {rows.length - 3} — и правила</summary>
+            <ul className="mt-2 space-y-2">
+              {rows.slice(3).map(([m, c]) => <Card key={m} d={d} f={f} m={m} c={c} main={m === main} />)}
+              {rules && <li className="rounded-xl p-2.5 text-sm ring-1 ring-brand-night/10">Правила (без LLM): качество <b>{num(v(rules.quality.index), 3)}</b>, без сети</li>}
+            </ul>
+          </details>
+        )}
+      </div>
       {f === "grade" && rows[0]?.[1].reference && (
         <p className="mt-2 text-xs text-brand-ink/65">Эталон: {Array.from(new Set(rows.map(([, c]) => c.reference).filter(Boolean))).join("; ")}.</p>
       )}
