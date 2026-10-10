@@ -4,10 +4,13 @@
  * вопросы по шаблону, оценка — правилом, кнопка «Подставить начало письменного ответа (заглушка)» отвечает за кандидата.
  *  1. Кандидат с развёрнутыми ответами (Мария): категория → «Подтвердите авторство ответа» с готовым примером песочницы
  *     («пример, модельный кандидат») → согласие → разговор в чате (канал «текст») → итог «ответ подтверждён устно».
+ *     Визуал собеседника — своя анимация (VoiceWave, состояния «говорю / слушаю / думаю»), видео и лиц нет (п. 5.11).
+ *     Если на стенде есть «нажми и говори» (INTERVIEW_STT_STUB=true на заглушке), первый ответ записывается с фальшивого
+ *     микрофона Chromium и распознаётся заглушкой — проверяется общий компонент записи голоса.
  *  2. Работодатель: значок на карточке кандидата и подробности с подтверждёнными цитатами и расшифровкой.
- *  3. Этап найма «ИИ-интервью»: работодатель приглашает в принятом приглашении, кандидат видит его у себя;
- *     итог кандидату не показывается.
- *  4. 390 px: те же экраны без горизонтальной прокрутки, снимки.
+ *  3. Этап найма «ИИ-интервью»: работодатель приглашает в принятом приглашении, кандидат (390 px) проходит его до конца;
+ *     итог кандидату не показывается, работодатель видит его в приглашении.
+ *  4. 390 px: панель защиты, разговор и карточка работодателя без горизонтальной прокрутки, снимки.
  * axe-core (E2E_AXE=<путь к axe.min.js>, например tools/a11y/axe_audit.cjs → /tmp/axe.min.js): нарушений уровня
  * serious/critical на новых экранах нет. Без E2E_AXE проверка доступности пропускается (пакеты не добавляются).
  */
@@ -19,6 +22,8 @@ import { apiContext, apiGet, juryToken } from "../lib/stand";
 import { juryEnter } from "../lib/ui";
 
 test.describe.configure({ mode: "serial" });
+// фальшивый микрофон Chromium (тон 440 Гц) и автоматическое разрешение — для «нажми и говори» на заглушке
+test.use({ launchOptions: { args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] }, permissions: ["microphone"] });
 
 const SHOTS = process.env.E2E_SHOTS_DIR || resolve(process.cwd(), "reports/mobile");
 const AXE = process.env.E2E_AXE;
@@ -28,6 +33,48 @@ let mariaRef = "";
 async function noHScroll(page: Page, what: string) {
   const w = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(w, `${what}: горизонтальная прокрутка`).toBeLessThanOrEqual(1);
+}
+
+/** Свой визуал собеседника: волна голоса и подпись состояния; видео и изображений людей нет. */
+async function visualOk(page: Page) {
+  const w = page.getByTestId("voice-wave");
+  await expect(w).toBeVisible();
+  await expect(w).toHaveAttribute("data-state", /^(speaking|listening|thinking)$/);
+  await expect(w).toContainText("Интервьюер:");
+  await expect(w).toContainText("модель, не люди");
+  await expect(page.locator("video")).toHaveCount(0);
+  await expect(w).toHaveAttribute("data-state", "listening", { timeout: 15_000 });  // прочитал вопрос → ждёт ответа
+}
+
+/** Ответить на вопросы до конца разговора: подсказка заглушки или свой текст; первый ответ — голосом, если можно. */
+async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { voiceFirst?: boolean; axeWhat?: string } = {}) {
+  const q = page.getByTestId("iv-question");
+  const cur = async () => ((await q.count()) ? ((await q.textContent()) ?? "") : "");
+  let prev = "";
+  for (let i = 0; i < 8; i++) {
+    // следующий вопрос (не прежний) или конец разговора
+    await expect.poll(async () => (await done.isVisible()) || !["", prev].includes(await cur()), { timeout: 90_000 }).toBe(true);
+    if (await done.isVisible()) return;
+    prev = await cur();
+    if (i === 0) { await visualOk(page); if (opts.axeWhat) await axe(page, opts.axeWhat); }
+    const field = page.getByLabel("Ваш ответ");
+    const rec = page.getByTestId("iv-record");
+    if (i === 0 && opts.voiceFirst && await rec.isVisible()) {
+      await rec.click();
+      await expect(rec).toHaveAttribute("aria-pressed", "true", { timeout: 15_000 });
+      await expect(page.getByTestId("voice-wave")).toHaveAttribute("data-state", "listening");
+      await page.waitForTimeout(1500);
+      await rec.click();
+      await expect(field).not.toHaveValue("", { timeout: 30_000 });  // распознанный текст — в поле, на проверку
+      await expect(page.getByRole("status").filter({ hasText: /Проверьте распознанный текст|Распознавание — заглушка/ })).toBeVisible();
+    } else {
+      const hint = page.getByTestId("iv-hint");
+      if (await hint.isVisible()) await hint.click();
+      else await field.fill("Отвечаю своими словами: сначала проверяю входные данные, затем выбираю структуру и объясняю почему, на примере из своей работы с очередями и код-ревью.");
+    }
+    await page.getByTestId("iv-send").click();
+  }
+  await expect(done).toBeVisible({ timeout: 90_000 });
 }
 
 async function axe(page: Page, what: string) {
@@ -72,25 +119,10 @@ test("кандидат: устная защита в чате на заглуш�
     await panel.getByRole("checkbox").check();
     await panel.getByTestId("interview-defense-start").click();
     await expect(page).toHaveURL(/\/candidate\/interview\/[0-9a-f-]{36}$/, { timeout: 60_000 });
+    await expect(page.getByTestId("voice-wave")).toHaveAttribute("data-state", "idle");
     await page.getByTestId("iv-begin-text").click();
-    const q = page.getByTestId("iv-question");
     const result = page.getByTestId("interview-result");
-    let prev = "";
-    for (let i = 0; i < 6; i++) {
-      await expect(q.or(result)).toBeVisible({ timeout: 60_000 });
-      if (await result.isVisible()) break;
-      await expect(q).not.toHaveText(prev);  // следующий вопрос, а не прежний
-      prev = (await q.textContent()) ?? "";
-      if (i === 0) await axe(page, "разговор");
-      const hint = page.getByTestId("iv-hint");
-      if (await hint.isVisible()) await hint.click();
-      else await page.getByLabel("Ваш ответ").fill("Отвечаю своими словами: сначала проверяю входные данные, затем выбираю структуру и объясняю почему.");
-      await page.getByTestId("iv-send").click();
-      await expect(q.or(result)).toBeVisible({ timeout: 60_000 });
-      if (await result.isVisible()) break;
-      await expect(q).not.toHaveText(prev, { timeout: 60_000 });
-      prev = "";
-    }
+    await talk(page, result, { voiceFirst: true, axeWhat: "разговор" });
     await expect(result).toBeVisible({ timeout: 90_000 });
     await expect(result).toContainText(/Ответ подтверждён устно|Есть расхождения|Мало данных/);
     await expect(result).toContainText("заглушка");
@@ -111,7 +143,7 @@ test("кандидат: устная защита в чате на заглуш�
   });
 });
 
-test("этап найма «ИИ-интервью»: приглашение работодателя видно кандидату", async ({ page, browser }) => {
+test("этап найма «ИИ-интервью»: приглашение работодателя → кандидат проходит (390 px) → итог у работодателя", async ({ page, browser }) => {
   test.skip(!enabled, "INTERVIEW_ENABLED выключен на стенде");
   const api = await apiContext();
   let invId = "";
@@ -148,7 +180,24 @@ test("этап найма «ИИ-интервью»: приглашение ра
   await expect(ai).toContainText("Компания приглашает на ИИ-интервью");
   await expect(ai.getByRole("button", { name: "Начать ИИ-интервью" })).toBeVisible();
   await axe(cand, "приглашение кандидата");
+  await cand.setViewportSize({ width: 390, height: 844 });
+  await ai.getByRole("checkbox").check();
+  await ai.getByRole("button", { name: "Начать ИИ-интервью" }).click();
+  await expect(cand).toHaveURL(/\/candidate\/interview\/[0-9a-f-]{36}$/, { timeout: 60_000 });
+  await cand.getByTestId("iv-begin-text").click();
+  await expect(cand.getByTestId("iv-question")).toBeVisible({ timeout: 60_000 });
+  await noHScroll(cand, "разговор ИИ-интервью, 390 px");
+  mkdirSync(SHOTS, { recursive: true });
+  await cand.screenshot({ path: resolve(SHOTS, "14-interview-room-390.png"), fullPage: true });
+  const done = cand.getByTestId("iv-done");
+  await talk(cand, done, { axeWhat: "разговор ИИ-интервью, 390 px" });
+  await expect(done).toContainText("видит только пригласившая компания");
   await cand.context().close();
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  const res = page.getByTestId("ai-interview-employer").getByTestId("interview-result").first();
+  await expect(res).toBeVisible({ timeout: 60_000 });
+  await expect(res).toContainText("модель, не люди");
 });
 
 test("390 px: панель защиты, разговор и карточка работодателя без горизонтальной прокрутки", async ({ page, browser }) => {

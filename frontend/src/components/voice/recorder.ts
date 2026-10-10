@@ -50,7 +50,7 @@ function pickMime(): string | undefined {
 }
 
 /** Среднеквадратичный уровень сигнала анализатора, 0…1 (с усилением для тихой речи). */
-export function rmsLevel(an: AnalyserNode, buf: Uint8Array): number {
+export function rmsLevel(an: AnalyserNode, buf: Uint8Array<ArrayBuffer>): number {
   an.getByteTimeDomainData(buf);
   let s = 0;
   for (let i = 0; i < buf.length; i++) { const v = (buf[i] - 128) / 128; s += v * v; }
@@ -163,7 +163,7 @@ export function useSpeechPlayer() {
   const audio = useRef<HTMLAudioElement | null>(null);
   const ctx = useRef<AudioContext | null>(null);
   const an = useRef<AnalyserNode | null>(null);
-  const buf = useRef<Uint8Array | null>(null);
+  const buf = useRef<Uint8Array<ArrayBuffer> | null>(null);
   const url = useRef<string | null>(null);
   const [playing, setPlaying] = useState(false);
 
