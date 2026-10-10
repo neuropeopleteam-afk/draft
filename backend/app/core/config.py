@@ -274,6 +274,26 @@ class Settings(BaseSettings):
     passport_retired_public_keys: str = ""  # открытые ключи выведенных из оборота ключей (base64url через запятую)
     passport_ttl_days: int = 365
 
+    # hh.ru (app/modules/hh, docs/INTEGRATIONS.md): импорт своей вакансии работодателя и «Рынок по hh.ru» у вилки.
+    # Токен приложения и HH-User-Agent — только из secrets/hh.env на сервере (HH_APP_TOKEN, HH_USER_AGENT); client
+    # id/secret не нужны. HH_ENABLED=false (по умолчанию) или нет токена — функции скрыты. HH_STUB=1 — заглушка с
+    # фикстурой вместо api.hh.ru (тесты, CI, e2e). Не чаще 1 запроса в hh_min_interval_s на все воркеры, кэш на диске.
+    hh_enabled: bool = False
+    hh_stub: bool = False
+    hh_app_token: str | None = None
+    hh_user_agent: str | None = None
+    hh_base_url: str = "https://api.hh.ru"
+    hh_timeout_s: float = 10.0
+    hh_min_interval_s: float = 1.0
+    hh_cache_dir: str = "/tmp/hh_cache"
+    hh_vacancy_ttl_s: int = 600  # вакансия по номеру (предпросмотр → импорт)
+    hh_market_ttl_s: int = 24 * 3600  # «Рынок по hh.ru»: поиск живых вакансий с зарплатой
+
+    @property
+    def hh_available(self) -> bool:
+        """Функции hh.ru видны: флаг включён и есть токен приложения (или заглушка)."""
+        return bool(self.hh_enabled and (self.hh_stub or (self.hh_app_token and self.hh_user_agent)))
+
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
     fsp_oidc_client_id: str | None = None
