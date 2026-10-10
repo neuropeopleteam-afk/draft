@@ -1,0 +1,780 @@
+{
+ "title": "Доказательная оценка: флаг GRADING_EVIDENCE выкл и вкл на одних и тех же 406 ответах",
+ "date": "2026-10-10 17:53",
+ "code_sha": "abb801d",
+ "grader": "Claude Sonnet 5.5",
+ "skeptic": "Claude Fable 5.1",
+ "reference": "gpt-oss-120b (панель 06.10, одна модель; модель, не люди); на подмножестве 50 — судьи замера моделей",
+ "off_judges50": {
+  "mae": {
+   "value": 0.015,
+   "ci90": [
+    0.007,
+    0.024
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.991,
+   "ci90": [
+    0.972,
+    1.0
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.006,
+   "ci90": [
+    -0.017,
+    0.004
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.96,
+   "ci90": [
+    0.88,
+    1
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 25,
+  "order_strict": {
+   "value": 5,
+   "n": 5
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 25
+  }
+ },
+ "on_judges50": {
+  "mae": {
+   "value": 0.015,
+   "ci90": [
+    0.007,
+    0.024
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.982,
+   "ci90": [
+    0.958,
+    1.0
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.001,
+   "ci90": [
+    -0.012,
+    0.009
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.92,
+   "ci90": [
+    0.84,
+    1
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 25,
+  "order_strict": {
+   "value": 5,
+   "n": 5
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 25
+  }
+ },
+ "paired_judges50": {
+  "d_mae": 0.0,
+  "ci90": [
+   0.0,
+   0.001
+  ],
+  "n": 25,
+  "answers_differ": 1
+ },
+ "n": 406,
+ "answered_v3": 403,
+ "off": {
+  "mae": {
+   "value": 0.112,
+   "ci90": [
+    0.098,
+    0.127
+   ],
+   "n": 261
+  },
+  "kappa_w": {
+   "value": 0.841,
+   "ci90": [
+    0.805,
+    0.872
+   ],
+   "n": 261
+  },
+  "bias": {
+   "value": -0.079,
+   "ci90": [
+    -0.096,
+    -0.063
+   ],
+   "n": 261
+  },
+  "over_share": {
+   "value": 0.011,
+   "ci90": [
+    0.004,
+    0.023
+   ],
+   "n": 261
+  },
+  "exact_bin": {
+   "value": 0.609,
+   "ci90": [
+    0.556,
+    0.659
+   ],
+   "n": 261
+  },
+  "attacks_passed": 0,
+  "attacks_n": 145,
+  "order_strict": {
+   "value": 29,
+   "n": 29
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 261
+  }
+ },
+ "on_first": {
+  "mae": {
+   "value": 0.115,
+   "ci90": [
+    0.101,
+    0.13
+   ],
+   "n": 258
+  },
+  "kappa_w": {
+   "value": 0.813,
+   "ci90": [
+    0.77,
+    0.853
+   ],
+   "n": 258
+  },
+  "bias": {
+   "value": -0.079,
+   "ci90": [
+    -0.095,
+    -0.062
+   ],
+   "n": 258
+  },
+  "over_share": {
+   "value": 0.019,
+   "ci90": [
+    0.008,
+    0.035
+   ],
+   "n": 258
+  },
+  "exact_bin": {
+   "value": 0.624,
+   "ci90": [
+    0.574,
+    0.671
+   ],
+   "n": 258
+  },
+  "attacks_passed": 0,
+  "attacks_n": 145,
+  "order_strict": {
+   "value": 28,
+   "n": 28
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 258
+  }
+ },
+ "on": {
+  "mae": {
+   "value": 0.11,
+   "ci90": [
+    0.096,
+    0.125
+   ],
+   "n": 256
+  },
+  "kappa_w": {
+   "value": 0.833,
+   "ci90": [
+    0.79,
+    0.868
+   ],
+   "n": 256
+  },
+  "bias": {
+   "value": -0.076,
+   "ci90": [
+    -0.093,
+    -0.059
+   ],
+   "n": 256
+  },
+  "over_share": {
+   "value": 0.02,
+   "ci90": [
+    0.008,
+    0.035
+   ],
+   "n": 256
+  },
+  "exact_bin": {
+   "value": 0.637,
+   "ci90": [
+    0.586,
+    0.688
+   ],
+   "n": 256
+  },
+  "attacks_passed": 0,
+  "attacks_n": 145,
+  "order_strict": {
+   "value": 28,
+   "n": 28
+  },
+  "expert_honest": {
+   "value": 2,
+   "n": 258
+  }
+ },
+ "off_three": {
+  "mae": {
+   "value": 0.031,
+   "ci90": [
+    0.017,
+    0.047
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.974,
+   "ci90": [
+    0.944,
+    0.993
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.019,
+   "ci90": [
+    -0.037,
+    -0.003
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.88,
+   "ci90": [
+    0.76,
+    0.96
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 145,
+  "order_strict": {
+   "value": 29,
+   "n": 29
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 261
+  }
+ },
+ "on_three": {
+  "mae": {
+   "value": 0.026,
+   "ci90": [
+    0.013,
+    0.041
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.983,
+   "ci90": [
+    0.957,
+    1.0
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.014,
+   "ci90": [
+    -0.031,
+    0.0
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.92,
+   "ci90": [
+    0.84,
+    1
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 145,
+  "order_strict": {
+   "value": 28,
+   "n": 28
+  },
+  "expert_honest": {
+   "value": 2,
+   "n": 258
+  }
+ },
+ "off_repeat": null,
+ "paired": {
+  "on_minus_off": {
+   "d_mae": 0.001,
+   "ci90": [
+    -0.006,
+    0.007
+   ],
+   "n": 256,
+   "answers_differ": 37
+  },
+  "repeat_minus_off": null,
+  "on_minus_repeat": null
+ },
+ "changed_vs_off": [
+  [
+   "gptoss-120b|medium|0|backend.db.overbooking_ob3#2",
+   0.75,
+   0.875
+  ],
+  [
+   "gptoss-120b|medium|0|common.sys.reliability_open#0",
+   0.85,
+   0.7
+  ],
+  [
+   "gptoss-120b|medium|0|common.time.tz_report_ob3#2",
+   0.5,
+   0.35
+  ],
+  [
+   "gptoss-120b|medium|0|frontend.http.request_cache_ob3#2",
+   0.375,
+   0.575
+  ],
+  [
+   "gptoss-120b|medium|0|frontend.sec.frontend_open#0",
+   0.5,
+   0.675
+  ],
+  [
+   "gptoss-120b|medium|0|qa.regression.strategy_open#0",
+   0.7,
+   0.375
+  ],
+  [
+   "gptoss-120b|medium|1|backend.db.overbooking_ob3#2",
+   0.65,
+   0.5
+  ],
+  [
+   "gptoss-120b|medium|1|backend.py.idempotency_ob3#2",
+   0.875,
+   0.675
+  ],
+  [
+   "gptoss-120b|medium|1|common.sys.reliability_open#0",
+   0.5,
+   0.325
+  ],
+  [
+   "gptoss-120b|medium|1|data_ml.ml.design_open#0",
+   0.5,
+   0.65
+  ],
+  [
+   "gptoss-120b|medium|1|data_ml.ml.group_kfold_ob3#2",
+   0.575,
+   0.375
+  ],
+  [
+   "gptoss-120b|medium|1|qa.api.cursor_pagination_ob3#2",
+   0.525,
+   0.7
+  ],
+  [
+   "gptoss-120b|medium|1|security.auth.token_validation_ob3#2",
+   0.65,
+   0.85
+  ],
+  [
+   "gptoss-120b|medium|2|common.time.tz_report_ob3#2",
+   0.7,
+   0.575
+  ],
+  [
+   "gptoss-120b|medium|2|frontend.web.perf_open#0",
+   0.65,
+   0.5
+  ],
+  [
+   "gptoss-120b|medium|2|qa.pytest.shared_state_ob3#2",
+   0.5,
+   0.625
+  ],
+  [
+   "gptoss-120b|medium|2|security.auth.token_validation_ob3#2",
+   0.825,
+   0.625
+  ],
+  [
+   "llama3.1-8b|b1|0|common.conc.async_lost_update_ob3#2",
+   0.375,
+   0.175
+  ],
+  [
+   "llama3.1-8b|b1|0|data_ml.ml.design_open#0",
+   0.15,
+   0.325
+  ],
+  [
+   "llama3.1-8b|b1|0|data_ml.mlops.psi_drift_ob3#2",
+   0.2,
+   0.325
+  ],
+  [
+   "llama3.1-8b|b1|0|qa.api.cursor_pagination_ob3#2",
+   0.175,
+   0.375
+  ],
+  [
+   "llama3.1-8b|b1|0|qa.regression.strategy_open#0",
+   0.0,
+   0.125
+  ],
+  [
+   "llama3.1-8b|b1|0|security.design.threat_model_open#0",
+   0.275,
+   0.5
+  ],
+  [
+   "qcoder-32b-awq|b1|0|common.sql.revenue_report_ob3#2",
+   0.5,
+   0.375
+  ],
+  [
+   "qcoder-32b-awq|b1|0|data_ml.mlops.psi_drift_ob3#2",
+   0.5,
+   0.375
+  ],
+  [
+   "qcoder-32b-awq|b1|0|frontend.a11y.focus_trap_ob3#2",
+   0.525,
+   0.65
+  ],
+  [
+   "qcoder-32b-awq|b1|0|qa.pytest.shared_state_ob3#2",
+   0.2,
+   0.35
+  ],
+  [
+   "qcoder-32b-awq|b1|0|security.design.threat_model_open#0",
+   0.375,
+   0.5
+  ],
+  [
+   "qcoder-7b|b1|0|backend.design.service_open#0",
+   0.35,
+   0.5
+  ],
+  [
+   "qcoder-7b|b1|0|backend.py.rate_limiter_ob3#2",
+   0.0,
+   0.15
+  ],
+  [
+   "qcoder-7b|b1|0|common.http.api_design_open#0",
+   0.175,
+   0.325
+  ],
+  [
+   "qcoder-7b|b1|0|common.sys.reliability_open#0",
+   0.0,
+   0.15
+  ],
+  [
+   "qcoder-7b|b1|0|frontend.sec.frontend_open#0",
+   0.375,
+   0.5
+  ],
+  [
+   "qcoder-7b|b1|0|frontend.web.perf_open#0",
+   0.55,
+   0.35
+  ],
+  [
+   "qcoder-7b|b1|0|qa.regression.strategy_open#0",
+   0.5,
+   0.325
+  ],
+  [
+   "ref_medium|-|0|common.time.tz_report_ob3#2",
+   0.525,
+   0.375
+  ],
+  [
+   "ref_medium|-|0|frontend.sec.frontend_open#0",
+   0.5,
+   0.375
+  ]
+ ],
+ "skeptic_calls": 108,
+ "skeptic_answered": 57,
+ "skeptic_not_run": 51,
+ "complete": {
+  "n": 352,
+  "off": {
+   "mae": {
+    "value": 0.107,
+    "ci90": [
+     0.092,
+     0.124
+    ],
+    "n": 207
+   },
+   "kappa_w": {
+    "value": 0.845,
+    "ci90": [
+     0.802,
+     0.881
+    ],
+    "n": 207
+   },
+   "bias": {
+    "value": -0.076,
+    "ci90": [
+     -0.095,
+     -0.057
+    ],
+    "n": 207
+   },
+   "over_share": {
+    "value": 0.005,
+    "ci90": [
+     0,
+     0.014
+    ],
+    "n": 207
+   },
+   "exact_bin": {
+    "value": 0.633,
+    "ci90": [
+     0.575,
+     0.686
+    ],
+    "n": 207
+   },
+   "attacks_passed": 0,
+   "attacks_n": 145,
+   "order_strict": {
+    "value": 14,
+    "n": 14
+   },
+   "expert_honest": {
+    "value": 0,
+    "n": 207
+   }
+  },
+  "on": {
+   "mae": {
+    "value": 0.107,
+    "ci90": [
+     0.093,
+     0.122
+    ],
+    "n": 205
+   },
+   "kappa_w": {
+    "value": 0.837,
+    "ci90": [
+     0.786,
+     0.876
+    ],
+    "n": 205
+   },
+   "bias": {
+    "value": -0.072,
+    "ci90": [
+     -0.09,
+     -0.056
+    ],
+    "n": 205
+   },
+   "over_share": {
+    "value": 0.015,
+    "ci90": [
+     0.005,
+     0.029
+    ],
+    "n": 205
+   },
+   "exact_bin": {
+    "value": 0.654,
+    "ci90": [
+     0.6,
+     0.707
+    ],
+    "n": 205
+   },
+   "attacks_passed": 0,
+   "attacks_n": 145,
+   "order_strict": {
+    "value": 14,
+    "n": 14
+   },
+   "expert_honest": {
+    "value": 2,
+    "n": 207
+   }
+  },
+  "paired": {
+   "d_mae": 0.002,
+   "ci90": [
+    -0.006,
+    0.009
+   ],
+   "n": 205,
+   "answers_differ": 34
+  }
+ },
+ "verdicts": {
+  "agree": 55,
+  "disagree": 2
+ },
+ "changes": {
+  "down": 5,
+  "up": 9,
+  "up_rejected": 0
+ },
+ "evidence": {
+  "quotes": 774,
+  "dropped": 3,
+  "capped": 1
+ },
+ "cost_usd": {
+  "v2": 3.1537,
+  "v3": 3.2342,
+  "skeptic": 2.8635
+ },
+ "latency_s": {
+  "v3": {
+   "p50": 2.69,
+   "p90": 4.48
+  },
+  "skeptic": {
+   "p50": 9.98,
+   "p90": 14.98
+  }
+ },
+ "decision": {
+  "rule": {
+   "d_mae_ci90_hi": 0.02,
+   "kappa_w_drop": 0.02,
+   "expert_share_rise": 0.05
+  },
+  "checks": {
+   "mae": true,
+   "kappa_w": true,
+   "attacks": true,
+   "order": true,
+   "expert": true
+  },
+  "non_inferior": true,
+  "text": "не хуже по всем пунктам правила"
+ },
+ "decision_first": {
+  "rule": {
+   "d_mae_ci90_hi": 0.02,
+   "kappa_w_drop": 0.02,
+   "expert_share_rise": 0.05
+  },
+  "checks": {
+   "mae": true,
+   "kappa_w": false,
+   "attacks": true,
+   "order": true,
+   "expert": true
+  },
+  "non_inferior": false,
+  "text": "«не хуже» не доказано: κw"
+ },
+ "decision_complete": {
+  "rule": {
+   "d_mae_ci90_hi": 0.02,
+   "kappa_w_drop": 0.02,
+   "expert_share_rise": 0.05
+  },
+  "checks": {
+   "mae": true,
+   "kappa_w": true,
+   "attacks": true,
+   "order": true,
+   "expert": true
+  },
+  "non_inferior": true,
+  "text": "не хуже по всем пунктам правила"
+ }
+}
