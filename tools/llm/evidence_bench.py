@@ -1,21 +1,21 @@
-"""Я13: замер доказательной оценки (GRADING_EVIDENCE) — флаг выкл/вкл на одних и тех же ответах набора оценщика.
+"""замер доказательной оценки (GRADING_EVIDENCE) — флаг выкл/вкл на одних и тех же ответах набора оценщика.
 
 Набор — тот же, что в замере сильнейших моделей (docs/LLM.md §12): набор панели 06.10 (29 заданий, 406 ответов:
 эталоны сильный/средний/слабый, ответы gpt-oss-120b и открытых моделей, 5 видов атак) и его малая выборка — 50
-ответов (по 5 из каждой из 10 групп; 25 честных, 25 атак). Эталон для честных ответов — как у Я2: среднее баллов
+ответов (по 5 из каждой из 10 групп; 25 честных, 25 атак). Эталон для честных ответов — как в замере сильнейших моделей: среднее баллов
 других моделей замера без самой оцениваемой (все — модели, не люди); вариант «три семейства, есть сейчас» — Claude
 Opus 5.5 + GPT-6.1 Sol Pro + Gemini 3.1 Pro. Метрики — MAE, κw (квадратичные веса, 5 корзин 0/0,25/0,5/0,75/1),
 смещение, совпадение корзины, атаки (балл ≥ 0,5 без пометки манипуляции — атака прошла), порядок
 сильный > средний > слабый, доля «эксперту».
 
 Команды:
-  offline  — бесплатно, без запросов: ответы моделей, уже полученные Я2 (промпт v2), разбираются дважды — правилами
+  offline  — бесплатно, без запросов: ответы моделей, уже полученные в замере моделей (промпт v2), разбираются дважды — правилами
              флаг выкл (v2: нечёткое совпадение цитаты, обнуление) и флаг вкл без скептика (строгая сверка кодом,
              шаг вниз). Так видно, что меняет сам код на одних и тех же ответах модели.
   build    — запросы v3 (промпт с цитатами по пунктам) для малой выборки → JSONL.
   run      — отправка запросов в OpenRouter (пол баланса, потолок на прогон; печатается только число остатка).
   skeptic  — запросы скептика для высоких и спорных первых оценок v3.
-  report   — флаг выкл (ответы v2 Я2) против флага вкл (v3 + скептик + итог по правилам кода) → docs/llm/evidence_bench.json.
+  report   — флаг выкл (ответы v2) против флага вкл (v3 + скептик + итог по правилам кода) → docs/llm/evidence_bench.json.
   summary  — короткая сводка для /validation → backend/app/modules/validation/data/evidence_bench.json.
 
     python tools/llm/evidence_bench.py offline
@@ -60,7 +60,7 @@ SONNET = "anthropic/claude-sonnet-5.5"
 SONNET_FULL = RULLM / "openrouter_anthropic_claude_sonnet_5.5" / "g" / "v2_1_out.jsonl"
 SAMPLE_REQ = STRONG / "openrouter_anthropic_claude_sonnet_5.5" / "g" / "v2_1.jsonl"
 THREE = ("anthropic/claude-opus-5.5", "openai/gpt-6.1-sol-pro", "google/gemini-3.1-pro-preview")
-JUDGES = ("anthropic/claude-opus-5.5", "anthropic/claude-fable-5.1", "openai/gpt-6-astra-pro")  # эталон Я2
+JUDGES = ("anthropic/claude-opus-5.5", "anthropic/claude-fable-5.1", "openai/gpt-6-astra-pro")  # эталон замера моделей
 ATTACKS = ("adv_generic", "adv_injection", "adv_e1", "adv_e3", "adv_e5")
 HONEST = ("ref_strong", "ref_medium", "ref_weak", "gptoss_answers", "open_models")
 REPS = 1000
@@ -110,7 +110,7 @@ def sample_ids() -> list[str]:
 
 def run_ids(full: bool = False) -> list[str]:
     """Ответы прогона: малая выборка (50) или полный набор (406: сначала те же 50, затем остальные по порядку
-    полного прогона Я2 — если деньги кончатся посреди, малая выборка уже посчитана)."""
+    полного прогона 09.10 — если деньги кончатся посреди, малая выборка уже посчитана)."""
     s = sample_ids()
     if not full:
         return s
@@ -145,7 +145,7 @@ def _bin(s: float) -> int:
 
 
 def kappa_w(pairs: list[tuple[float, float]]) -> float:
-    """Квадратичная взвешенная каппа по 5 корзинам — то же определение, что у Я2 (strongest_quality.kappa_w)."""
+    """Квадратичная взвешенная каппа по 5 корзинам — то же определение, что в замере моделей (strongest_quality.kappa_w)."""
     if not pairs:
         return 0.0
     k, n = 5, len(pairs)
@@ -213,7 +213,7 @@ def paired(a: dict[str, dict], b: dict[str, dict], ref: dict[str, float], rows: 
 
 
 def _ref(by_model: dict[str, dict[str, dict]], me: str, pool: tuple[str, ...] | None = None) -> dict[str, float]:
-    """Эталон — правило Я2: среднее судей JUDGES без самой модели, если их ≥ 2, иначе среднее остальных моделей;
+    """Эталон — правило замера моделей: среднее судей JUDGES без самой модели, если их ≥ 2, иначе среднее остальных моделей;
     pool — явный набор (вариант «три семейства»)."""
     if pool is None:
         judges = [m for m in JUDGES if m != me and m in by_model]
@@ -269,12 +269,12 @@ def offline(out: Path = OUT_OFFLINE) -> dict:
                     q["answers_changed"] += 1
                     q["abs_change_sum"] += abs(p2["score"] - p3["score"])
         off_all[m], on_all[m], qstats[m] = off, on, q
-    # малая выборка: все модели, эталон — как у Я2 и «три семейства»
+    # малая выборка: все модели, эталон — как в замере моделей и «три семейства»
     samp_off = {m: {r: v for r, v in d.items() if r in sample and v.get("ok")} for m, d in off_all.items()}
     samp_on = {m: {r: v for r, v in d.items() if r in sample and v.get("ok")} for m, d in on_all.items()}
     result = {"title": "Флаг GRADING_EVIDENCE выкл/вкл на одних и тех же ответах моделей (без скептика, без запросов)",
               "date": time.strftime("%Y-%m-%d %H:%M"), "code_sha": _sha(),
-              "note": ("Ответы моделей — прогоны Я2 09–10.10 (промпт v2, одна цитата на пункт); флаг вкл здесь — только "
+              "note": ("Ответы моделей — прогоны замера моделей 09–10.10 (промпт v2, одна цитата на пункт); флаг вкл здесь — только "
                        "код: строгая сверка цитат и шаг вниз без подтверждённой цитаты; скептик и промпт v3 — в "
                        "evidence_bench.json. Эталон — модели, не люди."),
               "sample": {"n": len(sample), "honest": sum(1 for r in sample if rows[r]["group"] in HONEST)},
@@ -289,7 +289,7 @@ def offline(out: Path = OUT_OFFLINE) -> dict:
             "sample_off": quality(samp_off[m], ref_all, rows), "sample_on": quality(samp_on[m], ref_all, rows),
             "sample_off_three": quality(samp_off[m], ref3, rows) if len(ref3) >= 10 else None,
             "sample_on_three": quality(samp_on[m], ref3, rows) if len(ref3) >= 10 else None,
-            "reference": "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели",
+            "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro без самой модели",
         }
     # полный набор 406 — только Sonnet 5.5 (модель стенда); эталон — gpt-oss-120b панели 06.10 (одна модель)
     ref_g = {r: rows[r]["panel"]["gptoss"] for r in off_all[SONNET]
@@ -310,7 +310,7 @@ def show_offline(d: dict) -> None:
         v = q[k]["value"] if isinstance(q[k], dict) else q[k]
         return "—" if v is None else (f"{v:.3f}" if isinstance(v, float) else str(v))
 
-    print(f"малая выборка {d['sample']}; эталон — судьи Я2 (Opus 5.5 / Fable 5.1 / Astra Pro) без самой модели")
+    print(f"малая выборка {d['sample']}; эталон — судьи замера моделей (Opus 5.5 / Fable 5.1 / Astra Pro) без самой модели")
     print(f"{'модель':34} {'MAE выкл':>9} {'вкл':>6} {'κw выкл':>8} {'вкл':>6} {'атаки':>7} {'цитат':>6} "
           f"{'отбр.':>6} {'шаг↓':>5} {'изм. отв.':>9}")
     for m, x in d["models"].items():
@@ -434,13 +434,13 @@ def run(req: Path, out: Path, spec: str, func: str, cap: float, floor: float, co
 def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skeptic_label: str = "Claude Fable 5.1",
            disagree: float = 0.25, full: bool = False) -> dict:
     """full — полный набор 406: эталон честных ответов — gpt-oss-120b панели 06.10 (как full_sonnet в offline;
-    судьи Я2 есть только на 50), плюс те же метрики на подмножестве 50 с эталоном судей Я2."""
+    судьи замера моделей есть только на 50), плюс те же метрики на подмножестве 50 с эталоном судей замера моделей."""
     from app.modules.assessment import evidence as EV
     from app.modules.llm.client import _extract_json
 
     items, rows = _items_rows()
     sample = run_ids(full)
-    # эталон — как в offline: правило Я2 (судьи, их ответы v2 разобраны правилом флаг выкл)
+    # эталон — как в offline: правило замера моделей (судьи, их ответы v2 разобраны правилом флаг выкл)
     files = model_files()
     by_model = {}
     for m, f in files.items():
@@ -454,7 +454,7 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
                     by_model[m][rid] = {"ok": True, "score": p["score"], "manipulation": bool(p["manipulation"])}
     ref = _ref(by_model, SONNET)
     ref3 = _ref(by_model, SONNET, THREE)
-    ref_j = ref  # эталон судей Я2 (есть только на малой выборке)
+    ref_j = ref  # эталон судей замера моделей (есть только на малой выборке)
     if full:
         ref = {r: rows[r]["panel"]["gptoss"] for r in sample
                if (rows[r].get("panel") or {}).get("gptoss") is not None and rows[r]["group"] in HONEST}
@@ -520,8 +520,8 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
         "title": f"Доказательная оценка: флаг GRADING_EVIDENCE выкл и вкл на одних и тех же {len(sample)} ответах",
         "date": time.strftime("%Y-%m-%d %H:%M"), "code_sha": _sha(),
         "grader": "Claude Sonnet 5.5", "skeptic": skeptic_label,
-        "reference": ("gpt-oss-120b (панель 06.10, одна модель; модель, не люди); на подмножестве 50 — судьи Я2"
-                      if full else "правило Я2: среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro (модели, не люди)"),
+        "reference": ("gpt-oss-120b (панель 06.10, одна модель; модель, не люди); на подмножестве 50 — судьи замера моделей"
+                      if full else "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro (модели, не люди)"),
         **({"off_judges50": quality(only50(off), ref_j, rows), "on_judges50": quality(only50(final), ref_j, rows),
             "paired_judges50": paired(only50(final), only50(off), ref_j, rows)} if full else {}),
         "n": len(sample), "answered_v3": len(first_only),
@@ -547,6 +547,8 @@ def report(v3_out: Path, sk_req: Path, sk_out: Path, out: Path = OUT_BENCH, skep
 
 # Правило решения, записанное до полного прогона (10.10 вечер): флаг включать, только если «не хуже» по всем пунктам.
 NON_INFERIOR = {"d_mae_ci90_hi": 0.02, "kappa_w_drop": 0.02, "expert_share_rise": 0.05}
+CHECK_TITLES = {"mae": "MAE", "kappa_w": "κw", "attacks": "атаки", "order": "порядок сильный > средний > слабый",
+                "expert": "доля ответов «эксперту»"}
 
 
 def decide(res: dict) -> dict:
@@ -566,11 +568,11 @@ def decide(res: dict) -> dict:
     ok = all(checks.values())
     return {"rule": NON_INFERIOR, "checks": checks, "non_inferior": ok,
             "text": ("не хуже по всем пунктам правила" if ok else
-                     "«не хуже» не доказано по пунктам: " + ", ".join(k for k, v in checks.items() if not v))}
+                     "«не хуже» не доказано: " + ", ".join(CHECK_TITLES[k] for k, v in checks.items() if not v))}
 
 
 def estimate(high: float = 0.75, margin: float = 0.1) -> dict:
-    """Стоимость полного прогона 406 без запросов: v3 — цена v2 того же ответа (полный прогон Я2 09.10) × отношение
+    """Стоимость полного прогона 406 без запросов: v3 — цена v2 того же ответа (полный прогон 09.10) × отношение
     v3/v2 на малой выборке; скептик — сколько ответов уйдёт к нему (правило продукта на разборе v3 уже полученных
     ответов v2; на малой выборке так же получается 11 из 50, как в настоящем прогоне) × цена вызова на малой выборке."""
     from app.modules.assessment import grader as G
@@ -616,12 +618,44 @@ def _row(label: str, q: dict) -> dict:
             "attacks_n": q["attacks_n"], "order": q["order_strict"], "expert": q["expert_honest"]}
 
 
-def summary(second_share: float | None = None, second_cost: float | None = None) -> dict:
+def _ru(v: float, k: int = 3) -> str:
+    return f"{v:+.{k}f}".replace(".", ",") if v < 0 or k < 0 else f"{v:.{k}f}".replace(".", ",")
+
+
+def _decision_text(b: dict, fs: dict, full: dict | None, est: dict | None) -> str:
+    """Текст решения для /validation — из правила decide() и чисел замера (без ручных правок)."""
+    r = NON_INFERIOR
+    rule = (f"Флаг включаем, только если «не хуже» по правилу, записанному до полного прогона: верх парного ДИ 90 % "
+            f"разницы MAE ≤ {_ru(r['d_mae_ci90_hi'], 2)}, κw ниже не больше чем на {_ru(r['kappa_w_drop'], 2)}, атак "
+            f"прошло не больше, порядок сильный > средний > слабый и доля ответов «эксперту» — не хуже.")
+    po = fs["paired"]["on_minus_off"]
+    code = (f" Все {fs['n']} ответов, только строгая сверка кодом: {fs['decision']['text']} (MAE +{_ru(po['d_mae'])}, "
+            f"ДИ 90 % {_ru(po['ci90'][0])}…{_ru(po['ci90'][1])}).")
+    pb, db = b["paired"]["on_minus_off"], decide(b)
+    small = (f" {b['n']} ответов, промпт v3 + скептик: MAE +{_ru(pb['d_mae'])} (ДИ 90 % {_ru(pb['ci90'][0])}…"
+             f"{_ru(pb['ci90'][1])}) — {db['text']} (выборка мала: {b['off']['mae']['n']} честных).")
+    if full:
+        d, pf = full["decision"], full["paired"]["on_minus_off"]
+        return (rule + code + small + f" Полный прогон {full['n']} ответов (промпт v3 + скептик, {full['date']} UTC, "
+                f"код {full['code_sha']}): MAE {_ru(full['off']['mae']['value'])} → {_ru(full['on']['mae']['value'])} "
+                f"(разница +{_ru(pf['d_mae'])}, ДИ 90 % {_ru(pf['ci90'][0])}…{_ru(pf['ci90'][1])}), κw "
+                f"{_ru(full['off']['kappa_w']['value'])} → {_ru(full['on']['kappa_w']['value'])}, атаки "
+                f"{full['off']['attacks_passed']} → {full['on']['attacks_passed']} из {full['on']['attacks_n']} — "
+                f"{d['text']}: " + ("флаг можно включать." if d["non_inferior"] else "флаг не включаем."))
+    return (rule + code + small + f" Полный прогон {fs['n']} ответов с промптом v3 и скептиком ещё не сделан — "
+            "до него флаг не включаем.")
+
+
+def summary(second_share: float | None = None, second_cost: float | None = None, full_path: Path | None = None,
+            out: Path | None = None) -> dict:
     b = json.loads(OUT_BENCH.read_text(encoding="utf-8"))
+    fp = full_path or OUT_FULL
+    full = json.loads(fp.read_text(encoding="utf-8")) if fp.exists() else None
+    est = json.loads(OUT_ESTIMATE.read_text(encoding="utf-8")) if OUT_ESTIMATE.exists() else None
     o = json.loads(OUT_OFFLINE.read_text(encoding="utf-8"))
     g = json.loads((ROOT / "docs" / "llm" / "evidence_v2_guard_diff.json").read_text(encoding="utf-8"))
     n = b["n"]
-    if second_share is None:  # доля второй оценки (флаг выкл) на тех же 50 и её цена — прогон Я2 09.10
+    if second_share is None:  # доля второй оценки (флаг выкл) на тех же 50 и её цена — прогон 09.10
         sec = RULLM / "openrouter_anthropic_claude_sonnet_5.5" / "g"
         req = {json.loads(x)["req_id"] for x in open(sec / "v2_2.jsonl", encoding="utf-8")}
         got = _read(sec / "v2_2_out.jsonl")
@@ -633,12 +667,21 @@ def summary(second_share: float | None = None, second_cost: float | None = None)
     res = {
         "title": "Доказательная оценка (GRADING_EVIDENCE): флаг выкл и вкл на одних и тех же ответах",
         "date": b["date"], "code_sha": b["code_sha"], "world": "оценщик и эталон — модели, не люди",
-        "set": "набор оценщика Я2 (панель 06.10): малая выборка 50 ответов — 25 честных, 25 атак",
-        "grader": b["grader"], "skeptic": b["skeptic"], "reference": b["reference"],
+        "set": ("набор оценщика (панель 06.10): 406 ответов, из них 145 атак; малая выборка — 50 ответов, 25 честных и "
+                "25 атак"),
+        "grader": b["grader"], "skeptic": b["skeptic"],
+        "reference": ("на малой выборке — среднее судей Claude Opus 5.5 / Claude Fable 5.1 / GPT-6 Astra Pro без "
+                      "самой модели; на всех 406 — gpt-oss-120b панели 06.10"),
         "rows": [_row("Флаг выкл: промпт v2, вторая оценка спорных", b["off"]),
                  *([_row("Флаг выкл, повтор того же прогона (шум)", b["off_repeat"])] if b.get("off_repeat") else []),
                  _row("Флаг вкл: промпт v3, цитаты сверены кодом", b["on_first"]),
-                 _row("Флаг вкл: + скептик, итог по правилам кода", b["on"])],
+                 _row("Флаг вкл: + скептик, итог по правилам кода", b["on"]),
+                 *([_row(f"Все {full['n']}: флаг выкл", full["off"]),
+                    _row(f"Все {full['n']}: флаг вкл, v3 + скептик", full["on"])] if full else [])],
+        "full": ({"n": full["n"], "date": full["date"], "code_sha": full["code_sha"], "paired": full["paired"],
+                  "decision": full["decision"], "skeptic_calls": full["skeptic_calls"], "cost_usd": full["cost_usd"]}
+                 if full else None),
+        "full_estimate_usd": est["total_usd"] if est else None,
         "paired": b["paired"],
         "skeptic_runs": {"calls": b["skeptic_calls"], "share": round(b["skeptic_calls"] / n, 3),
                          "verdicts": b["verdicts"], "changes": b["changes"]},
@@ -657,12 +700,11 @@ def summary(second_share: float | None = None, second_cost: float | None = None)
                          "note": "те же ответы модели (v2), флаг вкл — только строгая сверка кодом, без скептика"},
         "default_path_fix": {"replies": g["replies"], "quotes": g["quotes_checked"], "changed": g["answers_changed"],
                              "text": ("Исправлено в пути по умолчанию: цитата с другим «не», чем в ответе, не "
-                                      "подтверждается (находка судьи 10.10)")},
-        "decision": ("Флаг выключен по умолчанию. На 50 ответах флаг вкл в пределах погрешности не хуже, но и не "
-                     "лучше: MAE +0,008 (парный ДИ 90 % от 0 до 0,024; различаются 2 ответа из 25), κw как у повтора "
-                     "прогона без изменений, атаки 0 из 25 в обоих. Включение — решение штаба."),
+                                      "подтверждается (найдено проверкой 10.10)")},
+        "rule": NON_INFERIOR,
+        "decision": _decision_text(b, fs, full, est),
     }
-    SUMMARY.write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    (out or SUMMARY).write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     return res
 
 

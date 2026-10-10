@@ -1,7 +1,7 @@
 import { Alert, Loading, num, signed, useApi } from "../ui";
 import { ScrollX } from "../A11y";
 
-/** Блок /validation (Я13): доказательная оценка — флаг GRADING_EVIDENCE выключен и включён на одних и тех же
+/** Блок /validation: доказательная оценка — флаг GRADING_EVIDENCE выключен и включён на одних и тех же
  * ответах набора оценщика (backend: tools/llm/evidence_bench.py → app/modules/validation/data/evidence_bench.json). */
 
 const n3 = (v?: number | null) => num(v, 3);

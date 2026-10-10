@@ -87,7 +87,7 @@ SYSTEM_HEAD = (
     '"level": "strong" | "medium" | "weak", "manipulation": true | false, '
     '"comment": "1–2 предложения по-русски: чего не хватает"}}.'
 )
-# Я13 (GRADING_EVIDENCE, assessment/evidence.py): то же, что v2, но по каждому пункту — от одной до трёх дословных
+# Доказательная оценка (GRADING_EVIDENCE, assessment/evidence.py): то же, что v2, но по каждому пункту — от одной до трёх дословных
 # цитат из ответа; модель знает, что цитаты сверяет программа и пункт без подтверждённой цитаты полный балл не получает.
 EVIDENCE_VERSION = "v3"
 SYSTEM_HEAD_V3 = SYSTEM_HEAD.replace(
@@ -260,7 +260,7 @@ def quote_supported(quote: str, answer: str) -> bool:
         return False
     from app.modules.assessment.evidence import negation_consistent
 
-    if not negation_consistent(quote, answer):  # «не» добавлено или потеряно — смысл обратный (находка Я5, 10.10)
+    if not negation_consistent(quote, answer):  # «не» добавлено или потеряно — смысл обратный (найдено проверкой 10.10)
         return False
     if f" {q} " in f" {a} ":  # целыми словами: «не следует» не входит в «мне следует»
         return True
@@ -305,7 +305,7 @@ class GradeOutcome:
     checks: list[str] = field(default_factory=list)  # причины сомнения (вторая оценка)
     second: dict | None = None  # вторая оценка: {score, criteria, level, latency_ms, error}
     scores: list[float] = field(default_factory=list)  # оценки всех вызовов LLM
-    evidence: dict | None = None  # Я13: цитаты по пунктам, сверенные кодом (evidence.verify_criteria)
+    evidence: dict | None = None  # цитаты по пунктам, сверенные кодом (evidence.verify_criteria)
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -353,7 +353,7 @@ def parse_reply(data, rubric: dict, answer: str, *, version: str = PROMPT_VERSIO
     v2: оценка критерия выше 0 без цитаты, найденной в ответе, обнуляется (unsupported); цитата с другим отрицанием,
     чем в ответе, не найдена. Если модель вообще не вернула цитат (старый формат «id: число») — оценки не обнуляются,
     но это причина сомнения (no_quotes); правило «без подтверждённой цитаты — на шаг ниже» — в v3 (флаг).
-    v3 (Я13, GRADING_EVIDENCE): цитаты сверяет evidence.verify_criteria — строго, без перефраза; пункт без
+    v3 (GRADING_EVIDENCE): цитаты сверяет evidence.verify_criteria — строго, без перефраза; пункт без
     подтверждённой цитаты опускается на шаг (unsupported), сверка по пунктам — в evidence."""
     out = {"ok": False, "error": None, "score": None, "criteria": {}, "quotes": {}, "level": None, "comment": None,
            "manipulation": False, "unsupported": [], "no_quotes": False, "evidence": None}
@@ -524,7 +524,7 @@ def grade_open(*, stem: str, code: str | None, step_prompt: str | None, rubric: 
     red = redact(body, use_ner=True, header=False)  # шапки резюме в ответе нет: даты в коде ответа не трогаем
     # общий бюджет первой и второй оценки с переходами по цепочке: ответ кандидата ждёт оценку синхронно
     deadline = time.monotonic() + s.llm_grading_budget_s
-    ev_on = bool(s.grading_evidence)  # Я13: промпт v3, сверка цитат кодом, скептик для высоких и спорных
+    ev_on = bool(s.grading_evidence)  # промпт v3, сверка цитат кодом, скептик для высоких и спорных
     version = EVIDENCE_VERSION if ev_on else PROMPT_VERSION
 
     def call(second: bool):
@@ -586,7 +586,7 @@ SKEPTIC_ERRORS = {"disagree": "graders_disagree", "manipulation": "prompt_inject
 
 def _with_skeptic(out: GradeOutcome, *, stem, code, step_prompt, rubric, text, model, second_async, deadline,
                   s) -> GradeOutcome:
-    """Я13: первая оценка с доказательствами → скептик для высоких (≥ GRADING_SKEPTIC_HIGH) и спорных (doubts).
+    """первая оценка с доказательствами → скептик для высоких (≥ GRADING_SKEPTIC_HIGH) и спорных (doubts).
 
     Вместо независимой второй оценки (при выключенном флаге — она). В фоне (second_async, как И27) ответ получает
     балл первой оценки и second={status: pending, kind: skeptic}; синхронно — итог по правилам evidence.assemble."""
