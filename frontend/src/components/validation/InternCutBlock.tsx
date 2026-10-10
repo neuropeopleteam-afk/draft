@@ -56,7 +56,7 @@ export function InternCutSection({ ic }: { ic: any }) {
         не выше {pct(rule.max_false_confirm)}, ложные отказы (θ выше порога на 0,25 и более) не выше {pct(rule.max_false_reject)} и не больше {pct(rule.max_exhausted)} сессий
         упираются в исчерпание заданий. В продукте действует порог <b>θ = {theta(ic.cut_in_use)}</b>.
       </p>
-      <h3 className="mt-6 text-base font-bold text-brand-night">{curOk ? `Текущий банк: правилу удовлетворяет порог ${(cur.passing ?? []).map(theta).join(", ")}` : "Текущий банк: лёгких семейств для Стажёра мало, тест идёт в основном по самым простым заданиям Junior"}</h3>
+      <h3 className="mt-6 text-base font-bold text-brand-night">{curOk ? `Текущий банк: правилу удовлетворяет порог ${(cur.passing ?? []).map(theta).join(", ")}` : "Текущий банк: лёгких семейств для Стажёра ещё нет, тест идёт по самым простым заданиям Junior"}</h3>
       <div className="mt-3">
         <Table head={["Порог", "Ложное подтверждение", "Ложный отказ", "Подтверждение в полосе Стажёра", "Предложен Junior в полосе", "Заданий", "SE", "Исчерпание пула", "Доля полосы, θ ~ N(0; 1)"]}
           rows={cuts.map(row)} mark={idx} />
