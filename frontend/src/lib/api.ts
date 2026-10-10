@@ -39,7 +39,18 @@ export interface Catalog {
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, public code: string, message: string) { super(message); }
+  /** retryAfterS — заголовок Retry-After ответа в секундах (503 db_busy, 429), иначе null (Я16). */
+  constructor(public status: number, public code: string, message: string, public retryAfterS: number | null = null) { super(message); }
+}
+
+/** Retry-After в секундах (число или HTTP-дата), иначе null. */
+export function retryAfterOf(res: Response): number | null {
+  const v = res.headers.get("Retry-After");
+  if (!v) return null;
+  const n = Number(v);
+  if (Number.isFinite(n) && n >= 0) return n;
+  const t = Date.parse(v);
+  return Number.isFinite(t) ? Math.max(0, Math.round((t - Date.now()) / 1000)) : null;
 }
 
 /** Я16: сбой сети или сервера (5xx, обрыв, тайм-аут, 408/429), а не ответ «нельзя» (401/403/404): имеет смысл
@@ -123,7 +134,7 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
   if (!res.ok) {
     const { code, message } = messageFrom(res.status, body);
     errorHook?.(path, res.status, code);
-    throw new ApiError(res.status, code, message);
+    throw new ApiError(res.status, code, message, retryAfterOf(res));
   }
   return body as T;
 }

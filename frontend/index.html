@@ -13,8 +13,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="Платформа подбора ИТ-специалистов с обратной механикой: работодатель сам находит проверенного кандидата и приглашает с зарплатой." />
     <title>Встречный — подбор ИТ-специалистов</title>
-    <!-- Я16: адрес зеркала для экрана «Страница не загрузилась» (https://…); пусто — ссылка не показывается -->
-    <meta name="fsp-mirror" content="" />
     <!-- Я16: экран до запуска приложения — встроен в страницу (без внешних файлов и шрифтов): виден сразу. -->
     <style>
       .boot{box-sizing:border-box;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:1.5rem;text-align:center;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#310F53;background:#fff}
@@ -73,11 +71,6 @@
           if (kind === "error") return ["Не удалось запустить страницу", "При запуске произошла ошибка. Обычно помогает обновление страницы."];
           return ["Страница не загрузилась", "Часть файлов не дошла: связь прервалась или вышла новая версия сайта. " + VPN];
         }
-        // зеркало — по желанию: <meta name="fsp-mirror" content="https://…">; пусто — ссылки нет
-        function mirror() {
-          var m = D.querySelector('meta[name="fsp-mirror"]'), u = m && m.getAttribute("content");
-          return u && /^https:\/\/[^\s"'<>]+$/.test(u) ? u : "";
-        }
         // kind: slow (не запустилось за 9 с) | chunk (файл сборки не загрузился) | error (код упал до первого экрана)
         function fail(kind) {
           if (state === "mounted" || shown) return;
@@ -88,7 +81,6 @@
             root.innerHTML = '<main class="boot" id="boot" aria-labelledby="boot-h" data-boot="' + kind + '">' +
               '<h1 id="boot-h" tabindex="-1">' + t[0] + "</h1><p>" + t[1] + "</p>" +
               '<button type="button" id="boot-reload">Обновить</button>' +
-              (mirror() ? '<p><a href="' + mirror() + '" style="color:#520978;font-weight:600">Открыть зеркало сайта</a></p>' : "") +
               '<p class="boot-note" id="boot-note" role="status">' + (auto ? "Пробуем загрузить ещё раз…" : "") + "</p></main>";
             D.getElementById("boot-reload").onclick = reload;
             try { D.getElementById("boot-h").focus(); } catch (e) { /* фокус не обязателен */ }
@@ -103,7 +95,9 @@
           if (e.target && e.target !== W) return;  // картинка, иконка — не мешают запуску
           // ошибка нашего кода (не расширения) до первого экрана: не отрисовалось за 1,5 с — сообщение сразу
           if (!/\/(assets|src)\//.test(e.filename || "")) return;
-          W.setTimeout(function () { if (state !== "mounted") fail("error"); }, 1500);
+          // обрезанный файл (обрыв посреди передачи) — синтаксическая ошибка: это сеть, а не код
+          var cut = /SyntaxError|Unexpected end|Invalid or unexpected|missing \) after|unterminated/i.test(e.message || "");
+          W.setTimeout(function () { if (state !== "mounted") fail(cut ? "chunk" : "error"); }, 1500);
         }, true);
         W.addEventListener("vite:preloadError", function () { if (state !== "mounted") fail("chunk"); });
         W.addEventListener("unhandledrejection", function (e) {

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { brotliCompressSync, constants as zlib, gzipSync } from "node:zlib";
 import { defineConfig, type Plugin } from "vite";
@@ -41,7 +41,8 @@ function precompress(): Plugin {
     apply: "build",
     configResolved(c) { outDir = resolve(c.root, c.build.outDir); },
     // closeBundle — после writeBundle всех плагинов: sw.js уже с версией сборки
-    closeBundle() {
+    closeBundle(error?: Error) {
+      if (error || !existsSync(outDir)) return;  // сборка упала — не заслоняем её ошибку своей
       let n = 0;
       for (const file of walk(outDir)) {
         if (!COMPRESSIBLE.test(file)) continue;
