@@ -299,6 +299,15 @@ def _load_claims(db: Session, out: dict) -> None:
             out[ts.user_id].last_attempt = ts
 
 
+def _position(out: dict, t: dict, grade: str | None) -> None:
+    """Я22 (флаг GRADE_POSITION_ENABLED): позиция внутри уровня по θ ± SE теста — текст без чисел θ."""
+    from app.core.config import get_settings
+    from app.modules.assessment.grades import level_position
+
+    if get_settings().grade_position_enabled:
+        out["position"] = level_position(t.get("theta"), t.get("se"), grade)
+
+
 def grade_status(b: "Bundle") -> dict:
     """Единая модель статуса грейда для карточки, подборки, поиска, сравнения, PDF и объяснения «почему».
 
@@ -314,6 +323,8 @@ def grade_status(b: "Bundle") -> dict:
            "direction": b.direction, "claimed_grade": None, "claimed_direction": None,
            "claimed_category_id": None, "claimed_title": None, "attempt": None, "p_pct": None, "text": ""}
     t = b.test.value if b.test else None
+    if st in ("confirmed", "provisional") and t:
+        _position(out, t, b.grade)
     if st == "confirmed":
         by = prov.confirmed_by(t)
         out["text"] = "Грейд подтверждён тестом" + (f" ({by['title']})" if by and by.get("by") in ("probe", "cup") else "")
