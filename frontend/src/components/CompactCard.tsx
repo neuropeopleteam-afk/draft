@@ -29,6 +29,8 @@ export function compactFacts(r: any, fit?: Fit | null): CompactFacts {
     return `${xs.join(", ")} — ${st === "declared" ? (one ? "только заявлен" : "только заявлены") : (one ? "не проверялся" : "не проверялись")}`;
   }).filter((x): x is string => !!x);
   const risks: string[] = [];
+  const req = r.must?.required_total ?? 0, miss = r.must?.missing_total ?? 0;
+  if (miss > 0) risks.push(`не подтверждено тестом обязательных: ${miss} из ${req}`);  // «риск не виден» при 2 из 4 вводил бы в заблуждение
   const below = stack.filter((x) => x.status === "mismatch").map(skillName);
   if (below.length) risks.push(`ниже порога теста: ${below.join(", ")}`);
   const st = c.status?.status;
