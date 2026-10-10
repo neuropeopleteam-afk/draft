@@ -13007,6 +13007,952 @@
         "title": "HealthOut",
         "type": "object"
       },
+      "HhArea": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "HhArea",
+        "type": "object"
+      },
+      "HhImportIn": {
+        "properties": {
+          "confirm_own": {
+            "default": false,
+            "description": "Подтверждаю, что это вакансия нашей компании",
+            "title": "Confirm Own",
+            "type": "boolean"
+          },
+          "ref": {
+            "description": "Ссылка на вакансию hh.ru или её номер",
+            "maxLength": 300,
+            "minLength": 1,
+            "title": "Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ref"
+        ],
+        "title": "HhImportIn",
+        "type": "object"
+      },
+      "HhImportOut": {
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "conditions": {
+            "description": "«Условия с hh.ru — опыт · график · формат · занятость» (строка в описании)",
+            "title": "Conditions",
+            "type": "string"
+          },
+          "confirm_required": {
+            "description": "Импорт требует подтверждения «это вакансия нашей компании»",
+            "title": "Confirm Required",
+            "type": "boolean"
+          },
+          "description_preview": {
+            "title": "Description Preview",
+            "type": "string"
+          },
+          "employer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Работодатель вакансии в hh.ru",
+            "title": "Employer Name"
+          },
+          "experience": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experience"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "hh_id": {
+            "description": "Номер вакансии на hh.ru",
+            "title": "Hh Id",
+            "type": "string"
+          },
+          "imported_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imported At"
+          },
+          "key_skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Key Skills",
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "own_company": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Совпадает ли работодатель hh.ru с компанией на платформе",
+            "title": "Own Company"
+          },
+          "parse_method": {
+            "description": "Разбор потребности: rules (без LLM)",
+            "title": "Parse Method",
+            "type": "string"
+          },
+          "result": {
+            "description": "created | updated | skipped",
+            "title": "Result",
+            "type": "string"
+          },
+          "salary_basis": {
+            "description": "gross — до вычета НДФЛ, net — на руки",
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_from": {
+            "title": "Salary From",
+            "type": "integer"
+          },
+          "salary_from_hh": {
+            "description": "Вилка взята из hh.ru целиком",
+            "title": "Salary From Hh",
+            "type": "boolean"
+          },
+          "salary_hh": {
+            "description": "Зарплата в hh.ru как есть: от/до, валюта, до вычета НДФЛ или на руки",
+            "title": "Salary Hh",
+            "type": "string"
+          },
+          "salary_source": {
+            "default": "market",
+            "description": "hh — вилка из hh.ru; hh_partial — только «от»/«до» или шире 1,5, вторая граница достроена; market — рыночный диапазон категории",
+            "title": "Salary Source",
+            "type": "string"
+          },
+          "salary_to": {
+            "title": "Salary To",
+            "type": "integer"
+          },
+          "stack": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stack",
+            "type": "array"
+          },
+          "stack_from_key_skills": {
+            "description": "Навыки, добавленные из key_skills (в тексте их нет)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Stack From Key Skills",
+            "type": "array"
+          },
+          "stack_titles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stack Titles",
+            "type": "array"
+          },
+          "state": {
+            "description": "new | same | changed | edited",
+            "title": "State",
+            "type": "string"
+          },
+          "state_title": {
+            "title": "State Title",
+            "type": "string"
+          },
+          "stub": {
+            "description": "Заглушка hh.ru (демо-данные), не настоящий API",
+            "title": "Stub",
+            "type": "boolean"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          },
+          "work_format": {
+            "title": "Work Format",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hh_id",
+          "url",
+          "title",
+          "employer_name",
+          "own_company",
+          "confirm_required",
+          "archived",
+          "experience",
+          "conditions",
+          "salary_hh",
+          "key_skills",
+          "category_id",
+          "stack",
+          "stack_from_key_skills",
+          "stack_titles",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_from_hh",
+          "work_format",
+          "city",
+          "description_preview",
+          "parse_method",
+          "notes",
+          "state",
+          "state_title",
+          "vacancy_id",
+          "fetched_at",
+          "stub",
+          "result",
+          "text"
+        ],
+        "title": "HhImportOut",
+        "type": "object"
+      },
+      "HhMarketOut": {
+        "properties": {
+          "area": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HhArea"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "area_fallback": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area Fallback"
+          },
+          "area_requested": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HhArea"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Когда получены данные hh.ru (кэш 24 ч)",
+            "title": "As Of"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "basis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "net — все суммы на руки",
+            "title": "Basis"
+          },
+          "cached": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cached"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "category_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Title"
+          },
+          "excluded": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Excluded"
+          },
+          "few_data": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Few Data"
+          },
+          "found": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Найдено hh.ru по запросу (в расчёте — первые до 100 свежих)",
+            "title": "Found"
+          },
+          "grade_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "name — слово грейда в названии; experience — опыт hh.ru ≈ грейд",
+            "title": "Grade By"
+          },
+          "grade_by_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade By Title"
+          },
+          "gross_share": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Доля сумм «до вычета НДФЛ» до приведения к «на руки»",
+            "title": "Gross Share"
+          },
+          "median": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Median"
+          },
+          "median_gross": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "≈ медиана до вычета НДФЛ (шкала 13–22 %)",
+            "title": "Median Gross"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Вакансий с зарплатой в рублях за месяц в расчёте",
+            "title": "N"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "p25": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P25"
+          },
+          "p75": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "P75"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "remote": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Remote"
+          },
+          "sample": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample"
+          },
+          "search_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Тот же поиск на hh.ru — для самопроверки",
+            "title": "Search Url"
+          },
+          "shown": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Медиана посчитана (n ≥ 8)",
+            "title": "Shown"
+          },
+          "stale": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "hh.ru недоступен — показан кэш прошлой даты",
+            "title": "Stale"
+          },
+          "stub": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stub"
+          },
+          "tried": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/HhTried"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tried"
+          }
+        },
+        "required": [
+          "available"
+        ],
+        "title": "HhMarketOut",
+        "type": "object"
+      },
+      "HhParseOut": {
+        "additionalProperties": true,
+        "properties": {
+          "code_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code Commit"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "N"
+          }
+        },
+        "title": "HhParseOut",
+        "type": "object"
+      },
+      "HhPreviewOut": {
+        "properties": {
+          "archived": {
+            "title": "Archived",
+            "type": "boolean"
+          },
+          "category_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category Id"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "conditions": {
+            "description": "«Условия с hh.ru — опыт · график · формат · занятость» (строка в описании)",
+            "title": "Conditions",
+            "type": "string"
+          },
+          "confirm_required": {
+            "description": "Импорт требует подтверждения «это вакансия нашей компании»",
+            "title": "Confirm Required",
+            "type": "boolean"
+          },
+          "description_preview": {
+            "title": "Description Preview",
+            "type": "string"
+          },
+          "employer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Работодатель вакансии в hh.ru",
+            "title": "Employer Name"
+          },
+          "experience": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Experience"
+          },
+          "fetched_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fetched At"
+          },
+          "hh_id": {
+            "description": "Номер вакансии на hh.ru",
+            "title": "Hh Id",
+            "type": "string"
+          },
+          "key_skills": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Key Skills",
+            "type": "array"
+          },
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "own_company": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Совпадает ли работодатель hh.ru с компанией на платформе",
+            "title": "Own Company"
+          },
+          "parse_method": {
+            "description": "Разбор потребности: rules (без LLM)",
+            "title": "Parse Method",
+            "type": "string"
+          },
+          "salary_basis": {
+            "description": "gross — до вычета НДФЛ, net — на руки",
+            "title": "Salary Basis",
+            "type": "string"
+          },
+          "salary_from": {
+            "title": "Salary From",
+            "type": "integer"
+          },
+          "salary_from_hh": {
+            "description": "Вилка взята из hh.ru целиком",
+            "title": "Salary From Hh",
+            "type": "boolean"
+          },
+          "salary_hh": {
+            "description": "Зарплата в hh.ru как есть: от/до, валюта, до вычета НДФЛ или на руки",
+            "title": "Salary Hh",
+            "type": "string"
+          },
+          "salary_source": {
+            "default": "market",
+            "description": "hh — вилка из hh.ru; hh_partial — только «от»/«до» или шире 1,5, вторая граница достроена; market — рыночный диапазон категории",
+            "title": "Salary Source",
+            "type": "string"
+          },
+          "salary_to": {
+            "title": "Salary To",
+            "type": "integer"
+          },
+          "stack": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stack",
+            "type": "array"
+          },
+          "stack_from_key_skills": {
+            "description": "Навыки, добавленные из key_skills (в тексте их нет)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Stack From Key Skills",
+            "type": "array"
+          },
+          "stack_titles": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stack Titles",
+            "type": "array"
+          },
+          "state": {
+            "description": "new | same | changed | edited",
+            "title": "State",
+            "type": "string"
+          },
+          "state_title": {
+            "title": "State Title",
+            "type": "string"
+          },
+          "stub": {
+            "description": "Заглушка hh.ru (демо-данные), не настоящий API",
+            "title": "Stub",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "vacancy_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vacancy Id"
+          },
+          "work_format": {
+            "title": "Work Format",
+            "type": "string"
+          }
+        },
+        "required": [
+          "hh_id",
+          "url",
+          "title",
+          "employer_name",
+          "own_company",
+          "confirm_required",
+          "archived",
+          "experience",
+          "conditions",
+          "salary_hh",
+          "key_skills",
+          "category_id",
+          "stack",
+          "stack_from_key_skills",
+          "stack_titles",
+          "salary_from",
+          "salary_to",
+          "salary_basis",
+          "salary_from_hh",
+          "work_format",
+          "city",
+          "description_preview",
+          "parse_method",
+          "notes",
+          "state",
+          "state_title",
+          "vacancy_id",
+          "fetched_at",
+          "stub"
+        ],
+        "title": "HhPreviewOut",
+        "type": "object"
+      },
+      "HhTried": {
+        "properties": {
+          "area": {
+            "title": "Area",
+            "type": "string"
+          },
+          "by": {
+            "title": "By",
+            "type": "string"
+          },
+          "found": {
+            "title": "Found",
+            "type": "integer"
+          },
+          "n": {
+            "title": "N",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "area",
+          "by",
+          "n",
+          "found"
+        ],
+        "title": "HhTried",
+        "type": "object"
+      },
       "HiringCandidateCanOut": {
         "additionalProperties": true,
         "properties": {
@@ -29872,6 +30818,95 @@
         ]
       }
     },
+    "/api/assessment/sessions/{session_id}/evidence": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "candidate_evidence_api_assessment_sessions__session_id__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Candidate Evidence Api Assessment Sessions  Session Id  Evidence Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "session_not_found",
+                    "message": "Сессия теста не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `session_not_found` — Сессия теста не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "test_not_finished",
+                    "message": "Тест ещё не завершён"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тест ещё не завершён. Коды `detail.code`: `test_not_finished` — Тест ещё не завершён."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Доказательства оценки развёрнутых ответов: цитаты из ответа по пунктам рубрики",
+        "tags": [
+          "assessment"
+        ]
+      }
+    },
     "/api/assessment/sessions/{session_id}/finish": {
       "post": {
         "description": "Доступно, когда движок закончил тест (item = null). Открытые ответы, которые не удалось оценить LLM, остаются «на проверке» и в θ пока не входят.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
@@ -41870,6 +42905,117 @@
         ]
       }
     },
+    "/api/employer/candidates/{ref}/evidence": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "employer_evidence_api_employer_candidates__ref__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "title": "Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "backend",
+                    "frontend",
+                    "data_ml",
+                    "qa",
+                    "security"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Direction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Employer Evidence Api Employer Candidates  Ref  Evidence Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "candidate_not_found",
+                    "message": "Кандидат не найден или скрыл профиль"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Кандидат не найден или скрыл профиль. Коды `detail.code`: `candidate_not_found` — Кандидат не найден или скрыл профиль."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "company_required — сначала заполните профиль компании. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Доказательства оценки развёрнутых ответов последнего теста кандидата (если не скрыл)",
+        "tags": [
+          "employer"
+        ]
+      }
+    },
     "/api/employer/candidates/{ref}/passport": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
@@ -44983,6 +46129,195 @@
         "summary": "Отозвать неотвеченное приглашение",
         "tags": [
           "employer-contact"
+        ]
+      }
+    },
+    "/api/employer/market/hh": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "hh_market_view_api_employer_market_hh_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 48,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 100,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City"
+            }
+          },
+          {
+            "description": "Кандидат: его категория, если нет своей",
+            "in": "query",
+            "name": "ref",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 32,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Кандидат: его категория, если нет своей",
+              "title": "Ref"
+            }
+          },
+          {
+            "description": "Потребность: категория, город, формат",
+            "in": "query",
+            "name": "need_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Потребность: категория, город, формат",
+              "title": "Need Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HhMarketOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "hh_disabled",
+                    "message": "Интеграция с hh.ru не включена на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Интеграция с hh.ru выключена (hh_disabled) или вакансия не найдена. Коды `detail.code`: `hh_disabled` — Интеграция с hh.ru не включена на этом сервере; `candidate_not_found` — Кандидат не найден или скрыл профиль."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нет профиля компании. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Неверная ссылка или номер вакансии"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru ограничил частоту запросов"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru ответил ошибкой или недоступен"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Очередь запросов к hh.ru занята"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru не ответил вовремя"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "«Рынок по hh.ru»: медиана и p25–p75 вилок живых вакансий роли, грейда и региона (кэш 24 ч)",
+        "tags": [
+          "hh"
         ]
       }
     },
@@ -49827,6 +51162,261 @@
         "summary": "Создать вакансию (вилка «от–до» обязательна)",
         "tags": [
           "vacancies"
+        ]
+      }
+    },
+    "/api/employer/vacancies/import/hh": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "hh_import_api_employer_vacancies_import_hh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HhImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HhImportOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "hh_disabled",
+                    "message": "Интеграция с hh.ru не включена на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Интеграция с hh.ru выключена (hh_disabled) или вакансия не найдена. Коды `detail.code`: `hh_disabled` — Интеграция с hh.ru не включена на этом сервере."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нет профиля компании. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Неверная ссылка или номер вакансии"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru ограничил частоту запросов"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru ответил ошибкой или недоступен"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Очередь запросов к hh.ru занята"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru не ответил вовремя"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Импортировать свою вакансию с hh.ru → черновик вакансии (источник «hh.ru», ссылка, дата импорта)",
+        "tags": [
+          "hh"
+        ]
+      }
+    },
+    "/api/employer/vacancies/import/hh/preview": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "hh_preview_api_employer_vacancies_import_hh_preview_get",
+        "parameters": [
+          {
+            "description": "Ссылка или номер вакансии",
+            "in": "query",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "description": "Ссылка или номер вакансии",
+              "maxLength": 300,
+              "minLength": 1,
+              "title": "Ref",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HhPreviewOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "hh_disabled",
+                    "message": "Интеграция с hh.ru не включена на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Интеграция с hh.ru выключена (hh_disabled) или вакансия не найдена. Коды `detail.code`: `hh_disabled` — Интеграция с hh.ru не включена на этом сервере."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нет профиля компании. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Неверная ссылка или номер вакансии"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru ограничил частоту запросов"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru ответил ошибкой или недоступен"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Очередь запросов к hh.ru занята"
+          },
+          "504": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "hh.ru не ответил вовремя"
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Импорт своей вакансии с hh.ru: что придёт в черновик (только чтение hh.ru)",
+        "tags": [
+          "hh"
         ]
       }
     },
@@ -62865,6 +64455,30 @@
         ]
       }
     },
+    "/api/validation/evidence": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "validation_evidence_api_validation_evidence_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Validation Evidence Api Validation Evidence Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Доказательная оценка: флаг выкл/вкл на одних ответах набора оценщика",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
     "/api/validation/fsp-rating": {
       "get": {
         "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
@@ -63480,6 +65094,28 @@
           }
         },
         "summary": "Первый экран /validation: 5 чисел с ДИ и подписью мира",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
+    "/api/validation/hh-parse": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "hh_parse_api_validation_hh_parse_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HhParseOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Разбор потребности на корпусе вакансий hh.ru: полнота полей, навыки, отрицания (пересчёт: tools/realdata/hh_corpus.py run)",
         "tags": [
           "validation"
         ]
@@ -64955,6 +66591,10 @@
     {
       "description": "Обезличенная статистика прохождения у жюри и посетителей стенда: уведомление и отказ, путь, необязательная анкета SUS и оценки топ-5, сводка для /validation (при N ≥ 3)",
       "name": "study"
+    },
+    {
+      "description": "hh.ru: импорт своей вакансии работодателя (только чтение GET /vacancies/{id}) и «Рынок по hh.ru» — медиана и p25–p75 вилок живых вакансий. Без HH_ENABLED и токена приложения — 404 hh_disabled.",
+      "name": "hh"
     },
     {
       "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма (флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется",
