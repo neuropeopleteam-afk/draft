@@ -182,6 +182,9 @@ class Settings(BaseSettings):
     # шире — категория не выше Senior); экспресс-тест жюри и мини-тест QR Lead/Principal не присваивают
     grades_ext_min_items: int = 8
     grades_ext_max_se: float = 0.6
+    # сессии с заявленным Lead/Principal: априорное SD оценки θ (EAP; у остальных 1,0) и тест без ротации субпулов
+    grades_ext_prior_sd: float = 1.5
+    grades_ext_no_subpool: bool = True
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"

@@ -122,9 +122,30 @@ def set_cuts(lead: float, principal: float) -> None:
     grades_mod.scale.cache_clear()
 
 
+def patch_ext_sessions(prior_sd: float, no_subpool: bool) -> None:
+    """Сессии с заявленным Lead/Principal — как в продукте (bank_engine): своё априорное SD оценки θ
+    (GRADES_EXT_PRIOR_SD) и без ротации субпулов (GRADES_EXT_NO_SUBPOOL: трудных семейств мало, как у Стажёра)."""
+    from dataclasses import replace
+
+    orig = sim.run_session
+
+    def run_session(pool, direction, responder, cfg, exposure, claimed, subpool, rng, **kw):
+        if claimed in seed_data.EXT_GRADE_ORDER:
+            cfg2 = replace(cfg)
+            base_cat = cfg.cat
+            object.__setattr__(cfg2, "cat", lambda: replace(base_cat(), prior_sd=prior_sd))
+            cfg = cfg2
+            if no_subpool:
+                subpool = None
+        return orig(pool, direction, responder, cfg, exposure, claimed, subpool, rng, **kw)
+
+    sim.run_session = run_session
+
+
 def worker(args) -> dict:
     lead, principal = CUT_VARIANTS[args.cuts]
     set_cuts(lead, principal)
+    patch_ext_sessions(args.ext_prior_sd, args.ext_subpool == "none")
     cfg = sim.app_config_from_settings()  # пороги CAT — cuts_tuple() после set_cuts
     base = sim.make_pool(cfg.subpools)
     i = sim.DIRECTIONS.index(args.direction)
@@ -146,9 +167,11 @@ def worker(args) -> dict:
         rows.append({"theta": c.theta, "true": LEVELS.index(grades_mod.point_grade(c.theta)), "claimed": c.claimed,
                      "l1": r1["level"], "l2": r2["level"], "s1": r1["status"],
                      "t1": sum(t["time_s"] for t in r1["tests"]) / 60.0, "n1": sum(t["n_items"] for t in r1["tests"]),
-                     "se1": r1["tests"][0]["se"], "ext_items": sum(1 for f in r1["families"] if f.startswith("model."))})
+                     "se1": r1["tests"][0]["se"], "th1": r1["tests"][0]["theta"],
+                     "n_model": sum(1 for f in r1["tests"][0]["families"] if f.startswith("model.")),
+                     "conf1": bool(r1["tests"][0]["confirmed"])})
     return {"direction": args.direction, "world": args.world, "cuts": args.cuts, "bank": args.bank, "rows": rows,
-            "n_model_families": len(extra)}
+            "n_model_families": len(extra), "psd": args.ext_prior_sd, "sp": args.ext_subpool}
 
 
 # ---------------------------------------------------------------- метрики
@@ -185,6 +208,20 @@ def summarize(rows: list[dict]) -> dict:
                     # куда попали: доли по присвоенным уровням
                     "assigned": {LEVELS[j]: round(float(np.mean(g == j)), 3) for j in range(len(LEVELS)) if np.any(g == j)}}
     out["by_true_level"] = by
+    # Сам тест, без поведения в опросе: кандидаты, заявившие ровно свой истинный уровень — доля подтверждения с первой
+    # попытки, смещение θ̂ первой сессии, SE и число модельных заданий Lead/Principal в ней
+    same = {}
+    for lv, name in enumerate(LEVELS):
+        rs = [r for r in rows if r["true"] == lv and r["claimed"] == name]
+        if len(rs) < 5:
+            continue
+        same[name] = {"n": len(rs), "confirmed_first": round(float(np.mean([r["conf1"] for r in rs])), 3),
+                      "exact": round(float(np.mean([r["l1"] == lv for r in rs])), 3),
+                      "bias_theta": round(float(np.mean([r["th1"] - r["theta"] for r in rs])), 3),
+                      "se": round(float(np.mean([r["se1"] for r in rs])), 3),
+                      "model_items": round(float(np.mean([r["n_model"] for r in rs])), 2)}
+    out["claimed_true"] = same
+    out["claimed_share"] = {g: round(float(np.mean([r["claimed"] == g for r in rows])), 3) for g in LEVELS[1:]}
     # завышение относительно соседей: присвоен Lead/Principal при истинном ниже
     for g in ("lead", "principal"):
         j = LEVELS.index(g)
@@ -195,10 +232,12 @@ def summarize(rows: list[dict]) -> dict:
 
 
 def run(n: int, quick: bool, parallel: int, a_ext: float, variants: list[str], banks: list[str],
-        worlds: list[str], write: bool = True, merge: bool = False) -> dict:
+        worlds: list[str], write: bool = True, merge: bool = False, psds: tuple[float, ...] = (1.0,),
+        sps: tuple[str, ...] = ("split",)) -> dict:
     t0 = time.time()
     dirs = sim.DIRECTIONS[:2] if quick else sim.DIRECTIONS
-    jobs = [(cv, b, w, d) for cv in variants for b in banks for w in worlds for d in dirs]
+    jobs = [(cv, b, w, d, ps, sp) for cv in variants for b in banks for w in worlds for ps in psds for sp in sps
+            for d in dirs]
     tmp = Path(tempfile.mkdtemp(prefix="gext_"))
     procs: list[tuple[subprocess.Popen, Path]] = []
     results = []
@@ -206,11 +245,12 @@ def run(n: int, quick: bool, parallel: int, a_ext: float, variants: list[str], b
     pending = list(jobs)
     while pending or procs:
         while pending and len(procs) < parallel:
-            cv, b, w, d = pending.pop(0)
-            out = tmp / f"{cv.replace('/', '_')}_{b}_{w}_{d}.json"
+            cv, b, w, d, ps, sp = pending.pop(0)
+            out = tmp / f"{cv.replace('/', '_')}_{b}_{w}_{ps}_{sp}_{d}.json"
             p = subprocess.Popen([sys.executable, "-m", "app.modules.validation.grades_ext_sim", "--worker",
                                   "--cuts", cv, "--bank", b, "--world", w, "--direction", d, "--n", str(n),
-                                  "--a-ext", str(a_ext), "--out", str(out)], env=env)
+                                  "--a-ext", str(a_ext), "--ext-prior-sd", str(ps), "--ext-subpool", sp,
+                                  "--out", str(out)], env=env)
             procs.append((p, out))
         time.sleep(0.5)
         for p, out in list(procs):
@@ -224,10 +264,13 @@ def run(n: int, quick: bool, parallel: int, a_ext: float, variants: list[str], b
     for cv in variants:
         for b in banks:
             for w in worlds:
-                rows = [r for x in results if (x["cuts"], x["bank"], x["world"]) == (cv, b, w) for r in x["rows"]]
-                key = f"{cv}|{b}|{w}"
-                rep["variants"][key] = {"cuts": dict(zip(("lead", "principal"), CUT_VARIANTS[cv], strict=True)),
-                                        "bank": b, "world": w, **summarize(rows)}
+                for ps in psds:
+                    for sp in sps:
+                        rows = [r for x in results if (x["cuts"], x["bank"], x["world"], x["psd"], x["sp"])
+                                == (cv, b, w, ps, sp) for r in x["rows"]]
+                        key = f"{cv}|{b}|{w}|sd{ps}|{sp}"
+                        rep["variants"][key] = {"cuts": dict(zip(("lead", "principal"), CUT_VARIANTS[cv], strict=True)),
+                                                "bank": b, "world": w, "prior_sd": ps, "subpool": sp, **summarize(rows)}
     world_cfg = {"n_per_direction": n, "directions": list(dirs), "a_ext": a_ext, "banks": {b: BANKS[b] for b in banks},
                  "b_range": B_RANGE, "misspec": 0.5, "cuts_base": {g: seed_data.ALL_GRADE_CUTS[g] for g in LEVELS[1:5]},
                  "worlds": {w: WORLDS[w] for w in worlds}}
@@ -272,23 +315,35 @@ def markdown(rep: dict) -> str:
          "решение P ≥ 0,8 → «принять уровень ниже» или тест ступенью ниже; повтор — с историей первой попытки. "
          "Lead и Principal присваивает только полный тест (не меньше 8 оценённых заданий, SE ≤ 0,6).", "",
          "## Итог по вариантам", "",
-         "| Пороги Lead/Principal | Банк | Мир | n | Точно | Выше | Ниже | Без кат. | ±1 | Совпадение повтора | κw повтора | "
+         "| Пороги Lead/Principal | Банк | Мир | SD априори (Lead/Principal) | Субпулы | n | Точно | Выше | Ниже | Без кат. | ±1 | Совпадение повтора | κw повтора | "
          "Присвоено Lead (из них верно) | Присвоено Principal (верно) | Мин (ср./p90) |",
-         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+         "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for v in rep["variants"].values():
-        L.append(f"| {_n(v['cuts']['lead'], 2)} / {_n(v['cuts']['principal'], 2)} | {v['bank']} | {v['world']} | {v['n']} | "
+        L.append(f"| {_n(v['cuts']['lead'], 2)} / {_n(v['cuts']['principal'], 2)} | {v['bank']} | {v['world']} | "
+                 f"{_n(v.get('prior_sd', 1.0))} | {'без ротации' if v.get('subpool') == 'none' else 'ротация'} | {v['n']} | "
                  f"{_p(v['exact'])} | {_p(v['above'])} | {_p(v['below'])} | {_p(v['none'])} | {_p(v['within_1'])} | "
                  f"{_p(v['retest_exact'])} | {_n(v['kappa_w_retest'], 3)} | {v['assigned_lead']} ({_p(v['precision_lead'])}) | "
                  f"{v['assigned_principal']} ({_p(v['precision_principal'])}) | {_n(v['minutes_mean'])} / {_n(v['minutes_p90'])} |")
     L += ["", "## По истинному уровню", ""]
     for key, v in rep["variants"].items():
-        L += [f"### Пороги {_n(v['cuts']['lead'], 2)} / {_n(v['cuts']['principal'], 2)}, банк {v['bank']}, {WORLDS.get(v['world'], v['world'])}", "",
+        L += [f"### Пороги {_n(v['cuts']['lead'], 2)} / {_n(v['cuts']['principal'], 2)}, банк {v['bank']}, "
+              f"{WORLDS.get(v['world'], v['world'])}, SD априори {_n(v.get('prior_sd', 1.0))}, "
+              f"{'без ротации субпулов' if v.get('subpool') == 'none' else 'ротация субпулов'}", "",
               "| Истинный уровень | n | Точно | Выше | Ниже | Без кат. | Совпадение повтора | Куда попали |", "|---|---|---|---|---|---|---|---|"]
         for lv, b in v.get("by_true_level", {}).items():
             where = ", ".join(f"{LEVEL_RU.get(k, k)} {_p(x)}" for k, x in b["assigned"].items())
             L.append(f"| {LEVEL_RU.get(lv, lv)} | {b['n']} | {_p(b['exact'])} | {_p(b['above'])} | {_p(b['below'])} | "
                      f"{_p(b['none'])} | {_p(b['retest_exact'])} | {where} |")
         L.append("")
+        cs = v.get("claimed_true") or {}
+        if cs:
+            L += ["Заявили свой истинный уровень (качество самого теста, без поведения в опросе):", "",
+                  "| Уровень | n | Подтверждён с первой попытки | Итог точно | Смещение θ̂ | SE | Заданий Lead/Principal в сессии |",
+                  "|---|---|---|---|---|---|---|"]
+            for lv, b in cs.items():
+                L.append(f"| {LEVEL_RU.get(lv, lv)} | {b['n']} | {_p(b['confirmed_first'])} | {_p(b['exact'])} | "
+                         f"{_n(b['bias_theta'], 2)} | {_n(b['se'], 2)} | {_n(b['model_items'], 1)} |")
+            L.append("")
     L += ["Банк «expected» — ожидаемый по карточке банка: общий блок 4 Lead + 2 Principal, направление 2 Lead + 1 Principal; "
           "«double» — вдвое больше. Семейства делятся между двумя субпулами, как и остальные.", ""]
     return "\n".join(L) + "\n"
@@ -311,6 +366,10 @@ def main() -> int:
     ap.add_argument("--world", default="top")
     ap.add_argument("--direction", default="backend")
     ap.add_argument("--out")
+    ap.add_argument("--ext-prior-sd", type=float, default=1.0)
+    ap.add_argument("--ext-subpool", default="split", choices=("split", "none"))
+    ap.add_argument("--psds", default="1.0", help="варианты априорного SD для заявленных Lead/Principal")
+    ap.add_argument("--sps", default="split", help="split | none — субпулы для заявленных Lead/Principal")
     a = ap.parse_args()
     if a.worker:
         res = worker(a)
@@ -318,7 +377,8 @@ def main() -> int:
         return 0
     n = min(a.n, 40) if a.quick else a.n
     rep = run(n, a.quick, a.parallel, a.a_ext, a.variants.split(","), a.banks.split(","), a.worlds.split(","),
-              write=not a.no_write, merge=a.merge)
+              write=not a.no_write, merge=a.merge, psds=tuple(float(x) for x in a.psds.split(",")),
+              sps=tuple(a.sps.split(",")))
     for key, v in rep["variants"].items():
         print(f"{key}: точно {v['exact']}, выше {v['above']}, ниже {v['below']}, без {v['none']}, κw {v['kappa_w_retest']}, "
               f"Lead {v['assigned_lead']} ({v['precision_lead']}), Principal {v['assigned_principal']} ({v['precision_principal']})")

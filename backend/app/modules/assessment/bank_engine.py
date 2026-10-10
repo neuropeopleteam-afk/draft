@@ -68,6 +68,7 @@ from app.modules.assessment.grades import (GRADE_RU, category_level, cuts_tuple,
                                            start_theta)
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import stack_gate, to_stack_tags
+from app.modules.catalog.seed_data import EXT_GRADE_ORDER
 
 log = logging.getLogger("assessment")
 
@@ -210,6 +211,12 @@ class BankEngine:
                                  parse_quarantine(self._settings().assessment_subpool_quarantine))
         if claimed_grade == "intern":  # лёгких семейств мало — тест Стажёра идёт без ротации субпулов (intern_pool.py)
             subpool = None
+        if claimed_grade in EXT_GRADE_ORDER:  # Lead/Principal (флаг GRADES_EXT_ENABLED): трудных семейств мало — как у
+            # Стажёра, без ротации субпулов; оценка θ — с более широким априорным SD (меньше стягивание к среднему у
+            # θ ≈ 2–3). Обоснование и числа — docs/validation/GRADES_EXT.md
+            if self._settings().grades_ext_no_subpool:
+                subpool = None
+            cfg["prior_sd"] = float(self._settings().grades_ext_prior_sd)
         state = {
             "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": claimed_grade,
             "mode": mode, "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": subpool, "items": [], "skipped": [],
@@ -459,7 +466,7 @@ class BankEngine:
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
                          ext_time_s=float(c.get("ext_time_s", 1800.0)),
-                         ext_own_first=bool(c.get("ext_own_first", False)))
+                         ext_own_first=bool(c.get("ext_own_first", False)), prior_sd=float(c.get("prior_sd", 1.0)))
 
     def _rebuild(self, state: dict) -> CATSession:
         pool = list(_pool(state["cfg"].get("subpools", 1)))

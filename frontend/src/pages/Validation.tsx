@@ -168,7 +168,7 @@ function Report({ r }: { r: any }) {
   );
 }
 
-const GRADE_RU: Record<string, string> = { none: "без грейда", junior: "Junior", middle: "Middle", senior: "Senior" };
+const GRADE_RU: Record<string, string> = { none: "без грейда", junior: "Junior", middle: "Middle", senior: "Senior", lead: "Lead", principal: "Principal" };
 const dist = (d?: Record<string, number>) => d ? Object.entries(d).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${GRADE_RU[k] ?? k}: ${v}`).join(" · ") : "—";
 
 /** «Проверьте сами»: синтетический кандидат заданного уровня или стратегии проходит N тестов на НАСТОЯЩЕМ движке

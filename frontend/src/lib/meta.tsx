@@ -16,6 +16,15 @@ export interface Meta {
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
   interview?: { enabled: boolean; stub: boolean; defense_minutes: number }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.)
+  // Lead и Principal (GRADES_EXT_ENABLED): есть только при включённом флаге; уровни направления — те, для которых в банке
+  // есть проверенные семейства (backend/app/modules/catalog/levels.py)
+  grades_ext?: GradesExt;
+}
+
+export interface GradesExt {
+  enabled: boolean; grades: string[]; min_own: number; min_total: number;
+  common: Record<string, number>;
+  by_direction: Record<string, { grades: string[]; families: Record<string, number> }>;
 }
 
 const Ctx = createContext<Meta | null>(null);
