@@ -5,7 +5,7 @@ import { num, useApi } from "./ui";
  * рубрики и условия заданий закрыты — только «Пункт N», вес и балл. Подпись — «оценка модели». */
 
 type Quote = { text: string; how?: string };
-type Crit = { n: number; title: string; weight: number; score?: number | null; model_score?: number | null; quotes: Quote[]; dropped: number; dropped_why: string[]; capped: boolean };
+type Crit = { n: number; title: string; weight: number; score?: number | null; model_score?: number | null; cap_score?: number | null; quotes: Quote[]; dropped: number; dropped_why: string[]; capped: boolean };
 type Change = { n: number | null; from: number; to: number; accepted: boolean; direction: string };
 type Item = {
   position: number; part: number; parts: number; skills: string[]; status?: string; score?: number | null;
@@ -27,7 +27,9 @@ function Criterion({ c }: { c: Crit }) {
       {c.quotes.length > 0 ? (
         <ul className="mt-2 space-y-1.5" aria-label={`Цитаты к пункту ${c.n}`}>
           {c.quotes.map((q, i) => (
-            <li key={i} className="break-words border-l-2 border-brand/50 pl-3 text-sm text-brand-ink/85">«{q.text}»</li>
+            <li key={i} className="break-words border-l-2 border-brand/50 pl-3 text-sm text-brand-ink/85">
+              «{q.text}»{q.how === "skeptic" && <span className="text-xs text-brand-ink/65"> — нашёл скептик, программа сверила с ответом</span>}
+            </li>
           ))}
         </ul>
       ) : (c.score ?? 0) > 0 || c.capped ? (
@@ -35,7 +37,7 @@ function Criterion({ c }: { c: Crit }) {
       ) : null}
       {c.capped && (
         <p className="mt-1.5 text-xs text-brand-plum">
-          Без подтверждённой цитаты пункт не получает полный балл: модель поставила {sc(c.model_score)}, засчитано {sc(c.score)}.
+          Без подтверждённой цитаты пункт не получает полный балл: модель поставила {sc(c.model_score)}, засчитано {sc(c.cap_score ?? c.score)}.
         </p>
       )}
       {c.dropped > 0 && (
