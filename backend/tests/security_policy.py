@@ -138,6 +138,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     # сброс/удаление песочницы отзывает токены всех её персон и имеет кулдаун — проверяем работодателями A и B
     ("POST", "/api/jury/reset"): ("jury_demo", {"jury_candidate": SKIP, "jury_expert": SKIP, "jury_fsp": SKIP,
                                                 "jury_other_candidate": SKIP}),
+    ("GET", "/api/jury/quick"): "jury_demo",  # Я9: демо-персоны своей песочницы для «Проверки за 12 минут»
     ("DELETE", "/api/jury/sandbox"): ("jury_demo", {"jury_candidate": SKIP, "jury_expert": SKIP, "jury_fsp": SKIP,
                                                     "jury_other_candidate": SKIP}),  # feat/jury-test
     # живая демонстрация: зал по QR — гости без регистрации (свой гостевой токен), экран — работодатель жюри
