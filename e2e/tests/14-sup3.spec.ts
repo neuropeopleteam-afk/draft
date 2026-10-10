@@ -86,7 +86,7 @@ test("В-2: «Принять встречное» — карточка обно�
 test("С3-6: «Пригласить» — «Отправляем…», одно приглашение, подтверждение сразу и почему кнопка неактивна", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await juryEnter(page, "employer");
-  await openSection(page, "Потребности", /\/employer\/needs$/);
+  await openSection(page, "Потребности и подборки", /\/employer\/needs$/);
   await page.getByRole("link", { name: /Backend-разработчик middle в команду платежей/ }).first().click();
   await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+/);
   const links = page.getByRole("link", { name: "Открыть" });
@@ -141,8 +141,17 @@ test("С3-9: Ангофф — «· верный» отделён от текст
   await juryEnter(page, "expert");
   await page.getByRole("main").getByRole("link", { name: /^Задание C/ }).click();
   await expect(page).toHaveURL(/\/expert\/angoff$/);
-  const right = page.getByRole("main").locator("li").filter({ hasText: /верный$/ }).first();
-  await expect(right).toBeVisible({ timeout: 60_000 });
+  const main = page.getByRole("main");
+  const right = main.locator("li").filter({ hasText: /верный$/ }).first();
+  await expect(main.getByRole("button", { name: "Объект 1" })).toBeVisible({ timeout: 60_000 });
+  for (let k = 2; k <= 6 && !(await right.isVisible().catch(() => false)); k++) {
+    // объект с вариантами ответа (у «предсказать вывод» верный ответ — строкой, без вариантов)
+    const btn = main.getByRole("button", { name: `Объект ${k}`, exact: true });
+    if (!(await btn.count())) break;
+    await btn.click();
+    await page.waitForTimeout(300);
+  }
+  await expect(right).toBeVisible({ timeout: 10_000 });
   const txt = (await right.textContent()) ?? "";
   expect(txt, "пробел и разделитель перед «верный»").toMatch(/\S \u00b7 верный$/);
   await page.setViewportSize({ width: 390, height: 844 });
