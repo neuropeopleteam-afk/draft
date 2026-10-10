@@ -86,12 +86,12 @@ flowchart LR
 
 | Компонент | Технология | Память (лимит) | Порт |
 |---|---|---|---|
-| web | nginx 1.27 + статика Vite | 96 МБ | 127.0.0.1:8140 → 80 |
-| api | Python 3.12, FastAPI, uvicorn (2 воркера), Natasha, ReportLab | 896 МБ | 127.0.0.1:8141 → 8000 |
-| db | PostgreSQL 16 (shared_buffers 128 МБ) | 512 МБ | только внутренняя сеть compose |
-| keycloak (выкл.) | Keycloak 26, `start-dev` | 768 МБ | 127.0.0.1:8142 (профиль `keycloak`) |
+| web | nginx 1.27 + статика Vite | 32 МиБ | 127.0.0.1:8140 → 80 |
+| api | Python 3.12, FastAPI, uvicorn (2 воркера), Natasha, ReportLab | 1536 МиБ | 127.0.0.1:8141 → 8000 |
+| db | PostgreSQL 16 (shared_buffers 128 МБ) | 320 МиБ | только внутренняя сеть compose |
+| keycloak (демо «ФСП ID», профиль `fsp-id`, по умолчанию выкл.) | Keycloak 26.4 | 576 МиБ | 127.0.0.1:8142 |
 
-Итого лимиты стека: 96 + 896 + 512 = 1504 МБ ≈ 1,5 ГБ (фактически api ≈ 170 МБ, Natasha загружается лениво).
+Итого лимиты стека: 32 + 1536 + 320 = 1888 МиБ без Keycloak, 2464 МиБ с ним (актуальные лимиты — в `docker-compose.yml` и в начале README; расчёт и замеры — `docs/LOAD_TEST.md`; обычное потребление api 457–508 МиБ, Natasha загружается лениво).
 
 Миграции Alembic применяются при старте контейнера api. OpenAPI: `/api/docs` (Swagger UI), `/api/redoc`,
 `/api/openapi.json`; файлы Swagger UI 5.33.1 и ReDoc 2.5.4 раздаются с нашего сервера (`/api/static/apidocs`),
@@ -298,7 +298,7 @@ PWA: `frontend/public/manifest.webmanifest`, `sw.js` (оболочка офла�
   берутся; стоп, как только порог вышел из интервала. Настройки `ASSESSMENT_STOP_RULE`, `ASSESSMENT_CLASSIFY_Z`,
   `ASSESSMENT_SELECT_AT`, `ASSESSMENT_EXTENSION_ITEMS`, `ASSESSMENT_EXTENSION_MINUTES`, `ASSESSMENT_EXTENSION_OWN_FIRST`;
   сессии, начатые до обновления, доигрываются по прежним правилам. Обоснование и метрики «до/после» —
-  `<внутренний документ>` и раздел «Повтор» на /validation.
+  внутренний отчёт разработки и раздел «Повтор» на /validation.
 - **Состав и частота показа (день 3А).** Не больше 2 заданий open_book_3step и 1 open_answer в сессии. Контроль частоты
   Sympson — Hetter: параметры K_f (`app/modules/assessment/exposure_k.json`, цель r_max = 0,3) подбираются симуляцией
   `tools/calibrate_exposure.py`. Ротация субпулов: банк поделён на 2 субпула, повторная попытка идёт по другому;
@@ -555,7 +555,7 @@ sudo systemctl daemon-reload && sudo systemctl enable --now spectrek-monitor.tim
 | Оценка пакета разметки (`experts/llm_grade.py`) | `llm_not_configured`, ответы оценивает эксперт | сообщение на `/validation` |
 
 Подбор, ранжирование, объяснения, тест на банке заданий, приглашения, ATS, переписка и кубки с автопроверкой LLM не используют.
-Проверено тестами `tests/test_no_llm.py` и прогоном свежего клона (отчёт `<внутренний документ>`, раздел «Чистая машина»).
+Проверено тестами `tests/test_no_llm.py` и прогоном свежего клона (внутренний отчёт разработки, раздел «Чистая машина»).
 
 ## 13. Подбор и ранжирование (match-v1.1)
 
