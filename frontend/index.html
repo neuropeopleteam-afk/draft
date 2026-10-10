@@ -13,10 +13,112 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="description" content="Платформа подбора ИТ-специалистов с обратной механикой: работодатель сам находит проверенного кандидата и приглашает с зарплатой." />
     <title>Встречный — подбор ИТ-специалистов</title>
-    <script src="/recover.js"></script>
+    <!-- Я16: экран до запуска приложения — встроен в страницу (без внешних файлов и шрифтов): виден сразу. -->
+    <style>
+      .boot{box-sizing:border-box;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;padding:1.5rem;text-align:center;font-family:Montserrat,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:#310F53;background:#fff}
+      .boot h1{margin:0;font-size:1.25rem;line-height:1.35;font-weight:700;outline:none}
+      .boot p{margin:0;max-width:30rem;font-size:1rem;line-height:1.5;color:#1C1D22}
+      .boot .boot-note{min-height:1.5em;font-size:.9rem;color:#520978}
+      .boot button{font:inherit;font-size:1rem;font-weight:600;min-height:44px;padding:.75rem 1.25rem;border:0;border-radius:.75rem;background:#E0004C;color:#fff;cursor:pointer}
+      .boot button:hover{background:#C20042}
+      .boot button:focus-visible{outline:3px solid #310F53;outline-offset:3px}
+      .boot-spin{width:2rem;height:2rem;border-radius:50%;border:3px solid #FFD6E4;border-top-color:#E0004C;animation:boot-spin 1s linear infinite}
+      @keyframes boot-spin{to{transform:rotate(360deg)}}
+      @media (prefers-reduced-motion:reduce){.boot-spin{animation:none}}
+    </style>
+    <!-- Я16: сторож загрузки (встроенный, без зависимостей и внешних запросов) — docs/BOOT.md. Не запустилось за 9 с,
+         файл сборки не загрузился, код упал до первого экрана → сообщение и «Обновить»; одна авто-повторная загрузка
+         с обходом кэша (?r=метка), следующая — не раньше чем через 2 мин. Приложение: __fspBoot.started/mounted/retry. -->
+    <script>
+      (function () {
+        var W = window, D = document, KEY = "fsp_boot_retry", WAIT_MS = 9000, GAP_MS = 120000;
+        var state = "wait";  // wait → started (код приложения выполняется) → mounted (первый экран отрисован)
+        var shown = false, timer = 0;
+        function now() { return new Date().getTime(); }
+        function hasR() { return /[?&]r=\d/.test(location.search); }
+        function lastRetry() { try { return Number(sessionStorage.getItem(KEY)) || 0; } catch (e) { return -1; } }
+        function canAuto() { var l = lastRetry(); return l < 0 ? !hasR() : now() - l > GAP_MS; }
+        function mark() { try { sessionStorage.setItem(KEY, String(now())); } catch (e) { /* без sessionStorage — метка r */ } }
+        function withR() {
+          var q = location.search.replace(/^\?/, "").split("&").filter(function (p) { return p && p.indexOf("r=") !== 0; });
+          q.push("r=" + now());
+          return location.pathname + "?" + q.join("&") + location.hash;
+        }
+        function dropR() {
+          if (!hasR() || !W.history || !history.replaceState) return;
+          var q = location.search.replace(/^\?/, "").split("&").filter(function (p) { return p && p.indexOf("r=") !== 0; });
+          try { history.replaceState(history.state, "", location.pathname + (q.length ? "?" + q.join("&") : "") + location.hash); } catch (e) { /* адрес как есть */ }
+        }
+        // повтор с обходом кэша; под service worker — снять его и кэши (как прежний recover.js), ждать не дольше 1,5 с
+        function reload() {
+          mark();
+          var done = false;
+          function go() { if (!done) { done = true; location.replace(withR()); } }
+          W.setTimeout(go, 1500);
+          try {
+            var sw = navigator.serviceWorker, jobs = [];
+            if (sw && sw.controller && sw.getRegistrations) {
+              jobs.push(sw.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+              if (W.caches && caches.keys) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }));
+            }
+            Promise.all(jobs).then(go, go);
+          } catch (e) { go(); }
+        }
+        // соединения из-за рубежа (VPN) с сервером в Москве обрываются на ~16 КБ — помогает отключить VPN
+        var VPN = "Если включён VPN — отключите его и обновите страницу.";
+        function text(kind) {
+          if (kind === "slow") return ["Страница не загрузилась", "Связь с сервером медленная или прервалась. " + VPN];
+          if (kind === "error") return ["Не удалось запустить страницу", "При запуске произошла ошибка. Обычно помогает обновление страницы."];
+          return ["Страница не загрузилась", "Часть файлов не дошла: связь прервалась или вышла новая версия сайта. " + VPN];
+        }
+        // kind: slow (не запустилось за 9 с) | chunk (файл сборки не загрузился) | error (код упал до первого экрана)
+        function fail(kind) {
+          if (state === "mounted" || shown) return;
+          shown = true;
+          W.clearTimeout(timer);
+          var auto = canAuto(), t = text(kind), root = D.getElementById("root");
+          if (root) {
+            root.innerHTML = '<main class="boot" id="boot" aria-labelledby="boot-h" data-boot="' + kind + '">' +
+              '<h1 id="boot-h" tabindex="-1">' + t[0] + "</h1><p>" + t[1] + "</p>" +
+              '<button type="button" id="boot-reload">Обновить</button>' +
+              '<p class="boot-note" id="boot-note" role="status">' + (auto ? "Пробуем загрузить ещё раз…" : "") + "</p></main>";
+            D.getElementById("boot-reload").onclick = reload;
+            try { D.getElementById("boot-h").focus(); } catch (e) { /* фокус не обязателен */ }
+          }
+          // одна авто-попытка; если за 1,2 с приложение всё же запустилось — не перезагружаем
+          if (auto) W.setTimeout(function () { if (state === "wait") reload(); }, 1200);
+        }
+        function isAsset(t) { return t && t !== W && (t.tagName === "SCRIPT" || t.tagName === "LINK") && /\/assets\//.test(t.src || t.href || ""); }
+        W.addEventListener("error", function (e) {
+          if (state === "mounted") return;
+          if (isAsset(e.target)) return fail("chunk");
+          if (e.target && e.target !== W) return;  // картинка, иконка — не мешают запуску
+          // ошибка нашего кода (не расширения) до первого экрана: не отрисовалось за 1,5 с — сообщение сразу
+          if (!/\/(assets|src)\//.test(e.filename || "")) return;
+          // обрезанный файл (обрыв посреди передачи) — синтаксическая ошибка: это сеть, а не код
+          var cut = /SyntaxError|Unexpected end|Invalid or unexpected|missing \) after|unterminated/i.test(e.message || "");
+          W.setTimeout(function () { if (state !== "mounted") fail(cut ? "chunk" : "error"); }, 1500);
+        }, true);
+        W.addEventListener("vite:preloadError", function () { if (state !== "mounted") fail("chunk"); });
+        W.addEventListener("unhandledrejection", function (e) {
+          var m = String((e.reason && (e.reason.message || e.reason)) || "");
+          if (state !== "mounted" && /dynamically imported module|Importing a module script failed|Unable to preload CSS/i.test(m)) fail("chunk");
+        });
+        timer = W.setTimeout(function () { if (state !== "mounted") fail("slow"); }, WAIT_MS);
+        W.__fspBoot = {
+          started: function () { if (state === "wait") state = "started"; dropR(); },
+          mounted: function () { state = "mounted"; W.clearTimeout(timer); dropR(); },
+          canAuto: canAuto,
+          // после запуска (ошибка загрузки экрана): true — повтор пошёл, false — лимит, решает человек
+          retry: function () { if (!canAuto()) return false; reload(); return true; },
+          reload: reload
+        };
+      })();
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><main class="boot" id="boot" data-boot="loading"><div class="boot-spin" aria-hidden="true"></div><p role="status">Загружаем…</p></main></div>
+    <noscript><p style="font-family:system-ui,sans-serif;padding:1.5rem;color:#310F53">Для работы сайта включите JavaScript в браузере.</p></noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
