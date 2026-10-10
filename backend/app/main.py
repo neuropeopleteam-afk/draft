@@ -37,6 +37,7 @@ from app.modules.catalog.router import router as catalog_router
 from app.modules.contact import router as contact
 from app.modules.experts.router import router as expert_panel_router
 from app.modules.hiring import router as hiring  # найм после принятия: собеседование, оффер, исход (Н8)
+from app.modules.interview import router as interview  # устная защита и ИИ-интервью (Я15), флаг INTERVIEW_ENABLED
 from app.modules.invitations.router import candidate_router as candidate_contact_router
 from app.modules.invitations.router import employer_router as employer_contact_router
 from app.modules.jury.router import make_spare
@@ -111,7 +112,7 @@ def create_app() -> FastAPI:
             "Ошибки возвращаются в формате `{\"detail\": {\"code\": \"...\", \"message\": \"...\"}}`."
         ),
         openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
-                      + mutual.TAGS + study_api.TAGS),
+                      + mutual.TAGS + study_api.TAGS + interview.TAGS),
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -134,7 +135,8 @@ def create_app() -> FastAPI:
               subs_api.employer_router, subs_api.notify_router, subs_api.jury_router,  # подписка, уведомления (И25)
               attempts_employer_router,  # две попытки теста рядом (И26)
               mutual.employer_router, mutual.candidate_router, mutual.public_router,  # взаимный подбор (Н9, Н2, Н3)
-              study_api.router):  # статистика прохождения: живые пользователи (У1)
+              study_api.router,  # статистика прохождения: живые пользователи (У1)
+              interview.router, interview.candidate_router, interview.employer_router):  # устная защита (Я15)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
@@ -169,7 +171,8 @@ def create_app() -> FastAPI:
                 # сроки правил грейда и приглашений — из настроек, тексты интерфейса берут их отсюда (Ф3)
                 "rules": {"grade_change_interval_days": get_settings().grade_change_interval_days,  # на запросе, как proctor_camera
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
-                          "invitation_cooldown_days": get_settings().invitation_cooldown_days}}
+                          "invitation_cooldown_days": get_settings().invitation_cooldown_days},
+                "interview": interview.svc.meta()}  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
 
     class HealthOut(BaseModel):
         status: str
