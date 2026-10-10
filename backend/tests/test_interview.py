@@ -350,3 +350,12 @@ def test_openapi_has_interview_models(client):
     op = sch["paths"]["/api/interview/defense/{test_session_id}"]["post"]
     assert op["tags"] == ["interview"] and "$ref" in str(op["responses"]["201"])
     assert any(t["name"] == "interview" for t in sch["tags"])
+
+
+def test_criteria_link_only_with_flag(on, monkeypatch):
+    from app.modules.validation import criteria as C
+
+    assert C.INTERVIEW_GO in C.build()["criteria"][1]["items"][0]["do"]
+    monkeypatch.setattr(get_settings(), "interview_enabled", False)
+    assert C.INTERVIEW_GO not in C.build()["criteria"][1]["items"][0]["do"]
+    assert "docs/INTERVIEW.md" in C.markdown()  # строка документа — всегда, от флага не зависит
