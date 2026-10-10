@@ -39,7 +39,25 @@ export interface Catalog {
 }
 
 export class ApiError extends Error {
-  constructor(public status: number, public code: string, message: string) { super(message); }
+  /** retryAfterS — заголовок Retry-After ответа в секундах (503 db_busy, 429), иначе null (Я16). */
+  constructor(public status: number, public code: string, message: string, public retryAfterS: number | null = null) { super(message); }
+}
+
+/** Retry-After в секундах (число или HTTP-дата), иначе null. */
+export function retryAfterOf(res: Response): number | null {
+  const v = res.headers.get("Retry-After");
+  if (!v) return null;
+  const n = Number(v);
+  if (Number.isFinite(n) && n >= 0) return n;
+  const t = Date.parse(v);
+  return Number.isFinite(t) ? Math.max(0, Math.round((t - Date.now()) / 1000)) : null;
+}
+
+/** Я16: сбой сети или сервера (5xx, обрыв, тайм-аут, 408/429), а не ответ «нельзя» (401/403/404): имеет смысл
+ *  повторить, вход и введённые данные не сбрасывать. */
+export function isTransient(e: unknown): boolean {
+  if (e instanceof ApiError) return e.status >= 500 || e.status === 0 || e.status === 408 || e.status === 429;
+  return e instanceof TypeError || (typeof DOMException !== "undefined" && e instanceof DOMException && (e.name === "AbortError" || e.name === "TimeoutError"));
 }
 
 const TOKEN_KEY = "fsp_token";
@@ -84,8 +102,8 @@ export function apiUrl(path: string): string {
 /** Пауза перед повтором GET после 5xx: Retry-After сервера (503 db_busy — пул БД занят, 10.10), иначе 1 с, 2 с;
  *  не дольше 5 с. Мгновенный повтор под перегрузкой только добавлял бы запросов. */
 export function retryDelayMs(res: Response | null, attempt: number): number {
-  const ra = Number(res?.headers.get("Retry-After"));
-  return Math.min(5000, Number.isFinite(ra) && ra > 0 ? ra * 1000 : 1000 * (attempt + 1));
+  const ra = res ? retryAfterOf(res) : null;  // секунды или HTTP-дата (Я16)
+  return Math.min(5000, ra != null && ra > 0 ? ra * 1000 : 1000 * (attempt + 1));
 }
 
 async function fetchRetry(url: string, init: RequestInit, tries = 3, timeoutMs = 15000): Promise<Response> {
@@ -125,7 +143,7 @@ export async function api<T>(path: string, opts: { method?: string; body?: unkno
   if (!res.ok) {
     const { code, message } = messageFrom(res.status, body);
     errorHook?.(path, res.status, code);
-    throw new ApiError(res.status, code, message);
+    throw new ApiError(res.status, code, message, retryAfterOf(res));
   }
   return body as T;
 }

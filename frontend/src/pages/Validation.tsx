@@ -5,6 +5,8 @@ import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
 import LlmModels from "../components/validation/LlmModels";
+import RuLlm from "../components/validation/RuLlm";
+import Strongest from "../components/validation/Strongest";
 import RetestLive from "../components/validation/RetestLive";  // И26: доля повторов заданий между попытками
 import Headline from "../components/validation/Headline";
 import { ProvenanceLine, Snapshots, type Prov } from "../components/validation/Provenance";  // Я8: происхождение чисел, снимки расчётов
@@ -393,6 +395,8 @@ function ExpertsSection({ ex, prov }: { ex: any; prov?: Prov }) {
       {ex.packs?.v2_labeled && <PacksBlock p={ex.packs} />}
       {!ex.llm && ex.llm_without_experts && <div className="mt-4"><LlmTable llm={ex.llm_without_experts} note="Оценки моделей получены, согласие появится после разметки ответов экспертами." /></div>}
       <LlmModels />
+      <RuLlm />
+      <Strongest />
       {ex.synthetic_check && (
         <details className="mt-6 rounded-2xl bg-white p-5 ring-1 ring-brand-night/10">
           <summary className="cursor-pointer font-semibold text-brand-night">Проверка расчёта на синтетической разметке {ex.synthetic_check.ok ? "· пройдена" : "· не пройдена"}</summary>
