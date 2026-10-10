@@ -1,4 +1,5 @@
 import { num, pct, useApi } from "../ui";
+import { ScrollX } from "../A11y";
 
 /** /validation#ru-llm: режим «только российская модель» (LLM_CHAIN=yandex) — все LLM-функции на одних входах:
  * YandexGPT 5.1 против Claude Sonnet 5.5 и правил (backend: app/modules/validation/data/ru_llm.json ←
@@ -68,7 +69,7 @@ export default function RuLlm() {
         Весь путь работает в режиме <code>LLM_CHAIN=yandex</code> (Yandex AI Studio, РФ): тексты не уходят за рубеж.
         Одни и те же входы, одна попытка на вход, путь продукта целиком. Замер {d.date}, код {d.code_sha}.
       </p>
-      <div className="mt-3 hidden overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10 md:block">
+      <ScrollX label="Только российская модель" className="mt-3 hidden overflow-x-auto rounded-2xl bg-white ring-1 ring-brand-night/10 md:block">
         <table className="w-full min-w-[52rem] text-left text-sm">
           <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
             <tr>
@@ -87,7 +88,7 @@ export default function RuLlm() {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollX>
       <div className="mt-3 space-y-3 md:hidden">
         {d.functions.map((f) => (
           <div key={f.key} className="rounded-2xl bg-white p-3 text-sm ring-1 ring-brand-night/10" data-testid={`ru-llm-m-${f.key}`}>
