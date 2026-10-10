@@ -52,9 +52,14 @@ for spec in $RUNS; do
   extra=(); [ "$BURST_AT" -gt 0 ] && extra+=(--burst-at "$BURST_AT" --burst-n 5)
   [ -n "${WEB:-}" ] && extra+=(--web "$WEB")
   "${R[@]}" run --host "$H" -u "$users" -r 2 -t "$dur" --tag "$tag" --xlink-file "$X" --server-stats "${extra[@]}"
+  rc=$?
   "${R[@]}" nginx --tag "$tag" || echo "[$(ts)] сверка с nginx не выполнена"
   "${R[@]}" summary --tag "$tag" > "$OUT/${tag}_summary.md" 2>&1 || echo "[$(ts)] сводка не построена"
   echo "[$(ts)] $tag готов: $OUT/${tag}_summary.md"
+  if [ "$rc" -ne 0 ]; then
+    echo "[$(ts)] прогон $tag завершился с кодом $rc (3 — пользователей после разгона меньше 90 %) — следующие не идут"
+    break
+  fi
   fail=$("$PY" - "$OUT/${tag}_stats.csv" <<'PY'
 import csv, sys
 r = next((r for r in csv.DictReader(open(sys.argv[1], encoding="utf-8")) if r["Name"] == "Aggregated"), None)
