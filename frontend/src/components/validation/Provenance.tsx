@@ -17,10 +17,14 @@ const KIND_CLS: Record<string, string> = {
   people: "bg-emerald-50 text-emerald-800 ring-emerald-200",
   rules: "bg-brand-blush/50 text-brand-plum ring-brand/20",
   live: "bg-emerald-50 text-emerald-800 ring-emerald-200",
+  tests: "bg-white text-brand-night ring-brand-night/20",
+  doc: "bg-white text-brand-night ring-brand-night/20",
+  measured: "bg-[#F3F2FB] text-brand-night ring-brand-night/15",
+  yours: "bg-emerald-50 text-emerald-800 ring-emerald-200",
 };
 const SNAP: Record<string, string> = {
   current: "текущий снимок", historical: "исторический снимок", no_bank: "от банка не зависит",
-  bank_unknown: "банк не записан", live: "по базе при запросе", missing: "не посчитано",
+  bank_unknown: "банк не записан", live: "по базе при запросе", missing: "не посчитано", code: "по коду этой версии",
 };
 const d10 = (v?: string | null) => (v ? `${v.slice(8, 10)}.${v.slice(5, 7)}.${v.slice(0, 4)}` : null);
 
@@ -32,7 +36,7 @@ export function KindChip({ p }: { p: Pick<Prov, "kind" | "kind_label"> }) {
 export function ProvenanceLine({ p, className = "" }: { p?: Prov | null; className?: string }) {
   if (!p) return null;
   const bank = p.bank ? `банк ${p.bank.slice(0, 8)}${p.bank_families ? ` (${p.bank_families}${NB}семейств)` : ""}` : p.snapshot === "no_bank" ? "банк не нужен" : p.snapshot === "live" ? null : "банк не записан";
-  const parts = [d10(p.date), p.commit ? <>алгоритм <code>{p.commit}</code></> : p.snapshot === "live" ? null : "коммит не записан", bank,
+  const parts = [d10(p.date), p.commit ? <>{p.snapshot === "code" || p.snapshot === "live" ? "код" : "алгоритм"} <code>{p.commit}</code></> : p.snapshot === "live" ? null : "коммит не записан", bank,
     p.command ? <code>{p.command}</code> : null].filter(Boolean);
   return (
     <span className={`flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] leading-snug text-brand-ink/70 [overflow-wrap:anywhere] ${className}`} data-testid="provenance-line" data-snapshot={p.snapshot} data-kind={p.kind}>
@@ -47,6 +51,7 @@ const SECTION_T: Record<string, string> = {
   headline: "5 чисел", "path-retest": "Весь путь дважды", bench: "Бенчмарк", ablations: "Абляции", "retest-repeats": "Повторы заданий",
   retest: "Повтор", test: "Тест", competitors: "Условия конкурентов", exposure: "Частота показа", leak: "Утечка",
   matching: "Демо-500", junior: "Junior у порога", intern: "Стажёр", grader: "Оценщик ответов", experts: "Модельная панель",
+  discrimination: "D и r_pb", calibration: "Калибровка",
 };
 
 /** Первый экран /validation: из каких снимков числа страницы — текущий банк или прошлый (с датой). */
