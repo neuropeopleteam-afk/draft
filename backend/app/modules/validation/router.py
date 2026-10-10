@@ -9,14 +9,18 @@ from __future__ import annotations
 from functools import lru_cache
 import json
 from pathlib import Path
+import threading
+import time
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
+from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.db import get_db
+from app.core.config import get_settings
+from app.core.db import get_db, release
 from app.core.deps import get_current_user
 from app.core.enums import TestSessionStatus, UserRole
 from app.core.errors import api_error, err
@@ -85,8 +89,7 @@ def _live(db: Session) -> dict:
                            "families_limited": {d: len(v) for d, v in (exp.get("k") or {}).items()}}}
 
 
-@router.get("/report", summary="Метрики валидации (пересчёт: make validate)")
-def report(db: Session = Depends(get_db)):
+def _report_body(db: Session) -> dict:
     from app.modules.experts.section import section as experts_section
 
     from app.modules.validation.provenance import provenance  # Ф6 (Н7): подписи банка/отчёта/калибровки
@@ -95,6 +98,41 @@ def report(db: Session = Depends(get_db)):
             "intern_cut": _intern_cut(),
             "self_check": {"strategies": selfcheck.STRATEGIES, "max_n": selfcheck.MAX_N,
                            "directions": list(selfcheck.DIRECTIONS)}}
+
+
+# Готовый ответ /report (байты JSON) на воркер: VALIDATION_REPORT_TTL_S секунд. 10.10 под нагрузкой 100 пользователей
+# отчёт считался на каждый запрос (до 2000 сессий из БД, экспертный раздел, 105 КБ JSON): p50 4,1 с, p95 21 с, 504 —
+# и всё это время держал соединение с БД. Теперь считает один поток, остальные получают прошлый ответ (не старше TTL,
+# пока идёт пересчёт — прошлый); соединение возвращается в пул до сериализации. 0 — без кэша (тесты).
+_rep_cache: dict = {}
+_rep_lock = threading.Lock()
+
+
+def _report_bytes(db: Session) -> bytes:
+    data = _report_body(db)
+    release(db)  # дальше — только CPU: соединение не держим
+    return json.dumps(jsonable_encoder(data), ensure_ascii=False, allow_nan=False, separators=(",", ":")).encode()
+
+
+@router.get("/report", summary="Метрики валидации (пересчёт: make validate)",
+            description="Ответ кэшируется на воркер на VALIDATION_REPORT_TTL_S секунд (живые счётчики — с этой задержкой).")
+def report(db: Session = Depends(get_db)):
+    ttl = get_settings().validation_report_ttl_s
+    if ttl <= 0:
+        return _report_body(db)
+    body, at = _rep_cache.get("body"), _rep_cache.get("at", 0.0)
+    if body is not None and time.monotonic() - at < ttl:
+        return Response(body, media_type="application/json")
+    if not _rep_lock.acquire(blocking=body is None):  # пересчёт уже идёт — прошлый ответ
+        return Response(body, media_type="application/json", headers={"X-Report-Stale": "1"})
+    try:
+        body, at = _rep_cache.get("body"), _rep_cache.get("at", 0.0)
+        if body is None or time.monotonic() - at >= ttl:  # пока ждали блокировку, мог посчитать другой поток
+            body = _report_bytes(db)
+            _rep_cache.update(body=body, at=time.monotonic())
+        return Response(body, media_type="application/json")
+    finally:
+        _rep_lock.release()
 
 
 class AttackIn(BaseModel):
