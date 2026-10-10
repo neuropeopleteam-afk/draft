@@ -13,13 +13,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import Field
 
-Obj = dict[str, Any]
-
-
-class Doc(BaseModel):
-    model_config = ConfigDict(extra="allow", populate_by_name=True)
+from app.core.api_models_base import Doc, Obj
 
 
 # ---------------------------------------------------------------- система
@@ -679,3 +675,21 @@ RESPONSE_TYPES: dict[str, Any] = {
     "GET /api/notifications/prefs": NotificationPrefsOut,
     "PUT /api/notifications/prefs": NotificationPrefsOut,
 }
+
+
+# Модули с остальными моделями: у каждого своя таблица TYPES того же вида.
+MODULES = ("api_models_work",)
+
+
+def all_types() -> dict[str, Any]:
+    """Одна таблица «МЕТОД /путь» → тип ответа: RESPONSE_TYPES (ключевые методы) и TYPES модулей api_models_*.py."""
+    import importlib
+
+    out = dict(RESPONSE_TYPES)
+    for name in MODULES:
+        extra = importlib.import_module(f"app.core.{name}").TYPES
+        dup = sorted(set(out) & set(extra))
+        if dup:
+            raise RuntimeError(f"операция описана в двух таблицах моделей: {dup}")
+        out.update(extra)
+    return out
