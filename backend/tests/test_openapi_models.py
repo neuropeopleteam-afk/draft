@@ -41,7 +41,7 @@ def test_model_names_do_not_clash_with_app_schemas():
     from app.main import create_app
 
     raw = set(FastAPI.openapi(create_app())["components"]["schemas"])
-    own = {tp.__name__ if isinstance(tp, type) else tp.__args__[0].__name__ for tp in RESPONSE_TYPES.values()}
+    own = {tp.__name__ if isinstance(tp, type) else tp.__args__[-1].__name__ for tp in RESPONSE_TYPES.values()}
     assert not (raw & own), f"имена моделей совпали со схемами приложения: {sorted(raw & own)}"
 
 
@@ -86,7 +86,7 @@ def test_models_are_attached_in_the_schema(spec):
         op = spec["paths"][path][method.lower()]
         ok = next(c for c in op["responses"] if c.startswith("2"))
         schema = op["responses"][ok]["content"]["application/json"]["schema"]
-        name = (tp if isinstance(tp, type) else tp.__args__[0]).__name__
+        name = (tp if isinstance(tp, type) else tp.__args__[-1]).__name__
         assert name in json.dumps(schema), f"{key}: в успешном ответе нет модели {name}"
         assert name in spec["components"]["schemas"], name
 
