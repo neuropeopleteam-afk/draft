@@ -83,7 +83,7 @@ class Route:
     provider: str
     model: str  # как в запросе (для Yandex AI Studio — gpt://<каталог>/…)
     timeout_s: float
-    reasoning: str | None = None  # усилие рассуждений (OpenRouter): low | medium | high; None — не передаётся
+    reasoning: str | None = None  # усилие рассуждений (OpenRouter): none | minimal | low | medium | high; None — не передаётся
 
     @property
     def key(self) -> str:
@@ -96,8 +96,8 @@ def short_model(model: str | None) -> str:
     return re.sub(r"^gpt://[^/]+/", "", model or "")
 
 
-_LABELS = {"yandexgpt": "YandexGPT", "yandexgpt-lite": "YandexGPT Lite", "gpt-oss-120b": "gpt-oss-120b",
-           "gpt-oss-20b": "gpt-oss-20b"}
+_LABELS = {"yandexgpt": "YandexGPT", "yandexgpt-lite": "YandexGPT Lite", "yandexgpt-5.1": "YandexGPT 5.1",
+           "gpt-oss-120b": "gpt-oss-120b", "gpt-oss-20b": "gpt-oss-20b"}  # «YandexGPT 5.1» на чипах режима LLM_CHAIN=yandex
 
 
 def model_label(model: str | None) -> str:
@@ -183,7 +183,8 @@ def model_for(func: str | None, provider: str, s: Settings | None = None) -> str
             m = s.llm_local_model
     if not m:
         return None
-    return resolve_model(m) if provider == "yandex" else m
+    # «a|b» — несколько моделей одного провайдера по порядку (резерв другого поставщика внутри OpenRouter)
+    return "|".join(resolve_model(x.strip()) for x in m.split("|") if x.strip()) if provider == "yandex" else m
 
 
 def timeout_for(func: str | None, s: Settings | None = None) -> float:
@@ -197,7 +198,9 @@ def timeout_for(func: str | None, s: Settings | None = None) -> float:
 def reasoning_for(func: str | None, s: Settings | None = None) -> str | None:
     s = s or get_settings()
     v = (getattr(s, f"llm_reasoning_{func}", None) if func in FUNCTIONS else None) or "default"
-    return v if v in ("low", "medium", "high") else None
+    # none — без рассуждений (reasoning.effort=none): открытые модели с рассуждениями иначе тратят лимит
+    # ответа-дельты (900 токенов) на ход мысли и возвращают пустой ответ (docs/LLM.md, раздел 12)
+    return v if v in ("none", "minimal", "low", "medium", "high") else None
 
 
 def routes(func: str | None = None, model: str | None = None, provider: str | None = None,
@@ -223,8 +226,9 @@ def routes(func: str | None = None, model: str | None = None, provider: str | No
         if not s.llm_provider_configured(p):
             continue
         m = model_for(func, p, s)
-        if m:
-            out.append(Route(p, m, tl if p == "local" else t, reasoning_for(func, s) if p == "openrouter" else None))
+        for mm in (x.strip() for x in (m or "").split("|")):
+            if mm:
+                out.append(Route(p, mm, tl if p == "local" else t, reasoning_for(func, s) if p == "openrouter" else None))
     return out
 
 
@@ -380,6 +384,11 @@ def _verify(provider: str, s: Settings) -> ssl.SSLContext | bool:
     return True
 
 
+def _schema_ok(route: Route, s: Settings) -> bool:
+    """Передавать ли JSON-схему ответа провайдеру: OpenRouter — всегда, Yandex AI Studio — по LLM_YANDEX_JSON_SCHEMA."""
+    return route.provider == "openrouter" or (route.provider == "yandex" and s.llm_yandex_json_schema)
+
+
 def _attempt(route: Route, messages: list[dict], *, temperature: float, max_tokens: int, want_json: bool,
              client: httpx.Client | None, validate: Callable[[object], bool] | None,
              response_format: dict | None = None) -> LLMResult:
@@ -391,8 +400,8 @@ def _attempt(route: Route, messages: list[dict], *, temperature: float, max_toke
         body["reasoning"] = {"effort": route.reasoning}
     if want_json and route.provider == "local" and s.llm_local_json_mode:
         body["response_format"] = {"type": "json_object"}
-    if response_format and route.provider == "openrouter":
-        body["response_format"] = response_format  # жёсткая JSON-схема ответа (structured output, И27)
+    if response_format and _schema_ok(route, s):
+        body["response_format"] = response_format  # жёсткая JSON-схема ответа (structured output, И27; Yandex — по флагу LLM_YANDEX_JSON_SCHEMA)
     name = short_model(route.model)
     t0 = time.monotonic()
     try:
@@ -461,8 +470,9 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
     latency_ms результата — суммарное время всех попыток (столько ждал пользователь).
     deadline — момент time.monotonic(), к которому нужен ответ (общий бюджет вызывающего): тайм-аут попытки
     урезается до остатка, при остатке меньше секунды следующие провайдеры не вызываются (ошибка deadline).
-    response_format — JSON-схема ответа ({"type": "json_schema", ...}) для OpenRouter (structured output); провайдер
-    её не принял (HTTP 400) — одна повторная попытка того же маршрута без схемы, ответ проверяется как обычно."""
+    response_format — JSON-схема ответа ({"type": "json_schema", ...}) для OpenRouter и, при LLM_YANDEX_JSON_SCHEMA, для
+    Yandex AI Studio (structured output); провайдер её не принял (HTTP 400) — одна повторная попытка того же маршрута
+    без схемы, ответ проверяется как обычно."""
     rs = routes(func, model, provider, timeout_s)
     if not rs:
         return LLMResult(ok=False, error="not_configured", func=func)
@@ -485,7 +495,7 @@ def chat(messages: list[dict], *, temperature: float = 0.1, max_tokens: int = 12
             continue
         res = _attempt(r, messages, temperature=temperature, max_tokens=max_tokens, want_json=want_json,
                        client=client, validate=validate, response_format=response_format)
-        if response_format and r.provider == "openrouter" and res.error == "http_400":
+        if response_format and _schema_ok(r, get_settings()) and res.error == "http_400":
             attempts.append({"provider": r.provider, "model": res.model, "ok": False, "error": "schema_rejected",
                              "latency_ms": res.latency_ms})
             total += res.latency_ms
