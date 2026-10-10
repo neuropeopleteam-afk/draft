@@ -276,6 +276,7 @@ def skills() -> None:
     by_dir: dict[str, list[set]] = defaultdict(list)
     by_cat: dict[str, list[set]] = defaultdict(list)
     names: dict[str, Counter] = defaultdict(Counter)
+    anchor: dict[str, set] = defaultdict(set)  # теги, которые работодатели направления сами указали в key_skills
     for it in items:
         v = raws.get(it["id"])
         if v is None:
@@ -283,6 +284,7 @@ def skills() -> None:
         r = need_parser.parse_need(text_of(v), use_llm=False)
         tags = set(ks_tags(v)) | {s["tag"] for s in (r.get("stack_required") or []) + (r.get("stack_desired") or [])}
         d = it["labels"]["direction"]
+        anchor[d] |= set(ks_tags(v))
         by_dir[d].append(tags)
         g = it["labels"]["grade_title"] or (it["labels"]["grade_bucket"] if it["labels"]["grade_by"] == "name" else None)
         if g:
@@ -292,18 +294,23 @@ def skills() -> None:
             if nm:
                 names[d][nm] += 1
 
-    def top(rows: list[set], k: int = 15) -> list[dict]:
-        c = Counter(t for r in rows for t in r)
+    def top(rows: list[set], d: str, k: int = 15) -> list[dict]:
+        # Навык из текста считается, только если работодатели направления хотя бы раз указали его в key_skills:
+        # так отсекаются ложные срабатывания словаря («в пешей доступности» → доступность интерфейсов и т. п.)
+        c = Counter(t for r in rows for t in r if t in anchor[d])
         return [{"tag": t, "title": STACK[t][0], "share": round(n / len(rows), 3), "n": n}
                 for t, n in c.most_common(k) if n >= 2]
 
     out = {"as_of": corpus["collected_at"], "source": "корпус hh.ru docs/realdata/hh_match_corpus.json",
            "method": "Доля вакансий направления, где навык есть в «Ключевых навыках» hh.ru или найден разбором текста "
-                     "(теги справочника платформы — то, что проверяет тест). Категория (направление × грейд) — "
-                     "только при n ≥ 10 вакансий со словом грейда.",
+                     "(теги справочника платформы — то, что проверяет тест); навык из текста учитывается, только если "
+                     "работодатели направления хотя бы раз указали его в «Ключевых навыках» (отсекает ложные "
+                     "срабатывания словаря). Категория (направление × грейд) — только при n ≥ 10 вакансий со словом "
+                     "грейда.",
            "min_n_category": 10,
-           "directions": {d: {"n": len(rows), "top": top(rows)} for d, rows in sorted(by_dir.items())},
-           "categories": {c: {"n": len(rows), "top": top(rows)} for c, rows in sorted(by_cat.items()) if len(rows) >= 10},
+           "directions": {d: {"n": len(rows), "top": top(rows, d)} for d, rows in sorted(by_dir.items())},
+           "categories": {c: {"n": len(rows), "top": top(rows, c.split(".")[0])} for c, rows in sorted(by_cat.items())
+                          if len(rows) >= 10},
            "key_skills_names_top": {d: [{"name": n, "count": k} for n, k in c.most_common(25)] for d, c in sorted(names.items())}}
     DATA.mkdir(parents=True, exist_ok=True)
     (DATA / "skills.json").write_text(json.dumps(out, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
