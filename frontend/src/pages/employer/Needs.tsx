@@ -568,7 +568,10 @@ export function Selection() {
             <WhatIf needId={id!} version={s.version} next={(last ?? 0) + 1} busy={busy} onApply={applyWhatIf} />
             <Alert>{wErr}</Alert>
             {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
-              Порядок: сначала кандидаты, у которых всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и зонды поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+              Порядок: {s.core?.on && s.core?.active ? `сначала кандидаты, у которых ${s.core.label.toLowerCase()} (${s.core.title}) заявлен или подтверждён, затем — остальные. Внутри групп — сначала те, у кого` : "сначала кандидаты, у которых"} всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и зонды поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+            </p>}
+            {s.core && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="core-summary">
+              <b className="font-semibold text-brand-night">{s.core.label}: {s.core.title}.</b> Подтверждён тестом — {s.core.counts?.confirmed ?? 0}, заявлен — {s.core.counts?.declared ?? 0}, не заявлен — {s.core.counts?.absent ?? 0}{s.core.active ? (s.core.on ? ". Кандидаты без ядра роли (смежное направление) остаются в подборке, но идут ниже." : ". На порядок не влияет: признак выключен.") : ". В подборке ядро не заявлено ни у кого — на порядок не влияет."}
             </p>}
             {s.filters?.origin?.note && <Alert kind="info">v{s.version}: {s.filters.origin.note}</Alert>}
             <MutualToolbar needId={id!} version={s.version} mutual={mutual} />
@@ -581,7 +584,7 @@ export function Selection() {
             {invited && <Alert kind="ok">{invited}</Alert>}
             {!s.results.length ? <Empty title="Подходящих кандидатов нет"
               text={`Ни один кандидат не прошёл фильтры этой версии. Посмотрите «Что если» выше — там видно, какое условие отсекает больше всего, — или ослабьте фильтры слева и выберите соседнюю категорию. Прежние версии сохранены.`} /> : mutual.sorted<any>(s.results).map((r: any, i: number) => (
-              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} compact collapsible expanded={expandAll || i === 0}
+              <CandidateCard key={r.ref} c={r.card} score={r.score} reasons={r.reasons} must={r.must} core={r.core} compact collapsible expanded={expandAll || i === 0}
                 badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
                 mutual={<MutualCardBlock needId={id!} version={s.version} cref={r.ref} mutual={mutual} />}
                 actions={
