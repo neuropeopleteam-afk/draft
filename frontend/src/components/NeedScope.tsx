@@ -36,7 +36,7 @@ export function NeedScope({ scope, cov, recipients, picked, onAsk, needId }: {
   return (
     <section className="space-y-1 rounded-xl bg-brand-blush/25 px-3 py-2 text-sm leading-relaxed sm:space-y-1.5 sm:py-2.5" data-testid="sel-coverage" aria-label="Что проверено тестом по этой потребности">
       <p>{scope.out_of_catalog
-        ? <><b className="font-semibold text-brand-night">Ближайшая категория: {scope.nearest_title}</b> — отдельной категории «{scope.role_title}» нет; частичное соответствие, а не подтверждение грейда.</>
+        ? <><b className="font-semibold text-brand-night">Ближайшая категория: {scope.nearest_title}</b> — <span className="hidden sm:inline">отдельной категории «{scope.role_title}» нет; </span>частичное соответствие, а не подтверждение грейда.</>
         : <b className="font-semibold text-brand-night">Часть требований тест платформы не проверяет{scope.nearest_title ? ` (направление ${scope.nearest_title})` : ""}.</b>}</p>
       <p data-testid="scope-tested"><span className="font-semibold text-emerald-800">Проверено тестом:</span>{" "}
         {scope.tested.length ? scope.tested.map((x) => x.title + (x.must === false ? " (желательно)" : "")).join(", ") : (scope.tested_note || "из навыков потребности — ничего")}.</p>
