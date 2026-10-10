@@ -8,7 +8,8 @@
  *   - второй сбой подряд → только кнопка, без цикла перезагрузок;
  *   - CSS завис → экран загрузки всё равно рисуется (стили сборки не блокируют первую отрисовку);
  *   - файл ленивого экрана оборвался → «Раздел не загрузился» → повторная загрузка → экран открылся;
- *   - 500/503/обрыв на /api/me, /api/meta → экран повтора, вход сохранён; «Повторить» → кабинет;
+ *   - 500/503/обрыв на /api/me, /api/meta → экран повтора, вход сохранён; «Повторить» → кабинет; 503 db_busy
+ *     с Retry-After (пул БД занят, ветка ops/load) → «перегружен», повтор сам через Retry-After;
  *   - axe (WCAG 2.1 A/AA) на экранах сбоя, 390 и 1440 без горизонтальной прокрутки;
  *   - бюджет: стартовый JS ≤ 250 КБ gzip, index.html ≤ 12 КБ (сторож доходит целиком даже при обрыве ~16 КБ).
  */
@@ -199,10 +200,12 @@ test("500 на /api/me → экран повтора, вход сохранён;
 
 test("503 и обрыв сети на старте: главная не пустая, кабинет — экран повтора, повтор сам", async ({ page }) => {
   desktopOnly();
-  let meCalls = 0;
+  // сеть до /api/me «лежит», пока тест не вернёт её (счётчик вызовов не годится: главная тоже спрашивает /api/me,
+  // а fetchRetry повторяет GET до 3 раз — попытки уходили ещё на главной, и кабинет открывался без экрана повтора)
+  let meDown = true, meCalls = 0;
   await mockApi(page, {
     "/meta": (route: Route) => route.fulfill({ status: 503, json: { detail: "Service Unavailable" } }),
-    "/me": (route: Route) => { meCalls++; return meCalls <= 3 ? route.abort("connectionreset") : route.fulfill({ json: ME }); },
+    "/me": (route: Route) => { meCalls++; return meDown ? route.abort("connectionreset") : route.fulfill({ json: ME }); },
   });
   await page.addInitScript(() => { if (!localStorage.getItem("fsp_token")) localStorage.setItem("fsp_token", "e2e-token"); });
   await page.goto("/");
@@ -211,8 +214,34 @@ test("503 и обрыв сети на старте: главная не пуст
   await page.goto("/candidate");
   await expect(page.getByRole("heading", { level: 1, name: "Сервер временно не отвечает" })).toBeVisible();
   await expect(page.getByText(/Повторим сами через \d+ с/)).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem("fsp_token")), "вход не сброшен").toBe("e2e-token");
+  expect(new URL(page.url()).pathname, "не уводит на /login").toBe("/candidate");
+  const before = meCalls;
+  meDown = false;
   // через 10 с — повтор без нажатия: сеть вернулась — кабинет
   await expect(page.getByRole("navigation", { name: "Кабинет кандидата" })).toBeVisible({ timeout: 15_000 });
+  expect(meCalls, "повтор сделан сам, без нажатия").toBeGreaterThan(before);
+});
+
+test("503 db_busy с Retry-After на /api/me (пул БД занят) → «перегружен», повтор по Retry-After", async ({ page }) => {
+  desktopOnly();
+  // ответ backend при исчерпании пула (ветка ops/load, main.py db_busy): 503, Retry-After, detail.code = db_busy
+  let busy = true;
+  const db_busy = { detail: { code: "db_busy", message: "Сервер сейчас перегружен — повторите через несколько секунд" } };
+  await mockApi(page, {
+    "/me": (route: Route) => busy
+      ? route.fulfill({ status: 503, headers: { "Retry-After": "3" }, json: db_busy })
+      : route.fulfill({ json: ME }),
+  });
+  await page.addInitScript(() => { if (!localStorage.getItem("fsp_token")) localStorage.setItem("fsp_token", "e2e-token"); });
+  await page.goto("/candidate");
+  await expect(page.getByRole("heading", { level: 1, name: "Сервер временно не отвечает" })).toBeVisible();
+  await expect(page.getByText("Сервер сейчас перегружен — данные не потеряны, вход сохранён.", { exact: false })).toBeVisible();
+  await expect(page.getByText(/Повторим сами через [1-3] с/)).toBeVisible();
+  await axe(page, "сервер перегружен (db_busy)");
+  busy = false;
+  await expect(page.getByRole("navigation", { name: "Кабинет кандидата" })).toBeVisible({ timeout: 10_000 });
+  expect(await page.evaluate(() => localStorage.getItem("fsp_token"))).toBe("e2e-token");
 });
 
 test("бюджет: стартовый JS ≤ 250 КБ gzip, index.html ≤ 12 КБ, рядом .gz и .br", async () => {
