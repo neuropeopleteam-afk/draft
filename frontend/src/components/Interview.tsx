@@ -33,7 +33,7 @@ const STYLE: Record<string, string> = {
   discrepancies: "bg-amber-50 text-amber-900 ring-amber-200", weak: "bg-amber-50 text-amber-900 ring-amber-200",
   medium: "bg-sky-50 text-sky-900 ring-sky-200", insufficient: "bg-gray-100 text-gray-700 ring-gray-200",
 };
-const LEVEL_STYLE: Record<string, string> = { confirmed: "text-emerald-700", strong: "text-emerald-700", partial: "text-sky-800", medium: "text-sky-800", discrepancy: "text-amber-800", weak: "text-amber-800", no_data: "text-brand-ink/60" };
+const LEVEL_STYLE: Record<string, string> = { confirmed: "text-emerald-700", strong: "text-emerald-700", partial: "text-sky-800", medium: "text-sky-800", discrepancy: "text-amber-800", weak: "text-amber-800", no_data: "text-brand-ink/75" };
 export const useInterviewOn = () => !!useMeta()?.interview?.enabled;
 
 /** Значок «ответ подтверждён устно / расхождения / мало данных / не проходил» — карточка, подборка, сравнение. */
