@@ -82,13 +82,30 @@ from assessment_bank.psychometrics import pool_from_specs
 specs = load_specs()
 pool = pool_from_specs(specs.values())
 by = {}
+base_grades = ("intern", "junior", "middle", "senior")
+ready = {}
 for s in specs.values():
     d = by.setdefault(s.direction, {"families": 0, "canary": 0, "formats": {}})
     d["families"] += 1
     d["canary"] += int(s.canary)
     d["formats"][s.format] = d["formats"].get(s.format, 0) + 1
-print(json.dumps({"n_families": len(specs), "pool": len(pool), "by_direction": by}, ensure_ascii=False))
+    # готовность направления (то же правило, что readiness_rule в backend/app/modules/catalog/ext.py):
+    # семейства без канареек, нацеленные хотя бы на один уровень Стажёр…Senior, и покрытие каждого уровня
+    tg = set(s.target_grades or ())
+    if not s.canary and tg & set(base_grades):
+        r = ready.setdefault(s.direction, {"families": 0, "per_grade": {g: 0 for g in base_grades}})
+        r["families"] += 1
+        for g in tg & set(base_grades):
+            r["per_grade"][g] += 1
+print(json.dumps({"n_families": len(specs), "pool": len(pool), "by_direction": by, "readiness": ready},
+                 ensure_ascii=False))
 '''
+
+
+# Правило готовности направления (как catalog_ext_min_families / catalog_ext_min_per_grade по умолчанию в
+# backend/app/core/config.py; тест tests/test_catalog_ext.py сверяет)
+READY_MIN_FAMILIES = 18
+READY_MIN_PER_GRADE = 3
 
 
 def run_py(code_or_args: list[str], cwd: Path, timeout: int = 120) -> subprocess.CompletedProcess:
@@ -204,11 +221,20 @@ def main() -> int:
 
     old_hash = tree_hash(DST) if DST.exists() else None
     new_hash = tree_hash(pkg)
+    readiness = final.get("readiness") or {}
+    verified = sorted(d for d, r in readiness.items()
+                      if r["families"] >= READY_MIN_FAMILIES and min(r["per_grade"].values()) >= READY_MIN_PER_GRADE)
     manifest = {
         # путь рабочего места в манифест не пишем: банк — соседний репозиторий
         "source": "../bank", **git_info(src), "content_hash": new_hash,
         "synced_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "n_families": final["n_families"], "by_direction": final["by_direction"],
+        # «список из банка» для расширения каталога (CATALOG_EXT_ENABLED): направления, чей банк прошёл фильтр
+        # качества и правило готовности (не меньше READY_MIN_FAMILIES семейств, каждый уровень Стажёр…Senior —
+        # не меньше READY_MIN_PER_GRADE); платформа показывает направление расширения, только если оно здесь
+        "directions_verified": verified,
+        "readiness": {"rule": {"min_families": READY_MIN_FAMILIES, "min_per_grade": READY_MIN_PER_GRADE},
+                      "by_direction": readiness},
         "excluded": excluded, "validation": validation,
     }
     if old_hash == new_hash and (DST / "BANK_SYNC.json").exists():
