@@ -51,6 +51,13 @@ def main() -> int:
         out["k_legacy"][d], out["history_legacy"][d] = kl, hl
         print(f"{d}: K<1 у {len(k)} семейств, макс. частота по итерациям {hist} (до 06.10: {hl}), "
               f"{time.time() - t0:.0f} с", flush=True)
+    # Я8: подпись расчёта (коммит кода, банк, seed) — для строки происхождения K на /validation#exposure
+    from app.modules.validation.signature import signature
+    out["signature"] = signature(seed=a.seed, config={**out["config"], "r_max": a.r_max, "sessions": a.sessions,
+                                                      "iterations": a.iterations},
+                                 world="калибровка K Sympson — Hetter симуляцией теста продукта на синтетических "
+                                       "кандидатах", command="make validate (tools/calibrate_exposure.py)",
+                                 n=a.sessions * a.iterations * len(DIRECTIONS))
     dst = BACKEND / "app" / "modules" / "assessment" / "exposure_k.json"
     dst.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
     print("→", dst)

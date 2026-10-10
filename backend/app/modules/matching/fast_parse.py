@@ -32,7 +32,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
-from app.core.db import SessionLocal, utcnow
+from app.core.db import SessionLocal, release, utcnow
 from app.modules.catalog.seed_data import STACK
 from app.modules.llm import client as llm_client
 from app.modules.matching.models import NeedParseJob
@@ -40,7 +40,7 @@ from app.modules.matching.need_parser import parse_need
 
 log = logging.getLogger("fast_parse")
 
-PARSER_VERSION = "fp3"  # меняется при изменении правил или запроса — старый кэш не используется
+PARSER_VERSION = "fp4"  # Я11: отрицание формата, «опыт не требуется», веса по перечислениям; меняется при изменении правил или запроса — старый кэш не используется
 STALE_S = 120  # задача pending дольше — считаем оборвавшейся (перезапуск процесса), отдаём failed
 MAX_PENDING_PER_USER = 4  # защита от очереди из одного окна (повторные нажатия)
 SCALARS = ("direction", "grade", "experience_years_min", "work_format")
@@ -116,6 +116,7 @@ def run_job(job_id: uuid.UUID, text: str, hint_direction: str | None, hint_grade
             if job is None or job.status != "pending":
                 return
             base = job.result or parse_need(text, hint_direction, hint_grade, use_llm=False)
+            release(db)  # модель отвечает секунды: соединение в пул (пул общий с запросами воркера), refresh возьмёт снова
             t0 = time.monotonic()
             try:
                 merged = parse_need(text, hint_direction, hint_grade, use_llm=True)

@@ -48,6 +48,7 @@ def test_tiers_put_full_required_first_and_flag_restores_old_order(client, monke
     b, _ = _cand(client, 1, NO_PG)
     c, _ = _cand(client, 2, TWO)
     monkeypatch.setenv("MATCH_MUST_FIRST", "0")
+    monkeypatch.setenv("RANK_CORE_SKILL", "0")  # Я1: ядро роли проверяется отдельно (test_core_skill)
     old, sel_old = _order(NEED)
     by = {r["ref"]: r for r in sel_old["results"]}
     # предусловие теста: по прежнему баллу кандидат без PostgreSQL выше полностью покрывающего
