@@ -422,15 +422,18 @@ def response_refs() -> tuple[dict[str, dict], dict[str, dict]]:
 
     RESPONSE_TYPES = all_types()
 
-    def base(tp):
-        return typing.get_args(tp)[0] if typing.get_origin(tp) is list else tp
+    def base(tp):  # list[M] и dict[str, M] → M
+        origin = typing.get_origin(tp)
+        return typing.get_args(tp)[-1] if origin in (list, dict) else tp
 
     models = list(dict.fromkeys(base(tp) for tp in RESPONSE_TYPES.values()))
     _, defs = models_json_schema([(m, "serialization") for m in models], ref_template="#/components/schemas/{model}")
     refs = {}
     for key, tp in RESPONSE_TYPES.items():
         ref = {"$ref": f"#/components/schemas/{base(tp).__name__}"}
-        refs[key] = {"type": "array", "items": ref} if base(tp) is not tp else ref
+        origin = typing.get_origin(tp)
+        refs[key] = {"type": "array", "items": ref} if origin is list else (
+            {"type": "object", "additionalProperties": ref} if origin is dict else ref)
     return refs, defs.get("$defs", {})
 
 
