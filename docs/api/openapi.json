@@ -29897,6 +29897,95 @@
         ]
       }
     },
+    "/api/assessment/sessions/{session_id}/evidence": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
+        "operationId": "candidate_evidence_api_assessment_sessions__session_id__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Session Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Candidate Evidence Api Assessment Sessions  Session Id  Evidence Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "session_not_found",
+                    "message": "Сессия теста не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Сессия не найдена. Коды `detail.code`: `session_not_found` — Сессия теста не найдена."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "test_not_finished",
+                    "message": "Тест ещё не завершён"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тест ещё не завершён. Коды `detail.code`: `test_not_finished` — Тест ещё не завершён."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Доказательства оценки развёрнутых ответов: цитаты из ответа по пунктам рубрики",
+        "tags": [
+          "assessment"
+        ]
+      }
+    },
     "/api/assessment/sessions/{session_id}/finish": {
       "post": {
         "description": "Доступно, когда движок закончил тест (item = null). Открытые ответы, которые не удалось оценить LLM, остаются «на проверке» и в θ пока не входят.\n\n**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — кандидат.",
@@ -41702,6 +41791,117 @@
           }
         ],
         "summary": "Две попытки теста кандидата рядом (если попыток ≥ 2 и кандидат не скрыл)",
+        "tags": [
+          "employer"
+        ]
+      }
+    },
+    "/api/employer/candidates/{ref}/evidence": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "employer_evidence_api_employer_candidates__ref__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "ref",
+            "required": true,
+            "schema": {
+              "title": "Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "direction",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "backend",
+                    "frontend",
+                    "data_ml",
+                    "qa",
+                    "security"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Direction"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Employer Evidence Api Employer Candidates  Ref  Evidence Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "candidate_not_found",
+                    "message": "Кандидат не найден или скрыл профиль"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Кандидат не найден или скрыл профиль. Коды `detail.code`: `candidate_not_found` — Кандидат не найден или скрыл профиль."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "company_required — сначала заполните профиль компании. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Доказательства оценки развёрнутых ответов последнего теста кандидата (если не скрыл)",
         "tags": [
           "employer"
         ]
@@ -61878,6 +62078,30 @@
           }
         },
         "summary": "Страница /criteria: критерии ТЗ → что сделать → что увидите → чем доказано",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
+    "/api/validation/evidence": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "validation_evidence_api_validation_evidence_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Validation Evidence Api Validation Evidence Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Доказательная оценка: флаг выкл/вкл на одних ответах набора оценщика",
         "tags": [
           "validation"
         ]
