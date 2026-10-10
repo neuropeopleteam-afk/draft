@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
 import { InlineThread } from "../../components/Chat";
@@ -8,6 +8,7 @@ import { api } from "../../lib/api";
 import { daysText, useRules } from "../../lib/meta";
 import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
+import { HhMarketNote } from "../../integrations/HhImport";  // Я12: «Рынок по hh.ru» у вилки (только при HH_ENABLED)
 import { EmployerHiring, HiringChip, HiringReminders } from "../../components/Hiring";
 import { OfferFitHint } from "../mutual/Employer";  // подсказка до отправки: подходит ли предложение кандидату (Н9)
 
@@ -16,8 +17,9 @@ type Market = { from: number; to: number; median?: number | null } | null | unde
 export type NeedSalary = { from?: number | null; to?: number | null; net?: boolean | null } | null | undefined;
 const basisOf = (need: NeedSalary): Basis => (need?.net ? "net" : "gross");
 
-function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market }: {
+function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market, hh }: {
   from: string; to: string; setFrom: (v: string) => void; setTo: (v: string) => void; basis: Basis; setBasis: (b: Basis) => void; market: Market;
+  hh?: { cref?: string | null; needId?: string | null };
 }) {
   const f = Number(from), t = Number(to);
   const wide = f > 0 && t > f * SALARY_MAX_RATIO;
@@ -36,6 +38,7 @@ function SalaryFields({ from, to, setFrom, setTo, basis, setBasis, market }: {
         </p>
       </div>
       <MarketNote m={market} extra="Минимум кандидата вам не показывается." />
+      {hh && <HhMarketNote cref={hh.cref} needId={hh.needId} />}
     </div>
   );
 }
@@ -78,9 +81,9 @@ export const probeSentText = (r: any) => r?.created?.length
   ? `Зонд отправлен: ${r.created.length} ${plural(r.created.length, "кандидату", "кандидатам", "кандидатам")}. Ответ появится в разделе «Зонды»; контакты не раскрываются.`
   : null;
 
-export function ProbeForm({ refs, needId, market, needSalary, onDone }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: (res?: any) => void }) {
-  const [title, setTitle] = useState("");
-  const [task, setTask] = useState("");
+export function ProbeForm({ refs, needId, market, needSalary, onDone, init }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: (res?: any) => void; init?: { title?: string; task?: string } | null }) {
+  const [title, setTitle] = useState(init?.title ?? "");  // Я10: заготовка вопроса на навык, который тест не проверяет
+  const [task, setTask] = useState(init?.task ?? "");
   const [mode, setMode] = useState<"any" | "solution" | "approach">("any");
   const [mins, setMins] = useState("30");
   const [from, setFrom] = useState(() => defaultRange(market, needSalary)[0]);
@@ -171,7 +174,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       <Field label="Позиция" htmlFor="it"><input id="it" className="input" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Python-разработчик в команду платежей" /></Field>
       <Field label="Суть предложения" htmlFor="idesc"><textarea id="idesc" className="input min-h-[110px]" value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Задачи, команда, формат, что предлагаем" /></Field>
       <Field label="Как с вами связаться" htmlFor="ic"><input id="ic" className="input" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telegram @hr_company или hr@company.ru" /></Field>
-      <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} basis={basis} setBasis={setBasis} market={market} />
+      <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} basis={basis} setBasis={setBasis} market={market} hh={{ cref, needId }} />
       <OfferFitHint cref={cref} needId={needId} from={Number(from) || undefined} to={Number(to) || undefined} basis={basis} />
       {safety?.minor && <Alert kind="info">{safety.warning} {!safety.offer_allowed && "Оффер недоступен: возраст 14–15 лет или ещё нет отметки согласия."}</Alert>}
       <Field label="Формат предложения" htmlFor="offer-format"><select id="offer-format" className="input" value={format} onChange={e => setFormat(e.target.value)}>
@@ -189,7 +192,9 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
 }
 
 export function EmployerProbes() {
-  const { data, loading, error, reload } = useApi<any[]>("/employer/probes");
+  const { data: all, loading, error, reload } = useApi<any[]>("/employer/probes");
+  const need = new URLSearchParams(useLocation().search).get("need");  // Я10: из подборки — «зонды по этой потребности»
+  const data = need && all ? all.filter((p) => p.need_id === need) : all;
   const [err, setErr] = useState<string | null>(null);
   const [comment, setComment] = useState<Record<string, string>>({});
   async function review(id: string, verdict: string) {
@@ -200,6 +205,7 @@ export function EmployerProbes() {
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Зонды" subtitle="Короткие задачи с вилкой зарплаты до раскрытия контактов. Оценка ответа становится фактом T1 в профиле кандидата." />
       <p className="text-sm text-brand-ink/70">Рядом с зондом со свободным ответом — <Link className="font-semibold text-brand hover:underline" to="/employer/assignments">задания с автопроверкой</Link>: 3–5 заданий банка по стеку потребности, проверяет система.</p>
+      {need && all && <p className="text-sm text-brand-ink/70" data-testid="probes-need-filter">Показаны зонды по одной потребности: {data?.length ?? 0} из {all.length}. <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${need}`}>К подборке</Link> · <Link className="font-semibold text-brand hover:underline" to="/employer/probes">Все зонды</Link></p>}
       <Alert>{err}</Alert>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
         <Empty title="Зондов пока нет" text="Отметьте кандидатов в подборке и отправьте им короткую задачу." action={<Link to="/employer/needs" className="btn-primary">К подборкам</Link>} />
