@@ -26,6 +26,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import urllib.error
@@ -192,14 +193,41 @@ def run(a) -> None:
     meta = {"tag": a.tag, "host": a.host, "users": a.users, "ramp_per_s": a.ramp, "time": a.time,
             "burst_at_s": a.burst_at, "burst_n": a.burst_n if a.burst_at else 0, "user_agent": f"spectrek-load/{a.tag}",
             "start": time.strftime("%Y-%m-%dT%H:%M:%S%z")}
-    p = subprocess.run(cmd, env=env, cwd=ROOT, capture_output=True, text=True)
-    (OUT / f"{a.tag}_locust.log").write_text(_scrub(p.stdout[-20000:] + "\n" + p.stderr[-20000:]))
+    raw = Path(tempfile.mkstemp(prefix=f"lt_{a.tag}_", suffix=".log")[1])  # сырой журнал — вне репозитория
+    with raw.open("w") as lf:
+        p = subprocess.Popen(cmd, env=env, cwd=ROOT, stdout=lf, stderr=subprocess.STDOUT, text=True)
+        check_at = a.users / max(a.ramp, 0.1) + 45  # после разгона: все ли пользователи живы
+        while p.poll() is None:
+            time.sleep(5)
+            if check_at and time.time() - t0 > check_at:
+                check_at = 0
+                live = _live_users(OUT / f"{a.tag}_stats_history.csv")
+                meta["users_after_ramp"] = live
+                if live < 0.9 * a.users:
+                    meta["aborted"] = f"после разгона живых пользователей {live} из {a.users} — прогон остановлен"
+                    print(f"ОСТАНОВЛЕНО: {meta['aborted']} (причина — в {a.tag}_locust.log)")
+                    p.terminate()
+        p.wait()
+    (OUT / f"{a.tag}_locust.log").write_text(_scrub(raw.read_text(errors="replace")[-40000:]))
+    raw.unlink()
     stop.set()
     for t in threads:
         t.join(timeout=dur + 400)
-    meta.update(end=time.strftime("%Y-%m-%dT%H:%M:%S%z"), locust_exit=p.returncode)
+    meta.update(end=time.strftime("%Y-%m-%dT%H:%M:%S%z"), locust_exit=p.returncode,
+                users_max=_live_users(OUT / f"{a.tag}_stats_history.csv", peak=True))
     (OUT / f"{a.tag}_meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1))
     print(f"Locust завершён (код {p.returncode}) за {time.time() - t0:.0f} с; CSV — {OUT}/{a.tag}_*.csv")
+    if meta.get("aborted"):
+        sys.exit(3)
+
+
+def _live_users(hist: Path, peak: bool = False) -> int:
+    """Число живых пользователей Locust по stats_history (последняя строка Aggregated или максимум за прогон)."""
+    if not hist.exists():
+        return 0
+    vals = [int(r["User Count"]) for r in csv.DictReader(open(hist, encoding="utf-8")) if r.get("Name") == "Aggregated"
+            and (r.get("User Count") or "").isdigit()]
+    return (max(vals) if peak else vals[-1]) if vals else 0
 
 
 def _scrub(s: str) -> str:
@@ -217,6 +245,11 @@ def _mib(v: str) -> float:
 
 def summary(a) -> None:
     rows = list(csv.DictReader(open(OUT / f"{a.tag}_stats.csv", encoding="utf-8")))
+    mf = OUT / f"{a.tag}_meta.json"
+    if mf.exists():
+        meta = json.loads(mf.read_text())
+        print(f"Пользователей одновременно: задано {meta.get('users')}, после разгона {meta.get('users_after_ramp', '—')}, "
+              f"макс. {meta.get('users_max', '—')}" + (f"; {meta['aborted']}" if meta.get("aborted") else "") + "\n")
     print(f"| Операция | Запросов | Ошибок | p50, мс | p95, мс | p99, мс | Макс., мс |\n|---|---:|---:|---:|---:|---:|---:|")
     agg = None
     for r in sorted(rows, key=lambda r: -int(r["Request Count"] or 0)):

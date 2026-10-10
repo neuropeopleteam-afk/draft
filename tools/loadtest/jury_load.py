@@ -150,7 +150,9 @@ class JuryUser(HttpUser):
         if XLINK and not getattr(self, "_xcookie", False):
             with self.client.get(f"{base}/x/{XLINK}", name="страница: вход по личной ссылке", allow_redirects=False,
                                  catch_response=True) as r:
-                if r.status_code in (200, 302, 303) and "fsp_x" in r.cookies.keys() | self.client.cookies.keys():
+                # RequestsCookieJar.keys() — список: проверка «in» по каждой банке (10.10: `keys() | keys()` падал TypeError
+                # в on_start, и пользователи страниц молча выбывали — 63 из 100 на стенде)
+                if r.status_code in (200, 302, 303) and ("fsp_x" in r.cookies or "fsp_x" in self.client.cookies):
                     r.success()
                     self._xcookie = True
                 elif r.status_code == 429:
