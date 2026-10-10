@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 
 from app.modules.assessment import evidence as EV, grader as G, second_opinion
@@ -445,7 +446,8 @@ def test_evidence_api_candidate_employer_validation(client):
     # полный прогон 406 (если посчитан): решение — по правилу «не хуже», без номеров исполнителей в открытом тексте
     if v.get("full"):
         assert v["full"]["n"] == 406 and isinstance(v["full"]["decision"]["non_inferior"], bool)
-        assert v["full"]["decision"]["text"] in v["decision"] and "Я2" not in json.dumps(v, ensure_ascii=False)
+        assert v["full"]["decision"]["text"] in v["decision"]
+        assert not re.search("\u042f\\d", json.dumps(v, ensure_ascii=False))  # «Я» и цифра — номер исполнителя
     assert "модели, не люди" in v["world"]
 
 
