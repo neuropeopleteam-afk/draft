@@ -257,6 +257,93 @@
         "title": "ApplicationOut",
         "type": "object"
       },
+      "AssessmentFeedbackOut": {
+        "additionalProperties": true,
+        "description": "Обратная связь после теста: карта навыков, спрос работодателей, маршрут роста, дисциплины ФСП.",
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "competitions": {
+            "description": "Рекомендованные дисциплины ФСП",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Competitions",
+            "type": "array"
+          },
+          "demand": {
+            "additionalProperties": true,
+            "description": "Разрыв с требованиями активных потребностей и вакансий в категории",
+            "title": "Demand",
+            "type": "object"
+          },
+          "fsp_calendar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsp Calendar Url"
+          },
+          "route": {
+            "description": "Маршрут роста: что подтвердить дальше",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Route",
+            "type": "array"
+          },
+          "session": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Тест, по которому построена обратная связь",
+            "title": "Session"
+          },
+          "skill_map": {
+            "additionalProperties": true,
+            "description": "Карта навыков по темам банка: summary, topics (без заданий и ключей)",
+            "title": "Skill Map",
+            "type": "object"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "available",
+          "source",
+          "session",
+          "skill_map",
+          "demand",
+          "route",
+          "competitions",
+          "fsp_calendar_url"
+        ],
+        "title": "AssessmentFeedbackOut",
+        "type": "object"
+      },
       "AssessmentResultOut": {
         "additionalProperties": true,
         "description": "Итог теста: оценка способности, грейд, вероятности по уровням и пояснение.",
@@ -6049,6 +6136,39 @@
         "title": "ConnectionIn",
         "type": "object"
       },
+      "ConsentChangedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          },
+          "kind": {
+            "description": "Вид согласия: personal_data, employer_visibility, camera, …",
+            "title": "Kind",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Версия текста, на которую дано согласие (при выдаче)",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "kind",
+          "granted"
+        ],
+        "title": "ConsentChangedOut",
+        "type": "object"
+      },
       "ConsentOut": {
         "additionalProperties": true,
         "properties": {
@@ -6084,6 +6204,31 @@
           "revoked_at"
         ],
         "title": "ConsentOut",
+        "type": "object"
+      },
+      "ContactsRevokeOut": {
+        "additionalProperties": true,
+        "properties": {
+          "contacts_open_to": {
+            "description": "Кому контакты остались открытыми (после отзыва — пусто)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Contacts Open To",
+            "type": "array"
+          },
+          "revoked": {
+            "description": "Сколько приглашений, по которым были открыты контакты, закрыто",
+            "title": "Revoked",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "revoked",
+          "contacts_open_to"
+        ],
+        "title": "ContactsRevokeOut",
         "type": "object"
       },
       "CriterionIn": {
@@ -7866,6 +8011,107 @@
         "title": "DeleteIn",
         "type": "object"
       },
+      "DeletePreviewOut": {
+        "additionalProperties": true,
+        "description": "Что будет удалено, что обезличено и что платформа сделать не в силах — до подтверждения удаления.",
+        "properties": {
+          "anonymized": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Что остаётся без ваших данных (у работодателей): группа → число записей",
+            "title": "Anonymized",
+            "type": "object"
+          },
+          "backups": {
+            "title": "Backups",
+            "type": "string"
+          },
+          "confirm": {
+            "additionalProperties": true,
+            "description": "Что нужно для подтверждения: phrase, needs_password, needs_email, needs_code",
+            "title": "Confirm",
+            "type": "object"
+          },
+          "contacts_open_to": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Contacts Open To",
+            "type": "array"
+          },
+          "deleted": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Что удаляется: название группы данных → число записей",
+            "title": "Deleted",
+            "type": "object"
+          },
+          "not_in_our_power": {
+            "description": "Что платформа удалить не может (копии у работодателей, резервные копии)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Not In Our Power",
+            "type": "array"
+          }
+        },
+        "required": [
+          "deleted",
+          "anonymized",
+          "contacts_open_to",
+          "confirm",
+          "not_in_our_power",
+          "backups"
+        ],
+        "title": "DeletePreviewOut",
+        "type": "object"
+      },
+      "DeleteResultOut": {
+        "additionalProperties": true,
+        "properties": {
+          "anonymized": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Anonymized",
+            "type": "object"
+          },
+          "backups": {
+            "title": "Backups",
+            "type": "string"
+          },
+          "deleted": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Deleted",
+            "type": "object"
+          },
+          "not_in_our_power": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Not In Our Power",
+            "type": "array"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "deleted",
+          "anonymized",
+          "not_in_our_power",
+          "backups"
+        ],
+        "title": "DeleteResultOut",
+        "type": "object"
+      },
       "DemoNextWeekOut": {
         "additionalProperties": true,
         "properties": {
@@ -7933,6 +8179,88 @@
           "sort_order"
         ],
         "title": "DirectionOut",
+        "type": "object"
+      },
+      "EmployerAttemptsOut": {
+        "additionalProperties": true,
+        "description": "История попыток кандидата для работодателя — только если кандидат открыл её в приватности.",
+        "properties": {
+          "attempts": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Попытки: заявленный грейд, режим, время, точность оценки",
+            "title": "Attempts"
+          },
+          "available": {
+            "title": "Available",
+            "type": "boolean"
+          },
+          "comparison": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Сравнение первой и последней попытки: delta, changes, overlap",
+            "title": "Comparison"
+          },
+          "direction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction"
+          },
+          "direction_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Direction Title"
+          },
+          "n_attempts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "N Attempts"
+          }
+        },
+        "required": [
+          "available",
+          "direction",
+          "direction_title"
+        ],
+        "title": "EmployerAttemptsOut",
         "type": "object"
       },
       "EmployerCandidateCardOut": {
@@ -9723,6 +10051,31 @@
         "title": "FspLinkIn",
         "type": "object"
       },
+      "FspLinkOut": {
+        "additionalProperties": true,
+        "properties": {
+          "fsp_id_claimed": {
+            "title": "Fsp Id Claimed",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "status": {
+            "description": "Результат привязки: linked, pending, …",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "fsp_id_claimed",
+          "status",
+          "message"
+        ],
+        "title": "FspLinkOut",
+        "type": "object"
+      },
       "FspOverviewOut": {
         "additionalProperties": true,
         "description": "Обзор для кабинета ФСП. Значения в группах меньше порога k скрываются (null), чтобы нельзя было узнать отдельного человека.",
@@ -9907,6 +10260,192 @@
         "title": "FspOverviewOut",
         "type": "object"
       },
+      "FspRatingOut": {
+        "additionalProperties": true,
+        "properties": {
+          "as_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "As Of"
+          },
+          "best_result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Result"
+          },
+          "competitions": {
+            "title": "Competitions",
+            "type": "integer"
+          },
+          "policy": {
+            "title": "Policy",
+            "type": "string"
+          },
+          "strength": {
+            "description": "Сила паспорта ФСП, 0…1",
+            "title": "Strength",
+            "type": "number"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "strength",
+          "competitions",
+          "best_result",
+          "policy",
+          "as_of"
+        ],
+        "title": "FspRatingOut",
+        "type": "object"
+      },
+      "FspStateOut": {
+        "additionalProperties": true,
+        "description": "Связка с ФСП: заявленный номер, достижения из реестра (T2) и рейтинг.",
+        "properties": {
+          "achievements": {
+            "description": "Достижения: дисциплина, место, дата, разряд, подтверждено ли реестром",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Achievements",
+            "type": "array"
+          },
+          "fsp_id_claimed": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fsp Id Claimed"
+          },
+          "identity_linked": {
+            "description": "Учётная запись связана с ФСП ID",
+            "title": "Identity Linked",
+            "type": "boolean"
+          },
+          "keycloak_ready": {
+            "title": "Keycloak Ready",
+            "type": "boolean"
+          },
+          "link_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Как связано: fsp_id (вход), manual (номер вручную), registry",
+            "title": "Link Source"
+          },
+          "linked": {
+            "title": "Linked",
+            "type": "boolean"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "rating": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FspRatingOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "registry": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Результат последней сверки с реестром",
+            "title": "Registry"
+          },
+          "registry_sync_available": {
+            "title": "Registry Sync Available",
+            "type": "boolean"
+          },
+          "registry_warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Registry Warning"
+          },
+          "sport_rank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sport Rank"
+          },
+          "synced_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synced At"
+          }
+        },
+        "required": [
+          "fsp_id_claimed",
+          "linked",
+          "link_source",
+          "achievements",
+          "rating",
+          "sport_rank",
+          "synced_at",
+          "registry",
+          "registry_warning",
+          "identity_linked",
+          "registry_sync_available",
+          "keycloak_ready",
+          "note"
+        ],
+        "title": "FspStateOut",
+        "type": "object"
+      },
       "FspStatusOut": {
         "properties": {
           "achievements_count": {
@@ -9935,6 +10474,78 @@
           "linked"
         ],
         "title": "FspStatusOut",
+        "type": "object"
+      },
+      "GradeHintOut": {
+        "additionalProperties": true,
+        "description": "Подсказка грейда по резюме и опросу — только совет, решает кандидат.",
+        "properties": {
+          "confidence": {
+            "title": "Confidence",
+            "type": "string"
+          },
+          "has_resume": {
+            "title": "Has Resume",
+            "type": "boolean"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "signals": {
+            "description": "Сигналы: источник, грейд, пояснение",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Signals",
+            "type": "array"
+          },
+          "suggested": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suggested"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "votes": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Votes",
+            "type": "object"
+          }
+        },
+        "required": [
+          "suggested",
+          "confidence",
+          "has_resume",
+          "method",
+          "summary",
+          "note",
+          "signals",
+          "votes"
+        ],
+        "title": "GradeHintOut",
         "type": "object"
       },
       "GradeOut": {
@@ -10939,6 +11550,54 @@
         "title": "ImportIn",
         "type": "object"
       },
+      "InterestDayOut": {
+        "additionalProperties": true,
+        "properties": {
+          "date": {
+            "title": "Date",
+            "type": "string"
+          },
+          "selections": {
+            "title": "Selections",
+            "type": "integer"
+          },
+          "views": {
+            "title": "Views",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "date",
+          "views",
+          "selections"
+        ],
+        "title": "InterestDayOut",
+        "type": "object"
+      },
+      "InterestPeriodOut": {
+        "additionalProperties": true,
+        "properties": {
+          "employers_viewed": {
+            "title": "Employers Viewed",
+            "type": "integer"
+          },
+          "probes": {
+            "title": "Probes",
+            "type": "integer"
+          },
+          "selections": {
+            "title": "Selections",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "employers_viewed",
+          "selections",
+          "probes"
+        ],
+        "title": "InterestPeriodOut",
+        "type": "object"
+      },
       "InterviewOut": {
         "additionalProperties": true,
         "properties": {
@@ -11541,6 +12200,27 @@
         "title": "JuryLoginOut",
         "type": "object"
       },
+      "JuryModeOut": {
+        "additionalProperties": true,
+        "properties": {
+          "jury_mode": {
+            "title": "Jury Mode",
+            "type": "boolean"
+          },
+          "sandbox_starts": {
+            "additionalProperties": true,
+            "description": "Лимит запусков песочницы: limit, used, left, next_at",
+            "title": "Sandbox Starts",
+            "type": "object"
+          }
+        },
+        "required": [
+          "jury_mode",
+          "sandbox_starts"
+        ],
+        "title": "JuryModeOut",
+        "type": "object"
+      },
       "JuryStatusOut": {
         "additionalProperties": true,
         "properties": {
@@ -11641,6 +12321,99 @@
           "value"
         ],
         "title": "LabelIn",
+        "type": "object"
+      },
+      "LegalConsentTextOut": {
+        "additionalProperties": true,
+        "description": "Текст согласия в действующей версии и сведения об операторе.",
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/LegalOperatorOut"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "title",
+          "text",
+          "operator"
+        ],
+        "title": "LegalConsentTextOut",
+        "type": "object"
+      },
+      "LegalOperatorOut": {
+        "additionalProperties": true,
+        "properties": {
+          "actual_address": {
+            "title": "Actual Address",
+            "type": "string"
+          },
+          "director": {
+            "title": "Director",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "full_name": {
+            "title": "Full Name",
+            "type": "string"
+          },
+          "inn": {
+            "title": "Inn",
+            "type": "string"
+          },
+          "kpp": {
+            "title": "Kpp",
+            "type": "string"
+          },
+          "legal_address": {
+            "title": "Legal Address",
+            "type": "string"
+          },
+          "ogrn": {
+            "title": "Ogrn",
+            "type": "string"
+          },
+          "short_name": {
+            "title": "Short Name",
+            "type": "string"
+          },
+          "storage": {
+            "title": "Storage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "full_name",
+          "short_name",
+          "inn",
+          "kpp",
+          "ogrn",
+          "legal_address",
+          "actual_address",
+          "email",
+          "director",
+          "storage"
+        ],
+        "title": "LegalOperatorOut",
         "type": "object"
       },
       "MapItem": {
@@ -11772,6 +12545,107 @@
           "body"
         ],
         "title": "MessageIn",
+        "type": "object"
+      },
+      "MessagePostedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "can_write": {
+            "title": "Can Write",
+            "type": "boolean"
+          },
+          "company": {
+            "title": "Company",
+            "type": "string"
+          },
+          "counterpart": {
+            "title": "Counterpart",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_len": {
+            "description": "Максимальная длина сообщения",
+            "title": "Max Len",
+            "type": "integer"
+          },
+          "messages": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Почему писать нельзя, если can_write = false",
+            "title": "Reason"
+          },
+          "revoked": {
+            "title": "Revoked",
+            "type": "boolean"
+          },
+          "rules": {
+            "additionalProperties": true,
+            "title": "Rules",
+            "type": "object"
+          },
+          "sent": {
+            "additionalProperties": true,
+            "description": "Отправленное сообщение",
+            "title": "Sent",
+            "type": "object"
+          },
+          "side": {
+            "description": "Сторона текущего пользователя: candidate или employer",
+            "title": "Side",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "title",
+          "side",
+          "counterpart",
+          "company",
+          "messages",
+          "mode",
+          "max_len",
+          "can_write",
+          "reason",
+          "revoked",
+          "rules",
+          "status",
+          "sent"
+        ],
+        "title": "MessagePostedOut",
         "type": "object"
       },
       "MetaOut": {
@@ -11943,6 +12817,108 @@
         "title": "MutualFitOut",
         "type": "object"
       },
+      "MyDataExportOut": {
+        "additionalProperties": true,
+        "description": "Выгрузка всех данных о пользователе (право на доступ к данным) — машиночитаемый JSON.",
+        "properties": {
+          "about": {
+            "additionalProperties": true,
+            "description": "Что это за выгрузка: operator, what_is_here, not_included, consent_document_version",
+            "title": "About",
+            "type": "object"
+          },
+          "account": {
+            "additionalProperties": true,
+            "description": "Учётная запись: email, created_at, last_login_at, demo_account, вход через ФСП ID",
+            "title": "Account",
+            "type": "object"
+          },
+          "camera": {
+            "additionalProperties": true,
+            "description": "События камеры — без кадров",
+            "title": "Camera",
+            "type": "object"
+          },
+          "consents": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Consents",
+            "type": "array"
+          },
+          "facts": {
+            "description": "Факты профиля с уровнем доказательства: key, title, value, source, evidence_level",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Facts",
+            "type": "array"
+          },
+          "format": {
+            "title": "Format",
+            "type": "string"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "string"
+          },
+          "profile": {
+            "additionalProperties": true,
+            "description": "Профиль: ФИО, телефон, город, опыт, мессенджер",
+            "title": "Profile",
+            "type": "object"
+          },
+          "resumes": {
+            "description": "Резюме: текст без ФИО и контактов, извлечённые поля",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Resumes",
+            "type": "array"
+          },
+          "specializations": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Specializations",
+            "type": "array"
+          },
+          "survey": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Survey",
+            "type": "array"
+          },
+          "tests": {
+            "additionalProperties": true,
+            "description": "Попытки теста и история грейда",
+            "title": "Tests",
+            "type": "object"
+          }
+        },
+        "required": [
+          "format",
+          "generated_at",
+          "about",
+          "account",
+          "profile",
+          "consents",
+          "specializations",
+          "facts",
+          "survey",
+          "resumes",
+          "tests",
+          "camera"
+        ],
+        "title": "MyDataExportOut",
+        "type": "object"
+      },
       "MyDataOut": {
         "additionalProperties": true,
         "properties": {
@@ -12025,6 +13001,81 @@
           "consent_version"
         ],
         "title": "MyDataOut",
+        "type": "object"
+      },
+      "MyInterestOut": {
+        "additionalProperties": true,
+        "description": "Интерес работодателей к вам за период: сколько компаний смотрели карточку, сколько раз попали в подборки.",
+        "properties": {
+          "best_rank": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Best Rank"
+          },
+          "by_day": {
+            "items": {
+              "$ref": "#/components/schemas/InterestDayOut"
+            },
+            "title": "By Day",
+            "type": "array"
+          },
+          "demo": {
+            "title": "Demo",
+            "type": "boolean"
+          },
+          "employers_viewed": {
+            "title": "Employers Viewed",
+            "type": "integer"
+          },
+          "has_category": {
+            "title": "Has Category",
+            "type": "boolean"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "period_days": {
+            "title": "Period Days",
+            "type": "integer"
+          },
+          "previous": {
+            "$ref": "#/components/schemas/InterestPeriodOut",
+            "description": "То же за предыдущий период"
+          },
+          "probes": {
+            "title": "Probes",
+            "type": "integer"
+          },
+          "selections": {
+            "title": "Selections",
+            "type": "integer"
+          },
+          "visible_to_employers": {
+            "title": "Visible To Employers",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "period_days",
+          "employers_viewed",
+          "selections",
+          "probes",
+          "best_rank",
+          "previous",
+          "by_day",
+          "visible_to_employers",
+          "has_category",
+          "note",
+          "demo"
+        ],
+        "title": "MyInterestOut",
         "type": "object"
       },
       "NeedFileOut": {
@@ -12573,6 +13624,21 @@
           "quiet"
         ],
         "title": "NotificationsOut",
+        "type": "object"
+      },
+      "NotificationsReadOut": {
+        "additionalProperties": true,
+        "properties": {
+          "read": {
+            "description": "Сколько уведомлений отмечено прочитанными",
+            "title": "Read",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "read"
+        ],
+        "title": "NotificationsReadOut",
         "type": "object"
       },
       "ObservedIn": {
@@ -13382,6 +14448,53 @@
         "title": "ParseIn",
         "type": "object"
       },
+      "ParseJobOut": {
+        "additionalProperties": true,
+        "description": "Состояние фонового разбора потребности: словарный разбор готов сразу, языковая модель дополняет позже.",
+        "properties": {
+          "delta": {
+            "description": "Что модель изменила поверх словарного разбора",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Delta",
+            "type": "array"
+          },
+          "llm": {
+            "additionalProperties": true,
+            "description": "Что сделала модель: used, reason, attempts",
+            "title": "Llm",
+            "type": "object"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Разбор потребности, когда задача завершена",
+            "title": "Result"
+          },
+          "status": {
+            "description": "pending, done или failed",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "llm",
+          "delta"
+        ],
+        "title": "ParseJobOut",
+        "type": "object"
+      },
       "PassportKeyOut": {
         "additionalProperties": true,
         "properties": {
@@ -14146,6 +15259,24 @@
         "title": "PrivacyIn",
         "type": "object"
       },
+      "PrivacyOut": {
+        "additionalProperties": true,
+        "properties": {
+          "privacy": {
+            "additionalProperties": {
+              "type": "boolean"
+            },
+            "description": "Что показывать работодателю: show_city, show_experience, show_work_format, show_roles, show_stack, show_soft_skills, show_fsp, show_attempts",
+            "title": "Privacy",
+            "type": "object"
+          }
+        },
+        "required": [
+          "privacy"
+        ],
+        "title": "PrivacyOut",
+        "type": "object"
+      },
       "ProbeAnswerIn": {
         "properties": {
           "link": {
@@ -14421,6 +15552,438 @@
           "deadline_at"
         ],
         "title": "ProbeOut",
+        "type": "object"
+      },
+      "ProctorConsentOut": {
+        "additionalProperties": true,
+        "properties": {
+          "active": {
+            "description": "Согласие на камеру действует",
+            "title": "Active",
+            "type": "boolean"
+          },
+          "current_version": {
+            "title": "Current Version",
+            "type": "string"
+          },
+          "enabled": {
+            "description": "Контроль по камере включён на платформе",
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "granted_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Granted At"
+          },
+          "text": {
+            "$ref": "#/components/schemas/ProctorConsentTextOut"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "enabled",
+          "active",
+          "version",
+          "current_version",
+          "granted_at",
+          "text"
+        ],
+        "title": "ProctorConsentOut",
+        "type": "object"
+      },
+      "ProctorConsentRevokedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "stopped_sessions": {
+            "description": "Сколько идущих тестов остановили наблюдение",
+            "title": "Stopped Sessions",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "granted",
+          "kind",
+          "stopped_sessions"
+        ],
+        "title": "ProctorConsentRevokedOut",
+        "type": "object"
+      },
+      "ProctorConsentTextOut": {
+        "additionalProperties": true,
+        "properties": {
+          "effect": {
+            "title": "Effect",
+            "type": "string"
+          },
+          "how_long": {
+            "title": "How Long",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "operator": {
+            "title": "Operator",
+            "type": "string"
+          },
+          "revoke": {
+            "title": "Revoke",
+            "type": "string"
+          },
+          "stored": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stored",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          },
+          "what": {
+            "items": {
+              "type": "string"
+            },
+            "title": "What",
+            "type": "array"
+          },
+          "who_sees": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Who Sees",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "version",
+          "title",
+          "what",
+          "stored",
+          "how_long",
+          "who_sees",
+          "effect",
+          "revoke",
+          "operator"
+        ],
+        "title": "ProctorConsentTextOut",
+        "type": "object"
+      },
+      "ProctorEventsOut": {
+        "additionalProperties": true,
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "dropped": {
+            "title": "Dropped",
+            "type": "integer"
+          },
+          "events_total": {
+            "title": "Events Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "accepted",
+          "events_total",
+          "dropped"
+        ],
+        "title": "ProctorEventsOut",
+        "type": "object"
+      },
+      "ProctorMySessionOut": {
+        "additionalProperties": true,
+        "properties": {
+          "claimed_grade": {
+            "title": "Claimed Grade",
+            "type": "string"
+          },
+          "direction": {
+            "title": "Direction",
+            "type": "string"
+          },
+          "events": {
+            "title": "Events",
+            "type": "integer"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "started_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Started At"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "title": "Summary",
+            "type": "object"
+          }
+        },
+        "required": [
+          "session_id",
+          "direction",
+          "claimed_grade",
+          "status",
+          "started_at",
+          "mode",
+          "events",
+          "summary"
+        ],
+        "title": "ProctorMySessionOut",
+        "type": "object"
+      },
+      "ProctorSessionOut": {
+        "additionalProperties": true,
+        "description": "Наблюдение по камере в одном тесте: режим, окна наблюдения, события, итог. Кадры не сохраняются.",
+        "properties": {
+          "camera_active": {
+            "title": "Camera Active",
+            "type": "boolean"
+          },
+          "consent_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consent Version"
+          },
+          "events": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Свои события (только в карточке сеанса): position, kind, title, duration_s, faces, counted, at",
+            "title": "Events"
+          },
+          "items": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Наблюдение по заданиям: position, observed_s, time_s, no_face_s, multi_face_s, off_s",
+            "title": "Items"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "camera, declined, denied, unsupported или null — без камеры",
+            "title": "Mode"
+          },
+          "resumes": {
+            "description": "Сколько раз наблюдение возобновлялось",
+            "title": "Resumes",
+            "type": "integer"
+          },
+          "session_id": {
+            "title": "Session Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "summary": {
+            "additionalProperties": true,
+            "description": "Итог, как его видит работодатель: mode, title, remarks, notes, points, totals",
+            "title": "Summary",
+            "type": "object"
+          },
+          "windows": {
+            "description": "Окна наблюдения: from, to, mid",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Windows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "session_id",
+          "status",
+          "mode",
+          "camera_active",
+          "windows",
+          "resumes",
+          "consent_version",
+          "summary"
+        ],
+        "title": "ProctorSessionOut",
+        "type": "object"
+      },
+      "ProctorStatsOut": {
+        "additionalProperties": true,
+        "description": "Обезличенный агрегат по камере для кабинета ФСП; группы меньше порога скрыты.",
+        "properties": {
+          "camera_remarks_share": {
+            "title": "Camera Remarks Share",
+            "type": "number"
+          },
+          "camera_share": {
+            "title": "Camera Share",
+            "type": "number"
+          },
+          "camera_with_remarks": {
+            "title": "Camera With Remarks",
+            "type": "integer"
+          },
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "k_min": {
+            "title": "K Min",
+            "type": "integer"
+          },
+          "modes": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Modes",
+            "type": "object"
+          },
+          "note": {
+            "title": "Note",
+            "type": "string"
+          },
+          "observed_min_median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed Min Median"
+          },
+          "period_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Period Days"
+          },
+          "remark_kinds": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Remark Kinds",
+            "type": "object"
+          },
+          "tests_finished": {
+            "title": "Tests Finished",
+            "type": "integer"
+          },
+          "without_record": {
+            "title": "Without Record",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "enabled",
+          "k_min",
+          "period_days",
+          "tests_finished",
+          "camera_share",
+          "camera_with_remarks",
+          "camera_remarks_share",
+          "observed_min_median",
+          "modes",
+          "remark_kinds",
+          "without_record",
+          "note"
+        ],
+        "title": "ProctorStatsOut",
         "type": "object"
       },
       "ProposeIn": {
@@ -15402,6 +16965,20 @@
         "title": "RespondIn",
         "type": "object"
       },
+      "ResumeAppliedOut": {
+        "additionalProperties": true,
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "applied"
+        ],
+        "title": "ResumeAppliedOut",
+        "type": "object"
+      },
       "ResumeOut": {
         "additionalProperties": true,
         "properties": {
@@ -15471,6 +17048,71 @@
           "kind"
         ],
         "title": "ResumeOut",
+        "type": "object"
+      },
+      "ResumeUploadOut": {
+        "additionalProperties": true,
+        "description": "Результат загрузки резюме: текст без персональных данных, извлечённые поля, найденные персональные данные — только здесь.",
+        "properties": {
+          "evidence_level": {
+            "title": "Evidence Level",
+            "type": "string"
+          },
+          "extracted": {
+            "additionalProperties": true,
+            "title": "Extracted",
+            "type": "object"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "method": {
+            "description": "Как извлечён текст: text-layer, docx, ocr",
+            "title": "Method",
+            "type": "string"
+          },
+          "pages": {
+            "title": "Pages",
+            "type": "integer"
+          },
+          "pii_found": {
+            "additionalProperties": true,
+            "description": "Найденные ФИО, почта, телефон, мессенджер — только в этом ответе, в базе не сохраняются",
+            "title": "Pii Found",
+            "type": "object"
+          },
+          "pii_summary": {
+            "additionalProperties": true,
+            "title": "Pii Summary",
+            "type": "object"
+          },
+          "text_preview": {
+            "title": "Text Preview",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "pages",
+          "method",
+          "pii_summary",
+          "pii_found",
+          "extracted",
+          "text_preview",
+          "evidence_level",
+          "kind"
+        ],
+        "title": "ResumeUploadOut",
         "type": "object"
       },
       "RevokeIn": {
@@ -16654,6 +18296,361 @@
           "join_id"
         ],
         "title": "StubMoveIn",
+        "type": "object"
+      },
+      "StudyAdminReportOut": {
+        "additionalProperties": true,
+        "properties": {
+          "declined": {
+            "title": "Declined",
+            "type": "integer"
+          },
+          "generated_at": {
+            "title": "Generated At",
+            "type": "string"
+          },
+          "participants": {
+            "description": "Участники: роль, шаги сценария, ответы без привязки к личности",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Participants",
+            "type": "array"
+          },
+          "public": {
+            "$ref": "#/components/schemas/StudySummaryOut"
+          }
+        },
+        "required": [
+          "generated_at",
+          "declined",
+          "participants",
+          "public"
+        ],
+        "title": "StudyAdminReportOut",
+        "type": "object"
+      },
+      "StudyOkOut": {
+        "additionalProperties": true,
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "StudyOkOut",
+        "type": "object"
+      },
+      "StudyStateOut": {
+        "additionalProperties": true,
+        "description": "Участие в исследовании удобства: новый, участник (on), отказавшийся (declined) или исключённый.",
+        "properties": {
+          "answered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Answered"
+          },
+          "current": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Current"
+          },
+          "path_done": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Path Done"
+          },
+          "prompt": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Предложить анкету сейчас (один раз)",
+            "title": "Prompt"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Почему исключён (automation, …)",
+            "title": "Reason"
+          },
+          "role": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Role"
+          },
+          "state": {
+            "description": "new, on, declined или excluded",
+            "title": "State",
+            "type": "string"
+          },
+          "steps": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/StudyStepOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Шаги сценария проверки",
+            "title": "Steps"
+          },
+          "survey_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Survey Url"
+          }
+        },
+        "required": [
+          "state"
+        ],
+        "title": "StudyStateOut",
+        "type": "object"
+      },
+      "StudyStepOut": {
+        "additionalProperties": true,
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "done": {
+            "title": "Done",
+            "type": "boolean"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "link": {
+            "title": "Link",
+            "type": "string"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "boolean"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "title",
+          "link",
+          "done",
+          "skipped",
+          "at"
+        ],
+        "title": "StudyStepOut",
+        "type": "object"
+      },
+      "StudySubmitOut": {
+        "additionalProperties": true,
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "path_done": {
+            "title": "Path Done",
+            "type": "boolean"
+          },
+          "sus_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sus Score"
+          }
+        },
+        "required": [
+          "ok",
+          "sus_score",
+          "path_done"
+        ],
+        "title": "StudySubmitOut",
+        "type": "object"
+      },
+      "StudySummaryOut": {
+        "additionalProperties": true,
+        "properties": {
+          "min_n": {
+            "title": "Min N",
+            "type": "integer"
+          },
+          "shown": {
+            "description": "Достаточно ответов, чтобы показывать сводку публично",
+            "title": "Shown",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "shown",
+          "min_n"
+        ],
+        "title": "StudySummaryOut",
+        "type": "object"
+      },
+      "StudySurveyFormOut": {
+        "additionalProperties": true,
+        "properties": {
+          "answers": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Ранее данные ответы, если были",
+            "title": "Answers"
+          },
+          "belief": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Belief"
+          },
+          "exposed": {
+            "title": "Exposed",
+            "type": "boolean"
+          },
+          "grade_fit": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grade Fit"
+          },
+          "path_done": {
+            "title": "Path Done",
+            "type": "boolean"
+          },
+          "rel": {
+            "additionalProperties": true,
+            "description": "Оценка релевантности подборки: scale, threshold, selection",
+            "title": "Rel",
+            "type": "object"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "sus": {
+            "additionalProperties": true,
+            "description": "Вопросы SUS: items, scale",
+            "title": "Sus",
+            "type": "object"
+          },
+          "tags": {
+            "description": "Что мешало: перечень меток",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "text_max": {
+            "title": "Text Max",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "role",
+          "path_done",
+          "exposed",
+          "sus",
+          "rel",
+          "belief",
+          "grade_fit",
+          "tags",
+          "text_max",
+          "answers"
+        ],
+        "title": "StudySurveyFormOut",
         "type": "object"
       },
       "SubsFastForwardOut": {
@@ -18206,6 +20203,26 @@
         "title": "TwoFactorChallengeOut",
         "type": "object"
       },
+      "TwoFactorCheckOut": {
+        "additionalProperties": true,
+        "properties": {
+          "method": {
+            "description": "totp или recovery — чем подтверждено",
+            "title": "Method",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "method"
+        ],
+        "title": "TwoFactorCheckOut",
+        "type": "object"
+      },
       "TwoFactorCodeIn": {
         "properties": {
           "code": {
@@ -18253,6 +20270,25 @@
           "recovery_codes"
         ],
         "title": "TwoFactorConfirmOut",
+        "type": "object"
+      },
+      "TwoFactorDisabledOut": {
+        "additionalProperties": true,
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "enabled"
+        ],
+        "title": "TwoFactorDisabledOut",
         "type": "object"
       },
       "TwoFactorLoginOut": {
@@ -18341,6 +20377,41 @@
           "method"
         ],
         "title": "TwoFactorLoginOut",
+        "type": "object"
+      },
+      "TwoFactorResetOut": {
+        "additionalProperties": true,
+        "properties": {
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "required": {
+            "description": "Следующий вход потребует подключить приложение заново",
+            "title": "Required",
+            "type": "boolean"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "sessions_revoked": {
+            "title": "Sessions Revoked",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "email",
+          "role",
+          "required",
+          "sessions_revoked"
+        ],
+        "title": "TwoFactorResetOut",
         "type": "object"
       },
       "TwoFactorSetupIn": {
@@ -18530,6 +20601,34 @@
           "demo_note"
         ],
         "title": "TwoFactorStatusOut",
+        "type": "object"
+      },
+      "TwoFactorUsersOut": {
+        "additionalProperties": true,
+        "properties": {
+          "items": {
+            "description": "Пользователи с подключённым или начатым вторым фактором",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "required_roles": {
+            "description": "Роли, для которых второй фактор обязателен",
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Roles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items",
+          "required_roles"
+        ],
+        "title": "TwoFactorUsersOut",
         "type": "object"
       },
       "TwoFactorVerifyIn": {
@@ -20853,7 +22952,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorResetOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -20933,7 +23034,9 @@
                     "fsp_analyst"
                   ]
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorUsersOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -21543,9 +23646,7 @@
                   "source": "bank_session"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Feedback Api Assessment Feedback Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssessmentFeedbackOut"
                 }
               }
             },
@@ -21648,9 +23749,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Grade Hint Api Assessment Grade Hint Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GradeHintOut"
                 }
               }
             },
@@ -21910,9 +24009,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Accept Lower Api Assessment Sessions  Session Id  Accept Lower Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AssessmentResultOut"
                 }
               }
             },
@@ -24181,7 +26278,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorCheckOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -24359,7 +26458,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorDisabledOut"
+                }
               }
             },
             "description": "Успешный ответ."
@@ -27609,9 +29710,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Restore Api Candidate Invitations  Inv Id  Contacts Restore Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateInvitationOut"
                 }
               }
             },
@@ -27870,9 +29969,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Counter Api Candidate Invitations  Inv Id  Counter Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateInvitationOut"
                 }
               }
             },
@@ -27975,9 +30072,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Decline Api Candidate Invitations  Inv Id  Decline Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CandidateInvitationOut"
                 }
               }
             },
@@ -29435,9 +31530,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Decline Probe Api Candidate Probes  Probe Id  Decline Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProbeOut"
                 }
               }
             },
@@ -33816,9 +35909,7 @@
                   "n_attempts": 2
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Employer Attempts Api Employer Candidates  Ref  Attempts Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EmployerAttemptsOut"
                 }
               }
             },
@@ -35554,9 +37645,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Counter Accept Api Employer Invitations  Inv Id  Counter Accept Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EmployerInvitationOut"
                 }
               }
             },
@@ -35653,9 +37742,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Counter Decline Api Employer Invitations  Inv Id  Counter Decline Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EmployerInvitationOut"
                 }
               }
             },
@@ -36763,9 +38850,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Withdraw Api Employer Invitations  Inv Id  Withdraw Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EmployerInvitationOut"
                 }
               }
             },
@@ -37575,9 +39660,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Parse Job Api Employer Needs Parse  Job Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ParseJobOut"
                 }
               }
             },
@@ -46680,9 +48763,7 @@
                   "version": "2026-10-06"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Consent Text Api Legal Consents  Kind  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/LegalConsentTextOut"
                 }
               }
             },
@@ -47304,9 +49385,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Revoke Consent Api Me Consents  Kind  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ConsentChangedOut"
                 }
               }
             },
@@ -47383,9 +49462,7 @@
                   "version": "2026-10-06"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Grant Consent Api Me Consents  Kind  Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ConsentChangedOut"
                 }
               }
             },
@@ -47537,9 +49614,7 @@
                   "revoked": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Revoke All Contacts Api Me Data Contacts Revoke Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ContactsRevokeOut"
                 }
               }
             },
@@ -47598,9 +49673,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Delete Account Api Me Data Delete Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/DeleteResultOut"
                 }
               }
             },
@@ -47730,9 +49803,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Delete Preview Api Me Data Delete Preview Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/DeletePreviewOut"
                 }
               }
             },
@@ -47997,7 +50068,9 @@
                     ]
                   }
                 },
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/MyDataExportOut"
+                }
               }
             },
             "description": "Успешный ответ. Пример — реальный ответ на демо-данных (сокращён)."
@@ -48092,9 +50165,7 @@
                   "synced_at": "2026-10-09T14:59:12.623822"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response My Fsp Api Me Fsp Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspStateOut"
                 }
               }
             },
@@ -48145,9 +50216,7 @@
                   "status": "pending_registry"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Link Fsp Api Me Fsp Link Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspLinkOut"
                 }
               }
             },
@@ -48235,9 +50304,7 @@
                   "synced_at": "2026-10-09T14:59:48.109285+00:00"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Sync Fsp Registry Api Me Fsp Registry Sync Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FspStateOut"
                 }
               }
             },
@@ -48346,9 +50413,7 @@
                   "visible_to_employers": true
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response My Interest Api Me Interest Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/MyInterestOut"
                 }
               }
             },
@@ -48403,9 +50468,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Set Jury Mode Api Me Jury Mode Put",
-                  "type": "object"
+                  "$ref": "#/components/schemas/JuryModeOut"
                 }
               }
             },
@@ -49089,9 +51152,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Set Privacy Api Me Privacy Put",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PrivacyOut"
                 }
               }
             },
@@ -49278,9 +51339,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Upload Resume Api Me Resume Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ResumeUploadOut"
                 }
               }
             },
@@ -49396,9 +51455,7 @@
                   "applied": true
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Apply Resume Api Me Resume  Resume Id  Apply Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ResumeAppliedOut"
                 }
               }
             },
@@ -49732,9 +51789,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Post Message Api Messages  Kind   Tid  Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/MessagePostedOut"
                 }
               }
             },
@@ -50120,9 +52175,7 @@
                   "read": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Read Api Notifications Read Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/NotificationsReadOut"
                 }
               }
             },
@@ -50393,9 +52446,7 @@
                   "stopped_sessions": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Revoke Consent Api Proctor Consent Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProctorConsentRevokedOut"
                 }
               }
             },
@@ -50454,9 +52505,7 @@
                   "version": "2026-10-08"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Consent Api Proctor Consent Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProctorConsentOut"
                 }
               }
             },
@@ -50492,9 +52541,7 @@
                   "version": "2026-10-08"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Grant Consent Api Proctor Consent Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ConsentChangedOut"
                 }
               }
             },
@@ -50576,10 +52623,8 @@
                 ],
                 "schema": {
                   "items": {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/ProctorMySessionOut"
                   },
-                  "title": "Response My Sessions Api Proctor Me Sessions Get",
                   "type": "array"
                 }
               }
@@ -50676,9 +52721,7 @@
                   ]
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Session Api Proctor Sessions  Session Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProctorSessionOut"
                 }
               }
             },
@@ -50775,9 +52818,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Events Api Proctor Sessions  Session Id  Events Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProctorEventsOut"
                 }
               }
             },
@@ -50874,9 +52915,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Start Api Proctor Sessions  Session Id  Start Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProctorSessionOut"
                 }
               }
             },
@@ -50979,9 +53018,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stop Api Proctor Sessions  Session Id  Stop Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProctorSessionOut"
                 }
               }
             },
@@ -51097,9 +53134,7 @@
                   "without_record": 0
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stats Api Proctor Stats Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ProctorStatsOut"
                 }
               }
             },
@@ -51568,9 +53603,7 @@
                   }
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Admin Report Api Study Admin Report Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/StudyAdminReportOut"
                 }
               }
             },
@@ -51616,9 +53649,7 @@
                   "state": "declined"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Decline Api Study Decline Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/StudyStateOut"
                 }
               }
             },
@@ -51674,9 +53705,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Enroll Api Study Enroll Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/StudyStateOut"
                 }
               }
             },
@@ -51795,9 +53824,7 @@
                   "state": "excluded"
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Me Api Study Me Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/StudyStateOut"
                 }
               }
             },
@@ -51831,9 +53858,7 @@
                   "shown": false
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Summary Api Study Summary Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/StudySummaryOut"
                 }
               }
             },
@@ -51889,9 +53914,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Survey Api Study Survey Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/StudySurveyFormOut"
                 }
               }
             },
@@ -51955,9 +53978,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Submit Api Study Survey Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/StudySubmitOut"
                 }
               }
             },
@@ -52038,9 +54059,7 @@
                   "ok": true
                 },
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Survey Shown Api Study Survey Shown Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/StudyOkOut"
                 }
               }
             },
@@ -52774,9 +54793,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Apply Api Vacancies  Vid  Apply Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ApplicationOut"
                 }
               }
             },
