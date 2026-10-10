@@ -507,7 +507,7 @@ export function Selection() {
       </div>
       {/* И27, Н2: частичное соответствие и требования вне справочника видны и в каждой версии подборки */}
       {/* Я10 (п. 2): у заголовка — проверено тестом / НЕ проверено и вопрос-зонд на непроверенный навык */}
-      <NeedScope key={s?.version ?? 0} scope={s?.scope} cov={s && "scope" in s ? null : cov} recipients={askRefs} picked={picked.length > 0} onAsk={setAsk} />
+      <NeedScope key={s?.version ?? 0} scope={s?.scope} cov={s && "scope" in s ? null : cov} recipients={askRefs} picked={picked.length > 0} onAsk={setAsk} needId={id} />
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <Link to="/employer/needs" className="font-semibold text-brand hover:underline sm:hidden">Все потребности</Link>
         <span className="text-brand-ink/65">Версии подборки:</span>

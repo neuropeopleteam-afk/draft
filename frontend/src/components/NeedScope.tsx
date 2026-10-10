@@ -21,8 +21,8 @@ export function scopeOptions(scope?: NeedScopeData | null): AskOption[] {
 
 /** cov — прежний ответ (до Я10, без scope): показываем как раньше одной строкой.
  *  Компактно (первый экран на 390): навыки «НЕ проверено» — кнопки вопроса по навыку; причины и задача роли — с 640 px. */
-export function NeedScope({ scope, cov, recipients, picked, onAsk }: {
-  scope?: NeedScopeData | null; cov?: { message: string; not_tested: string } | null; recipients: string[]; picked?: boolean;
+export function NeedScope({ scope, cov, recipients, picked, onAsk, needId }: {
+  scope?: NeedScopeData | null; cov?: { message: string; not_tested: string } | null; recipients: string[]; picked?: boolean; needId?: string;
   onAsk: (optionId: string) => void;
 }) {
   if (!scope) return cov ? <p className="rounded-lg bg-brand-blush/25 px-3 py-2 text-sm" data-testid="sel-coverage"><b className="font-semibold">{cov.message}</b> Не проверяется: {cov.not_tested}.</p> : null;
@@ -58,7 +58,7 @@ export function NeedScope({ scope, cov, recipients, picked, onAsk }: {
             title={`Кому: ${recipients.join(", ")} — отмеченные «Сравнить», иначе первые три. Вопрос (задача роли или навык) и текст можно поправить перед отправкой; оценённый ответ становится подтверждённым фактом (T1) в карточке.`}
             onClick={() => onAsk(options[0].id)}>Задать вопрос зондом ({recipients.length})</button>
           <span className="text-xs text-brand-ink/65">{picked ? "отмеченным" : "первым трём"} · {pr && pr.total > 0
-            ? <Link className="font-semibold text-brand hover:underline" to="/employer/probes">зонды по этой потребности: {pr.total}{pr.answered ? `, с ответом ${pr.answered}` : ""}{pr.reviewed ? `, оценено ${pr.reviewed}` : ""}</Link>
+            ? <Link className="font-semibold text-brand hover:underline" to={needId ? `/employer/probes?need=${needId}` : "/employer/probes"}>зонды по этой потребности: {pr.total}{pr.answered ? `, с ответом ${pr.answered}` : ""}{pr.reviewed ? `, оценено ${pr.reviewed}` : ""}</Link>
             : "зондов пока нет"}</span>
         </div>
       )}
