@@ -84,7 +84,10 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 grades-ext-sim: ## Путь-повтор с 6 уровнями (Lead, Principal; модельные семейства) → data/grades_ext_sim.json, docs/validation/GRADES_EXT.md (≈ 15 мин на 8 ядрах)
 	cd backend && GRADES_EXT_ENABLED=1 python -m app.modules.validation.grades_ext_sim $(SIM_ARGS)
 
-.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest grades-ext-sim
+grades-ext-need: ## Что нужно для точности Lead/Principal ≥ 64 %: банк, блок Lead/Principal, частичный балл → data/grades_ext_need.json, docs/validation/GRADES_EXT_NEED.md
+	cd backend && GRADES_EXT_ENABLED=1 python -m app.modules.validation.grades_ext_need $(SIM_ARGS)
+
+.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest grades-ext-sim grades-ext-need
 
 # подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
 GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)
