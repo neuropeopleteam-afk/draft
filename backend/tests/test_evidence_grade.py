@@ -1,4 +1,4 @@
-"""Я13: доказательная оценка развёрнутых ответов (assessment/evidence.py, флаг GRADING_EVIDENCE).
+"""доказательная оценка развёрнутых ответов (assessment/evidence.py, флаг GRADING_EVIDENCE).
 
 Сверка цитат кодом (нормализация, перефраз и выдумка не проходят), правило «пункт без подтверждённой цитаты не
 получает полный балл», скептик для высоких и спорных оценок, итог по правилам кода (assemble), флаг выкл/вкл,
@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 
 from app.modules.assessment import evidence as EV, grader as G, second_opinion
@@ -101,7 +102,7 @@ def test_parse_reply_v3_and_v2_unchanged():
     assert p2["evidence"] is None and p2["criteria"]["fix"] == 0.0
 
 
-# ------------------------------------------------------------------ пробы судьи Я5 (10.10): отрицание и цитата без доказательства
+# ------------------------------------------------------------------ пробы независимой проверки (10.10): отрицание и цитата без доказательства
 Y5_RUBRIC = {"criteria": [{"id": "x", "weight": 1, "description": "Решение о данных"}]}
 Y5_ANSWER = "данные следует удалять"
 
@@ -116,7 +117,7 @@ def test_y5_negation_probes_flag_off_v2():
     p = G.parse_reply({"criteria": {"x": {"score": 1, "quote": "данные не следует удалять"}}}, Y5_RUBRIC, Y5_ANSWER)
     assert p["ok"] and p["score"] == 0.0 and p["unsupported"] == ["x"]
     # число без цитаты при выключенном флаге — прежнее правило: балл не снижается, но это причина сомнения (вторая
-    # оценка); «без подтверждённой цитаты — не полный балл» — под GRADING_EVIDENCE (решение команды 10.10, до замера)
+    # оценка); «без подтверждённой цитаты — не полный балл» — под GRADING_EVIDENCE (решение 10.10, до замера)
     p = G.parse_reply({"criteria": {"x": 1}}, Y5_RUBRIC, Y5_ANSWER)
     assert p["ok"] and p["score"] == 1.0 and p["no_quotes"] and "no_quotes" in G.doubts(p, Y5_ANSWER, 5)
     a = "Нет: в READ COMMITTED каждый SELECT видит данные. Не следует удалять данные."
@@ -442,6 +443,11 @@ def test_evidence_api_candidate_employer_validation(client):
     # /validation: сводка замера (открыто)
     v = client.get("/api/validation/evidence").json()
     assert v["enabled"] is False and len(v["rows"]) >= 3 and v["default_path_fix"]["changed"] == 0
+    # полный прогон 406 (если посчитан): решение — по правилу «не хуже», без номеров исполнителей в открытом тексте
+    if v.get("full"):
+        assert v["full"]["n"] == 406 and isinstance(v["full"]["decision"]["non_inferior"], bool)
+        assert v["full"]["decision"]["text"] in v["decision"]
+        assert not re.search("\u042f\\d", json.dumps(v, ensure_ascii=False))  # «Я» и цифра — номер исполнителя
     assert "модели, не люди" in v["world"]
 
 
