@@ -9,6 +9,7 @@ import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText
 import { useTags } from "./Needs";
 import { PassportEmployerBadge } from "../../passport/Share";
 import { EmployerAttempts } from "../../components/AttemptsCompare";
+import { EmployerEvidence } from "../../components/OpenEvidence";  // цитаты из ответа
 
 const PAGE = 20;
 
@@ -150,6 +151,7 @@ export function CandidateDetail() {
       {msg && <Alert kind="ok">{msg}</Alert>}
       <PassportEmployerBadge refId={c.ref} />
       <EmployerAttempts refId={c.ref} direction={c.direction ?? direction} />
+      <EmployerEvidence refId={c.ref} direction={c.direction ?? direction} />
       {(c.my_invitations.length > 0 || c.my_probes.length > 0) && (
         <section className="card text-sm">
           <h2 className="font-bold text-brand-night">Ваши взаимодействия</h2>
