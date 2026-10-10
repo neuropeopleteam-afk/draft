@@ -54,7 +54,20 @@ N_BOOT = 1000
 
 PARAMS = ("decision", "confirm_level", "ext_items", "ext_minutes", "min_items", "max_items", "se_target",
           "classify_z", "stop_rule", "award_above", "misspec", "levels", "max_minutes", "exclude_low", "partial",
-          "time_weight")
+          "time_weight", "weak_a", "weak_pool")
+# Семейства, слабые по калибровке панелью LLM (модель, не люди): отрицательная дискриминация шага, p = 0/1, a < 0,6,
+# a_eff < 0,55, p ≈ угадывание, неизоморфные варианты (банк, ветка feat/bank-core-plus 5493728,
+# reports/weak_families.json, поле exclude). Проверка: мир, где их истинная a = weak_a (по умолчанию в пуле — prior
+# a ≈ 1,0–1,2), и политика пула weak_pool: keep — как сейчас, exclude — убрать из пула, down — a = WEAK_DOWN_A в пуле.
+WEAK_FAMILIES = frozenset("""
+backend.db.overbooking_ob3 backend.go.defer_recover_output backend.go.map_race_fix backend.go.slice_append_output
+backend.kafka.offset_commit_mcq backend.py.idempotency_coarse_ob3 common.conc.async_lost_update_ob3
+common.db.index_plan_mcq common.db.tx_isolation_mcq common.git.move_commits_mcq common.perf.fanout_tail_mcq
+common.time.tz_report_ob3 data_ml.ab.sample_size_mcq data_ml.sql.latest_record_fix data_ml.stats.mean_median_output
+data_ml.stats.ztest_fix frontend.a11y.focus_trap_ob3 frontend.js.microtask_order frontend.react.state_batch_mcq
+frontend.ts.nullish_mcq qa.api.cursor_pagination_ob3 qa.pytest.shared_state_ob3 security.access.owner_check_bug
+security.auth.token_validation_ob3 security.crypto.aead_mcq security.supply.dependency_patch_fix""".split())
+WEAK_DOWN_A = 0.4
 OPEN_FORMATS = ("open_answer", "open_book_3step")
 PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items": "дотестирование, заданий",
             "ext_minutes": "дотестирование, мин", "min_items": "минимум заданий", "max_items": "максимум заданий",
@@ -62,7 +75,8 @@ PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items":
             "award_above": "уровень выше в сессии (P)", "decision": "решение",
             "misspec": "мир: ошибка параметров σ", "levels": "ступеней", "max_minutes": "лимит основной части, мин",
             "exclude_low": "без семейств с низкой информацией (доля)", "partial": "частичный балл: критериев",
-            "time_weight": "выбор: информация на минуту (вес)"}
+            "time_weight": "выбор: информация на минуту (вес)",
+            "weak_a": "мир: у 26 слабых по панели семейств истинная a", "weak_pool": "26 слабых семейств в пуле"}
 DECISION_RU = {"claimed": "заявленный грейд, P ≥ порога уверенности", "point": "по лучшей оценке θ̂ (точечный грейд)"}
 
 
@@ -72,7 +86,8 @@ def baseline_point() -> dict:
     return {"decision": "claimed", "misspec": 0.5, "confirm_level": CONFIRM_LEVEL, "ext_items": c.ext_items, "ext_minutes": c.ext_minutes,
             "min_items": c.min_items, "max_items": c.max_items, "se_target": c.se_target,
             "classify_z": c.classify_z, "stop_rule": c.stop_rule, "award_above": None, "levels": 5,
-            "max_minutes": c.max_minutes, "exclude_low": 0.0, "partial": 1, "time_weight": c.time_weight}
+            "max_minutes": c.max_minutes, "exclude_low": 0.0, "partial": 1, "time_weight": c.time_weight,
+            "weak_a": 0.0, "weak_pool": "keep"}
 
 
 def _p(**kw) -> dict:
@@ -151,7 +166,16 @@ def stage_refine() -> list[dict]:
             _p(confirm_level=0.6, levels=4)]
 
 
-STAGES = {"screen": stage_screen, "time": stage_time, "refine": stage_refine, "grid": stage_grid, "worlds": stage_worlds, "competitor": stage_competitor,
+def stage_weak() -> list[dict]:
+    """26 слабых по панели семейств: мир «на деле слабые» (a = 0,4) и мир «как в prior»; политика пула."""
+    pts = []
+    for cl in (0.6, 0.8):
+        pts += [_p(confirm_level=cl, weak_a=0.4, weak_pool=wp) for wp in ("keep", "exclude", "down")]
+        pts += [_p(confirm_level=cl, weak_pool=wp) for wp in ("exclude", "down")]
+    return pts
+
+
+STAGES = {"screen": stage_screen, "time": stage_time, "refine": stage_refine, "weak": stage_weak, "grid": stage_grid, "worlds": stage_worlds, "competitor": stage_competitor,
           "pool": stage_pool}
 
 
@@ -229,8 +253,15 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
     cands = pr.make_candidates(n, d, rng0)
     if four:
         cands = [replace(c, claimed="junior") if c.claimed == "intern" else c for c in cands]
+    if float(pt["weak_a"]) > 0:  # мир: слабые по панели семейства на деле слабые
+        truth = {f: (replace(t, a=np.full_like(t.a, float(pt["weak_a"]))) if f in WEAK_FAMILIES else t)
+                 for f, t in truth.items()}
     low = low_info_families(pool_all, float(pt["exclude_low"]))
     pool = [it for it in pool_all if it.family_id not in low]
+    if pt["weak_pool"] == "exclude":
+        pool = [it for it in pool if it.family_id not in WEAK_FAMILIES]
+    elif pt["weak_pool"] == "down":
+        pool = [replace(it, a=np.full_like(it.a, WEAK_DOWN_A)) if it.family_id in WEAK_FAMILIES else it for it in pool]
     counter = ExposureControl(0.3, k=dict(k))
     det = CanaryDetector()
     rng = pr._rng(i, 1)
@@ -415,12 +446,12 @@ def run(stages: list[str], n: int = 500, workers: int | None = None, write: bool
         points.append({"key": k, "point": p, "n_per_direction": n, "metrics": metrics(by[k], seed=pr.SEED)})
     base_key = key(baseline_point())
     front: list[str] = []
-    worlds = sorted({p["point"]["misspec"] for p in points}, reverse=True)
+    worlds = sorted({(p["point"]["misspec"], p["point"]["weak_a"]) for p in points}, reverse=True)
     for w in worlds:
-        front += pareto([p for p in points if p["point"]["misspec"] == w])
+        front += pareto([p for p in points if (p["point"]["misspec"], p["point"]["weak_a"]) == w])
     for p in points:
         p["pareto"] = p["key"] in front
-    main_world = [p for p in points if p["point"]["misspec"] == 0.5]
+    main_world = [p for p in points if p["point"]["misspec"] == 0.5 and not p["point"]["weak_a"]]
     choice = choose(main_world, base_key)
     strict = [p for p in main_world if p["metrics"]["feasible_strict"] or p["key"] == base_key]
     choice_strict = choose(strict, base_key)
@@ -459,9 +490,11 @@ def compact(rep: dict) -> dict:
                 **{k: p["metrics"].get(k) for k in keep}}
     base = pts.get(rep["baseline_key"])
     ch = rep.get("choice") or {}
-    main = [p for p in rep["points"] if p["point"]["misspec"] == 0.5 and p["point"].get("levels", 5) == 5]
+    main = [p for p in rep["points"] if p["point"]["misspec"] == 0.5 and p["point"].get("levels", 5) == 5
+            and not p["point"].get("weak_a")]
     front = sorted([p for p in main if p.get("pareto")], key=lambda p: -p["metrics"]["exact"])
-    comp = [p for p in rep["points"] if p["point"].get("levels", 5) == 4 or p["point"]["misspec"] != 0.5]
+    comp = [p for p in rep["points"] if p["point"].get("levels", 5) == 4 or p["point"]["misspec"] != 0.5
+            or p["point"].get("weak_a")]
     keyrows = [p for p in main if _label(p["point"]) in KEY_ROWS]
     return {"signature": rep["signature"], "constraints": rep["constraints"], "caveat": rep.get("caveat"),
             "baseline": row(base) if base else None,
