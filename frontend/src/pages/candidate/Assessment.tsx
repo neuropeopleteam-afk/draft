@@ -342,8 +342,14 @@ export function IntegrityNotice() {
   );
 }
 
-/** Полноэкранный режим теста: запрос — только из обработчика нажатия (требование браузеров). */
-const fsSupported = () => typeof document !== "undefined" && !!document.fullscreenEnabled && !!document.documentElement.requestFullscreen;
+/** Полноэкранный режим теста: запрос — только из обработчика нажатия (требование браузеров).
+ * Я11 (С3-5): на телефонах и планшетах (основной ввод — касание: pointer: coarse и hover: none) полноэкранный режим
+ * страницы недоступен (iPhone) или слетает от жестов — его не просим, баннер «Вернуться…» не показываем; в сигналах
+ * задания fs_na = 1, и сервер не пишет «без полноэкранного режима, хотя браузер его поддерживает». */
+export const touchPrimary = () => typeof window !== "undefined" && !!window.matchMedia
+  && window.matchMedia("(pointer: coarse)").matches && window.matchMedia("(hover: none)").matches;
+const fsSupported = () => typeof document !== "undefined" && !!document.fullscreenEnabled && !!document.documentElement.requestFullscreen
+  && !touchPrimary();
 function enterFullscreen() {
   if (fsSupported() && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => undefined);
 }
@@ -438,7 +444,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
           {/* Ф6 (В7, Н8) + Ф4: на первом экране — коротко; правило остановки и погрешность — под «Подробнее» */}
           <p className="mt-2 text-brand-ink/75">
             {mode === "express"
-              ? `Без дотестирования${grade === "senior" ? ", за Senior длиннее" : ""}; результат помечен «экспресс», интервал оценки шире, чем у полного. Только в демо-режиме жюри.`
+              ? <><span className="chip mr-1.5" data-testid="jury-brief">Краткий режим жюри</span>{`Не полный тест (до 80 минут): без дотестирования${grade === "senior" ? ", за Senior длиннее" : ""}; результат помечен «экспресс», интервал оценки шире, чем у полного. Только в демо-режиме жюри.`}</>
               : <FullLength len={len.data} brief />}
           </p>
           <details className="mt-2 text-xs text-brand-ink/70">
@@ -609,7 +615,8 @@ export function TestRun() {
     const seg = c.fsSince ? now - c.fsSince : 0;
     const cv = t.n >= 10 && t.mean > 0 ? Math.round((Math.sqrt(t.m2 / (t.n - 1)) / t.mean) * 100) : 0;
     const base = { focus_lost: c.focus_lost, hidden_ms: c.hidden_ms + extra, paste: c.paste, paste_chars: c.paste_chars, copy: c.copy,
-      fs_exit: c.fs_exit, fs_ms: c.fs_ms + (c.fsOn ? seg : 0), fs_out_ms: c.fs_out_ms + (c.fsOn ? 0 : seg), fs_na: fsOk ? 0 : 1 };
+      // Я11 (С3-5): без полноэкранного режима (телефон) время «вне его» не копится — это не выход из режима
+      fs_exit: c.fs_exit, fs_ms: c.fs_ms + (c.fsOn ? seg : 0), fs_out_ms: fsOk ? c.fs_out_ms + (c.fsOn ? 0 : seg) : 0, fs_na: fsOk ? 0 : 1 };
     if (s?.item?.answer_kind !== "text" || s?.item?.format === "predict_output") return base;
     return { ...base, typed: t.typed, inserted: t.inserted, dropped: t.dropped, deleted: t.deleted, keys: t.keys, ik_cv: cv, active_ms: t.active_ms };
   }
@@ -811,6 +818,14 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       {(r.second_opinions?.pending > 0 || r.second_opinions?.revised > 0) && <p className="mt-2 text-xs text-brand-ink/65" data-testid="second-opinions">{r.second_opinions.pending > 0 ? `Вторая оценка спорных ответов: ${r.second_opinions.pending} — выполняется в фоне, итог теста её не ждёт; если оценки разойдутся, ответ проверит эксперт. ` : ""}{r.second_opinions.revised > 0 ? `Пересмотрено второй моделью: ${r.second_opinions.revised}${r.second_opinions.disputed ? `, передано эксперту: ${r.second_opinions.disputed}` : ""}.` : ""}</p>}
       {/* Ф6 (В2): итог камеры — один раз, в блоке камеры ниже (в пометке достоверности не повторяется) */}
       {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={meta?.proctor_camera === false ? r.integrity : { ...r.integrity, camera: null }} /></div>}
+      {/* Я11 (С3-11): демо-режим жюри — что именно снизило достоверность (причины работодателя; вне демо-режима их нет, Р27) */}
+      {r.integrity_jury?.reasons?.length > 0 && (
+        <div className="mt-2 rounded-lg bg-[#F3F2FB] px-2.5 py-1.5 text-xs text-brand-night" data-testid="result-integrity-jury">
+          <p className="font-semibold">Что именно отмечено</p>
+          <ul className="mt-0.5 list-disc space-y-0.5 pl-4">{r.integrity_jury.reasons.map((t: string, i: number) => <li key={i}>{t}</li>)}</ul>
+          <p className="mt-0.5 text-brand-ink/70">{r.integrity_jury.note}</p>
+        </div>
+      )}
       <CameraReport sessionId={sessionId} />
       {r.accept_lower_available && r.accept_lower_grade && (
         <div className="card mt-4 border-brand/30 bg-brand-blush/20 text-sm" data-testid="accept-lower">

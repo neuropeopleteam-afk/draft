@@ -30,7 +30,7 @@ test("/validation: метрики теста и подбора на месте",
     bank: "Банк заданий и калибровка", test: "Тест: точность оценки и решения по грейду (симуляция)",
     retest: "Стабильность грейда при повторе", competitors: "В условиях конкурентов", exposure: "Частота показа заданий",
     leak: "Устойчивость к утечке части банка", matching: "Подбор на демо-данных: разметка правилами", bench: "Бенчмарк подбора со скрытой истиной",
-    experts: "Экспертная разметка: подбор, модель-оценщик, пороги грейдов", live: "Живые данные платформы",
+    live: "Живые данные платформы",
     "red-button": "Красная кнопка: атакуйте сами",
   };
   for (const [id, title] of Object.entries(SECTIONS)) {
@@ -40,6 +40,15 @@ test("/validation: метрики теста и подбора на месте",
   const report = await page.request.get("/api/validation/report");
   expect(report.ok()).toBeTruthy();
   const body = await report.json();
+  // Я8: кто размечал — в заголовке блока («Модельная панель (…) — не люди»), не только в подписи
+  const src = body.experts?.source;
+  const expertsTitle = `${src && src.kind !== "people" && src.heading ? src.heading : "Экспертная разметка"}: подбор, модель-оценщик, пороги грейдов`;
+  await expect(page.locator("section#experts").getByRole("heading", { level: 2, name: expertsTitle, exact: true })).toBeVisible();
+  if (body.experts?.model_panel) expect(expertsTitle).toContain("— не люди");
+  // Я8: у каждого из 5 чисел первого экрана — строка происхождения; снимки разных банков разделены
+  await expect(page.getByTestId("validation-headline").getByTestId("provenance-line").first()).toBeVisible();
+  await expect(page.getByTestId("validation-snapshots")).toBeVisible();
+  await expect(page.getByTestId("retest-vs-truth").first()).toContainText("повторяемость, а не точность");
   expect(Object.keys(body)).toEqual(expect.arrayContaining(["live", "attacks"]));
   await expect(page.locator("section#matching")).toContainText(/nDCG|BM25/);
 });

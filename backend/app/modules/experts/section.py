@@ -105,15 +105,17 @@ def _status(panel: list[dict], res: dict) -> dict:
         return {"state": "waiting", "title": "Ожидает разметки",
                 "text": f"{who} в панели: {len(panel)}. Разметка ещё не начата."}
     ready = (m.get("needs_complete", 0) >= MIN_READY["A_needs"] and len(res.get("coders") or []) >= MIN_READY["coders"])
+    of = {"model": " модельной панели", "mixed": " смешанной панели"}.get(kind, "")  # Я8: не «завершена» без «кем»
     return {"state": "ready" if ready else "partial",
-            "title": "Разметка завершена" if ready else "Разметка идёт",
+            "title": f"Разметка{of} завершена" if ready else f"Разметка{of} идёт",
             "text": (f"{began}: {len(started)} из {len(panel)}. Потребностей размечено полностью: "
                      f"{m.get('needs_complete', 0)} из {m.get('needs_total', len(P.A_NEEDS))}. "
                      + ("" if ready else "Цифры ниже предварительные — обновляются по мере разметки.")).strip()}
 
 
 MODEL_AGREEMENT = "согласие прогонов модели"
-MODEL_CAVEAT = "согласие завышено: прогоны одной модели коррелированы"
+MODEL_CAVEAT = ("согласие завышено: прогоны одной модели коррелированы; это не межэкспертная надёжность людей и не "
+                "точность разметки")
 MODEL_REFERENCE = "консенсус модельной панели"
 MODEL_ANGOFF = "справочно, модельная панель"
 

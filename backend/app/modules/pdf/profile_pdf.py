@@ -20,6 +20,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from app.core.config import get_settings
 from app.core.fmt import theta_se
+from app.core.origin import NO_FSP
 from app.modules.catalog.seed_data import GRADES
 
 NIGHT = colors.HexColor("#310F53")
@@ -165,7 +166,7 @@ def render_profile(card: dict, *, contacts: dict | None = None, audience: str = 
             el.append(Paragraph("Источник — демо-реестр хакатона (реальный реестр ФСП подключается через ФСП ID).",
                                 st["small"]))
     else:
-        el.append(Paragraph("Истории ФСП нет — нейтральное состояние, на рейтинг не влияет отрицательно.", st["p"]))
+        el.append(Paragraph(NO_FSP + ".", st["p"]))
 
     el.append(Paragraph("Самоописание · T0", st["h2"]))
     rows = []
