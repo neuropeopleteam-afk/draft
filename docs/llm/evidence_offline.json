@@ -1,7 +1,7 @@
 {
  "title": "Флаг GRADING_EVIDENCE выкл/вкл на одних и тех же ответах моделей (без скептика, без запросов)",
- "date": "2026-10-10 11:05",
- "code_sha": "888bf29",
+ "date": "2026-10-10 17:08",
+ "code_sha": "9db1cb5",
  "note": "Ответы моделей — прогоны Я2 09–10.10 (промпт v2, одна цитата на пункт); флаг вкл здесь — только код: строгая сверка цитат и шаг вниз без подтверждённой цитаты; скептик и промпт v3 — в evidence_bench.json. Эталон — модели, не люди.",
  "sample": {
   "n": 50,
@@ -2768,6 +2768,17 @@
     "n": 261
    }
   },
+  "paired": {
+   "on_minus_off": {
+    "d_mae": 0.003,
+    "ci90": [
+     0.001,
+     0.006
+    ],
+    "n": 261,
+    "answers_differ": 4
+   }
+  },
   "quotes": {
    "answers": 406,
    "quotes": 502,
@@ -2778,6 +2789,22 @@
    "capped_criteria": 4,
    "answers_changed": 4,
    "abs_change_sum": 0.775
+  },
+  "decision": {
+   "rule": {
+    "d_mae_ci90_hi": 0.02,
+    "kappa_w_drop": 0.02,
+    "expert_share_rise": 0.05
+   },
+   "checks": {
+    "mae": true,
+    "kappa_w": true,
+    "attacks": true,
+    "order": true,
+    "expert": true
+   },
+   "non_inferior": true,
+   "text": "не хуже по всем пунктам правила"
   }
  }
 }

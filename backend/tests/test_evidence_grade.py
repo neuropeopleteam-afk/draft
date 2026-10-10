@@ -443,3 +443,33 @@ def test_evidence_api_candidate_employer_validation(client):
     v = client.get("/api/validation/evidence").json()
     assert v["enabled"] is False and len(v["rows"]) >= 3 and v["default_path_fix"]["changed"] == 0
     assert "модели, не люди" in v["world"]
+
+
+def test_evidence_view_skeptic_raised_criterion_shows_its_quote():
+    """Пункт, который скептик повысил с цитатой, подтверждённой кодом, показывает эту цитату и не помечается «без
+    подтверждённой цитаты»; у пункта, сниженного правилом, — балл после правила (cap_score), а не итог скептика."""
+    from app.modules.assessment import evidence_view as V
+
+    p = G.parse_reply({"criteria": {"cause": {"score": 1, "quotes": ["выдуманная цитата про очередь сообщений"]},
+                                    "fix": {"score": 1, "quotes": ["выдумка про индекс"]}}, "level": "strong"},
+                      RUBRIC, ANSWER, version="v3")
+    assert p["evidence"]["capped"] == ["cause", "fix"]
+    sk = EV.assemble({"criteria": p["criteria"], "score": p["score"]},
+                     {"ok": True, "manipulation": False,
+                      "remarks": [{"criterion": "cause", "score": 1.0, "quote": "два запроса читают остаток одновременно"},
+                                  {"criterion": "fix", "score": 0.0, "problem": "исправления нет"}]},
+                     RUBRIC, ANSWER, disputed=True)
+    assert sk["verdict"] == "agree" and sk["criteria"] == {"cause": 1.0, "fix": 0.0}
+    state = {"items": [{"position": 3, "parts": 1, "skills": ["sql"], "rubric": RUBRIC, "x": [sk["score"]],
+                        "grading": [{"status": "scored", "method": "llm2", "score": sk["score"], "criteria": sk["criteria"],
+                                     "evidence": p["evidence"], "second": {"status": "done", "kind": "skeptic",
+                                                                           "verdict": "agree", "changes": sk["changes"]}}]}]}
+    (it,) = V.items_view(state)
+    c1, c2 = it["criteria"]
+    assert c1["score"] == 1.0 and not c1["capped"]
+    assert c1["quotes"] == [{"text": "два запроса читают остаток одновременно", "how": "skeptic"}]
+    assert c2["capped"] and c2["cap_score"] == 0.5 and c2["score"] == 0.0 and c2["quotes"] == []
+    # скептик не согласился (ответ у эксперта) — его цитата не показывается
+    state["items"][0]["grading"][0]["second"]["verdict"] = "disagree"
+    (it,) = V.items_view(state)
+    assert it["criteria"][0]["quotes"] == [] and it["criteria"][0]["capped"]
