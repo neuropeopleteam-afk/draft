@@ -53,14 +53,16 @@ MAX_MINUTES = 60.0
 N_BOOT = 1000
 
 PARAMS = ("decision", "confirm_level", "ext_items", "ext_minutes", "min_items", "max_items", "se_target",
-          "classify_z", "stop_rule", "award_above", "misspec", "levels", "max_minutes", "exclude_low", "partial")
+          "classify_z", "stop_rule", "award_above", "misspec", "levels", "max_minutes", "exclude_low", "partial",
+          "time_weight")
 OPEN_FORMATS = ("open_answer", "open_book_3step")
 PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items": "дотестирование, заданий",
             "ext_minutes": "дотестирование, мин", "min_items": "минимум заданий", "max_items": "максимум заданий",
             "se_target": "остановка по SE", "classify_z": "z классификации", "stop_rule": "правило остановки",
             "award_above": "уровень выше в сессии (P)", "decision": "решение",
             "misspec": "мир: ошибка параметров σ", "levels": "ступеней", "max_minutes": "лимит основной части, мин",
-            "exclude_low": "без семейств с низкой информацией (доля)", "partial": "частичный балл: критериев"}
+            "exclude_low": "без семейств с низкой информацией (доля)", "partial": "частичный балл: критериев",
+            "time_weight": "выбор: информация на минуту (вес)"}
 DECISION_RU = {"claimed": "заявленный грейд, P ≥ порога уверенности", "point": "по лучшей оценке θ̂ (точечный грейд)"}
 
 
@@ -70,7 +72,7 @@ def baseline_point() -> dict:
     return {"decision": "claimed", "misspec": 0.5, "confirm_level": CONFIRM_LEVEL, "ext_items": c.ext_items, "ext_minutes": c.ext_minutes,
             "min_items": c.min_items, "max_items": c.max_items, "se_target": c.se_target,
             "classify_z": c.classify_z, "stop_rule": c.stop_rule, "award_above": None, "levels": 5,
-            "max_minutes": c.max_minutes, "exclude_low": 0.0, "partial": 1}
+            "max_minutes": c.max_minutes, "exclude_low": 0.0, "partial": 1, "time_weight": c.time_weight}
 
 
 def _p(**kw) -> dict:
@@ -130,7 +132,17 @@ def stage_pool() -> list[dict]:
     return pts
 
 
-STAGES = {"screen": stage_screen, "grid": stage_grid, "worlds": stage_worlds, "competitor": stage_competitor,
+def stage_time() -> list[dict]:
+    """Больше заданий за те же 60 минут: выбор по информации на минуту ожидаемого времени и длиннее максимум."""
+    pts = []
+    for c in (0.6, 0.8):
+        for tw in (0.5, 1.0):
+            for mx in (16, 20, 24):
+                pts.append(_p(confirm_level=c, time_weight=tw, max_items=mx))
+    return pts
+
+
+STAGES = {"screen": stage_screen, "time": stage_time, "grid": stage_grid, "worlds": stage_worlds, "competitor": stage_competitor,
           "pool": stage_pool}
 
 
@@ -197,7 +209,7 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
     cfg = replace(base, ext_items=int(pt["ext_items"]), ext_minutes=int(pt["ext_minutes"]),
                   min_items=int(pt["min_items"]), max_items=int(pt["max_items"]), se_target=float(pt["se_target"]),
                   classify_z=float(pt["classify_z"]), stop_rule=str(pt["stop_rule"]),
-                  max_minutes=int(pt["max_minutes"]))
+                  max_minutes=int(pt["max_minutes"]), time_weight=float(pt["time_weight"]))
     four = int(pt["levels"]) == 4
     if four:  # 4 ступени, как у FSP Talent: без Стажёра (ниже Junior — без категории)
         cfg = replace(cfg, cuts=tuple(c for g, c in zip(GRADE_ORDER, cfg.cuts) if g != "intern"))
@@ -257,8 +269,9 @@ def run_parallel(tasks: list, workers: int, t0: float) -> list[dict]:
                 continue
             tf, of = Path(tmp) / f"t{w}.json", Path(tmp) / f"o{w}.json"
             tf.write_text(json.dumps(part, ensure_ascii=False), encoding="utf-8")
+            env = {**os.environ, "OMP_NUM_THREADS": "1", "OPENBLAS_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}
             procs.append((subprocess.Popen([sys.executable, "-m", "app.modules.validation.grade_sweep", "--worker",
-                                            str(tf), str(of)], cwd=str(pr.REPO / "backend")), of))
+                                            str(tf), str(of)], cwd=str(pr.REPO / "backend"), env=env), of))
         out = []
         for p, of in procs:
             if p.wait() != 0:
@@ -326,7 +339,9 @@ def pareto(points: list[dict]) -> list[str]:
 
 def choose(points: list[dict], base_key: str) -> dict:
     """Лучшая допустимая точка по точности; при равенстве (±0,5 п. п.) — меньше завышение, затем меньше минут."""
-    base = next(p for p in points if p["key"] == base_key)
+    base = next((p for p in points if p["key"] == base_key), None)
+    if base is None:
+        return {"key": None, "better_on_all": False, "reason": "текущей конфигурации нет среди точек"}
     feas = [p for p in points if p["metrics"]["feasible"]]
     if not feas:
         return {"key": base_key, "better_on_all": False, "reason": "нет допустимых точек"}
@@ -358,8 +373,13 @@ def run(stages: list[str], n: int = 500, workers: int | None = None, write: bool
             uniq.append(p)
     old = {}
     if merge and OUT.exists():
-        old = {p["key"]: p for p in json.loads(OUT.read_text(encoding="utf-8")).get("points", [])
-               if p.get("n_per_direction") == n}
+        old = {}
+        for p in json.loads(OUT.read_text(encoding="utf-8")).get("points", []):
+            if p.get("n_per_direction") != n:
+                continue
+            p["point"] = {**baseline_point(), **p["point"]}  # точки прежних прогонов — без новых параметров
+            p["key"] = key(p["point"])
+            old[p["key"]] = p
     todo = [p for p in uniq if key(p) not in old]
     tasks = [(p, i, d, n) for p in todo for i, d in enumerate(sim.DIRECTIONS)]
     workers = workers or min(8, len(os.sched_getaffinity(0)))
@@ -367,6 +387,8 @@ def run(stages: list[str], n: int = 500, workers: int | None = None, write: bool
     by: dict[str, list[dict]] = {}
     for r in run_parallel(tasks, workers, t0):
         by.setdefault(r["key"], []).append(r)
+    raw = OUT.with_name("grade_sweep_raw_last.json")  # сырьё последнего прогона — до анализа (не потерять при ошибке)
+    raw.write_text(json.dumps({k: v for k, v in by.items()}, ensure_ascii=False), encoding="utf-8")
     points = list(old.values())
     for p in todo:
         k = key(p)

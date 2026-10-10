@@ -200,6 +200,10 @@ class Settings(BaseSettings):
     assessment_subpool_quarantine: str = ""
     # Контроль частоты показа: sympson_hetter (K_f из assessment/exposure_k.json) | none
     assessment_exposure: str = "sympson_hetter"
+    # Я22: позиция внутри уровня (нижняя / середина / верхняя часть) в результате кандидата и в карточке работодателя —
+    # только когда погрешность позволяет, иначе «точнее — после дотестирования»; без чисел θ (grades.level_position).
+    # false — как раньше (поля нет)
+    grade_position_enabled: bool = False
     # Камера во время теста по согласию (app/modules/proctor): false — экран камеры не показывается вообще,
     # тест идёт без камеры. Камера и так необязательна: без неё тест доступен полностью, грейд не меняется
     proctor_camera_enabled: bool = True
