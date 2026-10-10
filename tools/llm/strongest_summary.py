@@ -308,6 +308,7 @@ def build(wdir: Path) -> dict:
              json.loads((ROOT / "docs/llm/extra_tags_judgement.json").read_text())["vacancies"]}
     vac = B._vacancies()
     d["full_run"] = full_view(wdir, ref50, Q.vac_expected(vac), {v["id"]: v["text"] for v in vac})
+    apply_full_run(d)
     d["pending"] = pending_text(d)
     d["title"] = "Сильнейшие модели: качество, надёжность, задержка и цена по функциям (малая выборка)"
     return d
@@ -507,22 +508,9 @@ def functions_view(dirs: dict[str, list[Path]], grade_in: dict, corrected: dict,
                           "price": pr[m]}
             # «в пределах стенда»: p95 не больше тайм-аута функции и отказов (пустые, формат, сеть) не больше 10 %
             c["within_budget"] = bool(r["calls"]) and (r["p95_s"] or 999) <= r["budget_s"] and rel >= 0.9
-        ok = [m for m, c in cells.items() if c["within_budget"]]
-        by_q = sorted(ok, key=lambda m: -(cells[m]["quality"]["index"]["value"] or 0))
-        by_total = sorted(cells, key=lambda m: -cells[m]["score"]["total"])
-        if not by_q:
-            continue
-        main = by_q[0]
-        ci = cells[main]["quality"]["index"]["ci90"] or [0, 1]
-        fam = meta.get(main, {}).get("family")
-        choice[f] = {
-            "strongest_within_latency": main,
-            "within_noise": [m for m in by_q[1:] if (cells[m]["quality"]["index"]["ci90"] or [0, 0])[1] >= ci[0]],
-            "reserve_other_family": next((m for m in by_q[1:] if meta.get(m, {}).get("family") != fam), None),
-            "best_open": next((m for m in by_q if meta.get(m, {}).get("open_weights")), None),
-            "best_total": by_total[0], "ranked_quality": by_q, "ranked_total": by_total,
-            "excluded_latency_or_fails": [m for m in cells if m not in ok],
-            "then": "правила"}
+        ch = _choose(cells, meta)
+        if ch:
+            choice[f] = ch
     # согласие эталона между собой (пары сильнейших, честные ответы выборки)
     agree = []
     pres = [j for j in JUDGES if j in grade_in]
@@ -535,6 +523,70 @@ def functions_view(dirs: dict[str, list[Path]], grade_in: dict, corrected: dict,
                           "kappa_w": Q.metric(Q.kappa_w, pairs)})
     return {"functions": out, "functions_rules": rules, "choice": choice, "judges_agreement": agree,
             "weights": W, "budget_s": Q.BUDGET_S}
+
+
+def _choose(cells: dict, meta: dict, rejected: dict | None = None) -> dict | None:
+    """Выбор по функции: лучшая по качеству среди уложившихся в бюджет стенда (и не опровергнутых полным прогоном)."""
+    rejected = rejected or {}
+    ok = [m for m, c in cells.items() if c["within_budget"] and m not in rejected]
+    by_q = sorted(ok, key=lambda m: -(cells[m]["quality"]["index"]["value"] or 0))
+    by_total = [m for m in sorted(cells, key=lambda m: -cells[m]["score"]["total"]) if m not in rejected]
+    if not by_q:
+        return None
+    main = by_q[0]
+    ci = cells[main]["quality"]["index"]["ci90"] or [0, 1]
+    fam = meta.get(main, {}).get("family")
+    return {
+        "strongest_within_latency": main,
+        "within_noise": [m for m in by_q[1:] if (cells[m]["quality"]["index"]["ci90"] or [0, 0])[1] >= ci[0]],
+        "reserve_other_family": next((m for m in by_q[1:] if meta.get(m, {}).get("family") != fam), None),
+        "best_open": next((m for m in by_q if meta.get(m, {}).get("open_weights")), None),
+        "best_total": by_total[0] if by_total else None, "ranked_quality": by_q, "ranked_total": by_total,
+        "excluded_latency_or_fails": [m for m in cells if m not in ok],
+        "then": "правила"}
+
+
+def full_run_ok(rel: dict) -> tuple[bool, str]:
+    """Тот же порог, что у выбора: успешных ≥ 90 % и p95 не больше тайм-аута стенда — теперь на всех входах."""
+    ok = rel["ok_share"]["value"] or 0
+    p95 = rel.get("p95_s") or 999
+    if ok >= 0.9 and p95 <= rel["budget_s"]:
+        return True, ""
+    er = rel.get("errors") or {}
+    parts = [f"{ERR_RU.get(k, k)} {v}" for k, v in sorted(er.items(), key=lambda kv: -kv[1]) if v]
+    why = f"успешных {round(ok * 100)} % из {rel['calls']}" + (f" ({', '.join(parts)})" if parts else "")
+    if p95 > rel["budget_s"]:
+        why += f"; p95 {p95:.1f} с > {rel['budget_s']} с"
+    return False, why.replace(".", ",")
+
+
+def apply_full_run(d: dict) -> None:
+    """Полный прогон проверяет выбор малой выборки: модель, не уложившаяся в порог на всех входах, из выбора функции
+    исключается (с причиной), основная — следующая по качеству; лидер малой выборки сохраняется для честности."""
+    fr = d.get("full_run") or {}
+    for f, ch in list((d.get("choice") or {}).items()):
+        checked, rejected = {}, {}
+        for m, c in fr.items():
+            x = c.get(f)
+            if not x or not x.get("reliability"):
+                continue
+            ok, why = full_run_ok(x["reliability"])
+            x["within_budget"] = ok
+            checked[m] = ok
+            if not ok:
+                rejected[m] = why
+        if not checked:
+            continue
+        new = _choose(d["functions"][f], d["models"], rejected) if rejected else dict(ch)
+        if not new:
+            continue
+        new["small_sample_leader"] = ch["strongest_within_latency"]
+        new["full_run_rejected"] = [{"model": m, "why": w} for m, w in rejected.items()]
+        new["full_run_confirmed"] = [m for m, ok in checked.items() if ok]
+        main = new["strongest_within_latency"]
+        new["main_full_run"] = "подтверждена" if checked.get(main) else ("не прогонялась" if main not in checked else
+                                                                        "не подтверждена")
+        d["choice"][f] = new
 
 
 # ------------------------------------------------------------------ п. 4: полный прогон победителей
@@ -556,12 +608,14 @@ def full_view(wdir: Path, corrected: dict, vac_exp: dict, texts: dict) -> dict:
                 break
     if len(dirs) < 2:
         return {}
-    grade = {}
+    grade, pool_ok = {}, set()
     for m, d in dirs.items():
         if (d / "g" / "v2_1_out.jsonl").exists():
-            sc, _ = _grade_scores(d / "g" / "v2_1_out.jsonl")
-            if len(sc) >= 300:  # полный набор, а не выборка
+            sc, calls = _grade_scores(d / "g" / "v2_1_out.jsonl")
+            if calls["n"] >= 300:  # полный набор (а не выборка) — и тогда, когда принята лишь часть ответов
                 grade[m] = sc
+                if len(sc) >= 300:  # в эталон сравнения — только модели, ответившие почти на весь набор
+                    pool_ok.add(m)
     out = {}
     for m, d in dirs.items():
         cell = {}
@@ -577,7 +631,7 @@ def full_view(wdir: Path, corrected: dict, vac_exp: dict, texts: dict) -> dict:
                                   "usd_per_1k": round(sum(c["cost"] for c in calls) / len(calls) * 1000, 2) if calls else None}
         if m in grade:
             sc = grade[m]
-            pool = [o for o in grade if o != m]
+            pool = [o for o in grade if o != m and o in pool_ok]
             ref = {}
             for rid in sc:
                 v = [grade[o][rid]["score"] for o in pool if rid in grade[o]]
@@ -590,11 +644,13 @@ def full_view(wdir: Path, corrected: dict, vac_exp: dict, texts: dict) -> dict:
                     items.setdefault(x["item"], {})[x["group"]] = x["score"]
             order = [v["ref_strong"] > v["ref_medium"] > v["ref_weak"] for v in items.values() if len(v) == 3]
             _, calls = _grade_raw(d / "g" / "v2_1_out.jsonl")
-            cell["grade"] = {"n": len(sc), "reference": "среднее " + ", ".join(pool) + " (без самой модели)",
+            rel = Q.reliability(calls, Q.BUDGET_S["grade"])
+            cell["grade"] = {"n": len(sc), "calls": len(calls),
+                             "reference": "среднее " + ", ".join(pool) + " (без самой модели)",
                              "mae": g["mae"], "kappa_w": g["kappa_w"], "bias": g["bias"], "exact_bin": g["exact_bin"],
                              "attacks_resisted": g["attacks_resisted"], "attacks_n": g["attacks_n"],
                              "order_strict": Q.metric(Q.mean, order),
-                             "reliability": Q.reliability(calls, Q.BUDGET_S["grade"]),
+                             "reliability": rel,
                              "usd_per_1k": round(sum(c["cost"] for c in calls) / len(calls) * 1000, 2) if calls else None}
         if cell:
             out[m] = cell
@@ -786,8 +842,14 @@ def md_table(d: dict) -> str:
                         f"шума (интервалы пересекаются): {noise}. Резерв другой семьи: "
                         f"{label(d, ch['reserve_other_family']) if ch['reserve_other_family'] else '—'}; лучшая "
                         f"открытая: {label(d, ch['best_open']) if ch['best_open'] else '—'}; лучшая по сводной: "
-                        f"{label(d, ch['best_total'])}; затем {ch['then']}. Вне бюджета задержки или с отказами "
-                        f"> 10 %: {excl}."]
+                        f"{label(d, ch['best_total']) if ch.get('best_total') else '—'}; затем {ch['then']}. Вне "
+                        f"бюджета задержки или с отказами > 10 %: {excl}."]
+            if ch.get("full_run_rejected"):
+                out[-1] += (" **Полный прогон (все входы) исключил:** " + "; ".join(
+                    f"{label(d, x['model'])} — {x['why']}" for x in ch["full_run_rejected"]) +
+                    f" (лидер малой выборки — {label(d, ch['small_sample_leader'])}).")
+            if ch.get("main_full_run"):
+                out[-1] += f" Основная в полном прогоне: {ch['main_full_run']}."
         if f == "grade" and cells:
             refs = sorted({c.get("reference") for c in cells.values() if c.get("reference")})
             out += ["", "Эталон оценщика: " + "; ".join(refs) + "."]
@@ -796,16 +858,27 @@ def md_table(d: dict) -> str:
     if fr:
         out += ["#### Полный прогон победителей (все входы)", "",
                 "Разбор — 50 реальных вакансий (исправленная разметка); оценщик — все ответы набора панели, эталон — среднее "
-                "остальных моделей полного прогона без самой модели (модели, не люди).", "",
+                "остальных моделей полного прогона без самой модели (в эталоне — только ответившие почти на весь набор; "
+                "модели, не люди). Качество — по принятым ответам; «✗» — на всех входах не уложилась в порог выбора "
+                "(успешных ≥ 90 %, p95 ≤ тайм-аута стенда).", "",
                 "| Модель | Разбор: F1 стека [90 %] | Разбор: поля | Оценщик: MAE [90 %] | κw | Атаки отбиты | "
-                "Порядок «сильный > средний > слабый» | p95 разбор / оценка, с | $ за 1000 разбор / оценка |",
-                "|---|---|---|---|---|---|---|---|---|"]
+                "Порядок «сильный > средний > слабый» | Успешно разбор / оценка | p95 разбор / оценка, с | "
+                "$ за 1000 разбор / оценка |",
+                "|---|---|---|---|---|---|---|---|---|---|"]
+
+        def okc(x: dict) -> str:
+            r = x.get("reliability") or {}
+            if not r:
+                return "—"
+            return f"{_mv(r.get('ok_share'), pct=True)} из {r['calls']}" + ("" if x.get("within_budget", True) else " ✗")
+
         for m, c in fr.items():
             pn, g = c.get("parse_need") or {}, c.get("grade") or {}
             out.append(f"| {label(d, m)} | {_mv(pn.get('stack_f1'), ci=True)} | {_mv(pn.get('fields_acc'))} | "
                        f"{_mv(g.get('mae'), ci=True)} | {_mv(g.get('kappa_w'))} | "
                        f"{_mv(g.get('attacks_resisted'), pct=True)}{(' из ' + str(g['attacks_n'])) if g else ''} | "
-                       f"{_mv(g.get('order_strict'), 2)} | {_n((pn.get('reliability') or {}).get('p95_s'), 1)} / "
+                       f"{_mv(g.get('order_strict'), 2)} | {okc(pn)} / {okc(g)} | "
+                       f"{_n((pn.get('reliability') or {}).get('p95_s'), 1)} / "
                        f"{_n((g.get('reliability') or {}).get('p95_s'), 1)} | {_n(pn.get('usd_per_1k'), 2)} / "
                        f"{_n(g.get('usd_per_1k'), 2)} |")
         out.append("")

@@ -14,17 +14,18 @@ type Cell = {
   score: { total: number };
 };
 type Choice = { strongest_within_latency: string; within_noise: string[]; reserve_other_family: string | null;
-  best_open: string | null; best_total: string; excluded_latency_or_fails: string[]; then: string };
+  best_open: string | null; best_total: string | null; excluded_latency_or_fails: string[]; then: string;
+  small_sample_leader?: string; full_run_rejected?: { model: string; why: string }[]; main_full_run?: string };
 type Meta = { name: string; family: string; open_weights?: string | null; stand?: boolean };
 type Data = { missing?: boolean; date: string; code_sha: string; models: Record<string, Meta>;
   functions: Record<string, Record<string, Cell>>; functions_rules?: Record<string, { quality: Cell["quality"] }>;
   choice: Record<string, Choice>; budget_s: Record<string, number>; conditions: string[]; pending?: string;
   judges_agreement?: { a: string; b: string; n: number; mae: M; kappa_w: M }[];
   full_run?: Record<string, { parse_need?: FullNeed; grade?: FullGrade }> };
-type Rel = { p95_s: number | null };
-type FullNeed = { n: number; stack_f1: M; fields_acc: M; reliability: Rel; usd_per_1k: number | null };
-type FullGrade = { n: number; mae: M; kappa_w: M; attacks_resisted: M; attacks_n: number; order_strict: M;
-  reliability: Rel; usd_per_1k: number | null };
+type Rel = { p95_s: number | null; calls?: number; ok_share?: M };
+type FullNeed = { n: number; stack_f1: M; fields_acc: M; reliability: Rel; usd_per_1k: number | null; within_budget?: boolean };
+type FullGrade = { n: number; calls?: number; mae: M; kappa_w: M; attacks_resisted: M; attacks_n: number; order_strict: M;
+  reliability: Rel; usd_per_1k: number | null; within_budget?: boolean };
 
 const TITLE: Record<string, string> = { parse_need: "Разбор потребности", resume: "Разбор резюме", grade: "Оценка развёрнутых ответов" };
 const ORDER = ["parse_need", "resume", "grade"];
@@ -102,6 +103,13 @@ function Func({ d, f }: { d: Data; f: string }) {
           {ci(mc.quality.index) && ` [${ci(mc.quality.index)}]`}); в пределах шума — {ch.within_noise.map((m) => label(d, m)).join(", ") || "нет"}.
           {" "}Резерв другой семьи — {ch.reserve_other_family ? label(d, ch.reserve_other_family) : "—"}; лучшая открытая —{" "}
           {ch.best_open ? label(d, ch.best_open) : "—"}; затем {ch.then}.
+          {!!ch.full_run_rejected?.length && (
+            <span className="mt-1 block" data-testid={`strongest-rejected-${f}`}>
+              Полный прогон (все входы) исключил: {ch.full_run_rejected.map((x) => `${label(d, x.model)} — ${x.why}`).join("; ")}
+              {ch.small_sample_leader && ` (лидер малой выборки — ${label(d, ch.small_sample_leader)})`}.
+            </span>
+          )}
+          {ch.main_full_run && <span className="block">Основная в полном прогоне: {ch.main_full_run}.</span>}
         </p>
       )}
       <ScrollX label={`Модели: ${TITLE[f] ?? f}`} className="mt-3 hidden overflow-x-auto md:block">
@@ -153,12 +161,13 @@ function Full({ d }: { d: Data }) {
       <h4 className="font-bold text-brand-night">Полный прогон победителей — все входы</h4>
       <p className="mt-1 text-sm text-brand-ink/80">
         Разбор — все 50 реальных вакансий (исправленная разметка); оценщик — все ответы набора панели против среднего остальных
-        моделей полного прогона без самой модели (модели, не люди).
+        моделей полного прогона без самой модели (модели, не люди). Качество — по принятым ответам; модель, не уложившаяся
+        на всех входах в порог выбора (успешных ≥ 90 %, p95 ≤ тайм-аута), из выбора исключается.
       </p>
       <ScrollX label="Полный прогон победителей" className="mt-3 overflow-x-auto">
         <table className="w-full min-w-[46rem] text-left text-sm">
           <thead className="bg-[#F3F2FB] text-xs uppercase tracking-[0.06em] text-brand-night/80">
-            <tr>{["Модель", "Разбор: F1 стека", "Оценщик: MAE", "κw", "Атаки отбиты", "Порядок сильный > средний > слабый"].map((h) => (
+            <tr>{["Модель", "Разбор: F1 стека", "Оценщик: MAE", "κw", "Атаки отбиты", "Порядок сильный > средний > слабый", "Успешно"].map((h) => (
               <th key={h} scope="col" className="px-3 py-2.5 font-semibold">{h}</th>))}</tr>
           </thead>
           <tbody>
@@ -170,6 +179,13 @@ function Full({ d }: { d: Data }) {
                 <td className="px-3 py-2 tabular-nums">{c.grade ? num(v(c.grade.kappa_w), 2) : "—"}</td>
                 <td className="whitespace-nowrap px-3 py-2 tabular-nums">{c.grade ? `${pct(v(c.grade.attacks_resisted), 0)} из ${c.grade.attacks_n}` : "—"}</td>
                 <td className="px-3 py-2 tabular-nums">{c.grade ? num(v(c.grade.order_strict), 2) : "—"}</td>
+                <td className="whitespace-nowrap px-3 py-2 tabular-nums">
+                  {[c.parse_need, c.grade].filter(Boolean).map((x, i) => (
+                    <span key={i} className={`block ${x!.within_budget === false ? "font-semibold text-amber-800" : ""}`}>
+                      {pct(v(x!.reliability.ok_share), 0)} из {x!.reliability.calls}{x!.within_budget === false && " — ниже порога"}
+                    </span>
+                  ))}
+                </td>
               </tr>
             ))}
           </tbody>
