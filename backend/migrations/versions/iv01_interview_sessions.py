@@ -58,7 +58,7 @@ def upgrade() -> None:
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=True),
         sa.CheckConstraint("mode IN ('defense', 'interview')", name=op.f("ck_interview_sessions_mode")),
         sa.CheckConstraint("status IN ('invited', 'created', 'in_progress', 'evaluating', 'completed', 'failed', "
-                           "'expired', 'cancelled')", name=op.f("ck_interview_sessions_status")),
+                           "'expired', 'cancelled', 'deleted')", name=op.f("ck_interview_sessions_status")),
         sa.ForeignKeyConstraint(["candidate_user_id"], ["users.id"],
                                 name=op.f("fk_interview_sessions_candidate_user_id_users"), ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["test_session_id"], ["test_sessions.id"],

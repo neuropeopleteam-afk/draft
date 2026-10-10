@@ -161,6 +161,7 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
       {s && s.status === "evaluating" && <p className="text-sm font-semibold text-brand-night" role="status">Разговор окончен — модель оценивает ответы. Обновите страницу через минуту.</p>}
       {active && <Link className="btn-primary" to={`/candidate/interview/${s!.id}`}>{s!.status === "created" ? "Начать разговор" : "Продолжить разговор"}</Link>}
       {s && ["failed", "expired", "cancelled"].includes(s.status) && <p className="text-sm text-brand-ink/70">Прошлая сессия: {s.status_title.toLowerCase()}{s.error ? ` — ${s.error}` : ""}.</p>}
+      {s?.status === "deleted" && <p className="text-sm text-brand-ink/70">Запись и результат удалены по вашей просьбе. Повторная защита этой попытки недоступна — она будет у следующей попытки теста.</p>}
       {!st.eligible && st.reason && <p className="text-sm text-brand-ink/70">{st.reason}.</p>}
       {st.can_start && !active && (open ? (
         <div className="space-y-3 rounded-xl border border-brand-night/10 p-3">
@@ -276,7 +277,7 @@ export function AiInterviewCandidate({ inv }: { inv: { id: string; status: strin
       )}
       {(s.status === "created" || s.status === "in_progress") && <Link className="btn-primary !py-2" to={`/candidate/interview/${s.id}`}>Продолжить ИИ-интервью</Link>}
       {s.status === "completed" && <p className="text-brand-ink/75">Пройдено {dt(s.completed_at)}. Итог и расшифровку видит только эта компания.</p>}
-      {["evaluating", "failed", "expired", "cancelled"].includes(s.status) && <p className="text-brand-ink/75">{s.status_title}.</p>}
+      {["evaluating", "failed", "expired", "cancelled", "deleted"].includes(s.status) && <p className="text-brand-ink/75">{s.status_title}.</p>}
       <Alert>{err}</Alert>
     </section>
   );
@@ -425,7 +426,7 @@ export function InterviewRoom() {
       )}
       {s.status === "evaluating" && <section className="card" role="status"><p className="font-semibold text-brand-night">Разговор окончен — модель оценивает ответы…</p></section>}
       {s.status === "completed" && <section className="card">{s.result_hidden ? <p className="font-semibold text-brand-night" data-testid="iv-done">Спасибо! Разговор окончен. Итог и расшифровку видит только пригласившая компания.</p> : <SessionResult s={s} />}</section>}
-      {["failed", "expired", "cancelled"].includes(s.status) && <Alert kind="info">{s.status_title}{s.error ? `: ${s.error}` : ""}.</Alert>}
+      {["failed", "expired", "cancelled", "deleted"].includes(s.status) && <Alert kind="info">{s.status_title}{s.error ? `: ${s.error}` : ""}.</Alert>}
       <Alert>{err}</Alert>
       {!["created", "in_progress"].includes(s.status) && <Link className="btn-ghost" to={s.return_to}>Вернуться</Link>}
     </div>
