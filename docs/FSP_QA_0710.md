@@ -42,7 +42,7 @@
   неизменность порядка и скора при смене возрастных групп и отметки согласия на всём пуле.
 - В таблице ФСП виден отрицательный численный сдвиг nDCG, а не только округлённое равенство.
 
-Снимки и JSON протокола: `reports_0710/fsp_artifacts/shots/` (в рабочем каталоге команды, рядом с отчётом И6).
+Снимки и JSON протокола: внутренний отчёт разработки (в рабочем каталоге команды, рядом с отчётом И6).
 Пересъёмка создаёт новую песочницу и не меняет исходные 150 кандидатов экспертного набора.
 
 ## Keycloak стенда
@@ -63,10 +63,10 @@ Read-only запросы к https://fsp.neuropeople.pro/auth/realms/fsp/.well-kn
 Команды на общей машине команды (venv обязателен, системный Python не содержит зависимостей API):
 
 ```bash
-cd /home/user/workspace/spectrek/wt/fsp2/backend
-flock /tmp/spectrek_heavy.lock /home/user/workspace/spectrek/.venv/bin/python -m pytest -q -o addopts=""
+cd <рабочее дерево fsp2>/backend
+flock /tmp/spectrek_heavy.lock python -m pytest -q -o addopts=""
 cd ..
-PATH=/home/user/workspace/spectrek/.venv/bin:$PATH flock /tmp/spectrek_heavy.lock make bench
+PATH=<каталог рабочего места>/.venv/bin:$PATH flock /tmp/spectrek_heavy.lock make bench
 ```
 
 Основной nDCG@10 на трёх знаках: 0,589 → 0,589, но точная парная разница отрицательная:
