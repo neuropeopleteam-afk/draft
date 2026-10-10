@@ -508,8 +508,8 @@ _BULLET = re.compile(r"^\s*(?:[-–—•*·▪●◦]|\d{1,2}[.)])\s+")
 
 def list_weights_on() -> bool:
     """Флаг NEED_LIST_WEIGHTS (по умолчанию выключен): «1» — один вес на перечисление (LIST_WEIGHT_RULE), иначе —
-    по порядку упоминания (ORDER_WEIGHT_RULE, как до Я11). По умолчанию выключен: на бенчмарке MRR −0,005 в двух мирах
-    (<внутренний документ>, «Замер»)."""
+    по порядку упоминания (ORDER_WEIGHT_RULE, прежнее правило). По умолчанию выключен: на бенчмарке MRR −0,005 в двух мирах
+    (docs/LLM.md, раздел 10.4, «Замер»)."""
     import os
 
     return os.environ.get("NEED_LIST_WEIGHTS", "0").strip().lower() in ("1", "true", "yes", "on")

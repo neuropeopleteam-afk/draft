@@ -672,8 +672,8 @@ PostgreSQL, Docker…» — на `601e2ba` давал формат «Удалё�
   упоминания 1,0 → 0,6, общий навык ×0,8, «желательно» 0,3): текст супервизора — 1,0/0,9/0,8/0,56 и у словаря, и после
   модели. Правило «один вес на перечисление» — за флагом `NEED_LIST_WEIGHTS=1`, по умолчанию выключено (замер ниже).
 
-Замер (`tools/realdata/parse_compare.py --rev 601e2ba`, `tools/realdata/list_weights_ab.py`, логи и JSON —
-`<внутренний документ>`):
+Замер (`tools/realdata/parse_compare.py --rev 601e2ba`, `tools/realdata/list_weights_ab.py`; логи и JSON прогона — вне
+репозитория):
 
 | Набор | По умолчанию (флаг выкл.) | `NEED_LIST_WEIGHTS=1` |
 |---|---|---|
