@@ -102,7 +102,7 @@ export async function resetSandbox(api: APIRequestContext, sid = sandboxId()): P
 }
 
 /** Удаление своей песочницы без пересоздания (DELETE /api/jury/sandbox): дешевле сброса — прогон убирает за собой
- * так (reports_0610/e2e2.md, п. 9). Если учётки песочницы уже удалены по лимиту — делать нечего. */
+ * так (внутренний отчёт разработки, п. 9). Если учётки песочницы уже удалены по лимиту — делать нечего. */
 export async function deleteSandbox(api: APIRequestContext, sid = sandboxId()): Promise<Record<string, unknown>> {
   let token: string;
   try { token = await juryToken(api, "candidate", sid); }

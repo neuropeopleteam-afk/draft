@@ -47,6 +47,12 @@ jobs:
           "$RUNNER_TEMP/actionlint" -color
       - name: shellcheck
         run: shellcheck tools/ci/*.sh
+      - name: Публикуемое дерево, лицензии, единый набор чисел и тесты этих инструментов
+        run: |
+          python3 tools/publish/check_public_tree.py
+          python3 tools/publish/gen_third_party.py --check
+          python3 tools/publish/gen_numbers.py --check
+          python3 -m unittest discover -s tools/publish -p 'test_*.py'
       - name: docker compose config (основной стек и профиль fsp-id)
         run: |
           cp .env.example .env
