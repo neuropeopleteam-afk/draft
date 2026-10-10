@@ -28,7 +28,7 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
   return (
     <div className="min-h-screen bg-[#FBF8FC]">
       <SiteHeader />
-      <main className="mx-auto max-w-content px-4 py-10 sm:px-6">
+      <main id="main" className="mx-auto max-w-content px-4 py-10 sm:px-6">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
         <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-brand-night md:text-4xl">Как будете проверять?</h1>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-brand-ink/75">
