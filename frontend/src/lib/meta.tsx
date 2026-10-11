@@ -32,7 +32,9 @@ export interface GradesExt {
 }
 
 const Ctx = createContext<Meta | null>(null);
-const defaultTitle = (m: Meta) => `${m.product_name} — подбор ИТ-специалистов`;
+// Подзаголовок продукта (решение владельца 09.10): название приходит из /api/meta, подзаголовок — константа интерфейса.
+export const PRODUCT_TAGLINE = "Компании выбирают подтверждённых";
+const defaultTitle = (m: Meta) => `${m.product_name} — ${PRODUCT_TAGLINE.toLowerCase()}`;
 let loaded: Meta | null = null;
 let ownTitle = false;  // экран задал свой заголовок (usePageTitle) — общий его не перезаписывает
 
@@ -61,7 +63,7 @@ export function daysText(n: number): string {
 }
 export const useProductName = () => useContext(Ctx)?.product_name ?? "";
 
-/** Свой заголовок вкладки экрана: «Мини-тест · Встречный». Ответ /api/meta приходит позже — он его не затирает;
+/** Свой заголовок вкладки экрана: «Мини-тест · Драфт». Ответ /api/meta приходит позже — он его не затирает;
  * при уходе с экрана возвращается общий заголовок. */
 export function usePageTitle(title: string) {
   const product = useProductName();
@@ -72,7 +74,7 @@ export function usePageTitle(title: string) {
   }, [title, product]);
 }
 
-/** Заголовок вкладки по экрану (WCAG 2.4.2): «<заголовок h1> · Встречный»; null — общий. Вызывает RouteAnnouncer
+/** Заголовок вкладки по экрану (WCAG 2.4.2): «<заголовок h1> · Драфт»; null — общий. Вызывает RouteAnnouncer
  *  (components/A11y.tsx) при смене адреса; экран со своим usePageTitle не перезаписывается. */
 export function setScreenTitle(h: string | null) {
   if (ownTitle || !loaded) return;

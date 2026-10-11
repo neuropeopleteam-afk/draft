@@ -73,7 +73,7 @@ def test(user: User = Depends(get_current_user), db: Session = Depends(get_db)) 
     if not get_isettings().push_enabled:
         raise api_error(409, "push_disabled", "Web Push на сервере не настроен")
     path = "/employer" if user.role.value == "employer" else "/candidate"
-    sent = service.send_to_user(db, user.id, "Встречный: уведомления работают",
+    sent = service.send_to_user(db, user.id, "Драфт: уведомления работают",
                                 "Так будут приходить новые приглашения и статусы откликов.", path, "test")
     if not sent:
         raise api_error(409, "no_devices", "Не удалось доставить: подпишите устройство ещё раз")

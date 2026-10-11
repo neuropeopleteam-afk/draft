@@ -110,7 +110,7 @@ export default function LiveGuest() {
   return (
     <div className="min-h-screen bg-[#FBF8FC] pb-10">
       <header className="bg-brand-night px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] text-white">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Встречный · живая демонстрация</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-brand-blush/80">Драфт · живая демонстрация</p>
         <p className="mt-1 text-base font-bold">{room?.company ?? "Демо жюри"}</p>
       </header>
       <main id="main" className="mx-auto max-w-lg px-4 pt-4">
