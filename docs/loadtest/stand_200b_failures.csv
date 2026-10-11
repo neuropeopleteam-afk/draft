@@ -1,0 +1,38 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+GET,публичное: живые пользователи,HTTPError('503 Server Error: Service Unavailable for url: публичное: живые пользователи'),2,2026-10-11T15:55:10Z,2026-10-11T15:55:21Z
+GET,кандидат: приглашения,HTTPError('503 Server Error: Service Unavailable for url: кандидат: приглашения'),13,2026-10-11T15:55:04Z,2026-10-11T15:56:00Z
+GET,подборка: версия,HTTPError('503 Server Error: Service Unavailable for url: подборка: версия'),18,2026-10-11T15:55:06Z,2026-10-11T15:56:00Z
+POST,тест: завершить (итог),"CatchResponseError('503 {""detail"":{""code"":""db_busy"",""message"":""Сервер сейчас перегружен — повторите через несколько секунд""}}')",1,2026-10-11T15:55:44Z,2026-10-11T15:55:44Z
+POST,вход жюри (песочница),"CatchResponseError('503 {""detail"":{""code"":""db_busy"",""message"":""Сервер сейчас перегружен — повторите через несколько секунд""}}')",11,2026-10-11T15:55:09Z,2026-10-11T15:55:34Z
+GET,работодатель: потребности,HTTPError('401 Client Error: Unauthorized for url: работодатель: потребности'),14,2026-10-11T15:55:10Z,2026-10-11T15:55:51Z
+GET,кандидат: зонды,HTTPError('503 Server Error: Service Unavailable for url: кандидат: зонды'),12,2026-10-11T15:55:14Z,2026-10-11T15:55:55Z
+POST,"потребность: разбор (правила, модель в фоне)","HTTPError('503 Server Error: Service Unavailable for url: потребность: разбор (правила, модель в фоне)')",4,2026-10-11T15:55:14Z,2026-10-11T15:55:31Z
+GET,кандидат: приглашения,HTTPError('401 Client Error: Unauthorized for url: кандидат: приглашения'),1,2026-10-11T15:55:50Z,2026-10-11T15:55:50Z
+GET,кандидат: вакансии,HTTPError('503 Server Error: Service Unavailable for url: кандидат: вакансии'),9,2026-10-11T15:54:59Z,2026-10-11T15:56:01Z
+GET,кандидат: обратная связь,CatchResponseError('503'),7,2026-10-11T15:54:59Z,2026-10-11T15:55:55Z
+GET,кандидат: вакансии,HTTPError('401 Client Error: Unauthorized for url: кандидат: вакансии'),1,2026-10-11T15:55:21Z,2026-10-11T15:55:21Z
+GET,тест: получить задание,HTTPError('503 Server Error: Service Unavailable for url: тест: получить задание'),1,2026-10-11T15:55:21Z,2026-10-11T15:55:21Z
+GET,работодатель: приглашения,HTTPError('401 Client Error: Unauthorized for url: работодатель: приглашения'),2,2026-10-11T15:55:31Z,2026-10-11T15:55:34Z
+GET,кандидат: две попытки рядом,HTTPError('503 Server Error: Service Unavailable for url: кандидат: две попытки рядом'),3,2026-10-11T15:55:05Z,2026-10-11T15:55:52Z
+GET,работодатель: категории с рынком,HTTPError('401 Client Error: Unauthorized for url: работодатель: категории с рынком'),2,2026-10-11T15:55:45Z,2026-10-11T15:55:46Z
+POST,потребность: создать + подборка v1,"CatchResponseError('503 {""detail"":{""code"":""db_busy"",""message"":""Сервер сейчас перегружен — повторите через несколько секунд""}}')",1,2026-10-11T15:54:52Z,2026-10-11T15:54:52Z
+GET,кабинет: непрочитанные,HTTPError('503 Server Error: Service Unavailable for url: кабинет: непрочитанные'),7,2026-10-11T15:55:28Z,2026-10-11T15:55:51Z
+GET,/validation: attempts-repeat,HTTPError('503 Server Error: Service Unavailable for url: /validation: attempts-repeat'),3,2026-10-11T15:55:21Z,2026-10-11T15:55:40Z
+GET,/validation: report,HTTPError('503 Server Error: Service Unavailable for url: /validation: report'),1,2026-10-11T15:55:44Z,2026-10-11T15:55:44Z
+POST,тест: ответ,"CatchResponseError('503 {""detail"":{""code"":""db_busy"",""message"":""Сервер сейчас перегружен — повторите через несколько секунд""}}')",1,2026-10-11T15:55:21Z,2026-10-11T15:55:21Z
+GET,кандидат: две попытки рядом,HTTPError('401 Client Error: Unauthorized for url: кандидат: две попытки рядом'),2,2026-10-11T15:55:40Z,2026-10-11T15:55:40Z
+POST,/validation: красная кнопка (rename),"CatchResponseError('503 {""detail"":{""code"":""db_busy"",""message"":""Сервер сейчас перегружен — повторите через несколько секунд""}}')",1,2026-10-11T15:55:44Z,2026-10-11T15:55:44Z
+GET,подборка: что если,HTTPError('503 Server Error: Service Unavailable for url: подборка: что если'),3,2026-10-11T15:55:16Z,2026-10-11T15:55:56Z
+GET,кабинет: непрочитанные,HTTPError('401 Client Error: Unauthorized for url: кабинет: непрочитанные'),1,2026-10-11T15:56:02Z,2026-10-11T15:56:02Z
+GET,подборка: сравнение 2–3,CatchResponseError('503'),8,2026-10-11T15:54:55Z,2026-10-11T15:55:53Z
+GET,работодатель: приглашения,HTTPError('503 Server Error: Service Unavailable for url: работодатель: приглашения'),6,2026-10-11T15:54:57Z,2026-10-11T15:56:01Z
+POST,/validation: красная кнопка (fake_fsp),"CatchResponseError('503 {""detail"":{""code"":""db_busy"",""message"":""Сервер сейчас перегружен — повторите через несколько секунд""}}')",1,2026-10-11T15:55:32Z,2026-10-11T15:55:32Z
+GET,работодатель: потребности,HTTPError('503 Server Error: Service Unavailable for url: работодатель: потребности'),4,2026-10-11T15:55:10Z,2026-10-11T15:55:34Z
+GET,работодатель: категории с рынком,HTTPError('503 Server Error: Service Unavailable for url: работодатель: категории с рынком'),5,2026-10-11T15:55:08Z,2026-10-11T15:55:35Z
+GET,подборка: карточка кандидата,HTTPError('503 Server Error: Service Unavailable for url: подборка: карточка кандидата'),5,2026-10-11T15:55:10Z,2026-10-11T15:55:50Z
+GET,кандидат: статус категории,HTTPError('503 Server Error: Service Unavailable for url: кандидат: статус категории'),12,2026-10-11T15:54:57Z,2026-10-11T15:55:54Z
+POST,приглашение: отправить,"CatchResponseError('503 {""detail"":{""code"":""db_busy"",""message"":""Сервер сейчас перегружен — повторите через несколько секунд""}}')",1,2026-10-11T15:55:14Z,2026-10-11T15:55:14Z
+POST,"потребность: разбор (правила, модель в фоне)","HTTPError('401 Client Error: Unauthorized for url: потребность: разбор (правила, модель в фоне)')",2,2026-10-11T15:55:14Z,2026-10-11T15:55:52Z
+GET,главная: персоны жюри,HTTPError('503 Server Error: Service Unavailable for url: главная: персоны жюри'),6,2026-10-11T15:54:59Z,2026-10-11T15:55:55Z
+GET,кандидат: зонды,HTTPError('401 Client Error: Unauthorized for url: кандидат: зонды'),1,2026-10-11T15:56:00Z,2026-10-11T15:56:00Z
+GET,/validation: summary,HTTPError('503 Server Error: Service Unavailable for url: /validation: summary'),2,2026-10-11T15:55:40Z,2026-10-11T15:56:00Z
