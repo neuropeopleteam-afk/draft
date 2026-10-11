@@ -1,0 +1,16 @@
+{
+ "tag": "stand_100b",
+ "host": "https://fsp.neuropeople.pro",
+ "users": 100,
+ "ramp_per_s": 2.0,
+ "time": "11m",
+ "burst_at_s": 300,
+ "burst_n": 5,
+ "user_agent": "spectrek-load/stand_100b",
+ "start": "2026-10-11T15:38:39+0000",
+ "route": "SOCKS5 127.0.0.1:1080",
+ "users_after_ramp": 100,
+ "end": "2026-10-11T15:50:27+0000",
+ "locust_exit": 1,
+ "users_max": 100
+}
