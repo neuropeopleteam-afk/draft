@@ -93,6 +93,19 @@ TAGS = [
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    # Lead/Principal (флаг GRADES_EXT_ENABLED): грейды и категории в справочнике — идемпотентно; без флага — ничего
+    from app.modules.catalog.seed_data import GRADES_EXT
+
+    if GRADES_EXT:
+        from app.core.db import SessionLocal, get_engine as _db_engine
+        from app.modules.catalog.levels_seed import ensure as ensure_ext_levels
+
+        try:
+            _db_engine()  # до первого запроса движок БД ещё не создан
+            with SessionLocal() as _db:
+                ensure_ext_levels(_db)
+        except Exception:  # noqa: BLE001 — справочник не должен ронять старт; повтор — python -m …levels_seed
+            logging.getLogger("catalog").exception("Lead/Principal: справочник не дополнен")
     # Запасная песочница жюри — в фоне после старта: первый вход эксперта не ждёт её создания
     if get_settings().jury_spare_sandboxes > 0:
         t = threading.Timer(5.0, make_spare)
@@ -194,6 +207,7 @@ def create_app() -> FastAPI:
     def meta() -> dict:
         from app.modules.assessment.engine import get_engine
         from app.modules.llm.client import status as llm_status
+        from app.modules.catalog import levels as _levels
 
         return {"product_name": s.product_name, "version": s.app_version, "operator": OPERATOR,
                 "jury_mode_available": s.jury_mode_available, "demo_sandbox": s.demo_sandbox,
@@ -208,7 +222,10 @@ def create_app() -> FastAPI:
                 "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
                 "interview_enabled": interview.svc.enabled(),  # то же одним флагом — шаг проводника «12 минут» (Я9)
                 "hh": hh_api.meta(),  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
-                "voice_need": voice.meta()}  # кнопка «Надиктовать»: флаг, заглушка, предел секунд, версия согласия
+                "voice_need": voice.meta(),  # кнопка «Надиктовать»: флаг, заглушка, предел секунд, версия согласия
+                # Lead/Principal (флаг GRADES_EXT_ENABLED): уровни платформы и какие из них видны в каждом направлении
+                # (по банку, catalog.levels); без флага ключа нет — интерфейс показывает прежние 4 уровня
+                **({"grades_ext": _levels.status()} if _levels.enabled() else {})}
 
     class HealthOut(BaseModel):
         status: str

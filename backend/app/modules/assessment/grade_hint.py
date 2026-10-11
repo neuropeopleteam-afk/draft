@@ -15,6 +15,8 @@ from sqlalchemy.orm import Session
 
 from app.core.enums import FspEventLevel
 from app.modules.assessment.rules import GRADE_LEVEL, GRADE_RU
+from app.modules.catalog import levels as grade_levels
+from app.modules.catalog.seed_data import GRADES_EXT
 from app.modules.assessment.service import latest_survey
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.core.origin import NO_FSP_SHORT
@@ -26,10 +28,28 @@ _LEVEL_RU = {FspEventLevel.regional: "региональный", FspEventLevel.i
              FspEventLevel.national: "всероссийский", FspEventLevel.international: "международный"}
 
 
-def grade_by_years(years: float | None) -> str | None:
+def grade_by_years(years: float | None, top: str | None = None) -> str | None:
+    """Подсказка по стажу. С флагом GRADES_EXT_ENABLED выше Senior — Lead (от 7,5 лет) и Principal (от 10 лет),
+    но не выше top — верхнего уровня, который тест проверяет в направлении (catalog.levels)."""
     if years is None:
         return None
-    return "junior" if years < 1.5 else "middle" if years < 4.5 else "senior"
+    g = "junior" if years < 1.5 else "middle" if years < 4.5 else "senior"
+    if GRADES_EXT and g == "senior" and years >= 7.5:
+        g = "lead" if years < 10 else "principal"
+        if top in GRADE_LEVEL and GRADE_LEVEL[g] > GRADE_LEVEL[top]:
+            g = top if GRADE_LEVEL[top] >= GRADE_LEVEL["senior"] else "senior"
+        elif top is None:
+            g = "senior"  # направление неизвестно — Lead/Principal не подсказываем
+    return g
+
+
+def _years_scale(top: str) -> str:
+    base = "до 1,5 лет — Junior, 1,5–4,5 — Middle, "
+    if top == "principal":
+        return base + "4,5–7,5 — Senior, 7,5–10 — Lead, от 10 — Principal"
+    if top == "lead":
+        return base + "4,5–7,5 — Senior, от 7,5 — Lead"
+    return base + "от 4,5 — Senior"
 
 
 def _years_ru(v: float) -> str:
@@ -43,25 +63,28 @@ def _years_ru(v: float) -> str:
     return f"{n} лет"
 
 
-def build_hint(*, survey_years: float | None, resume: dict | None, achievements: list[dict]) -> dict:
+def build_hint(*, survey_years: float | None, resume: dict | None, achievements: list[dict],
+               top: str | None = None) -> dict:
     """Чистая функция (покрыта тестами). resume — поля CandidateResume.extracted; achievements —
-    [{level: FspEventLevel|str, place: int|None, result_title: str|None, verified: bool}]."""
-    votes: dict[str, float] = {g: 0.0 for g in GRADE_LEVEL}
+    [{level: FspEventLevel|str, place: int|None, result_title: str|None, verified: bool}].
+    top — верхний уровень, который тест проверяет в направлении (Lead/Principal — флаг GRADES_EXT_ENABLED и банк)."""
+    top = top if top in GRADE_LEVEL else ("senior" if GRADES_EXT else max(GRADE_LEVEL, key=GRADE_LEVEL.get))
+    votes: dict[str, float] = {g: 0.0 for g in GRADE_LEVEL if GRADE_LEVEL[g] <= GRADE_LEVEL[top]}
     signals: list[dict] = []
 
-    g_s = grade_by_years(survey_years)
+    g_s = grade_by_years(survey_years, top)
     if g_s:
         votes[g_s] += 2.0
         signals.append({"source": "survey", "title": "Опрос", "grade": g_s,
                         "text": f"Коммерческий стаж {_years_ru(float(survey_years))}: обычно это {GRADE_RU[g_s]} "
-                                "(до 1,5 лет — Junior, 1,5–4,5 — Middle, от 4,5 — Senior). Стаж — только ориентир: "
+                                f"({_years_scale(top)}). Стаж — только ориентир: "
                                 "грейд подтверждает тест навыков."})
     else:
         signals.append({"source": "survey", "title": "Опрос", "grade": None, "text": "Стаж в опросе не указан."})
 
     if resume:
         ry = resume.get("experience_years")
-        g_r = grade_by_years(float(ry)) if isinstance(ry, (int, float)) else None
+        g_r = grade_by_years(float(ry), top) if isinstance(ry, (int, float)) else None
         if g_r:
             votes[g_r] += 2.0
             txt = f"Стаж по резюме {_years_ru(float(ry))}: обычно {GRADE_RU[g_r]}."
@@ -69,15 +92,18 @@ def build_hint(*, survey_years: float | None, resume: dict | None, achievements:
                 txt += f" Расходится с опросом ({GRADE_RU[g_s]}) — уточните стаж."
             signals.append({"source": "resume", "title": "Резюме: стаж", "grade": g_r, "text": txt})
         kw = resume.get("grade_hint")
+        if kw in GRADE_LEVEL and GRADE_LEVEL[kw] > GRADE_LEVEL[top]:
+            kw = top
         if kw in GRADE_LEVEL and not g_r:
             votes[kw] += 1.0
             signals.append({"source": "resume", "title": "Резюме: формулировки", "grade": kw,
                             "text": f"В резюме встречаются слова уровня {GRADE_RU[kw]} (стаж из текста не извлёкся)."})
         roles = {r.get("id") for r in (resume.get("roles") or [])}
         if "team_lead" in roles:
-            votes["senior"] += 1.0
-            signals.append({"source": "resume", "title": "Резюме: роль", "grade": "senior",
-                            "text": "Указан опыт руководства командой — обычно уровень Senior."})
+            g_l = "lead" if "lead" in votes else "senior"  # Lead — только если тест направления его проверяет
+            votes[g_l] += 1.0
+            signals.append({"source": "resume", "title": "Резюме: роль", "grade": g_l,
+                            "text": f"Указан опыт руководства командой — обычно уровень {GRADE_RU[g_l]}."})
         n_stack = len(resume.get("stack") or [])
         if n_stack:
             signals.append({"source": "resume", "title": "Резюме: стек", "grade": None,
@@ -146,7 +172,9 @@ def grade_hint(db: Session, user_id: uuid.UUID) -> dict:
     if passport is not None:
         for a in db.scalars(select(FspAchievement).where(FspAchievement.passport_id == passport.id)).all():
             ach.append({"level": a.event_level, "place": a.place, "result_title": a.result_title, "verified": a.verified})
-    out = build_hint(survey_years=years, resume=(resume.extracted if resume is not None else None), achievements=ach)
+    top = grade_levels.top_grade(survey.direction_id if survey is not None else None) if GRADES_EXT else None
+    out = build_hint(survey_years=years, resume=(resume.extracted if resume is not None else None), achievements=ach,
+                     top=top)
     out["has_resume"] = resume is not None
     out["method"] = "rules"
     return out

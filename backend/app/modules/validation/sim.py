@@ -89,7 +89,9 @@ def app_config_from_settings() -> AppConfig:
 
 
 def make_pool(n_subpools: int, params: dict | None = None):
-    return pool_from_specs(load_specs().values(), params=params, n_subpools=max(1, n_subpools))
+    from app.modules.catalog.levels import pool_specs  # как в продукте: без флага — без семейств только Lead/Principal
+
+    return pool_from_specs(pool_specs(load_specs().values()), params=params, n_subpools=max(1, n_subpools))
 
 
 class LegacyExtSession(AppCATSession):

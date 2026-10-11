@@ -5,6 +5,8 @@
 """
 import re
 
+from app.modules.catalog.seed_data import GRADES_EXT
+
 # id стек-тега → синонимы (нижний регистр; границы слова проверяются регулярным выражением)
 STACK_ALIASES: dict[str, list[str]] = {
     "algorithms": ["алгоритм", "структуры данных", "algorithms", "data structures", "leetcode", "олимпиадн"],
@@ -117,6 +119,12 @@ GRADE_KEYWORDS: dict[str, list[str]] = {
     "middle": ["middle", "мидл", "миддл", "опытный разработчик"],
     "senior": ["senior", "сеньор", "синьор", "старш", "ведущ", "lead", "тимлид", "архитектор", "principal", "head of"],
 }
+if GRADES_EXT:  # флаг GRADES_EXT_ENABLED: Lead и Principal — свои уровни, а не Senior (видимость — catalog.levels)
+    GRADE_KEYWORDS["senior"] = ["senior", "сеньор", "синьор", "старш", "ведущ"]
+    GRADE_KEYWORDS["lead"] = ["team lead", "teamlead", "tech lead", "techlead", "тимлид", "техлид", "лид команды",
+                              "lead ", "lead-", "lead/", "архитектор", "architect", "head of"]
+    GRADE_KEYWORDS["principal"] = ["principal", "staff engineer", "staff-инженер", "главный архитектор",
+                                   "chief architect", "принципал"]
 
 ROLES: dict[str, list[str]] = {
     "developer": ["разработчик", "developer", "программист", "engineer", "инженер-программист"],

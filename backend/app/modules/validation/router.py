@@ -268,6 +268,14 @@ def two_stage_route():
     from app.modules.validation.two_stage import compact
 
     return {**compact(json.loads(TWO_STAGE.read_text(encoding="utf-8"))), "product": p}
+from app.modules.catalog.seed_data import GRADES_EXT as _GRADES_EXT  # noqa: E402
+
+if _GRADES_EXT:  # Lead/Principal (флаг GRADES_EXT_ENABLED): без флага маршрута нет — openapi прежний
+    @router.get("/grades-ext", summary="Lead и Principal: точность различения 6 уровней и что нужно для цели (модель, не люди)")
+    def grades_ext_route():
+        from app.modules.validation.grades_ext_view import view
+
+        return view()
 
 
 @router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
