@@ -184,7 +184,7 @@ export function JuryGuide() {
     } catch (e) { setMsg(errText(e)); } finally { setBusy(false); }
   }
   async function reset() {
-    if (!confirm("Сбросить своё демо в исходное состояние? Приглашения, зонды, тесты и кубки ваших демо-учёток будут пересозданы. У других экспертов жюри ничего не изменится.")) return;
+    if (!confirm("Сбросить своё демо в исходное состояние? Приглашения, задания с вилкой, тесты и кубки ваших демо-учёток будут пересозданы. У других экспертов жюри ничего не изменится.")) return;
     setBusy(true); setMsg(null);
     try { const r = await juryReset(signIn); setMsg(`Демо пересоздано за ${String(r.seconds).replace(".", ",")} с, вход сохранён.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(false); }

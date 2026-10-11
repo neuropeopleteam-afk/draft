@@ -237,7 +237,7 @@ export function CupPassportEvents() {
   return (
     <section className="card">
       <h2 className="font-bold text-brand-night">Кубки работодателей — мероприятия платформы</h2>
-      <p className="mt-1 text-xs text-brand-ink/65">Подтверждено платформой (T1), не реестром ФСП. В рейтинге учитывается как зонд, без штрафа.</p>
+      <p className="mt-1 text-xs text-brand-ink/65">Подтверждено платформой, не реестром ФСП. В рейтинге учитывается как задание с вилкой, без штрафа.</p>
       <ul className="mt-3 space-y-2 text-sm">
         {data.map((x) => (
           <li key={x.cup_id} className="flex items-start gap-2"><Level level="T1" />

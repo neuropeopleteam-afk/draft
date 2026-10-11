@@ -40,7 +40,7 @@ export const useInterviewOn = () => !!useMeta()?.interview?.enabled;
 export function DefenseBadge({ d }: { d?: { verdict: Verdict; title: string; example?: boolean; stub?: boolean; quotes?: number | null } | null }) {
   if (!d) return null;
   const cls = d.verdict ? STYLE[d.verdict] ?? STYLE.insufficient : "bg-white text-brand-ink/70 ring-brand-night/15";
-  const tail = d.example ? " · пример, модельный кандидат" : d.stub ? " · заглушка" : "";
+  const tail = d.example ? " · пример, модельный кандидат" : d.stub ? " · демо" : "";
   return (
     <span className={`inline-flex max-w-full items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ${cls}`}
       title={`Устная защита развёрнутых ответов теста. ${MODEL_NOTE}`} data-testid="defense-badge">
@@ -154,7 +154,7 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
         ИИ-интервьюер задаст до {st.max_questions} вопросов по вашим развёрнутым ответам{st.answers_n ? ` (${st.answers_n})` : ""} — голосом или в чате.
         Работодатель увидит «ответ подтверждён устно» или «есть расхождения» с цитатами. Грейд не меняется; оценивает модель, решение — за людьми.
       </p>
-      {st.stub && <Alert kind="info">Сейчас работает заглушка: вопросы по шаблону, оценка — правилом по ключевым словам, не моделью. Итог помечен «заглушка».</Alert>}
+      {st.stub && <Alert kind="info">Демо-режим: вопросы по шаблону, оценка — по фиксированному правилу, не моделью. Итог помечен «демо».</Alert>}
       {st.jury && <p className="text-xs text-brand-ink/65" data-testid="defense-jury">Песочница жюри: живой запуск — {st.jury.live_per_hour} в час, до {st.jury.max_minutes} минут. Готовый пример — ниже.</p>}
       {s && s.status === "completed" && (
         <div className="space-y-2">
@@ -406,7 +406,7 @@ export function InterviewRoom() {
   return (
     <div className="max-w-2xl space-y-4">
       <PageTitle title={title} subtitle={`${s.status_title}. ${MODEL_NOTE}`} />
-      {s.stub && <Alert kind="info">Заглушка: разговор по шаблону, без модели и голоса; оценка — правилом, итог помечен «заглушка».</Alert>}
+      {s.stub && <Alert kind="info">Демо-режим: разговор по шаблону, без модели и голоса; оценка — по фиксированному правилу, итог помечен «демо».</Alert>}
       <audio ref={player.audioRef} className="hidden" />
       {(s.status === "created" || live || s.status === "evaluating") && (
         <div className="card flex justify-center !py-3" data-testid="iv-visual">
@@ -439,7 +439,7 @@ export function InterviewRoom() {
               <VoiceRecordButton testId="iv-record" disabled={busy && rec === "idle"} maxSeconds={90}
                 transcribe={(b) => postAudio(`/interview/sessions/${id}/transcribe`, b)}
                 onLevel={(f) => { mic.current = f; player.stop(); }} onState={setRec} onNote={setNote}
-                onText={(t, info) => { setText((x) => (x ? `${x} ` : "") + t); setNote(info.stub ? "Распознавание — заглушка: подставлен текст для проверки. Поправьте и отправьте." : "Проверьте распознанный текст и отправьте ответ."); }} />
+                onText={(t, info) => { setText((x) => (x ? `${x} ` : "") + t); setNote(info.stub ? "Демо-распознавание: подставлен текст для проверки. Поправьте и отправьте." : "Проверьте распознанный текст и отправьте ответ."); }} />
             )}
             {ch === "voice" && <button className="btn-ghost" disabled={busy || player.playing} onClick={() => q && void say(q, true)} data-testid="iv-repeat">Повторить вопрос</button>}
             {c.engine === "stub" && c.hint && <button className="btn-ghost" onClick={() => setText(c.hint ?? "")} data-testid="iv-hint">Подставить начало письменного ответа (заглушка)</button>}
