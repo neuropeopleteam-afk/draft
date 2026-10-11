@@ -461,3 +461,23 @@ def test_expert_review_keeps_candidate_revocation(client):
     assert me["active"] is None and me["opted_out"] and me["eligible"]
     again = client.post("/api/me/passport/reissue", headers=H(tok)).json()["active"]
     assert again["passport"]["grade_status"] == "confirmed" and again["status"]["state"] == "valid"
+
+
+def test_fix7_one_status_source_category_and_passport(client):
+    """FIX7 п. 6 (проход модельных пользователей, выкладка 5): категория — «подтверждён», паспорт — «предварительный»
+    без объяснения. Теперь статус паспорта и экран «Категория» — из одного источника (profiles.facts.passport_status):
+    открытые ответы на проверке эксперта → в статусе грейда pending_review и passport_status «preliminary», плашка
+    и паспорт говорят одно и то же, у паспорта — причина."""
+    tok, _uid = _candidate_with_category(client, email="fix7.onesrc@example.com", pending_left=1, seed=13)
+    gs = client.get("/api/assessment/status", headers=H(tok)).json()["grade_status"]
+    assert gs["status"] == "confirmed" and gs["pending_review"] >= 1, gs
+    assert gs["passport_status"] == "preliminary" and "на проверке эксперта" in gs["text"], gs
+    me = client.get("/api/me/passport", headers=H(tok)).json()
+    assert me["active"]["passport"]["grade_status"] == gs["passport_status"]
+    assert "на проверке эксперта" in (me["preliminary_reason"] or ""), me.get("preliminary_reason")
+    # без открытых ответов — оба «подтверждён», причины нет
+    tok2, _ = _candidate_with_category(client, email="fix7.onesrc2@example.com", seed=14)
+    gs2 = client.get("/api/assessment/status", headers=H(tok2)).json()["grade_status"]
+    me2 = client.get("/api/me/passport", headers=H(tok2)).json()
+    assert gs2["passport_status"] == "confirmed" == me2["active"]["passport"]["grade_status"]
+    assert not gs2.get("pending_review") and me2["preliminary_reason"] is None

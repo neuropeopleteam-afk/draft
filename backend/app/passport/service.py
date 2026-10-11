@@ -28,7 +28,7 @@ from app.core.errors import api_error
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_ORDER as _PLATFORM_GRADE_ORDER
-from app.modules.profiles.facts import DISCIPLINE_TITLES, LEVEL_TITLES, card, load_bundles
+from app.modules.profiles.facts import DISCIPLINE_TITLES, LEVEL_TITLES, card, load_bundles, passport_status
 from app.modules.profiles.models import CandidateProfile
 from app.passport import crypto
 from app.passport.models import GradePassport, PassportKey
@@ -91,11 +91,11 @@ def build_content(db: Session, user_id: uuid.UUID) -> dict | None:
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     c = card(b, cats)
     t = b.test.value if b.test else {}
-    status = "confirmed"
-    if getattr(p, "grade_provisional", False) or t.get("pending_review"):
-        status = "preliminary"  # «Junior (предварительно)» (ветка junior) или открытые ответы ещё на проверке
-    if (c.get("category") or {}).get("ext_preliminary"):
-        status = "preliminary"  # Lead/Principal (флаг GRADES_EXT_ENABLED): по тесту, но предварительно
+    # FIX7 п. 6: один источник статуса с карточкой и экраном «Категория» (profiles.facts.passport_status):
+    # «Junior (предварительно)», открытые ответы ещё на проверке эксперта, Lead/Principal по тесту — «предварительный»
+    status = passport_status(b)
+    if getattr(p, "grade_provisional", False) or (c.get("category") or {}).get("ext_preliminary"):
+        status = "preliminary"  # прежние признаки — на случай расхождения загрузки (не ослабляем)
     session_id = t.get("session_id")
     probs = None
     if session_id:
@@ -360,12 +360,28 @@ def public_view(db: Session, p: GradePassport) -> dict:
     }
 
 
+def _preliminary_reason(db: Session, user_id: uuid.UUID) -> str | None:
+    b = load_bundles(db, [user_id]).get(user_id)
+    if b is None:
+        return None
+    t = b.test.value if b.test else {}
+    if (t or {}).get("pending_review"):
+        return (f"Открытых ответов теста на проверке эксперта — {int(t['pending_review'])}: до проверки грейд в паспорте "
+                "«предварительный», после неё паспорт перевыпустится сам.")
+    if b.grade_status == "provisional":
+        return "Junior — предварительно: вероятность уровня ниже порога подтверждения; подтвердит короткое дотестирование."
+    return "Уровень Lead/Principal по тесту — предварительно: точность различения у верхних уровней ниже цели."
+
+
 def owner_view(db: Session, p: GradePassport | None, user_id: uuid.UUID) -> dict:
     hist = db.scalars(select(GradePassport).where(GradePassport.user_id == user_id)
                       .order_by(GradePassport.issued_at.desc()).limit(10)).all()
+    content = build_content(db, user_id)
     return {
         "active": ({**public_view(db, p), "id": p.id} if p is not None else None),
-        "eligible": build_content(db, user_id) is not None,
+        "eligible": content is not None,
+        # FIX7 п. 6: почему паспорт «предварительный» — тот же источник, что у экрана «Категория» (passport_status)
+        "preliminary_reason": _preliminary_reason(db, user_id) if content and content["grade_status"] == "preliminary" else None,
         "opted_out": p is None and _candidate_opted_out(db, user_id),
         "history": [{"id": h.id, "category_id": h.category_id, "grade_status": h.grade_status,
                      "issued_at": _iso(h.issued_at), "valid_until": _iso(h.valid_until),

@@ -12936,6 +12936,32 @@
             "description": "Вероятность заявленного грейда по тесту, %",
             "title": "P Pct"
           },
+          "passport_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "FIX7: статус грейда, который попадёт в паспорт ФСП (confirmed / preliminary) — тот же источник, что у паспорта",
+            "title": "Passport Status"
+          },
+          "pending_review": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "FIX7: открытых ответов теста на проверке эксперта (грейд по тесту подтверждён, итог и паспорт обновятся после проверки)",
+            "title": "Pending Review"
+          },
           "status": {
             "description": "confirmed — подтверждён тестом, provisional — предварительно, unconfirmed — не подтверждён",
             "title": "Status",
@@ -18739,6 +18765,19 @@
           "opted_out": {
             "title": "Opted Out",
             "type": "boolean"
+          },
+          "preliminary_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "FIX7: почему грейд в паспорте «предварительный» (тот же источник, что статус на экране «Категория»)",
+            "title": "Preliminary Reason"
           }
         },
         "required": [

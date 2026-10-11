@@ -7,6 +7,8 @@ import { GRADE_STATUS, StateBadge, verifyHref, type PassportPublic, type Passpor
 
 interface Owner {
   active: (PassportPublic & { id: string }) | null; eligible: boolean; opted_out: boolean;
+  /** FIX7 п. 6: почему грейд в паспорте «предварительный» (тот же источник, что статус на экране «Категория»). */
+  preliminary_reason?: string | null;
   history: { id: string; category_id: string; grade_status: string; issued_at: string; valid_until: string; revoked_at: string | null; reason: string | null; reason_title: string | null }[];
 }
 
@@ -50,6 +52,9 @@ export function PassportShare() {
           <img src={`/api/passport/${a.id}/qr.svg`} alt="QR-код ссылки на проверку паспорта" className="h-40 w-40 rounded-xl border border-brand-night/10 bg-white p-2" />
           <div className="min-w-0 space-y-3 text-sm">
             <p><b className="text-brand-night">{a.passport.category.title}</b> · {GRADE_STATUS[a.passport.grade_status]} · действителен до {dt(a.passport.valid_until)}</p>
+            {a.passport.grade_status === "preliminary" && data.preliminary_reason && (
+              <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-950 ring-1 ring-amber-200" data-testid="passport-preliminary-reason">{data.preliminary_reason}</p>
+            )}
             <p className="break-all rounded-xl bg-[#F7F6FB] px-3 py-2 font-mono text-xs text-brand-night">{verifyHref(a.id)}</p>
             <div className="flex flex-wrap gap-3">
               <button className="btn-primary" onClick={() => void share(verifyHref(a.id))}>{copied ? "Ссылка скопирована" : "Поделиться паспортом"}</button>

@@ -67,6 +67,10 @@ class GradeStatusOut(Doc):
     attempt: Any = Field(description="Сведения о последней неподтверждённой попытке, если была")
     p_pct: int | float | None = Field(description="Вероятность заявленного грейда по тесту, %")
     text: str = Field(description="Пояснение статуса человеческим языком")
+    pending_review: int | None = Field(None, description="FIX7: открытых ответов теста на проверке эксперта (грейд по тесту "
+                                                         "подтверждён, итог и паспорт обновятся после проверки)")
+    passport_status: str | None = Field(None, description="FIX7: статус грейда, который попадёт в паспорт ФСП (confirmed / "
+                                                          "preliminary) — тот же источник, что у паспорта")
 
 
 class CategoryRefOut(Doc):
@@ -436,6 +440,8 @@ class PassportStateOut(Doc):
     eligible: bool = Field(description="Может ли пользователь выпустить паспорт")
     opted_out: bool
     history: list[Obj]
+    preliminary_reason: str | None = Field(None, description="FIX7: почему грейд в паспорте «предварительный» "
+                                                             "(тот же источник, что статус на экране «Категория»)")
 
 
 # ---------------------------------------------------------------- жюри, уведомления, кабинет ФСП
