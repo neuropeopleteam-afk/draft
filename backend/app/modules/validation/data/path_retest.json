@@ -3,11 +3,11 @@
   "world": "симуляция теста: 5 направлений × 500 кандидатов, семейств в банке: 165",
   "seed": 20261006,
   "config_hash": "1dae5e52fe2f",
-  "commit": "59cb381",
+  "commit": "659ca65",
   "bank": "76c4164b6ce83743",
   "n": 2500,
   "command": "make path-retest",
-  "generated_at": "2026-10-10T17:36:47+00:00"
+  "generated_at": "2026-10-10T18:25:40+00:00"
  },
  "quick": false,
  "n_per_direction": 500,
@@ -3736,5 +3736,5 @@
   "ci": null,
   "icc": null
  },
- "seconds": 62.0
+ "seconds": 25.8
 }

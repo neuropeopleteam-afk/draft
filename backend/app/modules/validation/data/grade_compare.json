@@ -1,0 +1,1173 @@
+{
+ "signature": {
+  "world": "симуляция всего пути (path-retest): 5 направлений × 500 синтетических кандидатов, путь дважды; миры: наш мир: ошибка эксперта σ 0,5, точные параметры заданий",
+  "seed": 20261006,
+  "config_hash": "4b5f411d9e81",
+  "commit": "b927567",
+  "bank": "76c4164b6ce83743",
+  "n": 2500,
+  "command": "make grade-compare",
+  "generated_at": "2026-10-11T10:10:42+00:00"
+ },
+ "rows": [
+  {
+   "world": "ours",
+   "variant": "old",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 0,
+    "promote": null
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.5752,
+    "over": 0.0492,
+    "under": 0.3484,
+    "none": 0.0544,
+    "within_1": 0.986,
+    "kappa_true": 0.7581,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8442,
+    "retest_exact": 0.7696,
+    "minutes_mean": 56.6321,
+    "minutes_p90": 74.2291,
+    "minutes_over_60": 0.4888,
+    "items_mean": 20.5396,
+    "sessions_mean": 1.006,
+    "borderline": 0.7372,
+    "status": {
+     "accepted_lower": 0.2724,
+     "confirmed": 0.5796,
+     "none": 0.0544,
+     "provisional": 0.0936
+    },
+    "exact_ci": [
+     0.556,
+     0.594
+    ],
+    "over_ci": [
+     0.041,
+     0.058
+    ],
+    "retest_kappa_ci": [
+     0.829,
+     0.857
+    ],
+    "feasible": true,
+    "feasible_strict": true,
+    "claimed_below_share": 0.1668,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.1824
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.6904,
+    "over": 0.059,
+    "under": 0.2189,
+    "none": 0.0643,
+    "within_1": 0.9914,
+    "kappa_true": 0.826,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.8225,
+    "retest_exact": 0.7316,
+    "minutes_mean": 57.7709,
+    "minutes_p90": 74.3719,
+    "minutes_over_60": 0.519,
+    "items_mean": 20.553,
+    "sessions_mean": 1.0072,
+    "borderline": 0.7019,
+    "status": {
+     "accepted_lower": 0.325,
+     "confirmed": 0.4998,
+     "none": 0.0643,
+     "provisional": 0.1109
+    },
+    "exact_ci": [
+     0.669,
+     0.708
+    ],
+    "over_ci": [
+     0.049,
+     0.07
+    ],
+    "retest_kappa_ci": [
+     0.805,
+     0.838
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.2189
+   }
+  },
+  {
+   "world": "ours",
+   "variant": "current",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 0,
+    "promote": null
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.6408,
+    "over": 0.0648,
+    "under": 0.2796,
+    "none": 0.034,
+    "within_1": 0.9936,
+    "kappa_true": 0.7997,
+    "under_claimed_below": 0.1668,
+    "retest_kappa": 0.8736,
+    "retest_exact": 0.8036,
+    "minutes_mean": 56.5626,
+    "minutes_p90": 74.4947,
+    "minutes_over_60": 0.4904,
+    "items_mean": 20.4808,
+    "sessions_mean": 1.0036,
+    "borderline": 0.7404,
+    "status": {
+     "accepted_lower": 0.2088,
+     "confirmed": 0.7036,
+     "none": 0.034,
+     "provisional": 0.0536
+    },
+    "exact_ci": [
+     0.623,
+     0.66
+    ],
+    "over_ci": [
+     0.056,
+     0.074
+    ],
+    "retest_kappa_ci": [
+     0.862,
+     0.885
+    ],
+    "feasible": true,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.1128
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.7691,
+    "over": 0.0778,
+    "under": 0.1354,
+    "none": 0.0408,
+    "within_1": 0.9981,
+    "kappa_true": 0.8757,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.8506,
+    "retest_exact": 0.7657,
+    "minutes_mean": 57.7421,
+    "minutes_p90": 74.7204,
+    "minutes_over_60": 0.5233,
+    "items_mean": 20.493,
+    "sessions_mean": 1.0043,
+    "borderline": 0.7038,
+    "status": {
+     "accepted_lower": 0.2501,
+     "confirmed": 0.6457,
+     "none": 0.0408,
+     "provisional": 0.0634
+    },
+    "exact_ci": [
+     0.753,
+     0.787
+    ],
+    "over_ci": [
+     0.066,
+     0.089
+    ],
+    "retest_kappa_ci": [
+     0.836,
+     0.863
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.1354
+   }
+  },
+  {
+   "world": "ours",
+   "variant": "promote_03",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 0,
+    "promote": 0.3
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.6936,
+    "over": 0.1208,
+    "under": 0.1756,
+    "none": 0.0268,
+    "within_1": 0.998,
+    "kappa_true": 0.8244,
+    "under_claimed_below": 0.0648,
+    "retest_kappa": 0.757,
+    "retest_exact": 0.6672,
+    "minutes_mean": 60.926,
+    "minutes_p90": 79.3532,
+    "minutes_over_60": 0.5504,
+    "items_mean": 21.8728,
+    "sessions_mean": 1.3044,
+    "borderline": 0.734,
+    "status": {
+     "accepted_lower": 0.2028,
+     "confirmed": 0.5632,
+     "none": 0.0268,
+     "promoted": 0.158,
+     "provisional": 0.0492
+    },
+    "exact_ci": [
+     0.675,
+     0.711
+    ],
+    "over_ci": [
+     0.108,
+     0.134
+    ],
+    "retest_kappa_ci": [
+     0.737,
+     0.773
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.2996,
+    "promoted": 0.158,
+    "under_other": 0.1108
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.71,
+    "over": 0.145,
+    "under": 0.133,
+    "none": 0.0322,
+    "within_1": 0.9981,
+    "kappa_true": 0.8408,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.7683,
+    "retest_exact": 0.674,
+    "minutes_mean": 60.5316,
+    "minutes_p90": 77.7164,
+    "minutes_over_60": 0.5506,
+    "items_mean": 21.3759,
+    "sessions_mean": 1.1968,
+    "borderline": 0.7,
+    "status": {
+     "accepted_lower": 0.2429,
+     "confirmed": 0.6044,
+     "none": 0.0322,
+     "promoted": 0.0619,
+     "provisional": 0.0586
+    },
+    "exact_ci": [
+     0.689,
+     0.731
+    ],
+    "over_ci": [
+     0.131,
+     0.162
+    ],
+    "retest_kappa_ci": [
+     0.748,
+     0.787
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.1911,
+    "promoted": 0.0619,
+    "under_other": 0.133
+   }
+  },
+  {
+   "world": "ours",
+   "variant": "promote_05",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 0,
+    "promote": 0.5
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.6676,
+    "over": 0.1368,
+    "under": 0.186,
+    "none": 0.0252,
+    "within_1": 0.9976,
+    "kappa_true": 0.8082,
+    "under_claimed_below": 0.0728,
+    "retest_kappa": 0.7575,
+    "retest_exact": 0.6568,
+    "minutes_mean": 59.7983,
+    "minutes_p90": 76.9478,
+    "minutes_over_60": 0.5352,
+    "items_mean": 21.4332,
+    "sessions_mean": 1.214,
+    "borderline": 0.7472,
+    "status": {
+     "accepted_lower": 0.2016,
+     "confirmed": 0.562,
+     "none": 0.0252,
+     "promoted": 0.1596,
+     "provisional": 0.0516
+    },
+    "exact_ci": [
+     0.65,
+     0.686
+    ],
+    "over_ci": [
+     0.124,
+     0.15
+    ],
+    "retest_kappa_ci": [
+     0.739,
+     0.773
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.21,
+    "promoted": 0.1596,
+    "under_other": 0.1132
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.6884,
+    "over": 0.1642,
+    "under": 0.1359,
+    "none": 0.0302,
+    "within_1": 0.9981,
+    "kappa_true": 0.828,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.7754,
+    "retest_exact": 0.674,
+    "minutes_mean": 59.5396,
+    "minutes_p90": 75.9241,
+    "minutes_over_60": 0.5334,
+    "items_mean": 21.001,
+    "sessions_mean": 1.1191,
+    "borderline": 0.7115,
+    "status": {
+     "accepted_lower": 0.241,
+     "confirmed": 0.5934,
+     "none": 0.0302,
+     "promoted": 0.0735,
+     "provisional": 0.0619
+    },
+    "exact_ci": [
+     0.669,
+     0.707
+    ],
+    "over_ci": [
+     0.15,
+     0.18
+    ],
+    "retest_kappa_ci": [
+     0.759,
+     0.793
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.1143,
+    "promoted": 0.0735,
+    "under_other": 0.1359
+   }
+  },
+  {
+   "world": "exact",
+   "variant": "old",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 1,
+    "promote": null
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.5704,
+    "over": 0.0516,
+    "under": 0.3524,
+    "none": 0.0528,
+    "within_1": 0.9916,
+    "kappa_true": 0.7645,
+    "under_claimed_below": 0.1652,
+    "retest_kappa": 0.8527,
+    "retest_exact": 0.7748,
+    "minutes_mean": 55.9005,
+    "minutes_p90": 74.0436,
+    "minutes_over_60": 0.4632,
+    "items_mean": 20.5748,
+    "sessions_mean": 1.004,
+    "borderline": 0.7388,
+    "status": {
+     "accepted_lower": 0.2728,
+     "confirmed": 0.5836,
+     "none": 0.0528,
+     "provisional": 0.0908
+    },
+    "exact_ci": [
+     0.553,
+     0.589
+    ],
+    "over_ci": [
+     0.043,
+     0.061
+    ],
+    "retest_kappa_ci": [
+     0.84,
+     0.864
+    ],
+    "feasible": true,
+    "feasible_strict": true,
+    "claimed_below_share": 0.1668,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.1872
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.6846,
+    "over": 0.0619,
+    "under": 0.2247,
+    "none": 0.0614,
+    "within_1": 0.9976,
+    "kappa_true": 0.8326,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.8308,
+    "retest_exact": 0.7355,
+    "minutes_mean": 56.9322,
+    "minutes_p90": 74.2732,
+    "minutes_over_60": 0.4801,
+    "items_mean": 20.5559,
+    "sessions_mean": 1.0048,
+    "borderline": 0.6995,
+    "status": {
+     "accepted_lower": 0.3269,
+     "confirmed": 0.5036,
+     "none": 0.0614,
+     "provisional": 0.108
+    },
+    "exact_ci": [
+     0.664,
+     0.705
+    ],
+    "over_ci": [
+     0.051,
+     0.073
+    ],
+    "retest_kappa_ci": [
+     0.814,
+     0.845
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.2247
+   }
+  },
+  {
+   "world": "exact",
+   "variant": "current",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 1,
+    "promote": null
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.646,
+    "over": 0.0704,
+    "under": 0.2724,
+    "none": 0.032,
+    "within_1": 0.9936,
+    "kappa_true": 0.804,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.8794,
+    "retest_exact": 0.8048,
+    "minutes_mean": 55.7173,
+    "minutes_p90": 73.9027,
+    "minutes_over_60": 0.4524,
+    "items_mean": 20.5536,
+    "sessions_mean": 1.0032,
+    "borderline": 0.7452,
+    "status": {
+     "accepted_lower": 0.1964,
+     "confirmed": 0.7244,
+     "none": 0.032,
+     "provisional": 0.0472
+    },
+    "exact_ci": [
+     0.628,
+     0.664
+    ],
+    "over_ci": [
+     0.061,
+     0.081
+    ],
+    "retest_kappa_ci": [
+     0.867,
+     0.89
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.106
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.7753,
+    "over": 0.0845,
+    "under": 0.1272,
+    "none": 0.0379,
+    "within_1": 0.999,
+    "kappa_true": 0.8816,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.8587,
+    "retest_exact": 0.7686,
+    "minutes_mean": 56.7731,
+    "minutes_p90": 74.3022,
+    "minutes_over_60": 0.4695,
+    "items_mean": 20.5372,
+    "sessions_mean": 1.0038,
+    "borderline": 0.7067,
+    "status": {
+     "accepted_lower": 0.2348,
+     "confirmed": 0.6707,
+     "none": 0.0379,
+     "provisional": 0.0566
+    },
+    "exact_ci": [
+     0.758,
+     0.792
+    ],
+    "over_ci": [
+     0.073,
+     0.097
+    ],
+    "retest_kappa_ci": [
+     0.845,
+     0.87
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.1272
+   }
+  },
+  {
+   "world": "exact",
+   "variant": "promote_03",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 1,
+    "promote": 0.3
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.7028,
+    "over": 0.1292,
+    "under": 0.1596,
+    "none": 0.028,
+    "within_1": 0.9964,
+    "kappa_true": 0.8289,
+    "under_claimed_below": 0.058,
+    "retest_kappa": 0.7674,
+    "retest_exact": 0.6588,
+    "minutes_mean": 60.195,
+    "minutes_p90": 78.5123,
+    "minutes_over_60": 0.54,
+    "items_mean": 22.0224,
+    "sessions_mean": 1.3176,
+    "borderline": 0.7404,
+    "status": {
+     "accepted_lower": 0.1944,
+     "confirmed": 0.552,
+     "none": 0.028,
+     "promoted": 0.176,
+     "provisional": 0.0496
+    },
+    "exact_ci": [
+     0.685,
+     0.72
+    ],
+    "over_ci": [
+     0.116,
+     0.142
+    ],
+    "retest_kappa_ci": [
+     0.749,
+     0.785
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.3116,
+    "promoted": 0.176,
+    "under_other": 0.1016
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.7139,
+    "over": 0.1551,
+    "under": 0.1219,
+    "none": 0.0326,
+    "within_1": 0.9971,
+    "kappa_true": 0.8434,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.7799,
+    "retest_exact": 0.6654,
+    "minutes_mean": 59.8312,
+    "minutes_p90": 77.3794,
+    "minutes_over_60": 0.5401,
+    "items_mean": 21.5151,
+    "sessions_mean": 1.2098,
+    "borderline": 0.7019,
+    "status": {
+     "accepted_lower": 0.2328,
+     "confirmed": 0.5987,
+     "none": 0.0326,
+     "promoted": 0.0763,
+     "provisional": 0.0595
+    },
+    "exact_ci": [
+     0.695,
+     0.733
+    ],
+    "over_ci": [
+     0.14,
+     0.169
+    ],
+    "retest_kappa_ci": [
+     0.762,
+     0.797
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.2026,
+    "promoted": 0.0763,
+    "under_other": 0.1219
+   }
+  },
+  {
+   "world": "exact",
+   "variant": "promote_05",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 1,
+    "promote": 0.5
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.6928,
+    "over": 0.1248,
+    "under": 0.1732,
+    "none": 0.028,
+    "within_1": 0.9976,
+    "kappa_true": 0.8249,
+    "under_claimed_below": 0.07,
+    "retest_kappa": 0.7797,
+    "retest_exact": 0.6772,
+    "minutes_mean": 58.7606,
+    "minutes_p90": 77.0778,
+    "minutes_over_60": 0.5052,
+    "items_mean": 21.5444,
+    "sessions_mean": 1.2124,
+    "borderline": 0.7412,
+    "status": {
+     "accepted_lower": 0.1948,
+     "confirmed": 0.5716,
+     "none": 0.028,
+     "promoted": 0.1548,
+     "provisional": 0.0508
+    },
+    "exact_ci": [
+     0.675,
+     0.711
+    ],
+    "over_ci": [
+     0.112,
+     0.138
+    ],
+    "retest_kappa_ci": [
+     0.764,
+     0.795
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.2072,
+    "promoted": 0.1548,
+    "under_other": 0.1032
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.7158,
+    "over": 0.1498,
+    "under": 0.1239,
+    "none": 0.0331,
+    "within_1": 0.9976,
+    "kappa_true": 0.8451,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.7913,
+    "retest_exact": 0.6827,
+    "minutes_mean": 58.4754,
+    "minutes_p90": 75.8332,
+    "minutes_over_60": 0.5084,
+    "items_mean": 21.1051,
+    "sessions_mean": 1.1176,
+    "borderline": 0.7028,
+    "status": {
+     "accepted_lower": 0.2338,
+     "confirmed": 0.6073,
+     "none": 0.0331,
+     "promoted": 0.0648,
+     "provisional": 0.061
+    },
+    "exact_ci": [
+     0.698,
+     0.735
+    ],
+    "over_ci": [
+     0.134,
+     0.166
+    ],
+    "retest_kappa_ci": [
+     0.773,
+     0.808
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.1114,
+    "promoted": 0.0648,
+    "under_other": 0.1239
+   }
+  },
+  {
+   "world": "exact",
+   "variant": "current",
+   "levels": 4,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 4,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 1,
+    "promote": null
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.6624,
+    "over": 0.1292,
+    "under": 0.2,
+    "none": 0.0516,
+    "within_1": 0.9976,
+    "kappa_true": 0.7469,
+    "under_claimed_below": 0.104,
+    "retest_kappa": 0.7751,
+    "retest_exact": 0.7852,
+    "minutes_mean": 60.1222,
+    "minutes_p90": 74.9492,
+    "minutes_over_60": 0.5536,
+    "items_mean": 20.8444,
+    "sessions_mean": 1.0444,
+    "borderline": 0.7304,
+    "status": {
+     "accepted_lower": 0.1992,
+     "confirmed": 0.6644,
+     "none": 0.0196,
+     "provisional": 0.1168
+    },
+    "exact_ci": [
+     0.644,
+     0.68
+    ],
+    "over_ci": [
+     0.116,
+     0.142
+    ],
+    "retest_kappa_ci": [
+     0.756,
+     0.793
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.104,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.096
+   },
+   "claimed_not_below": {
+    "n": 2240,
+    "exact": 0.7393,
+    "over": 0.1442,
+    "under": 0.1071,
+    "none": 0.0576,
+    "within_1": 0.9991,
+    "kappa_true": 0.8069,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.7647,
+    "retest_exact": 0.7612,
+    "minutes_mean": 60.2135,
+    "minutes_p90": 74.9883,
+    "minutes_over_60": 0.5571,
+    "items_mean": 20.8875,
+    "sessions_mean": 1.0496,
+    "borderline": 0.7121,
+    "status": {
+     "accepted_lower": 0.2214,
+     "confirmed": 0.6263,
+     "none": 0.0219,
+     "provisional": 0.1304
+    },
+    "exact_ci": [
+     0.721,
+     0.757
+    ],
+    "over_ci": [
+     0.129,
+     0.159
+    ],
+    "retest_kappa_ci": [
+     0.746,
+     0.784
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.0,
+    "promoted": 0.0,
+    "under_other": 0.1071
+   }
+  },
+  {
+   "world": "exact",
+   "variant": "promote_03",
+   "levels": 4,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 4,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 1,
+    "promote": 0.3
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.6684,
+    "over": 0.1764,
+    "under": 0.1504,
+    "none": 0.0416,
+    "within_1": 0.9976,
+    "kappa_true": 0.7556,
+    "under_claimed_below": 0.048,
+    "retest_kappa": 0.6976,
+    "retest_exact": 0.684,
+    "minutes_mean": 63.4402,
+    "minutes_p90": 81.0831,
+    "minutes_over_60": 0.62,
+    "items_mean": 21.8772,
+    "sessions_mean": 1.2688,
+    "borderline": 0.7168,
+    "status": {
+     "accepted_lower": 0.2016,
+     "confirmed": 0.5612,
+     "none": 0.0156,
+     "promoted": 0.1012,
+     "provisional": 0.1204
+    },
+    "exact_ci": [
+     0.65,
+     0.686
+    ],
+    "over_ci": [
+     0.161,
+     0.191
+    ],
+    "retest_kappa_ci": [
+     0.675,
+     0.718
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.104,
+    "offered": 0.2252,
+    "promoted": 0.1012,
+    "under_other": 0.1024
+   },
+   "claimed_not_below": {
+    "n": 2240,
+    "exact": 0.6835,
+    "over": 0.1969,
+    "under": 0.1143,
+    "none": 0.0464,
+    "within_1": 0.9982,
+    "kappa_true": 0.7639,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.7071,
+    "retest_exact": 0.696,
+    "minutes_mean": 62.608,
+    "minutes_p90": 78.3661,
+    "minutes_over_60": 0.6009,
+    "items_mean": 21.6272,
+    "sessions_mean": 1.2067,
+    "borderline": 0.6969,
+    "status": {
+     "accepted_lower": 0.2241,
+     "confirmed": 0.5746,
+     "none": 0.0174,
+     "promoted": 0.0496,
+     "provisional": 0.1344
+    },
+    "exact_ci": [
+     0.664,
+     0.702
+    ],
+    "over_ci": [
+     0.181,
+     0.214
+    ],
+    "retest_kappa_ci": [
+     0.684,
+     0.729
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.158,
+    "promoted": 0.0496,
+    "under_other": 0.1143
+   }
+  }
+ ],
+ "others": [
+  {
+   "name": "Прототип А",
+   "exact": 0.826,
+   "kappa": 0.904,
+   "over": 0.029,
+   "note": "их собственная симуляция с точными параметрами заданий, 4 ступени"
+  },
+  {
+   "name": "Прототип Б",
+   "exact": 0.7,
+   "note": "их опубликованное число"
+  }
+ ],
+ "two_stage": {
+  "exact": 0.675,
+  "over": 0.04,
+  "retest_exact": 0.8,
+  "retest_kappa": 0.875,
+  "note": "двухэтапное подтверждение пограничных (feat/two-stage, проба c₂ 0,5; синтетика)"
+ },
+ "promote_cfg": {
+  "min_items": 4,
+  "max_items": 8,
+  "max_minutes": 15,
+  "ext_items": 0
+ },
+ "caveat": "Синтетика (модель, не люди): кандидаты — модель ответов 2PL; «точные параметры» — истина = предкалибровка; числа ориентиров — из их материалов, другой мир и процедура.",
+ "seconds": 54.6
+}

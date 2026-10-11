@@ -10,6 +10,7 @@ import { api, apiDownload, type Catalog } from "../lib/api";
 import { SusPrompt } from "./Sus";
 import { TrustBadge, TrustPanel, type Trust, type TrustShort } from "./Trust";
 import { AtsStageBadge, atsPushText } from "./Ats";
+import { HhImportButton } from "./HhImport";  // Я12: своя вакансия с hh.ru → черновик (только при HH_ENABLED)
 import { AssignmentButton } from "../pages/assignments/Employer";  // задание к вакансии (И7)
 import { AttemptStatus, Skills } from "../pages/assignments/shared";
 
@@ -205,6 +206,7 @@ export function EmployerVacancies() {
         <PageTitle title="Вакансии" subtitle="Вилка «от–до» обязательна. Контакты откликнувшихся кандидатов видны сразу." />
         <div className="flex flex-wrap gap-2">
           <button className="btn-ghost" onClick={() => setImporting(true)}>Импортировать из ATS</button>
+          <HhImportButton onDone={() => void reload()} />
           <button className="btn-primary" onClick={() => setEdit({ ...EMPTY })}>Новая вакансия</button>
         </div>
       </div>
@@ -240,8 +242,9 @@ export function EmployerVacancies() {
 function SourceBadge({ v }: { v: Vacancy }) {
   const cls = "ml-2 inline-flex items-center rounded-full bg-[#ECEAF8] px-2 py-0.5 text-xs font-semibold text-brand-night hover:underline";
   const GEN: Record<string, string> = { potok: "Потока" };  // «из «Потока»» — родительный падеж
-  const label = `из «${GEN[v.source ?? ""] ?? v.source_title ?? v.source}» · № ${v.external_id}`;
-  const hint = v.edited_after_import ? "Изменена на платформе после импорта — повторный импорт её не перезапишет" : "Импортирована из ATS; повторный импорт обновит поля";
+  const label = v.source === "hh" ? `с hh.ru · № ${v.external_id}${v.imported_at ? ` · импорт ${dt(v.imported_at)}` : ""}`  // Я12
+    : `из «${GEN[v.source ?? ""] ?? v.source_title ?? v.source}» · № ${v.external_id}`;
+  const hint = v.edited_after_import ? "Изменена на платформе после импорта — повторный импорт её не перезапишет" : v.source === "hh" ? "Импортирована с hh.ru; повторный импорт обновит поля" : "Импортирована из ATS; повторный импорт обновит поля";
   return v.external_url
     ? <a className={cls} href={v.external_url} target="_blank" rel="noopener noreferrer" title={hint}>{label} ↗</a>
     : <Link className={cls} to="/employer/ats" title={hint}>{label}</Link>;

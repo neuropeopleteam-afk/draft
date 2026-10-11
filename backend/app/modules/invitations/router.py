@@ -111,6 +111,7 @@ def _probe_out(db: Session, p: Probe, side: str) -> dict:
         out["candidate_ref"] = cand.public_ref
         out["candidate_category"] = cand.current_category_id
         out["candidate_deleted"] = cand.deleted_at is not None
+        out["need_id"] = str(p.need_id) if p.need_id else None  # Я10: «зонды по этой потребности» из подборки
     else:
         out["below_my_minimum"] = svc.below_minimum(cand, p.salary_to, p.salary_basis)
     return out

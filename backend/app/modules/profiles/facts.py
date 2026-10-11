@@ -33,11 +33,13 @@ DEFAULT_PRIVACY = {
     "show_city": True, "show_experience": True, "show_work_format": True, "show_roles": True,
     "show_stack": True, "show_soft_skills": True, "show_fsp": True,
     "show_attempts": True,  # И26: сравнение двух попыток теста в карточке у работодателя
+    "show_evidence": True,  # цитаты из развёрнутых ответов (доказательства оценки) в карточке у работодателя
 }
 PRIVACY_TITLES = {
     "show_city": "Город", "show_experience": "Стаж", "show_work_format": "Формат работы", "show_roles": "Роли",
     "show_stack": "Заявленный стек", "show_soft_skills": "Софт-скиллы из резюме", "show_fsp": "Достижения ФСП",
     "show_attempts": "Сравнение попыток теста",
+    "show_evidence": "Цитаты из ответов теста (доказательства оценки)",
 }
 WORK_FORMAT_TITLES = {"office": "Офис", "hybrid": "Гибрид", "remote": "Удалённо", "any": "Любой"}
 DISCIPLINE_TITLES = {d["id"]: d["title"] for d in FSP_DISCIPLINES}
@@ -502,6 +504,7 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
     from app.modules.assessment import provisional as prov
+    from app.modules.interview.service import badge as defense_badge  # Я15: устная защита (None — флаг выключен)
 
     p, pv = b.profile, b.privacy
     cat = categories.get(b.category_id or "")
@@ -537,6 +540,7 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
             "level": "T1", "theta": t.get("theta"), "se": t.get("se"), "correct": t.get("correct"),
             "answered": t.get("answered"), "engine": t.get("engine"), "date": b.test.created_at.date().isoformat(),
             "integrity": integrity_summary(t.get("integrity")),
+            "defense": defense_badge(t),  # Я15: «ответ подтверждён устно / расхождения / не проходил»
             # экспресс-тест жюри (5–7 заданий, интервал шире) и принятый уровень ниже — видны работодателю честно
             "mode": t.get("mode", "full"), "accepted_lower": bool(t.get("accepted_lower")), "grade": t.get("grade"),
         } if t else None,
