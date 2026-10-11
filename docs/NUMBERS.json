@@ -20,9 +20,9 @@
   "unique_variants": 3281
  },
  "migrations": {
-  "revisions": 32,
+  "revisions": 33,
   "heads": [
-   "iv01"
+   "tr01"
   ]
  },
  "memory_limits_mib": {
@@ -56,8 +56,8 @@
   }
  },
  "e2e_in_code": {
-  "spec_files": 22,
-  "scenarios": 54
+  "spec_files": 23,
+  "scenarios": 55
  },
  "validation_report": {
   "report_generated_at": "2026-10-10",
