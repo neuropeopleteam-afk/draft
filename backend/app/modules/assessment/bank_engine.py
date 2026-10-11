@@ -194,7 +194,8 @@ class BankEngine:
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
               previous_subpools: list[int] | None = None, previous_families: list[str] | None = None,
               confirm_from: dict | None = None, mode: str = "full", seen: dict[str, int] | None = None,
-              seen_seeds: dict[str, list[int]] | None = None) -> dict:
+              seen_seeds: dict[str, list[int]] | None = None, refine_from: dict | None = None,
+              refine: dict | None = None) -> dict:
         """confirm_from — состояние завершённой сессии с итогом «Junior (предварительно)»: новая сессия —
         короткое дотестирование у порога Junior поверх её ответов (см. _start_confirm).
         mode: full — обычный адаптивный тест; express — экспресс-тест для жюри (без канареек, короче);
@@ -202,6 +203,9 @@ class BankEngine:
         seen — семейства всех прошлых попыток с «возрастом» (0 — последняя), seen_seeds — их seed (И26): не берутся
         ни в основную часть, ни в дотестирование; запасной путь — LRU с новым вариантом (exposure.AppCATSession).
         Без seen — как до 09.10: семейства прошлой попытки (previous_families) не попадают только в дотестирование."""
+        if refine_from is not None:  # Я26: уточнение уровня у границы (assessment/two_stage.py)
+            return self._start_refine(direction=direction, stack_tags=stack_tags, seed=seed, prev=refine_from,
+                                      refine=refine or {}, seen=seen, seen_seeds=seen_seeds)
         if confirm_from is not None:
             return self._start_confirm(direction=direction, stack_tags=stack_tags, seed=seed, prev=confirm_from,
                                        previous_families=previous_families, seen=seen, seen_seeds=seen_seeds)
@@ -231,6 +235,40 @@ class BankEngine:
         if seen is not None:  # И26: все прошлые попытки — и в основной части, и в дотестировании; LRU — запасной путь
             state.update(seen=dict(seen), seen_seeds={k: list(v) for k, v in (seen_seeds or {}).items()},
                          exclude_ext=[])
+        return state
+
+    def _start_refine(self, *, direction: str, stack_tags: list[str], seed: int, prev: dict, refine: dict,
+                      seen: dict[str, int] | None = None, seen_seeds: dict[str, list[int]] | None = None) -> dict:
+        """Я26: уточнение уровня «на границе» — вторая сессия поверх ответов полной сессии.
+
+        Как дотестирование Junior (_start_confirm): ответы первой сессии — «prior» (в θ и детекторе, заново не
+        показываются), основная часть считается завершённой; затем до refine.items коротких заданий (≤ 5 мин) с
+        наибольшей информацией у порога refine.cut_grade из семейств, которых кандидат не видел, не дольше refine.minutes.
+        Итог — two_stage.final_grade по всем ответам (см. finish)."""
+        from app.modules.assessment.two_stage import stop_z
+
+        cfg = self._base_cfg()
+        prior = [{k: v for k, v in it.items() if k not in ("public", "key", "rubric", "answers")}
+                 for it in (prev.get("prior") or []) + (prev.get("items") or []) if it.get("done")]
+        n_prior = sum(1 for it in prior if not it.get("canary"))
+        used_time = sum(float(it.get("time_s") or 0) for it in prior)
+        level = float(refine.get("level", 0.8))
+        cfg.update({"mode": "refine", "min_items": n_prior, "max_items": n_prior, "max_time_s": used_time,
+                    "stop_rule": "classification", "cuts_only": refine["cut_grade"], "classify_z": stop_z(level),
+                    "ext_items": int(refine.get("items", 8)), "ext_time_s": float(refine.get("minutes", 15)) * 60.0,
+                    "max_item_time_s": 300.0})
+        own = {it["family_id"] for it in prior}
+        state = {
+            "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": prev["claimed_grade"],
+            "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": prev.get("subpool"), "items": [],
+            "skipped": [], "exclude_ext": sorted(own), "mode": "refine", "prior": prior,
+            "refine": {**refine, "theta_before": prev.get("final_theta"), "se_before": prev.get("final_se"),
+                       "prior_items": n_prior},
+            "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
+            "started_at": time.time(),
+        }
+        if seen is not None:
+            state.update(seen=dict(seen), seen_seeds={k: list(v) for k, v in (seen_seeds or {}).items()})
         return state
 
     def _start_confirm(self, *, direction: str, stack_tags: list[str], seed: int, prev: dict,
@@ -434,6 +472,10 @@ class BankEngine:
                          "status": "pending" if any(v is None for v in i["x"]) else "scored"}
                         for i in scored if i["format"] in ("open_answer", "open_book_3step")],
         }
+        if state.get("mode") == "refine":  # Я26: итог уточнения — по общей оценке обеих сессий
+            from app.modules.assessment.two_stage import refine_result
+
+            details["two_stage"] = refine_result(state, theta, se, len(new_scored))
         retake = dec.retake_lower
         lvl = category_level(theta, se, len(scored), direction=state["direction"])
         details["category_level"] = {"grade": lvl.grade, "ceiling": lvl.ceiling, "capped": lvl.capped,
@@ -493,15 +535,27 @@ class BankEngine:
         excl.update(weak_excluded(self._settings()))
         if state["claimed_grade"] == "intern":
             excl.update(intern_exclusions(pool, state["direction"]))
-        sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
-                             state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
-                             max_item_time_s=cfg.get("max_item_time_s"),
-                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
-                             seen=state.get("seen"), ext_lru=state.get("mode") == "confirm")
+        kw = dict(max_per_format=cfg.get("max_per_format", {}), max_item_time_s=cfg.get("max_item_time_s"),
+                  exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
+                  seen=state.get("seen"), ext_lru=state.get("mode") in ("confirm", "refine"))
+        if state.get("mode") == "refine":  # Я26: вторая сессия у границы — правило выбора и стопа из two_stage
+            from app.modules.assessment.two_stage import RefineSession
+
+            rf = state.get("refine") or {}
+            sess = RefineSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
+                                 state.get("subpool"), rng, cut=self.scale.cuts[cfg["cuts_only"]],
+                                 n_new=int(cfg.get("ext_items", rf.get("items", 8))),
+                                 z_stop=float(cfg.get("classify_z", 1.28)), **kw)
+        else:
+            sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
+                                 state.get("subpool"), rng, **kw)
         lookup = sess.items
         for it in prior + state["items"]:
             if it["done"] and it["family_id"] in lookup:
                 sess.record(lookup[it["family_id"]], _x_list(it), it["log_t"], time_s=it["time_s"])
+        if state.get("mode") == "refine":
+            sess.n_prior = sum(1 for it in prior if it.get("done") and not it.get("canary") and it["family_id"] in lookup)
+            sess.ext_start = sess.n_prior
         for it in prior + state["items"]:
             sess.used.add(it["family_id"])
         sess.used.update(state.get("skipped", []))
@@ -708,7 +762,7 @@ class BankEngine:
     def _total_est(self, state: dict) -> int:
         c = state["cfg"]
         ext = state.get("ext")
-        if state.get("mode") == "confirm":
+        if state.get("mode") in ("confirm", "refine"):
             return int(ext["n"] if ext else c.get("ext_items", 6))
         n_can = len(c.get("canary_positions", (2, 6, 10)))  # позиции канареек 2, 6, 10; экспресс — без них
         return c["max_items"] + n_can + (ext["n"] if ext else 0)
@@ -727,7 +781,7 @@ class BankEngine:
             step_prompt=(steps[k - 1]["prompt"] if is_ob3 and len(steps) >= k else None),
             elapsed_s=int(max(0, time.time() - it["issued_at"])), block="common" if it["block"] == "common" else "direction",
             adaptive=True, min_items=c["min_items"], max_items=c["max_items"],
-            answered=sum(1 for i in state["items"] if i["done"]), extension=bool(it.get("ext")) or state.get("mode") == "confirm",
+            answered=sum(1 for i in state["items"] if i["done"]), extension=bool(it.get("ext")) or state.get("mode") in ("confirm", "refine"),
         )
 
     @staticmethod

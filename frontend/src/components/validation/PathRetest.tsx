@@ -199,3 +199,41 @@ export function GradeAccuracy() {
     </section>
   );
 }
+
+/** Я26: двухэтапное подтверждение уровня у границы — «одна сессия / две сессии» на симуляции всего пути
+ *  (backend: validation/two_stage.py, make two-stage). Модель, не люди. В продукте — флаг ASSESSMENT_TWO_STAGE_ENABLED. */
+export function TwoStage() {
+  const { data: g, error, loading } = useApi<any>("/validation/two-stage", []);
+  const p1 = (v?: number | null) => pct(v, 1);
+  const head = ["Вариант", "Точно", "Выше", "Ниже", "Совпадение при повторе", "κw повтора", "Второй этап", "Минут всего", "Минут второго этапа"];
+  const row = (x: any): ReactNode[] => [
+    <span key="l">{x.label}{x.feasible ? "" : <span className="block text-xs text-brand-ink/75">не проходит ограничения</span>}</span>,
+    <span key="e">{p1(x.exact)}{x.exact_ci && <span className="block text-xs text-brand-ink/65">{p1(x.exact_ci[0])} … {p1(x.exact_ci[1])}</span>}</span>,
+    p1(x.over), p1(x.under), p1(x.retest_exact), num(x.retest_kappa, 3), p1(x.share_refined), num(x.minutes_mean, 1), num(x.refine_minutes_mean, 1)];
+  const t = g?.targets, one = g?.one_session, ch = g?.choice?.row, pr = g?.product;
+  return (
+    <section id="two-stage" className="mt-12 scroll-mt-20" aria-labelledby="two-stage-t">
+      <h2 id="two-stage-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Две сессии у границы: уточнение уровня</h2>
+      <div className="mt-4">
+        {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !g || g.missing
+          ? <Alert kind="info">Расчёт ещё не выполнен: запустите make two-stage.</Alert>
+          : <>
+            <SignatureLine s={g.signature} />
+            <p className="mt-2 text-sm text-brand-ink/75">Модель, не люди: синтетические кандидаты (2PL), истинные параметры заданий = предкалибровка + ошибка эксперта. Если после полного теста уровень «на границе» (вероятность у порога между 1 − L и L), кандидату предлагается отдельная сессия до N коротких заданий у этой границы из семейств, которых он не видел; итог — одна оценка по ответам обеих сессий. Одни и те же кандидаты во всех вариантах; точек перебора — {g.n_points}.</p>
+            {ch && one && <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <K label="Точно истинный уровень" value={`${p1(one.exact)} → ${p1(ch.exact)}`} hint={`цель ≥ ${pct(t?.exact, 0)}`} />
+              <K label="Выше истинного" value={`${p1(one.over)} → ${p1(ch.over)}`} hint={`ограничение ≤ ${pct(t?.max_over, 0)}`} />
+              <K label="Совпадение при повторе" value={`${p1(one.retest_exact)} → ${p1(ch.retest_exact)}`} hint={`цель ≥ ${pct(t?.retest_exact, 0)}; κw ${num(one.retest_kappa, 3)} → ${num(ch.retest_kappa, 3)}`} />
+              <K label="Второй этап и время" value={`${p1(ch.share_refined)} кандидатов`} hint={`в среднем ${num(ch.refine_minutes_mean, 1)} мин у них; на кандидата ${num(one.minutes_mean, 1)} → ${num(ch.minutes_mean, 1)} мин`} />
+            </div>}
+            <h3 className="mt-6 font-bold text-brand-night">Одна сессия / две сессии</h3>
+            <div className="mt-2"><T head={head} rows={[one, g.default, ...(g.choice?.key && g.default && g.choice.row?.label !== g.default.label ? [ch] : [])].filter(Boolean).map(row)} min="60rem" caption="Одна сессия и две сессии" /></div>
+            <p className="mt-2 text-xs text-brand-ink/70">Цели волны (точно ≥ {pct(t?.exact, 0)}, повтор ≥ {pct(t?.retest_exact, 0)}) не достигнуты ни одним вариантом: за 10–15 минут второй сессии добавляется в среднем {num(ch?.refine_items_mean, 1)} коротких заданий — этого мало, чтобы уверенно разделить соседние уровни у большинства пограничных. Варианты «выше заявленного» (уточнение и выше заявленного грейда) точнее, но завышают уровень чаще 7 % или хуже совпадают при повторе — они в Парето-фронте ниже. Выбранный вариант лучше одной сессии по всем ограничениям: {g.choice?.better_on_all ? "да" : "нет"}.</p>
+            <h3 className="mt-6 font-bold text-brand-night">Парето-фронт (точно ↑, выше ↓, повтор ↑, доля второго этапа ↓, минуты ↓)</h3>
+            <div className="mt-2"><T head={head} rows={(g.pareto ?? []).map(row)} min="60rem" caption="Парето-фронт двух сессий" /></div>
+            <p className="mt-2 text-xs text-brand-ink/70">В продукте: {pr?.enabled ? `включено — L ${num(pr.level, 2)}, до ${pr.items} заданий / ${pr.minutes} мин, итог при P ≥ ${num(pr.confirm, 2)}` : "выключено (флаг ASSESSMENT_TWO_STAGE_ENABLED)"}. Полная таблица — docs/validation/TWO_STAGE.md; пересчёт — make two-stage.</p>
+          </>}
+      </div>
+    </section>
+  );
+}
