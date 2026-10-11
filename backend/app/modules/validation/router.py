@@ -239,6 +239,21 @@ def path_retest():
     return {**d, "vs_truth": retest_vs_truth(d), "provenance": stamp("path", d)}
 
 
+PARTIAL_SIM = Path(__file__).resolve().parent / "data" / "partial_credit_sim.json"
+PARTIAL_NOISE = Path(__file__).resolve().parent / "data" / "partial_credit_noise.json"
+
+
+@router.get("/partial-credit", summary="Частичный балл 0–4 у развёрнутых: «0/1» против «0–4» (синтетика; пересчёт: "
+                                       "make partial-credit-sim)")
+def partial_credit_route():
+    d = json.loads(PARTIAL_SIM.read_text(encoding="utf-8")) if PARTIAL_SIM.exists() else {"missing": True}
+    if PARTIAL_NOISE.exists():
+        nz = json.loads(PARTIAL_NOISE.read_text(encoding="utf-8"))
+        d["grader"] = {k: nz.get(k) for k in ("grader", "reference", "n", "agreement", "intermediate_share_reference",
+                                               "set", "points_rule")}
+    return {**d, "enabled": bool(get_settings().assessment_partial_credit_enabled)}
+
+
 @router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
 def test_length_route():
     from app.modules.validation.provenance import length_info  # Ф6 (Н8)

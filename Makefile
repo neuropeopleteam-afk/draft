@@ -67,6 +67,9 @@ stability: ## Стабильность статуса «Junior (предвари
 path-retest: ## Test–retest всего пути кандидата (5 × 500, дважды) и D / r_pb семейств → data/path_retest.json (≈ 3 мин CPU)
 	cd backend && python -m app.modules.validation.path_retest && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
 
+partial-credit-sim: ## Частичный балл 0–4 у развёрнутых: «0/1» против «0–4» (5 × 500, 14 вариантов) → data/partial_credit_sim.json, docs/validation/PARTIAL_CREDIT.md
+	cd backend && python -m app.modules.validation.partial_credit_sim $(SIM_ARGS)
+
 criteria-doc: ## docs/CRITERIA.md «Критерий ТЗ → что показываем → чем доказано» из того же источника, что /criteria
 	cd backend && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
 
@@ -81,7 +84,7 @@ dev-frontend: ## Локальный frontend (Vite, прокси /api → :8000)
 	cd frontend && npm install && npm run dev
 
 .PHONY: help env up llm-local llm-local-logs down ps logs migrate test test-pg test-local validate validate-docker dev-backend dev-frontend
-.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest
+.PHONY: bench bench-quick stability intern-cut fsp-regression path-retest partial-credit-sim
 
 # подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
 GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)
