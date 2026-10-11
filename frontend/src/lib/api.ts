@@ -70,16 +70,54 @@ export const tokenStore = {
 function messageFrom(status: number, body: any): { code: string; message: string } {
   const d = body?.detail;
   if (d && typeof d === "object" && !Array.isArray(d) && d.message) return { code: d.code, message: d.message };
-  if (Array.isArray(d)) {
-    const first = d[0];
-    const field = first?.loc?.slice(-1)[0];
-    const raw = String(first?.msg ?? "Проверьте поля формы").replace(/^Value error, /, "");
-    const fieldRu: Record<string, string> = { email: "Почта", password: "Пароль", code: "Код" };
-    return { code: "validation_error", message: field && fieldRu[field] ? `${fieldRu[field]}: ${raw}` : raw };
-  }
+  if (Array.isArray(d)) return { code: "validation_error", message: validationText(d[0]) };
   // Строка от FastAPI: русская — показываем как есть, английская по умолчанию («Not Found») — по коду статуса
   if (typeof d === "string" && /[а-яё]/i.test(d)) return { code: "http_" + status, message: d };
   return { code: "http_" + status, message: STATUS_TEXT[status] ?? (status >= 500 ? "Сервис временно недоступен, повторите через минуту" : "Не удалось выполнить запрос") };
+}
+
+/** UX-2: поля форм по-русски для ошибок 422 (pydantic). Неизвестное поле — без названия, английский текст не показываем. */
+const FIELD_RU: Record<string, string> = {
+  email: "Почта", password: "Пароль", new_password: "Новый пароль", code: "Код", inn: "ИНН", name: "Название",
+  company_name: "Компания", company: "Компания", full_name: "Имя", phone: "Телефон", contact_phone: "Телефон",
+  contact_email: "Почта для кандидатов", website: "Сайт", url: "Ссылка", base_url: "Адрес", city: "Город",
+  industry: "Сфера", description: "Описание", title: "Название", position_title: "Должность", position: "Должность",
+  text: "Текст", task_text: "Текст задачи", comment: "Комментарий", note: "Примечание", reason: "Причина",
+  answer: "Ответ", summary: "Кратко", salary_from: "Зарплата от", salary_to: "Зарплата до", salary: "Зарплата",
+  salary_basis: "Основание вилки", work_format: "Формат работы", work_formats: "Формат работы", grade: "Грейд",
+  claimed_grade: "Грейд", category_id: "Категория", direction: "Направление", stack: "Стек", skills: "Навыки",
+  requirements: "Требования", time_limit_min: "Время", deadline_days: "Срок", fsp_id: "ФСП ID", telegram: "Телеграм",
+  experience_years: "Коммерческий стаж", salary_min_hidden: "Минимальная зарплата", additional_direction: "Дополнительное направление",
+  additional_stack: "Стек дополнительного направления", roles: "Роли", privacy: "Видимость", consent_publication: "Согласие на публикацию",
+  sport_rank: "Разряд", place: "Место", level: "Уровень", status: "Статус", file: "Файл", message: "Сообщение",
+};
+const PYDANTIC_RU: Record<string, (c: any) => string> = {
+  missing: () => "обязательное поле",
+  string_pattern_mismatch: () => "неверный формат",
+  string_too_short: (c) => `не короче ${c?.min_length ?? 1} симв.`,
+  string_too_long: (c) => `не длиннее ${c?.max_length} симв.`,
+  too_short: (c) => `не меньше ${c?.min_length ?? 1}`,
+  too_long: (c) => `не больше ${c?.max_length}`,
+  greater_than: (c) => `больше ${c?.gt}`, greater_than_equal: (c) => `не меньше ${c?.ge}`,
+  less_than: (c) => `меньше ${c?.lt}`, less_than_equal: (c) => `не больше ${c?.le}`,
+  int_parsing: () => "нужно целое число", int_type: () => "нужно целое число", int_from_float: () => "нужно целое число",
+  float_parsing: () => "нужно число", float_type: () => "нужно число", bool_parsing: () => "нужно да или нет",
+  string_type: () => "нужен текст", literal_error: () => "недопустимое значение", enum: () => "недопустимое значение",
+  url_parsing: () => "неверная ссылка", url_scheme: () => "неверная ссылка", date_parsing: () => "неверная дата",
+  datetime_parsing: () => "неверная дата", uuid_parsing: () => "неверный идентификатор", json_invalid: () => "неверные данные",
+};
+export function validationText(e: any): string {
+  const loc: unknown[] = Array.isArray(e?.loc) ? e.loc : [];
+  const field = [...loc].reverse().find((x) => typeof x === "string" && x !== "body" && x !== "query") as string | undefined;
+  const ru = field ? FIELD_RU[field] : undefined;
+  const raw = String(e?.msg ?? "").replace(/^Value error, /, "");
+  if (field === "inn" && (e?.type === "string_pattern_mismatch" || !/[а-яё]/i.test(raw))) return "ИНН — 10 или 12 цифр";
+  if (field?.endsWith("email") && e?.type === "value_error" && !/[а-яё]/i.test(raw)) return `${ru ?? "Почта"}: неверный адрес`;
+  // русский текст своего валидатора (Value error, …) — как есть
+  const own = /[а-яё]/i.test(raw);
+  const why = own ? raw : PYDANTIC_RU[e?.type]?.(e?.ctx) ?? "неверное значение";
+  if (own && (!ru || raw.toLowerCase().startsWith(ru.toLowerCase()))) return raw;
+  return ru ? `${ru}: ${why}` : `Проверьте поля формы: ${why}`;
 }
 
 const STATUS_TEXT: Record<number, string> = {

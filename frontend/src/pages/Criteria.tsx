@@ -104,7 +104,9 @@ function Body({ d }: { d: Out }) {
   return (
     <>
       <p className="mt-3 max-w-3xl text-sm leading-relaxed text-brand-ink/75">{d.how_to_read}</p>
-      <nav className="mt-5 flex flex-wrap gap-2 text-sm" aria-label="Критерии">
+      {/* UX-2: что значат проценты у кнопок критериев */}
+      <p className="mt-5 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender" data-testid="criteria-weight-note">Вес критерия в оценке жюри (раздел 6 ТЗ)</p>
+      <nav className="mt-2 flex flex-wrap gap-2 text-sm" aria-label="Критерии">
         <a href="#unique" className="rounded-full bg-brand-night px-3 py-1.5 font-semibold text-white hover:bg-brand-plum">Только здесь</a>
         {d.criteria.map((c) => (
           <a key={c.id} href={`#${c.id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">

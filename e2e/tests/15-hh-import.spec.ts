@@ -141,7 +141,7 @@ test("hh.ru: своя вакансия → черновик; чужая — с �
     const inv = page.getByRole("dialog", { name: "Приглашение-оффер" });
     const m = inv.getByTestId("hh-market");
     await expect(m).toBeVisible({ timeout: 30_000 });
-    await expect(m).toContainText("Рынок по hh.ru");
+    await expect(m).toContainText("Вакансии на hh.ru");
     await expect(m).toContainText(/на руки, медиана|мало данных/);
     await expect(m).toContainText(/\d+ вакансий/);
     if (meta.hh?.stub) await expect(m).toContainText("данные не настоящие");

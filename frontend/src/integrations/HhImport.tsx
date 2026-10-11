@@ -111,23 +111,25 @@ interface HhMarket {
 }
 
 /** «Рынок по hh.ru» рядом с вилкой: медиана и p25–p75 вилок живых вакансий роли, грейда и региона (на руки). */
-export function HhMarketNote({ cref, needId, categoryId }: { cref?: string | null; needId?: string | null; categoryId?: string | null }) {
+export function HhMarketNote({ cref, needId, categoryId, title = "Рынок по hh.ru", how }: { cref?: string | null; needId?: string | null; categoryId?: string | null; title?: string; how?: React.ReactNode }) {
   const on = useHh();
   const q = new URLSearchParams();
   if (categoryId) q.set("category_id", categoryId);
   if (cref) q.set("ref", cref);
   if (needId) q.set("need_id", needId);
   const { data: m, error, loading } = useApi<HhMarket>(on && q.toString() ? `/employer/market/hh?${q}` : null, [on, q.toString()]);
-  if (!on) return null;
-  if (loading && !m) return <p className="text-xs text-brand-ink/65" role="status">Рынок по hh.ru: считаем по живым вакансиям…</p>;
-  if (error) return <p className="text-xs text-brand-ink/65">Рынок по hh.ru сейчас недоступен: {error}</p>;
-  if (!m) return null;
-  if (!m.available) return <p className="text-xs text-brand-ink/65">Рынок по hh.ru: {m.reason}</p>;
+  // UX-2: how — общее «Как считали» формы приглашения (без hh.ru-данных — отдельной раскрывашкой)
+  const howOnly = how ? <details className="text-xs text-brand-night"><summary className="cursor-pointer font-semibold text-brand-plum">Как считали</summary><p className="mt-1 text-brand-ink/80">{how}</p></details> : null;
+  if (!on) return howOnly;
+  if (loading && !m) return <p className="text-xs text-brand-ink/65" role="status">{title}: считаем по живым вакансиям…</p>;
+  if (error) return <><p className="text-xs text-brand-ink/65">{title} сейчас недоступно: {error}</p>{howOnly}</>;
+  if (!m) return howOnly;
+  if (!m.available) return <><p className="text-xs text-brand-ink/65">{title}: {m.reason}</p>{howOnly}</>;
   const where = `${m.area?.name ?? "—"}${m.area_fallback ? ` (в регионе «${m.area_requested?.name}» мало вакансий)` : ""}`;
   return (
     <div className="rounded-lg bg-[#F3F2FB] px-3 py-2 text-xs text-brand-night" data-testid="hh-market">
       <p>
-        <b>Рынок по hh.ru</b>{m.category_title ? ` · ${m.category_title}` : ""}:{" "}
+        <b>{title}</b>{m.category_title ? ` · ${m.category_title}` : ""}:{" "}
         {m.shown
           ? <>{range(m.p25, m.p75)} на руки, медиана {rub(m.median)} <span className="whitespace-nowrap">(≈ {rub(m.median_gross)} до вычета НДФЛ)</span></>
           : <>мало данных — {m.n} {m.n === 1 ? "вакансия" : "вакансий"} с зарплатой, медиану не считаем</>}
@@ -138,7 +140,7 @@ export function HhMarketNote({ cref, needId, categoryId }: { cref?: string | nul
       </p>
       <details className="mt-1">
         <summary className="cursor-pointer font-semibold text-brand-plum">Как считали</summary>
-        <p className="mt-1 text-brand-ink/80">{m.note}{m.search_url && <> <a className="font-semibold text-brand-plum underline" href={m.search_url} target="_blank" rel="noopener noreferrer">Тот же поиск на hh.ru ↗</a></>}</p>
+        <p className="mt-1 text-brand-ink/80">{how}{m.note}{m.search_url && <> <a className="font-semibold text-brand-plum underline" href={m.search_url} target="_blank" rel="noopener noreferrer">Тот же поиск на hh.ru ↗</a></>}</p>
       </details>
     </div>
   );
