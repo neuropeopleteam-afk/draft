@@ -24,7 +24,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK, category_title
+from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, category_title, tag_title
 from app.modules.jury import scope as jury_scope
 from app.modules.matching import ranking
 from app.modules.profiles.facts import load_bundles
@@ -74,7 +74,7 @@ def _key(req: dict, filters: dict) -> str:
 
 def _skill(tag: str) -> str:
     """«Kafka», но «Без «HTML и CSS»» — русское название навыка берём в кавычки."""
-    t = STACK.get(tag, (tag,))[0]
+    t = tag_title(tag)
     return t if t.isascii() else f"«{t}»"
 
 
@@ -146,14 +146,14 @@ def _relaxations(req: dict, filters: dict, sf: dict, cat_ids: list[str], neighbo
         t = _skill(tag)
         r2, f2 = _without_tag(req, filters, tag)
         add("skill", tag, f"Без {t}", f"Перенести {t} в желательные", r2, f2, cut({"stack_t1": [tag]}),
-            criterion=STACK.get(tag, (tag,))[0])
+            criterion=tag_title(tag))
     for tag in filters.get("stack_any") or []:
         if tag in (sf.get("stack_t1") or []):
             continue
         t = _skill(tag)
         _r2, f2 = _without_tag(req, filters, tag)
         add("skill", tag, f"Без {t}", f"Убрать фильтр {t}", req, f2, cut({"stack_any": [tag]}),
-            criterion=STACK.get(tag, (tag,))[0])
+            criterion=tag_title(tag))
     formats = sf.get("work_formats") or ([sf["work_format"]] if sf.get("work_format") else [])
     if formats:
         r2, f2 = _without(req, filters, ("work_format", "work_formats"), ("work_format", "work_formats"))
@@ -266,7 +266,7 @@ def _compute(db: Session, req: dict, filters: dict) -> dict:
     criteria = [f"грейд подтверждён ({', '.join(category_title(c) for c in cat_ids[:3])}"
                 f"{'…' if len(cat_ids) > 3 else ''})"]
     if sf.get("stack_t1"):
-        criteria.append("подтверждены тестом: " + ", ".join(STACK.get(t, (t,))[0] for t in sf["stack_t1"]))
+        criteria.append("подтверждены тестом: " + ", ".join(tag_title(t) for t in sf["stack_t1"]))
     if formats:
         criteria.append("формат: " + " или ".join(WF_TITLES.get(x, x) for x in formats))
     if sf.get("city"):

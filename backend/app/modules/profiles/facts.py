@@ -479,6 +479,16 @@ def _uniq(facts: list) -> list:
             out.append(f)
     return out
 
+def _model_label() -> str:
+    from app.modules.catalog.ext import MODEL_LABEL
+    return MODEL_LABEL
+
+
+def _is_model_candidate(p) -> bool:
+    """Модельный кандидат каталога расширения: заголовок профиля, который ставит demo.seed.extend_catalog_ext."""
+    return (p.headline or "").endswith(f"({_model_label()})")
+
+
 def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None, rank_total: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
@@ -505,6 +515,8 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
                      "title": category_title(f"{cd}.{cg}")} if cat is None and cd and cg else None),
         "direction": b.direction,
         "direction_title": DIRECTION_TITLES.get(b.direction or "", None),
+        # модельные кандидаты новых направлений каталога (demo.seed.extend_catalog_ext) — подпись «модель, не люди»
+        **({"model_note": _model_label()} if _is_model_candidate(p) else {}),
         "grade": b.grade,
         "grade_title": prov.title(GRADES.get(b.grade or "", None), is_prov),
         # «Junior (предварительно)»: уровень доказанности (вероятность уровня не ниже Junior), причина, попытки

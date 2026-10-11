@@ -20,7 +20,7 @@ from app.core.enums import EvidenceLevel, FactSource, InvitationStatus, ProbeSta
 from app.core.errors import api_error
 from app.core.fmt import theta_se
 from app.modules.auth.models import User
-from app.modules.catalog.seed_data import STACK, category_title
+from app.modules.catalog.seed_data import category_title, tag_title
 from app.modules.invitations.models import Invitation, InvitationComplaint, InvitationEvent, Probe
 from app.modules.matching.models import EmployerNeed
 from app.modules.profiles.facts import achievement_text, fmt_count, load_bundles, refresh_rating, skill_confirmed, skill_evidence_text
@@ -112,7 +112,7 @@ def build_evidence(db: Session, candidate_id: uuid.UUID, company_id: uuid.UUID, 
     for tag, f in b.skills_t1.items():
         if skill_confirmed(f) and (not wanted or tag in wanted):
             ev.append({"level": "T1", "kind": "skill",
-                       "text": f"{STACK.get(tag, (tag,))[0]}: {skill_evidence_text(f).lower()}"})  # тест и задания (И7)
+                       "text": f"{tag_title(tag)}: {skill_evidence_text(f).lower()}"})  # тест и задания (И7)
     for a in b.achievements[:3]:
         if a.verified:
             ev.append({"level": "T2", "kind": "fsp", "text": achievement_text(a)})
