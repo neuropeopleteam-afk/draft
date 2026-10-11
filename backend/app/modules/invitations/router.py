@@ -140,7 +140,8 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
            "created_at": i.created_at.isoformat(), "viewed_at": i.viewed_at.isoformat() if i.viewed_at else None,
            "responded_at": i.responded_at.isoformat() if i.responded_at else None,
            "history": svc.events_of(db, i),
-           "company": {"name": comp.name, "industry": comp.industry, "website": comp.website, "city": comp.city}
+           "company": {"name": comp.name, "industry": comp.industry, "website": comp.website, "city": comp.city,
+                       **_tariff_badge(db, comp.id)}  # Я29: fsp_partner — только при TARIFFS_ENABLED
            if comp else None}
     out["complaint"] = svc.complaint_out(svc.complaint_of(db, i), with_comment=side == "candidate")
     out["ats_stage"] = stage_out(i.ats_stage, side)  # обратный канал: этап у работодателя по данным его ATS
@@ -157,6 +158,12 @@ def _inv_out(db: Session, i: Invitation, side: str) -> dict:
 
     out["hiring"] = hiring_summary(db, i, side)  # этап найма после принятия: собеседование, оффер, исход (Н8)
     return out
+
+
+def _tariff_badge(db: Session, company_id: uuid.UUID) -> dict:
+    from app.modules.tariffs.service import badge
+
+    return badge(db, company_id)
 
 
 def _candidate_user(db: Session, uid: uuid.UUID) -> User:
@@ -218,13 +225,17 @@ def review(probe_id: uuid.UUID, data: ReviewIn, user: User = Depends(employer), 
     description="Вилка «от–до» в рублях обязательна. Не чаще одного приглашения кандидату от компании за 30 дней. "
                 "Подтверждённые факты (T1/T2) прикладываются автоматически как доказательства соответствия.",
     responses={**E_AUTH, 404: err("Кандидат не найден"),
-               409: err("invitation_cooldown — приглашение этому кандидату уже было в последние 30 дней"),
+               409: err("invitation_cooldown — приглашение этому кандидату уже было в последние 30 дней; "
+                        "tariff_limit — исчерпан лимит приглашений тарифа в месяц (TARIFFS_ENABLED)"),
                422: err("Нет вилки «от–до» или она некорректна")},
 )
 def send_invitation(data: InvitationIn, bg: BackgroundTasks, user: User = Depends(employer),
                     db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
     p = svc.profile_by_ref(db, data.candidate_ref)
+    from app.modules.tariffs.service import check_invite_limit
+
+    check_invite_limit(db, c)  # Я29: лимит приглашений тарифа в месяц (только при TARIFFS_ENABLED) → 409 tariff_limit
     inv = svc.create_invitation(db, user, c, p, position_title=data.position_title,
                                 offer_description=data.offer_description, salary_from=data.salary_from,
                                 salary_to=data.salary_to, contact_method=data.contact_method, need_id=data.need_id,

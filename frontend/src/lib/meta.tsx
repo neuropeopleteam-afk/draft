@@ -21,6 +21,7 @@ export interface Meta {
   // Lead и Principal (GRADES_EXT_ENABLED): есть только при включённом флаге; уровни направления — те, для которых в банке
   // есть проверенные семейства (backend/app/modules/catalog/levels.py)
   grades_ext?: GradesExt;
+  tariffs?: { enabled: boolean; price_is_stub: boolean }; // Я29: тарифы работодателя и «Польза для ФСП» (TARIFFS_ENABLED)
 }
 
 export interface GradesExt {
