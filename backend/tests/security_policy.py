@@ -409,6 +409,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
     ("GET", "/api/validation/hh-parse"): "open",  # Я12: замер разбора на корпусе hh.ru
+    ("GET", "/api/validation/hh-match"): "open",  # Я12б: подбор на вакансиях hh.ru и спрос по направлениям (агрегаты)
     ("GET", "/api/validation/attempts-repeat"): "open",  # feat/attempts (И26)
     ("GET", "/api/validation/test-length"): "open",  # Ф6 (Н8): длина теста на экране старта
     ("GET", "/api/validation/provenance"): "open",  # Я8: происхождение чисел /validation

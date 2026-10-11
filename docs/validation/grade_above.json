@@ -1,0 +1,308 @@
+{
+  "rule": {
+    "min_exact": 30,
+    "keep": 2,
+    "algorithm": "match-v1.3",
+    "flag": "MATCH_GRADE_ABOVE",
+    "enabled_in_product": true
+  },
+  "acceptance": "P@5, P@10, nDCG@5, nDCG@10, MRR «после» не ниже «до» в каждом мире",
+  "no_fitting": true,
+  "worlds": {
+    "small_1": {
+      "title": "200 × 500, seed 20261006",
+      "config": {
+        "seed": 20261006,
+        "n_needs": 200,
+        "n_candidates": 500
+      },
+      "exact_pool_median": 21,
+      "applied_needs": 114,
+      "changed_top10_needs": 83,
+      "before": {
+        "p@5": 0.709,
+        "p@10": 0.6435,
+        "ndcg@5": 0.5726,
+        "ndcg@10": 0.5793,
+        "mrr": 0.8604
+      },
+      "after": {
+        "p@5": 0.712,
+        "p@10": 0.658,
+        "ndcg@5": 0.5759,
+        "ndcg@10": 0.592,
+        "mrr": 0.8609
+      },
+      "delta_ci95": {
+        "p@5": [
+          -0.005,
+          0.012
+        ],
+        "ndcg@10": [
+          0.0064,
+          0.019
+        ],
+        "mrr": [
+          -0.0009,
+          0.0027
+        ]
+      },
+      "coverage_before": {
+        "best5": 72.1,
+        "mean5": 57.3
+      },
+      "coverage_after": {
+        "best5": 73.7,
+        "mean5": 59.4
+      },
+      "seconds": 4,
+      "not_worse": true
+    },
+    "small_2": {
+      "title": "200 × 500, seed 20261007",
+      "config": {
+        "seed": 20261007,
+        "n_needs": 200,
+        "n_candidates": 500
+      },
+      "exact_pool_median": 19,
+      "applied_needs": 105,
+      "changed_top10_needs": 89,
+      "before": {
+        "p@5": 0.717,
+        "p@10": 0.6575,
+        "ndcg@5": 0.5668,
+        "ndcg@10": 0.5718,
+        "mrr": 0.8603
+      },
+      "after": {
+        "p@5": 0.72,
+        "p@10": 0.6675,
+        "ndcg@5": 0.5705,
+        "ndcg@10": 0.583,
+        "mrr": 0.8606
+      },
+      "delta_ci95": {
+        "p@5": [
+          -0.009,
+          0.014
+        ],
+        "ndcg@10": [
+          0.004,
+          0.0187
+        ],
+        "mrr": [
+          -0.0013,
+          0.0024
+        ]
+      },
+      "coverage_before": {
+        "best5": 70.1,
+        "mean5": 55.0
+      },
+      "coverage_after": {
+        "best5": 73.2,
+        "mean5": 58.3
+      },
+      "seconds": 3,
+      "not_worse": true
+    },
+    "guard_500": {
+      "title": "50 × 500 (мир ranking_guard)",
+      "config": {
+        "seed": 20261006,
+        "n_needs": 50,
+        "n_candidates": 500
+      },
+      "exact_pool_median": 26,
+      "applied_needs": 29,
+      "changed_top10_needs": 20,
+      "before": {
+        "p@5": 0.716,
+        "p@10": 0.644,
+        "ndcg@5": 0.586,
+        "ndcg@10": 0.5804,
+        "mrr": 0.8483
+      },
+      "after": {
+        "p@5": 0.724,
+        "p@10": 0.66,
+        "ndcg@5": 0.5952,
+        "ndcg@10": 0.5968,
+        "mrr": 0.8483
+      },
+      "delta_ci95": {
+        "p@5": [
+          -0.008,
+          0.024
+        ],
+        "ndcg@10": [
+          0.0046,
+          0.0303
+        ],
+        "mrr": [
+          0.0,
+          0.0
+        ]
+      },
+      "coverage_before": {
+        "best5": 70.4,
+        "mean5": 55.9
+      },
+      "coverage_after": {
+        "best5": 71.5,
+        "mean5": 58.0
+      },
+      "seconds": 1,
+      "not_worse": true
+    },
+    "sens_600": {
+      "title": "60 × 600 (размер анализа чувствительности)",
+      "config": {
+        "seed": 20261006,
+        "n_needs": 60,
+        "n_candidates": 600
+      },
+      "exact_pool_median": 27,
+      "applied_needs": 30,
+      "changed_top10_needs": 18,
+      "before": {
+        "p@5": 0.7333,
+        "p@10": 0.6483,
+        "ndcg@5": 0.5922,
+        "ndcg@10": 0.5775,
+        "mrr": 0.8569
+      },
+      "after": {
+        "p@5": 0.7367,
+        "p@10": 0.6633,
+        "ndcg@5": 0.5972,
+        "ndcg@10": 0.5883,
+        "mrr": 0.8569
+      },
+      "delta_ci95": {
+        "p@5": [
+          -0.0067,
+          0.0167
+        ],
+        "ndcg@10": [
+          0.0011,
+          0.0221
+        ],
+        "mrr": [
+          0.0,
+          0.0
+        ]
+      },
+      "coverage_before": {
+        "best5": 70.5,
+        "mean5": 56.1
+      },
+      "coverage_after": {
+        "best5": 71.9,
+        "mean5": 58.0
+      },
+      "seconds": 1,
+      "not_worse": true
+    },
+    "main_1": {
+      "title": "200 × 2000, seed 20261006 (основной мир)",
+      "config": {
+        "seed": 20261006,
+        "n_needs": 200,
+        "n_candidates": 2000
+      },
+      "exact_pool_median": 83,
+      "applied_needs": 0,
+      "changed_top10_needs": 0,
+      "before": {
+        "p@5": 0.776,
+        "p@10": 0.746,
+        "ndcg@5": 0.5921,
+        "ndcg@10": 0.5728,
+        "mrr": 0.8879
+      },
+      "after": {
+        "p@5": 0.776,
+        "p@10": 0.746,
+        "ndcg@5": 0.5921,
+        "ndcg@10": 0.5728,
+        "mrr": 0.8879
+      },
+      "delta_ci95": {
+        "p@5": [
+          0.0,
+          0.0
+        ],
+        "ndcg@10": [
+          0.0,
+          0.0
+        ],
+        "mrr": [
+          0.0,
+          0.0
+        ]
+      },
+      "coverage_before": {
+        "best5": 79.3,
+        "mean5": 69.6
+      },
+      "coverage_after": {
+        "best5": 79.3,
+        "mean5": 69.6
+      },
+      "seconds": 10,
+      "not_worse": true
+    },
+    "main_2": {
+      "title": "200 × 2000, seed 20261007 (второй мир)",
+      "config": {
+        "seed": 20261007,
+        "n_needs": 200,
+        "n_candidates": 2000
+      },
+      "exact_pool_median": 101,
+      "applied_needs": 0,
+      "changed_top10_needs": 0,
+      "before": {
+        "p@5": 0.749,
+        "p@10": 0.728,
+        "ndcg@5": 0.5655,
+        "ndcg@10": 0.5517,
+        "mrr": 0.863
+      },
+      "after": {
+        "p@5": 0.749,
+        "p@10": 0.728,
+        "ndcg@5": 0.5655,
+        "ndcg@10": 0.5517,
+        "mrr": 0.863
+      },
+      "delta_ci95": {
+        "p@5": [
+          0.0,
+          0.0
+        ],
+        "ndcg@10": [
+          0.0,
+          0.0
+        ],
+        "mrr": [
+          0.0,
+          0.0
+        ]
+      },
+      "coverage_before": {
+        "best5": 78.4,
+        "mean5": 69.6
+      },
+      "coverage_after": {
+        "best5": 78.4,
+        "mean5": 69.6
+      },
+      "seconds": 11,
+      "not_worse": true
+    }
+  },
+  "not_worse_all": true
+}
