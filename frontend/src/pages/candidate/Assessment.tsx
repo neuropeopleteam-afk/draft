@@ -184,7 +184,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         {STEPS.map((s, i) => (
           <li key={s}>
             <button type="button" onClick={() => i < step && setStep(i)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === step ? "bg-brand-strong text-white" : i < step ? "bg-brand-blush text-brand-plum" : "bg-gray-100 text-gray-500"}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === step ? "bg-brand-strong text-white" : i < step ? "bg-brand-blush text-brand-plum" : "bg-gray-100 text-gray-600"}`}>
               {i + 1}. {s}
             </button>
           </li>
