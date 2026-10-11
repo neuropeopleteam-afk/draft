@@ -407,6 +407,7 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/strongest"): "open",  # сильнейшие модели по функциям
     ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
     ("GET", "/api/validation/grade-accuracy"): "open",  # feat/grade-accuracy: сводка перебора правил теста (как path-retest)
+    ("GET", "/api/validation/two-stage"): "open",  # feat/two-stage: «одна сессия / две сессии» (симуляция, как grade-accuracy)
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
     ("GET", "/api/validation/hh-parse"): "open",  # Я12: замер разбора на корпусе hh.ru
