@@ -13,7 +13,7 @@ import { PassportShare } from "../../passport/Share";
 import { AttemptsLink } from "../../components/AttemptsCompare";
 
 const REASON: Record<string, string> = {
-  initial: "Первое присвоение", retest_up: "Пересдача на грейд выше", retest_down: "Пересдача на грейд ниже", sandbox: "Демо-режим жюри",
+  initial: "Первое присвоение", retest_up: "Пересдача на грейд выше", retest_down: "Пересдача на грейд ниже", sandbox: "Режим проверки для жюри",
   admin: "Администратор", provisional: "Присвоена предварительно", confirmed: "Предварительная подтверждена (не смена грейда)",
 };
 const MODE: Record<string, string> = { confirm: "дотестирование", express: "экспресс", full: "" };
@@ -77,7 +77,7 @@ export default function Category() {
         <div className="rounded-xl bg-brand-blush/30 p-4 text-sm">
           <p className="font-semibold text-brand-night">Правила {s.grade_change_interval_days ?? 90} и {s.retake_same_grade_days ?? 30} дней</p>
           {s.lock_active
-            ? <p className="mt-1 text-brand-ink/75">Смена грейда доступна с <b>{dt(s.locked_until).replace(/ г\.$/, "")}</b>.{s.sandbox_active && " Сейчас ограничение снято демо-режимом."}</p>
+            ? <p className="mt-1 text-brand-ink/75">Смена грейда доступна с <b>{dt(s.locked_until).replace(/ г\.$/, "")}</b>.{s.sandbox_active && " Сейчас ограничение снято режимом проверки для жюри."}</p>
             : <p className="mt-1 text-brand-ink/75">{c.grade ? "Можно пройти тест на грейд выше или ниже." : "Ограничений нет — пройдите тест."}</p>}
           {Object.keys(s.retake_locks ?? {}).length > 0 && (
             <p className="mt-1 text-brand-ink/75">Повтор после неподтверждённой попытки: {Object.entries(s.retake_locks as Record<string, string>).map(([g, at]) => `${GRADE_TITLE_ALL[g]} — с ${dt(at).replace(/ г\.$/, "")}`).join(", ")}. Тест на грейд ниже — сразу.</p>
@@ -85,7 +85,7 @@ export default function Category() {
           <p className="mt-1 text-xs text-brand-ink/65">Смена подтверждённого грейда — не чаще раза в {s.grade_change_interval_days ?? 90} дней; повтор на тот же грейд после неудачи — через {s.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу.</p>
           {s.jury_mode_available && s.jury_mode_allowed && (
             <div className="mt-3 border-t border-brand/10 pt-2">
-              <Toggle checked={s.jury_mode} onChange={jury} label="Демо-режим жюри" hint={`Только для демо-учёток. Снимает ограничение ${s.grade_change_interval_days ?? 90} дней для показа; в истории такие смены помечаются.`} />
+              <Toggle checked={s.jury_mode} onChange={jury} label="Режим проверки для жюри" hint={`Только для учёток жюри. Снимает ограничение ${s.grade_change_interval_days ?? 90} дней для показа; в истории такие смены помечаются.`} />
               {s.sandbox_starts && <p className="text-xs text-brand-ink/65">Новых тестов за 24 часа осталось: {s.sandbox_starts.left} из {s.sandbox_starts.limit} — чтобы банк заданий нельзя было выкачать перезапусками.</p>}
             </div>
           )}
@@ -105,7 +105,7 @@ export default function Category() {
             <span className="text-sm text-brand-ink/70">P(уровень не ниже Junior) = <b>{pv.p_pct} %</b> · подтверждение от {pv.confirm_pct} %, «не доказанно ниже» от {pv.level_pct} %</span>
           </div>
           <p className="text-sm text-brand-ink/75">{ruText(pv.hint)}</p>
-          {pv.reason_title && <p className="text-xs text-brand-ink/65">Причина: {pv.reason_title}.{pv.last_confirm ? ` Последнее дотестирование ${dtt(pv.last_confirm.at)}: θ = ${signed(pv.last_confirm.theta)} ± ${num(pv.last_confirm.se)}, P = ${Math.round((pv.last_confirm.p ?? 0) * 100)} %.` : ""}</p>}
+          {pv.reason_title && <p className="text-xs text-brand-ink/65">Причина: {pv.reason_title}.{pv.last_confirm ? ` Последнее дотестирование ${dtt(pv.last_confirm.at)}: уровень по шкале теста ${signed(pv.last_confirm.theta)} ± ${num(pv.last_confirm.se)}, вероятность уровня не ниже порога ${Math.round((pv.last_confirm.p ?? 0) * 100)} %.` : ""}</p>}
           <ul className="grid gap-2 text-sm md:grid-cols-3">
             {(pv.routes ?? []).map((r: any) => (
               <li key={r.id} className="rounded-xl bg-white p-3"><p className="font-semibold text-brand-night">{r.title}</p><p className="mt-1 text-xs leading-relaxed text-brand-ink/70">{r.text}</p></li>
@@ -157,9 +157,9 @@ export default function Category() {
               {s.sessions.map((t: any) => (
                 <li key={t.id} className="flex items-start justify-between gap-3 border-l-2 border-brand-blush pl-3">
                   <div>
-                    <p className="font-semibold">{DIRECTION_TITLES[t.direction]} · {GRADE_TITLE_ALL[t.claimed_grade]}{MODE[t.mode] ? ` · ${MODE[t.mode]}` : ""}{t.is_sandbox ? " · демо" : ""}</p>
+                    <p className="font-semibold">{DIRECTION_TITLES[t.direction]} · {GRADE_TITLE_ALL[t.claimed_grade]}{MODE[t.mode] ? ` · ${MODE[t.mode]}` : ""}{t.is_sandbox ? " · проверка жюри" : ""}</p>
                     <p className="text-brand-ink/65">{SESSION[t.status] ?? t.status} · {dtt(t.finished_at ?? t.started_at)}</p>
-                    {t.theta != null && <p className="text-brand-ink/65">θ = {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADE_TITLE_ALL[t.accepted_lower] ?? t.accepted_lower}` : t.provisional ? "предварительно" : "не подтверждён"}</p>}
+                    {t.theta != null && <p className="text-brand-ink/65">уровень по шкале теста {signed(t.theta)} ± {num(t.se)} · {t.confirmed ? "подтверждён" : t.accepted_lower ? `не подтверждён, принят ${GRADE_TITLE_ALL[t.accepted_lower] ?? t.accepted_lower}` : t.provisional ? "предварительно" : "не подтверждён"}</p>}
                   </div>
                   {t.status === "in_progress" && <Link className="text-sm font-semibold text-brand" to={`/candidate/assessment/test/${t.id}`}>Продолжить</Link>}
                   {t.status === "finished" && <Link className="shrink-0 text-sm font-semibold text-brand" to={`/candidate/feedback?session=${t.id}`}>Разбор</Link>}
