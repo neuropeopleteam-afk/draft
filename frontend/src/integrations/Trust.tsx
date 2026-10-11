@@ -3,12 +3,14 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Alert, dateOnly, dt, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
+import { OriginTag, type Origin } from "../components/Origin";
 
 export { dateOnly };
 
 export interface TrustShort {
   score: number; level: "high" | "medium" | "low"; level_title: string; preliminary: boolean; critical: boolean;
   summary: string; offer_salary?: { status: string; text: string } | null; company_id?: string;
+  origin?: Origin | null;  // Я8: сведения ФНС — модельные данные / реальный запрос / не проверено
 }
 export interface TrustFactor { id: string; title: string; status: "ok" | "warn" | "bad" | "unknown" | "neutral"; points: number; max: number; text: string }
 export interface Trust extends TrustShort {
@@ -61,7 +63,7 @@ export function TrustPanel({ t, title = "Индекс доверия работ�
     <section className="rounded-2xl border border-brand-night/10 bg-white p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{title}</p>
+          <p className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{title}{t.origin && <span className="normal-case tracking-normal">Сведения ФНС: <OriginTag o={t.origin} /></span>}</p>
           <p className="mt-1 flex items-baseline gap-2">
             <span className="text-3xl font-extrabold tabular-nums text-brand-night">{t.score}</span>
             <span className="text-sm text-brand-ink/65">из 100</span>

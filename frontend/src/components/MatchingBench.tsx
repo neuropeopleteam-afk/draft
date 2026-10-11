@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Alert, DIRECTIONS, GRADES, Loading, useApi } from "./ui";
 import { ScrollX } from "./A11y";
+import { ProvenanceLine } from "./validation/Provenance";
 
 /** Блок /validation: бенчмарк подбора со скрытой истиной (backend: app/modules/validation/matching_bench.py, make bench). */
 
@@ -19,6 +20,7 @@ export default function MatchingBench() {
   return (
     <section id="bench" className="mt-12 scroll-mt-20" aria-labelledby="bench-t">
       <h2 id="bench-t" className="text-xl font-extrabold tracking-tight text-brand-night md:text-2xl">Бенчмарк подбора со скрытой истиной</h2>
+      {r?.provenance && <ProvenanceLine p={r.provenance} className="mt-1.5" />}
       <div className="mt-4">
         {loading ? <Loading /> : error ? <Alert>{error}</Alert> : !r || r.missing
           ? <Alert kind="info">Бенчмарк ещё не посчитан: запустите make bench.</Alert>
@@ -72,7 +74,7 @@ function Body({ r }: { r: any }) {
         <li>Тест — главный вклад: без него (только самоописание) nDCG@10 ниже на {n2(pm.no_test?.["ndcg@10"]?.mean)}, только грейд из теста без скора внутри категории — ниже на {n2(pm.grade_only?.["ndcg@10"]?.mean)}.</li>
         <li>Раздутые резюме: нерелевантные «раздутые» занимают {pct(g.inflated?.platform?.irrelevant_inflated_top10)} мест топ-10 у платформы, {pct(g.inflated?.bm25?.irrelevant_inflated_top10)} у BM25 и {pct(g.inflated?.no_guard?.irrelevant_inflated_top10)}, если засчитывать заявленное как подтверждённое.</li>
         <li>Цена защиты от раздувания: при {pct(r.config?.share_inflated)} «раздутых» засчитывание заявленных навыков дало бы nDCG@10 {sgn(-(pm.no_guard?.["ndcg@10"]?.mean ?? 0))}{strategic ? <> — но если 40 % кандидатов дописывают все навыки направления, оно {strategic.no_guard?.["ndcg@10"] <= strategic.platform?.["ndcg@10"] + 0.01 ? "уже не выигрывает у платформы" : "всё ещё выигрывает у платформы"} ({n2(strategic.no_guard?.["ndcg@10"])} против {n2(strategic.platform?.["ndcg@10"])}, мир {strategic.n_needs} × {strategic.n_candidates}), а у платформы nDCG@10 почти не меняется ({n2(base?.platform?.["ndcg@10"])} → {n2(strategic.platform?.["ndcg@10"])})</> : null}. Заявленное (T0) в скор не входит намеренно — это устойчивость к атаке «дописать в резюме навыки вакансии».</li>
-        <li>Вклад бонуса ФСП в nDCG@10: {sgn(pm.no_fsp?.["ndcg@10"]?.mean)} (ДИ {range(pm.no_fsp?.["ndcg@10"])}). Кандидаты без ФСП не тонут: средний перцентиль места подходящих — {n2(g.fsp?.platform?.without_fsp_percentile)} против {n2(g.fsp?.platform?.with_fsp_percentile)} у кандидатов с ФСП (0 — вершина выдачи). Но бонус переставляет подходящих: среди подходящих в топ-10 без ФСП {pct(g.fsp?.platform?.without_fsp_share_of_relevant_top10)} (без бонуса {pct(g.fsp?.no_fsp?.without_fsp_share_of_relevant_top10)}, среди всех подходящих {pct(g.fsp?.without_fsp_share_of_all_relevant)}).</li>
+        <li>Вклад бонуса ФСП в nDCG@10: {sgn(pm.no_fsp?.["ndcg@10"]?.mean)} (ДИ {range(pm.no_fsp?.["ndcg@10"])}). Кандидаты без ФСП (без штрафа; подтверждённые достижения дают бонус) — средний перцентиль места подходящих — {n2(g.fsp?.platform?.without_fsp_percentile)} против {n2(g.fsp?.platform?.with_fsp_percentile)} у кандидатов с ФСП (0 — вершина выдачи). Но бонус переставляет подходящих: среди подходящих в топ-10 без ФСП {pct(g.fsp?.platform?.without_fsp_share_of_relevant_top10)} (без бонуса {pct(g.fsp?.no_fsp?.without_fsp_share_of_relevant_top10)}, среди всех подходящих {pct(g.fsp?.without_fsp_share_of_all_relevant)}).</li>
         {jun && jun.no_test > jun.platform ? <li>Слабое место — потребности уровня Junior: nDCG@10 {n2(jun.platform)} против {n2(jun.no_test)} у самоописания. Тест у порога Junior осторожен (подтверждение от P = 0,8): часть подходящих не подтверждает грейд и остаётся без категории (без категории — {intRu(w.no_category)} из {intRu(w.n_candidates)}). Дотестирование у порога в синтетике не моделируется.</li> : null}
       </ul>
 

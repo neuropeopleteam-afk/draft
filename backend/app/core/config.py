@@ -139,7 +139,7 @@ class Settings(BaseSettings):
     llm_timeout_resume: float | None = None
     llm_timeout_grade: float | None = None
     llm_timeout_grade_second: float | None = None
-    # Рассуждения моделей OpenRouter на функцию (у Sonnet 5.5 их нельзя выключить): low | medium | high | default
+    # Рассуждения моделей OpenRouter на функцию (у Sonnet 5.5 их нельзя выключить): none | minimal | low | medium | high | default
     # (параметр не передаётся). Разбор и резюме — low: извлечению рассуждения не нужны, а ответ в 2 раза дешевле и
     # не обрезается лимитом токенов (docs/LLM.md, «качество / время»)
     llm_reasoning_parse_need: str = "low"
@@ -147,6 +147,9 @@ class Settings(BaseSettings):
     llm_reasoning_grade: str = "default"
     llm_reasoning_grade_second: str = "low"  # Fable 5.1 по умолчанию рассуждает долго: ответ обрезался лимитом
     # Автомат-выключатель: после N ошибок подряд провайдер (с этой моделью) пропускается M секунд
+    # JSON-схема ответа (structured output) и для Yandex AI Studio — у запроса-дельты разбора потребности
+    # (Completions API AI Studio принимает response_format json_schema); HTTP 400 — повтор без схемы, как у OpenRouter
+    llm_yandex_json_schema: bool = False
     llm_breaker_failures: int = 3
     llm_breaker_cooldown_s: float = 60.0
     # Вторая оценка спорных ответов (grade_second, docs/LLM.md): «близко к порогу» — |балл − 0,5| ≤ LLM_GRADING_NEAR
@@ -167,6 +170,13 @@ class Settings(BaseSettings):
     # И27: вторая оценка спорных ответов — в фоне (итог теста её не ждёт, результат дописывается в оценку с пометкой
     # «пересмотрено второй моделью»); false — как раньше, синхронно внутри ответа кандидата
     llm_grading_second_async: bool = True
+    # Доказательная оценка (assessment/evidence.py, docs/LLM.md «Доказательная оценка»): цитаты по пунктам рубрики, сверенные кодом
+    # (пункт без подтверждённой цитаты — на шаг ниже), «скептик» для высоких (≥ GRADING_SKEPTIC_HIGH) и спорных
+    # оценок со сборкой итога кодом; выключено — промпт v2 и вторая оценка, как раньше. Модель скептика — цепочка
+    # grade_second или явная GRADING_SKEPTIC_MODEL (одна попытка, без цепочки)
+    grading_evidence: bool = False
+    grading_skeptic_high: float = 0.75
+    grading_skeptic_model: str | None = None
     # И27: кэш разбора потребности по нормализованному тексту (таблица need_parse_jobs), с; 0 — без кэша
     parse_cache_ttl_s: int = 3600
 
