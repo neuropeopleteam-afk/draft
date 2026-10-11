@@ -222,7 +222,7 @@ def create_app() -> FastAPI:
                           "invitation_cooldown_days": get_settings().invitation_cooldown_days,
                           # Я22: порог уверенности решения по грейду, % (подтверждение и «уровень ниже»)
                           "confirm_pct": round(100 * get_settings().assessment_confirm_level)},
-                "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
+                "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes, avatar}
                 "interview_enabled": interview.svc.enabled(),  # то же одним флагом — шаг проводника «12 минут» (Я9)
                 "hh": hh_api.meta(),  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
                 "voice_need": voice.meta(),  # кнопка «Надиктовать»: флаг, заглушка, предел секунд, версия согласия

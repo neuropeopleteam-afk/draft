@@ -869,10 +869,14 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     : r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
     : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
     : "Грейд не подтверждён";
+  // Я26 + Я25: у Lead/Principal «предварительно» уточнение — «второй этап» в пометке (кнопка там же, без второго блока)
+  const extStage = !r.grade_preliminary?.second_stage?.available || !r.two_stage ? null
+    : r.mode === "refine" ? (r.two_stage.refine ? { status: r.two_stage.status, outcome: r.two_stage.refine } : null)
+    : r.two_stage.boundary ? r.two_stage : null;
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
-      <ExtPreliminaryNote x={r.grade_preliminary} className="mt-4" />
+      <ExtPreliminaryNote x={r.grade_preliminary} stage={extStage} direction={r.direction} className="mt-4" />
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · интервал θ шире, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
@@ -886,7 +890,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
       {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
-      {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
+      {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && !extStage && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
       <div className="card mt-4 text-sm text-brand-ink/75">{ruText(r.explanation)}</div>
       {r.level_position && <p className="mt-2 text-sm text-brand-ink/80" data-testid="level-position">Позиция внутри уровня {r.level_position.grade_title}: <b>{r.level_position.text}</b>{r.level_position.known ? " — по точности этого теста" : " (погрешность пока шире половины уровня)"}</p>}
       {(r.confirmed || r.accepted_lower) && <p className="mt-3 text-xs text-brand-ink/65">Грейд — уровень навыков, подтверждённый этим тестом. Стаж в годах остаётся справкой в профиле и на грейд не влияет.</p>}

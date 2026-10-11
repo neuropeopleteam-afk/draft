@@ -3,7 +3,7 @@ import { DIRECTION_TITLES } from "../ui";
 import { ScrollX } from "../A11y";
 import { ProvenanceLine, type Prov } from "./Provenance";
 
-/* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в условиях конкурентов»
+/* Блоки страницы /validation про стабильность грейда, условия симуляции, прогон «в других условиях измерения»
    и атаку утечкой по доле слитых вариантов. Данные — simulation из validation/report.json (make validate). */
 
 /** Ф6 (Н7): вместо «сейчас» — дата отчёта и мир, на котором он посчитан (задаёт Validation.tsx из provenance). */
@@ -189,12 +189,10 @@ export function RetestSection({ sim }: { sim: any }) {
   );
 }
 
-/** Прогон «в условиях конкурентов»: 20 заданий, ошибка параметров как в их симуляции. */
-export function CompetitorConditions({ sim }: { sim: any }) {
-  const cl = sim?.competitor_like;
+/** Прогон в других условиях измерения: ровно 20 заданий без досрочной остановки, меньшая ошибка параметров. */
+export function AltConditions({ sim }: { sim: any }) {
+  const cl = sim?.alt_conditions;
   if (!cl) return null;
-  const ref = cl.reference?.["miliantr/fsp-talent"] ?? {};
-  const jb = cl.reference?.["Izymka/fsp-job-board"] ?? {};
   const t = cl.truth ?? {};
   const r = cl.retest ?? {};
   const m = sim?.mean ?? {};
@@ -202,26 +200,22 @@ export function CompetitorConditions({ sim }: { sim: any }) {
   const c = sim?.conditions ?? {};
   const n = ndirs(sim);
   return (
-    <Section id="competitors" title="В условиях конкурентов"
-      lead="Цифры разных команд нельзя сравнивать без условий симуляции: длины теста, ошибки параметров и числа кандидатов. Здесь наш тест прогнан в условиях, опубликованных miliantr/fsp-talent, рядом с нашим жёстким вариантом.">
-      <Table head={["Кто и в каких условиях", "Грейд точно", "κ с истиной", "±1 ступень", "r(θ̂, θ)", "κ повтора", "r(θ₁, θ₂)", "Заданий"]}
+    <Section id="other-conditions" title="Другие условия измерения"
+      lead="Числа симуляции зависят от условий: длины теста, ошибки параметров заданий и числа кандидатов. Здесь тот же тест прогнан в других условиях — ровно 20 заданий без досрочной остановки и меньшая ошибка параметров, — рядом с основными условиями.">
+      <Table head={["Условия измерения", "Грейд точно", "κ с истиной", "±1 ступень", "r(θ̂, θ)", "κ повтора", "r(θ₁, θ₂)", "Заданий"]}
         strong={[1]}
         rows={[
-          [<>FSP Talent, их симуляция<br /><span className="text-xs font-normal text-brand-ink/65">{ref.length} заданий, {ref.param_error}, {ref.n} кандидатов</span></>,
-            pct(ref.grade_exact, 1), num(ref.kappa_true, 3), pct(ref.grade_within_1, 1), "—", "—", num(ref.r_theta_retest, 3), String(ref.length ?? "—")],
-          [<>Наш тест в их условиях<br /><span className="text-xs font-normal text-brand-ink/65">ровно {cl.config?.max_items} заданий из всего банка, b + N(0; {num(cl.error?.b_sd)}), a × LogN(0; {num(cl.error?.a_logsd, 1)}), {cl.n_per_direction} × {n} кандидатов</span></>,
+          [<>Другие условия<br /><span className="text-xs font-normal text-brand-ink/65">ровно {cl.config?.max_items} заданий из всего банка, b + N(0; {num(cl.error?.b_sd)}), a × LogN(0; {num(cl.error?.a_logsd, 1)}), {cl.n_per_direction} × {n} кандидатов</span></>,
             pct(t.grade_exact, 1), num(t.kappa_true, 3), pct(t.grade_within_1, 1), num(t.r_theta, 3), num(r.grade_kappa_quadratic), num(r.r_theta, 3), num(t.mean_items, 1)],
-          [<>Наш тест в наших условиях<br /><span className="text-xs font-normal text-brand-ink/65">{lengthText(sim?.config)}, σ = 0,5, {c.n_per_direction} × {n} кандидатов</span></>,
+          [<>Основные условия<br /><span className="text-xs font-normal text-brand-ink/65">{lengthText(sim?.config)}, σ = 0,5, {c.n_per_direction} × {n} кандидатов</span></>,
             pct(m.grade_exact, 1), num(m.kappa_true, 3), pct(m.grade_within_1, 1), num(m.r_theta, 3), num(ra.grade_kappa_quadratic), num(ra.r_theta, 3), num(m.mean_items, 1)],
-          [<>fsp-job-board<br /><span className="text-xs font-normal text-brand-ink/65">условия симуляции не опубликованы</span></>,
-            "—", "—", "—", "—", num(jb.kappa_retest), "—", "—"],
         ]} />
       <ul className="mt-3 max-w-4xl list-disc space-y-1.5 pl-5 text-sm leading-relaxed text-brand-ink/75">
-        <li>В их условиях наши цифры почти не меняются: разрыв не в том, что наша симуляция жёстче, а в информативности заданий — при a ≈ 1 у 20 заданий
-          SE ≈ {num(r.rms_se)}, потолок κ повтора {num(r.ceiling?.grade_kappa_quadratic)}. Параметры заданий у конкурента (3PL) нам неизвестны.</li>
-        <li>У FSP Talent «грейд точно» — подтверждённый грейд с правом сразу пройти тест ниже; у нас — грейд по θ̂ одной попытки, без второго шанса.</li>
-        <li>Повтор у нас — вторая форма без семейств первой; банк — около 43 семейств на направление, поэтому вторая форма в этих условиях короче ({num(r.mean_items, 1)} задания в среднем по обеим попыткам). У FSP Talent банк 252 задания.</li>
-        <li>Ошибка параметров у нас — сдвиг на всё семейство (у многошаговых — общий на шаги), у них — по заданию; при равной σ это условие для нас не мягче.</li>
+        <li>При других условиях измерения наши цифры почти не меняются: потолок задаёт информативность заданий, а не жёсткость симуляции — при a ≈ 1 у 20 заданий
+          SE ≈ {num(r.rms_se)}, потолок κ повтора {num(r.ceiling?.grade_kappa_quadratic)}.</li>
+        <li>«Грейд точно» здесь — грейд по θ̂ одной попытки, без второго шанса и без дотестирования у порога.</li>
+        <li>Повтор у нас — вторая форма без семейств первой; банк — около 43 семейств на направление, поэтому вторая форма в этих условиях короче ({num(r.mean_items, 1)} задания в среднем по обеим попыткам).</li>
+        <li>Ошибка параметров здесь меньше основной (σ = {num(cl.error?.b_sd)} вместо 0,5): сдвиг один на всё семейство (у многошаговых — общий на шаги).</li>
       </ul>
     </Section>
   );

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
-import { ExtPreliminaryNote, GradeBadge, GradeStatusNote } from "../../components/GradeStatus";
+import { ExtPreliminaryNote, GradeBadge, GradeStatusNote, TwoStageNote } from "../../components/GradeStatus";
 import { Alert, DIRECTION_TITLES, Empty, GRADE_TITLE_ALL, Loading, Toggle, catTitle, dt, dtt, errText, num, ruText, signed, useApi } from "../../components/ui";
 import { DefenseForLatest } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { MarketNote } from "../../components/Salary";
@@ -70,7 +70,8 @@ export default function Category() {
             </div>
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTION_TITLES[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADE_TITLE_ALL[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
           {gs?.status === "unconfirmed" && <GradeStatusNote s={gs} className="mt-2" />}
-          <ExtPreliminaryNote x={gs?.ext_preliminary} className="mt-3" />
+          <ExtPreliminaryNote x={gs?.ext_preliminary} stage={s.two_stage} direction={c.direction} className="mt-3" />
+          {!gs?.ext_preliminary && <TwoStageNote t={s.two_stage} direction={c.direction} className="mt-3" />}
           {gs?.status === "unconfirmed" && <p className="mt-1 text-xs text-brand-ink/65">Работодатели видят вас в поиске и подборках со статусом «грейд не подтверждён» — ниже всех подтверждённых. Категорию присваивает только тест.</p>}
         </div>
         <div className="rounded-xl bg-brand-blush/30 p-4 text-sm">
