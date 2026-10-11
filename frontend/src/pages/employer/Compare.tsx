@@ -29,14 +29,15 @@ function WhyBlock({ why }: { why: Why[] }) {
   return (
     <section className="card space-y-3" aria-label="Почему один кандидат выше другого">
       <h2 className="text-sm font-bold text-brand-night">Почему выше</h2>
-      <ul className="grid gap-3 md:grid-cols-2">
+      {/* аудит №1: колонки по ширине блока, а не экрана — при узкой колонке (панель проводника) уровни не наезжают на текст */}
+      <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,20rem),1fr))] gap-3">
         {why.map((w) => (
           <li key={`${w.higher}-${w.lower}`} className="rounded-xl bg-[#F7F6FB] p-4 text-sm">
             <p className="font-semibold text-brand-night">{w.summary}</p>
             {w.pro.length > 0 && (
               <ul className="mt-2 space-y-1.5">
                 {w.pro.map((f, i) => (
-                  <li key={i} className="flex items-start gap-2"><Level level={f.level} /><span className="flex-1">{ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-emerald-700">+{pts(f.points)}</span></li>
+                  <li key={i} className="flex items-start gap-2"><span className="shrink-0"><Level level={f.level} /></span><span className="min-w-0 flex-1">{ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-emerald-700">+{pts(f.points)}</span></li>
                 ))}
               </ul>
             )}
