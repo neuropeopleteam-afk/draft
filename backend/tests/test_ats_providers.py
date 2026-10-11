@@ -90,7 +90,7 @@ DOC = {"candidate": {"ref": "C-7", "category_id": "backend.middle", "category_ti
        "context": {"type": "invitation", "position_title": "Backend-разработчик (платежи)", "salary_from": 240000,
                    "salary_to": 270000, "evidence": [{"level": "T2", "text": "ICPC"}]},
        "links": {"pdf": "https://x/api/ats/profile/t.pdf", "card": "https://x/employer/candidates/C-7"},
-       "source": {"url": "https://x", "platform": "Встречный (спецтрек ФСП)"}}
+       "source": {"url": "https://x", "platform": "Драфт (спецтрек ФСП)"}}
 
 
 # ------------------------------------------------------------------ Talantix: токены и ошибки
@@ -106,7 +106,7 @@ def test_talantix_auth_check_refresh_on_401_and_persist(http):
     assert get1["headers"]["Authorization"] == "Bearer acc-1" and get2["headers"]["Authorization"] == "Bearer acc-2"
     assert post["data"] == {"grant_type": "refresh_token", "refresh_token": "ref-1"}
     assert post["headers"]["Content-Type"] == "application/x-www-form-urlencoded"
-    assert all(c["headers"]["User-Agent"].startswith("Vstrechny-ATS/1.0 (") for c in http.calls)
+    assert all(c["headers"]["User-Agent"].startswith("Draft-ATS/1.0 (") for c in http.calls)
     assert saved and saved[0]["access_token"] == "acc-2" and saved[0]["refresh_token"] == "ref-2"
     assert saved[0]["expires_at"] and cl.refreshed
 

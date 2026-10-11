@@ -44,7 +44,7 @@ class AtsProviderOut(Doc):
     stage_id: int | None = Field(description="Этап (статус) подбора в ATS по умолчанию")
     stage_title: str | None
     vacancy_map: Obj = Field(description="Вакансия платформы (uuid) → вакансия и этап в ATS")
-    source_id: int | None = Field(default=None, description="Talantix: идентификатор источника «Встречный (ФСП)»")
+    source_id: int | None = Field(default=None, description="Talantix: идентификатор источника «Драфт (ФСП)»")
     last_check_at: str | None
     last_check_ok: bool | None
     last_check_info: Obj = Field(description="Итог последней проверки: account, vacancies_active, details, token_refreshed либо error")

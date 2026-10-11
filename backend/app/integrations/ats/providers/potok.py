@@ -141,13 +141,13 @@ def applicant_body(d: dict, *, vacancy_id: int | None) -> dict:
     cv = {"title": prof.title(d), "skills": prof.as_html(d), "about_me": prof.offer_text(d),
           "skill_set": prof.key_skills(d)}
     if tl:
-        cv["education"] = {"attestation": [{"name": f"Адаптивный тест «Встречный»: {d['category_title'] or '—'}",
+        cv["education"] = {"attestation": [{"name": f"Адаптивный тест «Драфт»: {d['category_title'] or '—'}",
                                             "organization": d["platform"], "result": f"T1. {tl}", "year": year}]}
     if d["fsp"]["achievements"]:
         cv["awards"] = [{"name": a, "organization": "Федерация спортивного программирования",
                          "description": f"T2: подтверждено ({d['fsp']['source']})"} for a in d["fsp"]["achievements"]]
     if d["pdf_url"]:
-        cv["certificate"] = [{"title": "Верифицированный профиль «Встречный» (PDF)", "url": d["pdf_url"],
+        cv["certificate"] = [{"title": "Верифицированный профиль «Драфт» (PDF)", "url": d["pdf_url"],
                               "company": d["platform"]}]
     first = d["first_name"] if d["first_name"] and d["first_name"] != "—" else "Кандидат"
     a = {"first_name": first, "last_name": d["last_name"] or d["ref"], "middle_name": d["middle_name"],
