@@ -17,6 +17,8 @@ from .settings import get_interview_settings
 
 log = logging.getLogger("interview.engine")
 MAX_ANSWERS = 60
+# Предел слов в реплике модели: вопрос до 25 слов + связка/пересказ; длиннее — шаблон правил (он всегда короткий).
+MAX_WORDS = {"opening": 50, "question": 34, "repeat": 30, "closing": 40}
 
 
 def is_stub() -> bool:
@@ -36,14 +38,16 @@ def _clean(text: str) -> str:
     return " ".join(t.split()).strip()
 
 
-def _llm_turn(messages: list[dict], timeout_s: float) -> tuple[str | None, str | None, dict | None, float]:
-    """(text, kind, info, cost) или (None, None, info, 0) при сбое. Явная модель: одна попытка без цепочки — дальше правила."""
+def _llm_turn(messages: list[dict], timeout_s: float, max_words: int = 60) -> tuple[str | None, str | None, dict | None, float]:
+    """(text, kind, info, cost) или (None, None, info, 0) при сбое. Явная модель: одна попытка без цепочки — дальше правила.
+    Реплика длиннее max_words слов считается сбоем: голосом длинный вопрос не воспринимается."""
     from app.modules.llm import client as llm
 
     s = get_interview_settings()
 
     def ok(data: object) -> bool:
-        return isinstance(data, dict) and isinstance(data.get("text"), str) and len(data["text"].strip()) >= 8
+        return (isinstance(data, dict) and isinstance(data.get("text"), str) and len(data["text"].strip()) >= 8
+                and len(data["text"].split()) <= max_words)
 
     res = llm.chat(messages, temperature=0.6, max_tokens=400, want_json=True, model=s.interview_model_turn,
                    timeout_s=timeout_s, validate=ok)
@@ -97,12 +101,13 @@ def next_turn(inp: TurnInput) -> TurnOutput:
     if is_stub():
         source = "stub"
     else:
-        msgs = host_messages(spec, tr, service_line(spec, item, kind, minute, answers, short), host, product)
-        text, model_kind, info, cost = _llm_turn(msgs, get_interview_settings().interview_turn_timeout_s)
+        msgs = host_messages(spec, tr, service_line(spec, item, kind, minute, answers, short, product), host, product)
+        text, model_kind, info, cost = _llm_turn(msgs, get_interview_settings().interview_turn_timeout_s,
+                                                 MAX_WORDS.get(kind, 60))
         if text:
             source = "llm"
     if not text:
-        text = rules_turn(spec, tr, kind, item.k if item else None)
+        text = rules_turn(spec, tr, kind, item.k if item else None, product)
     # Вид реплики решает код (план и время), модель лишь подсказывает; расхождение — в журнал.
     if model_kind and model_kind != kind:
         log.info("interview turn: модель предложила kind=%s, по плану %s", model_kind, kind)
