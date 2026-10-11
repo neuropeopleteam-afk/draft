@@ -14,10 +14,11 @@ import { InviteForm, ProbeForm, inviteSentText, probeSentText } from "./Contact"
 import { MutualCardBlock, MutualToolbar, useMutual } from "../mutual/Employer";  // взаимный подбор (Н9, Н2, Н3)
 import { AssignmentButton } from "../assignments/Employer";  // задание с автопроверкой по требованиям (И7)
 import { WhatIf } from "../../components/WhatIf";
-import { ParseStatus, Suggestions, evSource, useFastParse } from "./parseFlow";  // И27: словарь сразу, модель в фоне
+import { ParseStatus, RulesFallbackNote, Suggestions, evSource, useFastParse } from "./parseFlow";  // И27: словарь сразу, модель в фоне
 import { NewChip, SubscriptionPanel, useSub } from "./Subscription";  // подписка на потребность (И25)
 import { NeedFileNote, NeedFileUpload, type NeedFileInfo } from "./NeedFile";  // Ф5: потребность из файла вакансии
 import { needPreset } from "../../lib/jury";  // Я9: заготовка своей потребности из проводника
+import { DictateNeed } from "../../components/VoiceNeed";  // «Надиктовать» (VOICE_NEED_ENABLED)
 
 interface Tag { id: string; title: string; direction_id: string | null }
 export type ItemStatus = "extracted" | "confirmed" | "edited" | "manual";
@@ -327,6 +328,7 @@ export function Needs() {
           <textarea id="need" className="input min-h-[120px]" value={text} onChange={(e) => { setText(e.target.value); setReq(null); fp.reset(); }} placeholder={EXAMPLE} />
         </Field>
         {file && text.slice(0, 40) === file.text.slice(0, 40) && <NeedFileNote info={file} edited={text !== file.text} />}
+        <DictateNeed fieldId="need" disabled={busy} onText={(t) => { setText((x) => (x.trim() ? `${x.trimEnd()} ${t}` : t)); setReq(null); fp.reset(); }} />
         {!req && (
           <div className="flex flex-wrap gap-4 text-sm">
             <button type="button" className="font-semibold text-brand hover:underline" onClick={() => setText(EXAMPLE)}>Подставить пример</button>
@@ -343,6 +345,7 @@ export function Needs() {
               <h2 className="font-bold text-brand-night">Откуда взяты требования</h2>
               <ParseStatus req={req} fp={fp} />
             </div>
+            <RulesFallbackNote req={req} fp={fp} />
             <LlmOff>LLM на этой установке не подключён: технологии, грейд и опыт найдены по словарю и правилам, формулировки вне словаря не распознаются — проверьте список и добавьте недостающее вручную.</LlmOff>
             <div className="rounded-xl bg-[#F7F6FB] p-4">
               <QuotedText text={parsed} marks={reqMarks(req, (t) => tags[t]?.title ?? t)} focus={focus} onFocus={setFocus} />
