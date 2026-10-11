@@ -19,10 +19,10 @@
 | `ELEVENLABS_VOICE_ID` | `sRk0zCqhS2Cmv0bzx5wA` — стоковый голос библиотеки ElevenLabs «Felix — Calm, Clear and Friendly» (ru, мужской, спокойный); добавлен в аккаунт 10.10.2026 через API `POST /v1/voices/add` |
 | `ELEVENLABS_MODEL` | `eleven_multilingual_v2` (по умолчанию) |
 | `DEEPGRAM_API_KEY` | ключ Deepgram; модель `nova-3`, язык `ru`; режим «нажми и говори» — целый фрагмент за запрос |
-| `INTERVIEW_ANAM_ENABLED` | канал «аватар» поставщика (Anam). **По умолчанию выключен и в сдаче не включается** — решение владельца 10.10 (регламент п. 5.11: изображения третьих лиц). Без флага `avatar_token` отвечает `avatar_unavailable`, в `status()` `channels.avatar=false`, `anam_enabled=false`; каналы — голос и текст. До 11.10 назывался `INTERVIEW_AVATAR_ENABLED`; теперь `INTERVIEW_AVATAR_ENABLED` — флаг продукта для собственного рисованного образа интервьюера (`app/core/config.py`, docs/INTERVIEW.md, раздел 2.2), поставщика он не включает |
-| `ANAM_API_KEY` | ключ Anam (нужен только при `INTERVIEW_ANAM_ENABLED=1`) |
-| `ANAM_AVATAR_ID` | `19d18eb0-5346-4d50-a77f-26b3723ed79d` — стоковый образ поставщика «Richard (table)», модель `cara-4`, режим передачи звука (`enableAudioPassthrough`) |
-| `ANAM_PERSONA_ID` | `25952956-4d5e-41ba-b0bc-54c11a971f6b` — персона «Интервьюер», создана 10.10.2026 10:37 UTC через `POST /v1/personas` (стоковый образ Richard + стоковый голос «Richard (ru)»); для учёта — в сессии используется `ANAM_AVATAR_ID` |
+| `INTERVIEW_ANAM_ENABLED` | живой аватар Anam **с нашим лицом** (решение владельца 11.10). **По умолчанию выключен.** Без флага `avatar_token` отвечает `avatar_unavailable`, в `status()` `channels.avatar=false`, `anam_enabled=false`, маршрут `POST /api/interview/sessions/{id}/avatar-token` — 503, экран разговора показывает свой портрет и клипы (`INTERVIEW_AVATAR_ENABLED`, docs/INTERVIEW.md 2.2). С флагом: экран берёт токен, поднимает поток официальным `@anam-ai/js-sdk`, реплики ведущей озвучивает **наш** ElevenLabs (`/speech?format=pcm`, pcm_s16le 16 кГц) и передаёт звук в поток (`enableAudioPassthrough`) — Anam рисует лицо и губы, её LLM/голос/микрофон не используются; любой сбой — тихий откат на портрет и mp3. Отдельный файл секретов: `/opt/spectrek_fsp/secrets/anam.env` (600) — `env_file` у `api` |
+| `ANAM_API_KEY` | ключ Anam (нужен только при `INTERVIEW_ANAM_ENABLED=1`), в `anam.env` |
+| `ANAM_AVATAR_ID` | `e98c6f5f-445f-4935-a920-97879c41a799` — **наш собственный аватар «Draft Interviewer»**, создан 11.10.2026 20:09 UTC через `POST /v1/avatars` (one-shot из одного изображения, модель `cara-4`) из нашего сгенерированного портрета (тот же кадр, что `frontend/public/avatar/interviewer.webp`; исходник 1024×1024 → 1152×1152; происхождение — `frontend/public/avatar/PROVENANCE.md`, несуществующий человек). Стоковые образы поставщика не используются. Прежний стоковый id `19d18eb0-…` (10.10) — не применять |
+| `ANAM_PERSONA_ID` | не нужен (в сессии персона создаётся из `personaConfig` на лету; LLM и голос Anam не задействованы). Персона «Интервьюер» `25952956-…` от 10.10 — только для учёта |
 | `ANAM_MAX_SESSION_S` | предел сессии аватара, по умолчанию 600 |
 | `INTERVIEW_TURN_URLS` | свой STUN/TURN по IP через запятую (`stun:IP:3478,turn:IP:3478?transport=udp,turns:IP:5349`); пусто — ICE поставщика |
 | `INTERVIEW_TURN_SECRET` | общий секрет coturn (`use-auth-secret`); временные учётные данные выдаёт движок |
@@ -39,9 +39,12 @@
 В `services.api.env_file` добавлено (в этой ветке):
 
 ```yaml
-      # ИИ-интервьюер (backend/app/modules/interview/engine/DEPLOY.md): ключи ElevenLabs/Deepgram/Anam, ID стокового
-      # аватара и голоса, ретранслятор. Нет файла — движок в заглушке (текст, правила), поставщики не вызываются.
+      # ИИ-интервьюер (backend/app/modules/interview/engine/DEPLOY.md): ключи ElevenLabs/Deepgram, ID голоса,
+      # ретранслятор. Нет файла — движок в заглушке (текст, правила), поставщики не вызываются.
       - path: ${INTERVIEW_ENV_FILE:-./secrets/interview.env}
+        required: false
+      # живой аватар Anam с нашим лицом: ANAM_API_KEY, ANAM_AVATAR_ID, INTERVIEW_ANAM_ENABLED=true (по умолчанию выкл.)
+      - path: ${ANAM_ENV_FILE:-./secrets/anam.env}
         required: false
 ```
 

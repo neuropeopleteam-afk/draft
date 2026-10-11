@@ -356,7 +356,8 @@ def test_avatar_live(monkeypatch):
     assert t.session_token == "tok" and t.relay_only and t.persona_name == "Интервьюер" and t.max_seconds == 600
     pc = calls[0]["json"]["personaConfig"]
     assert pc["avatarId"] == "av-1" and pc["enableAudioPassthrough"] is True and pc["name"] == "Интервьюер" and "voiceId" not in pc
-    assert calls[0]["json"]["sessionOptions"]["showAIAvatarDisclosure"] is True
+    assert calls[0]["json"]["sessionOptions"]["showAIAvatarDisclosure"] is False  # без плашек поставщика (решение владельца 11.10)
+    assert pc["avatarModel"] == "cara-4"  # модель собственных (one-shot) аватаров
     assert calls[0]["headers"]["Authorization"] == "Bearer k"
     assert t.ice_servers[0] == {"urls": ["stun:1.2.3.4:3478"]}
     turn = t.ice_servers[1]

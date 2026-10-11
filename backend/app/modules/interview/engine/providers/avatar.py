@@ -1,8 +1,10 @@
-"""Аватар Anam — ТОЛЬКО за флагом INTERVIEW_ANAM_ENABLED (по умолчанию выключен: решение владельца 10.10, регламент
-п. 5.11 — изображения третьих лиц в сдаче не показываем; каналы по умолчанию — голос и текст).
-Сеансовый токен (публичный REST: POST /v1/auth/session-token) для стокового образа поставщика в режиме
-передачи звука (enableAudioPassthrough) — реплики озвучивает наш синтез, Anam только рисует лицо и губы. Персонаж
-нейтральный («Интервьюер»); образ и голос — стоковые, созданы 10.10.2026 (ID в engine/DEPLOY.md). Свой TURN — через
+"""Аватар Anam — ТОЛЬКО за флагом INTERVIEW_ANAM_ENABLED (по умолчанию выключен; каналы по умолчанию — голос и текст).
+Лицо — НАШЕ: сгенерированный портрет несуществующего человека (frontend/public/avatar/PROVENANCE.md), загруженный в Anam
+как собственный аватар (POST /v1/avatars, «one-shot» из одного изображения, модель cara-4) — его ID в ANAM_AVATAR_ID
+(engine/DEPLOY.md). Стоковые образы поставщика не используются (решение владельца 11.10).
+Сеансовый токен (публичный REST: POST /v1/auth/session-token) в режиме передачи звука (enableAudioPassthrough) — реплики
+озвучивает наш синтез (ElevenLabs, женский голос, /speech?format=pcm), Anam только рисует лицо и губы; её LLM и голос
+не задействованы. Персонаж нейтральный («Интервьюер»). Свой TURN — через
 временные учётные данные по общему секрету (стандартная схема coturn use-auth-secret: имя «срок:метка», пароль —
 HMAC-SHA1 по имени в base64)."""
 from __future__ import annotations
@@ -52,11 +54,13 @@ def avatar_token(persona_name: str | None = None) -> AvatarToken:
         raise EngineError("avatar_unavailable", "Канал «аватар» выключен — доступны каналы «голос» и «текст»")
     if s.interview_stub or not s.anam_api_key or not s.anam_avatar_id:
         raise EngineError("avatar_unavailable", "Аватар не настроен — доступны каналы «голос» и «текст»")
-    # Режим передачи звука: Anam рисует только лицо; голос — наш синтез, поэтому voiceId здесь не нужен (голос персоны
-    # записан в самой персоне ANAM_PERSONA_ID на стороне поставщика). Выбор региона у организации недоступен — не шлём.
+    # Режим передачи звука: Anam рисует только лицо; голос — наш синтез, поэтому voiceId и LLM здесь не нужны.
+    # Выбор региона у организации недоступен — не шлём. avatarModel — cara-4 (единственная для собственных аватаров).
     body = {"personaConfig": {"name": name, "avatarId": s.anam_avatar_id, "avatarModel": "cara-4",
                               "enableAudioPassthrough": True},
-            "sessionOptions": {"showAIAvatarDisclosure": True},  # честная плашка поставщика «это ИИ-аватар»
+            # плашки поставщика на видео нет (решение владельца 11.10: под образом только «Интервьюер: говорит / слушает»);
+            # честность — в самом экране: подзаголовок «Оценка — модель, не люди», alt/aria «сгенерированный образ, не человек»
+            "sessionOptions": {"showAIAvatarDisclosure": False},
             "clientLabel": "draft-interview"}
     try:
         resp = relay.request("POST", HOST, "/v1/auth/session-token",

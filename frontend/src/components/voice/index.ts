@@ -8,3 +8,5 @@ export { VoiceWave, WAVE_LABEL } from "./VoiceWave";
 export type { VoiceWaveProps, WaveState } from "./VoiceWave";
 export { InterviewerAvatar } from "./InterviewerAvatar";
 export type { InterviewerAvatarProps } from "./InterviewerAvatar";
+export { AnamAvatar } from "./AnamAvatar";
+export type { AnamAvatarProps, AnamHandle, AnamStatus } from "./AnamAvatar";

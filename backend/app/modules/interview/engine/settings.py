@@ -32,8 +32,8 @@ class InterviewSettings(BaseSettings):
     # (app/core/config.py, docs/INTERVIEW.md, раздел 2.2) и к поставщику отношения не имеет.
     interview_anam_enabled: bool = False
     anam_api_key: str | None = None
-    anam_avatar_id: str | None = None  # стоковый образ поставщика (engine/DEPLOY.md)
-    anam_persona_id: str | None = None  # персона «Интервьюер», создана 10.10.2026 через API (для учёта; в сессии не нужна)
+    anam_avatar_id: str | None = None  # НАШ собственный аватар в Anam из нашего портрета (engine/DEPLOY.md); стоковые не используем
+    anam_persona_id: str | None = None  # не нужен: персона в сессии — из personaConfig; оставлен для учёта
     anam_max_session_s: int = 600
 
     interview_turn_urls: str | None = None  # stun:/turn:/turns: через запятую, адреса по IP
