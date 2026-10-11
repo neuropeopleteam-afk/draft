@@ -97,22 +97,44 @@ SCENARIOS = {
     "b_k20_x2_s4": dict(mult=2, a=1.5, block=20, partial=False, short_mult=4),
     "d_k15_c_x2_s4": dict(mult=2, a=1.5, block=15, partial=True, short_mult=4),
     "d_k20_c_x3_s4": dict(mult=3, a=1.5, block=20, partial=True, short_mult=4),
+    # короткие — только в общем блоке (common_short_mult), у направления — как в банке сейчас (own_short_mult 1);
+    # o2 — развёрнутых ×2 (близко к банку Я23/Я24 на 11.10: общий Lead 4 + Principal 2, у направления по 1–2)
+    "d_k20_c_cs8": dict(mult=1, a=1.5, block=20, partial=True, common_short_mult=8, own_short_mult=1),
+    "d_k20_c_o2_cs8": dict(mult=2, a=1.5, block=20, partial=True, common_short_mult=4, own_short_mult=0.5),
+    "d_k20_c_o2_cs8_os4": dict(mult=2, a=1.5, block=20, partial=True, common_short_mult=4, own_short_mult=2),
+    "b_k20_o2_cs8": dict(mult=2, a=1.5, block=20, partial=False, common_short_mult=4, own_short_mult=0.5),
 }
 
 
-def scen_text(s: dict) -> str:
+def _short_mults(s: dict) -> tuple[float, float]:
+    """Кратность коротких заданий (сверх mult): (у направления, в общем блоке)."""
     sm = s.get("short_mult", 1)
-    parts = [f"банк ×{s['mult']}" + (f", коротких ×{s['mult'] * sm}" if sm != 1 else ""), f"a {s['a']}"]
+    return s.get("own_short_mult", sm), s.get("common_short_mult", sm)
+
+
+def _x(v: float) -> str:
+    return f"{v:g}".replace(".", ",")
+
+
+def scen_text(s: dict) -> str:
+    so, sc = _short_mults(s)
+    m = s["mult"]
+    if so == sc:
+        head = f"банк ×{m}" + (f", коротких ×{_x(m * so)}" if so != 1 else "")
+    else:
+        head = f"развёрнутых ×{m}, коротких: общий ×{_x(m * sc)}, направление ×{_x(m * so)}"
+    parts = [head, f"a {s['a']}"]
     parts.append(f"блок {s['block']} заданий" if s["block"] else "без блока")
     parts.append("частичный балл 0–4" if s["partial"] else "развёрнутые 0/1")
     return ", ".join(parts)
 
 
 def bank_counts(s: dict) -> dict:
-    sm = s.get("short_mult", 1)
+    so, sc = _short_mults(s)
     out = {}
     for blk, by in BANK_UNIT.items():
-        out[blk] = {g: (n_s * s["mult"] * sm, n_o * s["mult"]) for g, (n_s, n_o) in by.items()}
+        sm = sc if blk == "common" else so
+        out[blk] = {g: (int(round(n_s * s["mult"] * sm)), n_o * s["mult"]) for g, (n_s, n_o) in by.items()}
     return out
 
 
