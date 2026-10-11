@@ -406,7 +406,7 @@ export function TwoFactorLogin() {
         <p className="text-center text-xs text-brand-ink/65" aria-live="polite">{expired ? <Link to="/login" className="font-semibold underline" onClick={() => pending.clear()}>К вводу пароля</Link> : `Код можно ввести в течение ${mm}`}</p>
       </form>
       {ch.persona && <p className="mt-5 rounded-lg bg-brand-blush/40 px-3 py-2 text-xs leading-relaxed text-brand-ink/80">
-        Это ваша демо-песочница: второй фактор здесь включили вы. Потеряли код — «Сбросить демо» на <Link to="/#jury" className="font-semibold text-brand hover:text-brand-soft">главной</Link> пересоздаст учётки без него.
+        Это ваша демо-песочница: второй фактор здесь включили вы. Потеряли код — «Вернуть демо-данные» на <Link to="/#jury" className="font-semibold text-brand hover:text-brand-soft">главной</Link> пересоздаст учётки без него.
       </p>}
     </AuthShell>
   );
