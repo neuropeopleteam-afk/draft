@@ -523,7 +523,7 @@
   "conditions": 1.0,
   "no_notes": 0.098
  },
- "baseline_note": "Я11 (fix/sup3): тот же замер на 50 вакансиях — <внутренний документ>; здесь — корпус hh.ru.",
+ "baseline_note": "Тот же замер разбора на 50 вакансиях — docs/LLM.md, раздел 10.4; здесь — корпус hh.ru.",
  "compare": {
   "rev": "fix/sup3",
   "parser": {

@@ -3,6 +3,7 @@ import { GradeBadge, GradeStatusNote } from "./GradeStatus";
 import { Level, num, pct, ruText, signed, years } from "./ui";
 import { Specializations } from "./Specializations";
 import { MarketNote } from "./Salary";
+import { NO_FSP, OriginTag } from "./Origin";
 
 const WF: Record<string, string> = { office: "Офис", hybrid: "Гибрид", remote: "Удалённо", any: "Любой формат" };
 
@@ -42,7 +43,7 @@ export function ReasonLevel({ r }: { r: { level?: string | null; status?: string
 /** Ф6 (Н3): рядом с баллом — покрытие обязательного тестом; подсказка — что балл значит и какие условия жёсткие. */
 export const SCORE_HINT = "Соответствие из 100 — взвешенная доля требований потребности, подтверждённых тестом (T1); обязательные весят больше желательных, ФСП и зонды добавляют немного. Заявленное кандидатом (T0) в балл не входит. Обязательные навыки — мягкое условие: без подтверждения кандидат не исключается, но помечен и идёт ниже. Формат и город — жёсткое условие: не прошедшие скрыты (можно показать всех).";
 
-function ScoreBox({ score, must }: { score: number; must?: any }) {
+export function ScoreBox({ score, must }: { score: number; must?: any }) {
   const req = must?.required_total ?? 0, miss = must?.missing_total ?? 0;
   return (
     <div className="text-right" title={SCORE_HINT}>
@@ -72,14 +73,15 @@ function Brief({ c, reasons }: { c: any; reasons?: any[] }) {
       {gaps.length > 0 && <li className="flex items-start gap-2"><Level level="none" />
         <span className="text-brand-ink/80">Пробелы обязательного: {gaps.join(", ")} — можно проверить зондом</span></li>}
       <li className="flex items-start gap-2"><Level level={fsp.achievements?.length && !fsp.hidden ? "T2" : "none"} />
-        <span className="text-brand-ink/80">{fsp.hidden ? "Паспорт ФСП скрыт кандидатом" : fsp.achievements?.length ? `ФСП: ${fsp.achievements[0].text}${fsp.achievements.length > 1 ? ` и ещё ${fsp.achievements.length - 1}` : ""}` : "Истории ФСП нет — нейтрально"}</span></li>
+        <span className="text-brand-ink/80">{fsp.hidden ? "Паспорт ФСП скрыт кандидатом" : fsp.achievements?.length ? `ФСП: ${fsp.achievements[0].text}${fsp.achievements.length > 1 ? ` и ещё ${fsp.achievements.length - 1}` : ""}` : NO_FSP}{fsp.achievements?.length > 0 && !fsp.hidden && <OriginTag o={fsp.origin} className="ml-1.5 align-middle" />}</span></li>
     </ul>
   );
 }
 
-export function CandidateCard({ c, score, reasons, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false }: {
+export function CandidateCard({ c, score, reasons, actions, must, core, compact = false, badge, mutual, collapsible = false, expanded = false, bare = false }: {
   c: any; score?: number; reasons?: any[]; actions?: ReactNode; must?: any; core?: any; compact?: boolean; badge?: ReactNode; mutual?: ReactNode;  // mutual — взаимный подбор (Н9); core — ядро роли (Я1)
   collapsible?: boolean; expanded?: boolean;  // Ф6 (Н9): короткая карточка с раскрытием по клику
+  bare?: boolean;  // Я10: только доказательства — без рамки и шапки (раскрытие компактной карточки подборки)
 }) {
   const t = c.test;
   const fsp = c.fsp ?? {};
@@ -121,9 +123,10 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
       </article>
     );
   }
+  const Box = bare ? "div" : "article";  // Я10: вложенная в компактную карточку — div, шапка уже есть в ней
   return (
-    <article className="card" data-testid="candidate-card">
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <Box className={bare ? "" : "card"} data-testid={bare ? "candidate-evidence" : "candidate-card"}>
+      {!bare && <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -144,7 +147,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
           </p>
         </div>
         {score != null && <ScoreBox score={score} must={must} />}
-      </div>
+      </div>}
       {mutual}
 
       {c.specializations?.length > 1 && <div className="mt-4"><Specializations items={c.specializations} /></div>}
@@ -176,9 +179,9 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
           {fsp.hidden ? <p className="mt-1 text-brand-ink/65">скрыто кандидатом</p>
             : fsp.achievements?.length ? (
               <ul className="mt-1 space-y-1 text-brand-ink/75">{fsp.achievements.slice(0, compact ? 2 : 4).map((a: any, i: number) => <li key={i}>{a.text}{a.relevance?.title && <span className="ml-1 text-xs text-brand-plum">· {a.relevance.title}{a.relevance.coef < 1 ? ` (×${String(a.relevance.coef).replace(".", ",")})` : ""}</span>}</li>)}</ul>
-            ) : <p className="mt-1 text-brand-ink/65">истории ФСП нет — нейтрально</p>}
+            ) : <p className="mt-1 text-brand-ink/65">{NO_FSP}</p>}
           {fsp.unverified_count > 0 && <p className="mt-1 text-xs text-brand-ink/65">Заявлено без подтверждения реестром: {fsp.unverified_count} — не учитывается</p>}
-          {fsp.source === "demo" && <p className="mt-1 text-xs text-brand-lavender">демо-реестр</p>}
+          {fsp.origin && !fsp.hidden && <p className="mt-1"><OriginTag o={fsp.origin} /></p>}
           {fsp.rating && !fsp.hidden && fsp.rating.competitions > 0 && <details className="mt-2 text-xs text-brand-ink/70">
             <summary className="cursor-pointer font-semibold text-brand-plum">Как считается ФСП: {num(fsp.rating.strength, 3)} · соревнований {num(fsp.rating.competitions, 0)}</summary>
             <p className="mt-2 leading-relaxed">{fsp.rating.policy}</p>
@@ -215,7 +218,7 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
         {actions}
       </div>
       {toggle && <div className="mt-3 border-t border-brand-night/5 pt-2">{toggle}</div>}
-    </article>
+    </Box>
   );
 }
 
@@ -236,7 +239,8 @@ export function Integrity({ v, compact = false }: { v: { level: string; title: s
       {v.note && !compact && <p className="mt-0.5 opacity-80">{v.note}</p>}{/* версия для самого кандидата (Р27) */}
       {/* И16: итог камеры (по согласию кандидата) — только заголовок и до трёх замечаний; без камеры — нейтрально */}
       {v.camera && <p className="mt-0.5 text-[11px] opacity-90" data-testid="camera-title">{v.camera.title}{!compact && v.camera.remarks.length ? `: ${v.camera.remarks.join("; ")}` : ""}{!compact && v.camera.notes.length ? ` · ${v.camera.notes.join("; ")}` : ""}</p>}
-      {v.level !== "high" && <p className="mt-0.5 opacity-80">Не блокирует: на место в подборке не влияет, решение за вами — можно пригласить или проверить зондом.</p>}
+      {/* подсказка работодателю; у версии для кандидата (с note, Р27) — не показывается (Я11, С3-11) */}
+      {v.level !== "high" && !v.note && <p className="mt-0.5 opacity-80">Не блокирует: на место в подборке не влияет, решение за вами — можно пригласить или проверить зондом.</p>}
     </div>
   );
 }
