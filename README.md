@@ -54,7 +54,9 @@
 
 ## Проверка одной командой, без ключей и доступов
 
-Нужны Docker 24+ с плагином compose, `make`, `openssl`, `curl`. Ключи языковой модели, почты и любых внешних сервисов не нужны.
+Нужны Docker Engine 24+ с плагином **Compose v2.24+** (`docker compose version`; более старый не разберёт
+`docker-compose.yml` — ошибка `env_file.0 must be a string`; `make up` проверяет версию сам), `make`, `openssl`, `curl`.
+Ключи языковой модели, почты и любых внешних сервисов не нужны.
 
 > **`REPO_URL` — заполнитель.** Адрес репозитория владелец проекта укажет после публикации (11.10); до тех пор в документации
 > везде стоит переменная `REPO_URL`. Подставьте адрес, по которому вы открыли этот файл.
@@ -268,7 +270,7 @@ make env && NO_SEED=1 make up          # порты публикуются то�
 Страница QR без пароля — `sudo bash infra/nginx/apply-public-snippets.sh` (копия файла сайта, `nginx -t`, откат при
 ошибке, проверка адресов). Мониторинг с письмом владельцу — раздел 11.1 в [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-### Проверено с нуля (09.10)
+### Проверено с нуля (09.10, 11.10)
 
 Чистый клон без `.env` и кэша сборки → `make env && make up` → демо-данные → вход жюри в один клик, экспресс-тест до
 итога, потребность → подборка → сравнение: **около 5 минут** на сервере 4 vCPU (сборка образов без кэша — 2 мин 19 с,
@@ -279,7 +281,7 @@ make env && NO_SEED=1 make up          # порты публикуются то�
 - **Нет `make`** (Ubuntu Server ставится без него): `sudo apt install make` или те же команды вручную:
   ```bash
   test -f .env || { cp .env.example .env && sed -i "s/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=$(openssl rand -hex 24)/; s/^JWT_SECRET=$/JWT_SECRET=$(openssl rand -hex 32)/" .env; }
-  docker compose up -d --build
+  docker compose up -d --build --wait --wait-timeout 300   # --wait: демо-данные — только после миграций и /api/health
   docker compose exec -T api python -m app.modules.demo.seed
   ```
 - **Вторая копия на том же сервере.** В `docker-compose.yml` задано имя проекта `spectrek_fsp`: без своего имени вторая
@@ -288,6 +290,11 @@ make env && NO_SEED=1 make up          # порты публикуются то�
   (переменная важнее имени из файла: все `make` и `docker compose` в этом терминале пойдут во вторую копию).
 - Первый вход жюри сразу после запуска или после демо-данных — до 20–30 с: создаётся песочница эксперта (запасная
   готовится в фоне, следующие входы — мгновенно).
+- **11.10, без Docker, чистая машина 8 vCPU** (git archive, без `.env` и кэшей pip/npm): раздел «Чистая машина» буква в
+  букву — **68 с** до работающего сайта (pip 35 с, миграции 2 с, демо-данные 10 с, `npm install` 3 с, Vite 1 с), проверка
+  `fresh_check.py --base http://127.0.0.1:5173 --expect-candidates` — все шаги OK. Те же шаги, что в образах и `make up`
+  (PostgreSQL 16, `uvicorn --workers 2`, сборка `npm ci && npm run build`), — **82 с**, все шаги OK. Сам Docker там
+  недоступен: `docker compose config` проверен на Compose 2.24.0 и 2.29.7 (OK) и 2.21/2.23 (ошибка выше).
 
 ## Лицензия
 
