@@ -108,7 +108,7 @@ services:
       - "127.0.0.1:${API_PORT:-8141}:8000"
     # 08.10: было 768m (77 % при спокойной проверке, OOM 07.10 при 640m); сервер 7,9 ГБ, свободно 5,5 ГБ.
     # 10.10, 100 пользователей: memory.peak 1471 МиБ при 2 воркерах. API_WORKERS (Dockerfile) больше 2 — поднять и
-    # API_MEM_LIMIT (≈ 700 МиБ на воркер), и сверить пул БД: API_WORKERS × (DB_POOL_SIZE + DB_MAX_OVERFLOW) ≤
+    # API_MEM_LIMIT (11.10: 1,1–1,2 ГБ на воркер после нагрузки; 3 воркера — 4096m), и сверить пул БД: API_WORKERS × (DB_POOL_SIZE + DB_MAX_OVERFLOW) ≤
     # PG_MAX_CONNECTIONS − 14 (docs/LOAD.md, раздел 8). 10.10 вечер: 1536m → 3072m (пик 1471 МиБ при 100 пользователях).
     mem_limit: ${API_MEM_LIMIT:-3072m}
 
