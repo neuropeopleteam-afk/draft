@@ -38,7 +38,8 @@ from app.modules.catalog.seed_data import STACK  # noqa: E402
 from app.modules.hh.client import HhClient, HhError  # noqa: E402
 from app.modules.hh.directions import GRADE_WORDS, HH_DIRECTIONS, NEW_DIRECTIONS, search_params  # noqa: E402
 
-CACHE = Path(os.environ.get("HH_CORPUS_DIR", "/srv/work/srv/work/spectrek/data_local/hh_corpus"))
+# сырьё корпуса (тексты вакансий) — только вне репозитория: HH_CORPUS_DIR, по умолчанию ../data_local/hh_corpus
+CACHE = Path(os.environ.get("HH_CORPUS_DIR") or ROOT.parent / "data_local/hh_corpus")
 CORPUS = ROOT / "docs/realdata/hh_match_corpus.json"
 DATA = ROOT / "backend/app/modules/hh/data"
 OUT_MATCH = ROOT / "backend/app/modules/validation/data/hh_match.json"
