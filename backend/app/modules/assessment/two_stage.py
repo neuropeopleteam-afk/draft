@@ -1,29 +1,31 @@
 """Двухэтапное подтверждение уровня у границы (флаг ASSESSMENT_TWO_STAGE_ENABLED, по умолчанию выключен).
 
-Одна сессия теста (≤ 60 мин) заканчивается с погрешностью SE ≈ 0,33: у кандидатов, чей уровень близко к порогу
-соседнего, решение по одной сессии — почти монетка (docs/validation/GRADE_ACCURACY.md: потолок одной сессии ≈ 65–74 %
-точных попаданий). Двухэтапная схема: после основного теста кандидату «на границе» предлагается **уточнение уровня** —
-отдельная короткая сессия (10–15 мин) только из заданий у этой границы, из других семейств (без повторов первой сессии,
+Одна сессия теста (≤ 60 мин) заканчивается с погрешностью SE ≈ 0,33–0,40: у кандидатов, чей уровень близко к порогу,
+решение по одной сессии — почти монетка (docs/validation/GRADE_ACCURACY.md: потолок одной сессии ≈ 65–74 % точных
+попаданий). Двухэтапная схема: после основного теста кандидату «на границе» предлагается **уточнение уровня** —
+отдельная короткая сессия (10–15 мин) только из заданий у этой границы, из других семейств (без повторов прошлых сессий,
 с контролем частоты показа). Итог считается по ответам обеих сессий вместе (одна общая апостериорная оценка θ), а не
 по второй сессии отдельно.
 
 Правила (общие для продукта и симуляции ``app.modules.validation.two_stage``; значения — настройки, выбраны на симуляции):
 
-* **«На границе»** (``boundary``): после первой сессии уровень g, оценка θ̂ ± SE. Рассматриваются пороги уровня g и всех
-  уровней выше. Граница есть, если хотя бы у одного из них P(θ ≥ порога) лежит строго между 1 − L и L
-  (L = ``assessment_two_stage_level``; то же самое, что |θ̂ − порог| < z_L · SE, z_L = Φ⁻¹(L) — критерий по SE и по
-  вероятности совпадают) — берётся порог с вероятностью, ближайшей к 0,5; или если уровень выше g уже доказан с P ≥ L
-  (кандидат заявил ниже своего уровня — тест подтвердил заявленный и выше не поднимает) — берётся порог наивысшего
-  такого уровня. Иначе граница не нужна.
+* **«На границе»** (``boundary``): после сессии с заявленным грейдом c итог g (подтверждён c, принят уровень ниже,
+  «предварительно» или без категории), оценка θ̂ ± SE. Рассматриваются пороги уровней от g (от Стажёра, если категории
+  нет) до c включительно. Граница есть, если у одного из них P(θ ≥ порога) лежит строго между 1 − L и L
+  (L = ``assessment_two_stage_level``; то же, что |θ̂ − порог| < z_L · SE, z_L = Φ⁻¹(L)) — берётся порог с
+  вероятностью, ближайшей к 0,5: «keep» — уровень итога под вопросом, «up» — возможно, уровень выше итога (до заявленного).
+  Режим «выше заявленного» (``above`` > 0): если на заявленном уровне границы нет и у порога уровня выше заявленного
+  P ≥ ``above`` — граница «above» у наивысшего такого порога (тест на заявленный грейд выше его не поднимает).
 * **До уточнения** уровень — по первой сессии (не выше, чем позволяет она), с пометкой «на границе: можно уточнить».
 * **Вторая сессия** (``RefineSession``): ответы первой сессии перенесены (в θ и в детектор предзнания, заново не
   показываются); новые задания — короткие (лимит ≤ 5 мин), с наибольшей информацией в выбранном пороге, семейства
-  первой сессии исключены, частота показа — Sympson — Hetter как в основном тесте. Не больше N заданий
+  прошлых сессий исключены, частота показа — Sympson — Hetter как в основном тесте. Не больше N заданий
   (``assessment_two_stage_items``) и M минут (``assessment_two_stage_minutes``); досрочный стоп, когда после
   ``MIN_NEW`` заданий порог вышел из θ̂ ± z_L · SE.
-* **Итог** (``final_grade``): наивысший уровень, доказанный общей оценкой обеих сессий с P ≥ c₂
-  (``assessment_two_stage_confirm``) — то же отображение θ → категория, что у остальных режимов (grades.category_level).
-  Итог может быть и ниже уровня первой сессии, если общая оценка его не держит. Уровень — только по тесту (FTT.4).
+* **Итог** (``final_grade``): наивысший уровень, доказанный общей оценкой обеих сессий: до заявленного включительно —
+  с P ≥ c₂ (``assessment_two_stage_confirm``), выше заявленного — с P ≥ c↑ (``assessment_two_stage_confirm_up``,
+  строже: повышение без запаса даёт завышение). Итог может быть и ниже уровня первой сессии, если общая оценка его не
+  держит. Уровень — только по тесту (FTT.4).
 
 Всё, что проверено, — на синтетике (модель, не люди): docs/validation/TWO_STAGE.md.
 """
@@ -35,14 +37,16 @@ import math
 from assessment_bank.psychometrics import PoolItem
 
 from app.modules.assessment.exposure import AppCATSession
-from app.modules.assessment.grades import category_level, p_at_least
+from app.modules.assessment.grades import p_at_least
 from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
 
 # Значения по умолчанию — выбор на симуляции (docs/validation/TWO_STAGE.md); настройки — app.core.config
 DEFAULT_LEVEL = 0.8
-DEFAULT_ITEMS = 6
+DEFAULT_ITEMS = 8
 DEFAULT_MINUTES = 15
 DEFAULT_CONFIRM = 0.6
+DEFAULT_CONFIRM_UP = 0.9
+DEFAULT_ABOVE = 0.0    # 0 — уточнение «выше заявленного» не предлагается
 MIN_NEW = 3            # не меньше 3 новых заданий: подтверждение — новыми ответами, а не одной первой сессией
 ITEM_TIME_S = 300.0    # только короткие задания (как дотестирование у порога)
 
@@ -81,29 +85,40 @@ class Boundary:
                 "p": round(self.p, 4), "kind": self.kind}
 
 
-def boundary(theta: float | None, se: float | None, grade: str | None, level: float = DEFAULT_LEVEL) -> Boundary | None:
-    """Граница для уточнения после первой сессии (см. описание модуля) или None — уточнять нечего."""
+def boundary(theta: float | None, se: float | None, grade: str | None, claimed: str | None = None,
+             level: float = DEFAULT_LEVEL, above: float = DEFAULT_ABOVE) -> Boundary | None:
+    """Граница для уточнения после сессии с заявленным грейдом ``claimed`` и итогом ``grade`` (см. описание модуля)
+    или None — уточнять нечего. claimed None — заявленный = итог."""
     if theta is None or se is None:
         return None
     theta, se, grade = float(theta), max(float(se), 1e-6), grade or "none"
-    start = max(_rank(grade), 0)
-    rel = GRADE_ORDER[start:]
+    claimed = claimed if claimed in GRADE_ORDER else (grade if grade in GRADE_ORDER else GRADE_ORDER[0])
+    lo, hi = max(_rank(grade), 0), _rank(claimed)
+    rel = GRADE_ORDER[min(lo, hi):max(lo, hi) + 1]
     probs = {g: p_at_least(theta, se, g) for g in rel}
     band = [g for g in rel if 1 - level < probs[g] < level]
     if band:
         g = min(band, key=lambda x: (abs(probs[x] - 0.5), -_rank(x)))
         kind = "keep" if _rank(g) <= _rank(grade) else "up"
         return Boundary(grade, g, float(GRADE_CUTS[g]), probs[g], kind)
-    above = [g for g in rel if _rank(g) > _rank(grade) and probs[g] >= level]
-    if above:
-        g = above[-1]
-        return Boundary(grade, g, float(GRADE_CUTS[g]), probs[g], "above")
+    if above > 0 and _rank(grade) >= _rank(claimed):
+        ups = [g for g in GRADE_ORDER if _rank(g) > _rank(claimed) and p_at_least(theta, se, g) >= above]
+        if ups:
+            g = ups[-1]
+            return Boundary(grade, g, float(GRADE_CUTS[g]), p_at_least(theta, se, g), "above")
     return None
 
 
-def final_grade(theta: float, se: float, confirm: float = DEFAULT_CONFIRM) -> str:
-    """Итог по общей оценке обеих сессий: наивысший уровень с P(θ ≥ порога) ≥ confirm (без потолка длины)."""
-    return category_level(float(theta), float(se), None, confirm_level=confirm).grade
+def final_grade(theta: float, se: float, claimed: str | None = None, confirm: float = DEFAULT_CONFIRM,
+                confirm_up: float = DEFAULT_CONFIRM_UP) -> str:
+    """Итог по общей оценке обеих сессий: наивысший уровень с P(θ ≥ порога) ≥ confirm (до заявленного включительно)
+    или ≥ confirm_up (выше заявленного). Без потолка длины: вторая сессия добавляет задания к первой."""
+    cr = _rank(claimed) if claimed in GRADE_ORDER else len(GRADE_ORDER)
+    out = "none"
+    for i, g in enumerate(GRADE_ORDER):
+        if p_at_least(float(theta), float(se), g) >= (confirm if i <= cr else confirm_up):
+            out = g
+    return out
 
 
 def stop_z(level: float) -> float:
