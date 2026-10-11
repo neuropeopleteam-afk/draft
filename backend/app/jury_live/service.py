@@ -31,7 +31,7 @@ from app.jury_live import mini
 from app.jury_live.models import LiveGuest, LiveRoom
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK, category_title
+from app.modules.catalog.seed_data import DIRECTIONS, GRADES, category_title, tag_title
 from app.modules.invitations import service as inv_svc
 from app.modules.invitations.models import Invitation
 from app.modules.jury import scope
@@ -285,7 +285,7 @@ def _write_facts(db: Session, g: LiveGuest, res: dict) -> None:
             t[0] += int(it["correct"])
             t[1] += 1
     for tag, (ok, total) in totals.items():
-        db.add(CandidateFact(user_id=g.user_id, kind="skill", key=tag, title=STACK.get(tag, (tag,))[0],
+        db.add(CandidateFact(user_id=g.user_id, kind="skill", key=tag, title=tag_title(tag),
                              value={"score": round(ok / total, 2), "correct": ok, "total": total},
                              evidence_level=EvidenceLevel.T1, source=FactSource.test, source_ref=src))
 
@@ -515,7 +515,7 @@ def guest_out(db: Session, g: LiveGuest, *, now: datetime, own: bool) -> dict:
                                                 "ceiling", "capped")}
         out["result"]["category_title"] = _cat_title(r) if r.get("category_id") else None
         out["result"]["preliminary"] = bool(r.get("category_id"))
-        out["result"]["skills"] = [{"tag": k, "title": STACK.get(k, (k,))[0], "score": v}
+        out["result"]["skills"] = [{"tag": k, "title": tag_title(k), "score": v}
                                    for k, v in sorted((r.get("skills") or {}).items())]
     if stage in ("selected", "invited", "accepted", "declined") and g.selection:
         sel = g.selection

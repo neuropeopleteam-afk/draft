@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.core.db import as_aware, utcnow
 from app.integrations.vacancies.models import Vacancy
 from app.modules.assignments.models import Assignment
-from app.modules.catalog.seed_data import STACK, category_title
+from app.modules.catalog.seed_data import category_title, tag_title
 from app.modules.matching.models import EmployerNeed
 from app.modules.profiles import freshness as fr
 from app.modules.profiles.facts import fmt_count, load_bundles, skill_confirmed
@@ -33,7 +33,7 @@ def _cap(s: str | None) -> str:
 
 
 def _title(tag: str) -> str:
-    return STACK.get(tag, (tag,))[0]
+    return tag_title(tag)
 
 
 def requirement_tags(db: Session, a: Assignment) -> tuple[list[str], list[str], str | None]:

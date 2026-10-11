@@ -32,7 +32,7 @@ from app.core.enums import EvidenceLevel, InvitationStatus
 from app.cup.models import Cup, CupEntry
 from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_ORDER, STACK, category_title
+from app.modules.catalog.seed_data import DIRECTIONS, GRADE_ORDER, STACK, category_title, tag_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.auth.models import User
 from app.modules.invitations.models import Invitation
@@ -287,7 +287,7 @@ def demand(d: Data) -> dict:
             if c.invited:
                 invited_sk[s] += 1
     tags = sorted(set(w) | {t for t, _ in invited_sk.most_common(10)}, key=lambda t: (-w.get(t, 0), -invited_sk.get(t, 0)))
-    skills = [{"tag": t, "title": STACK.get(t, (t,))[0], "direction": STACK.get(t, (None, None, None))[2],
+    skills = [{"tag": t, "title": tag_title(t), "direction": STACK.get(t, (None, None, None))[2],
                "needs_required": req.get(t, 0), "needs_desired": des.get(t, 0), "demand_weight": w.get(t, 0),
                "companies": len(comps.get(t, ())), "supply_confirmed": kc(supply_sk.get(t, 0)),
                "invited_with_skill": kc(invited_sk.get(t, 0)),

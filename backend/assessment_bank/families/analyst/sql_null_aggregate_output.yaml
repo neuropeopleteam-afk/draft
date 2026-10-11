@@ -1,0 +1,20 @@
+family_id: analyst.sql.null_aggregate_output
+title: Агрегаты SQL и NULL — COUNT, SUM, AVG и фильтр «не равно»
+direction: analyst
+skills: [sql, data_analysis, null_semantics]
+target_grades: [intern, junior]
+format: predict_output
+language: sql
+invariants: {}
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -1.2
+  a: 1.1
+  sigma_variant: 0.25
+  basis: "Таблица 6–8 строк и 3–4 агрегата; нужно знать, что COUNT(столбец), SUM, AVG и COUNT(DISTINCT) пропускают NULL, а условие «<>» отбрасывает строки с NULL. Стажёр/Junior, у порога Junior (b ≈ −1,2)"
+generator: assessment_bank.families.analyst.sql_null_aggregate_output
+version: 1
+description: >
+  Запрос с агрегатами к таблице с пропусками; нужно предсказать результат. Ключ — расчёт на Python,
+  сверенный с исполнением показанного запроса в sqlite3.

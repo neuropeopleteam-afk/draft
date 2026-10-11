@@ -26,7 +26,6 @@ from __future__ import annotations
 import argparse
 from copy import deepcopy
 from dataclasses import replace
-import functools
 import json
 import os
 from pathlib import Path
@@ -119,6 +118,54 @@ SCENARIOS = {
                                  common_principal_short=16),
     "d_k20_c_o2_cs8_p2": dict(mult=2, a=1.5, block=20, partial=True, common_short_mult=4, own_short_mult=0.5,
                                own_principal_short=2),
+    # банк после синхронизации банка Lead/Principal (feat/bank-ext 705e743, 11.10): у пяти базовых направлений в среднем
+    # Lead 2,4 коротких + 2 развёрнутых, Principal 0,6 + 2; общий блок Lead 3 + 4, Principal 2 + 2 (всего 74 семейства
+    # на 10 блоков) → у направления Lead (2, 2), Principal (1, 2); общий Lead (3, 4), Principal (2, 2). Частичный балл —
+    # модель платформы; k10 — второй этап: до 10 коротких Lead/Principal после основной части (сколько найдётся в банке)
+    "g_bank705": dict(mult=2, a=1.5, block=0, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                      own_principal_short=1, common_principal_short=2),
+    "g_bank705_k10": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                          own_principal_short=1, common_principal_short=2),
+    # что писать авторам банка (11.10 вечер): банк на 11.10 + второй этап (блок) + новые короткие Principal (≤ 7 мин):
+    # cN — коротких Principal в общем блоке N (было 2), oN — у направления N (было 1), hi — их трудность U(3,0; 3,5)
+    # (выше границы Lead/Principal 3,0; у семейств банка на 11.10 априорная b Principal 2,5–2,8 — ниже границы)
+    "g_pb_c10": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                     own_principal_short=1, common_principal_short=10),
+    "g_pb_c10_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                        own_principal_short=1, common_principal_short=10, b_principal_short=(3.0, 3.5)),
+    "g_pb_c18_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                        own_principal_short=1, common_principal_short=18, b_principal_short=(3.0, 3.5)),
+    "g_pb_c10_o3_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                           own_principal_short=3, common_principal_short=10, b_principal_short=(3.0, 3.5)),
+    "g_pb_c18_hi_k20": dict(mult=2, a=1.5, block=20, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                            own_principal_short=1, common_principal_short=18, b_principal_short=(3.0, 3.5)),
+    "g_pb_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                    own_principal_short=1, common_principal_short=2, b_principal_short=(3.0, 3.5)),
+    # та же прибавка (+ 8 в общем блоке), трудность «как пишут сейчас» (2,5–2,8 — априорные b Principal банка 11.10)
+    # и «у самой границы» (2,9–3,3)
+    "g_pb_c10_lo": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                        own_principal_short=1, common_principal_short=10, b_principal_short=(2.5, 2.8)),
+    "g_pb_c10_mid": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                         own_principal_short=1, common_principal_short=10, b_principal_short=(2.9, 3.3)),
+    # реальный банк: семейства Lead/Principal банка (после синхронизации Я21), без модельных; трудность и наклон —
+    # априорные авторские (как в продукте), истина = авторские + ошибка эксперта σ = 0,5; a — не используется
+    "g_real": dict(real=True, mult=0, a=None, block=0, partial="gpcm"),
+    "g_real_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm"),
+    "g_real_k20": dict(real=True, mult=0, a=None, block=20, partial="gpcm"),
+    # реальный банк + N новых коротких Principal (модельные, ≤ 7 мин, a 1,5, трудность у границы 2,9–3,3) — «что дадут
+    # семейства ПБ-А/Б/В»: cN — в общем блоке, oN — у каждого направления
+    "g_real_pb_c8": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
+                         common_principal_short=8, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c8_o2": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=2,
+                            common_principal_short=8, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c16_o2": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=2,
+                             common_principal_short=16, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c16_o2_k20": dict(real=True, mult=0, a=1.5, block=20, partial="gpcm", own_principal_short=2,
+                                 common_principal_short=16, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c24": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
+                          common_principal_short=24, b_principal_short=(2.9, 3.3)),
+    "g_real_pb_c32": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
+                          common_principal_short=32, b_principal_short=(2.9, 3.3)),
 }
 
 
@@ -133,6 +180,15 @@ def _x(v: float) -> str:
 
 
 def scen_text(s: dict) -> str:
+    if s.get("real"):
+        add = [f"{lbl} {s[k]}" for k, lbl in (("common_principal_short", "общий"), ("own_principal_short", "направление"))
+               if s.get(k)]
+        lo, hi = s.get("b_principal_short") or (0, 0)
+        return ", ".join(["реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a)"
+                          + (f" + новых коротких Principal (модельных): {', '.join(add)}, трудность {_x(lo)}–{_x(hi)}, "
+                             f"a {_x(s['a'])}" if add else ""),
+                          f"блок {s['block']} заданий" if s["block"] else "без блока",
+                          "частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm" else "развёрнутые 0/1"])
     so, sc = _short_mults(s)
     m = s["mult"]
     if so == sc:
@@ -143,6 +199,9 @@ def scen_text(s: dict) -> str:
           if k in s]
     if ps:
         head += ", коротких Principal: " + ", ".join(ps)
+    if s.get("b_principal_short"):
+        lo, hi = s["b_principal_short"]
+        head += f" (их трудность {_x(lo)}–{_x(hi)})"
     parts = [head, f"a {s['a']}"]
     parts.append(f"блок {s['block']} заданий" if s["block"] else "без блока")
     parts.append("частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm"
@@ -151,6 +210,9 @@ def scen_text(s: dict) -> str:
 
 
 def bank_counts(s: dict) -> dict:
+    if s.get("real"):  # реальный банк: модельные — только добавленные короткие Principal
+        return {blk: {"lead": (0, 0), "principal": (int(s.get(f"{blk}_principal_short") or 0), 0)}
+                for blk in ("own", "common")}
     so, sc = _short_mults(s)
     out = {}
     for blk, by in BANK_UNIT.items():
@@ -185,7 +247,9 @@ def model_bank(pool, s: dict, n_subpools: int, rng: np.random.Generator) -> list
                 for k in range(n):
                     base = src[k % len(src)]
                     it = deepcopy(base)
-                    target = float(rng.uniform(*B_RANGE[g]))
+                    # b_principal_short — трудность коротких Principal (новые семейства у границы Lead/Principal и выше)
+                    rng_b = s.get("b_principal_short") if (kind == "s" and g == "principal") else None
+                    target = float(rng.uniform(*(rng_b or B_RANGE[g])))
                     if kind == "o" and s["partial"] is True:  # 0–4 по рубрике: четыре ступени вокруг трудности ответа
                         it.b = target + np.array([-0.75, -0.25, 0.25, 0.75])
                         it.a = np.full(4, 0.8 * s["a"])
@@ -281,7 +345,7 @@ def run_path_x(pool, cand, truth, cfg, counter, history, rng, det, s: dict, conf
         if dec.provisional:
             final, status = "junior", "provisional"
             break
-        lower, _ = rules_mod.accept_lower_allowed(None, g, False, dec.probabilities)
+        lower, _ = rules_mod.accept_lower_allowed(None, g, False, dec.probabilities, level=confirm)
         if lower:
             final, status = lower, "accepted_lower"
             break
@@ -297,8 +361,7 @@ def worker(a) -> dict:
     s = SCENARIOS[a.scenario]
     confirm = a.confirm
     gx.patch_ext_sessions(1.5, True)  # как продукт: заявленный Lead/Principal — без ротации, априорное SD 1,5
-    # порог уверенности принятия уровня ниже — тот же confirm (как настройка ASSESSMENT_CONFIRM_LEVEL)
-    rules_mod.proved_lower = functools.partial(rules_mod.proved_lower, level=confirm)
+    # порог уверенности принятия уровня ниже — тот же confirm (как настройка ASSESSMENT_CONFIRM_LEVEL): run_path_x
     cfg = sim.app_config_from_settings()
     if s["partial"] == "gpcm":  # модель частичного балла платформы: движок с partial_credit, ответы — GPCM + шум оценщика
         try:
@@ -311,6 +374,8 @@ def worker(a) -> dict:
     base = sim.make_pool(cfg.subpools)
     bseed = [SEED, 7, list(SCENARIOS).index(a.scenario)] + ([a.rep] if a.rep else [])  # rep — другая реализация банка
     extra = model_bank(base, s, cfg.subpools, np.random.default_rng(bseed))
+    if s.get("real") and not any(p.grades and p.grades[0] in EXT for p in base):
+        raise SystemExit("сценарии g_real* — на дереве с банком, где есть семейства Lead/Principal (после sync_bank)")
     pool = list(base) + extra
     i = sim.DIRECTIONS.index(a.direction)
     wi = list(gx.WORLDS).index(a.world)
@@ -403,14 +468,22 @@ def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], 
                         "scenario": sc, "confirm": cf, "world": w, "rep": rp,
                         "text": scen_text(SCENARIOS[sc]) + (f" · банк, реализация {rp + 1}" if rp else ""),
                         "bank": bank_counts(SCENARIOS[sc]), **SCENARIOS[sc], **summarize(rows)}
-    if merge and OUT.exists():
-        old = json.loads(OUT.read_text(encoding="utf-8"))
+    old = json.loads(OUT.read_text(encoding="utf-8")) if merge and OUT.exists() else None
+    if old:
         rep["variants"] = {**old.get("variants", {}), **rep["variants"]}
     cfg_sig = {"scenarios": {k: SCENARIOS[k] for k in scenarios}, "bank_unit": BANK_UNIT, "b_range": B_RANGE,
                "n_per_direction": n, "confirms": confirms, "worlds": worlds}
     rep["signature"] = signature(seed=SEED, config=cfg_sig, n=n * len(sim.DIRECTIONS),
                                  world="симуляция 6 уровней: модельный банк Lead/Principal, блок Lead/Principal, "
                                        "частичный балл; модель, не люди", command="make grades-ext-need")
+    if old and old.get("signature"):
+        # --merge: подпись основного прогона сохраняется, этот прогон — строкой в extra_runs (какие сценарии, коммит, когда)
+        new_sig, base = rep["signature"], dict(old["signature"])
+        base["extra_runs"] = [*base.get("extra_runs", []), {
+            "scenarios": ", ".join(scenarios), "reps": ",".join(str(r) for r in (reps or [0])),
+            "confirms": ",".join(str(c) for c in confirms), "worlds": ",".join(worlds),
+            **{k: new_sig.get(k) for k in ("commit", "bank", "generated_at", "seed", "config_hash", "command")}}]
+        rep["signature"] = base
     rep["target"] = {"exact_lead": 0.64, "exact_principal": 0.64, "above_max": 0.07}
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
@@ -435,6 +508,10 @@ def markdown(rep: dict) -> str:
          "≤ 7 %.", "",
          f"Подпись: {sig.get('world')}; seed {sig.get('seed')}; коммит {sig.get('commit') or '—'}; "
          f"команда `{sig.get('command')}`.", "",
+         *[f"- Дополнительный прогон: {x.get('scenarios')} (реализации {x.get('reps') or '0'}) — коммит "
+           f"{x.get('commit') or '—'}, {str(x.get('generated_at') or '—')[:16].replace('T', ' ')} UTC, "
+           f"config {x.get('config_hash') or '—'}." for x in sig.get("extra_runs", [])],
+         *([""] if sig.get("extra_runs") else []),
          "Банк ×1 — ожидаемый по карточке банка: направление — Lead 1 короткое + 1 развёрнутое, Principal 1 развёрнутое; "
          "общий блок — Lead 2 + 2, Principal 1 + 1. Блок — до K коротких трудных заданий за ≤ 25 мин после основной "
          "части (тем, кто заявил Lead/Principal, и подтвердившим Senior с θ̂, не исключающим Lead).", "",

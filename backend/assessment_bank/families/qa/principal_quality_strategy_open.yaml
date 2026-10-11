@@ -1,0 +1,23 @@
+family_id: qa.principal.quality_strategy_open
+title: Стратегия качества для нескольких команд — метрики, контракты, частые релизы, модель QA, тестовые данные (Principal)
+direction: qa
+skills: [test_architecture, regression_strategy, contract_testing, quality_metrics, test_data_management, release_management]
+target_grades: [principal]
+format: open_answer
+language: text
+invariants:
+  extra:
+    topics: [cadence, contracts, metrics, org_model, test_data]
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "Ситуация уровня организации с числами (команды, сервисы, доли отказов стенда, очереди, сроки); рубрика из 3 критериев — диагноз по данным, стратегия, этапы перехода и критерии успеха. Сильный ответ требует решений на уровне нескольких команд и плана миграции с метриками, а не перечня практик (их даёт Senior/Lead и получает средний балл): у порога Lead/Principal (2,75)"
+generator: assessment_bank.families.qa.principal_quality_strategy_open
+version: 1
+description: >
+  Открытые вопросы уровня Principal по стратегии качества: метрики вместо KPI по дефектам, переход на контрактные
+  тесты, ежедневные релизы, перестройка отдела QA, тестовые данные без персональных данных. Оценка по рубрике с
+  цитатами из ответа.

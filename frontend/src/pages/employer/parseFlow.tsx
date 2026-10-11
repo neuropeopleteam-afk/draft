@@ -4,7 +4,7 @@
 // «модель предлагает: …» с «Принять» / «Отклонить», молча ничего не перезаписывается.
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../lib/api";
-import { DIRECTIONS, GRADE_TITLE_ALL, num } from "../../components/ui";
+import { DIRECTION_TITLES, GRADE_TITLE_ALL, num } from "../../components/ui";
 import type { Ev } from "../../components/Quotes";
 import type { Req, StackItem } from "./Needs";
 
@@ -29,7 +29,7 @@ export function evSource(ev: Ev & { confirmed_by?: string }): string {
 
 function valueText(field: string | undefined, v: any): string {
   if (v == null) return "не указано";
-  if (field === "direction") return DIRECTIONS[v] ?? v;
+  if (field === "direction") return DIRECTION_TITLES[v] ?? v;
   if (field === "grade") return GRADE_TITLE_ALL[v] ?? v;
   if (field === "experience_years_min") return `от ${num(v)} лет`;
   if (field === "work_format") return FORMAT[v] ?? v;

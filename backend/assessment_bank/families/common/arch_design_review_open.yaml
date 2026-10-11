@@ -1,0 +1,25 @@
+family_id: common.arch.design_review_open
+title: Ревью дизайн-документа ведущим инженером — найти и ранжировать риски запуска, не поднять ложных тревог
+direction: common
+skills: [system_design, design_review, reliability, distributed_systems, capacity_planning]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    planted_flaws: 3
+    sound_items: 2
+    flaw_pool: [spof_db, unbounded_queue, sync_cross_region, retry_no_idem, peak_capacity, cache_money, shared_schema, cause_alerts]
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "Априорная трудность (не по людям). Ревью из 5 пунктов: 3 изъяна из пула 8 и 2 здравых решения-приманки; полный балл требует найти все три, обосновать числами условия (бюджет SLO, пик, RTT), предложить проверяемую меру и не поднять ложную тревогу. Senior обычно находит 1–2 изъяна без приоритизации — граница Senior/Lead (порог θ ≈ 2,0); σ 0,35 — изъяны пула неодинаково очевидны"
+generator: assessment_bank.families.common.arch_design_review_open
+version: 1
+description: >
+  Lead: ревью дизайна нового сервиса. Пять пунктов документа, три из них — заложенные изъяны надёжности,
+  ёмкости и интеграции, два — здравые решения. Рубрика по каждому изъяну (с номером пункта) и по
+  ранжированию рисков без ложных тревог; оценка с цитатами-доказательствами.

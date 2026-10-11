@@ -28,6 +28,7 @@ import contextvars
 from contextlib import contextmanager
 from datetime import date, timedelta
 import logging
+import threading
 import time
 
 import numpy as np
@@ -554,13 +555,21 @@ def _tariffs_demo(db: Session) -> None:
         log.exception("jury: tariffs demo failed")
 
 
+# SQLite (локальный запуск без Docker — один процесс uvicorn): по очереди между потоками процесса. Без этого запасная
+# песочница (фоновый поток) и вход эксперта писали в файл одновременно — «database is locked» сразу, без ожидания
+# (повышение блокировки чтения до записи), и песочница оставалась без примера устной защиты (развёртывание с нуля 11.10).
+_local_mx = threading.RLock()
+
+
 @contextmanager
 def _lock(db: Session):
     """Сброс и создание демо жюри — по очереди между воркерами uvicorn (advisory lock PostgreSQL на отдельном
-    соединении: сессия внутри несколько раз фиксирует транзакции и может сменить соединение)."""
+    соединении: сессия внутри несколько раз фиксирует транзакции и может сменить соединение); на SQLite — между
+    потоками процесса (_local_mx)."""
     bind = db.get_bind()
     if bind.dialect.name != "postgresql":
-        yield
+        with _local_mx:
+            yield
         return
     with bind.connect() as conn:
         conn.execute(text("SELECT pg_advisory_lock(20261006)"))

@@ -1,0 +1,28 @@
+family_id: devops.bash.retry_ob3
+title: bash — retry возвращает 0 после исчерпания попыток (открытая книга)
+direction: devops
+skills: [bash, shell, exit_codes, ci_cd, reliability]
+target_grades: [middle, senior]
+format: open_book_3step
+language: bash
+invariants:
+  code_lines: [14, 16]
+  operations: [18, 20]
+  defect_type: missing_return_status
+  n_options: 4
+  extra:
+    subtypes: [sleep, echo_last, backoff]
+    step3_conditions: [backoff_deadline, non_idempotent, set_e_functions]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.7
+  a: 1.2
+  sigma_variant: 0.3
+  step_offsets: [-0.6, 0.1, 0.7]
+  basis: "Функция retry 14–16 строк без return после цикла; шаг 1 — выбрать сценарий «все попытки неудачны» (проще); шаг 2 — три почти верных исправления фиксированного состава (return $? после цикла, return 1 внутри цикла, set -e); шаг 3 — перенос (джиттер и лимит времени, неидемпотентные команды, пределы set -e). Граница Middle/Senior"
+generator: assessment_bank.families.devops.bash_retry_ob3
+version: 1
+description: >
+  Функция retry в bash возвращает статус последней команды цикла. Шаг 1 — сценарий, воспроизводящий дефект;
+  шаг 2 — исправление; шаг 3 — развёрнутый ответ по рубрике. Шаги 1–2 проверяются исполнением в bash.

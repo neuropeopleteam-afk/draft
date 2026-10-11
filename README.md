@@ -16,13 +16,13 @@
 <!-- numbers:begin -->
 | Что | Число | Откуда |
 |---|---|---|
-| Автотесты бэкенда (`pytest`, SQLite) | **1508 прошли**, пропущено 3, упавших 0 | полный прогон на сервере проверок, SHA `5721237`, 11.10.2026; `make test`, `make coverage` |
-| Банк заданий | **165 семейств** (backend 44, common 34, data_ml 23, frontend 26, qa 19, security 19); валидатор (20 вариантов на семейство): PASS 147, WARN 18, FAIL 0 (WARN — открытый ответ без ключа или ключ не исполняется в окружении без Django/JDK; в окружении только с `requirements.txt` WARN больше); 1379 проверок ключей исполнением кода, ошибок 0; 3300 вариантов, уникальных 3281 | `backend/assessment_bank/BANK_SYNC.json`, `make test-bank` |
-| Миграции Alembic | **ревизий: 33, одна голова `tr01`** | `backend/migrations/versions`, `alembic heads` |
+| Автотесты бэкенда (`pytest`, SQLite) | **1645 прошли**, пропущено 16, упавших 0 | полный прогон на сервере проверок, SHA `4864dce`, 11.10.2026; `make test`, `make coverage` |
+| Банк заданий | **342 семейств** (analyst 26, backend 52, common 46, data_eng 29, data_ml 34, devops 30, frontend 35, mobile 29, qa 30, security 31); валидатор (20 вариантов на семейство): PASS 322, WARN 20, FAIL 0 (WARN — открытый ответ без ключа или ключ не исполняется в окружении без Django/JDK; в окружении только с `requirements.txt` WARN больше); 2219 проверок ключей исполнением кода, ошибок 0; 6840 вариантов, уникальных 6816 | `backend/assessment_bank/BANK_SYNC.json`, `make test-bank` |
+| Миграции Alembic | **ревизий: 35, одна голова `cm01`** | `backend/migrations/versions`, `alembic heads` |
 | Подбор (модель, не люди) | P@5 **0,776** [0,740; 0,810], nDCG@10 **0,573** [0,546; 0,599], MRR 0,888; синтетический мир со скрытой истиной, 200 потребностей × 2000 кандидатов, seed 20261006, алгоритм `match-v1.3` | `make bench`, `docs/validation/MATCHING_BENCH.md`, `docs/validation/matching_bench.json` |
-| Отчёт страницы `/validation` (симуляция теста, повтор, утечка) | посчитан 10.10; соответствует текущему банку; константы показа `exposure_k.json` — 06.10 на 128 семействах | `make validate`, `backend/app/modules/validation/data/report.json` |
+| Отчёт страницы `/validation` (симуляция теста, повтор, утечка) | посчитан 10.10; **на банке из 165 семейств, а в банке сейчас 342: пересчёт `make validate` (≈ 10 мин на 8 ядрах) даст другие числа симуляции, повтора и утечки**; константы показа `exposure_k.json` — 06.10 на 128 семействах | `make validate`, `backend/app/modules/validation/data/report.json` |
 | Точность уровня (модель, не люди) | порог уверенности P ≥ 0,6: точно истинный уровень **64,1 %** (было 57,5 % при P ≥ 0,8), выше 6,5 %, ниже 28,0 %, без категории 3,4 %; повтор: совпало 80,4 %, κw 0,874; ≈ 57 мин | перебор 98 вариантов, коммит `8f4d6d2`; путь — коммит `659ca65`, 2026-10-10; `make grade-sweep`, `docs/validation/GRADE_ACCURACY.md` |
-| Сквозные сценарии (Playwright) | 55 сценариев в 23 файлах (число в коде, не результат прогона) | `e2e/tests`, `make e2e` |
+| Сквозные сценарии (Playwright) | 57 сценариев в 24 файлах (число в коде, не результат прогона) | `e2e/tests`, `make e2e` |
 | Лимиты памяти контейнеров | db 320 МиБ, api 3072 МиБ, web 32 МиБ, keycloak 576 МиБ; профиль llm-local — 8 ГиБ | `docker-compose.yml`, разбор — `docs/LOAD_TEST.md` |
 <!-- numbers:end -->
 
@@ -54,7 +54,9 @@
 
 ## Проверка одной командой, без ключей и доступов
 
-Нужны Docker 24+ с плагином compose, `make`, `openssl`, `curl`. Ключи языковой модели, почты и любых внешних сервисов не нужны.
+Нужны Docker Engine 24+ с плагином **Compose v2.24+** (`docker compose version`; более старый не разберёт
+`docker-compose.yml` — ошибка `env_file.0 must be a string`; `make up` проверяет версию сам), `make`, `openssl`, `curl`.
+Ключи языковой модели, почты и любых внешних сервисов не нужны.
 
 > **`REPO_URL` — заполнитель.** Адрес репозитория владелец проекта укажет после публикации (11.10); до тех пор в документации
 > везде стоит переменная `REPO_URL`. Подставьте адрес, по которому вы открыли этот файл.
@@ -268,7 +270,7 @@ make env && NO_SEED=1 make up          # порты публикуются то�
 Страница QR без пароля — `sudo bash infra/nginx/apply-public-snippets.sh` (копия файла сайта, `nginx -t`, откат при
 ошибке, проверка адресов). Мониторинг с письмом владельцу — раздел 11.1 в [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-### Проверено с нуля (09.10)
+### Проверено с нуля (09.10, 11.10)
 
 Чистый клон без `.env` и кэша сборки → `make env && make up` → демо-данные → вход жюри в один клик, экспресс-тест до
 итога, потребность → подборка → сравнение: **около 5 минут** на сервере 4 vCPU (сборка образов без кэша — 2 мин 19 с,
@@ -279,7 +281,7 @@ make env && NO_SEED=1 make up          # порты публикуются то�
 - **Нет `make`** (Ubuntu Server ставится без него): `sudo apt install make` или те же команды вручную:
   ```bash
   test -f .env || { cp .env.example .env && sed -i "s/^POSTGRES_PASSWORD=$/POSTGRES_PASSWORD=$(openssl rand -hex 24)/; s/^JWT_SECRET=$/JWT_SECRET=$(openssl rand -hex 32)/" .env; }
-  docker compose up -d --build
+  docker compose up -d --build --wait --wait-timeout 300   # --wait: демо-данные — только после миграций и /api/health
   docker compose exec -T api python -m app.modules.demo.seed
   ```
 - **Вторая копия на том же сервере.** В `docker-compose.yml` задано имя проекта `spectrek_fsp`: без своего имени вторая
@@ -288,6 +290,11 @@ make env && NO_SEED=1 make up          # порты публикуются то�
   (переменная важнее имени из файла: все `make` и `docker compose` в этом терминале пойдут во вторую копию).
 - Первый вход жюри сразу после запуска или после демо-данных — до 20–30 с: создаётся песочница эксперта (запасная
   готовится в фоне, следующие входы — мгновенно).
+- **11.10, без Docker, чистая машина 8 vCPU** (git archive, без `.env` и кэшей pip/npm): раздел «Чистая машина» буква в
+  букву — **68 с** до работающего сайта (pip 35 с, миграции 2 с, демо-данные 10 с, `npm install` 3 с, Vite 1 с), проверка
+  `fresh_check.py --base http://127.0.0.1:5173 --expect-candidates` — все шаги OK. Те же шаги, что в образах и `make up`
+  (PostgreSQL 16, `uvicorn --workers 2`, сборка `npm ci && npm run build`), — **82 с**, все шаги OK. Сам Docker там
+  недоступен: `docker compose config` проверен на Compose 2.24.0 и 2.29.7 (OK) и 2.21/2.23 (ошибка выше).
 
 ## Лицензия
 
