@@ -61,7 +61,7 @@
  },
  "e2e_in_code": {
   "spec_files": 24,
-  "scenarios": 57
+  "scenarios": 58
  },
  "validation_report": {
   "report_generated_at": "2026-10-10",
@@ -131,11 +131,11 @@
  },
  "tests": {
   "failed": 0,
-  "passed": 1652,
-  "skipped": 19,
-  "seconds": 290.62,
+  "passed": 1667,
+  "skipped": 20,
+  "seconds": 231.9,
   "exit": 0,
-  "sha": "d101806",
+  "sha": "4b09113",
   "date": "11.10.2026"
  },
  "note": "Числа посчитаны tools/publish/gen_numbers.py; тесты и покрытие — из журнала прогона. Подбор — синтетический мир со скрытой истиной (модель, не люди)."
