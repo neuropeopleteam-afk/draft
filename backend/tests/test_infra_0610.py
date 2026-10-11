@@ -174,7 +174,7 @@ def test_red_button_one_click_for_jury(client):
     assert r.status_code == 200 and r.json()["violated"] is False
 
 
-def test_leak_bank_from_cache(client, monkeypatch):
+def test_leak_bank_from_cache(client, monkeypatch, tmp_path):
     from app.modules.validation import attacks
 
     tok = register_and_verify(client)
@@ -187,10 +187,14 @@ def test_leak_bank_from_cache(client, monkeypatch):
     calls = []
     monkeypatch.setattr(attacks, "_leak", lambda p, seed=None: calls.append(p) or {"violated": False, "fact": "ok",
                                                                                    "details": {}})
+    # межпроцессная блокировка симуляции (flock в каталоге временных файлов) — общая на машину: на сервере проверок её
+    # держит настоящая симуляция соседнего прогона → 429 attack_busy не по вине кода (нестабильность 11.10). Поэтому в тесте
+    # свой файл блокировки: проверяем кэш процесса и саму механику, а не соседей
+    monkeypatch.setattr(attacks, "SIM_LOCK", tmp_path / "leak_sim.lock")
     attacks._leak_mem.pop("backend:0.7", None)
     for _ in range(2):
         r = client.post("/api/validation/attacks/leak_bank", json={"leak_share": 0.7}, headers=H(tok))
-        assert r.status_code == 200 and r.json()["cached"]
+        assert r.status_code == 200 and r.json()["cached"], r.text
     assert len(calls) == 1
     attacks._leak_mem.pop("backend:0.7", None)
     # пока симуляция идёт в этом процессе — вторая такая же сразу получает 429, а не занимает воркер
@@ -202,6 +206,7 @@ def test_leak_bank_from_cache(client, monkeypatch):
         attacks._leak_mx.release()
     # …и если симуляция идёт в другом воркере контейнера (межпроцессная блокировка)
     held = attacks._sim_lock()
+    assert held is not None  # свой файл блокировки — свободен
     try:
         r = client.post("/api/validation/attacks/leak_bank", json={"leak_share": 0.7}, headers=H(tok))
         assert r.status_code == 429 and r.json()["detail"]["code"] == "attack_busy"
