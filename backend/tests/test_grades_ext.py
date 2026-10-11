@@ -163,3 +163,14 @@ def test_without_flag_refine_item_time_unchanged():
     st = _refine_state(eng, "senior")
     assert st["cfg"]["max_item_time_s"] == 300.0 and "ext_item_time_s" not in st["cfg"]
     assert eng._cfg(st).ext_item_time_s == 300.0
+
+
+def test_without_flag_second_stage_items_minutes_unchanged(monkeypatch):
+    """GRADES_EXT_REFINE_ITEMS / _MINUTES без GRADES_EXT_ENABLED не действуют (второй этап — как у двухэтапного)."""
+    from app.core.config import get_settings
+    from app.modules.assessment import two_stage
+
+    monkeypatch.setattr(get_settings(), "grades_ext_refine_items", 10)
+    monkeypatch.setattr(get_settings(), "grades_ext_refine_minutes", 25)
+    p = {"items": 8, "minutes": 15, "level": 0.8}
+    assert two_stage.ext_params(p, "lead") == p and two_stage.ext_params(p, "senior") == p

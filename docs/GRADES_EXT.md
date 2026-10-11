@@ -70,6 +70,8 @@ Senior, **Lead**, **Principal**.
 ## Включение на стенде
 1. В окружении API: `GRADES_EXT_ENABLED=true` (и при желании `GRADES_EXT_PRELIMINARY=true` — по умолчанию так).
    Лимит времени задания во втором этапе у границ Lead/Principal — `GRADES_EXT_REFINE_ITEM_TIME_S` (по умолчанию 420; 300 — прежнее поведение).
+   Число заданий и минуты второго этапа у этих границ — `GRADES_EXT_REFINE_ITEMS` / `GRADES_EXT_REFINE_MINUTES` (по умолчанию 0 —
+   как у двухэтапного, 8 / 15; синтетика, модель, не люди: 10 / 25 — Principal точно 28 → 42 %, docs/validation/GRADES_EXT_NEED.md).
 2. Банк с семействами Lead/Principal синхронизирован (`tools/sync_bank.py`), затем перезапуск API: флаг читается при старте.
 3. Проверка: `/api/meta` → `grades_ext.by_direction.<направление>.grades` содержит `lead`/`principal` там, где банк их
    проверяет; `/validation#grades-ext` показывает блок.
