@@ -72,6 +72,7 @@ class ConversationOut(BaseModel):
     channels: ChannelsOut
     engine: Literal["engine", "stub"]
     hint: str | None = Field(None, description="Только заглушка: начало письменного ответа — «подставить» в e2e")
+    context: str | None = Field(None, description="Защита: 1–2 строки письменного ответа кандидата, по которому вопрос")
 
 
 class TaskRef(BaseModel):
@@ -284,8 +285,10 @@ async def session_transcribe(session_id: uuid.UUID, request: Request, user: User
                        503: err("Голос недоступен — вопрос показан текстом")}, response_class=Response)
 def session_speech(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> Response:
     row = svc.own_session(db, user, session_id)
-    q = (row.state or {}).get("q")
-    if row.status != "in_progress" or not q:
+    st = row.state or {}
+    # идёт разговор — текущий вопрос; только что закрыт (время вышло, «Закончить») — прощание ведущей
+    q = st.get("q") if row.status == "in_progress" else st.get("closing") if row.status in ("evaluating", "completed") else None
+    if not q:
         raise api_error(409, "interview_closed", "Разговор не идёт")
     try:
         audio, mime, usd = pt.get_port().speak(q)

@@ -3,12 +3,14 @@ from __future__ import annotations
 
 from .planning import plan, task_by_id
 from .schemas import InterviewContext, SessionSpec, Transcript
-from .textnorm import first_sentence, normalize, overlap
+from .textnorm import first_sentence, normalize, overlap, short_fragment, short_title, word_count
 
+# Ведущая — женский образ «ИИ-интервьюер Драфта»: приветствие и представление — одна фраза, вопросы — до 25 слов.
 _OPEN = {
-    "defense": "Здравствуйте, {name}! Я задам {n} по вашим письменным ответам — это займёт несколько минут и не меняет результат теста. ",
-    "interview": "Здравствуйте, {name}! Я задам {n} о вашем опыте — это займёт около {m}. ",
+    "defense": "Здравствуйте, {name}, я — ИИ-интервьюер {product}, задам {n} по вашим письменным ответам. ",
+    "interview": "Здравствуйте, {name}, я — ИИ-интервьюер {product}, задам {n} о вашем опыте, это около {m}. ",
 }
+MAX_QUESTION_WORDS = 25
 
 
 def plural(n: int, one: str, few: str, many: str) -> str:
@@ -19,44 +21,58 @@ def plural(n: int, one: str, few: str, many: str) -> str:
         return f"{n} {few}"
     return f"{n} {many}"
 _CLOSE = {
-    "defense": "Спасибо, {name}, на этом всё. Ваши объяснения переданы работодателю как подтверждение результатов теста; сам результат теста не меняется. Хорошего дня!",
-    "interview": "Спасибо, {name}, на этом всё. Итог интервью увидит работодатель, решение принимает человек. Хорошего дня!",
+    "defense": "Спасибо, {name}, я всё записала. Объяснения увидит работодатель, результат теста не меняется. Хорошего дня.",
+    "interview": "Спасибо, {name}, я всё записала. Итог увидит работодатель, решение принимает человек. Хорошего дня.",
 }
+# {lead} — «В задании «…» вы написали: «первые слова ответа».» (короткий фрагмент, не цитата целиком)
+_FIRST_ASK = ("Почему вы решили именно так?", "Почему именно так, а не иначе?", "Как вы проверите, что это работает?")
 _DEFENSE_Q = (
-    "В задании «{title}» вы написали про {topic}. Расскажите своими словами: как это работает и почему вы выбрали именно такой путь?",
-    "Вернёмся к заданию «{title}». Почему именно так, а не иначе — какие альтернативы вы отбросили и чем они хуже?",
-    "По заданию «{title}»: что пойдёт не так в крайнем случае и как вы это заметите?",
-    "По заданию «{title}»: как убедиться, что решение работает — что бы вы проверили и в каком порядке?",
+    "{lead} {ask}",
+    "Вернёмся к заданию «{title}». Какой другой вариант вы видели и чем он хуже?",
+    "В задании «{title}»: где ваше решение может сломаться?",
+    "В задании «{title}»: как вы проверите, что решение работает?",
 )
 _INTERVIEW_Q = (
-    "Давайте про навык «{skill}». Вспомните конкретный случай: какая была задача, что вы делали сами и чем всё закончилось?",
-    "Ещё про «{skill}»: расскажите о ситуации, где было по-настоящему трудно, и как вы выкрутились.",
-    "Как вы учились «{skill}» и по чему понимаете, что получается?",
+    "Про «{skill}»: вспомните один случай из работы. Что за задача, что делали вы сами?",
+    "Ещё про «{skill}»: когда было трудно и как вы справились?",
+    "Как вы учились «{skill}» и как понимаете, что получается?",
 )
 
 
-def rules_turn(spec: SessionSpec, transcript: Transcript, kind: str, k: int | None) -> str:
+def _lead(title: str, answer: str) -> str:
+    frag = short_fragment(answer, 7)
+    return f"В задании «{title}» вы написали: «{frag}»." if frag else f"Вернёмся к вашему ответу в задании «{title}»."
+
+
+def rules_turn(spec: SessionSpec, transcript: Transcript, kind: str, k: int | None, product: str = "Драфт") -> str:
+    from .prompts import genitive
+
     name = spec.candidate_name
     if kind == "closing":
         return _CLOSE[spec.mode].format(name=name)
     items = plan(spec)
     if kind == "repeat":
         last = next((u for u in reversed(transcript.items) if u.who == "interviewer" and u.kind in ("opening", "question")), None)
-        core = last.text.split(". ", 1)[-1] if last else ""
-        return f"Повторю проще. {core}".strip() if core else "Повторю: расскажите своими словами, как это работает."
+        if last is not None and last.k and 1 <= last.k <= len(items):
+            return "Повторю проще. " + rules_turn(spec, transcript, "question", last.k, product)
+        return "Повторю проще: расскажите своими словами, как это работает."
     item = items[(k or 1) - 1]
     angle_idx = (item.k - 1) // max(1, len({i.task_id or i.skill for i in items}))
     if spec.mode == "defense":
         t = task_by_id(spec, item.task_id)
-        topic = (t.topics[(item.k - 1) % len(t.topics)] if t and t.topics else "ваше решение")
-        q = _DEFENSE_Q[angle_idx % len(_DEFENSE_Q)].format(title=item.title, topic=f"«{topic}»" if topic != "ваше решение" else topic)
+        title = short_title(item.title)
+        ask = _FIRST_ASK[(item.k - 1) % len(_FIRST_ASK)]
+        q = _DEFENSE_Q[angle_idx % len(_DEFENSE_Q)].format(title=title, lead=_lead(title, t.answer if t else ""), ask=ask)
+        if word_count(q) > MAX_QUESTION_WORDS:  # длинное название или фрагмент — без фрагмента
+            q = _DEFENSE_Q[angle_idx % len(_DEFENSE_Q)].format(title=title, ask=ask,
+                                                               lead=f"Вернёмся к вашему ответу в задании «{title}».")
     else:
         q = _INTERVIEW_Q[angle_idx % len(_INTERVIEW_Q)].format(skill=item.skill)
     prefix = ""
     if kind == "opening":
         n = plural(spec.max_questions, "короткий вопрос", "коротких вопроса", "коротких вопросов")
         m = plural(spec.duration_min, "минуты", "минут", "минут")
-        prefix = _OPEN[spec.mode].format(name=name, n=n, m=m)
+        prefix = _OPEN[spec.mode].format(name=name, n=n, m=m, product=genitive(product))
     return prefix + q
 
 

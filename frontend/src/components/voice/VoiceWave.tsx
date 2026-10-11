@@ -27,14 +27,14 @@ export interface VoiceWaveProps {
   level?: () => number;
   /** Имя собеседника для подписи («Интервьюер»). */
   name?: string;
-  /** Дополнительная подпись под состоянием (например, «модель, не люди»). */
+  /** Не показывается (решение владельца 11.10: только «Интервьюер: состояние»); оставлено для совместимости. */
   caption?: string;
   /** Размер круга, px (по умолчанию 132; ширина подстраивается под контейнер). */
   size?: number;
   className?: string;
 }
 
-export function VoiceWave({ state, level, name = "Интервьюер", caption, size = 132, className = "" }: VoiceWaveProps) {
+export function VoiceWave({ state, level, name = "Интервьюер", size = 132, className = "" }: VoiceWaveProps) {
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const st = useRef(state);
   st.current = state;
@@ -125,7 +125,6 @@ export function VoiceWave({ state, level, name = "Интервьюер", caption
       <p className="-mt-2 text-sm font-semibold text-brand-night">
         {name}: <span aria-live="polite" data-testid="voice-wave-state">{WAVE_LABEL[state].toLowerCase()}</span>
       </p>
-      {caption && <p className="text-xs text-brand-ink/65">{caption}</p>}
     </div>
   );
 }

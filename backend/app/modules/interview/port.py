@@ -40,6 +40,43 @@ def keywords(text: str) -> set[str]:
     return {w.lower()[:7] for w in _WORD.findall(text or "") if w.lower() not in _STOP}
 
 
+def _genitive(product: str) -> str:
+    p = (product or "").strip()
+    return p + "а" if p and p[-1].lower() in "бвгджзклмнпрстфхцчшщ" else p
+
+
+_TAIL = {"и", "а", "но", "в", "во", "на", "с", "со", "к", "по", "за", "из", "от", "до", "для", "или", "что", "чтобы", "как", "при"}
+_CODE = re.compile(r"\([^)]*\)|`[^`]*`|«[^»]*»|\"[^\"]*\"")
+
+
+def _trim(words: list[str], n: int) -> str:
+    w = [x for x in words if any(ch.isalnum() for ch in x)][:n]
+    while len(w) > 1 and w[-1].lower() in _TAIL:
+        w.pop()
+    return " ".join(w).strip(" ,.-")
+
+
+def short_title(title: str, n: int = 5) -> str:
+    """Название задания вслух: без кода, скобок, кавычек и обрезанного хвоста, до двоеточия, не длиннее n слов."""
+    raw = (title or "").strip()
+    t = _CODE.sub(" ", raw.replace("…", " ").replace("...", " "))
+    if raw.endswith(("…", "...")) and len(t.split()) > 1:
+        t = t.rsplit(None, 1)[0]
+    parts = [x for x in re.split(r"[:.;!?—]", t) if x.strip()]
+    head = parts[0] if parts else ""
+    if len(parts) > 1 and head.strip().lower() in ("контекст", "задача", "задание", "ситуация", "кейс", "условие", "сценарий"):
+        head = parts[1]  # «Контекст: сервис уведомлений…» → «сервис уведомлений»
+    out = _trim(head.split(), n)
+    return out[:1].upper() + out[1:] if out else "задание"
+
+
+def short_fragment(text: str, n: int = 7) -> str:
+    """Первые слова письменного ответа (до запятой/двоеточия, не больше n) — напоминание, а не длинная цитата."""
+    t = _CODE.sub(" ", first_phrase(text, 400))
+    t = re.split(r"[:;—]|,\s", t, maxsplit=1)[0]
+    return _trim([x.strip("«»\"'`") for x in t.split()], n)
+
+
 def first_phrase(text: str, n: int = 160) -> str:
     t = re.sub(r"\s+", " ", text or "").strip()
     m = re.match(r"(.{20,}?[.!?…])(\s|$)", t)
@@ -58,19 +95,21 @@ class StubPort:
             tasks = ctx.get("tasks") or []
             for k in range(min(max_q, 2 * len(tasks))):
                 t = tasks[k % len(tasks)]
-                title = t.get("title") or "задание"
+                title = short_title(t.get("title") or "задание")
                 if k < len(tasks):
-                    topic = (t.get("topics") or [title])[0]
-                    q = (f"В задании «{title}» вы написали: «{first_phrase(t.get('answer') or '', 120)}». Объясните своими "
-                         f"словами, почему решили именно так и что здесь главное про «{topic}».")
+                    frag = short_fragment(t.get("answer") or "", 7)
+                    ask = ("Почему вы решили именно так?", "Почему именно так, а не иначе?",
+                           "Как вы проверите, что это работает?")[k % 3]
+                    q = (f"В задании «{title}» вы написали: «{frag}». {ask}" if frag else
+                         f"Вернёмся к вашему ответу в задании «{title}». {ask}")
                 else:
-                    q = f"Вернёмся к заданию «{title}»: что изменится в вашем решении, если условие станет строже?"
+                    q = f"Вернёмся к заданию «{title}». Что изменится, если условие станет строже?"
                 out.append({"n": k + 1, "task_id": t.get("id"), "skill": None, "question": q})
         else:
             for k, s in enumerate((ctx.get("unconfirmed_skills") or [])[:max_q]):
                 out.append({"n": k + 1, "task_id": None, "skill": s.get("name"),
-                            "question": f"Расскажите о своём опыте: {s.get('name')}. Какая задача была самой сложной и "
-                                        f"что именно сделали вы?"})
+                            "question": f"Про «{s.get('name')}»: вспомните один случай из работы. Что за задача, что "
+                                        f"делали вы сами?"})
         return out
 
     def is_stub(self) -> bool:
@@ -81,7 +120,8 @@ class StubPort:
         plan = self._plan(mode, ctx, max_questions)
         if not plan:
             raise EngineUnavailable("нет вопросов")
-        hello = f"{name}, здравствуйте! Это заглушка интервью: разговор по шаблону, без модели. "
+        hello = (f"Здравствуйте, {name}, я — ИИ-интервьюер {_genitive(get_settings().product_name)} в режиме заглушки, "
+                 f"без модели. ")
         return {"mode": mode, "ctx": ctx, "plan": plan, "i": 0}, hello + plan[0]["question"], False
 
     def reply(self, state: dict, answer: str, channel: str = "text") -> tuple[dict, str, bool]:
@@ -90,7 +130,7 @@ class StubPort:
         plan = state.get("plan") or []
         if i < len(plan):
             return state, plan[i]["question"], False
-        return state, "Спасибо, это все вопросы.", True
+        return state, "Спасибо, я всё записала, это все вопросы.", True
 
     def hint(self, state: dict, n: int) -> str | None:
         plan = state.get("plan") or []
