@@ -1,0 +1,23 @@
+family_id: analyst.req.decision_table_mcq
+title: Таблица решений — пропущенная или противоречивая комбинация условий
+direction: analyst
+skills: [requirements, requirements_analysis, edge_cases, test_design]
+target_grades: [middle]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    modes: [gap, conflict]
+time_limit_s: 270
+canary: false
+prior_difficulty:
+  b: 0.2
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "Таблица из трёх условий и 4–7 правил с «—»; нужно систематически перебрать 8 комбинаций, а дистракторы — комбинации, покрытые только через «—» (их легко принять за пропуск). Два подтипа вопроса (пропуск, противоречие) → σ повышена. Middle (b ≈ 0,2)"
+generator: assessment_bank.families.analyst.req_decision_table_mcq
+version: 1
+description: >
+  Таблица решений с одним пропуском или одним противоречием; нужно найти комбинацию условий. Ключ:
+  программа на Python разбирает показанную таблицу и перебирает все комбинации.

@@ -10,7 +10,7 @@
     комментариев, объявлений interface/type;
   - sql: число предложений (SELECT, FROM, JOIN, WHERE, GROUP BY, HAVING, ORDER BY, LIMIT, WITH);
   - bash: число команд (разделители — перевод строки, |, &&, ;) без определения функций;
-  - go/java: как javascript — «значимые» строки без строк из одних скобок и комментариев;
+  - go/java/kotlin/swift: как javascript — «значимые» строки без строк из одних скобок и комментариев;
   - dockerfile: число инструкций (FROM, RUN, COPY, …; продолжения строк «\\» — одна инструкция);
   - yaml: число строк с ключом или элементом списка.
 """
@@ -20,7 +20,8 @@ import ast
 import re
 
 _COMMENT_PREFIX = {"python": "#", "bash": "#", "sql": "--", "javascript": "//",
-                   "typescript": "//", "go": "//", "java": "//", "dockerfile": "#", "yaml": "#"}
+                   "typescript": "//", "go": "//", "java": "//", "dockerfile": "#", "yaml": "#",
+                   "kotlin": "//", "swift": "//"}
 
 
 def count_code_lines(code: str | None, language: str) -> int:
@@ -130,7 +131,7 @@ def _yaml_ops(code: str) -> int:
 def count_operations(code: str | None, language: str) -> int:
     if not code:
         return 0
-    if language in ("go", "java"):
+    if language in ("go", "java", "kotlin", "swift"):
         return _js_ops(code)
     if language == "dockerfile":
         return _docker_ops(code)

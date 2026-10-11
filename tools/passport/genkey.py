@@ -30,7 +30,7 @@ def main() -> int:
     pub = b64u(key.public_key().public_bytes(serialization.Encoding.Raw, serialization.PublicFormat.Raw))
     thumb = json.dumps({"crv": "Ed25519", "kty": "OKP", "x": pub}, sort_keys=True, separators=(",", ":"))
     kid = "ed25519-" + b64u(hashlib.sha256(thumb.encode()).digest())[:16]
-    print("# Ключ подписи паспортов грейда «Встречный» (Ed25519). Секрет: chmod 600, не коммитить.")
+    print("# Ключ подписи паспортов грейда «Драфт» (Ed25519). Секрет: chmod 600, не коммитить.")
     print(f"# kid: {kid}")
     print(f"# открытый ключ (base64url, можно публиковать): {pub}")
     print(f"PASSPORT_SIGNING_KEY={b64u(seed)}")

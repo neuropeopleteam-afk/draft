@@ -463,6 +463,7 @@ def build(db=None) -> dict:
                     it["limit"] = it["limit"] + " " + GRADES_EXT_LIMIT
         crit.append({"id": f"c{c['n']}", "n": c["n"], "title": c["title"], "short": c["short"], "weight": c["weight"],
                      "items": items})
+    _catalog_note(crit)
     return {"criteria": crit, "pitch": PITCH, "unique": UNIQUE + _voice_unique(), "how_to_read": HOW_TO_READ,
             "personas": PERSONA_TITLE, "total_weight": sum(c["weight"] for c in CRITERIA) + PITCH["weight"]}
 
@@ -483,6 +484,23 @@ def _voice_unique() -> list[dict]:
     from app.core.config import get_settings
 
     return [VOICE_UNIQUE] if getattr(get_settings(), "voice_need_enabled", False) else []
+
+
+CATEGORIZATION_TZ = "корректность категоризации кандидатов по стеку, специализации и пройденным тестам"
+
+
+def _catalog_note(crit: list[dict]) -> None:
+    """Расширение каталога (CATALOG_EXT_ENABLED, catalog/ext.py): в пункте о категоризации — сколько направлений видно.
+    Без флага или без проверенного банка текст не меняется (и docs/CRITERIA.md тоже)."""
+    from app.modules.catalog import ext
+
+    n_ext = len(ext.visible_ext())
+    if not n_ext:
+        return
+    for c in crit:
+        for it in c["items"]:
+            if it["tz"] == CATEGORIZATION_TZ:
+                it["see"] += f" Каталог: {5 + n_ext} направлений, новые — только с проверенным банком."
 
 
 def all_links(data: dict | None = None) -> list[dict]:

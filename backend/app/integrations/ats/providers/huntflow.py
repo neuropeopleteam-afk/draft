@@ -70,7 +70,7 @@ class HuntflowProvider(Provider):
         if vid and aid and (force or not link.on_vacancy(vid)):
             status_id = target.stage_id or next((s["id"] for s in self.stages(vid)), None)
             if status_id:
-                comment = prof.offer_text(d) if not dedup else "Повторная передача с платформы «Встречный»"
+                comment = prof.offer_text(d) if not dedup else "Повторная передача с платформы «Драфт»"
                 lk = self.cl.add_to_vacancy(self.account_id, aid, vid, status_id, comment)
                 link.save(vacancy={"id": vid, "join_id": lk.get("id")})
                 res.update({"vacancy_id": vid, "status_id": status_id, "link_id": lk.get("id")})

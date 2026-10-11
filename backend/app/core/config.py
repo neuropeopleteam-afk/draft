@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore", env_ignore_empty=True)
 
     # Рабочее название продукта — единственное место, где оно задано (фронтенд берёт его из /api/meta).
-    product_name: str = "Встречный"
+    product_name: str = "Драфт"
     app_name: str = "Спецтрек ФСП — платформа подбора ИТ-специалистов"
     app_version: str = "0.2.0"
     env: str = Field(default="dev", description="dev | test | prod")
@@ -319,6 +319,16 @@ class Settings(BaseSettings):
     # к вкладу результата в силу паспорта (app/modules/fsp/relevance.py). По умолчанию выключено — порядок выдачи
     # match-v1 не меняется; включать только без падения метрик make bench / ranking_guard (цифры — внутренний отчёт разработки)
     fsp_discipline_relevance: bool = False
+    # Каталог шире (волна 7, app/modules/catalog/ext.py): 4 новых направления — DevOps / SRE, инженер данных, мобильная
+    # разработка, системный / бизнес-аналитик. По умолчанию выключено — всё как с пятью направлениями. С флагом видны
+    # только направления, чей банк прошёл проверку (directions_verified манифеста банка + правило ниже, FTT.4:
+    # уровень — только по тесту). CATALOG_EXT_DIRECTIONS — показывать только перечисленные (через запятую; пусто — все
+    # готовые). CATALOG_EXT_FORCE_READY — только тесты и локальная проверка интерфейса до готовности банка, на стенде пусто.
+    catalog_ext_enabled: bool = False
+    catalog_ext_directions: str = ""
+    catalog_ext_min_families: int = 18
+    catalog_ext_min_per_grade: int = 3
+    catalog_ext_force_ready: str = ""
 
     # Подписка на потребность и напоминания (И25, Н6; app/modules/subs): фоновый обход раз в N секунд (0 — выключен:
     # тесты и консольный запуск python -m app.modules.subs.runner). Топ-N подписки, не чаще одного пересчёта в
@@ -393,8 +403,12 @@ class Settings(BaseSettings):
     # INTERVIEW_ENGINE=stub — заглушка продукта (тесты, CI, e2e): вопросы по шаблону, оценка правилом, «заглушка» в итоге.
     interview_enabled: bool = False
     interview_engine: str = "auto"  # auto — движок, если он есть и настроен, иначе заглушка; stub — всегда заглушка
-    # Видео-аватара в продукте нет (решение владельца 10.10, регламент п. 5.11): визуал — своя анимация волны голоса;
-    # канал «аватар» остаётся только в движке за INTERVIEW_AVATAR_ENABLED (выкл.) и экраном не используется.
+    # Лица поставщика (Anam) в продукте нет (решение владельца 10.10, регламент п. 5.11): канал «аватар» поставщика — только
+    # в движке за INTERVIEW_ANAM_ENABLED (выкл.) и экраном не используется. Визуал по умолчанию — своя анимация волны голоса.
+    # INTERVIEW_AVATAR_ENABLED (решение владельца 11.10): свой рисованный образ «ИИ-интервьюер, не человек» —
+    # сгенерированная картинка и беззвучные клипы (frontend/public/avatar/, PROVENANCE.md), переключение по состоянию
+    # разговора; без клипов — 2D-анимация по громкости голоса. Голос — как раньше (/speech). docs/INTERVIEW.md, раздел 2.2.
+    interview_avatar_enabled: bool = False
     interview_stt_stub: bool = False  # e2e/демо: в заглушке «нажми и говори» отдаёт начало письменного ответа (stub=true)
     interview_audio_max_kb: int = 3072  # запись одного ответа «нажми и говори»
     interview_defense_minutes: int = 3

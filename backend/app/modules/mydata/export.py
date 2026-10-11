@@ -29,7 +29,7 @@ from app.modules.mydata import erase, interest
 from app.modules.auth.models import Consent, User
 from app.modules.profiles.models import CandidateProfile
 
-FORMAT = "vstrechny.my-data/1"
+FORMAT = "draft.my-data/1"
 SECRET_COL = re.compile(r"(secret|token|_hash$|^hash|password|^p256dh$|^auth$|signature|^endpoint$|nonce|verifier|^ticket|api_key|private)", re.I)
 # Разделы, для которых выгрузка устроена особо (в «other» не дублируются)
 SECTION_TABLES = {

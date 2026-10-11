@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.modules.assessment.models import TestSession
-from app.modules.catalog.seed_data import DIRECTIONS, STACK, tag_title
+from app.modules.catalog.seed_data import DIRECTIONS, tag_title
 
 TEXT_PARTS = {"open_answer": (0,), "open_book_3step": (2,)}
 _HIDDEN = re.compile("\u2063[^\u2063]*\u2063")  # скрытые фрагменты ИИ-метки (assessment/ai_mark) — не ответ кандидата
@@ -114,7 +114,7 @@ def interview_context(db: Session, inv, bundle, req: dict) -> tuple[dict, dict, 
     confirmed, unconfirmed = [], []
     for t in dict.fromkeys(tags):
         f = bundle.skills_t1.get(t) if bundle else None
-        name = STACK.get(t, (t,))[0]
+        name = tag_title(t)
         if skill_confirmed(f):
             confirmed.append(name)
         else:

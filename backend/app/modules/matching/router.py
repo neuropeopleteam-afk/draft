@@ -30,11 +30,12 @@ from app.modules.matching import ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
 from app.modules.matching import compare as compare_mod
 from app.modules.matching import fast_parse
-from app.modules.matching.need_parser import bias_report, normalize, parse_need, text_notes
+from app.modules.matching.need_parser import bias_report, normalize, parse_need, salary_is_net, text_notes
 from app.modules.matching import whatif
 from app.modules.mydata import interest  # обезличенная отметка интереса для кандидата (md01)
 from app.modules.profiles.facts import card, load_bundles
 from app.modules.profiles.models import Company, EmployerProfile
+from app.modules.catalog.ext import EXT_SHORT_TITLES, DirectionId, hidden_ext
 from app.modules.catalog.seed_data import GRADE_ORDER as _GRADE_ORDER
 
 # уровни платформы: 4 (Стажёр–Senior), с флагом GRADES_EXT_ENABLED — 6 (+ Lead, Principal; catalog.levels)
@@ -86,7 +87,7 @@ class StackReq(BaseModel):
 
 
 class Requirements(BaseModel):
-    direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None
+    direction: DirectionId | None = None
     grade: GradeId | None = None
     stack_required: list[StackReq] = Field(default_factory=list, max_length=20)
     stack_desired: list[StackReq] = Field(default_factory=list, max_length=20)
@@ -96,6 +97,9 @@ class Requirements(BaseModel):
     city: str | None = Field(None, max_length=100)
     salary_from: int | None = Field(None, gt=0)
     salary_to: int | None = Field(None, gt=0)
+    salary_net: bool | None = Field(None, description="Основание вилки: true — «на руки» (после НДФЛ), false — до вычета "
+                                    "НДФЛ; не передано — по тексту потребности («на руки» → true). Приглашение, "
+                                    "сравнение и взаимный подбор читают это поле")
     evidence: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary", "city"], Evidence | None] | None = None
     review: dict[Literal["direction", "grade", "experience_years_min", "work_format", "salary", "city"], ReviewStatus] | None = None
     unknown_terms: list[UnknownTerm] | None = Field(None, max_length=20, description="Вне справочника: сохраняются "
@@ -157,6 +161,10 @@ class SelectionIn(BaseModel):
 def _req_dict(r: Requirements | dict, text: str) -> dict:
     """Требования от клиента → канон. Находки фильтра ст. 64 ТК РФ считаются на сервере по тексту потребности."""
     d = r.model_dump() if isinstance(r, Requirements) else dict(r)
+    if d.get("salary_net") is None and (d.get("salary_from") or d.get("salary_to")):
+        # основание вилки не передано (старые клиенты, ручной ввод) — по тексту потребности, как при разборе;
+        # явное значение (true/false) сохраняется как есть — «на руки» не превращается в «до вычета» при подтверждении
+        d["salary_net"] = salary_is_net(text or "")
     req = normalize({**d, "stack_required": [dict(x) for x in d.get("stack_required") or []],
                      "stack_desired": [dict(x) for x in d.get("stack_desired") or []]},
                     method=d.get("method", "manual"))
@@ -183,7 +191,7 @@ def _need_title(req: dict) -> str:
     категория + до трёх главных обязательных навыков (по весу), а у профессии вне справочника (coverage) — её название
     и ближайшая категория, по которой идёт подбор."""
     direction = {"backend": "Backend", "frontend": "Frontend", "data_ml": "Data/ML", "qa": "QA",
-                 "security": "ИБ"}.get(req.get("direction") or "")
+                 "security": "ИБ", **EXT_SHORT_TITLES}.get(req.get("direction") or "")
     grade = GRADES.get(req.get("grade") or "")
     cov = req.get("coverage") or {}
     if cov.get("title"):
@@ -476,7 +484,7 @@ def compare_candidates(need_id: uuid.UUID, refs: list[str] = Query(default_facto
 
 @router.get("/candidates", summary="Поиск по всей базе (только обезличенные карточки)", responses=AUTH)
 def search_candidates(
-    direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+    direction: DirectionId | None = None,
     grade: GradeId | None = None,
     category: str | None = None,
     stack: list[str] = Query(default_factory=list, description="Стек-теги (все должны быть)"),
@@ -498,13 +506,14 @@ def categories(user: User = Depends(employer), db: Session = Depends(get_db)) ->
     return [{"id": c.id, "title": c.title, "direction": c.direction_id, "grade": c.grade_id,
              "count": counts.get(c.id, 0), "provisional": prov.get(c.id, 0), "unconfirmed": unc.get(c.id, 0),
              "market_range": ranking._mr(c)}
-            for c in db.scalars(select(Category).order_by(Category.direction_id)).all()]
+            for c in db.scalars(select(Category).order_by(Category.direction_id)).all()
+            if c.direction_id not in hidden_ext()]  # направления расширения каталога — только видимые
 
 
 @router.get("/candidates/{ref}", summary="Карточка кандидата: факты с уровнями, история контактов, контакты после принятия",
             responses={**AUTH, 404: err("Кандидат не найден или скрыл профиль")})
 def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
-                     direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+                     direction: DirectionId | None = None,
                      user: User = Depends(employer),
                      db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)

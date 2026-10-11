@@ -155,9 +155,9 @@ _HEAD_CONJ = re.compile(r"^\s*(?:и|а|или|также)\s+", re.IGNORECASE)
 
 
 def _skills_phrase(req: dict) -> str:
-    from app.modules.catalog.seed_data import STACK
+    from app.modules.catalog.seed_data import tag_title
 
-    tags = [STACK.get(i["tag"], (i["tag"],))[0] for i in (req.get("stack_required") or [])[:4]]
+    tags = [tag_title(i["tag"]) for i in (req.get("stack_required") or [])[:4]]
     return ", ".join(tags) if tags else "ключевые навыки и задачи"
 
 

@@ -1,0 +1,25 @@
+family_id: devops.k8s.target_port_bug
+title: Kubernetes — targetPort Service не ведёт на порт приложения
+direction: devops
+skills: [kubernetes, services, networking, kubernetes_manifests]
+target_grades: [junior, middle]
+format: find_bug
+language: yaml
+invariants:
+  code_lines: [36, 66]
+  operations: [36, 66]
+  defect_type: service_target_port_mismatch
+  extra:
+    subtype: target_port
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.1
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Deployment + Service, 36–66 строк YAML; симптом дан (endpoints есть, connection refused; в 70 % вариантов второй порт metrics с верным targetPort); нужно различать port и targetPort Service, номер и имя порта контейнера и найти, какой порт слушает приложение (--port или PORT); ловушка — readinessProbe на верном порту. Граница Junior/Middle"
+generator: assessment_bank.families.devops.k8s_target_port_bug
+version: 1
+description: >
+  Найти строку манифеста, из-за которой трафик Service не доходит до приложения. Ключ — исполнение модели
+  сопоставления Service → под → порт над показанным YAML.

@@ -3267,7 +3267,7 @@
               }
             ],
             "default": null,
-            "description": "Talantix: идентификатор источника «Встречный (ФСП)»",
+            "description": "Talantix: идентификатор источника «Драфт (ФСП)»",
             "title": "Source Id"
           },
           "stage_id": {
@@ -16677,6 +16677,12 @@
             "title": "Assessment Engine",
             "type": "string"
           },
+          "catalog": {
+            "additionalProperties": true,
+            "description": "Видимые направления каталога: directions — все видимые (5 базовых и направления расширения с проверенным банком), ext — видимые направления расширения, ext_enabled — включён ли CATALOG_EXT_ENABLED",
+            "title": "Catalog",
+            "type": "object"
+          },
           "demo_sandbox": {
             "description": "Работает ли стенд на демо-данных",
             "title": "Demo Sandbox",
@@ -16727,7 +16733,8 @@
           "proctor_camera",
           "llm",
           "assessment_engine",
-          "rules"
+          "rules",
+          "catalog"
         ],
         "title": "MetaOut",
         "type": "object"
@@ -18029,7 +18036,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -18070,7 +18081,11 @@
               "frontend",
               "data_ml",
               "qa",
-              "security"
+              "security",
+              "devops",
+              "data_eng",
+              "mobile",
+              "analyst"
             ],
             "title": "Direction",
             "type": "string"
@@ -20894,7 +20909,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -21005,6 +21024,18 @@
               }
             ],
             "title": "Salary From"
+          },
+          "salary_net": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Основание вилки: true — «на руки» (после НДФЛ), false — до вычета НДФЛ; не передано — по тексту потребности («на руки» → true). Приглашение, сравнение и взаимный подбор читают это поле",
+            "title": "Salary Net"
           },
           "salary_to": {
             "anyOf": [
@@ -28645,7 +28676,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -30105,7 +30140,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -31476,7 +31515,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -33002,7 +33045,7 @@
     },
     "/api/ats-stub/webhook/{stub_key}": {
       "post": {
-        "description": "**Доступ:** вход по JWT не требуется; ключ или подпись передаются в заголовке `x-vstrechny-signature`.",
+        "description": "**Доступ:** вход по JWT не требуется; ключ или подпись передаются в заголовке `x-draft-signature`.",
         "operationId": "webhook_api_ats_stub_webhook__stub_key__post",
         "parameters": [
           {
@@ -33016,7 +33059,7 @@
           },
           {
             "in": "header",
-            "name": "x-vstrechny-signature",
+            "name": "x-draft-signature",
             "required": false,
             "schema": {
               "anyOf": [
@@ -33027,7 +33070,7 @@
                   "type": "null"
                 }
               ],
-              "title": "X-Vstrechny-Signature"
+              "title": "X-Draft-Signature"
             }
           }
         ],
@@ -33602,7 +33645,7 @@
                   "account": "employer@jury.example.com",
                   "algorithm": "SHA1",
                   "digits": 6,
-                  "issuer": "Встречный",
+                  "issuer": "Драфт",
                   "otpauth_uri": "<скрыто>",
                   "period_s": 30,
                   "qr_svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 69 69\" shape-rendering=\"crispEdges\" role=\"img\" aria-labe…",
@@ -38847,7 +38890,7 @@
         "operationId": "get_stack_tags_api_catalog_stack_tags_get",
         "parameters": [
           {
-            "description": "Направление; общий блок возвращается всегда",
+            "description": "Направление; общий блок возвращается всегда. У направлений расширения каталога — ещё связанные теги других направлений (инженеру данных — Spark и Airflow и т. п.)",
             "in": "query",
             "name": "direction",
             "required": false,
@@ -38860,7 +38903,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Направление; общий блок возвращается всегда",
+              "description": "Направление; общий блок возвращается всегда. У направлений расширения каталога — ещё связанные теги других направлений (инженеру данных — Spark и Airflow и т. п.)",
               "title": "Direction"
             }
           }
@@ -39146,9 +39189,9 @@
                     "card": "http://localhost:8080/employer/candidates/C-DNH544",
                     "pdf": "http://localhost:8080/api/ats/profile/<JWT>.pdf"
                   },
-                  "schema": "vstrechny.candidate.v1",
+                  "schema": "draft.candidate.v1",
                   "source": {
-                    "platform": "Встречный (спецтрек ФСП)",
+                    "platform": "Драфт (спецтрек ФСП)",
                     "url": "http://localhost:8080"
                   }
                 },
@@ -42384,7 +42427,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -42669,7 +42716,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -43019,7 +43070,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -43233,7 +43288,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -55722,7 +55781,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -59913,7 +59976,7 @@
                       }
                     }
                   ],
-                  "format": "vstrechny.my-data/1",
+                  "format": "draft.my-data/1",
                   "generated_at": "2026-10-09T14:59:48.019271+00:00",
                   "profile": {
                     "city": "Москва",
@@ -60800,13 +60863,13 @@
                       "issued_at": "2026-10-09T14:59:48Z",
                       "issuer": {
                         "jwks_url": "http://localhost:8080/api/passport/keys",
-                        "name": "Встречный",
+                        "name": "Драфт",
                         "test_key": true,
                         "url": "http://localhost:8080"
                       },
                       "kid": "ed25519-DtDho77tNSeKQWVO",
                       "methodology_url": "http://localhost:8080/validation",
-                      "schema": "vstrechny.grade-passport/1"
+                      "schema": "draft.grade-passport/1"
                     },
                     "signature": {
                       "alg": "EdDSA",
@@ -60935,13 +60998,13 @@
                       "issued_at": "2026-10-09T14:59:48Z",
                       "issuer": {
                         "jwks_url": "http://localhost:8080/api/passport/keys",
-                        "name": "Встречный",
+                        "name": "Драфт",
                         "test_key": true,
                         "url": "http://localhost:8080"
                       },
                       "kid": "ed25519-DtDho77tNSeKQWVO",
                       "methodology_url": "http://localhost:8080/validation",
-                      "schema": "vstrechny.grade-passport/1"
+                      "schema": "draft.grade-passport/1"
                     },
                     "signature": {
                       "alg": "EdDSA",
@@ -61917,7 +61980,7 @@
                     "storage": "Данные хранятся на сервере в Москве (HOSTKEY); письма — Yandex Cloud Postbox; языковые модели — основная Clau…"
                   },
                   "proctor_camera": true,
-                  "product_name": "Встречный",
+                  "product_name": "Драфт",
                   "rules": {
                     "grade_change_interval_days": 90,
                     "invitation_cooldown_days": 30,
@@ -62213,7 +62276,7 @@
                       "x": "UHFndGaFS_zmWutMyj0RvU1MfOe5dGQ3uzdJmJ9jZqo"
                     }
                   ],
-                  "schema": "vstrechny.grade-passport/1"
+                  "schema": "draft.grade-passport/1"
                 },
                 "schema": {
                   "$ref": "#/components/schemas/PassportKeysOut"

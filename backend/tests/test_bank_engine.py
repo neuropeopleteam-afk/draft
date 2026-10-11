@@ -236,10 +236,16 @@ def test_wrong_step_or_foreign_token_rejected(bank):
 
 def test_skill_map_targets_exist_in_catalog():
     from app.modules.assessment import skill_map
+    from app.modules.catalog.ext import EXT_DIRECTIONS, EXT_STACK
     from app.modules.catalog.seed_data import STACK
 
-    targets = set(skill_map._GLOBAL.values()) | {v for d in skill_map._BY_DIRECTION.values() for v in d.values()}
-    assert targets <= set(STACK), targets - set(STACK)
+    base = set(skill_map._GLOBAL.values()) | {v for d, m in skill_map._BY_DIRECTION.items() if d not in EXT_DIRECTIONS
+                                              for v in m.values()}
+    assert base <= set(STACK), base - set(STACK)
+    # направления расширения каталога (CATALOG_EXT_ENABLED): свои стек-теги (миграция ce01) или общий справочник
+    for d in EXT_DIRECTIONS:
+        ext_t = set(skill_map._BY_DIRECTION.get(d, {}).values())
+        assert ext_t <= set(STACK) | set(EXT_STACK), (d, ext_t - set(STACK) - set(EXT_STACK))
 
 
 # ------------------------------------------------------------------ через API
