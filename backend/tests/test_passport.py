@@ -497,3 +497,17 @@ def test_fix7_skill_confirmed_title_names_real_source():
     assert skill_confirmed_title(both_ok) == "подтверждён тестом и заданием работодателя (T1)"
     assert skill_confirmed_title(task_only) == "подтверждён заданием работодателя (T1); в тесте — ниже 50 %"
     assert skill_confirmed_title(assign) == "подтверждён заданием работодателя (T1)"
+
+
+def test_fix7_compare_cell_names_employer_task():
+    """FIX7 п. 11 (P07/P08): навык, подтверждённый только заданием работодателя, в сравнении — не «задания теста»."""
+    from types import SimpleNamespace as NS
+
+    from app.modules.matching.compare import _stack_cell
+
+    assign = NS(value={"score": 1.0, "correct": 1, "total": 1}, source_ref="assignment:1")
+    test = NS(value={"score": 0.67, "correct": 2, "total": 3}, source_ref="test_session:1")
+    cell, _ = _stack_cell(NS(skills_t1={"python": assign}, stack_t0=set()), "python")
+    assert cell["text"].startswith("Подтверждено заданием работодателя: 1 из 1")
+    cell, _ = _stack_cell(NS(skills_t1={"python": test}, stack_t0=set()), "python")
+    assert cell["text"].startswith("Подтверждено заданиями: 2 из 3")

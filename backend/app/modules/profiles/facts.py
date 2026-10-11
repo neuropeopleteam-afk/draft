@@ -453,6 +453,11 @@ def _origin(f: CandidateFact) -> str:
     return (getattr(f, "value", None) or {}).get("origin") or ("assignment" if ref.startswith("assignment:") else "test")
 
 
+def skill_origin(f: CandidateFact) -> str:
+    """«test» | «assignment» — публичное имя для _origin (FIX7 п. 11: подпись источника в сравнении)."""
+    return _origin(f)
+
+
 def _part(f: CandidateFact) -> dict:
     v = getattr(f, "value", None) or {}
     try:
