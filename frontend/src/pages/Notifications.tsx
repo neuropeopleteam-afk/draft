@@ -62,7 +62,7 @@ export default function Notifications() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Уведомления" subtitle={role === "employer"
-        ? "Новые подходящие кандидаты по потребностям, за которыми вы следите, и напоминания по приглашениям и откликам."
+        ? "Новые подходящие кандидаты и напоминания по приглашениям."
         : "Напоминания о приглашениях: без ответа и срок ответа."} />
       <section className="card space-y-1">
         <h2 className="font-bold text-brand-night">Каналы</h2>
