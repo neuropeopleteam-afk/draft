@@ -106,20 +106,22 @@ const LEVEL_STYLE: Record<string, string> = {
 };
 const LEVEL_HINT: Record<string, string> = {
   T2: "Подтверждено реестром ФСП",
-  T1: "Подтверждено тестом или зондом на платформе",
+  T1: "Подтверждено тестом или заданием работодателя на платформе",
   T0: "Указано кандидатом, не проверено",
   none: "Нет данных",
 };
 
 /** SIMPLIFY п.5: рядом с кодом уровня — слова (код без слов работодателю ничего не говорит); words={false} — только код
  *  (легенда, где слова стоят рядом полным текстом). */
-export const LEVEL_WORDS: Record<string, string> = { T0: "заявлено", T1: "подтверждено тестом", T2: "подтверждено ФСП" };
+export const LEVEL_WORDS: Record<string, string> = { T0: "указано кандидатом", T1: "подтверждено тестом", T2: "подтверждено ФСП" };
+/** КУХНЯ: на экранах — только слова, без внутренних кодов T0/T1/T2; words={false} — короткая метка для легенды. */
+const LEVEL_SHORT: Record<string, string> = { T0: "указано", T1: "тест", T2: "ФСП", none: "нет данных" };
 
 export function Level({ level, words = true }: { level?: string | null; words?: boolean }) {
   const l = level ?? "none";
   return (
-    <span title={LEVEL_HINT[l]} aria-label={`${l === "none" ? "нет данных" : l}: ${LEVEL_HINT[l] ?? ""}`} className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide ${LEVEL_STYLE[l] ?? LEVEL_STYLE.none}`}>
-      {l === "none" ? "нет" : l}{words && LEVEL_WORDS[l] && <span aria-hidden="true" className="ml-1 font-semibold tracking-normal">· {LEVEL_WORDS[l]}</span>}
+    <span title={LEVEL_HINT[l]} aria-label={LEVEL_HINT[l] ?? "нет данных"} className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-xs font-semibold leading-none ${LEVEL_STYLE[l] ?? LEVEL_STYLE.none}`}>
+      <span aria-hidden="true">{words ? (LEVEL_WORDS[l] ?? LEVEL_SHORT.none) : (LEVEL_SHORT[l] ?? LEVEL_SHORT.none)}</span>
     </span>
   );
 }
