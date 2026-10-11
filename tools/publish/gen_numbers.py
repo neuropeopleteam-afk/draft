@@ -116,6 +116,66 @@ def static_numbers() -> dict:
     }
 
 
+def _num(text: str, pattern: str, default: float | int | None = None, flags: int = re.M):
+    """Первое число по шаблону (запятая как десятичный разделитель, пробелы в разрядах), иначе default."""
+    m = re.search(pattern, text, flags)
+    if not m:
+        return default
+    raw = m.group(1).replace("\u00a0", "").replace(" ", "").replace(",", ".")
+    return int(raw) if re.fullmatch(r"-?\d+", raw) else float(raw)
+
+
+def measured_numbers() -> dict:
+    """Числа для сопроводительной документации, у которых нет отдельного машинного источника в репозитории:
+    читаются из документов-замеров (docs/LOAD.md, docs/BOOT.md), из файлов расчёта (evidence_bench.json) и из
+    констант демо-данных (app/modules/demo/seed.py, integrations/vacancies/demo.py). Доступность (a11y) приходит
+    из axe.json прогона (`--axe-json`), иначе остаётся прежней из docs/NUMBERS.json (как тесты)."""
+    load = (ROOT / "docs/LOAD.md").read_text(encoding="utf-8")
+    boot = (ROOT / "docs/BOOT.md").read_text(encoding="utf-8")
+    ev = json.loads((ROOT / "backend/app/modules/validation/data/evidence_bench.json").read_text(encoding="utf-8"))
+    seed = (ROOT / "backend/app/modules/demo/seed.py").read_text(encoding="utf-8")
+    vac = (ROOT / "backend/app/integrations/vacancies/demo.py").read_text(encoding="utf-8")
+
+    def _entries(src: str, name: str) -> int:  # число элементов списка кортежей/словарей NEEDS = [...] в исходнике
+        m = re.search(rf"^{name} = \[(.*?)^\]", src, re.S | re.M)
+        body = m.group(1) if m else ""
+        return len(re.findall(r"^\s{4}\(|^\s{4}\{|^\s{4}dict\(", body, re.M))
+
+    return {
+        # docs/LOAD.md: «Развёртывание с нуля по README | **291 с …»
+        "deploy": {"fresh_seconds": _num(load, r"Развёртывание с нуля по README \| \*\*(\d+) с")},
+        # docs/BOOT.md: «| стартовый JS на проводе, gzip | 418 295 (…) | 101 458 (…) |» — в КБ (÷1000, как в тексте документа)
+        "boot": {"js_kb_before": round((_num(boot, r"стартовый JS на проводе, gzip \| ([\d  ]+) \(") or 0) / 1000),
+                 "js_kb_after": round((_num(boot, r"стартовый JS на проводе, gzip \| [\d  ]+ \([^|]*\| ([\d  ]+) \(") or 0) / 1000)},
+        # docs/LOAD.md: 100 пользователей — «42 ошибки (0,51 %)»; исправление пула и отчёта — «1,3 → 24,1 запроса/с, 7 × 500 → 0 ошибок»
+        "load": {"u100_error_share": round((_num(load, r"\*\*\d+ ошибк[аи] \(([\d,]+) %\)") or 0) / 100, 4),
+                 "fix_rps_before": _num(load, r"\*\*([\d,]+) → [\d,]+ запрос"),
+                 "fix_rps_after": _num(load, r"\*\*[\d,]+ → ([\d,]+) запрос"),
+                 "fix_errors_after": _num(load, r"\d+ × 500 → (\d+) ошибок")},
+        # демо-данные платформы (python -m app.modules.demo.seed): кандидаты и работодатели — из docstring модуля, потребности и
+        # вакансии — по спискам NEEDS + INTERN_NEEDS и VACANCIES
+        "demo": {"candidates": _num(seed, r"Демо-данные: (\d+) кандидатов"), "employers": _num(seed, r"(\d+) работодателей"),
+                 "needs": _entries(seed, "NEEDS") + _entries(seed, "INTERN_NEEDS"), "vacancies": _entries(vac, "VACANCIES")},
+        # evidence_bench.json: стоимость ответа при включённом GRADING_EVIDENCE (полный прогон 406, оценка + скептик)
+        "evidence": {"cost_usd_per_answer": ev["full"]["cost_per_answer_on"], "n": ev["full"]["n"]},
+    }
+
+
+def parse_axe(path: Path) -> dict:
+    """Итог axe-аудита (tools/a11y/axe_audit.cjs → axe.json): проходов экран × ширина, нарушений по степеням, экранов с
+    горизонтальной прокруткой."""
+    d = json.loads(path.read_text(encoding="utf-8"))
+    rows = [r for r in d["results"] if not r.get("error")]
+    out = {"screens": len({r["screen"] for r in rows}), "passes": len(rows), "errors": len(d["results"]) - len(rows),
+           "critical": 0, "serious": 0, "moderate": 0, "minor": 0, "hscroll": 0}
+    for r in rows:
+        for k in ("critical", "serious", "moderate", "minor"):
+            out[k] += int((r.get("counts") or {}).get(k, 0) or 0)
+        if (r.get("hscroll") or 0) > 0:
+            out["hscroll"] += 1
+    return out
+
+
 def parse_log(path: Path) -> dict:
     t = path.read_text(encoding="utf-8", errors="replace")
     out: dict = {}
@@ -224,11 +284,16 @@ def main() -> int:
     ap.add_argument("--tests-log")
     ap.add_argument("--sha", help="SHA кода, на котором снят журнал (по умолчанию — текущий HEAD)")
     ap.add_argument("--date", help="дата прогона ДД.ММ.ГГГГ")
+    ap.add_argument("--axe-json", help="axe.json прогона tools/a11y/axe_audit.cjs → раздел a11y")
     ap.add_argument("--check", action="store_true")
     a = ap.parse_args()
 
     old = json.loads(NUMBERS.read_text(encoding="utf-8")) if NUMBERS.exists() else {}
     n = static_numbers()
+    n.update(measured_numbers())
+    n["a11y"] = old.get("a11y", {})
+    if a.axe_json:
+        n["a11y"] = {**parse_axe(Path(a.axe_json)), "date": a.date or __import__("datetime").date.today().strftime("%d.%m.%Y")}
     n["tests"] = old.get("tests", {})
     if a.tests_log:
         n["tests"] = {**parse_log(Path(a.tests_log)), "sha": a.sha or git_short(), "date": a.date or __import__("datetime").date.today().strftime("%d.%m.%Y")}
@@ -239,7 +304,8 @@ def main() -> int:
     new_json = json.dumps(n, ensure_ascii=False, indent=1) + "\n"
     if a.check:
         # сравниваем статическую часть (без тестов: они приходят из журнала) и тексты блоков
-        for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code", "validation_report", "grade_accuracy"):
+        for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code", "validation_report",
+                  "grade_accuracy", "deploy", "boot", "load", "demo", "evidence"):
             if old.get(k) != n[k]:
                 bad.append(f"docs/NUMBERS.json: раздел «{k}» устарел")
     else:
