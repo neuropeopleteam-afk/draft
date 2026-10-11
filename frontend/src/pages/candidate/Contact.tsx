@@ -10,6 +10,7 @@ import { InvitationTrust, TrustBadge, useInvitationsTrust } from "../../integrat
 import { EmploymentTermsText } from "../../integrations/Youth";
 import { AtsStageBadge } from "../../integrations/Ats";
 import { CandidateHiring, HiringChip, HiringReminders } from "../../components/Hiring";
+import { AiInterviewCandidate } from "../../components/Interview";  // Я15: приглашение на ИИ-интервью
 import { WhyChosen } from "../mutual/Candidate";  // почему меня выбрали (Н9)
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
@@ -127,6 +128,7 @@ export function Invitations() {
               <button type="button" className="text-sm font-semibold text-brand-plum hover:underline" onClick={() => setComplaining(true)}>Пожаловаться: нереальная вилка, не та роль, спам</button>
             )}
             {open.status === "accepted" && !open.contacts_revoked && <Alert kind="ok">Вы приняли приглашение. Работодатель видит ваши контакты и свяжется с вами.</Alert>}
+            {open.status === "accepted" && <AiInterviewCandidate inv={open} />}
             {open.status === "accepted" && <CandidateHiring inv={open} onChange={() => { void api<any>(`/candidate/invitations/${open.id}`).then(setOpen).catch(() => undefined); void reload(); }} />}
             {open.status === "accepted" && <ContactsAccess inv={open} onDone={(r) => { setOpen(r); void reload(); }} />}
             {open.status === "accepted" && <SusPrompt context="e2e" />}
