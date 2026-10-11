@@ -10,7 +10,8 @@ import { RouteBoundary, RouteFallback, StartupError, StartupLoading } from "./Bo
 import { useMeta } from "../lib/meta";
 
 // flag — раздел виден, только если функция включена на сервере (/api/meta → <flag>.enabled), например «Тарифы» (Я29)
-export interface Section { path: string; title: string; description: string; day?: string; more?: boolean; flag?: "tariffs" }
+// also — другие разделы, на которых пункт тоже подсвечен (например, «Уведомления» на /…/app)
+export interface Section { path: string; title: string; description: string; day?: string; more?: boolean; flag?: "tariffs"; also?: string[] }
 
 /** Короткая подпись роли для шапки на телефоне: «Кабинет работодателя» не помещается рядом с логотипом. */
 const SHORT: Partial<Record<Role, string>> = { candidate: "Кандидат", employer: "Работодатель", expert: "Эксперт", fsp_analyst: "ФСП", admin: "Администратор" };
@@ -47,7 +48,8 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
   const base = cabinetPath(role);
   const exit = () => { signOut(); navigate("/"); };
   const moreS = sections.filter((s) => s.more);
-  const activeMore = moreS.some((s) => loc.pathname === `${base}/${s.path}` || loc.pathname.startsWith(`${base}/${s.path}/`));
+  const on = (p: string) => loc.pathname === `${base}/${p}` || loc.pathname.startsWith(`${base}/${p}/`);
+  const activeMore = moreS.some((s) => [s.path, ...(s.also ?? [])].some(on));
 
   return (
     <div className="min-h-screen bg-[#FBF8FC] md:grid md:grid-cols-[17rem_minmax(0,1fr)]">
@@ -70,7 +72,7 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
             : <button type="button" aria-expanded={moreOpen} onClick={() => setMoreOpen((v) => !v)}
                 className="block shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-left text-sm font-semibold text-brand-plum hover:bg-brand-blush/40 md:w-full">
                 {moreOpen ? "Свернуть" : `Ещё ${moreS.length}`}</button>)}
-          {(moreOpen || activeMore) && moreS.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} />)}
+          {(moreOpen || activeMore) && moreS.map((s) => <NavItem key={s.path} to={`${base}/${s.path}`} label={s.title} hint={s.description} also={(s.also ?? []).some(on)} />)}
         </nav>
         <div className="hidden border-t border-brand-night/10 px-5 py-5 md:block">
           <GuideSlot where="sidebar" />
@@ -86,10 +88,10 @@ export function CabinetLayout({ role, sections: allSections, title, alsoRoles = 
   );
 }
 
-function NavItem({ to, label, end, hint, badge = 0, badgeLabel = "непрочитанных" }: { to: string; label: string; end?: boolean; hint?: string; badge?: number; badgeLabel?: string }) {
+function NavItem({ to, label, end, hint, badge = 0, badgeLabel = "непрочитанных", also = false }: { to: string; label: string; end?: boolean; hint?: string; badge?: number; badgeLabel?: string; also?: boolean }) {
   return (
     <NavLink to={to} end={end} title={hint}
-      className={({ isActive }) => `block shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors md:whitespace-normal ${isActive ? "bg-brand-blush text-brand-night" : "text-brand-ink/75 hover:bg-brand-blush/40 hover:text-brand-night"}`}>
+      className={({ isActive: a }) => { const isActive = a || also; return `block shrink-0 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-colors md:whitespace-normal ${isActive ? "bg-brand-blush text-brand-night" : "text-brand-ink/75 hover:bg-brand-blush/40 hover:text-brand-night"}`; }}>
       {label}
       {badge > 0 && <span className="ml-1.5 inline-flex min-w-[1.25rem] items-center justify-center rounded-full bg-brand-strong px-1.5 text-xs font-bold leading-5 text-white" aria-label={`, ${badgeLabel}: ${badge}`}>{badge}</span>}
     </NavLink>
