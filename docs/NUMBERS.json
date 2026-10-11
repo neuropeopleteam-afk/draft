@@ -56,8 +56,8 @@
   }
  },
  "e2e_in_code": {
-  "spec_files": 22,
-  "scenarios": 52
+  "spec_files": 21,
+  "scenarios": 51
  },
  "validation_report": {
   "report_generated_at": "2026-10-10",
