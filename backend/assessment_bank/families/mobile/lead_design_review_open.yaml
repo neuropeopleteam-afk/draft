@@ -1,0 +1,23 @@
+family_id: mobile.lead.design_review_open
+title: Ревью дизайн-документа ленты мобильного приложения — изображения, подгрузка, главный поток, офлайн, уведомления, аналитика, выпуск (Lead)
+direction: mobile
+skills: [architecture, main_thread, offline_first, caching, pagination]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    issues_pool: [analytics, images, main, offline, paging, push, release]
+    planted: 3
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 2.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Ревью чужого дизайн-документа ленты: три вставленные проблемы из семи среди верных разделов; нужно найти их, связать с последствиями на устройствах (память, батарея, сеть, нельзя откатить релиз) и расставить приоритет. Senior видит отдельные проблемы реализации, Lead — все три с приоритетом и проверкой; частичный балл 0–4 — у порога Senior/Lead"
+generator: assessment_bank.families.mobile.lead_design_review_open
+version: 1
+description: >
+  Ревью выдержки дизайн-документа ленты мобильного приложения: три проблемы из пула семи вставлены среди верных
+  разделов. Рубрика — по критерию на проблему и приоритизация; шкала 0–4 с цитатами из ответа.

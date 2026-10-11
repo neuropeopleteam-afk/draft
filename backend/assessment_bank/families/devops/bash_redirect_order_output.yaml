@@ -1,0 +1,24 @@
+family_id: devops.bash.redirect_order_output
+title: Bash — порядок перенаправлений stdout и stderr
+direction: devops
+skills: [bash, shell, linux, logging]
+target_grades: [intern, junior]
+format: predict_output
+language: bash
+invariants:
+  code_lines: [5, 6]
+  extra:
+    subtype: redirect_order
+    forms: [3, 4]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -1.1
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "Скрипт 5–6 строк: функция пишет по строке в stdout и stderr, 3–4 вызова с разными перенаправлениями (> f 2>&1, 2>&1 > f, 2>/dev/null, >/dev/null, >> f) и cat файла в конце; в каждом варианте есть «2>&1 > f» (stderr остаётся в терминале). Нужно знать, что перенаправления применяются слева направо и > обрезает файл. Intern/Junior"
+generator: assessment_bank.families.devops.bash_redirect_order_output
+version: 1
+description: >
+  Предсказать, что увидит оператор в терминале (stdout и stderr) при разных перенаправлениях и что окажется в
+  файле журнала. Ключ — независимая модель; проверка — исполнение скрипта в bash.

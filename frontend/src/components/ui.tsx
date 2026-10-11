@@ -38,6 +38,11 @@ export const dtt = (s?: string | null) => (s ? new Date(s).toLocaleString("ru-RU
 export const errText = (e: unknown) => (e instanceof ApiError ? e.message : "Не удалось связаться с сервером");
 
 export const DIRECTIONS: Record<string, string> = { backend: "Backend", frontend: "Frontend", data_ml: "Data/ML", qa: "QA", security: "Информационная безопасность" };
+// Направления расширения каталога (backend/app/modules/catalog/ext.py, флаг CATALOG_EXT_ENABLED): в выборе направления
+// появляются, только если их отдаёт /api/meta (catalog.directions) — направление с проверенным банком заданий.
+export const DIRECTIONS_EXT: Record<string, string> = { devops: "DevOps / SRE", data_eng: "Инженер данных", mobile: "Мобильная разработка", analyst: "Системный / бизнес-аналитик" };
+// Подписи всех направлений — для показа сохранённых данных (выбор — useDirectionEntries из lib/meta)
+export const DIRECTION_TITLES: Record<string, string> = { ...DIRECTIONS, ...DIRECTIONS_EXT };
 // Грейды платформы снизу вверх (как GRADE_ORDER в backend/app/modules/catalog/seed_data.py)
 export const GRADES: Record<string, string> = { intern: "Стажёр", junior: "Junior", middle: "Middle", senior: "Senior" };
 // Грейд — уровень навыков, его подтверждает тест (ответ организаторов VS.1); стаж — только подсказка «обычно …»
@@ -67,7 +72,7 @@ export const GRADE_TITLE_ALL: Record<string, string> = { ...GRADES, ...GRADE_EXT
 export const catTitle = (id?: string | null) => {
   if (!id) return "Не присвоена";
   const [d, g] = id.split(".");
-  return `${DIRECTIONS[d] ?? d} · ${GRADE_TITLE_ALL[g] ?? g}`;
+  return `${DIRECTION_TITLES[d] ?? d} · ${GRADE_TITLE_ALL[g] ?? g}`;
 };
 
 /** Загрузка данных с повтором. */

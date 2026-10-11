@@ -1,0 +1,23 @@
+family_id: security.lead.design_review_open
+title: Ревью безопасности дизайн-документа обмена документами — файлы, ссылки, права, ключи, журнал, вебхуки, удаление (Lead)
+direction: security
+skills: [threat_modeling, access_control, secrets_management, trust_boundaries, secure_design]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    issues_pool: [authz, keys, links, logging, retention, upload, webhook]
+    planted: 3
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 2.0
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Ревью чужого дизайн-документа: три вставленные проблемы безопасности из семи среди верных разделов; нужно найти именно их, назвать угрозу и последствие для данных клиентов, предложить исправление и расставить приоритет. Senior находит отдельные уязвимости, Lead — все три с оценкой ущерба и порядком; частичный балл 0–4 по критериям — у порога Senior/Lead"
+generator: assessment_bank.families.security.lead_design_review_open
+version: 1
+description: >
+  Ревью безопасности выдержки дизайн-документа обмена документами: три проблемы из пула семи вставлены среди верных
+  разделов. Рубрика — по критерию на проблему и приоритизация; шкала 0–4 с цитатами из ответа.

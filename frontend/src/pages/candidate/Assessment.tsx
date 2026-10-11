@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEve
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { DefensePanel } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
 import { ExtPreliminaryNote } from "../../components/GradeStatus";  // Я25: Lead/Principal «предварительно»
-import { useMeta } from "../../lib/meta";
+import { useDirectionEntries, useMeta } from "../../lib/meta";
 import { useGrades } from "../../lib/grades";
 import { trapTab } from "../../components/ui";  // А11: Tab по кругу внутри страницы теста
 import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
@@ -126,6 +126,7 @@ function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; 
 
 function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
   const a = data.answers;
+  const dirEntries = useDirectionEntries();  // 5 базовых + направления расширения каталога с проверенным банком
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(a.direction ?? "");
   const [additionalDirection, setAdditionalDirection] = useState(a.additional_direction ?? "");
@@ -185,7 +186,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         {STEPS.map((s, i) => (
           <li key={s}>
             <button type="button" onClick={() => i < step && setStep(i)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === step ? "bg-brand-strong text-white" : i < step ? "bg-brand-blush text-brand-plum" : "bg-gray-100 text-gray-500"}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === step ? "bg-brand-strong text-white" : i < step ? "bg-brand-blush text-brand-plum" : "bg-gray-100 text-gray-600"}`}>
               {i + 1}. {s}
             </button>
           </li>
@@ -196,7 +197,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
           <div>
             <p className="label">Основное направление</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              {Object.entries(DIRECTIONS).map(([id, t]) => (
+              {dirEntries.map(([id, t]) => (
                 <button key={id} type="button" onClick={() => { setDirection(id); if (id !== direction) setStack({}); if (id === additionalDirection) { setAdditionalDirection(""); setAdditionalStack({}); } }}
                   className={`rounded-xl border px-4 py-4 text-left transition-colors ${direction === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
                   <span className="font-semibold text-brand-night">{t}</span>
@@ -208,7 +209,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
                 <select id="additional-direction" className="input" value={additionalDirection}
                   onChange={(e) => { setAdditionalDirection(e.target.value); setAdditionalStack({}); }}>
                   <option value="">Без второго направления</option>
-                  {Object.entries(DIRECTIONS).filter(([id]) => id !== direction).map(([id, title]) => <option key={id} value={id}>{title}</option>)}
+                  {dirEntries.filter(([id]) => id !== direction).map(([id, title]) => <option key={id} value={id}>{title}</option>)}
                 </select>
               </Field>
             </div>
@@ -217,7 +218,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         {step === 1 && (
           <div className="space-y-5">
             <p className="text-sm text-brand-ink/70">Отметьте технологии и оцените уровень. Навыки из вашего стека попадут в тест и станут подтверждёнными (T1).</p>
-            {[{ t: DIRECTIONS[direction], list: groups.own }, { t: "Общий блок", list: groups.common }].map((g) => (
+            {[{ t: DIRECTION_TITLES[direction], list: groups.own }, { t: "Общий блок", list: groups.common }].map((g) => (
               <div key={g.t}>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{g.t}</p>
                 <div className="flex flex-wrap gap-2">
@@ -243,7 +244,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
             ))}
             {additionalDirection && (
               <div className="border-t border-brand-night/10 pt-4">
-                <p className="mb-2 text-sm font-semibold text-brand-night">Стек дополнительного направления · {DIRECTIONS[additionalDirection]}</p>
+                <p className="mb-2 text-sm font-semibold text-brand-night">Стек дополнительного направления · {DIRECTION_TITLES[additionalDirection]}</p>
                 <div className="flex flex-wrap gap-2">
                   {additionalTags.map((tag) => (
                     <button key={tag.id} type="button" aria-pressed={!!additionalStack[tag.id]}
@@ -411,7 +412,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
 
   return (
     <>
-      <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTIONS[dir] ?? "—"}. Грейд — уровень навыков: его подтверждает тест, а не стаж. Выберите уровень.`} />
+      <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTION_TITLES[dir] ?? "—"}. Грейд — уровень навыков: его подтверждает тест, а не стаж. Выберите уровень.`} />
       {status?.specializations?.length > 1 && (
         <div className="mt-4">
           <Field label="Направление теста" htmlFor="test-direction" hint="Подтверждения и ограничения в двух направлениях независимы.">
@@ -499,7 +500,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </p>
       )}
       <IntegrityNotice />
-      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTIONS[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
+      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTION_TITLES[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
       {retakeLocked && !locked && (
         <div className="mt-4"><Alert kind="info">Повторить тест на {GRADE_TITLE_ALL[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
       )}
@@ -717,14 +718,14 @@ export function TestRun() {
   return (
     <div className="max-w-3xl">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-ink/65">
-        <span>{s.mode === "confirm" ? "Дотестирование у порога" : s.mode === "refine" ? "Уточнение уровня у границы" : "Тест"} · {DIRECTIONS[s.direction]} · {GRADE_TITLE_ALL[s.claimed_grade]}</span>
+        <span>{s.mode === "confirm" ? "Дотестирование у порога" : s.mode === "refine" ? "Уточнение уровня у границы" : "Тест"} · {DIRECTION_TITLES[s.direction]} · {GRADE_TITLE_ALL[s.claimed_grade]}</span>
         <span>{it.adaptive ? `Задание ${it.position} · отвечено ${it.answered}` : `Задание ${it.position} из ${it.total}`}</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-blush/60">
         <div className="h-full bg-brand transition-all" style={{ width: `${Math.min(100, (it.adaptive ? it.answered / (it.max_items || 20) : (it.position - 1) / it.total) * 100)}%` }} />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTIONS[s.direction]}»`}</span>}
+        {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTION_TITLES[s.direction]}»`}</span>}
         {it.extension && <span className="chip">Дотестирование у порога грейда</span>}
         {it.steps_total && <span className="chip">Шаг {it.step} из {it.steps_total}</span>}
         <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/65"}`} role="timer" aria-live="off">

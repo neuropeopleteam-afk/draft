@@ -26,9 +26,11 @@ class InterviewSettings(BaseSettings):
     elevenlabs_model: str = "eleven_multilingual_v2"
     deepgram_api_key: str | None = None
     deepgram_model: str = "nova-3"
-    # Решение владельца 10.10 (регламент п. 5.11, изображения третьих лиц): лицо стокового аватара поставщика в сдаче не
-    # показываем. Канал «аватар» существует только за этим флагом и по умолчанию выключен; без него — голос и текст.
-    interview_avatar_enabled: bool = False
+    # Решение владельца 10.10 (регламент п. 5.11, изображения третьих лиц): лицо стокового аватара поставщика (Anam) в сдаче
+    # не показываем. Канал «аватар» поставщика существует только за INTERVIEW_ANAM_ENABLED и по умолчанию выключен; без него —
+    # голос и текст. INTERVIEW_AVATAR_ENABLED (11.10) — флаг продукта для собственного рисованного образа интервьюера
+    # (app/core/config.py, docs/INTERVIEW.md, раздел 2.2) и к поставщику отношения не имеет.
+    interview_anam_enabled: bool = False
     anam_api_key: str | None = None
     anam_avatar_id: str | None = None  # стоковый образ поставщика (engine/DEPLOY.md)
     anam_persona_id: str | None = None  # персона «Интервьюер», создана 10.10.2026 через API (для учёта; в сессии не нужна)

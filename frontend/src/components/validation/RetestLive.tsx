@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { DIRECTIONS, dtt, num, pct, plural, useApi } from "../ui";
+import { DIRECTION_TITLES, dtt, num, pct, plural, useApi } from "../ui";
 import { Conditions } from "./StabilityBlocks";
 import { ScrollX } from "../A11y";
 
@@ -33,7 +33,7 @@ export default function RetestLive() {
   const famMax = sizes.length ? Math.max(...sizes) : 0;
   const famRange = sizes.length ? `${Math.min(...sizes)}–${famMax} ${plural(famMax, "семейство", "семейства", "семейств")}` : "десятки семейств";
   // направления, где к третьей попытке новых семейств хватает (повтор 3/1 меньше 10 %)
-  const enough = dirs.filter(([, v]) => (v.after?.third_vs_first?.share_families ?? 1) < 0.1).map(([d]) => DIRECTIONS[d] ?? d);
+  const enough = dirs.filter(([, v]) => (v.after?.third_vs_first?.share_families ?? 1) < 0.1).map(([d]) => DIRECTION_TITLES[d] ?? d);
   return (
     <section id="retest-repeats" className="mt-8 scroll-mt-20" aria-labelledby="retest-repeats-t">
       <h3 id="retest-repeats-t" className="text-base font-bold text-brand-night">Доля повторов заданий между попытками</h3>
@@ -80,7 +80,7 @@ export default function RetestLive() {
           Третья против первой по направлениям (число — оцениваемых семейств направления вместе с общим блоком в банке):{" "}
           {dirs.map(([d, v], i) => (
             <span key={d}>
-              {i > 0 && "; "}{DIRECTIONS[d] ?? d} ({v.families_in_bank}) — {pct(v.after?.third_vs_first?.share_families, 1)} (было {pct(v.before?.third_vs_first?.share_families, 1)})
+              {i > 0 && "; "}{DIRECTION_TITLES[d] ?? d} ({v.families_in_bank}) — {pct(v.after?.third_vs_first?.share_families, 1)} (было {pct(v.before?.third_vs_first?.share_families, 1)})
             </span>
           ))}.
         </p>
