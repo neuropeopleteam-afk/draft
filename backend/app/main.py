@@ -30,6 +30,9 @@ from app.modules.assignments.router import TAGS as ASSIGNMENTS_TAGS
 from app.modules.assignments.router import candidate_router as assignments_candidate_router
 from app.modules.assignments.router import employer_router as assignments_employer_router
 from app.modules.assessment.attempts import employer_router as attempts_employer_router
+from app.modules.assessment.evidence_view import candidate_router as evidence_candidate_router
+from app.modules.assessment.evidence_view import employer_router as evidence_employer_router
+from app.modules.assessment.evidence_view import validation_router as evidence_validation_router
 from app.modules.assessment.expert_router import router as expert_router
 from app.modules.assessment.router import router as assessment_router
 from app.modules.auth.router import router as auth_router
@@ -39,6 +42,8 @@ from app.modules.catalog.router import router as catalog_router
 from app.modules.contact import router as contact
 from app.modules.experts.router import router as expert_panel_router
 from app.modules.hiring import router as hiring  # найм после принятия: собеседование, оффер, исход (Н8)
+from app.modules.hh import router as hh_api  # hh.ru: импорт своей вакансии, «Рынок по hh.ru» (Я12, за HH_ENABLED)
+from app.modules.interview import router as interview  # устная защита и ИИ-интервью (Я15), флаг INTERVIEW_ENABLED
 from app.modules.invitations.router import candidate_router as candidate_contact_router
 from app.modules.invitations.router import employer_router as employer_contact_router
 from app.modules.jury.router import make_spare
@@ -123,7 +128,7 @@ def create_app() -> FastAPI:
             "сервера — `docs/api/openapi.json` в репозитории (обзор — `docs/API.md`)."
         ),
         openapi_tags=(TAGS + contact.TAGS + hiring.TAGS + INTEGRATION_TAGS + IDEAS_TAGS + ASSIGNMENTS_TAGS + PASSPORT_TAGS
-                      + mutual.TAGS + study_api.TAGS),
+                      + mutual.TAGS + study_api.TAGS + hh_api.TAGS + interview.TAGS),
         docs_url=None,
         redoc_url=None,
         openapi_url="/api/openapi.json",
@@ -155,8 +160,11 @@ def create_app() -> FastAPI:
               hiring.router, hiring.candidate_router, hiring.employer_router,  # найм (Н8)
               subs_api.employer_router, subs_api.notify_router, subs_api.jury_router,  # подписка, уведомления (И25)
               attempts_employer_router,  # две попытки теста рядом (И26)
+              evidence_candidate_router, evidence_employer_router, evidence_validation_router,  # цитаты
               mutual.employer_router, mutual.candidate_router, mutual.public_router,  # взаимный подбор (Н9, Н2, Н3)
-              study_api.router):  # статистика прохождения: живые пользователи (У1)
+              study_api.router,  # статистика прохождения: живые пользователи (У1)
+              hh_api.router, hh_api.validation_router,  # hh.ru (Я12): без HH_ENABLED и токена — 404 hh_disabled
+              interview.router, interview.candidate_router, interview.employer_router):  # устная защита (Я15)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
@@ -194,7 +202,10 @@ def create_app() -> FastAPI:
                           "retake_same_grade_days": get_settings().retake_same_grade_days,
                           "invitation_cooldown_days": get_settings().invitation_cooldown_days,
                           # Я22: порог уверенности решения по грейду, % (подтверждение и «уровень ниже»)
-                          "confirm_pct": round(100 * get_settings().assessment_confirm_level)}}
+                          "confirm_pct": round(100 * get_settings().assessment_confirm_level)},
+                "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
+                "interview_enabled": interview.svc.enabled(),  # то же одним флагом — шаг проводника «12 минут» (Я9)
+                "hh": hh_api.meta()}  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
 
     class HealthOut(BaseModel):
         status: str

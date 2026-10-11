@@ -81,6 +81,13 @@ test("работодатель: потребность → подборка с �
     await expect(total).toBeVisible();
     expect(Number((await total.locator("b").textContent()) ?? 0)).toBeGreaterThan(0);
 
+    // Я10: первый экран — до 5 компактных карточек, «Пригласить» и «Сравнить» видны сразу
+    const firstCard = page.locator('[data-testid="candidate-card"][data-compact="true"]').first();
+    await expect(firstCard.getByRole("button", { name: "Пригласить", exact: true })).toBeVisible();
+    await expect(firstCard.getByRole("checkbox", { name: "Сравнить", exact: true })).toBeVisible();
+    expect(await page.locator('[data-testid="candidate-card"]').count(), "первый экран — не больше 5 карточек").toBeLessThanOrEqual(5);
+    // доказательства: на широком блоке — справа, иначе — по «Подробнее»
+    if (!(await page.getByTestId("side-details").isVisible())) await firstCard.getByRole("button", { name: /^Подробнее/ }).click();
     // блок «Почему в подборке» раскрыт сразу: по каждому требованию — факт и уровень доказанности
     const first = page.locator("details").filter({ has: page.getByText("Почему в подборке") }).first();
     await expect(first).toHaveAttribute("open", "");
@@ -91,7 +98,11 @@ test("работодатель: потребность → подборка с �
     await expect(first).toContainText(/T1|подтвержден/i);
     // ФИО в подборке не показываются — только обезличенный номер
     await expect(page.getByText(CANDIDATE_NAME)).toHaveCount(0);
-    await expect(page.getByText(`Кандидат ${ref}`)).toBeVisible();
+    // кандидат может быть ниже первых пяти — остальные свёрнуты под «Показать ещё N» / «Показать всех (N)»
+    const mine = page.getByText(`Кандидат ${ref}`, { exact: true });
+    const more = page.getByRole("button", { name: /^Показать (всех \(\d+\)|ещё \d+)$/ });
+    if (!(await mine.count()) && (await more.count())) await more.last().click();
+    await expect(mine).toBeVisible();
   });
 
   await test.step("обезличенная карточка из подборки", async () => {

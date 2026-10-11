@@ -220,6 +220,9 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
          "hint": "θ — уровень по шкале теста, ± SE — стандартная ошибка; интервал — 95 %"},
         {"key": "integrity", "group": "Тест", "title": "Достоверность результата теста"},
     ]
+    from app.modules.interview import service as iv  # Я15: строка «Устная защита» — только при флаге
+    if iv.enabled():
+        rows.append({"key": "defense", "group": "Тест", "title": "Устная защита ответов", "hint": iv.COMPARE_HINT})
     core = core_skill.role_core(req)  # Я1: ядро роли — отдельной строкой перед стеком
     if core:
         rows.append({"key": "core", "group": "Ядро роли", "title": core["label"], "requirement": core["title"],
@@ -307,8 +310,10 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                                       "integrity": integ["level"]}
             else:
                 cells["integrity"] = {"level": "none", "status": "neutral", "text": "Нет сведений"}
+            if iv.enabled():
+                cells["defense"] = iv.compare_cell((c.get("test") or {}).get("defense"))
         else:
-            for k in ("category", "theta", "integrity"):
+            for k in ("category", "theta", "integrity") + (("defense",) if iv.enabled() else ()):
                 cells[k] = {"level": "none", "status": "missing", "text": "Нет результата теста"}
             gs = c.get("status") or {}
             if gs.get("status") == "unconfirmed":  # грейд не подтверждён: заявленное (T0) и исход последней попытки

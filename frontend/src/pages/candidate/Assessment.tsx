@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { DefensePanel } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, DIRECTIONS, Field, GRADES, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
@@ -14,6 +15,7 @@ import { camera } from "../../proctor/controller";
 import { FeedbackSummary } from "./Feedback";
 import { useLlmOff } from "../../components/LlmOff";
 import { MutualPrefs } from "../mutual/Candidate";  // интересы для взаимного подбора (Н9)
+import { CandidateEvidence } from "../../components/OpenEvidence";  // цитаты из ответа
 
 interface Tag { id: string; title: string; kind: string; direction_id: string | null }
 interface Onb {
@@ -816,6 +818,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " LLM-оценщик не подключён: ответы проверяет эксперт." : ""}</Alert></div>}
       {/* И27: вторая оценка спорных ответов идёт в фоне — итог её не ждёт */}
       {(r.second_opinions?.pending > 0 || r.second_opinions?.revised > 0) && <p className="mt-2 text-xs text-brand-ink/65" data-testid="second-opinions">{r.second_opinions.pending > 0 ? `Вторая оценка спорных ответов: ${r.second_opinions.pending} — выполняется в фоне, итог теста её не ждёт; если оценки разойдутся, ответ проверит эксперт. ` : ""}{r.second_opinions.revised > 0 ? `Пересмотрено второй моделью: ${r.second_opinions.revised}${r.second_opinions.disputed ? `, передано эксперту: ${r.second_opinions.disputed}` : ""}.` : ""}</p>}
+      {/* доказательства — цитаты из ответа по пунктам рубрики (только при GRADING_EVIDENCE) */}
+      <CandidateEvidence sessionId={sessionId} />
       {/* Ф6 (В2): итог камеры — один раз, в блоке камеры ниже (в пометке достоверности не повторяется) */}
       {r.integrity && <div className="mt-3" data-testid="result-integrity"><Integrity v={meta?.proctor_camera === false ? r.integrity : { ...r.integrity, camera: null }} /></div>}
       {/* Я11 (С3-11): демо-режим жюри — что именно снизило достоверность (причины работодателя; вне демо-режима их нет, Р27) */}
@@ -845,6 +849,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       )}
       <div className="mt-3"><Alert>{err}</Alert></div>
       <FeedbackSummary sessionId={sessionId} fallbackLink />
+      <DefensePanel sessionId={sessionId} />
       <div className="mt-6 flex flex-wrap gap-3">
         <button className="btn-primary" onClick={onCategory}>Перейти к категории</button>
       </div>
