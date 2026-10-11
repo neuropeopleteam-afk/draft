@@ -1,0 +1,24 @@
+family_id: frontend.perf.principal_third_party_mcq
+title: Одно действие с внешними скриптами — наибольшая чистая выгода от ускорения страниц
+direction: frontend
+skills: [web_performance, core_web_vitals, technical_strategy, performance]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    plans: [chat, an, ab, srv]
+    traps: [max_speedup, no_direct_cost, without_data_loss]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: из четырёх действий с внешними скриптами выбирается одно с наибольшей чистой выгодой — рост выручки от ускорения (по эксперименту, % за 100 мс) минус прямая цена или скрытая цена (пропавшие события аналитики у отложенной загрузки — доля сессий до первого действия × цена полных данных). Верное действие распределено поровну; ловушки — «самое большое ускорение», «без прямых затрат» и расчёт без цены пропавших событий — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно гонится за миллисекундами или «бесплатным» откладыванием; Principal учитывает скрытые цены — граница Lead/Principal (θ ≈ 2,9); σ 0,3"
+generator: assessment_bank.families.frontend.principal_third_party_mcq
+version: 1
+description: >
+  Principal (короткое, 7 мин): какое из четырёх действий с внешними скриптами даёт наибольшую чистую выгоду.
+  Ключ — исполнением: модельная выборка сессий и выгода каждого действия.
