@@ -82,7 +82,7 @@ ITM_NOISE = {"t0_model": "claims", "claim_over": 0.25, "claim_under": 0.10, "cla
              "claim_omit": 0.0}
 VARIANTS = {
     "grade_cap": {"title": "Флаг MATCH_GRADE_CAP: тест не даёт бонуса выше порога следующего грейда",
-                  "env": {"MATCH_GRADE_CAP": "1"}, "where": "продукт, флаг (по умолчанию выключен)"},
+                  "env": {"MATCH_GRADE_CAP": "1"}, "where": "продукт, флаг выключен по умолчанию"},
     "w_req45_fsp05": {"title": "Веса: тест 0,40 · обязательное 0,45 · ФСП 0,05 (подобранные на синтетике)",
                       "weights": {"test": 0.40, "stack_required": 0.45, "stack_desired": 0.05, "fsp": 0.05,
                                   "probe": 0.05}, "where": "только стенд"},
@@ -202,6 +202,16 @@ def diagnostics(world: World, reqs: list[dict], sc: dict, order: np.ndarray) -> 
             y3.append(rel[i, j] == 3)
     xs, x0, ys, y3 = map(np.asarray, (xs, x0, ys, y3))
     exact_rel = [float(((rel[i] >= 2) & (vis[i] == 2)).sum() / max((vis[i] == 2).sum(), 1)) for i in range(n)]
+    # метка 1 в топ-10: почему не релевантен (по истине) — мало обязательных навыков или грейд
+    why1 = {"low_required": 0, "grade": 0, "other": 0}
+    for i, need in enumerate(world.needs):
+        for j in order[i, :10]:
+            if rel[i, j] != 1:
+                continue
+            lat = world.candidates[j].latent
+            cov = (sum(1 for t in need.required if t in lat.known) / len(need.required)) if need.required else 1.0
+            why1["low_required" if cov < world.config.cov_min else "grade" if lat.direction == need.direction else
+                 "other"] += 1
     return {
         "top10_label_mix": [round(float(x), 3) for x in np.bincount(top.ravel(), minlength=4)[:4] / top.size],
         "ideal10_label_mix": [round(float(x), 3) for x in np.bincount(ideal.ravel(), minlength=4)[:4] / ideal.size],
@@ -214,6 +224,7 @@ def diagnostics(world: World, reqs: list[dict], sc: dict, order: np.ndarray) -> 
         "ties_adjacent_top10": round(ties, 3),
         "label3_location": where3,
         "relevant_share_exact_category": round(float(np.mean(exact_rel)), 3),
+        "label1_top10_reasons": {k: round(v / max(sum(why1.values()), 1), 3) for k, v in why1.items()},
         "auc_exact_category": {"pairs": int(len(ys)), "relevant_share": round(float(ys.mean()), 3) if len(ys) else None,
                                "score_vs_rel2": _auc(xs, ys) if len(ys) else None,
                                "score_vs_rel3": _auc(xs, y3) if len(ys) else None,
@@ -450,12 +461,33 @@ def markdown(rep: dict) -> str:
           f"{_pct(d['relevant_share_exact_category'])} | {_f(au['score_vs_rel2'])} / {_f(au['score_vs_rel3'])} | "
           f"{_f(au['declared_required_vs_rel2'])} / {_f(au['declared_required_vs_rel3'])} |")
     a("")
-    a("Как читать. MRR — место первого релевантного (метка ≥ 2): в точной категории потребности релевантна заметная "
-      "доля кандидатов, поэтому первый релевантный почти всегда в первых строках. nDCG@10 со шкалой 2^rel − 1 требует "
-      "в топ-10 именно метку 3 (вес 7 против 3 у метки 2 и 1 у метки 1). В нашей истине метка 3 — «реально владеет "
-      "≥ 75 % обязательных навыков», а тест видит навыки выборочно (задания сессии покрывают часть обязательных), "
-      "заявленное же в резюме мы в балл не берём намеренно — это защита от раздувания. Пересортировка своего топ-10 по "
-      "истине почти не помогает: дело в составе топ-10, а не в порядке внутри него; ничьих в топ-10 почти нет.")
+    st = _cond(rep, "ours_strict") or rep["conditions"][0]
+    d = st["diagnostics"]
+    pm = st["metrics"]["platform"]
+    a(f"Как читать (строка «{st['title']}»). MRR {_f(pm['mrr']['mean'])} — место первого релевантного (метка ≥ 2): в "
+      f"точной категории потребности релевантны {_pct(d['relevant_share_exact_category'])} кандидатов, поэтому первый "
+      f"релевантный почти всегда в первых строках. nDCG@10 {_f(d['ndcg10'])} со шкалой 2^rel − 1 требует в топ-10 именно "
+      f"метку 3 (вес 7 против 3 у метки 2 и 1 у метки 1): в нашем топ-10 меток 3 — {_pct(d['top10_label_mix'][3])}, в "
+      f"идеальном — {_pct(d['ideal10_label_mix'][3])}; меток 1 — {_pct(d['top10_label_mix'][1])}"
+      + (f" (из них {_pct(d['label1_top10_reasons']['low_required'])} реально владеют меньше чем "
+         f"{_pct(st['config'].get('cov_min', 0.5))} обязательных навыков)" if "label1_top10_reasons" in d else "")
+      + ".")
+    a("")
+    a(f"* Порядок внутри топ-10: если переставить наши же 10 кандидатов по истине, nDCG@10 "
+      f"{_f(d['ndcg10'])} → {_f(d['ndcg10_top10_resorted_by_truth'])}. Ничьих в топ-10 — {_pct(d['ties_adjacent_top10'])}: "
+      f"порядок не случайный.")
+    a(f"* Состав топ-10: если знать истину внутри тех же ярусов выдачи (категория из теста, ядро, обязательное), "
+      f"nDCG@10 {_f(d['oracle_within_tiers']['ndcg@10'])}, P@5 {_f(d['oracle_within_tiers']['p@5'])} — главный разрыв в том, "
+      f"кого мы берём в топ-10, а не в порядке внутри него.")
+    a(f"* Шкала: та же выдача в линейной шкале (gain = rel) — {_f(d['ndcg10_linear_gain'])}, в бинарной (релевантен / нет) — "
+      f"{_f(d['ndcg10_binary'])}: экспоненциальная шкала строже к недобору меток 3.")
+    a(f"* Что видит подбор: внутри точной категории балл продукта отделяет метку 3 с AUC "
+      f"{_f(d['auc_exact_category']['score_vs_rel3'])}, а заявленное в резюме покрытие обязательных — "
+      f"{_f(d['auc_exact_category']['declared_required_vs_rel3'])}. Заявленное (T0) мы в балл намеренно не берём: в "
+      f"нашем мире 20 % резюме раздуты, и атака «дописать навыки вакансии» не должна поднимать в выдаче "
+      f"([{OURS_MD}]({OURS_MD}), абляция «заявленное как подтверждённое»). Тест подтверждает навыки выборочно — задания "
+      f"сессии покрывают часть обязательных навыков конкретной потребности; честный рычаг — больше доказательств по "
+      f"обязательным навыкам (дотестирование, зонд работодателя), а не перестановка.")
     a("")
     a("## Что улучшает порядок: варианты и правило «не хуже»")
     a("")
@@ -508,7 +540,7 @@ def verdicts(rep: dict) -> list[str]:
                    + " / ".join(mb._f(x["p@5"]) for x in nw["deltas"]) + ", ΔMRR "
                    + " / ".join(mb._f(x["mrr"]) for x in nw["deltas"]) + ", ΔnDCG@10 "
                    + " / ".join(mb._f(x["ndcg@10"]) for x in nw["deltas"])
-                   + f"; в чужих условиях ΔnDCG@10 от {mb._f(min(their))} до {mb._f(max(their))}. "
+                   + (f"; в чужих условиях ΔnDCG@10 от {mb._f(min(their))} до {mb._f(max(their))}. " if their else ". ")
                    + (("Правило «не хуже» выполнено" if nw["passed"] else "Правило «не хуже» не выполнено")
                       + ("; это проверка на стенде: веса подобраны на той же синтетике (подгонка под нашу же истину), "
                          "в продукт без данных о людях не переносим." if "weights" in v else
@@ -521,7 +553,12 @@ def main() -> int:
     ap.add_argument("--quick", action="store_true", help="20 × 200 без дополнительных seed (проверка механики)")
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--only", nargs="*", help="id условий (по умолчанию все)")
+    ap.add_argument("--md-only", action="store_true", help="только пересобрать MATCHING_COMPARE.md из сохранённого json")
     a = ap.parse_args()
+    if a.md_only:
+        DOCS_MD.write_text(markdown(json.loads(DOCS_JSON.read_text(encoding="utf-8"))), encoding="utf-8")
+        print(f"→ {DOCS_MD.relative_to(REPO)}")
+        return 0
     run(quick=a.quick, write=not a.no_write, only=a.only)
     return 0
 
