@@ -1,4 +1,4 @@
-"""Аватар Anam — ТОЛЬКО за флагом INTERVIEW_AVATAR_ENABLED (по умолчанию выключен: решение владельца 10.10, регламент
+"""Аватар Anam — ТОЛЬКО за флагом INTERVIEW_ANAM_ENABLED (по умолчанию выключен: решение владельца 10.10, регламент
 п. 5.11 — изображения третьих лиц в сдаче не показываем; каналы по умолчанию — голос и текст).
 Сеансовый токен (публичный REST: POST /v1/auth/session-token) для стокового образа поставщика в режиме
 передачи звука (enableAudioPassthrough) — реплики озвучивает наш синтез, Anam только рисует лицо и губы. Персонаж
@@ -48,7 +48,7 @@ def ice_servers() -> list[dict] | None:
 def avatar_token(persona_name: str | None = None) -> AvatarToken:
     s = get_interview_settings()
     name = persona_name or s.interviewer_name
-    if not s.interview_avatar_enabled:
+    if not s.interview_anam_enabled:
         raise EngineError("avatar_unavailable", "Канал «аватар» выключен — доступны каналы «голос» и «текст»")
     if s.interview_stub or not s.anam_api_key or not s.anam_avatar_id:
         raise EngineError("avatar_unavailable", "Аватар не настроен — доступны каналы «голос» и «текст»")
