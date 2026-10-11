@@ -433,7 +433,48 @@ def markdown(rep: dict) -> str:
                  f"{_n(np.mean(mins)) if mins else '—'} | {_n(lead.get('block_minutes_mean'))} | {ok_txt} |")
     L += ["", "Семейств Lead/Principal на одно направление (своих) и в общем блоке — по сценарию: "
           "кратность × (короткие, развёрнутые) из строки банка ×1.", ""]
+    L += robustness_md(rep)
     return "\n".join(L) + "\n"
+
+
+def robustness(rep: dict) -> list[dict]:
+    """Разброс по реализациям модельного банка (--reps): сценарий × confirm × мир, где есть больше одной реализации."""
+    groups: dict[tuple, list[dict]] = {}
+    for v in rep["variants"].values():
+        groups.setdefault((v["scenario"], v["confirm"], v["world"]), []).append(v)
+    out = []
+    for (sc, cf, w), vs in groups.items():
+        if len(vs) < 2:
+            continue
+        lead = [x["by_true_level"].get("lead", {}).get("exact") for x in vs]
+        prc = [x["by_true_level"].get("principal", {}).get("exact") for x in vs]
+        if None in lead or None in prc:
+            continue
+        ab = [x["above"] for x in vs]
+        ok = sum(1 for a_, b_, c_ in zip(lead, prc, ab, strict=True) if a_ >= 0.64 and b_ >= 0.64 and c_ <= 0.07)
+        b = bank_counts(SCENARIOS[sc])
+        out.append({"scenario": sc, "confirm": cf, "world": w, "text": scen_text(SCENARIOS[sc]), "reps": len(vs),
+                    "lead": [min(lead), float(np.mean(lead)), max(lead)], "principal": [min(prc), float(np.mean(prc)), max(prc)],
+                    "above_max": max(ab), "ok": ok,
+                    "own": sum(x + y for x, y in b["own"].values()), "common": sum(x + y for x, y in b["common"].values())})
+    return out
+
+
+def robustness_md(rep: dict) -> list[str]:
+    rows = robustness(rep)
+    if not rows:
+        return []
+    L = ["## Устойчивость: разные реализации модельного банка", "",
+         "Тот же сценарий, другие случайные трудности семейств Lead/Principal (`--reps`). Доля «цель» — во скольких "
+         "реализациях одновременно Lead ≥ 64 %, Principal ≥ 64 % и завышение ≤ 7 %.", "",
+         "| Сценарий | confirm | Мир | Реализаций | Lead: мин / среднее / макс | Principal: мин / среднее / макс | "
+         "Выше, макс | Цель | Семейств: направление / общий |",
+         "|---|---|---|---|---|---|---|---|---|"]
+    for r in rows:
+        fm = (lambda t: " / ".join(_p(x) for x in t))
+        L.append(f"| {r['text']} | {_n(r['confirm'])} | {r['world']} | {r['reps']} | {fm(r['lead'])} | {fm(r['principal'])} | "
+                 f"{_p(r['above_max'])} | {r['ok']} из {r['reps']} | {r['own']} / {r['common']} |")
+    return L + [""]
 
 
 def main() -> int:
