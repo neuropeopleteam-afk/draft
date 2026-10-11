@@ -43,6 +43,12 @@ function WhyBlock({ why }: { why: Why[] }) {
             {w.con.map((f, i) => (
               <p key={i} className="mt-2 flex items-start gap-2 text-brand-ink/70"><Level level={f.level} /><span className="flex-1">В пользу {w.lower}: {ruText(f.text)}</span><span className="whitespace-nowrap font-semibold text-brand-plum">−{pts(f.points)}</span></p>
             ))}
+            {(() => {  // FIX7 п. 11: показаны топ-3 «за» и главный «против» — остаток разницы виден отдельной строкой
+              const rest = w.diff - w.pro.reduce((t, f) => t + f.points, 0) - w.con.reduce((t, f) => t + f.points, 0);
+              return Math.abs(rest) >= 0.1 ? <p className="mt-2 flex items-start gap-2 text-brand-ink/70" data-testid="why-rest">
+                <span className="flex-1">Прочие сигналы — факторы меньшего веса и округление</span>
+                <span className="whitespace-nowrap font-semibold">{rest > 0 ? "+" : "−"}{pts(rest)}</span></p> : null;
+            })()}
             {w.core_note && <p className="mt-2 border-t border-brand-ink/10 pt-2 font-semibold text-amber-900" data-testid="why-core-note">{nowrapRefs(w.core_note)}.</p>}
           </li>
         ))}
