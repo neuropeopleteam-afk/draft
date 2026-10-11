@@ -212,6 +212,17 @@ class Settings(BaseSettings):
     # только когда погрешность позволяет, иначе «точнее — после дотестирования»; без чисел θ (grades.level_position).
     # false — как раньше (поля нет)
     grade_position_enabled: bool = False
+    # Я26: двухэтапное подтверждение уровня у границы (assessment/two_stage.py, docs/validation/TWO_STAGE.md): после
+    # полного теста уровень «на границе» (P у порога между 1 − L и L) — кандидату предлагается уточнение отдельной
+    # сессией до N коротких заданий и M минут у этого порога; итог — по общей оценке обеих сессий (до заявленного —
+    # P ≥ confirm, выше заявленного — P ≥ confirm_up, если above > 0). false — как раньше (предложения нет)
+    assessment_two_stage_enabled: bool = False
+    assessment_two_stage_level: float = 0.8
+    assessment_two_stage_items: int = 8
+    assessment_two_stage_minutes: int = 15
+    assessment_two_stage_confirm: float = 0.5
+    assessment_two_stage_confirm_up: float = 0.9
+    assessment_two_stage_above: float = 0.0
     # Камера во время теста по согласию (app/modules/proctor): false — экран камеры не показывается вообще,
     # тест идёт без камеры. Камера и так необязательна: без неё тест доступен полностью, грейд не меняется
     proctor_camera_enabled: bool = True
