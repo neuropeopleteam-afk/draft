@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import { Level } from "./ui";
+import { plainText } from "./ui";
+
+const LEVEL_HINT_WORDS: Record<string, string> = { T1: "Проверено на платформе", T0: "Указано кандидатом, не проверено", none: "Нет данных" };
 
 /** Я12б: «Что сейчас просит рынок» — частые навыки категории кандидата по вакансиям hh.ru (агрегат с n и датой) и
  * что из них он ещё не подтвердил → тест или короткое задание. Блок приходит в /assessment/feedback как market_hh
@@ -36,9 +38,9 @@ export default function HhMarketSkills({ m }: { m: HhMarket }) {
               <span className="h-1.5 w-12 shrink-0 rounded-full bg-brand-night/5" aria-hidden="true"><span className="block h-1.5 rounded-full bg-brand-lavender" style={{ width: `${x.share * 100}%` }} /></span>
               в {pct(x.share)} вакансий
             </span>
-            <span className="flex flex-wrap items-center justify-end gap-1.5">
-              <Level level={LEVEL[x.status]} />
-              <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ${CHIP[x.status]}`}>{x.status_title}</span>
+            {/* КУХНЯ: без кода T0/T1 и без второй плашки — статус словами; на 390 px подпись переносится, не шире колонки */}
+            <span className="flex min-w-0 max-w-[11rem] flex-wrap items-center justify-end gap-1.5 sm:max-w-none">
+              <span title={LEVEL_HINT_WORDS[LEVEL[x.status]]} className={`inline-block max-w-full whitespace-normal break-words rounded-md px-2 py-0.5 text-right text-xs font-semibold ring-1 ${CHIP[x.status]}`}>{plainText(x.status_title)}</span>
             </span>
             {x.action && (
               <span className="order-4 col-span-2 text-xs text-brand-ink/65 sm:col-span-3">
