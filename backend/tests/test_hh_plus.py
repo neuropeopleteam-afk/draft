@@ -199,3 +199,17 @@ def test_a11y_security_need_not_required():
                       use_llm=False)
     tags = {i["tag"] for i in need["stack_required"] + need["stack_desired"]}
     assert "a11y" not in tags and "siem-soc" in tags
+
+
+def test_desired_section_list_with_weak_cues_stays_desired():
+    """«Будет плюсом:» и пункты списка «— Опыт работы с …» (так пишут вакансии hh.ru): пункты — желательно; явное
+    «обязательно» в пункте — обязательно; следующий заголовок без маркера («Условия:») закрывает секцию."""
+    from app.modules.matching.need_parser import parse_need
+    text = ("Middle Python-разработчик\nТребования:\n— Опыт работы с Python и FastAPI от 3 лет;\n— Знание PostgreSQL;\n"
+            "Будет плюсом:\n— Опыт работы с Kafka;\n— Знание Redis;\n— Docker обязательно;\n"
+            "Условия:\n— Опыт работы с Git в команде;\n")
+    need = parse_need(text, use_llm=False)
+    req = {i["tag"] for i in need["stack_required"]}
+    des = {i["tag"] for i in need["stack_desired"]}
+    assert {"python", "fastapi", "postgresql", "docker", "git"} <= req
+    assert {"kafka", "redis"} <= des and not ({"kafka", "redis"} & req)
