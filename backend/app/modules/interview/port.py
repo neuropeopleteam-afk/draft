@@ -192,14 +192,6 @@ class StubPort:
     def avatar_token(self) -> dict:
         raise EngineUnavailable("avatar_unavailable")
 
-    def avatar_token(self) -> dict:
-        """Токен сессии Anam (наш аватар ANAM_AVATAR_ID, режим передачи звука — голос наш). Нет флага/ключа/сети → EngineUnavailable."""
-        try:
-            t = self.eng.avatar_token()
-        except Exception as x:  # noqa: BLE001
-            raise self._err(x) from None
-        return t.model_dump(mode="json") if hasattr(t, "model_dump") else dict(t)
-
     def check_limits(self, jury: bool, last_hour: list[dict], spent_today_usd: float) -> None:
         return None
 
@@ -300,6 +292,14 @@ class EnginePort:
         if getattr(a, "stub", False) or not a.data:
             raise EngineUnavailable("tts_unavailable")
         return a.data, a.mime or "audio/mpeg", float(a.cost_usd or 0)
+
+    def avatar_token(self) -> dict:
+        """Токен сессии Anam (наш аватар ANAM_AVATAR_ID, режим передачи звука — голос наш). Нет флага/ключа/сети → EngineUnavailable."""
+        try:
+            t = self.eng.avatar_token()
+        except Exception as x:  # noqa: BLE001
+            raise self._err(x) from None
+        return t.model_dump(mode="json") if hasattr(t, "model_dump") else dict(t)
 
     def check_limits(self, jury: bool, last_hour: list[dict], spent_today_usd: float) -> None:
         """last_hour — сессии песочницы жюри за час: [{"created_at": datetime, "active": bool}] (контракт, раздел 4)."""

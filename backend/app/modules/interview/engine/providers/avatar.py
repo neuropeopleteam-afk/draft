@@ -58,7 +58,9 @@ def avatar_token(persona_name: str | None = None) -> AvatarToken:
     # Выбор региона у организации недоступен — не шлём. avatarModel — cara-4 (единственная для собственных аватаров).
     body = {"personaConfig": {"name": name, "avatarId": s.anam_avatar_id, "avatarModel": "cara-4",
                               "enableAudioPassthrough": True},
-            "sessionOptions": {"showAIAvatarDisclosure": True},  # честная плашка поставщика «это ИИ-аватар»
+            # плашки поставщика на видео нет (решение владельца 11.10: под образом только «Интервьюер: говорит / слушает»);
+            # честность — в самом экране: подзаголовок «Оценка — модель, не люди», alt/aria «сгенерированный образ, не человек»
+            "sessionOptions": {"showAIAvatarDisclosure": False},
             "clientLabel": "draft-interview"}
     try:
         resp = relay.request("POST", HOST, "/v1/auth/session-token",
