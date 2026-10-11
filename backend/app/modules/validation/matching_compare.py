@@ -329,6 +329,7 @@ def run(quick: bool = False, write: bool = True, only: list[str] | None = None) 
                                       f"{c['world']['n_needs']} × {c['world']['n_candidates']}" for c in res),
                                   command=cmd)}
     rep["not_worse"] = {vid: not_worse(rep, vid) for vid in VARIANTS}
+    rep["strict_bench"] = strict_bench_reference()
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
         for p in (DOCS_JSON, DATA_OUT):
@@ -373,6 +374,11 @@ def markdown(rep: dict) -> str:
       f"[{OURS_MD}]({OURS_MD}) (200 × 2000), он не меняется.")
     a("")
     a(f"> {rep['caveat']} Числа — синтетика (модель, не люди).")
+    a("")
+    a("## Выводы")
+    a("")
+    for line in conclusions(rep):
+        a(f"* {line}")
     a("")
     a("## Итог: в их условиях")
     a("")
@@ -495,16 +501,19 @@ def markdown(rep: dict) -> str:
       "на нашем строгом протоколе (оба мира 200 × 2000) P@5 и MRR не ниже продукта; три числа на вакансиях hh от "
       "порядка выдачи не зависят (разбор текста и пул кандидатов те же).")
     a("")
-    a("| Вариант | Где | Мир | ΔP@5 | ΔnDCG@10 | ΔMRR |")
-    a("|---|---|---|---|---|---|")
-    for vid, v in VARIANTS.items():
-        for c in rep["conditions"]:
-            rows = [(c["title"], c["variants"])] + [(f"{c['title']}, seed {x['seed']}", x["variants"])
-                                                     for x in c["other_seeds"] if "variants" in x]
-            for title, vv in rows:
-                d = vv[vid]["minus_product"]
-                a(f"| {v['title']} | {v['where']} | {title} | {mb._signed(d['p@5'])} | {mb._signed(d['ndcg@10'])} | "
-                  f"{mb._signed(d['mrr'])} |")
+    a("| Мир | " + " | ".join(f"{v['title']} ({v['where']})" for v in VARIANTS.values()) + " |")
+    a("|---|" + "---|" * len(VARIANTS))
+    for c in rep["conditions"]:
+        rows = [(c["title"] + f", seed {c['config']['seed']}", c["variants"])] + [
+            (f"{c['title']}, seed {x['seed']}", x["variants"]) for x in c["other_seeds"] if "variants" in x]
+        for title, vv in rows:
+            cells = []
+            for vid in VARIANTS:
+                dd = vv[vid]["minus_product"]
+                cells.append(" / ".join(mb._signed(dd[m]).split(" [")[0] for m in ("p@5", "ndcg@10", "mrr")))
+            a(f"| {title} | " + " | ".join(cells) + " |")
+    a("")
+    a("В ячейке — ΔP@5 / ΔnDCG@10 / ΔMRR (среднее по потребностям); 95 % ДИ каждой разницы — в json (`variants`).")
     a("")
     for line in verdicts(rep):
         a(f"* {line}")
@@ -516,6 +525,79 @@ def markdown(rep: dict) -> str:
 
 def _pct(v) -> str:
     return "—" if v is None else f"{round(v * 100)} %"
+
+
+def strict_bench_reference() -> dict | None:
+    """Строгий протокол (make bench) из его записанного json: методы и доля «раздутых» в топ-10 — для выводов."""
+    path = REPO / "docs" / "validation" / "matching_bench.json"
+    if not path.exists():
+        return None
+    d = json.loads(path.read_text(encoding="utf-8"))
+    keep = ("platform", "bm25", "keywords_grade", "no_test", "no_guard")
+    return {"metrics": {k: {m: d["metrics"][k][m]["mean"] for m in METRICS4} for k in keep if k in d["metrics"]},
+            "inflated": (d.get("groups") or {}).get("inflated"), "commit": (d.get("signature") or {}).get("commit")}
+
+
+def conclusions(rep: dict) -> list[str]:
+    out = []
+    ft, itm = _cond(rep, "ft_world"), _cond(rep, "itm_world")
+    pub_ft, pub_itm = rep["published"]["ft"]["rows"], rep["published"]["itm"]["rows"]
+    if ft and itm:
+        pf, pi = ft["metrics"]["platform"], itm["metrics"]["platform"]
+        out.append(f"В их условиях наш подбор ниже опубликованных ими чисел: «FSP Talent» — P@5 {_f(pf['p@5']['mean'])} "
+                   f"против {_f(pub_ft[0]['p@5'])}, nDCG@10 {_f(pf['ndcg@10']['mean'])} против {_f(pub_ft[0]['ndcg@10'])}, "
+                   f"MRR {_f(pf['mrr']['mean'])} против {_f(pub_ft[0]['mrr'])}; IT Match — P@10 {_f(pi['p@10']['mean'])} "
+                   f"против {_f(pub_itm[0]['p@10'])}, nDCG@10 {_f(pi['ndcg@10']['mean'])} против {_f(pub_itm[0]['ndcg@10'], 2)} "
+                   f"(их размер, шкала и шум; другие seed — в разделах ниже).")
+        kf, ki = ft["metrics"]["keywords_grade"], itm["metrics"]["keywords_grade"]
+        out.append(f"Их мир воспроизведён близко к описанию: базовая линия «ключевые слова + заявленный грейд» у нас "
+                   f"P@5 {_f(kf['p@5']['mean'])}, MRR {_f(kf['mrr']['mean'])} (у них {_f(pub_ft[1]['p@5'])} и "
+                   f"{_f(pub_ft[1]['mrr'])}); «по резюме» в мире IT Match — P@10 {_f(ki['p@10']['mean'])}, nDCG@10 "
+                   f"{_f(ki['ndcg@10']['mean'])} (у них {_f(pub_itm[1]['p@10'])} и {_f(pub_itm[1]['ndcg@10'], 2)}).")
+        nf, ni = ft["metrics"]["no_test"], itm["metrics"]["no_test"]
+        sb = rep.get("strict_bench") or {}
+        sm = sb.get("metrics") or {}
+        txt = (f"Главная причина разрыва — допущение мира о правдивости резюме. В их описании резюме почти честные, и "
+               f"подбор по одному самоописанию в их мире сильнее нашего: P@5 {_f(nf['p@5']['mean'])} / nDCG@10 "
+               f"{_f(nf['ndcg@10']['mean'])} («FSP Talent») и {_f(ni['p@5']['mean'])} / {_f(ni['ndcg@10']['mean'])} "
+               f"(IT Match). Наш подбор заявленное (T0) в балл намеренно не берёт")
+        if sm.get("no_test") and sm.get("platform"):
+            txt += (f": в нашем строгом мире (20 % раздутых резюме) подбор по самоописанию даёт P@5 "
+                    f"{_f(sm['no_test']['p@5'])} / nDCG@10 {_f(sm['no_test']['ndcg@10'])} против "
+                    f"{_f(sm['platform']['p@5'])} / {_f(sm['platform']['ndcg@10'])} у продукта")
+            inf = sb.get("inflated") or {}
+            if inf.get("platform") and inf.get("no_test"):
+                txt += (f", а нерелевантные «раздутые» занимают {_pct(inf['no_test']['irrelevant_inflated_top10'])} мест "
+                        f"топ-10 против {_pct(inf['platform']['irrelevant_inflated_top10'])} у продукта "
+                        f"([{OURS_MD}]({OURS_MD}))")
+        out.append(txt + ".")
+    nw = rep.get("not_worse", {}).get("grade_cap") or {}
+    their = [c["variants"]["grade_cap"]["minus_product"]["ndcg@10"]["mean"] for c in rep["conditions"] if c["competitor"]]
+    if nw.get("checked") and their:
+        out.append("Второе отличие — шкала: у них кандидат на ступень выше запрошенного грейда «переквалифицирован» "
+                   "(множитель 0,75 / метка 1), у нас — подходит (метка 2–3). Флаг MATCH_GRADE_CAP (тест не даёт бонуса "
+                   f"выше порога следующего грейда) в их условиях даёт ΔnDCG@10 от {mb._f(min(their))} до "
+                   f"{mb._f(max(their))}, но на нашем строгом протоколе ΔMRR "
+                   + " / ".join(mb._f(x["mrr"]) for x in nw["deltas"])
+                   + (" — правило «не хуже» не выполнено, флаг выключен." if not nw["passed"] else
+                      " — правило «не хуже» выполнено."))
+    b = [(c["title"], c["paired_platform_minus"]["bm25"]["ndcg@10"]) for c in rep["conditions"]
+         if "bm25" in c["paired_platform_minus"]]
+    if b:
+        weak = [(t, x) for t, x in b if x["lo"] <= 0]
+        out.append(f"В одном мире наш подбор по среднему выше BM25 по тексту резюме во всех {len(b)} условиях: ΔnDCG@10 "
+                   f"от {mb._f(min(x['mean'] for _, x in b))} до {mb._f(max(x['mean'] for _, x in b))}"
+                   + ("; в пределах шума (ДИ включает 0): " + "; ".join(f"{t} {mb._signed(x)}" for t, x in weak)
+                      if weak else "") + ".")
+    st = _cond(rep, "ours_strict")
+    if st:
+        d = st["diagnostics"]
+        out.append(f"nDCG@10 {_f(d['ndcg10'])} при MRR {_f(st['metrics']['platform']['mrr']['mean'])} на строгом протоколе — "
+                   f"из-за состава топ-10, а не порядка и не ничьих: меток 3 в нашем топ-10 {_pct(d['top10_label_mix'][3])} "
+                   f"против {_pct(d['ideal10_label_mix'][3])} в идеальном; пересортировка своего топ-10 по истине — "
+                   f"{_f(d['ndcg10_top10_resorted_by_truth'])}, знание истины внутри тех же ярусов — "
+                   f"{_f(d['oracle_within_tiers']['ndcg@10'])} (раздел «Почему nDCG@10 ниже MRR»).")
+    return out
 
 
 def not_worse(rep: dict, vid: str) -> dict:
@@ -556,7 +638,12 @@ def main() -> int:
     ap.add_argument("--md-only", action="store_true", help="только пересобрать MATCHING_COMPARE.md из сохранённого json")
     a = ap.parse_args()
     if a.md_only:
-        DOCS_MD.write_text(markdown(json.loads(DOCS_JSON.read_text(encoding="utf-8"))), encoding="utf-8")
+        rep = json.loads(DOCS_JSON.read_text(encoding="utf-8"))
+        if "strict_bench" not in rep:
+            rep["strict_bench"] = strict_bench_reference()
+            for p in (DOCS_JSON, DATA_OUT):
+                p.write_text(json.dumps(rep, ensure_ascii=False, indent=1), encoding="utf-8")
+        DOCS_MD.write_text(markdown(rep), encoding="utf-8")
         print(f"→ {DOCS_MD.relative_to(REPO)}")
         return 0
     run(quick=a.quick, write=not a.no_write, only=a.only)
