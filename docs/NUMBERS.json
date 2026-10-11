@@ -89,7 +89,17 @@
   "cost_usd_per_answer": 0.0213,
   "n": 406
  },
- "a11y": {},
+ "a11y": {
+  "screens": 36,
+  "passes": 72,
+  "errors": 0,
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "hscroll": 0,
+  "date": "11.10.2026"
+ },
  "tests": {
   "failed": 0,
   "passed": 1508,
