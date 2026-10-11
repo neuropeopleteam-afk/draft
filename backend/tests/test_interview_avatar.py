@@ -57,5 +57,5 @@ def test_avatar_assets_and_provenance():
             assert f.is_file(), f
             assert 10_000 < f.stat().st_size <= MAX_CLIP, (f, f.stat().st_size)
     prov = (AVATAR_DIR / "PROVENANCE.md").read_text(encoding="utf-8")
-    assert "сгенерировано" in prov.lower() and "gpt_image_2_5_flare" in prov and "veo_3_1_fast" in prov
+    assert "сгенерирован" in prov.lower() and "gpt_image_2_5_flare" in prov and "veo_3_1_fast" in prov
     assert re.search(r"2026-10-11", prov) and "не человек" in prov
