@@ -83,6 +83,8 @@ PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items":
             "time_weight": "выбор: информация на минуту (вес)",
             "weak_a": "мир: у 26 слабых по панели семейств истинная a", "weak_pool": "26 слабых семейств в пуле",
             "plus": "добор банка у порогов J/M и M/S (17 семейств)"}
+VALUE_RU = {"weak_pool": {"exclude": "26 слабых семейств исключены из пула", "down": "26 слабых семейств в пуле с a = 0,4"},
+            "plus": {1: "+ добор банка у порогов J/M и M/S (17 семейств)"}}
 DECISION_RU = {"claimed": "заявленный грейд, P ≥ порога уверенности", "point": "по лучшей оценке θ̂ (точечный грейд)"}
 
 
@@ -187,6 +189,8 @@ def stage_plus() -> list[dict]:
     for wa in (0.0, 0.4):
         pts += [_p(confirm_level=0.6, weak_a=wa, plus=1, weak_pool=wp) for wp in ("keep", "exclude")]
         pts += [_p(confirm_level=cl, weak_a=wa, plus=1, weak_pool="exclude") for cl in (0.55, 0.58)]
+        # после синхронизации банка: какой порог держит завышение ≤ 7 % (keep — пул как есть; exclude — с чисткой)
+        pts += [_p(confirm_level=cl, weak_a=wa, plus=1, weak_pool=wp) for cl in (0.65, 0.7) for wp in ("keep", "exclude")]
     return pts
 
 
@@ -608,6 +612,9 @@ def _diff(pt: dict, base: dict) -> str:
             if k == "decision":
                 parts.append(DECISION_RU.get(v, v) if v != "point" else "решение по лучшей оценке θ̂ (точечный грейд)")
                 continue
+            if k in VALUE_RU:
+                parts.append(VALUE_RU[k].get(v, f"{PARAM_RU[k]} {v}"))
+                continue
             v = "нет" if v is None else (str(v).replace(".", ",") if isinstance(v, float) else str(v))
             parts.append(f"{PARAM_RU[k]} {v}")
     return "; ".join(parts) or "прежняя конфигурация (P ≥ 0,8, до 10.10)"
@@ -630,11 +637,11 @@ def pool_rows(rep: dict, confirm: float = 0.6) -> list[dict]:
     for p in rep["points"]:
         pt = p["point"]
         rest = {k: v for k, v in pt.items() if k not in (*POOL_KEYS, "weak_a", "confirm_level")}
-        if pt["confirm_level"] != confirm or rest != {k: v for k, v in baseline_point().items()
-                                                       if k not in (*POOL_KEYS, "weak_a", "confirm_level")}:
+        if (pt["confirm_level"] != confirm and not pt.get("plus")) or rest != {
+                k: v for k, v in baseline_point().items() if k not in (*POOL_KEYS, "weak_a", "confirm_level")}:
             continue
         out.append(p)
-    return sorted(out, key=lambda p: (p["point"]["weak_a"], int(p["point"].get("plus") or 0),
+    return sorted(out, key=lambda p: (p["point"]["weak_a"], int(p["point"].get("plus") or 0), p["point"]["confirm_level"],
                                       ("keep", "exclude", "down").index(p["point"]["weak_pool"])))
 
 
@@ -645,7 +652,8 @@ def pool_section(rep: dict, head: list[str], bp: dict) -> list[str]:
     L = ["## Чистка пула и добор у порогов (флаг `ASSESSMENT_WEAK_EXCLUDE`)", "",
          "26 семейств, слабых по калибровке панелью моделей (модель, не люди), и 17 новых сильных семейств у порогов "
          "J/M и M/S (prior a = 1,3, исполняемый ключ; в продукт попадут с синхронизацией банка). Два мира: слабые "
-         "семейства «как в prior» (панель ошиблась) и «на деле слабые» (истинная a = 0,4). Порог уверенности 0,6.", "",
+         "семейства «как в prior» (панель ошиблась) и «на деле слабые» (истинная a = 0,4). Порог уверенности 0,6; для банка с "
+         "добором — и другие пороги (какой держит завышение ≤ 7 % после синхронизации банка).", "",
          *head]
     L += [_row(p, bp) for p in rows]
     L += ["", "Правило: новое значение по умолчанию — только если лучше по всем ограничениям в обоих мирах. "
