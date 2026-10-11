@@ -203,7 +203,7 @@ export function EmployerVacancies() {
   return (
     <div className="max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <PageTitle title="Вакансии" subtitle="Вилка «от–до» обязательна. Контакты откликнувшихся кандидатов видны сразу." />
+        <PageTitle title="Вакансии" subtitle="Вилка «от–до» обязательна; контакты откликнувшихся видны сразу." />
         <div className="flex flex-wrap gap-2">
           <button className="btn-ghost" onClick={() => setImporting(true)}>Импортировать из ATS</button>
           <HhImportButton onDone={() => void reload()} />

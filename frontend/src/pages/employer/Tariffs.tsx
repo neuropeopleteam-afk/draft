@@ -168,7 +168,7 @@ export function EmployerTariffs() {
   const pctUsed = u.invites_limit ? Math.min(100, Math.round((100 * u.invites_used) / u.invites_limit)) : 0;
   return (
     <div className="max-w-6xl space-y-6">
-      <PageTitle title="Тарифы" subtitle="Кандидатам платформа бесплатна всегда. Здесь — ваш тариф, остаток приглашений в месяце и демонстрационные счета." />
+      <PageTitle title="Тарифы" subtitle="Ваш тариф и остаток приглашений; кандидатам — всегда бесплатно." />
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]" aria-label="Текущий тариф">
         <div className="space-y-2">

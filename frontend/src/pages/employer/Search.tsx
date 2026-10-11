@@ -92,7 +92,7 @@ export function Search() {
 
   return (
     <div className="max-w-6xl space-y-6">
-      <PageTitle title="Поиск по базе" subtitle="Все кандидаты с согласием на публикацию: с подтверждённым грейдом, «предварительно» и без подтверждённого грейда — последние всегда ниже. Карточки обезличены." />
+      <PageTitle title="Поиск по базе" subtitle="Все опубликованные кандидаты, обезличенно; без подтверждённого грейда — ниже." />
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
         <aside className="card h-fit space-y-4">
           <Field label="Специализация" htmlFor="sd">
