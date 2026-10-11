@@ -67,7 +67,7 @@ function Body({ r }: { r: any }) {
                 <td className="py-2 pr-3 text-brand-ink/80">{num(x.se_first_mean, 3)}</td>
                 <td className="py-2 pr-3 text-brand-ink/80">{x.rmse_theta_first == null ? "—" : num(x.rmse_theta_first, 3)}</td>
                 <td className="py-2 pr-3 text-brand-ink/80">{num(x.minutes_per_path, 1)}</td>
-                <td className="py-2 pr-3 text-brand-ink/80">{x.diff_vs_frac ? <>{pp(x.diff_vs_frac.exact)}<span className="text-xs text-brand-ink/60">{ci(x.diff_vs_frac.exact_ci)}</span></> : "—"}</td>
+                <td className="py-2 pr-3 text-brand-ink/80">{x.diff_vs_frac ? <>{pp(x.diff_vs_frac.exact)}<span className="text-xs text-brand-ink/65">{ci(x.diff_vs_frac.exact_ci)}</span></> : "—"}</td>
               </tr>
             ))}
           </tbody>
