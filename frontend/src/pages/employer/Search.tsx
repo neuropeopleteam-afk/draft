@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { CandidateCard } from "../../components/CandidateCard";
 import { InterviewEmployerDetails } from "../../components/Interview";  // Я15: устная защита и ИИ-интервью
 import { PageTitle } from "../../components/CabinetLayout";
-import { StatusCounts } from "../../components/GradeStatus";
-import { Alert, Empty, Field, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi } from "../../components/ui";
+import { GradeBadge, StatusCounts } from "../../components/GradeStatus";
+import { Alert, Empty, Field, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi, years } from "../../components/ui";
+import { MarketNote } from "../../components/Salary";
 import { useGrades } from "../../lib/grades";
 import { apiDownload } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
@@ -15,6 +16,54 @@ import { EmployerAttempts } from "../../components/AttemptsCompare";
 import { EmployerEvidence } from "../../components/OpenEvidence";  // цитаты из ответа
 
 const PAGE = 20;
+
+/** SIMPLIFY п.4: короткая карточка поиска — уровень, совпадение, зарплата (рынок категории) и одна строка риска;
+ *  навыки, свежесть, зонды, паспорт ФСП и заявленное — под «Подробнее» (та же полная карточка, что и раньше). */
+function riskLine(c: any): { t: string; warn: boolean } | null {
+  const t = c.test, fsp = c.fsp ?? {};
+  if (c.employment_safety?.minor) return { t: `Особые условия оффера · ${c.employment_safety.age_group === "16-17" ? "16–17 лет" : "14–15 лет"} — подробнее в карточке`, warn: true };
+  if (!t) return { t: "Результата теста нет", warn: true };
+  if (t.integrity && t.integrity.level !== "high") return { t: `Достоверность результата: ${String(t.integrity.title).toLowerCase()}`, warn: true };
+  if (c.freshness?.level && c.freshness.level !== "fresh" && c.freshness.title) return { t: `Свежесть: ${String(c.freshness.title).toLowerCase()}`, warn: c.freshness.level !== "aging" };
+  if (fsp.unverified_count > 0) return { t: `ФСП заявлено без подтверждения реестром: ${fsp.unverified_count} — не учитывается`, warn: false };
+  if (t.integrity?.level === "high") return { t: `Достоверность результата: ${String(t.integrity.title).toLowerCase()}`, warn: false };
+  return null;
+}
+
+function SearchCard({ c, stack, tags, market, actions }: { c: any; stack: string[]; tags: any; market?: { from: number; to: number } | null; actions: ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const conf = new Set((c.skills_confirmed ?? []).filter((s: any) => s.confirmed !== false).map((s: any) => s.tag));
+  const hit = stack.filter((x) => conf.has(x));
+  const risk = riskLine(c);
+  const title = (x: string) => tags?.[x]?.title ?? x;
+  return (
+    <article className="card" data-testid="candidate-card" data-collapsed={open ? undefined : "true"}>
+      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Кандидат {c.ref}</p>
+      <div className="mt-1 flex flex-wrap items-center gap-2">
+        <p className="text-lg font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
+        <GradeBadge s={c.status} claimed={c.claimed} />
+        {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
+      </div>
+      <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[8rem_minmax(0,1fr)]" data-testid="search-brief">
+        <dt className="font-semibold text-brand-night">Совпадение</dt>
+        <dd className="text-brand-ink/80">{stack.length
+          ? `стек фильтра подтверждён тестом: ${hit.length} из ${stack.length}${hit.length ? ` (${hit.map(title).join(", ")})` : ""}`
+          : c.rank_in_category ? `место ${c.rank_in_category} из ${c.category_size} в категории` : "категория не присвоена"}
+          {c.experience_years != null ? ` · стаж ${years(c.experience_years)}` : ""}{c.city ? ` · ${c.city}` : ""}</dd>
+        <dt className="font-semibold text-brand-night">Зарплата</dt>
+        <dd className="text-brand-ink/80">{market ? <MarketNote m={market} short /> : <span className="text-brand-ink/65">рынок категории не указан</span>}</dd>
+        <dt className="font-semibold text-brand-night">Риск</dt>
+        <dd className={risk?.warn ? "font-semibold text-amber-900" : "text-brand-ink/80"} data-testid="search-risk">{risk?.t ?? "пометок нет"}</dd>
+      </dl>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        <button type="button" className="text-left text-sm font-semibold text-brand hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}
+          title="Тест, подтверждённые навыки, свежесть, зонды, паспорт ФСП, заявленное кандидатом">{open ? "Свернуть" : "Подробнее"}</button>
+        {actions}
+      </div>
+      {open && <div className="mt-2 border-t border-brand-night/5 pt-2"><CandidateCard c={c} compact bare /></div>}
+    </article>
+  );
+}
 
 export function Search() {
   const tags = useTags();
@@ -93,7 +142,8 @@ export function Search() {
           </div>
           {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.items.length ? <Empty title="Никого не нашлось" text="Ослабьте фильтры." /> :
             <>
-              {data.items.map((c: any) => <CandidateCard key={c.ref} c={c} compact actions={<Link className="btn-ghost !py-2" to={`/employer/candidates/${c.ref}?direction=${c.direction}`}>Открыть</Link>} />)}
+              {data.items.map((c: any) => <SearchCard key={c.ref} c={c} stack={stack} tags={tags} market={cats.data?.find((k) => k.id === c.category?.id)?.market_range}
+                actions={<Link className="btn-ghost !py-2" to={`/employer/candidates/${c.ref}?direction=${c.direction}`}>Открыть</Link>} />)}
               {data.total > PAGE && (
                 <nav className="flex flex-wrap items-center justify-between gap-3 pt-2" aria-label="Страницы результатов">
                   <button className="btn-ghost" disabled={page === 0 || loading} onClick={() => { setPage(page - 1); window.scrollTo({ top: 0 }); }}>← Предыдущие</button>

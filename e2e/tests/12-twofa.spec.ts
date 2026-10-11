@@ -130,6 +130,7 @@ test("ФСП: вход в один клик спрашивает код; рез�
   // другая персона песочницы входит в один клик по-прежнему без кода
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.locator("section#jury").getByTestId("jury-more-roles").locator("summary").click();  // SIMPLIFY п.9: «Ещё роли»
   await page.locator("section#jury").getByRole("button", { name: /^Войти как:?\s*Эксперт/ }).click();
   await expect(page).toHaveURL(/\/expert$/, { timeout: 60_000 });
 

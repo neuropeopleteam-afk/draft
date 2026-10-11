@@ -111,11 +111,15 @@ const LEVEL_HINT: Record<string, string> = {
   none: "Нет данных",
 };
 
-export function Level({ level }: { level?: string | null }) {
+/** SIMPLIFY п.5: рядом с кодом уровня — слова (код без слов работодателю ничего не говорит); words={false} — только код
+ *  (легенда, где слова стоят рядом полным текстом). */
+export const LEVEL_WORDS: Record<string, string> = { T0: "заявлено", T1: "подтверждено тестом", T2: "подтверждено ФСП" };
+
+export function Level({ level, words = true }: { level?: string | null; words?: boolean }) {
   const l = level ?? "none";
   return (
     <span title={LEVEL_HINT[l]} aria-label={`${l === "none" ? "нет данных" : l}: ${LEVEL_HINT[l] ?? ""}`} className={`inline-flex shrink-0 items-center rounded-md px-1.5 py-0.5 text-xs font-bold leading-none tracking-wide ${LEVEL_STYLE[l] ?? LEVEL_STYLE.none}`}>
-      {l === "none" ? "нет" : l}
+      {l === "none" ? "нет" : l}{words && LEVEL_WORDS[l] && <span aria-hidden="true" className="ml-1 font-semibold tracking-normal">· {LEVEL_WORDS[l]}</span>}
     </span>
   );
 }
@@ -123,7 +127,7 @@ export function Level({ level }: { level?: string | null }) {
 export function LevelLegend() {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-brand-ink/70">
-      {["T1", "T2", "T0"].map((l) => <span key={l} className="inline-flex items-center gap-1.5"><Level level={l} />{LEVEL_HINT[l]}</span>)}
+      {["T1", "T2", "T0"].map((l) => <span key={l} className="inline-flex items-center gap-1.5"><Level level={l} words={false} />{LEVEL_HINT[l]}</span>)}
     </div>
   );
 }
@@ -230,7 +234,7 @@ export function Toggle({ checked, onChange, label, hint }: { checked: boolean; o
 export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <div className="card min-w-0 break-words">
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
+      <p className="stat-label text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{label}</p>
       <p className="mt-2 text-xl font-bold tabular-nums text-brand-night">{value}</p>
       {hint && <p className="mt-1 text-xs leading-relaxed text-brand-ink/65">{hint}</p>}
     </div>
