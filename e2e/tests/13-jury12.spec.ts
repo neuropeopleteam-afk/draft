@@ -94,6 +94,10 @@ test("1440: проверка за 12 минут — от своей потреб
 
   await test.step("2. первые три кандидата и объяснения", async () => {
     await expectStep(page, 2, "Первые три кандидата и почему они");
+    // компактная подборка: доказательства — по «Подробнее» первой карточки (на широком экране — панель справа), как в 02
+    const firstCard = page.locator('[data-testid="candidate-card"]').first();
+    await expect(firstCard).toBeVisible({ timeout: 60_000 });
+    if (!(await page.getByTestId("side-details").isVisible())) await firstCard.getByRole("button", { name: /^Подробнее/ }).click();
     await expect(page.locator("details").filter({ has: page.getByText("Почему в подборке") }).first()).toBeVisible({ timeout: 60_000 });
     await next(page, "Сравнение трёх рядом");
   });
