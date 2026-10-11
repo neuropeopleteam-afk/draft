@@ -45,6 +45,7 @@ def excerpt(text: str, limit: int = 400) -> str:
 
 _TAIL = {"и", "а", "но", "в", "во", "на", "с", "со", "к", "по", "за", "из", "от", "до", "для", "или", "что", "чтобы", "как",
          "при", "the", "a", "an", "of", "to"}
+_GENERIC = {"контекст", "задача", "задание", "ситуация", "кейс", "условие", "сценарий", "вопрос"}
 _PAREN = re.compile(r"\([^)]*\)|`[^`]*`|«[^»]*»|\"[^\"]*\"")
 
 
@@ -56,14 +57,18 @@ def short_title(title: str, max_words: int = 5) -> str:
     t = _PAREN.sub(" ", raw.replace("…", " ").replace("...", " "))
     if cut:
         t = t.rsplit(None, 1)[0] if len(t.split()) > 1 else t
-    t = re.split(r"[:.;!?—]", t, maxsplit=1)[0]
+    parts = [x for x in re.split(r"[:.;!?—]", t) if x.strip()]
+    t = parts[0] if parts else ""
+    if len(parts) > 1 and t.strip().lower() in _GENERIC:  # «Контекст: сервис уведомлений…» → «сервис уведомлений»
+        t = parts[1]
     w = [x for x in t.split() if any(ch.isalnum() for ch in x)]
     if not w:
         return "задание"
     w = w[:max_words]
     while len(w) > 1 and w[-1].lower() in _TAIL:
         w.pop()
-    return " ".join(w).strip(" ,-")
+    out = " ".join(w).strip(" ,-")
+    return out[:1].upper() + out[1:]
 
 
 def short_fragment(text: str, max_words: int = 7) -> str:
