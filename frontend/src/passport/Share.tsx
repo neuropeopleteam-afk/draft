@@ -30,7 +30,7 @@ export function PassportShare() {
   // на телефоне — системное меню «Поделиться» (мессенджер, почта), на компьютере — ссылка в буфер обмена
   async function share(url: string) {
     if (typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches) {
-      try { await navigator.share({ title: "Паспорт грейда · Встречный", url }); return; } catch (e) { if ((e as DOMException).name === "AbortError") return; }
+      try { await navigator.share({ title: "Паспорт грейда · Драфт", url }); return; } catch (e) { if ((e as DOMException).name === "AbortError") return; }
     }
     try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2500); } catch { setErr("Не удалось скопировать — выделите ссылку вручную"); }
   }

@@ -10,7 +10,7 @@
 | **«Поток»** (potok.io) | REST v3 `https://app.potok.io/api/v3`, токен компании | кандидат с резюме на вакансии, этап, комментарий |
 | **Хантфлоу** | REST v2 `https://api.huntflow.ru/v2`, токен | кандидат с резюме, на вакансии и этапе |
 | **Вебхук** | `POST` JSON с подписью HMAC-SHA256 | любая система, в том числе своя |
-| **Экспорт JSON** | `vstrechny.candidate.v1` | ручная загрузка |
+| **Экспорт JSON** | `draft.candidate.v1` | ручная загрузка |
 
 В обратную сторону: вакансии работодателя импортируются из «Потока» на платформу (§12), этапы рекрутёра по
 переданным кандидатам возвращаются обратным каналом (§11).
@@ -67,7 +67,7 @@
 
 ## 2. Профиль для ATS
 
-Общая основа (`profile.build`) из карточки `vstrechny.candidate.v1`:
+Общая основа (`profile.build`) из карточки `draft.candidate.v1`:
 
 | Что | Откуда | Уровень |
 |---|---|---|
@@ -104,7 +104,7 @@
   новая пара. Обновляем заранее (за минуту до `expires_at`) и по 401 с одной повторной попыткой; новая пара
   сразу пишется в БД. `400 invalid_grant` — refresh истёк или уже использован: нужна новая пара.
 - Заголовки каждого запроса: `Authorization: Bearer`, `Content-Type: application/json`, обязательный
-  `User-Agent` — `Vstrechny-ATS/1.0 (<компания>; <контакт>)`, контакт — `ATS_USER_AGENT_CONTACT`.
+  `User-Agent` — `Draft-ATS/1.0 (<компания>; <контакт>)`, контакт — `ATS_USER_AGENT_CONTACT`.
 - Ответы GraphQL 200 / 210 (INTERNAL) / 269 (EXTERNAL_SYSTEM_ERROR); предметные ошибки — типами в `data`
   (`PersonSaveError` с полями и нарушенными ограничениями → журнал). 403 `insufficient_permissions` — нет тарифа
   или прав. Одно корневое поле на запрос.
@@ -112,7 +112,7 @@
 **Передача** (`providers/talantix.py`):
 
 1. `persons(filter: {search: <почта>, searchFrom: [CONTACTS]})` — кандидат уже в базе? Да — дубликат не создаём.
-2. `personSources(filterByName: "Встречный (ФСП)")`, при отсутствии — `createPersonSource` (один раз, id
+2. `personSources(filterByName: "Драфт (ФСП)")`, при отсутствии — `createPersonSource` (один раз, id
    кэшируется в подключении).
 3. `dictionaries { areas }` — `areaId` по городу кандидата (если нашёлся; иначе без региона).
 4. `createPerson(personCreate: PersonCreateInput)`:
@@ -122,7 +122,7 @@
    | `firstName`, `lastName`, `middleName` | ФИО (нет ФИО — «Кандидат» + код кандидата) |
    | `contacts` | `email`, `cell`, `telegram` |
    | `vacancyIds` | выбранная вакансия |
-   | `sourceId` | источник «Встречный (ФСП)» |
+   | `sourceId` | источник «Драфт (ФСП)» |
    | `areaId` | регион из справочника areas |
    | `customResumes [{type: TMS, text}]` | HTML профиля: все разделы п. 2 с уровнями T0/T1/T2 и ссылками |
    | `structuredResume.title` | «Backend · Middle — <позиция>» |
@@ -159,7 +159,7 @@
    | `…skills` | HTML профиля (все разделы п. 2) |
    | `…about_me` | оффер и вилка |
    | `…skill_set` | подтверждённые навыки (T1) |
-   | `…education.attestation` | адаптивный тест «Встречный» (T1) |
+   | `…education.attestation` | адаптивный тест «Драфт» (T1) |
    | `…awards` | достижения ФСП (T2) |
    | `…certificate` | PDF-профиль (ссылка) |
    | `events [{body, type: Event::Comment}]` | комментарий: вилка, T1/T2, ссылка на PDF. Именно список: на объект `{body, type}` (как в опубликованной спецификации) настоящий API отвечает 500 — проверено 07.10.2026; заглушка ведёт себя так же |
@@ -188,14 +188,14 @@
 
 ## 6. Универсальный вебхук
 
-`POST <URL>` с телом JSON (схема `vstrechny.candidate.v1`, см. п. 7) и заголовками:
+`POST <URL>` с телом JSON (схема `draft.candidate.v1`, см. п. 7) и заголовками:
 
 | Заголовок | Значение |
 |---|---|
-| `X-Vstrechny-Event` | `candidate.accepted_invitation` или `candidate.applied` |
-| `X-Vstrechny-Delivery` | id доставки (для идемпотентности на стороне получателя) |
-| `X-Vstrechny-Timestamp` | Unix-время отправки |
-| `X-Vstrechny-Signature` | `t=<timestamp>,v1=<hex HMAC-SHA256(secret, "<timestamp>." + тело)>` |
+| `X-Draft-Event` | `candidate.accepted_invitation` или `candidate.applied` |
+| `X-Draft-Delivery` | id доставки (для идемпотентности на стороне получателя) |
+| `X-Draft-Timestamp` | Unix-время отправки |
+| `X-Draft-Signature` | `t=<timestamp>,v1=<hex HMAC-SHA256(secret, "<timestamp>." + тело)>` |
 
 Проверка на стороне получателя (Python):
 
@@ -213,16 +213,16 @@ def verify(secret: str, body: bytes, header: str, tolerance_s: int = 300) -> boo
 
 Ответ 2xx — доставлено; иначе повтор.
 
-## 7. Экспорт JSON (`vstrechny.candidate.v1`)
+## 7. Экспорт JSON (`draft.candidate.v1`)
 
 `GET /api/employer/invitations/{id}/export.json`, `GET /api/employer/applications/{id}/export.json` — то же тело,
 что уходит в вебхук:
 
 ```json
 {
-  "schema": "vstrechny.candidate.v1",
+  "schema": "draft.candidate.v1",
   "exported_at": "2026-10-05T15:00:00+00:00",
-  "source": {"platform": "Встречный (спецтрек ФСП)", "url": "https://fsp.neuropeople.pro"},
+  "source": {"platform": "Драфт (спецтрек ФСП)", "url": "https://fsp.neuropeople.pro"},
   "company": {"id": "…", "name": "…", "inn": "<реквизит>"},
   "candidate": {
     "ref": "C-7Q2K9M", "category_id": "backend.middle", "category_title": "Backend · Middle",
@@ -459,7 +459,7 @@ API (поля сверены с ответом настоящего `GET /jobs.j
 | «Не прошёл», «Отказ кандидата», кандидат отклонил оффер | отказ | `POST /jobs/{job}/{applicant}/decline.json` с `declination_reason_id` | этап «Отказ», если есть; иначе — только запись в журнале | то же |
 
 * К каждому шагу — комментарий в ATS (`POST /events.json` у «Потока», комментарий у Talantix, `comment` у Хантфлоу):
-  «Встречный: собеседование назначено, 15.10.2026, 11:00 МСК · видеозвонок», «Встречный: оффер 270 000 ₽ …».
+  «Драфт: собеседование назначено, 15.10.2026, 11:00 МСК · видеозвонок», «Драфт: оффер 270 000 ₽ …».
 * Если кандидат ещё не передан в эту ATS (автопередача выключена) — сначала обычная передача, как кнопка «В ATS».
 * Причина отказа «Потока» — `POTOK_DECLINE_REASON_ID` (и автор `POTOK_AUTHOR_ID`, если компания требует): справочник
   причин у каждой компании свой. Без неё отказ уходит только комментарием — это видно в журнале. У демо-«Потока» — 1.

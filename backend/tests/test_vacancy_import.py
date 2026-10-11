@@ -19,7 +19,7 @@ PREVIEW, IMPORT = "/api/employer/vacancies/import/potok/preview", "/api/employer
 # Как настоящий ответ GET /jobs.json (вакансия стенда 1714909, 09.10.2026): вилки нет, опыт «без опыта», город — id
 # региона; author / jobs_users / executive_recruiter — ПДн рекрутёра, их платформа не читает и не хранит
 REAL_JOB = {
-    "id": 1714909, "name": "Backend-разработчик Python (Middle) — подбор через «Встречный»",
+    "id": 1714909, "name": "Backend-разработчик Python (Middle) — подбор через «Драфт»",
     "description": "<p>Требования: Python 3.12, FastAPI, PostgreSQL, SQL, Git, Docker. Тестовая вакансия для проверки "
                    "интеграции.</p><p>Обязанности:</p><p>Условия работы:</p>",
     "schedule_type": "fullDay", "salary_from": None, "salary_to": None, "experience_type": "noExperience",

@@ -273,7 +273,7 @@ def test_ats_stub_huntflow_and_webhook_on_accept(client, ats_http):
     wh = next(r for r in recs if r["kind"] == "webhook")
     assert wh["signature_valid"] is True and wh["payload"]["event"] == "candidate.accepted_invitation"
     ex = client.get(f"/api/employer/invitations/{inv['id']}/export.json", headers=H(te))
-    assert ex.status_code == 200 and ex.json()["schema"] == "vstrechny.candidate.v1"
+    assert ex.status_code == 200 and ex.json()["schema"] == "draft.candidate.v1"
     assert ex.json()["candidate"]["contacts"]["phone"] == "+7 900 111-22-33"
     # повторная ручная передача не создаёт дубликат в Хантфлоу; force=true — передаёт заново
     again = client.post("/api/employer/ats/push", json={"invitation_id": inv["id"]}, headers=H(te)).json()
@@ -405,7 +405,7 @@ def test_push_subscribe_and_notifications(client, isettings, monkeypatch):
     client.post(f"/api/candidate/invitations/{inv['id']}/accept", headers=H(tc))
     assert any("принял" in p["title"] for e, p in sent if e.endswith("/hr"))
     assert client.post("/api/push/test", headers=H(tc)).json()["sent"] == 1
-    assert service.SENT_LOG[-1]["title"].startswith("Встречный")
+    assert service.SENT_LOG[-1]["title"].startswith("Драфт")
 
 
 # ------------------------------------------------------------------ SUS

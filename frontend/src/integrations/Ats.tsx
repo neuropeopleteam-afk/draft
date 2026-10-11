@@ -338,10 +338,10 @@ function SettingsPanel({ tab, s, hf, onSaved, setMsg }: { tab: "huntflow" | "web
         </div>
       ) : (
         <div className="border-t border-brand-night/5 pt-4">
-          <Toggle checked={f.webhook.enabled} onChange={(v) => set("webhook", "enabled", v)} label="Универсальный вебхук" hint="POST JSON (схема vstrechny.candidate.v1) с подписью HMAC-SHA256 — для любой ATS или своей системы" />
+          <Toggle checked={f.webhook.enabled} onChange={(v) => set("webhook", "enabled", v)} label="Универсальный вебхук" hint="POST JSON (схема draft.candidate.v1) с подписью HMAC-SHA256 — для любой ATS или своей системы" />
           {f.webhook.enabled && (
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <Field label="URL (https)" htmlFor="wu"><input id="wu" className="input" value={f.webhook.url ?? ""} onChange={(e) => set("webhook", "url", e.target.value)} placeholder="https://ats.example.ru/hooks/vstrechny" /></Field>
+              <Field label="URL (https)" htmlFor="wu"><input id="wu" className="input" value={f.webhook.url ?? ""} onChange={(e) => set("webhook", "url", e.target.value)} placeholder="https://ats.example.ru/hooks/draft" /></Field>
               <Field label="Секрет подписи" htmlFor="ws" hint={f.webhook.secret_set ? `Сохранён: ${f.webhook.secret_masked}` : "Пусто — сгенерируем"}><input id="ws" type="password" autoComplete="off" className="input" value={f.webhook.secret} onChange={(e) => set("webhook", "secret", e.target.value)} /></Field>
               <p className="text-xs text-brand-ink/65 sm:col-span-2">Заголовок <code>{s.webhook.signature_header}</code>. Проверка на стороне получателя — в docs/ATS.md.{" "}
                 {f.webhook.secret_set && <button className="font-semibold text-brand hover:underline" onClick={async () => setSecret((await api<any>("/employer/ats/webhook-secret")).secret)}>Показать секрет</button>}

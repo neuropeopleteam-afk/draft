@@ -95,7 +95,7 @@ async def add_to_vacancy(account_id: int, applicant_id: int, request: Request,
 
 
 @router.post("/webhook/{stub_key}", summary="Заглушка: приёмник вебхука (проверяет подпись HMAC)")
-async def webhook(stub_key: str, request: Request, x_vstrechny_signature: str | None = Header(None),
+async def webhook(stub_key: str, request: Request, x_draft_signature: str | None = Header(None),
                   db: Session = Depends(get_db)) -> dict:
     st = db.scalar(select(AtsSettings).where(AtsSettings.stub_key == stub_key))
     if st is None:
@@ -103,7 +103,7 @@ async def webhook(stub_key: str, request: Request, x_vstrechny_signature: str | 
     raw = await request.body()
     if len(raw) > 512 * 1024:
         raise api_error(413, "too_large", "Слишком большое тело")
-    valid = verify_signature(decrypt(st.webhook_secret_enc) or "", raw, x_vstrechny_signature)
+    valid = verify_signature(decrypt(st.webhook_secret_enc) or "", raw, x_draft_signature)
     try:
         import json
 
