@@ -235,6 +235,19 @@ def enabled() -> bool:
     return params()["enabled"]
 
 
+def ext_params(p: dict, cut_grade: str | None) -> dict:
+    """Я25: у границ Lead/Principal (GRADES_EXT_ENABLED) — свои число заданий и минуты второго этапа, если заданы
+    (GRADES_EXT_REFINE_ITEMS / _MINUTES; 0 — как у двухэтапного)."""
+    from app.core.config import get_settings
+    from app.modules.catalog import levels
+
+    if cut_grade not in EXT_GRADE_ORDER or not levels.enabled():
+        return p
+    s = get_settings()
+    return {**p, "items": int(s.grades_ext_refine_items or p["items"]),
+            "minutes": int(s.grades_ext_refine_minutes or p["minutes"])}
+
+
 def _state(ts) -> dict:
     return (ts.result or {}).get("state") or {}
 
@@ -324,6 +337,7 @@ def offer(db, ts) -> dict | None:
     b = session_boundary(ts, p)
     if b is None:
         return None
+    p = ext_params(p, b.cut_grade)
     from app.core.enums import TestSessionStatus
 
     refs = _refines(db, ts)
