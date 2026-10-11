@@ -10,7 +10,7 @@ const pct = (v?: number | null) => (v == null ? "—" : `${Math.round(v * 100)}\
 const sgn = (v?: number | null) => (v == null ? "—" : `${v > 0 ? "+" : v < 0 ? "−" : ""}${Math.abs(v).toFixed(2).replace(".", ",")}`);
 const range = (x?: { lo: number; hi: number }) => (x ? `${n2(x.lo)}–${n2(x.hi)}` : "");
 const intRu = (v?: number | null) => (v == null ? "—" : v.toLocaleString("ru-RU"));
-const W_TITLES: Record<string, string> = { test: "тест", stack_required: "обязательный стек", stack_desired: "желательный стек", fsp: "ФСП", probe: "зонды" };
+const W_TITLES: Record<string, string> = { test: "тест", stack_required: "обязательный стек", stack_desired: "желательный стек", fsp: "ФСП", probe: "задания с вилкой" };
 const wText = (w?: Record<string, number>) => (w ? Object.entries(w).map(([k, v]) => `${W_TITLES[k] ?? k} ${n2(v)}`).join(" · ") : "—");
 const KIND: Record<string, string> = { platform: "Платформа", baseline: "Базовая линия", ablation: "Абляция" };
 const METRICS: [string, string][] = [["p@5", "p@5"], ["p@10", "p@10"], ["ndcg@5", "nDCG@5"], ["ndcg@10", "nDCG@10"], ["mrr", "MRR"]];

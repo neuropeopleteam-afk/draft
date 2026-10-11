@@ -42,7 +42,7 @@ export function PassportShare() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 id="passport-share" className="font-bold text-brand-night">Паспорт грейда</h2>
-          <p className="mt-1 text-sm text-brand-ink/70">Подписанная электронной подписью платформы выписка: категория, навыки T1 и достижения ФСП T2. Без ФИО и контактов. Работодатель проверит её по ссылке или QR-коду без входа.</p>
+          <p className="mt-1 text-sm text-brand-ink/70">Подписанная электронной подписью платформы выписка: категория, подтверждённые тестом навыки и достижения ФСП из реестра. Без ФИО и контактов. Работодатель проверит её по ссылке или QR-коду без входа.</p>
         </div>
         {a && <StateBadge state={a.status.state as PassportState}>{a.status.title}</StateBadge>}
       </div>
@@ -91,7 +91,7 @@ export function PassportEmployerBadge({ refId }: { refId: string }) {
     <section className="card flex flex-wrap items-center justify-between gap-3 text-sm" aria-label="Подписанный паспорт грейда">
       <div className="min-w-0">
         <p className="font-bold text-brand-night">Подписанный паспорт грейда</p>
-        <p className="mt-1 text-brand-ink/70">Категория, навыки T1 и достижения ФСП T2 подписаны платформой. Действителен до {dt(data.valid_until)}{data.test_key ? " · тестовый ключ стенда" : ""}.</p>
+        <p className="mt-1 text-brand-ink/70">Категория, подтверждённые тестом навыки и достижения ФСП из реестра подписаны платформой. Действителен до {dt(data.valid_until)}{data.test_key ? " · тестовый ключ стенда" : ""}.</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <StateBadge state={data.state}>{data.title}</StateBadge>

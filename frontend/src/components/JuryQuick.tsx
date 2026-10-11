@@ -150,7 +150,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
       </div>
       <p className="mt-2 flex flex-wrap justify-between gap-x-3 text-xs text-white/75">
         <span>Шаг {q + 1} из {steps.length} · {s.optional ? "по желанию, " : ""}≈{"\u00A0"}{mins(s.min)}</span>
-        <span role="timer" data-testid="quick-timer" className={late ? "text-brand-blush" : undefined}
+        <span role="timer" data-testid="quick-timer" hidden className={late ? "text-brand-blush" : undefined}
           title="Ориентир, а не ограничение: проверку можно проходить в своём темпе">
           Прошло {mmss(now - t0)} · {s.optional ? `сверх плана ${QUICK_MINUTES}\u00A0мин` : `план ${mins(PLAN[q])} из ${QUICK_MINUTES}`}
         </span>
@@ -231,7 +231,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
             : <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => setDone(true)}>Готово</button>}
         <span className="ml-auto flex gap-3 text-xs font-semibold text-white/70">
           <button className="underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={() => { quick.restart(); setQ(0); setNow(Date.now()); }}>Начать заново</button>
-          <button className="underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={onReset}>Сбросить демо</button>
+          <button className="underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={onReset}>Вернуть демо-данные</button>
         </span>
       </div>
     </>
