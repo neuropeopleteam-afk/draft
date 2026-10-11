@@ -162,7 +162,10 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
 
   const hasFullstack = dirEntries.some(([id]) => id === "backend") && dirEntries.some(([id]) => id === "frontend");
   const fullstack = direction === "backend" && additionalDirection === "frontend";
-  const canNext = [!!direction, Object.keys(stack).length > 0, exp !== "" && Number(exp) >= 0, true][step];
+  // UX-2: пределы сервера (OnboardingIn) — проверяем на своём шаге, до отправки: стаж 0–50 лет, минимум зарплаты ≤ 10 млн
+  const expBad = exp !== "" && !(Number(exp) >= 0 && Number(exp) <= 50);
+  const salaryBad = salary !== "" && !(Number(salary) > 0 && Number(salary) <= 10_000_000);
+  const canNext = [!!direction, Object.keys(stack).length > 0, exp !== "" && !expBad, !salaryBad][step];
 
   async function save() {
     setError(null); setBusy(true);
@@ -270,8 +273,9 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         )}
         {step === 2 && (
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Коммерческий стаж, лет" htmlFor="exp">
-              <input id="exp" className="input" type="number" min={0} max={50} step={0.5} value={exp} onChange={(e) => setExp(e.target.value)} />
+            <Field label="Коммерческий стаж, лет" htmlFor="exp" hint={expBad ? undefined : "От 0 до 50"}>
+              <input id="exp" className="input" type="number" min={0} max={50} step={0.5} value={exp} onChange={(e) => setExp(e.target.value)} aria-invalid={expBad} aria-describedby={expBad ? "exp-err" : undefined} />
+              {expBad && <p id="exp-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">Стаж — от 0 до 50 лет</p>}
             </Field>
             <Field label="Город" htmlFor="city">
               <input id="city" className="input" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Например, Казань" />
@@ -299,7 +303,8 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         {step === 3 && (
           <div className="space-y-5">
             <Field label="Минимальная зарплата, ₽ в месяц" htmlFor="salary" hint="Скрытое поле: работодатель его не видит. Мы отметим приглашения с вилкой ниже этого порога.">
-              <input id="salary" className="input" type="number" min={0} step={5000} value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="Например, 200000" />
+              <input id="salary" className="input" type="number" min={0} max={10000000} step={5000} value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="Например, 200000" aria-invalid={salaryBad} aria-describedby={salaryBad ? "salary-err" : undefined} />
+              {salaryBad && <p id="salary-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">Сумма — больше нуля и не больше 10{"\u00a0"}000{"\u00a0"}000{"\u00a0"}₽</p>}
             </Field>
             <div>
               <p className="label">Что показывать работодателю в обезличенной карточке</p>
@@ -331,7 +336,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
           <button type="button" className="btn-ghost" disabled={step === 0} onClick={() => setStep(step - 1)}>Назад</button>
           {step < 3
             ? <button type="button" className="btn-primary" disabled={!canNext} onClick={() => setStep(step + 1)}>Далее</button>
-            : <button type="button" className="btn-primary" disabled={busy} onClick={save}>{busy ? "Сохраняем…" : "Сохранить и выбрать грейд"}</button>}
+            : <button type="button" className="btn-primary" disabled={busy || salaryBad || expBad} onClick={save}>{busy ? "Сохраняем…" : "Сохранить и выбрать грейд"}</button>}
         </div>
       </div>
     </>
