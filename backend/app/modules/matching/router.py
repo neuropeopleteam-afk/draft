@@ -514,13 +514,20 @@ def categories(user: User = Depends(employer), db: Session = Depends(get_db)) ->
             responses={**AUTH, 404: err("Кандидат не найден или скрыл профиль")})
 def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
                      direction: DirectionId | None = None,
+                     v: int | None = Query(None, ge=1, description="FIX7 п. 12: версия подборки потребности — балл, "
+                                                                    "обязательное и причины по требованиям этой версии "
+                                                                    "(«Что если» могло ослабить требование)"),
                      user: User = Depends(employer),
                      db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
     p = profile_by_ref(db, ref)
     interest.record_card_view(db, c.id, p.user_id)  # кандидату — «карточку посмотрели N работодателей»
     n = _own_need(db, c, need_id) if need_id else None
-    selected_direction = (n.requirements or {}).get("direction") if n else direction
+    # FIX7 п. 12: из подборки v2 карточка считается по требованиям v2, а не исходной потребности
+    sv = db.scalar(select(SelectionVersion).where(SelectionVersion.need_id == n.id, SelectionVersion.version == v)) \
+        if n is not None and v else None
+    req = (sv.requirements or n.requirements) if sv is not None else (n.requirements if n is not None else None)
+    selected_direction = (req or {}).get("direction") if n else direction
     b = load_bundles(db, [p.user_id], direction=selected_direction)[p.user_id]
     cats = {x.id: x for x in db.scalars(select(Category)).all()}
     if b.category_id:
@@ -531,18 +538,18 @@ def candidate_detail(ref: str, need_id: uuid.UUID | None = None,
     else:  # грейд не подтверждён: места в категории нет
         out = card(b, cats)
     if need_id:
-        s, comps, reasons = ranking.score_candidate(b, n.requirements)
+        s, comps, reasons = ranking.score_candidate(b, req)
         from app.modules.matching import must_have
 
         # Ф2: «Не хватает обязательного» в шапке; ярус без пула не считается (missing — по самому кандидату)
-        must = must_have.assess(b, n.requirements, set(must_have.must_tags(n.requirements)))
+        must = must_have.assess(b, req, set(must_have.must_tags(req)))
         from app.modules.matching import core_skill
 
-        core = core_skill.describe(b, n.requirements)  # Я1: «Основной язык роли — Go: не заявлен»
+        core = core_skill.describe(b, req)  # Я1: «Основной язык роли — Go: не заявлен»
         if core:
             reasons = reasons[:1] + [core_skill.reason(core)] + reasons[1:]
         out["match"] = {"need_id": str(n.id), "score": s, "components": comps, "reasons": reasons, "must": must,
-                        "core": core}
+                        "core": core, "version": sv.version if sv is not None else None}
     until = cooldown_until(db, c.id, p.user_id)
     inv = db.scalars(select(Invitation).where(Invitation.company_id == c.id, Invitation.candidate_user_id == p.user_id)
                      .order_by(Invitation.created_at.desc())).all()
