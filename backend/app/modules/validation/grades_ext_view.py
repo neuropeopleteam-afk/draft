@@ -16,6 +16,8 @@ NEED = Path(__file__).resolve().parent / "data" / "grades_ext_need.json"
 ROWS = (
     ("base|0.8|top", "now"),
     ("base|0.6|top", "confirm"),
+    ("g_bank705|0.6|top", "bank_1110"),
+    ("g_bank705_k10|0.6|top", "bank_1110_stage2"),
     ("a_x3|0.6|top", "bank"),
     ("c_x2|0.6|top", "partial"),
     ("b_k15_x2|0.6|top", "block"),
@@ -28,6 +30,8 @@ ROWS = (
 ROLE_TITLES = {
     "now": "Сейчас: банк ожидаемый, без блока, развёрнутые 0/1",
     "confirm": "Порог уверенности 0,6 вместо 0,8",
+    "bank_1110": "Банк Lead/Principal на 11.10 (74 семейства), частичный балл — модель платформы, без второго этапа",
+    "bank_1110_stage2": "Банк на 11.10 и второй этап: до 10 коротких заданий Lead/Principal после основной части",
     "bank": "Только банк ×3",
     "partial": "Банк ×2 и частичный балл 0–4",
     "block": "Банк ×2 и блок Lead/Principal (15 заданий)",

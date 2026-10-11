@@ -127,6 +127,21 @@ SCENARIOS = {
                       own_principal_short=1, common_principal_short=2),
     "g_bank705_k10": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
                           own_principal_short=1, common_principal_short=2),
+    # что писать авторам банка (11.10 вечер): банк на 11.10 + второй этап (блок) + новые короткие Principal (≤ 7 мин):
+    # cN — коротких Principal в общем блоке N (было 2), oN — у направления N (было 1), hi — их трудность U(3,0; 3,5)
+    # (выше границы Lead/Principal 3,0; у семейств банка на 11.10 априорная b Principal 2,5–2,8 — ниже границы)
+    "g_pb_c10": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                     own_principal_short=1, common_principal_short=10),
+    "g_pb_c10_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                        own_principal_short=1, common_principal_short=10, b_principal_short=(3.0, 3.5)),
+    "g_pb_c18_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                        own_principal_short=1, common_principal_short=18, b_principal_short=(3.0, 3.5)),
+    "g_pb_c10_o3_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                           own_principal_short=3, common_principal_short=10, b_principal_short=(3.0, 3.5)),
+    "g_pb_c18_hi_k20": dict(mult=2, a=1.5, block=20, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                            own_principal_short=1, common_principal_short=18, b_principal_short=(3.0, 3.5)),
+    "g_pb_hi": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                    own_principal_short=1, common_principal_short=2, b_principal_short=(3.0, 3.5)),
 }
 
 
@@ -151,6 +166,9 @@ def scen_text(s: dict) -> str:
           if k in s]
     if ps:
         head += ", коротких Principal: " + ", ".join(ps)
+    if s.get("b_principal_short"):
+        lo, hi = s["b_principal_short"]
+        head += f" (их трудность {_x(lo)}–{_x(hi)})"
     parts = [head, f"a {s['a']}"]
     parts.append(f"блок {s['block']} заданий" if s["block"] else "без блока")
     parts.append("частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm"
@@ -193,7 +211,9 @@ def model_bank(pool, s: dict, n_subpools: int, rng: np.random.Generator) -> list
                 for k in range(n):
                     base = src[k % len(src)]
                     it = deepcopy(base)
-                    target = float(rng.uniform(*B_RANGE[g]))
+                    # b_principal_short — трудность коротких Principal (новые семейства у границы Lead/Principal и выше)
+                    rng_b = s.get("b_principal_short") if (kind == "s" and g == "principal") else None
+                    target = float(rng.uniform(*(rng_b or B_RANGE[g])))
                     if kind == "o" and s["partial"] is True:  # 0–4 по рубрике: четыре ступени вокруг трудности ответа
                         it.b = target + np.array([-0.75, -0.25, 0.25, 0.75])
                         it.a = np.full(4, 0.8 * s["a"])
