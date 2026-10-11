@@ -17769,7 +17769,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (+ семейства ПБ-В; qa, security, mobile, analyst, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (+ новые короткие Principal 11.10; qa, security, mobile, analyst, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -17803,7 +17803,7 @@
     "mobile",
     "analyst"
    ],
-   "bank_note": "+ семейства ПБ-В; qa, security, mobile, analyst",
+   "bank_note": "+ новые короткие Principal 11.10; qa, security, mobile, analyst",
    "n": 800,
    "exact": 0.453,
    "above": 0.014,
@@ -17882,7 +17882,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (+ семейства ПБ-В; qa, security, mobile, analyst, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (+ новые короткие Principal 11.10; qa, security, mobile, analyst, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -17916,7 +17916,7 @@
     "mobile",
     "analyst"
    ],
-   "bank_note": "+ семейства ПБ-В; qa, security, mobile, analyst",
+   "bank_note": "+ новые короткие Principal 11.10; qa, security, mobile, analyst",
    "n": 800,
    "exact": 0.504,
    "above": 0.041,
@@ -17995,7 +17995,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18023,7 +18023,7 @@
    "a": null,
    "block": 0,
    "partial": "gpcm",
-   "bank_note": "после семейств ПБ-А/Б/В",
+   "bank_note": "после новых коротких Principal 11.10",
    "n": 1000,
    "exact": 0.487,
    "above": 0.015,
@@ -18080,7 +18080,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18108,7 +18108,7 @@
    "a": null,
    "block": 10,
    "partial": "gpcm",
-   "bank_note": "после семейств ПБ-А/Б/В",
+   "bank_note": "после новых коротких Principal 11.10",
    "n": 1000,
    "exact": 0.558,
    "above": 0.041,
@@ -18165,7 +18165,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; qa, security, mobile, analyst, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18199,7 +18199,7 @@
     "mobile",
     "analyst"
    ],
-   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst",
+   "bank_note": "после новых коротких Principal 11.10; qa, security, mobile, analyst",
    "n": 800,
    "exact": 0.463,
    "above": 0.014,
@@ -18278,7 +18278,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; qa, security, mobile, analyst, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18312,7 +18312,7 @@
     "mobile",
     "analyst"
    ],
-   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst",
+   "bank_note": "после новых коротких Principal 11.10; qa, security, mobile, analyst",
    "n": 800,
    "exact": 0.564,
    "above": 0.034,
@@ -18391,7 +18391,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; второй этап как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18424,7 +18424,7 @@
    "block_trigger": "product",
    "block_min_new": 3,
    "block_pool": "all",
-   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с",
+   "bank_note": "после новых коротких Principal 11.10; второй этап как в продукте, 300 с",
    "n": 1000,
    "exact": 0.497,
    "above": 0.023,
@@ -18481,7 +18481,7 @@
    "confirm": 0.65,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; второй этап как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18514,7 +18514,7 @@
    "block_trigger": "product",
    "block_min_new": 3,
    "block_pool": "all",
-   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с",
+   "bank_note": "после новых коротких Principal 11.10; второй этап как в продукте, 300 с",
    "n": 1000,
    "exact": 0.475,
    "above": 0.019,
@@ -18571,7 +18571,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; второй этап как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18604,7 +18604,7 @@
    "block_trigger": "product",
    "block_min_new": 3,
    "block_pool": "all",
-   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с",
+   "bank_note": "после новых коротких Principal 11.10; второй этап как в продукте, 420 с",
    "n": 1000,
    "exact": 0.535,
    "above": 0.012,
@@ -18661,7 +18661,7 @@
    "confirm": 0.65,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; второй этап как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18694,7 +18694,7 @@
    "block_trigger": "product",
    "block_min_new": 3,
    "block_pool": "all",
-   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с",
+   "bank_note": "после новых коротких Principal 11.10; второй этап как в продукте, 420 с",
    "n": 1000,
    "exact": 0.51,
    "above": 0.009,
@@ -18751,7 +18751,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин, априорные b и a), второй этап до 10 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин, априорные b и a), второй этап до 10 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18784,7 +18784,7 @@
    "block_trigger": "product",
    "block_min_new": 3,
    "block_pool": "all",
-   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин",
+   "bank_note": "после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин",
    "n": 1000,
    "exact": 0.575,
    "above": 0.019,
@@ -18841,7 +18841,7 @@
    "confirm": 0.65,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин, априорные b и a), второй этап до 10 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин, априорные b и a), второй этап до 10 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18874,7 +18874,7 @@
    "block_trigger": "product",
    "block_min_new": 3,
    "block_pool": "all",
-   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин",
+   "bank_note": "после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин",
    "n": 1000,
    "exact": 0.544,
    "above": 0.014,
@@ -18931,7 +18931,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -18970,7 +18970,7 @@
     "mobile",
     "analyst"
    ],
-   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с",
+   "bank_note": "после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 300 с",
    "n": 800,
    "exact": 0.485,
    "above": 0.018,
@@ -19049,7 +19049,7 @@
    "confirm": 0.65,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -19088,7 +19088,7 @@
     "mobile",
     "analyst"
    ],
-   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с",
+   "bank_note": "после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 300 с",
    "n": 800,
    "exact": 0.453,
    "above": 0.016,
@@ -19167,7 +19167,7 @@
    "confirm": 0.6,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -19206,7 +19206,7 @@
     "mobile",
     "analyst"
    ],
-   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с",
+   "bank_note": "после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 420 с",
    "n": 800,
    "exact": 0.53,
    "above": 0.022,
@@ -19285,7 +19285,7 @@
    "confirm": 0.65,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -19324,7 +19324,7 @@
     "mobile",
     "analyst"
    ],
-   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с",
+   "bank_note": "после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 420 с",
    "n": 800,
    "exact": 0.494,
    "above": 0.019,
@@ -19403,7 +19403,7 @@
    "confirm": 0.65,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -19431,7 +19431,7 @@
    "a": null,
    "block": 0,
    "partial": "gpcm",
-   "bank_note": "после семейств ПБ-А/Б/В",
+   "bank_note": "после новых коротких Principal 11.10",
    "n": 1000,
    "exact": 0.468,
    "above": 0.007,
@@ -19488,7 +19488,7 @@
    "confirm": 0.65,
    "world": "top",
    "rep": 0,
-   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "text": "реальный банк Lead/Principal (после новых коротких Principal 11.10, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
    "bank": {
     "own": {
      "lead": [
@@ -19516,7 +19516,7 @@
    "a": null,
    "block": 10,
    "partial": "gpcm",
-   "bank_note": "после семейств ПБ-А/Б/В",
+   "bank_note": "после новых коротких Principal 11.10",
    "n": 1000,
    "exact": 0.534,
    "above": 0.034,
@@ -19701,7 +19701,7 @@
     "seed": 20261011,
     "config_hash": "d9488cffd24e",
     "command": "make grades-ext-need",
-    "note": "то же дерево + семейства ветки банка feat/bank-principal-c 82c4570 (ПБ-В, 19 коротких Principal; до валидатора и sync)"
+    "note": "то же дерево + семейства ветки банка feat/bank-principal-c 82c4570 (19 коротких Principal; до валидатора и sync)"
    },
    {
     "scenarios": "g_real_v2, g_real_v2_k10, g_real_v2_d4, g_real_v2_d4_k10",
@@ -19714,7 +19714,7 @@
     "seed": 20261011,
     "config_hash": "f67e5297eb33",
     "command": "make grades-ext-need",
-    "note": "дерево exp/grades-ext-x-catalog-ext2 f8ff237 + семейства feat/bank-ext 272a323 (ПБ-А/Б/В влиты, до sync в catalog-ext)"
+    "note": "дерево exp/grades-ext-x-catalog-ext2 f8ff237 + семейства feat/bank-ext 272a323 (новые Principal влиты, до sync в catalog-ext)"
    },
    {
     "scenarios": "g_real_v2_p300, g_real_v2_p420, g_real_v2_p420_m25, g_real_v2_d4_p300, g_real_v2_d4_p420, g_real_v2, g_real_v2_k10",

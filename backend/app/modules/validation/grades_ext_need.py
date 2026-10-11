@@ -153,7 +153,7 @@ SCENARIOS = {
     "g_real_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm"),
     "g_real_k20": dict(real=True, mult=0, a=None, block=20, partial="gpcm"),
     # реальный банк + N новых коротких Principal (модельные, ≤ 7 мин, a 1,5, трудность у границы 2,9–3,3) — «что дадут
-    # семейства ПБ-А/Б/В»: cN — в общем блоке, oN — у каждого направления
+    # новые семейства Principal»: cN — в общем блоке, oN — у каждого направления
     "g_real_pb_c8": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
                          common_principal_short=8, b_principal_short=(2.9, 3.3)),
     "g_real_pb_c8_o2": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=2,
@@ -166,42 +166,42 @@ SCENARIOS = {
                           common_principal_short=24, b_principal_short=(2.9, 3.3)),
     "g_real_pb_c32": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
                           common_principal_short=32, b_principal_short=(2.9, 3.3)),
-    # «после»: то же, что g_real / g_real_k10, на банке после синхронизации семейств ПБ-А/Б/В (вечер 11.10) — отдельные
+    # «после»: то же, что g_real / g_real_k10, на банке после синхронизации новых коротких Principal (вечер 11.10) — отдельные
     # ключи, чтобы «до» (банк 705e743) и «после» лежали рядом
-    "g_real_v2": dict(real=True, mult=0, a=None, block=0, partial="gpcm", bank_note="после семейств ПБ-А/Б/В"),
-    "g_real_v2_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm", bank_note="после семейств ПБ-А/Б/В"),
-    # направления ПБ-В (qa, security, mobile, analyst): «до» — банк 705e743, «после» — + семейства ПБ-В
+    "g_real_v2": dict(real=True, mult=0, a=None, block=0, partial="gpcm", bank_note="после новых коротких Principal 11.10"),
+    "g_real_v2_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm", bank_note="после новых коротких Principal 11.10"),
+    # направления qa, security, mobile, analyst: «до» — банк 705e743, «после» — + новые короткие Principal 11.10
     "g_real_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm", directions=("qa", "security", "mobile", "analyst"),
                       bank_note="банк 705e743; qa, security, mobile, analyst"),
     "g_real_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
                           directions=("qa", "security", "mobile", "analyst"), bank_note="банк 705e743; qa, security, mobile, analyst"),
     "g_real_pbc_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm",
-                          directions=("qa", "security", "mobile", "analyst"), bank_note="+ семейства ПБ-В; qa, security, mobile, analyst"),
+                          directions=("qa", "security", "mobile", "analyst"), bank_note="+ новые короткие Principal 11.10; qa, security, mobile, analyst"),
     "g_real_pbc_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
                               directions=("qa", "security", "mobile", "analyst"),
-                              bank_note="+ семейства ПБ-В; qa, security, mobile, analyst"),
+                              bank_note="+ новые короткие Principal 11.10; qa, security, mobile, analyst"),
     "g_real_v2_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm", directions=("qa", "security", "mobile", "analyst"),
-                         bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst"),
+                         bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst"),
     "g_real_v2_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
                              directions=("qa", "security", "mobile", "analyst"),
-                             bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst"),
+                             bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst"),
     # «как в продукте» (второй этап Я26: только заявившим Lead/Principal, до 8 коротких, 15 мин, не меньше 3 новых) на банке
-    # после всех ПБ: p300 — лимит задания 300 с (до 5434b09: новые короткие Principal 420 с не попадают), p420 — 420 с
+    # после всех новых Principal: p300 — лимит задания 300 с (до 5434b09: новые короткие Principal 420 с не попадают), p420 — 420 с
     # (GRADES_EXT_REFINE_ITEM_TIME_S с 5434b09); p420_m25 — то же, 10 заданий за 25 мин (что дали бы больше минут);
     # пул второго этапа — все короткие задания направления и общего блока (block_pool «all»), как AppCATSession._ext_candidates
     "g_real_v2_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
-                           block_trigger="product", block_min_new=3, block_pool="all", bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с"),
+                           block_trigger="product", block_min_new=3, block_pool="all", bank_note="после новых коротких Principal 11.10; второй этап как в продукте, 300 с"),
     "g_real_v2_p420": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=420.0, block_minutes=15,
-                           block_trigger="product", block_min_new=3, block_pool="all", bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с"),
+                           block_trigger="product", block_min_new=3, block_pool="all", bank_note="после новых коротких Principal 11.10; второй этап как в продукте, 420 с"),
     "g_real_v2_p420_m25": dict(real=True, mult=0, a=None, block=10, partial="gpcm", block_item_time=420.0, block_minutes=25,
                                block_trigger="product", block_min_new=3, block_pool="all",
-                               bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин"),
+                               bank_note="после новых коротких Principal 11.10; второй этап как в продукте, 420 с, 10 заданий за 25 мин"),
     "g_real_v2_d4_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
                               block_trigger="product", block_min_new=3, block_pool="all", directions=("qa", "security", "mobile", "analyst"),
-                              bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с"),
+                              bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 300 с"),
     "g_real_v2_d4_p420": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=420.0, block_minutes=15,
                               block_trigger="product", block_min_new=3, block_pool="all", directions=("qa", "security", "mobile", "analyst"),
-                              bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с"),
+                              bank_note="после новых коротких Principal 11.10; qa, security, mobile, analyst; как в продукте, 420 с"),
 }
 
 
