@@ -9,7 +9,9 @@
 Ловушки: самый большой пакет (лучшая пропускная способность, но ожидание набора съедает бюджет p99),
 без пакетирования (каждый запрос платит накладные a), короткое ожидание при большом пакете и т. п.;
 верная конфигурация меняется между вариантами. Генератор подбирает параметры так, что минимум G
-единственный, отрыв ≥ 1 GPU, ожидание каждой конфигурации меньше SLO и выполнимы хотя бы три из четырёх.
+единственный, отрыв ≥ 1 GPU, ожидание каждой конфигурации меньше SLO и выполнимы хотя бы три из четырёх;
+max_batch у четырёх конфигураций различны, место верной по max_batch (2–4) выбирается равновероятно до
+подбора (версия 2).
 Ключ проверяется исполнением: программа заново проигрывает очередь каждого GPU по событиям (своя
 реализация, не код генератора), ищет минимальное G для каждой конфигурации и печатает букву.
 """
@@ -117,24 +119,32 @@ def _label(B: int, T: int) -> str:
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx = rng.choice(CONTEXTS)
-    for _ in range(300):
-        rate = rng.choice([1500, 3000, 6000, 12000])
-        a = rng.choice([3, 5, 8])
-        b = rng.choice([0.2, 0.4, 0.6])
-        slo = rng.choice([20, 30, 45, 60])
-        cfgs = rng.sample([c for c in POOL if c[1] < slo], 4)
-        need = {c: _min_gpus(rate, c[0], c[1], a, b, slo) for c in cfgs}
-        if sum(g < 10 ** 9 for g in need.values()) < 3:     # сравнивать есть что: выполнимы хотя бы три
-            continue
-        vals = sorted(need.values())
-        if vals[0] >= 10 ** 9 or vals[1] - vals[0] < 1:
-            continue
-        best = min(need, key=need.get)
-        biggest = max(cfgs, key=lambda c: c[0])
-        if best == biggest and rng.random() < 0.85:   # «самый большой пакет» — не чаще ≈ четверти вариантов
-            continue
-        break
-    else:
+    # место верной конфигурации по max_batch среди четырёх — 2, 3 или 4 равновероятно (самый малый пакет при
+    # трёх выполнимых конфигурациях почти никогда не минимален); при неудаче подбора — другое место
+    want = rng.choice([2, 3, 4])
+    found = False
+    for want in (want, *rng.sample([r for r in (2, 3, 4) if r != want], 2)):
+        if found:
+            break
+        for _ in range(500):
+            rate = rng.choice([1500, 3000, 6000, 12000])
+            a = rng.choice([3, 5, 8])
+            b = rng.choice([0.2, 0.4, 0.6])
+            slo = rng.choice([20, 30, 45, 60])
+            cfgs = rng.sample([c for c in POOL if c[1] < slo], 4)
+            need = {c: _min_gpus(rate, c[0], c[1], a, b, slo) for c in cfgs}
+            if sum(g < 10 ** 9 for g in need.values()) < 3:   # сравнивать есть что: выполнимы хотя бы три
+                continue
+            vals = sorted(need.values())
+            if vals[0] >= 10 ** 9 or vals[1] - vals[0] < 1:
+                continue
+            best = min(need, key=need.get)
+            batches = sorted(c[0] for c in cfgs)
+            if len(set(batches)) != 4 or batches.index(best[0]) + 1 != want:
+                continue                      # иначе «средний по размеру пакет» угадывается без расчёта
+            found = True
+            break
+    if not found:
         raise RuntimeError("не удалось подобрать параметры")
     labels = {c: _label(*c) for c in cfgs}
     stem = (f"Модель «{ctx}» обслуживается на GPU с динамическим пакетированием: если в очереди набралось max_batch "

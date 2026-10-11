@@ -5,10 +5,15 @@
 зависимость с запасным ответом (её отказ запрос не роняет). Нужно оценить ожидаемую недоступность за
 30 дней. Ключ: A = s·a·b·(1 − (1 − r)²), недоступность — (1 − A)·43 200 мин.
 
-Дистракторы — типичные ошибки одной числовой формы:
+Дистракторы — типичные ошибки одной числовой формы, три из пяти (версия 2: число ловушек с меньшей
+недоступностью, чем у ключа, равновероятно 0, 1 или 2 — ключ не всегда наименьший):
+  больше недоступности —
   * optional_in_series — необязательная зависимость учтена последовательно;
   * replicas_in_series — реплики перемножены как последовательные (r²);
-  * single_replica — резервирование не учтено (одна реплика r).
+  * single_replica — резервирование не учтено (одна реплика r);
+  меньше недоступности —
+  * weakest_link — доступность цепочки принята равной доступности самого слабого обязательного звена;
+  * no_service — забыт сам сервис: перемножены только зависимости и база.
 Ключ проверяется исполнением: программа-модель перебирает все 2⁶ состояний компонентов (жив/упал) с их
 вероятностями, считает долю состояний, где запрос успешен, и печатает букву совпавшего варианта.
 """
@@ -59,14 +64,19 @@ def _p(s: str) -> Fraction:
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     flow, dep1, dep2, opt = rng.choice(CONTEXTS)
+    n_below = rng.choice([0, 1, 2])          # сколько ловушек с меньшей недоступностью — до подбора чисел
     for _ in range(400):
         s, a, b = rng.choice(["99,95", "99,9"]), rng.choice(["99,9", "99,8", "99,95"]), rng.choice(["99,9", "99,5", "99,8"])
         r, c = rng.choice(["99", "99,5", "98", "99,9"]), rng.choice(["99", "98", "97", "99,5"])
         S, A, B, R, C = map(_p, (s, a, b, r, c))
-        good = S * A * B * (1 - (1 - R) ** 2)
-        vals = {"good": good, "optional_in_series": good * C, "replicas_in_series": S * A * B * R * R,
-                "single_replica": S * A * B * R}
-        down = {k: float((1 - v) * MONTH_MIN) for k, v in vals.items()}
+        pair = 1 - (1 - R) ** 2
+        good = S * A * B * pair
+        worse = {"optional_in_series": good * C, "replicas_in_series": S * A * B * R * R,
+                 "single_replica": S * A * B * R}
+        better = {"weakest_link": min(S, A, B, pair), "no_service": A * B * pair}
+        traps = rng.sample(sorted(better), n_below) + rng.sample(sorted(worse), 3 - n_below)
+        alld = {k: float((1 - v) * MONTH_MIN) for k, v in ({"good": good} | worse | better).items()}
+        down = {k: alld[k] for k in ["good", *traps]}
         if well_separated(list(down.values()), 0.15):
             break
     else:
@@ -80,14 +90,20 @@ def generate(seed: int):
     comp = {"svc": S, "dep1": A, "dep2": B, "db1": R, "db2": R, "optional": C}
     program = PROGRAM.format(comp={k: f"Fraction({v.numerator}, {v.denominator})" for k, v in comp.items()},
                              month=MONTH_MIN).replace("'Fraction(", "Fraction(").replace(")'", ")")
-    expl = (f"Последовательно перемножаются сервис, «{dep1}», «{dep2}» и база; база из двух реплик недоступна, только "
-            f"если упали обе: 1 − (1 − {r} %)². Зависимость «{opt}» с запасным ответом в произведение не входит. Итог ≈ "
-            f"{fmt_num(down['good'], 0)} мин. Если учесть «{opt}» последовательно — {fmt_num(down['optional_in_series'], 0)} "
-            f"мин; если перемножить реплики как последовательные — {fmt_num(down['replicas_in_series'], 0)} мин; не учесть "
-            f"резерв — {fmt_num(down['single_replica'], 0)} мин.")
+    why = {"optional_in_series": f"зависимость «{opt}» учтена последовательно — {fmt_num(alld['optional_in_series'], 0)} мин",
+           "replicas_in_series": (f"реплики перемножены как последовательные — "
+                                  f"{fmt_num(alld['replicas_in_series'], 0)} мин"),
+           "single_replica": f"резерв базы не учтён — {fmt_num(alld['single_replica'], 0)} мин",
+           "weakest_link": (f"доступность цепочки принята равной самому слабому звену — "
+                            f"{fmt_num(alld['weakest_link'], 0)} мин: недоступности звеньев складываются"),
+           "no_service": f"забыт сам сервис ({s} %) — {fmt_num(alld['no_service'], 0)} мин"}
+    expl = (f"Последовательно перемножаются сервис, «{dep1}», «{dep2}» и база; база из двух реплик недоступна, "
+            f"только если упали обе: 1 − (1 − {r} %)². Зависимость «{opt}» с запасным ответом в произведение не "
+            f"входит. Итог ≈ {fmt_num(down['good'], 0)} мин. Ловушки: " + "; ".join(why[k] for k in sorted(traps)) + ".")
     return numeric_mcq(FAMILY_ID, seed, rng, ctx=flow, stem=stem, good=text["good"],
-                       distractors=[text["optional_in_series"], text["replicas_in_series"], text["single_replica"]],
+                       distractors=[text[k] for k in traps],
                        program=program, explanation=expl,
-                       params={"s": s, "a": a, "b": b, "r": r, "c": c, "down_min": round(down["good"], 2)},
+                       params={"s": s, "a": a, "b": b, "r": r, "c": c, "down_min": round(down["good"], 2),
+                               "traps": traps},
                        note="Ответ проверяется программой-моделью: перебор всех состояний компонентов (жив/упал) "
                             "с вероятностями.")
