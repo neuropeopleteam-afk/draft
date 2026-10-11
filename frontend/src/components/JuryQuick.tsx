@@ -69,7 +69,8 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const LAST = steps.length - 1, PLAN = planOf(steps);
   const [now, setNow] = useState(Date.now());
   const [info, setInfo] = useState<QuickPersona[] | null>(null);
-  const [done, setDone] = useState(false);  // С2 №5: «Готово» — короткий итог, справочник — с шага 1
+  const [done, setDone] = useState(false);
+  const [sent, setSent] = useState(0);  // аудит №2: приглашение отправлено с этого экрана — шаг отмечен, демо-персоны перечитываются  // С2 №5: «Готово» — короткий итог, справочник — с шага 1
   useEffect(() => { quick.touch(); const t = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(t); }, []);
   const jury = isJury(me?.email);
   const need = quick.need();
@@ -79,7 +80,8 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
     let off = false;
     quickInfo(need).then((r) => { if (!off) setInfo(r.personas); }).catch(() => { if (!off) setInfo(null); });
     return () => { off = true; };
-  }, [q, need, jury, loc.pathname, me?.email]);
+  }, [q, need, jury, loc.pathname, me?.email, sent]);
+  useEffect(() => { const f = () => setSent((n) => n + 1); window.addEventListener("jury:invited", f); return () => window.removeEventListener("jury:invited", f); }, []);
 
   const s = steps[q];
   const ans = answerer(info);
@@ -172,7 +174,8 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
       )}
       {q === INVITE && info && (
         <p className="mt-2 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs leading-relaxed text-white/85" data-testid="quick-invite-hint">
-          {invited ? `Приглашение отправлено (${ans.name}, демо-кандидат вашей копии) — в следующем шаге ответите на него сами.`
+          {invited ? `✓ Приглашение отправлено (${ans.name}, демо-кандидат вашей копии) — в следующем шаге ответите на него сами.`
+            : sent > 0 ? "✓ Приглашение отправлено — ответ покажем на готовом приглашении Илье Сергееву."
             : invitable ? <>Чтобы в следующем шаге ответить на своё приглашение самому, пригласите кандидата <b>{invitable.ref}</b> (место {invitable.rank} в подборке): это демо-кандидат вашей копии — {invitable.name}.</>
             : "Демо-кандидатов, за которых можно войти, в этой подборке нет: пригласите любого — ответ покажем на готовом приглашении Илье Сергееву."}
         </p>
