@@ -20,8 +20,8 @@
 
 | Расчёт | Блоки /validation | Строка происхождения |
 |---|---|---|
-| Повтор всего пути, точность к истине, D и r_pb (`path_retest.json`) | #headline, #path-retest, #discrimination | синтетика · исторический снимок · 10.10.2026 · алгоритм `659ca65` · банк `76c4164b` (165 семейств) · `make path-retest` |
-| Бенчмарк подбора со скрытой истиной, абляции (`matching_bench.json`) | #headline, #bench, #ablations | синтетика · исторический снимок · 11.10.2026 · алгоритм `296b31dd` · банк `76c4164b` · `make bench` |
+| Повтор всего пути, точность к истине, D и r_pb (`path_retest.json`) | #headline, #path-retest, #discrimination | синтетика · текущий снимок · 11.10.2026 · коммит не записан · банк `f563cfca` (342 семейств) · `make path-retest` |
+| Бенчмарк подбора со скрытой истиной, абляции (`matching_bench.json`) | #headline, #bench, #ablations | синтетика · текущий снимок · 11.10.2026 · коммит не записан · банк `f563cfca` (342 семейств) · `make bench` |
 | Повторы заданий между попытками (`attempts_repeat.json`) | #retest-repeats | синтетика · исторический снимок · 09.10.2026 · алгоритм `9dcade5` · банк `76c4164b` · `python -m app.modules.validation.attempts_repeat` |
 | Симуляция теста: точность, повтор, частота показа, утечка (`report.json`) | #retest, #test, #other-conditions, #exposure, #leak, #calibration | синтетика · исторический снимок · 10.10.2026 · алгоритм `f2d853e` · банк `76c4164b` (165 семейств) · `make validate` |
 | Подбор на демо-данных (метки правилами, циркулярно) (`report.json`) | #matching | правила на демо-данных · исторический снимок · 10.10.2026 · алгоритм `f2d853e` · банк `76c4164b` (165 семейств) · `make validate` |
