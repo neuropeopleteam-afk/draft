@@ -438,6 +438,7 @@ export function Selection() {
   const [probeOpen, setProbeOpen] = useState(false);
   const [invite, setInvite] = useState<any>(null);  // Ф6 (Н9): приглашение с вилкой прямо из подборки
   const [invited, setInvited] = useState<string | null>(null);
+  const [sentRefs, setSentRefs] = useState<string[]>([]);  // аудит №2: кому приглашение ушло только что
   const [expandAll, setExpandAll] = useState(false);
   const [focus, setFocus] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -565,7 +566,7 @@ export function Selection() {
                       return (
                         <CompactCard key={r.ref} r={expMin != null ? { ...r, exp_min: expMin } : r} rank={i + 1} fit={mutual.data?.items[r.ref]} needId={id} version={s.version}
                           picked={picked.includes(r.ref)} pickDisabled={picked.length >= 3} onPick={() => togglePick(r.ref)}
-                          onInvite={() => { setInvited(null); setInvite(r); }}
+                          onInvite={() => { setInvited(null); setInvite(r); }} sent={sentRefs.includes(r.ref)}
                           badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}
                           side={side} active={side && activeRow?.ref === r.ref}
                           open={!side && isOpen} onToggle={() => (side ? setActive(r.ref) : setOpen({ ...open, [r.ref]: !isOpen }))}
@@ -586,7 +587,7 @@ export function Selection() {
                   {side && activeRow && <aside className="card sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain !p-4" aria-label={`Подробно: кандидат ${activeRow.ref}`} data-testid="side-details">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-night/10 pb-3">
                       <p className="font-bold text-brand-night">Подробно: кандидат {activeRow.ref} <span className="font-normal text-brand-ink/65">· №{ordered.indexOf(activeRow) + 1}</span></p>
-                      <button type="button" className="btn-primary !px-4 !py-2" onClick={() => { setInvited(null); setInvite(activeRow); }}>Пригласить {activeRow.ref}</button>
+                      <button type="button" className="btn-primary !px-4 !py-2 disabled:opacity-60" disabled={sentRefs.includes(activeRow.ref)} onClick={() => { setInvited(null); setInvite(activeRow); }}>{sentRefs.includes(activeRow.ref) ? `Приглашён ✓ ${activeRow.ref}` : `Пригласить ${activeRow.ref}`}</button>
                     </div>
                     <div className="pt-3">{evidence(activeRow)}</div>
                   </aside>}
@@ -700,7 +701,7 @@ export function Selection() {
       <Modal open={!!invite} onClose={() => setInvite(null)} title={`Приглашение кандидату ${invite?.ref ?? ""}`}>
         {invite && <InviteForm cref={invite.ref} needId={id} market={invite.card?.market_range ?? s?.categories?.find((c: any) => c.relation === "exact")?.market_range}
           needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }}
-          onDone={(inv) => { setInvited(inviteSentText(inv, invite.ref)); setInvite(null); }} />}
+          onDone={(inv) => { setInvited(inviteSentText(inv, invite.ref)); setSentRefs((x) => [...x, invite.ref]); setInvite(null); window.dispatchEvent(new Event("jury:invited")); }} />}
       </Modal>
       {/* А11: обновление подборки (новая версия, пересчёт) — экранному диктору; последним элементом, чтобы не сдвигать space-y */}
       <p className="sr-only" role="status" aria-live="polite">{busy ? "Пересчитываем подборку" : s ? `Подборка v${s.version}: кандидатов ${s.total}` : ""}</p>
