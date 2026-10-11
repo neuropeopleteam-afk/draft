@@ -200,6 +200,10 @@ class Settings(BaseSettings):
     # «предварительно» и предложением второго этапа (уточнение у границы; флаг ASSESSMENT_TWO_STAGE_ENABLED). Уровень
     # присваивает тест (FTT.4), пометка не меняет ни категорию, ни место в подборке.
     grades_ext_preliminary: bool = True
+    # второй этап (уточнение у границы, ASSESSMENT_TWO_STAGE_ENABLED) у границ Senior/Lead и Lead/Principal: задания с
+    # лимитом времени до N с (короткие Lead/Principal банка — 420 с, ≤ 7 мин); у границ Стажёр…Senior — как прежде 300 с.
+    # Действует только при GRADES_EXT_ENABLED; 300 — прежнее поведение
+    grades_ext_refine_item_time_s: float = 420.0
 
     # Движок тестирования: bank — пакет assessment_bank (адаптивный тест); stub — заглушка из 6 вопросов.
     assessment_engine: str = "bank"
