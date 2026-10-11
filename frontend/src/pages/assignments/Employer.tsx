@@ -180,7 +180,7 @@ export function EmployerAssignments() {
   return (
     <div className="max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <PageTitle title="Задания с автопроверкой" subtitle="Система собирает 3–5 заданий банка по стеку потребности или вакансии — той же сложности и с той же проверкой, что в тесте платформы. Отправьте кандидату вместо зонда со свободным ответом, прикрепите к вакансии или откройте для всех подходящих. Результат — факт T1 по навыкам в подборке." />
+        <PageTitle title="Задания с автопроверкой" subtitle="3–5 заданий банка по стеку с автопроверкой; результат — факт T1 в подборке." />
         <button className="btn-primary" onClick={() => setOpen(true)}>Новое задание</button>
       </div>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (

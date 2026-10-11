@@ -160,7 +160,12 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
   }, [additionalDirection]);
   const groups = useMemo(() => ({ own: tags.filter((t) => t.direction_id), common: tags.filter((t) => !t.direction_id) }), [tags]);
 
-  const canNext = [!!direction, Object.keys(stack).length > 0, exp !== "" && Number(exp) >= 0, true][step];
+  const hasFullstack = dirEntries.some(([id]) => id === "backend") && dirEntries.some(([id]) => id === "frontend");
+  const fullstack = direction === "backend" && additionalDirection === "frontend";
+  // UX-2: пределы сервера (OnboardingIn) — проверяем на своём шаге, до отправки: стаж 0–50 лет, минимум зарплаты ≤ 10 млн
+  const expBad = exp !== "" && !(Number(exp) >= 0 && Number(exp) <= 50);
+  const salaryBad = salary !== "" && !(Number(salary) > 0 && Number(salary) <= 10_000_000);
+  const canNext = [!!direction, Object.keys(stack).length > 0, exp !== "" && !expBad, !salaryBad][step];
 
   async function save() {
     setError(null); setBusy(true);
@@ -198,14 +203,22 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
             <p className="label">Основное направление</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {dirEntries.map(([id, t]) => (
-                <button key={id} type="button" onClick={() => { setDirection(id); if (id !== direction) setStack({}); if (id === additionalDirection) { setAdditionalDirection(""); setAdditionalStack({}); } }}
-                  className={`rounded-xl border px-4 py-4 text-left transition-colors ${direction === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
+                <button key={id} type="button" aria-pressed={direction === id && !fullstack} onClick={() => { setDirection(id); if (id !== direction) setStack({}); if (id === additionalDirection || (fullstack && id === "backend")) { setAdditionalDirection(""); setAdditionalStack({}); } }}
+                  className={`rounded-xl border px-4 py-4 text-left transition-colors ${direction === id && !fullstack ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
                   <span className="font-semibold text-brand-night">{t}</span>
                 </button>
               ))}
+              {/* UX-2: фулстек = основное Backend + дополнительное Frontend (два независимых подтверждения) */}
+              {hasFullstack && (
+                <button type="button" aria-pressed={fullstack} data-testid="direction-fullstack"
+                  onClick={() => { if (direction !== "backend") setStack({}); setDirection("backend"); if (additionalDirection !== "frontend") setAdditionalStack({}); setAdditionalDirection("frontend"); }}
+                  className={`rounded-xl border px-4 py-4 text-left transition-colors ${fullstack ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
+                  <span className="font-semibold text-brand-night">Fullstack (Backend + Frontend)</span>
+                </button>
+              )}
             </div>
             <div className="mt-5">
-              <Field label="Дополнительное направление (необязательно)" htmlFor="additional-direction" hint="Отдельный тест и категория. Подтверждённые направления сохраняются при редактировании опроса. Максимум — два.">
+              <Field label="Дополнительное направление (необязательно)" htmlFor="additional-direction" hint="Например, фулстек: Backend + Frontend">
                 <select id="additional-direction" className="input" value={additionalDirection}
                   onChange={(e) => { setAdditionalDirection(e.target.value); setAdditionalStack({}); }}>
                   <option value="">Без второго направления</option>
@@ -260,8 +273,9 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         )}
         {step === 2 && (
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Коммерческий стаж, лет" htmlFor="exp">
-              <input id="exp" className="input" type="number" min={0} max={50} step={0.5} value={exp} onChange={(e) => setExp(e.target.value)} />
+            <Field label="Коммерческий стаж, лет" htmlFor="exp" hint={expBad ? undefined : "От 0 до 50"}>
+              <input id="exp" className="input" type="number" min={0} max={50} step={0.5} value={exp} onChange={(e) => setExp(e.target.value)} aria-invalid={expBad} aria-describedby={expBad ? "exp-err" : undefined} />
+              {expBad && <p id="exp-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">Стаж — от 0 до 50 лет</p>}
             </Field>
             <Field label="Город" htmlFor="city">
               <input id="city" className="input" value={city} onChange={(e) => setCity(e.target.value)} placeholder="Например, Казань" />
@@ -289,7 +303,8 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         {step === 3 && (
           <div className="space-y-5">
             <Field label="Минимальная зарплата, ₽ в месяц" htmlFor="salary" hint="Скрытое поле: работодатель его не видит. Мы отметим приглашения с вилкой ниже этого порога.">
-              <input id="salary" className="input" type="number" min={0} step={5000} value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="Например, 200000" />
+              <input id="salary" className="input" type="number" min={0} max={10000000} step={5000} value={salary} onChange={(e) => setSalary(e.target.value)} placeholder="Например, 200000" aria-invalid={salaryBad} aria-describedby={salaryBad ? "salary-err" : undefined} />
+              {salaryBad && <p id="salary-err" role="alert" className="mt-1 text-xs font-semibold text-brand-plum">Сумма — больше нуля и не больше 10{"\u00a0"}000{"\u00a0"}000{"\u00a0"}₽</p>}
             </Field>
             <div>
               <p className="label">Что показывать работодателю в обезличенной карточке</p>
@@ -300,7 +315,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
               </div>
               <p className="mt-2 text-xs text-brand-ink/65">Имя, почта и телефон не показываются никогда — только после того, как вы примете приглашение.</p>
             </div>
-            <Field label="ФСП ID (необязательно)" htmlFor="fsp" hint="Связь с ФСП ID пока работает как заглушка: идентификатор сохранится, достижения подтянутся после подключения реестра.">
+            <Field label="ФСП ID (необязательно)" htmlFor="fsp" hint="Достижения подтянутся из реестра ФСП, если войти через ФСП ID">
               <input id="fsp" className="input" value={fspId} onChange={(e) => setFspId(e.target.value)} placeholder="Например, FSP-123456" />
             </Field>
             <label className="flex items-start gap-3 rounded-xl border border-brand-night/10 p-4 text-sm">
@@ -321,7 +336,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
           <button type="button" className="btn-ghost" disabled={step === 0} onClick={() => setStep(step - 1)}>Назад</button>
           {step < 3
             ? <button type="button" className="btn-primary" disabled={!canNext} onClick={() => setStep(step + 1)}>Далее</button>
-            : <button type="button" className="btn-primary" disabled={busy} onClick={save}>{busy ? "Сохраняем…" : "Сохранить и выбрать грейд"}</button>}
+            : <button type="button" className="btn-primary" disabled={busy || salaryBad || expBad} onClick={save}>{busy ? "Сохраняем…" : "Сохранить и выбрать грейд"}</button>}
         </div>
       </div>
     </>
