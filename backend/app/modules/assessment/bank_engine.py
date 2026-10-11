@@ -64,10 +64,11 @@ from app.modules.assessment import ai_mark, integrity
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
 from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
 from app.modules.assessment.grader import grade_open
-from app.modules.assessment.grades import (GRADE_RU, category_level, cuts_tuple, decide_grade, scale as platform_scale,
+from app.modules.assessment.grades import (GRADE_RU, category_level, confirm_pct, cuts_tuple, decide_grade, scale as platform_scale,
                                            start_theta)
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import stack_gate, to_stack_tags
+from app.modules.assessment.weak_pool import weak_excluded
 
 log = logging.getLogger("assessment")
 
@@ -478,6 +479,8 @@ class BankEngine:
         # Фильтр по стеку (И3): семейства Go, Java, Django, Kafka, Docker — только кандидатам с этим тегом в стеке опроса;
         # уже выданные задания остаются в сессии (они есть в sess.items и записываются ниже)
         excl = set(stack_excluded(state.get("stack")))
+        # Чистка пула (ASSESSMENT_WEAK_EXCLUDE, по умолчанию выкл.): слабые по калибровке семейства не выдаются
+        excl.update(weak_excluded(self._settings()))
         if state["claimed_grade"] == "intern":
             excl.update(intern_exclusions(pool, state["direction"]))
         sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
@@ -729,13 +732,13 @@ class BankEngine:
                 s += f" Результат уверенно выше порога — можно пройти тест на {GRADE_RU[GRADES[GRADES.index(claimed) + 1]]}."
         elif dec.provisional:
             s = (f"Грейд {g} пока не подтверждён, но и уровень ниже порога не доказан: θ = {theta_se(theta, se)}, "
-                 f"вероятность уровня не ниже {g} — {ps} (для подтверждения нужно ≥ 80 %, «не доказанно ниже» — "
+                 f"вероятность уровня не ниже {g} — {ps} (для подтверждения нужно ≥ {confirm_pct()} %, «не доказанно ниже» — "
                  "≥ 10 %). Категория Junior присвоена предварительно: работодатели видят её с пометкой «предварительно». "
                  "Подтвердить можно коротким дотестированием у порога (до 6 заданий, до 20 минут) или работой — "
                  "зондом работодателя или кубком.")
         else:
             s = (f"Грейд {g} пока не подтверждён: θ = {theta_se(theta, se)}, вероятность уровня не ниже {g} — "
-                 f"{ps} (нужно ≥ 80 %). Принудительного понижения нет")
+                 f"{ps} (нужно ≥ {confirm_pct()} %). Принудительного понижения нет")
             s += (f": можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower else
                   ": можно повторить после подготовки." if GRADES.index(claimed) == 0 else
                   ": можно пройти тест на грейд ниже или повторить после подготовки.")
