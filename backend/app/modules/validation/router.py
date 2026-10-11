@@ -245,7 +245,7 @@ GRADE_SWEEP = Path(__file__).resolve().parent / "data" / "grade_sweep.json"
 @router.get("/grade-accuracy", summary="Точность уровня: перебор параметров теста, Парето и выбор (пересчёт: make grade-sweep)")
 def grade_accuracy():
     """Я22: компактно для страницы — текущая и прежняя конфигурация, выбор, Парето-фронт основного мира (σ = 0,5),
-    другие условия (4 ступени, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой. Полный список точек — в JSON."""
+    другие условия измерения (4 ступени, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой. Полный список точек — в JSON."""
     if not GRADE_SWEEP.exists():
         return {"missing": True}
     from app.modules.validation.grade_sweep import compact
