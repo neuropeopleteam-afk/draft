@@ -49,3 +49,20 @@ export async function openSection(page: Page, name: string, url: RegExp): Promis
   await link.click();
   await expect(page).toHaveURL(url);
 }
+
+/** /validation (SIMPLIFY): разделы ниже «5 чисел» свёрнуты — раскрыть все, как это сделает человек кнопкой
+ *  «Раскрыть все разделы» в блоке «Как читать эту страницу». Проверки содержимого после этого — те же, что раньше. */
+export async function openAllFolds(page: Page): Promise<void> {
+  const btn = page.getByTestId("fold-all");
+  await expect(btn).toBeVisible();
+  if ((await btn.textContent())?.includes("Раскрыть")) await btn.click();
+  await expect(btn).toHaveText("Свернуть все разделы");
+}
+
+/** Раскрыть один свёрнутый раздел /validation кнопкой «Показать раздел» под его заголовком. */
+export async function openFold(page: Page, sectionSelector: string): Promise<void> {
+  const fold = page.getByTestId("fold").filter({ has: page.locator(sectionSelector) });
+  const btn = fold.getByTestId("fold-toggle");
+  if ((await btn.getAttribute("aria-expanded")) !== "true") await btn.click();
+  await expect(btn).toHaveAttribute("aria-expanded", "true");
+}
