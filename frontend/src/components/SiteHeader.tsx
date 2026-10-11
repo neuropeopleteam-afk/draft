@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { cabinetPath, useAuth } from "../lib/auth";
 import { Logo } from "./Logo";
+import { useMeta } from "../lib/meta";
 
 export function SiteHeader({ dark = false }: { dark?: boolean }) {
   const { me } = useAuth();
@@ -33,11 +34,13 @@ export function SiteHeader({ dark = false }: { dark?: boolean }) {
 }
 
 export function SiteFooter() {
+  const tariffs = !!useMeta()?.tariffs?.enabled;  // Я29: ссылка на тарифы — только при TARIFFS_ENABLED
   return (
     <footer className="border-t border-brand-night/10 bg-white">
       <div className="mx-auto flex max-w-content flex-col gap-3 px-6 py-8 text-sm text-brand-ink/70 md:flex-row md:items-center md:justify-between">
         <p>Прототип спецтрека ФСП · ЛЦТ 2026. Открытый код, лицензия MIT.</p>
         <p className="flex flex-wrap gap-x-5 gap-y-2">
+          {tariffs && <a className="hover:text-brand-night" href="/tariffs">Тарифы</a>}
           <a className="hover:text-brand-night" href="/validation">Как мы проверяем себя</a>
           <a className="hover:text-brand-night" href="/criteria">Проверка по критериям ТЗ</a>
           <a className="hover:text-brand-night" href="/api/docs">Документация API</a>
