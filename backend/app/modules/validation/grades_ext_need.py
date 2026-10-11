@@ -166,6 +166,10 @@ SCENARIOS = {
                           common_principal_short=24, b_principal_short=(2.9, 3.3)),
     "g_real_pb_c32": dict(real=True, mult=0, a=1.5, block=10, partial="gpcm", own_principal_short=0,
                           common_principal_short=32, b_principal_short=(2.9, 3.3)),
+    # «после»: то же, что g_real / g_real_k10, на банке после синхронизации семейств ПБ-А/Б/В (вечер 11.10) — отдельные
+    # ключи, чтобы «до» (банк 705e743) и «после» лежали рядом
+    "g_real_v2": dict(real=True, mult=0, a=None, block=0, partial="gpcm", bank_note="после семейств ПБ-А/Б/В"),
+    "g_real_v2_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm", bank_note="после семейств ПБ-А/Б/В"),
 }
 
 
@@ -184,7 +188,8 @@ def scen_text(s: dict) -> str:
         add = [f"{lbl} {s[k]}" for k, lbl in (("common_principal_short", "общий"), ("own_principal_short", "направление"))
                if s.get(k)]
         lo, hi = s.get("b_principal_short") or (0, 0)
-        return ", ".join(["реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a)"
+        return ", ".join([f"реальный банк Lead/Principal ({s.get('bank_note') or 'семейства банка после синхронизации'}, "
+                          "априорные b и a)"
                           + (f" + новых коротких Principal (модельных): {', '.join(add)}, трудность {_x(lo)}–{_x(hi)}, "
                              f"a {_x(s['a'])}" if add else ""),
                           f"блок {s['block']} заданий" if s["block"] else "без блока",
