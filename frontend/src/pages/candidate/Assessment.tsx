@@ -160,6 +160,8 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
   }, [additionalDirection]);
   const groups = useMemo(() => ({ own: tags.filter((t) => t.direction_id), common: tags.filter((t) => !t.direction_id) }), [tags]);
 
+  const hasFullstack = dirEntries.some(([id]) => id === "backend") && dirEntries.some(([id]) => id === "frontend");
+  const fullstack = direction === "backend" && additionalDirection === "frontend";
   const canNext = [!!direction, Object.keys(stack).length > 0, exp !== "" && Number(exp) >= 0, true][step];
 
   async function save() {
@@ -198,14 +200,22 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
             <p className="label">Основное направление</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {dirEntries.map(([id, t]) => (
-                <button key={id} type="button" onClick={() => { setDirection(id); if (id !== direction) setStack({}); if (id === additionalDirection) { setAdditionalDirection(""); setAdditionalStack({}); } }}
-                  className={`rounded-xl border px-4 py-4 text-left transition-colors ${direction === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
+                <button key={id} type="button" aria-pressed={direction === id && !fullstack} onClick={() => { setDirection(id); if (id !== direction) setStack({}); if (id === additionalDirection || (fullstack && id === "backend")) { setAdditionalDirection(""); setAdditionalStack({}); } }}
+                  className={`rounded-xl border px-4 py-4 text-left transition-colors ${direction === id && !fullstack ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
                   <span className="font-semibold text-brand-night">{t}</span>
                 </button>
               ))}
+              {/* UX-2: фулстек = основное Backend + дополнительное Frontend (два независимых подтверждения) */}
+              {hasFullstack && (
+                <button type="button" aria-pressed={fullstack} data-testid="direction-fullstack"
+                  onClick={() => { if (direction !== "backend") setStack({}); setDirection("backend"); if (additionalDirection !== "frontend") setAdditionalStack({}); setAdditionalDirection("frontend"); }}
+                  className={`rounded-xl border px-4 py-4 text-left transition-colors ${fullstack ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
+                  <span className="font-semibold text-brand-night">Fullstack (Backend + Frontend)</span>
+                </button>
+              )}
             </div>
             <div className="mt-5">
-              <Field label="Дополнительное направление (необязательно)" htmlFor="additional-direction" hint="Отдельный тест и категория. Подтверждённые направления сохраняются при редактировании опроса. Максимум — два.">
+              <Field label="Дополнительное направление (необязательно)" htmlFor="additional-direction" hint="Например, фулстек: Backend + Frontend">
                 <select id="additional-direction" className="input" value={additionalDirection}
                   onChange={(e) => { setAdditionalDirection(e.target.value); setAdditionalStack({}); }}>
                   <option value="">Без второго направления</option>
