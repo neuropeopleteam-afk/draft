@@ -1,0 +1,20 @@
+# Журнал nginx стенда: запросы с User-Agent «spectrek-load/stand_200b» (всплеск — «spectrek-load/stand_200b-burst»)
+
+Прогон: строк журнала 1980; коды: 200 — 1697, 201 — 28, 302 — 77, 401 — 26, 409 — 4, 503 — 148
+    503 /api/employer/needs: 38
+    401 /api/employer/needs: 16
+    503 /api/candidate/invitations: 13
+    503 /api/assessment/status: 12
+    503 /api/candidate/probes: 12
+    503 /api/jury/login: 11
+    503 /api/vacancies/: 9
+    503 /api/assessment/feedback: 7
+    503 /api/messages/unread: 7
+    503 /api/employer/invitations: 7
+    503 /api/jury/status: 6
+    503 /api/employer/candidates: 5
+    503 /api/employer/categories: 5
+    503 /api/study/summary: 4
+    409 /api/employer/invitations: 4
+Всплеск: строк журнала 0; коды: —
+Locust: запросов 1920 (без событий фоновой модели 0), из них без ответа (код 0, обрыв связи) 0; дошло до nginx 1980 — разница -60

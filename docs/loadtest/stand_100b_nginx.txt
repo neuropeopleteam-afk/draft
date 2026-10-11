@@ -1,0 +1,8 @@
+# Журнал nginx стенда: запросы с User-Agent «spectrek-load/stand_100b» (всплеск — «spectrek-load/stand_100b-burst»)
+
+Прогон: строк журнала 9848; коды: 200 — 9733, 201 — 64, 302 — 37, 409 — 1, 429 — 11, 504 — 2
+    429 /api/validation/attacks: 11
+    504 /api/validation/attacks: 2
+    409 /api/employer/invitations: 1
+Всплеск: строк журнала 15; коды: 200 — 15
+Locust: запросов 9798 (без событий фоновой модели 3), из них без ответа (код 0, обрыв связи) 0; дошло до nginx 9848 — разница -50
