@@ -68,9 +68,9 @@ LEVEL_RU = {"none": "без категории", "intern": "Стажёр", "juni
             "lead": "Lead", "principal": "Principal"}  # Lead/Principal — прогон с флагом GRADES_EXT_ENABLED
 P_FOLLOW_HINT = 0.5      # доля заявляющих грейд по подсказке опроса (остальные — по самооценке)
 SELF_SD = 0.6            # шум самооценки, как в assessment_bank.simulation.make_population
-BORDER = 0.25            # «у порога»: |θ − ближайший порог| < 0,25 (как у Прототип А)
+BORDER = 0.25            # «у порога»: |θ − ближайший порог| < 0,25
 N_BOOT = 2000
-WEAK_D, WEAK_RPB = 0.2, 0.2   # слабое на симуляции: D < 0,2 или r_pb < 0,2 (критерий Прототип А — D ≥ 0,2 у ≥ 2/3)
+WEAK_D, WEAK_RPB = 0.2, 0.2   # слабое на симуляции: D < 0,2 или r_pb < 0,2
 WEAK_PANEL = 0.15             # слабое на панели моделей: r_pb < 0,15 (независимая проверка, шкала моделей ≠ шкала людей)
 BACKEND_LANGS = ("django", "go", "java", None)  # основной язык бэкенда в опросе (None — Python без Django и др.)
 # Аудит банка 08.10 (раздел «на переделку»): подсказки длиной или структурой верного варианта, неточные дистракторы.
@@ -570,7 +570,6 @@ def run(n: int = 500, quick: bool = False, write: bool = True, pilot_n: int = 10
         "transitions": _transitions(all_1, all_2),
         "block_gap": gap, "discrimination": disc,
         "procedure": [x.replace("{c}", _f(product_confirm_level(), 1)) for x in PROCEDURE], "caveat": CAVEAT,
-        "other_reference": OTHER_REFERENCE,
     }
     rep["seconds"] = round(time.time() - t0, 1)
     if write:
@@ -607,12 +606,6 @@ CAVEAT = ("Синтетика: истинные параметры задани�
           "ступенью Junior. Дискриминативность — на симулированном пилоте с авторскими параметрами: она показывает "
           "замысел автора, а не поведение людей; r_pb панели моделей — независимая проверка на ответах моделей, "
           "шкала моделей не равна шкале людей.")
-OTHER_REFERENCE = {
-    "source": "внешний репозиторий, docs/testing.md (05.10.2026)",
-    "kappa_w": 0.866, "exact": 0.759, "within_1": 0.998, "r_theta_parallel": 0.874, "borderline_exact": 0.663,
-    "far_exact": 0.826, "length": 20, "confirm_rule": "P ≥ 0,5", "param_error": "b + N(0; 0,35), a · LogN(0; 0,2)",
-    "n": 1600, "levels": 4, "ci": None, "icc": None,
-}
 
 
 # ---------------------------------------------------------------- документация
@@ -638,7 +631,6 @@ def _pci(ci) -> str:
 def markdown(rep: dict) -> str:
     t = rep["total"]
     pg, sig = t["path_grade"], rep["signature"]
-    cr = rep["other_reference"]
     L = [
         "# Test–retest всего пути кандидата и дискриминативность семейств",
         "",
@@ -666,11 +658,10 @@ def markdown(rep: dict) -> str:
         f"| То же, только тест на заявленный грейд | {_pc(t['overlap_first']['mean'])} |",
         f"| Точечный грейд по θ̂: κ / потолок при той же погрешности | {_f(t.get('point_grade', {}).get('kappa_w'))} / {_f(t.get('point_grade_ceiling', {}).get('kappa_w'))} |",
         "",
-        f"Для сравнения (другой мир, другая процедура): Прототип А — κw {_f(cr['kappa_w'])}, точно {_pc(cr['exact'])}, ±1 "
-        f"{_pc(cr['within_1'])}; 4 ступени, 20 заданий, подтверждение при {cr['confirm_rule']}, ошибка параметров "
-        f"{cr['param_error']}, без ДИ и ICC ({cr['source']}). У нас — 5 ступеней (со Стажёром), подтверждение при P ≥ "
-        f"{_f(rep['config'].get('confirm_level', 0.8), 1)}, "
-        "ошибка параметров σ = 0,5: числа не сравнимы напрямую, сравнимы только методы внутри одного мира.",
+        "Условия расчёта: 5 ступеней (со Стажёром), подтверждение при P ≥ "
+        f"{_f(rep['config'].get('confirm_level', 0.8), 1)}, ошибка параметров σ = 0,5. Числа относятся к этому миру: "
+        "при другой длине теста, другой ошибке параметров или другой доле кандидатов у порога они будут "
+        "другими (прогон при других условиях измерения — `/validation#other-conditions`).",
         "",
         "## Уверенные и у порога",
         "",
