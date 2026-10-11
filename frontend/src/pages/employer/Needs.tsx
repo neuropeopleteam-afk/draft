@@ -49,7 +49,7 @@ function ReqNotes({ req, title }: { req: Req; title: (t: string) => string }) {
   if (!tips.length && !unknown.length && !excluded.length && !req.salary_note) return null;
   return (
     <ul className="space-y-1.5 rounded-lg bg-brand-blush/25 px-3 py-2 text-sm">
-      {unknown.length > 0 && <li data-testid="unknown-terms"><b className="font-semibold">Вне справочника — проверить вручную:</b> {unknown.map((u) => u.term + (u.evidence?.source === "llm" ? " (выделено моделью)" : "")).join(", ")} — в подбор не входят: тест платформы их не проверяет. Проверьте зондом или на интервью.</li>}
+      {unknown.length > 0 && <li data-testid="unknown-terms"><b className="font-semibold">Вне справочника — проверить вручную:</b> {unknown.map((u) => u.term + (u.evidence?.source === "llm" ? " (выделено моделью)" : "")).join(", ")} — в подбор не входят: тест платформы их не проверяет. Проверьте заданием или на интервью.</li>}
       {excluded.length > 0 && <li><b className="font-semibold">Исключено по тексту:</b> {excluded.map((x) => `${title(x.tag)}${x.evidence?.quote ? ` («${x.evidence.quote}»)` : ""}`).join(", ")}</li>}
       {req.salary_note && <li>{req.salary_note.text}{req.salary_note.evidence?.quote ? ` («${req.salary_note.evidence.quote}»)` : ""}</li>}
       {tips.map((t) => <li key={t}>{t}</li>)}
@@ -598,7 +598,7 @@ export function Selection() {
                 {picked.length > 0 && <span className="px-1 text-sm text-brand-ink/70">Отмечено: {picked.join(", ")}{picked.length < 2 ? " — отметьте ещё одного" : ""}</span>}
                 <button className="btn-ghost !px-3 !py-1.5 text-sm" disabled={picked.length < 2 || picked.length > 3} title="Отметьте «Сравнить» у 2–3 кандидатов"
                     onClick={() => navigate(`/employer/needs/${id}/compare?refs=${picked.join(",")}&v=${s.version}`)}>Сравнить выбранных ({picked.length})</button>
-                <button className="btn-ghost !px-3 !py-1.5 text-sm" disabled={!picked.length} title={picked.length ? "Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить зонд выбранным ({picked.length}) · необязательно</button>
+                <button className="btn-ghost !px-3 !py-1.5 text-sm" disabled={!picked.length} title={picked.length ? "Необязательно: короткая задача до приглашения, если хотите свежий сигнал по навыку" : "Отметьте кандидатов в списке ниже"} onClick={() => setProbeOpen(true)}>Отправить задание выбранным ({picked.length}) · необязательно</button>
                   <AssignmentButton label={`Задание по требованиям (${picked.length})`} disabled={!picked.length} title="Задание с автопроверкой по стеку потребности" init={{ needId: id, refs: picked, mode: "probe", market: s?.categories?.find((c: any) => c.relation === "exact")?.market_range }} onDone={() => setPicked([])} />
                 {picked.length > 0 && <button type="button" className="text-sm font-semibold text-brand hover:underline" onClick={() => setPicked([])}>Снять отметки</button>}
               </div>
@@ -670,7 +670,7 @@ export function Selection() {
             <WhatIf needId={id!} version={s.version} next={(last ?? 0) + 1} busy={busy} onApply={applyWhatIf} />
             <Alert>{wErr}</Alert>
             {s.must_first && (s.requirements?.stack_required?.length ?? 0) > 0 && <p className="text-xs leading-relaxed text-brand-ink/70">
-              Порядок: {s.core?.on && s.core?.active ? `сначала кандидаты, у которых ${s.core.label.toLowerCase()} (${s.core.title}) заявлен или подтверждён, затем — остальные. Внутри групп — сначала те, у кого` : "сначала кандидаты, у которых"} всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и зонды поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
+              Порядок: {s.core?.on && s.core?.active ? `сначала кандидаты, у которых ${s.core.label.toLowerCase()} (${s.core.title}) заявлен или подтверждён, затем — остальные. Внутри групп — сначала те, у кого` : "сначала кандидаты, у которых"} всё обязательное подтверждено тестом, затем — без одного навыка, затем — без двух и более; внутри — по соответствию. ФСП и задания поднимают только внутри своей группы. Навык, который не подтверждён ни у кого в подборке, порядок не меняет.
             </p>}
             {s.grade_above?.applied && <p className="text-xs leading-relaxed text-brand-ink/70" data-testid="grade-above-note">
               <b className="font-semibold text-brand-night">Добор уровнем выше.</b> {s.grade_above.text}
@@ -705,7 +705,7 @@ export function Selection() {
       </Modal>
       {/* А11: обновление подборки (новая версия, пересчёт) — экранному диктору; последним элементом, чтобы не сдвигать space-y */}
       <p className="sr-only" role="status" aria-live="polite">{busy ? "Пересчитываем подборку" : s ? `Подборка v${s.version}: кандидатов ${s.total}` : ""}</p>
-      <Modal open={!!ask} onClose={() => setAsk(null)} title={`Вопрос зондом: ${askRefs.length} канд.`}>
+      <Modal open={!!ask} onClose={() => setAsk(null)} title={`Короткое задание: ${askRefs.length} канд.`}>
         {ask && askOpt && <div className="mb-4">
           <label className="label" htmlFor="scope-ask">Вопрос: типовая задача роли или навык, который тест не проверяет</label>
           <select id="scope-ask" className="input" value={askOpt.id} onChange={(e) => setAsk(e.target.value)}>
@@ -715,7 +715,7 @@ export function Selection() {
         </div>}
         {ask && askOpt && <ProbeForm key={askOpt.id} refs={askRefs} needId={id} init={askOpt.probe} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setAsk(null); setPicked([]); setInvited(probeSentText(r)); sel.reload(); }} />}
       </Modal>
-      <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Зонд для ${picked.length} канд.`}>
+      <Modal open={probeOpen} onClose={() => setProbeOpen(false)} title={`Задание для ${picked.length} канд.`}>
         <ProbeForm refs={picked} needId={id} market={s?.categories?.find((c: any) => c.relation === "exact")?.market_range} needSalary={{ from: s?.requirements?.salary_from, to: s?.requirements?.salary_to, net: s?.requirements?.salary_net }} onDone={(r) => { setProbeOpen(false); setPicked([]); setInvited(probeSentText(r)); }} />
       </Modal>
     </div>

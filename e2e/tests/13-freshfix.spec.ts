@@ -34,7 +34,7 @@ async function openCandidateFromSelection(page: Page): Promise<void> {
   await expect(page.getByRole("button", { name: "Пригласить", exact: true })).toBeVisible({ timeout: 60_000 });
 }
 
-test("карточка кандидата: проводник не перекрывает кнопки; зонд закрывает окно и пишет итог", async ({ page }) => {
+test("карточка кандидата: проводник не перекрывает кнопки; задание закрывает окно и пишет итог", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
   await juryEnter(page, "employer");
   await page.getByRole("button", { name: "Показать проводник для жюри" }).click();
@@ -42,30 +42,30 @@ test("карточка кандидата: проводник не перекр�
   await expect(guide).toBeVisible();
   await openCandidateFromSelection(page);
   const invite = page.getByRole("button", { name: "Пригласить", exact: true });
-  const probe = page.getByRole("button", { name: "Отправить зонд", exact: true });
+  const probe = page.getByRole("button", { name: "Отправить задание", exact: true });
 
   for (const [w, h] of [[1440, 1000], [1280, 800], [1024, 768], [390, 844]] as const) {
-    await test.step(`${w}×${h}: «Пригласить» и «Отправить зонд» не под проводником`, async () => {
+    await test.step(`${w}×${h}: «Пригласить» и «Отправить задание» не под проводником`, async () => {
       await page.setViewportSize({ width: w, height: h });
       await page.waitForTimeout(300);  // ResizeObserver проводника пересчитывает место
       expect(await notCovered(invite), `«Пригласить» открыта при ${w}`).toBe(true);
-      expect(await notCovered(probe), `«Отправить зонд» открыта при ${w}`).toBe(true);
+      expect(await notCovered(probe), `«Отправить задание» открыта при ${w}`).toBe(true);
       const noScroll = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
       expect(noScroll, "без горизонтальной прокрутки").toBe(true);
     });
   }
 
-  await test.step("зонд: после отправки окно закрыто, итог — под кнопками", async () => {
+  await test.step("задание: после отправки окно закрыто, итог — под кнопками", async () => {
     await page.setViewportSize({ width: 1440, height: 1000 });
     await probe.click();
-    const dialog = page.getByRole("dialog", { name: "Зонд кандидату" });
+    const dialog = page.getByRole("dialog", { name: "Задание кандидату" });
     await expect(dialog).toBeVisible();
     await dialog.getByLabel("Название").fill("Медленный запрос (e2e Ф6)");
     await dialog.getByLabel("Задача").fill("Запрос с JOIN по двум таблицам выполняется 8 секунд. Опишите план диагностики и исправления.");
-    await dialog.getByRole("button", { name: "Отправить зонд" }).click();
+    await dialog.getByRole("button", { name: "Отправить задание" }).click();
     await expect(dialog).toBeHidden({ timeout: 30_000 });
-    await expect(page.getByRole("status").filter({ hasText: "Зонд отправлен: 1 кандидату" })).toBeVisible();
-    await expect(page.getByText(/^Зонд «Медленный запрос \(e2e Ф6\)»/)).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Задание отправлено: 1 кандидату" })).toBeVisible();
+    await expect(page.getByText(/^Задание «Медленный запрос \(e2e Ф6\)»/)).toBeVisible();
   });
 
   await test.step("«Пригласить» открывает окно оффера (не отправляем)", async () => {
