@@ -180,3 +180,25 @@ def test_with_flag_lead_principal_only_families_in_test_pool(monkeypatch):
         assert lead_only in ids and mixed in ids
     finally:
         bank_engine._pool.cache_clear()
+
+
+def test_refine_at_lead_principal_cut_takes_items_up_to_420s(monkeypatch):
+    """Второй этап у границ Senior/Lead и Lead/Principal — короткие задания до GRADES_EXT_REFINE_ITEM_TIME_S (420 с:
+    короткие Principal банка рассчитаны на ≤ 7 мин); у границ Стажёр…Senior — как прежде 300 с; 300 — прежнее поведение."""
+    from app.core.config import get_settings
+    from app.modules.assessment.bank_engine import BankEngine
+    from tests.test_grades_ext import _refine_state
+
+    eng = BankEngine()
+    for cut in ("lead", "principal"):
+        st = _refine_state(eng, cut, claimed=cut)
+        assert st["cfg"]["max_item_time_s"] == 420.0 and st["cfg"]["ext_item_time_s"] == 420.0
+        assert eng._cfg(st).ext_item_time_s == 420.0
+        sess = eng._rebuild(st)
+        assert sess.max_item_time_s == 420.0
+        assert all(i.time_limit_s <= 420.0 for i in sess._ext_candidates())
+    st = _refine_state(eng, "senior")
+    assert st["cfg"]["max_item_time_s"] == 300.0 and "ext_item_time_s" not in st["cfg"]
+    monkeypatch.setattr(get_settings(), "grades_ext_refine_item_time_s", 300.0)
+    st = _refine_state(eng, "principal", claimed="principal")
+    assert st["cfg"]["max_item_time_s"] == 300.0 and "ext_item_time_s" not in st["cfg"]
