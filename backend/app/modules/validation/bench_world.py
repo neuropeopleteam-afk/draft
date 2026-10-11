@@ -22,7 +22,7 @@ Bundle для ``ranking.score_candidate`` строится функцией ``bu
 """
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from functools import cached_property
 from datetime import date, datetime, timezone
 from decimal import Decimal
@@ -137,6 +137,20 @@ class BenchConfig:
     decision: str = "bank"
     # «Junior (предварительно)» у порога (только decision = bank): категория Junior при P(θ ≥ −1) ∈ [0,1; 0,8)
     provisional: bool = True
+    # Сопоставимые условия (matching_compare, make match-bench-compare): мир по описанию чужого бенчмарка. По умолчанию
+    # выключено — строгий протокол make bench не меняется ни в одном случайном потоке.
+    dirs: tuple[str, ...] | None = None  # направления мира (None — все DIRS)
+    need_grade_p: tuple[float, ...] | None = None  # доли потребностей по грейдам GRADES (None — NEED_GRADE_P)
+    need_required: tuple[int, int] = (2, 4)  # число обязательных навыков потребности, от и до включительно
+    theta_model: str = "normal"  # normal — θ* ~ N(0, 1); bands — грейд по band_p, θ* равномерно внутри полосы грейда
+    band_p: tuple[float, ...] = (0.35, 0.40, 0.25)  # доли Junior / Middle / Senior при theta_model = bands
+    band_top: float = 2.3  # верх полосы Senior при theta_model = bands
+    t0_model: str = "personas"  # personas — наши «раздутые»/«скромные»; claims — независимые завышение грейда и приписки
+    claim_over: float = 0.30  # t0_model = claims: доля завышающих грейд на ступень
+    claim_under: float = 0.10  # … занижающих на ступень
+    claim_stuff: float = 0.40  # … приписывающих навыки своего направления, которыми не владеют
+    claim_stuff_n: tuple[int, int] = (1, 3)  # сколько навыков приписывают, от и до включительно
+    claim_omit: float = 0.10  # … вероятность не указать в резюме навык, которым владеет
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -215,6 +229,38 @@ def true_grade(theta: float) -> str | None:
     return g
 
 
+def _required_cov(need: NeedSpec, lat: Latent) -> float:
+    return (sum(1 for t in need.required if t in lat.known) / len(need.required)) if need.required else 1.0
+
+
+def relevance_ft(need: NeedSpec, lat: Latent) -> int:
+    """Шкала бенчмарка Прототип А (внешний автор, docs/matching.md §6) по её описанию, на нашем мире: полезность найма =
+    специализация × соответствие истинного грейда × (0,25 + 0,75 · покрытие обязательного) × сила внутри грейда;
+    метка 3 при ≥ 0,8, 2 при ≥ 0,6, 1 при ≥ 0,4. Грейд: совпадает 1,0, выше на ступень 0,75, ниже 0,45, иначе 0.
+    Сила внутри грейда (только при совпадении): 0,85 + 0,3 · min(1, θ* − нижняя граница истинного грейда).
+    В нашем мире нет смежных направлений, близких навыков (граф навыков) и зарплат — эти множители равны 1 или 0."""
+    if lat.direction != need.direction or lat.true_grade is None:
+        return 0
+    d = GRADE_LEVEL[lat.true_grade] - GRADE_LEVEL[need.grade]
+    grade_fit = {0: 1.0, 1: 0.75, -1: 0.45}.get(d, 0.0)
+    ability = 0.85 + 0.3 * min(1.0, lat.theta - GRADE_CUTS[lat.true_grade]) if d == 0 else 1.0
+    u = grade_fit * (0.25 + 0.75 * _required_cov(need, lat)) * ability
+    return 3 if u >= 0.8 else 2 if u >= 0.6 else 1 if u >= 0.4 else 0
+
+
+def relevance_itm(need: NeedSpec, lat: Latent) -> int:
+    """Шкала бенчмарка Прототип Б (docs/validation.md §2) по её описанию: 2 — то же направление, истинный грейд совпадает
+    и есть хотя бы одна нужная технология; 1 — соседний грейд с нужной технологией или точный грейд без неё; иначе 0."""
+    if lat.direction != need.direction:
+        return 0
+    have = GRADE_LEVEL[lat.true_grade] if lat.true_grade else GRADE_LEVEL[GRADES[0]] - 1
+    d = abs(have - GRADE_LEVEL[need.grade])
+    tech = any(t in lat.known for t in need.required)
+    if d == 0:
+        return 2 if tech else 1
+    return 1 if d == 1 and tech else 0
+
+
 def true_relevance(need: NeedSpec, lat: Latent, cfg: BenchConfig) -> int:
     """Истинная пригодность кандидата для потребности, 0..3 (релевантен — ≥ 2). Видит только Latent и NeedSpec.
 
@@ -227,6 +273,10 @@ def true_relevance(need: NeedSpec, lat: Latent, cfg: BenchConfig) -> int:
     Строгое правило (cfg.truth = "strict", для анализа чувствительности): грейд совпадает → 2, соседний в любую
     сторону → 1, через ступень → 0; 3 — только при точном грейде.
     """
+    if cfg.truth == "ft":
+        return relevance_ft(need, lat)
+    if cfg.truth == "itm":
+        return relevance_itm(need, lat)
     if lat.direction != need.direction:
         return 0
     have = GRADE_LEVEL[lat.true_grade] if lat.true_grade else GRADE_LEVEL[GRADES[0]] - 1
@@ -357,8 +407,15 @@ def _make_candidate(i: int, cfg: BenchConfig, blocks: dict) -> Candidate:
     # Свои потоки случайности у каждого кандидата и у каждой части (истина, T0, тест, ФСП): при изменении одного
     # параметра (например, σθ) остальное у кандидата не меняется — варианты чувствительности сравнимы попарно
     rng, r0, rt, rf = (np.random.default_rng(x) for x in np.random.SeedSequence([cfg.seed, 1, i]).spawn(4))
-    d = DIRS[int(rng.integers(len(DIRS)))]
-    theta = float(rng.normal(0, 1))
+    dirs = cfg.dirs or DIRS
+    d = dirs[int(rng.integers(len(dirs)))]
+    if cfg.theta_model == "bands":  # грейд по долям, θ* равномерно внутри полосы (Junior … Senior)
+        bands = [(GRADE_CUTS[g], GRADE_CUTS[n] if n else cfg.band_top)
+                 for g, n in zip(GRADES[1:], (*GRADES[2:], None), strict=True)]
+        lo, hi = bands[int(rng.choice(len(bands), p=np.asarray(cfg.band_p) / sum(cfg.band_p)))]
+        theta = float(rng.uniform(lo, hi))
+    else:
+        theta = float(rng.normal(0, 1))
     pop = POPULARITY[d]
     known = {t for t, p in pop.items() if rng.random() < float(np.clip(p * (0.75 + 0.2 * theta), 0.02, 0.97))}
     if not known:
@@ -372,7 +429,20 @@ def _make_candidate(i: int, cfg: BenchConfig, blocks: dict) -> Candidate:
     # T0 — самоописание
     base = lat.true_grade or GRADES[0]
     others = [t for t in pop if t not in known]
-    if persona == "inflated":
+    if cfg.t0_model == "claims":  # независимые: завышение/занижение грейда, приписки своего направления, пропуски
+        u2 = r0.random()
+        g_decl = (_shift_grade(base, +1) if u2 < cfg.claim_over else
+                  _shift_grade(base, -1) if u2 < cfg.claim_over + cfg.claim_under else base)
+        kept = sorted(t for t in sorted(known) if r0.random() >= cfg.claim_omit) or sorted(known)[:1]
+        stuffed: list[str] = []
+        if others and r0.random() < cfg.claim_stuff:
+            k = int(r0.integers(cfg.claim_stuff_n[0], cfg.claim_stuff_n[1] + 1))
+            stuffed = _weighted_sample(r0, others, [pop[t] for t in others], k)
+        stack = sorted(set(kept) | set(stuffed))
+        persona = "inflated" if stuffed else "modest" if g_decl != base and u2 >= cfg.claim_over else "honest"
+        lat = replace(lat, persona=persona)
+        years = max(0.0, 1.5 + 2.2 * (theta + 1) + r0.normal(0, 1))
+    elif persona == "inflated":
         g_decl = _shift_grade(base, +1 if lat.true_grade else +2)
         n_extra = len(others) if cfg.inflate_all else int(r0.integers(4, 9))
         extra = _weighted_sample(r0, others, [pop[t] for t in others], n_extra) if others else []
@@ -392,10 +462,10 @@ def _make_candidate(i: int, cfg: BenchConfig, blocks: dict) -> Candidate:
     role = ROLE[d][int(r0.integers(len(ROLE[d])))]
     words = [_resume_phrase(t, r0) for t in r0.permutation(stack)]
     proj = PROJECT[d][int(r0.integers(len(PROJECT[d])))]
-    if persona == "inflated":
+    if persona == "inflated" and cfg.t0_model == "personas":
         text = (f"{role.capitalize()}, {g_decl.capitalize()}. Эксперт. Опыт {years:g} лет. Ключевые навыки: "
                 f"{', '.join(words)}. Также владею: {', '.join(r0.permutation(words))}. {proj}")
-    elif persona == "modest":
+    elif persona == "modest" and cfg.t0_model == "personas":
         text = f"{role.capitalize()}. Работал с {', '.join(words)}."
     else:
         text = f"{role.capitalize()}, {g_decl}. Опыт {years:g} лет. Стек: {', '.join(words)}. {proj}"
@@ -423,7 +493,7 @@ def _make_candidate(i: int, cfg: BenchConfig, blocks: dict) -> Candidate:
             disc, wts = zip(*DISCIPLINE_BY_DIR[d], strict=True)
             ach.append({"discipline": str(rf.choice(disc, p=np.asarray(wts) / sum(wts))), "level": lvl,
                         "place": place, "year": int(rf.integers(2023, 2027)), "verified": True})
-    if persona == "inflated" and rf.random() < 0.25:  # «значок из анкеты» без подтверждения реестром
+    if persona == "inflated" and cfg.t0_model == "personas" and rf.random() < 0.25:  # «значок из анкеты» без реестра
         ach.append({"discipline": "product", "level": "national", "place": 1, "year": 2025, "verified": False})
 
     obs = Observed(idx=i, public_ref=f"B{int(rng.integers(16 ** 7)):07X}", direction_declared=d,
@@ -451,12 +521,14 @@ def _need_text(d: str, g: str, req: list[str], des: list[str], wf: str | None, r
     return f"Вакансия «{role}», грейд {g}. Нужно уверенно знать {r}" + (f"; плюсом будет {s}." if des else ".") + fmt
 
 
-def _make_need(i: int, rng: np.random.Generator) -> NeedSpec:
-    d = DIRS[i % len(DIRS)]
-    g = str(rng.choice(GRADES, p=list(NEED_GRADE_P)))
+def _make_need(i: int, rng: np.random.Generator, cfg: BenchConfig | None = None) -> NeedSpec:
+    cfg = cfg or BenchConfig()
+    dirs = cfg.dirs or DIRS
+    d = dirs[i % len(dirs)]
+    g = str(rng.choice(GRADES, p=list(cfg.need_grade_p or NEED_GRADE_P)))
     pop = POPULARITY[d]
     tags = list(pop)
-    req = _weighted_sample(rng, tags, [pop[t] for t in tags], int(rng.integers(2, 5)))
+    req = _weighted_sample(rng, tags, [pop[t] for t in tags], int(rng.integers(cfg.need_required[0], cfg.need_required[1] + 1)))
     rest = [t for t in tags if t not in req]
     des = _weighted_sample(rng, rest, [pop[t] for t in rest], int(rng.integers(0, 3)))
     wf = [None, "remote", "hybrid", "office"][int(rng.integers(4))]
@@ -472,7 +544,7 @@ def generate(cfg: BenchConfig, blocks: dict | None = None) -> World:
     for i in range(cfg.n_needs):
         rn = np.random.default_rng(np.random.SeedSequence([cfg.seed, 2, i]))
         for _ in range(50):
-            n = _make_need(i, rn)
+            n = _make_need(i, rn, cfg)
             row = [true_relevance(n, c.latent, cfg) for c in cands]
             if sum(1 for r in row if r >= 2) >= cfg.min_relevant_per_need:
                 break
