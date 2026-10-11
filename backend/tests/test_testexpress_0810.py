@@ -76,18 +76,25 @@ def test_ceiling_boundaries_items_and_se():
 
 @pytest.mark.parametrize("grade", GRADE_ORDER)
 def test_category_boundary_at_confirm_level(grade):
-    """Граница категории — ровно P(θ ≥ порога) = 0,8: θ = порог + 0,8416·SE."""
+    """Граница категории — ровно P(θ ≥ порога) = порогу уверенности (настройка, Я22: 0,6; прежний 0,8):
+    θ = порог + z(уровня)·SE."""
+    from scipy.special import ndtri
+
+    from app.modules.assessment.grades import confirm_level
+
     se = 0.4
-    z80 = 0.8416212335729143
-    at = GRADE_CUTS[grade] + z80 * se
+    lv = confirm_level(se)
+    at = GRADE_CUTS[grade] + float(ndtri(lv)) * se
     above, below = category_level(at + 1e-3, se, 12), category_level(at - 1e-3, se, 12)
     rank = GRADE_ORDER.index
     assert rank(above.grade) >= rank(grade) > (rank(below.grade) if below.grade != "none" else -1)
-    assert p_at_least(at + 1e-3, se, grade) >= 0.8 > p_at_least(at - 1e-3, se, grade)
+    assert p_at_least(at + 1e-3, se, grade) >= lv > p_at_least(at - 1e-3, se, grade)
 
 
 def test_one_mapping_for_all_modes_grid():
     """decide_grade (полный/экспресс), proved_lower (принять уровень ниже) и category_level (мини-тест) согласованы."""
+    from app.modules.assessment.grades import confirm_level
+
     rank = lambda g: -1 if g == "none" else GRADE_ORDER.index(g)  # noqa: E731
     for theta in np.arange(-2.6, 3.01, 0.07):
         for se in (0.3, 0.45, 0.6, 0.72, 0.8):
@@ -95,11 +102,12 @@ def test_one_mapping_for_all_modes_grid():
                 lvl = category_level(float(theta), se, n)
                 for claimed in GRADE_ORDER:
                     p = p_at_least(float(theta), se, claimed)
-                    if abs(p - 0.8) < 2e-3:
+                    lv = confirm_level(se)  # Я22: порог из настройки; при SE > 0,6 — прежние 0,8
+                    if abs(p - lv) < 2e-3:
                         continue  # у самой границы решения различаются только округлением вероятностей
                     d = decide_grade(float(theta), se, claimed, n_items=n)
                     assert d.confirmed == (rank(lvl.grade) >= rank(claimed)), (theta, se, n, claimed, lvl)
-                    low = proved_lower(d.probabilities, claimed)
+                    low = proved_lower(d.probabilities, claimed, lv)
                     if not d.confirmed and lvl.grade != "none" and rank(lvl.grade) < rank(claimed) and n is None:
                         assert low == lvl.grade, (theta, se, claimed, low, lvl)
 
@@ -362,7 +370,8 @@ def test_meta_rules_from_settings(client, monkeypatch):
     m = client.get("/api/meta").json()["rules"]
     assert m == {"grade_change_interval_days": s.grade_change_interval_days,
                  "retake_same_grade_days": s.retake_same_grade_days,
-                 "invitation_cooldown_days": s.invitation_cooldown_days}
+                 "invitation_cooldown_days": s.invitation_cooldown_days,
+                 "confirm_pct": round(100 * s.assessment_confirm_level)}
     monkeypatch.setattr(s, "retake_same_grade_days", 21)
     assert client.get("/api/meta").json()["rules"]["retake_same_grade_days"] == 21
 

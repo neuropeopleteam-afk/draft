@@ -429,12 +429,24 @@ def finish_session(db: Session, ts: TestSession, engine=None) -> dict:
     }
     second_todo = second_op.take_new(ts.result["state"]) if _engine_key(ts) == "bank" else []
     result["second_opinions"] = second_op.summary(ts.result["state"])  # И27: итог не ждёт вторую оценку
+    _add_level_position(result, ts)
     ts.result = {**ts.result, "outcome": {**ts.result["outcome"], **result}}
     flag_modified(ts, "result")
     db.commit()
     second_op.schedule(ts.id, second_todo)
     _jury_integrity(result, profile, (res.details or {}).get("integrity"))  # в ответ, не в сохранённый итог
     return result
+
+
+def _add_level_position(out: dict, ts: TestSession) -> None:
+    """Я22 (флаг GRADE_POSITION_ENABLED): позиция внутри уровня, присвоенного этим тестом, — без чисел θ."""
+    if not get_settings().grade_position_enabled:
+        return
+    from app.modules.assessment.grades import level_position
+
+    er = (ts.result or {}).get("engine_result") or {}
+    grade = ts.result_grade_id or ("junior" if er.get("provisional") else None)
+    out["level_position"] = level_position(er.get("theta"), er.get("se"), grade)
 
 
 def store_confirmed(db, profile, specialization, ts, res, outcome, current):
@@ -529,8 +541,10 @@ def _accept_lower_fields(ts: TestSession, specialization, er: dict) -> dict:
     current = specialization.grade_id if specialization is not None else None
     cur_prov = bool(specialization is not None and specialization.status == "provisional" and current)
     probs = er.get("probabilities") or {}
+    from app.modules.assessment.grades import confirm_level as _cl  # Я22: при широком интервале — прежние 0,8
+
     can_lower, _ = accept_lower_allowed(current, ts.claimed_grade_id, bool(er.get("confirmed")), probs,
-                                        provisional=cur_prov)
+                                        provisional=cur_prov, level=_cl(er.get("se")))
     accepted = ((ts.result or {}).get("outcome") or {}).get("accepted_lower")
     avail = bool(can_lower and not accepted)
     return {
@@ -552,6 +566,7 @@ def result(db: Session, ts: TestSession) -> dict:
     out = dict(ts.result.get("outcome") or {})
     out.update(_accept_lower_fields(ts, specialization, er))
     out["second_opinions"] = second_op.summary(ts.result.get("state") or {})  # И27: текущее состояние фона
+    _add_level_position(out, ts)
     out.update({"current_grade": specialization.grade_id, "category_id": specialization.category_id,
                 "category_status": specialization.status, "mode": _mode(ts),
                 "sandbox": is_sandbox(profile), "retake_same_grade_days": get_settings().retake_same_grade_days,
@@ -587,11 +602,15 @@ def accept_lower_grade(db: Session, ts: TestSession) -> dict:
     specialization = ensure_specialization(db, profile, ts.direction_id)
     current = specialization.grade_id
     cur_prov = bool(specialization.status == "provisional" and current)
+    from app.modules.assessment.grades import confirm_level as _cl  # Я22: при широком интервале — прежние 0,8
+
     lower, why = accept_lower_allowed(current, ts.claimed_grade_id, bool(er.get("confirmed")), er.get("probabilities"),
-                                      provisional=cur_prov)
+                                      provisional=cur_prov, level=_cl(er.get("se")))
     if lower is None:
+        from app.modules.assessment.grades import confirm_pct
+
         msg = {"confirmed": "Заявленный грейд подтверждён — принимать уровень ниже незачем",
-               "no_lower_proved": "Тест не доказал уверенно ни один уровень ниже заявленного (нужно P ≥ 80 %)",
+               "no_lower_proved": f"Тест не доказал уверенно ни один уровень ниже заявленного (нужно P ≥ {confirm_pct()} %)",
                "not_above_current": "Доказанный уровень не выше текущего подтверждённого грейда"}[why]
         raise api_error(409, "accept_lower_unavailable", msg)
     now = utcnow()
