@@ -93,6 +93,10 @@ SCENARIOS = {
     "d_k20_c_s6": dict(mult=1, a=1.5, block=20, partial=True, short_mult=6),
     "d_k20_c_s8": dict(mult=1, a=1.5, block=20, partial=True, short_mult=8),
     "d_k20_c_x2_s4": dict(mult=2, a=1.5, block=20, partial=True, short_mult=4),
+    # после полного прогона 11.10: вклад частичного балла, блок короче, запас по Principal
+    "b_k20_x2_s4": dict(mult=2, a=1.5, block=20, partial=False, short_mult=4),
+    "d_k15_c_x2_s4": dict(mult=2, a=1.5, block=15, partial=True, short_mult=4),
+    "d_k20_c_x3_s4": dict(mult=3, a=1.5, block=20, partial=True, short_mult=4),
 }
 
 
