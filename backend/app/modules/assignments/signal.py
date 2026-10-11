@@ -24,9 +24,9 @@ def reason_for(probes: list) -> dict | None:
     v = f.value or {}
     title = (f.title or "").removeprefix(PREFIX)
     skills = [s for s in (v.get("skills") or [])][:4]
-    from app.modules.catalog.seed_data import STACK
+    from app.modules.catalog.seed_data import tag_title
 
-    names = ", ".join(STACK.get(t, (t,))[0] for t in skills)
+    names = ", ".join(tag_title(t) for t in skills)
     more = f" и ещё {len(facts) - 1}" if len(facts) > 1 else ""
     text = (f"«{title}» от {fr.date_text(getattr(f, 'created_at', None))}{more}: {v.get('verdict', 'выполнено')}"
             + (f"; проверены навыки: {names}" if names else ""))

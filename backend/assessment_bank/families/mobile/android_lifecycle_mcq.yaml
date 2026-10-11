@@ -1,0 +1,24 @@
+family_id: mobile.android.lifecycle_mcq
+title: Жизненный цикл Activity — колбэки при повороте, диалогах, уходе в фон
+direction: mobile
+skills: [android, android_lifecycle, activity_lifecycle, lifecycle]
+target_grades: [junior]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    actions: [rotate, alert, dialog_activity, opaque, home, lock]
+    misconceptions: [rotate_no_recreate, config_ignored, dialog_pauses, translucent_stops, no_restart, home_destroys]
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -0.6
+  a: 1.2
+  sigma_variant: 0.35
+  basis: "Сценарий из двух действий; дистракторы — та же модель с одним типичным заблуждением (поворот без пересоздания, диалог приостанавливает Activity, полупрозрачная Activity останавливает экран, нет onRestart), поэтому все варианты правдоподобны и одной формы; разные пары действий → σ повышена. Junior (b ≈ −0,6), различает Стажёра и Junior/Middle"
+generator: assessment_bank.families.mobile.android_lifecycle_mcq
+version: 1
+description: >
+  Два действия пользователя над Activity; нужно выбрать верную последовательность колбэков. Ключ: модель
+  жизненного цикла исполняется в песочнице и находит вариант, совпавший с верной последовательностью.

@@ -94,9 +94,9 @@ def app_config_from_settings() -> AppConfig:
 
 
 def make_pool(n_subpools: int, params: dict | None = None):
-    from app.modules.catalog.levels import pool_specs  # как в продукте: без флага — без семейств только Lead/Principal
+    from app.modules.catalog.ext import active_specs  # как bank_engine._pool: без семейств только Lead/Principal
 
-    return pool_from_specs(pool_specs(load_specs().values()), params=params, n_subpools=max(1, n_subpools))
+    return pool_from_specs(active_specs(load_specs().values()), params=params, n_subpools=max(1, n_subpools))
 
 
 class LegacyExtSession(AppCATSession):
@@ -497,7 +497,7 @@ def leak_experiment(pool, truth, direction: str, cfg: AppConfig, rng, k, n: int 
     return res
 
 
-# --------------------------------------------------------------------------- метрики к истине, другие условия
+# --------------------------------------------------------------------------- метрики к истине, другие условия измерения
 def truth_metrics(people, results) -> dict:
     """Грейд по θ̂ против истинного грейда: точное совпадение, ±1, взвешенная κ с истиной, r(θ̂, θ)."""
     th = np.array([p.theta for p in people])
@@ -511,7 +511,7 @@ def truth_metrics(people, results) -> dict:
 
 
 def make_truth_like(pool, rng, b_sd: float, a_logsd: float) -> dict:
-    """Истинные параметры с ошибкой как в симуляции ориентира: b + N(0; b_sd) по каждому заданию (семейству;
+    """Истинные параметры с другой ошибкой: b + N(0; b_sd) по каждому заданию (семейству;
     у трёхшаговых — один сдвиг на семейство), a · LogN(0; a_logsd); разброс вариантов и время — как у банка."""
     from assessment_bank.simulation import TrueFamily
 
@@ -527,15 +527,15 @@ def make_truth_like(pool, rng, b_sd: float, a_logsd: float) -> dict:
 
 # Длина 20 без досрочной остановки и дотестирования, весь банк направления (без субпулов), лимит времени 120 минут;
 # повтор — семейства первой попытки исключены (вторая форма короче, если банк кончается)
-OTHER_LIKE = AppConfig(min_items=20, max_items=20, se_target=0.0, max_minutes=120, subpools=1,
-                            stop_rule="se", ext_items=0, rotation="exclude_last")
-OTHER_ERROR = {"b_sd": 0.35, "a_logsd": 0.2, "source": "внешний репозиторий, evaluation/results/tests_report.md"}
+ALT_CONDITIONS = AppConfig(min_items=20, max_items=20, se_target=0.0, max_minutes=120, subpools=1,
+                           stop_rule="se", ext_items=0, rotation="exclude_last")
+ALT_ERROR = {"b_sd": 0.35, "a_logsd": 0.2, "source": "собственный протокол: ошибка параметров меньше основной (σ = 0,5)"}
 
 
-def other_run(pool1, direction, rng, k, n: int) -> dict:
-    truth = make_truth_like(pool1, rng, OTHER_ERROR["b_sd"], OTHER_ERROR["a_logsd"])
+def alt_conditions_run(pool1, direction, rng, k, n: int) -> dict:
+    truth = make_truth_like(pool1, rng, ALT_ERROR["b_sd"], ALT_ERROR["a_logsd"])
     people = make_population(n, rng)
-    cfg = OTHER_LIKE
+    cfg = ALT_CONDITIONS
     r1 = run_population(pool1, truth, people, direction, cfg, rng, k=k)
     r2 = run_population(pool1, truth, people, direction, cfg, rng, k=k, exclude=[set(r["families"]) for r in r1])
     return {"truth": truth_metrics(people, r1), "retest": retest_metrics(people, r1, r2)}

@@ -1,0 +1,24 @@
+family_id: common.arch.queue_workers_mcq
+title: Сколько обработчиков нужно очереди под требование к среднему ожиданию — модель M/M/c, а не правило 80 %
+direction: common
+skills: [capacity_planning, queueing, probability, system_design, performance]
+target_grades: [lead]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: "три из пяти эвристик загрузки: full_load, rule_90, rule_80, rule_60, double (меньше ключа 0–3 равновероятно)"
+    load_range: [4, 60]
+time_limit_s: 480
+canary: false
+prior_difficulty:
+  b: 1.9
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Нужна модель очереди M/M/c и формула Эрланга C (или её оценка): минимальное число обработчиков под требование к среднему ожиданию. Дистракторы — три из пяти эвристик, которыми пользуются без модели: загрузка почти 100 %, «держим 90 / 80 / 60 %», двукратный запас; при малом W правило загрузки недостаточно, при большом — избыточно; место ключа по величине меняется (версия 2). Senior обычно применяет правило загрузки — граница Senior/Lead (θ ≈ 2,0). Один подтип"
+generator: assessment_bank.families.common.arch_queue_workers_mcq
+version: 2
+description: >
+  Lead: минимальное число обработчиков очереди при пуассоновском потоке, экспоненциальном времени обработки и
+  требовании к среднему ожиданию. Ключ — исполнением: Эрланг C через рекурсию Эрланга B.

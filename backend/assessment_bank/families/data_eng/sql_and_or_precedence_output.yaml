@@ -1,0 +1,22 @@
+family_id: data_eng.sql.and_or_precedence_output
+title: SQL — приоритет AND над OR в WHERE
+direction: data_eng
+skills: [sql, data_validation]
+target_grades: [intern, junior]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [4, 4]
+  extra:
+    subtype: and_before_or
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -1.3
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "Запрос 4 строки: WHERE из трёх условий вида A OR B AND C без скобок, ORDER BY id; 7–9 строк данных; в каждом варианте прочтение «(A OR B) AND C» даёт другой результат (есть строка, попадающая только из-за приоритета AND, и строка из части B AND C). Intern/Junior"
+generator: assessment_bank.families.data_eng.sql_and_or_precedence_output
+version: 1
+description: >
+  Предсказать результат запроса, где в WHERE смешаны OR и AND без скобок. Ключ — исполнение запроса в sqlite.

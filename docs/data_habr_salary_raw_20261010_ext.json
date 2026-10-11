@@ -1,0 +1,353 @@
+{
+ "devops": {
+  "direction": "devops",
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=devops",
+  "groups": {
+   "All": {
+    "p25": 142500,
+    "median": 225000,
+    "p75": 350000,
+    "total": 1226,
+    "title": "DevOps-инженер",
+    "min": 84166,
+    "max": 480833
+   },
+   "Senior": {
+    "p25": 286000,
+    "median": 358922,
+    "p75": 461666,
+    "total": 263,
+    "title": "Senior DevOps-инженер",
+    "min": 212500,
+    "max": 543333
+   },
+   "Middle": {
+    "p25": 162500,
+    "median": 220833,
+    "p75": 287500,
+    "total": 580,
+    "title": "Middle DevOps-инженер",
+    "min": 111416,
+    "max": 354166
+   },
+   "Lead": {
+    "p25": 333333,
+    "median": 453333,
+    "p75": 560970,
+    "total": 114,
+    "title": "Lead DevOps-инженер",
+    "min": 196666,
+    "max": 685000
+   },
+   "Junior": {
+    "p25": 81583,
+    "median": 112500,
+    "p75": 166249,
+    "total": 217,
+    "title": "Junior DevOps-инженер",
+    "min": 54083,
+    "max": 203333
+   },
+   "Intern": {
+    "p25": 45331,
+    "median": 64166,
+    "p75": 85791,
+    "total": 52,
+    "title": "Intern DevOps-инженер",
+    "min": 25416,
+    "max": 102500
+   }
+  }
+ },
+ "sre": {
+  "direction": "devops",
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=sre",
+  "groups": {
+   "All": {
+    "p25": 199583,
+    "median": 296666,
+    "p75": 447666,
+    "total": 121,
+    "title": "Инженер по доступности сервисов",
+    "min": 150000,
+    "max": 575000
+   },
+   "Middle": {
+    "p25": 194166,
+    "median": 243375,
+    "p75": 297083,
+    "total": 51,
+    "title": "Middle Инженер по доступности сервисов",
+    "min": 155000,
+    "max": 390666
+   },
+   "Junior": {
+    "p25": 113958,
+    "median": 175833,
+    "p75": 221249,
+    "total": 10,
+    "title": "Junior Инженер по доступности сервисов",
+    "min": 104333,
+    "max": 278333
+   },
+   "Lead": {
+    "p25": 451074,
+    "median": 533333,
+    "p75": 674083,
+    "total": 19,
+    "title": "Lead Инженер по доступности сервисов",
+    "min": 375666,
+    "max": 766666
+   },
+   "Senior": {
+    "p25": 302208,
+    "median": 392333,
+    "p75": 482333,
+    "total": 37,
+    "title": "Senior Инженер по доступности сервисов",
+    "min": 197500,
+    "max": 555000
+   }
+  }
+ },
+ "data_engineer": {
+  "direction": "data_eng",
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=data_engineer",
+  "groups": {
+   "All": {
+    "p25": 166666,
+    "median": 256666,
+    "p75": 360000,
+    "total": 374,
+    "title": "Инженер по данным",
+    "min": 108333,
+    "max": 468000
+   },
+   "Middle": {
+    "p25": 189250,
+    "median": 233333,
+    "p75": 291666,
+    "total": 184,
+    "title": "Middle Инженер по данным",
+    "min": 131883,
+    "max": 356250
+   },
+   "Senior": {
+    "p25": 320083,
+    "median": 361666,
+    "p75": 435000,
+    "total": 79,
+    "title": "Senior Инженер по данным",
+    "min": 264666,
+    "max": 503333
+   },
+   "Lead": {
+    "p25": 361666,
+    "median": 436875,
+    "p75": 548333,
+    "total": 39,
+    "title": "Lead Инженер по данным",
+    "min": 310000,
+    "max": 628333
+   },
+   "Junior": {
+    "p25": 96625,
+    "median": 136666,
+    "p75": 173666,
+    "total": 58,
+    "title": "Junior Инженер по данным",
+    "min": 77166,
+    "max": 224500
+   },
+   "Intern": {
+    "p25": 66666,
+    "median": 88641,
+    "p75": 101666,
+    "total": 14,
+    "title": "Intern Инженер по данным",
+    "min": 40066,
+    "max": 121666
+   }
+  }
+ },
+ "mobileapp_developer": {
+  "direction": "mobile",
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=mobileapp_developer",
+  "groups": {
+   "All": {
+    "p25": 190833,
+    "median": 297500,
+    "p75": 416666,
+    "total": 736,
+    "title": "Разработчик мобильных приложений",
+    "min": 107012,
+    "max": 535083
+   },
+   "Middle": {
+    "p25": 166041,
+    "median": 226933,
+    "p75": 308083,
+    "total": 292,
+    "title": "Middle Разработчик мобильных приложений",
+    "min": 103333,
+    "max": 365333
+   },
+   "Senior": {
+    "p25": 277333,
+    "median": 370000,
+    "p75": 457333,
+    "total": 283,
+    "title": "Senior Разработчик мобильных приложений",
+    "min": 212916,
+    "max": 536000
+   },
+   "Lead": {
+    "p25": 387500,
+    "median": 468999,
+    "p75": 608000,
+    "total": 101,
+    "title": "Lead Разработчик мобильных приложений",
+    "min": 313666,
+    "max": 724000
+   },
+   "Junior": {
+    "p25": 63958,
+    "median": 87500,
+    "p75": 113750,
+    "total": 46,
+    "title": "Junior Разработчик мобильных приложений",
+    "min": 40833,
+    "max": 175000
+   },
+   "Intern": {
+    "p25": 40833,
+    "median": 85583,
+    "p75": 118333,
+    "total": 14,
+    "title": "Intern Разработчик мобильных приложений",
+    "min": 20833,
+    "max": 138333
+   }
+  }
+ },
+ "systems_analyst": {
+  "direction": "analyst",
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=systems_analyst",
+  "groups": {
+   "All": {
+    "p25": 130833,
+    "median": 222500,
+    "p75": 301666,
+    "total": 2459,
+    "title": "Системный аналитик",
+    "min": 84166,
+    "max": 395166
+   },
+   "Junior": {
+    "p25": 74583,
+    "median": 100000,
+    "p75": 136666,
+    "total": 351,
+    "title": "Junior Системный аналитик",
+    "min": 56833,
+    "max": 183333
+   },
+   "Senior": {
+    "p25": 245833,
+    "median": 301666,
+    "p75": 370000,
+    "total": 569,
+    "title": "Senior Системный аналитик",
+    "min": 190833,
+    "max": 416666
+   },
+   "Middle": {
+    "p25": 148875,
+    "median": 196666,
+    "p75": 257264,
+    "total": 1201,
+    "title": "Middle Системный аналитик",
+    "min": 104166,
+    "max": 312000
+   },
+   "Intern": {
+    "p25": 51458,
+    "median": 64166,
+    "p75": 98466,
+    "total": 112,
+    "title": "Intern Системный аналитик",
+    "min": 32833,
+    "max": 122968
+   },
+   "Lead": {
+    "p25": 293750,
+    "median": 375999,
+    "p75": 462000,
+    "total": 226,
+    "title": "Lead Системный аналитик",
+    "min": 217500,
+    "max": 550000
+   }
+  }
+ },
+ "business_analyst": {
+  "direction": "analyst",
+  "url": "https://career.habr.com/api/frontend_v1/salary_calculator/general_graph?spec_aliases%5B%5D=business_analyst",
+  "groups": {
+   "All": {
+    "p25": 110000,
+    "median": 169166,
+    "p75": 248749,
+    "total": 1022,
+    "title": "Бизнес-аналитик",
+    "min": 68333,
+    "max": 350000
+   },
+   "Middle": {
+    "p25": 119166,
+    "median": 166666,
+    "p75": 230000,
+    "total": 494,
+    "title": "Middle Бизнес-аналитик",
+    "min": 94166,
+    "max": 275629
+   },
+   "Senior": {
+    "p25": 186666,
+    "median": 260833,
+    "p75": 336249,
+    "total": 181,
+    "title": "Senior Бизнес-аналитик",
+    "min": 135000,
+    "max": 433333
+   },
+   "Junior": {
+    "p25": 75000,
+    "median": 100000,
+    "p75": 140000,
+    "total": 210,
+    "title": "Junior Бизнес-аналитик",
+    "min": 52833,
+    "max": 184666
+   },
+   "Lead": {
+    "p25": 238333,
+    "median": 311666,
+    "p75": 429166,
+    "total": 83,
+    "title": "Lead Бизнес-аналитик",
+    "min": 145833,
+    "max": 498333
+   },
+   "Intern": {
+    "p25": 47500,
+    "median": 68333,
+    "p75": 103191,
+    "total": 54,
+    "title": "Intern Бизнес-аналитик",
+    "min": 30833,
+    "max": 141666
+   }
+  }
+ }
+}

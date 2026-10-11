@@ -207,6 +207,8 @@ def test_api_two_stage_offer_refine_and_employer_note(client, monkeypatch, flag)
     # итог по запросу — то же предложение
     r = client.get(f"/api/assessment/sessions/{sid}/result", headers=H(t))
     assert r.status_code == 200 and r.json()["two_stage"]["available"] is True
+    st = client.get("/api/assessment/status", headers=H(t)).json()["two_stage"]  # экран «Категория и грейд»
+    assert st["status"] == "offered" and st["available"] and st["session_id"] == str(sid) and st["ext"] is False
     # работодатель (если тест присвоил категорию) видит пометку «уточнение не проходил»
     with SessionLocal() as db:
         facts = db.scalars(select(CandidateFact).where(CandidateFact.user_id == uid,
@@ -240,6 +242,8 @@ def test_api_two_stage_offer_refine_and_employer_note(client, monkeypatch, flag)
     # первая сессия: уточнение пройдено, нового нет
     r = client.get(f"/api/assessment/sessions/{sid}/result", headers=H(t))
     assert r.json()["two_stage"]["status"] == "done" and r.json()["two_stage"]["outcome"]["final_grade"] == f
+    st = client.get("/api/assessment/status", headers=H(t)).json()["two_stage"]
+    assert st["status"] == "done" and st["outcome"]["final_grade"] == f and st["refine_session_id"] == s["session_id"]
     r = client.post("/api/assessment/sessions", json={"claimed_grade": out["claimed_grade"], "mode": "refine"},
                     headers=H(t))
     assert r.status_code == 409 and r.json()["detail"]["code"] == "refine_unavailable"
@@ -254,8 +258,30 @@ def test_api_two_stage_offer_refine_and_employer_note(client, monkeypatch, flag)
     flag(False)
     r = client.get(f"/api/assessment/sessions/{sid}/result", headers=H(t))
     assert "two_stage" not in r.json() or r.json()["two_stage"] is None
+    assert "two_stage" not in client.get("/api/assessment/status", headers=H(t)).json()
     r = client.post("/api/assessment/sessions", json={"claimed_grade": "middle", "mode": "refine"}, headers=H(t))
     assert r.status_code == 409 and r.json()["detail"]["code"] == "two_stage_disabled"
+
+
+def test_ext_second_stage_suite_in_subprocess():
+    """Я26 + Я25: tests/test_two_stage_ext_on.py — отдельным процессом с GRADES_EXT_ENABLED=1 (своя временная БД)."""
+    import os
+    import re
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    env = {k: v for k, v in os.environ.items() if k not in ("DATABASE_URL", "PYTEST_XDIST_WORKER",
+                                                           "PYTEST_XDIST_WORKER_COUNT", "PYTEST_CURRENT_TEST")}
+    env["GRADES_EXT_ENABLED"] = "1"
+    env.pop("TEST_DATABASE_URL", None)
+    env.pop("PYTEST_ADDOPTS", None)
+    r = subprocess.run([sys.executable, "-m", "pytest", "-q", "-x", "-rs", "-p", "no:cacheprovider", "-p", "no:randomly",
+                        "-o", "addopts=", "tests/test_two_stage_ext_on.py"], cwd=Path(__file__).resolve().parents[1],
+                       env=env, capture_output=True, text=True, timeout=600)
+    assert r.returncode == 0, (r.stdout[-4000:] + r.stderr[-2000:])
+    m = re.search(r"(\d+) passed", r.stdout)
+    assert m and int(m.group(1)) == 3, r.stdout[-2000:]
 
 
 # ---------------------------------------------------------------- симуляция

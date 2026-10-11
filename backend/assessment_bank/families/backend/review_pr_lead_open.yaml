@@ -1,0 +1,25 @@
+family_id: backend.review.pr_lead_open
+title: Ревью PR платёжного кода ведущим — что блокирует мёрж (транзакции, таймауты, идемпотентность, деньги, ошибки)
+direction: backend
+skills: [code_review, transactions, idempotency, reliability, databases]
+target_grades: [lead]
+format: open_answer
+language: python
+invariants:
+  extra:
+    planted_flaws: 3
+    sound_items: 2
+    flaw_pool: [tx_external, no_timeout, n_plus_one, no_idem, float_money, swallow_ack, secret_log]
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "Априорная трудность (не по людям). PR из 5 фрагментов кода: 3 дефекта из пула 7 и 2 здравых фрагмента; полный балл — найти все три, обосновать числами условия (закон Литтла для пула при внешнем вызове в транзакции, бюджет ответа), предложить исправление с проверкой, не тронуть здравые. Senior находит очевидные (N+1, float), пропуская внешний вызов в транзакции и ack после ошибки, — граница Senior/Lead (θ ≈ 2,0); σ 0,35 — дефекты пула неодинаково заметны"
+generator: assessment_bank.families.backend.review_pr_lead_open
+version: 1
+description: >
+  Lead: ревью PR из пяти фрагментов Python-кода платёжного сервиса; три заложенных дефекта и два здравых
+  фрагмента. Рубрика по каждому дефекту (с номером фрагмента) и по приоритетам без ложных тревог; оценка с
+  цитатами-доказательствами.

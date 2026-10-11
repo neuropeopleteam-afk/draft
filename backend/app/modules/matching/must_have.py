@@ -23,7 +23,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import tag_title
 from app.modules.profiles.facts import Bundle, skill_confirmed
 
 HIGH_SELF_LEVEL = 3  # самооценка опроса: 1 — знаком … 3 — уверенно
@@ -94,11 +94,11 @@ def assess(b: Bundle, req: dict, avail: set[str], levels: dict[str, int] | None 
     cov = {t: coverage(b, t, levels) for t in tags}
     missing = [t for t in tags if not cov[t]]
     counted = [t for t in missing if t in avail]
-    titles = [STACK.get(t, (t,))[0] for t in missing]
+    titles = [tag_title(t) for t in missing]
     return {"tier": min(len(counted), MAX_TIER), "missing": titles[:SHOW_MISSING],
             "missing_more": max(0, len(titles) - SHOW_MISSING), "missing_total": len(titles),
             "missing_counted": len(counted),
-            "declared_high": [STACK.get(t, (t,))[0] for t in tags if cov[t] == "t0_high"],
+            "declared_high": [tag_title(t) for t in tags if cov[t] == "t0_high"],
             "required_total": len(tags)}
 
 

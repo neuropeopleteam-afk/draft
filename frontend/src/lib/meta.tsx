@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { api } from "./api";
+import { DIRECTIONS, DIRECTION_TITLES } from "../components/ui";
 
 // Название продукта задаётся в одном месте — backend/app/core/config.py (product_name) — и приходит из /api/meta.
 export interface Meta {
@@ -16,6 +17,8 @@ export interface Meta {
   voice_need?: { enabled: boolean; stub?: boolean; max_seconds: number; consent_version: string; consent_text: string };  // «Надиктовать»
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number; confirm_pct?: number };
+  // видимые направления каталога: 5 базовых и направления расширения с проверенным банком (CATALOG_EXT_ENABLED)
+  catalog?: { directions: string[]; ext: string[]; ext_enabled: boolean; ext_titles?: Record<string, string>; model_label?: string };
   interview?: { enabled: boolean; stub: boolean; defense_minutes: number; avatar?: boolean }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.); avatar — свой образ интервьюера (В1)
   hh?: { enabled: boolean; stub: boolean }; // Я12: импорт своей вакансии с hh.ru и «Рынок по hh.ru» (HH_ENABLED и токен)
   // Lead и Principal (GRADES_EXT_ENABLED): есть только при включённом флаге; уровни направления — те, для которых в банке
@@ -79,4 +82,11 @@ export function usePageTitle(title: string) {
 export function setScreenTitle(h: string | null) {
   if (ownTitle || !loaded) return;
   document.title = h ? `${h} · ${loaded.product_name}` : defaultTitle(loaded);
+}
+
+/** Направления для выбора (опрос, потребность, поиск): [id, подпись]. Без /api/meta или без расширения каталога —
+ * 5 базовых, как прежде; с CATALOG_EXT_ENABLED — ещё направления, чей банк прошёл проверку. */
+export function useDirectionEntries(): [string, string][] {
+  const ids = useContext(Ctx)?.catalog?.directions;
+  return (ids?.length ? ids : Object.keys(DIRECTIONS)).map((d) => [d, DIRECTION_TITLES[d] ?? d]);
 }
