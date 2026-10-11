@@ -96,7 +96,7 @@ test("потребность: ст. 64 → цитаты и предупрежд�
       hasText: /^C-[A-Z0-9]+ (выше C-[A-Z0-9]+ на [\d,]+ балл[а-я]* из 100|и C-[A-Z0-9]+ почти равны: разница [\d,]+ балл[а-я]* из 100 — решит зонд)/,
     });
     await expect(pairs).toHaveCount(2);
-    await expect(main.getByRole("button", { name: "Зонд всем (3)" })).toBeVisible();
+    await expect(main.getByRole("button", { name: "Задание всем (3)" })).toBeVisible();
     await main.getByRole("link", { name: "К подборке" }).click();
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+\/v\/1$/);
   });
