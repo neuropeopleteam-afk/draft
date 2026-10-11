@@ -1,6 +1,6 @@
 /**
  * Интерфейс: подписи и мелочи (Ф4). Демо-работодатели у кандидата (высокий и «плохой» индекс доверия),
- * проводник жюри помнит закрытие, «Отправить зонд выбранным (0)» неактивна, экран перед тестом — коротко.
+ * проводник жюри помнит закрытие, «Отправить задание выбранным (0)» неактивна, экран перед тестом — коротко.
  */
 import { expect, test } from "../lib/fixtures";
 import { juryEnter, openSection } from "../lib/ui";
@@ -61,13 +61,13 @@ test("«Пройдите тест сами»: экран перед старто
   expect(noScroll, "без горизонтальной прокрутки").toBe(true);
 });
 
-test("работодатель: «Отправить зонд выбранным (0)» неактивна, пока никого не отметили", async ({ page }) => {
+test("работодатель: «Отправить задание выбранным (0)» неактивна, пока никого не отметили", async ({ page }) => {
   await juryEnter(page, "employer");
   await openSection(page, "Потребности и подборки", /\/employer\/needs$/);
   await page.getByRole("link", { name: "Открыть" }).first().click().catch(async () => {
     await page.getByRole("button", { name: "Открыть" }).first().click();
   });
-  const probe = page.getByRole("button", { name: "Отправить зонд выбранным (0)" });
+  const probe = page.getByRole("button", { name: "Отправить задание выбранным (0)" });
   await expect(probe).toBeVisible({ timeout: 60_000 });
   await expect(probe).toBeDisabled();
 });

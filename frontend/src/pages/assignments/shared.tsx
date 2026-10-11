@@ -40,7 +40,7 @@ export function plural(n: number, one: string, few: string, many: string) {
 }
 export const zad = (n: number) => plural(n, "задание", "задания", "заданий");
 
-export const MODE_TITLE: Record<string, string> = { probe: "Зонд кандидатам", vacancy: "К вакансии", open: "Открытое" };
+export const MODE_TITLE: Record<string, string> = { probe: "Задание с вилкой кандидатам", vacancy: "К вакансии", open: "Открытое" };
 export const SOURCE_TITLE: Record<string, string> = { probe: "Предложено лично", vacancy: "К отклику на вакансию", feed: "Задание для вас" };
 export const FORMAT_TITLE: Record<string, string> = {
   choose_fix: "выбор исправления", mcq_concept: "вопрос с вариантами", find_bug: "найти строку с ошибкой", predict_output: "предсказать вывод",

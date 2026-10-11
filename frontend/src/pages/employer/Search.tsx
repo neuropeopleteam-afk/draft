@@ -57,7 +57,7 @@ function SearchCard({ c, stack, tags, market, actions }: { c: any; stack: string
       </dl>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <button type="button" className="text-left text-sm font-semibold text-brand hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}
-          title="Тест, подтверждённые навыки, свежесть, зонды, паспорт ФСП, заявленное кандидатом">{open ? "Свернуть" : "Подробнее"}</button>
+          title="Тест, подтверждённые навыки, свежесть, задания, паспорт ФСП, заявленное кандидатом">{open ? "Свернуть" : "Подробнее"}</button>
         {actions}
       </div>
       {open && <div className="mt-2 border-t border-brand-night/5 pt-2"><CandidateCard c={c} compact bare /></div>}
@@ -197,7 +197,7 @@ export function CandidateDetail() {
       <CandidateCard c={c} score={c.match?.score} reasons={c.match?.reasons} must={c.match?.must} core={c.match?.core}
         actions={
           <div className="flex flex-wrap items-center gap-3">
-            <button className="btn-ghost" onClick={() => setModal("probe")}>Отправить зонд</button>
+            <button className="btn-ghost" onClick={() => setModal("probe")}>Отправить задание</button>
             <button className="btn-primary" disabled={!c.can_invite} title={c.can_invite ? undefined : inviteBlockedText(c)} aria-describedby={c.can_invite ? undefined : "invite-why"} onClick={() => setModal("invite")}>Пригласить</button>
             {/* Я11 (С3-6): почему «Пригласить» неактивна — рядом с кнопкой, а не только ниже по странице */}
             {!c.can_invite && <p id="invite-why" className="basis-full text-xs text-brand-ink/65">{inviteBlockedText(c)}</p>}
@@ -214,11 +214,11 @@ export function CandidateDetail() {
           <h2 className="font-bold text-brand-night">Ваши взаимодействия</h2>
           <ul className="mt-3 space-y-2">
             {c.my_invitations.map((i: any) => <li key={i.id} className="flex items-center justify-between gap-3"><span>Приглашение «{i.position_title}» · {dt(i.created_at)}</span><Status s={i.contacts_revoked ? "contacts_revoked" : i.status} /></li>)}
-            {c.my_probes.map((p: any) => <li key={p.id} className="flex items-center justify-between gap-3"><span>Зонд «{p.title}» · {dt(p.created_at)}</span><Status s={p.status} /></li>)}
+            {c.my_probes.map((p: any) => <li key={p.id} className="flex items-center justify-between gap-3"><span>Задание «{p.title}» · {dt(p.created_at)}</span><Status s={p.status} /></li>)}
           </ul>
         </section>
       )}
-      <Modal open={modal === "probe"} onClose={() => setModal("")} title="Зонд кандидату">
+      <Modal open={modal === "probe"} onClose={() => setModal("")} title="Задание кандидату">
         <ProbeForm refs={[c.ref]} needId={need ?? undefined} market={c.market_range} needSalary={needSalary} onDone={(r) => { setModal(""); setMsg(probeSentText(r)); void reload(); }} />
       </Modal>
       <Modal open={modal === "invite"} onClose={() => setModal("")} title="Приглашение-оффер">
