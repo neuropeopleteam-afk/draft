@@ -67,17 +67,30 @@ _PEOPLE = ("candidates_fsp", "invited_fsp", "invite_rate_fsp", "invitations_fsp"
            "accept_rate_fsp", "fsp_invite_share")
 
 
-def _secondary(rows: list[dict], total: dict, key: str) -> None:
+def _secondary(rows: list[dict], total: dict, key: str) -> bool:
     """Если в разбиении скрыта ровно одна группа, а итог раскрыт — скрыть и наименьшую раскрытую (иначе скрытую
-    восстановят вычитанием из итога)."""
+    восстановят вычитанием из итога). True — что-то скрыли."""
     hidden = [r for r in rows if r[key] is None]
     if len(hidden) == 1 and total.get(key) is not None:
-        shown = sorted((r for r in rows if r[key]), key=lambda r: r[key])
+        shown = sorted((r for r in rows if r[key] is not None), key=lambda r: r[key])
         if shown:
             v = shown[0]
             for k in _PEOPLE:
                 v[k] = None
             v["secondary_suppressed"] = True
+            return True
+    return False
+
+
+_SUPPRESS_KEYS = ("candidates_fsp", "invited_fsp", "accepted_fsp", "hired_fsp")
+
+
+def _suppress(rows: list[dict], total: dict) -> None:
+    """Вторичное подавление по всем числам людей до устойчивого состояния: скрытая строка по одному числу скрывает
+    и остальные, поэтому проверка повторяется, пока ни по одному числу не остаётся ровно одной скрытой группы."""
+    for _ in range(len(rows) + 1):
+        if not any([_secondary(rows, total, k) for k in _SUPPRESS_KEYS]):
+            return
 
 
 def compute(db: Session, days: int | None = None, d: Data | None = None) -> dict:
@@ -107,8 +120,7 @@ def compute(db: Session, days: int | None = None, d: Data | None = None) -> dict
         invs = [i for c in members for i in invs_by_cand.get(c.user_id, [])]
         regions.append(_row(reg, reg, members, invs, hired, fsp_inv))
     regions.sort(key=lambda r: (r["key"] in (OTHER, NO_REGION), -(r["candidates_fsp"] or 0), r["title"]))
-    _secondary(regions, total, "candidates_fsp")
-    _secondary(regions, total, "invited_fsp")
+    _suppress(regions, total)
 
     # по направлениям
     dirs = []
@@ -116,8 +128,7 @@ def compute(db: Session, days: int | None = None, d: Data | None = None) -> dict
         members = [c for c in cands if c.direction == dd]
         invs = [i for c in members for i in invs_by_cand.get(c.user_id, [])]
         dirs.append(_row(dd, title, members, invs, hired, fsp_inv))
-    _secondary(dirs, total, "candidates_fsp")
-    _secondary(dirs, total, "invited_fsp")
+    _suppress(dirs, total)
 
     # доля приглашений с ФСП-бонусом (события, а не люди: раскрывается, если приглашённых участников ФСП ≥ K или 0)
     n_all = len(d.invs)
