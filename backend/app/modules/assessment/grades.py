@@ -33,7 +33,7 @@ from app.core.fmt import ru_num, theta_se
 from app.modules.catalog import levels
 from app.modules.catalog.seed_data import EXT_GRADE_ORDER, GRADE_CUTS, GRADE_ORDER, GRADES, GRADE_START_THETA
 
-CONFIRM_LEVEL = 0.8
+CONFIRM_LEVEL = 0.8  # прежний порог уверенности (до Я22); действующий — настройка assessment_confirm_level
 UPGRADE_LEVEL = 0.9
 GRADE_RU = {"none": "без грейда", **GRADES}
 # Потолок категории по длине теста и погрешности: крайний грейд (Senior) — только при ≥ 5 оценённых заданиях
@@ -42,6 +42,26 @@ TOP_MIN_ITEMS = 5
 TOP_MAX_SE = 0.75
 SHORT_CEILING = "middle"
 PRELIMINARY_MAX_ITEMS = TOP_MIN_ITEMS - 1  # мини-тест QR (3 задания): категория всегда предварительная
+
+
+# Широкий интервал (экспресс 5–12 коротких заданий, мини-тест QR, SE > 0,6): прежний порог 0,8 — перебор порога
+# уверенности считан на полном тесте (SE в конце ≈ 0,33), для коротких тестов он не проверялся.
+WIDE_SE = 0.6
+
+
+def confirm_level(se: float | None = None) -> float:
+    """Действующий порог уверенности подтверждения и «уровня ниже» (настройка ASSESSMENT_CONFIRM_LEVEL);
+    при SE > WIDE_SE — не ниже прежнего 0,8."""
+    from app.core.config import get_settings
+
+    lv = float(get_settings().assessment_confirm_level)
+    if se is not None and float(se) > WIDE_SE:
+        lv = max(lv, CONFIRM_LEVEL)
+    return lv
+
+
+def confirm_pct() -> int:
+    return round(100 * confirm_level())
 
 
 @lru_cache(maxsize=1)
@@ -119,8 +139,10 @@ class CategoryLevel:
 
 
 def category_level(theta: float, se: float, n_items: int | None = None,
-                   confirm_level: float = CONFIRM_LEVEL, direction: str | None = None) -> CategoryLevel:
+                   confirm_level: float | None = None, direction: str | None = None) -> CategoryLevel:
     """Единое отображение θ ± SE → категория для всех режимов (полный, экспресс, дотестирование, мини-тест)."""
+    if confirm_level is None:
+        confirm_level = globals()["confirm_level"](se)
     proven = "none"
     for g in order_for(direction):  # P(θ ≥ порога) убывает с грейдом: наивысший — последний, где P ≥ уровня
         if p_at_least(theta, se, g) >= confirm_level:
@@ -138,13 +160,16 @@ def probabilities(theta: float, se: float, direction: str | None = None) -> dict
     return {g: round(at_least[i] - at_least[i + 1], 4) for i, g in enumerate(order)}
 
 
-def decide_grade(theta: float, se: float, claimed: str, confirm_level: float = CONFIRM_LEVEL,
+def decide_grade(theta: float, se: float, claimed: str, confirm_level: float | None = None,
                  upgrade_level: float = UPGRADE_LEVEL, n_items: int | None = None,
                  direction: str | None = None) -> GradeDecision:
     """Решение по заявленному грейду на полной шкале платформы (см. описание модуля) с потолком категории
     (``ceiling``): грейд выше потолка короткий или слишком неточный тест не подтверждает; уровень ниже, доказанный
     с той же уверенностью, остаётся доступным («пройти тест на …» / «принять уровень ниже»). n_items — число
-    оценённых заданий (None — длина не ограничивает, только погрешность)."""
+    оценённых заданий (None — длина не ограничивает, только погрешность). confirm_level None — настройка
+    assessment_confirm_level (Я22)."""
+    if confirm_level is None:
+        confirm_level = globals()["confirm_level"](se)
     dec = _decide(theta, se, claimed, confirm_level, upgrade_level, direction)
     top = ceiling(n_items, se, direction)
     if _rank(claimed) > _rank(top) and (dec.confirmed or dec.provisional):
@@ -207,3 +232,49 @@ def _decide(theta: float, se: float, claimed: str, confirm_level: float, upgrade
                 "Грейд не понижается принудительно; "
                 + (f"можно пройти тест на {retake}." if retake else "можно пройти тест ещё раз после подготовки."))
     return GradeDecision(claimed, point, confirmed, claimed if confirmed else "none", upgrade, retake, probs, expl)
+
+
+# ---------------------------------------------------------------- позиция внутри уровня (Я22, флаг GRADE_POSITION_ENABLED)
+# Полоса грейда — [порог; порог следующего); у Senior сверху порога нет — условная ширина 1 (как у Junior и Middle).
+# Половина полосы — граница «нижняя / верхняя часть»; середина — центральная половина полосы. Позиция называется,
+# только когда погрешность это позволяет: P(θ по одну сторону середины полосы) ≥ 0,8 — «нижняя» / «верхняя часть»;
+# P(θ в центральной половине полосы) ≥ 0,5 — «середина»; иначе — «точнее — после дотестирования». Числа θ не выводятся.
+POSITION_LEVEL = 0.8
+POSITION_MID_LEVEL = 0.5
+POSITION_MAX_SE = 0.6
+POSITION_TEXT = {"lower": "нижняя часть уровня", "middle": "середина уровня", "upper": "верхняя часть уровня",
+                 "uncertain": "точнее — после дотестирования"}
+
+
+def _band(grade: str) -> tuple[float, float]:
+    i = GRADE_ORDER.index(grade)
+    lo = GRADE_CUTS[grade]
+    hi = GRADE_CUTS[GRADE_ORDER[i + 1]] if i + 1 < len(GRADE_ORDER) else lo + 1.0
+    return lo, hi
+
+
+def _cdf(x: float, theta: float, se: float) -> float:
+    return 0.5 * (1 + math.erf((x - theta) / (max(se, 1e-6) * math.sqrt(2))))
+
+
+def level_position(theta: float | None, se: float | None, grade: str | None) -> dict | None:
+    """Позиция θ̂ внутри полосы присвоенного грейда: lower | middle | upper | uncertain (см. правила выше).
+    None — нет грейда или оценки. Текст без чисел θ — для результата кандидата и карточки работодателя."""
+    if grade not in GRADE_ORDER or theta is None or se is None:
+        return None
+    theta, se = float(theta), float(se)
+    lo, hi = _band(grade)
+    w = hi - lo
+    mid = lo + w / 2
+    code = "uncertain"
+    if se <= POSITION_MAX_SE:
+        p_low = _cdf(mid, theta, se)
+        p_center = _cdf(lo + 3 * w / 4, theta, se) - _cdf(lo + w / 4, theta, se)
+        if p_low >= POSITION_LEVEL:
+            code = "lower"
+        elif 1 - p_low >= POSITION_LEVEL:
+            code = "upper"
+        elif p_center >= POSITION_MID_LEVEL:
+            code = "middle"
+    return {"code": code, "text": POSITION_TEXT[code], "grade": grade, "grade_title": GRADE_RU.get(grade, grade),
+            "known": code != "uncertain"}

@@ -20,9 +20,9 @@
   "unique_variants": 3281
  },
  "migrations": {
-  "revisions": 32,
+  "revisions": 33,
   "heads": [
-   "iv01"
+   "tr01"
   ]
  },
  "memory_limits_mib": {
@@ -33,12 +33,12 @@
   "llm-local": 8192
  },
  "matching": {
-  "algorithm": "match-v1.2",
+  "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "5721237",
+  "bench_commit": "296b31dd",
   "bank_hash": "76c4164b6ce83743",
-  "generated_at": "2026-10-11T10:06:08+00:00",
+  "generated_at": "2026-10-11T11:24:03+00:00",
   "p5": {
    "mean": 0.776,
    "lo": 0.74,
@@ -56,8 +56,8 @@
   }
  },
  "e2e_in_code": {
-  "spec_files": 21,
-  "scenarios": 51
+  "spec_files": 23,
+  "scenarios": 55
  },
  "validation_report": {
   "report_generated_at": "2026-10-10",
@@ -65,6 +65,31 @@
   "exposure_generated_at": "2026-10-06",
   "exposure_bank_families": 128,
   "report_matches_bank": true
+ },
+ "grade_accuracy": {
+  "confirm_level": 0.6,
+  "path_retest_commit": "659ca65",
+  "path_retest_at": "2026-10-10",
+  "sweep_commit": "8f4d6d2",
+  "sweep_points": 98,
+  "before": {
+   "exact": 0.575,
+   "over": 0.049,
+   "under": 0.348,
+   "none": 0.054,
+   "retest_exact": 0.77,
+   "retest_kappa": 0.844,
+   "minutes_mean": 56.632
+  },
+  "now": {
+   "exact": 0.641,
+   "over": 0.065,
+   "under": 0.28,
+   "none": 0.034,
+   "retest_exact": 0.804,
+   "retest_kappa": 0.874,
+   "minutes_mean": 56.563
+  }
  },
  "deploy": {
   "fresh_seconds": 291

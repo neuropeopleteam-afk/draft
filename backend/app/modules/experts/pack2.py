@@ -177,7 +177,8 @@ def _demo_pool(db: Session) -> dict:
 
 def match_order(db: Session, req: dict, demo: dict) -> list:
     """Подборка match-v1 по демо-пулу: тот же отбор и порядок, что ranking.build_selection(db, req, {}), без лимита
-    и без недемо-кандидатов (удаление элементов не меняет взаимный порядок остальных)."""
+    и без недемо-кандидатов (удаление элементов не меняет взаимный порядок остальных). Пакет v2 размечен до match-v1.3:
+    добор ступенью выше (grade_above) здесь не применяется — сверка с продуктом при MATCH_GRADE_ABOVE=0."""
     from app.modules.catalog.models import Category
     from app.modules.matching import ranking
     from app.modules.profiles.facts import load_bundles

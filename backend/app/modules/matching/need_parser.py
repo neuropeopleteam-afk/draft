@@ -384,14 +384,31 @@ def _sentences(text: str) -> list[tuple[int, int, str]]:
     return out
 
 
+# «Слабые» маркеры обязательного: в списке под заголовком «Будет плюсом:» пункт «— опыт работы с Linux, Docker» остаётся
+# «желательно» (Я12б: так написаны реальные вакансии hh.ru); явное «обязательно / необходимо / нужно» в пункте — обязательно
+# и внутри такого списка; заголовок с маркером («Требования:», «Что мы ожидаем:») переключает секцию, как раньше.
+WEAK_REQUIRED_CUES = ("опыт работы с", "уверенн", "знание", "умение", "владение")
+
+
+def _strong_required(low: str) -> bool:
+    return any(c in low for c in REQUIRED_CUES if c not in WEAK_REQUIRED_CUES)
+
+
 def _section_kind(text: str) -> list[tuple[int, int, str]]:
     """Размечаем текст на зоны «обязательно» / «желательно» по заголовкам и маркерам в предложениях."""
     zones = []
     current = "neutral"
     for start, end, sent in _sentences(text):
         low = sent.lower()
+        header = low.strip().endswith(":")
+        if current == "desired" and not header and not any(c in low for c in DESIRED_CUES) \
+                and not _strong_required(low):
+            zones.append((start, end, "desired"))  # пункт списка «Будет плюсом:» со слабым маркером («опыт работы с»)
+            continue
         if any(c in low for c in DESIRED_CUES) and any(c in low for c in REQUIRED_CUES):
             zones.extend(_mixed_zones(start, sent, current))  # «Python, FastAPI обязательно, Kafka будет плюсом»
+            if header:  # «Будет плюсом знание:», «Желательно опыт работы с:» — заголовок секции «желательно»
+                current = "desired" if not _strong_required(low) else current
             continue
         if any(c in low for c in DESIRED_CUES):
             post = _postfix_desired(start, sent, current)
@@ -404,6 +421,8 @@ def _section_kind(text: str) -> list[tuple[int, int, str]]:
             kind = "required"
             current = "required" if low.strip().endswith(":") else current
         else:
+            if header and current == "desired":  # «Условия:», «Мы ждём:» после «Будет плюсом:» — секция «желательно» закончилась
+                current = "neutral"
             kind = current
         zones.append((start, end, kind))
     return zones

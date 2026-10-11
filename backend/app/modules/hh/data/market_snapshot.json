@@ -1,0 +1,1921 @@
+{
+ "as_of": "2026-10-10T17:27:07+00:00",
+ "areas": {
+  "113": "Россия",
+  "1": "Москва",
+  "2": "Санкт-Петербург",
+  "3": "Екатеринбург",
+  "4": "Новосибирск",
+  "88": "Казань"
+ },
+ "basis": "net",
+ "method": "Вилки в живых вакансиях hh.ru с зарплатой (only_with_salary, до 100 свежих на запрос): рубли за месяц, у вилки — середина, у «от» — «от», у «до» — «до»; суммы до вычета НДФЛ приведены к «на руки». Грейд — слово грейда в названии, если таких меньше 20 — опыт hh.ru как приближение. Это объявления работодателей, не фактические зарплаты.",
+ "failed_requests": 0,
+ "categories": {
+  "backend.intern": {
+   "113": {
+    "n": 37,
+    "by": "experience",
+    "found": 37,
+    "gross_share": 0.7,
+    "median": 52000,
+    "p25": 52000,
+    "p75": 83000
+   },
+   "1": {
+    "n": 10,
+    "by": "experience",
+    "found": 10,
+    "gross_share": 0.6,
+    "median": 82000,
+    "p25": 52000,
+    "p75": 119000
+   },
+   "2": {
+    "n": 4,
+    "by": "experience",
+    "found": 4,
+    "gross_share": 1.0,
+    "median": 52000,
+    "p25": 46000,
+    "p75": 54000
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 52000,
+    "p25": 52000,
+    "p75": 52000
+   },
+   "88": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 52000,
+    "p25": 52000,
+    "p75": 52000
+   }
+  },
+  "backend.junior": {
+   "113": {
+    "n": 32,
+    "by": "name",
+    "found": 32,
+    "gross_share": 0.69,
+    "median": 111000,
+    "p25": 81000,
+    "p75": 111000
+   },
+   "1": {
+    "n": 50,
+    "by": "experience",
+    "found": 50,
+    "gross_share": 0.44,
+    "median": 150000,
+    "p25": 105000,
+    "p75": 200000
+   },
+   "2": {
+    "n": 21,
+    "by": "experience",
+    "found": 22,
+    "gross_share": 0.43,
+    "median": 113000,
+    "p25": 80000,
+    "p75": 150000
+   },
+   "3": {
+    "n": 4,
+    "by": "experience",
+    "found": 4,
+    "gross_share": 0.25,
+    "median": 110000,
+    "p25": 102000,
+    "p75": 121000
+   },
+   "4": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.57,
+    "median": 104000,
+    "p25": 76000,
+    "p75": 145000
+   },
+   "88": {
+    "n": 10,
+    "by": "experience",
+    "found": 10,
+    "gross_share": 0.6,
+    "median": 111000,
+    "p25": 103000,
+    "p75": 111000
+   }
+  },
+  "backend.middle": {
+   "113": {
+    "n": 35,
+    "by": "name",
+    "found": 35,
+    "gross_share": 0.14,
+    "median": 164000,
+    "p25": 140000,
+    "p75": 208000
+   },
+   "1": {
+    "n": 100,
+    "by": "experience",
+    "found": 130,
+    "gross_share": 0.33,
+    "median": 209000,
+    "p25": 159000,
+    "p75": 250000
+   },
+   "2": {
+    "n": 48,
+    "by": "experience",
+    "found": 49,
+    "gross_share": 0.38,
+    "median": 180000,
+    "p25": 149000,
+    "p75": 222000
+   },
+   "3": {
+    "n": 10,
+    "by": "experience",
+    "found": 10,
+    "gross_share": 0.2,
+    "median": 230000,
+    "p25": 121000,
+    "p75": 258000
+   },
+   "4": {
+    "n": 9,
+    "by": "experience",
+    "found": 10,
+    "gross_share": 0.56,
+    "median": 180000,
+    "p25": 104000,
+    "p75": 220000
+   },
+   "88": {
+    "n": 15,
+    "by": "experience",
+    "found": 15,
+    "gross_share": 0.47,
+    "median": 120000,
+    "p25": 111000,
+    "p75": 187000
+   }
+  },
+  "backend.senior": {
+   "113": {
+    "n": 79,
+    "by": "name",
+    "found": 84,
+    "gross_share": 0.39,
+    "median": 275000,
+    "p25": 200000,
+    "p75": 350000
+   },
+   "1": {
+    "n": 50,
+    "by": "name",
+    "found": 53,
+    "gross_share": 0.4,
+    "median": 280000,
+    "p25": 238000,
+    "p75": 384000
+   },
+   "2": {
+    "n": 38,
+    "by": "experience",
+    "found": 39,
+    "gross_share": 0.39,
+    "median": 200000,
+    "p25": 180000,
+    "p75": 292000
+   },
+   "3": {
+    "n": 8,
+    "by": "experience",
+    "found": 8,
+    "gross_share": 0.12,
+    "median": 250000,
+    "p25": 230000,
+    "p75": 319000
+   },
+   "4": {
+    "n": 4,
+    "by": "experience",
+    "found": 5,
+    "gross_share": 0.5,
+    "median": 338000,
+    "p25": 279000,
+    "p75": 406000
+   },
+   "88": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.29,
+    "median": 200000,
+    "p25": 170000,
+    "p75": 225000
+   }
+  },
+  "frontend.intern": {
+   "113": {
+    "n": 9,
+    "by": "experience",
+    "found": 9,
+    "gross_share": 0.78,
+    "median": 35000,
+    "p25": 35000,
+    "p75": 50000
+   },
+   "1": {
+    "n": 1,
+    "by": "name",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 35000,
+    "p25": 35000,
+    "p75": 35000
+   },
+   "2": {
+    "n": 1,
+    "by": "name",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 35000,
+    "p25": 35000,
+    "p75": 35000
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 1.0,
+    "median": 73000,
+    "p25": 54000,
+    "p75": 92000
+   }
+  },
+  "frontend.junior": {
+   "113": {
+    "n": 41,
+    "by": "experience",
+    "found": 41,
+    "gross_share": 0.54,
+    "median": 110000,
+    "p25": 85000,
+    "p75": 135000
+   },
+   "1": {
+    "n": 10,
+    "by": "experience",
+    "found": 10,
+    "gross_share": 0.5,
+    "median": 145000,
+    "p25": 94000,
+    "p75": 156000
+   },
+   "2": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 1.0,
+    "median": 109000,
+    "p25": 72000,
+    "p75": 110000
+   },
+   "3": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.5,
+    "median": 160000,
+    "p25": 155000,
+    "p75": 165000
+   },
+   "4": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 100000,
+    "p25": 100000,
+    "p75": 100000
+   },
+   "88": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.86,
+    "median": 111000,
+    "p25": 110000,
+    "p75": 111000
+   }
+  },
+  "frontend.middle": {
+   "113": {
+    "n": 60,
+    "by": "experience",
+    "found": 60,
+    "gross_share": 0.48,
+    "median": 150000,
+    "p25": 111000,
+    "p75": 183000
+   },
+   "1": {
+    "n": 26,
+    "by": "experience",
+    "found": 26,
+    "gross_share": 0.46,
+    "median": 174000,
+    "p25": 151000,
+    "p75": 208000
+   },
+   "2": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.71,
+    "median": 195000,
+    "p25": 147000,
+    "p75": 222000
+   },
+   "3": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.5,
+    "median": 160000,
+    "p25": 155000,
+    "p75": 165000
+   },
+   "4": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 100000,
+    "p25": 100000,
+    "p75": 100000
+   },
+   "88": {
+    "n": 5,
+    "by": "experience",
+    "found": 5,
+    "gross_share": 0.8,
+    "median": 111000,
+    "p25": 111000,
+    "p75": 111000
+   }
+  },
+  "frontend.senior": {
+   "113": {
+    "n": 34,
+    "by": "experience",
+    "found": 35,
+    "gross_share": 0.53,
+    "median": 201000,
+    "p25": 174000,
+    "p75": 233000
+   },
+   "1": {
+    "n": 22,
+    "by": "experience",
+    "found": 22,
+    "gross_share": 0.55,
+    "median": 212000,
+    "p25": 177000,
+    "p75": 269000
+   },
+   "2": {
+    "n": 6,
+    "by": "experience",
+    "found": 6,
+    "gross_share": 0.67,
+    "median": 222000,
+    "p25": 200000,
+    "p75": 230000
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "qa.intern": {
+   "113": {
+    "n": 27,
+    "by": "experience",
+    "found": 27,
+    "gross_share": 0.37,
+    "median": 60000,
+    "p25": 48000,
+    "p75": 70000
+   },
+   "1": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.29,
+    "median": 60000,
+    "p25": 44000,
+    "p75": 60000
+   },
+   "2": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.5,
+    "median": 77000,
+    "p25": 73000,
+    "p75": 81000
+   },
+   "3": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.5,
+    "median": 40000,
+    "p25": 35000,
+    "p75": 45000
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "qa.junior": {
+   "113": {
+    "n": 98,
+    "by": "experience",
+    "found": 153,
+    "gross_share": 0.33,
+    "median": 90000,
+    "p25": 70000,
+    "p75": 110000
+   },
+   "1": {
+    "n": 69,
+    "by": "experience",
+    "found": 72,
+    "gross_share": 0.29,
+    "median": 100000,
+    "p25": 75000,
+    "p75": 113000
+   },
+   "2": {
+    "n": 17,
+    "by": "experience",
+    "found": 17,
+    "gross_share": 0.18,
+    "median": 100000,
+    "p25": 85000,
+    "p75": 115000
+   },
+   "3": {
+    "n": 5,
+    "by": "experience",
+    "found": 5,
+    "gross_share": 0.2,
+    "median": 60000,
+    "p25": 50000,
+    "p75": 80000
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 6,
+    "by": "experience",
+    "found": 6,
+    "gross_share": 0.5,
+    "median": 81000,
+    "p25": 72000,
+    "p75": 104000
+   }
+  },
+  "qa.middle": {
+   "113": {
+    "n": 97,
+    "by": "experience",
+    "found": 202,
+    "gross_share": 0.27,
+    "median": 115000,
+    "p25": 90000,
+    "p75": 150000
+   },
+   "1": {
+    "n": 98,
+    "by": "experience",
+    "found": 115,
+    "gross_share": 0.31,
+    "median": 120000,
+    "p25": 100000,
+    "p75": 173000
+   },
+   "2": {
+    "n": 19,
+    "by": "experience",
+    "found": 20,
+    "gross_share": 0.16,
+    "median": 115000,
+    "p25": 95000,
+    "p75": 142000
+   },
+   "3": {
+    "n": 4,
+    "by": "experience",
+    "found": 4,
+    "gross_share": 0.0,
+    "median": 108000,
+    "p25": 75000,
+    "p75": 146000
+   },
+   "4": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.0,
+    "median": 145000,
+    "p25": 138000,
+    "p75": 152000
+   },
+   "88": {
+    "n": 10,
+    "by": "experience",
+    "found": 10,
+    "gross_share": 0.4,
+    "median": 108000,
+    "p25": 81000,
+    "p75": 145000
+   }
+  },
+  "qa.senior": {
+   "113": {
+    "n": 26,
+    "by": "name",
+    "found": 26,
+    "gross_share": 0.38,
+    "median": 215000,
+    "p25": 157000,
+    "p75": 300000
+   },
+   "1": {
+    "n": 54,
+    "by": "experience",
+    "found": 54,
+    "gross_share": 0.33,
+    "median": 200000,
+    "p25": 141000,
+    "p75": 248000
+   },
+   "2": {
+    "n": 5,
+    "by": "experience",
+    "found": 6,
+    "gross_share": 0.4,
+    "median": 175000,
+    "p25": 174000,
+    "p75": 180000
+   },
+   "3": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 180000,
+    "p25": 180000,
+    "p75": 180000
+   },
+   "4": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 0.0,
+    "median": 160000,
+    "p25": 145000,
+    "p75": 230000
+   },
+   "88": {
+    "n": 4,
+    "by": "experience",
+    "found": 4,
+    "gross_share": 0.25,
+    "median": 165000,
+    "p25": 139000,
+    "p75": 185000
+   }
+  },
+  "data_ml.intern": {
+   "113": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 1.0,
+    "median": 83000,
+    "p25": 75000,
+    "p75": 85000
+   },
+   "1": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "2": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "data_ml.junior": {
+   "113": {
+    "n": 20,
+    "by": "experience",
+    "found": 22,
+    "gross_share": 0.4,
+    "median": 152000,
+    "p25": 108000,
+    "p75": 200000
+   },
+   "1": {
+    "n": 10,
+    "by": "experience",
+    "found": 12,
+    "gross_share": 0.2,
+    "median": 192000,
+    "p25": 154000,
+    "p75": 215000
+   },
+   "2": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 90000,
+    "p25": 90000,
+    "p75": 90000
+   },
+   "3": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 139000,
+    "p25": 139000,
+    "p75": 139000
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 100000,
+    "p25": 100000,
+    "p75": 100000
+   }
+  },
+  "data_ml.middle": {
+   "113": {
+    "n": 39,
+    "by": "experience",
+    "found": 42,
+    "gross_share": 0.51,
+    "median": 225000,
+    "p25": 174000,
+    "p75": 291000
+   },
+   "1": {
+    "n": 19,
+    "by": "experience",
+    "found": 21,
+    "gross_share": 0.37,
+    "median": 225000,
+    "p25": 180000,
+    "p75": 266000
+   },
+   "2": {
+    "n": 3,
+    "by": "experience",
+    "found": 4,
+    "gross_share": 0.33,
+    "median": 291000,
+    "p25": 190000,
+    "p75": 345000
+   },
+   "3": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 1.0,
+    "median": 215000,
+    "p25": 177000,
+    "p75": 253000
+   },
+   "4": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 400000,
+    "p25": 400000,
+    "p75": 400000
+   },
+   "88": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 0.67,
+    "median": 291000,
+    "p25": 195000,
+    "p75": 307000
+   }
+  },
+  "data_ml.senior": {
+   "113": {
+    "n": 28,
+    "by": "experience",
+    "found": 29,
+    "gross_share": 0.54,
+    "median": 323000,
+    "p25": 272000,
+    "p75": 400000
+   },
+   "1": {
+    "n": 11,
+    "by": "experience",
+    "found": 11,
+    "gross_share": 0.45,
+    "median": 291000,
+    "p25": 252000,
+    "p75": 385000
+   },
+   "2": {
+    "n": 2,
+    "by": "name",
+    "found": 2,
+    "gross_share": 0.5,
+    "median": 345000,
+    "p25": 318000,
+    "p75": 373000
+   },
+   "3": {
+    "n": 2,
+    "by": "name",
+    "found": 2,
+    "gross_share": 0.5,
+    "median": 325000,
+    "p25": 308000,
+    "p75": 343000
+   },
+   "4": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 0.0,
+    "median": 400000,
+    "p25": 380000,
+    "p75": 400000
+   },
+   "88": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 1.0,
+    "median": 307000,
+    "p25": 299000,
+    "p75": 315000
+   }
+  },
+  "security.intern": {
+   "113": {
+    "n": 86,
+    "by": "experience",
+    "found": 87,
+    "gross_share": 0.56,
+    "median": 58000,
+    "p25": 48000,
+    "p75": 70000
+   },
+   "1": {
+    "n": 14,
+    "by": "experience",
+    "found": 15,
+    "gross_share": 0.64,
+    "median": 65000,
+    "p25": 60000,
+    "p75": 83000
+   },
+   "2": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.86,
+    "median": 57000,
+    "p25": 50000,
+    "p75": 75000
+   },
+   "3": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.0,
+    "median": 61000,
+    "p25": 49000,
+    "p75": 73000
+   },
+   "4": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 70000,
+    "p25": 70000,
+    "p75": 70000
+   },
+   "88": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 38000,
+    "p25": 38000,
+    "p75": 38000
+   }
+  },
+  "security.junior": {
+   "113": {
+    "n": 20,
+    "by": "name",
+    "found": 20,
+    "gross_share": 0.55,
+    "median": 75000,
+    "p25": 65000,
+    "p75": 96000
+   },
+   "1": {
+    "n": 89,
+    "by": "experience",
+    "found": 90,
+    "gross_share": 0.49,
+    "median": 120000,
+    "p25": 95000,
+    "p75": 157000
+   },
+   "2": {
+    "n": 36,
+    "by": "experience",
+    "found": 36,
+    "gross_share": 0.67,
+    "median": 79000,
+    "p25": 69000,
+    "p75": 96000
+   },
+   "3": {
+    "n": 25,
+    "by": "experience",
+    "found": 25,
+    "gross_share": 0.24,
+    "median": 90000,
+    "p25": 73000,
+    "p75": 130000
+   },
+   "4": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 0.33,
+    "median": 70000,
+    "p25": 62000,
+    "p75": 80000
+   },
+   "88": {
+    "n": 9,
+    "by": "experience",
+    "found": 9,
+    "gross_share": 0.56,
+    "median": 137000,
+    "p25": 75000,
+    "p75": 157000
+   }
+  },
+  "security.middle": {
+   "113": {
+    "n": 100,
+    "by": "experience",
+    "found": 647,
+    "gross_share": 0.49,
+    "median": 120000,
+    "p25": 82000,
+    "p75": 186000
+   },
+   "1": {
+    "n": 100,
+    "by": "experience",
+    "found": 158,
+    "gross_share": 0.48,
+    "median": 156000,
+    "p25": 120000,
+    "p75": 207000
+   },
+   "2": {
+    "n": 58,
+    "by": "experience",
+    "found": 58,
+    "gross_share": 0.59,
+    "median": 100000,
+    "p25": 80000,
+    "p75": 130000
+   },
+   "3": {
+    "n": 31,
+    "by": "experience",
+    "found": 31,
+    "gross_share": 0.19,
+    "median": 110000,
+    "p25": 82000,
+    "p75": 145000
+   },
+   "4": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.0,
+    "median": 82000,
+    "p25": 76000,
+    "p75": 94000
+   },
+   "88": {
+    "n": 9,
+    "by": "experience",
+    "found": 9,
+    "gross_share": 0.56,
+    "median": 137000,
+    "p25": 75000,
+    "p75": 157000
+   }
+  },
+  "security.senior": {
+   "113": {
+    "n": 98,
+    "by": "name",
+    "found": 221,
+    "gross_share": 0.59,
+    "median": 99000,
+    "p25": 74000,
+    "p75": 139000
+   },
+   "1": {
+    "n": 58,
+    "by": "name",
+    "found": 59,
+    "gross_share": 0.43,
+    "median": 154000,
+    "p25": 124000,
+    "p75": 200000
+   },
+   "2": {
+    "n": 29,
+    "by": "name",
+    "found": 29,
+    "gross_share": 0.62,
+    "median": 110000,
+    "p25": 87000,
+    "p75": 150000
+   },
+   "3": {
+    "n": 9,
+    "by": "name",
+    "found": 9,
+    "gross_share": 0.22,
+    "median": 85000,
+    "p25": 71000,
+    "p75": 100000
+   },
+   "4": {
+    "n": 5,
+    "by": "experience",
+    "found": 5,
+    "gross_share": 0.0,
+    "median": 82000,
+    "p25": 81000,
+    "p75": 97000
+   },
+   "88": {
+    "n": 2,
+    "by": "name",
+    "found": 2,
+    "gross_share": 0.0,
+    "median": 57000,
+    "p25": 48000,
+    "p75": 66000
+   }
+  },
+  "devops.intern": {
+   "113": {
+    "n": 14,
+    "by": "experience",
+    "found": 14,
+    "gross_share": 0.71,
+    "median": 61000,
+    "p25": 61000,
+    "p75": 61000
+   },
+   "1": {
+    "n": 5,
+    "by": "experience",
+    "found": 5,
+    "gross_share": 0.6,
+    "median": 61000,
+    "p25": 50000,
+    "p75": 61000
+   },
+   "2": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 0.67,
+    "median": 61000,
+    "p25": 61000,
+    "p75": 75000
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 1,
+    "by": "name",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 61000,
+    "p25": 61000,
+    "p75": 61000
+   }
+  },
+  "devops.junior": {
+   "113": {
+    "n": 70,
+    "by": "experience",
+    "found": 71,
+    "gross_share": 0.63,
+    "median": 138000,
+    "p25": 85000,
+    "p75": 214000
+   },
+   "1": {
+    "n": 21,
+    "by": "experience",
+    "found": 21,
+    "gross_share": 0.57,
+    "median": 165000,
+    "p25": 100000,
+    "p75": 200000
+   },
+   "2": {
+    "n": 15,
+    "by": "experience",
+    "found": 16,
+    "gross_share": 0.47,
+    "median": 120000,
+    "p25": 95000,
+    "p75": 204000
+   },
+   "3": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.5,
+    "median": 190000,
+    "p25": 165000,
+    "p75": 215000
+   },
+   "4": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 1.0,
+    "median": 146000,
+    "p25": 99000,
+    "p75": 193000
+   },
+   "88": {
+    "n": 6,
+    "by": "experience",
+    "found": 6,
+    "gross_share": 0.67,
+    "median": 110000,
+    "p25": 93000,
+    "p75": 196000
+   }
+  },
+  "devops.middle": {
+   "113": {
+    "n": 98,
+    "by": "experience",
+    "found": 120,
+    "gross_share": 0.49,
+    "median": 200000,
+    "p25": 150000,
+    "p75": 240000
+   },
+   "1": {
+    "n": 50,
+    "by": "experience",
+    "found": 51,
+    "gross_share": 0.46,
+    "median": 208000,
+    "p25": 167000,
+    "p75": 240000
+   },
+   "2": {
+    "n": 19,
+    "by": "experience",
+    "found": 20,
+    "gross_share": 0.42,
+    "median": 180000,
+    "p25": 115000,
+    "p75": 223000
+   },
+   "3": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 0.33,
+    "median": 180000,
+    "p25": 160000,
+    "p75": 210000
+   },
+   "4": {
+    "n": 4,
+    "by": "experience",
+    "found": 4,
+    "gross_share": 0.5,
+    "median": 165000,
+    "p25": 81000,
+    "p75": 255000
+   },
+   "88": {
+    "n": 6,
+    "by": "experience",
+    "found": 6,
+    "gross_share": 0.5,
+    "median": 168000,
+    "p25": 110000,
+    "p75": 236000
+   }
+  },
+  "devops.senior": {
+   "113": {
+    "n": 79,
+    "by": "experience",
+    "found": 81,
+    "gross_share": 0.35,
+    "median": 215000,
+    "p25": 177000,
+    "p75": 260000
+   },
+   "1": {
+    "n": 44,
+    "by": "experience",
+    "found": 45,
+    "gross_share": 0.39,
+    "median": 223000,
+    "p25": 200000,
+    "p75": 271000
+   },
+   "2": {
+    "n": 10,
+    "by": "experience",
+    "found": 10,
+    "gross_share": 0.5,
+    "median": 187000,
+    "p25": 138000,
+    "p75": 282000
+   },
+   "3": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 180000,
+    "p25": 180000,
+    "p75": 180000
+   },
+   "4": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.0,
+    "median": 195000,
+    "p25": 142000,
+    "p75": 248000
+   },
+   "88": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 250000,
+    "p25": 250000,
+    "p75": 250000
+   }
+  },
+  "data_eng.intern": {
+   "113": {
+    "n": 9,
+    "by": "experience",
+    "found": 9,
+    "gross_share": 1.0,
+    "median": 74000,
+    "p25": 74000,
+    "p75": 74000
+   },
+   "1": {
+    "n": 3,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 1.0,
+    "median": 96000,
+    "p25": 85000,
+    "p75": 98000
+   },
+   "2": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 74000,
+    "p25": 74000,
+    "p75": 74000
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "data_eng.junior": {
+   "113": {
+    "n": 18,
+    "by": "experience",
+    "found": 19,
+    "gross_share": 0.78,
+    "median": 98000,
+    "p25": 74000,
+    "p75": 174000
+   },
+   "1": {
+    "n": 11,
+    "by": "experience",
+    "found": 11,
+    "gross_share": 0.73,
+    "median": 174000,
+    "p25": 125000,
+    "p75": 196000
+   },
+   "2": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 74000,
+    "p25": 74000,
+    "p75": 74000
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "data_eng.middle": {
+   "113": {
+    "n": 22,
+    "by": "experience",
+    "found": 23,
+    "gross_share": 0.36,
+    "median": 218000,
+    "p25": 178000,
+    "p75": 269000
+   },
+   "1": {
+    "n": 18,
+    "by": "experience",
+    "found": 18,
+    "gross_share": 0.44,
+    "median": 213000,
+    "p25": 178000,
+    "p75": 246000
+   },
+   "2": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 275000,
+    "p25": 275000,
+    "p75": 275000
+   },
+   "3": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 275000,
+    "p25": 275000,
+    "p75": 275000
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "data_eng.senior": {
+   "113": {
+    "n": 20,
+    "by": "experience",
+    "found": 20,
+    "gross_share": 0.3,
+    "median": 230000,
+    "p25": 215000,
+    "p75": 275000
+   },
+   "1": {
+    "n": 16,
+    "by": "experience",
+    "found": 16,
+    "gross_share": 0.38,
+    "median": 222000,
+    "p25": 210000,
+    "p75": 250000
+   },
+   "2": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.0,
+    "median": 250000,
+    "p25": 238000,
+    "p75": 262000
+   },
+   "3": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 275000,
+    "p25": 275000,
+    "p75": 275000
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "mobile.intern": {
+   "113": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 1.0,
+    "median": 71000,
+    "p25": 69000,
+    "p75": 72000
+   },
+   "1": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 74000,
+    "p25": 74000,
+    "p75": 74000
+   },
+   "2": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "mobile.junior": {
+   "113": {
+    "n": 14,
+    "by": "experience",
+    "found": 14,
+    "gross_share": 0.29,
+    "median": 112000,
+    "p25": 75000,
+    "p75": 145000
+   },
+   "1": {
+    "n": 6,
+    "by": "experience",
+    "found": 6,
+    "gross_share": 0.5,
+    "median": 118000,
+    "p25": 98000,
+    "p75": 141000
+   },
+   "2": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "3": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 80000,
+    "p25": 80000,
+    "p75": 80000
+   },
+   "4": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 18000,
+    "p25": 18000,
+    "p75": 18000
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "mobile.middle": {
+   "113": {
+    "n": 25,
+    "by": "experience",
+    "found": 27,
+    "gross_share": 0.28,
+    "median": 150000,
+    "p25": 122000,
+    "p75": 210000
+   },
+   "1": {
+    "n": 14,
+    "by": "experience",
+    "found": 15,
+    "gross_share": 0.43,
+    "median": 184000,
+    "p25": 134000,
+    "p75": 228000
+   },
+   "2": {
+    "n": 2,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 0.5,
+    "median": 187000,
+    "p25": 180000,
+    "p75": 194000
+   },
+   "3": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 80000,
+    "p25": 80000,
+    "p75": 80000
+   },
+   "4": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.0,
+    "median": 102000,
+    "p25": 60000,
+    "p75": 143000
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "mobile.senior": {
+   "113": {
+    "n": 16,
+    "by": "experience",
+    "found": 18,
+    "gross_share": 0.31,
+    "median": 209000,
+    "p25": 171000,
+    "p75": 264000
+   },
+   "1": {
+    "n": 12,
+    "by": "experience",
+    "found": 13,
+    "gross_share": 0.33,
+    "median": 241000,
+    "p25": 196000,
+    "p75": 357000
+   },
+   "2": {
+    "n": 2,
+    "by": "experience",
+    "found": 3,
+    "gross_share": 0.5,
+    "median": 187000,
+    "p25": 180000,
+    "p75": 194000
+   },
+   "3": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "4": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 0.0,
+    "median": 185000,
+    "p25": 185000,
+    "p75": 185000
+   },
+   "88": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   }
+  },
+  "analyst.intern": {
+   "113": {
+    "n": 54,
+    "by": "experience",
+    "found": 54,
+    "gross_share": 0.48,
+    "median": 64000,
+    "p25": 52000,
+    "p75": 90000
+   },
+   "1": {
+    "n": 18,
+    "by": "experience",
+    "found": 18,
+    "gross_share": 0.44,
+    "median": 82000,
+    "p25": 60000,
+    "p75": 108000
+   },
+   "2": {
+    "n": 12,
+    "by": "experience",
+    "found": 12,
+    "gross_share": 0.42,
+    "median": 91000,
+    "p25": 75000,
+    "p75": 99000
+   },
+   "3": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.0,
+    "median": 68000,
+    "p25": 66000,
+    "p75": 69000
+   },
+   "4": {
+    "n": 0,
+    "by": "name",
+    "found": 0,
+    "gross_share": null
+   },
+   "88": {
+    "n": 1,
+    "by": "experience",
+    "found": 1,
+    "gross_share": 1.0,
+    "median": 52000,
+    "p25": 52000,
+    "p75": 52000
+   }
+  },
+  "analyst.junior": {
+   "113": {
+    "n": 100,
+    "by": "experience",
+    "found": 237,
+    "gross_share": 0.49,
+    "median": 100000,
+    "p25": 78000,
+    "p75": 132000
+   },
+   "1": {
+    "n": 79,
+    "by": "experience",
+    "found": 80,
+    "gross_share": 0.44,
+    "median": 130000,
+    "p25": 93000,
+    "p75": 162000
+   },
+   "2": {
+    "n": 25,
+    "by": "experience",
+    "found": 25,
+    "gross_share": 0.44,
+    "median": 92000,
+    "p25": 80000,
+    "p75": 120000
+   },
+   "3": {
+    "n": 9,
+    "by": "experience",
+    "found": 9,
+    "gross_share": 0.0,
+    "median": 120000,
+    "p25": 95000,
+    "p75": 120000
+   },
+   "4": {
+    "n": 5,
+    "by": "experience",
+    "found": 5,
+    "gross_share": 0.6,
+    "median": 120000,
+    "p25": 109000,
+    "p75": 160000
+   },
+   "88": {
+    "n": 5,
+    "by": "experience",
+    "found": 5,
+    "gross_share": 0.8,
+    "median": 111000,
+    "p25": 111000,
+    "p75": 120000
+   }
+  },
+  "analyst.middle": {
+   "113": {
+    "n": 100,
+    "by": "experience",
+    "found": 374,
+    "gross_share": 0.42,
+    "median": 137000,
+    "p25": 100000,
+    "p75": 193000
+   },
+   "1": {
+    "n": 100,
+    "by": "experience",
+    "found": 171,
+    "gross_share": 0.39,
+    "median": 166000,
+    "p25": 130000,
+    "p75": 220000
+   },
+   "2": {
+    "n": 33,
+    "by": "experience",
+    "found": 34,
+    "gross_share": 0.45,
+    "median": 141000,
+    "p25": 118000,
+    "p75": 175000
+   },
+   "3": {
+    "n": 14,
+    "by": "experience",
+    "found": 14,
+    "gross_share": 0.14,
+    "median": 155000,
+    "p25": 120000,
+    "p75": 200000
+   },
+   "4": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.43,
+    "median": 160000,
+    "p25": 114000,
+    "p75": 177000
+   },
+   "88": {
+    "n": 11,
+    "by": "experience",
+    "found": 11,
+    "gross_share": 0.45,
+    "median": 120000,
+    "p25": 111000,
+    "p75": 155000
+   }
+  },
+  "analyst.senior": {
+   "113": {
+    "n": 55,
+    "by": "name",
+    "found": 55,
+    "gross_share": 0.53,
+    "median": 160000,
+    "p25": 108000,
+    "p75": 229000
+   },
+   "1": {
+    "n": 24,
+    "by": "name",
+    "found": 24,
+    "gross_share": 0.58,
+    "median": 219000,
+    "p25": 161000,
+    "p75": 300000
+   },
+   "2": {
+    "n": 24,
+    "by": "experience",
+    "found": 25,
+    "gross_share": 0.42,
+    "median": 178000,
+    "p25": 148000,
+    "p75": 225000
+   },
+   "3": {
+    "n": 8,
+    "by": "experience",
+    "found": 8,
+    "gross_share": 0.38,
+    "median": 202000,
+    "p25": 165000,
+    "p75": 219000
+   },
+   "4": {
+    "n": 2,
+    "by": "experience",
+    "found": 2,
+    "gross_share": 0.0,
+    "median": 198000,
+    "p25": 189000,
+    "p75": 206000
+   },
+   "88": {
+    "n": 7,
+    "by": "experience",
+    "found": 7,
+    "gross_share": 0.29,
+    "median": 142000,
+    "p25": 115000,
+    "p75": 191000
+   }
+  }
+ }
+}
