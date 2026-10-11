@@ -1,22 +1,22 @@
 {
  "signature": {
-  "world": "симуляция всего пути: 5 направлений × 500 кандидатов, точек перебора: 72",
+  "world": "симуляция всего пути: 5 направлений × 500 кандидатов, точек перебора: 82",
   "seed": 20261006,
-  "config_hash": "4cc8cb8b30bd",
-  "commit": "36e4f02",
+  "config_hash": "052b8d098bd8",
+  "commit": "unknown",
   "bank": "76c4164b6ce83743",
   "n": 2500,
   "command": "make grade-sweep",
-  "generated_at": "2026-10-10T17:34:52+00:00"
+  "generated_at": "2026-10-10T18:25:02+00:00"
  },
  "constraints": {
   "max_over": 0.07,
   "min_retest_kappa": 0.84,
   "max_minutes_mean": 60.0
  },
- "baseline_key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+ "baseline_key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
  "choice": {
-  "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+  "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
   "point": {
    "decision": "claimed",
    "misspec": 0.5,
@@ -33,7 +33,9 @@
    "max_minutes": 60,
    "exclude_low": 0.0,
    "partial": 1,
-   "time_weight": 0.0
+   "time_weight": 0.0,
+   "weak_a": 0.0,
+   "weak_pool": "keep"
   },
   "better_on_all": true,
   "delta_exact": 0.0656,
@@ -42,7 +44,7 @@
   "delta_minutes": -0.07
  },
  "choice_strict_over_6": {
-  "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+  "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
   "point": {
    "decision": "claimed",
    "misspec": 0.5,
@@ -59,7 +61,9 @@
    "max_minutes": 60,
    "exclude_low": 0.0,
    "partial": 1,
-   "time_weight": 0.0
+   "time_weight": 0.0,
+   "weak_a": 0.0,
+   "weak_pool": "keep"
   },
   "better_on_all": true,
   "delta_exact": 0.05,
@@ -68,48 +72,54 @@
   "delta_minutes": -0.1
  },
  "pareto": [
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.75;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=0;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=12;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=12;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=14;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.25;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.3;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.4;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.45;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=se;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.2;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.3;partial=1;time_weight=0.0",
-  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0",
-  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.2;partial=1;time_weight=0.0",
-  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.3;partial=1;time_weight=0.0",
-  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=3;time_weight=0.0",
-  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0",
-  "decision=claimed;confirm_level=0.58;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.62;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=1.0",
-  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
-  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0"
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=keep",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=down",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=down",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.75;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=0;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=12;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=12;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=14;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.25;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.3;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.4;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.45;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=se;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.2;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.3;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.2;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.3;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=3;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.58;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.62;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
+  "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep"
  ],
  "points": [
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -126,7 +136,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -170,7 +182,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -187,7 +199,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -231,7 +245,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.55;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -248,7 +262,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -292,7 +308,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -309,7 +325,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -353,7 +371,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.65;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -370,7 +388,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -414,7 +434,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.7;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -431,7 +451,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -475,7 +497,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.75;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.75;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -492,7 +514,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -536,7 +560,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=0;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=0;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -553,7 +577,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -597,7 +623,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=3;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=3;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -614,7 +640,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -658,7 +686,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=9;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=9;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -675,7 +703,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -719,7 +749,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=12;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=12;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -736,7 +766,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -780,7 +812,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=10;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=10;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -797,7 +829,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -841,7 +875,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=30;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=30;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -858,7 +892,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -902,7 +938,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=6;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=6;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -919,7 +955,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -963,7 +1001,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=10;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=10;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -980,7 +1018,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1024,7 +1064,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=12;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=12;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1041,7 +1081,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1085,7 +1127,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=12;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=12;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1102,7 +1144,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1146,7 +1190,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=14;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=14;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1163,7 +1207,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1207,7 +1253,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=18;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=18;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1224,7 +1270,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1268,7 +1316,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1285,7 +1333,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1329,7 +1379,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.25;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.25;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1346,7 +1396,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1390,7 +1442,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.3;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.3;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1407,7 +1459,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1451,7 +1505,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.4;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.4;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1468,7 +1522,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1512,7 +1568,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.45;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.45;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1529,7 +1585,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1573,7 +1631,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1590,7 +1648,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1634,7 +1694,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.15;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.15;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1651,7 +1711,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1695,7 +1757,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.44;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.44;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1712,7 +1774,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1756,7 +1820,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.64;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.64;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1773,7 +1837,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1817,7 +1883,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=se;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=se;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1834,7 +1900,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1878,7 +1946,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=0.8;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=0.8;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1895,7 +1963,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -1940,7 +2010,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=0.9;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=0.9;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -1957,7 +2027,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2002,7 +2074,7 @@
    "pareto": false
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.5,
@@ -2019,7 +2091,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2061,7 +2135,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.35,
@@ -2078,7 +2152,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2122,7 +2198,7 @@
    "pareto": true
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.35,
@@ -2139,7 +2215,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2181,7 +2259,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.5;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.35,
@@ -2198,7 +2276,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2242,7 +2322,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.5;ext_items=0;ext_minutes=20;min_items=20;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=90;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.5;ext_items=0;ext_minutes=20;min_items=20;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=90;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.35,
@@ -2259,7 +2339,9 @@
     "max_minutes": 90,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2303,7 +2385,7 @@
    "pareto": false
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=0;ext_minutes=20;min_items=20;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=90;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=0;ext_minutes=20;min_items=20;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=90;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.35,
@@ -2320,7 +2402,9 @@
     "max_minutes": 90,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2362,7 +2446,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.35,
@@ -2379,7 +2463,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2423,7 +2509,7 @@
    "pareto": false
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.35,
@@ -2440,7 +2526,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2482,7 +2570,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -2499,7 +2587,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2543,7 +2633,7 @@
    "pareto": false
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.5,
@@ -2560,7 +2650,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2602,7 +2694,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -2619,7 +2711,9 @@
     "max_minutes": 60,
     "exclude_low": 0.1,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2663,7 +2757,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.2;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.2;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -2680,7 +2774,9 @@
     "max_minutes": 60,
     "exclude_low": 0.2,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2724,7 +2820,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.3;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.3;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -2741,7 +2837,9 @@
     "max_minutes": 60,
     "exclude_low": 0.3,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2785,7 +2883,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=2;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=2;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -2802,7 +2900,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 2,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2846,7 +2946,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=3;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=3;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -2863,7 +2963,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 3,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2907,7 +3009,7 @@
    "pareto": false
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.5,
@@ -2924,7 +3026,9 @@
     "max_minutes": 60,
     "exclude_low": 0.1,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -2966,7 +3070,7 @@
    "pareto": true
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.2;partial=1;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.2;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.5,
@@ -2983,7 +3087,9 @@
     "max_minutes": 60,
     "exclude_low": 0.2,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3025,7 +3131,7 @@
    "pareto": true
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.3;partial=1;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.3;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.5,
@@ -3042,7 +3148,9 @@
     "max_minutes": 60,
     "exclude_low": 0.3,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3084,7 +3192,7 @@
    "pareto": true
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=2;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=2;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.5,
@@ -3101,7 +3209,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 2,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3143,7 +3253,7 @@
    "pareto": false
   },
   {
-   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=3;time_weight=0.0",
+   "key": "decision=point;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=3;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "point",
     "misspec": 0.5,
@@ -3160,7 +3270,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 3,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3202,7 +3314,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3219,7 +3331,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.5
+    "time_weight": 0.5,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3263,7 +3377,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3280,7 +3394,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.5
+    "time_weight": 0.5,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3324,7 +3440,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=24;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=24;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3341,7 +3457,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.5
+    "time_weight": 0.5,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3385,7 +3503,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3402,7 +3520,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 1.0
+    "time_weight": 1.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3446,7 +3566,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3463,7 +3583,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 1.0
+    "time_weight": 1.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3507,7 +3629,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=24;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=24;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3524,7 +3646,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 1.0
+    "time_weight": 1.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3568,7 +3692,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3585,7 +3709,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.5
+    "time_weight": 0.5,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3629,7 +3755,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3646,7 +3772,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.5
+    "time_weight": 0.5,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3690,7 +3818,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=24;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=24;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.5;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3707,7 +3835,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.5
+    "time_weight": 0.5,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3751,7 +3881,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3768,7 +3898,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 1.0
+    "time_weight": 1.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3812,7 +3944,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3829,7 +3961,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 1.0
+    "time_weight": 1.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3873,7 +4007,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=24;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0",
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=24;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3890,7 +4024,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 1.0
+    "time_weight": 1.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3934,7 +4070,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.58;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.58;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -3951,7 +4087,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -3995,7 +4133,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.62;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.62;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -4012,7 +4150,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -4056,7 +4196,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -4073,7 +4213,9 @@
     "max_minutes": 60,
     "exclude_low": 0.1,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -4117,7 +4259,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=9;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=9;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -4134,7 +4276,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -4178,7 +4322,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.0;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -4195,7 +4339,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -4239,7 +4385,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=1.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=20;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.1;partial=1;time_weight=1.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -4256,7 +4402,9 @@
     "max_minutes": 60,
     "exclude_low": 0.1,
     "partial": 1,
-    "time_weight": 1.0
+    "time_weight": 1.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -4300,7 +4448,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.35,
@@ -4317,7 +4465,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -4361,7 +4511,7 @@
    "pareto": true
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.35;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.35,
@@ -4378,7 +4528,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -4422,7 +4574,7 @@
    "pareto": false
   },
   {
-   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0",
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=4;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=keep",
    "point": {
     "decision": "claimed",
     "misspec": 0.5,
@@ -4439,7 +4591,9 @@
     "max_minutes": 60,
     "exclude_low": 0.0,
     "partial": 1,
-    "time_weight": 0.0
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep"
    },
    "n_per_direction": 500,
    "metrics": {
@@ -4481,8 +4635,638 @@
     "feasible_strict": false
    },
    "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=keep",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "keep"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6216,
+    "over": 0.076,
+    "under": 0.2956,
+    "none": 0.0224,
+    "within_1": 0.9904,
+    "kappa_true": 0.7728,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.8581,
+    "retest_exact": 0.7948,
+    "minutes_mean": 56.9995,
+    "minutes_p90": 74.1178,
+    "minutes_over_60": 0.4892,
+    "items_mean": 20.6284,
+    "sessions_mean": 1.0012,
+    "borderline": 0.7548,
+    "status": {
+     "accepted_lower": 0.2232,
+     "confirmed": 0.716,
+     "none": 0.0224,
+     "provisional": 0.0384
+    },
+    "exact_ci": [
+     0.601,
+     0.641
+    ],
+    "over_ci": [
+     0.066,
+     0.086
+    ],
+    "retest_kappa_ci": [
+     0.846,
+     0.87
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "exclude"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6416,
+    "over": 0.0688,
+    "under": 0.2816,
+    "none": 0.024,
+    "within_1": 0.9928,
+    "kappa_true": 0.7951,
+    "under_claimed_below": 0.1668,
+    "retest_kappa": 0.8501,
+    "retest_exact": 0.774,
+    "minutes_mean": 55.4733,
+    "minutes_p90": 73.9176,
+    "minutes_over_60": 0.4464,
+    "items_mean": 20.56,
+    "sessions_mean": 1.006,
+    "borderline": 0.7588,
+    "status": {
+     "accepted_lower": 0.2116,
+     "confirmed": 0.7052,
+     "none": 0.024,
+     "provisional": 0.0592
+    },
+    "exact_ci": [
+     0.623,
+     0.66
+    ],
+    "over_ci": [
+     0.059,
+     0.079
+    ],
+    "retest_kappa_ci": [
+     0.838,
+     0.863
+    ],
+    "feasible": true,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=down",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "down"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6248,
+    "over": 0.0684,
+    "under": 0.2968,
+    "none": 0.0272,
+    "within_1": 0.9908,
+    "kappa_true": 0.7809,
+    "under_claimed_below": 0.1656,
+    "retest_kappa": 0.8553,
+    "retest_exact": 0.7872,
+    "minutes_mean": 57.0226,
+    "minutes_p90": 74.4725,
+    "minutes_over_60": 0.4956,
+    "items_mean": 20.6332,
+    "sessions_mean": 1.0052,
+    "borderline": 0.7732,
+    "status": {
+     "accepted_lower": 0.2228,
+     "confirmed": 0.6936,
+     "none": 0.0272,
+     "provisional": 0.0564
+    },
+    "exact_ci": [
+     0.606,
+     0.644
+    ],
+    "over_ci": [
+     0.059,
+     0.078
+    ],
+    "retest_kappa_ci": [
+     0.843,
+     0.868
+    ],
+    "feasible": true,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "exclude"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6416,
+    "over": 0.0688,
+    "under": 0.2816,
+    "none": 0.024,
+    "within_1": 0.9928,
+    "kappa_true": 0.7951,
+    "under_claimed_below": 0.1668,
+    "retest_kappa": 0.8501,
+    "retest_exact": 0.774,
+    "minutes_mean": 55.4733,
+    "minutes_p90": 73.9176,
+    "minutes_over_60": 0.4464,
+    "items_mean": 20.56,
+    "sessions_mean": 1.006,
+    "borderline": 0.7588,
+    "status": {
+     "accepted_lower": 0.2116,
+     "confirmed": 0.7052,
+     "none": 0.024,
+     "provisional": 0.0592
+    },
+    "exact_ci": [
+     0.624,
+     0.659
+    ],
+    "over_ci": [
+     0.06,
+     0.079
+    ],
+    "retest_kappa_ci": [
+     0.837,
+     0.861
+    ],
+    "feasible": true,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.6;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=down",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "down"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.6168,
+    "over": 0.0684,
+    "under": 0.304,
+    "none": 0.0304,
+    "within_1": 0.9936,
+    "kappa_true": 0.7852,
+    "under_claimed_below": 0.1664,
+    "retest_kappa": 0.8514,
+    "retest_exact": 0.776,
+    "minutes_mean": 56.9166,
+    "minutes_p90": 74.4555,
+    "minutes_over_60": 0.4976,
+    "items_mean": 20.6152,
+    "sessions_mean": 1.006,
+    "borderline": 0.7848,
+    "status": {
+     "accepted_lower": 0.2256,
+     "confirmed": 0.68,
+     "none": 0.0304,
+     "provisional": 0.064
+    },
+    "exact_ci": [
+     0.598,
+     0.636
+    ],
+    "over_ci": [
+     0.059,
+     0.079
+    ],
+    "retest_kappa_ci": [
+     0.838,
+     0.864
+    ],
+    "feasible": true,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=keep",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "keep"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5516,
+    "over": 0.0556,
+    "under": 0.3776,
+    "none": 0.0404,
+    "within_1": 0.9816,
+    "kappa_true": 0.7247,
+    "under_claimed_below": 0.166,
+    "retest_kappa": 0.8234,
+    "retest_exact": 0.7672,
+    "minutes_mean": 56.9887,
+    "minutes_p90": 74.2408,
+    "minutes_over_60": 0.492,
+    "items_mean": 20.6352,
+    "sessions_mean": 1.0016,
+    "borderline": 0.7604,
+    "status": {
+     "accepted_lower": 0.3028,
+     "confirmed": 0.586,
+     "none": 0.0404,
+     "provisional": 0.0708
+    },
+    "exact_ci": [
+     0.529,
+     0.569
+    ],
+    "over_ci": [
+     0.047,
+     0.064
+    ],
+    "retest_kappa_ci": [
+     0.809,
+     0.839
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=exclude",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "exclude"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5544,
+    "over": 0.0544,
+    "under": 0.3688,
+    "none": 0.046,
+    "within_1": 0.9824,
+    "kappa_true": 0.7358,
+    "under_claimed_below": 0.1648,
+    "retest_kappa": 0.8206,
+    "retest_exact": 0.7476,
+    "minutes_mean": 55.2658,
+    "minutes_p90": 73.7873,
+    "minutes_over_60": 0.4392,
+    "items_mean": 20.5768,
+    "sessions_mean": 1.0076,
+    "borderline": 0.7512,
+    "status": {
+     "accepted_lower": 0.292,
+     "confirmed": 0.5632,
+     "none": 0.046,
+     "provisional": 0.0988
+    },
+    "exact_ci": [
+     0.535,
+     0.575
+    ],
+    "over_ci": [
+     0.046,
+     0.063
+    ],
+    "retest_kappa_ci": [
+     0.804,
+     0.836
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.4;weak_pool=down",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.4,
+    "weak_pool": "down"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.544,
+    "over": 0.0496,
+    "under": 0.3848,
+    "none": 0.0472,
+    "within_1": 0.9804,
+    "kappa_true": 0.7253,
+    "under_claimed_below": 0.1652,
+    "retest_kappa": 0.8106,
+    "retest_exact": 0.7452,
+    "minutes_mean": 57.0665,
+    "minutes_p90": 74.47,
+    "minutes_over_60": 0.4996,
+    "items_mean": 20.6872,
+    "sessions_mean": 1.006,
+    "borderline": 0.7768,
+    "status": {
+     "accepted_lower": 0.304,
+     "confirmed": 0.5476,
+     "none": 0.0472,
+     "provisional": 0.1012
+    },
+    "exact_ci": [
+     0.524,
+     0.563
+    ],
+    "over_ci": [
+     0.041,
+     0.059
+    ],
+    "retest_kappa_ci": [
+     0.794,
+     0.826
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": true
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=exclude",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "exclude"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5544,
+    "over": 0.0544,
+    "under": 0.3688,
+    "none": 0.046,
+    "within_1": 0.9824,
+    "kappa_true": 0.7358,
+    "under_claimed_below": 0.1648,
+    "retest_kappa": 0.8206,
+    "retest_exact": 0.7476,
+    "minutes_mean": 55.2658,
+    "minutes_p90": 73.7873,
+    "minutes_over_60": 0.4392,
+    "items_mean": 20.5768,
+    "sessions_mean": 1.0076,
+    "borderline": 0.7512,
+    "status": {
+     "accepted_lower": 0.292,
+     "confirmed": 0.5632,
+     "none": 0.046,
+     "provisional": 0.0988
+    },
+    "exact_ci": [
+     0.536,
+     0.573
+    ],
+    "over_ci": [
+     0.046,
+     0.063
+    ],
+    "retest_kappa_ci": [
+     0.806,
+     0.834
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
+  },
+  {
+   "key": "decision=claimed;confirm_level=0.8;ext_items=6;ext_minutes=20;min_items=8;max_items=16;se_target=0.35;classify_z=1.28;stop_rule=classification;award_above=None;misspec=0.5;levels=5;max_minutes=60;exclude_low=0.0;partial=1;time_weight=0.0;weak_a=0.0;weak_pool=down",
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.8,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "down"
+   },
+   "n_per_direction": 500,
+   "metrics": {
+    "n": 2500,
+    "exact": 0.5428,
+    "over": 0.0492,
+    "under": 0.3852,
+    "none": 0.0492,
+    "within_1": 0.9836,
+    "kappa_true": 0.736,
+    "under_claimed_below": 0.1644,
+    "retest_kappa": 0.8178,
+    "retest_exact": 0.7412,
+    "minutes_mean": 57.0353,
+    "minutes_p90": 74.5298,
+    "minutes_over_60": 0.496,
+    "items_mean": 20.6712,
+    "sessions_mean": 1.0076,
+    "borderline": 0.7856,
+    "status": {
+     "accepted_lower": 0.3004,
+     "confirmed": 0.5416,
+     "none": 0.0492,
+     "provisional": 0.1088
+    },
+    "exact_ci": [
+     0.524,
+     0.561
+    ],
+    "over_ci": [
+     0.041,
+     0.058
+    ],
+    "retest_kappa_ci": [
+     0.801,
+     0.832
+    ],
+    "feasible": false,
+    "feasible_strict": false
+   },
+   "pareto": false
   }
  ],
  "caveat": "Синтетика: истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5, люди — модель ответов 2PL; проверяется механика всей процедуры, а не качество заданий на людях. «Предварительно» считается ступенью Junior. Дискриминативность — на симулированном пилоте с авторскими параметрами: она показывает замысел автора, а не поведение людей; r_pb панели моделей — независимая проверка на ответах моделей, шкала моделей не равна шкале людей.",
- "seconds": 0.0
+ "seconds": 58.0
 }
