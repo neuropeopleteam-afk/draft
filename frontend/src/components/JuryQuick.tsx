@@ -4,7 +4,7 @@ import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { isJury, NEED_PRESETS, needPreset, personaOf, quick, QUICK_MINUTES, quickInfo, quickSteps, type GuideMode, type Persona,
   type QuickPersona, type QuickStep } from "../lib/jury";
-import { useMeta } from "../lib/meta";
+import { useDirectionEntries, useMeta } from "../lib/meta";
 
 /** Я9 «Проверка за 12 минут»: короткий режим проводника жюри (шаги — lib/jury.ts, QUICK). Своя потребность →
  *  первые три → сравнение → приглашение с вилкой → ответ кандидата → экспресс-тест (краткий режим жюри) → категория →
@@ -64,6 +64,8 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
   const loc = useLocation();
   const steps = useQuickSteps();
   const ivStub = !!useMeta()?.interview?.stub;
+  const dirs = useDirectionEntries().map(([d]) => d);
+  const presetLabel = (p: (typeof NEED_PRESETS)[number]) => (p.dir && p.inCatalog && dirs.includes(p.dir) ? p.inCatalog : p.label);
   const LAST = steps.length - 1, PLAN = planOf(steps);
   const [now, setNow] = useState(Date.now());
   const [info, setInfo] = useState<QuickPersona[] | null>(null);
@@ -144,7 +146,7 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
           <div className="mt-1 flex flex-wrap gap-1.5">
             {NEED_PRESETS.map((p) => (
               <button key={p.label} type="button" title={p.text} disabled={busy} onClick={() => preset(p.text)}
-                className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-white/20 hover:bg-white/20 disabled:opacity-40">{p.label}</button>
+                className="rounded-lg bg-white/10 px-2.5 py-1 text-xs font-semibold text-white ring-1 ring-white/20 hover:bg-white/20 disabled:opacity-40">{presetLabel(p)}</button>
             ))}
           </div>
           <p className="mt-1 text-xs text-white/75">Или напишите свою — любой текст вакансии; подойдёт и файл PDF или DOCX.</p>
