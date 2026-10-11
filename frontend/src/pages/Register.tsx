@@ -44,7 +44,7 @@ export default function Register() {
   return (
     <AuthShell
       title="Регистрация"
-      footer={<>Уже есть аккаунт? <Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Войти</Link></>}
+      lead={<>Уже есть аккаунт? <Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Войти</Link></>}
     >
       {/* UX-2: жюри регистрироваться не нужно — одна строка со ссылкой на вход в один клик */}
       <p className="mb-6 rounded-xl bg-[#F3F2FB] px-4 py-3 text-sm text-brand-night" data-testid="register-jury-hint">
