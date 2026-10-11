@@ -476,7 +476,7 @@ def test_block_is_hidden_below_three_completed_paths(client, monkeypatch):
     assert "N = 3 завершённых путей (кандидаты — 2, работодатели — 1)" in s["signature"]
     assert utcnow().astimezone(report.MSK).strftime("%d.%m.%Y") in s["signature"] or (utcnow() - timedelta(days=1)).astimezone(report.MSK).strftime("%d.%m.%Y") in s["signature"]
     assert s["completion"]["by_role"] == {}  # у роли меньше трёх завершивших — своего среза нет
-    assert s["sus"] == {"n": 1, "by_role": {}} and s["p5"]["n"] == 0 and "mean" not in s["p5"]  # один ответ — без цифр
+    assert s["sus"] == {"n": 1, "enough": False, "by_role": {}} and s["p5"]["n"] == 0 and "mean" not in s["p5"]  # один ответ — без цифр
 
 
 def test_declined_and_excluded_never_enter_the_numbers(client, monkeypatch):
@@ -502,10 +502,11 @@ def test_numbers_slices_ci_and_where_people_stop(client, monkeypatch):
         fk.add(db, "employer", done=False, idle_min=2, current="selection")  # ещё идёт — в «бросили» не входит
     s = client.get("/api/study/summary").json()
     assert s["n"]["done"] == 6 and s["n"]["stopped"] == 1 and s["n"]["active"] == 1
-    assert s["sus"]["n"] == 6 and set(s["sus"]["by_role"]) == {"candidate", "employer"}
-    assert s["sus"]["by_role"]["employer"]["mean"] == pytest.approx((100 + 75 + 50) / 3)
-    lo, hi = s["sus"]["by_role"]["employer"]["ci"]
-    assert 0 <= lo < 75 < hi <= 100
+    # SUS: всего 6 анкет ≥ 5 — балл есть; в каждой роли по 3 < 5 — среза по роли нет (Я17: n < 5 не результат)
+    assert s["sus_min_n"] == 5 and s["sus"]["n"] == 6 and s["sus"]["enough"] and s["sus"]["by_role"] == {}
+    assert s["sus"]["mean"] == pytest.approx((100 + 75 + 50 + 75 * 3) / 6)
+    lo, hi = s["sus"]["ci"]
+    assert 0 <= lo < s["sus"]["mean"] < hi <= 100
     p5 = s["p5"]  # P@5 участников: 0,8; 0,4; 0,6 → среднее 0,6
     assert p5["n"] == 3 and p5["mean"] == pytest.approx(0.6) and p5["threshold"] == 4
     assert p5["ratings"] == 15 and p5["ratings_relevant"] == 9 and len(p5["by_rank"]) == 5 and p5["ci"][0] <= p5["mean"] <= p5["ci"][1]

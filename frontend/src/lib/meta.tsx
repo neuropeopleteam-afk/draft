@@ -13,6 +13,7 @@ export interface Meta {
   };
   operator: Record<string, string>;
   proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
+  voice_need?: { enabled: boolean; stub?: boolean; max_seconds: number; consent_version: string; consent_text: string };  // «Надиктовать»
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
   interview?: { enabled: boolean; stub: boolean; defense_minutes: number }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.)

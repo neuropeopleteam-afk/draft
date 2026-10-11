@@ -60,6 +60,7 @@ from app.modules.subs import router as subs_api
 from app.modules.subs import runner as subs_runner
 from app.modules.study import router as study_api
 from app.modules.validation.router import router as validation_router
+from app.modules.voice import router as voice  # голосовой ввод потребности (VOICE_NEED_ENABLED)
 from app.modules.fsp.registry import router as fsp_registry_router
 from app.passport.router import TAGS as PASSPORT_TAGS
 from app.passport.router import router as passport_router
@@ -164,7 +165,8 @@ def create_app() -> FastAPI:
               mutual.employer_router, mutual.candidate_router, mutual.public_router,  # взаимный подбор (Н9, Н2, Н3)
               study_api.router,  # статистика прохождения: живые пользователи (У1)
               hh_api.router, hh_api.validation_router,  # hh.ru (Я12): без HH_ENABLED и токена — 404 hh_disabled
-              interview.router, interview.candidate_router, interview.employer_router):  # устная защита (Я15)
+              interview.router, interview.candidate_router, interview.employer_router,  # устная защита (Я15)
+              voice.router):  # «Надиктовать» потребность (за флагом VOICE_NEED_ENABLED)
         app.include_router(r)
     include_integration_routers(app)
     include_ideas_routers(app)
@@ -203,7 +205,8 @@ def create_app() -> FastAPI:
                           "invitation_cooldown_days": get_settings().invitation_cooldown_days},
                 "interview": interview.svc.meta(),  # устная защита и ИИ-интервью (Я15): {enabled, stub, defense_minutes}
                 "interview_enabled": interview.svc.enabled(),  # то же одним флагом — шаг проводника «12 минут» (Я9)
-                "hh": hh_api.meta()}  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
+                "hh": hh_api.meta(),  # Я12: кнопка импорта с hh.ru и «Рынок по hh.ru» — только при HH_ENABLED и токене
+                "voice_need": voice.meta()}  # кнопка «Надиктовать»: флаг, заглушка, предел секунд, версия согласия
 
     class HealthOut(BaseModel):
         status: str
