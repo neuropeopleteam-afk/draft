@@ -119,6 +119,14 @@ SCENARIOS = {
                                  common_principal_short=16),
     "d_k20_c_o2_cs8_p2": dict(mult=2, a=1.5, block=20, partial=True, common_short_mult=4, own_short_mult=0.5,
                                own_principal_short=2),
+    # банк после синхронизации банка Lead/Principal (feat/bank-ext 705e743, 11.10): у пяти базовых направлений в среднем
+    # Lead 2,4 коротких + 2 развёрнутых, Principal 0,6 + 2; общий блок Lead 3 + 4, Principal 2 + 2 (всего 74 семейства
+    # на 10 блоков) → у направления Lead (2, 2), Principal (1, 2); общий Lead (3, 4), Principal (2, 2). Частичный балл —
+    # модель платформы; k10 — второй этап: до 10 коротких Lead/Principal после основной части (сколько найдётся в банке)
+    "g_bank705": dict(mult=2, a=1.5, block=0, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                      own_principal_short=1, common_principal_short=2),
+    "g_bank705_k10": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
+                          own_principal_short=1, common_principal_short=2),
 }
 
 
