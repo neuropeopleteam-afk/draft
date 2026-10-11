@@ -33,7 +33,9 @@ export const plainText = (s?: string | null) => ruText(s)
   .replace(/θ\s+(?=[+−-]?\d)/g, "уровень ")
   .replace(/θ/g, "уровень по тесту")
   .replace(/погрешность SE|\bSE\b/g, "точность")
-  .replace(/сила паспорта/g, "вес достижений");
+  .replace(/сила паспорта/g, "вес достижений")
+  .replace(/\s*\((?:уровень )?T[012](?:\/T[012])*\)/g, "")
+  .replace(/,? ?уровень T[012]\b/g, "");
 /** Доля → проценты: 0.953 → «95 %». */
 export const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${num(v * 100, d)}${NB}%`);
 export const dt = (s?: string | null) => (s ? new Date(s).toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" }) : "—");
