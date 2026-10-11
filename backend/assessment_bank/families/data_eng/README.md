@@ -1,12 +1,12 @@
 # Направление data_eng — Инженер данных
 
-Семейства направления «Инженер данных»: SQL-аналитика (агрегаты, окна, сессии, SCD2), ETL/ELT (upsert,
+Семейства направления «Инженер данных»: SQL-аналитика (фильтры, агрегаты, окна, сессии, SCD2), ETL/ELT (upsert,
 перезапись партиций, инкрементальная выгрузка по водяному знаку, CDC), качество данных, оркестрация (Airflow:
 правила запуска, catchup), потоковая обработка (окна по времени события, отставание группы Kafka, гарантии доставки),
 проектирование конвейеров.
 
-Семейств уровней Стажёр–Senior: **20**. Покрытие уровней (семейство может целиться в два соседних): Стажёр — 3, Junior — 13, Middle — 14, Senior — 7.
-Семейства уровней Lead/Principal (файлы с префиксами `lead_`/`principal_`, 3 шт.) — отдельный набор,
+Семейств уровней Стажёр–Senior: **22**. Покрытие уровней (семейство может целиться в два соседних): Стажёр — 4, Junior — 14, Middle — 15, Senior — 8.
+Семейства уровней Lead/Principal (файлы с префиксами `lead_`/`principal_`, 6 шт.) — отдельный набор,
 проверяется `tests/test_lead_principal_a.py`.
 
 ## Как устроены семейства
@@ -29,6 +29,7 @@
 |---|---|---|---|---|---|
 | `data_eng.design.pipeline_open` | open_answer | Senior | +1.3 | Проектирование конвейера данных — источники, гарантии, модель хранения и эксплуатация | рубрика |
 | `data_eng.dq.uniqueness_check_bug` | find_bug | Junior, Middle | -0.4 | Качество данных — проверка уникальности по неполному составному ключу | исполнение: python |
+| `data_eng.dwh.scd2_rerun_fix` | choose_fix | Middle, Senior | +0.8 | Загрузка измерения SCD2 — повторный запуск за ту же дату создаёт вторую текущую версию | исполнение: python |
 | `data_eng.etl.cdc_apply_output` | predict_output | Middle, Senior | +0.6 | CDC — итоговое состояние таблицы после применения событий не по порядку (повторы, устаревшие, удаление) | исполнение: python |
 | `data_eng.etl.csv_parse_bug` | find_bug | Стажёр, Junior | -0.8 | ETL — разбор CSV через split(",") при полях с запятыми | исполнение: python |
 | `data_eng.etl.partition_overwrite_fix` | choose_fix | Middle, Senior | +0.5 | ETL — идемпотентный перезапуск дневной загрузки (перезапись партиции в транзакции) | исполнение: python |
@@ -38,6 +39,7 @@
 | `data_eng.orch.catchup_runs_mcq` | mcq_concept | Junior, Middle | -0.1 | Оркестрация (Airflow) — сколько запусков создаст catchup и какая у них logical_date | исполнение: python |
 | `data_eng.orch.trigger_rule_output` | predict_output | Junior, Middle | +0.3 | Оркестрация (Airflow) — состояния задач после падения одной (trigger_rule) | исполнение: python |
 | `data_eng.sql.and_or_precedence_output` | predict_output | Стажёр, Junior | -1.3 | SQL — приоритет AND над OR в WHERE | исполнение: sqlite |
+| `data_eng.sql.date_between_output` | predict_output | Стажёр, Junior | -0.9 | SQL — фильтр по датам через BETWEEN по столбцу с датой и временем | исполнение: sqlite |
 | `data_eng.sql.group_by_having_output` | predict_output | Стажёр, Junior | -1.1 | SQL — WHERE до группировки и HAVING после | исполнение: sqlite |
 | `data_eng.sql.left_join_filter_bug` | find_bug | Junior, Middle | -0.3 | SQL — условие на правую таблицу в WHERE ломает LEFT JOIN | исполнение: python |
 | `data_eng.sql.null_agg_canary` | predict_output | Junior | -1.0 | SQL — агрегаты и NULL (канарейка) | исполнение: sqlite |
