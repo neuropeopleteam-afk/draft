@@ -256,7 +256,7 @@ def run(n: int = 300, quick: bool = False, write: bool = True, parallel: int = 2
                                   command="make partial-credit-sim" if not quick else
                                   "python -m app.modules.validation.partial_credit_sim --quick"),
            "quick": quick, "n_per_direction": n, "directions": list(dirs), "worlds": WORLDS, "arms": ARM_RU,
-           "rows": rows, "info": info_table(), "caveat": CAVEAT,
+           "rows": rows, "info": info_table(), "caveat": CAVEAT, "conclusions": conclusions(rows),
            "seconds": round(time.time() - t0, 1)}
     if write:
         OUT.write_text(json.dumps(rep, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
@@ -305,11 +305,54 @@ def _f(v, d: int = 3) -> str:
 
 
 def _d(v) -> str:
-    return "—" if v is None else (f"{100 * v:+.1f} п. п.").replace(".", ",")
+    return "—" if v is None else f"{100 * v:+.1f}".replace(".", ",") + " п. п."
 
 
 def _dci(ci) -> str:
     return "" if not ci else f" [{100 * ci[0]:+.1f}; {100 * ci[1]:+.1f}]".replace(".", ",")
+
+
+def conclusions(rows: list[dict]) -> list[str]:
+    """Выводы по строкам симуляции (числа — из строк; толкование — общее для любых чисел этого мира)."""
+    def get(length, world, conf, arm):
+        return next((r for r in rows if (r["length"], r["world"], r["confirm"], r["arm"]) == (length, world, conf, arm)),
+                    None)
+
+    out = []
+    fr, gp, bi = (get("adaptive", "base", 0.6, a) for a in ("frac", "gpcm", "bin"))
+    if fr and gp and gp.get("diff_vs_frac"):
+        d = gp["diff_vs_frac"]
+        out.append(f"Основной мир, P ≥ 0,6, адаптивный тест: «0–4, GPCM» против нынешнего учёта доли — точно "
+                   f"{_pc(fr['exact'])} → {_pc(gp['exact'])} ({_d(d['exact'])}{_dci(d['exact_ci'])}), повтор "
+                   f"{_pc(fr['retest_exact'])} → {_pc(gp['retest_exact'])} ({_d(d['retest_exact'])}"
+                   f"{_dci(d['retest_exact_ci'])}). Разница в пределах шума: прироста точности уровня нет.")
+        if fr.get("rmse_theta_first") is not None:
+            out.append(f"GPCM снижает заявленную ошибку SE {_f(fr['se_first_mean'])} → {_f(gp['se_first_mean'])}, но "
+                       f"фактическая ошибка θ̂ не меньше (RMSE {_f(fr['rmse_theta_first'])} → "
+                       f"{_f(gp['rmse_theta_first'])}), а покрытие 90 %-интервала падает {_pc(fr['coverage90_first'])} → "
+                       f"{_pc(gp['coverage90_first'])}: выигрыш информации в основном на бумаге.")
+    b8 = get("adaptive", "base", 0.8, "bin")
+    if fr and bi and bi.get("diff_vs_frac"):
+        d = bi["diff_vs_frac"]
+        tail = (f"; при P ≥ 0,8 — {_d(b8['diff_vs_frac']['retest_exact'])}{_dci(b8['diff_vs_frac']['retest_exact_ci'])}"
+                if b8 and b8.get("diff_vs_frac") else "")
+        out.append(f"Строгий «0/1» немного хуже нынешнего учёта доли: повтор {_d(d['retest_exact'])}"
+                   f"{_dci(d['retest_exact_ci'])}{tail}; RMSE θ̂ {_f(bi.get('rmse_theta_first'))} против "
+                   f"{_f(fr.get('rmse_theta_first'))}. Частичный балл полезен — и он уже есть: доля 0..1 входит в 2PL "
+                   f"(квазибиномиально).")
+    out.append("Почему так: оценочное уравнение доли в 2PL a·(x − P(θ)) почти пропорционально уравнению GPCM "
+               "a_g·(k − E[k | θ]) — ожидаемая доля балла GPCM совпадает с кривой 2PL (так выведены параметры до "
+               "калибровки), поэтому точечная оценка θ почти та же; меняются вес развёрнутых частей и заявленная точность. "
+               "К тому же развёрнутых частей в сессии не больше трёх из ≈ 20 заданий.")
+    fg = get("fixed", "base", 0.6, "gpcm")
+    if fg and fg.get("diff_vs_frac"):
+        d = fg["diff_vs_frac"]
+        out.append(f"Одна длина (16 заданий): точно {_d(d['exact'])}{_dci(d['exact_ci'])}, повтор "
+                   f"{_d(d['retest_exact'])}{_dci(d['retest_exact_ci'])} — тоже в пределах шума.")
+    out.append("Решение: флаг ASSESSMENT_PARTIAL_CREDIT_ENABLED оставить выключенным. Смысл включать — после калибровки "
+               "ступеней GPCM на ответах людей (пилот), когда ступени не выводятся из 2PL; до этого балл 0–4 полезен как "
+               "показ (рубрика, цитаты), а не как источник точности уровня.")
+    return out
 
 
 def markdown(rep: dict) -> str:
@@ -325,6 +368,7 @@ def markdown(rep: dict) -> str:
     L += ["", "Миры (как отвечает кандидат и как ошибается оценщик):", ""]
     for k, v in rep["worlds"].items():
         L.append(f"- `{k}` — {v['ru']};")
+    L += ["", "## Выводы", ""] + [f"- {c}" for c in rep.get("conclusions") or conclusions(rep["rows"])]
     L += ["", "## Итог", "",
           "| Длина | Мир | Порог P | Вариант | Точно | Выше | Ниже | Без кат. | Повтор совпал | κw повтора | SE 1-й сессии | "
           "RMSE θ̂ 1-й сессии | Покрытие 90 % | Заданий в сессии | Минут на путь |",
@@ -365,7 +409,10 @@ def main() -> int:
         Path(a.worker[1]).write_text(json.dumps([run_task(tuple(t)) for t in tasks]), encoding="utf-8")
         return 0
     if a.md_only:
-        DOCS_MD.write_text(markdown(json.loads(OUT.read_text(encoding="utf-8"))), encoding="utf-8")
+        rep = json.loads(OUT.read_text(encoding="utf-8"))
+        rep["conclusions"] = conclusions(rep["rows"])
+        OUT.write_text(json.dumps(rep, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        DOCS_MD.write_text(markdown(rep), encoding="utf-8")
         return 0
     run(a.n, a.quick, not a.no_write, a.parallel)
     return 0
