@@ -252,7 +252,7 @@ export function EmployerProbes() {
   }
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Зонды" subtitle="Короткая задача с вилкой до раскрытия контактов; оценка ответа — факт T1." />
+      <PageTitle title="Зонды" subtitle="Короткая задача с вилкой до раскрытия контактов; оценка ответа — подтверждённый факт." />
       <p className="text-sm text-brand-ink/70">Рядом с зондом со свободным ответом — <Link className="font-semibold text-brand hover:underline" to="/employer/assignments">задания с автопроверкой</Link>: 3–5 заданий банка по стеку потребности, проверяет система.</p>
       {need && all && <p className="text-sm text-brand-ink/70" data-testid="probes-need-filter">Показаны зонды по одной потребности: {data?.length ?? 0} из {all.length}. <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${need}`}>К подборке</Link> · <Link className="font-semibold text-brand hover:underline" to="/employer/probes">Все зонды</Link></p>}
       <Alert>{err}</Alert>

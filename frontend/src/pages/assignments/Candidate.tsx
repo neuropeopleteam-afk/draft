@@ -97,7 +97,7 @@ export function CandidateAssignments() {
   return (
     <div className="max-w-5xl space-y-6">
       <PageTitle title="Задания для вас"
-        subtitle={`Адресные задания с автопроверкой из банка платформы: 3–5 заданий по вашему стеку, ключи остаются на сервере. Система предлагает их примерно раз в ${data.feed_days} дн. и каждый раз объясняет, почему именно это. Результат оценивается по рубрике, обновляет свежесть профиля и виден работодателям в подборках как факт T1.`} />
+        subtitle={`Адресные задания с автопроверкой из банка платформы: 3–5 заданий по вашему стеку, ключи остаются на сервере. Система предлагает их примерно раз в ${data.feed_days} дн. и каждый раз объясняет, почему именно это. Результат оценивается по рубрике, обновляет свежесть профиля и виден работодателям в подборках как подтверждённый факт.`} />
       {!data.has_category && <Alert kind="info">Лента открывается после первичного теста: по категории и стеку система подбирает задания. Задания-зонды и задания к откликам приходят и без неё.</Alert>}
       {data.new_offer && <Alert kind="ok">Новое задание по вашему стеку — предложение действует, пока работодатель не закроет задание. Отказ на рейтинг не влияет.</Alert>}
       <div className="grid items-start gap-4 lg:grid-cols-2">
@@ -199,7 +199,7 @@ export function CandidateAssignment() {
           <div><p className="label">Из чего состоит</p><Families items={a.families} /></div>
           {d.status !== "scored" && <RubricView rubric={a.rubric} title="Как оценивается: рубрика на 100 баллов" />}
           {needApproach && d.status !== "scored" && <Alert kind="info">В конце нужно коротко описать свой подход (от {APPROACH_MIN} символов): его оценит работодатель по рубрике. Не указывайте ФИО, контакты и ссылки — их система скроет, но лучше не писать.</Alert>}
-          <p className="text-xs text-brand-ink/65">У каждого кандидата свой вариант, ответы сверяются с ключом на сервере, код не исполняется. Результат — верно/неверно по заданиям и доля по навыкам; он записывается как факт T1 и виден работодателям в подборках. Отказ ни на что не влияет.</p>
+          <p className="text-xs text-brand-ink/65">У каждого кандидата свой вариант, ответы сверяются с ключом на сервере, код не исполняется. Результат — верно/неверно по заданиям и доля по навыкам; он записывается как подтверждённый факт и виден работодателям в подборках. Отказ ни на что не влияет.</p>
           {d.status === "offered" && a.status === "active" && (
             <div className="flex flex-wrap gap-3 border-t border-brand-night/10 pt-4">
               <button className="btn-primary" disabled={busy} onClick={() => setConfirm("start")}>Начать: {a.time_limit_min} мин</button>
@@ -262,7 +262,7 @@ export function CandidateAssignment() {
             <p className="text-sm text-brand-ink/65">{spentText(d.time_spent_s)}{d.submitted_at ? ` · ${dtt(d.submitted_at)}` : ""}</p>
           </div>
           {d.tasks && <ul className="flex flex-wrap gap-2 text-xs">{d.tasks.map((t) => <li key={t.token} className={`rounded-md px-2 py-1 font-semibold ${t.correct ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>№{t.position}: {t.correct ? "верно" : "неверно"}</li>)}</ul>}
-          <div><p className="label flex items-center gap-2"><Level level="T1" /> По навыкам — записано в профиль как факт T1</p><Skills items={d.skills} /></div>
+          <div><p className="label flex items-center gap-2"><Level level="T1" /> По навыкам — записано в профиль как подтверждённый факт</p><Skills items={d.skills} /></div>
           <RubricView rubric={d.rubric} title="Рубрика: баллы" />
           <div className="flex flex-wrap items-center gap-2"><ReviewBadge a={d} />{d.review_status === "pending" && <span className="text-xs text-brand-ink/65">Пока оценки нет, в подборке виден результат автопроверки; итог по рубрике появится после оценки работодателя, вы получите уведомление.</span>}</div>
           {d.approach_text && <div><p className="label">Ваш подход (контакты скрыты)</p><p className="whitespace-pre-wrap rounded-xl bg-[#F7F6FB] px-3 py-2 text-sm text-brand-ink/80">{d.approach_text}</p></div>}
