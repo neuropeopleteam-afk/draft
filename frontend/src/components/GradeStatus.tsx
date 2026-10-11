@@ -10,6 +10,12 @@ export interface GradeStatusInfo {
   grade?: string | null; grade_title?: string | null; claimed_grade?: string | null; claimed_title?: string | null;
   claimed_category_id?: string | null;
   attempt?: { grade?: string | null; theta?: number | null; se?: number | null; at?: string | null } | null;
+  // Lead/Principal (GRADES_EXT_ENABLED): уровень присвоен тестом, но «предварительно» — точность различения ниже цели
+  ext_preliminary?: ExtPreliminary | null;
+}
+
+export interface ExtPreliminary {
+  grade: string; title: string; text: string; second_stage?: { available: boolean; text: string } | null;
 }
 
 const STYLE: Record<GradeStatusKind, string> = {
@@ -27,17 +33,31 @@ export function GradeBadge({ s, claimed }: { s?: GradeStatusInfo | null; claimed
   if (!s) return null;
   const label = s.status === "provisional" ? `Предварительно${s.p_pct != null ? ` · ${s.p_pct} %` : ""}`
     : s.status === "unconfirmed" ? `Грейд не подтверждён${claimed?.title ? ` · заявлен ${claimed.title}` : s.claimed_title ? ` · заявлен ${s.claimed_title}` : ""}`
+    : s.ext_preliminary ? `${s.grade_title ?? s.ext_preliminary.grade} по тесту · предварительно`
     : "Грейд подтверждён";
+  const cls = s.status === "confirmed" && s.ext_preliminary ? STYLE.provisional : STYLE[s.status];
   return (
-    <span title={ruText(s.text)} className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ${STYLE[s.status]}`}>
+    <span title={ruText(s.text)} data-testid={s.ext_preliminary ? "grade-ext-preliminary" : undefined} className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1 ${cls}`}>
       {label}
     </span>
   );
 }
 
+/** Lead/Principal «предварительно»: пояснение и предложение второго этапа (уточнение у границы). */
+export function ExtPreliminaryNote({ x, className = "" }: { x?: ExtPreliminary | null; className?: string }) {
+  if (!x) return null;
+  const ss = x.second_stage;
+  return (
+    <div data-testid="ext-preliminary-note" className={`rounded-xl bg-amber-50 p-3 text-sm leading-relaxed text-amber-950 ring-1 ring-amber-200 ${className}`}>
+      <p><b>Уровень {x.grade === "principal" ? "Principal" : "Lead"} — предварительно.</b> {ruText(x.text)}</p>
+      {ss && <p className="mt-1">{ss.available ? ruText(ss.text) : `${ruText(ss.text)} Второй этап пока не включён — до него уровень остаётся с пометкой «предварительно».`}</p>}
+    </div>
+  );
+}
+
 /** Пояснение под плашкой — одно предложение из бэкенда (текст един для всех экранов). */
 export function GradeStatusNote({ s, className = "" }: { s?: GradeStatusInfo | null; className?: string }) {
-  if (!s || s.status === "confirmed") return null;
+  if (!s || (s.status === "confirmed" && !s.ext_preliminary)) return null;
   return <p className={`text-xs leading-relaxed text-brand-ink/70 ${className}`}>{ruText(s.text)}</p>;
 }
 

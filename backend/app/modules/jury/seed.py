@@ -533,13 +533,25 @@ def ensure_ideas(db: Session) -> None:
 
     try:
         if not is_stale(db) and has_demo_invitations(db):
-            return
+            return _tariffs_demo(db)
         with _lock(db):
             if is_stale(db) or not has_demo_invitations(db):  # другой воркер мог уже пересеять, пока мы ждали
                 prepare(db)
+            _tariffs_demo(db)
     except Exception:  # noqa: BLE001 — демо кубков не должно ломать вход жюри
         db.rollback()
         log.exception("jury: ideas demo failed")
+
+
+def _tariffs_demo(db: Session) -> None:
+    """Я29: тарифы демо-компаний, партнёры ФСП, демо-наймы — только при TARIFFS_ENABLED; сбой не ломает вход жюри."""
+    from app.modules.tariffs.demo import ensure
+
+    try:
+        ensure(db)
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("jury: tariffs demo failed")
 
 
 @contextmanager

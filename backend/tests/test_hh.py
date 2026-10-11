@@ -263,8 +263,8 @@ def test_market_median_and_honest_labels(client, hh_on):
     kz = client.get(MARKET, params={"category_id": "qa.senior", "city": "Казань"}, headers=H(te)).json()
     assert kz["area_fallback"] and kz["area"]["id"] == "113" and "вакансий мало" in kz["note"]
     assert [t["area"] for t in kz["tried"]][:2] == ["Казань", "Казань"]
-    # неизвестная категория — честно «не считается»
-    no = client.get(MARKET, params={"category_id": "devops.middle"}, headers=H(te)).json()
+    # неизвестная категория — честно «не считается» (devops.* с Я12б считается: 4 новых направления каталога)
+    no = client.get(MARKET, params={"category_id": "design.middle"}, headers=H(te)).json()
     assert no["available"] is False and no["reason"]
 
 

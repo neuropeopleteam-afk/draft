@@ -1,0 +1,411 @@
+{
+ "source": "банк feat/bank-ext 68ce4cf (добор у порогов J/M и M/S)",
+ "note": "предкалибровка автора (prior), не калибровка на людях",
+ "families": [
+  {
+   "family_id": "security.web.ssrf_allowlist_fix",
+   "direction": "security",
+   "block": "security",
+   "format": "choose_fix",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 300,
+   "skills": [
+    "secure_code_review",
+    "input_validation",
+    "trust_boundaries",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 0.9,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "security.session.fixation_bug",
+   "direction": "security",
+   "block": "security",
+   "format": "find_bug",
+   "target_grades": [
+    "junior",
+    "middle"
+   ],
+   "canary": false,
+   "time_limit_s": 240,
+   "skills": [
+    "secure_code_review",
+    "session_lifecycle",
+    "cookies",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 0.1,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "security.crypto.hmac_canonical_bug",
+   "direction": "security",
+   "block": "security",
+   "format": "find_bug",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 300,
+   "skills": [
+    "hmac",
+    "secure_code_review",
+    "cryptography",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 1.1,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "security.access.bulk_owner_check_bug",
+   "direction": "security",
+   "block": "security",
+   "format": "find_bug",
+   "target_grades": [
+    "junior",
+    "middle"
+   ],
+   "canary": false,
+   "time_limit_s": 210,
+   "skills": [
+    "access_control",
+    "authorization",
+    "secure_code_review",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 0.0,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "security.auth.token_audience_bug",
+   "direction": "security",
+   "block": "security",
+   "format": "find_bug",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 300,
+   "skills": [
+    "token_validation",
+    "authorization",
+    "secure_code_review",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 1.0,
+    "step_offsets": [],
+    "sigma_variant": 0.25
+   }
+  },
+  {
+   "family_id": "frontend.state.optimistic_rollback_fix",
+   "direction": "frontend",
+   "block": "frontend",
+   "format": "choose_fix",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 360,
+   "skills": [
+    "javascript",
+    "state_management",
+    "async_await",
+    "race_conditions"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 1.0,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "frontend.js.object_key_order_output",
+   "direction": "frontend",
+   "block": "frontend",
+   "format": "predict_output",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 240,
+   "skills": [
+    "javascript",
+    "js_types",
+    "operators"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 0.8,
+    "step_offsets": [],
+    "sigma_variant": 0.25
+   }
+  },
+  {
+   "family_id": "data_ml.ml.purged_split_fix",
+   "direction": "data_ml",
+   "block": "data_ml",
+   "format": "choose_fix",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 360,
+   "skills": [
+    "time_split",
+    "data_leakage",
+    "validation",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 1.0,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "data_ml.metrics.pooled_rate_bug",
+   "direction": "data_ml",
+   "block": "data_ml",
+   "format": "find_bug",
+   "target_grades": [
+    "junior",
+    "middle"
+   ],
+   "canary": false,
+   "time_limit_s": 210,
+   "skills": [
+    "analytics",
+    "aggregation",
+    "descriptive_statistics",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": -0.1,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "data_ml.features.lag_window_leak_bug",
+   "direction": "data_ml",
+   "block": "data_ml",
+   "format": "find_bug",
+   "target_grades": [
+    "junior",
+    "middle"
+   ],
+   "canary": false,
+   "time_limit_s": 210,
+   "skills": [
+    "feature_engineering",
+    "data_leakage",
+    "time_series",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": -0.1,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "data_ml.features.target_encoding_oof_fix",
+   "direction": "data_ml",
+   "block": "data_ml",
+   "format": "choose_fix",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 420,
+   "skills": [
+    "categorical_encoding",
+    "data_leakage",
+    "cross_validation",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 1.1,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "qa.mock.called_once_bug",
+   "direction": "qa",
+   "block": "qa",
+   "format": "find_bug",
+   "target_grades": [
+    "junior",
+    "middle"
+   ],
+   "canary": false,
+   "time_limit_s": 210,
+   "skills": [
+    "unittest_mock",
+    "test_review",
+    "false_positive",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 0.2,
+    "step_offsets": [],
+    "sigma_variant": 0.25
+   }
+  },
+  {
+   "family_id": "qa.mutation.survivors_output",
+   "direction": "qa",
+   "block": "qa",
+   "format": "predict_output",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 300,
+   "skills": [
+    "test_design",
+    "boundary_value_analysis",
+    "test_review",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 0.6,
+    "step_offsets": [],
+    "sigma_variant": 0.3
+   }
+  },
+  {
+   "family_id": "qa.pytest.fixture_scope_state_bug",
+   "direction": "qa",
+   "block": "qa",
+   "format": "find_bug",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 240,
+   "skills": [
+    "fixtures",
+    "pytest",
+    "test_architecture",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 0.6,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "qa.pytest.raises_too_broad_bug",
+   "direction": "qa",
+   "block": "qa",
+   "format": "find_bug",
+   "target_grades": [
+    "junior",
+    "middle"
+   ],
+   "canary": false,
+   "time_limit_s": 180,
+   "skills": [
+    "test_review",
+    "false_positive",
+    "pytest",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": -0.2,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "backend.cache.stampede_fix",
+   "direction": "backend",
+   "block": "backend",
+   "format": "choose_fix",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 360,
+   "skills": [
+    "caching",
+    "asyncio",
+    "race_conditions",
+    "python"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 1.0,
+    "step_offsets": [],
+    "sigma_variant": 0.2
+   }
+  },
+  {
+   "family_id": "common.sql.window_range_ties_output",
+   "direction": "common",
+   "block": "common",
+   "format": "predict_output",
+   "target_grades": [
+    "middle",
+    "senior"
+   ],
+   "canary": false,
+   "time_limit_s": 300,
+   "skills": [
+    "sql",
+    "window_functions"
+   ],
+   "prior_difficulty": {
+    "a": 1.3,
+    "b": 0.9,
+    "step_offsets": [],
+    "sigma_variant": 0.25
+   }
+  }
+ ]
+}
