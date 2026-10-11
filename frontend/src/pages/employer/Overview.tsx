@@ -5,6 +5,7 @@ import { Alert, Field, Stat, errText, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { CompanyTrustCard } from "../../integrations/Trust";
+import { InvitesLeft, PartnerBadge, useTariffsOn } from "./Tariffs";  // Я29: тариф и остаток приглашений
 
 export default function EmployerOverview() {
   const { me } = useAuth();
@@ -24,6 +25,7 @@ export default function EmployerOverview() {
   return (
     <div className="max-w-4xl">
       <PageTitle title={company?.name ?? "Кабинет работодателя"} subtitle="Найдите проверенных кандидатов по категории и выйдите на контакт первым." />
+      <div className="mt-4"><InvitesLeft /></div>
       <div className="mt-8 grid gap-5 md:grid-cols-4">
         <Stat label="Потребности" value={needs.data?.length ?? "…"} />
         <Stat label="Приглашения" value={inv.data?.length ?? "…"} hint={inv.data ? `принято: ${accepted}` : undefined} />
@@ -71,6 +73,7 @@ export function Company() {
   return (
     <div className="max-w-3xl space-y-6">
       <PageTitle title="Профиль компании" subtitle="Эти сведения кандидат увидит в зонде и приглашении." />
+      <CompanyTariffLine />
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card grid gap-4 sm:grid-cols-2">
         <Field label="Название" htmlFor="cn"><input id="cn" className="input" value={f.name} onChange={set("name")} /></Field>
@@ -85,5 +88,18 @@ export function Company() {
       </section>
       <CompanyTrustCard key={`${c.inn ?? ""}|${c.website ?? ""}`} hasInn={!!c.inn} />
     </div>
+  );
+}
+
+/** Я29: тариф и метка «Партнёр ФСП» в профиле компании (только при TARIFFS_ENABLED). */
+function CompanyTariffLine() {
+  const on = useTariffsOn();
+  const t = useApi<any>(on ? "/employer/tariff" : null, [on]);
+  if (!on || !t.data) return null;
+  return (
+    <p className="flex flex-wrap items-center gap-2 text-sm text-brand-ink/75" data-testid="company-tariff">
+      Тариф «{t.data.plan.title}» <PartnerBadge on={t.data.fsp_partner} />
+      <Link to="/employer/tariffs" className="font-semibold text-brand hover:underline">Тарифы</Link>
+    </p>
   );
 }
