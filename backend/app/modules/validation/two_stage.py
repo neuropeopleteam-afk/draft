@@ -74,22 +74,24 @@ def default_point() -> dict:
             "floor": False}
 
 
+BASE = {"level": 0.8, "items": 8, "minutes": 15, "confirm": 0.5, "confirm_up": 0.9, "above": 0.0, "floor": False}
+
+
 def _v(**kw) -> dict:
-    return {**default_point(), **kw}
+    return {**BASE, **kw}
 
 
 def stage_main() -> list[dict]:
-    """Перебор: L × N × c₂ × «выше заявленного» (минуты 15), затем c↑, минуты 10, длиннее карточки и абляции."""
-    pts = [one_session()]
+    """Перебор: L × N × c₂ × «выше заявленного» (минуты 15), затем c₂, c↑, минуты 10, длиннее карточки и абляции."""
+    pts = [one_session(), default_point()]
     for lv in (0.7, 0.8, 0.9):
         for n in (6, 8):
             for c in (0.5, 0.6):
                 for up in (0.0, 0.8):
                     pts.append(_v(level=lv, items=n, confirm=c, above=up))
-    pts += [_v(above=0.8, confirm_up=cu) for cu in (0.8, 0.95)]
-    pts += [_v(above=0.6), _v(above=0.6, confirm_up=0.95)]
-    pts += [_v(minutes=10, items=6), _v(minutes=10, items=6, level=0.7), _v(level=0.95), _v(level=0.95, confirm=0.5)]
-    pts += [_v(confirm=0.55), _v(confirm=0.65), _v(floor=True)]
+    pts += [_v(confirm=c) for c in (0.45, 0.55)]
+    pts += [_v(above=0.8, confirm_up=cu) for cu in (0.8, 0.95)] + [_v(above=0.6), _v(above=0.6, confirm_up=0.95)]
+    pts += [_v(minutes=10, items=6), _v(minutes=10, items=6, level=0.7), _v(level=0.95), _v(floor=True)]
     pts += [_v(items=10, minutes=20), _v(items=12, minutes=25, level=0.9)]   # длиннее карточки — для Парето
     return pts
 
