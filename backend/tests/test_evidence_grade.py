@@ -409,6 +409,8 @@ def test_evidence_api_candidate_employer_validation(client):
     from tests.test_day2_rules import H, candidate_with_category, employer, my_ref
 
     tc = candidate_with_category(client, email="ev-cand@example.com")
+    # фраза о цитатах перед тестом — только при флаге (по умолчанию выключен)
+    assert client.get("/api/assessment/status", headers=H(tc)).json()["evidence_grading"] is False
     sid = _inject_evidence("ev-cand@example.com")
     r = client.get(f"/api/assessment/sessions/{sid}/evidence", headers=H(tc))
     assert r.status_code == 200, r.text
@@ -479,3 +481,17 @@ def test_evidence_view_skeptic_raised_criterion_shows_its_quote():
     state["items"][0]["grading"][0]["second"]["verdict"] = "disagree"
     (it,) = V.items_view(state)
     assert it["criteria"][0]["quotes"] == [] and it["criteria"][0]["capped"]
+
+
+def test_status_evidence_grading_follows_flag(client, monkeypatch):
+    from app.core.config import get_settings
+    from tests.test_day2_rules import H, candidate_with_category
+
+    tc = candidate_with_category(client, email="ev-flag@example.com")
+    monkeypatch.setenv("GRADING_EVIDENCE", "true")
+    get_settings.cache_clear()
+    try:
+        assert client.get("/api/assessment/status", headers=H(tc)).json()["evidence_grading"] is True
+    finally:
+        monkeypatch.delenv("GRADING_EVIDENCE", raising=False)
+        get_settings.cache_clear()
