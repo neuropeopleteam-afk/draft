@@ -287,9 +287,9 @@
         "accuracy": 1.0
       },
       "grade": {
-        "correct": 39,
+        "correct": 34,
         "n": 39,
-        "accuracy": 1.0
+        "accuracy": 0.8718
       },
       "experience_years_min": {
         "correct": 50,
@@ -297,9 +297,9 @@
         "accuracy": 1.0
       },
       "work_format": {
-        "correct": 49,
+        "correct": 50,
         "n": 50,
-        "accuracy": 0.98
+        "accuracy": 1.0
       },
       "salary_from": {
         "correct": 50,
@@ -313,22 +313,50 @@
       }
     },
     "grade_inferences_on_unspecified": 8,
-    "stack_micro_precision": 0.884,
-    "stack_micro_recall": 0.9338,
+    "stack_micro_precision": 0.8875,
+    "stack_micro_recall": 0.9404,
     "stack_tp_fp_fn": [
-      282,
-      37,
-      20
+      284,
+      36,
+      18
     ],
-    "quotes": 499,
+    "quotes": 506,
     "invalid_quotes": 0,
     "mismatches": [
       {
+        "id": "vac-007",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://youngjunior.ru/javascript/jobs/27104"
+      },
+      {
         "id": "vac-037",
-        "field": "work_format",
-        "expected": "hybrid",
-        "actual": "remote",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
         "source_url": "https://career.habr.com/vacancies/1000167022"
+      },
+      {
+        "id": "vac-038",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://career.habr.com/vacancies/1000168347"
+      },
+      {
+        "id": "vac-039",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://career.habr.com/vacancies/1000162215"
+      },
+      {
+        "id": "vac-050",
+        "field": "grade",
+        "expected": "junior",
+        "actual": "intern",
+        "source_url": "https://novosibirsk.hh.ru/vacancy/137859362"
       }
     ]
   },

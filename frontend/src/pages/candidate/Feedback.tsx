@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, GRADES, Level, Loading, catTitle, dt, useApi } from "../../components/ui";
+import HhMarketSkills, { type HhMarket } from "../../components/HhMarketSkills";  // Я12б: «Что сейчас просит рынок» (hh.ru)
 
 /** Обратная связь после теста: карта навыков, спрос работодателей категории, маршрут роста, дисциплины ФСП. */
 
@@ -19,6 +20,7 @@ export interface FeedbackData {
   skill_map?: { topics: Topic[]; summary: { topics: number; strong: number; ok: number; gap: number; pending: number; best: string[]; weakest: string[] }; note: string };
   demand?: { scope: string; scope_title: string; sources: number; sources_in_category: number; items: DemandItem[]; full_match: number; with_required: number; avg_required_coverage: number | null; note: string };
   route?: Step[]; competitions?: Comp[]; fsp_calendar_url?: string;
+  market_hh?: HhMarket | null;
 }
 
 const STATUS: Record<string, [string, string, string]> = {
@@ -226,6 +228,7 @@ export default function Feedback() {
       {fb.source === "facts" && <Alert kind="info">Подробной разбивки по заданиям для этого теста нет — карта построена по навыкам, подтверждённым тестом (T1).</Alert>}
       <SkillMap fb={fb} />
       {fb.demand && <Demand d={fb.demand} />}
+      {fb.market_hh && <HhMarketSkills m={fb.market_hh} />}
       {fb.route && fb.route.length > 0 && <Route steps={fb.route} />}
       {fb.competitions && fb.competitions.length > 0 && <Competitions list={fb.competitions} url={fb.fsp_calendar_url} />}
       <p className="text-xs text-brand-ink/65">Этот разбор входит и в ваш PDF-профиль (раздел <Link className="underline" to="/candidate/profile">«Профиль и резюме»</Link>). В версии профиля для работодателя его нет.</p>

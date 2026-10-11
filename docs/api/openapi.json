@@ -291,6 +291,20 @@
             ],
             "title": "Fsp Calendar Url"
           },
+          "market_hh": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Я12б, при HH_ENABLED: «Что сейчас просит рынок» — частые навыки категории по вакансиям hh.ru (агрегат, n, дата), статус каждого у кандидата и ссылка на тест или короткое задание",
+            "title": "Market Hh"
+          },
           "route": {
             "description": "Маршрут роста: что подтвердить дальше",
             "items": {
@@ -13639,6 +13653,85 @@
         "title": "HhMarketOut",
         "type": "object"
       },
+      "HhMatchOut": {
+        "additionalProperties": true,
+        "properties": {
+          "code_commit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Коммит кода замера",
+            "title": "Code Commit"
+          },
+          "demand": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Спрос по направлениям: число вакансий hh.ru на дату (агрегат)",
+            "title": "Demand"
+          },
+          "generated_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Когда посчитан замер (UTC)",
+            "title": "Generated At"
+          },
+          "label_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Подпись: тексты — реальные вакансии hh.ru, кандидаты — модельные",
+            "title": "Label Note"
+          },
+          "missing": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing"
+          },
+          "n": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Вакансий в прогоне",
+            "title": "N"
+          }
+        },
+        "title": "HhMatchOut",
+        "type": "object"
+      },
       "HhParseOut": {
         "additionalProperties": true,
         "properties": {
@@ -24200,6 +24293,20 @@
       "TrustCheckOut": {
         "additionalProperties": true,
         "properties": {
+          "hh": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Я12б, при HH_ENABLED: сравнение с рынком hh.ru — n, медиана, p25, p75, регион, дата снимка, conclusive (n ≥ 10)",
+            "title": "Hh"
+          },
           "kind": {
             "title": "Kind",
             "type": "string"
@@ -65322,6 +65429,28 @@
           }
         },
         "summary": "Первый экран /validation: 5 чисел с ДИ и подписью мира",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
+    "/api/validation/hh-match": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "hh_match_api_validation_hh_match_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HhMatchOut"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Подбор на реальных вакансиях hh.ru (кандидаты — модельные): покрытие требований, доля потребностей с подтверждёнными кандидатами, ошибки разбора; спрос по направлениям (пересчёт: tools/realdata/hh_plus.py match / demand)",
         "tags": [
           "validation"
         ]
