@@ -69,7 +69,7 @@ export default function Category() {
               <MarketNote m={c.market_range} />
             </div>
           ) : <p className="mt-2 text-sm text-brand-ink/70">Тест ещё не подтвердил грейд. Направление опроса: {DIRECTION_TITLES[s.survey_direction] ?? "—"}{s.claimed_grade ? `, заявленный грейд: ${GRADE_TITLE_ALL[s.claimed_grade] ?? s.claimed_grade}` : ""}.</p>}
-          {gs?.status === "unconfirmed" && <GradeStatusNote s={gs} className="mt-2" />}
+          {(gs?.status === "unconfirmed" || gs?.pending_review) && <GradeStatusNote s={gs} className="mt-2" />}
           <ExtPreliminaryNote x={gs?.ext_preliminary} stage={s.two_stage} direction={c.direction} className="mt-3" />
           {!gs?.ext_preliminary && <TwoStageNote t={s.two_stage} direction={c.direction} className="mt-3" />}
           {gs?.status === "unconfirmed" && <p className="mt-1 text-xs text-brand-ink/65">Работодатели видят вас в поиске и подборках со статусом «грейд не подтверждён» — ниже всех подтверждённых. Категорию присваивает только тест.</p>}
