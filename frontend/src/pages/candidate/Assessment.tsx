@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEve
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { DefensePanel } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi, plainText } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
@@ -451,7 +451,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
       </details>
       {extGrade && (
         <Alert kind="info">
-          {levels[grade]} присваивает только полный тест: не меньше 8 оценённых заданий и малая погрешность оценки. Экспресс-тест
+          {levels[grade]} присваивает только полный тест: не меньше 8 оценённых заданий и достаточная точность оценки. Экспресс-тест
           жюри и короткие проверки дают не выше Senior. Если уровень не подтвердится, тест предложит уровень ниже.
         </Alert>
       )}
@@ -474,8 +474,8 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
             <p className="mt-2 leading-relaxed"><b>Как считается.</b>{" "}
             {mode === "express"
               ? (grade === "senior"
-                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ 80 %), интервал θ шире, чем у полного (погрешность ≈ 0,6 против ≈ 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
-                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но интервал θ заметно шире (погрешность ≈ 0,65 против ≈ 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
+                ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ 80 %), оценка менее точная, чем у полного (± 0,6 против ± 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
+                : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но оценка заметно менее точная (± 0,65 против ± 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
               : `Полный тест: грейд подтверждается, если вероятность уровня не ниже заявленного ≥ ${meta?.rules?.confirm_pct ?? 60} %. С 5-го задания информация собирается у ближайшего порога грейда, который ещё не определён (порог внутри θ ± 1,28·SE); если после основного блока порог всё ещё внутри интервала — до 6 коротких заданий у этого порога. Подробнее и с цифрами симуляции — на странице «Валидация».`}
             </p>
           </details>
@@ -485,7 +485,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         <summary className="cursor-pointer text-brand-ink/75">{expressOk ? <b className="text-brand-night">Как устроен тест</b> : <><b className="text-brand-night">Как устроен тест:</b> адаптивный, основной блок 8–16 заданий до 60 минут, у порога грейда — ещё до 6 коротких (до 20 минут).</>}</summary>
       <div className="card mt-2 space-y-3 text-sm text-brand-ink/75">
         <p><b>Как устроен тест.</b> Общий блок и задачи вашего направления: найти дефект в коде, предсказать вывод, выбрать исправление, разобрать задачу по шагам, ответить развёрнуто. Тест адаптивный: следующее задание подбирается по ответам. Основной блок — 8–16 заданий, до 60 минут; если результат у самого порога грейда — ещё до 6 коротких заданий (до 20 минут), чтобы грейд не зависел от случайности. Дотестирование — обычная часть пути, а не исключение: <FullLength len={len.data} short /> Повторная попытка — из другого набора заданий.</p>
-        <p>Результат — оценка уровня θ с погрешностью и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои.</p>
+        <p>Результат — оценка уровня с указанием точности и решение: грейд подтверждён или нет. Варианты заданий у каждого кандидата свои.</p>
         <p><b>Грейд — уровень навыков, а не стаж.</b> Уровень выбираете вы сами, подтверждает его только тест. Стаж в годах остаётся в профиле как справка для работодателя и в подборе не участвует; подсказки «обычно столько-то лет» — лишь ориентир, с какого уровня начать.</p>
         <p>Если грейд не подтвердится, текущая категория не понизится. Смена подтверждённого грейда — не чаще раза в {status?.grade_change_interval_days ?? 90} дней. Повторить тест на тот же грейд после неподтверждённой попытки можно через {status?.retake_same_grade_days ?? 30} дней, на грейд ниже — сразу; если тест уверенно показал уровень ниже, его можно принять без нового теста.</p>
         {status?.engine?.startsWith("stub") && <p className="text-brand-plum">Сейчас работает временная версия теста (6 заданий): банк заданий недоступен.</p>}
@@ -878,22 +878,22 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
       <ExtPreliminaryNote x={r.grade_preliminary} stage={extStage} direction={r.direction} className="mt-4" />
-      {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · интервал θ шире, чем у полного</span></div>}
+      {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · оценка менее точная, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
           Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от {meta?.rules?.confirm_pct ?? 60} %, «не доказанно ниже» — от 10 %).
-          {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, зондом работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, зондом работодателя или кубком."}
+          {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, заданием работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, зондом работодателя или кубком."}
         </Alert></div>
       )}
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-xl font-bold text-brand-night">θ = {signed(r.theta)}</p><p className="text-xs text-brand-ink/65">погрешность ± {num(r.se)}</p></div>
+        <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Оценка уровня</p><p className="mt-2 text-xl font-bold text-brand-night">{signed(r.theta)}</p><p className="text-xs text-brand-ink/65">по шкале теста · точность ± {num(r.se)}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
       {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
       {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && !extStage && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
-      <div className="card mt-4 text-sm text-brand-ink/75">{ruText(r.explanation)}</div>
-      {r.level_position && <p className="mt-2 text-sm text-brand-ink/80" data-testid="level-position">Позиция внутри уровня {r.level_position.grade_title}: <b>{r.level_position.text}</b>{r.level_position.known ? " — по точности этого теста" : " (погрешность пока шире половины уровня)"}</p>}
+      <div className="card mt-4 text-sm text-brand-ink/75">{plainText(r.explanation)}</div>
+      {r.level_position && <p className="mt-2 text-sm text-brand-ink/80" data-testid="level-position">Позиция внутри уровня {r.level_position.grade_title}: <b>{r.level_position.text}</b>{r.level_position.known ? " — по точности этого теста" : " (точнее этот тест пока сказать не может)"}</p>}
       {(r.confirmed || r.accepted_lower) && <p className="mt-3 text-xs text-brand-ink/65">Грейд — уровень навыков, подтверждённый этим тестом. Стаж в годах остаётся справкой в профиле и на грейд не влияет.</p>}
       {r.details?.n_scored != null && (
         <p className="mt-3 text-xs text-brand-ink/65">
@@ -902,7 +902,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
           {r.details.time_used_s ? ` · время: ${Math.round(r.details.time_used_s / 60)} мин` : ""}
         </p>
       )}
-      {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " LLM-оценщик не подключён: ответы проверяет эксперт." : ""}</Alert></div>}
+      {r.details?.pending_review > 0 && <div className="mt-3"><Alert kind="info">Открытых ответов на проверке: {r.details.pending_review}. Пока они не оценены, результат предварительный.{llmOff ? " Автоматическая проверка сейчас недоступна: ответы проверяет эксперт." : ""}</Alert></div>}
       {/* И27: вторая оценка спорных ответов идёт в фоне — итог её не ждёт */}
       {(r.second_opinions?.pending > 0 || r.second_opinions?.revised > 0) && <p className="mt-2 text-xs text-brand-ink/65" data-testid="second-opinions">{r.second_opinions.pending > 0 ? `Вторая оценка спорных ответов: ${r.second_opinions.pending} — выполняется в фоне, итог теста её не ждёт; если оценки разойдутся, ответ проверит эксперт. ` : ""}{r.second_opinions.revised > 0 ? `Пересмотрено второй моделью: ${r.second_opinions.revised}${r.second_opinions.disputed ? `, передано эксперту: ${r.second_opinions.disputed}` : ""}.` : ""}</p>}
       {/* доказательства — цитаты из ответа по пунктам рубрики (только при GRADING_EVIDENCE) */}
