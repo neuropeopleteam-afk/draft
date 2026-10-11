@@ -277,7 +277,8 @@ def worker(a) -> dict:
     rules_mod.proved_lower = functools.partial(rules_mod.proved_lower, level=confirm)
     cfg = sim.app_config_from_settings()
     base = sim.make_pool(cfg.subpools)
-    extra = model_bank(base, s, cfg.subpools, np.random.default_rng([SEED, 7, list(SCENARIOS).index(a.scenario)]))
+    bseed = [SEED, 7, list(SCENARIOS).index(a.scenario)] + ([a.rep] if a.rep else [])  # rep — другая реализация банка
+    extra = model_bank(base, s, cfg.subpools, np.random.default_rng(bseed))
     pool = list(base) + extra
     i = sim.DIRECTIONS.index(a.direction)
     wi = list(gx.WORLDS).index(a.world)
@@ -298,7 +299,7 @@ def worker(a) -> dict:
                      "block": sum(t["n_block"] for t in r1["tests"]),
                      "block_min": sum(t["block_time_s"] for t in r1["tests"]) / 60.0})
     return {"scenario": a.scenario, "confirm": confirm, "world": a.world, "direction": a.direction, "rows": rows,
-            "n_model": len(extra)}
+            "n_model": len(extra), "rep": a.rep}
 
 
 def summarize(rows: list[dict]) -> dict:
@@ -325,20 +326,26 @@ def summarize(rows: list[dict]) -> dict:
     return out
 
 
+def _key(sc: str, cf: float, w: str, rep: int) -> str:
+    return f"{sc}|{cf}|{w}" + (f"|r{rep}" if rep else "")
+
+
 def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], parallel: int,
-        merge: bool, write: bool = True) -> dict:
+        merge: bool, write: bool = True, reps: list[int] | None = None) -> dict:
     t0 = time.time()
-    jobs = [(sc, cf, w, d) for sc in scenarios for cf in confirms for w in worlds for d in sim.DIRECTIONS]
+    reps = reps or [0]
+    jobs = [(sc, cf, w, d, r) for sc in scenarios for cf in confirms for w in worlds for r in reps
+            for d in sim.DIRECTIONS]
     tmp = Path(tempfile.mkdtemp(prefix="gneed_"))
     env = {**os.environ, "GRADES_EXT_ENABLED": "1"}
     procs, results, pending = [], [], list(jobs)
     while pending or procs:
         while pending and len(procs) < parallel:
-            sc, cf, w, d = pending.pop(0)
-            out = tmp / f"{sc}_{cf}_{w}_{d}.json"
+            sc, cf, w, d, r = pending.pop(0)
+            out = tmp / f"{sc}_{cf}_{w}_{d}_r{r}.json"
             p = subprocess.Popen([sys.executable, "-m", "app.modules.validation.grades_ext_need", "--worker",
                                   "--scenario", sc, "--confirm", str(cf), "--world", w, "--direction", d,
-                                  "--n", str(n), "--out", str(out)], env=env)
+                                  "--n", str(n), "--rep", str(r), "--out", str(out)], env=env)
             procs.append((p, out))
         time.sleep(0.5)
         for p, out in list(procs):
@@ -351,9 +358,13 @@ def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], 
     for sc in scenarios:
         for cf in confirms:
             for w in worlds:
-                rows = [r for x in results if (x["scenario"], x["confirm"], x["world"]) == (sc, cf, w) for r in x["rows"]]
-                rep["variants"][f"{sc}|{cf}|{w}"] = {"scenario": sc, "confirm": cf, "world": w, "text": scen_text(SCENARIOS[sc]),
-                                                     "bank": bank_counts(SCENARIOS[sc]), **SCENARIOS[sc], **summarize(rows)}
+                for rp in reps:
+                    rows = [r for x in results if (x["scenario"], x["confirm"], x["world"], x.get("rep", 0)) ==
+                            (sc, cf, w, rp) for r in x["rows"]]
+                    rep["variants"][_key(sc, cf, w, rp)] = {
+                        "scenario": sc, "confirm": cf, "world": w, "rep": rp,
+                        "text": scen_text(SCENARIOS[sc]) + (f" · банк, реализация {rp + 1}" if rp else ""),
+                        "bank": bank_counts(SCENARIOS[sc]), **SCENARIOS[sc], **summarize(rows)}
     if merge and OUT.exists():
         old = json.loads(OUT.read_text(encoding="utf-8"))
         rep["variants"] = {**old.get("variants", {}), **rep["variants"]}
@@ -421,12 +432,14 @@ def main() -> int:
     ap.add_argument("--world", default="top")
     ap.add_argument("--direction", default="backend")
     ap.add_argument("--out")
+    ap.add_argument("--rep", type=int, default=0)
+    ap.add_argument("--reps", default="0", help="реализации модельного банка: 0,1,2… (0 — как в основном прогоне)")
     a = ap.parse_args()
     if a.worker:
         Path(a.out).write_text(json.dumps(worker(a)), encoding="utf-8")
         return 0
     rep = run(a.n, a.scenarios.split(","), [float(x) for x in a.confirms.split(",")], a.worlds.split(","),
-              a.parallel, a.merge, write=not a.no_write)
+              a.parallel, a.merge, write=not a.no_write, reps=[int(x) for x in a.reps.split(",")])
     for key, v in rep["variants"].items():
         b = v["by_true_level"]
         print(f"{key}: Lead {b.get('lead', {}).get('exact')}, Principal {b.get('principal', {}).get('exact')}, "
