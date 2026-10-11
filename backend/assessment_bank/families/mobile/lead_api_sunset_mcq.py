@@ -7,9 +7,11 @@
 версии обновляется до текущей (геометрическое убывание). Отключение допустимо, когда молча ломающихся — не больше
 X % активных; вопрос — через сколько недель и какая доля в этот момент увидит экран обязательного обновления.
 
-Дистракторы (фиксированный состав): ``all_old`` — молча ломающимися считаются все версии со старым эндпоинтом
-(экран обязательного обновления забыт) — слишком поздно; ``linear`` — убывание линейное (m от исходной доли в
-неделю); ``today_forced`` — неделя верная, но доля экрана обновления взята на сегодня. Ключ — расчёт программой.
+Дистракторы — схема 2×2 (неделя верна/неверна × доля экрана обновления на неделю отключения/на сегодня; ни один
+вариант не «центральный»): неверная неделя — по варианту ``all_old`` (молча ломающимися считаются все версии со
+старым эндпоинтом — экран обязательного обновления забыт, слишком поздно) или ``linear`` (убывание линейное: m от
+исходной доли в неделю); ``today_forced`` — доля экрана обновления взята на сегодня; четвёртый — обе ошибки.
+Ключ — расчёт программой.
 """
 from __future__ import annotations
 
@@ -65,10 +67,12 @@ def generate(seed: int):
         w = next(i for i in range(200) if silent * (1 - m) ** i <= x + 1e-12)
         w_all = next(i for i in range(400) if (silent + forced) * (1 - m) ** i <= x + 1e-12)
         w_lin = math.ceil((1 - x / silent) / m - 1e-12)
-        lin_forced = max(0.0, forced * (1 - m * w_lin))
-        opts = {"good": _opt(w, forced * (1 - m) ** w), "all_old": _opt(w_all, forced * (1 - m) ** w_all),
-                "linear": _opt(w_lin, lin_forced), "today_forced": _opt(w, forced)}
-        if len(set(opts.values())) == 4 and 3 <= w <= 40 and w_lin != w:
+        wrong_w = rng.choice(["all_old", "linear"])
+        ww = w_all if wrong_w == "all_old" else w_lin
+        # схема 2×2: неделя верна/неверна × доля экрана обновления на неделю отключения/на сегодня
+        opts = {"good": _opt(w, forced * (1 - m) ** w), "today_forced": _opt(w, forced),
+                wrong_w: _opt(ww, forced * (1 - m) ** w), wrong_w + "+today_forced": _opt(ww, forced)}
+        if len(set(opts.values())) == 4 and 3 <= w <= 40 and w_lin != w and ww != w:
             break
     else:  # pragma: no cover
         raise RuntimeError("не нашлось параметров")
@@ -91,7 +95,8 @@ def generate(seed: int):
            f"неделю; доля на сегодня завышает число затронутых. Практика Lead: экран обязательного обновления и "
            f"флаги на сервере закладываются заранее, отключение — постепенное, с мониторингом ошибок по версиям.")
     return computed_mcq(FAMILY_ID, seed, rng, stem=stem, correct=opts["good"],
-                        distractors=[opts[k] for k in ("all_old", "linear", "today_forced")],
+                        distractors=[v for k, v in opts.items() if k != "good"],
                         program=PROGRAM.format(shares=shares, order=order, v_old=v_old, v_gate=v_gate, m=m, x=x),
                         why=why, context=ctx, code=table, language="text",
-                        params={"v_gate": v_gate, "v_old": v_old, "m": m, "x": x, "w": w})
+                        params={"v_gate": v_gate, "v_old": v_old, "m": m, "x": x, "w": w,
+                                "distractors": [k for k in opts if k != "good"]})

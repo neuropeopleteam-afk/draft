@@ -1,7 +1,7 @@
 family_id: mobile.js.token_refresh_fix
 title: Параллельные 401 и одноразовый refresh-токен — одно обновление на всех
 direction: mobile
-skills: [mobile_networking, authentication, javascript, promises, concurrency]
+skills: [networking, authentication, javascript, promises, concurrency]
 target_grades: [middle, senior]
 format: choose_fix
 language: javascript

@@ -1,7 +1,7 @@
 family_id: mobile.js.cursor_pagination_bug
 title: Курсорная подгрузка ленты — за запрос добавляется одна запись
 direction: mobile
-skills: [mobile_networking, pagination, javascript, ui_lists]
+skills: [networking, pagination, javascript, ui_lists]
 target_grades: [junior]
 format: find_bug
 language: javascript

@@ -1,7 +1,7 @@
 family_id: mobile.swift.retain_cycle_bug
 title: "Swift — экран не освобождается: цикл ссылок через сохранённое замыкание"
 direction: mobile
-skills: [swift, memory_management, arc, closures, ios]
+skills: [swift, memory_management, arc, retain_cycles, closures, ios]
 target_grades: [middle]
 format: find_bug
 language: swift

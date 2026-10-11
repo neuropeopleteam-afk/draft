@@ -1,7 +1,7 @@
 family_id: mobile.kotlin.flow_lifecycle_mcq
 title: Kotlin Flow в UI — сбор с учётом жизненного цикла (repeatOnLifecycle)
 direction: mobile
-skills: [kotlin, coroutines, flow, android, mobile_lifecycle]
+skills: [kotlin, coroutines, flow, android, android_lifecycle]
 target_grades: [middle, senior]
 format: mcq_concept
 language: kotlin

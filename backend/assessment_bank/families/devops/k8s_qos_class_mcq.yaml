@@ -1,7 +1,7 @@
 family_id: devops.k8s.qos_class_mcq
 title: Kubernetes — класс QoS пода по requests и limits
 direction: devops
-skills: [kubernetes, k8s_resources, k8s_qos, yaml]
+skills: [kubernetes, resources, scheduling, kubernetes_manifests]
 target_grades: [junior, middle]
 format: mcq_concept
 language: yaml

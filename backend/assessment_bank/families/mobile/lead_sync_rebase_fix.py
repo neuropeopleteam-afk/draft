@@ -7,7 +7,8 @@
 
 Показан модуль (~30 строк) с дефектом «устаревший ответ сервера не отбрасывается»: два быстрых запроса синхронизации,
 ответ на первый пришёл вторым и откатил запись. Варианты — четыре замены ``rebase`` в другом стиле; каждый
-дистрактор исправляет показанный дефект и нарушает одно правило (фиксированный состав):
+дистрактор исправляет показанный дефект и нарушает правила — схема 2×2 из двух правил пула ниже (нарушено одно,
+другое, оба; ни один вариант не «центральный»):
 
 * ``tombstone_ignored`` — удаление на сервере не учитывается: правка «воскрешает» удалённую запись;
 * ``record_level_conflict`` — конфликт по версии записи, а не поля: теряются правки полей, которые сервер не трогал;
@@ -17,7 +18,7 @@
 """
 from __future__ import annotations
 
-from assessment_bank.families._lead_b_utils import module_choose_fix
+from assessment_bank.families._lead_b_utils import factorial_distractors, module_choose_fix
 from assessment_bank.gen_utils import make_rng
 
 FAMILY_ID = "mobile.lead.sync_rebase_fix"
@@ -79,13 +80,14 @@ CORRECT = '''function rebase(@L@, @P@, @R@) {
   return { @S@, @K@, @X@ };
 }'''
 
-DISTRACTORS = {
-    "tombstone_ignored": CORRECT.replace("if (!rec || rec.deleted) {", "if (!rec || !rec.fields) {"),
-    "record_level_conflict": CORRECT.replace("if (@F@(rec, @O@.field) > @O@.base) {",
-                                             "if (rec.version > @O@.base) {"),
-    "base_not_moved": CORRECT.replace("@K@.push({ ...@O@, base: rec.version });",
-                                      "@K@.push({ ...@O@, base: @O@.base });"),
+MUTATIONS = {  # правило → (фрагмент верного текста, замена); дистракторы — по схеме 2×2
+    "tombstone_ignored": ("if (!rec || rec.deleted) {", "if (!rec || !rec.fields) {"),
+    "record_level_conflict": ("if (@F@(rec, @O@.field) > @O@.base) {",
+                              "if (rec.version > @O@.base) {"),
+    "base_not_moved": ("@K@.push({ ...@O@, base: rec.version });",
+                       "@K@.push({ ...@O@, base: @O@.base || rec.version });"),
 }
+DISTRACTORS = {k: CORRECT.replace(*v) for k, v in MUTATIONS.items()}
 assert all(d != CORRECT for d in DISTRACTORS.values())
 
 WHY = {
@@ -153,8 +155,8 @@ def generate(seed: int):
         blocks = [helpers, _rename(REPORT, names), "{FN}"]
     module = "\n\n".join(blocks)
     buggy, correct = _rename(BUGGY, names), _rename(CORRECT, names)
-    kinds = sorted(DISTRACTORS)
-    dis = [_rename(DISTRACTORS[k], names) for k in kinds]
+    dis, kinds = factorial_distractors(CORRECT, MUTATIONS, rng)
+    dis = [_rename(d, names) for d in dis]
     stem = (f"{ctx.capitalize()}: записи «{entity}» правятся без сети, правки полей копятся в очереди `{P}` "
             f"(`base` — версия записи, на которой сделана правка). При синхронизации ответ сервера `{R}` "
             f"накладывается на локальное состояние `{L}`, затем очередь перебазируется. Правила: (1) ответ сервера "
@@ -166,7 +168,7 @@ def generate(seed: int):
             f"данным. Какая замена `rebase` выполняет правила целиком?")
     why = ("Верная замена отбрасывает ответ сервера, не новее локальной записи, определяет конфликт по версии "
            "поля, а не записи, считает удаление на сервере конфликтом и переносит base правок на текущую версию. "
-           "Остальные варианты устраняют откат, но: " + "; ".join(WHY[k] for k in kinds) + ". Для команды: "
+           "Остальные варианты устраняют откат, но: " + "; ".join(WHY[k] for k in kinds[:2]) + "; четвёртый вариант нарушает оба этих правила" + ". Для команды: "
            "правила синхронизации фиксируются как контракт клиента и сервера и проверяются сценариями "
            "(устаревший ответ, удаление, правки разных полей), а не одним случаем инцидента.")
     return module_choose_fix(

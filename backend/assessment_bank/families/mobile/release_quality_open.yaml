@@ -1,7 +1,7 @@
 family_id: mobile.release.release_quality_open
 title: Выпуск и качество мобильного приложения — поэтапный выпуск, совместимость, запуск, ANR, тесты
 direction: mobile
-skills: [mobile_release, mobile_performance, mobile_testing, api_compatibility]
+skills: [mobile_release, mobile_performance, testing, rest_api]
 target_grades: [senior]
 format: open_answer
 language: text

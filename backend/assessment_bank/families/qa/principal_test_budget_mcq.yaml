@@ -1,0 +1,24 @@
+family_id: qa.principal.test_budget_mcq
+title: Регрессия в бюджет конвейера — транзитивное влияние изменения и перекрытие наборов (Principal)
+direction: qa
+skills: [risk_based_testing, regression_strategy, test_architecture, ci, test_design]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: [direct, additive, greedy]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 2.5
+  a: 1.3
+  sigma_variant: 0.35
+  basis: "Нужно одновременно построить транзитивное замыкание графа зависимостей (затронуты и модули второго-третьего уровня), не удваивать ущерб при перекрытии наборов и перебрать подмножества в бюджет, а не отбирать жадно. Каждый дистрактор — оптимум при одной типичной ошибке (только прямые связи; сложение ценности наборов; жадный отбор по ценности на минуту); Lead обычно избегает одной-двух ошибок, Principal — всех трёх: у порога Lead/Principal"
+generator: assessment_bank.families.qa.principal_test_budget_mcq
+version: 1
+description: >
+  Выбор наборов регрессии в бюджет конвейера по графу влияния изменения: ущерб модуля засчитывается, если модуль
+  задет изменением (транзитивно) и проверен хотя бы одним набором. Ключ — программа: замыкание графа и перебор
+  подмножеств наборов.

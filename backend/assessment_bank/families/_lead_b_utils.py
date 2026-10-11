@@ -8,6 +8,8 @@
 * ``open_variant`` — open_answer по теме из словаря ``TOPICS`` с рубрикой из трёх критериев и эталонами; замечания
   для оценщика требуют дословных цитат из ответа на каждый засчитанный критерий (модуль доказательной оценки).
 * ``computed_mcq`` — mcq_concept, где ключ считает программа по тем же числам, что показаны кандидату.
+* ``factorial_distractors`` — дистракторы по схеме 2×2 (нарушено одно правило, другое, оба): ни один вариант не
+  «центральный», ключ не угадывается по сходству вариантов.
 * ``design_review_variant`` — open_answer «ревью дизайн-документа»: выдержка документа, в которую вставлены k
   проблем из пула темы (остальные места — верные строки); критерии рубрики — найденные проблемы и приоритизация.
 """
@@ -40,6 +42,31 @@ def pct(x: float, nd: int = 1) -> str:
     if "," in s:
         s = s.rstrip("0").rstrip(",")
     return s + " %"
+
+
+def factorial_distractors(correct: str, mutations: dict[str, tuple[str, str]], rng) -> tuple[list[str], list[str]]:
+    """Дистракторы по схеме 2×2: из пула правил выбираются два (a, b); варианты — верный, нарушено a, нарушено b,
+    нарушены оба. Каждый вариант отличается от двух других на одно правило и от третьего — на два, поэтому
+    «центральный» вариант (больше всего общего с остальными) не выдаёт ключ, а большинство по каждому правилу — 2 на 2.
+
+    ``mutations`` — правило → (фрагмент верного текста, замена); фрагменты разных правил не пересекаются.
+    Возвращает (тексты дистракторов, их имена: a, b, «a+b»).
+    """
+    a, b = rng.sample(sorted(mutations), 2)
+
+    def apply(names):
+        text = correct
+        for n in names:
+            old, new = mutations[n]
+            if text.count(old) != 1:
+                raise ValueError(f"фрагмент правила {n} не найден ровно один раз")
+            text = text.replace(old, new)
+        return text
+
+    texts = [apply([a]), apply([b]), apply([a, b])]
+    if len({correct, *texts}) != 4:
+        raise ValueError("варианты 2×2 совпадают")
+    return texts, [a, b, f"{a}+{b}"]
 
 
 def module_choose_fix(fid: str, seed: int, rng, *, stem: str, module: str, buggy_fn: str, correct_fn: str,
@@ -107,7 +134,8 @@ def design_review_variant(fid: str, seed: int, rng, *, context: str, intro: str,
                           lines: Sequence[str], issues: dict[str, dict[str, str | None]], vals: dict[str, Any],
                           k: int = 3, length: str = "10–16 предложений", extra_notes: str = "",
                           priority_crit: str = "Расставляет приоритет замечаний по риску для требований и "
-                                               "предлагает порядок исправления и способ проверки"):
+                                               "предлагает порядок исправления и способ проверки",
+                          role: str = "ведущий инженер", doc_kind: str = "дизайн-документа"):
     """Ревью дизайн-документа.
 
     ``lines`` — строки документа; строка ``@<id>@`` — место проблемы ``<id>`` из ``issues``. У проблемы: ``good`` —
@@ -144,7 +172,7 @@ def design_review_variant(fid: str, seed: int, rng, *, context: str, intro: str,
              f"(темы: {', '.join(good_ids)}) — замечания к ним не засчитываются, но и не снижают балл, если не "
              "предлагают опасного решения. Ссылки на пункты документа желательны, но цитата из ответа обязательна."
              + (" " + extra_notes if extra_notes else ""))
-    stem = (f"{intro} Ниже — выдержка из дизайн-документа «{doc_title}». Проведите ревью как ведущий инженер: "
+    stem = (f"{intro} Ниже — выдержка из {doc_kind} «{doc_title}». Проведите ревью как {role}: "
             f"найдите проблемы, которые помешают выполнить требования, сошлитесь на пункты документа, оцените риск и "
             f"предложите исправления и способ проверки. Ответ — {length}.")
     rub = {"criteria": crit, "strong": strong, "medium": medium, "weak": weak, "notes": notes}

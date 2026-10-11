@@ -1,7 +1,7 @@
 family_id: data_eng.sql.group_by_having_output
 title: SQL — WHERE до группировки и HAVING после
 direction: data_eng
-skills: [sql, aggregation, group_by]
+skills: [sql, aggregation]
 target_grades: [intern, junior]
 format: predict_output
 language: sql

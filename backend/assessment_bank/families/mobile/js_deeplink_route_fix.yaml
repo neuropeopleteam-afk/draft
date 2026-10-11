@@ -1,7 +1,7 @@
 family_id: mobile.js.deeplink_route_fix
 title: Диплинк с метками открывает главный экран — разбор пути ссылки
 direction: mobile
-skills: [deep_links, mobile_navigation, javascript, url_parsing]
+skills: [deep_links, navigation, javascript]
 target_grades: [intern, junior]
 format: choose_fix
 language: javascript

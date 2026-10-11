@@ -1,0 +1,26 @@
+family_id: analyst.er.cardinality_ddl_fix
+title: Кардинальность связи из требования — какое определение таблицы ему соответствует
+direction: analyst
+skills: [er_modeling, cardinality, keys, data_modeling, sql]
+target_grades: [junior, middle]
+format: choose_fix
+language: sql
+invariants:
+  code_lines: [6, 6]
+  defect_type: cardinality
+  n_options: 4
+  extra:
+    modes: [one_many, one_one, optional, many_many]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.3
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "Перевод словесной кардинальности в ограничения NOT NULL / UNIQUE / REFERENCES / составной ключ; все дистракторы — определения той же формы с одной типичной ошибкой (лишнее или пропущенное ограничение). Четыре режима связи → σ повышена. Граница Junior/Middle (b ≈ −0,3)"
+generator: assessment_bank.families.analyst.er_cardinality_ddl_fix
+version: 1
+description: >
+  Требование описывает связь сущностей словами; показано определение таблицы с ошибкой кардинальности.
+  Ключ: каждое определение создаётся в sqlite3 с включёнными внешними ключами и проходит сценарии вставки,
+  выведенные из требования.

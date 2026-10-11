@@ -1,7 +1,7 @@
 family_id: devops.net.nginx_location_mcq
 title: Сети — какой location nginx обработает запрос
 direction: devops
-skills: [nginx, networking, http, regex]
+skills: [nginx, networking, http, reverse_proxy]
 target_grades: [middle, senior]
 format: mcq_concept
 language: text

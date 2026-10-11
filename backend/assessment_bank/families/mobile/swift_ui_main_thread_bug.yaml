@@ -1,7 +1,7 @@
 family_id: mobile.swift.ui_main_thread_bug
 title: Swift — обновление интерфейса из обработчика URLSession
 direction: mobile
-skills: [swift, ios, gcd, mobile_threading, networking]
+skills: [swift, ios, gcd, main_thread, ui_threading, networking]
 target_grades: [junior]
 format: find_bug
 language: swift

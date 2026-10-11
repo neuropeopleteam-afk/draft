@@ -1,0 +1,26 @@
+family_id: frontend.arch.optimistic_update_fix
+title: Оптимистичные обновления при быстрых изменениях, ответах в любом порядке и отказах сервера — интерфейс сходится с сервером
+direction: frontend
+skills: [state_management, async_await, promises, data_consistency, architecture]
+target_grades: [lead]
+format: choose_fix
+language: javascript
+invariants:
+  code_lines: [14, 24]
+  n_options: 4
+  defect_type: optimistic_race
+  extra:
+    distractors_fixed: [snapshot, latest_only, confirmed_unseq]
+    scenarios: 5
+time_limit_s: 720
+canary: false
+prior_difficulty:
+  b: 2.0
+  a: 1.3
+  sigma_variant: 0.25
+  basis: "Априорная трудность (не по людям). Четыре класса по 18–30 строк; три дистрактора — распространённые «исправления» (откат к снимку, учёт только последнего ответа, «последнее подтверждённое» без номера), каждый ломается на своём сценарии порядка ответов и отказов; верный — журнал изменений с правилом «последнее неотклонённое», которое совпадает с правилом сервера. Нужно проиграть несколько чередований ответов в уме. Senior обычно выбирает «только последний ответ» и не проверяет двойной отказ — граница Senior/Lead (θ ≈ 2,0). Состав дистракторов фиксирован, σ 0,25"
+generator: assessment_bank.families.frontend.arch_optimistic_update_fix
+version: 1
+description: >
+  Lead: замена клиентского стора с оптимистичными обновлениями. Ключ — исполнением в node: поддельный API с
+  управляемым порядком ответов и отказами, пять сценариев, сравнение интерфейса с сервером.
