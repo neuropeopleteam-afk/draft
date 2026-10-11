@@ -333,7 +333,7 @@ export function Needs() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Потребности и подборки" subtitle="Опишите, кто нужен, своими словами. У каждого извлечённого требования — цитата из вашего текста: подтвердите, поправьте или удалите. Подборка строится по подтверждённым фактам о кандидатах." />
+      <PageTitle title="Потребности и подборки" subtitle="Опишите, кто нужен, своими словами — подборка строится по подтверждённым фактам о кандидатах." />
       <section className="card space-y-4">
         <Field label="Кого вы ищете" htmlFor="need" hint="Контакты из текста вырезаются до обработки. Без LLM разбор идёт по словарю технологий и правилам. Требования к полу, возрасту, внешности, семье (ст. 64 ТК РФ) не учитываются.">
           <textarea id="need" className="input min-h-[120px]" value={text} onChange={(e) => { setText(e.target.value); setReq(null); fp.reset(); }} placeholder={EXAMPLE} />
