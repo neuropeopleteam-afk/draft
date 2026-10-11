@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Alert, DIRECTIONS, GRADES, Loading, useApi } from "./ui";
+import { Alert, DIRECTIONS, GRADE_TITLE_ALL, Loading, useApi } from "./ui";
 import { ScrollX } from "./A11y";
 import { ProvenanceLine } from "./validation/Provenance";
 
@@ -119,7 +119,7 @@ function Body({ r }: { r: any }) {
           {" "}Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make bench</code> ({n2(r.seconds, 0)} с). Seed мира {r.seeds?.world}, второй мир {r.seeds?.world2}, бутстреп {r.seeds?.bootstrap}, разбиение {r.seeds?.split}; конфиг {r.config_hash}, алгоритм {r.algorithm}.
           Отчёт построен {r.generated_at?.slice(0, 10).split("-").reverse().join(".")}. Подробно: docs/validation/MATCHING_BENCH.md и matching_bench.json (метрики по каждой потребности).
         </p>
-        <p className="mt-2 text-brand-ink/70">Разрез по направлениям (nDCG@10, платформа / BM25): {Object.entries<any>(r.breakdown?.by_direction ?? {}).map(([d, v]) => `${DIRECTIONS[d] ?? d} ${n2(v.platform)} / ${n2(v.bm25)}`).join("; ")}. По грейдам: {Object.entries<any>(r.breakdown?.by_grade ?? {}).map(([gr, v]) => `${GRADES[gr] ?? gr} ${n2(v.platform)} / ${n2(v.bm25)}`).join("; ")}.</p>
+        <p className="mt-2 text-brand-ink/70">Разрез по направлениям (nDCG@10, платформа / BM25): {Object.entries<any>(r.breakdown?.by_direction ?? {}).map(([d, v]) => `${DIRECTIONS[d] ?? d} ${n2(v.platform)} / ${n2(v.bm25)}`).join("; ")}. По грейдам: {Object.entries<any>(r.breakdown?.by_grade ?? {}).map(([gr, v]) => `${GRADE_TITLE_ALL[gr] ?? gr} ${n2(v.platform)} / ${n2(v.bm25)}`).join("; ")}.</p>
       </details>
     </>
   );

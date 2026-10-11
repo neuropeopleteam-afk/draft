@@ -23,6 +23,7 @@ from app.modules.assessment.models import SurveyResponse, SurveyStackTag
 from app.modules.auth.models import Consent, User
 from app.modules.catalog.dictionary import ROLE_TITLES
 from app.modules.catalog.models import Category
+from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.seed_data import DIRECTIONS, STACK, grade_by_experience
 from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, achievement_text, card, load_bundles, refresh_rating, set_t0_facts
 from app.modules.profiles.models import CandidateProfile, CandidateResume
@@ -152,8 +153,9 @@ class OnboardingIn(BaseModel):
         return v.strip() if v else None
 
 
-def _grade_hint(years: float) -> str:
-    return grade_by_experience(years) or "junior"
+def _grade_hint(years: float, direction: str | None = None) -> str:
+    # потолок — верхний уровень, который тест проверяет в направлении (Lead/Principal — флаг и банк, catalog.levels)
+    return grade_by_experience(years, top=grade_levels.top_grade(direction)) or "junior"
 
 
 @router.get("/onboarding", summary="Опрос: текущие ответы и справочники", responses=AUTH)
@@ -207,7 +209,7 @@ def save_onboarding(data: OnboardingIn, user: User = Depends(candidate), db: Ses
     if data.additional_direction:
         ensure_specialization(db, p, data.additional_direction)
     survey = SurveyResponse(
-        user_id=user.id, direction_id=data.direction, claimed_grade_id=_grade_hint(data.experience_years),
+        user_id=user.id, direction_id=data.direction, claimed_grade_id=_grade_hint(data.experience_years, data.direction),
         experience_years=data.experience_years,
         answers={"stack": {s.tag: s.level for s in data.stack}, "roles": data.roles,
                  "work_format": data.work_format.value, "city": data.city},
@@ -218,7 +220,7 @@ def save_onboarding(data: OnboardingIn, user: User = Depends(candidate), db: Ses
         db.add(SurveyStackTag(survey_id=survey.id, stack_tag_id=s.tag, self_level=s.level))
     if data.additional_direction:
         extra = SurveyResponse(user_id=user.id, direction_id=data.additional_direction,
-                               claimed_grade_id=_grade_hint(data.experience_years), experience_years=data.experience_years,
+                               claimed_grade_id=_grade_hint(data.experience_years, data.direction), experience_years=data.experience_years,
                                answers={"stack": {s.tag: s.level for s in data.additional_stack}, "roles": data.roles})
         db.add(extra)
         db.flush()

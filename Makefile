@@ -90,7 +90,13 @@ grade-sweep: ## Перебор параметров теста ради точн
 grade-compare: ## Точность уровня в сопоставимых условиях (точные параметры, заявили не ниже, короткий тест на уровень выше) → data/grade_compare.json, docs/validation/GRADE_COMPARE.md
 	cd backend && python -m app.modules.validation.grade_compare $(COMPARE_ARGS)
 
-.PHONY: bench bench-quick stability intern-cut grade-above fsp-regression path-retest grade-sweep grade-compare
+grades-ext-sim: ## Путь-повтор с 6 уровнями (Lead, Principal; модельные семейства) → data/grades_ext_sim.json, docs/validation/GRADES_EXT.md (≈ 15 мин на 8 ядрах)
+	cd backend && GRADES_EXT_ENABLED=1 python -m app.modules.validation.grades_ext_sim $(SIM_ARGS)
+
+grades-ext-need: ## Что нужно для точности Lead/Principal ≥ 64 %: банк, блок Lead/Principal, частичный балл → data/grades_ext_need.json, docs/validation/GRADES_EXT_NEED.md
+	cd backend && GRADES_EXT_ENABLED=1 python -m app.modules.validation.grades_ext_need $(SIM_ARGS)
+
+.PHONY: bench bench-quick stability intern-cut grade-above fsp-regression path-retest grade-sweep grade-compare grades-ext-sim grades-ext-need
 
 # подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
 GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)
