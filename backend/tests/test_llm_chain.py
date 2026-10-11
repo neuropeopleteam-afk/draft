@@ -234,7 +234,7 @@ def test_relay_url_and_token(monkeypatch, net):
     # атрибуция OpenRouter — нейтральная: без названия продукта и домена
     s = get_settings()
     neutral = (c["headers"]["http-referer"] + c["headers"]["x-title"]).lower()
-    for word in (s.product_name.lower(), "neuropeople", "fsp", "фсп", "встречн"):
+    for word in (s.product_name.lower(), "neuropeople", "fsp", "фсп", "драфт"):
         assert word not in neutral
     st = llm.status()
     assert st["chain"] == [{"provider": "openrouter", "configured": True, "relay": True}]

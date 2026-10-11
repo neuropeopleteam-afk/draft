@@ -92,7 +92,7 @@ def test_export_contains_own_data_and_nothing_foreign(client, world):
     assert r.headers["content-type"].startswith("application/json")
     raw = r.text
     data = json.loads(raw)
-    assert data["format"].startswith("vstrechny.my-data/")
+    assert data["format"].startswith("draft.my-data/")
     assert data["account"]["email"] == "cand@example.com" and data["account"]["role"] == "candidate"
     p = data["profile"]
     assert p["full_name"] == "Иван Петров" and p["phone"] == "+7 900 111-22-33" and p["salary_min_hidden"] == 250000

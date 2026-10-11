@@ -39,7 +39,7 @@ from app.modules.profiles.candidate_router import candidate_card_for
 from app.modules.profiles.models import CandidateProfile, Company
 
 log = logging.getLogger(__name__)
-SCHEMA = "vstrechny.candidate.v1"
+SCHEMA = "draft.candidate.v1"
 LOCK_S = 90
 TARGET_TITLES = {"huntflow": "Хантфлоу", "talantix": "Talantix", "potok": "Поток", "webhook": "Вебхук"}
 NO_RETRY = (400, 401, 402, 403, 404, 422)
@@ -67,7 +67,7 @@ def export_payload(db: Session, company: Company, *, invitation: Invitation | No
     base = get_isettings().public_base_url.rstrip("/")
     return {
         "schema": SCHEMA, "exported_at": utcnow().isoformat(),
-        "source": {"platform": "Встречный (спецтрек ФСП)", "url": base},
+        "source": {"platform": "Драфт (спецтрек ФСП)", "url": base},
         "company": {"id": str(company.id), "name": company.name, "inn": company.inn},
         "candidate": {"ref": cp.public_ref, "category_id": cp.current_category_id,
                       "category_title": category_title(cp.current_category_id) if cp.current_category_id else None,
@@ -81,7 +81,7 @@ def export_payload(db: Session, company: Company, *, invitation: Invitation | No
 
 
 def huntflow_applicant(p: dict) -> dict:
-    """Тело POST /accounts/{id}/applicants Хантфлоу из карточки ``vstrechny.candidate.v1``."""
+    """Тело POST /accounts/{id}/applicants Хантфлоу из карточки ``draft.candidate.v1``."""
     return hf_body(prof.build(p))
 
 

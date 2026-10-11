@@ -93,7 +93,7 @@ def talantix_issue(db: Session, stub_key: str) -> dict:
     db.add(AtsStubRecord(stub_key=stub_key, kind="talantix_token", payload={
         "a": _h(access), "r": _h(refresh), "a_exp": now + TX_ACCESS_TTL, "r_exp": now + TX_REFRESH_TTL, "used": False}))
     db.flush()
-    return {"name": "Встречный (демо)", "access_token": access, "expires_in": TX_ACCESS_TTL, "refresh_token": refresh,
+    return {"name": "Драфт (демо)", "access_token": access, "expires_in": TX_ACCESS_TTL, "refresh_token": refresh,
             "refresh_token_expires_in": TX_REFRESH_TTL, "token_type": "bearer", "created_at": int(now * 1000)}
 
 
