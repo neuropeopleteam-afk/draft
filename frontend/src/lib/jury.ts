@@ -209,11 +209,12 @@ export const QUICK_INTERVIEW: QuickStep = {
  *  /api/meta `interview.defense_minutes`). */
 export const quickSteps = (iv?: { enabled?: boolean; defense_minutes?: number } | null): QuickStep[] =>
   iv?.enabled ? [...QUICK.slice(0, -1), { ...QUICK_INTERVIEW, min: iv.defense_minutes || QUICK_INTERVIEW.min }, QUICK[QUICK.length - 1]] : QUICK;
-/** Заготовки своей потребности (шаг 1): отрицание, нестандартный стек, роль вне каталога. Эксперт правит текст сам. */
-export const NEED_PRESETS = [
+/** Заготовки своей потребности (шаг 1): отрицание, нестандартный стек, роль вне каталога. Эксперт правит текст сам.
+ *  С2 №7: dir/inCatalog — если направление уже в каталоге (расширение каталога, /api/meta catalog.directions), подпись другая. */
+export const NEED_PRESETS: { label: string; text: string; dir?: string; inCatalog?: string }[] = [
   { label: "Python, с отрицанием", text: "Ищем Python-разработчика middle: FastAPI, PostgreSQL, Docker. Django не нужен, PHP не нужен. Желательно Redis. Удалённо, 200–260 тыс. ₽" },
   { label: "Go и ClickHouse, Казань", text: "Go-разработчик senior: Kafka, ClickHouse, gRPC и Kubernetes; Rust будет плюсом. Гибрид в Казани, 320–400 тыс. ₽" },
-  { label: "DevOps — вне каталога", text: "DevOps-инженер middle: Linux, Docker, CI/CD, Kubernetes, Terraform и мониторинг на Prometheus. Удалённо, 250–300 тыс. ₽" },
+  { label: "DevOps — вне каталога", dir: "devops", inCatalog: "DevOps / SRE — новое направление", text: "DevOps-инженер middle: Linux, Docker, CI/CD, Kubernetes, Terraform и мониторинг на Prometheus. Удалённо, 250–300 тыс. ₽" },
 ];
 const KEY_PRESET = "jury_need_preset", PRESET_EVENT = "jury-need-preset";
 /** Заготовка → поле «Кого вы ищете» (Needs.tsx): ждёт в sessionStorage, если экран ещё не открыт. */
