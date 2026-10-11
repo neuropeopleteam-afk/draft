@@ -24,23 +24,60 @@ ROLES = (
 )
 
 
-def coverage(text: str) -> dict | None:
+_OWN_ANALYST = re.compile(r"бизнес|систем|business|system", re.I)
+
+
+def _first_role(text: str):
+    """Первая профессия вне базового каталога в заголовке/первых строках → (совпадение, строка ROLES) или None."""
     # Profession is decided from the title/first lines, not from incidental SDK mentions.
     head = text[:400]
     if re.search(r"\bqa\b|\bsdet\b|тестировщик|тестирован", head.split("\n")[0], re.I):
         return None
     # Несколько ролей в заголовке («Бизнес-аналитик / аналитик 1С») — берём названную первой (И18)
     hits = [(m, r) for r in ROLES if (m := re.search(r[2], head, re.I))]
-    for m, (role, title, pattern, nearest, tested, untested) in sorted(hits, key=lambda h: h[0].start())[:1]:
-        if m:
-            return {"role": role, "title": title, "nearest_direction": nearest,
-                    "nearest_title": DIRECTIONS[nearest], "supported": False,
-                    "tested": tested, "not_tested": untested,
-                    "message": f"Отдельной категории «{title}» пока нет. Ближайшая — {DIRECTIONS[nearest]}. "
-                               "Это частичное соответствие, а не подтверждение профессионального грейда.",
-                    "evidence": {"start": m.start(), "end": m.end(), "quote": text[m.start():m.end()],
-                                 "source": "rules"}}
-    return None
+    return min(hits, key=lambda h: h[0].start()) if hits else None
+
+
+def _own_direction(role: str, quote: str) -> str | None:
+    """Направление расширения каталога для профессии, если оно видно (CATALOG_EXT_ENABLED и проверенный банк)."""
+    from app.modules.catalog.ext import COVERAGE_ROLE_DIRECTION, is_visible
+
+    d = COVERAGE_ROLE_DIRECTION.get(role)
+    if not d or not is_visible(d):
+        return None
+    if role == "analytics" and not _OWN_ANALYST.search(quote):
+        return None  # аналитик данных / продуктовый аналитик — по-прежнему ближайшая Data/ML
+    return d
+
+
+def coverage(text: str) -> dict | None:
+    hit = _first_role(text)
+    if not hit:
+        return None
+    m, (role, title, pattern, nearest, tested, untested) = hit
+    if _own_direction(role, m.group(0)):
+        return None  # своё направление каталога: частичного соответствия нет (own_direction)
+    return {"role": role, "title": title, "nearest_direction": nearest,
+            "nearest_title": DIRECTIONS[nearest], "supported": False,
+            "tested": tested, "not_tested": untested,
+            "message": f"Отдельной категории «{title}» пока нет. Ближайшая — {DIRECTIONS[nearest]}. "
+                       "Это частичное соответствие, а не подтверждение профессионального грейда.",
+            "evidence": {"start": m.start(), "end": m.end(), "quote": text[m.start():m.end()],
+                         "source": "rules"}}
+
+
+def own_direction(text: str) -> dict | None:
+    """Профессия, у которой с расширением каталога есть своё направление (DevOps / SRE, мобильная разработка,
+    системный / бизнес-аналитик): {"direction", "evidence"}; без флага или без проверенного банка — None."""
+    hit = _first_role(text)
+    if not hit:
+        return None
+    m, row = hit
+    d = _own_direction(row[0], m.group(0))
+    if not d:
+        return None
+    return {"direction": d, "evidence": {"start": m.start(), "end": m.end(), "quote": text[m.start():m.end()],
+                                         "source": "rules", "basis": "title"}}
 
 
 # --- Я10: «что проверено тестом / что НЕ проверено» для подборки и вопрос-зонд на непроверенный навык -------------
@@ -84,9 +121,11 @@ def _bank_tags(direction: str) -> frozenset[str]:
 
     from app.modules.assessment.skill_map import to_stack_tags
 
+    from app.modules.catalog.ext import in_active_pool
+
     out: set[str] = set()
     for s in load_specs().values():
-        if s.canary or s.direction not in (direction, "common"):
+        if s.canary or s.direction not in (direction, "common") or not in_active_pool(s):
             continue
         out.update(to_stack_tags(s.direction, s.skills))
     return frozenset(out)
@@ -101,7 +140,8 @@ def scope(req: dict | None) -> dict | None:
     """
     if not req:
         return None
-    from app.modules.catalog.seed_data import STACK
+    from app.modules.catalog.ext import EXT_STACK
+    from app.modules.catalog.seed_data import DIRECTION_TITLES, STACK
 
     cov = req.get("coverage") or None
     have = bank_tags(req.get("direction"))
@@ -111,7 +151,7 @@ def scope(req: dict | None) -> dict | None:
         tag = it.get("tag")
         if not tag:
             continue
-        title = STACK.get(tag, (tag,))[0]
+        title = STACK.get(tag, EXT_STACK.get(tag, (tag,)))[0]  # теги расширения каталога — со своим названием
         if tag in have:
             tested.append({"tag": tag, "title": title, "must": must})
         else:
@@ -128,7 +168,7 @@ def scope(req: dict | None) -> dict | None:
     p = PROBES.get(role or "")
     return {
         "out_of_catalog": bool(cov), "role": role, "role_title": (cov or {}).get("title"),
-        "nearest_title": (cov or {}).get("nearest_title") or DIRECTIONS.get(req.get("direction") or ""),
+        "nearest_title": (cov or {}).get("nearest_title") or DIRECTION_TITLES.get(req.get("direction") or ""),
         "tested": tested, "tested_note": (cov or {}).get("tested"),
         "not_tested": not_tested, "not_tested_note": (cov or {}).get("not_tested"),
         "probe": {"title": p[0], "task": p[1]} if p else (not_tested[0]["probe"] if not_tested else None),

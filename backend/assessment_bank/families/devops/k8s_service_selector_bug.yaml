@@ -1,0 +1,25 @@
+family_id: devops.k8s.service_selector_bug
+title: Kubernetes — селектор Service не совпадает с метками подов
+direction: devops
+skills: [kubernetes, services, kubernetes_manifests]
+target_grades: [junior, middle]
+format: find_bug
+language: yaml
+invariants:
+  code_lines: [36, 66]
+  operations: [36, 66]
+  defect_type: service_selector_mismatch
+  extra:
+    subtype: selector_labels
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.4
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Deployment + Service, 36–66 строк YAML; симптом дан (поды Ready, endpoints <none>); нужно сопоставить selector Service с метками шаблона пода, а не с metadata Deployment; три формы расхождения (значение, лишняя пара, ключ) одного подтипа; ловушка — selector Deployment совпадает с шаблоном. Граница Junior/Middle"
+generator: assessment_bank.families.devops.k8s_service_selector_bug
+version: 1
+description: >
+  Найти строку манифеста, из-за которой Service не получает endpoints. Ключ — исполнение модели
+  сопоставления Service → под → порт над показанным YAML (подмножество YAML разбирается в песочнице).

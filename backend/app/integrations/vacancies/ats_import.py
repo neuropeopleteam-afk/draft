@@ -34,7 +34,7 @@ from app.integrations.ats import providers
 from app.integrations.ats.clients import AtsError
 from app.integrations.vacancies.models import Vacancy
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import known_tag
 
 SOURCE = "potok"
 SOURCE_TITLE = "Поток"
@@ -115,7 +115,7 @@ def map_job(db: Session, job: dict) -> Mapped:
     if not category_id:
         notes.append("Категорию по тексту определить не удалось — выберите её перед публикацией")
     stack = [s["tag"] for s in (parsed.get("stack_required") or []) + (parsed.get("stack_desired") or [])
-             if s.get("tag") in STACK]
+             if known_tag(s.get("tag"))]
     stack = list(dict.fromkeys(stack))[:20]
     lo, hi = job.get("salary_from"), job.get("salary_to")
     from_ats = bool(lo and hi and 0 < int(lo) <= int(hi) and int(hi) <= int(lo) * MAX_RATIO

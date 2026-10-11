@@ -24,7 +24,7 @@ from app.core.fmt import probe_title, quoted, ru_num, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog import levels as grade_levels
-from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
+from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, tag_title
 from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
     GRADE_STATUS_ORDER,
@@ -77,8 +77,7 @@ def grade_cap_enabled() -> bool:
 def grade_cap(test: float, grade: str | None, on: bool | None = None) -> float:
     """Компонента теста с потолком на пороге следующего грейда (флаг MATCH_GRADE_CAP, выкл.): кандидат, чей θ выше
     порога следующего грейда, внутри категории не обгоняет за счёт теста того, кто уверенно в запрошенном грейде, —
-    его опережают подтверждённые обязательные навыки. Так считают и другие открытые бенчмарки (потолок θ на пороге
-    + 1, мера близости к грейду вакансии); в нашем строгом протоколе правило «не хуже» не выполнено
+    его опережают подтверждённые обязательные навыки. В нашем строгом протоколе правило «не хуже» не выполнено
     (docs/validation/MATCHING_COMPARE.md), поэтому выключено. Для Senior (следующего грейда нет) потолка нет."""
     on = grade_cap_enabled() if on is None else on
     if not on or grade not in GRADES:
@@ -277,7 +276,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         got = 0.0
         for i in items:
             tag, w = i["tag"], i["weight"]
-            title = STACK.get(tag, (tag,))[0]
+            title = tag_title(tag)
             f = b.skills_t1.get(tag)
             if skill_confirmed(f):
                 got += w * f.value.get("score", 0)

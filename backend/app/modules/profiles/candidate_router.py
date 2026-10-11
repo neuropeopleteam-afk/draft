@@ -24,11 +24,12 @@ from app.modules.auth.models import Consent, User
 from app.modules.catalog.dictionary import ROLE_TITLES
 from app.modules.catalog.models import Category
 from app.modules.catalog import levels as grade_levels
-from app.modules.catalog.seed_data import DIRECTIONS, STACK, grade_by_experience
+from app.modules.catalog.seed_data import DIRECTIONS, grade_by_experience, known_tag
 from app.modules.profiles.facts import DEFAULT_PRIVACY, PRIVACY_TITLES, achievement_text, card, load_bundles, refresh_rating, set_t0_facts
 from app.modules.profiles.models import CandidateProfile, CandidateResume
 from app.modules.profiles.models import CandidateSpecialization
 from app.modules.profiles.specializations import ensure_specialization
+from app.modules.catalog.ext import DirectionId
 from app.core.origin import NO_FSP, fsp_origin
 
 router = APIRouter(prefix="/api/me", tags=["candidate"])
@@ -108,8 +109,8 @@ class StackItem(BaseModel):
 
 
 class OnboardingIn(BaseModel):
-    direction: Literal["backend", "frontend", "data_ml", "qa", "security"]
-    additional_direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None
+    direction: DirectionId
+    additional_direction: DirectionId | None = None
     additional_stack: list[StackItem] = Field(default_factory=list, max_length=40)
     stack: list[StackItem] = Field(default_factory=list, max_length=40)
     experience_years: float = Field(ge=0, le=50)
@@ -132,7 +133,7 @@ class OnboardingIn(BaseModel):
     @field_validator("stack", "additional_stack")
     @classmethod
     def _known_tags(cls, v: list[StackItem]) -> list[StackItem]:
-        bad = [s.tag for s in v if s.tag not in STACK]
+        bad = [s.tag for s in v if not known_tag(s.tag)]
         if bad:
             raise ValueError(f"Неизвестные стек-теги: {', '.join(bad)}")
         return v

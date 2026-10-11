@@ -1,0 +1,25 @@
+family_id: frontend.arch.realtime_collab_open
+title: Совместное редактирование в реальном времени — модель слияния, переподключение без потерь, журнал и снимки
+direction: frontend
+skills: [architecture, state_management, websockets, distributed_systems, data_consistency]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    twists: [offline, storm, big_doc]
+    criteria: [merge, transport, storage, twist, verify]
+    anchors: [ops_per_doc_s, log_mb_per_day]
+    scale: "0–4"
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 2.0
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Архитектура целиком: модель слияния одновременных правок с ценой (OT с арбитром или CRDT), транспорт с номерами операций и повторной отправкой неподтверждённых, хранение журнала и снимков с расчётом роста журнала по числам варианта, присутствие вне журнала и особенность (офлайн-правки до часа, шторм переподключений после выкладки, документ на десятки тысяч элементов). Senior обычно называет WebSocket и библиотеку CRDT без переподключения, снимков и расчёта — граница Senior/Lead (θ ≈ 2,0); рубрика 0–4 по пяти критериям, σ 0,3"
+generator: assessment_bank.families.frontend.arch_realtime_collab_open
+version: 1
+description: >
+  Lead: совместное редактирование в реальном времени — слияние правок, переподключение, журнал операций и
+  снимки, особенность варианта. Рубрика 0–4; оценка с цитатами-доказательствами.

@@ -1,0 +1,24 @@
+family_id: mobile.kotlin.main_thread_io_bug
+title: Kotlin — блокирующий вызов в viewModelScope.launch на главном потоке
+direction: mobile
+skills: [kotlin, coroutines, android, main_thread, ui_threading]
+target_grades: [junior, middle]
+format: find_bug
+language: kotlin
+invariants:
+  code_lines: [11, 20]
+  operations: [8, 15]
+  defect_type: blocking_call_on_main
+time_limit_s: 210
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.2
+  sigma_variant: 0.2
+  basis: "14–20 строк Kotlin, один подтип: синхронный вызов в viewModelScope.launch (Dispatchers.Main.immediate по умолчанию). Почти верный путь — строка launch: перенос launch на IO ломает MutableLiveData.setValue; нужно знать и диспетчер по умолчанию, и правило setValue. Различает Junior и Middle (b ≈ −0,2)"
+generator: assessment_bank.families.mobile.kotlin_main_thread_io_bug
+version: 1
+description: >
+  ViewModel вызывает синхронный сетевой или дисковый метод внутри viewModelScope.launch. Ключ проверяется
+  моделью потоков на Python по показанному коду: дефектный код — блокирующий вызов на главном потоке;
+  исправление строки ключа проходит; перенос launch на Dispatchers.IO — запись LiveData вне главного потока.

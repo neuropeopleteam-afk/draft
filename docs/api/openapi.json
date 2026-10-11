@@ -16677,6 +16677,12 @@
             "title": "Assessment Engine",
             "type": "string"
           },
+          "catalog": {
+            "additionalProperties": true,
+            "description": "Видимые направления каталога: directions — все видимые (5 базовых и направления расширения с проверенным банком), ext — видимые направления расширения, ext_enabled — включён ли CATALOG_EXT_ENABLED",
+            "title": "Catalog",
+            "type": "object"
+          },
           "demo_sandbox": {
             "description": "Работает ли стенд на демо-данных",
             "title": "Demo Sandbox",
@@ -16727,7 +16733,8 @@
           "proctor_camera",
           "llm",
           "assessment_engine",
-          "rules"
+          "rules",
+          "catalog"
         ],
         "title": "MetaOut",
         "type": "object"
@@ -18029,7 +18036,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -18070,7 +18081,11 @@
               "frontend",
               "data_ml",
               "qa",
-              "security"
+              "security",
+              "devops",
+              "data_eng",
+              "mobile",
+              "analyst"
             ],
             "title": "Direction",
             "type": "string"
@@ -20894,7 +20909,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -27358,20 +27377,6 @@
             "description": "Распределение по заявленным грейдам",
             "title": "Claimed"
           },
-          "competitor_reference": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Опубликованные показатели других платформ для сравнения",
-            "title": "Competitor Reference"
-          },
           "config": {
             "anyOf": [
               {
@@ -28657,7 +28662,11 @@
                   "frontend",
                   "data_ml",
                   "qa",
-                  "security"
+                  "security",
+                  "devops",
+                  "data_eng",
+                  "mobile",
+                  "analyst"
                 ],
                 "type": "string"
               },
@@ -30117,7 +30126,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -31488,7 +31501,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -38859,7 +38876,7 @@
         "operationId": "get_stack_tags_api_catalog_stack_tags_get",
         "parameters": [
           {
-            "description": "Направление; общий блок возвращается всегда",
+            "description": "Направление; общий блок возвращается всегда. У направлений расширения каталога — ещё связанные теги других направлений (инженеру данных — Spark и Airflow и т. п.)",
             "in": "query",
             "name": "direction",
             "required": false,
@@ -38872,7 +38889,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Направление; общий блок возвращается всегда",
+              "description": "Направление; общий блок возвращается всегда. У направлений расширения каталога — ещё связанные теги других направлений (инженеру данных — Spark и Airflow и т. п.)",
               "title": "Direction"
             }
           }
@@ -42396,7 +42413,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -42681,7 +42702,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -43031,7 +43056,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -43245,7 +43274,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -55734,7 +55767,11 @@
                     "frontend",
                     "data_ml",
                     "qa",
-                    "security"
+                    "security",
+                    "devops",
+                    "data_eng",
+                    "mobile",
+                    "analyst"
                   ],
                   "type": "string"
                 },
@@ -65762,7 +65799,7 @@
     },
     "/api/validation/grade-accuracy": {
       "get": {
-        "description": "Я22: компактно для страницы — текущая и прежняя конфигурация, выбор, Парето-фронт основного мира (σ = 0,5),\nусловия конкурента (4 ступени, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой. Полный список точек — в JSON.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "description": "Я22: компактно для страницы — текущая и прежняя конфигурация, выбор, Парето-фронт основного мира (σ = 0,5),\nдругие условия измерения (4 ступени, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой. Полный список точек — в JSON.\n\n**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
         "operationId": "grade_accuracy_api_validation_grade_accuracy_get",
         "responses": {
           "200": {
@@ -67420,7 +67457,7 @@
                       }
                     ],
                     "conditions": {
-                      "n_competitor": 400,
+                      "n_alt": 400,
                       "n_leak": 400,
                       "n_leak_table": 300,
                       "n_per_direction": 400,
