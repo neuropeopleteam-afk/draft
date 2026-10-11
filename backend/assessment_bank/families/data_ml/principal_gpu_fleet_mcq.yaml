@@ -1,0 +1,24 @@
+family_id: data_ml.serving.principal_gpu_fleet_mcq
+title: Парк GPU для обслуживания модели — пакет по требованию p95, пик, предел загрузки и потеря зоны
+direction: data_ml
+skills: [ml_systems, mlops, capacity_planning, latency, performance]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: "три из шести: больше ключа — batch1, each_zone; меньше — avg, no_zone, no_sla, no_cap (больше ключа 0, 1 или 2 равновероятно)"
+    zones: [3, 4]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.4
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Четыре решения подряд: пакет по таблице нагрузочного теста под требование p95 (не самый производительный), пик вместо среднего, предел загрузки и запас на потерю одной зоны из трёх-четырёх (оставшиеся z − 1 зон держат пик), округление по зонам. Дистракторы — три из шести типичных ошибок одной формы (число GPU, ≥ 12 % и ≥ 2 GPU друг от друга), завышающие и занижающие; место ключа по величине меняется. Senior обычно считает по пиковой нагрузке, но теряет потерю зоны или выбирает пакет по пропускной способности; бюджет мощности на год с отказоустойчивостью — граница Lead/Principal (θ ≈ 2,4). Короткое задание (≤ 7 мин). σ 0,3"
+generator: assessment_bank.families.data_ml.principal_gpu_fleet_mcq
+version: 1
+description: >
+  Principal (у границы Lead): минимальное число GPU по таблице нагрузочного теста, требованию p95, пику, пределу
+  загрузки и потере одной зоны. Ключ — исполнением: выбор пакета и перебор числа GPU с проверкой каждой потери зоны.

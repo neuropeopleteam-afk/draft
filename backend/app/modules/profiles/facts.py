@@ -22,7 +22,7 @@ from app.modules.catalog.constants import FSP_DISCIPLINES
 from app.modules.catalog.dictionary import ROLE_TITLES, SOFT_SKILL_TITLES
 from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADES, STACK, category_title, tag_title
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_CUTS, category_title, known_tag, tag_title
 from app.modules.fsp.models import FspAchievement, FspPassport
 from app.modules.profiles.models import CandidateFact, CandidateProfile, CandidateSpecialization
 from app.modules.profiles.specializations import legacy_specialization, summary, sync_primary
@@ -64,8 +64,8 @@ def set_t0_facts(db: Session, user_id: uuid.UUID, source: FactSource, *, stack: 
     db.execute(delete(CandidateFact).where(CandidateFact.user_id == user_id, CandidateFact.source == source,
                                            CandidateFact.evidence_level == EvidenceLevel.T0))
     for t in stack or []:
-        if t in STACK:
-            db.add(CandidateFact(user_id=user_id, kind="stack", key=t, title=STACK[t][0], value={},
+        if known_tag(t):
+            db.add(CandidateFact(user_id=user_id, kind="stack", key=t, title=tag_title(t), value={},
                                  evidence_level=EvidenceLevel.T0, source=source))
     for r in roles or []:
         if r in ROLE_TITLES:
@@ -312,6 +312,15 @@ def _position(out: dict, t: dict, grade: str | None) -> None:
         out["position"] = level_position(t.get("theta"), t.get("se"), grade)
 
 
+def _two_stage(out: dict, t: dict) -> None:
+    """Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): «на границе Middle/Senior — уточнение пройдено / не пройдено»."""
+    from app.modules.assessment.two_stage import card_note
+
+    note = card_note(t)
+    if note:
+        out["two_stage"] = note
+
+
 def grade_status(b: "Bundle") -> dict:
     """Единая модель статуса грейда для карточки, подборки, поиска, сравнения, PDF и объяснения «почему».
 
@@ -329,6 +338,7 @@ def grade_status(b: "Bundle") -> dict:
     t = b.test.value if b.test else None
     if st in ("confirmed", "provisional") and t:
         _position(out, t, b.grade)
+        _two_stage(out, t)
     if st == "confirmed":
         by = prov.confirmed_by(t)
         out["text"] = "Грейд подтверждён тестом" + (f" ({by['title']})" if by and by.get("by") in ("probe", "cup") else "")
@@ -495,6 +505,16 @@ def _uniq(facts: list) -> list:
             out.append(f)
     return out
 
+def _model_label() -> str:
+    from app.modules.catalog.ext import MODEL_LABEL
+    return MODEL_LABEL
+
+
+def _is_model_candidate(p) -> bool:
+    """Модельный кандидат каталога расширения: заголовок профиля, который ставит demo.seed.extend_catalog_ext."""
+    return (p.headline or "").endswith(f"({_model_label()})")
+
+
 def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None, rank_total: int | None = None,
          include_hidden: bool = False) -> dict:
     """Обезличенная карточка для работодателя. ФИО, контакты и минимум зарплаты сюда не попадают никогда."""
@@ -522,7 +542,9 @@ def card(b: Bundle, categories: dict[str, Category], *, rank: int | None = None,
         "claimed": ({"direction": cd, "grade": cg, "category_id": f"{cd}.{cg}",
                      "title": category_title(f"{cd}.{cg}")} if cat is None and cd and cg else None),
         "direction": b.direction,
-        "direction_title": DIRECTIONS.get(b.direction or "", None),
+        "direction_title": DIRECTION_TITLES.get(b.direction or "", None),
+        # модельные кандидаты новых направлений каталога (demo.seed.extend_catalog_ext) — подпись «модель, не люди»
+        **({"model_note": _model_label()} if _is_model_candidate(p) else {}),
         "grade": b.grade,
         "grade_title": prov.title(GRADES.get(b.grade or "", None), is_prov),
         # «Junior (предварительно)»: уровень доказанности (вероятность уровня не ниже Junior), причина, попытки

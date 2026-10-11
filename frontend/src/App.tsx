@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { RouteAnnouncer, SkipLink } from "./components/A11y";  // А11: пропуск навигации, смена экрана
 import { JuryGuide } from "./components/JuryGuide";
@@ -11,6 +11,7 @@ import { panelSections } from "./pages/expert/sections";
 import { fspSections } from "./ideas/fsp/sections";
 import { HashScroll } from "./lib/hashScroll";
 import { lazyNamed } from "./lib/lazyPage";
+import { preloadSections } from "./lib/preload";
 
 // Я16: стартовый JS — общий код и главная (первый экран жюри). Остальные экраны — ленивыми файлами сборки по
 // модулям: роли (кандидат, работодатель, эксперт, ФСП) и тяжёлые экраны (валидация, критерии, графики) грузятся
@@ -59,10 +60,20 @@ const pg = {
   passport: () => import("./passport/VerifyPage"),
   criteria: () => import("./pages/Criteria"),  // К1: проверка по критериям ТЗ
   interview: () => import("./components/Interview"),  // Я15: разговор устной защиты и ИИ-интервью
+  tariffs: () => import("./pages/employer/Tariffs"),  // Я29: тарифы работодателя (TARIFFS_ENABLED)
+  fspBenefit: () => import("./ideas/fsp/Benefit"),  // Я29: «Польза для ФСП» и «Партнёры ФСП»
 };
+
+// FIX7: файлы основных разделов маршрута жюри — заранее, когда браузер свободен (lib/preload.ts): переход в раздел
+// не ждёт сеть. Порядок — как в проводнике жюри: кабинет, тест, потребности и подборка, карточка, валидация, критерии.
+const PRELOAD = [pg.cabinet, pg.assessment, pg.needs, pg.search, pg.validation, pg.criteria, pg.category, pg.compare, pg.feedback];
 
 const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
 const InterviewRoom = lazyNamed(pg.interview, "InterviewRoom");
+const TariffsPublic = lazyNamed(pg.tariffs, "default");
+const EmployerTariffs = lazyNamed(pg.tariffs, "EmployerTariffs");
+const FspBenefit = lazyNamed(pg.fspBenefit, "FspBenefit");
+const FspPartners = lazyNamed(pg.fspBenefit, "FspPartners");
 const StudyAbout = lazyNamed(pg.studyAbout, "default");
 const Expert = lazyNamed(pg.expert, "default");
 const ExpertAngoff = lazyNamed(pg.panel, "ExpertAngoff");
@@ -134,6 +145,7 @@ const Criteria = lazyNamed(pg.criteria, "default");
 const JuryGo = lazyNamed(pg.criteria, "JuryGo");
 
 export default function App() {
+  useEffect(() => { preloadSections(PRELOAD); }, []);
   return (
     <>
     <SkipLink />
@@ -145,6 +157,7 @@ export default function App() {
       <Route path="/criteria" element={<Criteria />} />
       <Route path="/jury/go" element={<JuryGo />} />
       <Route path="/study" element={<StudyAbout />} />
+      <Route path="/tariffs" element={<TariffsPublic />} />
       <Route path="/jury/live" element={<LiveScreen />} />
       <Route path="/j/:code" element={<LiveGuest />} />
       <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
@@ -214,6 +227,7 @@ export default function App() {
         <Route path="cups/:id" element={<EmployerCup />} />
         <Route path="assignments" element={<EmployerAssignments />} />
         <Route path="assignments/:id" element={<EmployerAssignment />} />
+        <Route path="tariffs" element={<EmployerTariffs />} />
       </Route>
       <Route path="/fsp" element={<CabinetLayout role="fsp_analyst" alsoRoles={["admin"]} title="Кабинет ФСП" sections={fspSections} />}>
         <Route element={<FspReportLayout />}>
@@ -225,6 +239,8 @@ export default function App() {
           <Route path="cups" element={<FspCups />} />
           <Route path="method" element={<FspMethod />} />
         </Route>
+        <Route path="benefit" element={<FspBenefit />} />
+        <Route path="partners" element={<FspPartners />} />
         <Route path="security" element={<TwoFactorSettings />} />
       </Route>
       <Route path="*" element={<NotFound />} />

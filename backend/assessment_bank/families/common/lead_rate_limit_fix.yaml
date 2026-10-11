@@ -1,0 +1,25 @@
+family_id: common.arch.lead_rate_limit_fix
+title: Ограничитель частоты на шлюзе — ведро по клиенту, предел всплеска, отказ без долга
+direction: common
+skills: [python, reliability, system_design, rest_api, testing]
+target_grades: [lead]
+format: choose_fix
+language: python
+invariants:
+  n_options: 4
+  defect_type: rate_limit
+  extra:
+    scheme: factorial_2x2
+    rules: [per_client, burst, reject]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.2
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое задание у верхней границы Lead: принципы платформы даны без кода (лимит на ключ клиента, а не на адрес; всплеск после простоя не больше ёмкости; отказ не отнимает будущих жетонов), кандидат переводит их в код ведра жетонов — ключ ведра, предел накопления, запись счёта при отказе. Варианты — схема 2×2 из двух правил с разными локальными именами; ключ — исполнением на четырёх сценариях с явным временем. Senior обычно замечает предел накопления, но пропускает ключ по адресу за общим NAT и «штраф» при отказе; уверенно решает Lead — граница Senior/Lead и Lead/Principal (θ ≈ 2,2); σ 0,3"
+generator: assessment_bank.families.common.lead_rate_limit_fix
+version: 1
+description: >
+  Lead (короткое, 7 мин): какая замена функции ограничителя частоты выполняет три принципа платформы. Ключ —
+  исполнением: замены исполняются в составе модуля на четырёх сценариях.

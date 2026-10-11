@@ -1,0 +1,24 @@
+family_id: analyst.req.rice_priority_mcq
+title: Приоритизация бэклога по RICE — какая доработка первая (последняя)
+direction: analyst
+skills: [prioritization, requirements, stakeholders]
+target_grades: [intern, junior]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  code_lines: [6, 6]
+  extra:
+    modes: [max, min]
+time_limit_s: 180
+canary: false
+prior_difficulty:
+  b: -1.0
+  a: 1.1
+  sigma_variant: 0.25
+  basis: "Четыре строки, четыре множителя; три дистрактора — «ловушки одного множителя» (наибольший охват, влияние, наименьшие трудозатраты), разрыв первого и второго места ≥ 10 %. Расчёт прямой, нужна аккуратность с долями Confidence и дробным Effort. Стажёр/Junior (b ≈ −1,0)"
+generator: assessment_bank.families.analyst.req_rice_priority_mcq
+version: 1
+description: >
+  Таблица оценок RICE для четырёх доработок; нужно выбрать доработку с наибольшим (наименьшим) приоритетом.
+  Ключ: Python разбирает показанную таблицу и считает RICE точно.

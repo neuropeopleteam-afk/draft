@@ -17,7 +17,7 @@ from assessment_bank import load_specs
 
 from app.cup.tasks import AUTO_FORMATS
 from app.modules.assessment.skill_map import to_stack_tags
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import tag_title
 from app.modules.profiles.facts import GRADE_CUTS
 
 N_MIN, N_MAX = 3, 5
@@ -93,7 +93,7 @@ def pick(direction: str, grade: str, stack_tags: list[str], n: int, seed: int | 
 def describe(spec) -> dict:
     tags = family_tags(spec)
     return {"family_id": spec.family_id, "title": spec.title, "tags": tags,
-            "tag_titles": [STACK.get(t, (t,))[0] for t in tags], "difficulty": round(_difficulty(spec), 2),
+            "tag_titles": [tag_title(t) for t in tags], "difficulty": round(_difficulty(spec), 2),
             "format": spec.format, "language": spec.language, "time_limit_s": spec.time_limit_s}
 
 

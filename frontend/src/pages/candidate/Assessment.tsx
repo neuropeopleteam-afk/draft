@@ -2,12 +2,12 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEve
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { DefensePanel } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
 import { ExtPreliminaryNote } from "../../components/GradeStatus";  // Я25: Lead/Principal «предварительно»
-import { useMeta } from "../../lib/meta";
+import { useDirectionEntries, useMeta } from "../../lib/meta";
 import { useGrades } from "../../lib/grades";
 import { trapTab } from "../../components/ui";  // А11: Tab по кругу внутри страницы теста
 import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
@@ -126,6 +126,7 @@ function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; 
 
 function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
   const a = data.answers;
+  const dirEntries = useDirectionEntries();  // 5 базовых + направления расширения каталога с проверенным банком
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(a.direction ?? "");
   const [additionalDirection, setAdditionalDirection] = useState(a.additional_direction ?? "");
@@ -185,7 +186,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         {STEPS.map((s, i) => (
           <li key={s}>
             <button type="button" onClick={() => i < step && setStep(i)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === step ? "bg-brand-strong text-white" : i < step ? "bg-brand-blush text-brand-plum" : "bg-gray-100 text-gray-500"}`}>
+              className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === step ? "bg-brand-strong text-white" : i < step ? "bg-brand-blush text-brand-plum" : "bg-gray-100 text-gray-600"}`}>
               {i + 1}. {s}
             </button>
           </li>
@@ -196,7 +197,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
           <div>
             <p className="label">Основное направление</p>
             <div className="grid gap-3 sm:grid-cols-2">
-              {Object.entries(DIRECTIONS).map(([id, t]) => (
+              {dirEntries.map(([id, t]) => (
                 <button key={id} type="button" onClick={() => { setDirection(id); if (id !== direction) setStack({}); if (id === additionalDirection) { setAdditionalDirection(""); setAdditionalStack({}); } }}
                   className={`rounded-xl border px-4 py-4 text-left transition-colors ${direction === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 hover:border-brand/40"}`}>
                   <span className="font-semibold text-brand-night">{t}</span>
@@ -208,7 +209,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
                 <select id="additional-direction" className="input" value={additionalDirection}
                   onChange={(e) => { setAdditionalDirection(e.target.value); setAdditionalStack({}); }}>
                   <option value="">Без второго направления</option>
-                  {Object.entries(DIRECTIONS).filter(([id]) => id !== direction).map(([id, title]) => <option key={id} value={id}>{title}</option>)}
+                  {dirEntries.filter(([id]) => id !== direction).map(([id, title]) => <option key={id} value={id}>{title}</option>)}
                 </select>
               </Field>
             </div>
@@ -217,7 +218,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
         {step === 1 && (
           <div className="space-y-5">
             <p className="text-sm text-brand-ink/70">Отметьте технологии и оцените уровень. Навыки из вашего стека попадут в тест и станут подтверждёнными (T1).</p>
-            {[{ t: DIRECTIONS[direction], list: groups.own }, { t: "Общий блок", list: groups.common }].map((g) => (
+            {[{ t: DIRECTION_TITLES[direction], list: groups.own }, { t: "Общий блок", list: groups.common }].map((g) => (
               <div key={g.t}>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{g.t}</p>
                 <div className="flex flex-wrap gap-2">
@@ -243,7 +244,7 @@ function Survey({ data, onDone }: { data: Onb; onDone: () => void }) {
             ))}
             {additionalDirection && (
               <div className="border-t border-brand-night/10 pt-4">
-                <p className="mb-2 text-sm font-semibold text-brand-night">Стек дополнительного направления · {DIRECTIONS[additionalDirection]}</p>
+                <p className="mb-2 text-sm font-semibold text-brand-night">Стек дополнительного направления · {DIRECTION_TITLES[additionalDirection]}</p>
                 <div className="flex flex-wrap gap-2">
                   {additionalTags.map((tag) => (
                     <button key={tag.id} type="button" aria-pressed={!!additionalStack[tag.id]}
@@ -411,7 +412,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
 
   return (
     <>
-      <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTIONS[dir] ?? "—"}. Грейд — уровень навыков: его подтверждает тест, а не стаж. Выберите уровень.`} />
+      <PageTitle title="Тест на грейд" subtitle={`Направление: ${DIRECTION_TITLES[dir] ?? "—"}. Грейд — уровень навыков: его подтверждает тест, а не стаж. Выберите уровень.`} />
       {status?.specializations?.length > 1 && (
         <div className="mt-4">
           <Field label="Направление теста" htmlFor="test-direction" hint="Подтверждения и ограничения в двух направлениях независимы.">
@@ -499,7 +500,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </p>
       )}
       <IntegrityNotice />
-      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTIONS[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
+      {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTION_TITLES[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
       {retakeLocked && !locked && (
         <div className="mt-4"><Alert kind="info">Повторить тест на {GRADE_TITLE_ALL[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
       )}
@@ -649,6 +650,7 @@ export function TestRun() {
     return { ...base, typed: t.typed, inserted: t.inserted, dropped: t.dropped, deleted: t.deleted, keys: t.keys, ik_cv: cv, active_ms: t.active_ms };
   }
   useEffect(() => {
+    setResult(null);  // Я26: переход с итога к уточнению уровня — та же страница, другая сессия
     api<any>(`/assessment/sessions/${id}`).then(async (x) => {
       // завершённый тест (обновили страницу, вернулись из категории) — показываем итог, а не «сессия закрыта»
       if (x?.status === "finished") { setS(x); setResult(await api<any>(`/assessment/sessions/${id}/result`)); return; }
@@ -716,14 +718,14 @@ export function TestRun() {
   return (
     <div className="max-w-3xl">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-ink/65">
-        <span>{s.mode === "confirm" ? "Дотестирование у порога" : "Тест"} · {DIRECTIONS[s.direction]} · {GRADE_TITLE_ALL[s.claimed_grade]}</span>
+        <span>{s.mode === "confirm" ? "Дотестирование у порога" : s.mode === "refine" ? "Уточнение уровня у границы" : "Тест"} · {DIRECTION_TITLES[s.direction]} · {GRADE_TITLE_ALL[s.claimed_grade]}</span>
         <span>{it.adaptive ? `Задание ${it.position} · отвечено ${it.answered}` : `Задание ${it.position} из ${it.total}`}</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-blush/60">
         <div className="h-full bg-brand transition-all" style={{ width: `${Math.min(100, (it.adaptive ? it.answered / (it.max_items || 20) : (it.position - 1) / it.total) * 100)}%` }} />
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-        {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTIONS[s.direction]}»`}</span>}
+        {it.adaptive && <span className="chip">{it.block === "common" ? "Общий блок" : `Блок «${DIRECTION_TITLES[s.direction]}»`}</span>}
         {it.extension && <span className="chip">Дотестирование у порога грейда</span>}
         {it.steps_total && <span className="chip">Шаг {it.step} из {it.steps_total}</span>}
         <span className={`ml-auto font-mono ${left < 0 ? "text-brand-plum" : "text-brand-ink/65"}`} role="timer" aria-live="off">
@@ -800,8 +802,56 @@ export function TestRun() {
   );
 }
 
+// Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): уровень «на границе» — предложение уточнить отдельной короткой сессией
+function TwoStageOffer({ t, claimed, direction }: { t: any; claimed: string; direction: string }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  async function start() {
+    setBusy(true); setErr(null);
+    try {
+      const x = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: claimed, mode: "refine", integrity_ack: true, direction } });
+      navigate(`/candidate/assessment/test/${x.session_id}`);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+  const lab = t.label ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : "";
+  const o = t.outcome;
+  return (
+    <section className="card mt-4 border-brand/30 bg-[#F3F2FB] text-sm" data-testid="two-stage-offer" aria-label="Уточнение уровня у границы">
+      <p className="font-semibold text-brand-night">{lab}{t.status === "offered" ? ": можно уточнить" : ""}</p>
+      {t.status === "done" && o ? (
+        <p className="mt-1 text-brand-ink/80">Уточнение {o.passed ? "пройдено" : "не подтвердило уровень у границы"}: по двум сессиям — <b>{GRADE_TITLE_ALL[o.final_grade] ?? "без категории"}</b> (новых заданий: {o.new_items}).</p>
+      ) : (
+        <>
+          <p className="mt-1 text-brand-ink/80">{t.text}</p>
+          <p className="mt-1 text-xs text-brand-ink/65">До уточнения действует уровень по этому тесту. Уточнение — одно на тест; правила 30 и 90 дней на него не действуют. Действует согласие на проверку самостоятельности выполнения, данное перед основным тестом.</p>
+        </>
+      )}
+      <div className="mt-3 flex flex-wrap gap-3">
+        {t.status === "offered" && t.available && <button className="btn-primary" onClick={start} disabled={busy}>{busy ? "Готовим задания…" : `Уточнить уровень за 10–${t.minutes} минут`}</button>}
+        {t.status === "in_progress" && t.refine_session_id && <button className="btn-primary" onClick={() => navigate(`/candidate/assessment/test/${t.refine_session_id}`)}>Продолжить уточнение</button>}
+        {t.status === "done" && t.refine_session_id && <button className="btn-ghost" onClick={() => navigate(`/candidate/assessment/test/${t.refine_session_id}`)}>Итог уточнения</button>}
+      </div>
+      <div className="mt-2"><Alert>{err}</Alert></div>
+    </section>
+  );
+}
+
+function TwoStageOutcome({ t }: { t: any }) {
+  const o = t.refine || {};
+  const lab = t.label ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : "";
+  return (
+    <div className="card mt-4 text-sm" data-testid="two-stage-outcome">
+      <p className="font-semibold text-brand-night">{lab} — уточнение {t.status === "passed" ? "пройдено" : "не пройдено"}</p>
+      <p className="mt-1 text-brand-ink/80">После основного теста: {GRADE_TITLE_ALL[o.grade_before] ?? "без категории"} · по двум сессиям вместе: <b>{GRADE_TITLE_ALL[o.final_grade] ?? "без категории"}</b> · новых коротких заданий: {o.new_items}.</p>
+      <p className="mt-1 text-xs text-brand-ink/65">Уровень считается по ответам обеих сессий одной оценкой; работодатель видит пометку «{t.label} — уточнение {t.status === "passed" ? "пройдено" : "не пройдено"}».</p>
+    </div>
+  );
+}
+
 function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
   const [r, setR] = useState<any>(initial);
+  useEffect(() => { setR(initial); }, [initial]);
   const llmOff = useLlmOff();
   const meta = useMeta();
   const [busy, setBusy] = useState(false);
@@ -813,19 +863,24 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     try { setR(await api<any>(`/assessment/sessions/${sessionId}/accept-lower`, { method: "POST" })); await refresh(); }
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
-  const title = r.accepted_lower ? `Принят уровень ${GRADE_TITLE_ALL[r.accepted_lower] ?? r.accepted_lower}`
+  const title = r.mode === "refine" && r.two_stage?.refine ? (r.two_stage.status === "passed" ? "Уточнение уровня пройдено" : "Уточнение не подтвердило уровень у границы")
+    : r.accepted_lower ? `Принят уровень ${GRADE_TITLE_ALL[r.accepted_lower] ?? r.accepted_lower}`
     : r.confirmed && r.grade_preliminary ? `${GRADE_TITLE_ALL[r.grade_preliminary.grade] ?? r.grade_preliminary.grade} по тесту — предварительно`
     : r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
     : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
     : "Грейд не подтверждён";
+  // Я26 + Я25: у Lead/Principal «предварительно» уточнение — «второй этап» в пометке (кнопка там же, без второго блока)
+  const extStage = !r.grade_preliminary?.second_stage?.available || !r.two_stage ? null
+    : r.mode === "refine" ? (r.two_stage.refine ? { status: r.two_stage.status, outcome: r.two_stage.refine } : null)
+    : r.two_stage.boundary ? r.two_stage : null;
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
-      <ExtPreliminaryNote x={r.grade_preliminary} className="mt-4" />
+      <ExtPreliminaryNote x={r.grade_preliminary} stage={extStage} direction={r.direction} className="mt-4" />
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · интервал θ шире, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
-          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от 80 %, «не доказанно ниже» — от 10 %).
+          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от {meta?.rules?.confirm_pct ?? 60} %, «не доказанно ниже» — от 10 %).
           {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, зондом работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, зондом работодателя или кубком."}
         </Alert></div>
       )}
@@ -834,6 +889,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
+      {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
+      {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && !extStage && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
       <div className="card mt-4 text-sm text-brand-ink/75">{ruText(r.explanation)}</div>
       {r.level_position && <p className="mt-2 text-sm text-brand-ink/80" data-testid="level-position">Позиция внутри уровня {r.level_position.grade_title}: <b>{r.level_position.text}</b>{r.level_position.known ? " — по точности этого теста" : " (погрешность пока шире половины уровня)"}</p>}
       {(r.confirmed || r.accepted_lower) && <p className="mt-3 text-xs text-brand-ink/65">Грейд — уровень навыков, подтверждённый этим тестом. Стаж в годах остаётся справкой в профиле и на грейд не влияет.</p>}

@@ -1,0 +1,25 @@
+family_id: data_eng.stream.consumer_lag_mcq
+title: Kafka — отставание группы потребителей и время, за которое она догонит поток
+direction: data_eng
+skills: [kafka, kafka_offsets, kafka_consumer_groups, streaming]
+target_grades: [junior, middle]
+format: mcq_concept
+language: text
+invariants:
+  code_lines: [4, 7]
+  n_options: 4
+  extra:
+    subtype: catch_up_time
+    partitions: [3, 6]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: -0.3
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "Вывод kafka-consumer-groups без колонки LAG для 3–6 партиций, скорость записи и чтения на партицию; нужно посчитать отставание каждой партиции (LOG-END − CURRENT) и понять, что группа догонит поток, когда догонит самая отстающая партиция. Дистракторы фиксированного состава: сумма отставаний на одну скорость, без учёта входящего потока, среднее по партициям. Граница Junior/Middle"
+generator: assessment_bank.families.data_eng.stream_consumer_lag_mcq
+version: 1
+description: >
+  По выводу kafka-consumer-groups --describe (без колонки LAG) и скоростям записи/чтения на партицию определить,
+  через сколько минут группа полностью догонит поток. Ключ — исполнение модели над показанной таблицей.

@@ -5,23 +5,24 @@ import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
 import EvidenceBench from "../components/validation/EvidenceBench";
+import PartialCredit from "../components/validation/PartialCredit";
 import LlmModels from "../components/validation/LlmModels";
 import RuLlm from "../components/validation/RuLlm";
 import Strongest from "../components/validation/Strongest";
 import RetestLive from "../components/validation/RetestLive";  // И26: доля повторов заданий между попытками
 import Headline from "../components/validation/Headline";
 import { ProvenanceLine, Snapshots, type Prov } from "../components/validation/Provenance";  // Я8: происхождение чисел, снимки расчётов
-import PathRetest, { CalibrationCard, GradeAccuracy } from "../components/validation/PathRetest";
+import PathRetest, { CalibrationCard, GradeAccuracy, TwoStage } from "../components/validation/PathRetest";
 import LiveUsers from "../components/validation/LiveUsers";
 import Ablations from "../components/validation/Ablations";
 import HhParse from "../components/validation/HhParse";  // Я12: разбор на вакансиях hh.ru (при HH_ENABLED)
 import HhMatch from "../components/validation/HhMatch";  // Я12б: подбор на вакансиях hh.ru и спрос (при HH_ENABLED)
 import GradesExtBlock from "../components/validation/GradesExt";  // Я25: Lead и Principal (при GRADES_EXT_ENABLED)
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
-import { Alert, DIRECTIONS, dtt, errText, Loading, useApi } from "../components/ui";
+import { Alert, DIRECTIONS, DIRECTION_TITLES, Loading, dtt, errText, useApi } from "../components/ui";
 import { api } from "../lib/api";
 import { InternCutSection } from "../components/validation/InternCutBlock";
-import { AsOf, OtherConditions, ExposureNote, LeakShareTable, RetestSection, SimConditions } from "../components/validation/StabilityBlocks";
+import { AsOf, AltConditions, ExposureNote, LeakShareTable, RetestSection, SimConditions } from "../components/validation/StabilityBlocks";
 import { useAuth } from "../lib/auth";
 import { juryToken } from "../lib/jury";
 import { useHashScroll } from "../lib/hashScroll";
@@ -77,7 +78,7 @@ function Report({ r }: { r: any }) {
       <p className="mt-4 text-xs text-brand-ink/65" data-testid="report-signature">Отчёт симуляции построен {dtt(r.generated_at)} · {r.n_per_direction} синтетических кандидатов на направление · {num(r.seconds, 0)} с · банк расчёта: {rp.bank_n_families ?? "—"} семейств, коммит {rp.bank_commit ?? "—"}{pv.code_commit && pv.code_commit !== "unknown" ? ` · код стенда ${pv.code_commit}` : ""}</p>
       {bn.n_families != null && !rp.same_bank && <div className="mt-3"><Alert kind="info" ><b>Числа отчёта — на банке от {rp.bank_synced_at ? d10(rp.bank_synced_at) : rdate}.</b> Сейчас в банке {bn.n_families} семейств (синхронизирован {bn.synced_at ? d10(bn.synced_at) : "—"}, коммит {bn.commit ?? "—"}); полная симуляция теста на нём не пересчитывалась (make validate), поэтому таблицы ниже подписаны датой отчёта. Блоки «5 чисел» и «Весь путь дважды» посчитаны отдельно — их мир указан в подписи.</Alert></div>}
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
-        {[["headline", "5 чисел"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["grade-accuracy", "Точность уровня"], ...(gxOn ? [["grades-ext", "Lead и Principal"]] : []), ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["others", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"], ["grader", "Оценщик ответов"], ["evidence", "Цитаты оценщика"], ...(hhOn ? [["hh-parse", "Разбор на hh.ru"], ["hh-match", "Подбор на hh.ru"]] : []), ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
+        {[["headline", "5 чисел"], ["retest", "Повтор"], ["path-retest", "Весь путь дважды"], ["grade-accuracy", "Точность уровня"], ...(gxOn ? [["grades-ext", "Lead и Principal"]] : []), ["two-stage", "Две сессии"], ["bank", "Банк"], ["calibration", "Калибровка"], ["test", "Тест"], ["junior", "Junior у порога"], ["intern", "Стажёр"], ["other-conditions", "Другие условия"], ["exposure", "Частота показа"], ["leak", "Утечка"], ["bench", "Подбор: бенчмарк"], ["ablations", "Абляции"], ["experts", r.experts?.model_panel ? "Модельная панель" : "Экспертная разметка"], ["grader", "Оценщик ответов"], ["evidence", "Цитаты оценщика"], ["partial-credit", "Частичный балл"], ...(hhOn ? [["hh-parse", "Разбор на hh.ru"], ["hh-match", "Подбор на hh.ru"]] : []), ["matching", "Демо-500"], ["live", "Живые данные"], ...(study?.shown ? [["study-live", "Живые пользователи"]] : []), ["self-check", "Проверьте сами"], ["red-button", "Красная кнопка"]].map(([id, t]) =>
           <a key={id} href={`#${id}`} className="rounded-full bg-white px-3 py-1.5 font-medium text-brand-night ring-1 ring-brand-night/10 hover:ring-brand/40">{t}</a>)}
       </nav>
 
@@ -87,6 +88,7 @@ function Report({ r }: { r: any }) {
       <PathRetest />
       <GradeAccuracy />
       <GradesExtBlock />
+      <TwoStage />
 
       <Section id="bank" title="Банк заданий и калибровка">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
@@ -109,7 +111,7 @@ function Report({ r }: { r: any }) {
       <Section id="test" title="Тест: точность оценки и решения по грейду (симуляция)"
         lead={`Конфигурация платформы: ${sim.config?.min_items}–${sim.config?.max_items} заданий, до ${sim.config?.max_minutes} мин, ${sim.config?.subpools} субпула, контроль частоты Sympson — Hetter, open book не больше ${sim.config?.max_per_format?.open_book_3step}. Сравнение — с конфигурацией дня 2 (до 20 заданий, 90 мин, без контроля частоты и ротации). ${sim.population ?? ""}`}>
         <Table head={["Направление", "r(θ)", "RMSE", "Заданий", "Минут", "Грейд точно", "Решение верно", "Ложное подтверждение", "Ложный отказ", "Open book, макс."]}
-          rows={[...dirs.map((d) => { const a = sim.directions[d].app; return [DIRECTIONS[d], num(a.r_theta), num(a.rmse), num(a.mean_items, 1), num(a.mean_time_min, 0), pct(a.grade_exact), pct(a.decision_accuracy), pct(a.false_confirm_rate, 1), pct(a.false_reject_rate, 1), a.ob3_max]; }),
+          rows={[...dirs.map((d) => { const a = sim.directions[d].app; return [DIRECTION_TITLES[d], num(a.r_theta), num(a.rmse), num(a.mean_items, 1), num(a.mean_time_min, 0), pct(a.grade_exact), pct(a.decision_accuracy), pct(a.false_confirm_rate, 1), pct(a.false_reject_rate, 1), a.ob3_max]; }),
             ["Среднее", num(sim.mean?.r_theta), num(sim.mean?.rmse), num(sim.mean?.mean_items, 1), num(sim.mean?.mean_time_min, 0), pct(sim.mean?.grade_exact), pct(sim.mean?.decision_accuracy), pct(sim.mean?.false_confirm_rate, 1), pct(sim.mean?.false_reject_rate, 1), ""],
             ["День 2, среднее", num(sim.mean_baseline?.r_theta), num(sim.mean_baseline?.rmse), num(sim.mean_baseline?.mean_items, 1), num(sim.mean_baseline?.mean_time_min, 0), pct(sim.mean_baseline?.grade_exact), pct(sim.mean_baseline?.decision_accuracy), pct(sim.mean_baseline?.false_confirm_rate, 1), pct(sim.mean_baseline?.false_reject_rate, 1), Math.max(...dirs.map((d) => sim.directions[d].baseline_day2.ob3_max))]]} />
         <SimConditions sim={sim} kind="test" />
@@ -117,12 +119,12 @@ function Report({ r }: { r: any }) {
 
       <JuniorStability />
       <InternCutSection ic={r.intern_cut} />
-      <OtherConditions sim={sim} />
+      <AltConditions sim={sim} />
 
       <Section id="exposure" title="Частота показа заданий"
         lead="Доля сессий, в которых показано семейство заданий. Цель Sympson — Hetter — не выше 0,3; канарейки опубликованы намеренно и не считаются.">
         <Table head={["Направление", "Макс. частота", "Средняя", "Доля > 0,3", "Не используются", "День 2: макс.", "День 2: > 0,3", "День 2: не используются"]}
-          rows={dirs.map((d) => { const e = sim.directions[d].exposure; return [DIRECTIONS[d], num(e.app.max_rate), num(e.app.mean_rate), pct(e.app.share_over_rmax), pct(e.app.unused_share), num(e.baseline_day2.max_rate), pct(e.baseline_day2.share_over_rmax), pct(e.baseline_day2.unused_share)]; })} />
+          rows={dirs.map((d) => { const e = sim.directions[d].exposure; return [DIRECTION_TITLES[d], num(e.app.max_rate), num(e.app.mean_rate), pct(e.app.share_over_rmax), pct(e.app.unused_share), num(e.baseline_day2.max_rate), pct(e.baseline_day2.share_over_rmax), pct(e.baseline_day2.unused_share)]; })} />
         <ExposureNote sim={sim} />
         <p className="mt-2 text-xs text-brand-ink/70">Коэффициенты K, которые сейчас читает движок теста:</p>
         <ProvenanceLine p={r.provenance?.exposure_k} className="mt-0.5" />
@@ -133,12 +135,12 @@ function Report({ r }: { r: any }) {
       <Section id="leak" title="Устойчивость к утечке части банка"
         lead={`Опубликовано ${pct(sim.directions?.[dirs[0]]?.leak?.leak_share)} вариантов и все канарейки, ${pct(sim.directions?.[dirs[0]]?.leak?.cheater_share)} кандидатов пользуются утечкой. Порог детектора — по честным кандидатам при 1 % ложных срабатываний.`}>
         <Table head={["Направление", "Без утечки: завышение θ", "Утечка, без детектора", "С детектором", "Детектор + карантин", "Поймано списывающих", "Ложные срабатывания"]}
-          rows={dirs.map((d) => { const l = sim.directions[d].leak; return [DIRECTIONS[d], sgn(l.no_leak.cheaters_bias_theta), sgn(l.leak_no_detector.cheaters_bias_theta), sgn(l.leak_detector.cheaters_bias_theta), sgn(l.leak_detector_rotation.cheaters_bias_theta), pct(l.leak_detector.detector_tpr), pct(l.leak_detector.detector_fpr, 1)]; })} />
+          rows={dirs.map((d) => { const l = sim.directions[d].leak; return [DIRECTION_TITLES[d], sgn(l.no_leak.cheaters_bias_theta), sgn(l.leak_no_detector.cheaters_bias_theta), sgn(l.leak_detector.cheaters_bias_theta), sgn(l.leak_detector_rotation.cheaters_bias_theta), pct(l.leak_detector.detector_tpr), pct(l.leak_detector.detector_fpr, 1)]; })} />
         <p className="mt-2 text-xs text-brand-ink/65">Завышение θ — средняя разница «оценка − истинный уровень» у списывающих, в единицах шкалы (1 ≈ одна ступень грейда).</p>
         <h3 className="mt-6 text-base font-bold text-brand-night">Доля успешной атаки слитыми ответами</h3>
         <p className="mt-1 text-sm text-brand-ink/70">Успех атаки — списывающий без нужного уровня получил подтверждение заявленного грейда. Фиксированная форма — одни и те же задания всем кандидатам грейда (без адаптивности, ротации, канареек и детектора); после утечки она остаётся той же, поэтому показан и случай «утекла целиком».</p>
         <Table head={["Направление", "Фикс. форма: без утечки", "Фикс. форма: утечка 30 %", "Фикс. форма: утекла целиком", "Наш тест: утечка 30 %", "+ детектор", "+ детектор и карантин", "Списывающих без уровня"]}
-          rows={dirs.map((d) => { const l = sim.directions[d].leak; const a = l.attack_success_rate ?? {}; return [DIRECTIONS[d], pct(a.fixed_no_leak), pct(a.fixed_leak), pct(a.fixed_full_leak), pct(a.leak_no_detector), pct(a.leak_detector), pct(a.leak_detector_rotation), l.n_unqualified_cheaters ?? "—"]; })} />
+          rows={dirs.map((d) => { const l = sim.directions[d].leak; const a = l.attack_success_rate ?? {}; return [DIRECTION_TITLES[d], pct(a.fixed_no_leak), pct(a.fixed_leak), pct(a.fixed_full_leak), pct(a.leak_no_detector), pct(a.leak_detector), pct(a.leak_detector_rotation), l.n_unqualified_cheaters ?? "—"]; })} />
         <p className="mt-2 text-xs text-brand-ink/65">Базовая доля «без утечки» — ошибка теста, а не атака. Выборка списывающих без уровня — десятки человек на направление, поэтому разброс ±10 п. п.</p>
         <SimConditions sim={sim} kind="leak" />
         <LeakShareTable sim={sim} />
@@ -152,6 +154,7 @@ function Report({ r }: { r: any }) {
       <HhParse />
       <HhMatch />
       <EvidenceBench />
+      <PartialCredit />
 
       <Section id="matching" title="Подбор на демо-данных: разметка правилами" lead={`${m.n_needs} потребностей × ${m.set_size} кандидатов из демо-данных, ${m.n_pairs} пар. ${m.method ?? ""}`}>
         <ProvenanceLine p={pv.demo} className="mb-2" />
@@ -217,7 +220,7 @@ function SelfCheck({ opts }: { opts?: { strategies: { id: string; title: string;
             <input className={sel} type="number" step="0.1" min={-3} max={3} value={f.theta} onChange={(e) => setF({ ...f, theta: Number(e.target.value) })} />
             <span className="mt-1 block text-xs text-brand-ink/65">Пороги: Junior −1, Middle 0, Senior 1</span></label>}
           <label><span className={lab}>Направление</span>
-            <select className={sel} value={f.direction} onChange={(e) => setF({ ...f, direction: e.target.value })}>{(opts?.directions ?? Object.keys(DIRECTIONS)).map((d) => <option key={d} value={d}>{DIRECTIONS[d] ?? d}</option>)}</select></label>
+            <select className={sel} value={f.direction} onChange={(e) => setF({ ...f, direction: e.target.value })}>{(opts?.directions ?? Object.keys(DIRECTIONS)).map((d) => <option key={d} value={d}>{DIRECTION_TITLES[d] ?? d}</option>)}</select></label>
           <label><span className={lab}>Заявленный грейд</span>
             <select className={sel} value={f.claimed_grade} onChange={(e) => setF({ ...f, claimed_grade: e.target.value })}>{["junior", "middle", "senior"].map((g) => <option key={g} value={g}>{GRADE_RU[g]}</option>)}</select></label>
           <label><span className={lab}>Кандидатов (до {maxN})</span>

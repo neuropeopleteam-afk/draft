@@ -26,7 +26,7 @@ export default function PassportVerify() {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
   useEffect(() => {
-    document.title = "Проверка паспорта грейда · Встречный";
+    document.title = "Проверка паспорта грейда · Драфт";
     api<PassportPublic>(`/passport/${encodeURIComponent(id)}`, { auth: false })
       .then(setD)
       .catch((e) => { if ((e as { status?: number }).status === 404) setNotFound(true); else setError(errText(e)); });

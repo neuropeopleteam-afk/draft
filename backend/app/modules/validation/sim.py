@@ -22,7 +22,7 @@ from scipy import stats
 
 from assessment_bank import load_specs
 from assessment_bank.psychometrics import (CanaryDetector, CATConfig, ExposureControl, GradeScale, decide,
-                                           estimate_theta, pool_from_specs)
+                                           pool_from_specs)
 from assessment_bank.simulation import (LeakModel, Person, _apply_detector, _grade_idx, make_population,
                                         make_responder, make_truth, quadratic_kappa, summarize)
 
@@ -57,6 +57,8 @@ class AppConfig:
     rotation: str = "subpool"      # subpool — параллельные формы-субпулы; exclude_last — весь банк без семейств прошлой попытки
     cuts: tuple = field(default_factory=cuts_tuple)              # пороги грейдов платформы (со Стажёром), как в bank_engine
     start_theta: dict = field(default_factory=start_theta)       # стартовая θ по заявленному грейду
+    partial_credit: bool = False   # развёрнутые части — GPCM 0–4 (ASSESSMENT_PARTIAL_CREDIT_ENABLED)
+    partial_credit_select: bool = True  # выбор задания по информации GPCM (ASSESSMENT_PARTIAL_CREDIT_SELECT)
 
     def cat(self) -> CATConfig:
         return CATConfig(min_items=self.min_items, max_items=self.max_items, se_target=self.se_target,
@@ -64,7 +66,8 @@ class AppConfig:
                          cuts=tuple(self.cuts), start_theta=dict(self.start_theta),
                          stop_rule=self.stop_rule, classify_z=self.classify_z, select_at=self.select_at,
                          time_weight=self.time_weight, ext_items=0 if self.legacy_ext else self.ext_items,
-                         ext_time_s=self.ext_minutes * 60.0, ext_own_first=self.ext_own_first)
+                         ext_time_s=self.ext_minutes * 60.0, ext_own_first=self.ext_own_first,
+                         partial_credit=self.partial_credit, partial_credit_select=self.partial_credit_select)
 
 
 BASELINE_DAY2 = AppConfig(max_items=20, max_minutes=90, subpools=1, exposure=False, max_per_format={},
@@ -85,13 +88,15 @@ def app_config_from_settings() -> AppConfig:
                                      "open_answer": s.assessment_max_open_answer},
                      stop_rule=s.assessment_stop_rule, classify_z=s.assessment_classify_z,
                      select_at=s.assessment_select_at, ext_items=s.assessment_extension_items,
-                     ext_minutes=s.assessment_extension_minutes, ext_own_first=s.assessment_extension_own_first)
+                     ext_minutes=s.assessment_extension_minutes, ext_own_first=s.assessment_extension_own_first,
+                     partial_credit=s.assessment_partial_credit_enabled,
+                     partial_credit_select=s.assessment_partial_credit_select)
 
 
 def make_pool(n_subpools: int, params: dict | None = None):
-    from app.modules.catalog.levels import pool_specs  # как в продукте: без флага — без семейств только Lead/Principal
+    from app.modules.catalog.ext import active_specs  # как bank_engine._pool: без семейств только Lead/Principal
 
-    return pool_from_specs(pool_specs(load_specs().values()), params=params, n_subpools=max(1, n_subpools))
+    return pool_from_specs(active_specs(load_specs().values()), params=params, n_subpools=max(1, n_subpools))
 
 
 class LegacyExtSession(AppCATSession):
@@ -165,16 +170,14 @@ class ClaimPriorSession(AppCATSession):
         return ClaimPriorSession.PRIORS.get(self.claimed_grade, (0.0, 1.0))
 
     def _update_theta(self) -> None:
-        x, a, b = self._scored_arrays()
         m, sd = self._prior()
-        est = estimate_theta(x, a, b, method=self.cfg.estimator, prior_mean=m, prior_sd=sd)
+        est = self._estimate(prior_mean=m, prior_sd=sd)
         self.theta, self.se = est.theta, est.se
         self.trace.append((self.theta, self.se))
 
     def rescore(self, exclude: set[int]) -> tuple[float, float]:
-        x, a, b = self._scored_arrays(exclude)
         m, sd = self._prior()
-        est = estimate_theta(x, a, b, method=self.cfg.estimator, prior_mean=m, prior_sd=sd)
+        est = self._estimate(exclude, prior_mean=m, prior_sd=sd)
         return est.theta, est.se
 
 
@@ -494,7 +497,7 @@ def leak_experiment(pool, truth, direction: str, cfg: AppConfig, rng, k, n: int 
     return res
 
 
-# --------------------------------------------------------------------------- метрики к истине, другие условия
+# --------------------------------------------------------------------------- метрики к истине, другие условия измерения
 def truth_metrics(people, results) -> dict:
     """Грейд по θ̂ против истинного грейда: точное совпадение, ±1, взвешенная κ с истиной, r(θ̂, θ)."""
     th = np.array([p.theta for p in people])
@@ -508,7 +511,7 @@ def truth_metrics(people, results) -> dict:
 
 
 def make_truth_like(pool, rng, b_sd: float, a_logsd: float) -> dict:
-    """Истинные параметры с ошибкой как в симуляции ориентира: b + N(0; b_sd) по каждому заданию (семейству;
+    """Истинные параметры с другой ошибкой: b + N(0; b_sd) по каждому заданию (семейству;
     у трёхшаговых — один сдвиг на семейство), a · LogN(0; a_logsd); разброс вариантов и время — как у банка."""
     from assessment_bank.simulation import TrueFamily
 
@@ -524,15 +527,15 @@ def make_truth_like(pool, rng, b_sd: float, a_logsd: float) -> dict:
 
 # Длина 20 без досрочной остановки и дотестирования, весь банк направления (без субпулов), лимит времени 120 минут;
 # повтор — семейства первой попытки исключены (вторая форма короче, если банк кончается)
-OTHER_LIKE = AppConfig(min_items=20, max_items=20, se_target=0.0, max_minutes=120, subpools=1,
-                            stop_rule="se", ext_items=0, rotation="exclude_last")
-OTHER_ERROR = {"b_sd": 0.35, "a_logsd": 0.2, "source": "внешний репозиторий, evaluation/results/tests_report.md"}
+ALT_CONDITIONS = AppConfig(min_items=20, max_items=20, se_target=0.0, max_minutes=120, subpools=1,
+                           stop_rule="se", ext_items=0, rotation="exclude_last")
+ALT_ERROR = {"b_sd": 0.35, "a_logsd": 0.2, "source": "собственный протокол: ошибка параметров меньше основной (σ = 0,5)"}
 
 
-def other_run(pool1, direction, rng, k, n: int) -> dict:
-    truth = make_truth_like(pool1, rng, OTHER_ERROR["b_sd"], OTHER_ERROR["a_logsd"])
+def alt_conditions_run(pool1, direction, rng, k, n: int) -> dict:
+    truth = make_truth_like(pool1, rng, ALT_ERROR["b_sd"], ALT_ERROR["a_logsd"])
     people = make_population(n, rng)
-    cfg = OTHER_LIKE
+    cfg = ALT_CONDITIONS
     r1 = run_population(pool1, truth, people, direction, cfg, rng, k=k)
     r2 = run_population(pool1, truth, people, direction, cfg, rng, k=k, exclude=[set(r["families"]) for r in r1])
     return {"truth": truth_metrics(people, r1), "retest": retest_metrics(people, r1, r2)}

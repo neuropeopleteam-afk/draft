@@ -179,7 +179,9 @@ def accept_lower_allowed(current_grade: str | None, claimed_grade: str, confirme
     Возвращает (доказанный грейд или None, причина отказа)."""
     if confirmed:
         return None, "confirmed"
-    lower = proved_lower(probabilities, claimed_grade, level)
+    # level по имени и только если задан: симуляции подменяют proved_lower через functools.partial(level=…)
+    # (grades_ext_need, partial_credit_sim) — позиционный аргумент давал бы «multiple values for level»
+    lower = proved_lower(probabilities, claimed_grade, **({"level": level} if level is not None else {}))
     if lower is None:
         return None, "no_lower_proved"
     if provisional:

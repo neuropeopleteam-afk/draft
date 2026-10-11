@@ -11,7 +11,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from app.core.db import as_aware, utcnow
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import tag_title
 
 FRESH_DAYS = 90
 STALE_DAYS = 180
@@ -46,7 +46,7 @@ def skill_rows(skills: dict, now: datetime | None = None) -> list[dict]:
         age = max(0, (now - as_aware(at)).days)
         v = f.value or {}
         score = float(v.get("score") or 0)
-        out.append({"tag": tag, "title": STACK.get(tag, (tag,))[0], "score": score, "confirmed": score >= 0.5,
+        out.append({"tag": tag, "title": tag_title(tag), "score": score, "confirmed": score >= 0.5,
                     "correct": v.get("correct"), "total": v.get("total"), "at": as_aware(at).isoformat(),
                     "date": date_text(at), "age_days": age, "state": state_of(age),
                     "origins": sorted((v.get("parts") or {v.get("origin") or "test": 1}).keys())})

@@ -6,7 +6,7 @@ import { api, apiUrl, tokenStore } from "../lib/api";
 import { useMeta } from "../lib/meta";
 import { PageTitle } from "./CabinetLayout";
 import { Alert, Loading, dt, errText, useApi } from "./ui";
-import { VoiceRecordButton, VoiceWave, postAudio, useSpeechPlayer, type WaveState } from "./voice";
+import { InterviewerAvatar, VoiceRecordButton, VoiceWave, postAudio, useSpeechPlayer, type WaveState } from "./voice";
 
 type Verdict = "confirmed" | "discrepancies" | "insufficient" | "strong" | "medium" | "weak" | null;
 interface Quote { text: string }
@@ -292,12 +292,15 @@ const READ_MS = (q: string) => Math.max(1200, Math.min(4000, q.length * 35));
 
 /**
  * /candidate/interview/:id — разговор голосом или в чате. Визуал собеседника — собственная анимация (VoiceWave: круг и
- * волна голоса, состояния «говорю / слушаю / думаю»), без видео и изображений людей (регламент п. 5.11). Голос
- * ведущего — /speech (mp3), ответ — «нажми и говори» (запись → распознанный текст в поле, человек проверяет) или текстом.
- * Отказ голоса → текст; отказ микрофона/распознавания → текст.
+ * волна голоса, состояния «говорю / слушаю / думаю»), без изображений людей (регламент п. 5.11); при
+ * INTERVIEW_AVATAR_ENABLED (meta.interview.avatar) — свой образ «ИИ-интервьюер, не человек» (InterviewerAvatar:
+ * сгенерированный портрет несуществующего человека и беззвучные клипы по состоянию; без клипов — кадр и свечение рамки).
+ * Голос ведущего — /speech (mp3), ответ — «нажми и говори» (запись → распознанный текст в поле, человек проверяет)
+ * или текстом. Отказ голоса → текст; отказ микрофона/распознавания → текст.
  */
 export function InterviewRoom() {
   const { id } = useParams();
+  const avatar = !!useMeta()?.interview?.avatar;
   const [s, setS] = useState<IvSession | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -381,7 +384,8 @@ export function InterviewRoom() {
   const wave: WaveState = s.status === "evaluating" || busy || rec === "processing" ? "thinking"
     : !live ? "idle" : rec === "recording" ? "listening" : player.playing || reading ? "speaking" : "listening";
   const level = () => (rec === "recording" ? mic.current() : player.level());
-  const caption = `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"}, без видео`;
+  const caption = avatar ? `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"} · портрет сгенерирован`
+    : `модель, не люди · ${ch === "voice" && live ? "голос и текст" : "текст"}, без видео`;
   return (
     <div className="max-w-2xl space-y-4">
       <PageTitle title={title} subtitle={`${s.status_title}. ${MODEL_NOTE}`} />
@@ -389,7 +393,8 @@ export function InterviewRoom() {
       <audio ref={player.audioRef} className="hidden" />
       {(s.status === "created" || live || s.status === "evaluating") && (
         <div className="card flex justify-center !py-3" data-testid="iv-visual">
-          <VoiceWave state={wave} level={level} name="Интервьюер" caption={caption} size={120} />
+          {avatar ? <InterviewerAvatar state={wave} level={level} name="Интервьюер" caption={caption} size={200} />
+            : <VoiceWave state={wave} level={level} name="Интервьюер" caption={caption} size={120} />}
         </div>
       )}
       {note && <p className="text-sm text-brand-ink/75" role="status">{note}</p>}

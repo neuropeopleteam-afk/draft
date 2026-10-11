@@ -99,6 +99,7 @@ _UPSTREAM = {"employer": OK_UPSTREAM, "employer_other": OK_UPSTREAM, "jury_emplo
              "jury_other_employer": OK_UPSTREAM}
 
 _HH_OFF = {"employer": OK404, "employer_other": OK404, "jury_employer": OK404, "jury_other_employer": OK404}
+_FSP_OFF = {"fsp_analyst": OK404, "admin": OK404, "jury_fsp": OK404}  # Я29: блок ФСП за TARIFFS_ENABLED (выкл.)
 
 POLICY: dict[tuple[str, str], Policy] = {
     # ---------------------------------------------------------------- система, документация, справочники
@@ -325,6 +326,16 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/employer/vacancies/import/hh/preview"): ("employer", _HH_OFF),
     ("POST", "/api/employer/vacancies/import/hh"): ("employer", _HH_OFF),
     ("GET", "/api/employer/market/hh"): ("employer", _HH_OFF),
+    # Я29 тарифы: по умолчанию выключено (TARIFFS_ENABLED) — 404 tariffs_disabled, роли проверяются раньше
+    ("GET", "/api/tariffs"): "open404",
+    ("GET", "/api/employer/tariff"): ("employer", _HH_OFF),
+    ("POST", "/api/employer/tariff"): ("employer", _HH_OFF),
+    ("POST", "/api/employer/tariff/partner-request"): ("employer", _HH_OFF),
+    ("GET", "/api/fsp-cabinet/partners"): ("fsp", _FSP_OFF),
+    ("GET", "/api/fsp-cabinet/partners/search"): ("fsp", _FSP_OFF),
+    ("POST", "/api/fsp-cabinet/partners/{company_id}"): ("fsp", _FSP_OFF),
+    ("GET", "/api/fsp-cabinet/benefit"): ("fsp", _FSP_OFF),
+    ("GET", "/api/fsp-cabinet/benefit/export.csv"): ("fsp", _FSP_OFF),
     ("POST", "/api/employer/applications/{app_id}/view"): "employer_own",
     ("POST", "/api/employer/applications/{app_id}/status"): "employer_own",
     ("GET", "/api/employer/applications/{app_id}/export.json"): "employer_own",
@@ -407,6 +418,8 @@ POLICY: dict[tuple[str, str], Policy] = {
     ("GET", "/api/validation/strongest"): "open",  # сильнейшие модели по функциям
     ("GET", "/api/validation/path-retest"): "open",  # feat/validation (ВЛ)
     ("GET", "/api/validation/grade-accuracy"): "open",  # feat/grade-accuracy: сводка перебора правил теста (как path-retest)
+    ("GET", "/api/validation/two-stage"): "open",  # feat/two-stage: «одна сессия / две сессии» (симуляция, как grade-accuracy)
+    ("GET", "/api/validation/partial-credit"): "open",  # частичный балл 0–4 (симуляция)
     ("GET", "/api/validation/headline"): "open",
     ("GET", "/api/validation/criteria"): "open",  # feat/criteria-page (К1)
     ("GET", "/api/validation/hh-parse"): "open",  # Я12: замер разбора на корпусе hh.ru

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import as_aware
 from app.core.errors import api_error
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES
 from app.modules.profiles.models import CandidateProfile, CandidateSpecialization
 
 MAX_SPECIALIZATIONS = 2
@@ -60,10 +60,10 @@ def sync_primary(p: CandidateProfile, r: CandidateSpecialization) -> None:
 def summary(r: CandidateSpecialization, test=None) -> dict:
     v = test.value if test else {}
     return {
-        "direction": r.direction_id, "direction_title": DIRECTIONS.get(r.direction_id, r.direction_id),
+        "direction": r.direction_id, "direction_title": DIRECTION_TITLES.get(r.direction_id, r.direction_id),
         "is_primary": r.is_primary, "grade": r.grade_id, "grade_title": GRADES.get(r.grade_id or ""),
         "category_id": r.category_id,
-        "category_title": (f"{DIRECTIONS.get(r.direction_id, r.direction_id)} · {GRADES.get(r.grade_id, r.grade_id)}"
+        "category_title": (f"{DIRECTION_TITLES.get(r.direction_id, r.direction_id)} · {GRADES.get(r.grade_id, r.grade_id)}"
                            + (" (предварительно)" if r.status == "provisional" else "")) if r.category_id else None,
         "status": r.status, "provisional": r.status == "provisional" and bool(r.category_id),
         "confirmed_by": "test" if r.status == "confirmed" and (test or r.test_session_id) else None,

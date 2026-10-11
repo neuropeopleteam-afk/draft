@@ -19,22 +19,24 @@ import re
 
 from app.modules.catalog.dictionary import (
     DESIRED_CUES,
-    DIRECTION_KEYWORDS,
     GRADE_KEYWORDS,
     REQUIRED_CUES,
     WORK_FORMAT_KEYWORDS,
+    direction_keywords,
     find_key_span,
     find_keys,
     find_stack,
     find_stack_spans,
     find_unsupported_spans,
+    kw_pattern,
 )
+from app.modules.catalog import ext as catalog_ext
 from app.modules.catalog import levels as grade_levels
-from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, GRADES_EXT, STACK
+from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, GRADES_EXT, active_stack, known_tag
 from app.modules.llm.client import chat_json
 from app.modules.matching import bias as bias_filter
 
-DIRECTIONS = ("backend", "frontend", "data_ml", "qa", "security")
+DIRECTIONS = catalog_ext.BASE_DIRECTIONS  # базовые; с расширением каталога — catalog_ext.visible_directions()
 COMMON_TAGS = {"algorithms", "sql", "http", "git", "linux", "docker"}
 CITY_ALIASES = {
     "Москва": ["Москва", "Москве", "Москвы"], "Санкт-Петербург": ["Санкт-Петербург", "Петербурге"],
@@ -182,7 +184,8 @@ def city_span(text: str, work_format) -> tuple[str | None, tuple[int, int] | Non
 
 
 def tag_directions() -> dict[str, str | None]:
-    return {t: v[2] for t, v in STACK.items()}
+    """Тег → направление; теги видимых направлений расширения каталога — тоже (без флага — ровно STACK)."""
+    return {t: v[2] for t, v in active_stack().items()}
 
 
 _SALARY_RE = re.compile(
@@ -501,9 +504,9 @@ def negated_directions(text: str) -> str:
     """Текст для голосования направления: ключевые слова направления под отрицанием («фронтенд не нужен», «без
     фронтенда») заменены пробелами (позиции сохраняются) — отрицание не выбирает профессию (И27, Н1)."""
     low, out = text.lower(), list(text)
-    for words in DIRECTION_KEYWORDS.values():
+    for words in direction_keywords().values():
         for w in words:
-            for m in re.finditer(re.escape(w), low):
+            for m in re.finditer(kw_pattern(w), low):
                 s, e = m.start(), m.end()
                 while e < len(text) and text[e].isalpha():
                     e += 1
@@ -617,7 +620,8 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
 
     # Направление: ключевые слова (вес 3) + голоса стек-тегов (вес 1); слова под отрицанием не голосуют
     dtext = negated_directions(text)
-    dk = find_keys(dtext, DIRECTION_KEYWORDS)
+    dkw = direction_keywords()
+    dk = find_keys(dtext, dkw)
     votes = {d: 3 * n for d, n in dk.items()}
     for t in tags:
         d = dirs.get(t)
@@ -625,11 +629,13 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
             votes[d] = votes.get(d, 0) + 1
     # Some public texts start with an introductory line and put the role on the next line.
     head = dtext[:200].split(":", 1)[0]
-    title_dirs = find_keys(head, DIRECTION_KEYWORDS)
+    title_dirs = find_keys(head, dkw)
     if "qa" in title_dirs:
         title_dirs = {"qa": title_dirs["qa"]}
     # Incidental testing, models or interfaces in responsibilities do not change a developer's role.
-    if (not title_dirs or not any(d in title_dirs for d in ("qa", "security"))) and re.search(
+    # «Kotlin-разработчик Android», «DevOps (Go)» — роль из заголовка направления расширения не перебивается языком
+    own_title = ("qa", "security") + catalog_ext.visible_ext()
+    if (not title_dirs or not any(d in title_dirs for d in own_title)) and re.search(
             r"(?:Go|Golang|Java|Kotlin|PHP|C#|\.NET)[ -]*(?:разработ|developer)|разработ\w*\s+(?:Go|Java|PHP)", head, re.I):
         title_dirs = {"backend": 1}
     elif not title_dirs:
@@ -639,10 +645,10 @@ def parse_rules(text: str, hint_direction: str | None = None, hint_grade: str | 
                                    max(votes, key=votes.get) if votes else None)
     ev: dict[str, dict | None] = {}
     if direction and not hint_direction:
-        if direction in title_dirs and find_key_span(head, DIRECTION_KEYWORDS[direction]):
-            ev["direction"] = _ev(text, find_key_span(head, DIRECTION_KEYWORDS[direction]), basis="title")
+        if direction in title_dirs and find_key_span(head, dkw[direction]):
+            ev["direction"] = _ev(text, find_key_span(head, dkw[direction]), basis="title")
         elif direction in dk:
-            ev["direction"] = _ev(text, find_key_span(dtext, DIRECTION_KEYWORDS[direction]), basis="keyword")
+            ev["direction"] = _ev(text, find_key_span(dtext, dkw[direction]), basis="keyword")
         else:  # направление выведено по технологиям — цитата первой из них
             first = min((sp for t, sp in spans.items() if dirs.get(t) == direction), default=None)
             ev["direction"] = _ev(text, first, basis="stack")
@@ -734,7 +740,7 @@ def clean_evidence(ev) -> dict | None:
 def normalize(req: dict, method: str) -> dict:
     """Приводим к канону и выкидываем всё, чего нет в справочнике (защита от «фантазий» LLM)."""
     dirs = tag_directions()
-    d = req.get("direction") if req.get("direction") in DIRECTIONS else None
+    d = req.get("direction") if req.get("direction") in catalog_ext.visible_directions() else None
     g = req.get("grade") if req.get("grade") in GRADES else None
     g_capped = None
     if GRADES_EXT and g:  # Lead/Principal — только там, где банк направления их проверяет (catalog.levels)
@@ -815,6 +821,15 @@ LLM_SYSTEM = (
 )
 
 
+def _llm_system() -> str:
+    """Промт полного разбора: список направлений — видимые (с расширением каталога — и новые)."""
+    vis = catalog_ext.visible_directions()
+    if vis == catalog_ext.BASE_DIRECTIONS:
+        return LLM_SYSTEM
+    return LLM_SYSTEM.replace('["backend","frontend","data_ml","qa","security"]',
+                              "[" + ",".join(f'"{d}"' for d in vis) + "]")
+
+
 def bias_report(text: str, req: dict) -> tuple[list[dict], str | None]:
     """Находки фильтра ст. 64 ТК РФ с предложениями и исправленный текст (или None, если нарушений нет)."""
     found = bias_filter.find_bias(text)
@@ -861,7 +876,7 @@ def delta_schema() -> dict:
                   "unknown_required": {"type": "array", "items": {
                       "type": "object", "additionalProperties": False, "required": ["term", "quote"],
                       "properties": {"term": {"type": "string"}, "quote": {"type": "string"}}}},
-                  "direction": opt(DIRECTIONS), "grade": opt(GRADES),
+                  "direction": opt(catalog_ext.visible_directions()), "grade": opt(GRADES),
                   "experience_years_min": {"anyOf": [{"type": "number"}, {"type": "null"}]},
                   "work_format": opt(("office", "hybrid", "remote")),
                   "quotes": {"type": "object", "additionalProperties": False, "required": list(qs),
@@ -889,7 +904,7 @@ def _call_llm(clean_text: str, rules: dict, full: bool = False):
     """Запрос к модели: дельта (по умолчанию, И27) или прежний полный разбор (mode=full)."""
     tags = ", ".join(sorted(tag_directions()))
     if full:
-        return chat_json(LLM_SYSTEM.replace("{tags}", tags), clean_text[:6000],
+        return chat_json(_llm_system().replace("{tags}", tags), clean_text[:6000],
                          func="parse_need", validate=lambda d: isinstance(d, dict), max_tokens=2500)
     user = f"ТЕКСТ ВАКАНСИИ:\n{clean_text[:6000]}\n\nУЖЕ НАЙДЕНО СЛОВАРЁМ:\n{_rules_summary(rules)}"
     return chat_json(DELTA_SYSTEM.replace("{tags}", tags), user, func="parse_need", max_tokens=900,
@@ -1019,7 +1034,7 @@ def text_notes(text: str, req: dict, extra: list | None = None) -> dict:
     unknown += _unknown_from_model(text, extra, {u["term"].lower() for u in unknown},
                                    [(u["evidence"]["start"], u["evidence"]["end"]) for u in unknown if u.get("evidence")])
     used = {i["tag"] for i in (req.get("stack_required") or []) + (req.get("stack_desired") or [])}
-    excluded = [x for x in (req.get("excluded") or []) if isinstance(x, dict) and x.get("tag") in STACK
+    excluded = [x for x in (req.get("excluded") or []) if isinstance(x, dict) and known_tag(x.get("tag"))
                 and x["tag"] not in used]
     if not excluded and "excluded" not in req:
         excluded = [{"tag": t, "evidence": _ev(text, sp)} for t, sp in negated_tags(masked, find_stack_spans(masked)).items()
@@ -1045,7 +1060,7 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
     merged.update(text_notes(text, merged, extra=merged.pop("unknown_llm", None)))
     merged["bias"] = bias_filter.suggestions(found, merged)
     merged["suggested_text"] = bias_filter.rewrite(text, found, merged)
-    from app.modules.matching.coverage import coverage
+    from app.modules.matching.coverage import coverage, own_direction
 
     cov = coverage(text)
     if cov:
@@ -1053,6 +1068,9 @@ def parse_need(text: str, hint_direction: str | None = None, hint_grade: str | N
         if not hint_direction:
             merged["direction"] = cov["nearest_direction"]
             merged["evidence"]["direction"] = cov["evidence"]
+    elif not hint_direction and (own := own_direction(text)) and merged.get("direction") != own["direction"]:
+        merged["direction"] = own["direction"]  # расширение каталога: своё направление вместо ближайшего
+        merged["evidence"]["direction"] = own["evidence"]
     merged["weight_rule"] = weight_rule()  # Я11 (С3-3): правило весов — рядом с весами в карточке
     return merged
 

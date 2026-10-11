@@ -536,7 +536,7 @@ def presets(db: Session, inv: Invitation) -> dict:
         if d.weekday() < 5:
             days.append(d)
     c = db.get(Company, inv.company_id)
-    link = "https://telemost.yandex.ru/j/demo-vstrechny" if c and c.is_demo else ""
+    link = "https://telemost.yandex.ru/j/demo-draft" if c and c.is_demo else ""
     slots = [{"starts_at": datetime.combine(day, dtime(h, 0), MSK).isoformat(), "duration_min": 60,
               "format": "video", "place": link} for day, h in zip(days, (11, 15, 12))]
     start = now.date() + timedelta(days=14)

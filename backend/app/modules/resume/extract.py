@@ -16,16 +16,16 @@ import subprocess
 import sys
 
 from app.modules.catalog.dictionary import (
-    DIRECTION_KEYWORDS,
     GRADE_KEYWORDS,
     ROLE_TITLES,
     ROLES,
     SOFT_SKILL_TITLES,
     SOFT_SKILLS,
+    direction_keywords,
     find_keys,
     find_stack,
 )
-from app.modules.catalog.seed_data import STACK, grade_by_experience, tag_direction
+from app.modules.catalog.seed_data import active_stack, grade_by_experience, known_tag, tag_direction, tag_title
 from app.modules.llm.client import chat_json
 
 _RANGE = re.compile(
@@ -148,10 +148,10 @@ def experience_years(text: str, today: date | None = None) -> float | None:
 
 def extract_rules(text: str) -> dict:
     tags = find_stack(text)
-    stack = [{"tag": t, "title": STACK[t][0]} for t, _ in sorted(tags.items(), key=lambda kv: kv[1])]
+    stack = [{"tag": t, "title": tag_title(t)} for t, _ in sorted(tags.items(), key=lambda kv: kv[1])]
     roles = [{"id": r, "title": ROLE_TITLES[r]} for r in find_keys(text, ROLES)]
     soft = [{"id": s, "title": SOFT_SKILL_TITLES[s]} for s in find_keys(text, SOFT_SKILLS)]
-    votes = {d: 3 * n for d, n in find_keys(text, DIRECTION_KEYWORDS).items()}
+    votes = {d: 3 * n for d, n in find_keys(text, direction_keywords()).items()}
     for t in tags:
         d = tag_direction(t)
         if d:
@@ -186,7 +186,7 @@ def extract(text_redacted: str, use_llm: bool = True) -> dict:
     out = extract_rules(text_redacted)
     if not use_llm:
         return out
-    prompt = (LLM_SYSTEM.replace("{tags}", ", ".join(STACK)).replace("{roles}", ", ".join(ROLES))
+    prompt = (LLM_SYSTEM.replace("{tags}", ", ".join(active_stack())).replace("{roles}", ", ".join(ROLES))
               .replace("{soft}", ", ".join(SOFT_SKILLS)))
     res = chat_json(prompt, text_redacted[:8000], func="resume", validate=lambda d: isinstance(d, dict),
                     max_tokens=2000)
@@ -196,8 +196,8 @@ def extract(text_redacted: str, use_llm: bool = True) -> dict:
     d = res.data
     have = {s["tag"] for s in out["stack"]}
     for t in d.get("stack") or []:
-        if t in STACK and t not in have:
-            out["stack"].append({"tag": t, "title": STACK[t][0], "by": "llm"})
+        if known_tag(t) and t not in have:
+            out["stack"].append({"tag": t, "title": tag_title(t), "by": "llm"})
             have.add(t)
     have_r = {r["id"] for r in out["roles"]}
     for r in d.get("roles") or []:

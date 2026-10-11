@@ -240,7 +240,11 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
                               verified=True, source_ref="demo-registry"))
     db.commit()
     res = {}
-    for attempt in range(6):  # демо-респондент случаен: нужен заданный исход — иначе следующий seed
+    # демо-респондент случаен (выбор заданий и ответы): нужен заданный исход — иначе следующий seed. Для «Junior
+    # (предварительно)» окно уже: при пороге уверенности 0,6 (Я22) θ = −1,05 чаще подтверждает Junior, чем раньше при 0,8,
+    # поэтому попыток 12 (6 не хватало примерно раз на сотню песочниц — test_jury_persona_candidate_junior).
+    attempts = 12 if want == "provisional" else 6
+    for attempt in range(attempts):
         res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items, copy_items,
                             camera=camera)
         if want == "provisional" and res.get("category_provisional"):
@@ -534,13 +538,25 @@ def ensure_ideas(db: Session) -> None:
 
     try:
         if not is_stale(db) and has_demo_invitations(db):
-            return
+            return _tariffs_demo(db)
         with _lock(db):
             if is_stale(db) or not has_demo_invitations(db):  # другой воркер мог уже пересеять, пока мы ждали
                 prepare(db)
+            _tariffs_demo(db)
     except Exception:  # noqa: BLE001 — демо кубков не должно ломать вход жюри
         db.rollback()
         log.exception("jury: ideas demo failed")
+
+
+def _tariffs_demo(db: Session) -> None:
+    """Я29: тарифы демо-компаний, партнёры ФСП, демо-наймы — только при TARIFFS_ENABLED; сбой не ломает вход жюри."""
+    from app.modules.tariffs.demo import ensure
+
+    try:
+        ensure(db)
+    except Exception:  # noqa: BLE001
+        db.rollback()
+        log.exception("jury: tariffs demo failed")
 
 
 # SQLite (локальный запуск без Docker — один процесс uvicorn): по очереди между потоками процесса. Без этого запасная

@@ -27,7 +27,7 @@ from app.integrations.vacancies.ats_import import EXPERIENCE_HINT, EXPERIENCE_TI
 from app.integrations.vacancies.models import Vacancy
 from app.modules.catalog.dictionary import find_stack
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import known_tag, tag_title
 from app.modules.hh.client import HhClient, HhError
 
 SOURCE = "hh"
@@ -181,8 +181,8 @@ def map_vacancy(db: Session, v: dict) -> Mapped:
     if not category_id:
         notes.append("Категорию по тексту определить не удалось — выберите её перед публикацией")
     from_text = [s["tag"] for s in (parsed.get("stack_required") or []) + (parsed.get("stack_desired") or [])
-                 if s.get("tag") in STACK]
-    from_ks = [t for s in skills for t in sorted(find_stack(s), key=find_stack(s).get) if t in STACK]
+                 if known_tag(s.get("tag"))]
+    from_ks = [t for s in skills for t in sorted(find_stack(s), key=find_stack(s).get) if known_tag(t)]
     stack = list(dict.fromkeys(from_text + from_ks))[:20]
     sal = salary_of(v)
     lo, hi = (sal or {}).get("from"), (sal or {}).get("to")
@@ -274,7 +274,7 @@ def _summary(m: Mapped, company, raw: dict, meta: dict, existing: Vacancy | None
             "experience": m.experience, "conditions": m.conditions, "salary_hh": m.salary_hh,
             "key_skills": m.key_skills, "category_id": m.category_id, "stack": m.stack,
             "stack_from_key_skills": m.stack_from_key_skills,
-            "stack_titles": [STACK.get(t, (t,))[0] for t in m.stack], "salary_from": m.salary_from,
+            "stack_titles": [tag_title(t) for t in m.stack], "salary_from": m.salary_from,
             "salary_to": m.salary_to, "salary_basis": m.salary_basis, "salary_from_hh": m.salary_from_hh,
             "salary_source": m.salary_source,
             "work_format": m.work_format, "city": m.city, "description_preview": m.description[:600],

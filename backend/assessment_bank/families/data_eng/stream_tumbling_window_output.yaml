@@ -1,0 +1,24 @@
+family_id: data_eng.stream.tumbling_window_output
+title: Потоковая обработка — окна по времени события, водяной знак и опоздавшие события
+direction: data_eng
+skills: [streaming, stream_processing, windowing, watermarks, late_data, python]
+target_grades: [middle, senior]
+format: predict_output
+language: python
+invariants:
+  code_lines: [24, 30]
+  extra:
+    subtype: tumbling_watermark
+    events: [8, 12]
+time_limit_s: 480
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.2
+  sigma_variant: 0.35
+  basis: "Упрощённый обработчик потока: неперекрывающиеся окна по времени события (30/60/120 с), водяной знак = максимум времени − задержка (10–40 с); 8–12 событий не по порядку; в каждом варианте есть принятое событие не по порядку, отброшенное опоздавшее и не меньше двух окон, закрытых посреди потока. Нужно проследить водяной знак по шагам. Граница Middle/Senior"
+generator: assessment_bank.families.data_eng.stream_tumbling_window_output
+version: 1
+description: >
+  Предсказать вывод упрощённого обработчика потока с окнами по времени события и водяным знаком: какие окна и
+  когда закрываются, какие события отброшены как опоздавшие. Ключ — независимая модель; проверка — исполнение кода.

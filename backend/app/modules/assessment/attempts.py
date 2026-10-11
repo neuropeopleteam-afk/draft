@@ -32,13 +32,15 @@ from app.core.errors import api_error, err
 from app.core.fmt import ru_num, theta_se
 from app.modules.assessment.models import TestSession
 from app.modules.auth.models import User
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES
+from app.modules.catalog.ext import DirectionId
 
 Z95 = 1.96
 STATUS_TITLES = {"confirmed": "подтверждён", "accepted_lower": "принят уровень ниже", "provisional": "предварительно",
                  "unconfirmed": "не подтверждён"}
-MODE_TITLES = {"full": "полный тест", "express": "экспресс-тест", "confirm": "дотестирование"}
-Direction = Literal["backend", "frontend", "data_ml", "qa", "security"]
+MODE_TITLES = {"full": "полный тест", "express": "экспресс-тест", "confirm": "дотестирование",
+               "refine": "уточнение уровня"}
+Direction = DirectionId
 
 
 # ------------------------------------------------------------------ одна попытка
@@ -92,7 +94,7 @@ def attempt_view(ts: TestSession) -> dict:
     grade_after = out.get("accepted_lower") or (ts.claimed_grade_id if status in ("confirmed", "provisional") else None)
     ext = det.get("extension") or None
     return {
-        "id": str(ts.id), "direction": ts.direction_id, "direction_title": DIRECTIONS.get(ts.direction_id),
+        "id": str(ts.id), "direction": ts.direction_id, "direction_title": DIRECTION_TITLES.get(ts.direction_id),
         "mode": _mode(ts), "mode_title": MODE_TITLES.get(_mode(ts), _mode(ts)),
         "claimed_grade": ts.claimed_grade_id, "claimed_grade_title": GRADES.get(ts.claimed_grade_id),
         "started_at": as_aware(ts.started_at).isoformat() if ts.started_at else None,
@@ -256,8 +258,9 @@ def changes(a: dict, b: dict, ov: dict, d: dict) -> list[dict]:
         txt = (f"Повторилось семейств: {rf} из {nf} ({_pct(ov['share_families'])}), вариантов — "
                f"{ov['repeated_variants']} из {ov['n_variants_second']}: {why}. В повторённом семействе "
                f"генерируется новый вариант (другие числа и код).")
-    if b["mode"] == "confirm":
-        txt += f" Дотестирование: {b['prior_items']} ответов прошлой попытки перенесены, повторы считаются по новым."
+    if b["mode"] in ("confirm", "refine"):
+        txt += (f" {'Дотестирование' if b['mode'] == 'confirm' else 'Уточнение уровня'}: {b['prior_items']} ответов "
+                "прошлой попытки перенесены, повторы считаются по новым.")
     add("overlap", "Задания", txt)
     if a["mode"] != b["mode"] and "express" in (a["mode"], b["mode"]):
         add("mode", "Режим", "Экспресс-тест короче и его погрешность шире — сравнение с полным тестом условное.")
@@ -349,7 +352,7 @@ def for_candidate(db: Session, user_id: uuid.UUID, direction: str | None = None,
         chk = check_can_start(spec.grade_id, spec.locked_until, retake_grade, now, sandbox, failed,
                               st.retake_same_grade_days)
         can, reason = chk.allowed, (None if chk.allowed else chk.message)
-    return {"direction": direction, "direction_title": DIRECTIONS.get(direction) if direction else None,
+    return {"direction": direction, "direction_title": DIRECTION_TITLES.get(direction) if direction else None,
             "attempts": [_list_item(v, "candidate") for v in views], "comparison": cmp,
             "sandbox": sandbox, "retake_grade": retake_grade, "can_retake_now": can, "retake_reason": reason,
             "note": ("В демо-режиме жюри вторую попытку можно пройти сразу — правило 30/90 дней не действует; "
@@ -366,7 +369,7 @@ def for_employer(db: Session, user_id: uuid.UUID, privacy: dict, direction: str 
         return {"available": False, "reason": "single_attempt", "direction": direction, "n_attempts": len(rows),
                 "text": "Попытка теста одна — сравнивать не с чем"}
     p = pair(rows)
-    return {"available": True, "direction": direction, "direction_title": DIRECTIONS.get(direction),
+    return {"available": True, "direction": direction, "direction_title": DIRECTION_TITLES.get(direction),
             "n_attempts": len(rows), "attempts": [_list_item(attempt_view(t), "employer") for t in rows],
             "comparison": compare(attempt_view(p[0]), attempt_view(p[1]), audience="employer")}
 

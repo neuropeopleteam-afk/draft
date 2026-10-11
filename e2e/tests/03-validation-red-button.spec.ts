@@ -3,7 +3,7 @@
  * Страница открыта без входа. Каждая атака выполняется на живых демо-данных в памяти и ничего не записывает;
  * ожидаемое свойство должно выполняться: раздувание резюме, смена имени, смена пола/возраста/имени у всего пула,
  * фальшивый и убранный значок ФСП не меняют подбор сверх правил, утечка части банка ловится детектором.
- * Блоки страницы: бенчмарк подбора со скрытой истиной, сравнение с ориентирами в их условиях, экспертная разметка.
+ * Блоки страницы: бенчмарк подбора со скрытой истиной, прогон в других условиях измерения, экспертная разметка.
  */
 import { expect, test } from "../lib/fixtures";
 
@@ -28,7 +28,7 @@ test("/validation: метрики теста и подбора на месте",
   await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible();
   const SECTIONS: Record<string, string> = {
     bank: "Банк заданий и калибровка", test: "Тест: точность оценки и решения по грейду (симуляция)",
-    retest: "Стабильность грейда при повторе", others: "В других условиях", exposure: "Частота показа заданий",
+    retest: "Стабильность грейда при повторе", "other-conditions": "Другие условия измерения", exposure: "Частота показа заданий",
     leak: "Устойчивость к утечке части банка", matching: "Подбор на демо-данных: разметка правилами", bench: "Бенчмарк подбора со скрытой истиной",
     live: "Живые данные платформы",
     "red-button": "Красная кнопка: атакуйте сами",
@@ -53,7 +53,7 @@ test("/validation: метрики теста и подбора на месте",
   await expect(page.locator("section#matching")).toContainText(/nDCG|BM25/);
 });
 
-test("/validation: бенчмарк со скрытой истиной, другие условия, экспертная разметка", async ({ page }) => {
+test("/validation: бенчмарк со скрытой истиной, другие условия измерения, экспертная разметка", async ({ page }) => {
   await page.goto("/validation#bench", { waitUntil: "domcontentloaded" });
   await test.step("бенчмарк подбора: платформа против BM25 с доверительными интервалами", async () => {
     const bench = page.locator("section#bench");
@@ -68,9 +68,9 @@ test("/validation: бенчмарк со скрытой истиной, друг
     // честность: синтетика проверяет механику, а не реальный рынок — это сказано прямо
     await expect(bench.getByRole("status").filter({ hasText: /^Честно:/ })).toBeVisible();
   });
-  await test.step("ориентиры: наш тест в их условиях симуляции", async () => {
-    const table = page.locator("section#others").getByRole("table");
-    for (const who of [/^Прототип А, их симуляция/, /^Наш тест в их условиях/, /^Наш тест в наших условиях/]) {
+  await test.step("другие условия измерения: тот же тест при 20 заданиях и меньшей ошибке параметров", async () => {
+    const table = page.locator("section#other-conditions").getByRole("table");
+    for (const who of [/^Другие условия/, /^Основные условия/]) {
       await expect(table.getByRole("row").filter({ has: page.getByRole("cell", { name: who }) }), String(who)).toHaveCount(1);
     }
     await expect(table.getByRole("columnheader", { name: "κ с истиной" })).toBeVisible();
