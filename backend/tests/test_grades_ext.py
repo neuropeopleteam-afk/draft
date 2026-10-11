@@ -114,3 +114,33 @@ def test_with_flag_suite_in_subprocess():
 def test_validation_grades_ext_route_absent_without_flag(client):
     assert client.get("/api/validation/grades-ext").status_code == 404
     assert "/api/validation/grades-ext" not in client.get("/api/openapi.json").json()["paths"]
+
+
+def _with_ext_only_family(monkeypatch):
+    """Банк, в котором уже есть семейства только Lead/Principal (как после синхронизации банка волны 7)."""
+    from assessment_bank import load_specs as real_load
+
+    from app.modules.assessment import bank_engine
+
+    specs = dict(real_load())
+    base = next(s for s in specs.values() if not s.canary and s.block != "common")
+    lead = base.model_copy(update={"family_id": base.family_id + "_lead_only", "target_grades": ["lead", "principal"]})
+    mixed = base.model_copy(update={"family_id": base.family_id + "_senior_lead", "target_grades": ["senior", "lead"]})
+    specs[lead.family_id], specs[mixed.family_id] = lead, mixed
+    monkeypatch.setattr(bank_engine, "load_specs", lambda: specs)
+    bank_engine._pool.cache_clear()
+    return bank_engine, lead.family_id, mixed.family_id
+
+
+def test_without_flag_lead_principal_only_families_not_in_test_pool(monkeypatch):
+    from app.modules.catalog import levels
+
+    assert levels.ext_only(["lead"]) and levels.ext_only(("lead", "principal"))
+    assert not levels.ext_only(["senior", "lead"]) and not levels.ext_only([]) and not levels.ext_only(None)
+    bank_engine, lead_only, mixed = _with_ext_only_family(monkeypatch)
+    try:
+        ids = {p.family_id for p in bank_engine._pool(2)}
+        assert lead_only not in ids  # без флага — не в пуле адаптивного теста
+        assert mixed in ids  # Senior + Lead — обычное семейство Senior, остаётся
+    finally:
+        bank_engine._pool.cache_clear()

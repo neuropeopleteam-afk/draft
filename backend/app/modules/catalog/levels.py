@@ -43,6 +43,19 @@ def bank_ext_families() -> dict[str, dict[str, tuple[str, ...]]]:
     return {d: {g: tuple(sorted(v)) for g, v in by.items()} for d, by in out.items()}
 
 
+def ext_only(target_grades) -> bool:
+    """Семейство только для Lead/Principal: target_grades непусты и целиком из {lead, principal}."""
+    tg = set(target_grades or ())
+    return bool(tg) and tg <= set(EXT_GRADE_ORDER)
+
+
+def pool_specs(specs) -> list:
+    """Спецификации для пула адаптивного теста: без флага GRADES_EXT_ENABLED семейства только Lead/Principal в пул не
+    входят (банк может быть уже синхронизирован с ними, а шкала — из 4 уровней); с флагом — все."""
+    specs = list(specs)
+    return specs if GRADES_EXT else [s for s in specs if not ext_only(getattr(s, "target_grades", ()))]
+
+
 def _preliminary_setting() -> bool:
     from app.core.config import get_settings
 
