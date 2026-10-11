@@ -261,6 +261,8 @@ def _version_out(db: Session, v: SelectionVersion) -> dict:
         # Ф2: условия потребности, применённые к версии, и сколько кандидатов они скрыли (None — версия до Ф2)
         "conditions": meta.get("conditions"), "must_first": meta.get("must_first"),
         "core": meta.get("core"),  # Я1: ядро роли версии (None — у потребности нет ядра или версия до Я1)
+        # Я12б: добор ступенью выше (None — версия до match-v1.3); text — пояснение для работодателя
+        "grade_above": meta.get("grade_above"),
         "scope": _scope_out(db, v),  # Я10: что тест проверяет / НЕ проверяет и зонды по потребности (не меняет порядок)
         "weights": ranking.WEIGHTS, "levels": ranking.LEVELS, "provisional_penalty": ranking.PROVISIONAL_PENALTY,
         "categories": recs,
