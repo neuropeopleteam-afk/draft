@@ -240,7 +240,11 @@ def _candidate(db: Session, persona: str, name: str, with_fsp: bool, theta: floa
                               verified=True, source_ref="demo-registry"))
     db.commit()
     res = {}
-    for attempt in range(6):  # демо-респондент случаен: нужен заданный исход — иначе следующий seed
+    # демо-респондент случаен (выбор заданий и ответы): нужен заданный исход — иначе следующий seed. Для «Junior
+    # (предварительно)» окно уже: при пороге уверенности 0,6 (Я22) θ = −1,05 чаще подтверждает Junior, чем раньше при 0,8,
+    # поэтому попыток 12 (6 не хватало примерно раз на сотню песочниц — test_jury_persona_candidate_junior).
+    attempts = 12 if want == "provisional" else 6
+    for attempt in range(attempts):
         res = run_demo_test(db, u.id, claimed, theta, seed + attempt, pending_left, away_items, copy_items,
                             camera=camera)
         if want == "provisional" and res.get("category_provisional"):
