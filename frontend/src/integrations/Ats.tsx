@@ -124,12 +124,12 @@ export function EmployerAts() {
   const anyDemo = prov.data.some((p) => p.mode === "demo" && p.enabled) || s.data.stub.connected;
   return (
     <div className="max-w-5xl space-y-6">
-      <PageTitle title="Интеграция с ATS" subtitle="Когда кандидат принимает приглашение, его верифицированный профиль с контактами уходит в вашу ATS: категория и грейд, подтверждённые навыки T1/T2, паспорт ФСП, вилка оффера и ссылка на PDF. До принятия контакты закрыты — и в ATS тоже." />
+      <PageTitle title="Интеграция с ATS" subtitle="Принятое приглашение — профиль кандидата с контактами уходит в вашу ATS; до принятия контакты закрыты." />
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card flex flex-wrap items-center justify-between gap-4 border-brand-lavender/30 bg-[#FBFAFF]">
         <div className="max-w-xl">
           <p className="flex flex-wrap items-center gap-2 font-bold text-brand-night">Демо без своих аккаунтов <OriginTag kind="stub" /></p>
-          <p className="text-sm text-brand-ink/65">Заглушки на нашем сервере повторяют API Talantix (GraphQL, OAuth-токены с автообновлением), «Потока» (REST v3) и Хантфлоу (API v2) и принимают вебхук с проверкой подписи. Платформа ходит к ним по настоящему HTTP тем же кодом, что и к реальным системам.</p>
+          <p className="text-sm text-brand-ink/65" title="Talantix — GraphQL и OAuth-токены с автообновлением, «Поток» — REST v3, Хантфлоу — API v2, вебхук — с проверкой подписи">Заглушки повторяют API Talantix, «Потока», Хантфлоу и вебхука — по настоящему HTTP тем же кодом.</p>
         </div>
         <button className="btn-primary" disabled={busy} onClick={connectAll}>{busy ? "Подключаем…" : anyDemo ? "Переподключить все демо-ATS" : "Подключить все демо-ATS"}</button>
       </section>

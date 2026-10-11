@@ -44,9 +44,16 @@ export function InvitesLeft({ compact = false }: { compact?: boolean }) {
   if (!on || !data) return null;
   const u = data.usage;
   const low = u.invites_left <= Math.max(1, Math.round(u.invites_limit * 0.1));
+  // UX-2: компактная строка для обзора кабинета — тариф ссылкой и остаток одной фразой
+  if (compact) return (
+    <p className={`text-sm ${low ? "text-brand-plum" : "text-brand-ink/75"}`} data-testid="invites-left" aria-live="polite">
+      {data.plan_id !== "partner" ? <Link to="/employer/tariffs" className="font-semibold text-brand hover:underline">Тариф «{data.plan.title}»</Link> : <>Тариф «{data.plan.title}»</>}
+      {" "}· осталось <b className="tabular-nums">{u.invites_left}</b> из {invitesText(u.invites_limit)}{u.invites_left === 0 && <> · новые — с {u.resets_on}</>}
+    </p>
+  );
   return (
     <p className={`text-sm ${low ? "text-brand-plum" : "text-brand-ink/75"}`} data-testid="invites-left" aria-live="polite">
-      {compact ? "" : `Тариф «${data.plan.title}»: `}осталось <b className="tabular-nums">{u.invites_left}</b> из {invitesText(u.invites_limit)} в этом месяце
+      {`Тариф «${data.plan.title}»: `}осталось <b className="tabular-nums">{u.invites_left}</b> из {invitesText(u.invites_limit)} в этом месяце
       {u.invites_left === 0 && <> · новые — с {u.resets_on}</>}
       {data.plan_id !== "partner" && <> · <Link to="/employer/tariffs" className="font-semibold text-brand hover:underline">{u.invites_left === 0 ? "Больше приглашений" : "Тарифы"}</Link></>}
     </p>
@@ -161,7 +168,7 @@ export function EmployerTariffs() {
   const pctUsed = u.invites_limit ? Math.min(100, Math.round((100 * u.invites_used) / u.invites_limit)) : 0;
   return (
     <div className="max-w-6xl space-y-6">
-      <PageTitle title="Тарифы" subtitle="Кандидатам платформа бесплатна всегда. Здесь — ваш тариф, остаток приглашений в месяце и демонстрационные счета." />
+      <PageTitle title="Тарифы" subtitle="Ваш тариф и остаток приглашений; кандидатам — всегда бесплатно." />
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]" aria-label="Текущий тариф">
         <div className="space-y-2">

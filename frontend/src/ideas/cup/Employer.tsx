@@ -19,7 +19,7 @@ export function EmployerCups() {
     <div className="max-w-5xl space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <PageTitle title="Кубок работодателя"
-          subtitle="Соревнование в категории на базе зонда: все кандидаты категории решают одну задачу, таблица результатов — под псевдонимами, лучшим уходят приглашения с вашей вилкой. Место попадает в паспорт ФСП как мероприятие." />
+          subtitle="Одна задача для всей категории; лучшим — приглашения с вашей вилкой." />
         <button className="btn-primary" onClick={() => setOpen(true)}>Запустить кубок</button>
       </div>
       {error && <Alert>{error}</Alert>}
