@@ -73,7 +73,7 @@ SOURCES: dict[str, dict] = {
                  "kind": "synthetic", "title": "Повторы заданий между попытками", "sections": ["retest-repeats"]},
     "report": {"file": "report.json", "command": "make validate", "kind": "synthetic",
                "title": "Симуляция теста: точность, повтор, частота показа, утечка",
-               "sections": ["retest", "test", "competitors", "exposure", "leak", "calibration"]},
+               "sections": ["retest", "test", "other-conditions", "exposure", "leak", "calibration"]},
     "demo": {"file": "report.json", "command": "make validate", "kind": "rules",
              "title": "Подбор на демо-данных (метки правилами, циркулярно)", "sections": ["matching"]},
     "stability": {"file": "junior_stability.json", "command": "make stability", "kind": "synthetic",
