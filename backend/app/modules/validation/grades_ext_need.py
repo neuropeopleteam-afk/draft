@@ -26,7 +26,6 @@ from __future__ import annotations
 import argparse
 from copy import deepcopy
 from dataclasses import replace
-import functools
 import json
 import os
 from pathlib import Path
@@ -309,7 +308,7 @@ def run_path_x(pool, cand, truth, cfg, counter, history, rng, det, s: dict, conf
         if dec.provisional:
             final, status = "junior", "provisional"
             break
-        lower, _ = rules_mod.accept_lower_allowed(None, g, False, dec.probabilities)
+        lower, _ = rules_mod.accept_lower_allowed(None, g, False, dec.probabilities, level=confirm)
         if lower:
             final, status = lower, "accepted_lower"
             break
@@ -325,8 +324,7 @@ def worker(a) -> dict:
     s = SCENARIOS[a.scenario]
     confirm = a.confirm
     gx.patch_ext_sessions(1.5, True)  # как продукт: заявленный Lead/Principal — без ротации, априорное SD 1,5
-    # порог уверенности принятия уровня ниже — тот же confirm (как настройка ASSESSMENT_CONFIRM_LEVEL)
-    rules_mod.proved_lower = functools.partial(rules_mod.proved_lower, level=confirm)
+    # порог уверенности принятия уровня ниже — тот же confirm (как настройка ASSESSMENT_CONFIRM_LEVEL): run_path_x
     cfg = sim.app_config_from_settings()
     if s["partial"] == "gpcm":  # модель частичного балла платформы: движок с partial_credit, ответы — GPCM + шум оценщика
         try:
