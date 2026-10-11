@@ -304,8 +304,8 @@ def main() -> int:
     new_json = json.dumps(n, ensure_ascii=False, indent=1) + "\n"
     if a.check:
         # сравниваем статическую часть (без тестов: они приходят из журнала) и тексты блоков
-        for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code", "validation_report", "grade_accuracy",
-                  "deploy", "boot", "load", "demo", "evidence"):
+        for k in ("bank", "migrations", "memory_limits_mib", "matching", "e2e_in_code", "validation_report",
+                  "grade_accuracy", "deploy", "boot", "load", "demo", "evidence"):
             if old.get(k) != n[k]:
                 bad.append(f"docs/NUMBERS.json: раздел «{k}» устарел")
     else:
