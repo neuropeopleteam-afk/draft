@@ -1,0 +1,23 @@
+family_id: security.principal.control_overlap_mcq
+title: Чистая выгода пакета защитных мер поверх действующей — независимое действие, а не сумма долей (Principal, короткое)
+direction: security
+skills: [risk_prioritization, secure_design, threat_modeling, prioritization]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: "три из шести моделей ошибок: ignore_existing, additive, no_cost (выше ключа); max_only, first_only, both_block (ниже); меньше ключа 0–2 равновероятно"
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 2.5
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: экономика пакета мер безопасности для руководства. Нужно считать эффект по остатку после действующей меры и комбинировать независимые меры через (1 − a)(1 − b), а не складывать доли. Senior и Lead обычно складывают доли или забывают действующую меру; Principal строит модель остатка риска. Ловушки с обеих сторон от ключа"
+generator: assessment_bank.families.security.principal_control_overlap_mcq
+version: 1
+description: >
+  Годовая чистая выгода двух новых защитных мер поверх действующей при независимом действии мер на одни и те же
+  атаки. Ключ — программа: перебор исходов «остановила / пропустила» точными дробями.
