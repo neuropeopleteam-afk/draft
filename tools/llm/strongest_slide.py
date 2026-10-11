@@ -98,12 +98,15 @@ def png(d: dict, path: Path) -> None:
     fig, axes = plt.subplots(1, len(funcs), figsize=(5.6 * len(funcs), 5.2), dpi=160)
     axes = [axes] if len(funcs) == 1 else list(axes)
     fam_color = {}
+    any_rejected = False
     palette = ["#4B3FD1", "#D14B3F", "#1F9D6B", "#C98A00", "#7A4FA0", "#2C7FB8", "#B84F7A", "#5E6B2C", "#444444"]
     from matplotlib.ticker import FuncFormatter, LogLocator, NullFormatter
 
     for ax, f in zip(axes, funcs):
         cells = d["functions"][f]
         ch = d["choice"].get(f, {})
+        rejected = {x["model"] for x in ch.get("full_run_rejected") or []}
+        any_rejected = any_rejected or bool(rejected)
         pts = []
         for m, c in cells.items():
             q = c["quality"]["index"]
@@ -115,6 +118,8 @@ def png(d: dict, path: Path) -> None:
             lo, hi = (q.get("ci90") or [q["value"], q["value"]])
             ax.errorbar([x], [q["value"]], yerr=[[q["value"] - lo], [hi - q["value"]]], fmt="o", color=col,
                         mfc=col if c["within_budget"] else "white", ms=7, capsize=2, lw=1)
+            if m in rejected:  # полный прогон (все входы) не подтвердил порог выбора — крест поверх точки
+                ax.plot([x], [q["value"]], marker="x", color="#111111", ms=9, mew=1.6, ls="", zorder=5)
             pts.append((m, x, q["value"]))
         ys = [p[2] for p in pts] + [lo for m in cells for lo in ((cells[m]["quality"]["index"].get("ci90") or [None])[:1])
                                      if lo is not None]
@@ -185,6 +190,9 @@ def png(d: dict, path: Path) -> None:
     axes[0].set_ylabel("Индекс качества [90 %]", fontsize=9)
     handles = [plt.Line2D([], [], marker="o", ls="", color=c, label=fam) for fam, c in fam_color.items()]
     handles.append(plt.Line2D([], [], marker="o", ls="", color="#444444", mfc="white", label="вне бюджета стенда"))
+    if any_rejected:
+        handles.append(plt.Line2D([], [], marker="x", ls="", color="#111111", mew=1.6,
+                                  label="исключена полным прогоном (все входы)"))
     fig.legend(handles=handles, loc="lower center", ncol=len(handles), fontsize=8, frameon=False,
                bbox_to_anchor=(0.5, 0.045))
     fig.suptitle(f"Качество против цены по функциям — замер {d['date']}", fontsize=13)

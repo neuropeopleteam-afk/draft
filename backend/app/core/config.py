@@ -329,6 +329,15 @@ class Settings(BaseSettings):
         """Функции hh.ru видны: флаг включён и есть токен приложения (или заглушка)."""
         return bool(self.hh_enabled and (self.hh_stub or (self.hh_app_token and self.hh_user_agent)))
 
+    # Голосовой ввод потребности (app/modules/voice, docs/VOICE.md): кнопка «Надиктовать» у поля «Кого вы ищете».
+    # Распознавание — функция движка интервью stt (Deepgram через ретранслятор), заглушка — INTERVIEW_STUB=1 или нет ключа.
+    voice_need_enabled: bool = False
+    voice_need_max_seconds: int = Field(default=60, ge=5, le=180)
+    voice_need_max_kb: int = Field(default=2048, ge=64, le=6144)  # 60 с opus ≈ 0,5 МБ, AAC Safari ≈ 1 МБ; движок — до 6 МБ
+    voice_need_timeout_s: float = Field(default=20.0, gt=0, le=60)
+    voice_need_per_hour: int = Field(default=20, ge=1)  # записей на работодателя в час
+    voice_need_daily: int = Field(default=300, ge=1)  # записей в сутки на установку (≈ 300 мин × ставка STT)
+
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
     fsp_oidc_client_id: str | None = None
