@@ -13,7 +13,7 @@
 5. Частота показа семейств: Sympson — Hetter + 2 субпула, до/после, против «без контроля».
 6. Утечка части банка: без детектора, с детектором, с карантином субпула; таблица по доле слитых вариантов;
    атака завышением заявленного грейда.
-7. Прогон «в условиях конкурентов»: 20 заданий, ошибка параметров b + N(0; 0,35), a · LogN(0; 0,2).
+7. Прогон «в других условиях измерения»: 20 заданий, ошибка параметров b + N(0; 0,35), a · LogN(0; 0,2).
 8. Качество подбора: precision@5 / nDCG на 15 потребностях × 20 кандидатах демо-данных (временная SQLite).
 """
 from __future__ import annotations
@@ -135,7 +135,7 @@ def simulation_section(n: int, quick: bool) -> dict:
            "population": f"θ ~ N(0, 1), n = {n} на направление; истинные параметры = предкалибровка + ошибка эксперта "
                          "σ = 0,5 (по трудности семейства); время ответа — логнормальная модель банка",
            "conditions": {"n_per_direction": n, "n_retest_pairs": n_rt, "n_leak": n_leak, "n_leak_table": n_tab,
-                          "n_competitor": n_comp, "n_overclaim": n_oc, "param_error_b_sd": 0.5,
+                          "n_alt": n_comp, "n_overclaim": n_oc, "param_error_b_sd": 0.5,
                           "param_error_note": "сдвиг трудности семейства N(0; 0,5) + N(0; 0,15) по шагам, a × LogN(0; 0,25)",
                           "seeds": "numpy default_rng([20261006, направление, блок]) — одинаковые для «до» и «после»"},
            "policies": {
@@ -184,8 +184,8 @@ def simulation_section(n: int, quick: bool) -> dict:
         leak_leg = sim.leak_experiment(pool, truth, d, sim.LEGACY, _rng(i, 5), k_leg, n=n_leak)
         # 5. атака по доле слитых вариантов
         ltab = sim.leak_share_table(pool, truth, d, cfg, _rng(i, 6), k, n=n_tab)
-        # 6. «в условиях конкурентов»: 20 заданий, ошибка параметров b + N(0; 0,35), a · LogN(0; 0,2)
-        comp = sim.competitor_run(pool1, d, _rng(i, 7), k, n_comp)
+        # 6. «другие условия измерения»: 20 заданий, ошибка параметров b + N(0; 0,35), a · LogN(0; 0,2)
+        comp = sim.alt_conditions_run(pool1, d, _rng(i, 7), k, n_comp)
         out["directions"][d] = {
             "app": acc["app"], "legacy": acc["legacy"], "baseline_day2": acc["baseline_day2"],
             "retest": rt, "retest_legacy": rt_leg, "retest_legacy_sim": rt_leg_sim, "retest_claim_prior": rt_prior,
@@ -197,10 +197,10 @@ def simulation_section(n: int, quick: bool) -> dict:
                             "n_unqualified_cheaters": leak_leg["n_unqualified_cheaters"],
                             "detector_tpr": leak_leg["leak_detector"].get("detector_tpr"),
                             "detector_fpr": leak_leg["leak_detector"].get("detector_fpr")},
-            "leak_table": ltab, "competitor_like": comp, "seconds": round(time.time() - t0, 1)}
+            "leak_table": ltab, "alt_conditions": comp, "seconds": round(time.time() - t0, 1)}
         if i == 0:
-            # чувствительность к дискриминации заданий: a × 1,37 (медиана панели LLM) — только для объяснения разницы
-            # с конкурентами, не заголовочная цифра
+            # чувствительность к дискриминации заданий: a × 1,37 (медиана панели LLM) — только для объяснения потолка
+            # повтора, не заголовочная цифра
             pool_a = sim.make_pool(cfg.subpools)
             for it in pool_a:
                 it.a = it.a * 1.37
@@ -240,18 +240,11 @@ def simulation_section(n: int, quick: bool) -> dict:
                                     "detector_fpr"))} for sh in shares]}
     out["exposure_mean"] = {k_: _mean([v["exposure"][k_] for v in D], ("max_rate", "mean_rate", "share_over_rmax",
                                                                        "unused_share")) for k_ in ("app", "legacy")}
-    out["competitor_like"] = {"config": conf(sim.COMPETITOR_LIKE), "error": sim.COMPETITOR_ERROR, "n_per_direction": n_comp,
-                              "truth": _mean([v["competitor_like"]["truth"] for v in D],
-                                             ("grade_exact", "grade_within_1", "kappa_true", "r_theta", "mean_items",
-                                              "mean_time_min")),
-                              "retest": _rt_mean([v["competitor_like"]["retest"] for v in D]),
-                              # цифры из README/отчётов конкурентов (spectrek/intel/competitors.md, raw/0610)
-                              "reference": {"miliantr/fsp-talent": {"grade_exact": 0.805, "kappa_true": 0.898,
-                                                                    "grade_within_1": 0.999, "r_theta_retest": 0.866,
-                                                                    "decision_kappa_retest": 0.54, "length": 20,
-                                                                    "n": 1600, "param_error": "b + N(0; 0,35), a · LogN(0; 0,2)"},
-                                            "Izymka/fsp-job-board": {"kappa_retest": 0.86,
-                                                                     "param_error": "не опубликована"}}}
+    out["alt_conditions"] = {"config": conf(sim.ALT_CONDITIONS), "error": sim.ALT_ERROR, "n_per_direction": n_comp,
+                             "truth": _mean([v["alt_conditions"]["truth"] for v in D],
+                                            ("grade_exact", "grade_within_1", "kappa_true", "r_theta", "mean_items",
+                                             "mean_time_min")),
+                             "retest": _rt_mean([v["alt_conditions"]["retest"] for v in D])}
     return out
 
 

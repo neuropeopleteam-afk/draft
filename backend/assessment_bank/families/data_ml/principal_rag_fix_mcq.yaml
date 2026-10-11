@@ -1,0 +1,24 @@
+family_id: data_ml.llm.principal_rag_fix_mcq
+title: Что чинить в RAG — переранжирование, больше контекста, гибридный поиск или модель сильнее; полнота × точность, p95
+direction: data_ml
+skills: [rag, llm, model_evaluation, ml_systems, latency]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    measures: [rerank, top20, hybrid, bigger]
+    traps: [cheap, best_quality, no_dilution, no_latency]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.5
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Решение по системе RAG через разложение качества: доля верных ответов = полнота поиска × точность читателя; каждая мера двигает свою часть (переранжирование — полноту через k = 50, больше контекста — полноту, но снижает точность, гибридный поиск — полноту, модель сильнее — точность) и добавляет задержку. Ответ равновероятен среди четырёх; ловушки — самая дешёвая, наибольшая доля верных, «больше контекста — не хуже», без бюджета задержки — отличаются от ответа минимум в двух случаях. Lead обычно берёт модель сильнее или больше контекста, не раскладывая качество на поиск и чтение, — граница Lead/Principal (θ ≈ 2,5). Короткое задание (≤ 7 мин). σ 0,3"
+generator: assessment_bank.families.data_ml.principal_rag_fix_mcq
+version: 1
+description: >
+  Principal: из четырёх мер для RAG — самая дешёвая, которая одна даёт нужную долю верных ответов при бюджете p95.
+  Ключ — исполнением: пересчёт полноты поиска, точности читателя и задержки.

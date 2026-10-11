@@ -29,7 +29,7 @@ from app.core.enums import NeedStatus, TestSessionStatus
 from app.modules.assessment.integrity import candidate_view
 from app.modules.assessment.models import TestSession
 from app.modules.catalog.constants import FSP_DISCIPLINES
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_CUTS, GRADE_ORDER, GRADES, STACK, tag_title
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_CUTS, GRADE_ORDER, tag_title, known_tag
 from app.modules.profiles.facts import load_bundles
 
 # Только рекомендации для тренировки навыков, не вес соревнований и не рейтинг ФСП.
@@ -41,6 +41,11 @@ DISCIPLINE_SKILL_FIT = {
     "robotics": {"backend": .3, "frontend": .3, "data_ml": .5, "qa": .3, "security": .3},
     "uav": {"backend": .3, "frontend": .3, "data_ml": .5, "qa": .3, "security": .3},
 }
+# Направления расширения каталога (catalog/ext.py): те же рекомендации, только для их кандидатов
+for _d, _fit in {"devops": (.5, .8, .7, .3, .3), "data_eng": (.8, .9, .3, .3, .4), "mobile": (.6, 1., .4, .3, .3),
+                 "analyst": (.5, 1., .3, .3, .3)}.items():
+    for _disc, _v in zip(("algorithmic", "product", "security", "robotics", "uav"), _fit):
+        DISCIPLINE_SKILL_FIT[_disc][_d] = _v
 
 STRONG, OK = 0.75, 0.5  # пороги статуса темы по доле набранных баллов
 REL_DELTA = 0.2  # «выше/ниже вашего уровня»: отклонение от ожидаемой по θ доли
@@ -56,7 +61,11 @@ DEMAND_STATUS_TITLES = {"confirmed": "подтверждён тестом (T1)",
 # Темы для семейств, навыки которых не сводятся к стек-тегам справочника
 _EXTRA_TOPICS = [({"networking", "cidr", "ipv4", "routing"}, "networking", "Сети и адресация"),
                  ({"web_security", "xss", "csp"}, "web-security", "Безопасность веб-клиента"),
-                 ({"performance", "latency", "capacity_planning"}, "system-performance", "Производительность систем")]
+                 ({"performance", "latency", "capacity_planning"}, "system-performance", "Производительность систем"),
+                 # уровни Lead/Principal (банк feat/bank-ext; выдаются только с GRADES_EXT_ENABLED)
+                 ({"incident_analysis", "postmortem", "reliability", "slo"}, "reliability", "Надёжность и разбор инцидентов"),
+                 ({"technical_strategy", "engineering_metrics", "system_design"}, "tech-strategy",
+                  "Техническая стратегия и проектирование")]
 
 # Аспекты темы — навыки семейств банка по-русски. Навык без названия здесь в аспекты не выводится
 # (обычно это сама тема: python, sql, javascript …).
@@ -167,7 +176,11 @@ DISCIPLINE_TOPICS: dict[str, set[str]] = {
     "product": {"rest-api", "http", "fastapi", "django", "postgresql", "redis", "rabbitmq", "kafka", "docker", "git",
                 "react", "typescript", "javascript", "html-css", "state-management", "frontend-testing", "a11y",
                 "vite-webpack", "test-design", "api-testing", "pytest", "ci-cd", "playwright", "load-testing",
-                "pandas", "scikit-learn", "statistics", "mlops", "nlp", "airflow", "sql", "python", "asyncio"},
+                "pandas", "scikit-learn", "statistics", "mlops", "nlp", "airflow", "sql", "python", "asyncio",
+                # направления расширения каталога (catalog/ext.py)
+                "terraform", "helm", "monitoring", "sre", "etl", "dwh", "dbt", "streaming", "data-quality",
+                "android", "ios", "flutter", "react-native", "mobile-architecture", "requirements", "bpmn", "uml",
+                "user-stories", "integrations", "er-modeling"},
     "security": {"owasp", "cryptography", "network-security", "siem-soc", "forensics", "pentest", "linux",
                  "reverse-engineering", "ctf", "burp-suite", "web-security", "networking"},
     "robotics": {"python", "algorithms", "cv"},
@@ -183,7 +196,10 @@ DISCIPLINE_WHY = {
 }
 DIRECTION_DISCIPLINES = {"backend": ["product", "algorithmic"], "frontend": ["product", "algorithmic"],
                          "data_ml": ["product", "algorithmic", "uav"], "qa": ["product"],
-                         "security": ["security", "algorithmic"]}
+                         "security": ["security", "algorithmic"],
+                         # направления расширения каталога (catalog/ext.py)
+                         "devops": ["product", "security"], "data_eng": ["product", "algorithmic"],
+                         "mobile": ["product", "algorithmic"], "analyst": ["product"]}
 LEVEL_ORDER = ["school", "regional", "interregional", "national", "international"]
 LEVEL_RU = {"school": "школьный", "regional": "региональный", "interregional": "межрегиональный",
             "national": "всероссийский", "international": "международный"}
@@ -224,9 +240,11 @@ def bank_tags(direction: str) -> frozenset[str]:
         from app.modules.assessment.skill_map import to_stack_tags
     except Exception:  # noqa: BLE001 — банк недоступен: считаем, что заданий нет
         return frozenset()
+    from app.modules.catalog.ext import in_active_pool
+
     out: set[str] = set()
     for s in load_specs().values():
-        if s.direction in (direction, "common") and not s.canary:
+        if s.direction in (direction, "common") and not s.canary and in_active_pool(s):
             out.update(to_stack_tags(s.direction, s.skills))
     return frozenset(out)
 
@@ -331,11 +349,11 @@ def _demand(db: Session, direction: str, grade: str | None, bundle, topics: dict
                                                    EmployerNeed.direction_id == direction)).all():
         req = n.requirements or {}
         sources.append((n.grade_id or req.get("grade"),
-                        [s["tag"] for s in req.get("stack_required") or [] if s.get("tag") in STACK],
-                        [s["tag"] for s in req.get("stack_desired") or [] if s.get("tag") in STACK]))
+                        [s["tag"] for s in req.get("stack_required") or [] if known_tag(s.get("tag"))],
+                        [s["tag"] for s in req.get("stack_desired") or [] if known_tag(s.get("tag"))]))
     for v in db.scalars(select(Vacancy).where(Vacancy.status == "published",
                                               Vacancy.category_id.like(f"{direction}.%"))).all():
-        sources.append(((v.category_id or "").split(".")[-1] or None, [t for t in v.stack or [] if t in STACK], []))
+        sources.append(((v.category_id or "").split(".")[-1] or None, [t for t in v.stack or [] if known_tag(t)], []))
     sources = [s for s in sources if s[1] or s[2]]
     in_grade = [s for s in sources if grade and s[0] == grade]
     scope = "category" if len(in_grade) >= MIN_SOURCES_IN_GRADE else "direction"
@@ -370,8 +388,8 @@ def _demand(db: Session, direction: str, grade: str | None, bundle, topics: dict
         full += ok == len(set(req))
     n_req = len(cov)
     return {
-        "scope": scope, "scope_title": (f"категория {DIRECTIONS.get(direction, direction)} · {GRADES.get(grade, grade)}"
-                                        if scope == "category" else f"направление {DIRECTIONS.get(direction, direction)}"),
+        "scope": scope, "scope_title": (f"категория {DIRECTION_TITLES.get(direction, direction)} · {GRADES.get(grade, grade)}"
+                                        if scope == "category" else f"направление {DIRECTION_TITLES.get(direction, direction)}"),
         "sources": len(used), "sources_in_category": len(in_grade), "items": items,
         "full_match": full, "with_required": n_req,
         "avg_required_coverage": round(sum(cov) / n_req, 2) if n_req else None,
@@ -573,7 +591,7 @@ def build(db: Session, user_id: uuid.UUID, session_id: uuid.UUID | None = None) 
     return {
         "available": True, "source": source,
         "session": {
-            "id": str(ts.id) if ts else None, "direction": direction, "direction_title": DIRECTIONS.get(direction),
+            "id": str(ts.id) if ts else None, "direction": direction, "direction_title": DIRECTION_TITLES.get(direction),
             "claimed_grade": grade, "grade_title": GRADES.get(grade), "theta": ts.theta if ts else None,
             "se": ts.theta_se if ts else None, "confirmed": er.get("confirmed") if ts else None,
             "finished_at": ts.finished_at.isoformat() if ts and ts.finished_at else None,

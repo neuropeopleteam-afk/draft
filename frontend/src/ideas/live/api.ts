@@ -107,7 +107,7 @@ export function unlockAudio() {
 }
 
 /** Короткий двухтоновый сигнал + вибрация (Android) + заголовок вкладки. */
-export function chime(title = "Приглашение · Встречный") {
+export function chime(title = "Приглашение · Драфт") {
   try {
     if (ctx) {
       const t0 = ctx.currentTime;

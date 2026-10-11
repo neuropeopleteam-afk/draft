@@ -2,7 +2,8 @@
  * «Проверьте нас по критериям ТЗ» (/criteria, К1): страница открывается с главной, числа — из того же источника, что
  * API (GET /api/validation/criteria → расчёты /validation), и каждая ссылка страницы открывается и ведёт к видимому
  * блоку: якорь существует и оказывается на экране; ссылка с ролью входит в свою песочницу жюри (/jury/go) и
- * приводит на нужный экран; у ссылки на демо-потребность — её подборка.
+ * приводит на нужный экран; у ссылки на демо-потребность — её подборка. Первый сценарий заодно проверяет название «Драфт»
+ * (/api/meta, вкладка, шапка, манифест).
  */
 import { expect, test } from "../lib/fixtures";
 
@@ -12,8 +13,20 @@ const fmt = (v: number, f: string) =>
   f === "pct1" ? `${num(v * 100, 1)}${NB}%` : f === "pct" ? `${num(v * 100, 0)}${NB}%`
     : f === "signed3" ? `${v > 0 ? "+" : ""}${num(v, 3)}` : num(v, f === "num1" ? 1 : f === "num2" ? 2 : 3);
 
-test("главная → «Проверить по критериям ТЗ»: 6 критериев, блок «только здесь», числа из API", async ({ page }) => {
+// Название продукта «Драфт», подзаголовок «Компании выбирают подтверждённых»; старого названия в видимом тексте нет
+// («встречное предложение» кандидата — функция продукта, к названию не относится)
+const OLD_NAME = /Встречн(ый|ого|ому|ым|ом)(?![а-яё])/;
+
+test("главная → «Проверить по критериям ТЗ»: 6 критериев, блок «только здесь», числа из API; название «Драфт»", async ({ page }) => {
+  expect((await (await page.request.get("/api/meta")).json()).product_name).toBe("Драфт");
   await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page).toHaveTitle("Драфт — компании выбирают подтверждённых");
+  await expect(page.getByRole("main")).toContainText("Компании выбирают подтверждённых");
+  await expect(page.locator('header [aria-label="Драфт — на главную"]').first()).toBeVisible();
+  expect(await page.locator("body").innerText()).not.toMatch(OLD_NAME);
+  const manifest = await (await page.request.get("/manifest.webmanifest")).json();
+  expect(manifest.name).toMatch(/^Драфт — /);
+  expect(manifest.short_name).toBe("Драфт");
   await page.locator("section#jury").getByRole("link", { name: "Проверить по критериям ТЗ" }).click();
   await expect(page).toHaveURL(/\/criteria$/);
   await expect(page.getByRole("heading", { level: 1, name: "Проверьте нас по критериям ТЗ" })).toBeVisible();

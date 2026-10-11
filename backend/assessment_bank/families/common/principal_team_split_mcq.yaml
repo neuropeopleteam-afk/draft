@@ -1,0 +1,24 @@
+family_id: common.process.principal_team_split_mcq
+title: Границы команд по совместным изменениям, а не по графу вызовов
+direction: common
+skills: [architecture, technical_strategy, design_review, engineering_metrics]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    scheme: factorial_2x2_swaps
+    traps: [static_call_cut]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое задание у границы Lead/Principal на социотехническую архитектуру: девять компонентов делятся между тремя командами, даны статические вызовы и совместные изменения за квартал; согласования между командами порождают совместные изменения через границы, а не вызовы. Варианты — схема 2×2 из двух обменов компонентами (центрального варианта нет); меньше всего вызовов через границы — у неверного варианта. Lead обычно режет по графу зависимостей кода; Principal проводит границы по связности изменений — граница Lead/Principal (θ ≈ 2,9); σ 0,3"
+generator: assessment_bank.families.common.principal_team_split_mcq
+version: 1
+description: >
+  Principal (короткое, 7 мин): какое разбиение девяти компонентов между тремя командами даёт меньше всего
+  согласований. Ключ — исполнением: разбор показанных разбиений и подсчёт совместных изменений через границы.

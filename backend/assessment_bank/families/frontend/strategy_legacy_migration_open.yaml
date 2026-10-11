@@ -1,0 +1,23 @@
+family_id: frontend.strategy.legacy_migration_open
+title: Уход с устаревшего фронтенда — постепенная миграция или переписывание, микрофронтенды или монорепозиторий
+direction: frontend
+skills: [technical_strategy, migrations, architecture, design_systems, web_performance]
+target_grades: [principal]
+format: open_answer
+language: text
+invariants:
+  extra:
+    drivers: [eol, hiring, perf]
+    criteria: [decision, coexistence, sequencing, metrics, org_risks]
+time_limit_s: 1800
+canary: false
+prior_difficulty:
+  b: 2.7
+  a: 1.0
+  sigma_variant: 0.35
+  basis: "Априорная трудность (не по людям). Стратегия для многих команд: решение «постепенно по разделам» с обоснованием от причины (конец поддержки, найм, производительность), выбор между микрофронтендами и монорепозиторием с ценой, механика сосуществования без двух фреймворков на странице, порядок от причины, метрики и ограничение «вечной миграции». Lead обычно предлагает микрофронтенды по умолчанию без цены и порядка — граница Lead/Principal (θ ≈ 2,75); σ 0,35"
+generator: assessment_bank.families.frontend.strategy_legacy_migration_open
+version: 1
+description: >
+  Principal: стратегия миграции большого клиентского приложения со старого стека при непрерывном развитии
+  продукта. Пять критериев рубрики; оценка с цитатами-доказательствами.

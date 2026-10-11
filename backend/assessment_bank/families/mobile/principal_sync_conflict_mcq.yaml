@@ -1,0 +1,23 @@
+family_id: mobile.principal.sync_conflict_mcq
+title: Сколько конфликтов офлайн-синхронизации в сутки — правили хотя бы два разных устройства (Principal, короткое)
+direction: mobile
+skills: [offline_first, persistence, architecture, statistics, state_management]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: "три из пяти моделей ошибок: any_edit, edits_ge2, pairs_linear (выше ключа); two_devices, all_devices (ниже); меньше ключа 0–2 равновероятно"
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: оценка масштаба конфликтов офлайн-синхронизации для выбора стратегии разрешения. Нужна модель «хотя бы два разных устройства правили в окне» с вероятностью правки 1 − e^(−λT). Senior и Lead обычно считают конфликтом любую правку, две правки одного устройства или берут приближение для редких правок; Principal строит точную модель. Ловушки с обеих сторон от ключа"
+generator: assessment_bank.families.mobile.principal_sync_conflict_mcq
+version: 1
+description: >
+  Ожидаемое число конфликтов синхронизации в сутки при офлайн-окнах и нескольких устройствах пользователя.
+  Ключ — программа: перебор наборов «правило / не правило» по устройствам точными дробями.

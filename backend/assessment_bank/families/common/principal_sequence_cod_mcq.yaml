@@ -1,0 +1,24 @@
+family_id: common.strategy.principal_sequence_cod_mcq
+title: Порядок инициатив одной команды по цене задержки с зависимостью
+direction: common
+skills: [technical_strategy, prioritization, engineering_metrics, algorithms]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    traps: [value_first, shortest_first, wsjf_single]
+    key: optimum_over_feasible_orders
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.7
+  a: 1.5
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: порядок пяти инициатив одной команды по суммарной цене задержки Σ c·T при зависимости одной инициативы от другой. Три ловушки — «сначала дорогие», «сначала короткие» и WSJF по отдельности (c/d без учёта того, что зависимая тянет за собой предшественника) — допустимы, различны и хуже оптимума не меньше чем на 4 %; без зависимости оптимум другой. Lead обычно применяет WSJF по одной инициативе и чинит зависимость перестановкой; Principal сравнивает пару по суммарному отношению или считает потери каждого порядка — граница Lead/Principal (θ ≈ 3,0); σ 0,3"
+generator: assessment_bank.families.common.principal_sequence_cod_mcq
+version: 1
+description: >
+  Principal (короткое, 7 мин): какой из четырёх порядков инициатив даёт минимальные потери от задержки. Ключ —
+  исполнением: понедельный проигрыш показанных порядков.

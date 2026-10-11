@@ -389,7 +389,7 @@ def test_hiring_stages_go_to_potok_and_come_back(client, ats_http, monkeypatch):
     assert [d["trigger"] for d in dl if d["trigger"].startswith("hiring_")] == [
         "hiring_hired", "hiring_offer", "hiring_interview"]
     recs = client.get("/api/employer/ats/stub/records", headers=H(te)).json()
-    assert any(r["kind"] == "potok_event" and "Встречный: вышел на работу" in str(r["payload"]) for r in recs)
+    assert any(r["kind"] == "potok_event" and "Драфт: вышел на работу" in str(r["payload"]) for r in recs)
     j = client.get("/api/employer/ats/stages", headers=H(te)).json()
     assert [e["stage"] for e in j["events"]][:3] == ["hired", "offer", "interview"]
 

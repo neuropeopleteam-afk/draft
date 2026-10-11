@@ -1,0 +1,23 @@
+family_id: analyst.principal.pilot_value_mcq
+title: Запуск сразу, пилот или закрытие — ожидаемая ценность с учётом неточности пилота (Principal, короткое)
+direction: analyst
+skills: [product_metrics, prioritization, stakeholders, statistics]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: "три других решения из четырёх; верное задаётся по seed поровну, отрыв от второго не меньше 5 % от масштаба выигрыша"
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: ценность информации — запускать инициативу сразу, провести малый или большой пилот или закрыть её, с учётом неточности пилота, его цены и сдвига запуска. Senior и Lead обычно выбирают пилот «для безопасности» или сравнивают только p·V и потери; Principal считает дерево решений целиком"
+generator: assessment_bank.families.analyst.principal_pilot_value_mcq
+version: 1
+description: >
+  Выбор одного из четырёх решений по ожидаемой ценности: запуск сразу, закрытие, малый или большой пилот с
+  заданной точностью. Ключ — программа: дерево решений точными дробями.

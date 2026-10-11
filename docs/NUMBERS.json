@@ -1,28 +1,32 @@
 {
  "bank": {
-  "families": 165,
+  "families": 403,
   "by_direction": {
-   "backend": 44,
-   "common": 34,
-   "data_ml": 23,
-   "frontend": 26,
-   "qa": 19,
-   "security": 19
+   "analyst": 31,
+   "backend": 60,
+   "common": 54,
+   "data_eng": 35,
+   "data_ml": 40,
+   "devops": 36,
+   "frontend": 43,
+   "mobile": 34,
+   "qa": 35,
+   "security": 35
   },
-  "source_commit": "679823a",
-  "content_hash": "76c4164b6ce83743",
-  "pass": 147,
-  "warn": 18,
+  "source_commit": "272a323",
+  "content_hash": "4d44ffb455f03520",
+  "pass": 383,
+  "warn": 20,
   "fail": 0,
-  "checks": 1379,
+  "checks": 2450,
   "checks_failed": 0,
-  "variants": 3300,
-  "unique_variants": 3281
+  "variants": 8060,
+  "unique_variants": 8036
  },
  "migrations": {
-  "revisions": 32,
+  "revisions": 35,
   "heads": [
-   "iv01"
+   "cm01"
   ]
  },
  "memory_limits_mib": {
@@ -36,40 +40,40 @@
   "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "296b31dd",
-  "bank_hash": "76c4164b6ce83743",
-  "generated_at": "2026-10-11T11:24:03+00:00",
+  "bench_commit": "25770a6",
+  "bank_hash": "f563cfcaebf63aef",
+  "generated_at": "2026-10-11T15:22:45+00:00",
   "p5": {
-   "mean": 0.776,
-   "lo": 0.74,
-   "hi": 0.81
+   "mean": 0.762,
+   "lo": 0.73,
+   "hi": 0.793
   },
   "ndcg10": {
-   "mean": 0.573,
-   "lo": 0.546,
-   "hi": 0.599
+   "mean": 0.565,
+   "lo": 0.542,
+   "hi": 0.588
   },
   "mrr": {
-   "mean": 0.888,
-   "lo": 0.853,
-   "hi": 0.918
+   "mean": 0.921,
+   "lo": 0.89,
+   "hi": 0.947
   }
  },
  "e2e_in_code": {
-  "spec_files": 22,
-  "scenarios": 54
+  "spec_files": 24,
+  "scenarios": 57
  },
  "validation_report": {
   "report_generated_at": "2026-10-10",
   "report_bank_families": 165,
   "exposure_generated_at": "2026-10-06",
   "exposure_bank_families": 128,
-  "report_matches_bank": true
+  "report_matches_bank": false
  },
  "grade_accuracy": {
   "confirm_level": 0.6,
-  "path_retest_commit": "659ca65",
-  "path_retest_at": "2026-10-10",
+  "path_retest_commit": "25770a6",
+  "path_retest_at": "2026-10-11",
   "sweep_commit": "8f4d6d2",
   "sweep_points": 98,
   "before": {
@@ -127,11 +131,11 @@
  },
  "tests": {
   "failed": 0,
-  "passed": 1508,
-  "skipped": 3,
-  "seconds": 284.6,
+  "passed": 1652,
+  "skipped": 19,
+  "seconds": 290.62,
   "exit": 0,
-  "sha": "5721237",
+  "sha": "d101806",
   "date": "11.10.2026"
  },
  "note": "Числа посчитаны tools/publish/gen_numbers.py; тесты и покрытие — из журнала прогона. Подбор — синтетический мир со скрытой истиной (модель, не люди)."

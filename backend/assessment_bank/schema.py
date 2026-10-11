@@ -18,18 +18,20 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
-Direction = Literal["common", "backend", "frontend", "data_ml", "qa", "security"]
+Direction = Literal["common", "backend", "frontend", "data_ml", "qa", "security",
+                    "devops", "data_eng", "mobile", "analyst"]  # 4 новых направления — волна 7 (каталог А, 10.10)
 # intern — грейд «Стажёр» ниже Junior: информационная метка для лёгких семейств (b ≲ −1); CAT её не использует
-Grade = Literal["intern", "junior", "middle", "senior"]
+Grade = Literal["intern", "junior", "middle", "senior", "lead", "principal"]  # lead, principal — волна 7 (6 уровней, решение владельца 10.10)
 Format = Literal[
     "find_bug", "predict_output", "choose_fix", "open_book_3step", "mcq_concept", "open_answer"
 ]
 Language = Literal[
-    "python", "javascript", "typescript", "sql", "bash", "text", "go", "java", "dockerfile", "yaml"]
+    "python", "javascript", "typescript", "sql", "bash", "text", "go", "java", "dockerfile", "yaml",
+    "kotlin", "swift"]  # kotlin, swift — волна 7 (mobile): только чтение кода, ключ — моделью на Python
 Runner = Literal["python", "node", "bash", "git", "sqlite", "go", "java", "django"]
 Verification = Literal["execution", "reference_table", "rubric_only"]
 
-GRADES: tuple[str, ...] = ("intern", "junior", "middle", "senior")
+GRADES: tuple[str, ...] = ("intern", "junior", "middle", "senior", "lead", "principal")
 FORMATS: tuple[str, ...] = (
     "find_bug", "predict_output", "choose_fix", "open_book_3step", "mcq_concept", "open_answer",
 )
@@ -37,7 +39,8 @@ OPTION_FORMATS = {"choose_fix", "mcq_concept"}
 RUBRIC_FORMATS = {"open_answer", "open_book_3step"}
 AUTO_SCORED_FORMATS = {"find_bug", "predict_output", "choose_fix", "mcq_concept"}
 
-FAMILY_ID_RE = re.compile(r"^(common|backend|frontend|data_ml|qa|security)(\.[a-z0-9_]+){2,}$")
+FAMILY_ID_RE = re.compile(
+    r"^(common|backend|frontend|data_ml|qa|security|devops|data_eng|mobile|analyst)(\.[a-z0-9_]+){2,}$")
 
 
 class _Strict(BaseModel):

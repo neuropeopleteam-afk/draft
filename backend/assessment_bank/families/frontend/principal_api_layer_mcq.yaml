@@ -1,0 +1,24 @@
+family_id: frontend.strategy.principal_api_layer_mcq
+title: Как клиент получает данные страницы — прямые запросы, BFF, GraphQL или сборка на сервере
+direction: frontend
+skills: [frontend_architecture, web_performance, api_design, networking, technical_strategy]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    plans: [direct, bff, gql, ssr]
+    traps: [fewest_client_trips, no_new_layer, wired_only]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.7
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: схема получения данных страницы выбирается по годовой цене — доплата за слой плюс потеря выручки от задержки цепочки зависимых запросов (кто делает каждый круг — клиент по своей сети или сервер внутри дата-центра), усреднённой по долям мобильной и проводной сети. Верный вариант распределён поровну; ловушки — «меньше всего кругов клиента», «без нового слоя» и расчёт по проводной сети — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно выбирает по моде (GraphQL, сборка на сервере) или по простоте; Principal считает цепочку по сетям — граница Lead/Principal (θ ≈ 3,0); σ 0,3"
+generator: assessment_bank.families.frontend.principal_api_layer_mcq
+version: 1
+description: >
+  Principal (короткое, 7 мин): какая схема получения данных страницы даёт минимальную годовую цену. Ключ —
+  исполнением: проход цепочки запросов для каждого варианта и типа сети.

@@ -1,0 +1,24 @@
+family_id: frontend.strategy.principal_browser_baseline_mcq
+title: Политика поддержки браузеров по годовой цене — охват, вес сборки и тестирование
+direction: frontend
+skills: [build, bundlers, web_performance, technical_strategy, testing]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    plans: [all, mid, dual, evergreen]
+    traps: [max_reach, lightest_bundle, without_support_cost]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: политика поддержки браузеров выбирается по сумме цены тестирования и сборки, ушедшей выручки неподдержанных групп (только часть пользователей уходит) и потери выручки от добавки к LCP у тех групп, кому достаётся лишний вес. Верная политика распределена поровну; ловушки — «максимальный охват», «самый лёгкий бандл» и расчёт без цены тестирования — отличаются от ответа хотя бы в двух случаях (если верна сама ловушка — хотя бы в одном). Lead обычно решает по доле старых браузеров «меньше процента — отключаем» или «поддерживаем всех»; Principal сравнивает полные цены, включая двойную сборку, — граница Lead/Principal (θ ≈ 2,9); σ 0,3"
+generator: assessment_bank.families.frontend.principal_browser_baseline_mcq
+version: 1
+description: >
+  Principal (короткое, 7 мин): какая политика поддержки браузеров даёт минимальную годовую цену. Ключ —
+  исполнением: исход каждой группы браузеров при каждой политике.

@@ -32,7 +32,7 @@ from app.core.config import get_settings
 
 log = logging.getLogger(__name__)
 ALG = "EdDSA"
-SCHEMA = "vstrechny.grade-passport/1"
+SCHEMA = "draft.grade-passport/1"
 
 
 def b64u(raw: bytes) -> str:

@@ -33,8 +33,14 @@ def test_confirm_session_carries_prior_answers_and_adds_short_items():
     pool = sim.make_pool(cfg.subpools)
     rng = np.random.default_rng(5)
     truth = make_truth(pool, rng, misspec=0.5)
-    person = next(p for p in make_population(50, rng) if p.claimed == "junior")
-    (s1, r1), = js._run_people(pool, truth, [person], "backend", cfg, np.random.default_rng(6), {})
+    # как в продукте: дотестирование предлагается только «Junior (предварительно)» — берём первого такого
+    # (раньше — первого заявившего Junior: на другом банке его первая сессия могла решиться без дотестирования)
+    for person in (p for p in make_population(200, rng) if p.claimed == "junior"):
+        (s1, r1), = js._run_people(pool, truth, [person], "backend", cfg, np.random.default_rng(6), {})
+        if js._decisions([person], [r1], provisional=True) == ["provisional"]:
+            break
+    else:
+        raise AssertionError("нет «Junior (предварительно)» среди 200 человек")
     s2, r2 = js.confirm_session(pool, "backend", person, truth, s1, r1, cfg, set(), np.random.default_rng(7))
     fam1 = {a.family_id for a in r1.administered}
     new = [a for a in r2.administered if a.family_id not in fam1]

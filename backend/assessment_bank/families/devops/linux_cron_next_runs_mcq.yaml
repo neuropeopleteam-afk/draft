@@ -1,0 +1,24 @@
+family_id: devops.linux.cron_next_runs_mcq
+title: cron — ближайшие запуски задания по строке crontab
+direction: devops
+skills: [cron, linux]
+target_grades: [intern, junior]
+format: mcq_concept
+language: text
+invariants:
+  code_lines: [1, 1]
+  n_options: 4
+  extra:
+    templates: [daily, every_n_min, every_n_hours, weekdays, twice_daily]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -1.0
+  a: 1.1
+  sigma_variant: 0.35
+  basis: "Строка crontab одного из пяти видов (раз в сутки, */N минут, */N часов, будни 1-5, два часа через запятую) и текущий момент с днём недели; выбрать три ближайших запуска. Дистракторы — типовые ошибки прочтения: перепутаны поля минут и часов, */N отсчитано от текущего момента, неделя с понедельника = 0, учтён уже прошедший сегодня момент. Intern/Junior"
+generator: assessment_bank.families.devops.linux_cron_next_runs_mcq
+version: 1
+description: >
+  По строке crontab и текущему моменту выбрать три ближайших запуска задания. Ключ — исполнение модели
+  разбора полей cron над показанной строкой.

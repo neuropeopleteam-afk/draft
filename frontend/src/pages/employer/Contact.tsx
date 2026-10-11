@@ -4,7 +4,7 @@ import { PageTitle } from "../../components/CabinetLayout";
 import { Alert, Empty, Field, History, Level, Loading, Seg, Status, Toggle, catTitle, dt, dtt, errText, plural, rub, useApi } from "../../components/ui";
 import { InlineThread } from "../../components/Chat";
 import { BasisSeg, MarketNote, otherBasis, salaryText, type Basis } from "../../components/Salary";
-import { api } from "../../lib/api";
+import { ApiError, api } from "../../lib/api";
 import { daysText, useRules } from "../../lib/meta";
 import { AtsInvitationActions, AtsStageBadge } from "../../integrations/Ats";
 import { EmploymentTermsText } from "../../integrations/Youth";
@@ -12,6 +12,7 @@ import { HhMarketNote } from "../../integrations/HhImport";  // Я12: «Рыно
 import { EmployerHiring, HiringChip, HiringReminders } from "../../components/Hiring";
 import { AiInterviewEmployer } from "../../components/Interview";  // Я15: этап найма «ИИ-интервью»
 import { OfferFitHint } from "../mutual/Employer";  // подсказка до отправки: подходит ли предложение кандидату (Н9)
+import { InvitesLeft } from "./Tariffs";  // Я29: «осталось приглашений» (только при TARIFFS_ENABLED)
 
 type Market = { from: number; to: number; median?: number | null } | null | undefined;
 /** Вилка из потребности: разбор текста отдаёт и основание («на руки» — salary_net), need_parser. */
@@ -158,6 +159,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
   const [to, setTo] = useState(() => defaultRange(market, needSalary)[1]);
   const [basis, setBasis] = useState<Basis>(() => basisOf(needSalary));
   const [err, setErr] = useState<string | null>(null);
+  const [limitHit, setLimitHit] = useState(false);  // Я29: 409 tariff_limit — ссылка на тарифы
   const [sending, setSending] = useState(false);  // Я11 (С3-6): «Отправляем…» сразу, повторное нажатие не шлёт второй POST
   const inFlight = useRef(false);
   async function send() {
@@ -168,7 +170,7 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
     inFlight.current = true; setSending(true);
     try {
       onDone(await api<any>("/employer/invitations", { body: { candidate_ref: cref, need_id: needId ?? null, probe_id: probeId ?? null, position_title: title, offer_description: desc, contact_method: contact, salary_from: Number(from), salary_to: Number(to), employment_terms: { format, reduced_time: reduced, employer_acknowledged: ack }, salary_basis: basis } }));
-    } catch (e) { setErr(errText(e)); } finally { inFlight.current = false; setSending(false); }
+    } catch (e) { setErr(errText(e)); setLimitHit(e instanceof ApiError && e.code === "tariff_limit"); } finally { inFlight.current = false; setSending(false); }
   }
   return (
     <div className="space-y-4">
@@ -184,7 +186,8 @@ export function InviteForm({ cref, needId, probeId, market, needSalary, onDone }
       <Toggle checked={reduced} onChange={setReduced} label="Сокращённое рабочее время" />
       {safety?.minor && <Toggle checked={ack} onChange={setAck} label="Проверю документы и ограничения перед оформлением" />}
       <p className="text-xs text-brand-ink/65">К приглашению автоматически приложатся подтверждённые факты (T1/T2) о соответствии. {rules ? `Одно приглашение кандидату — не чаще раза в ${daysText(rules.invitation_cooldown_days)}. ` : ""}До принятия кандидат может задать вопрос в переписке или предложить свою вилку.</p>
-      <Alert>{err}</Alert>
+      <Alert>{err && <>{err}{limitHit && <> <Link to="/employer/tariffs" className="font-semibold underline">Открыть тарифы</Link></>}</>}</Alert>
+      <InvitesLeft />
       <button className="btn-primary" aria-busy={sending || undefined} disabled={sending || candidate.loading || !!candidate.error || title.length < 3 || desc.length < 20 || contact.length < 3 || (safety?.minor && (!safety.offer_allowed || format === "employment" || !reduced || !ack))} onClick={send}>{sending ? "Отправляем приглашение…" : "Отправить приглашение"}</button>
       <p className="sr-only" role="status" aria-live="polite">{sending ? `Отправляем приглашение кандидату ${cref}` : ""}</p>
       {candidate.error && <Alert>{candidate.error}</Alert>}
@@ -253,6 +256,7 @@ export function EmployerInvitations() {
   return (
     <div className="max-w-4xl space-y-6">
       <PageTitle title="Приглашения" subtitle="Статусы и история по каждому приглашению. Контакты кандидата открываются после принятия; до этого — переписка «вопрос — ответ» и встречное предложение кандидата." />
+      <InvitesLeft />
       <Alert>{err}</Alert>
       <HiringReminders />
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (

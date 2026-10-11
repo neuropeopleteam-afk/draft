@@ -24,7 +24,7 @@ from app.core.fmt import probe_title, quoted, ru_num, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog import levels as grade_levels
-from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
+from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, tag_title
 from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
     GRADE_STATUS_ORDER,
@@ -65,6 +65,29 @@ def algorithm() -> str:
 WEIGHTS = {"test": 0.45, "stack_required": 0.35, "stack_desired": 0.05, "fsp": 0.10, "probe": 0.05}
 LEVELS = {"T2": "подтверждено реестром ФСП", "T1": "подтверждено тестом или зондом", "T0": "заявлено кандидатом",
           "none": "нет данных"}
+
+
+def grade_cap_enabled() -> bool:
+    """Я28: флаг MATCH_GRADE_CAP (по умолчанию выключен) — «сила теста выше порога следующего грейда не даёт бонуса»."""
+    import os
+
+    return os.environ.get("MATCH_GRADE_CAP", "0").strip().lower() in ("1", "true", "yes", "on")
+
+
+def grade_cap(test: float, grade: str | None, on: bool | None = None) -> float:
+    """Компонента теста с потолком на пороге следующего грейда (флаг MATCH_GRADE_CAP, выкл.): кандидат, чей θ выше
+    порога следующего грейда, внутри категории не обгоняет за счёт теста того, кто уверенно в запрошенном грейде, —
+    его опережают подтверждённые обязательные навыки. В нашем строгом протоколе правило «не хуже» не выполнено
+    (docs/validation/MATCHING_COMPARE.md), поэтому выключено. Для Senior (следующего грейда нет) потолка нет."""
+    on = grade_cap_enabled() if on is None else on
+    if not on or grade not in GRADES:
+        return test
+    from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
+
+    i = GRADE_ORDER.index(grade)
+    if i + 1 >= len(GRADE_ORDER):
+        return test
+    return min(test, test_component(GRADE_CUTS[GRADE_ORDER[i + 1]], None, grade))
 
 
 def _has_category_clause():
@@ -202,7 +225,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
     p = b.profile
     reasons: list[dict] = []
     t = b.test.value if b.test else {}
-    test = test_component(t.get("theta"), t.get("se"), req.get("grade") or b.grade)
+    test = grade_cap(test_component(t.get("theta"), t.get("se"), req.get("grade") or b.grade), req.get("grade"))
     cat_title = category_title(b.category_id)
     if b.unconfirmed:
         # грейд не подтверждён: заявленное из опроса (T0) и исход последней попытки; результат теста в скор не входит
@@ -253,7 +276,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         got = 0.0
         for i in items:
             tag, w = i["tag"], i["weight"]
-            title = STACK.get(tag, (tag,))[0]
+            title = tag_title(tag)
             f = b.skills_t1.get(tag)
             if skill_confirmed(f):
                 got += w * f.value.get("score", 0)
