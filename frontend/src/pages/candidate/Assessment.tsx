@@ -804,7 +804,7 @@ function TwoStageOffer({ t, claimed, direction }: { t: any; claimed: string; dir
       ) : (
         <>
           <p className="mt-1 text-brand-ink/80">{t.text}</p>
-          <p className="mt-1 text-xs text-brand-ink/65">До уточнения действует уровень по этому тесту. Уточнение — одно на тест; правила 30 и 90 дней на него не действуют.</p>
+          <p className="mt-1 text-xs text-brand-ink/65">До уточнения действует уровень по этому тесту. Уточнение — одно на тест; правила 30 и 90 дней на него не действуют. Действует согласие на проверку самостоятельности выполнения, данное перед основным тестом.</p>
         </>
       )}
       <div className="mt-3 flex flex-wrap gap-3">
