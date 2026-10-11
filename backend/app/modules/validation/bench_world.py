@@ -137,7 +137,7 @@ class BenchConfig:
     decision: str = "bank"
     # «Junior (предварительно)» у порога (только decision = bank): категория Junior при P(θ ≥ −1) ∈ [0,1; 0,8)
     provisional: bool = True
-    # Сопоставимые условия (matching_compare, make match-bench-compare): мир по описанию чужого бенчмарка. По умолчанию
+    # Другие условия измерения (matching_compare, make match-bench-compare): мир с другим размером, шкалой и шумом. По умолчанию
     # выключено — строгий протокол make bench не меняется ни в одном случайном потоке.
     dirs: tuple[str, ...] | None = None  # направления мира (None — все DIRS)
     need_grade_p: tuple[float, ...] | None = None  # доли потребностей по грейдам GRADES (None — NEED_GRADE_P)
@@ -153,7 +153,7 @@ class BenchConfig:
     claim_omit: float = 0.10  # … вероятность не указать в резюме навык, которым владеет
 
     def to_dict(self) -> dict:
-        """Конфигурация для подписи. Ручки сопоставимых условий в значениях по умолчанию не пишутся — конфигурация и
+        """Конфигурация для подписи. Ручки других условий измерения в значениях по умолчанию не пишутся — конфигурация и
         hash строгого протокола (make bench) те же, что до их появления."""
         d = asdict(self)
         for f in fields(self):
@@ -243,8 +243,8 @@ def _required_cov(need: NeedSpec, lat: Latent) -> float:
     return (sum(1 for t in need.required if t in lat.known) / len(need.required)) if need.required else 1.0
 
 
-def relevance_ft(need: NeedSpec, lat: Latent) -> int:
-    """Шкала бенчмарка Прототип А (внешний автор, docs/matching.md §6) по её описанию, на нашем мире: полезность найма =
+def relevance_utility(need: NeedSpec, lat: Latent) -> int:
+    """Шкала «полезность найма» (условия A, matching_compare) на нашем мире: полезность найма =
     специализация × соответствие истинного грейда × (0,25 + 0,75 · покрытие обязательного) × сила внутри грейда;
     метка 3 при ≥ 0,8, 2 при ≥ 0,6, 1 при ≥ 0,4. Грейд: совпадает 1,0, выше на ступень 0,75, ниже 0,45, иначе 0.
     Сила внутри грейда (только при совпадении): 0,85 + 0,3 · min(1, θ* − нижняя граница истинного грейда).
@@ -258,8 +258,8 @@ def relevance_ft(need: NeedSpec, lat: Latent) -> int:
     return 3 if u >= 0.8 else 2 if u >= 0.6 else 1 if u >= 0.4 else 0
 
 
-def relevance_itm(need: NeedSpec, lat: Latent) -> int:
-    """Шкала бенчмарка Прототип Б (docs/validation.md §2) по её описанию: 2 — то же направление, истинный грейд совпадает
+def relevance_label2(need: NeedSpec, lat: Latent) -> int:
+    """Шкала 0–2 (условия B, matching_compare): 2 — то же направление, истинный грейд совпадает
     и есть хотя бы одна нужная технология; 1 — соседний грейд с нужной технологией или точный грейд без неё; иначе 0."""
     if lat.direction != need.direction:
         return 0
@@ -283,10 +283,10 @@ def true_relevance(need: NeedSpec, lat: Latent, cfg: BenchConfig) -> int:
     Строгое правило (cfg.truth = "strict", для анализа чувствительности): грейд совпадает → 2, соседний в любую
     сторону → 1, через ступень → 0; 3 — только при точном грейде.
     """
-    if cfg.truth == "ft":
-        return relevance_ft(need, lat)
-    if cfg.truth == "itm":
-        return relevance_itm(need, lat)
+    if cfg.truth == "utility":
+        return relevance_utility(need, lat)
+    if cfg.truth == "label2":
+        return relevance_label2(need, lat)
     if lat.direction != need.direction:
         return 0
     have = GRADE_LEVEL[lat.true_grade] if lat.true_grade else GRADE_LEVEL[GRADES[0]] - 1
