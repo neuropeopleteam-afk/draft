@@ -222,11 +222,7 @@ def run(n: int = 300, quick: bool = False, write: bool = True, parallel: int = 2
                [(arm, "narrow", 0.6, "adaptive") for arm in ARMS] + [(arm, "clean", 0.6, "adaptive") for arm in ARMS] + \
                [(arm, "base", 0.6, "fixed") for arm in ("frac", "gpcm")]
     tasks = [(arm, world, conf, length, i, d, n) for (arm, world, conf, length) in plan for i, d in enumerate(dirs)]
-    if parallel > 1:
-        with get_context("spawn").Pool(parallel) as p:
-            parts = list(p.imap_unordered(run_task, tasks))
-    else:
-        parts = [run_task(t) for t in tasks]
+    parts = _run_all(tasks, parallel)
     by: dict[tuple, list[dict]] = {}
     for p in parts:
         arm, world, conf, length, d = p["key"]
@@ -260,6 +256,36 @@ def run(n: int = 300, quick: bool = False, write: bool = True, parallel: int = 2
         DOCS_MD.write_text(markdown(rep), encoding="utf-8")
         print(f"→ {OUT.relative_to(REPO)}, {DOCS_MD.relative_to(REPO)} ({rep['seconds']} с)", flush=True)
     return rep
+
+
+def _run_all(tasks: list[tuple], parallel: int) -> list[dict]:
+    """Задачи параллельно: пул процессов, а где семафоры запрещены (сервер проверок) — процессы-исполнители."""
+    if parallel <= 1:
+        return [run_task(t) for t in tasks]
+    try:
+        with get_context("spawn").Pool(parallel) as p:
+            return list(p.imap_unordered(run_task, tasks))
+    except PermissionError:
+        import subprocess
+        import sys
+        import tempfile
+
+        tmp = Path(tempfile.mkdtemp(prefix="pcsim_"))
+        procs = []
+        for k in range(parallel):
+            chunk = tasks[k::parallel]
+            if not chunk:
+                continue
+            inp, out = tmp / f"in{k}.json", tmp / f"out{k}.json"
+            inp.write_text(json.dumps(chunk), encoding="utf-8")
+            procs.append((subprocess.Popen([sys.executable, "-m", "app.modules.validation.partial_credit_sim",
+                                            "--worker", str(inp), str(out)], cwd=str(HERE.parents[2])), out))
+        parts = []
+        for pr_, out in procs:
+            if pr_.wait() != 0:
+                raise RuntimeError(f"исполнитель симуляции завершился с кодом {pr_.returncode}")
+            parts += json.loads(out.read_text(encoding="utf-8"))
+        return parts
 
 
 def _pc(v) -> str:
@@ -323,7 +349,12 @@ def main() -> int:
     ap.add_argument("--parallel", type=int, default=int(os.environ.get("SIM_PARALLEL", "2")))
     ap.add_argument("--no-write", action="store_true")
     ap.add_argument("--md-only", action="store_true", help="только docs/validation/PARTIAL_CREDIT.md из сохранённого JSON")
+    ap.add_argument("--worker", nargs=2, metavar=("IN", "OUT"), help=argparse.SUPPRESS)
     a = ap.parse_args()
+    if a.worker:
+        tasks = json.loads(Path(a.worker[0]).read_text(encoding="utf-8"))
+        Path(a.worker[1]).write_text(json.dumps([run_task(tuple(t)) for t in tasks]), encoding="utf-8")
+        return 0
     if a.md_only:
         DOCS_MD.write_text(markdown(json.loads(OUT.read_text(encoding="utf-8"))), encoding="utf-8")
         return 0
