@@ -33,7 +33,7 @@ DEFAULT_PRIVACY = {
     "show_city": True, "show_experience": True, "show_work_format": True, "show_roles": True,
     "show_stack": True, "show_soft_skills": True, "show_fsp": True,
     "show_attempts": True,  # И26: сравнение двух попыток теста в карточке у работодателя
-    "show_evidence": True,  # Я13: цитаты из развёрнутых ответов (доказательства оценки) в карточке у работодателя
+    "show_evidence": True,  # цитаты из развёрнутых ответов (доказательства оценки) в карточке у работодателя
 }
 PRIVACY_TITLES = {
     "show_city": "Город", "show_experience": "Стаж", "show_work_format": "Формат работы", "show_roles": "Роли",

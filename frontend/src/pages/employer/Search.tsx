@@ -10,7 +10,7 @@ import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText
 import { useTags } from "./Needs";
 import { PassportEmployerBadge } from "../../passport/Share";
 import { EmployerAttempts } from "../../components/AttemptsCompare";
-import { EmployerEvidence } from "../../components/OpenEvidence";  // Я13: цитаты из ответа
+import { EmployerEvidence } from "../../components/OpenEvidence";  // цитаты из ответа
 
 const PAGE = 20;
 

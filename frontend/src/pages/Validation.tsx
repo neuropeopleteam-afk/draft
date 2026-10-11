@@ -4,7 +4,7 @@ import { FspRatingValidation } from "../components/validation/FspRating";
 import JuniorStability from "../components/validation/JuniorStability";
 import ClosedSet from "../components/validation/ClosedSet";
 import GraderCheck from "../components/validation/GraderCheck";
-import EvidenceBench from "../components/validation/EvidenceBench";  // Я13
+import EvidenceBench from "../components/validation/EvidenceBench";
 import LlmModels from "../components/validation/LlmModels";
 import RuLlm from "../components/validation/RuLlm";
 import Strongest from "../components/validation/Strongest";
