@@ -185,6 +185,22 @@ SCENARIOS = {
     "g_real_v2_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
                              directions=("qa", "security", "mobile", "analyst"),
                              bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst"),
+    # «как в продукте» (второй этап Я26: только заявившим Lead/Principal, до 8 коротких, 15 мин, не меньше 3 новых) на банке
+    # после всех ПБ: p300 — лимит задания 300 с (до 5434b09: новые короткие Principal 420 с не попадают), p420 — 420 с
+    # (GRADES_EXT_REFINE_ITEM_TIME_S с 5434b09); p420_m25 — то же, 10 заданий за 25 мин (что дали бы больше минут)
+    "g_real_v2_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
+                           block_trigger="product", block_min_new=3, bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с"),
+    "g_real_v2_p420": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=420.0, block_minutes=15,
+                           block_trigger="product", block_min_new=3, bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с"),
+    "g_real_v2_p420_m25": dict(real=True, mult=0, a=None, block=10, partial="gpcm", block_item_time=420.0, block_minutes=25,
+                               block_trigger="product", block_min_new=3,
+                               bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин"),
+    "g_real_v2_d4_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
+                              block_trigger="product", block_min_new=3, directions=("qa", "security", "mobile", "analyst"),
+                              bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с"),
+    "g_real_v2_d4_p420": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=420.0, block_minutes=15,
+                              block_trigger="product", block_min_new=3, directions=("qa", "security", "mobile", "analyst"),
+                              bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с"),
 }
 
 
@@ -207,7 +223,10 @@ def scen_text(s: dict) -> str:
                           "априорные b и a)"
                           + (f" + новых коротких Principal (модельных): {', '.join(add)}, трудность {_x(lo)}–{_x(hi)}, "
                              f"a {_x(s['a'])}" if add else ""),
-                          f"блок {s['block']} заданий" if s["block"] else "без блока",
+                          (f"второй этап до {s['block']} заданий ≤ {s['block_item_time']:g} с за {s['block_minutes']:g} мин"
+                           + (" (только заявившим Lead/Principal)" if s.get("block_trigger") == "product" else "")
+                           if s["block"] and "block_item_time" in s
+                           else f"блок {s['block']} заданий" if s["block"] else "без блока"),
                           "частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm" else "развёрнутые 0/1"])
     so, sc = _short_mults(s)
     m = s["mult"]
@@ -302,19 +321,29 @@ def run_session_x(pool, cand, truth, cfg, counter, claimed, history, rng, det, s
     dec = grades_mod.decide_grade(theta, se, claimed, confirm_level=confirm, n_items=int(res.n_items))
     cut_l, cut_p = seed_data.GRADE_CUTS["lead"], seed_data.GRADE_CUTS["principal"]
     z = cfg.classify_z
-    trig = s["block"] > 0 and theta + z * se >= cut_l and (claimed in EXT or (claimed == "senior" and dec.confirmed))
+    # блок: block_item_time — лимит времени задания (по умолчанию 420 с), block_minutes — запас времени (25 мин),
+    # block_trigger «product» — как второй этап продукта (Я26): только заявившим Lead/Principal (Senior, подтверждённому
+    # с запасом, «выше заявленного» продукт не предлагает), block_min_new — не меньше N новых заданий (в продукте 3)
+    item_t = float(s.get("block_item_time", BLOCK_ITEM_TIME_S))
+    minutes = float(s.get("block_minutes", 25))
+    min_new = int(s.get("block_min_new", 0))
+    senior_too = s.get("block_trigger", "model") != "product"
+    trig = s["block"] > 0 and theta + z * se >= cut_l and (claimed in EXT or (senior_too and claimed == "senior"
+                                                                              and dec.confirmed))
     if trig:
         sess.cfg = replace(sess.cfg, prior_sd=1.5)
         sess._update_theta()
         t0 = sess.time_used
         hard = [p for p in pool if p.grades and p.grades[0] in EXT and p.block in ("common", d)
-                and p.time_limit_s <= BLOCK_ITEM_TIME_S]
+                and p.time_limit_s <= item_t]
         while n_block < s["block"]:
             unc = [c for c in (cut_l, cut_p) if abs(sess.theta - c) < z * sess.se]
             if not unc:
-                break
+                if n_block >= min_new:
+                    break
+                unc = [cut_l, cut_p]
             target = min(unc, key=lambda c: abs(sess.theta - c))
-            left = 25 * 60 - (sess.time_used - t0)
+            left = minutes * 60 - (sess.time_used - t0)
             cands = [p for p in hard if p.family_id not in sess.used and p.family_id not in seen
                      and p.time_limit_s <= left]
             if not cands:
