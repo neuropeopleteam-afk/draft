@@ -82,6 +82,7 @@ export function CompactCard({ r, rank, fit, picked, onPick, pickDisabled, onInvi
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="font-bold text-brand-night">{c.category?.title ?? (c.claimed?.title ? `Заявлено: ${c.claimed.title}` : "Категория не присвоена")}</p>
             <GradeBadge s={c.status} claimed={c.claimed} />
+            {c.model_note && <span className="chip bg-[#ECEAF8] text-brand-night" data-testid="model-note">{c.model_note}</span>}
             {badge}
           </div>
           {f.core && <p className={`mt-1 text-sm font-semibold ${coreTone}`} data-testid="compact-core">{f.core}</p>}

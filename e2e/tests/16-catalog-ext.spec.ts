@@ -104,8 +104,12 @@ for (const width of [1440, 390]) {
       const ack = page.getByRole("checkbox", { name: /даю согласие оператору платформы на обработку сведений о ходе прохождения теста/ });
       if (await ack.count()) await ack.check();
       await page.getByRole("button", { name: /^Начать тест$/ }).click();
+      // перед новым тестом — экран камеры (по согласию), как в 08-mobile-390
       const noCam = page.getByRole("button", { name: "Пройти без камеры" });
-      if (await noCam.isVisible({ timeout: 10_000 }).catch(() => false)) await noCam.click();
+      const answer = page.getByRole("button", { name: /^Ответить/ });
+      await expect(noCam.or(answer)).toBeVisible({ timeout: 60_000 });
+      if (await noCam.isVisible()) await noCam.click();
+      await expect(answer).toBeVisible({ timeout: 60_000 });
       await expect(page).toHaveURL(/\/candidate\/assessment\/test\/[\w-]+$/, { timeout: 60_000 });
       await expect(page.getByText(new RegExp(`^Тест · ${TITLE} · Middle$`))).toBeVisible();
       expect(await noHScroll(page), "без горизонтальной прокрутки (задание)").toBe(true);

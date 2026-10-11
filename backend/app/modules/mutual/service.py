@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from app.core.db import as_aware, utcnow
 from app.core.errors import api_error
 from app.modules.auth.models import User
-from app.modules.catalog.seed_data import STACK, category_title
+from app.modules.catalog.seed_data import category_title, tag_title
 from app.modules.invitations.models import Invitation
 from app.modules.matching import ranking
 from app.modules.matching.models import EmployerNeed, SelectionVersion
@@ -256,7 +256,7 @@ def refine_by_feedback(db: Session, user: User, need: EmployerNeed, v: Selection
     if "skill" in reasons:
         by_ref = {r["ref"]: r for r in v.results}
         titles = _missing_required(by_ref, [f.candidate_ref for f in unfit if f.reason == "skill"])
-        title_to_tag = {STACK.get(i["tag"], (i["tag"],))[0]: i["tag"] for i in req.get("stack_required") or []}
+        title_to_tag = {tag_title(i["tag"]): i["tag"] for i in req.get("stack_required") or []}
         tags = [title_to_tag[t] for t in titles if t in title_to_tag]
         if tags:
             strict["stack_t1"] = sorted(set(filters.get("stack_t1") or []) | set(tags))
@@ -300,7 +300,7 @@ def similar(db: Session, user: User, need: EmployerNeed, v: SelectionVersion, re
         strict["categories"] = [cat]
     if same_must:
         strict["stack_t1"] = same_must
-    names = lambda tags: ", ".join(STACK.get(t, (t,))[0] for t in tags)  # noqa: E731
+    names = lambda tags: ", ".join(tag_title(t) for t in tags)  # noqa: E731
     note = [f"похожие на {ref}"] + ([f"категория {category_title(cat)}"] if cat else []) \
         + ([f"подтверждены те же обязательные: {names(same_must)}"] if same_must else []) \
         + ([f"в желательные добавлено его подтверждённое: {names(extra)}"] if extra else [])
@@ -382,7 +382,7 @@ def share_by_token(db: Session, token: str) -> SelectionShare:
 
 
 def _req_summary(req: dict) -> dict:
-    title = lambda items: [STACK.get(i["tag"], (i["tag"],))[0] for i in items or []]  # noqa: E731
+    title = lambda items: [tag_title(i["tag"]) for i in items or []]  # noqa: E731
     return {"category": category_title(f"{req['direction']}.{req['grade']}") if req.get("direction") and req.get("grade")
             else None, "direction": req.get("direction"), "grade": req.get("grade"),
             "stack_required": title(req.get("stack_required")), "stack_desired": title(req.get("stack_desired")),
