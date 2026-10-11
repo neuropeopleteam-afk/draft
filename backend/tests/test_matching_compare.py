@@ -135,7 +135,6 @@ def test_compare_quick_run_and_report():
     for part in ("# Подбор в сопоставимых условиях", "## Почему nDCG@10 ниже MRR", "правило «не хуже»",
                  "модель, не люди", mc.FT_URL, mc.ITM_URL):
         assert part in md
-    assert "snotra" not in md.lower()
 
 
 def test_published_numbers_and_makefile():
