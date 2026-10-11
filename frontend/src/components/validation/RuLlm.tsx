@@ -49,7 +49,7 @@ function cellView(d: Data, f: Func, model: string) {
   if (!c || c.status !== "done") {
     const ref = model === "yandex" && f.key === "needs_full" && d.ref_0810;
     return (
-      <span className="text-brand-ink/60">
+      <span className="text-brand-ink/65">
         ещё не замерено{ref && <><br />08.10: F1 {num(ref.needs_full.stack_f1, 3)}, {ref.needs_full.ok} из {ref.needs_full.n}, медиана {sec(ref.needs_full.p50_s)}</>}
       </span>
     );
