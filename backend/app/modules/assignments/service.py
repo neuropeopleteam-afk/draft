@@ -36,10 +36,6 @@ SOURCE_REF = "assignment:"  # source_ref фактов: assignment:<attempt_id>
 SOURCE_TITLE = {"probe": "зонд с автопроверкой", "vacancy": "задание к вакансии", "feed": "задание из ленты"}
 
 
-def tag_title(t: str) -> str:
-    return tag_title(t)
-
-
 # ------------------------------------------------------------------ требования: откуда стек и категория
 
 def requirements_from(db: Session, company: Company, *, need_id=None, vacancy_id=None, stack=None,
