@@ -30,7 +30,8 @@ from assessment_bank.psychometrics import GradeDecision, GradeScale, decide as b
 from assessment_bank.psychometrics.grading import GRADE_ORDER as BANK_GRADES
 
 from app.core.fmt import ru_num, theta_se
-from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER, GRADES, GRADE_START_THETA
+from app.modules.catalog import levels
+from app.modules.catalog.seed_data import EXT_GRADE_ORDER, GRADE_CUTS, GRADE_ORDER, GRADES, GRADE_START_THETA
 
 CONFIRM_LEVEL = 0.8  # прежний порог уверенности (до Я22); действующий — настройка assessment_confirm_level
 UPGRADE_LEVEL = 0.9
@@ -69,8 +70,14 @@ def scale() -> GradeScale:
     return GradeScale(cuts=dict(GRADE_CUTS))
 
 
-def cuts_tuple() -> tuple[float, ...]:
-    return tuple(GRADE_CUTS[g] for g in GRADE_ORDER)
+def order_for(direction: str | None = None) -> tuple[str, ...]:
+    """Шкала уровней направления (снизу вверх). Без направления — все уровни платформы; без флага
+    GRADES_EXT_ENABLED — всегда прежние 4 (Lead/Principal — только по банку направления, catalog.levels)."""
+    return levels.available_grades(direction) if direction else GRADE_ORDER
+
+
+def cuts_tuple(direction: str | None = None) -> tuple[float, ...]:
+    return tuple(GRADE_CUTS[g] for g in order_for(direction))
 
 
 def start_theta() -> dict[str, float]:
@@ -88,9 +95,9 @@ def p_at_least(theta: float, se: float, grade: str) -> float:
     return float(_norm_sf((GRADE_CUTS[grade] - theta) / max(se, 1e-6)))
 
 
-def point_grade(theta: float) -> str:
+def point_grade(theta: float, direction: str | None = None) -> str:
     g = "none"
-    for grade in GRADE_ORDER:
+    for grade in order_for(direction):
         if theta >= GRADE_CUTS[grade]:
             g = grade
     return g
@@ -100,11 +107,25 @@ def _rank(grade: str) -> int:
     return -1 if grade == "none" else GRADE_ORDER.index(grade)
 
 
-def ceiling(n_items: int | None, se: float | None = None) -> str:
-    """Наивысшая категория, которую может дать тест такой длины и точности (None — без ограничения длины)."""
+def ceiling(n_items: int | None, se: float | None = None, direction: str | None = None) -> str:
+    """Наивысшая категория, которую может дать тест такой длины и точности (None — без ограничения длины).
+
+    Lead/Principal (флаг GRADES_EXT_ENABLED) — верхний уровень направления по банку (catalog.levels); присваивает их
+    только полный тест: не меньше GRADES_EXT_MIN_ITEMS оценённых заданий и погрешность не больше GRADES_EXT_MAX_SE,
+    иначе потолок — Senior (экспресс и мини-тест Lead/Principal не дают)."""
     short = n_items is not None and n_items < TOP_MIN_ITEMS
     wide = se is not None and float(se) > TOP_MAX_SE
-    return SHORT_CEILING if short or wide else GRADE_ORDER[-1]
+    order = order_for(direction)
+    if short or wide:
+        return SHORT_CEILING
+    top = order[-1]
+    if top in EXT_GRADE_ORDER:
+        from app.core.config import get_settings
+
+        st = get_settings()
+        if (n_items is not None and n_items < st.grades_ext_min_items) or (se is not None and float(se) > st.grades_ext_max_se):
+            return "senior"
+    return top
 
 
 @dataclass(frozen=True)
@@ -118,29 +139,30 @@ class CategoryLevel:
 
 
 def category_level(theta: float, se: float, n_items: int | None = None,
-                   confirm_level: float | None = None) -> CategoryLevel:
+                   confirm_level: float | None = None, direction: str | None = None) -> CategoryLevel:
     """Единое отображение θ ± SE → категория для всех режимов (полный, экспресс, дотестирование, мини-тест)."""
     if confirm_level is None:
         confirm_level = globals()["confirm_level"](se)
     proven = "none"
-    for g in GRADE_ORDER:  # P(θ ≥ порога) убывает с грейдом: наивысший — последний, где P ≥ уровня
+    for g in order_for(direction):  # P(θ ≥ порога) убывает с грейдом: наивысший — последний, где P ≥ уровня
         if p_at_least(theta, se, g) >= confirm_level:
             proven = g
-    top = ceiling(n_items, se)
+    top = ceiling(n_items, se, direction)
     grade = proven if _rank(proven) <= _rank(top) else top
     return CategoryLevel(grade, proven, top, _rank(proven) > _rank(top),
                          n_items is not None and n_items <= PRELIMINARY_MAX_ITEMS,
                          round(p_at_least(theta, se, grade), 4))
 
 
-def probabilities(theta: float, se: float) -> dict[str, float]:
-    order = ("none",) + GRADE_ORDER
+def probabilities(theta: float, se: float, direction: str | None = None) -> dict[str, float]:
+    order = ("none",) + order_for(direction)
     at_least = [p_at_least(theta, se, g) for g in order] + [0.0]
     return {g: round(at_least[i] - at_least[i + 1], 4) for i, g in enumerate(order)}
 
 
 def decide_grade(theta: float, se: float, claimed: str, confirm_level: float | None = None,
-                 upgrade_level: float = UPGRADE_LEVEL, n_items: int | None = None) -> GradeDecision:
+                 upgrade_level: float = UPGRADE_LEVEL, n_items: int | None = None,
+                 direction: str | None = None) -> GradeDecision:
     """Решение по заявленному грейду на полной шкале платформы (см. описание модуля) с потолком категории
     (``ceiling``): грейд выше потолка короткий или слишком неточный тест не подтверждает; уровень ниже, доказанный
     с той же уверенностью, остаётся доступным («пройти тест на …» / «принять уровень ниже»). n_items — число
@@ -148,10 +170,10 @@ def decide_grade(theta: float, se: float, claimed: str, confirm_level: float | N
     assessment_confirm_level (Я22)."""
     if confirm_level is None:
         confirm_level = globals()["confirm_level"](se)
-    dec = _decide(theta, se, claimed, confirm_level, upgrade_level)
-    top = ceiling(n_items, se)
+    dec = _decide(theta, se, claimed, confirm_level, upgrade_level, direction)
+    top = ceiling(n_items, se, direction)
     if _rank(claimed) > _rank(top) and (dec.confirmed or dec.provisional):
-        lvl = category_level(theta, se, n_items, confirm_level)
+        lvl = category_level(theta, se, n_items, confirm_level, direction)
         retake = lvl.grade if lvl.grade != "none" and _rank(lvl.grade) < _rank(claimed) else None
         expl = (f"Заявленный грейд {claimed} не подтверждён: тест из {n_items or 'малого числа'} заданий с погрешностью "
                 f"{ru_num(se)} подтверждает категорию не выше {top}"
@@ -164,30 +186,39 @@ def decide_grade(theta: float, se: float, claimed: str, confirm_level: float | N
     return dec
 
 
-def _decide(theta: float, se: float, claimed: str, confirm_level: float, upgrade_level: float) -> GradeDecision:
-    if claimed not in GRADE_ORDER:
-        raise ValueError(f"claimed: {' | '.join(GRADE_ORDER)}")
-    idx = GRADE_ORDER.index(claimed)
-    probs = probabilities(theta, se)
-    point = point_grade(theta)
+def _decide(theta: float, se: float, claimed: str, confirm_level: float, upgrade_level: float,
+            direction: str | None = None) -> GradeDecision:
+    order = order_for(direction)
+    if claimed not in order:
+        raise ValueError(f"claimed: {' | '.join(order)}")
+    idx = order.index(claimed)
+    probs = probabilities(theta, se, direction)
+    point = point_grade(theta, direction)
     if claimed in BANK_GRADES:
         dec = bank_decide(theta, se, claimed, scale(), confirm_level=confirm_level, upgrade_level=upgrade_level)
-        retake, expl = dec.retake_lower, dec.explanation
+        retake, expl, upgrade = dec.retake_lower, dec.explanation, dec.upgrade_available
         if not dec.confirmed and retake is None:
-            for g in reversed(GRADE_ORDER[:idx]):  # грейды платформы ниже заявленного (у банка их нет)
+            for g in reversed(order[:idx]):  # грейды платформы ниже заявленного (у банка их нет)
                 if p_at_least(theta, se, g) >= confirm_level:
                     retake = g
                     expl = expl.replace("можно пройти тест на грейд ниже после подготовки.", f"можно пройти тест на {g}.")
                     break
-        return replace(dec, point_grade=point, probabilities=probs, retake_lower=retake, explanation=expl)
+        # уровень платформы выше крайнего уровня банка (Lead над Senior, флаг GRADES_EXT_ENABLED): то же правило
+        # «можно повысить» — P(θ ≥ порога следующего) ≥ upgrade_level
+        if dec.confirmed and not upgrade and idx + 1 < len(order) and order[idx + 1] not in BANK_GRADES:
+            upgrade = p_at_least(theta, se, order[idx + 1]) >= upgrade_level
+            if upgrade:
+                expl += f" Результат уверенно выше: можно пройти тест на {order[idx + 1]}."
+        return replace(dec, point_grade=point, probabilities=probs, retake_lower=retake, explanation=expl,
+                       upgrade_available=upgrade)
     p_claim = p_at_least(theta, se, claimed)
     confirmed = p_claim >= confirm_level
     upgrade = False
-    if confirmed and idx + 1 < len(GRADE_ORDER):
-        upgrade = p_at_least(theta, se, GRADE_ORDER[idx + 1]) >= upgrade_level
+    if confirmed and idx + 1 < len(order):
+        upgrade = p_at_least(theta, se, order[idx + 1]) >= upgrade_level
     retake = None
     if not confirmed:
-        for g in reversed(GRADE_ORDER[:idx]):
+        for g in reversed(order[:idx]):
             if p_at_least(theta, se, g) >= confirm_level:
                 retake = g
                 break
@@ -195,7 +226,7 @@ def _decide(theta: float, se: float, claimed: str, confirm_level: float, upgrade
         expl = (f"Заявленный грейд {claimed} подтверждён: P(θ ≥ порога) = {ru_num(p_claim)}"
                 f" при θ = {theta_se(theta, se)}.")
         if upgrade:
-            expl += f" Результат уверенно выше: можно пройти тест на {GRADE_ORDER[idx + 1]}."
+            expl += f" Результат уверенно выше: можно пройти тест на {order[idx + 1]}."
     else:
         expl = (f"Заявленный грейд {claimed} не подтверждён: P(θ ≥ порога) = {ru_num(p_claim)}. "
                 "Грейд не понижается принудительно; "
