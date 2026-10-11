@@ -1,0 +1,23 @@
+family_id: data_eng.sql.scd2_asof_output
+title: SQL — факты и измерение SCD2 по интервалу действия версии
+direction: data_eng
+skills: [sql, scd, dimensional_modeling, joins]
+target_grades: [junior, middle]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [8, 8]
+  operations: [5, 5]
+  extra:
+    subtype: half_open_interval_boundary
+time_limit_s: 360
+canary: false
+prior_difficulty:
+  b: 0.0
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "Измерение 4–9 версий, 8–12 фактов; соединение по полуоткрытому интервалу [valid_from, valid_to); в каждом варианте факт ровно в день смены версии (с <= результат другой). Граница Junior/Middle"
+generator: assessment_bank.families.data_eng.sql_scd2_asof_output
+version: 2
+description: >
+  Предсказать итог отчёта по фактам, соединённым с версиями измерения SCD2. Ключ — исполнение запроса в sqlite.

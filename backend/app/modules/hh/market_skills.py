@@ -8,7 +8,7 @@
 """
 from __future__ import annotations
 
-from app.modules.catalog.seed_data import DIRECTIONS, GRADES, STACK
+from app.modules.catalog.seed_data import DIRECTIONS, GRADES, known_tag, tag_title
 from app.modules.hh import snapshot
 from app.modules.hh.directions import HH_DIRECTIONS
 
@@ -46,7 +46,7 @@ def block(direction: str | None, grade: str | None, bundle, test_tags: frozenset
     s = snapshot.skills_for(direction, grade)
     if not s:
         return None
-    top = [x for x in s["top"] if x["tag"] in STACK][:TOP]
+    top = [x for x in s["top"] if known_tag(x["tag"])][:TOP]  # и теги видимых направлений расширения каталога
     tags = [x["tag"] for x in top]
     task = _task_tags(direction, grade, tags)
     items, todo = [], 0
@@ -64,7 +64,7 @@ def block(direction: str | None, grade: str | None, bundle, test_tags: frozenset
             else:
                 action = {"kind": "probe", "title": None, "href": None,
                           "text": "заданий на этот навык пока нет — подтвердить можно задачей-зондом работодателя"}
-        items.append({"tag": t, "title": STACK[t][0], "share": x["share"], "n": x["n"], "status": st,
+        items.append({"tag": t, "title": tag_title(t), "share": x["share"], "n": x["n"], "status": st,
                       "status_title": STATUS_TITLES[st], "action": action})
     scope_title = (f"категория {_dir_title(direction)} · {GRADES.get(grade, grade)}"
                    if s["scope"] == "category" else f"направление {_dir_title(direction)}")

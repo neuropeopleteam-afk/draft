@@ -1,0 +1,23 @@
+family_id: analyst.api.json_schema_validate_output
+title: Контракт API в JSON Schema — какие тела запроса проходят проверку
+direction: analyst
+skills: [json_schema, api_contracts, integrations]
+target_grades: [intern, junior]
+format: predict_output
+language: text
+invariants:
+  code_lines: [11, 13]
+  extra:
+    violations: [missing_required, number_as_string, fraction_in_integer, enum, extra_field, too_long, null_required, empty_array, below_minimum]
+time_limit_s: 210
+canary: false
+prior_difficulty:
+  b: -1.1
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "Схема из 4–6 полей и 5 тел; каждое некорректное тело нарушает ровно одно правило, ловушки — число строкой, дробное в integer, регистр в enum, лишнее поле при additionalProperties: false и допустимое при true. Набор нарушений меняется от варианта к варианту → σ повышена. Стажёр/Junior (b ≈ −1,1)"
+generator: assessment_bank.families.analyst.api_json_schema_validate_output
+version: 1
+description: >
+  JSON Schema тела запроса (подмножество ключевых слов) и пять тел; нужно назвать номера корректных.
+  Ключ: программа на Python разбирает показанную схему и тела и проверяет их минимальным валидатором.

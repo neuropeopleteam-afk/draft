@@ -143,3 +143,7 @@ docker-compose: `env_file: ${HH_ENV_FILE:-./secrets/hh.env}` с `required: false
 жюри), 90000002 (Junior QA, «опыт не требуется», «удалёнка не предусмотрена»), 90000003 (другая компания — нужен
 флажок «своя»), 90000429 — ответ «слишком много запросов». Тесты: `backend/tests/test_hh.py`; e2e:
 `e2e/tests/15-hh-import.spec.ts` (1440 и 390, axe).
+
+## Живые проверки
+
+Доказательства работы с настоящими hh.ru (одобренное приложение №30397) и ATS «Поток» — [`integrations/LIVE_CHECKS.md`](integrations/LIVE_CHECKS.md).
