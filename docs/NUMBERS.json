@@ -20,9 +20,9 @@
   "unique_variants": 3281
  },
  "migrations": {
-  "revisions": 31,
+  "revisions": 32,
   "heads": [
-   "fp01"
+   "iv01"
   ]
  },
  "memory_limits_mib": {
@@ -56,8 +56,8 @@
   }
  },
  "e2e_in_code": {
-  "spec_files": 18,
-  "scenarios": 43
+  "spec_files": 20,
+  "scenarios": 48
  },
  "validation_report": {
   "report_generated_at": "2026-10-10",
@@ -68,10 +68,10 @@
  },
  "grade_accuracy": {
   "confirm_level": 0.6,
-  "path_retest_commit": "59cb381",
+  "path_retest_commit": "659ca65",
   "path_retest_at": "2026-10-10",
-  "sweep_commit": "36e4f02",
-  "sweep_points": 72,
+  "sweep_commit": "8f4d6d2",
+  "sweep_points": 98,
   "before": {
    "exact": 0.575,
    "over": 0.049,
