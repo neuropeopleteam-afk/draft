@@ -207,10 +207,10 @@ _BY_DIRECTION["mobile"].update({"mobile_networking": "rest-api",
     "mobile-architecture", "ui_lists": "mobile-architecture", "deep_links": "mobile-architecture",
     "concurrency": "mobile-architecture", "migrations": "mobile-architecture", "sqlite": "mobile-architecture",
     "versioning": "rest-api"})
-# Я19/Я24 (<внутренний документ>): продуктовая аналитика у аналитика — статистика, анализ данных — SQL
+# продуктовая аналитика у аналитика — статистика, анализ данных — SQL
 _BY_DIRECTION["analyst"].update({"product_analytics": "statistics", "funnels": "statistics",
                                  "product_metrics": "statistics", "data_analysis": "sql"})
-# Я24/Я18 (bank_lead_b_note_ya21_ya25.md): навыки семейств Lead/Principal — видны только с GRADES_EXT_ENABLED
+# навыки семейств Lead/Principal (qa, security, mobile, devops) — видны только с GRADES_EXT_ENABLED
 _BY_DIRECTION["qa"].update({"flaky_tests": "ci-cd", "release_management": "ci-cd", "quality_metrics": "test-design",
                             "test_data_management": "test-design"})
 _BY_DIRECTION["security"].update({"supply_chain_security": "owasp"})
