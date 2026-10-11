@@ -5,10 +5,13 @@
 Окно выдаёт результат и закрывается, как только watermark ≥ e; события окна, пришедшие позже, отбрасываются.
 Вопрос — сумма, которую выдаст заданное окно.
 
-Дистракторы (одной формы — «сумма = N»):
-  * no_drop — учтены все события окна, включая опоздавшие (нет отбрасывания);
-  * processing_time — окно по времени прихода, а не события;
-  * inclusive_end — граница окна включена: событие ровно в e засчитано в окно.
+Дистракторы (одной формы — «сумма = N») — три из пяти (версия 2):
+  * no_drop — учтены все события окна, включая опоздавшие (нет отбрасывания) — больше ключа;
+  * inclusive_end — граница окна включена: событие ровно в e засчитано в окно — больше ключа;
+  * processing_time — окно по времени прихода, а не события — больше или меньше;
+  * no_lag — watermark без отставания L (= максимум времени события): окно закрывается раньше — не больше ключа;
+  * in_order_only — отброшены все события, пришедшие не по порядку времени события, — не больше ключа.
+Сколько ловушек меньше ключа (0–3), выбирается равновероятно до подбора потока — место ключа по величине меняется.
 Ключ проверяется исполнением: программа-модель проигрывает поток событие за событием (watermark, закрытие
 окон, отбрасывание опоздавших) и печатает букву варианта с полученной суммой.
 """
@@ -50,6 +53,12 @@ print(hit[0] if len(hit) == 1 else "AMBIGUOUS")
 """
 
 
+WHY = {"no_drop": "без отбрасывания опоздавших — {v}", "processing_time": "окно по времени прихода — {v}",
+       "inclusive_end": "граница окна включена (событие ровно в конце засчитано) — {v}",
+       "no_lag": "watermark без отставания (максимум времени события) — окно закрылось бы раньше: {v}",
+       "in_order_only": "отброшены все события, пришедшие не по порядку, хотя окно ещё открыто, — {v}"}
+
+
 def _hms(sec: int) -> str:
     return f"{sec // 3600:02d}:{sec // 60 % 60:02d}:{sec % 60:02d}"
 
@@ -63,35 +72,56 @@ def _simulate(events, W, L, start):
 def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, what = rng.choice(CONTEXTS)
-    for _ in range(3000):
-        W = rng.choice([5, 10])
-        L = rng.choice([1, 2, 3])
-        hour = rng.choice([9, 12, 15, 18, 21])
-        start = hour * 3600 + rng.choice([1, 2, 3]) * W * 60
-        end = start + W * 60
-        n = rng.choice([8, 9, 10])
-        evs = []
-        for i in range(n):
-            te = start + rng.randint(-W * 60 // 2, W * 60 + W * 60 // 2)
-            delay = rng.choice([0, 5, 20, 40, 70, 100]) if rng.random() < 0.75 else rng.choice([240, 330, 420, 540])
-            evs.append([te, te + delay, rng.choice(range(10, 100, 5))])
-        evs[rng.randrange(n)][0] = end                       # событие ровно на границе окна
-        for e in evs:
-            e[1] = max(e[1], e[0])
-        evs.sort(key=lambda e: (e[1], e[0]))
-        events = [(i + 1, te, ta, a) for i, (te, ta, a) in enumerate(evs)]
-        good = _simulate(events, W, L, start)
-        if good is None or _close_time(events, W, L, start)[0] is None:
-            continue                                         # окно должно закрыться в пределах показанного потока
-        no_drop = sum(a for _, te, _, a in events if start <= te < end)
-        proc = sum(a for _, _, ta, a in events if start <= ta < end)
-        # граница включена: то же моделирование, но событие ровно в e относится к окну [s, e]
-        incl = good + sum(a for i, te, _, a in events if te == end and _counted(events, W, L, start, i))
-        vals = {"good": good, "no_drop": no_drop, "processing_time": proc, "inclusive_end": incl}
-        dropped = no_drop - good
-        if len(set(vals.values())) == 4 and dropped > 0 and min(vals.values()) > 0:
+    want = rng.choice([0, 1, 2, 3])          # сколько ловушек меньше ключа — до подбора потока
+    found = False
+    for n_below in (want, 1, 2):           # редкий поток без нужного набора — запасной вариант
+        if found:
             break
-    else:
+        for _ in range(3000):
+            W = rng.choice([5, 10])
+            L = rng.choice([1, 2, 3])
+            hour = rng.choice([9, 12, 15, 18, 21])
+            start = hour * 3600 + rng.choice([1, 2, 3]) * W * 60
+            end = start + W * 60
+            n = rng.choice([8, 9, 10])
+            evs = []
+            for i in range(n):
+                te = start + rng.randint(-W * 60 // 2, W * 60 + W * 60 // 2)
+                delay = (rng.choice([0, 5, 20, 40, 70, 100]) if rng.random() < 0.75
+                         else rng.choice([240, 330, 420, 540]))
+                evs.append([te, te + delay, rng.choice(range(10, 100, 5))])
+            evs[rng.randrange(n)][0] = end                   # событие ровно на границе окна
+            for e in evs:
+                e[1] = max(e[1], e[0])
+            evs.sort(key=lambda e: (e[1], e[0]))
+            events = [(i + 1, te, ta, a) for i, (te, ta, a) in enumerate(evs)]
+            good = _simulate(events, W, L, start)
+            if good is None or _close_time(events, W, L, start)[0] is None:
+                continue                                     # окно должно закрыться в пределах показанного потока
+            no_drop = sum(a for _, te, _, a in events if start <= te < end)
+            proc = sum(a for _, _, ta, a in events if start <= ta < end)
+            # граница включена: то же моделирование, но событие ровно в e относится к окну [s, e]
+            incl = good + sum(a for i, te, _, a in events if te == end and _counted(events, W, L, start, i))
+            no_lag = _simulate(events, W, 0, start) or 0
+            seen, in_order = None, 0
+            for _, te, _, a in events:
+                if seen is None or te >= seen:
+                    in_order += a if start <= te < end else 0
+                seen = te if seen is None else max(seen, te)
+            pool = {"no_drop": no_drop, "processing_time": proc, "inclusive_end": incl, "no_lag": no_lag,
+                    "in_order_only": in_order}
+            if no_drop - good <= 0:
+                continue
+            below = sorted(k for k, v in pool.items() if 0 < v < good)
+            above = sorted(k for k, v in pool.items() if v > good)
+            if len(below) < n_below or len(above) < 3 - n_below:
+                continue
+            traps = rng.sample(below, n_below) + rng.sample(above, 3 - n_below)
+            vals = {"good": good, **{k: pool[k] for k in traps}}
+            if len(set(vals.values())) == 4:
+                found = True
+                break
+    if not found:
         raise RuntimeError("не удалось подобрать параметры")
     text = {k: f"сумма = {v}" for k, v in vals.items()}
     table = "\n".join(f"{i:>2} | {_hms(te)} | {_hms(ta)} | {a}" for i, te, ta, a in events)
@@ -107,12 +137,13 @@ def generate(seed: int):
     expl = (f"Проигрываем поток: watermark растёт с максимумом времени события; окно [{_hms(start)}, {_hms(end)}) "
             f"закрывается, когда watermark ≥ {_hms(end)}, то есть после события со временем ≥ {_hms(end + L * 60)}. "
             f"В результат входят события окна, пришедшие до закрытия: сумма = {good}; опоздавшие ("
-            f"№ {', '.join(map(str, late))}) отброшены. Без отбрасывания — {no_drop}; по времени прихода — {proc}; "
-            f"событие ровно в {_hms(end)} относится к следующему окну (с ним — {incl}).")
+            f"№ {', '.join(map(str, late))}) отброшены; событие ровно в {_hms(end)} относится к следующему окну. "
+            f"Ловушки: " + "; ".join(WHY[k].format(v=pool[k]) for k in sorted(traps)) + ".")
     return numeric_mcq(FAMILY_ID, seed, rng, ctx=ctx, stem=stem, good=text["good"],
-                       distractors=[text["no_drop"], text["processing_time"], text["inclusive_end"]],
+                       distractors=[text[k] for k in traps],
                        program=program, explanation=expl,
-                       params={"W": W, "L": L, "start": _hms(start), "n": len(events), "vals": vals},
+                       params={"W": W, "L": L, "start": _hms(start), "n": len(events), "vals": vals,
+                               "traps": traps},
                        note="Ответ проверяется программой-моделью: поток проигрывается событие за событием.")
 
 
