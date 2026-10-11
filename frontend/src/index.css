@@ -54,3 +54,11 @@
 @container (min-width: 26rem) { .stat-grid > div { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @container (min-width: 54rem) { .stat-grid > div { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .stat-grid .stat-label { overflow-wrap: normal; word-break: normal; hyphens: manual; }
+
+/* SIMPLIFY п.3: свёрнутый раздел /validation (components/validation/Fold.tsx) — видны заголовок h2 (data-fold-title),
+ * цепочка его родителей (data-fold-keep) и кнопка «Показать раздел»; остальное скрыто (display: none — и для диктора). */
+.fold[data-closed] > :not([data-fold-keep]):not([data-fold-title]):not([data-fold-btn]),
+.fold[data-closed] [data-fold-keep] > :not([data-fold-keep]):not([data-fold-title]) { display: none !important; }
+.fold[data-closed] > [data-fold-keep], .fold[data-closed] > [data-fold-title] { margin-top: 1.75rem; }
+.fold[data-closed] [data-fold-title] { cursor: pointer; }
+.fold[data-closed] [data-fold-title]:hover { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }

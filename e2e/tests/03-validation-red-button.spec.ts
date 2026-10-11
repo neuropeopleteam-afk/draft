@@ -6,6 +6,7 @@
  * Блоки страницы: бенчмарк подбора со скрытой истиной, прогон в других условиях измерения, экспертная разметка.
  */
 import { expect, test } from "../lib/fixtures";
+import { openAllFolds } from "../lib/ui";
 
 const ATTACKS = [
   "Раздуть резюме ключевыми словами",
@@ -26,6 +27,12 @@ test("главная → «Красная кнопка» ведёт на /valida
 test("/validation: метрики теста и подбора на месте", async ({ page }) => {
   await page.goto("/validation", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible();
+  // SIMPLIFY: разделы ниже «5 чисел» свёрнуты по умолчанию — заголовки видны сразу, содержимое — после «Раскрыть все»
+  for (const id of ["bank", "matching", "red-button"]) {
+    await expect(page.locator(`section#${id}`).getByRole("heading", { level: 2 }).first(), `свёрнутый раздел #${id}: заголовок виден`).toBeVisible();
+  }
+  await expect(page.getByTestId("validation-how-to-read")).toContainText("Как читать эту страницу");
+  await openAllFolds(page);
   const SECTIONS: Record<string, string> = {
     bank: "Банк заданий и калибровка", test: "Тест: точность оценки и решения по грейду (симуляция)",
     retest: "Стабильность грейда при повторе", "other-conditions": "Другие условия измерения", exposure: "Частота показа заданий",
@@ -68,6 +75,8 @@ test("/validation: бенчмарк со скрытой истиной, друг
     // честность: синтетика проверяет механику, а не реальный рынок — это сказано прямо
     await expect(bench.getByRole("status").filter({ hasText: /^Честно:/ })).toBeVisible();
   });
+  // SIMPLIFY: #bench раскрыт якорем; остальные разделы свёрнуты — раскрываем все
+  await openAllFolds(page);
   await test.step("другие условия измерения: тот же тест при 20 заданиях и меньшей ошибке параметров", async () => {
     const table = page.locator("section#other-conditions").getByRole("table");
     for (const who of [/^Другие условия/, /^Основные условия/]) {
