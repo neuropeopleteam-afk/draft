@@ -19,7 +19,7 @@ prior_difficulty:
   sigma_variant: 0.3
   basis: "Запрос 6–8 строк: LEFT JOIN, условие на правую таблицу в WHERE (4 вида условий), COUNT(r.id) или COALESCE(SUM); симптом «пропадают строки» дан; ловушки-«не ошибки» — COUNT(r.id) и COALESCE. Граница Junior/Middle"
 generator: assessment_bank.families.data_eng.sql_left_join_filter_bug
-version: 1
+version: 2
 description: >
   Найти строку запроса, из-за которой LEFT JOIN теряет записи без совпадений. Ключ — исполнение показанного
   запроса в sqlite: дефектный теряет строки, исправленный совпадает с эталоном.

@@ -18,11 +18,13 @@ FAMILY_ID = "data_eng.sql.left_join_filter_bug"
 CTX = [("клиенты и заказы", "customers", "orders", "customer_id", "клиента"),
        ("магазины и продажи", "stores", "sales", "store_id", "магазина"),
        ("курьеры и доставки", "couriers", "deliveries", "courier_id", "курьера"),
-       ("авторы и статьи", "authors", "posts", "author_id", "автора")]
+       ("авторы и статьи", "authors", "posts", "author_id", "автора"),
+       ("склады и отгрузки", "warehouses", "shipments", "warehouse_id", "склада"),
+       ("врачи и приёмы", "doctors", "visits", "doctor_id", "врача")]
 NAMES = ["Альфа", "Бета", "Гамма", "Дельта", "Омега", "Сигма"]
 FILTERS = [("created_at >= '{d}'", "начиная с {d}"), ("status = '{st}'", "в статусе {st}"),
            ("amount >= {a}", "на сумму от {a}"), ("channel = '{ch}'", "из канала {ch}")]
-ALIASES = [("l", "r"), ("c", "o"), ("a", "b"), ("m", "t")]
+ALIASES = [("l", "r"), ("c", "o"), ("a", "b"), ("m", "t"), ("p", "q"), ("s", "d")]
 
 
 def _query(L, R, fk, flt, agg, fixed, sh):
@@ -47,8 +49,9 @@ def generate(seed: int):
     rng = make_rng(FAMILY_ID, seed)
     ctx, L, R, fk, gen = rng.choice(CTX)
     flt_t, txt_t = rng.choice(FILTERS)
-    pv = dict(d=rng.choice(["2026-01-01", "2026-03-01", "2025-12-01"]), st=rng.choice(["done", "new"]),
-              a=rng.choice([800, 1000, 2500]), ch=rng.choice(["app", "web"]))
+    pv = dict(d=rng.choice(["2025-12-01", "2026-01-01", "2026-02-01", "2026-03-01", "2026-04-01"]),
+              st=rng.choice(["done", "new", "paid"]), a=rng.choice([500, 800, 1000, 1500, 2500]),
+              ch=rng.choice(["app", "web", "partner"]))
     flt, flt_txt = flt_t.format(**pv), txt_t.format(**pv)
     sh = {"alias": rng.choice(ALIASES), "city": rng.random() < 0.5, "order": rng.choice(["name", "agg"]),
           "comment": rng.choice([None, None, f"отчёт для отдела продаж", "выгрузка для дашборда", "сверка за период"])}
@@ -58,9 +61,11 @@ def generate(seed: int):
     for _ in range(500):
         right = []
         for j in range(rng.randint(5, 9)):
-            right.append((j + 1, rng.randint(1, len(names)), rng.choice(["2025-11-03", "2026-02-10", "2026-05-20"]),
-                          rng.choice(["done", "new", "cancelled"]), rng.choice([300, 800, 1000, 2500, 4000]),
-                          rng.choice(["app", "web"])))
+            right.append((j + 1, rng.randint(1, len(names)),
+                          rng.choice(["2025-11-03", "2025-12-15", "2026-01-20", "2026-02-10", "2026-03-18",
+                                      "2026-05-20"]),
+                          rng.choice(["done", "new", "cancelled", "paid"]), rng.choice([300, 800, 1000, 1500, 2500, 4000]),
+                          rng.choice(["app", "web", "partner"])))
         setup = (f"CREATE TABLE {L} (id INTEGER PRIMARY KEY, name TEXT, city TEXT);\n"
                  f"CREATE TABLE {R} (id INTEGER PRIMARY KEY, {fk} INTEGER, created_at TEXT, status TEXT, "
                  "amount INTEGER, channel TEXT);\n" + insert(L, ["id", "name", "city"], left) + "\n"

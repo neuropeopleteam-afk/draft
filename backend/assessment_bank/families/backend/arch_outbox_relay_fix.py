@@ -7,15 +7,20 @@
 перезапуска ретранслятор дочитывает очередь); (2) нет событий об изменениях, которые не зафиксированы;
 (3) события одной сущности — в порядке изменений; (4) повтор допустим — потребители удаляют дубли по id.
 
-Варианты (большие фрагменты, каждый исполняется):
-  * good — запись изменения и строки outbox в одной транзакции, ретранслятор публикует в порядке
-    вставки и отмечает «отправлено» после публикации (хотя бы раз);
+Варианты (большие фрагменты, каждый исполняется) построены по схеме 2×2 от верного (запись изменения и
+строки outbox в одной транзакции, ретранслятор публикует в порядке вставки и отмечает «отправлено» после
+публикации): из пула правил выбираются два (a, b), варианты — верный, нарушено a, нарушено b, нарушены оба.
+Пул:
   * mark_before — ретранслятор отмечает «отправлено» до публикации: падение между ними теряет событие;
-  * publish_in_tx — публикация внутри транзакции до фиксации: при падении на фиксации уходит событие о
-    незафиксированном изменении;
   * sorted_ids — ретранслятор сортирует очередь по id события («ради детерминизма»): id вида
-    «<сущность>:<событие>», и второе событие сущности по алфавиту раньше первого — порядок нарушен.
-Состав дистракторов фиксирован. Ключ проверяется исполнением: модель базы с транзакциями и брокера,
+    «<сущность>:<событие>», и второе событие сущности по алфавиту раньше первого — порядок нарушен;
+  * publish_in_tx — первая операция публикует внутри транзакции до фиксации: при падении на фиксации уходит
+    событие о незафиксированном изменении;
+  * split_tx — вторая операция пишет строку outbox отдельной транзакцией после изменения: падение между
+    ними оставляет изменение без события.
+Каждый вариант отличается от двух других на одно правило и от третьего — на два; у каждого варианта свои
+имена и необязательный комментарий, поэтому ни длина, ни сходство вариантов не выдают ключ.
+Ключ проверяется исполнением: модель базы с транзакциями и брокера,
 падение процесса подставляется в каждую точку (каждая операция с базой и брокером), затем перезапуск и
 проверка трёх инвариантов — на показанном коде (падает) и на каждом варианте.
 """
@@ -69,44 +74,33 @@ def {op2}(db, broker, {eid}):
         tx.insert("outbox", f"{{{eid}}}:{e2}", {{"type": "{e2}", "id": {eid}}})
 '''
 
-RELAY = {
-    "good": '''
+RELAY_GOOD = '''
 def relay_once(db, broker, batch={batch}):
     for event_id, event in db.pending_outbox(limit=batch):   # в порядке вставки
         broker.publish(event_id, event)
         db.mark_sent(event_id)
-''',
-    "mark_before": '''
-def relay_once(db, broker, batch={batch}):
-    for event_id, event in db.pending_outbox(limit=batch):   # в порядке вставки
-        db.mark_sent(event_id)          # чтобы второй экземпляр не взял ту же строку
-        broker.publish(event_id, event)
-''',
-    "sorted_ids": '''
-def relay_once(db, broker, batch={batch}):
-    pending = db.pending_outbox(limit=batch)
-    for event_id, event in sorted(pending, key=lambda row: row[0]):   # детерминированный порядок
-        broker.publish(event_id, event)
-        db.mark_sent(event_id)
-''',
-}
-
-PUBLISH_IN_TX = '''
-def {op1}(db, broker, {eid}, {field}):
-    with db.transaction() as tx:
-        tx.insert("{table}", {eid}, {{"{field}": {field}, "status": "{e1}"}})
-        broker.publish(f"{{{eid}}}:{e1}", {{"type": "{e1}", "id": {eid}}})   # внутри транзакции
-
-
-def {op2}(db, broker, {eid}):
-    with db.transaction() as tx:
-        tx.update("{table}", {eid}, status="{e2}")
-        broker.publish(f"{{{eid}}}:{e2}", {{"type": "{e2}", "id": {eid}}})   # внутри транзакции
-
-
-def relay_once(db, broker, batch={batch}):
-    return None                          # очередь не нужна: публикуем в транзакции
 '''
+
+# правило -> (фрагмент верного модуля, замена); фрагменты разных правил не пересекаются
+MUTATIONS = {
+    "mark_before": ("        broker.publish(event_id, event)\n        db.mark_sent(event_id)\n",
+                    "        db.mark_sent(event_id)\n        broker.publish(event_id, event)\n"),
+    "sorted_ids": ("    for event_id, event in db.pending_outbox(limit=batch):   # в порядке вставки\n",
+                   "    for event_id, event in sorted(db.pending_outbox(limit=batch)):   # детерминированно\n"),
+    "publish_in_tx": ("        tx.insert(\"outbox\", f\"{{{eid}}}:{e1}\", {{\"type\": \"{e1}\", \"id\": {eid}}})\n",
+                      "        broker.publish(f\"{{{eid}}}:{e1}\", {{\"type\": \"{e1}\", \"id\": {eid}}})   # до фиксации\n"),
+    "split_tx": ("        tx.update(\"{table}\", {eid}, status=\"{e2}\")\n        tx.insert(\"outbox\",",
+                 "        tx.update(\"{table}\", {eid}, status=\"{e2}\")\n    with db.transaction() as tx:\n"
+                 "        tx.insert(\"outbox\","),
+}
+PAIRS = [(x, y) for i, x in enumerate(sorted(MUTATIONS)) for y in sorted(MUTATIONS)[i + 1:]]
+WHY = {"mark_before": "отметка «отправлено» до публикации теряет событие при падении между шагами",
+       "sorted_ids": "сортировка по id ставит второе событие сущности раньше первого — порядок нарушен",
+       "publish_in_tx": "публикация внутри транзакции отправляет событие о незафиксированном изменении при падении "
+                        "на фиксации",
+       "split_tx": "строка outbox в отдельной транзакции: падение между транзакциями оставляет изменение без события"}
+NOTES = ["# изменение и событие — атомарно", "# outbox: событие пишется вместе с изменением",
+         "# доставка «хотя бы раз», дубли — по id"]
 
 # Модель базы и брокера (вне показанного кода): каждая операция — точка возможного падения процесса.
 WORLD = '''
@@ -234,22 +228,30 @@ def generate(seed: int):
     a, b = rng.sample(IDS[table], 2)
     v1, v2 = rng.sample([120, 250, 400, 75, 990, 31], 2)
     f = dict(op1=op1, op2=op2, e1=e1, e2=e2, table=table, field=field, eid=eid, batch=batch)
-    names = {"tx": rng.choice(["tx", "txn", "t"]), "event_id": rng.choice(["event_id", "msg_id", "ev_id"]),
-             "event": rng.choice(["event", "payload", "msg"]), "pending": rng.choice(["pending", "rows", "queue"]),
-             "row": rng.choice(["row", "item", "r"])}
-
-    def ren(src: str) -> str:   # поверхностные имена; порядок обращений к rng не зависит от текста
-        return re.sub(r"\b(tx|event_id|event|pending|row)\b", lambda m: names[m.group(1)], src)
-
-    code_buggy = ren(dedent(BUGGY.format(**f))) + "\n"
-    hand = dedent(HANDLERS_OUTBOX.format(**f))
-    opt_code = {k: ren(v) for k, v in {
-        "good": hand + "\n\n\n" + dedent(RELAY["good"].format(**f)),
-        "mark_before": hand + "\n\n\n" + dedent(RELAY["mark_before"].format(**f)),
-        "publish_in_tx": dedent(PUBLISH_IN_TX.format(**f)),
-        "sorted_ids": hand + "\n\n\n" + dedent(RELAY["sorted_ids"].format(**f)),
-    }.items()}
-    chosen = ["mark_before", "publish_in_tx", "sorted_ids"]
+    code_buggy = dedent(BUGGY.format(**f)) + "\n"
+    a_, b_ = rng.choice(PAIRS)
+    sets = {"good": [], a_: [a_], b_: [b_], f"{a_}+{b_}": [a_, b_]}
+    note = rng.choice(NOTES)
+    good_tpl = dedent(HANDLERS_OUTBOX) + "\n\n\n" + dedent(RELAY_GOOD) + "\n"
+    opt_code = {}
+    # у каждого варианта — свои имена и необязательный комментарий; порядок обращений к rng не зависит от текста
+    for k, muts in sets.items():
+        src = good_tpl.format(**f)
+        for mname in muts:
+            old, new = MUTATIONS[mname]
+            old, new = old.format(**f), new.format(**f)
+            if src.count(old) != 1:
+                raise ValueError(f"фрагмент правила {mname} не найден ровно один раз")
+            src = src.replace(old, new)
+        names = {"tx": rng.choice(["tx", "txn", "t"]), "event_id": rng.choice(["event_id", "msg_id", "ev_id"]),
+                 "event": rng.choice(["event", "payload", "msg"])}
+        src = re.sub(r"\b(tx|event_id|event)\b", lambda m: names[m.group(1)], src)
+        if rng.random() < 0.5:
+            src = src.replace(f"def {op1}(", f"{note}\ndef {op1}(", 1)
+        opt_code[k] = src
+    if len(set(opt_code.values())) != 4:
+        raise ValueError("варианты 2×2 совпадают")
+    chosen = [a_, b_, f"{a_}+{b_}"]
     opts, key = make_options(rng, ("Заменить модуль на:", opt_code["good"]),
                              [("Заменить модуль на:", opt_code[d]) for d in chosen])
     by_code = {c: k for k, c in opt_code.items()}
@@ -289,9 +291,7 @@ def generate(seed: int):
             "Верно: изменение и строка outbox пишутся в одной транзакции (нет события без изменения и изменения "
             "без события), ретранслятор публикует в порядке вставки и отмечает «отправлено» только после "
             "публикации — при падении между ними событие уйдёт повторно, что допустимо (дубли по id). "
-            "Отметка до публикации теряет событие при падении между шагами; публикация внутри транзакции "
-            "отправляет событие о незафиксированном изменении при падении на фиксации; сортировка по id "
-            f"ставит «{e2}» раньше «{e1}» — порядок событий сущности нарушен.")),
+            "Остальные нарушают правила: " + f"{WHY[a_]}; {WHY[b_]}; третий вариант нарушает оба.")),
         context=ctx, verification="execution", checks=checks, defect_type="dual_write",
         display_code_note=("Ответ проверяется исполнением: модель базы с транзакциями и брокера, падение процесса "
                            "подставляется в каждую точку, затем перезапуск и проверка инвариантов."),

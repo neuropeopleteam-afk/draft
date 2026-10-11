@@ -1,16 +1,16 @@
 {
   "source": "../bank",
-  "commit": "bddd532",
+  "commit": "9bc0968",
   "dirty_files": 0,
-  "content_hash": "eecad68471cb6b49",
-  "synced_at": "2026-10-11T10:50:44+00:00",
-  "n_families": 331,
+  "content_hash": "3681b6fbd6a0673f",
+  "synced_at": "2026-10-11T11:23:07+00:00",
+  "n_families": 342,
   "by_direction": {
     "analyst": {
-      "families": 25,
+      "families": 26,
       "canary": 0,
       "formats": {
-        "mcq_concept": 6,
+        "mcq_concept": 7,
         "predict_output": 5,
         "open_answer": 5,
         "find_bug": 5,
@@ -18,7 +18,7 @@
       }
     },
     "backend": {
-      "families": 51,
+      "families": 52,
       "canary": 2,
       "formats": {
         "choose_fix": 13,
@@ -26,7 +26,7 @@
         "find_bug": 11,
         "open_answer": 6,
         "open_book_3step": 5,
-        "mcq_concept": 4
+        "mcq_concept": 5
       }
     },
     "common": {
@@ -42,15 +42,15 @@
       }
     },
     "data_eng": {
-      "families": 26,
+      "families": 29,
       "canary": 1,
       "formats": {
         "open_answer": 5,
         "find_bug": 4,
-        "predict_output": 9,
-        "choose_fix": 3,
+        "choose_fix": 4,
+        "predict_output": 10,
         "open_book_3step": 1,
-        "mcq_concept": 4
+        "mcq_concept": 5
       }
     },
     "data_ml": {
@@ -66,14 +66,14 @@
       }
     },
     "devops": {
-      "families": 27,
+      "families": 30,
       "canary": 1,
       "formats": {
         "predict_output": 6,
         "choose_fix": 1,
         "find_bug": 3,
         "open_book_3step": 2,
-        "mcq_concept": 10,
+        "mcq_concept": 13,
         "open_answer": 5
       }
     },
@@ -90,10 +90,10 @@
       }
     },
     "mobile": {
-      "families": 28,
+      "families": 29,
       "canary": 0,
       "formats": {
-        "mcq_concept": 10,
+        "mcq_concept": 11,
         "open_answer": 5,
         "find_bug": 7,
         "choose_fix": 5,
@@ -101,11 +101,11 @@
       }
     },
     "qa": {
-      "families": 29,
+      "families": 30,
       "canary": 1,
       "formats": {
         "open_book_3step": 2,
-        "mcq_concept": 7,
+        "mcq_concept": 8,
         "find_bug": 9,
         "choose_fix": 2,
         "open_answer": 4,
@@ -113,12 +113,12 @@
       }
     },
     "security": {
-      "families": 30,
+      "families": 31,
       "canary": 1,
       "formats": {
         "find_bug": 9,
         "predict_output": 3,
-        "mcq_concept": 5,
+        "mcq_concept": 6,
         "choose_fix": 6,
         "open_answer": 5,
         "open_book_3step": 2
@@ -165,12 +165,12 @@
         }
       },
       "data_eng": {
-        "families": 19,
+        "families": 21,
         "per_grade": {
-          "intern": 3,
-          "junior": 12,
-          "middle": 14,
-          "senior": 7
+          "intern": 4,
+          "junior": 13,
+          "middle": 15,
+          "senior": 8
         }
       },
       "data_ml": {
@@ -183,12 +183,12 @@
         }
       },
       "devops": {
-        "families": 20,
+        "families": 22,
         "per_grade": {
-          "intern": 3,
-          "junior": 13,
-          "middle": 16,
-          "senior": 7
+          "intern": 4,
+          "junior": 14,
+          "middle": 17,
+          "senior": 8
         }
       },
       "frontend": {
@@ -232,38 +232,38 @@
   "excluded": [],
   "validation": {
     "summary": {
-      "n_families": 331,
-      "n_variants_generated": 6620,
-      "n_unique_variants": 6596,
-      "n_checks": 2174,
+      "n_families": 342,
+      "n_variants_generated": 6840,
+      "n_unique_variants": 6816,
+      "n_checks": 2219,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 311,
+        "PASS": 322,
         "WARN": 20
       },
       "n_fail": 0,
       "n_warn": 20,
       "by_direction": {
-        "analyst": 25,
-        "backend": 51,
+        "analyst": 26,
+        "backend": 52,
         "common": 46,
-        "data_eng": 26,
+        "data_eng": 29,
         "data_ml": 34,
-        "devops": 27,
+        "devops": 30,
         "frontend": 35,
-        "mobile": 28,
-        "qa": 29,
-        "security": 30
+        "mobile": 29,
+        "qa": 30,
+        "security": 31
       },
       "by_format": {
-        "mcq_concept": 70,
-        "predict_output": 64,
+        "mcq_concept": 79,
+        "predict_output": 65,
         "open_answer": 57,
         "find_bug": 67,
-        "choose_fix": 51,
+        "choose_fix": 52,
         "open_book_3step": 22
       },
-      "seconds": 242.2
+      "seconds": 378.2
     },
     "seeds": 20,
     "verify_seeds": 3,

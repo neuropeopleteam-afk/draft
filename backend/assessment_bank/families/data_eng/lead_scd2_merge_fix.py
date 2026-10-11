@@ -6,15 +6,18 @@
 (выгрузка частичная), остаются как есть; повторный запуск той же загрузки ничего не меняет; атрибуты
 могут быть NULL.
 
-Варианты (каждый исполняется):
-  * good — UPDATE закрывает текущие версии с отличием по null-безопасному сравнению (IS NOT), затем INSERT
-    для ключей без текущей версии;
+Варианты (каждый исполняется) построены по схеме 2×2 от верного (UPDATE закрывает текущие версии с отличием
+по null-безопасному сравнению IS NOT, затем INSERT для ключей снимка без текущей версии): из пула правил
+выбираются два (a, b), варианты — верный, нарушено a, нарушено b, нарушены оба. Пул:
   * null_unsafe — сравнение через «<>»: переход NULL → значение и значение → NULL не замечается;
   * history_match — новая версия вставляется, только если такой комбинации атрибутов нет ни в одной версии
-    ключа: возврат к прежнему значению (A → B → A) не замечается — текущей остаётся B;
-  * close_all — закрывает и вставляет заново все ключи снимка без проверки изменений: неизменные получают
-    лишние версии, повторный запуск снова меняет таблицу.
-Состав дистракторов фиксирован. Данные каждого варианта содержат все случаи (неизменный, простое изменение,
+    ключа: при возврате к прежнему значению (A → B → A) B закрывается, а новая версия не появляется;
+  * no_valid_to — при закрытии не ставится valid_to: у закрытой версии остаётся '9999-12-31';
+  * skip_null — в INSERT отсекаются строки снимка с NULL во втором атрибуте: переход в NULL закрывает версию
+    без новой, новый ключ с NULL не добавляется.
+Каждый вариант отличается от двух других на одно правило и от третьего — на два; у каждого варианта свои
+необязательные комментарии, поэтому ни длина, ни сходство вариантов не выдают ключ.
+Данные каждого варианта содержат все случаи (неизменный, простое изменение,
 NULL → значение, значение → NULL, возврат к прежнему значению, новый ключ, ключ вне снимка).
 Ключ проверяется исполнением: скрипт запускается дважды на sqlite, итог сравнивается с эталоном, который
 считает модель на Python (другим путём, чем SQL).
@@ -71,50 +74,25 @@ FROM {stg} s
 WHERE NOT EXISTS (SELECT 1 FROM {dim} d
                   WHERE d.{k} = s.{k} AND d.is_current = 1);
 ''',
-    "null_unsafe": '''
-UPDATE {dim}
-SET valid_to = '{d}', is_current = 0
-WHERE is_current = 1
-  AND EXISTS (SELECT 1 FROM {stg} s
-              WHERE s.{k} = {dim}.{k}
-                AND (s.{a1} <> {dim}.{a1} OR s.{a2} <> {dim}.{a2}));
-
-INSERT INTO {dim} ({k}, {a1}, {a2}, valid_from, valid_to, is_current)
-SELECT s.{k}, s.{a1}, s.{a2}, '{d}', '9999-12-31', 1
-FROM {stg} s
-WHERE NOT EXISTS (SELECT 1 FROM {dim} d
-                  WHERE d.{k} = s.{k} AND d.is_current = 1);
-''',
-    "history_match": '''
-INSERT INTO {dim} ({k}, {a1}, {a2}, valid_from, valid_to, is_current)
-SELECT s.{k}, s.{a1}, s.{a2}, '{d}', '9999-12-31', 2
-FROM {stg} s
-WHERE NOT EXISTS (SELECT 1 FROM {dim} d
-                  WHERE d.{k} = s.{k}
-                    AND d.{a1} IS s.{a1} AND d.{a2} IS s.{a2});
-
-UPDATE {dim}
-SET valid_to = '{d}', is_current = 0
-WHERE is_current = 1
-  AND EXISTS (SELECT 1 FROM {dim} n
-              WHERE n.{k} = {dim}.{k} AND n.is_current = 2);
-
-UPDATE {dim} SET is_current = 1 WHERE is_current = 2;
-''',
-    "close_all": '''
-UPDATE {dim}
-SET valid_to = '{d}', is_current = 0
-WHERE is_current = 1
-  AND EXISTS (SELECT 1 FROM {stg} s
-              WHERE s.{k} = {dim}.{k});
-
-INSERT INTO {dim} ({k}, {a1}, {a2}, valid_from, valid_to, is_current)
-SELECT s.{k}, s.{a1}, s.{a2}, '{d}', '9999-12-31', 1
-FROM {stg} s
-WHERE NOT EXISTS (SELECT 1 FROM {dim} d
-                  WHERE d.{k} = s.{k} AND d.is_current = 1);
-''',
 }
+
+# правило -> (фрагмент верного шаблона, замена); фрагменты разных правил не пересекаются
+MUTATIONS = {
+    "null_unsafe": ("(s.{a1} IS NOT {dim}.{a1} OR s.{a2} IS NOT {dim}.{a2})", "(s.{a1} <> {dim}.{a1} OR s.{a2} <> {dim}.{a2})"),
+    "history_match": ("WHERE d.{k} = s.{k} AND d.is_current = 1);",
+                      "WHERE d.{k} = s.{k}\n                    AND d.{a1} IS s.{a1} AND d.{a2} IS s.{a2});"),
+    "no_valid_to": ("SET valid_to = '{d}', is_current = 0", "SET is_current = 0"),
+    "skip_null": ("FROM {stg} s\nWHERE NOT EXISTS", "FROM {stg} s\nWHERE s.{a2} IS NOT NULL\n  AND NOT EXISTS"),
+}
+PAIRS = [(x, y) for i, x in enumerate(sorted(MUTATIONS)) for y in sorted(MUTATIONS)[i + 1:]]
+WHY = {"null_unsafe": "сравнение «<>» не видит переходов NULL ↔ значение",
+       "history_match": "поиск совпадения по всей истории ключа: при возврате к прежнему значению (A → B → A) B "
+                        "закрывается, а новая версия не появляется — у ключа нет текущей версии",
+       "no_valid_to": "у закрытой версии не ставится valid_to — она остаётся с '9999-12-31'",
+       "skip_null": "строки снимка с NULL отсекаются в INSERT — переход в NULL закрывает версию без новой, новый ключ "
+                    "с NULL не добавляется"}
+NOTES = (("-- закрываем текущие версии изменившихся ключей", "-- шаг 1: закрыть изменившиеся версии"),
+         ("-- добавляем новые текущие версии", "-- шаг 2: новые версии и новые ключи"))
 
 HARNESS = '''import sqlite3
 
@@ -205,8 +183,26 @@ def generate(seed: int):
     setup = ddl + ins
     f = dict(dim=dim, stg=stg, k=k, a1=a1, a2=a2, d=d)
     code = dedent(BUGGY.format(**f)) + "\n"
-    opt_code = {name: dedent(src.format(**f)) for name, src in SCRIPTS.items()}
-    chosen = ["null_unsafe", "history_match", "close_all"]
+    a, b = rng.choice(PAIRS)
+    sets = {"good": [], a: [a], b: [b], f"{a}+{b}": [a, b]}
+    style = rng.randrange(2)
+    opt_code = {}
+    for name, muts in sets.items():      # порядок обращений к rng не зависит от текста
+        tpl = SCRIPTS["good"]
+        for mname in muts:
+            old, new = MUTATIONS[mname]
+            if tpl.count(old) != 1:
+                raise ValueError(f"фрагмент правила {mname} не найден ровно один раз")
+            tpl = tpl.replace(old, new)
+        src = dedent(tpl.format(**f))
+        if rng.random() < 0.5:
+            src = NOTES[0][style] + "\n" + src.lstrip("\n")
+        if rng.random() < 0.5:
+            src = src.replace("\nINSERT INTO", "\n" + NOTES[1][style] + "\nINSERT INTO", 1)
+        opt_code[name] = src
+    if len(set(opt_code.values())) != 4:
+        raise ValueError("варианты 2×2 совпадают")
+    chosen = [a, b, f"{a}+{b}"]
     opts, key = make_options(rng, ("Заменить скрипт загрузки на:", opt_code["good"]),
                              [("Заменить скрипт загрузки на:", opt_code[c]) for c in chosen])
     by_code = {c: n for n, c in opt_code.items()}
@@ -236,9 +232,7 @@ def generate(seed: int):
         answer_key=AnswerKey(kind="option", value=key, explanation=(
             "Верно: сначала закрыть текущие версии, у которых атрибуты отличаются по null-безопасному сравнению "
             "(IS NOT), затем вставить версию для каждого ключа снимка без текущей версии — это и новые ключи, и "
-            "только что закрытые. Сравнение «<>» не видит переходов NULL ↔ значение; поиск совпадения по всей "
-            "истории не замечает возврата к прежнему значению (A → B → A) — текущей остаётся B; закрытие без "
-            "проверки изменений плодит версии неизменных ключей и меняет таблицу при повторном запуске.")),
+            "только что закрытые. Остальные нарушают правила: " + f"{WHY[a]}; {WHY[b]}; третий вариант нарушает оба.")),
         context=ctx, verification="execution", checks=checks, defect_type="scd2_load",
         display_code_note=("Ответ проверяется исполнением: скрипт запускается дважды на sqlite, итог сравнивается "
                            "с эталоном, посчитанным моделью на Python."),

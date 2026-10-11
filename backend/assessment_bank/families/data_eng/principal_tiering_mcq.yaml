@@ -1,0 +1,25 @@
+family_id: data_eng.strategy.principal_tiering_mcq
+title: Политика уровней хранения на горизонте трёх лет — хранение, плата за чтение и извлечение, рост объёма и чтений
+direction: data_eng
+skills: [data_lake, data_platform, capacity_planning, technical_strategy, cloud]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    horizon_months: 36
+    traps: [storage_only, no_growth]
+    options: "2×2: два H × два W"
+time_limit_s: 600
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.3
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Решение на горизонте: стоимость политики уровней хранения складывается из хранения по возрасту данных и платы за чтение и извлечение, которая зависит от того, как чтения убывают с возрастом; объём и чтения растут. Четыре политики по схеме 2×2 (два порога горячего уровня × два порога архива), верная меняется между вариантами, ловушки — минимум по одному хранению и минимум без роста. Lead обычно оптимизирует только хранение («всё старое — в архив») или считает по первому месяцу — граница Lead/Principal (θ ≈ 2,75). σ 0,3"
+generator: assessment_bank.families.data_eng.principal_tiering_mcq
+version: 1
+description: >
+  Principal: выбор политики уровней хранения (горячий, тёплый, архив) на 36 месяцев с ростом объёма и чтений,
+  платой за чтение и извлечение и требованием держать свежие данные горячими. Ключ — исполнением: помесячный проигрыш.

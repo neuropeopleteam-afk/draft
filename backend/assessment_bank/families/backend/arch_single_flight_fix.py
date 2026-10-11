@@ -5,14 +5,18 @@
 выполняет четыре требования: одна загрузка на ключ при любом числе ожидающих; разные ключи грузятся
 параллельно; ошибка загрузки доходит до всех ожидающих и не запоминается; по истечении TTL — новая загрузка.
 
-Варианты (большие фрагменты, каждый исполняется):
-  * good — Future «в полёте» на ключ, удаляется в finally, ошибка — через set_exception;
-  * global_lock — одна блокировка на все ключи с повторной проверкой: дубли убраны, но разные ключи
-    грузятся по очереди;
-  * no_double_check — блокировка на ключ без повторной проверки кэша после её получения: ожидающие
-    по очереди грузят снова;
-  * sticky_error — Future удаляется только при успехе: после ошибки ключ «залипает» в ошибке навсегда.
-Состав дистракторов фиксирован. Ключ проверяется исполнением: asyncio-тест (однопоточный цикл событий —
+Варианты (каждый исполняется) построены по схеме 2×2 от верного (Future «в полёте» на ключ, удаляется в
+finally, ошибка — через set_exception): из пула правил выбираются два (a, b), варианты — верный, нарушено a,
+нарушено b, нарушены оба. Пул:
+  * sticky_error — запись «в полёте» удаляется только при успехе (else вместо finally): после ошибки ключ
+    «залипает» в ошибке;
+  * cache_error — ошибка кэшируется на TTL как значение: следующий запрос не пробует снова и получает объект
+    исключения;
+  * register_late — Future регистрируется «в полёте» только после загрузки: одновременные запросы его не видят
+    и грузят каждый сам.
+Каждый вариант отличается от двух других на одно правило и от третьего — на два; у каждого варианта свои
+локальные имена и необязательный комментарий, поэтому ни длина, ни сходство вариантов не выдают ключ.
+Ключ проверяется исполнением: asyncio-тест (однопоточный цикл событий —
 детерминированный порядок) на показанном коде (падает) и на каждом варианте.
 """
 from __future__ import annotations
@@ -74,51 +78,26 @@ GET = {
                 del self._inflight[{arg}]
         return await fut
 ''',
-    "global_lock": '''
-    async def {meth}(self, {arg}):
-        hit = self._data.get({arg})
-        if hit and hit[1] > self.now:
-            return hit[0]
-        lock = self.__dict__.setdefault("_lock", asyncio.Lock())
-        async with lock:
-            hit = self._data.get({arg})
-            if hit and hit[1] > self.now:
-                return hit[0]
-            value = await self._loader({arg})
-            self._data[{arg}] = (value, self.now + self._ttl)
-            return value
-''',
-    "no_double_check": '''
-    async def {meth}(self, {arg}):
-        hit = self._data.get({arg})
-        if hit and hit[1] > self.now:
-            return hit[0]
-        lock = self._inflight.setdefault({arg}, asyncio.Lock())
-        async with lock:
-            value = await self._loader({arg})
-            self._data[{arg}] = (value, self.now + self._ttl)
-            return value
-''',
-    "sticky_error": '''
-    async def {meth}(self, {arg}):
-        hit = self._data.get({arg})
-        if hit and hit[1] > self.now:
-            return hit[0]
-        fut = self._inflight.get({arg})
-        if fut is None:
-            fut = asyncio.get_running_loop().create_future()
-            self._inflight[{arg}] = fut
-            try:
-                value = await self._loader({arg})
-            except Exception as exc:
-                fut.set_exception(exc)
-            else:
-                self._data[{arg}] = (value, self.now + self._ttl)
-                fut.set_result(value)
-                del self._inflight[{arg}]
-        return await fut
-''',
 }
+
+# правило -> (фрагмент верного шаблона, замена); фрагменты разных правил не пересекаются
+MUTATIONS = {
+    "sticky_error": ("            finally:\n                del self._inflight[{arg}]\n",
+                     "            else:\n                del self._inflight[{arg}]\n"),
+    "cache_error": ("                fut.set_exception(exc)\n",
+                    "                self._data[{arg}] = (exc, self.now + self._ttl)\n                fut.set_exception(exc)\n"),
+    "register_late": ("            self._inflight[{arg}] = fut\n            try:\n                value = await self._loader({arg})\n",
+                      "            try:\n                value = await self._loader({arg})\n                self._inflight[{arg}] = fut\n"),
+}
+PAIRS = [("sticky_error", "cache_error"), ("sticky_error", "register_late"), ("cache_error", "register_late")]
+WHY = {"sticky_error": "запись «в полёте» удаляется только при успехе — после ошибки ключ навсегда отдаёт ту же ошибку "
+                       "(требование 3)",
+       "cache_error": "ошибка кэшируется на TTL как значение — следующий запрос не пробует снова и получает объект "
+                      "исключения (требование 3)",
+       "register_late": "Future попадает в «в полёте» только после загрузки — одновременные запросы его не видят и "
+                        "грузят каждый сам (требование 1)"}
+NOTES = ["# одна загрузка на ключ, остальные ждут её результат", "# промах: грузим один раз, остальные ждут",
+         "# холодный кэш: защищаем источник от дублей"]
 
 TEST = '''
 import asyncio as _aio
@@ -169,18 +148,36 @@ def generate(seed: int):
     rng.shuffle(keys)
     k1, k2, k3, k4 = keys
     f = dict(cls=cls, arg=arg, meth=meth)
-    names = {"_data": rng.choice(["_data", "_store", "_entries"]), "_inflight": rng.choice(["_inflight", "_loading"]),
-             "hit": rng.choice(["hit", "entry", "cached"]), "fut": rng.choice(["fut", "waiter", "task"]),
-             "value": rng.choice(["value", "val", "result"]), "exc": rng.choice(["exc", "err", "e"])}
-
-    def ren(src: str) -> str:   # поверхностные имена; порядок обращений к rng не зависит от текста
-        return re.sub(r"\b(_data|_inflight|hit|fut|value|exc)\b", lambda m: names[m.group(1)], src)
-
-    head = ren(HEAD.format(**f))
-    code = {k: dedent(head) + "\n" + ren(GET[k].format(**f)).rstrip() + "\n" for k in GET}
+    a, b = rng.choice(PAIRS)
+    sets = {"good": [], a: [a], b: [b], f"{a}+{b}": [a, b]}
+    note = rng.choice(NOTES)
+    head_names = {"_data": rng.choice(["_data", "_store", "_entries"]), "_inflight": rng.choice(["_inflight", "_loading"])}
+    fields = lambda src: re.sub(r"\b(_data|_inflight)\b", lambda m: head_names[m.group(1)], src)  # noqa: E731
+    head = fields(HEAD.format(**f))
+    code = {"buggy": dedent(head) + "\n" + fields(GET["buggy"].format(**f)).rstrip() + "\n"}
+    opt_code = {}
+    # у каждого варианта — свои локальные имена и необязательный комментарий; порядок обращений к rng не зависит
+    # от текста
+    for k, muts in sets.items():
+        tpl = GET["good"]
+        for mname in muts:
+            old, new = MUTATIONS[mname]
+            if tpl.count(old) != 1:
+                raise ValueError(f"фрагмент правила {mname} не найден ровно один раз")
+            tpl = tpl.replace(old, new)
+        names = {"hit": rng.choice(["hit", "entry", "cached"]), "fut": rng.choice(["fut", "waiter", "pending"]),
+                 "value": rng.choice(["value", "val", "result"]), "exc": rng.choice(["exc", "err", "e"])}
+        add_note = rng.random() < 0.5
+        src = re.sub(r"\b(hit|fut|value|exc)\b", lambda m: names[m.group(1)], fields(tpl.format(**f)))
+        if add_note:
+            src = src.replace("        if " + names["fut"] + " is None:\n",
+                              "        " + note + "\n        if " + names["fut"] + " is None:\n", 1)
+        opt_code[k] = dedent(src).strip() + "\n"
+        code[k] = dedent(head) + "\n" + src.rstrip() + "\n"
+    if len(set(opt_code.values())) != 4:
+        raise ValueError("варианты 2×2 совпадают")
     test = TEST.format(cls=cls, meth=meth, ttl=ttl, n=n, k1=k1, k2=k2, k3=k3, k4=k4)
-    chosen = ["global_lock", "no_double_check", "sticky_error"]
-    opt_code = {k: dedent(ren(GET[k].format(**f))) for k in ["good"] + chosen}
+    chosen = [a, b, f"{a}+{b}"]
     opts, key = make_options(rng, ("Заменить метод на:", opt_code["good"]),
                              [("Заменить метод на:", opt_code[d]) for d in chosen])
     by_code = {c: k for k, c in opt_code.items()}
@@ -201,16 +198,12 @@ def generate(seed: int):
             f"сколько бы запросов ни ждали; (2) разные ключи грузятся параллельно; (3) ошибка загрузки доходит до "
             f"всех ожидающих и не запоминается — следующий запрос пробует снова; (4) по истечении TTL ({ttl} с) "
             f"значение загружается заново. Какая замена выполняет все четыре требования?")
-    why = {"global_lock": "одна блокировка на все ключи убирает дубли, но разные ключи грузятся по очереди (требование 2)",
-           "no_double_check": "после получения блокировки кэш не перепроверяется — ожидающие по очереди грузят снова "
-                              "(требование 1)",
-           "sticky_error": "загрузка «в полёте» удаляется только при успехе — после ошибки ключ навсегда отдаёт ту же "
-                           "ошибку (требование 3)"}
     ak = AnswerKey(kind="option", value=key,
                    explanation=("Верна загрузка «в полёте» на ключ: первый запрос создаёт Future и грузит, остальные "
                                 "ждут тот же Future; результат или ошибка передаются всем, а запись о загрузке "
-                                "удаляется в finally — ошибка не запоминается. Остальные: " +
-                                "; ".join(why[d] for d in chosen) + "."))
+                                "удаляется в finally — ошибка не запоминается. Остальные нарушают правила: " +
+                                f"{WHY[a]}; {WHY[b]}; третий вариант нарушает оба."))
     return build_variant(FAMILY_ID, seed, stem=stem, code=code["buggy"], options=opts, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="cache_stampede",
-                         language="python", params={"cls": cls, "meth": meth, "ttl": ttl, "n": n})
+                         language="python", params={"cls": cls, "meth": meth, "ttl": ttl, "n": n,
+                                                    "distractors": chosen})
