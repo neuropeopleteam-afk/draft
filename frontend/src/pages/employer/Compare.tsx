@@ -117,7 +117,7 @@ export function Compare() {
                     {c.probe_active ? "Зонд отправлен" : "Зонд"}
                   </button>
                   <button className="btn-primary !px-3 !py-1.5 text-xs" disabled={!c.can_invite} title={c.can_invite ? undefined : inviteBlockedText(c)} onClick={() => setInvite(c)}>Пригласить</button>
-                  <Link className="btn-ghost !px-3 !py-1.5 text-xs" to={`/employer/candidates/${c.ref}?need=${id}`}>Карточка</Link>
+                  <Link className="btn-ghost !px-3 !py-1.5 text-xs" to={`/employer/candidates/${c.ref}?need=${id}${data.need.version ? `&v=${data.need.version}` : ""}`}>Карточка</Link>
                 </div>
                 {!c.can_invite && <p className="text-xs text-brand-ink/65">Повторное приглашение — с {c.invite_available_at ? dt(c.invite_available_at) : "позже"}</p>}
                 {c.last_invitation_status && <div className="text-xs"><Status s={c.last_invitation_status} /></div>}

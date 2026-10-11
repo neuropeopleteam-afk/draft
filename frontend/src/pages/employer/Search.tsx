@@ -116,6 +116,7 @@ export function CandidateDetail() {
   const direction = params.get("direction");
   const qs = new URLSearchParams();
   if (need) qs.set("need_id", need);
+  if (need && params.get("v")) qs.set("v", params.get("v")!);  // FIX7 п. 12: версия подборки (требования v2)
   if (direction) qs.set("direction", direction);
   const { data: c, loading, error, reload } = useApi<any>(`/employer/candidates/${ref}?${qs.toString()}`);
   const [modal, setModal] = useState<"" | "probe" | "invite">("");

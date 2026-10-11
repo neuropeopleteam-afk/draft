@@ -563,7 +563,7 @@ export function Selection() {
                     {visible.map((r: any, i: number) => {
                       const isOpen = open[r.ref] ?? expandAll;
                       return (
-                        <CompactCard key={r.ref} r={expMin != null ? { ...r, exp_min: expMin } : r} rank={i + 1} fit={mutual.data?.items[r.ref]} needId={id}
+                        <CompactCard key={r.ref} r={expMin != null ? { ...r, exp_min: expMin } : r} rank={i + 1} fit={mutual.data?.items[r.ref]} needId={id} version={s.version}
                           picked={picked.includes(r.ref)} pickDisabled={picked.length >= 3} onPick={() => togglePick(r.ref)}
                           onInvite={() => { setInvited(null); setInvite(r); }}
                           badge={sub.data?.new_refs.includes(r.ref) ? <NewChip /> : undefined}

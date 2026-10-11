@@ -424,3 +424,27 @@ def test_fix7_offer_hint_names_real_reason():
     fine = summarize([_f("location", "ok", "Город совпадает: Казань"), _f("salary", "ok", "Вилка в ожиданиях кандидата"),
                       _f("format", "ok", "Подходит любой формат")])
     assert offer_hint(fine) == ("Вилка в ожиданиях кандидата.", None)
+
+
+def test_fix7_candidate_card_keeps_selection_version(client):
+    """FIX7 п. 12 (проход модельного пользователя P08): профиль, открытый из подборки v2, считался по требованиям v1
+    (61/100, 3/4, снова обязательный REST API). С ?v=2 — балл и «обязательное» по требованиям v2, как в самой подборке."""
+    w = _world(client)
+    te, nid = w["te"], w["need"]["id"]
+    req = dict(_sel(client, w)["requirements"])
+    must = req["stack_required"]
+    assert len(must) >= 2, must
+    req2 = {**req, "stack_required": must[:-1]}  # v2: одно обязательное ослаблено
+    r = client.post(f"/api/employer/needs/{nid}/selections", headers=H(te),
+                    json={"parent_version": 1, "filters": {}, "requirements": req2})
+    assert r.status_code == 201, r.text
+    v2 = r.json()
+    ref = v2["results"][0]["ref"]
+    card1 = client.get(f"/api/employer/candidates/{ref}", params={"need_id": nid}, headers=H(te)).json()["match"]
+    card2 = client.get(f"/api/employer/candidates/{ref}", params={"need_id": nid, "v": v2["version"]}, headers=H(te)).json()["match"]
+    assert card2["version"] == v2["version"] and card1["version"] is None
+    assert card2["must"]["required_total"] == len(must) - 1 and card1["must"]["required_total"] == len(must)
+    assert card2["score"] == v2["results"][0]["score"]
+    # чужая/несуществующая версия — как без версии (требования потребности)
+    card9 = client.get(f"/api/employer/candidates/{ref}", params={"need_id": nid, "v": 99}, headers=H(te)).json()["match"]
+    assert card9["version"] is None and card9["must"]["required_total"] == len(must)
