@@ -11,7 +11,7 @@ import { InterviewerAvatar, VoiceRecordButton, VoiceWave, postAudio, useSpeechPl
 type Verdict = "confirmed" | "discrepancies" | "insufficient" | "strong" | "medium" | "weak" | null;
 interface Quote { text: string }
 interface Question { n?: number; question: string; task_title?: string | null; skill?: string | null; level: string; level_title: string; quotes: Quote[]; reasoning?: string | null; lowered?: boolean }
-interface Conversation { n?: number; question?: string | null; asked: number; max_questions: number; deadline?: string | null; channels: { voice: boolean; stt: boolean; text: boolean }; engine: "engine" | "stub"; hint?: string | null }
+interface Conversation { n?: number; question?: string | null; asked: number; max_questions: number; deadline?: string | null; channels: { voice: boolean; stt: boolean; text: boolean }; engine: "engine" | "stub"; hint?: string | null; context?: string | null }
 export interface IvSession {
   id: string; mode: "defense" | "interview"; status: string; status_title: string; verdict: Verdict; verdict_title?: string | null;
   score?: number | null; summary?: string | null; questions: Question[]; flags: string[]; duration_s?: number | null; minutes: number;
@@ -332,7 +332,9 @@ export function InterviewRoom() {
   }, [s?.conversation?.deadline]);
   const q = s?.conversation?.question ?? null;
   useEffect(() => { if (q && s?.status === "in_progress" && spoken.current !== q) { spoken.current = q; void say(q); } }, [q, s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (s && s.status !== "in_progress") player.stop(); }, [s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (s && s.status !== "in_progress" && !bye) player.stop(); }, [s?.status]);  // eslint-disable-line react-hooks/exhaustive-deps
+  const [bye, setBye] = useState<string | null>(null);  // прощание ведущей: время вышло или «Закончить»
+  useEffect(() => { if (left === 0 && s?.status === "in_progress" && !busy) void finish(true); }, [left]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   async function fallback(next: Ch, why: string) {
     setNote(why); setCh(next);
@@ -371,10 +373,22 @@ export function InterviewRoom() {
     try { setS(await api<IvSession>(`/interview/sessions/${id}/answer`, { body: { text, channel: ch } })); setText(""); }
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
-  async function finish() {
+  async function finish(timeUp = false) {
     player.stop();
     setBusy(true); setErr(null);
-    try { setS(await api<IvSession>(`/interview/sessions/${id}/finish`, { method: "POST" })); } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+    try {
+      const r = await api<IvSession>(`/interview/sessions/${id}/finish`, { method: "POST" });
+      setS(r);
+      if (r.status === "evaluating" || r.status === "completed") {
+        setBye(timeUp ? "Время вышло. Спасибо, я всё записала — разговор закончен." : "Спасибо, я всё записала — разговор закончен.");
+        if (ch === "voice") {  // прощание — тем же голосом; не вышло — только текст
+          try {
+            const a = await fetch(apiUrl(`/interview/sessions/${id}/speech`), { headers: authHeaders() });
+            if (a.ok) void player.play(await a.blob());
+          } catch { /* текст прощания уже на экране */ }
+        }
+      } else if (timeUp) setBye("Время вышло — ответов нет, разговор закрыт. Его можно начать заново со страницы теста.");
+    } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
 
   if (!s) return err ? <Alert>{err}</Alert> : <Loading />;
@@ -401,9 +415,10 @@ export function InterviewRoom() {
       {s.status === "created" && c && (
         <section className="card space-y-3" aria-label="Начало разговора">
           <p className="text-sm text-brand-ink/80">До {s.max_questions} вопросов, около {s.minutes} минут. Отвечайте своими словами — так же, как писали в тесте.{c.channels.stt ? " Отвечать можно голосом («нажми и говори», текст можно поправить перед отправкой) или текстом" : " Отвечать — текстом"}; закончить — в любой момент.</p>
-          <div className="flex flex-wrap gap-2">
-            {c.channels.voice && <button className="btn-primary" disabled={busy} onClick={() => begin("voice")} data-testid="iv-begin-voice">Начать голосом</button>}
-            <button className={c.channels.voice ? "btn-ghost" : "btn-primary"} disabled={busy} onClick={() => begin("text")} data-testid="iv-begin-text">Начать в чате</button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button className="btn-primary" disabled={busy} onClick={() => begin(c.channels.voice ? "voice" : "text")}
+              data-testid={c.channels.voice ? "iv-begin-voice" : "iv-begin-text"}>Начать разговор</button>
+            {c.channels.voice && <button className="text-sm text-brand-ink/70 underline" disabled={busy} onClick={() => begin("text")} data-testid="iv-begin-text">Перейти в чат</button>}
           </div>
         </section>
       )}
@@ -411,6 +426,8 @@ export function InterviewRoom() {
         <section className="card space-y-3" aria-label="Разговор">
           <p className="text-xs text-brand-ink/65">Вопрос {Math.min(c.n ?? c.asked, c.max_questions)} из {c.max_questions}{left != null ? ` · осталось ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}` : ""}</p>
           <p className="font-semibold text-brand-night" aria-live="polite" data-testid="iv-question">{c.question}</p>
+          {c.context && <p className="line-clamp-2 text-sm text-brand-ink/75" data-testid="iv-context">Ваш ответ в тесте: «{c.context}»</p>}
+          <p className="text-xs text-brand-ink/65">{ch === "voice" && c.channels.stt ? "Ответьте голосом своими словами, 1–2 фразы." : "Ответьте своими словами, 1–2 фразы."}</p>
           <label className="block" htmlFor="iv-answer"><span className="sr-only">Ваш ответ</span>
             <textarea id="iv-answer" className="input min-h-[8rem] w-full" value={text} onChange={(e) => setText(e.target.value)} placeholder="Ваш ответ своими словами" maxLength={3000} /></label>
           <div className="flex flex-wrap gap-2">
@@ -423,11 +440,13 @@ export function InterviewRoom() {
             )}
             {ch === "voice" && <button className="btn-ghost" disabled={busy || player.playing} onClick={() => q && void say(q, true)} data-testid="iv-repeat">Повторить вопрос</button>}
             {c.engine === "stub" && c.hint && <button className="btn-ghost" onClick={() => setText(c.hint ?? "")} data-testid="iv-hint">Подставить начало письменного ответа (заглушка)</button>}
-            <button className="btn-ghost" disabled={busy} onClick={finish}>Закончить</button>
+            <button className="btn-ghost" disabled={busy} onClick={() => void finish()}>Закончить</button>
+            {ch === "voice" && <button className="text-sm text-brand-ink/70 underline" disabled={busy} onClick={() => { player.stop(); void fallback("text", "Перешли в чат: вопросы — текстом, отвечать можно и голосом."); }} data-testid="iv-to-chat">Перейти в чат</button>}
           </div>
         </section>
       )}
-      {s.status === "evaluating" && <section className="card" role="status"><p className="font-semibold text-brand-night">Разговор окончен — модель оценивает ответы…</p></section>}
+      {bye && <p className="font-semibold text-brand-night" role="status" data-testid="iv-bye">Интервьюер: {bye}</p>}
+      {s.status === "evaluating" && <section className="card" role="status"><p className="font-semibold text-brand-night">Разговор окончен — модель оценивает ответы, итог появится здесь через минуту.</p></section>}
       {s.status === "completed" && <section className="card">{s.result_hidden ? <p className="font-semibold text-brand-night" data-testid="iv-done">Спасибо! Разговор окончен. Итог и расшифровку видит только пригласившая компания.</p> : <SessionResult s={s} />}</section>}
       {["failed", "expired", "cancelled", "deleted"].includes(s.status) && <Alert kind="info">{s.status_title}{s.error ? `: ${s.error}` : ""}.</Alert>}
       <Alert>{err}</Alert>

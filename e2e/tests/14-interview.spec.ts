@@ -47,11 +47,13 @@ async function visualOk(page: Page, opts: { still?: boolean } = {}) {
   await expect(w).toBeVisible();
   await expect(w).toHaveAttribute("data-state", /^(speaking|listening|thinking)$/);
   await expect(w).toContainText("Интервьюер:");
-  await expect(w).toContainText("модель, не люди");
+  // под образом — только «Интервьюер: состояние» (решение владельца 11.10), без плашек и подписей
+  await expect(w).not.toContainText("модель, не люди");
+  await expect(w).not.toContainText("ИИ · не человек");
   if (!avatar) {
     await expect(page.locator("video")).toHaveCount(0);
   } else {
-    await expect(w).toContainText("ИИ-интервьюер, не человек");
+    await expect(w).not.toContainText("ИИ-интервьюер, не человек");
     await expect(w.getByTestId("avatar-still")).toHaveAttribute("alt", /несуществующий человек/);
     if (opts.still) {  // клипов нет (не загрузились) — запасной вариант: неподвижный кадр и свечение рамки, клипы не видны
       await expect(w).toHaveAttribute("data-mode", "still");
