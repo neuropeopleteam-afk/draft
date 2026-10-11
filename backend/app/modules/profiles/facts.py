@@ -483,6 +483,22 @@ def skill_parts_text(f: CandidateFact) -> str:
     return "; ".join(out)
 
 
+def skill_confirmed_title(f: CandidateFact | None) -> str:
+    """FIX7 п. 9: подпись подтверждённого навыка по настоящему источнику (тот же порог 50 %, что у skill_confirmed).
+    Слитый факт «тест 0,4 из 1 + задание работодателя 1 из 1» подтверждён заданием, а не тестом — в карте навыков
+    у такого навыка 34–40 % и «Пробел», поэтому подпись «подтверждён тестом» противоречила карте."""
+    v = getattr(f, "value", None) or {}
+    parts = v.get("parts") or ({_origin(f): _part(f)} if f is not None else {})
+    ok = {k for k, x in parts.items() if _part_ok(x)}
+    if ok == {"test"} or not parts:
+        return "подтверждён тестом (T1)"
+    if "test" in ok:
+        return "подтверждён тестом и заданием работодателя (T1)"
+    if "test" in parts:
+        return "подтверждён заданием работодателя (T1); в тесте — ниже 50 %"
+    return "подтверждён заданием работодателя (T1)"
+
+
 def skill_evidence_text(f: CandidateFact) -> str:
     """Один источник: «Подтверждено заданиями теста: 2 из 3» (ниже порога — «Проверено …: — ниже порога
     подтверждения»). Несколько (И7): исход каждого отдельно — «Тест — подтверждено, 1 из 1; задание работодателя —

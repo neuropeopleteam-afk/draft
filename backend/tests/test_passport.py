@@ -481,3 +481,19 @@ def test_fix7_one_status_source_category_and_passport(client):
     me2 = client.get("/api/me/passport", headers=H(tok2)).json()
     assert gs2["passport_status"] == "confirmed" == me2["active"]["passport"]["grade_status"]
     assert not gs2.get("pending_review") and me2["preliminary_reason"] is None
+
+
+def test_fix7_skill_confirmed_title_names_real_source():
+    """FIX7 п. 9 (P05): навык подтверждён заданием работодателя при тесте 0,4 из 1 — подпись не «подтверждён тестом»."""
+    from types import SimpleNamespace as NS
+
+    from app.modules.profiles.facts import skill_confirmed_title
+
+    both_ok = NS(value={"score": 1.0, "parts": {"test": {"correct": 1, "total": 1}, "assignment": {"correct": 1, "total": 1}}}, source_ref="")
+    task_only = NS(value={"score": 0.7, "parts": {"test": {"correct": 0.4, "total": 1}, "assignment": {"correct": 1, "total": 1}}}, source_ref="")
+    test_only = NS(value={"score": 0.67, "correct": 2, "total": 3}, source_ref="test_session:1")
+    assign = NS(value={"score": 1.0, "correct": 1, "total": 1}, source_ref="assignment:1")
+    assert skill_confirmed_title(test_only) == "подтверждён тестом (T1)"
+    assert skill_confirmed_title(both_ok) == "подтверждён тестом и заданием работодателя (T1)"
+    assert skill_confirmed_title(task_only) == "подтверждён заданием работодателя (T1); в тесте — ниже 50 %"
+    assert skill_confirmed_title(assign) == "подтверждён заданием работодателя (T1)"
