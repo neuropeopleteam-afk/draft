@@ -104,6 +104,9 @@ test("1440: проверка за 12 минут — от своей потреб
 
   await test.step("3. сравнение трёх рядом", async () => {
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+\/compare/);
+    // аудит №1: на сравнении проводник свёрнут (не сужает таблицу) — разворачиваем
+    await expect(page.getByTestId("guide-continue")).toHaveText("Продолжить проверку: шаг 3 из 8");
+    await page.getByTestId("guide-continue").click();
     await expectStep(page, 3, "Сравнение трёх рядом");
     await expect(page.getByRole("heading", { name: "Сравнение кандидатов" })).toBeVisible({ timeout: 60_000 });
     await next(page, "Приглашение с зарплатой");
@@ -146,6 +149,9 @@ test("1440: проверка за 12 минут — от своей потреб
       }
     }
     expect(sent, "приглашение с вилкой отправлено").toBe(true);
+    // аудит №2: карточка — «Приглашён ✓», шаг в проводнике отмечен
+    await expect(page.getByTestId("card-invited").first()).toHaveText("Приглашён ✓");
+    await expect(hint).toContainText("✓ Приглашение отправлено", { timeout: 30_000 });
     own = !!ref;
   });
 
