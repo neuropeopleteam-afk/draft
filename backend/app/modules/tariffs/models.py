@@ -45,8 +45,8 @@ class DemoInvoice(UUIDPk, Base):
     company_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("companies.id", ondelete="CASCADE"), index=True)
     number: Mapped[str] = mapped_column(sa.String(32), unique=True)
     plan: Mapped[str] = mapped_column(sa.String(16))
-    amount_rub: Mapped[int] = mapped_column(sa.Integer)
-    vat_rub: Mapped[int] = mapped_column(sa.Integer)
+    amount_rub: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)  # None — цена «по запросу»
+    vat_rub: Mapped[int | None] = mapped_column(sa.Integer, nullable=True)
     period_from: Mapped[date] = mapped_column(sa.Date)
     period_to: Mapped[date] = mapped_column(sa.Date)
     status: Mapped[str] = mapped_column(sa.String(16), default="demo")  # demo — оплата не проводится

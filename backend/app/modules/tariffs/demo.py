@@ -23,7 +23,6 @@ from app.core.enums import InvitationStatus
 from app.modules.hiring.models import HiringOutcome
 from app.modules.invitations.models import Invitation
 from app.modules.profiles.models import Company
-from app.modules.tariffs import plans as P
 from app.modules.tariffs import service as svc
 from app.modules.tariffs.models import CompanyTariff, DemoInvoice
 
@@ -69,9 +68,8 @@ def seed(db: Session, rng_seed: int = 20261011) -> dict:
             continue
         r = svc.ensure_row(db, c)
         r.plan, r.is_demo, r.plan_since = "hire", True, now - timedelta(days=20)
-        p = P.plan("hire")
         db.add(DemoInvoice(company_id=c.id, number=f"Д-ДЕМО-{c.id.hex[:8].upper()}", plan="hire",
-                           amount_rub=p["price_rub_month"], vat_rub=P.vat_of(p["price_rub_month"]),
+                           amount_rub=None, vat_rub=None,  # цена «по запросу» — счёт без суммы
                            period_from=today - timedelta(days=20), period_to=today + timedelta(days=10), status="demo",
                            created_at=now - timedelta(days=20)))
         out["hire"] += 1

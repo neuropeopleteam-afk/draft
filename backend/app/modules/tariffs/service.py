@@ -164,10 +164,10 @@ def require_feature(feature: str):
 
 def invoice_out(i: DemoInvoice) -> dict:
     return {"id": str(i.id), "number": i.number, "plan": i.plan, "plan_title": P.plan(i.plan)["title"],
-            "amount_rub": i.amount_rub, "vat_rub": i.vat_rub, "vat_rate": P.VAT_RATE,
+            "amount_rub": i.amount_rub, "vat_rub": i.vat_rub, "price_note": "по запросу",
             "period_from": i.period_from.isoformat(), "period_to": i.period_to.isoformat(), "status": i.status,
             "created_at": as_aware(i.created_at).isoformat(),
-            "note": "Демонстрационный счёт: оплата не проводится, тариф подключён сразу."}
+            "note": "Демонстрационный счёт без суммы: цена — по запросу, оплата не проводится, тариф подключён сразу."}
 
 
 def state(db: Session, c: Company) -> dict:
@@ -208,10 +208,10 @@ def choose(db: Session, c: Company, user: User, plan_id: str) -> dict:
     r = ensure_row(db, c)
     invoice = None
     if plan_id == P.PAID_PLAN:
-        p = P.plan(plan_id)
         today = utcnow().astimezone(MSK).date()
-        invoice = DemoInvoice(company_id=c.id, number=_invoice_number(db), plan=plan_id, amount_rub=p["price_rub_month"],
-                              vat_rub=P.vat_of(p["price_rub_month"]), period_from=today,
+        # цена «по запросу» (решение владельца 11.10): демо-счёт без суммы
+        invoice = DemoInvoice(company_id=c.id, number=_invoice_number(db), plan=plan_id, amount_rub=None,
+                              vat_rub=None, period_from=today,
                               period_to=today + timedelta(days=30), status="demo", created_by=user.id)
         db.add(invoice)
     r.plan = plan_id

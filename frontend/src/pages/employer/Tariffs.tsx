@@ -1,6 +1,6 @@
 // Я29: тарифы работодателя — публичная страница /tariffs, раздел «Тарифы» кабинета, счётчик «осталось приглашений»,
 // метка «Партнёр ФСП». Всё показывается только при TARIFFS_ENABLED (/api/meta → tariffs.enabled). Цены и лимиты —
-// backend/app/modules/tariffs/plans.py; оплаты нет — демонстрационный счёт.
+// backend/app/modules/tariffs/plans.py; цена «Найма» — по запросу, оплаты нет — демонстрационный счёт без суммы.
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageTitle } from "../../components/CabinetLayout";
@@ -14,7 +14,7 @@ interface Plan {
   summary: string; self_service: boolean; feature_list: { key: string; title: string; included: boolean }[];
 }
 interface Usage { month: string; invites_used: number; invites_limit: number; invites_left: number; resets_on: string }
-interface Invoice { id: string; number: string; plan_title: string; amount_rub: number; vat_rub: number; period_from: string; period_to: string; note: string }
+interface Invoice { id: string; number: string; plan_title: string; amount_rub: number | null; period_from: string; period_to: string; note: string }
 interface TariffState {
   plan_id: Plan["id"]; plan: Plan; is_default: boolean; fsp_partner: boolean; partner_since: string | null; partner_note: string | null;
   partner_requested_at: string | null; usage: Usage; invoices: Invoice[]; plans: Plan[]; price_is_stub: boolean; invoice?: Invoice | null;
@@ -22,7 +22,8 @@ interface TariffState {
 
 export const useTariffsOn = () => !!useMeta()?.tariffs?.enabled;
 const invitesText = (n: number) => `${n}${NB}${plural(n, "приглашение", "приглашения", "приглашений")}`;
-const price = (p: Plan) => (p.price_rub_month == null ? p.price_note : p.price_rub_month === 0 ? "0 ₽" : rub(p.price_rub_month));
+// цена «Найма» — «по запросу» (решение владельца 11.10): число показываем, только если оно задано в plans.py
+const price = (p: Plan) => (p.price_rub_month === 0 ? "0 ₽" : p.price_rub_month ? rub(p.price_rub_month) : p.price_note);
 
 /** Метка «Партнёр ФСП» — в карточке компании, в приглашении кандидату, в кабинете работодателя. */
 export function PartnerBadge({ on, className = "" }: { on?: boolean | null; className?: string }) {
@@ -60,8 +61,8 @@ function PlanCard({ p, current, action }: { p: Plan; current?: boolean; action?:
           <h3 className="text-lg font-bold text-brand-night">{p.title}</h3>
           {current && <span className="chip">Ваш тариф</span>}
         </div>
-        <p className={`mt-2 font-extrabold tabular-nums text-brand-night ${p.price_rub_month == null ? "text-lg leading-snug" : "text-2xl"}`}>{price(p)}</p>
-        <p className="text-xs text-brand-ink/65">{p.price_rub_month ? p.price_note : p.price_rub_month === 0 ? "Без оплаты" : "Подключает ФСП по договору"}</p>
+        <p className={`mt-2 font-extrabold tabular-nums text-brand-night ${p.id === "partner" ? "text-lg leading-snug" : "text-2xl"}`}>{price(p)}</p>
+        <p className="text-xs text-brand-ink/65">{p.price_rub_month === 0 ? "Без оплаты" : p.id === "partner" ? "Подключает ФСП по договору" : "Демо: подключается сразу, демо-счёт без суммы"}</p>
       </div>
       <p className="text-sm leading-relaxed text-brand-ink/80">{p.summary}</p>
       <ul className="space-y-1.5 text-sm">
@@ -79,7 +80,7 @@ function PlanCard({ p, current, action }: { p: Plan; current?: boolean; action?:
 }
 
 function StubNote() {
-  return <p className="text-xs leading-relaxed text-brand-ink/65">Цены — демонстрационные, не оферта: на прототипе нет настоящей оплаты, при выборе «Найма» выставляется демонстрационный счёт и тариф подключается сразу.</p>;
+  return <p className="text-xs leading-relaxed text-brand-ink/65">Цена «Найма» — по запросу, не оферта. На прототипе нет настоящей оплаты: при выборе «Найма» выставляется демонстрационный счёт без суммы и тариф подключается сразу.</p>;
 }
 
 // ------------------------------------------------------------------ публичная страница
@@ -145,7 +146,7 @@ export function EmployerTariffs() {
     try {
       const st = await api<TariffState>("/employer/tariff", { body: { plan } });
       setData(st);
-      setMsg({ k: "ok", t: st.invoice ? `Тариф «${st.plan.title}» подключён. Выставлен демонстрационный счёт № ${st.invoice.number} на ${rub(st.invoice.amount_rub)} — оплата не проводится.` : `Тариф «${st.plan.title}» подключён.` });
+      setMsg({ k: "ok", t: st.invoice ? `Тариф «${st.plan.title}» подключён. Выставлен демонстрационный счёт № ${st.invoice.number} без суммы (цена — по запросу) — оплата не проводится.` : `Тариф «${st.plan.title}» подключён.` });
     } catch (e) { setMsg({ k: "error", t: errText(e) }); } finally { setBusy(null); }
   }
   async function requestPartner() {
@@ -166,7 +167,7 @@ export function EmployerTariffs() {
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Текущий тариф</p>
           <p className="flex flex-wrap items-center gap-2 text-2xl font-extrabold text-brand-night">{data.plan.title} <PartnerBadge on={data.fsp_partner} /></p>
-          <p className="text-sm text-brand-ink/75">{price(data.plan)}{data.plan.price_rub_month ? ` ${data.plan.price_note}` : ""}</p>
+          <p className="text-sm text-brand-ink/75">{data.plan.price_rub_month === 0 ? "0 ₽" : data.plan.id === "hire" ? "Цена — по запросу" : data.plan.price_note}</p>
           {data.fsp_partner && data.partner_note && <p className="text-sm text-brand-ink/75">Основание: {data.partner_note}</p>}
           {data.is_default && !data.fsp_partner && <p className="text-xs text-brand-ink/65">Тариф по умолчанию{data.plan_id === "hire" ? " демо-песочницы" : ""}: менять ничего не нужно.</p>}
         </div>
@@ -186,7 +187,7 @@ export function EmployerTariffs() {
             : p.id === "partner" ? null
             : data.fsp_partner ? <p className="text-xs text-brand-ink/65">Сейчас действует «Партнёр ФСП» — его условия шире.</p>
             : <button className={p.id === "hire" ? "btn-primary w-full justify-center" : "btn-ghost w-full justify-center"} disabled={!!busy} aria-busy={busy === p.id || undefined} onClick={() => choose(p.id)}>
-                {busy === p.id ? "Подключаем…" : p.id === "hire" ? `Подключить за ${rub(p.price_rub_month)} (демо-счёт)` : "Перейти на «Старт»"}</button>;
+                {busy === p.id ? "Подключаем…" : p.id === "hire" ? "Подключить «Найм» (демо-счёт без суммы)" : "Перейти на «Старт»"}</button>;
           return <PlanCard key={p.id} p={p} current={cur} action={action} />;
         })}
       </div>
@@ -205,12 +206,12 @@ export function EmployerTariffs() {
       )}
       <section className="card space-y-3" aria-labelledby="inv-h">
         <h2 id="inv-h" className="text-lg font-bold text-brand-night">Демонстрационные счета</h2>
-        {!data.invoices.length ? <p className="text-sm text-brand-ink/65">Счетов нет{data.plan.price_rub_month ? " — тариф подключён по умолчанию" : ""}.</p> : (
+        {!data.invoices.length ? <p className="text-sm text-brand-ink/65">Счетов нет{data.plan_id === "hire" && data.is_default ? " — тариф подключён по умолчанию" : ""}.</p> : (
           <ul className="space-y-2">
             {data.invoices.map((i) => (
               <li key={i.id} className="rounded-xl border border-brand-night/10 p-3 text-sm" data-testid="demo-invoice">
-                <p className="font-semibold text-brand-night">Счёт № {i.number} · «{i.plan_title}» · {rub(i.amount_rub)}</p>
-                <p className="text-brand-ink/75">Период {dateOnly(i.period_from)} — {dateOnly(i.period_to)} · в том числе НДС 22 %: {rub(i.vat_rub)}</p>
+                <p className="font-semibold text-brand-night">Счёт № {i.number} · «{i.plan_title}» · сумма — по запросу</p>
+                <p className="text-brand-ink/75">Период {dateOnly(i.period_from)} — {dateOnly(i.period_to)}</p>
                 <p className="text-xs text-brand-ink/65">{i.note}</p>
               </li>
             ))}
