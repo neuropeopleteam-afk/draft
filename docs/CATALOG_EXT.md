@@ -27,6 +27,10 @@
 
 Состояние — в `/api/meta` → `catalog`: `directions` (все видимые), `ext` (видимые новые), `ext_enabled`.
 
+Семейства только уровней Lead/Principal (банк волны 7) в правило готовности не входят и без `GRADES_EXT_ENABLED`
+не попадают ни в адаптивный пул, ни в симуляцию, ни в «проверяемые навыки» подбора (`catalog.ext.active_specs`):
+тест базовых грейдов остаётся прежним.
+
 ## Что меняется с флагом
 
 - **Справочник и API.** `/api/catalog` и `/api/catalog/stack-tags` отдают новые направления, 16 категорий и 28 стек-тегов;
@@ -56,7 +60,9 @@
   CATALOG_EXT_ENABLED=1 python -m app.modules.validation.path_retest --directions devops,mobile`) → `backend/app/modules/validation/data/path_retest_ext.json`,
   `docs/validation/TEST_RETEST_EXT.md` (основной отчёт повтора не меняется).
 - Калибровка новых семейств: до прогона панели — априорная трудность (`prior_difficulty`, «априорная трудность»
-  в отчётах банка); после прогона — по `bank/calibration/README.md`.
+  в отчётах банка); после прогона — по `bank/calibration/README.md`. Панель — языковые модели
+  (модель, не люди): она находит слабые задания (угадывание, отрицательная дискриминация), но не заменяет
+  пилот на людях; движок теста берёт трудность из `prior_difficulty` семейства.
 
 ## Включение на стенде
 
