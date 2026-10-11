@@ -203,6 +203,19 @@ test("кандидат принимает → работодатель види�
     await expect(main.getByRole("heading", { level: 1, name: "Интеграция с ATS" })).toBeVisible();
     const journal = main.getByRole("table").filter({ has: page.getByRole("columnheader", { name: "Куда" }) });
     await expect(main.getByRole("heading", { level: 2, name: "Журнал передач" })).toBeVisible();
+    // FIX7 В2: первая вкладка — «Поток», остальные — в «Другие ATS»; в «Реальный» — откуда токен; причина неактивной проверки
+    const atsSeg = main.getByRole("radiogroup", { name: "ATS" });
+    await expect(atsSeg.getByRole("radio").first()).toHaveText(/^«Поток»/);
+    await expect(atsSeg.getByRole("radio").first()).toHaveAttribute("aria-checked", "true");
+    await expect(atsSeg.getByRole("radio", { name: /^Другие ATS/ })).toBeVisible();
+    await expect(main.getByTestId("ats-live-check")).toContainText("docs/integrations/LIVE_CHECKS.md");
+    await main.getByRole("radiogroup", { name: "Режим" }).getByRole("radio", { name: "Реальный" }).click();
+    await expect(main.getByTestId("ats-token-from")).toContainText("Настройки компании → «Генерация токенов»");
+    await expect(main.getByRole("button", { name: "Проверить подключение" })).toBeDisabled();
+    await expect(main.getByTestId("ats-check-why")).toContainText("сначала вставьте токен");
+    await main.getByRole("radiogroup", { name: "Режим" }).getByRole("radio", { name: "Демо" }).click();
+    await atsSeg.getByRole("radio", { name: /^Другие ATS/ }).click();
+    await expect(main.getByRole("radiogroup", { name: "Другие ATS" }).getByRole("radio", { name: /^Talantix/ })).toHaveAttribute("aria-checked", "true");
     // принятое приглашение уходит автоматически во все подключённые демо-ATS
     for (const ats of ["Talantix", "Поток", "Хантфлоу", "Вебхук"]) {
       const row = journal.getByRole("row").filter({ hasText: POSITION }).filter({ has: page.getByRole("cell", { name: ats, exact: true }) });
