@@ -269,3 +269,24 @@ test("390 px: панель защиты, разговор и карточка р
   await emp.getByTestId("defense-details").screenshot({ path: resolve(SHOTS, "14-interview-employer-390.png") });
   await emp.context().close();
 });
+
+// SIMPLIFY п.8: на главной (блок жюри) — карточка «ИИ-интервьюер» с постером (без видео); кнопка входит демо-кандидатом
+// и открывает панель устной защиты (/candidate/category#defense). Без образа интервьюера карточки нет.
+test("главная: карточка «ИИ-интервьюер» → вход кандидатом и панель устной защиты", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("section#jury")).toBeVisible({ timeout: 60_000 });
+  const card = page.locator("section#jury").getByTestId("jury-avatar");
+  if (!avatar) {
+    await expect(card).toHaveCount(0);
+    return;
+  }
+  await expect(card).toBeVisible();
+  await expect(card.locator("img")).toHaveAttribute("src", "/avatar/interviewer.webp");
+  await expect(card.locator("video")).toHaveCount(0);
+  await card.getByTestId("jury-avatar-try").click();
+  await expect(page).toHaveURL(/\/candidate\/category#defense$/, { timeout: 60_000 });
+  const panel = page.getByTestId("defense-panel");
+  await expect(panel).toBeVisible({ timeout: 60_000 });
+  await expect(panel).toBeInViewport();
+});
