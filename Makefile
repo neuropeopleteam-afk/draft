@@ -61,7 +61,7 @@ grade-above: ## Добор ступенью выше (match-v1.3): бенчма�
 intern-cut: ## Порог грейда «Стажёр»: симуляция теста при 4 порогах-кандидатах, с лёгкими семействами и без (≈ 2 мин CPU)
 	cd backend && python -m app.modules.validation.intern_cut
 
-match-bench-compare: ## Подбор в сопоставимых условиях: миры по описанию других бенчмарков (их размер, шкала, метрики) → docs/validation/MATCHING_COMPARE.md (≈ 15 мин CPU)
+match-bench-compare: ## Подбор при других условиях измерения: миры A и B (другой размер, шкала релевантности, шум самоописания) → docs/validation/MATCHING_COMPARE.md (≈ 15 мин CPU)
 	cd backend && python -m app.modules.validation.matching_compare
 
 bench-quick: ## Быстрая проверка бенчмарка 40 × 400 без записи результатов
@@ -99,7 +99,7 @@ grade-sweep: ## Перебор параметров теста ради точн
 two-stage: ## Двухэтапное подтверждение у границы: «одна сессия / две сессии», Парето по L и длине второго этапа → data/two_stage.json, docs/validation/TWO_STAGE.md (≈ 4 мин на 8 ядрах)
 	cd backend && python -m app.modules.validation.two_stage $(TWO_STAGE_ARGS)
 
-grade-compare: ## Точность уровня в сопоставимых условиях (точные параметры, заявили не ниже, короткий тест на уровень выше) → data/grade_compare.json, docs/validation/GRADE_COMPARE.md
+grade-compare: ## Точность уровня при других условиях измерения (точные параметры, заявили не ниже, короткий тест на уровень выше) → data/grade_compare.json, docs/validation/GRADE_COMPARE.md
 	cd backend && python -m app.modules.validation.grade_compare $(COMPARE_ARGS)
 
 grades-ext-sim: ## Путь-повтор с 6 уровнями (Lead, Principal; модельные семейства) → data/grades_ext_sim.json, docs/validation/GRADES_EXT.md (≈ 15 мин на 8 ядрах)

@@ -23,7 +23,7 @@
 | Повтор всего пути, точность к истине, D и r_pb (`path_retest.json`) | #headline, #path-retest, #discrimination | синтетика · исторический снимок · 10.10.2026 · алгоритм `659ca65` · банк `76c4164b` (165 семейств) · `make path-retest` |
 | Бенчмарк подбора со скрытой истиной, абляции (`matching_bench.json`) | #headline, #bench, #ablations | синтетика · исторический снимок · 11.10.2026 · алгоритм `296b31dd` · банк `76c4164b` · `make bench` |
 | Повторы заданий между попытками (`attempts_repeat.json`) | #retest-repeats | синтетика · исторический снимок · 09.10.2026 · алгоритм `9dcade5` · банк `76c4164b` · `python -m app.modules.validation.attempts_repeat` |
-| Симуляция теста: точность, повтор, частота показа, утечка (`report.json`) | #retest, #test, #others, #exposure, #leak, #calibration | синтетика · исторический снимок · 10.10.2026 · алгоритм `f2d853e` · банк `76c4164b` (165 семейств) · `make validate` |
+| Симуляция теста: точность, повтор, частота показа, утечка (`report.json`) | #retest, #test, #other-conditions, #exposure, #leak, #calibration | синтетика · исторический снимок · 10.10.2026 · алгоритм `f2d853e` · банк `76c4164b` (165 семейств) · `make validate` |
 | Подбор на демо-данных (метки правилами, циркулярно) (`report.json`) | #matching | правила на демо-данных · исторический снимок · 10.10.2026 · алгоритм `f2d853e` · банк `76c4164b` (165 семейств) · `make validate` |
 | Junior у порога (`junior_stability.json`) | #junior | синтетика · исторический снимок · 10.10.2026 · алгоритм `f2d853e` · банк `76c4164b` · `make stability` |
 | Порог Стажёра (`intern_cut.json`) | #intern | синтетика · исторический снимок · 10.10.2026 · алгоритм `ef1b5fc` · банк `76c4164b` · `make intern-cut` |
