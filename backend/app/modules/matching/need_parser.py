@@ -31,7 +31,8 @@ from app.modules.catalog.dictionary import (
     kw_pattern,
 )
 from app.modules.catalog import ext as catalog_ext
-from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, active_stack, known_tag
+from app.modules.catalog import levels as grade_levels
+from app.modules.catalog.seed_data import GRADE_ORDER as GRADES, GRADES_EXT, active_stack, known_tag
 from app.modules.llm.client import chat_json
 from app.modules.matching import bias as bias_filter
 
@@ -386,14 +387,31 @@ def _sentences(text: str) -> list[tuple[int, int, str]]:
     return out
 
 
+# «Слабые» маркеры обязательного: в списке под заголовком «Будет плюсом:» пункт «— опыт работы с Linux, Docker» остаётся
+# «желательно» (Я12б: так написаны реальные вакансии hh.ru); явное «обязательно / необходимо / нужно» в пункте — обязательно
+# и внутри такого списка; заголовок с маркером («Требования:», «Что мы ожидаем:») переключает секцию, как раньше.
+WEAK_REQUIRED_CUES = ("опыт работы с", "уверенн", "знание", "умение", "владение")
+
+
+def _strong_required(low: str) -> bool:
+    return any(c in low for c in REQUIRED_CUES if c not in WEAK_REQUIRED_CUES)
+
+
 def _section_kind(text: str) -> list[tuple[int, int, str]]:
     """Размечаем текст на зоны «обязательно» / «желательно» по заголовкам и маркерам в предложениях."""
     zones = []
     current = "neutral"
     for start, end, sent in _sentences(text):
         low = sent.lower()
+        header = low.strip().endswith(":")
+        if current == "desired" and not header and not any(c in low for c in DESIRED_CUES) \
+                and not _strong_required(low):
+            zones.append((start, end, "desired"))  # пункт списка «Будет плюсом:» со слабым маркером («опыт работы с»)
+            continue
         if any(c in low for c in DESIRED_CUES) and any(c in low for c in REQUIRED_CUES):
             zones.extend(_mixed_zones(start, sent, current))  # «Python, FastAPI обязательно, Kafka будет плюсом»
+            if header:  # «Будет плюсом знание:», «Желательно опыт работы с:» — заголовок секции «желательно»
+                current = "desired" if not _strong_required(low) else current
             continue
         if any(c in low for c in DESIRED_CUES):
             post = _postfix_desired(start, sent, current)
@@ -406,6 +424,8 @@ def _section_kind(text: str) -> list[tuple[int, int, str]]:
             kind = "required"
             current = "required" if low.strip().endswith(":") else current
         else:
+            if header and current == "desired":  # «Условия:», «Мы ждём:» после «Будет плюсом:» — секция «желательно» закончилась
+                current = "neutral"
             kind = current
         zones.append((start, end, kind))
     return zones
@@ -722,6 +742,11 @@ def normalize(req: dict, method: str) -> dict:
     dirs = tag_directions()
     d = req.get("direction") if req.get("direction") in catalog_ext.visible_directions() else None
     g = req.get("grade") if req.get("grade") in GRADES else None
+    g_capped = None
+    if GRADES_EXT and g:  # Lead/Principal — только там, где банк направления их проверяет (catalog.levels)
+        g_top = grade_levels.cap(d, g)
+        if g_top != g:
+            g, g_capped = g_top, g
     seen: set[str] = set()
 
     def clean(items, default_w) -> list[dict]:
@@ -775,13 +800,15 @@ def normalize(req: dict, method: str) -> dict:
         "evidence": {k: v for k, v in evidence.items() if v},
         "review": review,
         "method": method,
-    }
+    } | ({"grade_capped_from": g_capped} if g_capped else {})
 
 
 LLM_SYSTEM = (
     "Ты помогаешь структурировать описание вакансии в ИТ. Верни только JSON без пояснений: "
     '{"direction": одно из ["backend","frontend","data_ml","qa","security"] или null, '
-    '"grade": одно из ["intern","junior","middle","senior"] или null (intern — стажёр, без опыта), '
+    '"grade": одно из [' + ",".join(f'"{g}"' for g in GRADES) + '] или null (intern — стажёр, без опыта'
+    + ('; lead — тимлид, техлид, архитектор; principal — principal или staff-инженер, главный архитектор' if GRADES_EXT
+       else '') + '), '
     '"stack_required": [{"tag": id, "weight": 0.1..1.0, "quote": "точный фрагмент текста"}], '
     '"stack_desired": [{"tag": id, "weight": 0.1..0.5, "quote": "точный фрагмент текста"}], '
     '"experience_years_min": число или null, "work_format": "office"|"hybrid"|"remote"|null, '

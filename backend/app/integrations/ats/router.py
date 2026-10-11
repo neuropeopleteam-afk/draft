@@ -32,10 +32,12 @@ from app.integrations.crypto import decrypt, encrypt, mask
 from app.integrations.settings import get_isettings
 from app.integrations.vacancies.models import Vacancy, VacancyApplication
 from app.modules.auth.models import User
+from app.modules.tariffs.service import require_feature
 from app.modules.invitations.models import Invitation
 from app.modules.matching.router import my_company
 
 router = APIRouter(prefix="/api/employer/ats", tags=["ats"])
+TARIFF_ATS = [Depends(require_feature("ats"))]  # Я29: подключение ATS — в тарифах «Найм» и «Партнёр ФСП» (TARIFFS_ENABLED)
 export_router = APIRouter(prefix="/api/employer", tags=["ats"])
 public_router = APIRouter(prefix="/api/ats", tags=["ats"])
 employer = require_role(UserRole.employer)
@@ -87,7 +89,7 @@ class SettingsIn(BaseModel):
 
 
 @router.put("/settings", summary="Сохранить настройки ATS (Хантфлоу: токен и id вакансии; вебхук: URL и секрет)",
-            responses={**AUTH, 422: err("Некорректный адрес (нужен https, внешний хост)")})
+            dependencies=TARIFF_ATS, responses={**AUTH, 422: err("Некорректный адрес (нужен https, внешний хост)")})
 def put_settings(data: SettingsIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     st = svc.company_settings(db, my_company(db, user).id)
     try:
@@ -137,7 +139,7 @@ def huntflow_check(user: User = Depends(employer), db: Session = Depends(get_db)
 
 
 @router.post("/stub/connect", summary="Подключить тестовую ATS-заглушку (Хантфлоу-совместимый API + вебхук) для демо",
-             responses=AUTH)
+             dependencies=TARIFF_ATS, responses=AUTH)
 def stub_connect(user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     st = svc.company_settings(db, my_company(db, user).id)
     stub_huntflow_webhook(st)
@@ -146,7 +148,7 @@ def stub_connect(user: User = Depends(employer), db: Session = Depends(get_db)) 
 
 
 @router.post("/demo/connect-all", summary="Демо: подключить все ATS-заглушки — Хантфлоу, Talantix, «Поток» и вебхук",
-             responses=AUTH)
+             dependencies=TARIFF_ATS, responses=AUTH)
 def demo_connect_all(user: User = Depends(employer), db: Session = Depends(get_db)) -> list[dict]:
     c = my_company(db, user)
     connect_demo_all(db, c.id)
@@ -247,7 +249,7 @@ class ConnectionIn(BaseModel):
 
 
 @router.put("/providers/{code}", summary="Сохранить подключение Talantix или «Потока» (токены шифруются)",
-            responses={**AUTH, 404: err("Неизвестная ATS"), 422: err("Не хватает токена / некорректный адрес")})
+            dependencies=TARIFF_ATS, responses={**AUTH, 404: err("Неизвестная ATS"), 422: err("Не хватает токена / некорректный адрес")})
 def put_provider(code: str, data: ConnectionIn, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
     if _code(code) == "huntflow":
@@ -295,7 +297,7 @@ def put_provider(code: str, data: ConnectionIn, user: User = Depends(employer), 
 
 
 @router.post("/providers/{code}/demo", summary="Демо-режим провайдера: заглушка, имитирующая API Talantix / «Потока»",
-             responses={**AUTH, 404: err("Неизвестная ATS")})
+             dependencies=TARIFF_ATS, responses={**AUTH, 404: err("Неизвестная ATS")})
 def provider_demo(code: str, user: User = Depends(employer), db: Session = Depends(get_db)) -> dict:
     c = my_company(db, user)
     if _code(code) == "huntflow":

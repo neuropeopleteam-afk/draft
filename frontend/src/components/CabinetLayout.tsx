@@ -7,13 +7,17 @@ import { useHiringTodo } from "./Hiring";
 import { Logo } from "./Logo";
 import { GuideSlot } from "./JuryGuide";
 import { RouteBoundary, RouteFallback, StartupError, StartupLoading } from "./Boot";  // Я16
+import { useMeta } from "../lib/meta";
 
-export interface Section { path: string; title: string; description: string; day?: string; more?: boolean }
+// flag — раздел виден, только если функция включена на сервере (/api/meta → <flag>.enabled), например «Тарифы» (Я29)
+export interface Section { path: string; title: string; description: string; day?: string; more?: boolean; flag?: "tariffs" }
 
 /** Короткая подпись роли для шапки на телефоне: «Кабинет работодателя» не помещается рядом с логотипом. */
 const SHORT: Partial<Record<Role, string>> = { candidate: "Кандидат", employer: "Работодатель", expert: "Эксперт", fsp_analyst: "ФСП", admin: "Администратор" };
 
-export function CabinetLayout({ role, sections, title, alsoRoles = [] }: { role: Role; sections: Section[]; title: string; alsoRoles?: Role[] }) {
+export function CabinetLayout({ role, sections: allSections, title, alsoRoles = [] }: { role: Role; sections: Section[]; title: string; alsoRoles?: Role[] }) {
+  const meta = useMeta();
+  const sections = allSections.filter((s) => !s.flag || !!meta?.[s.flag]?.enabled);
   const { me, loading, error, failures, retry, signOut } = useAuth();
   const navigate = useNavigate();
   const loc = useLocation();

@@ -4,7 +4,8 @@ import { CandidateCard } from "../../components/CandidateCard";
 import { InterviewEmployerDetails } from "../../components/Interview";  // Я15: устная защита и ИИ-интервью
 import { PageTitle } from "../../components/CabinetLayout";
 import { StatusCounts } from "../../components/GradeStatus";
-import { Alert, Empty, Field, GRADES, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi } from "../../components/ui";
+import { Alert, Empty, Field, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi } from "../../components/ui";
+import { useGrades } from "../../lib/grades";
 import { apiDownload } from "../../lib/api";
 import { useDirectionEntries } from "../../lib/meta";
 import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
@@ -37,6 +38,7 @@ export function Search() {
   if (page) qs.set("offset", String(page * PAGE));
   const { data, loading, error } = useApi<any>(`/employer/candidates?${qs.toString()}`);
   const cats = useApi<any[]>("/employer/categories");
+  const levels = useGrades(direction || null);  // с флагом GRADES_EXT_ENABLED — и Lead/Principal направления
   const avail = Object.values(tags).filter((t: any) => !direction || !t.direction_id || t.direction_id === direction);
 
   return (
@@ -51,7 +53,7 @@ export function Search() {
           </Field>
           <Field label="Грейд" htmlFor="sg">
             <select id="sg" className="input" value={grade} onChange={(e) => { setGrade(e.target.value); setPage(0); }}>
-              <option value="">все</option>{Object.entries(GRADES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              <option value="">все</option>{Object.entries(levels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </Field>
           <div>

@@ -12,6 +12,7 @@ import { AtsStageBadge } from "../../integrations/Ats";
 import { CandidateHiring, HiringChip, HiringReminders } from "../../components/Hiring";
 import { AiInterviewCandidate } from "../../components/Interview";  // Я15: приглашение на ИИ-интервью
 import { WhyChosen } from "../mutual/Candidate";  // почему меня выбрали (Н9)
+import { PartnerBadge } from "../employer/Tariffs";  // Я29: метка «Партнёр ФСП» (только при TARIFFS_ENABLED)
 
 /** Входящие приглашения: принять (контакты откроются работодателю) или отклонить (причина — по желанию). */
 export function Invitations() {
@@ -59,6 +60,7 @@ export function Invitations() {
                 <div>
                   <p className="font-bold text-brand-night">{i.position_title}</p>
                   <p className="text-sm text-brand-ink/65">{i.company?.name} · {salaryText(i.salary_from, i.salary_to, i.salary_basis)} · {dt(i.created_at)}</p>
+                  {i.company?.fsp_partner && <PartnerBadge on className="mt-1" />}
                   {i.below_my_minimum && <p className="mt-1 text-xs font-semibold text-brand-plum">Верх вилки ниже вашего минимума</p>}
                   {i.counter && <p className="mt-1 text-xs font-semibold text-amber-800">Встречное предложение ждёт ответа работодателя</p>}
                 </div>
@@ -74,7 +76,7 @@ export function Invitations() {
       <Modal open={!!open} onClose={() => setOpen(null)} title={open?.position_title ?? ""}>
         {open && (
           <div className="space-y-4 text-sm">
-            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><AtsStageBadge s={open.ats_stage} /><span className="text-brand-ink/65">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span></div>
+            <div className="flex flex-wrap items-center gap-3"><Status s={open.status} /><AtsStageBadge s={open.ats_stage} /><span className="text-brand-ink/65">{open.company?.name}{open.company?.industry ? ` · ${open.company.industry}` : ""}</span><PartnerBadge on={open.company?.fsp_partner} /></div>
             <SalaryLine big from={open.salary_from} to={open.salary_to} basis={open.salary_basis} />
             {open.below_my_minimum && <Alert kind="info">Верх вилки ниже вашего скрытого минимума. Работодатель этот минимум не видит.</Alert>}
             <p className="whitespace-pre-line text-brand-ink/80">{open.offer_description}</p>

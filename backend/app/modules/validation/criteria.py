@@ -455,6 +455,12 @@ def build(db=None) -> dict:
                  for i, it in enumerate(c["items"], 1)]
         if c["n"] == 2 and _interview_on():  # Я15: ссылка на устную защиту — только при включённом флаге
             items[0]["do"] = items[0]["do"] + [INTERVIEW_GO]
+        if c["n"] == 2 and _grades_ext_on():  # Я25: Lead/Principal — только при включённом флаге
+            for it in items:
+                if it["tz"].startswith("корректность категоризации"):
+                    it["do"] = it["do"] + [GRADES_EXT_GO]
+                    it["see"] = it["see"] + " " + GRADES_EXT_SEE
+                    it["limit"] = it["limit"] + " " + GRADES_EXT_LIMIT
         crit.append({"id": f"c{c['n']}", "n": c["n"], "title": c["title"], "short": c["short"], "weight": c["weight"],
                      "items": items})
     _catalog_note(crit)
@@ -562,6 +568,20 @@ INTERVIEW_NOTE = {
         "навыкам, которые тест не подтвердил; итог и расшифровку видит только эта компания. Канал — голос или чат; на "
         "экране — своя анимация собеседника (волна голоса), без видео и лиц; `docs/INTERVIEW.md`."),
 }
+
+
+# Я25: Lead и Principal (флаг GRADES_EXT_ENABLED, по умолчанию выкл.; docs/GRADES_EXT.md)
+GRADES_EXT_GO = go("Lead и Principal: точность", "/validation#grades-ext")
+GRADES_EXT_SEE = ("Шесть уровней: Стажёр…Senior, Lead, Principal; Lead/Principal — только полным тестом и только в "
+                  "направлениях, где банк их проверяет.")
+GRADES_EXT_LIMIT = ("Lead и Principal пока «предварительно»: на модели при нынешнем банке тест различает их хуже, чем "
+                    "Junior–Senior; что нужно для 64 % — /validation#grades-ext.")
+
+
+def _grades_ext_on() -> bool:
+    from app.modules.catalog import levels
+
+    return levels.enabled()
 
 
 def _interview_on() -> bool:

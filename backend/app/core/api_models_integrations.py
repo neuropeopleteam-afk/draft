@@ -394,6 +394,8 @@ class TrustCheckOut(Doc):
     title: str
     status: str
     text: str
+    hh: Obj | None = Field(None, description="Я12б, при HH_ENABLED: сравнение с рынком hh.ru — n, медиана, p25, p75, "
+                                             "регион, дата снимка, conclusive (n ≥ 10)")
 
 
 class TrustOut(Doc):

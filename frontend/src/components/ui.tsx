@@ -52,6 +52,8 @@ export const GRADE_SKILLS: Record<string, string> = {
   junior: "Решает типовые задачи по понятной постановке, знает основы инструментов, работает с наставником",
   middle: "Самостоятельно ведёт задачу от постановки до выпуска, находит дефекты в чужом коде, понимает устройство инструментов",
   senior: "Проектирует решения, выбирает компромиссы, находит неочевидные дефекты и объясняет их команде",
+  lead: "Ведёт архитектуру системы и техническую работу команды: ревью дизайна, разбор инцидентов, миграции без простоя",
+  principal: "Задаёт техническую стратегию нескольких команд: архитектура на годы, крупные миграции, стандарты и их цена",
 };
 // Короткая строка для карточки выбора грейда (Ф4: экран перед стартом короткий; полный текст — под «Что умеет каждый уровень»)
 export const GRADE_SKILLS_SHORT: Record<string, string> = {
@@ -59,12 +61,18 @@ export const GRADE_SKILLS_SHORT: Record<string, string> = {
   junior: "Типовые задачи по понятной постановке, с наставником",
   middle: "Сам ведёт задачу от постановки до выпуска",
   senior: "Проектирует решения, объясняет компромиссы команде",
+  lead: "Архитектура системы и техническое лидерство команды",
+  principal: "Техническая стратегия нескольких команд",
 };
-export const GRADE_EXPERIENCE: Record<string, string> = { intern: "обычно без опыта или до полугода", junior: "обычно до 1,5 лет опыта", middle: "обычно 1,5–4,5 года опыта", senior: "обычно от 4,5 лет опыта" };
+export const GRADE_EXPERIENCE: Record<string, string> = { intern: "обычно без опыта или до полугода", junior: "обычно до 1,5 лет опыта", middle: "обычно 1,5–4,5 года опыта", senior: "обычно от 4,5 лет опыта", lead: "обычно от 7,5 лет опыта", principal: "обычно от 10 лет опыта" };
+// Lead и Principal (флаг GRADES_EXT_ENABLED на сервере): подписи и тексты выше есть всегда, а перебирать уровни нужно
+// через useGrades (lib/grades.ts): без флага и в направлениях без проверенных семейств этих уровней их нет
+export const GRADE_EXT: Record<string, string> = { lead: "Lead", principal: "Principal" };
+export const GRADE_TITLE_ALL: Record<string, string> = { ...GRADES, ...GRADE_EXT };
 export const catTitle = (id?: string | null) => {
   if (!id) return "Не присвоена";
   const [d, g] = id.split(".");
-  return `${DIRECTION_TITLES[d] ?? d} · ${GRADES[g] ?? g}`;
+  return `${DIRECTION_TITLES[d] ?? d} · ${GRADE_TITLE_ALL[g] ?? g}`;
 };
 
 /** Загрузка данных с повтором. */

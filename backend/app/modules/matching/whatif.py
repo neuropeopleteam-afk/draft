@@ -23,6 +23,7 @@ import time
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.models import Category
 from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, category_title, tag_title
 from app.modules.jury import scope as jury_scope
@@ -203,7 +204,8 @@ def _compute(db: Session, req: dict, filters: dict) -> dict:
     d, g = req.get("direction"), req.get("grade")
     neighbours = []
     if d and g:
-        for cid in (f"{d}.{x}" for x in GRADES if abs(GRADE_LEVEL[x] - GRADE_LEVEL[g]) == 1):
+        for cid in (f"{d}.{x}" for x in GRADES if abs(GRADE_LEVEL[x] - GRADE_LEVEL[g]) == 1
+                    and grade_levels.is_available(d, x)):  # Lead/Principal — только где их проверяет тест
             if cid in cats and cid not in cat_ids:
                 neighbours.append(cid)
     universe = cat_ids + neighbours

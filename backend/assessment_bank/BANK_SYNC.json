@@ -1,8 +1,8 @@
 {
   "source": "../bank",
-  "commit": "705e743",
+  "commit": "161b9c1",
   "dirty_files": 0,
-  "content_hash": "a4397d996399af73",
+  "content_hash": "f563cfcaebf63aef",
   "synced_at": "2026-10-11T14:15:28+00:00",
   "n_families": 342,
   "by_direction": {
@@ -268,5 +268,6 @@
     "seeds": 20,
     "verify_seeds": 3,
     "where": "сервер проверок (готовый отчёт)"
-  }
+  },
+  "note": "161b9c1 = 705e743 + перенос psychometrics/gpcm.py и cat.py из платформы (Я27); семейства те же, отчёт валидатора — 705e743 (20 seed)"
 }

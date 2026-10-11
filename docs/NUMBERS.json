@@ -13,8 +13,8 @@
    "qa": 30,
    "security": 31
   },
-  "source_commit": "9695472",
-  "content_hash": "2c7d82bbb008b587",
+  "source_commit": "161b9c1",
+  "content_hash": "f563cfcaebf63aef",
   "pass": 322,
   "warn": 20,
   "fail": 0,
@@ -24,9 +24,9 @@
   "unique_variants": 6816
  },
  "migrations": {
-  "revisions": 33,
+  "revisions": 35,
   "heads": [
-   "ce01"
+   "cm01"
   ]
  },
  "memory_limits_mib": {
@@ -37,12 +37,12 @@
   "llm-local": 8192
  },
  "matching": {
-  "algorithm": "match-v1.2",
+  "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "5721237",
+  "bench_commit": "296b31dd",
   "bank_hash": "76c4164b6ce83743",
-  "generated_at": "2026-10-11T10:06:08+00:00",
+  "generated_at": "2026-10-11T11:24:03+00:00",
   "p5": {
    "mean": 0.776,
    "lo": 0.74,
@@ -60,8 +60,8 @@
   }
  },
  "e2e_in_code": {
-  "spec_files": 22,
-  "scenarios": 53
+  "spec_files": 24,
+  "scenarios": 57
  },
  "validation_report": {
   "report_generated_at": "2026-10-10",
@@ -69,6 +69,31 @@
   "exposure_generated_at": "2026-10-06",
   "exposure_bank_families": 128,
   "report_matches_bank": false
+ },
+ "grade_accuracy": {
+  "confirm_level": 0.6,
+  "path_retest_commit": "659ca65",
+  "path_retest_at": "2026-10-10",
+  "sweep_commit": "8f4d6d2",
+  "sweep_points": 98,
+  "before": {
+   "exact": 0.575,
+   "over": 0.049,
+   "under": 0.348,
+   "none": 0.054,
+   "retest_exact": 0.77,
+   "retest_kappa": 0.844,
+   "minutes_mean": 56.632
+  },
+  "now": {
+   "exact": 0.641,
+   "over": 0.065,
+   "under": 0.28,
+   "none": 0.034,
+   "retest_exact": 0.804,
+   "retest_kappa": 0.874,
+   "minutes_mean": 56.563
+  }
  },
  "deploy": {
   "fresh_seconds": 291
@@ -93,7 +118,17 @@
   "cost_usd_per_answer": 0.0213,
   "n": 406
  },
- "a11y": {},
+ "a11y": {
+  "screens": 36,
+  "passes": 72,
+  "errors": 0,
+  "critical": 0,
+  "serious": 0,
+  "moderate": 0,
+  "minor": 0,
+  "hscroll": 0,
+  "date": "11.10.2026"
+ },
  "tests": {
   "failed": 0,
   "passed": 1508,
