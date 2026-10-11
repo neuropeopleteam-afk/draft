@@ -5926,21 +5926,6 @@
         "title": "ChannelsOut",
         "type": "object"
       },
-      "ChooseIn": {
-        "properties": {
-          "slot_id": {
-            "maxLength": 8,
-            "minLength": 1,
-            "title": "Slot Id",
-            "type": "string"
-          }
-        },
-        "required": [
-          "slot_id"
-        ],
-        "title": "ChooseIn",
-        "type": "object"
-      },
       "ClosedSetNeedResultOut": {
         "additionalProperties": true,
         "properties": {
@@ -18437,6 +18422,55 @@
         "title": "ParseJobOut",
         "type": "object"
       },
+      "PartnerRequestIn": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Чем компания хочет помочь ФСП (необязательно)",
+            "title": "Note"
+          }
+        },
+        "title": "PartnerRequestIn",
+        "type": "object"
+      },
+      "PartnerSetIn": {
+        "properties": {
+          "action": {
+            "enum": [
+              "grant",
+              "revoke"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Основание: спонсорский пакет, договор (необязательно)",
+            "title": "Note"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "PartnerSetIn",
+        "type": "object"
+      },
       "PassportKeyOut": {
         "additionalProperties": true,
         "properties": {
@@ -28781,6 +28815,21 @@
         "title": "InviteIn",
         "type": "object"
       },
+      "app__modules__hiring__router__ChooseIn": {
+        "properties": {
+          "slot_id": {
+            "maxLength": 8,
+            "minLength": 1,
+            "title": "Slot Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slot_id"
+        ],
+        "title": "ChooseIn",
+        "type": "object"
+      },
       "app__modules__hiring__router__CounterIn": {
         "properties": {
           "comment": {
@@ -29594,6 +29643,25 @@
           "enabled"
         ],
         "title": "SubscriptionIn",
+        "type": "object"
+      },
+      "app__modules__tariffs__router__ChooseIn": {
+        "properties": {
+          "plan": {
+            "description": "start — «Старт», hire — «Найм» (демо-счёт); partner выдаёт только ФСП → 409 partner_by_fsp",
+            "enum": [
+              "start",
+              "hire",
+              "partner"
+            ],
+            "title": "Plan",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan"
+        ],
+        "title": "ChooseIn",
         "type": "object"
       }
     },
@@ -37240,7 +37308,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ChooseIn"
+                "$ref": "#/components/schemas/app__modules__hiring__router__ChooseIn"
               }
             }
           },
@@ -39723,7 +39791,20 @@
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariff_feature",
+                    "message": "… — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для работодателя. Коды `detail.code`: `tariff_feature` — … — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета.; `forbidden` — Недостаточно прав для этого действия."
           },
           "404": {
             "content": {
@@ -40499,7 +40580,20 @@
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariff_feature",
+                    "message": "… — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для работодателя. Коды `detail.code`: `tariff_feature` — … — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета.; `forbidden` — Недостаточно прав для этого действия."
           },
           "404": {
             "content": {
@@ -40797,7 +40891,20 @@
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariff_feature",
+                    "message": "… — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для работодателя. Коды `detail.code`: `tariff_feature` — … — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета.; `forbidden` — Недостаточно прав для этого действия."
           },
           "404": {
             "content": {
@@ -41033,7 +41140,20 @@
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariff_feature",
+                    "message": "… — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для работодателя. Коды `detail.code`: `tariff_feature` — … — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета.; `forbidden` — Недостаточно прав для этого действия."
           },
           "404": {
             "content": {
@@ -41562,7 +41682,20 @@
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariff_feature",
+                    "message": "… — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для работодателя. Коды `detail.code`: `tariff_feature` — … — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета.; `forbidden` — Недостаточно прав для этого действия."
           },
           "409": {
             "content": {
@@ -41834,7 +41967,20 @@
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariff_feature",
+                    "message": "… — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для работодателя. Коды `detail.code`: `tariff_feature` — … — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета.; `forbidden` — Недостаточно прав для этого действия."
           },
           "409": {
             "content": {
@@ -44654,7 +44800,7 @@
                 }
               }
             },
-            "description": "invitation_cooldown — приглашение этому кандидату уже было в последние 30 дней. Коды `detail.code`: `company_required` — Сначала заполните профиль компании; `invitation_cooldown` — Этому кандидату ваша компания уже отправляла приглашение. Следующее — с …."
+            "description": "invitation_cooldown — приглашение этому кандидату уже было в последние 30 дней; tariff_limit — исчерпан лимит приглашений тарифа в месяц (TARIFFS_ENABLED). Коды `detail.code`: `company_required` — Сначала заполните профиль компании; `tariff_limit` — В тарифе «…» — … приглашений в месяц, все использованы. Следующие — с ….…; `invitation_cooldown` — Этому кандидату ваша компания уже отправляла приглашение. Следующее — с …."
           },
           "422": {
             "content": {
@@ -46267,7 +46413,20 @@
             "$ref": "#/components/responses/Unauthorized"
           },
           "403": {
-            "$ref": "#/components/responses/Forbidden"
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariff_feature",
+                    "message": "… — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета."
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для работодателя. Коды `detail.code`: `tariff_feature` — … — в тарифах «Найм» и «Партнёр ФСП». Сменить тариф — раздел «Тарифы» кабинета.; `forbidden` — Недостаточно прав для этого действия."
           },
           "404": {
             "content": {
@@ -51168,6 +51327,258 @@
         ]
       }
     },
+    "/api/employer/tariff": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "my_tariff_api_employer_tariff_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response My Tariff Api Employer Tariff Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariffs_disabled",
+                    "message": "Тарифы не включены на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тарифы не включены на сервере (tariffs_disabled). Коды `detail.code`: `tariffs_disabled` — Тарифы не включены на этом сервере."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Нет профиля компании. Коды `detail.code`: `company_required` — Сначала заполните профиль компании."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Тариф моей компании: лимит и остаток приглашений в месяц, демо-счета",
+        "tags": [
+          "tariffs"
+        ]
+      },
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "choose_api_employer_tariff_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__tariffs__router__ChooseIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Choose Api Employer Tariff Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariffs_disabled",
+                    "message": "Тарифы не включены на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тарифы не включены на сервере (tariffs_disabled). Коды `detail.code`: `tariffs_disabled` — Тарифы не включены на этом сервере."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_required",
+                    "message": "Сначала заполните профиль компании"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "plan_same — тариф уже действует; partner_by_fsp — «Партнёр ФСП» выдаёт ФСП; partner_active — уже партнёр ФСП. Коды `detail.code`: `company_required` — Сначала заполните профиль компании; `partner_by_fsp` — Тариф «Партнёр ФСП» подключает федерация по спонсорскому договору — отправьте заявку в разделе «Тарифы»; `partner_active` — Действует тариф «Партнёр ФСП» — его условия шире, менять не нужно; `plan_same` — Тариф «…» уже подключён."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "plan_unknown",
+                    "message": "Нет такого тарифа"
+                  }
+                },
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
+                }
+              }
+            },
+            "description": "Данные не прошли проверку: либо ошибка полей `{\"detail\": [{loc, msg, type}]}`, либо нарушено правило предметной области `{\"detail\": {code, message}}`. Коды `detail.code`: `plan_unknown` — Нет такого тарифа."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Сменить тариф: «Старт» или «Найм» (демонстрационный счёт, без оплаты)",
+        "tags": [
+          "tariffs"
+        ]
+      }
+    },
+    "/api/employer/tariff/partner-request": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
+        "operationId": "partner_request_api_employer_tariff_partner_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerRequestIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Partner Request Api Employer Tariff Partner Request Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariffs_disabled",
+                    "message": "Тарифы не включены на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тарифы не включены на сервере (tariffs_disabled). Коды `detail.code`: `tariffs_disabled` — Тарифы не включены на этом сервере."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "partner_already",
+                    "message": "Компания уже партнёр ФСП"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "partner_already — компания уже партнёр ФСП. Коды `detail.code`: `partner_already` — Компания уже партнёр ФСП; `company_required` — Сначала заполните профиль компании."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Заявка «Стать партнёром ФСП» (решает федерация в своём кабинете)",
+        "tags": [
+          "tariffs"
+        ]
+      }
+    },
     "/api/employer/vacancies": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — работодатель.",
@@ -53040,6 +53451,168 @@
         ]
       }
     },
+    "/api/fsp-cabinet/benefit": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "benefit_api_fsp_cabinet_benefit_get",
+        "parameters": [
+          {
+            "description": "Период, дней (по умолчанию — всё время)",
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 730,
+                  "minimum": 7,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Период, дней (по умолчанию — всё время)",
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Benefit Api Fsp Cabinet Benefit Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariffs_disabled",
+                    "message": "Тарифы не включены на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тарифы не включены на сервере (tariffs_disabled). Коды `detail.code`: `tariffs_disabled` — Тарифы не включены на этом сервере."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "«Польза для ФСП»: приглашения и наймы участников ФСП по регионам и направлениям, вклад партнёров, доля приглашений с ФСП-бонусом (агрегаты, K = 5)",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
+    "/api/fsp-cabinet/benefit/export.csv": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "benefit_csv_api_fsp_cabinet_benefit_export_csv_get",
+        "parameters": [
+          {
+            "description": "Период, дней (по умолчанию — всё время)",
+            "in": "query",
+            "name": "days",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 730,
+                  "minimum": 7,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Период, дней (по умолчанию — всё время)",
+              "title": "Days"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariffs_disabled",
+                    "message": "Тарифы не включены на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тарифы не включены на сервере (tariffs_disabled). Коды `detail.code`: `tariffs_disabled` — Тарифы не включены на этом сервере."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "«Польза для ФСП» в CSV (те же агрегаты, малые группы скрыты)",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
     "/api/fsp-cabinet/cups": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
@@ -53801,6 +54374,230 @@
           }
         ],
         "summary": "Ключевые показатели",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
+    "/api/fsp-cabinet/partners": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "partners_api_fsp_cabinet_partners_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Partners Api Fsp Cabinet Partners Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariffs_disabled",
+                    "message": "Тарифы не включены на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тарифы не включены на сервере (tariffs_disabled). Коды `detail.code`: `tariffs_disabled` — Тарифы не включены на этом сервере."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Партнёры ФСП и заявки компаний на партнёрство",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
+    "/api/fsp-cabinet/partners/search": {
+      "get": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "partners_search_api_fsp_cabinet_partners_search_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "minLength": 3,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "additionalProperties": true,
+                    "type": "object"
+                  },
+                  "title": "Response Partners Search Api Fsp Cabinet Partners Search Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariffs_disabled",
+                    "message": "Тарифы не включены на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тарифы не включены на сервере (tariffs_disabled). Коды `detail.code`: `tariffs_disabled` — Тарифы не включены на этом сервере."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Найти компанию по названию или ИНН, чтобы выдать метку партнёра",
+        "tags": [
+          "fsp-cabinet"
+        ]
+      }
+    },
+    "/api/fsp-cabinet/partners/{company_id}": {
+      "post": {
+        "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); роль — аналитик ФСП, администратор.",
+        "operationId": "partners_set_api_fsp_cabinet_partners__company_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "company_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Company Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerSetIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Partners Set Api Fsp Cabinet Partners  Company Id  Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "partner_scope",
+                    "message": "Метку этой компании меняет другой кабинет ФСП"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Только для роли «ФСП» или администратора; partner_scope — компания чужой песочницы жюри. Коды `detail.code`: `partner_scope` — Метку этой компании меняет другой кабинет ФСП; `forbidden` — Недостаточно прав для этого действия."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "company_not_found",
+                    "message": "Компания не найдена"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Компания не найдена или тарифы выключены. Коды `detail.code`: `company_not_found` — Компания не найдена; `tariffs_disabled` — Тарифы не включены на этом сервере."
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Ошибка проверки полей запроса: `detail` — список `{loc, msg, type}`."
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "summary": "Выдать или снять метку «Партнёр ФСП»",
         "tags": [
           "fsp-cabinet"
         ]
@@ -63460,6 +64257,46 @@
         ]
       }
     },
+    "/api/tariffs": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "plans_api_tariffs_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Plans Api Tariffs Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Успешный ответ."
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "tariffs_disabled",
+                    "message": "Тарифы не включены на этом сервере"
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Тарифы не включены на сервере (tariffs_disabled). Коды `detail.code`: `tariffs_disabled` — Тарифы не включены на этом сервере."
+          }
+        },
+        "summary": "Тарифы работодателя: цены, лимиты, функции (публично)",
+        "tags": [
+          "tariffs"
+        ]
+      }
+    },
     "/api/vacancies": {
       "get": {
         "description": "**Доступ:** нужен вход (JWT, `Authorization: Bearer`); любая роль.",
@@ -66827,6 +67664,10 @@
     {
       "description": "Устная защита развёрнутых ответов теста и ИИ-интервью этапом найма (флаг INTERVIEW_ENABLED). Оценивает модель; грейд не меняется",
       "name": "interview"
+    },
+    {
+      "description": "Тарифы работодателя: «Старт» (бесплатно), «Найм» (демо-счёт, без настоящей оплаты), «Партнёр ФСП» (выдаёт ФСП); лимит приглашений в месяц. Кандидатам всегда бесплатно. Без TARIFFS_ENABLED — 404 tariffs_disabled.",
+      "name": "tariffs"
     }
   ]
 }

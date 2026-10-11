@@ -18,6 +18,7 @@ export interface Meta {
   rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
   interview?: { enabled: boolean; stub: boolean; defense_minutes: number }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.)
   hh?: { enabled: boolean; stub: boolean }; // Я12: импорт своей вакансии с hh.ru и «Рынок по hh.ru» (HH_ENABLED и токен)
+  tariffs?: { enabled: boolean; price_is_stub: boolean }; // Я29: тарифы работодателя и «Польза для ФСП» (TARIFFS_ENABLED)
 }
 
 const Ctx = createContext<Meta | null>(null);
