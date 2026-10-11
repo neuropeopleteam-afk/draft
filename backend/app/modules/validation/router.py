@@ -253,6 +253,23 @@ def grade_accuracy():
     return compact(json.loads(GRADE_SWEEP.read_text(encoding="utf-8")))
 
 
+TWO_STAGE = Path(__file__).resolve().parent / "data" / "two_stage.json"
+
+
+@router.get("/two-stage", summary="Двухэтапное подтверждение у границы: одна сессия / две сессии, Парето, выбор "
+                                  "(пересчёт: make two-stage)")
+def two_stage_route():
+    """Я26: сводка симуляции и состояние в продукте (флаг ASSESSMENT_TWO_STAGE_ENABLED и его параметры)."""
+    from app.modules.assessment.two_stage import params
+
+    p = params()
+    if not TWO_STAGE.exists():
+        return {"missing": True, "product": p}
+    from app.modules.validation.two_stage import compact
+
+    return {**compact(json.loads(TWO_STAGE.read_text(encoding="utf-8"))), "product": p}
+
+
 @router.get("/test-length", summary="Длина теста для экрана старта: лимиты и итоги симуляции (синтетика, не люди)")
 def test_length_route():
     from app.modules.validation.provenance import length_info  # Ф6 (Н8)
