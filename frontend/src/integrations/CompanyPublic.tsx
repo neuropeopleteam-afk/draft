@@ -2,6 +2,7 @@
 import { Link, useParams } from "react-router-dom";
 import { Alert, Loading, catTitle, range, useApi } from "../components/ui";
 import { TrustPanel, type Trust } from "./Trust";
+import { PartnerBadge } from "../pages/employer/Tariffs";  // Я29: метку выдаёт ФСП (только при TARIFFS_ENABLED)
 
 export function CompanyPublic() {
   const { id } = useParams();
@@ -14,6 +15,7 @@ export function CompanyPublic() {
       <div>
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Профиль компании</p>
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-brand-night">{c.name}</h1>
+        {c.fsp_partner && <PartnerBadge on className="mt-2" />}
         <p className="mt-1 text-sm text-brand-ink/65">{[c.industry, c.city, c.website].filter(Boolean).join(" · ")}{c.inn ? ` · ИНН ${c.inn}` : ""}</p>
       </div>
       {c.description && <p className="whitespace-pre-line text-brand-ink/80">{c.description}</p>}

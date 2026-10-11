@@ -608,4 +608,12 @@ def build(db: Session, user_id: uuid.UUID, session_id: uuid.UUID | None = None) 
         "route": _route(ts, er, p, by_tag, demand),
         "competitions": _competitions(db, direction, bundle.category_id, bundle, by_tag, demand),
         "fsp_calendar_url": FSP_CALENDAR_URL,
+        # Я12б: «Что сейчас просит рынок» — частые навыки категории по hh.ru (агрегат, HH_ENABLED; иначе None)
+        "market_hh": _market_hh(direction, bundle.grade or grade, bundle),
     }
+
+
+def _market_hh(direction: str, grade: str | None, bundle) -> dict | None:
+    from app.modules.hh import market_skills
+
+    return market_skills.block(direction, grade, bundle, bank_tags(direction))

@@ -2,11 +2,13 @@ import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type FormEve
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { DefensePanel } from "../../components/Interview";  // Я15: устная защита ответа, по желанию
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTION_TITLES, Field, GRADES, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
+import { Alert, DIRECTION_TITLES, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKILLS, GRADE_SKILLS_SHORT, Loading, Seg, Toggle, catTitle, dt, dtEnd, errText, num, pct, ruText, signed, useApi } from "../../components/ui";
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
+import { ExtPreliminaryNote } from "../../components/GradeStatus";  // Я25: Lead/Principal «предварительно»
 import { useDirectionEntries, useMeta } from "../../lib/meta";
+import { useGrades } from "../../lib/grades";
 import { trapTab } from "../../components/ui";  // А11: Tab по кругу внутри страницы теста
 import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
 import { CameraIndicator } from "../../proctor/CameraIndicator";
@@ -100,11 +102,11 @@ function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; 
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Подсказка · необязательно</p>
-          <p className="mt-1 font-semibold text-brand-night">{open || !hint.suggested ? hint.summary : `Похоже на ${GRADES[hint.suggested]}. Выбор за вами.`}</p>
+          <p className="mt-1 font-semibold text-brand-night">{open || !hint.suggested ? hint.summary : `Похоже на ${GRADE_TITLE_ALL[hint.suggested]}. Выбор за вами.`}</p>
           {open && <p className="mt-1 text-xs text-brand-ink/65">По опросу, резюме и паспорту ФСП, правилами без нейросети. {hint.note}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
-          {hint.suggested && hint.suggested !== grade && <button type="button" className="btn-ghost" onClick={() => onPick(hint.suggested!)}>Выбрать {GRADES[hint.suggested]}</button>}
+          {hint.suggested && hint.suggested !== grade && <button type="button" className="btn-ghost" onClick={() => onPick(hint.suggested!)}>Выбрать {GRADE_TITLE_ALL[hint.suggested]}</button>}
           <button type="button" className="btn-ghost" onClick={() => setOpen((v) => !v)} aria-expanded={open}>{open ? "Скрыть объяснение" : "Почему так"}</button>
         </div>
       </div>
@@ -112,7 +114,7 @@ function GradeHint({ hint, grade, onPick }: { hint: Hint | null; grade: string; 
         <ul className="mt-3 grid gap-2 sm:grid-cols-3">
           {hint.signals.map((x, i) => (
             <li key={i} className="rounded-xl bg-brand-blush/25 p-3">
-              <p className="text-xs font-semibold text-brand-plum">{x.title}{x.grade ? ` → ${GRADES[x.grade]}` : ""}</p>
+              <p className="text-xs font-semibold text-brand-plum">{x.title}{x.grade ? ` → ${GRADE_TITLE_ALL[x.grade]}` : ""}</p>
               <p className="mt-1 text-xs leading-relaxed text-brand-ink/75">{x.text}</p>
             </li>
           ))}
@@ -356,12 +358,23 @@ function enterFullscreen() {
   if (fsSupported() && !document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => undefined);
 }
 
+/** Стаж-ориентир уровня; при видимом Lead у Senior — верхняя граница (как GRADE_EXPERIENCE_TEXT на бэкенде с флагом). */
+function expText(id: string, levels: Record<string, string>): string {
+  if (id === "senior" && levels.lead) return "обычно 4,5–7,5 года опыта";
+  if (id === "lead" && levels.principal) return "обычно 7,5–10 лет опыта";
+  return GRADE_EXPERIENCE[id] ?? "";
+}
+
 function GradeChoice({ status, onEditSurvey, express = false }: { status: any; onEditSurvey: () => void; express?: boolean }) {
   const navigate = useNavigate();
   const [q] = useSearchParams();
   const qGrade = q.get("grade");
-  const [grade, setGrade] = useState<string>(qGrade && qGrade in GRADES ? qGrade : status?.claimed_grade ?? "middle");
   const [dir, setDir] = useState<string>(q.get("direction") ?? status?.survey_direction ?? "");
+  // уровни направления: без флага GRADES_EXT_ENABLED — четыре, с флагом — плюс Lead/Principal, если их проверяет банк
+  const levels = useGrades(dir || status?.survey_direction);
+  const [grade, setGrade] = useState<string>(qGrade && qGrade in levels ? qGrade : status?.claimed_grade ?? "middle");
+  const extGrade = grade === "lead" || grade === "principal";
+  useEffect(() => { if (!(grade in levels)) setGrade(levels.senior ? "senior" : "middle"); }, [grade, levels]);
   const chosen = status?.specializations?.find((s: any) => s.direction === dir);
   const expressOk = !!status?.express_available;
   const [mode, setMode] = useState<Mode>(expressOk && (express || q.get("mode") === "express") ? "express" : "full");
@@ -410,10 +423,10 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         </div>
       )}
       {(chosen?.category_id ?? status?.current?.category_id) && (
-        <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}</b> · <Link className="font-semibold underline" to="/candidate/category">подробнее</Link></Alert>
+        <Alert kind="info">Текущая категория: <b>{catTitle(chosen ? chosen.category_id : status.current.category_id)}{status?.current?.grade_preliminary && (!chosen || chosen.direction === status.current.direction) ? " (предварительно)" : ""}</b> · <Link className="font-semibold underline" to="/candidate/category">подробнее</Link></Alert>
       )}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {Object.entries(GRADES).map(([id, t]) => (
+      <div className={`mt-6 grid gap-3 sm:grid-cols-2 ${Object.keys(levels).length > 4 ? "lg:grid-cols-3" : "lg:grid-cols-4"}`} data-testid="grade-cards">
+        {Object.entries(levels).map(([id, t]) => (
           <button key={id} type="button" onClick={() => setGrade(id)} aria-pressed={grade === id}
             className={`rounded-2xl border p-5 text-left transition-colors ${grade === id ? "border-brand bg-brand-blush/40" : "border-brand-night/10 bg-white hover:border-brand/40"}`}>
             <p className="text-lg font-bold text-brand-night">{t}</p>
@@ -428,14 +441,20 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
         ))}
       </div>
       <p className="mt-2 text-xs text-brand-ink/65">
-        Стаж — ориентир, не условие: {Object.entries(GRADES).map(([id, t]) => `${t} — ${GRADE_EXPERIENCE[id].replace(/^обычно /, "").replace(/ опыта$/, "")}`).join(" · ")}.
+        Стаж — ориентир, не условие: {Object.entries(levels).map(([id, t]) => `${t} — ${expText(id, levels).replace(/^обычно /, "").replace(/ опыта$/, "")}`).join(" · ")}.
       </p>
       <details className="mt-1 text-xs text-brand-ink/75">
         <summary className="cursor-pointer font-semibold text-brand-night">Что умеет каждый уровень</summary>
         <ul className="mt-1 list-disc space-y-1 pl-5">
-          {Object.entries(GRADES).map(([id, t]) => <li key={id}><b>{t}</b> — {GRADE_SKILLS[id]}</li>)}
+          {Object.entries(levels).map(([id, t]) => <li key={id}><b>{t}</b> — {GRADE_SKILLS[id]}</li>)}
         </ul>
       </details>
+      {extGrade && (
+        <Alert kind="info">
+          {levels[grade]} присваивает только полный тест: не меньше 8 оценённых заданий и малая погрешность оценки. Экспресс-тест
+          жюри и короткие проверки дают не выше Senior. Если уровень не подтвердится, тест предложит уровень ниже.
+        </Alert>
+      )}
       <GradeHint hint={hint.data ?? null} grade={grade} onPick={setGrade} />
       {expressOk && (
         <div className="card mt-4 text-sm" data-testid="mode-choice">
@@ -457,7 +476,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
               ? (grade === "senior"
                 ? `Экспресс-тест для жюри за Senior: ${ex.min_items}–${ex.max_items} коротких заданий (лимит задания до ${Math.round(ex.item_time_s / 60)} мин) без дотестирования, около 8–10 минут при быстрых ответах. За Senior экспресс длиннее, чем за Junior и Middle (5–7): семь коротких заданий не подтверждают крайнюю категорию даже при всех верных. Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже Senior ≥ 80 %), интервал θ шире, чем у полного (погрешность ≈ 0,6 против ≈ 0,4): Senior подтверждается при почти всех верных из ${ex.max_items}; если доказан уровень ниже, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`
                 : `Экспресс-тест для жюри: ${ex.min_items}–${ex.max_items} коротких заданий без дотестирования, около 5 минут при быстрых ответах (за Senior — до ${exSenior.max_items} заданий, ≈ 8–10 минут). Тот же банк, тот же адаптивный выбор и то же правило решения (вероятность уровня не ниже заявленного ≥ 80 %), но интервал θ заметно шире (погрешность ≈ 0,65 против ≈ 0,4 у полного): Middle или Junior подтверждаются только при почти всех верных ответах; если уровень ниже доказан, его можно принять без нового теста. Результат помечен «экспресс» для вас и работодателя. Доступен только в демо-режиме жюри.`)
-              : "Полный тест: грейд подтверждается, если вероятность уровня не ниже заявленного ≥ 80 %. С 5-го задания информация собирается у ближайшего порога грейда, который ещё не определён (порог внутри θ ± 1,28·SE); если после основного блока порог всё ещё внутри интервала — до 6 коротких заданий у этого порога. Подробнее и с цифрами симуляции — на странице «Валидация»."}
+              : `Полный тест: грейд подтверждается, если вероятность уровня не ниже заявленного ≥ ${meta?.rules?.confirm_pct ?? 60} %. С 5-го задания информация собирается у ближайшего порога грейда, который ещё не определён (порог внутри θ ± 1,28·SE); если после основного блока порог всё ещё внутри интервала — до 6 коротких заданий у этого порога. Подробнее и с цифрами симуляции — на странице «Валидация».`}
             </p>
           </details>
         </div>
@@ -483,7 +502,7 @@ function GradeChoice({ status, onEditSurvey, express = false }: { status: any; o
       <IntegrityNotice />
       {locked && <div className="mt-4"><Alert kind="info">Следующая смена грейда в направлении {DIRECTION_TITLES[dir]} — с {dtEnd(chosen?.locked_until ?? status.locked_until)}.{status?.jury_mode_allowed ? " Для показа жюри можно включить демо-режим в разделе «Категория и грейд»." : ""}</Alert></div>}
       {retakeLocked && !locked && (
-        <div className="mt-4"><Alert kind="info">Повторить тест на {GRADES[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
+        <div className="mt-4"><Alert kind="info">Повторить тест на {GRADE_TITLE_ALL[grade]} можно с {dt(retakeLocks[grade])}: предыдущая попытка на этот грейд не подтвердилась. Тест на грейд ниже доступен сразу.</Alert></div>
       )}
       {status?.sandbox_active && quota && (
         <div className="mt-4"><Alert kind="info"><span title="Лимит не даёт выкачать банк заданий перезапусками; продолжение начатого теста его не тратит.">Демо-режим: новых тестов за 24 часа осталось {quota.left} из {quota.limit}.</span></Alert></div>
@@ -631,6 +650,7 @@ export function TestRun() {
     return { ...base, typed: t.typed, inserted: t.inserted, dropped: t.dropped, deleted: t.deleted, keys: t.keys, ik_cv: cv, active_ms: t.active_ms };
   }
   useEffect(() => {
+    setResult(null);  // Я26: переход с итога к уточнению уровня — та же страница, другая сессия
     api<any>(`/assessment/sessions/${id}`).then(async (x) => {
       // завершённый тест (обновили страницу, вернулись из категории) — показываем итог, а не «сессия закрыта»
       if (x?.status === "finished") { setS(x); setResult(await api<any>(`/assessment/sessions/${id}/result`)); return; }
@@ -698,7 +718,7 @@ export function TestRun() {
   return (
     <div className="max-w-3xl">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-ink/65">
-        <span>{s.mode === "confirm" ? "Дотестирование у порога" : "Тест"} · {DIRECTION_TITLES[s.direction]} · {GRADES[s.claimed_grade]}</span>
+        <span>{s.mode === "confirm" ? "Дотестирование у порога" : s.mode === "refine" ? "Уточнение уровня у границы" : "Тест"} · {DIRECTION_TITLES[s.direction]} · {GRADE_TITLE_ALL[s.claimed_grade]}</span>
         <span>{it.adaptive ? `Задание ${it.position} · отвечено ${it.answered}` : `Задание ${it.position} из ${it.total}`}</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-blush/60">
@@ -782,8 +802,56 @@ export function TestRun() {
   );
 }
 
+// Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): уровень «на границе» — предложение уточнить отдельной короткой сессией
+function TwoStageOffer({ t, claimed, direction }: { t: any; claimed: string; direction: string }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  async function start() {
+    setBusy(true); setErr(null);
+    try {
+      const x = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: claimed, mode: "refine", integrity_ack: true, direction } });
+      navigate(`/candidate/assessment/test/${x.session_id}`);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+  const lab = t.label ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : "";
+  const o = t.outcome;
+  return (
+    <section className="card mt-4 border-brand/30 bg-[#F3F2FB] text-sm" data-testid="two-stage-offer" aria-label="Уточнение уровня у границы">
+      <p className="font-semibold text-brand-night">{lab}{t.status === "offered" ? ": можно уточнить" : ""}</p>
+      {t.status === "done" && o ? (
+        <p className="mt-1 text-brand-ink/80">Уточнение {o.passed ? "пройдено" : "не подтвердило уровень у границы"}: по двум сессиям — <b>{GRADE_TITLE_ALL[o.final_grade] ?? "без категории"}</b> (новых заданий: {o.new_items}).</p>
+      ) : (
+        <>
+          <p className="mt-1 text-brand-ink/80">{t.text}</p>
+          <p className="mt-1 text-xs text-brand-ink/65">До уточнения действует уровень по этому тесту. Уточнение — одно на тест; правила 30 и 90 дней на него не действуют. Действует согласие на проверку самостоятельности выполнения, данное перед основным тестом.</p>
+        </>
+      )}
+      <div className="mt-3 flex flex-wrap gap-3">
+        {t.status === "offered" && t.available && <button className="btn-primary" onClick={start} disabled={busy}>{busy ? "Готовим задания…" : `Уточнить уровень за 10–${t.minutes} минут`}</button>}
+        {t.status === "in_progress" && t.refine_session_id && <button className="btn-primary" onClick={() => navigate(`/candidate/assessment/test/${t.refine_session_id}`)}>Продолжить уточнение</button>}
+        {t.status === "done" && t.refine_session_id && <button className="btn-ghost" onClick={() => navigate(`/candidate/assessment/test/${t.refine_session_id}`)}>Итог уточнения</button>}
+      </div>
+      <div className="mt-2"><Alert>{err}</Alert></div>
+    </section>
+  );
+}
+
+function TwoStageOutcome({ t }: { t: any }) {
+  const o = t.refine || {};
+  const lab = t.label ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : "";
+  return (
+    <div className="card mt-4 text-sm" data-testid="two-stage-outcome">
+      <p className="font-semibold text-brand-night">{lab} — уточнение {t.status === "passed" ? "пройдено" : "не пройдено"}</p>
+      <p className="mt-1 text-brand-ink/80">После основного теста: {GRADE_TITLE_ALL[o.grade_before] ?? "без категории"} · по двум сессиям вместе: <b>{GRADE_TITLE_ALL[o.final_grade] ?? "без категории"}</b> · новых коротких заданий: {o.new_items}.</p>
+      <p className="mt-1 text-xs text-brand-ink/65">Уровень считается по ответам обеих сессий одной оценкой; работодатель видит пометку «{t.label} — уточнение {t.status === "passed" ? "пройдено" : "не пройдено"}».</p>
+    </div>
+  );
+}
+
 function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
   const [r, setR] = useState<any>(initial);
+  useEffect(() => { setR(initial); }, [initial]);
   const llmOff = useLlmOff();
   const meta = useMeta();
   const [busy, setBusy] = useState(false);
@@ -795,17 +863,20 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     try { setR(await api<any>(`/assessment/sessions/${sessionId}/accept-lower`, { method: "POST" })); await refresh(); }
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
-  const title = r.accepted_lower ? `Принят уровень ${GRADES[r.accepted_lower] ?? r.accepted_lower}`
+  const title = r.mode === "refine" && r.two_stage?.refine ? (r.two_stage.status === "passed" ? "Уточнение уровня пройдено" : "Уточнение не подтвердило уровень у границы")
+    : r.accepted_lower ? `Принят уровень ${GRADE_TITLE_ALL[r.accepted_lower] ?? r.accepted_lower}`
+    : r.confirmed && r.grade_preliminary ? `${GRADE_TITLE_ALL[r.grade_preliminary.grade] ?? r.grade_preliminary.grade} по тесту — предварительно`
     : r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
     : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
     : "Грейд не подтверждён";
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
+      <ExtPreliminaryNote x={r.grade_preliminary} className="mt-4" />
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · интервал θ шире, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
-          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от 80 %, «не доказанно ниже» — от 10 %).
+          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от {meta?.rules?.confirm_pct ?? 60} %, «не доказанно ниже» — от 10 %).
           {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, зондом работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, зондом работодателя или кубком."}
         </Alert></div>
       )}
@@ -814,7 +885,10 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
+      {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
+      {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
       <div className="card mt-4 text-sm text-brand-ink/75">{ruText(r.explanation)}</div>
+      {r.level_position && <p className="mt-2 text-sm text-brand-ink/80" data-testid="level-position">Позиция внутри уровня {r.level_position.grade_title}: <b>{r.level_position.text}</b>{r.level_position.known ? " — по точности этого теста" : " (погрешность пока шире половины уровня)"}</p>}
       {(r.confirmed || r.accepted_lower) && <p className="mt-3 text-xs text-brand-ink/65">Грейд — уровень навыков, подтверждённый этим тестом. Стаж в годах остаётся справкой в профиле и на грейд не влияет.</p>}
       {r.details?.n_scored != null && (
         <p className="mt-3 text-xs text-brand-ink/65">
@@ -841,19 +915,19 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       <CameraReport sessionId={sessionId} />
       {r.accept_lower_available && r.accept_lower_grade && (
         <div className="card mt-4 border-brand/30 bg-brand-blush/20 text-sm" data-testid="accept-lower">
-          <p className="font-semibold text-brand-night">Уровень {GRADES[r.accept_lower_grade]} доказан уверенно</p>
+          <p className="font-semibold text-brand-night">Уровень {GRADE_TITLE_ALL[r.accept_lower_grade]} доказан уверенно</p>
           <p className="mt-1 text-brand-ink/75">
-            Тест не подтвердил {GRADES[r.claimed_grade]}, но вероятность уровня не ниже {GRADES[r.accept_lower_grade]} по этому же тесту — {pct(r.accept_lower_p)}.
+            Тест не подтвердил {GRADE_TITLE_ALL[r.claimed_grade]}, но вероятность уровня не ниже {GRADE_TITLE_ALL[r.accept_lower_grade]} по этому же тесту — {pct(r.accept_lower_p)}.
             Можно принять его одним действием без нового теста. Принудительно уровень не понижается: решение за вами.{" "}
-            {r.sandbox ? `В демо-режиме повторить тест на ${GRADES[r.claimed_grade]} можно сразу (у живого кандидата — через ${r.retake_same_grade_days ?? 30} дней).` : `Повторить тест на ${GRADES[r.claimed_grade]} можно через ${r.retake_same_grade_days ?? 30} дней.`}
+            {r.sandbox ? `В демо-режиме повторить тест на ${GRADE_TITLE_ALL[r.claimed_grade]} можно сразу (у живого кандидата — через ${r.retake_same_grade_days ?? 30} дней).` : `Повторить тест на ${GRADE_TITLE_ALL[r.claimed_grade]} можно через ${r.retake_same_grade_days ?? 30} дней.`}
           </p>
           <div className="mt-3 flex flex-wrap gap-3">
-            <button className="btn-primary" onClick={acceptLower} disabled={busy}>{busy ? "Принимаем…" : `Принять уровень ${GRADES[r.accept_lower_grade]} без нового теста`}</button>
+            <button className="btn-primary" onClick={acceptLower} disabled={busy}>{busy ? "Принимаем…" : `Принять уровень ${GRADE_TITLE_ALL[r.accept_lower_grade]} без нового теста`}</button>
           </div>
         </div>
       )}
       {!r.confirmed && !r.accepted_lower && !r.accept_lower_available && !r.category_provisional && r.claimed_grade !== "intern" && (
-        <p className="mt-3 text-xs text-brand-ink/65">{r.sandbox ? "В демо-режиме повторить тест можно сразу; у живого кандидата" : "Повторить тест"} на {GRADES[r.claimed_grade]} {r.sandbox ? "— через" : "можно через"} {r.retake_same_grade_days ?? 30} дней; тест на грейд ниже — сразу, без зачёта попыток.</p>
+        <p className="mt-3 text-xs text-brand-ink/65">{r.sandbox ? "В демо-режиме повторить тест можно сразу; у живого кандидата" : "Повторить тест"} на {GRADE_TITLE_ALL[r.claimed_grade]} {r.sandbox ? "— через" : "можно через"} {r.retake_same_grade_days ?? 30} дней; тест на грейд ниже — сразу, без зачёта попыток.</p>
       )}
       <div className="mt-3"><Alert>{err}</Alert></div>
       <FeedbackSummary sessionId={sessionId} fallbackLink />

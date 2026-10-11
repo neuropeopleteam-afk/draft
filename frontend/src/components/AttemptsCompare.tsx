@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { DIRECTION_TITLES, GRADES, NB, dtt, num, pct, ruText, signed, useApi } from "./ui";
+import { DIRECTION_TITLES, GRADE_TITLE_ALL, NB, dtt, num, pct, ruText, signed, useApi } from "./ui";
 
 /** Две попытки теста рядом (И26): кандидату — /candidate/attempts, работодателю — в карточке кандидата.
  *  Данные — GET /api/assessment/attempts и /api/employer/candidates/{ref}/attempts (app/modules/assessment/attempts.py). */
@@ -31,7 +31,7 @@ const thetaSe = (a: Attempt) => (a.theta == null ? "—" : `${signed(a.theta)} �
 function Status({ a }: { a: Attempt }) {
   return (
     <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${STATUS_TONE[a.status] ?? STATUS_TONE.unconfirmed}`}>
-      {a.status_title}{a.grade_after ? ` · ${GRADES[a.grade_after] ?? a.grade_after}` : ""}
+      {a.status_title}{a.grade_after ? ` · ${GRADE_TITLE_ALL[a.grade_after] ?? a.grade_after}` : ""}
     </span>
   );
 }
@@ -55,7 +55,7 @@ export function AttemptsCompare({ cmp, audience = "candidate", level = 3 }: { cm
     <div className="min-w-0">
       <p className="font-bold text-brand-night">Попытка {n}</p>
       <p className="text-xs text-brand-ink/65">{dtt(x.finished_at)}</p>
-      <p className="text-xs text-brand-ink/65">{GRADES[x.claimed_grade] ?? x.claimed_grade} · {x.mode_title}{x.is_sandbox ? " · демо" : ""}</p>
+      <p className="text-xs text-brand-ink/65">{GRADE_TITLE_ALL[x.claimed_grade] ?? x.claimed_grade} · {x.mode_title}{x.is_sandbox ? " · демо" : ""}</p>
     </div>
   );
   return (

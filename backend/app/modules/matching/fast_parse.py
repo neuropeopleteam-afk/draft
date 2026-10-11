@@ -33,7 +33,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.db import SessionLocal, release, utcnow
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import tag_title
 from app.modules.llm import client as llm_client
 from app.modules.matching.models import NeedParseJob
 from app.modules.matching.need_parser import parse_need
@@ -155,7 +155,7 @@ def get(db: Session, job_id: uuid.UUID, user_id: uuid.UUID) -> dict | None:
 
 
 def _name(tag: str) -> str:
-    return STACK[tag][0] if tag in STACK else tag
+    return tag_title(tag) if tag != "other" else tag  # и теги направлений расширения каталога
 
 
 def diff(base: dict, merged: dict) -> list[dict]:
