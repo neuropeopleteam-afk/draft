@@ -8,7 +8,7 @@ language: text
 invariants:
   n_options: 4
   extra:
-    distractors: [no_prepublish, no_skew, extra_cache]
+    distractors: [no_prepublish_or_double_cache, no_skew_or_extra_cache, both]
 time_limit_s: 420
 canary: false
 prior_difficulty:
@@ -17,7 +17,7 @@ prior_difficulty:
   sigma_variant: 0.3
   basis: "Нужно разделить два механизма: кэш набора ключей ограничивает момент перехода (T1 = C), а время жизни токена с допуском часов — момент удаления (D = L + S), причём кэш на удалении не помогает. Почти верный дистрактор «D = L + S + C» (надёжно, но не минимально) и «без допуска часов» различают Senior, знающего порядок ротации, и Lead, рассуждающего о худшем случае по всем проверяющим сервисам: у порога Senior/Lead"
 generator: assessment_bank.families.security.lead_key_rotation_mcq
-version: 1
+version: 2
 description: >
   Минимальная задержка перехода на новый ключ и удаления старого при кэше набора ключей у проверяющих сервисов и
   допуске расхождения часов. Ключ — модель фаз обновления кэшей и перебор.

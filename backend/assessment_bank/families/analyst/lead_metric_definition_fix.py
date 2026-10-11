@@ -6,7 +6,8 @@
 
 Показан запрос дашборда: LEFT JOIN, а условия на покупку стоят в WHERE — соединение становится внутренним,
 знаменатель схлопывается до купивших, дашборд показывает 100 %. Варианты — четыре запроса в другом стиле (CTE),
-все с верным знаменателем; дистракторы (фиксированный состав) нарушают одно правило определения:
+все с верным знаменателем; дистракторы — по схеме 2×2 из двух правил пула (нарушено одно, другое, оба; ни один
+вариант не «центральный»):
 
 * ``inclusive_bound`` — правая граница включительно (покупка ровно через W суток засчитывается);
 * ``no_distinct`` — в числителе считаются покупки, а не пользователи (двойной счёт);
@@ -19,6 +20,7 @@ from __future__ import annotations
 
 import datetime as dt
 
+from assessment_bank.families._lead_b_utils import factorial_distractors
 from assessment_bank.families.data_ml._dm_utils import balanced_options, sql_py_program
 from assessment_bank.gen_utils import build_variant, make_rng, plural, sql_inserts
 from assessment_bank.schema import AnswerKey, Check
@@ -51,11 +53,12 @@ converted AS (
 )
 SELECT 1.0 * (SELECT COUNT(*) FROM converted) / (SELECT COUNT(*) FROM cohort) AS conversion"""
 
-DISTRACTORS = {
-    "inclusive_bound": CORRECT.replace("e.ts < datetime(c.reg,", "e.ts <= datetime(c.reg,"),
-    "no_distinct": CORRECT.replace("SELECT DISTINCT c.id FROM cohort c", "SELECT c.id FROM cohort c"),
-    "day_lower_bound": CORRECT.replace("WHERE e.ts >= c.reg AND", "WHERE e.ts >= date(c.reg) AND"),
+MUTATIONS = {  # правило → (фрагмент верного текста, замена); дистракторы — по схеме 2×2
+    "inclusive_bound": ("e.ts < datetime(c.reg,", "e.ts <= datetime(c.reg,"),
+    "no_distinct": ("SELECT DISTINCT c.id FROM cohort c", "SELECT c.id FROM cohort c"),
+    "day_lower_bound": ("WHERE e.ts >= c.reg AND", "WHERE e.ts >= date(c.reg) AND"),
 }
+DISTRACTORS = {k: CORRECT.replace(*v) for k, v in MUTATIONS.items()}
 assert all(d != CORRECT for d in DISTRACTORS.values())
 
 WHY = {
@@ -137,8 +140,8 @@ def generate(seed: int):
              + sql_inserts(users, ["id", reg, test], rows_u) + "\n" + sql_inserts(events, ["id", "user_id", "ts"], rows_e))
     code = BUGGY.format(**fmt)
     correct = CORRECT.format(**fmt)
-    kinds = sorted(DISTRACTORS)
-    dis = [DISTRACTORS[k].format(**fmt) for k in kinds]
+    dis, kinds = factorial_distractors(CORRECT, MUTATIONS, rng)
+    dis = [d.format(**fmt) for d in dis]
     label = "Заменить запрос на:"
     opts, key = balanced_options(FAMILY_ID, seed, rng, (label, correct), [(label, d) for d in dis])
     by_text = {correct: "good", **{d: k for d, k in zip(dis, kinds)}}
@@ -157,7 +160,8 @@ def generate(seed: int):
             f"100 %, хотя по выгрузке продукта конверсия намного ниже. Какой запрос реализует определение точно?")
     why = ("Показанный запрос ставит условия на покупку в WHERE после LEFT JOIN: строки пользователей без покупок "
            "отбрасываются, знаменатель равен числу купивших. Верный вариант считает когорту отдельно и пользователей "
-           "с покупкой в полуинтервале — через DISTINCT. Остальные: " + "; ".join(WHY[k].replace("W суток", f"{w} {days_w}") for k in kinds)
+           "с покупкой в полуинтервале — через DISTINCT. Остальные: " + "; ".join(WHY[k].replace("W суток", f"{w} {days_w}") for k in kinds[:2])
+           + "; четвёртый вариант нарушает оба этих правила"
            + ". Для Lead: определение метрики фиксируется вместе с пограничными случаями (границы окна, гостевые "
            "заказы, тестовые пользователи) и проверочным набором данных, иначе дашборд и выгрузки расходятся.")
     return build_variant(FAMILY_ID, seed, stem=stem, code=code, options=opts,

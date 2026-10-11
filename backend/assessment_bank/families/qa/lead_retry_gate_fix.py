@@ -3,7 +3,8 @@
 Кандидату показан модуль гейта (~35 строк) с дефектом «тесты без результата не учитываются»: решение строится по
 полученным результатам, а не по ожидаемому набору, — упавший шард даёт зелёный конвейер. Варианты — четыре замены
 ``decide`` в другом стиле (цикл), чем показанный код: эвристика «минимальная правка» не работает. Каждый дистрактор
-исправляет пропуск, но нарушает ровно одно правило политики (фиксированный состав):
+исправляет пропуск, но нарушает правила политики — схема 2×2 из двух правил пула ниже (нарушено одно, другое,
+оба; ни один вариант не «центральный», ключ не угадывается по сходству вариантов):
 
 * ``quarantine_missing`` — карантин освобождает изменённый в MR тест (правило «тест из карантина, который MR
   изменил, проверяется как обычный» потеряно; вместо него — «отсутствие результата блокирует всегда»);
@@ -18,7 +19,7 @@ from __future__ import annotations
 
 import math
 
-from assessment_bank.families._lead_b_utils import module_choose_fix, pct
+from assessment_bank.families._lead_b_utils import factorial_distractors, module_choose_fix, pct
 from assessment_bank.gen_utils import make_rng
 
 FAMILY_ID = "qa.lead.retry_gate_fix"
@@ -85,10 +86,10 @@ CORRECT = '''def decide(@E@, @R@, @C@, @Q@):
         return @KR@
     return @KP@'''
 
-DISTRACTORS = {  # каждая замена обязана изменить CORRECT (проверяется ниже)
-    "quarantine_missing": CORRECT.replace('(@T@ not in @Q@ or @T@ in @C@)', '(@T@ not in @Q@ or v == "missing")'),
-    "changed_flaky_tolerance": CORRECT.replace("if @T@ in @C@:", "if @T@ in @C@ and flaky > 1:"),
-    "rerun_before_block": CORRECT.replace(
+MUTATIONS = {  # правило → (фрагмент верного текста, замена); дистракторы — по схеме 2×2  # каждая замена обязана изменить CORRECT (проверяется ниже)
+    "quarantine_missing": ('(@T@ not in @Q@ or @T@ in @C@)', '(@T@ not in @Q@ or v == "missing")'),
+    "changed_flaky_tolerance": ("if @T@ in @C@:", "if @T@ in @C@ and flaky > 1:"),
+    "rerun_before_block": (
         '''    if @B@:
         return @KB@
     if flaky > FLAKY_SHARE_LIMIT * len(@E@):
@@ -98,6 +99,7 @@ DISTRACTORS = {  # каждая замена обязана изменить COR
     if @B@:
         return @KB@'''),
 }
+DISTRACTORS = {k: CORRECT.replace(*v) for k, v in MUTATIONS.items()}
 
 assert all(d != CORRECT for d in DISTRACTORS.values())
 
@@ -169,8 +171,8 @@ def generate(seed: int):
     module = (f"MAX_ATTEMPTS = {attempts_max}\nFLAKY_SHARE_LIMIT = {limit}\n\n\n" + "\n\n\n".join(blocks))
     module = _rename(module, names)
     buggy, correct = _rename(BUGGY, names), _rename(CORRECT, names)
-    kinds = sorted(DISTRACTORS)
-    dis = [_rename(DISTRACTORS[k], names) for k in kinds]
+    dis, kinds = factorial_distractors(CORRECT, MUTATIONS, rng)
+    dis = [_rename(d, names) for d in dis]
     E, R, C, Q = names["E"], names["R"], names["C"], names["Q"]
     policy = [
         f"набор тестов задаёт `{E}`; тест без результата (не дошёл отчёт, упал шард) считается красным",
@@ -191,7 +193,7 @@ def generate(seed: int):
     why = ("Верная замена проходит по ожидаемому набору (отсутствующий результат — красный), освобождает "
            "карантином только тесты, которых MR не касался, блокирует первый же нестабильный изменённый тест и "
            f"проверяет блокировку раньше «{kr}». Остальные варианты исправляют пропуск, но: "
-           + "; ".join(WHY[k] for k in kinds) + ".")
+           + "; ".join(WHY[k] for k in kinds[:2]) + "; четвёртый вариант нарушает оба этих правила" + ".")
     return module_choose_fix(
         FAMILY_ID, seed, rng, stem=stem, module=module, buggy_fn=buggy, correct_fn=correct, distractors=dis,
         tests=test_body, context=ctx, defect="missing_results_ignored", why=why,

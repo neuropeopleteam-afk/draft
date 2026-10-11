@@ -1,7 +1,7 @@
 family_id: mobile.js.retry_backoff_output
 title: Повторы запроса — экспоненциальная задержка, потолок и Retry-After
 direction: mobile
-skills: [mobile_networking, retries, javascript]
+skills: [networking, retries, javascript]
 target_grades: [intern, junior]
 format: predict_output
 language: javascript

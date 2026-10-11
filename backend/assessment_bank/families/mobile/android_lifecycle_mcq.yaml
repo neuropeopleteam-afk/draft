@@ -1,7 +1,7 @@
 family_id: mobile.android.lifecycle_mcq
 title: Жизненный цикл Activity — колбэки при повороте, диалогах, уходе в фон
 direction: mobile
-skills: [android, mobile_lifecycle, activity_lifecycle]
+skills: [android, android_lifecycle, activity_lifecycle, lifecycle]
 target_grades: [junior]
 format: mcq_concept
 language: text

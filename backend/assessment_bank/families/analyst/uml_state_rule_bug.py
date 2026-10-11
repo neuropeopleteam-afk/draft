@@ -1,6 +1,7 @@
 """analyst.uml.state_rule_bug — find_bug: переход машины состояний нарушает требование.
 
-Машина состояний (текстовая запись UML) и 3–4 требования к жизненному циклу объекта. Один переход
+Машина состояний (текстовая запись UML, 16 контекстов) и 3–4 требования к жизненному циклу объекта
+(нарушенное и 2–3 случайных из остальных). Один переход
 нарушает одно из требований (отмена после сборки, переход в конечное мимо обязательного шага, выход из
 конечного состояния…). Нужно указать строку перехода. Один подтип дефекта — переход противоречит
 требованию; исправление — верный переход в той же строке. Ключ проверяется исполнением: Python разбирает
@@ -33,7 +34,9 @@ def generate(seed: int):
     diff = changed_lines(buggy, fixed)
     assert len(diff) == 1
     key_line = next(iter(diff))
-    reqs = list(F["reqs"])
+    others = [r for j, r in enumerate(F["reqs"]) if j != ri]
+    k = rng.choice([2, 3])
+    reqs = [F["reqs"][ri]] + rng.sample(others, min(k, len(others)))
     rng.shuffle(reqs)
     preds = "\n".join(f"assert {r[1]}, {r[0]!r}" for r in reqs)
     prog = lambda m: (py_literal_block("MODEL", m) + PARSE + "try:\n" +  # noqa: E731
@@ -51,4 +54,4 @@ def generate(seed: int):
                                 f"{fmt(trans[ti])}."))
     return build_variant(FAMILY_ID, seed, stem=stem, code=buggy, answer_key=ak, context=ctx,
                          verification="execution", checks=checks, defect_type="transition_violates_rule",
-                         language="text", params={"fixed_code": fixed, "req": ri})
+                         language="text", params={"fixed_code": fixed, "req": ri, "n_reqs": len(reqs)})

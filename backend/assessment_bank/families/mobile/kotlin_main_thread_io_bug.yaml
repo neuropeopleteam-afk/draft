@@ -1,7 +1,7 @@
 family_id: mobile.kotlin.main_thread_io_bug
 title: Kotlin — блокирующий вызов в viewModelScope.launch на главном потоке
 direction: mobile
-skills: [kotlin, coroutines, android, mobile_threading]
+skills: [kotlin, coroutines, android, main_thread, ui_threading]
 target_grades: [junior, middle]
 format: find_bug
 language: kotlin

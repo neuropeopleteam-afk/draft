@@ -1,7 +1,7 @@
 family_id: devops.k8s.target_port_bug
 title: Kubernetes — targetPort Service не ведёт на порт приложения
 direction: devops
-skills: [kubernetes, k8s_services, networking, yaml]
+skills: [kubernetes, services, networking, kubernetes_manifests]
 target_grades: [junior, middle]
 format: find_bug
 language: yaml

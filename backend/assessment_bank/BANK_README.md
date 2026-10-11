@@ -192,6 +192,38 @@ Kafka, сборщик мусора JVM), ключ проверяется исп�
 Тесты добора — `tests/test_bank_core_plus.py`; счётчик в `tests/test_bankfix.py` считает только шесть исходных
 направлений (165 + добор), новые направления проверяются своими тестами.
 
+### Мобильная разработка и аналитик (волна 7, 10–11.10)
+
+Направления `mobile` («Мобильная разработка») и `analyst` («Системный / бизнес-аналитик») — 22 и 19 семейств
+уровней intern–senior (плюс Lead/Principal — отдельные семейства с префиксом `lead_`/`principal_`). Каждое — параметрический
+генератор с ≥ 20 различимыми вариантами (`tools/check_family_variants.py --direction mobile --direction analyst`).
+Kotlin и Swift в песочнице не исполняются: для них «найди ошибку» с ключом от модели на Python (поток выполнения,
+владение ссылками, потоки UI), концептуальные вопросы — с моделью жизненного цикла или справочной таблицей. JS/TS —
+исполняется в Node. Текстовые модели аналитика (машины состояний UML, BPMN, таблицы решений, контракты API, JSON
+Schema, процессы) вкладываются в программу проверки дословно и разбираются ею — ключ считается по показанному тексту.
+
+| Семейства | Формат | Уровни | Проверка ключа |
+|---|---|---|---|
+| `mobile.js.*` (token_refresh, offline_queue, double_submit, deeplink_route, cursor_pagination, background_timer, version_gate, retry_backoff) | choose_fix / find_bug / predict_output | I–S | Node: модели сервера, сети, таймеров |
+| `mobile.kotlin.*`, `mobile.swift.*` | find_bug / mcq_concept | J–S | модель на Python (главный поток, retain cycle, Flow и жизненный цикл) |
+| `mobile.android.*`, `mobile.ios.*`, `mobile.push.*`, `mobile.security.*` | mcq_concept | I–S | модель жизненного цикла / справочная таблица |
+| `mobile.storage.sqlite_migration_bug` | find_bug | I/J | sqlite: миграция схемы |
+| `mobile.perf.frame_budget_mcq`, `mobile.perf.cold_start_mcq` | mcq_concept | J–S | бюджет кадра; критический путь холодного старта |
+| `mobile.arch.offline_sync_open`, `mobile.release.release_quality_open` | open_answer | S | рубрика |
+| `analyst.sql.*` (null_aggregate, funnel_distinct, not_in_null, join_fanout, retention_cohort) | predict_output / find_bug / choose_fix | I–S | sqlite |
+| `analyst.er.cardinality_ddl_fix` | choose_fix | J/M | sqlite с внешними ключами: сценарии вставки из требования |
+| `analyst.uml.state_machine_output`, `analyst.uml.state_rule_bug` | predict_output / find_bug | I–M | разбор машины состояний (16 контекстов) |
+| `analyst.bpmn.gateway_trace_output`, `analyst.bpmn.join_mismatch_bug` | predict_output / find_bug | I–S | путь через XOR; игра фишек на Python |
+| `analyst.req.acceptance_scenario_mcq`, `analyst.req.decision_table_mcq`, `analyst.req.rice_priority_mcq` | mcq_concept | I–M | разбор сценариев Gherkin; перебор комбинаций таблицы; RICE по таблице |
+| `analyst.api.json_schema_validate_output` | predict_output | I/J | мини-валидатор подмножества JSON Schema |
+| `analyst.api.breaking_change_mcq`, `analyst.api.idempotency_contract_mcq` | mcq_concept | M/S | модель совместимости контракта; событийная модель повторов |
+| `analyst.process.bottleneck_capacity_output` | predict_output | M/S | мощность шагов с долей XOR и циклом доработки (Fraction) |
+| `analyst.req.nfr_open`, `analyst.arch.integration_open` | open_answer | S | рубрика |
+
+Имена навыков (`skills`) — из словаря каталога платформы (направления mobile/analyst, `skill_map`); тесты потока —
+`tests/test_wave7_mobile_analyst.py` (состав, покрытие уровней, трудность против уровней, различимость, данные
+машин состояний). prior_difficulty — априорная, до калибровки панелью.
+
 ### Правки по флагам панели 06.10 (версии 2)
 
 `qa.js.brittle_render_fix` и `common.text.utf8_truncate_fix` — фиксированный состав дистракторов;

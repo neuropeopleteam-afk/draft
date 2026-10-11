@@ -1,7 +1,7 @@
 family_id: mobile.js.double_submit_fix
 title: Двойное нажатие «Оплатить» — защита от повторной отправки
 direction: mobile
-skills: [mobile_ui, javascript, async_await, ui_state]
+skills: [state_management, javascript, async_await, promises]
 target_grades: [intern, junior]
 format: choose_fix
 language: javascript

@@ -1,0 +1,24 @@
+family_id: analyst.process.bottleneck_capacity_output
+title: Узкое место процесса — нагрузка с ветвлением XOR и циклом доработки
+direction: analyst
+skills: [business_processes, process_modeling, gateways, bpmn]
+target_grades: [middle, senior]
+format: predict_output
+language: text
+invariants:
+  code_lines: [4, 7]
+  extra:
+    loads: [main, xor_share, rework_check, rework_fix]
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.4
+  a: 1.1
+  sigma_variant: 0.3
+  basis: "4–6 шагов; мощность шага нужно делить на нагрузку (доля ветки XOR, 1/(1−q) у проверки с возвратом, q/(1−q) у исправления). В большинстве вариантов шаг с наименьшей «голой» мощностью — не узкое место, второе место отстоит не меньше чем на 10 %. Middle/Senior (b ≈ 0,4)"
+generator: assessment_bank.families.analyst.process_bottleneck_capacity_output
+version: 1
+description: >
+  Текстовая модель процесса с исполнителями и временем шагов, ветвлением XOR и циклом доработки; нужно
+  назвать узкое место и пропускную способность в экземплярах в час. Ключ: Python разбирает показанную
+  запись и считает точно.
