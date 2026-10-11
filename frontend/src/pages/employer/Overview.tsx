@@ -58,13 +58,16 @@ export function Company() {
   const c: any = me?.employer?.company ?? {};
   const [f, setF] = useState({ name: "", inn: "", industry: "", description: "", website: "", city: "", contact_email: "", contact_phone: "" });
   const [msg, setMsg] = useState<{ k: "ok" | "error"; t: string } | null>(null);
+  const [saved, setSaved] = useState(false);  // UX-2: после сохранения — «Сохранено» у кнопки и блок «Дальше»
+  const needs = useApi<any[]>(saved ? "/employer/needs" : null, [saved]);
+  const lastNeed = needs.data?.[0];
   useEffect(() => {
     setF({ name: c.name ?? "", inn: c.inn ?? "", industry: c.industry ?? "", description: c.description ?? "", website: c.website ?? "", city: c.city ?? "", contact_email: c.contact_email ?? "", contact_phone: c.contact_phone ?? "" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [me]);
   const set = (k: keyof typeof f) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setF({ ...f, [k]: e.target.value });
   async function save() {
-    setMsg(null);
+    setMsg(null); setSaved(false);
     try {
       const body = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, v.trim() || null]));
       if (!body.name) { setMsg({ k: "error", t: "Укажите название компании" }); return; }
@@ -73,7 +76,7 @@ export function Company() {
       if (body.inn && !/^\d{10}(\d{2})?$/.test(body.inn)) { setMsg({ k: "error", t: "ИНН — 10 или 12 цифр" }); return; }
       if (body.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.contact_email)) { setMsg({ k: "error", t: "Почта для кандидатов: неверный адрес" }); return; }
       await api("/me/company", { method: "PATCH", body });
-      await refresh(); setMsg({ k: "ok", t: "Профиль компании сохранён." });
+      await refresh(); setSaved(true);
     } catch (e) { setMsg({ k: "error", t: errText(e) }); }
   }
   return (
@@ -90,8 +93,23 @@ export function Company() {
         <Field label="Сайт" htmlFor="cw"><input id="cw" className="input" value={f.website} onChange={set("website")} placeholder="https://" /></Field>
         <Field label="Почта для кандидатов" htmlFor="ce"><input id="ce" className="input" value={f.contact_email} onChange={set("contact_email")} /></Field>
         <Field label="Телефон" htmlFor="cp"><input id="cp" className="input" value={f.contact_phone} onChange={set("contact_phone")} /></Field>
-        <div className="flex items-end"><button className="btn-primary" onClick={save}>Сохранить</button></div>
+        <div className="flex flex-wrap items-end gap-3">
+          <button className="btn-primary" onClick={save}>Сохранить</button>
+          {saved && <span role="status" className="pb-2.5 text-sm font-semibold text-brand-strong" data-testid="company-saved">✓ Сохранено</span>}
+        </div>
       </section>
+      {saved && (
+        <section className="card flex flex-wrap items-center justify-between gap-4 border-brand/30 bg-brand-blush/30" aria-label="Дальше" data-testid="company-next">
+          <div>
+            <h2 className="text-lg font-bold text-brand-night">Дальше</h2>
+            <p className="text-sm text-brand-ink/70">Опишите, кого ищете, — подборка соберётся сама.</p>
+          </div>
+          <div className="flex flex-wrap items-center gap-4">
+            <Link to={lastNeed ? `/employer/needs/${lastNeed.id}` : "/employer/search"} className="text-sm font-semibold text-brand hover:underline">Подборка кандидатов</Link>
+            <Link to="/employer/needs" className="btn-primary">Описать, кого ищете</Link>
+          </div>
+        </section>
+      )}
       <CompanyTrustCard key={`${c.inn ?? ""}|${c.website ?? ""}`} hasInn={!!c.inn} />
     </div>
   );
