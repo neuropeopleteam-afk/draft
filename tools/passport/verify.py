@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Офлайн-проверка паспорта грейда «Встречный» без нашей БД: подпись Ed25519 по открытому ключу (JWKS).
+"""Офлайн-проверка паспорта грейда «Драфт» без нашей БД: подпись Ed25519 по открытому ключу (JWKS).
 
     python tools/passport/verify.py passport.json                       # файл (скачан со страницы проверки)
     python tools/passport/verify.py passport.json --jwks keys.json      # с заранее сохранёнными ключами
@@ -56,7 +56,7 @@ def b64u_dec(s: str) -> bytes:
 
 
 def _get_json(url: str) -> dict:
-    req = Request(url, headers={"Accept": "application/json", "User-Agent": "vstrechny-passport-verify/1"})
+    req = Request(url, headers={"Accept": "application/json", "User-Agent": "draft-passport-verify/1"})
     with urlopen(req, timeout=20) as r:  # noqa: S310 — адрес задаёт сам проверяющий
         return json.loads(r.read().decode("utf-8"))
 
@@ -111,7 +111,7 @@ def check(doc: dict, keys: list[dict], now: datetime | None = None) -> dict:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Офлайн-проверка подписанного паспорта грейда «Встречный»")
+    ap = argparse.ArgumentParser(description="Офлайн-проверка подписанного паспорта грейда «Драфт»")
     ap.add_argument("source", help="файл паспорта (JSON) или ссылка /verify/<id>, /api/passport/<id>")
     ap.add_argument("--jwks", help="доверенные открытые ключи: файл или URL (по умолчанию — см. описание)")
     ap.add_argument("--json", action="store_true", help="итог в JSON")

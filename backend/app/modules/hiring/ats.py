@@ -128,7 +128,7 @@ def _potok(db: Session, inv: Invitation, stage: str, details: str) -> dict:
             db.commit()
             res.update(stage_id=stg["id"], stage_title=stg.get("name"))
             steps.append(f"Переведён на этап «{stg.get('name')}» (POST /ajs_joins/{join_id}/change_stage.json)")
-    if soft(steps, "Комментарий", lambda: cl.event(aid, f"Встречный: {details}", vid) or True):
+    if soft(steps, "Комментарий", lambda: cl.event(aid, f"Драфт: {details}", vid) or True):
         steps.append("Комментарий с деталями этапа (POST /events.json)")
     return res
 
@@ -151,10 +151,10 @@ def _by_name(db: Session, inv: Invitation, code: str, stage: str, details: str) 
         return res
     if code == "talantix":
         p.cl.transfer([ext], int(stg["id"]))
-        soft(steps, "Комментарий", lambda: p.cl.comment(ext, f"Встречный: {details}", vid))
+        soft(steps, "Комментарий", lambda: p.cl.comment(ext, f"Драфт: {details}", vid))
     else:
         st = db.get(AtsSettings, inv.company_id)
-        p.cl.add_to_vacancy(st.huntflow_account_id, ext, vid, int(stg["id"]), f"Встречный: {details}")
+        p.cl.add_to_vacancy(st.huntflow_account_id, ext, vid, int(stg["id"]), f"Драфт: {details}")
     res.update(stage_id=stg["id"], stage_title=stg.get("title"))
     steps.append(f"Переведён на этап «{stg.get('title')}»")
     return res

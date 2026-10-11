@@ -4,7 +4,7 @@ import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { errText } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { guide, juryLogin, juryReset, quick, QUICK, startQuick, type Persona } from "../lib/jury";
-import { daysText, useMeta, useRules } from "../lib/meta";
+import { daysText, PRODUCT_TAGLINE, useMeta, useRules } from "../lib/meta";
 
 type Rules = NonNullable<ReturnType<typeof useRules>>;
 
@@ -52,7 +52,7 @@ export default function Landing() {
               Работодатель находит вас сам — и сразу называет зарплату
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-white/80 md:text-lg">
-              Платформа подбора ИТ-специалистов наоборот. Кандидат один раз подтверждает уровень тестом,
+              {PRODUCT_TAGLINE}: платформа подбора ИТ-специалистов наоборот. Кандидат один раз подтверждает уровень тестом,
               попадает в категорию «направление · грейд» и получает приглашения с вилкой в рублях.
               Без откликов вслепую и без сотен нерелевантных резюме.
             </p>
