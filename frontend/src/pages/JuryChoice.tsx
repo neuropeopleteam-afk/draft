@@ -4,7 +4,7 @@ import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { Alert, errText, NB } from "../components/ui";
 import { useAuth } from "../lib/auth";
 import { useQuickSteps } from "../components/JuryQuick";
-import { guide, quick, QUICK, QUICK_MINUTES, startQuick, STEPS } from "../lib/jury";
+import { guide, quick, QUICK_MINUTES, startQuick, STEPS } from "../lib/jury";
 import { usePageTitle } from "../lib/meta";
 
 /** Я9: /jury/go без роли и экрана — выбор режима проводника жюри. «Проверка за 12 минут» (QUICK) или полный
@@ -39,7 +39,7 @@ export default function JuryChoice({ tour }: { tour: string | null }) {
         {err && <div className="mt-4"><Alert>{err}</Alert></div>}
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.25fr_1fr]">
           <section className="card flex flex-col p-5 sm:p-6" aria-labelledby="quick-t" data-testid="choice-quick">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{QUICK.length} шагов{steps.length > QUICK.length ? ` + ${steps.length - QUICK.length} по желанию` : ""} · около {QUICK_MINUTES} минут</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">{steps.length} шагов · около {QUICK_MINUTES} минут</p>
             <h2 id="quick-t" className="mt-1 text-xl font-extrabold text-brand-night">Проверка за 12 минут</h2>
             <p className="mt-1.5 text-sm leading-relaxed text-brand-ink/75">Главный сценарий ТЗ своими руками: вы пишете свою потребность, приглашаете кандидата из подборки и отвечаете за него, проходите экспресс-тест и открываете доказательства.</p>
             <ol className="mt-4 space-y-2 text-sm">
