@@ -61,6 +61,18 @@ class ChannelsOut(BaseModel):
     voice: bool = Field(description="Голос ведущего (синтез речи, mp3)")
     stt: bool = Field(description="«Нажми и говори»: запись ответа → распознанный текст")
     text: bool
+    avatar: bool = Field(False, description="Живой аватар (Anam, наше сгенерированное лицо, голос наш): токен — POST /sessions/{id}/avatar-token; "
+                                            "при любом сбое экран показывает свой портрет")
+
+
+class AvatarTokenOut(BaseModel):
+    """Параметры подключения к потоку живого аватара (Anam, JS SDK). Ключей нет — одноразовый токен сессии; реплики ведущей
+    клиент берёт у нас (/speech?format=pcm, наш голос) и передаёт в поток для движения губ (режим передачи звука)."""
+    session_token: str
+    max_seconds: int = Field(description="Потолок длительности сессии у поставщика")
+    ice_servers: list[dict] | None = Field(None, description="Наш TURN (временные учётные данные) или null — ICE поставщика")
+    relay_only: bool = False
+    persona_name: str = "Интервьюер"
 
 
 class ConversationOut(BaseModel):
@@ -283,7 +295,9 @@ async def session_transcribe(session_id: uuid.UUID, request: Request, user: User
 @router.get("/sessions/{session_id}/speech", summary="Голос интервьюера: текущий вопрос (аудио)",
             responses={**AUTH, 200: {"content": {"audio/mpeg": {}}}, 404: err("Сессия не найдена"),
                        503: err("Голос недоступен — вопрос показан текстом")}, response_class=Response)
-def session_speech(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> Response:
+def session_speech(session_id: uuid.UUID, format: Literal["mp3", "pcm"] = "mp3", user: User = Depends(candidate),
+                   db: Session = Depends(get_db)) -> Response:
+    """format=pcm — pcm_s16le 16 кГц моно (audio/pcm) для живого аватара (Anam, передача звука); по умолчанию mp3."""
     row = svc.own_session(db, user, session_id)
     st = row.state or {}
     # идёт разговор — текущий вопрос; только что закрыт (время вышло, «Закончить») — прощание ведущей
@@ -291,12 +305,34 @@ def session_speech(session_id: uuid.UUID, user: User = Depends(candidate), db: S
     if not q:
         raise api_error(409, "interview_closed", "Разговор не идёт")
     try:
-        audio, mime, usd = pt.get_port().speak(q)
+        audio, mime, usd = pt.get_port().speak(q, "pcm_16000" if format == "pcm" else "mp3")
     except pt.EngineUnavailable:
         raise api_error(503, "tts_unavailable", "Голос недоступен — вопрос показан текстом") from None
     svc.add_cost(row, "tts_usd", usd)
     db.commit()
     return Response(audio, media_type=mime, headers={"Cache-Control": "no-store"})
+
+
+@router.post("/sessions/{session_id}/avatar-token", summary="Живой аватар: токен сессии Anam (INTERVIEW_ANAM_ENABLED)",
+             response_model=AvatarTokenOut,
+             responses={**AUTH, **OFF, 404: err("Сессия не найдена"), 503: err("Аватар недоступен — экран показывает свой портрет")})
+def session_avatar_token(session_id: uuid.UUID, user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
+    """Лицо — наш сгенерированный портрет (frontend/public/avatar/PROVENANCE.md), загруженный в Anam как собственный аватар
+    (ANAM_AVATAR_ID); модель Anam только рисует лицо и губы под наш звук (/speech?format=pcm), её LLM и голос не
+    используются. Флаг по умолчанию выключен → 503, клиент тихо остаётся на портрете и голосе mp3."""
+    row = svc.own_session(db, user, session_id)
+    if row.status not in ("created", "in_progress"):
+        raise api_error(409, "interview_closed", "Разговор не идёт")
+    try:
+        t = pt.get_port().avatar_token()
+    except pt.EngineUnavailable:
+        raise api_error(503, "avatar_unavailable", "Аватар недоступен — доступны каналы «голос» и «текст»") from None
+    from app.modules.interview.engine.settings import get_interview_settings
+    # учёт: сессия поставщика тарифицируется по времени; оценка — длительность разговора, не больше потолка сессии
+    minutes = max(1, min(int(t.get("max_seconds") or 0) // 60 or 1, int(getattr(row, "minutes", 0) or 0) or 10))
+    svc.add_cost(row, "avatar_usd", minutes * float(getattr(get_interview_settings(), "interview_price_avatar_min", 0) or 0))
+    db.commit()
+    return t
 
 
 @router.post("/sessions/{session_id}/channel", summary="Сменить канал (отказ голоса → текст)",
