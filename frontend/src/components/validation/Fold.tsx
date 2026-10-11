@@ -100,3 +100,36 @@ export function Fold({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
+/** FINAL-UX E: всё ниже «5 чисел» и «Красной кнопки» — под одной кнопкой «Подробные расчёты». Кнопка раскрывает и все
+ *  разделы внутри; якорь адреса внутри группы (ссылки /criteria, проводник) раскрывает группу и нужный раздел. */
+export function FoldGroup({ children }: { children: ReactNode }) {
+  const all = useContext(Ctx);
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const loc = useLocation();
+  useEffect(() => {
+    const el = box.current;
+    const check = () => {
+      const id = hashId(window.location.hash);
+      if (!id || !el) return;
+      const t = document.getElementById(id);
+      if (t && el.contains(t)) setOpen(true);
+    };
+    check();
+    const mo = new MutationObserver(check);
+    if (el) mo.observe(el, { childList: true, subtree: true });
+    window.addEventListener("hashchange", check);
+    return () => { mo.disconnect(); window.removeEventListener("hashchange", check); };
+  }, [loc.hash, loc.key]);
+  return (
+    <div className="mt-10" data-testid="fold-group">
+      <button type="button" aria-expanded={open} data-testid="fold-group-toggle"
+        className="btn-ghost bg-white px-5 py-3 text-base"
+        onClick={() => { const v = !open; setOpen(v); if (v) all?.set(true); }}>
+        {open ? "Скрыть подробные расчёты ▴" : "Подробные расчёты ▾"}
+      </button>
+      <div ref={box} hidden={!open}>{children}</div>
+    </div>
+  );
+}
