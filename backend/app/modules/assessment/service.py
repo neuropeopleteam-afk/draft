@@ -815,6 +815,8 @@ def status(db: Session, user_id: uuid.UUID, direction: str | None = None) -> dic
         "sandbox_active": sandbox,
         "sandbox_starts": sandbox_quota(db, user.email) if sandbox and user is not None else None,
         "grade_change_interval_days": st_.grade_change_interval_days,
+        # доказательная оценка развёрнутых ответов (GRADING_EVIDENCE) — фраза о цитатах на экране перед тестом
+        "evidence_grading": bool(st_.grading_evidence),
         # неподтверждённая попытка: повтор на тот же грейд и выше — через retake_same_grade_days, ниже — сразу
         "retake_same_grade_days": st_.retake_same_grade_days,
         "retake_locks": {g: t.isoformat() for g, t in r_locks.items()},

@@ -187,6 +187,12 @@ export function GradeAccuracy() {
             <p className="mt-2 text-xs text-brand-ink/70">Условия конкурента (4 ступени без Стажёра, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой — строка «порог уверенности P 0,5; дотестирование 0; 20 заданий; ступеней 4». У FSP Talent в их мире: совпадение при повторе 76 %, κw 0,866 (miliantr/fsp-talent, docs/testing.md, 05.10.2026) — другой мир и другая процедура, числа сравнимы только по смыслу.</p>
             <h3 className="mt-6 font-bold text-brand-night">Парето-фронт (точно ↑, выше ↓, κw ↑, минуты ↓)</h3>
             <div className="mt-2"><T head={head} rows={(g.pareto ?? []).map(row)} min="56rem" caption="Парето-фронт перебора" /></div>
+            {g.pool?.rows?.length > 0 && <>
+              <h3 className="mt-6 font-bold text-brand-night">Чистка пула и добор сильных заданий у порогов</h3>
+              <p className="mt-2 text-sm text-brand-ink/75">26 семейств, слабых по калибровке панелью моделей (модель, не люди), и 17 новых семейств у порогов Junior/Middle и Middle/Senior. Два мира: слабые семейства «как в предкалибровке» и «на деле слабые».</p>
+              <div className="mt-2"><T head={head} rows={g.pool.rows.map((x: any) => { const r = row(x); r[0] = <span key="l">{x.label}{x.world_weak ? "" : <span className="block text-xs text-brand-ink/60">мир: как в предкалибровке</span>}{x.feasible ? "" : <span className="block text-xs text-brand-ink/60">не проходит ограничения</span>}</span>; return r; })} min="56rem" caption="Чистка пула и добор у порогов" /></div>
+              <p className="mt-2 text-xs text-brand-ink/70">Исключение слабых лучше по всем ограничениям в обоих мирах: банк платформы — {g.pool.exclude_better?.platform ? "да" : "нет"}, банк с добором — {g.pool.exclude_better?.plus ? "да" : "нет"}{g.pool.exclude_better?.platform || g.pool.exclude_better?.plus ? "." : "; поэтому чистка пула по умолчанию выключена (меньше сменных семейств — ниже повтор)."}{g.pool.plus_best_confirm ? ` После добора банка завышение ≤ ${pct(c.max_over)} в обоих мирах держит порог P ${num(g.pool.plus_best_confirm.confirm_level, 2)} — пересчёт пути на синхронизированном банке перед сменой порога.` : ""}</p>
+            </>}
             <p className="mt-2 text-xs text-brand-ink/70">Полная таблица — docs/validation/GRADE_ACCURACY.md; пересчёт — make grade-sweep.</p>
           </>}
       </div>
