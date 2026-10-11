@@ -47,6 +47,7 @@ from assessment_bank.psychometrics import CanaryDetector, ExposureControl
 from assessment_bank.simulation import Person, TrueFamily, _timed, make_responder, make_truth
 
 from app.modules.assessment.bank_engine import stack_excluded
+from app.modules.assessment.weak_pool import weak_excluded
 from app.modules.assessment.exposure import choose_subpool, exposure_table
 from app.modules.assessment.grade_hint import grade_by_years
 from app.modules.assessment.grades import confirm_level as product_confirm_level, cuts_tuple, decide_grade, p_at_least, point_grade
@@ -150,7 +151,7 @@ def run_session(pool, cand: Candidate, truth, cfg: sim.AppConfig, counter, claim
     d = cand.direction
     prev_sp = [h["subpool"] for h in history if h["subpool"] is not None]
     sp = choose_subpool(cfg.subpools, int(rng.integers(2 ** 31)), prev_sp)
-    excl = set(stack_excluded(cand.stack))
+    excl = set(stack_excluded(cand.stack)) | weak_excluded()  # как bank_engine._rebuild (ASSESSMENT_WEAK_EXCLUDE)
     if claimed == "intern":  # как bank_engine.start/_rebuild: без ротации, только лёгкие семейства
         sp = None
         excl |= set(intern_exclusions(pool, d))

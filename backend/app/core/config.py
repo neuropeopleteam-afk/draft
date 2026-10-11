@@ -212,6 +212,10 @@ class Settings(BaseSettings):
     # только когда погрешность позволяет, иначе «точнее — после дотестирования»; без чисел θ (grades.level_position).
     # false — как раньше (поля нет)
     grade_position_enabled: bool = False
+    # Я22: чистка пула — 26 семейств, слабых по калибровке панелью моделей (assessment/weak_pool.py), не выдаются ни в
+    # основной части, ни в дотестировании. false — пул как раньше. По умолчанию выключено: на симуляции повтор (κw)
+    # с исключением ниже (docs/validation/GRADE_ACCURACY.md, «Чистка пула»)
+    assessment_weak_exclude: bool = False
     # Камера во время теста по согласию (app/modules/proctor): false — экран камеры не показывается вообще,
     # тест идёт без камеры. Камера и так необязательна: без неё тест доступен полностью, грейд не меняется
     proctor_camera_enabled: bool = True
