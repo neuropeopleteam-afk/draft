@@ -55,7 +55,7 @@ N_BOOT = 1000
 
 PARAMS = ("decision", "confirm_level", "ext_items", "ext_minutes", "min_items", "max_items", "se_target",
           "classify_z", "stop_rule", "award_above", "misspec", "levels", "max_minutes", "exclude_low", "partial",
-          "time_weight", "weak_a", "weak_pool", "plus")
+          "time_weight", "weak_a", "weak_pool", "plus", "exact", "promote")
 # Семейства, слабые по калибровке панелью LLM (модель, не люди): отрицательная дискриминация шага, p = 0/1, a < 0,6,
 # a_eff < 0,55, p ≈ угадывание, неизоморфные варианты (банк, ветка feat/bank-core-plus 5493728,
 # reports/weak_families.json, поле exclude). Проверка: мир, где их истинная a = weak_a (по умолчанию в пуле — prior
@@ -82,9 +82,12 @@ PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items":
             "exclude_low": "без семейств с низкой информацией (доля)", "partial": "частичный балл: критериев",
             "time_weight": "выбор: информация на минуту (вес)",
             "weak_a": "мир: у 26 слабых по панели семейств истинная a", "weak_pool": "26 слабых семейств в пуле",
-            "plus": "добор банка у порогов J/M и M/S (17 семейств)"}
+            "plus": "добор банка у порогов J/M и M/S (17 семейств)",
+            "exact": "мир: точные параметры заданий (без ошибки эксперта)",
+            "promote": "короткий тест на уровень выше, если P(следующий) ≥"}
 VALUE_RU = {"weak_pool": {"exclude": "26 слабых семейств исключены из пула", "down": "26 слабых семейств в пуле с a = 0,4"},
-            "plus": {1: "+ добор банка у порогов J/M и M/S (17 семейств)"}}
+            "plus": {1: "+ добор банка у порогов J/M и M/S (17 семейств)"},
+            "exact": {1: "мир: точные параметры заданий (без ошибки эксперта)"}}
 DECISION_RU = {"claimed": "заявленный грейд, P ≥ порога уверенности", "point": "по лучшей оценке θ̂ (точечный грейд)"}
 
 
@@ -95,7 +98,7 @@ def baseline_point() -> dict:
             "min_items": c.min_items, "max_items": c.max_items, "se_target": c.se_target,
             "classify_z": c.classify_z, "stop_rule": c.stop_rule, "award_above": None, "levels": 5,
             "max_minutes": c.max_minutes, "exclude_low": 0.0, "partial": 1, "time_weight": c.time_weight,
-            "weak_a": 0.0, "weak_pool": "keep", "plus": 0}
+            "weak_a": 0.0, "weak_pool": "keep", "plus": 0, "exact": 0, "promote": None}
 
 
 def _p(**kw) -> dict:
@@ -302,6 +305,42 @@ def partial_responder(k: int):
     return factory
 
 
+PROMOTE_CFG = {"min_items": 4, "max_items": 8, "max_minutes": 15, "ext_items": 0}  # короткий тест на уровень выше
+
+
+def combine(t1: float, s1: float, t2: float, s2: float, prior_sd: float = 1.0) -> tuple[float, float]:
+    """Общая оценка по двум сессиям (нормальное приближение): апостериорные N(t1, s1²) и N(t2, s2²) с общим
+    априорным N(0, prior_sd²) — произведение правдоподобий: точность 1/s1² + 1/s2² − 1/prior_sd²."""
+    prec = 1.0 / s1 ** 2 + 1.0 / s2 ** 2 - 1.0 / prior_sd ** 2
+    prec = max(prec, 1.0 / s1 ** 2, 1.0 / s2 ** 2)
+    return (t1 / s1 ** 2 + t2 / s2 ** 2) / prec, prec ** -0.5
+
+
+def promote_path(pool, c, truth, cfg, counter, hist, rng, det, r: dict, q: float, confirm) -> dict:
+    """Вариант ТЗ «справившийся уверенно — повысить грейд» без автоподъёма: подтвердившему заявленный уровень, у
+    которого P(θ ≥ порога следующего) ≥ q, сразу предлагается короткий тест на уровень выше (≤ 8 заданий, ≤ 15 мин,
+    без повторов семейств). Следующий уровень — если общая оценка двух сессий даёт P ≥ порога уверенности; иначе
+    остаётся подтверждённый (не ниже). Кандидат принимает предложение всегда (верхняя оценка эффекта)."""
+    g = r["grade"]
+    if r["status"] != "confirmed" or g not in GRADE_ORDER or GRADE_ORDER.index(g) + 1 >= len(GRADE_ORDER):
+        return r
+    nxt = GRADE_ORDER[GRADE_ORDER.index(g) + 1]
+    t1 = r["tests"][-1]
+    if p_at_least(t1["theta"], t1["se"], nxt) < q:
+        return r
+    short = replace(cfg, **PROMOTE_CFG)
+    rec, _ = pr.run_session(pool, c, truth, short, counter, nxt, hist, rng, det, confirm_level=confirm)
+    th, se = combine(t1["theta"], t1["se"], rec["theta"], rec["se"])
+    from app.modules.assessment.grades import confirm_level as product_confirm
+
+    level = confirm if confirm is not None else product_confirm(se)
+    out = {**r, "tests": r["tests"] + [rec], "families": sorted(set(r["families"]) | set(rec["families"])),
+           "promote_offered": True}
+    if p_at_least(th, se, nxt) >= level:
+        out.update(grade=nxt, level=pr.LEVELS.index(nxt), status="promoted")
+    return out
+
+
 def run_task(args: tuple[dict, int, str, int]) -> dict:
     """Путь дважды для кандидатов одного направления при параметрах pt — те же rng, что path_retest.direction_run."""
     pt, i, d, n = args
@@ -327,6 +366,8 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
                                 misspec=float(pt["misspec"])))
     if four:
         cands = [replace(c, claimed="junior") if c.claimed == "intern" else c for c in cands]
+    if int(pt.get("exact") or 0):  # мир «точные параметры»: истина = предкалибровка (кандидаты — те же: rng0 уже пройден)
+        truth = pr.author_truth(pool_all)
     if float(pt["weak_a"]) > 0:  # мир: слабые по панели семейства на деле слабые
         truth = {f: (replace(t, a=np.full_like(t.a, float(pt["weak_a"]))) if f in WEAK_FAMILIES else t)
                  for f, t in truth.items()}
@@ -350,15 +391,20 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
     def lv(level: int) -> int:
         return max(level - 1, 0) if four else level
     out = {"true": [], "claimed": [], "l1": [], "l2": [], "min1": [], "items1": [], "sess1": [], "status1": [],
-           "border1": []}
+           "border1": [], "offer1": []}
     try:
         rows = []
+        q = pt.get("promote")
         for c in cands:
             hist: list[dict] = []
-            rows.append((c, pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"],
-                                        pt["award_above"], pt["decision"]),
-                         pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"],
-                                     pt["award_above"], pt["decision"])))
+            pair = []
+            for _ in range(2):
+                r = pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"], pt["award_above"],
+                                pt["decision"])
+                if q is not None:
+                    r = promote_path(pool, c, truth, cfg, counter, hist, rng, det, r, float(q), pt["confirm_level"])
+                pair.append(r)
+            rows.append((c, *pair))
     finally:
         pr.make_responder, pr.stack_excluded = saved, saved_stack
     for c, r1, r2 in rows:
@@ -371,6 +417,7 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
         out["sess1"].append(len(r1["tests"]))
         out["status1"].append(r1["status"])
         out["border1"].append(borderline(r1["grade"], r1["tests"][-1]["theta"], r1["tests"][-1]["se"]))
+        out["offer1"].append(bool(r1.get("promote_offered")))
     return {"key": key(pt), "direction": d, "n_excluded": len(low), **out}
 
 
