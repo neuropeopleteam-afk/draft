@@ -12,7 +12,7 @@ type Data = { direction: string | null; attempts: Item[]; comparison: Comparison
   can_retake_now: boolean; retake_reason: string | null; note: string | null };
 
 const label = (x: Item, i: number) =>
-  `${i + 1}. ${dtt(x.finished_at)} · ${GRADE_TITLE_ALL[x.claimed_grade] ?? x.claimed_grade} · θ ${x.theta == null ? "—" : `${signed(x.theta)} ± ${num(x.se)}`}`;
+  `${i + 1}. ${dtt(x.finished_at)} · ${GRADE_TITLE_ALL[x.claimed_grade] ?? x.claimed_grade} · уровень ${x.theta == null ? "—" : `${signed(x.theta)} ± ${num(x.se)}`}`;
 
 export default function Attempts() {
   const [params, setParams] = useSearchParams();
@@ -40,7 +40,7 @@ export default function Attempts() {
   const retakeBox = data.retake_grade && (
     <div className="flex flex-wrap items-center gap-3">
       <button className="btn-primary" disabled={!data.can_retake_now} onClick={retake}>
-        {data.sandbox ? "Пройти ещё раз (демо)" : `Пройти тест на ${GRADE_TITLE_ALL[data.retake_grade]} ещё раз`}
+        {data.sandbox ? "Пройти ещё раз (проверка жюри)" : `Пройти тест на ${GRADE_TITLE_ALL[data.retake_grade]} ещё раз`}
       </button>
       <span className="min-w-0 text-xs text-brand-ink/65">
         {data.sandbox ? data.note : data.can_retake_now ? "Повтор доступен по правилам 30/90 дней." : data.retake_reason}

@@ -66,9 +66,9 @@ export function AttemptsCompare({ cmp, audience = "candidate", level = 3 }: { cm
           {head(a, 1)}{head(b, 2)}
           <p className="hidden text-sm font-bold text-brand-night sm:block">Разница</p>
         </div>
-        <Row label={audience === "employer" ? "Оценка уровня ± погрешность" : "Оценка уровня θ ± погрешность"} a={thetaSe(a)} b={thetaSe(b)}
-          d={d.theta == null ? "—" : <>{audience === "employer" ? "разница" : "Δθ ="} {signed(d.theta)}{d.interval != null && <> · {d.within_error ? "в пределах" : "больше"} погрешности ±{num(d.interval)}</>}</>} />
-        <Row label="Точность (погрешность SE)" a={num(a.se)} b={num(b.se)} d={d.se == null ? "—" : `${signed(d.se)} (${d.se < 0 ? "точнее" : d.se > 0 ? "менее точно" : "так же"})`} />
+        <Row label="Оценка уровня ± точность" a={thetaSe(a)} b={thetaSe(b)}
+          d={d.theta == null ? "—" : <>разница {signed(d.theta)}{d.interval != null && <> · {d.within_error ? "в пределах" : "больше"} точности ±{num(d.interval)}</>}</>} />
+        <Row label="Точность оценки" a={num(a.se)} b={num(b.se)} d={d.se == null ? "—" : `${signed(d.se)} (${d.se < 0 ? "точнее" : d.se > 0 ? "менее точно" : "так же"})`} />
         <Row label="Доля верных ответов" a={a.accuracy == null ? "—" : `${pct(a.accuracy)} (${a.correct} из ${a.answered})`}
           b={b.accuracy == null ? "—" : `${pct(b.accuracy)} (${b.correct} из ${b.answered})`}
           d={d.accuracy == null ? "—" : `${signed(d.accuracy * 100, 0)}${NB}п. п.`} />
@@ -78,7 +78,7 @@ export function AttemptsCompare({ cmp, audience = "candidate", level = 3 }: { cm
           d={d.n_items ? signed(d.n_items, 0) : "—"} />
         <Row label="Повторы заданий во второй попытке" a="—"
           b={<>семейств {o.repeated_families} из {o.n_families_second}{o.share_families != null ? ` (${pct(o.share_families)})` : ""}; вариантов {o.repeated_variants} из {o.n_variants_second}</>}
-          d={o.engine === "stub" ? "тестовая заглушка" : o.repeated_families === 0 ? "параллельная форма" : "часть семейств повторилась"} />
+          d={o.engine === "stub" ? "упрощённый режим теста" : o.repeated_families === 0 ? "параллельная форма" : "часть семейств повторилась"} />
       </div>
       <section aria-label="Что изменилось и почему">
         <H className="font-bold text-brand-night">Что изменилось и почему</H>
