@@ -1,4 +1,4 @@
-"""В1: свой рисованный образ интервьюера (INTERVIEW_AVATAR_ENABLED) — флаг в /api/meta, отделение от поставщика Anam
+"""В1: свой образ интервьюера (сгенерированный портрет несуществующего человека) (INTERVIEW_AVATAR_ENABLED) — флаг в /api/meta, отделение от поставщика Anam
 (INTERVIEW_ANAM_ENABLED), файлы образа и клипов с происхождением (frontend/public/avatar/)."""
 from __future__ import annotations
 
@@ -58,4 +58,4 @@ def test_avatar_assets_and_provenance():
             assert 10_000 < f.stat().st_size <= MAX_CLIP, (f, f.stat().st_size)
     prov = (AVATAR_DIR / "PROVENANCE.md").read_text(encoding="utf-8")
     assert "сгенерирован" in prov.lower() and "gpt_image_2_5_flare" in prov and "veo_3_1_fast" in prov
-    assert re.search(r"2026-10-11", prov) and "не человек" in prov
+    assert re.search(r"2026-10-11", prov) and "не человек" in prov and "несуществующ" in prov

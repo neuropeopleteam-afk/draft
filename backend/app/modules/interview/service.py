@@ -44,7 +44,7 @@ def enabled() -> bool:
 
 def meta() -> dict:
     s = get_settings()
-    # avatar — свой рисованный образ интервьюера на экране разговора (INTERVIEW_AVATAR_ENABLED, только при включённом интервью)
+    # avatar — свой образ интервьюера (сгенерированный портрет) на экране разговора (INTERVIEW_AVATAR_ENABLED, только при включённом интервью)
     return {"enabled": enabled(), "stub": pt.is_stub(), "defense_minutes": s.interview_defense_minutes,
             "avatar": enabled() and bool(s.interview_avatar_enabled)}
 

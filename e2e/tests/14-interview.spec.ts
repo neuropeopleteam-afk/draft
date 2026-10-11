@@ -11,10 +11,10 @@
  *  3. Этап найма «ИИ-интервью»: работодатель приглашает в принятом приглашении, кандидат (390 px) проходит его до конца;
  *     итог кандидату не показывается, работодатель видит его в приглашении.
  *  4. 390 px: панель защиты, разговор и карточка работодателя без горизонтальной прокрутки, снимки.
- * В1: при INTERVIEW_AVATAR_ENABLED (/api/meta interview.avatar) вместо волны — свой рисованный образ «ИИ-интервьюер, не
+ * В1: при INTERVIEW_AVATAR_ENABLED (/api/meta interview.avatar) вместо волны — свой образ (сгенерированный портрет) «ИИ-интервьюер, не
  * человек» (interviewer-avatar): в 1440 px играет беззвучный клип текущего состояния (data-mode=video); в 390 px —
  * до начала разговора с prefers-reduced-motion неподвижный кадр без <video>, затем клипы недоступны (запросы обрываются) —
- * запасной вариант: картинка + 2D-рот по голосу (data-mode=still). Флаг выключен — проверяется прежний визуал.
+ * запасной вариант: неподвижный кадр и свечение рамки по голосу (data-mode=still). Флаг выключен — проверяется прежний визуал.
  * axe-core (E2E_AXE=<путь к axe.min.js>, например tools/a11y/axe_audit.cjs → /tmp/axe.min.js): нарушений уровня
  * serious/critical на новых экранах нет. Без E2E_AXE проверка доступности пропускается (пакеты не добавляются).
  */
@@ -41,7 +41,7 @@ async function noHScroll(page: Page, what: string) {
   expect(w, `${what}: горизонтальная прокрутка`).toBeLessThanOrEqual(1);
 }
 
-/** Свой визуал собеседника: волна голоса (флаг образа выкл.) или свой рисованный образ (вкл.) и подпись состояния. */
+/** Свой визуал собеседника: волна голоса (флаг образа выкл.) или свой образ — сгенерированный портрет (вкл.) и подпись состояния. */
 async function visualOk(page: Page, opts: { still?: boolean } = {}) {
   const w = page.getByTestId(VIS());
   await expect(w).toBeVisible();
@@ -52,8 +52,8 @@ async function visualOk(page: Page, opts: { still?: boolean } = {}) {
     await expect(page.locator("video")).toHaveCount(0);
   } else {
     await expect(w).toContainText("ИИ-интервьюер, не человек");
-    await expect(w.getByTestId("avatar-still")).toHaveAttribute("alt", /не фото человека/);
-    if (opts.still) {  // клипов нет (не загрузились) — запасной вариант: картинка и 2D-анимация, клипы не видны
+    await expect(w.getByTestId("avatar-still")).toHaveAttribute("alt", /несуществующий человек/);
+    if (opts.still) {  // клипов нет (не загрузились) — запасной вариант: неподвижный кадр и свечение рамки, клипы не видны
       await expect(w).toHaveAttribute("data-mode", "still");
       await expect(w.getByTestId("avatar-still")).toBeVisible();
     } else {  // клип текущего состояния играет, все клипы без звука и скрыты от чтения с экрана
