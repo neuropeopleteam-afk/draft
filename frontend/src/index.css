@@ -45,3 +45,12 @@
     .nav-strip::after { content: ""; flex: 0 0 1.5rem; }
   }
 }
+
+/* SIMPLIFY п.2: счётчики обзора работодателя — колонки по ширине самого блока, а не окна. Проводник жюри справа
+ * сужает main (поля body), окно остаётся 1440 px — по окну было 4 узкие колонки и подписи рвались посреди слова
+ * («ПОТРЕБНОСТ/И»). Теперь 1 → 2 → 4 колонки по месту: 4 — только когда у каждой карточки ≥ 12 rem под подпись. */
+.stat-grid { container-type: inline-size; }
+.stat-grid > div { display: grid; gap: 1.25rem; grid-template-columns: minmax(0, 1fr); }
+@container (min-width: 26rem) { .stat-grid > div { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (min-width: 54rem) { .stat-grid > div { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stat-grid .stat-label { overflow-wrap: normal; word-break: normal; hyphens: manual; }
