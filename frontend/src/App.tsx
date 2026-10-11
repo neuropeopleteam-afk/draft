@@ -58,9 +58,11 @@ const pg = {
   liveScreen: () => import("./ideas/live/Screen"),
   passport: () => import("./passport/VerifyPage"),
   criteria: () => import("./pages/Criteria"),  // К1: проверка по критериям ТЗ
+  interview: () => import("./components/Interview"),  // Я15: разговор устной защиты и ИИ-интервью
 };
 
 const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
+const InterviewRoom = lazyNamed(pg.interview, "InterviewRoom");
 const StudyAbout = lazyNamed(pg.studyAbout, "default");
 const Expert = lazyNamed(pg.expert, "default");
 const ExpertAngoff = lazyNamed(pg.panel, "ExpertAngoff");
@@ -172,6 +174,7 @@ export default function App() {
         <Route path="assessment/test/:id" element={<TestRun />} />
         <Route path="category" element={<Category />} />
         <Route path="attempts" element={<Attempts />} />
+        <Route path="interview/:id" element={<InterviewRoom />} />
         <Route path="feedback" element={<Feedback />} />
         <Route path="profile" element={<Profile />} />
         <Route path="invitations" element={<Invitations />} />

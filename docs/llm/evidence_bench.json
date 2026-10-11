@@ -1,0 +1,393 @@
+{
+ "title": "Доказательная оценка: флаг GRADING_EVIDENCE выкл и вкл на одних и тех же 50 ответах",
+ "date": "2026-10-10 11:09",
+ "code_sha": "b41a938",
+ "grader": "Claude Sonnet 5.5",
+ "skeptic": "Claude Fable 5.1",
+ "reference": "среднее судей Opus 5.5 / Fable 5.1 / GPT-6 Astra Pro (модели, не люди)",
+ "n": 50,
+ "answered_v3": 50,
+ "off": {
+  "mae": {
+   "value": 0.015,
+   "ci90": [
+    0.007,
+    0.024
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.991,
+   "ci90": [
+    0.972,
+    1.0
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.006,
+   "ci90": [
+    -0.017,
+    0.004
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.96,
+   "ci90": [
+    0.88,
+    1
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 25,
+  "order_strict": {
+   "value": 5,
+   "n": 5
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 25
+  }
+ },
+ "on_first": {
+  "mae": {
+   "value": 0.023,
+   "ci90": [
+    0.009,
+    0.04
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.991,
+   "ci90": [
+    0.972,
+    1.0
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.014,
+   "ci90": [
+    -0.032,
+    -0.0
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.96,
+   "ci90": [
+    0.88,
+    1
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 25,
+  "order_strict": {
+   "value": 5,
+   "n": 5
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 25
+  }
+ },
+ "on": {
+  "mae": {
+   "value": 0.023,
+   "ci90": [
+    0.01,
+    0.04
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.982,
+   "ci90": [
+    0.958,
+    1.0
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.009,
+   "ci90": [
+    -0.027,
+    0.006
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.92,
+   "ci90": [
+    0.84,
+    1
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 25,
+  "order_strict": {
+   "value": 5,
+   "n": 5
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 25
+  }
+ },
+ "off_three": {
+  "mae": {
+   "value": 0.031,
+   "ci90": [
+    0.017,
+    0.047
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.974,
+   "ci90": [
+    0.944,
+    0.993
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.019,
+   "ci90": [
+    -0.037,
+    -0.003
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.88,
+   "ci90": [
+    0.76,
+    0.96
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 25,
+  "order_strict": {
+   "value": 5,
+   "n": 5
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 25
+  }
+ },
+ "on_three": {
+  "mae": {
+   "value": 0.034,
+   "ci90": [
+    0.017,
+    0.052
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.983,
+   "ci90": [
+    0.957,
+    1.0
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.022,
+   "ci90": [
+    -0.043,
+    -0.004
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.92,
+   "ci90": [
+    0.84,
+    1
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 25,
+  "order_strict": {
+   "value": 5,
+   "n": 5
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 25
+  }
+ },
+ "off_repeat": {
+  "mae": {
+   "value": 0.015,
+   "ci90": [
+    0.007,
+    0.024
+   ],
+   "n": 25
+  },
+  "kappa_w": {
+   "value": 0.982,
+   "ci90": [
+    0.958,
+    1.0
+   ],
+   "n": 25
+  },
+  "bias": {
+   "value": -0.001,
+   "ci90": [
+    -0.012,
+    0.009
+   ],
+   "n": 25
+  },
+  "over_share": {
+   "value": 0,
+   "ci90": [
+    0,
+    0
+   ],
+   "n": 25
+  },
+  "exact_bin": {
+   "value": 0.92,
+   "ci90": [
+    0.84,
+    1
+   ],
+   "n": 25
+  },
+  "attacks_passed": 0,
+  "attacks_n": 25,
+  "order_strict": {
+   "value": 5,
+   "n": 5
+  },
+  "expert_honest": {
+   "value": 0,
+   "n": 25
+  }
+ },
+ "paired": {
+  "on_minus_off": {
+   "d_mae": 0.008,
+   "ci90": [
+    0.0,
+    0.024
+   ],
+   "n": 25,
+   "answers_differ": 2
+  },
+  "repeat_minus_off": {
+   "d_mae": 0.0,
+   "ci90": [
+    0.0,
+    0.001
+   ],
+   "n": 25,
+   "answers_differ": 1
+  },
+  "on_minus_repeat": {
+   "d_mae": 0.008,
+   "ci90": [
+    0.0,
+    0.024
+   ],
+   "n": 25,
+   "answers_differ": 1
+  }
+ },
+ "changed_vs_off": [
+  [
+   "gptoss-120b|medium|0|backend.db.overbooking_ob3#2",
+   0.75,
+   0.875
+  ],
+  [
+   "ref_medium|-|0|backend.py.idempotency_ob3#2",
+   0.575,
+   0.375
+  ]
+ ],
+ "skeptic_calls": 11,
+ "skeptic_answered": 11,
+ "verdicts": {
+  "agree": 11
+ },
+ "changes": {
+  "down": 0,
+  "up": 1,
+  "up_rejected": 0
+ },
+ "evidence": {
+  "quotes": 70,
+  "dropped": 0,
+  "capped": 0
+ },
+ "cost_usd": {
+  "v2": 0.3687,
+  "v3": 0.3848,
+  "skeptic": 0.4792
+ },
+ "latency_s": {
+  "v3": {
+   "p50": 2.55,
+   "p90": 5.1
+  },
+  "skeptic": {
+   "p50": 2.7,
+   "p90": 12.37
+  }
+ }
+}

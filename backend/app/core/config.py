@@ -170,6 +170,13 @@ class Settings(BaseSettings):
     # И27: вторая оценка спорных ответов — в фоне (итог теста её не ждёт, результат дописывается в оценку с пометкой
     # «пересмотрено второй моделью»); false — как раньше, синхронно внутри ответа кандидата
     llm_grading_second_async: bool = True
+    # Доказательная оценка (assessment/evidence.py, docs/LLM.md «Доказательная оценка»): цитаты по пунктам рубрики, сверенные кодом
+    # (пункт без подтверждённой цитаты — на шаг ниже), «скептик» для высоких (≥ GRADING_SKEPTIC_HIGH) и спорных
+    # оценок со сборкой итога кодом; выключено — промпт v2 и вторая оценка, как раньше. Модель скептика — цепочка
+    # grade_second или явная GRADING_SKEPTIC_MODEL (одна попытка, без цепочки)
+    grading_evidence: bool = False
+    grading_skeptic_high: float = 0.75
+    grading_skeptic_model: str | None = None
     # И27: кэш разбора потребности по нормализованному тексту (таблица need_parse_jobs), с; 0 — без кэша
     parse_cache_ttl_s: int = 3600
 
@@ -302,9 +309,50 @@ class Settings(BaseSettings):
     passport_retired_public_keys: str = ""  # открытые ключи выведенных из оборота ключей (base64url через запятую)
     passport_ttl_days: int = 365
 
+    # hh.ru (app/modules/hh, docs/INTEGRATIONS.md): импорт своей вакансии работодателя и «Рынок по hh.ru» у вилки.
+    # Токен приложения и HH-User-Agent — только из secrets/hh.env на сервере (HH_APP_TOKEN, HH_USER_AGENT); client
+    # id/secret не нужны. HH_ENABLED=false (по умолчанию) или нет токена — функции скрыты. HH_STUB=1 — заглушка с
+    # фикстурой вместо api.hh.ru (тесты, CI, e2e). Не чаще 1 запроса в hh_min_interval_s на все воркеры, кэш на диске.
+    hh_enabled: bool = False
+    hh_stub: bool = False
+    hh_app_token: str | None = None
+    hh_user_agent: str | None = None
+    hh_base_url: str = "https://api.hh.ru"
+    hh_timeout_s: float = 10.0
+    hh_min_interval_s: float = 1.0
+    hh_cache_dir: str = "/tmp/hh_cache"
+    hh_vacancy_ttl_s: int = 600  # вакансия по номеру (предпросмотр → импорт)
+    hh_market_ttl_s: int = 24 * 3600  # «Рынок по hh.ru»: поиск живых вакансий с зарплатой
+
+    @property
+    def hh_available(self) -> bool:
+        """Функции hh.ru видны: флаг включён и есть токен приложения (или заглушка)."""
+        return bool(self.hh_enabled and (self.hh_stub or (self.hh_app_token and self.hh_user_agent)))
+
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
     fsp_oidc_client_id: str | None = None
+
+    # Я15: «устная защита» ответов теста и «ИИ-интервью» как этап найма (app/modules/interview). По умолчанию выключено.
+    # Движок разговора и оценки — app/modules/interview/engine (Я14, свой интерфейс engine/CONTRACT.md); пока его нет или
+    # INTERVIEW_ENGINE=stub — заглушка продукта (тесты, CI, e2e): вопросы по шаблону, оценка правилом, «заглушка» в итоге.
+    interview_enabled: bool = False
+    interview_engine: str = "auto"  # auto — движок, если он есть и настроен, иначе заглушка; stub — всегда заглушка
+    # Видео-аватара в продукте нет (решение владельца 10.10, регламент п. 5.11): визуал — своя анимация волны голоса;
+    # канал «аватар» остаётся только в движке за INTERVIEW_AVATAR_ENABLED (выкл.) и экраном не используется.
+    interview_stt_stub: bool = False  # e2e/демо: в заглушке «нажми и говори» отдаёт начало письменного ответа (stub=true)
+    interview_audio_max_kb: int = 3072  # запись одного ответа «нажми и говори»
+    interview_defense_minutes: int = 3
+    interview_defense_max_questions: int = 3
+    interview_defense_min_chars: int = 120  # развёрнутый ответ короче — защищать нечего
+    interview_defense_max_tasks: int = 4
+    interview_defense_attempts: int = 2  # сессий на одну попытку теста (сбой связи — можно ещё раз)
+    interview_hiring_minutes: int = 10
+    interview_hiring_max_questions: int = 6
+    interview_per_user_day: int = 4
+    interview_total_day: int = 300  # всех новых сессий за сутки — потолок расходов со стороны продукта
+    interview_jury_minutes: int = 5  # режим жюри: живой запуск не длиннее, не чаще раза в час на песочницу
+    interview_jury_per_hour: int = 1
 
     @property
     def postbox_configured(self) -> bool:
