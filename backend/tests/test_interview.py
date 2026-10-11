@@ -336,11 +336,14 @@ def test_engine_port_channels_and_quote_check(client, on, monkeypatch):
     t = candidate_with_category(client)
     ts = _with_open_answers(client, t)
     sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
-    # видео-аватара в продукте нет (регламент п. 5.11): маршрута нет, канал «avatar» не принимается
+    # канал «avatar» как канал разговора не принимается (каналы — голос и текст; живой аватар — надстройка над «голосом»)
     assert client.post(f"/api/interview/sessions/{sid}/avatar", headers=H(t)).status_code in (404, 405)
     assert client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "avatar"}, headers=H(t)).status_code == 422
     s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "voice"}, headers=H(t)).json()
-    assert s["conversation"]["channels"] == {"voice": True, "stt": True, "text": True} and s["conversation"]["hint"] is None
+    assert s["conversation"]["channels"] == {"voice": True, "stt": True, "text": True, "avatar": True} and s["conversation"]["hint"] is None
+    # у поддельного движка нет avatar_token → 503, клиент тихо остаётся на портрете
+    r = client.post(f"/api/interview/sessions/{sid}/avatar-token", headers=H(t))
+    assert r.status_code == 503 and r.json()["detail"]["code"] == "avatar_unavailable"
     sp = client.get(f"/api/interview/sessions/{sid}/speech", headers=H(t))
     assert sp.status_code == 200 and sp.headers["content-type"] == "audio/mpeg"
     tr = client.post(f"/api/interview/sessions/{sid}/transcribe", content=b"\x1a\x45\xdf\xa3",
@@ -370,8 +373,9 @@ def test_stub_channels_unavailable(client, on):
     ts = _with_open_answers(client, t)
     sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
     s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "text"}, headers=H(t)).json()
-    assert s["conversation"]["channels"] == {"voice": False, "stt": False, "text": True}
+    assert s["conversation"]["channels"] == {"voice": False, "stt": False, "text": True, "avatar": False}
     assert client.get(f"/api/interview/sessions/{sid}/speech", headers=H(t)).status_code == 503
+    assert client.post(f"/api/interview/sessions/{sid}/avatar-token", headers=H(t)).status_code == 503
     r = client.post(f"/api/interview/sessions/{sid}/transcribe", content=b"x", headers={**H(t), "Content-Type": "audio/webm"})
     assert r.status_code == 503 and r.json()["detail"]["code"] == "stt_unavailable"
 
@@ -383,7 +387,7 @@ def test_stub_stt_for_e2e(client, on, monkeypatch):
     ts = _with_open_answers(client, t)
     sid = client.post(f"/api/interview/defense/{ts}", json={"name": "Иван", "consent": True}, headers=H(t)).json()["id"]
     s = client.post(f"/api/interview/sessions/{sid}/begin", json={"channel": "text"}, headers=H(t)).json()
-    assert s["conversation"]["channels"] == {"voice": False, "stt": True, "text": True}
+    assert s["conversation"]["channels"] == {"voice": False, "stt": True, "text": True, "avatar": False}
     r = client.post(f"/api/interview/sessions/{sid}/transcribe", content=b"\x1a\x45\xdf\xa3",
                     headers={**H(t), "Content-Type": "audio/webm"})
     assert r.status_code == 200 and r.json()["stub"] is True
