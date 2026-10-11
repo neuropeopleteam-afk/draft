@@ -93,6 +93,10 @@ def stage_main() -> list[dict]:
     pts += [_v(above=0.8, confirm_up=cu) for cu in (0.8, 0.95)] + [_v(above=0.6), _v(above=0.6, confirm_up=0.95)]
     pts += [_v(minutes=10, items=6), _v(minutes=10, items=6, level=0.7), _v(level=0.95), _v(floor=True)]
     pts += [_v(items=10, minutes=20), _v(items=12, minutes=25, level=0.9)]   # длиннее карточки — для Парето
+    # второй круг (по первому прогону 11.10): «итог не ниже первой сессии» со строже c₂ и мягче c₂ при разных L
+    pts += [_v(floor=True, confirm=c) for c in (0.55, 0.6, 0.65, 0.7)]
+    pts += [_v(floor=True, confirm=0.6, level=lv) for lv in (0.7, 0.9)] + [_v(floor=True, confirm=0.6, items=6, minutes=10)]
+    pts += [_v(confirm=c, level=lv) for lv in (0.7, 0.9) for c in (0.4, 0.45)] + [_v(confirm=0.4)]
     return pts
 
 
@@ -335,24 +339,34 @@ def pareto(points: list[dict]) -> list[str]:
             if not any(np.all(w >= v) and np.any(w > v) for j, w in enumerate(vs) if j != i)]
 
 
+def _better(m: dict, bm: dict) -> bool:
+    """Лучше одной сессии по всем ограничениям: точно ↑, завышение ≤ 7 %, совпадение при повторе и κw — не ниже."""
+    return bool(m["exact"] > bm["exact"] and m["over"] <= MAX_OVER and m["retest_exact"] >= bm["retest_exact"]
+                and m["retest_kappa"] >= bm["retest_kappa"])
+
+
 def choose(points: list[dict]) -> dict:
-    """Лучшая допустимая по точности; в пределах 1 п. п. — меньше доля второго этапа и минуты. По умолчанию — только
-    если лучше одной сессии по всем ограничениям (точно ↑, завышение ≤ 7 %, совпадение при повторе ↑, κw ↑)."""
+    """Среди допустимых (завышение ≤ 7 %, κw ≥ 0,84, второй этап ≤ 15 мин по p90, карточка ≤ 15 мин) — сначала те, что
+    лучше одной сессии по всем ограничениям; из них максимум точных, в пределах 1 п. п. — меньше доля второго этапа
+    и минуты. Нет таких — лучший допустимый по точности с пометкой better_on_all = false (по умолчанию — одна сессия)."""
     base = next(p for p in points if not p["point"]["items"])
-    feas = [p for p in points if p["point"]["items"] and p["metrics"]["feasible"] and not p["point"]["floor"]
+    bm = base["metrics"]
+    feas = [p for p in points if p["point"]["items"] and p["metrics"]["feasible"]
             and p["point"]["minutes"] <= MAX_REFINE_MIN]
     if not feas:
         return {"key": None, "better_on_all": False, "reason": "нет допустимых вариантов"}
-    best_exact = max(p["metrics"]["exact"] for p in feas)
-    near = [p for p in feas if p["metrics"]["exact"] >= best_exact - 0.01]
-    best = sorted(near, key=lambda p: (p["metrics"]["over"] > MAX_OVER, p["metrics"]["share_refined"],
-                                       p["metrics"]["minutes_mean"], -p["metrics"]["exact"]))[0]
-    bm, m = base["metrics"], best["metrics"]
-    better = bool(m["exact"] > bm["exact"] and m["over"] <= MAX_OVER and m["retest_exact"] > bm["retest_exact"]
-                  and m["retest_kappa"] > bm["retest_kappa"])
-    return {"key": best["key"], "point": best["point"], "better_on_all": better,
+    good = [p for p in feas if _better(p["metrics"], bm)]
+    pool = good or feas
+    best_exact = max(p["metrics"]["exact"] for p in pool)
+    near = [p for p in pool if p["metrics"]["exact"] >= best_exact - 0.01]
+    best = sorted(near, key=lambda p: (p["metrics"]["share_refined"], p["metrics"]["minutes_mean"],
+                                       -p["metrics"]["exact"]))[0]
+    m = best["metrics"]
+    return {"key": best["key"], "point": best["point"], "better_on_all": bool(good), "n_better": len(good),
+            "better_keys": [p["key"] for p in good],
             "delta_exact": round(m["exact"] - bm["exact"], 4), "delta_over": round(m["over"] - bm["over"], 4),
             "delta_retest": round(m["retest_exact"] - bm["retest_exact"], 4),
+            "delta_kappa": round(m["retest_kappa"] - bm["retest_kappa"], 4),
             "delta_minutes": round(m["minutes_mean"] - bm["minutes_mean"], 2)}
 
 
@@ -462,15 +476,19 @@ def markdown(rep: dict) -> str:
          f"`{sg.get('commit')}`, банк `{(sg.get('bank') or '—')[:16]}`. Пересчёт: `make two-stage`.", "",
          f"> {rep['caveat']} Модель, не люди: числа сравнивают правила внутри одного мира.", "",
          "## Правило", "",
-         "1. После основного теста (≤ 60 мин, решение при P ≥ 0,6) уровень **«на границе»**, если у порога уровня кандидата "
-         "или любого уровня выше P(θ ≥ порога) лежит строго между 1 − L и L (то же, что |θ̂ − порог| < z_L · SE), или "
-         "уровень выше заявленного уже вероятен с P ≥ L (тест на заявленный грейд выше его не поднимает).",
-         "2. До уточнения — уровень по первой сессии с пометкой «на границе: можно уточнить».",
+         "1. После основного теста (≤ 60 мин, решение при P ≥ 0,6; итог первой сессии g, заявленный грейд c) уровень "
+         "**«на границе»**, если у порогов уровней от g до c включительно (выше g, не выше заявленного) "
+         "P(θ ≥ порога) лежит строго между 1 − L и L (то же, что |θ̂ − порог| < z_L · SE); граница — порог с P, "
+         "ближайшей к 0,5. Вид: «уровень под вопросом» (порог — уровень g, keep) или «возможно выше» (порог выше g, "
+         "не выше c, up). Режим «выше заявленного» (above > 0): если g = c и уровень выше c вероятен с P ≥ above.",
+         "2. До уточнения — уровень по первой сессии с пометкой «на границе: можно уточнить» (не выше, чем позволяет "
+         "первая сессия).",
          "3. **Уточнение уровня** — отдельная сессия: только короткие задания (≤ 5 мин) с наибольшей информацией у "
          "выбранного порога, без семейств прошлых сессий, частота показа — Sympson — Hetter; не больше N заданий и M минут; "
          "досрочно — когда после 3 новых заданий порог вышел из θ̂ ± z_L · SE.",
          "4. **Итог** — по общей оценке обеих сессий (одна апостериорная θ̂ по всем ответам; детектор предзнания — по всем): "
-         "наивысший уровень с P(θ ≥ порога) ≥ c₂. Может быть и ниже первой сессии. Уровень — только по тесту.", "",
+         "наивысший уровень не выше заявленного с P(θ ≥ порога) ≥ c₂; выше заявленного — только в режиме above и с "
+         "P ≥ c↑. Может быть и ниже первой сессии (кроме варианта «итог не ниже первой»). Уровень — только по тесту.", "",
          "Повтор — вся процедура ещё раз (новый субпул, семейства обеих сессий первой попытки не берутся). Общие случайные "
          "числа: первая попытка одинакова во всех вариантах.", "",
          "## Одна сессия / две сессии", "", HEAD, _row(base)]
@@ -504,8 +522,10 @@ def markdown(rep: dict) -> str:
               f"{_f(100 * ch['delta_over'], 1)} п. п., совпадение при повторе {'+' if ch['delta_retest'] >= 0 else ''}"
               f"{_f(100 * ch['delta_retest'], 1)} п. п., минуты {'+' if ch['delta_minutes'] >= 0 else ''}"
               f"{_f(ch['delta_minutes'], 1)}).",
-              "- Допустимы: завышение ≤ 7 %, κw повтора ≥ 0,84, второй этап ≤ 15 мин (90-й перцентиль); выбор — максимум "
-              "точных, в пределах 1 п. п. — меньше доля второго этапа и минуты."]
+              f"- Лучше одной сессии по всем ограничениям (точно ↑, завышение ≤ 7 %, совпадение при повторе и κw не ниже): "
+              f"{ch.get('n_better', 0)} вариантов.",
+              "- Допустимы: завышение ≤ 7 %, κw повтора ≥ 0,84, второй этап ≤ 15 мин (90-й перцентиль); выбор — среди "
+              "лучших по всем ограничениям максимум точных, в пределах 1 п. п. — меньше доля второго этапа и минуты."]
     else:
         L.append(f"- {ch.get('reason')}")
     L += ["", "## Парето (точно ↑, завышение ↓, совпадение при повторе ↑, доля второго этапа ↓, минуты ↓)", "", HEAD]

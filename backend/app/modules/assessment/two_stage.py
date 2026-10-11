@@ -173,3 +173,204 @@ class RefineSession(AppCATSession):
             cands = [i for i in cands if i.subpool == self.subpool] or cands
         return self._pick(cands, self.cut)
 
+
+
+# ---------------------------------------------------------------- продукт (флаг ASSESSMENT_TWO_STAGE_ENABLED)
+
+TITLE = {"none": "без категории", "intern": "Стажёр", "junior": "Junior", "middle": "Middle", "senior": "Senior"}
+
+
+def params() -> dict:
+    """Настройки двухэтапного подтверждения (app.core.config)."""
+    from app.core.config import get_settings
+
+    s = get_settings()
+    return {"enabled": bool(s.assessment_two_stage_enabled), "level": float(s.assessment_two_stage_level),
+            "items": int(s.assessment_two_stage_items), "minutes": int(s.assessment_two_stage_minutes),
+            "confirm": float(s.assessment_two_stage_confirm), "confirm_up": float(s.assessment_two_stage_confirm_up),
+            "above": float(s.assessment_two_stage_above)}
+
+
+def enabled() -> bool:
+    return params()["enabled"]
+
+
+def _state(ts) -> dict:
+    return (ts.result or {}).get("state") or {}
+
+
+def mode_of(ts) -> str:
+    r = ts.result or {}
+    return r.get("mode") or _state(ts).get("mode") or "full"
+
+
+def session_grade(ts) -> str:
+    """Уровень по завершённой полной сессии — как путь симуляции: подтверждён заявленный; «Junior (предварительно)»;
+    принятый уровень ниже; иначе — уровень ниже заявленного, доказанный тем же тестом (его можно принять без нового
+    теста), или без категории."""
+    from app.modules.assessment.grades import confirm_level
+
+    r = ts.result or {}
+    er = r.get("engine_result") or {}
+    acc = (r.get("outcome") or {}).get("accepted_lower")
+    if acc:
+        return acc
+    if er.get("confirmed"):
+        return ts.claimed_grade_id
+    if er.get("provisional"):
+        return "junior"
+    th, se = er.get("theta"), er.get("se")
+    if th is None or se is None or ts.claimed_grade_id not in GRADE_ORDER:
+        return "none"
+    lvl = confirm_level(se)
+    lower = [g for g in GRADE_ORDER[:GRADE_ORDER.index(ts.claimed_grade_id)] if p_at_least(th, se, g) >= lvl]
+    return lower[-1] if lower else "none"
+
+
+def session_boundary(ts, p: dict | None = None) -> Boundary | None:
+    """Граница для уточнения по завершённой полной сессии банка (экспресс, дотестирование и уточнение — нет)."""
+    from app.core.enums import TestSessionStatus
+
+    p = p or params()
+    r = ts.result or {}
+    if ts.status != TestSessionStatus.finished or mode_of(ts) != "full" or not str(r.get("engine", "")).startswith("bank"):
+        return None
+    er = r.get("engine_result") or {}
+    return boundary(er.get("theta"), er.get("se"), session_grade(ts), ts.claimed_grade_id, level=p["level"],
+                    above=p["above"])
+
+
+def label(b: dict) -> str:
+    return f"на границе {TITLE.get(b.get('lower'), b.get('lower'))}/{TITLE.get(b.get('cut_grade'), b.get('cut_grade'))}"
+
+
+def _refines(db, ts) -> list:
+    from sqlalchemy import select
+
+    from app.core.enums import TestSessionStatus
+    from app.modules.assessment.models import TestSession
+
+    rows = db.scalars(select(TestSession).where(
+        TestSession.user_id == ts.user_id, TestSession.direction_id == ts.direction_id,
+        TestSession.status != TestSessionStatus.aborted).order_by(TestSession.created_at.desc()).limit(30)).all()
+    return [t for t in rows if mode_of(t) == "refine"
+            and (_state(t).get("refine") or {}).get("source_session_id") == str(ts.id)]
+
+
+def latest_full(db, user_id, direction: str):
+    """Последняя завершённая полная сессия банка в направлении — основа уточнения."""
+    from sqlalchemy import select
+
+    from app.core.enums import TestSessionStatus
+    from app.modules.assessment.models import TestSession
+
+    rows = db.scalars(select(TestSession).where(
+        TestSession.user_id == user_id, TestSession.direction_id == direction,
+        TestSession.status == TestSessionStatus.finished).order_by(TestSession.finished_at.desc()).limit(20)).all()
+    for t in rows:
+        if mode_of(t) == "refine":
+            return None  # после уточнения новое уточнение — только после нового полного теста
+        if mode_of(t) == "full" and str((t.result or {}).get("engine", "")).startswith("bank"):
+            return t
+    return None
+
+
+def offer(db, ts) -> dict | None:
+    """Блок «на границе: можно уточнить» для итога полной сессии (None — флаг выключен или границы нет)."""
+    p = params()
+    if not p["enabled"]:
+        return None
+    b = session_boundary(ts, p)
+    if b is None:
+        return None
+    from app.core.enums import TestSessionStatus
+
+    refs = _refines(db, ts)
+    last = latest_full(db, ts.user_id, ts.direction_id)
+    active = next((t for t in refs if t.status == TestSessionStatus.in_progress), None)
+    done = next((t for t in refs if t.status == TestSessionStatus.finished), None)
+    bd = b.as_dict()
+    out = {"boundary": bd, "label": label(bd), "items": p["items"], "minutes": p["minutes"],
+           "status": "done" if done else ("in_progress" if active else "offered"),
+           "available": bool(not refs and last is not None and last.id == ts.id),
+           "refine_session_id": str((done or active).id) if (done or active) else None,
+           "outcome": outcome(done) if done else None,
+           "text": (f"Уровень {label(bd)}: одна сессия теста не отделяет эти уровни уверенно. Можно уточнить уровень "
+                    f"за 10–{p['minutes']} минут — до {p['items']} коротких заданий у этой границы из новых семейств; "
+                    "итог считается по ответам обеих сессий вместе и может оказаться как выше, так и ниже нынешнего.")}
+    return out
+
+
+def outcome(ts) -> dict | None:
+    """Итог уточнения (сессия mode=refine): граница, уровень до и после, пройдено ли."""
+    if ts is None or mode_of(ts) != "refine":
+        return None
+    d = (((ts.result or {}).get("engine_result") or {}).get("details") or {}).get("two_stage")
+    return dict(d) if d else None
+
+
+def refine_result(res, state: dict, theta: float, se: float, n_new: int) -> dict:
+    """Итог уточнения для движка (bank_engine.finish): уровень по общей оценке обеих сессий."""
+    rf = state.get("refine") or {}
+    claimed = state.get("claimed_grade")
+    f = final_grade(theta, se, claimed, float(rf.get("confirm", DEFAULT_CONFIRM)),
+                    float(rf.get("confirm_up", DEFAULT_CONFIRM_UP)))
+    cut_g = rf.get("cut_grade")
+    passed = bool(cut_g in GRADE_ORDER and _rank(f) >= _rank(cut_g))
+    b = {k: rf.get(k) for k in ("grade", "cut_grade", "lower", "cut", "p", "kind")}
+    return {**b, "label": label(b), "claimed": claimed, "grade_before": rf.get("grade"), "final_grade": f,
+            "passed": passed, "theta_before": rf.get("theta_before"), "se_before": rf.get("se_before"),
+            "theta": round(float(theta), 4), "se": round(float(se), 4), "new_items": int(n_new),
+            "source_session_id": rf.get("source_session_id"), "confirm": rf.get("confirm"),
+            "confirm_up": rf.get("confirm_up")}
+
+
+def explain(o: dict) -> str:
+    """Текст итога уточнения для кандидата."""
+    f, before = o.get("final_grade"), o.get("grade_before")
+    s = (f"Уточнение уровня ({o.get('label')}): к ответам основного теста добавлено новых коротких заданий — "
+         f"{o.get('new_items')}, уровень посчитан по ответам обеих сессий вместе. ")
+    if f == "none":
+        s += "Общая оценка не подтверждает ни один уровень; принудительного понижения нет — прежняя категория сохраняется."
+    elif f == before:
+        s += f"Итог — {TITLE.get(f, f)}, как и после основного теста."
+    else:
+        s += f"Итог — {TITLE.get(f, f)} (после основного теста было: {TITLE.get(before, before)})."
+    return s + (" Уточнение пройдено." if o.get("passed") else " Уточнение не подтвердило уровень у границы.")
+
+
+def fact_payload(db, ts) -> dict | None:
+    """Пометка в факте результата теста (карточка работодателя, подборка): граница и уточнение."""
+    if not enabled():
+        return None
+    if mode_of(ts) == "refine":
+        o = outcome(ts)
+        if not o:
+            return None
+        return {"status": "passed" if o["passed"] else "failed", "label": o["label"], "cut_grade": o["cut_grade"],
+                "lower": o["lower"], "kind": o["kind"], "grade_before": o["grade_before"], "final_grade": o["final_grade"],
+                "new_items": o["new_items"]}
+    off = offer(db, ts)
+    if not off:
+        return None
+    b = off["boundary"]
+    return {"status": "offered", "label": off["label"], "cut_grade": b["cut_grade"], "lower": b["lower"],
+            "kind": b["kind"], "grade_before": b["grade"]}
+
+
+def card_note(value: dict | None) -> dict | None:
+    """Пометка для работодателя из факта test_result: «на границе Middle/Senior — уточнение пройдено / не пройдено»."""
+    t = (value or {}).get("two_stage")
+    if not t or not enabled():
+        return None
+    st = t.get("status")
+    lab = t.get("label") or ""
+    if st == "passed":
+        text = f"{lab[:1].upper()}{lab[1:]} — уточнение пройдено: {TITLE.get(t.get('final_grade'), '')} по двум сессиям теста"
+    elif st == "failed":
+        fin = t.get("final_grade")
+        text = (f"{lab[:1].upper()}{lab[1:]} — уточнение не пройдено"
+                + (f": {TITLE.get(fin, fin)} по двум сессиям теста" if fin and fin != "none" else ""))
+    else:
+        text = f"{lab[:1].upper()}{lab[1:]} — уточнение уровня не проходил (одна сессия теста)"
+    return {**t, "text": text}
