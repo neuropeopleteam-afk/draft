@@ -60,7 +60,7 @@ from assessment_bank.psychometrics import (CanaryDetector, CATConfig, CATSession
 from assessment_bank.registry import canary_published_seeds
 
 from app.core.fmt import theta_round, theta_se
-from app.modules.assessment import ai_mark, integrity
+from app.modules.assessment import ai_mark, integrity, partial_credit
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
 from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
 from app.modules.assessment.grader import grade_open
@@ -178,7 +178,9 @@ class BankEngine:
                 "select_at": s.assessment_select_at, "ext_own_first": s.assessment_extension_own_first,
                 "subpools": max(1, s.assessment_subpools),
                 "exposure": s.assessment_exposure,
-                "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer}}
+                "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer},
+                # частичный балл 0–4 (GPCM) — ключ только при флаге: сессии без него и прежние — как раньше
+                **({"partial_credit": True} if s.assessment_partial_credit_enabled else {})}
 
     # ------------------------------------------------------------------ протокол
     def _express_cfg(self, cfg: dict, claimed_grade: str) -> dict:
@@ -424,6 +426,8 @@ class BankEngine:
                          "status": "pending" if any(v is None for v in i["x"]) else "scored"}
                         for i in scored if i["format"] in ("open_answer", "open_book_3step")],
         }
+        if state["cfg"].get("partial_credit"):
+            details["partial_credit"] = partial_credit.session_summary(scored)
         retake = dec.retake_lower
         lvl = category_level(theta, se, len(scored))
         details["category_level"] = {"grade": lvl.grade, "ceiling": lvl.ceiling, "capped": lvl.capped,
@@ -458,7 +462,8 @@ class BankEngine:
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
                          ext_time_s=float(c.get("ext_time_s", 1800.0)),
-                         ext_own_first=bool(c.get("ext_own_first", False)))
+                         ext_own_first=bool(c.get("ext_own_first", False)),
+                         partial_credit=bool(c.get("partial_credit", False)))
 
     def _rebuild(self, state: dict) -> CATSession:
         pool = list(_pool(state["cfg"].get("subpools", 1)))
@@ -540,6 +545,10 @@ class BankEngine:
             "answers": {}, "x": [None] * spec.n_parts, "grading": [None] * spec.n_parts, "done": False,
             "ai_mark": ai_mark.new_mark(spec.format) if self._settings().assessment_ai_mark else None,
         }
+        if state["cfg"].get("partial_credit") and spec.format in partial_credit.TEXT_FORMATS:
+            it["pc"] = True  # развёрнутая часть: балл 0–4 в θ по GPCM; без рубрики в банке — общий шаблон
+            if not it["rubric"]:
+                it["rubric"] = partial_credit.generic_rubric(pv["stem"], None)
         state["items"].append(it)
         state["current"] = it["token"]
         state["outbox"].append({"type": "issue", "token": it["token"]})
@@ -621,6 +630,8 @@ class BankEngine:
                        rubric=it["rubric"], answer=text, second_async=get_settings().llm_grading_second_async)
         g_d = g.to_dict()
         g_d["attempts"] = int(prev.get("attempts", 0)) + 1
+        if it.get("pc"):
+            g_d["points"] = partial_credit.points(g.score) if g.status == "scored" else None
         it["grading"][part] = g_d
         it["x"][part] = g.score if g.status == "scored" else None
 
@@ -673,6 +684,8 @@ class BankEngine:
         score = round(sum(crit[k] * vals[k] for k in crit) / total_w, 4)
         rec = {"criteria": vals, "score": score, "comment": (comment or "")[:2000], "reviewer": reviewer,
                "at": time.time()}
+        if it.get("pc"):
+            rec["points"] = partial_credit.points(score)
         it.setdefault("expert_reviews", {})[str(part)] = rec
         disputed = bool((it["grading"][part] or {}).get("disputed"))
         if it["x"][part] is None or disputed:  # «на проверке» (или спорный после итога, И27) → оценка эксперта в θ
