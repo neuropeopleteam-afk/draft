@@ -56,7 +56,6 @@ function Body({ r }: { r: any }) {
   const sp = t.splits ?? {};
   const ps = t.path ?? {};
   const tr = t.truth ?? {};
-  const cr = r.other_reference ?? {};
   const split = (title: string, s: any) => [title, pct(s?.share), pct(s?.exact), pct(s?.within_1), withCi(s?.kappa_w, s?.kappa_w_ci)];
   return (
     <>
@@ -94,7 +93,7 @@ function Body({ r }: { r: any }) {
           <p className="mt-1">Это не подтверждение: P(θ{NB}≥{NB}порога Junior) от 0,10 до 0,80, работодатель видит статус и вероятность, в подборке — штраф к скору. Кандидат может дотестироваться (до двух попыток) или нажать «принять Стажёра» — если Стажёр доказан (P{NB}≥{NB}0,8), уровень присваивается без нового теста. В этой симуляции Стажёр доказан у {num(ps.provisional_intern_proved, 0)} «предварительных». Полосы P и доля истинно ниже порога — в разделе <a href="#junior" className="font-semibold text-brand-plum underline">«Junior у порога»</a>.</p>
         </div>
       </div>
-      <p className="mt-4 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Для сравнения, другой мир и другая процедура: Прототип А — κ {num(cr.kappa_w, 3)}, точно {pct(cr.exact)}, ±1 {pct(cr.within_1)}; 4 ступени, {cr.length} заданий, подтверждение при {cr.confirm_rule}, ошибка параметров {cr.param_error}, без доверительных интервалов и ICC. У нас 5 ступеней со Стажёром, подтверждение при P{NB}≥{NB}0,8 и ошибка параметров σ{NB}={NB}0,5 — числа напрямую не сравнимы.</p>
+      <p className="mt-4 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Условия расчёта: 5 ступеней со Стажёром, подтверждение при P{NB}≥{NB}0,8 и ошибка параметров σ{NB}={NB}0,5. Числа относятся к этому миру; при другой длине теста и другой ошибке параметров — см. <a href="#other-conditions" className="font-semibold text-brand-plum underline">«Другие условия измерения»</a>.</p>
       <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">{r.caveat}</p>
       <ProvenanceLine p={r.provenance} className="mt-2" />
       <SignatureLine s={r.signature} className="mt-1" />

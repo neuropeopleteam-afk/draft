@@ -27205,20 +27205,6 @@
             "description": "Распределение по заявленным грейдам",
             "title": "Claimed"
           },
-          "other_reference": {
-            "anyOf": [
-              {
-                "additionalProperties": true,
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Опубликованные показатели других платформ для сравнения",
-            "title": "Other Reference"
-          },
           "config": {
             "anyOf": [
               {
@@ -66382,7 +66368,7 @@
                       }
                     ],
                     "conditions": {
-                      "n_other": 400,
+                      "n_alt": 400,
                       "n_leak": 400,
                       "n_leak_table": 300,
                       "n_per_direction": 400,
