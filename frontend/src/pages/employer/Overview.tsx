@@ -68,6 +68,10 @@ export function Company() {
     try {
       const body = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, v.trim() || null]));
       if (!body.name) { setMsg({ k: "error", t: "Укажите название компании" }); return; }
+      // UX-2: ИНН проверяем до отправки — по-русски, без текста валидатора сервера
+      if (body.inn) body.inn = body.inn.replace(/\s/g, "");
+      if (body.inn && !/^\d{10}(\d{2})?$/.test(body.inn)) { setMsg({ k: "error", t: "ИНН — 10 или 12 цифр" }); return; }
+      if (body.contact_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.contact_email)) { setMsg({ k: "error", t: "Почта для кандидатов: неверный адрес" }); return; }
       await api("/me/company", { method: "PATCH", body });
       await refresh(); setMsg({ k: "ok", t: "Профиль компании сохранён." });
     } catch (e) { setMsg({ k: "error", t: errText(e) }); }
@@ -79,7 +83,7 @@ export function Company() {
       {msg && <Alert kind={msg.k}>{msg.t}</Alert>}
       <section className="card grid gap-4 sm:grid-cols-2">
         <Field label="Название" htmlFor="cn"><input id="cn" className="input" value={f.name} onChange={set("name")} /></Field>
-        <Field label="ИНН" htmlFor="ci" hint="10 или 12 цифр"><input id="ci" className="input" value={f.inn} onChange={set("inn")} /></Field>
+        <Field label="ИНН" htmlFor="ci" hint="10 или 12 цифр"><input id="ci" className="input" inputMode="numeric" maxLength={14} value={f.inn} onChange={set("inn")} /></Field>
         <Field label="Сфера" htmlFor="cind"><input id="cind" className="input" value={f.industry} onChange={set("industry")} placeholder="Финтех, ритейл, госсектор…" /></Field>
         <Field label="Город" htmlFor="ccity"><input id="ccity" className="input" value={f.city} onChange={set("city")} /></Field>
         <div className="sm:col-span-2"><Field label="О компании" htmlFor="cd"><textarea id="cd" className="input min-h-[110px]" value={f.description} onChange={set("description")} /></Field></div>
