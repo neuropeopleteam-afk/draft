@@ -77,7 +77,7 @@ test("работодатель: потребность → подборка с �
     await expect(page).toHaveURL(/\/employer\/needs\/[\w-]+$/, { timeout: 60_000 });
     needUrl = new URL(page.url()).pathname;
     await expect(page.getByRole("heading", { name: "Подходящие категории" })).toBeVisible();
-    const total = page.getByText(/^v1 · кандидатов:/);
+    const total = page.getByText(/^версия 1 · кандидатов:/);
     await expect(total).toBeVisible();
     expect(Number((await total.locator("b").textContent()) ?? 0)).toBeGreaterThan(0);
 
