@@ -448,3 +448,18 @@ def test_fix7_candidate_card_keeps_selection_version(client):
     # чужая/несуществующая версия — как без версии (требования потребности)
     card9 = client.get(f"/api/employer/candidates/{ref}", params={"need_id": nid, "v": 99}, headers=H(te)).json()["match"]
     assert card9["version"] is None and card9["must"]["required_total"] == len(must)
+
+
+def test_fix7_candidate_fit_title_names_unknown_terms():
+    """FIX7 Я4-16 (P04): формат/город/стек не указаны в предложении — не «Предложение вам подходит»; уровень тот же."""
+    from app.modules.mutual.fit import _f, summarize
+
+    fs = [_f("format", "unknown", "Формат в предложении не указан"), _f("location", "unknown", "Город в предложении не указан"),
+          _f("stack", "unknown", "Стек в предложении не указан"), _f("salary", "ok", "Вилка выше вашего минимума"),
+          _f("readiness", "ok", "Открыт к предложениям")]
+    me, emp = summarize(fs, "candidate"), summarize(fs, "employer")
+    assert me["level"] == emp["level"] == "high" and me["score"] == emp["score"]
+    assert me["title"] == "Подходит по указанным условиям"
+    assert "Не указаны в предложении: формат, город, стек — по ним соответствие не установлено" in me["line"]
+    full = [_f("format", "ok", "Гибрид"), _f("salary", "ok", "Вилка выше вашего минимума"), _f("readiness", "ok", "Открыт")]
+    assert summarize(full, "candidate")["title"] == "Предложение вам подходит"
