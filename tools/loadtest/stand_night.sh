@@ -11,6 +11,7 @@
 # Переменные: H — адрес стенда; RUNS — «тег:пользователей:время …»; PAUSE — секунд между прогонами;
 # BURST_AT — секунда всплеска (0 — без); MAX_FAIL — доля ошибок, после которой следующий прогон не идёт;
 # WEB — адрес страниц, если не совпадает с H (локальный стенд); PY — python для run_load.py (для KPY нужен paramiko).
+# Сторож внутри прогона (run_load.py): LT_ABORT_FAIL=0.05 — доля ошибок, LT_ABORT_API_MIB=2765 — память api (2,7 ГиБ).
 # Пароли и токены не печатаются.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
@@ -43,7 +44,7 @@ for spec in $RUNS; do
     sleep "$PAUSE"
   fi
   first=0
-  code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 "$H/api/health")
+  code=$(curl -s -o /dev/null -w '%{http_code}' -m 20 ${LT_SOCKS:+--socks5-hostname "$LT_SOCKS"} "$H/api/health")
   if [ "$code" != 200 ]; then
     echo "[$(ts)] /api/health = $code — следующие прогоны не идут"
     break
@@ -57,7 +58,7 @@ for spec in $RUNS; do
   "${R[@]}" summary --tag "$tag" > "$OUT/${tag}_summary.md" 2>&1 || echo "[$(ts)] сводка не построена"
   echo "[$(ts)] $tag готов: $OUT/${tag}_summary.md"
   if [ "$rc" -ne 0 ]; then
-    echo "[$(ts)] прогон $tag завершился с кодом $rc (3 — пользователей после разгона меньше 90 %) — следующие не идут"
+    echo "[$(ts)] прогон $tag завершился с кодом $rc (3 — пользователей после разгона меньше 90 % или сработал сторож LT_ABORT_FAIL / LT_ABORT_API_MIB) — следующие не идут"
     break
   fi
   fail=$("$PY" - "$OUT/${tag}_stats.csv" <<'PY'

@@ -45,6 +45,12 @@ UA = "spectrek-load/prepare"  # User-Agent запросов этого скри�
 # этого скрипта (urllib) — через PySocks, Locust — через HTTPS_PROXY=socks5h://… (requests + PySocks). Маршрут
 # записывается в meta и сводку: задержки через прокси и напрямую не сравниваются без пометки.
 SOCKS = os.environ.get("LT_SOCKS", "")
+# Остановка прогона по сторожу (решение штаба 11.10): доля ошибок Locust выше LT_ABORT_FAIL (за последние ≈ 60 с или за
+# весь прогон, от 200 запросов) или память контейнера api выше LT_ABORT_API_MIB (docker stats через KPY, только чтение).
+# 0 — сторож выключен. Замеры сторожа — <тег>_guard.txt.
+ABORT_FAIL = float(os.environ.get("LT_ABORT_FAIL", "0"))
+ABORT_API_MIB = float(os.environ.get("LT_ABORT_API_MIB", "0"))
+GUARD_EVERY_S = int(os.environ.get("LT_GUARD_EVERY_S", "30"))
 if SOCKS:
     import socket
 
@@ -218,8 +224,17 @@ def run(a) -> None:
     with raw.open("w") as lf:
         p = subprocess.Popen(cmd, env=env, cwd=ROOT, stdout=lf, stderr=subprocess.STDOUT, text=True)
         check_at = a.users / max(a.ramp, 0.1) + 45  # после разгона: все ли пользователи живы
+        guard_at, samples = (t0 + 60) if (ABORT_FAIL or ABORT_API_MIB) else 0, []
         while p.poll() is None:
             time.sleep(5)
+            if guard_at and time.time() >= guard_at:
+                guard_at = time.time() + GUARD_EVERY_S
+                why = _guard(a.tag, samples)
+                if why:
+                    guard_at = 0
+                    meta["aborted"] = f"сторож: {why} — прогон остановлен"
+                    print(f"ОСТАНОВЛЕНО: {meta['aborted']}")
+                    p.terminate()
             if check_at and time.time() - t0 > check_at:
                 check_at = 0
                 live = _live_users(OUT / f"{a.tag}_stats_history.csv")
@@ -240,6 +255,37 @@ def run(a) -> None:
     print(f"Locust завершён (код {p.returncode}) за {time.time() - t0:.0f} с; CSV — {OUT}/{a.tag}_*.csv")
     if meta.get("aborted"):
         sys.exit(3)
+
+
+def _guard(tag: str, samples: list) -> str:
+    """Один замер сторожа: доля ошибок Locust (окно ≈ 60 с и весь прогон) и память api. Пусто — всё в норме."""
+    req = fail = 0
+    hist = OUT / f"{tag}_stats_history.csv"
+    if hist.exists():
+        rows = [r for r in csv.DictReader(open(hist, encoding="utf-8")) if r.get("Name") == "Aggregated"]
+        if rows and (rows[-1].get("Total Request Count") or "").isdigit():
+            req, fail = int(rows[-1]["Total Request Count"]), int(rows[-1]["Total Failure Count"] or 0)
+    now = time.time()
+    samples.append((now, req, fail))
+    old = next(((t, r, f) for t, r, f in reversed(samples) if now - t >= 55), samples[0])
+    d_req, d_fail = req - old[1], fail - old[2]
+    mem = 0.0
+    if ABORT_API_MIB and KPY:
+        out = _remote("docker stats --no-stream --format '{{.Name}};{{.MemUsage}}' spectrek_fsp-api-1", timeout=60)
+        m = re.search(r"spectrek_fsp-api-1;([^/\n]+)/", out)
+        mem = _mib(m.group(1)) if m else 0.0
+    line = (f"{time.strftime('%T')} запросов {req}, ошибок {fail} ({fail / max(1, req):.2%}); за окно {d_req}/{d_fail} "
+            f"({d_fail / max(1, d_req):.2%}); api {mem:.0f} МиБ")
+    with (OUT / f"{tag}_guard.txt").open("a") as f:
+        f.write(line + "\n")
+    if ABORT_FAIL:
+        if d_req >= 200 and d_fail / d_req > ABORT_FAIL:
+            return f"ошибок за последнюю минуту {d_fail / d_req:.1%} > {ABORT_FAIL:.0%}"
+        if req >= 200 and fail / req > ABORT_FAIL:
+            return f"ошибок за прогон {fail / req:.1%} > {ABORT_FAIL:.0%}"
+    if ABORT_API_MIB and mem > ABORT_API_MIB:
+        return f"память api {mem:.0f} МиБ > {ABORT_API_MIB:.0f} МиБ"
+    return ""
 
 
 def _live_users(hist: Path, peak: bool = False) -> int:
