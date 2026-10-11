@@ -11,6 +11,9 @@
  *  3. Этап найма «ИИ-интервью»: работодатель приглашает в принятом приглашении, кандидат (390 px) проходит его до конца;
  *     итог кандидату не показывается, работодатель видит его в приглашении.
  *  4. 390 px: панель защиты, разговор и карточка работодателя без горизонтальной прокрутки, снимки.
+ * В1: при INTERVIEW_AVATAR_ENABLED (/api/meta interview.avatar) вместо волны — свой рисованный образ «ИИ-интервьюер, не
+ * человек» (interviewer-avatar): в 1440 px играет беззвучный клип текущего состояния (data-mode=video), в 390 px с
+ * prefers-reduced-motion — неподвижный кадр без <video> (data-mode=still). Флаг выключен — проверяется прежний визуал.
  * axe-core (E2E_AXE=<путь к axe.min.js>, например tools/a11y/axe_audit.cjs → /tmp/axe.min.js): нарушений уровня
  * serious/critical на новых экранах нет. Без E2E_AXE проверка доступности пропускается (пакеты не добавляются).
  */
@@ -28,26 +31,47 @@ test.use({ launchOptions: { args: ["--use-fake-ui-for-media-stream", "--use-fake
 const SHOTS = process.env.E2E_SHOTS_DIR || resolve(process.cwd(), "reports/mobile");
 const AXE = process.env.E2E_AXE;
 let enabled = false;
+let avatar = false;  // В1: INTERVIEW_AVATAR_ENABLED — свой образ интервьюера вместо волны
 let mariaRef = "";
+const VIS = () => (avatar ? "interviewer-avatar" : "voice-wave");
 
 async function noHScroll(page: Page, what: string) {
   const w = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(w, `${what}: горизонтальная прокрутка`).toBeLessThanOrEqual(1);
 }
 
-/** Свой визуал собеседника: волна голоса и подпись состояния; видео и изображений людей нет. */
-async function visualOk(page: Page) {
-  const w = page.getByTestId("voice-wave");
+/** Свой визуал собеседника: волна голоса (флаг образа выкл.) или свой рисованный образ (вкл.) и подпись состояния. */
+async function visualOk(page: Page, opts: { reduced?: boolean } = {}) {
+  const w = page.getByTestId(VIS());
   await expect(w).toBeVisible();
   await expect(w).toHaveAttribute("data-state", /^(speaking|listening|thinking)$/);
   await expect(w).toContainText("Интервьюер:");
   await expect(w).toContainText("модель, не люди");
-  await expect(page.locator("video")).toHaveCount(0);
+  if (!avatar) {
+    await expect(page.locator("video")).toHaveCount(0);
+  } else {
+    await expect(w).toContainText("ИИ-интервьюер, не человек");
+    await expect(w.getByTestId("avatar-still")).toHaveAttribute("alt", /не фото человека/);
+    if (opts.reduced) {  // prefers-reduced-motion: неподвижный кадр, клипов нет
+      await expect(w).toHaveAttribute("data-mode", "still");
+      await expect(page.locator("video")).toHaveCount(0);
+    } else {  // клип текущего состояния играет, все клипы без звука и скрыты от чтения с экрана
+      await expect(w).toHaveAttribute("data-mode", "video", { timeout: 20_000 });
+      const clips = await w.locator("video").evaluateAll((vs) => vs.map((v) => {
+        const el = v as HTMLVideoElement & { webkitAudioDecodedByteCount?: number };
+        return { muted: el.muted, hidden: el.getAttribute("aria-hidden"), playing: !el.paused,
+                 audio: el.webkitAudioDecodedByteCount ?? 0, id: el.dataset.testid ?? "" };
+      }));
+      expect(clips.length).toBeGreaterThan(0);
+      expect(clips.every((c) => c.muted && c.hidden === "true" && c.audio === 0)).toBe(true);
+      expect(clips.some((c) => c.playing)).toBe(true);
+    }
+  }
   await expect(w).toHaveAttribute("data-state", "listening", { timeout: 15_000 });  // прочитал вопрос → ждёт ответа
 }
 
 /** Ответить на вопросы до конца разговора: подсказка заглушки или свой текст; первый ответ — голосом, если можно. */
-async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { voiceFirst?: boolean; axeWhat?: string; shot?: string } = {}) {
+async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { voiceFirst?: boolean; axeWhat?: string; shot?: string; reduced?: boolean } = {}) {
   const q = page.getByTestId("iv-question");
   // вопрос может смениться или исчезнуть (конец разговора) между проверками — короткое ожидание, без 20 с по умолчанию
   const cur = async () => (await q.first().textContent({ timeout: 1_000 }).catch(() => "")) ?? "";
@@ -58,7 +82,7 @@ async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { v
     if (await done.isVisible()) return;
     prev = await cur();
     if (i === 0) {
-      await visualOk(page);
+      await visualOk(page, { reduced: opts.reduced });
       if (opts.axeWhat) await axe(page, opts.axeWhat);
       if (opts.shot) { mkdirSync(SHOTS, { recursive: true }); await page.screenshot({ path: resolve(SHOTS, opts.shot), fullPage: true }); }
     }
@@ -67,7 +91,7 @@ async function talk(page: Page, done: ReturnType<Page["getByTestId"]>, opts: { v
     if (i === 0 && opts.voiceFirst && await rec.isVisible()) {
       await rec.click();
       await expect(rec).toHaveAttribute("aria-pressed", "true", { timeout: 15_000 });
-      await expect(page.getByTestId("voice-wave")).toHaveAttribute("data-state", "listening");
+      await expect(page.getByTestId(VIS())).toHaveAttribute("data-state", "listening");
       await page.waitForTimeout(1500);
       await rec.click();
       await expect(field).not.toHaveValue("", { timeout: 30_000 });  // распознанный текст — в поле, на проверку
@@ -99,6 +123,7 @@ test.beforeAll(async () => {
   try {
     const meta = await (await api.get("/api/meta")).json();
     enabled = meta.interview_enabled === true;
+    avatar = enabled && meta.interview?.avatar === true;
     if (enabled) mariaRef = (await apiGet(api, "/me", await juryToken(api, "candidate"))).candidate.public_ref;
   } finally {
     await api.dispose();
@@ -124,10 +149,10 @@ test("кандидат: устная защита в чате на заглуш�
     await panel.getByRole("checkbox").check();
     await panel.getByTestId("interview-defense-start").click();
     await expect(page).toHaveURL(/\/candidate\/interview\/[0-9a-f-]{36}$/, { timeout: 60_000 });
-    await expect(page.getByTestId("voice-wave")).toHaveAttribute("data-state", "idle");
+    await expect(page.getByTestId(VIS())).toHaveAttribute("data-state", "idle");
     await page.getByTestId("iv-begin-text").click();
     const result = page.getByTestId("interview-result");
-    await talk(page, result, { voiceFirst: true, axeWhat: "разговор", shot: "14-interview-room-1440.png" });
+    await talk(page, result, { voiceFirst: true, axeWhat: "разговор", shot: avatar ? "14-interview-room-avatar-1440.png" : "14-interview-room-1440.png" });
     await expect(result).toBeVisible({ timeout: 90_000 });
     await expect(result).toContainText(/Ответ подтверждён устно|Есть расхождения|Мало данных/);
     await expect(result).toContainText("заглушка");
@@ -177,6 +202,7 @@ test("этап найма «ИИ-интервью»: приглашение ра
   await axe(page, "приглашения работодателя");
 
   const cand = await (await newPersonaContext(browser)).newPage();
+  if (avatar) await cand.emulateMedia({ reducedMotion: "reduce" });  // В1: образ без движения — неподвижный кадр
   await juryEnter(cand, "candidate");
   await cand.goto("/candidate/invitations", { waitUntil: "domcontentloaded" });
   await cand.getByText("Python-разработчик (ИИ-интервью)").first().click();
@@ -200,9 +226,9 @@ test("этап найма «ИИ-интервью»: приглашение ра
   await expect(cand.getByTestId("iv-question")).toBeVisible({ timeout: 60_000 });
   await noHScroll(cand, "разговор ИИ-интервью, 390 px");
   mkdirSync(SHOTS, { recursive: true });
-  await cand.screenshot({ path: resolve(SHOTS, "14-interview-room-390.png"), fullPage: true });
+  await cand.screenshot({ path: resolve(SHOTS, avatar ? "14-interview-room-avatar-390.png" : "14-interview-room-390.png"), fullPage: true });
   const done = cand.getByTestId("iv-done");
-  await talk(cand, done, { axeWhat: "разговор ИИ-интервью, 390 px" });
+  await talk(cand, done, { axeWhat: "разговор ИИ-интервью, 390 px", reduced: avatar });
   await expect(done).toContainText("видит только пригласившая компания");
   await cand.context().close();
 
