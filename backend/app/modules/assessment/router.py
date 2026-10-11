@@ -26,13 +26,16 @@ class StartIn(BaseModel):
     integrity_ack: bool = Field(False, description="Кандидат согласился с проверкой самостоятельности выполнения: "
                                                    "результат может получить пометку «достоверность результата». "
                                                    "Сохраняется в сессии с версией текста")
-    mode: Literal["full", "express", "confirm"] = Field(
+    mode: Literal["full", "express", "confirm", "refine"] = Field(
         "full", description="full — обычный адаптивный тест (8–16 заданий); "
                             "express — экспресс-тест для жюри: 5–7 коротких заданий, ≈ 5 минут "
                             "(за Senior — 8–12 заданий с лимитом до 6 мин), интервал θ шире, только в демо-режиме жюри; "
                             "confirm — короткое дотестирование у порога Junior для подтверждения категории "
                             "«Junior (предварительно)»: ответы прошлой попытки учитываются, добавляется до 6 коротких "
-                            "заданий (до 20 минут), не больше 2 попыток")
+                            "заданий (до 20 минут), не больше 2 попыток; "
+                            "refine — уточнение уровня «на границе» после полного теста (флаг "
+                            "ASSESSMENT_TWO_STAGE_ENABLED): до 8 коротких заданий у этой границы (до 15 минут), итог — "
+                            "по ответам обеих сессий; одно уточнение на полный тест")
 
 
 class OptionOut(BaseModel):
@@ -81,7 +84,8 @@ class SessionOut(BaseModel):
     total: int
     can_finish: bool = Field(False, description="Тест окончен по правилам движка (SE, лимит заданий/времени)")
     mode: str = Field("full", description="full — полный тест; express — экспресс-тест жюри; confirm — дотестирование "
-                                          "для подтверждения «Junior (предварительно)»")
+                                          "для подтверждения «Junior (предварительно)»; refine — уточнение уровня "
+                                          "у границы (вторая сессия)")
 
 
 class AnswerIn(BaseModel):
@@ -123,16 +127,19 @@ def get_status(direction: Literal["backend", "frontend", "data_ml", "qa", "secur
                 "грейд и выше — не раньше чем через RETAKE_SAME_GRADE_DAYS (30) дней, на грейд ниже — сразу. Демо-режим "
                 "жюри снимает ограничения, но число новых сессий в нём ограничено: JURY_MAX_TEST_STARTS_PER_DAY за 24 часа "
                 "на учётку. mode=express (только демо-режим) — экспресс-тест 5–7 коротких заданий (за Senior — 8–12); "
-                "mode=confirm — дотестирование «Junior (предварительно)». "
+                "mode=confirm — дотестирование «Junior (предварительно)»; mode=refine — уточнение уровня «на границе» "
+                "после полного теста (флаг ASSESSMENT_TWO_STAGE_ENABLED; правила 90 и 30 дней не действуют — это та же "
+                "оценка). "
                 "Если активная сессия на тот же грейд и режим уже есть — вернётся она.",
     responses={**AUTH, 409: err("onboarding_required — нет опроса; grade_locked — правило 90 дней; retake_cooldown — "
                                 "повтор на тот же грейд раньше 30 дней; express_sandbox_only — экспресс вне демо-режима; "
-                                "not_provisional / confirm_unavailable — дотестирование недоступно"),
+                                "not_provisional / confirm_unavailable — дотестирование недоступно; "
+                                "two_stage_disabled / refine_unavailable — уточнение уровня недоступно"),
                422: err("Неизвестный грейд"), 429: err("sandbox_restarts_exhausted — лимит перезапусков в демо-режиме")},
 )
 def start(data: StartIn, user: User = Depends(candidate), db: Session = Depends(get_db)) -> SessionOut:
     survey = service.latest_survey(db, user.id, data.direction)
-    if survey is not None and survey.claimed_grade_id != data.claimed_grade:
+    if survey is not None and survey.claimed_grade_id != data.claimed_grade and data.mode != "refine":
         survey.claimed_grade_id = data.claimed_grade
     return _session_out(db, service.start_session(db, user.id, data.claimed_grade, integrity_ack=data.integrity_ack,
                                                   enforce_sandbox_quota=True, direction=data.direction,
