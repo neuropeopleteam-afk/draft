@@ -70,6 +70,29 @@ def test_card_note_texts(flag):
     assert ts.card_note(v) is None
 
 
+def test_card_note_oral_defense_changes_mark_not_level(flag, monkeypatch):
+    """п. 4: устная защита (модуль interview) меняет пометку «на границе», уровень — нет."""
+    flag(True)
+    base = {"two_stage": {"status": "offered", "label": "на границе Junior/Middle", "grade_before": "junior"},
+            "grade": "junior"}
+    monkeypatch.setenv("INTERVIEW_ENABLED", "false")
+    get_settings.cache_clear()
+    assert ts.card_note({**base, "defense": {"verdict": "confirmed"}})["oral"] is None
+    monkeypatch.setenv("INTERVIEW_ENABLED", "true")
+    get_settings.cache_clear()
+    n = ts.card_note({**base, "defense": {"verdict": "confirmed"}})
+    assert n["oral"] == "confirmed" and n["text"] == "На границе Junior/Middle — подтверждено устной защитой"
+    n = ts.card_note({**base, "defense": {"verdict": "discrepancies"}})
+    assert n["oral"] == "check" and n["text"].endswith("требует проверки")
+    assert ts.card_note({**base, "defense": {"verdict": "insufficient"}})["oral"] is None
+    assert ts.card_note({**base, "defense": {"verdict": "confirmed", "example": True}})["oral"] is None
+    done = {**base, "two_stage": {**base["two_stage"], "status": "passed", "final_grade": "middle"},
+            "defense": {"verdict": "discrepancies"}}
+    n = ts.card_note(done)
+    assert "уточнение пройдено" in n["text"] and n["text"].endswith("устная защита: требует проверки")
+    assert n["final_grade"] == "middle"  # уровень — по тесту
+
+
 # ---------------------------------------------------------------- вторая сессия банка
 
 def _run(eng, st, rnd, target, oracle):
