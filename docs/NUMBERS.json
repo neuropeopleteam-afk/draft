@@ -1,27 +1,27 @@
 {
  "bank": {
-  "families": 342,
+  "families": 361,
   "by_direction": {
-   "analyst": 26,
+   "analyst": 31,
    "backend": 52,
    "common": 46,
    "data_eng": 29,
    "data_ml": 34,
    "devops": 30,
    "frontend": 35,
-   "mobile": 29,
-   "qa": 30,
-   "security": 31
+   "mobile": 34,
+   "qa": 35,
+   "security": 35
   },
-  "source_commit": "161b9c1",
-  "content_hash": "f563cfcaebf63aef",
-  "pass": 322,
+  "source_commit": "82aa359",
+  "content_hash": "cba1e486e274e873",
+  "pass": 341,
   "warn": 20,
   "fail": 0,
-  "checks": 2219,
+  "checks": 2276,
   "checks_failed": 0,
-  "variants": 6840,
-  "unique_variants": 6816
+  "variants": 7220,
+  "unique_variants": 7196
  },
  "migrations": {
   "revisions": 35,

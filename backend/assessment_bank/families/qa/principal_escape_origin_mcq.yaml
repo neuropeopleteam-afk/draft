@@ -1,0 +1,23 @@
+family_id: qa.principal.escape_origin_mcq
+title: Утечка дефектов в эксплуатацию по источникам после усиления раннего этапа (Principal, короткое)
+direction: qa
+skills: [quality_metrics, risk_based_testing, test_automation_strategy, defect_management, ci]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: "три из шести моделей ошибок: all_through, improved_all, code_only (ниже ключа); before, last_only, best_only (выше); меньше ключа 0–3 равновероятно"
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Короткое расчётное задание у границы Lead/Principal: нужно разложить утечку дефектов по источникам и увидеть, что вложение в ранний этап не действует на дефекты, появляющиеся позже (конфигурация, внешние интеграции). Senior считает «все проходят все этапы», Lead обычно перемножает этапы верно, но относит усиленный этап ко всем источникам; Principal держит модель по источникам. Ловушки с обеих сторон от ключа, место ключа по величине равновероятно"
+generator: assessment_bank.families.qa.principal_escape_origin_mcq
+version: 1
+description: >
+  Ожидаемое число дефектов, уходящих в эксплуатацию за квартал, при независимых этапах конвейера и дефектах,
+  возникающих на разных этапах. Ключ — программа: перебор исходов «нашёл / пропустил» по этапам.
