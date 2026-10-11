@@ -8804,11 +8804,12 @@
   "world": "симуляция 6 уровней: модельный банк Lead/Principal, блок Lead/Principal, частичный балл; модель, не люди",
   "seed": 20261011,
   "config_hash": "f05209a8a18c",
-  "commit": "unknown",
+  "commit": "9b59eacf",
   "bank": "76c4164b6ce83743",
   "n": 1000,
   "command": "make grades-ext-need",
-  "generated_at": "2026-10-11T09:56:40+00:00"
+  "generated_at": "2026-10-11T09:56:40+00:00",
+  "commit_note": "прогоны на сервере проверок шли без .git (commit unknown); код симуляции этих прогонов закоммичен в 9b59eacf без изменений сценариев"
  },
  "target": {
   "exact_lead": 0.64,
