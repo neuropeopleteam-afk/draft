@@ -120,8 +120,10 @@ test("«Пройдите тест сами»: проводник не назыв
 test("/validation: закрытый набор свёрнут, форма — по кнопке", async ({ page }) => {
   await page.goto("/validation");
   const sec = page.locator("section#closed-set");
+  // FINAL-UX E: раздел — под «Подробные расчёты» и свёрнут: раскрыть, затем прежняя проверка формы
+  await expect(page.getByTestId("fold-group-toggle")).toBeVisible({ timeout: 60_000 });
+  await openFold(page, "section#closed-set");
   await expect(sec.getByRole("heading", { name: "Закрытый набор жюри" })).toBeVisible({ timeout: 60_000 });
-  await openFold(page, "section#closed-set");  // SIMPLIFY: раздел свёрнут целиком — раскрыть, затем прежняя проверка формы
   await expect(sec.getByText("Скачать шаблон JSON")).toHaveCount(0);
   await sec.getByRole("button", { name: "Проверить на своих данных" }).click();
   await expect(sec.getByText("Скачать шаблон JSON")).toBeVisible();
