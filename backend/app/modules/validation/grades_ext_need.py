@@ -180,6 +180,11 @@ SCENARIOS = {
     "g_real_pbc_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
                               directions=("qa", "security", "mobile", "analyst"),
                               bank_note="+ семейства ПБ-В; qa, security, mobile, analyst"),
+    "g_real_v2_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm", directions=("qa", "security", "mobile", "analyst"),
+                         bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst"),
+    "g_real_v2_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
+                             directions=("qa", "security", "mobile", "analyst"),
+                             bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst"),
 }
 
 
