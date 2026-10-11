@@ -32,11 +32,12 @@ test("/validation: метрики теста и подбора на месте",
   await page.goto("/validation", { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible();
   // SIMPLIFY: разделы ниже «5 чисел» свёрнуты по умолчанию — заголовки видны сразу, содержимое — после «Раскрыть все»
-  for (const id of ["bank", "matching", "red-button"]) {
-    await expect(page.locator(`section#${id}`).getByRole("heading", { level: 2 }).first(), `свёрнутый раздел #${id}: заголовок виден`).toBeVisible();
-  }
-  await expect(page.getByTestId("validation-how-to-read")).toContainText("Как читать эту страницу");
+  // FINAL-UX E: «Красная кнопка» — сразу под «5 числами»; остальные разделы — под одной кнопкой «Подробные расчёты»
+  await expect(page.locator("section#red-button").getByRole("heading", { level: 2 }).first()).toBeVisible();
+  await expect(page.getByTestId("fold-group-toggle")).toHaveText(/Подробные расчёты/);
+  await expect(page.locator("section#bank")).toBeHidden();
   await openAllFolds(page);
+  await expect(page.getByTestId("validation-how-to-read")).toContainText("Как читать эту страницу");
   const SECTIONS: Record<string, string> = {
     bank: "Банк заданий и калибровка", test: "Тест: точность оценки и решения по грейду (симуляция)",
     retest: "Стабильность грейда при повторе", "other-conditions": "Другие условия измерения", exposure: "Частота показа заданий",
