@@ -36,6 +36,7 @@ from assessment_bank.psychometrics import CanaryDetector, ExposureControl
 from assessment_bank.simulation import make_truth
 
 from app.modules.assessment.exposure import exposure_table
+from app.modules.assessment import weak_pool
 from app.modules.assessment.grades import CONFIRM_LEVEL, GRADE_ORDER, p_at_least, point_grade
 from app.modules.validation import path_retest as pr
 from app.modules.validation import sim
@@ -54,20 +55,24 @@ N_BOOT = 1000
 
 PARAMS = ("decision", "confirm_level", "ext_items", "ext_minutes", "min_items", "max_items", "se_target",
           "classify_z", "stop_rule", "award_above", "misspec", "levels", "max_minutes", "exclude_low", "partial",
-          "time_weight", "weak_a", "weak_pool")
+          "time_weight", "weak_a", "weak_pool", "plus")
 # Семейства, слабые по калибровке панелью LLM (модель, не люди): отрицательная дискриминация шага, p = 0/1, a < 0,6,
 # a_eff < 0,55, p ≈ угадывание, неизоморфные варианты (банк, ветка feat/bank-core-plus 5493728,
 # reports/weak_families.json, поле exclude). Проверка: мир, где их истинная a = weak_a (по умолчанию в пуле — prior
 # a ≈ 1,0–1,2), и политика пула weak_pool: keep — как сейчас, exclude — убрать из пула, down — a = WEAK_DOWN_A в пуле.
-WEAK_FAMILIES = frozenset("""
-backend.db.overbooking_ob3 backend.go.defer_recover_output backend.go.map_race_fix backend.go.slice_append_output
-backend.kafka.offset_commit_mcq backend.py.idempotency_coarse_ob3 common.conc.async_lost_update_ob3
-common.db.index_plan_mcq common.db.tx_isolation_mcq common.git.move_commits_mcq common.perf.fanout_tail_mcq
-common.time.tz_report_ob3 data_ml.ab.sample_size_mcq data_ml.sql.latest_record_fix data_ml.stats.mean_median_output
-data_ml.stats.ztest_fix frontend.a11y.focus_trap_ob3 frontend.js.microtask_order frontend.react.state_batch_mcq
-frontend.ts.nullish_mcq qa.api.cursor_pagination_ob3 qa.pytest.shared_state_ob3 security.access.owner_check_bug
-security.auth.token_validation_ob3 security.crypto.aead_mcq security.supply.dependency_patch_fix""".split())
+WEAK_FAMILIES = weak_pool.WEAK_FAMILIES  # один список с продуктом (флаг ASSESSMENT_WEAK_EXCLUDE)
 WEAK_DOWN_A = 0.4
+# Добор банка у порогов J/M и M/S (17 семейств с исполняемым ключом, prior a = 1,3; банк feat/bank-ext 68ce4cf, в
+# продукт ещё не синхронизированы): plus = 1 — пул платформы + эти семейства (снимок предкалибровки —
+# data/bank_plus_core.json, `--export-plus <каталог families банка>`); истина для них — та же модель ошибки эксперта.
+PLUS_FILE = HERE / "data" / "bank_plus_core.json"
+PLUS_FAMILIES = (
+    "security.web.ssrf_allowlist_fix", "security.session.fixation_bug", "security.crypto.hmac_canonical_bug",
+    "security.access.bulk_owner_check_bug", "security.auth.token_audience_bug", "frontend.state.optimistic_rollback_fix",
+    "frontend.js.object_key_order_output", "data_ml.ml.purged_split_fix", "data_ml.metrics.pooled_rate_bug",
+    "data_ml.features.lag_window_leak_bug", "data_ml.features.target_encoding_oof_fix", "qa.mock.called_once_bug",
+    "qa.mutation.survivors_output", "qa.pytest.fixture_scope_state_bug", "qa.pytest.raises_too_broad_bug",
+    "backend.cache.stampede_fix", "common.sql.window_range_ties_output")
 OPEN_FORMATS = ("open_answer", "open_book_3step")
 PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items": "дотестирование, заданий",
             "ext_minutes": "дотестирование, мин", "min_items": "минимум заданий", "max_items": "максимум заданий",
@@ -76,7 +81,8 @@ PARAM_RU = {"confirm_level": "порог уверенности P", "ext_items":
             "misspec": "мир: ошибка параметров σ", "levels": "ступеней", "max_minutes": "лимит основной части, мин",
             "exclude_low": "без семейств с низкой информацией (доля)", "partial": "частичный балл: критериев",
             "time_weight": "выбор: информация на минуту (вес)",
-            "weak_a": "мир: у 26 слабых по панели семейств истинная a", "weak_pool": "26 слабых семейств в пуле"}
+            "weak_a": "мир: у 26 слабых по панели семейств истинная a", "weak_pool": "26 слабых семейств в пуле",
+            "plus": "добор банка у порогов J/M и M/S (17 семейств)"}
 DECISION_RU = {"claimed": "заявленный грейд, P ≥ порога уверенности", "point": "по лучшей оценке θ̂ (точечный грейд)"}
 
 
@@ -87,7 +93,7 @@ def baseline_point() -> dict:
             "min_items": c.min_items, "max_items": c.max_items, "se_target": c.se_target,
             "classify_z": c.classify_z, "stop_rule": c.stop_rule, "award_above": None, "levels": 5,
             "max_minutes": c.max_minutes, "exclude_low": 0.0, "partial": 1, "time_weight": c.time_weight,
-            "weak_a": 0.0, "weak_pool": "keep"}
+            "weak_a": 0.0, "weak_pool": "keep", "plus": 0}
 
 
 def _p(**kw) -> dict:
@@ -175,7 +181,16 @@ def stage_weak() -> list[dict]:
     return pts
 
 
-STAGES = {"screen": stage_screen, "time": stage_time, "refine": stage_refine, "weak": stage_weak, "grid": stage_grid, "worlds": stage_worlds, "other": stage_other,
+def stage_plus() -> list[dict]:
+    """Чистка пула вместе с добором сильных семейств у порогов: оба мира (слабые на деле слабые / как в prior)."""
+    pts = []
+    for wa in (0.0, 0.4):
+        pts += [_p(confirm_level=0.6, weak_a=wa, plus=1, weak_pool=wp) for wp in ("keep", "exclude")]
+        pts += [_p(confirm_level=cl, weak_a=wa, plus=1, weak_pool="exclude") for cl in (0.55, 0.58)]
+    return pts
+
+
+STAGES = {"plus": stage_plus, "screen": stage_screen, "time": stage_time, "refine": stage_refine, "weak": stage_weak, "grid": stage_grid, "worlds": stage_worlds, "other": stage_other,
           "pool": stage_pool}
 
 
@@ -197,10 +212,59 @@ def borderline(grade: str, theta: float, se: float, level: float = 0.8) -> bool:
 _CACHE: dict = {}
 
 
-def _pool(n_subpools: int):
-    if n_subpools not in _CACHE:
-        _CACHE[n_subpools] = sim.make_pool(n_subpools)
-    return _CACHE[n_subpools]
+def _pool(n_subpools: int, plus: int = 0):
+    if (n_subpools, plus) not in _CACHE:
+        if plus:
+            from assessment_bank import load_specs
+            from assessment_bank.psychometrics import pool_from_specs
+            _CACHE[(n_subpools, plus)] = pool_from_specs(list(load_specs().values()) + plus_specs(),
+                                                         n_subpools=max(1, n_subpools))
+        else:
+            _CACHE[(n_subpools, plus)] = sim.make_pool(n_subpools)
+    return _CACHE[(n_subpools, plus)]
+
+
+def plus_specs() -> list:
+    """Семейства добора из снимка data/bank_plus_core.json — в виде, который понимает pool_from_specs."""
+    from types import SimpleNamespace as NS
+
+    rows = json.loads(PLUS_FILE.read_text(encoding="utf-8"))["families"]
+    return [NS(**{**r, "prior_difficulty": NS(**r["prior_difficulty"])}) for r in rows]
+
+
+def plus_gates() -> dict[str, frozenset[str]]:
+    from app.modules.assessment.skill_map import stack_gate
+
+    out = {s.family_id: stack_gate(s.direction, s.skills) for s in plus_specs()}
+    return {f: g for f, g in out.items() if g}
+
+
+def export_plus(families_dir: str, commit: str) -> Path:
+    """Снимок предкалибровки семейств добора из YAML банка (без текстов заданий и генераторов)."""
+    import yaml
+
+    want, rows = set(PLUS_FAMILIES), {}
+    for path in sorted(Path(families_dir).glob("*/*.yaml")):
+        d = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if not isinstance(d, dict) or d.get("family_id") not in want:
+            continue
+        pr_ = d["prior_difficulty"]
+        rows[d["family_id"]] = {
+            "family_id": d["family_id"], "direction": d["direction"],
+            "block": "common" if d["direction"] == "common" else d["direction"], "format": d["format"],
+            "target_grades": list(d["target_grades"]), "canary": bool(d.get("canary", False)),
+            "time_limit_s": int(d["time_limit_s"]), "skills": list(d["skills"]),
+            "prior_difficulty": {"a": float(pr_["a"]), "b": float(pr_["b"]),
+                                 "step_offsets": [float(x) for x in (pr_.get("step_offsets") or [])],
+                                 "sigma_variant": float(pr_.get("sigma_variant", 0.3))}}
+    miss = sorted(want - set(rows))
+    if miss:
+        raise SystemExit(f"нет в банке: {miss}")
+    PLUS_FILE.write_text(json.dumps({"source": f"банк feat/bank-ext {commit} (добор у порогов J/M и M/S)",
+                                     "note": "предкалибровка автора (prior), не калибровка на людях",
+                                     "families": [rows[f] for f in PLUS_FAMILIES]}, ensure_ascii=False, indent=1),
+                         encoding="utf-8")
+    return PLUS_FILE
 
 
 def low_info_families(pool, q: float) -> set[str]:
@@ -246,11 +310,17 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
     four = int(pt["levels"]) == 4
     if four:  # 4 ступени, как у Прототип А: без Стажёра (ниже Junior — без категории)
         cfg = replace(cfg, cuts=tuple(c for g, c in zip(GRADE_ORDER, cfg.cuts) if g != "intern"))
-    pool_all = _pool(cfg.subpools)
+    plus = int(pt.get("plus") or 0)
+    pool_all = _pool(cfg.subpools, plus)
     k = (exposure_table() or {}).get("k", {}).get(d, {})
     rng0 = pr._rng(i, 0)
-    truth = make_truth(pool_all, rng0, misspec=float(pt["misspec"]))
+    added = set(PLUS_FAMILIES) if plus else set()
+    # истина прежних семейств и кандидаты — из тех же случайных чисел, что без добора (сравнение на тех же людях)
+    truth = make_truth([it for it in pool_all if it.family_id not in added], rng0, misspec=float(pt["misspec"]))
     cands = pr.make_candidates(n, d, rng0)
+    if plus:
+        truth.update(make_truth([it for it in pool_all if it.family_id in added], pr._rng(i, 7),
+                                misspec=float(pt["misspec"])))
     if four:
         cands = [replace(c, claimed="junior") if c.claimed == "intern" else c for c in cands]
     if float(pt["weak_a"]) > 0:  # мир: слабые по панели семейства на деле слабые
@@ -265,9 +335,13 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
     counter = ExposureControl(0.3, k=dict(k))
     det = CanaryDetector()
     rng = pr._rng(i, 1)
-    saved = pr.make_responder
+    saved, saved_stack = pr.make_responder, pr.stack_excluded
     if int(pt["partial"]) > 1:
         pr.make_responder = partial_responder(int(pt["partial"]))
+    if plus:  # фильтр по стеку и для семейств добора (как bank_engine.stack_excluded после синхронизации банка)
+        gates = plus_gates()
+        pr.stack_excluded = lambda stack: (set(saved_stack(stack))
+                                           | {f for f, g in gates.items() if not g <= set(stack or ())})
 
     def lv(level: int) -> int:
         return max(level - 1, 0) if four else level
@@ -282,7 +356,7 @@ def run_task(args: tuple[dict, int, str, int]) -> dict:
                          pr.run_path(pool, c, truth, cfg, counter, hist, rng, det, pt["confirm_level"],
                                      pt["award_above"], pt["decision"])))
     finally:
-        pr.make_responder = saved
+        pr.make_responder, pr.stack_excluded = saved, saved_stack
     for c, r1, r2 in rows:
         out["true"].append(lv(pr.LEVELS.index(point_grade(c.theta))))
         out["claimed"].append(lv(pr.LEVELS.index(c.claimed)))
@@ -446,12 +520,15 @@ def run(stages: list[str], n: int = 500, workers: int | None = None, write: bool
         points.append({"key": k, "point": p, "n_per_direction": n, "metrics": metrics(by[k], seed=pr.SEED)})
     base_key = key(baseline_point())
     front: list[str] = []
-    worlds = sorted({(p["point"]["misspec"], p["point"]["weak_a"]) for p in points}, reverse=True)
-    for w in worlds:
-        front += pareto([p for p in points if (p["point"]["misspec"], p["point"]["weak_a"]) == w])
+    def world(p: dict) -> tuple:  # мир и банк: Парето — внутри одного мира и одного банка
+        return (p["point"]["misspec"], p["point"]["weak_a"], int(p["point"].get("plus") or 0))
+    for w in sorted({world(p) for p in points}, reverse=True):
+        front += pareto([p for p in points if world(p) == w])
     for p in points:
         p["pareto"] = p["key"] in front
-    main_world = [p for p in points if p["point"]["misspec"] == 0.5 and not p["point"]["weak_a"]]
+    # выбор — только на банке платформы (добор ещё не синхронизирован) и в основном мире
+    main_world = [p for p in points if p["point"]["misspec"] == 0.5 and not p["point"]["weak_a"]
+                  and not p["point"].get("plus")]
     choice = choose(main_world, base_key)
     strict = [p for p in main_world if p["metrics"]["feasible_strict"] or p["key"] == base_key]
     choice_strict = choose(strict, base_key)
@@ -491,10 +568,10 @@ def compact(rep: dict) -> dict:
     base = pts.get(rep["baseline_key"])
     ch = rep.get("choice") or {}
     main = [p for p in rep["points"] if p["point"]["misspec"] == 0.5 and p["point"].get("levels", 5) == 5
-            and not p["point"].get("weak_a")]
+            and not p["point"].get("weak_a") and not p["point"].get("plus")]
     front = sorted([p for p in main if p.get("pareto")], key=lambda p: -p["metrics"]["exact"])
     comp = [p for p in rep["points"] if p["point"].get("levels", 5) == 4 or p["point"]["misspec"] != 0.5
-            or p["point"].get("weak_a")]
+            or p["point"].get("weak_a") or p["point"].get("plus")]
     keyrows = [p for p in main if _label(p["point"]) in KEY_ROWS]
     return {"signature": rep["signature"], "constraints": rep["constraints"], "caveat": rep.get("caveat"),
             "baseline": row(base) if base else None,
@@ -544,6 +621,39 @@ def _row(p: dict, base: dict) -> str:
             f"{_f(m['items_mean'], 1)} | {mark} |")
 
 
+POOL_KEYS = ("weak_pool", "plus")
+
+
+def pool_rows(rep: dict, confirm: float = 0.6) -> list[dict]:
+    """Точки «чистка пула / добор у порогов» при пороге confirm в двух мирах: слабые как в prior / на деле слабые."""
+    out = []
+    for p in rep["points"]:
+        pt = p["point"]
+        rest = {k: v for k, v in pt.items() if k not in (*POOL_KEYS, "weak_a", "confirm_level")}
+        if pt["confirm_level"] != confirm or rest != {k: v for k, v in baseline_point().items()
+                                                       if k not in (*POOL_KEYS, "weak_a", "confirm_level")}:
+            continue
+        out.append(p)
+    return sorted(out, key=lambda p: (p["point"]["weak_a"], int(p["point"].get("plus") or 0),
+                                      ("keep", "exclude", "down").index(p["point"]["weak_pool"])))
+
+
+def pool_section(rep: dict, head: list[str], bp: dict) -> list[str]:
+    rows = pool_rows(rep)
+    if not rows:
+        return []
+    L = ["## Чистка пула и добор у порогов (флаг `ASSESSMENT_WEAK_EXCLUDE`)", "",
+         "26 семейств, слабых по калибровке панелью моделей (модель, не люди), и 17 новых сильных семейств у порогов "
+         "J/M и M/S (prior a = 1,3, исполняемый ключ; в продукт попадут с синхронизацией банка). Два мира: слабые "
+         "семейства «как в prior» (панель ошиблась) и «на деле слабые» (истинная a = 0,4). Порог уверенности 0,6.", "",
+         *head]
+    L += [_row(p, bp) for p in rows]
+    L += ["", "Правило: новое значение по умолчанию — только если лучше по всем ограничениям в обоих мирах. "
+          "Флаг `ASSESSMENT_WEAK_EXCLUDE` (assessment/weak_pool.py) по умолчанию выключен; включает штаб, если строки "
+          "«exclude» лучше «keep» на банке, который стоит на стенде.", ""]
+    return L
+
+
 def markdown(rep: dict) -> str:
     pts = {p["key"]: p for p in rep["points"]}
     base = pts[rep["baseline_key"]]
@@ -576,6 +686,7 @@ def markdown(rep: dict) -> str:
               f"{_f(cm['retest_kappa'])} {('[' + _f(cm['retest_kappa_ci'][0]) + '; ' + _f(cm['retest_kappa_ci'][1]) + ']') if cm.get('retest_kappa_ci') else ''}; "
               f"минут на путь {_f(cm['minutes_mean'], 1)}.",
               f"- Лучше текущей по всем ограничениям: {'да' if ch['better_on_all'] else 'нет'}.", ""]
+    L += pool_section(rep, head, bp)
     front = [pts[k] for k in rep["pareto"]]
     front.sort(key=lambda p: -p["metrics"]["exact"])
     L += ["## Парето-фронт (недоминируемые по точности, завышению, κw и минутам)", "", *head]
@@ -596,7 +707,13 @@ def main() -> int:
     ap.add_argument("--points", default=None, help="JSON-файл со списком дополнительных точек (частичные словари)")
     ap.add_argument("--merge", action="store_true", help="дописать к уже посчитанным точкам data/grade_sweep.json")
     ap.add_argument("--no-write", action="store_true")
+    ap.add_argument("--export-plus", default=None, metavar="FAMILIES_DIR",
+                    help="снимок предкалибровки семейств добора из каталога families банка → data/bank_plus_core.json")
+    ap.add_argument("--export-commit", default="?")
     a = ap.parse_args()
+    if a.export_plus:
+        print("→", export_plus(a.export_plus, a.export_commit))
+        return 0
     stages = list(STAGES) if a.stage == "all" else ([] if a.stage == "none" else a.stage.split(","))
     extra = [_p(**e) for e in json.loads(Path(a.points).read_text(encoding="utf-8"))] if a.points else None
     rep = run(stages, a.n, a.workers, not a.no_write, extra, a.merge)
