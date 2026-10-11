@@ -311,6 +311,12 @@ def summarize(rows: list[dict]) -> dict:
            "retest_exact": round(float(np.mean(l1 == l2)), 3),
            "minutes_mean": round(float(t.mean()), 1), "minutes_p90": round(float(np.percentile(t, 90)), 1),
            "block_share": round(float(np.mean([r["block"] > 0 for r in rows])), 3)}
+    # завышение именно за счёт Lead/Principal: присвоен Lead/Principal выше истинного уровня
+    lo = LEVELS.index(EXT[0])
+    ext = l1 >= lo
+    out["ext_assigned"] = round(float(np.mean(ext)), 3)
+    out["above_ext"] = round(float(np.mean(ext & (l1 > true))), 3)
+    out["ext_false_share"] = round(float(np.mean(l1[ext] > true[ext])), 3) if ext.any() else None
     by = {}
     for lv, name in enumerate(LEVELS):
         m = true == lv
@@ -400,9 +406,9 @@ def markdown(rep: dict) -> str:
          "Банк ×1 — ожидаемый по карточке банка: направление — Lead 1 короткое + 1 развёрнутое, Principal 1 развёрнутое; "
          "общий блок — Lead 2 + 2, Principal 1 + 1. Блок — до K коротких трудных заданий за ≤ 25 мин после основной "
          "части (тем, кто заявил Lead/Principal, и подтвердившим Senior с θ̂, не исключающим Lead).", "",
-         "| Сценарий | confirm | Мир | Lead точно | Principal точно | Senior точно | Выше (все) | Ниже (все) | "
-         "Мин Lead/Principal (ср.) | Блок, мин (ср., Lead) | Цель |",
-         "|---|---|---|---|---|---|---|---|---|---|---|"]
+         "| Сценарий | confirm | Мир | Lead точно | Principal точно | Senior точно | Выше (все) | "
+         "Выше: присвоен Lead/Principal | Ниже (все) | Мин Lead/Principal (ср.) | Блок, мин (ср., Lead) | Цель |",
+         "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for v in rep["variants"].values():
         b = v.get("by_true_level", {})
         lead, prc, sen = b.get("lead", {}), b.get("principal", {}), b.get("senior", {})
@@ -410,7 +416,7 @@ def markdown(rep: dict) -> str:
         ok_txt = "да" if ok else ("—" if v["world"] == "pop" else "нет")
         mins = [x.get("minutes_mean") for x in (lead, prc) if x.get("minutes_mean") is not None]
         L.append(f"| {v['text']} | {_n(v['confirm'])} | {v['world']} | {_p(lead.get('exact'))} | {_p(prc.get('exact'))} | "
-                 f"{_p(sen.get('exact'))} | {_p(v['above'])} | {_p(v['below'])} | "
+                 f"{_p(sen.get('exact'))} | {_p(v['above'])} | {_p(v.get('above_ext'))} | {_p(v['below'])} | "
                  f"{_n(np.mean(mins)) if mins else '—'} | {_n(lead.get('block_minutes_mean'))} | {ok_txt} |")
     L += ["", "Семейств Lead/Principal на одно направление (своих) и в общем блоке — по сценарию: "
           "кратность × (короткие, развёрнутые) из строки банка ×1.", ""]
