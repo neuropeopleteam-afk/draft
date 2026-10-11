@@ -157,7 +157,11 @@ def main() -> int:
     noise = {"source": "docs/llm/partial_credit_offline.json (on_v3_skeptic)", "grader": res["grader"],
              "reference": res["reference"], "n": res["on_v3_skeptic"]["n"],
              "matrix_ref_to_grader": noise_matrix(conf),
-             "note": "строка — балл эталона 0–4, столбец — балл оценщика; сглаживание Лапласа 0,5, скачок > 2 запрещён"}
+             "note": "строка — балл эталона 0–4, столбец — балл оценщика; сглаживание Лапласа 0,5, скачок > 2 запрещён",
+             "agreement": {k: {m: v for m, v in res[k].items() if m != "confusion_ref_by_grader"}
+                           for k in ("off_v2", "on_v3", "on_v3_skeptic")},
+             "intermediate_share_reference": res["intermediate_share_reference"],
+             "set": "набор оценщика 06.10: 406 ответов, честные — 256–261 с оценкой", "points_rule": res["points_rule"]}
     OUT.write_text(json.dumps(res, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     NOISE.write_text(json.dumps(noise, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(json.dumps({k: v for k, v in res.items() if k not in ("reference_points_by_group",)}, ensure_ascii=False,
