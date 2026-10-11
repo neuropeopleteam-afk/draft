@@ -7,7 +7,7 @@ import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
 import { ExtPreliminaryNote } from "../../components/GradeStatus";  // Я25: Lead/Principal «предварительно»
-import { useDirectionEntries, useMeta } from "../../lib/meta";
+import { useDirectionEntries, useMeta, usePageTitle } from "../../lib/meta";
 import { useGrades } from "../../lib/grades";
 import { trapTab } from "../../components/ui";  // А11: Tab по кругу внутри страницы теста
 import { CameraConsent, startProctor, type CamMode } from "../../proctor/CameraConsent";
@@ -852,6 +852,7 @@ function TwoStageOutcome({ t }: { t: any }) {
 function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
   const [r, setR] = useState<any>(initial);
   useEffect(() => { setR(initial); }, [initial]);
+  usePageTitle("Результат теста");  // С2 №7: во вкладке — результат, а не «Задание N»
   const llmOff = useLlmOff();
   const meta = useMeta();
   const [busy, setBusy] = useState(false);
