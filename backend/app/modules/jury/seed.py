@@ -427,6 +427,8 @@ def _create_jury(db: Session, sid: str) -> dict:
     cups = _jury_cups(db, sid, eu, c, p1)
     tasks = _jury_assignments(db, sid, eu, c, needs[0], p1, p2, p3)  # задания работодателя с автопроверкой (И7)
     _maria_extras(db, eu, p1)
+    from app.modules.interview.demo import seed_jury_defense  # устная защита: «пример, модельный кандидат» (Я15)
+    seed_jury_defense(db, p1, p2)
     from app.modules.mydata.demo import seed_jury_interest  # «Мои данные»: отметка интереса у персон жюри (md01)
 
     seed_jury_interest(db, eu, c, p1, p2, p3)
