@@ -15,39 +15,36 @@ export default function EmployerOverview() {
   const probes = useApi<any[]>("/employer/probes");
   const subs = useApi<any>("/employer/subscriptions");
   const accepted = inv.data?.filter((i) => i.status === "accepted").length ?? 0;
+  // UX-2 (3): три шага по одной строке; зонд — в меню «Зонды», не в списке первых шагов
   const steps = [
-    { done: !!company?.description, title: "Заполните профиль компании", text: "Кандидат увидит его в приглашении.", to: "company" },
-    { done: !!needs.data?.length, title: "Опишите потребность", text: "Текстом, как в обычной вакансии, — требования структурируем автоматически.", to: "needs" },
-    // Ф6 (Н9): главный путь — приглашение с вилкой из подборки; зонд — необязательный шаг, не барьер к контакту
-    { done: !!inv.data?.length, title: "Пригласите кандидата из подборки", text: "Кнопка «Пригласить» в карточке: вилка «от–до» в рублях, контакты откроются после согласия кандидата.", to: "needs" },
-    { done: !!probes.data?.length, title: "Зонд — по желанию", text: "Необязательно: короткая задача с вилкой зарплаты, если нужен свежий сигнал по навыку до приглашения.", to: "probes", optional: true },
+    { done: !!company?.description, title: "Заполните профиль компании", to: "company" },
+    { done: !!needs.data?.length, title: "Опишите потребность — подборка соберётся сама", to: "needs" },
+    // Ф6 (Н9): главный путь — приглашение с вилкой из подборки
+    { done: !!inv.data?.length, title: "Пригласите кандидата из подборки", to: "needs" },
   ];
   // UX-2 (в): демо-компания жюри («Демо жюри: Северный платёж») — «Кабинет компании «Северный платёж»» и одна строка
   const demoName = company?.name?.match(/^Демо жюри:\s*(.+)$/)?.[1];
   return (
     <div className="max-w-4xl">
       <PageTitle title={demoName ? `Кабинет компании «${demoName.replace(/^«(.*)»$/, "$1")}»` : company?.name ?? "Кабинет работодателя"}
-        subtitle={demoName ? "Демо-компания для проверки" : "Найдите проверенных кандидатов по категории и выйдите на контакт первым."} />
-      <div className="mt-4"><InvitesLeft /></div>
+        subtitle={demoName ? "Демо-компания для проверки" : "Проверенные кандидаты по категории — выходите на контакт первым."} />
+      <div className="mt-3"><InvitesLeft compact /></div>
       {/* 1 → 2 → 4 колонки по ширине блока (index.css .stat-grid): в режиме жюри справа открыт проводник, и в 4 узкие
           колонки подписи рвались посреди слова («ПОТРЕБНОСТ-И») — теперь подпись переносится только между словами */}
       <div className="stat-grid mt-8"><div>
         <Stat label="Потребности" value={needs.data?.length ?? "…"} />
         <Stat label="Приглашения" value={inv.data?.length ?? "…"} hint={inv.data ? `принято: ${accepted}` : undefined} />
-        <Stat label="Зонды" value={probes.data?.length ?? "…"} hint={probes.data ? `ждут оценки: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
-        <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `слежу за потребностями: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
+        <Stat label="Зонды" value={probes.data?.length ?? "…"} hint={probes.data ? `на оценке: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
+        <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `подписок: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
       </div></div>
       <section className="card mt-8">
         <h2 className="text-lg font-bold text-brand-night">С чего начать</h2>
-        <ol className="mt-5 space-y-4">
+        <ol className="mt-4 space-y-3">
           {steps.map((s, i) => (
-            <li key={s.title} className="flex items-start gap-4">
-              <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${s.done ? "bg-brand-strong text-white" : "optional" in s ? "bg-brand-blush text-brand-plum" : "bg-brand-plum text-white"}`}>{s.done ? "✓" : "optional" in s ? "+" : i + 1}</span>
-              <div className="flex-1">
-                <p className="font-semibold">{s.title}{"optional" in s && <span className="ml-2 chip">необязательно</span>}</p>
-                <p className="text-sm text-brand-ink/65">{s.text}</p>
-              </div>
-              <Link to={s.to} className="text-sm font-semibold text-brand hover:text-brand-soft">Перейти</Link>
+            <li key={s.title} className="flex items-center gap-3">
+              <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm font-bold ${s.done ? "bg-brand-strong text-white" : "bg-brand-plum text-white"}`}>{s.done ? "✓" : i + 1}</span>
+              <p className="min-w-0 flex-1 font-semibold">{s.title}</p>
+              <Link to={s.to} className="shrink-0 text-sm font-semibold text-brand hover:text-brand-soft">Перейти</Link>
             </li>
           ))}
         </ol>
