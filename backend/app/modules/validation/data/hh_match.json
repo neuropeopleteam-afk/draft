@@ -1,7 +1,7 @@
 {
- "generated_at": "2026-10-10T17:51:47+00:00",
- "code_commit": "cf391af",
- "algorithm": "match-v1.2",
+ "generated_at": "2026-10-11T11:01:12+00:00",
+ "code_commit": "9a3b9fce",
+ "algorithm": "match-v1.3",
  "label_note": "тексты — реальные вакансии hh.ru, кандидаты — модельные (модель, не люди)",
  "corpus_collected_at": "2026-10-10",
  "n_corpus": 414,
@@ -28,10 +28,64 @@
    "n": 348,
    "share": 0.963
   },
-  "with_required": {
-   "k": 370,
+  "req_coverage_mean_top5": {
+   "mean": 0.276,
+   "n": 369
+  },
+  "grade_above_applied": {
+   "k": 150,
    "n": 414,
-   "share": 0.894
+   "share": 0.362
+  },
+  "top5_above_share": {
+   "k": 378,
+   "n": 2053,
+   "share": 0.184
+  },
+  "grade_above_off": {
+   "selection_nonempty": {
+    "k": 391,
+    "n": 414,
+    "share": 0.944
+   },
+   "confirmed_any": {
+    "k": 391,
+    "n": 414,
+    "share": 0.944
+   },
+   "confirmed_exact": {
+    "k": 354,
+    "n": 414,
+    "share": 0.855
+   },
+   "confirmed_right_direction": {
+    "k": 206,
+    "n": 414,
+    "share": 0.498
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.323,
+    "n": 369
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.234,
+    "n": 369
+   },
+   "req_full_top5": {
+    "k": 36,
+    "n": 369,
+    "share": 0.098
+   },
+   "req_full_top5_confirmed": {
+    "k": 36,
+    "n": 369,
+    "share": 0.098
+   }
+  },
+  "with_required": {
+   "k": 369,
+   "n": 414,
+   "share": 0.891
   },
   "key_skills_recall": {
    "k": 737,
@@ -39,39 +93,40 @@
    "share": 0.823
   },
   "selection_nonempty": {
-   "k": 392,
+   "k": 414,
    "n": 414,
-   "share": 0.947
+   "share": 1.0
   },
   "confirmed_any": {
-   "k": 392,
+   "k": 414,
    "n": 414,
-   "share": 0.947
+   "share": 1.0
   },
   "confirmed_exact": {
-   "k": 355,
+   "k": 354,
    "n": 414,
-   "share": 0.857
+   "share": 0.855
   },
   "confirmed_right_direction": {
-   "k": 207,
+   "k": 219,
    "n": 414,
-   "share": 0.5
+   "share": 0.529
   },
   "req_coverage_best_top5": {
-   "mean": 0.32,
-   "n": 370
+   "mean": 0.39,
+   "n": 369
   },
   "req_full_top5": {
-   "k": 33,
-   "n": 370,
-   "share": 0.089
+   "k": 46,
+   "n": 369,
+   "share": 0.125
   },
   "req_full_top5_confirmed": {
-   "k": 33,
-   "n": 370,
-   "share": 0.089
-  }
+   "k": 46,
+   "n": 369,
+   "share": 0.125
+  },
+  "required_mean": 5.5
  },
  "catalog_only": {
   "n": 236,
@@ -85,10 +140,64 @@
    "n": 210,
    "share": 0.981
   },
-  "with_required": {
-   "k": 220,
+  "req_coverage_mean_top5": {
+   "mean": 0.319,
+   "n": 219
+  },
+  "grade_above_applied": {
+   "k": 99,
    "n": 236,
-   "share": 0.932
+   "share": 0.419
+  },
+  "top5_above_share": {
+   "k": 259,
+   "n": 1172,
+   "share": 0.221
+  },
+  "grade_above_off": {
+   "selection_nonempty": {
+    "k": 221,
+    "n": 236,
+    "share": 0.936
+   },
+   "confirmed_any": {
+    "k": 221,
+    "n": 236,
+    "share": 0.936
+   },
+   "confirmed_exact": {
+    "k": 208,
+    "n": 236,
+    "share": 0.881
+   },
+   "confirmed_right_direction": {
+    "k": 206,
+    "n": 236,
+    "share": 0.873
+   },
+   "req_coverage_best_top5": {
+    "mean": 0.365,
+    "n": 219
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.267,
+    "n": 219
+   },
+   "req_full_top5": {
+    "k": 23,
+    "n": 219,
+    "share": 0.105
+   },
+   "req_full_top5_confirmed": {
+    "k": 23,
+    "n": 219,
+    "share": 0.105
+   }
+  },
+  "with_required": {
+   "k": 219,
+   "n": 236,
+   "share": 0.928
   },
   "key_skills_recall": {
    "k": 507,
@@ -96,39 +205,47 @@
    "share": 0.824
   },
   "selection_nonempty": {
-   "k": 222,
+   "k": 236,
    "n": 236,
-   "share": 0.941
+   "share": 1.0
   },
   "confirmed_any": {
-   "k": 222,
+   "k": 236,
    "n": 236,
-   "share": 0.941
+   "share": 1.0
   },
   "confirmed_exact": {
-   "k": 209,
+   "k": 208,
    "n": 236,
-   "share": 0.886
+   "share": 0.881
   },
   "confirmed_right_direction": {
-   "k": 207,
+   "k": 219,
    "n": 236,
-   "share": 0.877
+   "share": 0.928
   },
   "req_coverage_best_top5": {
-   "mean": 0.366,
-   "n": 220
+   "mean": 0.445,
+   "n": 219
   },
   "req_full_top5": {
-   "k": 22,
-   "n": 220,
-   "share": 0.1
+   "k": 30,
+   "n": 219,
+   "share": 0.137
   },
   "req_full_top5_confirmed": {
-   "k": 22,
-   "n": 220,
-   "share": 0.1
-  }
+   "k": 30,
+   "n": 219,
+   "share": 0.137
+  },
+  "required_mean": 5.8
+ },
+ "grade_above": {
+  "compare": true,
+  "flag": "MATCH_GRADE_ABOVE",
+  "min_exact": 30,
+  "keep": 2,
+  "note": "«до» — тот же код и разбор с MATCH_GRADE_ABOVE=0 (match-v1.2), «после» — продукт по умолчанию (match-v1.3): в точной категории меньше 30 подтверждённых — добор категории на ступень выше, первые 2 места — лучшие точного уровня"
  },
  "directions": {
   "analyst": {
@@ -164,14 +281,14 @@
     "share": 0.88
    },
    "selection_nonempty": {
-    "k": 44,
+    "k": 48,
     "n": 48,
-    "share": 0.917
+    "share": 1.0
    },
    "confirmed_any": {
-    "k": 44,
+    "k": 48,
     "n": 48,
-    "share": 0.917
+    "share": 1.0
    },
    "confirmed_exact": {
     "k": 38,
@@ -184,18 +301,26 @@
     "share": 0.0
    },
    "req_coverage_best_top5": {
+    "mean": 0.31,
+    "n": 29
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.179,
+    "n": 29
+   },
+   "req_coverage_best_top5_off": {
     "mean": 0.205,
     "n": 29
    },
    "req_full_top5": {
-    "k": 3,
+    "k": 6,
     "n": 29,
-    "share": 0.103
+    "share": 0.207
    },
    "req_full_top5_confirmed": {
-    "k": 3,
+    "k": 6,
     "n": 29,
-    "share": 0.103
+    "share": 0.207
    },
    "missed_key_skills_top": [
     {
@@ -239,14 +364,14 @@
     "share": 0.873
    },
    "selection_nonempty": {
-    "k": 43,
+    "k": 48,
     "n": 48,
-    "share": 0.896
+    "share": 1.0
    },
    "confirmed_any": {
-    "k": 43,
+    "k": 48,
     "n": 48,
-    "share": 0.896
+    "share": 1.0
    },
    "confirmed_exact": {
     "k": 43,
@@ -254,12 +379,20 @@
     "share": 0.896
    },
    "confirmed_right_direction": {
-    "k": 37,
+    "k": 41,
     "n": 48,
-    "share": 0.771
+    "share": 0.854
    },
    "req_coverage_best_top5": {
-    "mean": 0.259,
+    "mean": 0.309,
+    "n": 48
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.207,
+    "n": 48
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.255,
     "n": 48
    },
    "req_full_top5": {
@@ -286,11 +419,11 @@
      "n": 2
     },
     {
-     "tag": "kubernetes",
+     "tag": "docker",
      "n": 2
     },
     {
-     "tag": "docker",
+     "tag": "kafka",
      "n": 2
     }
    ]
@@ -328,14 +461,14 @@
     "share": 0.784
    },
    "selection_nonempty": {
-    "k": 43,
+    "k": 45,
     "n": 45,
-    "share": 0.956
+    "share": 1.0
    },
    "confirmed_any": {
-    "k": 43,
+    "k": 45,
     "n": 45,
-    "share": 0.956
+    "share": 1.0
    },
    "confirmed_exact": {
     "k": 33,
@@ -348,7 +481,15 @@
     "share": 0.0
    },
    "req_coverage_best_top5": {
-    "mean": 0.268,
+    "mean": 0.31,
+    "n": 38
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.221,
+    "n": 38
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.282,
     "n": 38
    },
    "req_full_top5": {
@@ -363,15 +504,15 @@
    },
    "missed_key_skills_top": [
     {
-     "tag": "sql",
-     "n": 6
-    },
-    {
      "tag": "python",
      "n": 6
     },
     {
      "tag": "statistics",
+     "n": 6
+    },
+    {
+     "tag": "sql",
      "n": 6
     },
     {
@@ -414,14 +555,14 @@
     "share": 0.722
    },
    "selection_nonempty": {
-    "k": 44,
+    "k": 45,
     "n": 45,
-    "share": 0.978
+    "share": 1.0
    },
    "confirmed_any": {
-    "k": 44,
+    "k": 45,
     "n": 45,
-    "share": 0.978
+    "share": 1.0
    },
    "confirmed_exact": {
     "k": 41,
@@ -429,23 +570,31 @@
     "share": 0.911
    },
    "confirmed_right_direction": {
-    "k": 41,
+    "k": 42,
     "n": 45,
-    "share": 0.911
+    "share": 0.933
    },
    "req_coverage_best_top5": {
-    "mean": 0.382,
+    "mean": 0.447,
+    "n": 45
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.312,
+    "n": 45
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.384,
     "n": 45
    },
    "req_full_top5": {
-    "k": 1,
+    "k": 2,
     "n": 45,
-    "share": 0.022
+    "share": 0.044
    },
    "req_full_top5_confirmed": {
-    "k": 1,
+    "k": 2,
     "n": 45,
-    "share": 0.022
+    "share": 0.044
    },
    "missed_key_skills_top": [
     {
@@ -502,14 +651,14 @@
     "share": 0.811
    },
    "selection_nonempty": {
-    "k": 45,
+    "k": 47,
     "n": 47,
-    "share": 0.957
+    "share": 1.0
    },
    "confirmed_any": {
-    "k": 45,
+    "k": 47,
     "n": 47,
-    "share": 0.957
+    "share": 1.0
    },
    "confirmed_exact": {
     "k": 41,
@@ -522,18 +671,26 @@
     "share": 0.0
    },
    "req_coverage_best_top5": {
-    "mean": 0.313,
+    "mean": 0.392,
+    "n": 46
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.28,
+    "n": 46
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.332,
     "n": 46
    },
    "req_full_top5": {
-    "k": 5,
+    "k": 7,
     "n": 46,
-    "share": 0.109
+    "share": 0.152
    },
    "req_full_top5_confirmed": {
-    "k": 5,
+    "k": 7,
     "n": 46,
-    "share": 0.109
+    "share": 0.152
    },
    "missed_key_skills_top": [
     {
@@ -588,14 +745,14 @@
     "share": 0.806
    },
    "selection_nonempty": {
-    "k": 46,
+    "k": 47,
     "n": 47,
-    "share": 0.979
+    "share": 1.0
    },
    "confirmed_any": {
-    "k": 46,
+    "k": 47,
     "n": 47,
-    "share": 0.979
+    "share": 1.0
    },
    "confirmed_exact": {
     "k": 42,
@@ -603,12 +760,20 @@
     "share": 0.894
    },
    "confirmed_right_direction": {
-    "k": 43,
+    "k": 44,
     "n": 47,
-    "share": 0.915
+    "share": 0.936
    },
    "req_coverage_best_top5": {
-    "mean": 0.375,
+    "mean": 0.472,
+    "n": 47
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.348,
+    "n": 47
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.379,
     "n": 47
    },
    "req_full_top5": {
@@ -693,6 +858,14 @@
     "share": 0.0
    },
    "req_coverage_best_top5": {
+    "mean": 0.206,
+    "n": 37
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.151,
+    "n": 37
+   },
+   "req_coverage_best_top5_off": {
     "mean": 0.196,
     "n": 37
    },
@@ -757,38 +930,46 @@
     "share": 0.744
    },
    "selection_nonempty": {
-    "k": 42,
+    "k": 48,
     "n": 48,
-    "share": 0.875
+    "share": 1.0
    },
    "confirmed_any": {
-    "k": 42,
+    "k": 48,
     "n": 48,
-    "share": 0.875
+    "share": 1.0
    },
    "confirmed_exact": {
-    "k": 42,
+    "k": 41,
     "n": 48,
-    "share": 0.875
+    "share": 0.854
    },
    "confirmed_right_direction": {
-    "k": 42,
+    "k": 48,
     "n": 48,
-    "share": 0.875
+    "share": 1.0
    },
    "req_coverage_best_top5": {
-    "mean": 0.376,
+    "mean": 0.471,
+    "n": 43
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.34,
+    "n": 43
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.36,
     "n": 43
    },
    "req_full_top5": {
-    "k": 8,
+    "k": 9,
     "n": 43,
-    "share": 0.186
+    "share": 0.209
    },
    "req_full_top5_confirmed": {
-    "k": 8,
+    "k": 9,
     "n": 43,
-    "share": 0.186
+    "share": 0.209
    },
    "missed_key_skills_top": [
     {
@@ -834,9 +1015,9 @@
     "share": 0.973
    },
    "with_required": {
-    "k": 37,
+    "k": 36,
     "n": 48,
-    "share": 0.771
+    "share": 0.75
    },
    "key_skills_recall": {
     "k": 27,
@@ -844,14 +1025,14 @@
     "share": 0.844
    },
    "selection_nonempty": {
-    "k": 47,
+    "k": 48,
     "n": 48,
-    "share": 0.979
+    "share": 1.0
    },
    "confirmed_any": {
-    "k": 47,
+    "k": 48,
     "n": 48,
-    "share": 0.979
+    "share": 1.0
    },
    "confirmed_exact": {
     "k": 41,
@@ -864,18 +1045,26 @@
     "share": 0.917
    },
    "req_coverage_best_top5": {
-    "mean": 0.465,
-    "n": 37
+    "mean": 0.557,
+    "n": 36
+   },
+   "req_coverage_mean_top5": {
+    "mean": 0.413,
+    "n": 36
+   },
+   "req_coverage_best_top5_off": {
+    "mean": 0.476,
+    "n": 36
    },
    "req_full_top5": {
-    "k": 9,
-    "n": 37,
-    "share": 0.243
+    "k": 15,
+    "n": 36,
+    "share": 0.417
    },
    "req_full_top5_confirmed": {
-    "k": 9,
-    "n": 37,
-    "share": 0.243
+    "k": 15,
+    "n": 36,
+    "share": 0.417
    },
    "missed_key_skills_top": [
     {
@@ -1093,6 +1282,12 @@
    "actual": "middle"
   },
   {
+   "id": "137123830",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
+  },
+  {
    "id": "138191979",
    "field": "direction",
    "expected": "security",
@@ -1109,6 +1304,12 @@
    "field": "direction",
    "expected": "security",
    "actual": "backend"
+  },
+  {
+   "id": "138320217",
+   "field": "stack",
+   "expected": "≥ 1 навык",
+   "actual": null
   },
   {
    "id": "138317940",
@@ -1348,6 +1549,6 @@
  "errors_by_field": {
   "direction": 20,
   "grade": 13,
-  "stack": 42
+  "stack": 44
  }
 }
