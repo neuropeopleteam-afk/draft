@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { SiteFooter, SiteHeader } from "../components/SiteHeader";
 import { errText } from "../components/ui";
 import { useAuth } from "../lib/auth";
-import { guide, juryLogin, juryReset, quick, QUICK, startQuick, type Persona } from "../lib/jury";
+import { guide, juryLogin, juryReset, quick, startQuick, type Persona } from "../lib/jury";
 import { daysText, PRODUCT_TAGLINE, useMeta, useRules } from "../lib/meta";
 
 type Rules = NonNullable<ReturnType<typeof useRules>>;
@@ -173,18 +173,26 @@ const JURY: { id: Persona; title: string; text: string }[] = [
   { id: "fsp", title: "Федерация (ФСП)", text: "Кабинет ФСП: спрос работодателей, эффект соревнований на приглашения, зарплаты из офферов. Только агрегаты." },
 ];
 
-const MAIN_ROLES: Persona[] = ["candidate", "employer", "candidate_new"];
+// SIMPLIFY п.9: одно главное действие («Начать проверку за 12 минут») и компактный ряд входов; описания ролей — в подсказке.
+// Остальные роли, сброс демо и проводник с регистрации — под «Ещё роли» (ничего не удалено, только убрано с первого экрана).
+const MAIN_ROLES: { id: Persona; label: string }[] = [
+  { id: "candidate", label: "Кандидат" }, { id: "candidate_new", label: "Пройти тест с нуля" },
+  { id: "employer", label: "Работодатель" }, { id: "fsp", label: "Федерация (ФСП)" },
+];
+const isMain = (p: Persona) => MAIN_ROLES.some((m) => m.id === p);
 
 function JuryBlock() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const interview = !!useMeta()?.interview?.enabled;  // Я15: шаг «по желанию» в «12 минутах»
+  const meta = useMeta();
+  const interview = !!meta?.interview?.enabled;  // Я15: шаг «по желанию» в «12 минутах»
+  const avatar = interview && !!meta?.interview?.avatar;  // SIMPLIFY п.8: карточка «ИИ-интервьюер» — только при образе интервьюера
 
-  async function enter(p: Persona) {
-    setBusy(p); setMsg(null);
-    try { navigate(await juryLogin(p, signIn)); }
+  async function enter(p: Persona, next?: string, key: string = p) {
+    setBusy(key); setMsg(null);
+    try { navigate(await juryLogin(p, signIn, next)); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
   }
   async function quickStart() {  // Я9: «Проверка за 12 минут» — вход работодателем своей копии
@@ -197,73 +205,64 @@ function JuryBlock() {
     try { const r = await juryReset(signIn); setMsg(`Ваше демо пересоздано в исходное состояние за ${String(r.seconds).replace(".", ",")} с. У других экспертов ничего не изменилось.`); }
     catch (e) { setMsg(errText(e)); } finally { setBusy(null); }
   }
+  const text = (p: Persona) => JURY.find((j) => j.id === p)?.text;
   return (
     <section id="jury" className="border-b border-brand-night/10 bg-[#F3F2FB]" aria-labelledby="jury-title">
       <div className="mx-auto max-w-content px-6 py-10">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-plum">Для экспертов жюри</p>
-            <h2 id="jury-title" className="mt-2 text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Вход в один клик и проводник по сценарию</h2>
-            <p className="mt-2 max-w-3xl text-sm leading-relaxed text-brand-ink/75">
-              Выберите роль — регистрация, опрос и тест у демо-учёток уже пройдены; у «Пройдите тест сами» теста нет — его проходите вы.
-              У каждого эксперта своя копия демо: ваши действия и сброс не видны другим. Проводник — «Проверка за 12 минут» или полный справочник по сценарию (регистрация → тест → категория → поиск работодателем → контакт), режим меняется в его шапке.
-              <span className="font-semibold text-brand-night"> Логин и пароль стенда — в материалах сдачи.</span>
-            </p>
+        <h2 id="jury-title" className="text-2xl font-extrabold tracking-tight text-brand-night md:text-3xl">Проверка для жюри</h2>
+        <p className="mt-2 max-w-3xl text-base leading-relaxed text-brand-ink/80">Проводник проведёт по главному сценарию за 12 минут. Регистрироваться не нужно.</p>
+        <button type="button" className="btn-primary mt-5 px-8 py-4 text-lg" disabled={!!busy} onClick={quickStart} data-testid="jury-quick">
+          {busy === "quick" ? "Входим…" : "Начать проверку за 12 минут"}</button>
+        <div className="mt-8 flex flex-wrap items-start gap-6">
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-brand-night">Или войдите сами:</p>
+            <div className="mt-2 flex flex-wrap gap-2" data-testid="jury-roles">
+              {MAIN_ROLES.map((m) => (
+                <button key={m.id} type="button" onClick={() => enter(m.id)} disabled={!!busy} title={text(m.id)}
+                  aria-label={`Войти как: ${m.label}`} className="btn-ghost bg-white px-4 py-2 text-sm disabled:opacity-60">
+                  {busy === m.id ? "Входим…" : m.label}
+                </button>
+              ))}
+            </div>
+            <details className="mt-3 text-sm" data-testid="jury-more-roles">
+              <summary className="cursor-pointer font-semibold text-brand-plum">Ещё роли</summary>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {JURY.filter((p) => !isMain(p.id)).map((p) => (
+                  <button key={p.id} type="button" onClick={() => enter(p.id)} disabled={!!busy} title={p.text}
+                    aria-label={`Войти как: ${p.title}`} className="btn-ghost bg-white px-3 py-1.5 text-sm disabled:opacity-60">
+                    {busy === p.id ? "Входим…" : p.title}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2">
+                <button type="button" className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { quick.setMode("full"); guide.enable(); guide.show(); guide.setStep(0); navigate("/register?role=candidate"); }}>
+                  Начать проводник с регистрации
+                </button>
+                <button type="button" className="font-semibold text-brand-plum underline-offset-2 hover:underline disabled:opacity-50" disabled={!!busy} onClick={reset}>
+                  {busy === "reset" ? "Сбрасываем…" : "Сбросить своё демо в исходное состояние"}
+                </button>
+              </div>
+            </details>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link to="/criteria" className="btn bg-brand-night text-white hover:bg-brand-plum">Проверить по критериям ТЗ</Link>
-            <Link to="/jury/live" className="btn-primary">Демонстрация для жюри: QR</Link>
-            <Link to="/validation" className="btn-ghost">Как мы проверяем себя</Link>
-            <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
-          </div>
+          {avatar && (  // п.8: образ интервьюера — постер (без видео), вход демо-кандидатом сразу к панели устной защиты
+            <div className="flex w-full max-w-md items-center gap-4 rounded-2xl bg-white p-4 ring-1 ring-brand-night/10" data-testid="jury-avatar">
+              <img src="/avatar/interviewer.webp" alt="Портрет ИИ-интервьюера: сгенерирован моделью, несуществующий человек"
+                className="h-16 w-16 shrink-0 rounded-xl object-cover" width={64} height={64} loading="lazy" decoding="async" />
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-brand-night">ИИ-интервьюер</p>
+                <button type="button" className="btn-primary mt-2 px-4 py-2 text-sm" disabled={!!busy} data-testid="jury-avatar-try"
+                  onClick={() => enter("candidate", "/candidate/category#defense", "avatar")}>{busy === "avatar" ? "Входим…" : "Попробовать устную защиту"}</button>
+              </div>
+            </div>
+          )}
         </div>
-        {/* Я9: короткий путь эксперта — своя потребность → … → доказательства, 8 шагов с критериями ТЗ */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-night p-4 text-white sm:p-5" data-testid="jury-quick">
-          <div className="min-w-0 max-w-3xl">
-            <p className="text-lg font-bold">Мало времени? Проверка за 12 минут</p>
-            <p className="mt-1 text-sm leading-relaxed text-white/80">{QUICK.length} шагов: {QUICK.map((s) => s.title.split(" · ")[0].toLowerCase()).join(" → ")}{interview ? "; по желанию — устная защита ответа" : ""}. У каждого шага — что он проверяет и какой критерий ТЗ.</p>
-          </div>
-          <button type="button" className="btn-primary shrink-0" disabled={!!busy} onClick={quickStart}>{busy === "quick" ? "Входим…" : "Начать проверку за 12 минут"}</button>
-        </div>
-        {/* Ф6 (В1): три основных входа карточками, остальные роли — компактным рядом (те же кнопки, описание в подсказке и ниже) */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {JURY.filter((p) => MAIN_ROLES.includes(p.id)).map((p) => (
-            <button key={p.id} onClick={() => enter(p.id)} disabled={!!busy}
-              aria-label={`Войти как: ${p.title}`}
-              className="card flex h-full flex-col items-start border-transparent p-5 text-left transition-shadow hover:shadow-md hover:ring-2 hover:ring-brand/40 focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-60 sm:p-5">
-              <span className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Войти как</span>
-              <span className="mt-1 text-lg font-bold text-brand-night">{p.title}</span>
-              <span className="mt-1.5 text-sm leading-relaxed text-brand-ink/70">{p.text}</span>
-              <span className="mt-auto inline-flex items-center gap-1.5 pt-4 text-sm font-semibold text-brand">{busy === p.id ? "Входим…" : <>Войти<span aria-hidden="true">→</span></>}</span>
-            </button>
-          ))}
-        </div>
-        <div className="mt-4 rounded-2xl bg-white/70 p-4 ring-1 ring-brand-night/10" data-testid="jury-more-roles">
-          <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="mr-1 font-semibold text-brand-night">Ещё роли:</span>
-            {JURY.filter((p) => !MAIN_ROLES.includes(p.id)).map((p) => (
-              <button key={p.id} onClick={() => enter(p.id)} disabled={!!busy} title={p.text}
-                aria-label={`Войти как: ${p.title}`} className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-60">
-                {busy === p.id ? "Входим…" : p.title}
-              </button>
-            ))}
-          </div>
-          <details className="mt-2 text-xs text-brand-ink/70">
-            <summary className="cursor-pointer font-semibold text-brand-plum">Что в этих ролях</summary>
-            <ul className="mt-2 space-y-1.5">
-              {JURY.filter((p) => !MAIN_ROLES.includes(p.id)).map((p) => <li key={p.id}><b className="text-brand-night">{p.title}.</b> {p.text}</li>)}
-            </ul>
-          </details>
-        </div>
-        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
-          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline" onClick={() => { quick.setMode("full"); guide.enable(); guide.show(); guide.setStep(0); navigate("/register?role=candidate"); }}>
-            Начать проводник с регистрации
-          </button>
-          <button className="font-semibold text-brand-plum underline-offset-2 hover:underline disabled:opacity-50" disabled={!!busy} onClick={reset}>
-            {busy === "reset" ? "Сбрасываем…" : "Сбросить своё демо в исходное состояние"}
-          </button>
-          {msg && <span className="text-brand-ink/75" role="status">{msg}</span>}
-        </div>
+        {msg && <p className="mt-4 text-sm text-brand-ink/75" role="status">{msg}</p>}
+        <p className="mt-8 text-xs text-brand-ink/70" data-testid="jury-links">
+          Для экспертов: <Link to="/criteria" className="font-semibold text-brand-plum hover:underline">критерии ТЗ</Link>
+          {" · "}<Link to="/validation" className="font-semibold text-brand-plum hover:underline">как мы проверяем себя</Link>
+          {" · "}<Link to="/jury/live" className="font-semibold text-brand-plum hover:underline">демонстрация в зале (QR)</Link>
+          <span className="block mt-1 text-brand-ink/60">Логин и пароль стенда — в материалах сдачи.</span>
+        </p>
       </div>
     </section>
   );

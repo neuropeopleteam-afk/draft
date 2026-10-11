@@ -26,13 +26,14 @@ export default function EmployerOverview() {
     <div className="max-w-4xl">
       <PageTitle title={company?.name ?? "Кабинет работодателя"} subtitle="Найдите проверенных кандидатов по категории и выйдите на контакт первым." />
       <div className="mt-4"><InvitesLeft /></div>
-      {/* 2 × 2 до 2xl: в режиме жюри справа открыт проводник, и в 4 колонки подписи рвались посреди слова («ПОТРЕБНОСТ-И») */}
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 2xl:grid-cols-4">
+      {/* 1 → 2 → 4 колонки по ширине блока (index.css .stat-grid): в режиме жюри справа открыт проводник, и в 4 узкие
+          колонки подписи рвались посреди слова («ПОТРЕБНОСТ-И») — теперь подпись переносится только между словами */}
+      <div className="stat-grid mt-8"><div>
         <Stat label="Потребности" value={needs.data?.length ?? "…"} />
         <Stat label="Приглашения" value={inv.data?.length ?? "…"} hint={inv.data ? `принято: ${accepted}` : undefined} />
         <Stat label="Зонды" value={probes.data?.length ?? "…"} hint={probes.data ? `ждут оценки: ${probes.data.filter((p) => p.status === "submitted").length}` : undefined} />
         <Link to="needs" className="block"><Stat label="Новых подходящих" value={subs.data?.new_total ?? "…"} hint={subs.data ? `слежу за потребностями: ${subs.data.items.filter((x: any) => x.enabled).length}` : undefined} /></Link>
-      </div>
+      </div></div>
       <section className="card mt-8">
         <h2 className="text-lg font-bold text-brand-night">С чего начать</h2>
         <ol className="mt-5 space-y-4">
