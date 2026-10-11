@@ -261,7 +261,6 @@ function JuryBlock() {
           Для экспертов: <Link to="/criteria" className="font-semibold text-brand-plum hover:underline">критерии ТЗ</Link>
           {" · "}<Link to="/validation" className="font-semibold text-brand-plum hover:underline">как мы проверяем себя</Link>
           {" · "}<Link to="/jury/live" className="font-semibold text-brand-plum hover:underline">демонстрация в зале (QR)</Link>
-          <span className="block mt-1 text-brand-ink/60">Логин и пароль стенда — в материалах сдачи.</span>
         </p>
       </div>
     </section>

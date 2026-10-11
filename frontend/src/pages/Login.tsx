@@ -72,7 +72,6 @@ export default function Login() {
         <button type="submit" className="btn-primary w-full" disabled={busy || !email || !password}>{busy ? "Входим…" : "Войти"}</button>
       </form>
       <FspIdLogin />
-      <p className="mt-5 text-center text-xs text-brand-ink/65">Логин и пароль стенда — в материалах сдачи.</p>
     </AuthShell>
   );
 }
