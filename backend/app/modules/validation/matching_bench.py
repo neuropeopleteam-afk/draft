@@ -37,7 +37,7 @@ import numpy as np
 
 from app.modules.catalog.seed_data import GRADE_ORDER
 from app.modules.matching.need_parser import parse_need
-from app.modules.matching import core_skill, must_have
+from app.modules.matching import core_skill, grade_above, must_have
 from app.modules.matching.ranking import WEIGHTS, algorithm, requirement_priority, score_candidate
 from app.modules.profiles.facts import PROVISIONAL_PENALTY
 from app.modules.validation.bench_world import (BenchConfig, World, bank_blocks, build_bundle, generate, true_grade)
@@ -156,10 +156,39 @@ def score_world(world: World, reqs: list[dict], mode: str = "platform") -> dict:
         out["core_state"][i] = st
         if ((st < 2) & (out["vis"][i] == 2)).any():
             out["core_absent"][i] = (st == 2).astype(np.int8)
+    _above_arrays(out, bundles, reqs)
     rebuilt = weighted(out, np.array([WEIGHTS[k] for k in COMP_KEYS]))
     out["max_rebuild_error"] = float(np.abs(rebuilt - prod).max()) if n else 0.0
     assert out["max_rebuild_error"] < 1e-3, "скор из компонент не совпал с ranking.score_candidate"
     return out
+
+
+def _above_arrays(out: dict, bundles, reqs) -> None:
+    """Я12б, добор ступенью выше (grade_above, как build_selection): above_on — правило действует (у потребности
+    есть уровень, в точной категории меньше MIN_EXACT, на ступень выше кто-то есть); above — кандидат категории на
+    ступень выше; must_tier_wide / core_absent_wide — ярус обязательного и ядро роли по общему пулу (точный + выше)."""
+    n, m = len(reqs), len(bundles)
+    cats = np.array([b.profile.current_category_id or "" for b in bundles])
+    out["above"] = np.zeros((n, m), dtype=bool)
+    out["above_on"] = np.zeros(n, dtype=bool)
+    out["must_tier_wide"] = out["must_tier"].copy()
+    out["core_absent_wide"] = out["core_absent"].copy()
+    for i, r in enumerate(reqs):
+        ab = grade_above.above_category(r)
+        if not ab:
+            continue
+        mask = cats == ab
+        if int((out["vis"][i] == 2).sum()) >= grade_above.MIN_EXACT or not mask.any():
+            continue
+        out["above"][i], out["above_on"][i] = mask, True
+        wide = (out["vis"][i] == 2) | mask
+        pool = [b for j, b in enumerate(bundles) if wide[j]]
+        avail = must_have.available(pool, r)
+        for j, b in enumerate(bundles):
+            out["must_tier_wide"][i, j] = must_have.assess(b, r, avail)["tier"]
+        st = out["core_state"][i]
+        if (st >= 0).any():
+            out["core_absent_wide"][i] = (st == 2).astype(np.int8) if ((st < 2) & wide).any() else 0
 
 
 def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY, transfer: bool = True) -> np.ndarray:
@@ -175,13 +204,17 @@ def weighted(sc: dict, w: np.ndarray, penalty: float = PROVISIONAL_PENALTY, tran
 
 def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROVISIONAL_PENALTY, *,
                     experimental: bool = False, must_first: bool | None = None, transfer: bool = True,
-                    tier: bool = True, core: bool | None = None, core_policy: str | None = None) -> np.ndarray:
+                    tier: bool = True, core: bool | None = None, core_policy: str | None = None,
+                    above: bool | None = None) -> np.ndarray:
     """Порядок как в build_selection: категория → [ядро роли, Я1] → ярус обязательного (Ф2, флаг MATCH_MUST_FIRST) →
     −скор (со штрафом «предварительно») → −рейтинг → public_ref. experimental — прежний эксперимент И8 (число пробелов
     без ярусов); transfer=False и tier=False — абляции ВЛ («без θ» без переноса веса, «без яруса грейда»).
     core — признак «ядро роли» (по умолчанию флаг RANK_CORE_SKILL), core_policy — group / within / cap / penalty
-    (по умолчанию core_skill.POLICY)."""
+    (по умолчанию core_skill.POLICY). above — добор ступенью выше (Я12б, grade_above; по умолчанию флаг
+    MATCH_GRADE_ABOVE): первые KEEP мест — лучшие точного уровня, дальше общий порядок, точный раньше при равном ярусе."""
     s = weighted(sc, np.array([WEIGHTS[k] for k in COMP_KEYS]) if w is None else w, penalty, transfer)
+    above = grade_above.enabled() if above is None else above
+    above_on = sc.get("above_on") if above else None
     must_first = must_have.enabled() if must_first is None else must_first
     if experimental:
         gaps = sc.get("mandatory_gaps", np.zeros_like(s))
@@ -199,17 +232,28 @@ def platform_orders(sc: dict, w: np.ndarray | None = None, penalty: float = PROV
         s = s - core_skill.PENALTY * absent
     # без яруса (абляция): кандидаты с категорией — одним списком по скору, без категории — в конце (их не видно)
     vis = sc["vis"] if tier else np.minimum(sc["vis"], 1)
+    def one(i, vis_i, gaps_i, absent_i, ab_i):
+        grp = absent_i if policy == "group" else zero
+        inner = absent_i if policy == "within" else zero
+        o = np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], ab_i, inner, gaps_i, grp, -vis_i))
+        if policy == "cap" and absent_i.any():
+            top = vis_i[o] == vis_i[o[0]]  # потолок места — внутри первого яруса (категория потребности)
+            n_top = int(top.sum())
+            pos = core_skill.cap_positions(list(absent_i[o[:n_top]].astype(bool)))
+            o = np.concatenate([o[:n_top][pos], o[n_top:]])
+        return o
+
     rows = []
     for i in range(len(s)):
-        grp = absent[i] if policy == "group" else zero
-        inner = absent[i] if policy == "within" else zero
-        o = np.lexsort((sc["ref_rank"], -sc["rating"], -s[i], inner, gaps[i], grp, -vis[i]))
-        if policy == "cap" and absent[i].any():
-            top = vis[i][o] == vis[i][o[0]]  # потолок места — внутри первого яруса (категория потребности)
-            n_top = int(top.sum())
-            pos = core_skill.cap_positions(list(absent[i][o[:n_top]].astype(bool)))
-            o = np.concatenate([o[:n_top][pos], o[n_top:]])
-        rows.append(o)
+        if above_on is not None and above_on[i] and tier:
+            ab = sc["above"][i].astype(np.int8)
+            a_w = sc["core_absent_wide"][i] if core else absent[i]
+            g_w = sc["must_tier_wide"][i] if must_first else gaps[i]
+            head = [j for j in one(i, vis[i], gaps[i], a_w, zero)[:grade_above.KEEP] if vis[i][j] == 2]
+            o = one(i, np.where(ab == 1, 2, vis[i]), g_w, a_w, ab)
+            rows.append(np.array(head + [j for j in o if j not in head]))
+            continue
+        rows.append(one(i, vis[i], gaps[i], absent[i], zero))
     return np.stack(rows)
 
 

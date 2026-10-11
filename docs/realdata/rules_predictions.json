@@ -1165,22 +1165,23 @@
           "basis": "required"
         },
         "status": "extracted"
-      },
+      }
+    ],
+    "stack_desired": [
       {
         "tag": "rest-api",
-        "weight": 0.6,
+        "weight": 0.3,
         "evidence": {
           "quote": "Swagger",
           "start": 1049,
           "end": 1056,
           "context": "Опыт работы с Swagger;",
           "source": "rules",
-          "basis": "required"
+          "basis": "desired"
         },
         "status": "extracted"
       }
     ],
-    "stack_desired": [],
     "experience_years_min": null,
     "work_format": null,
     "work_formats": null,
