@@ -620,6 +620,7 @@ export function TestRun() {
     return { ...base, typed: t.typed, inserted: t.inserted, dropped: t.dropped, deleted: t.deleted, keys: t.keys, ik_cv: cv, active_ms: t.active_ms };
   }
   useEffect(() => {
+    setResult(null);  // Я26: переход с итога к уточнению уровня — та же страница, другая сессия
     api<any>(`/assessment/sessions/${id}`).then(async (x) => {
       // завершённый тест (обновили страницу, вернулись из категории) — показываем итог, а не «сессия закрыта»
       if (x?.status === "finished") { setS(x); setResult(await api<any>(`/assessment/sessions/${id}/result`)); return; }
@@ -687,7 +688,7 @@ export function TestRun() {
   return (
     <div className="max-w-3xl">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-brand-ink/65">
-        <span>{s.mode === "confirm" ? "Дотестирование у порога" : "Тест"} · {DIRECTIONS[s.direction]} · {GRADES[s.claimed_grade]}</span>
+        <span>{s.mode === "confirm" ? "Дотестирование у порога" : s.mode === "refine" ? "Уточнение уровня у границы" : "Тест"} · {DIRECTIONS[s.direction]} · {GRADES[s.claimed_grade]}</span>
         <span>{it.adaptive ? `Задание ${it.position} · отвечено ${it.answered}` : `Задание ${it.position} из ${it.total}`}</span>
       </div>
       <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-blush/60">
@@ -771,8 +772,56 @@ export function TestRun() {
   );
 }
 
+// Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): уровень «на границе» — предложение уточнить отдельной короткой сессией
+function TwoStageOffer({ t, claimed, direction }: { t: any; claimed: string; direction: string }) {
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  async function start() {
+    setBusy(true); setErr(null);
+    try {
+      const x = await api<{ session_id: string }>("/assessment/sessions", { body: { claimed_grade: claimed, mode: "refine", integrity_ack: true, direction } });
+      navigate(`/candidate/assessment/test/${x.session_id}`);
+    } catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+  }
+  const lab = t.label ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : "";
+  const o = t.outcome;
+  return (
+    <section className="card mt-4 border-brand/30 bg-[#F3F2FB] text-sm" data-testid="two-stage-offer" aria-label="Уточнение уровня у границы">
+      <p className="font-semibold text-brand-night">{lab}{t.status === "offered" ? ": можно уточнить" : ""}</p>
+      {t.status === "done" && o ? (
+        <p className="mt-1 text-brand-ink/80">Уточнение {o.passed ? "пройдено" : "не подтвердило уровень у границы"}: по двум сессиям — <b>{GRADES[o.final_grade] ?? "без категории"}</b> (новых заданий: {o.new_items}).</p>
+      ) : (
+        <>
+          <p className="mt-1 text-brand-ink/80">{t.text}</p>
+          <p className="mt-1 text-xs text-brand-ink/65">До уточнения действует уровень по этому тесту. Уточнение — одно на тест; правила 30 и 90 дней на него не действуют.</p>
+        </>
+      )}
+      <div className="mt-3 flex flex-wrap gap-3">
+        {t.status === "offered" && t.available && <button className="btn-primary" onClick={start} disabled={busy}>{busy ? "Готовим задания…" : `Уточнить уровень за 10–${t.minutes} минут`}</button>}
+        {t.status === "in_progress" && t.refine_session_id && <button className="btn-primary" onClick={() => navigate(`/candidate/assessment/test/${t.refine_session_id}`)}>Продолжить уточнение</button>}
+        {t.status === "done" && t.refine_session_id && <button className="btn-ghost" onClick={() => navigate(`/candidate/assessment/test/${t.refine_session_id}`)}>Итог уточнения</button>}
+      </div>
+      <div className="mt-2"><Alert>{err}</Alert></div>
+    </section>
+  );
+}
+
+function TwoStageOutcome({ t }: { t: any }) {
+  const o = t.refine || {};
+  const lab = t.label ? t.label.charAt(0).toUpperCase() + t.label.slice(1) : "";
+  return (
+    <div className="card mt-4 text-sm" data-testid="two-stage-outcome">
+      <p className="font-semibold text-brand-night">{lab} — уточнение {t.status === "passed" ? "пройдено" : "не пройдено"}</p>
+      <p className="mt-1 text-brand-ink/80">После основного теста: {GRADES[o.grade_before] ?? "без категории"} · по двум сессиям вместе: <b>{GRADES[o.final_grade] ?? "без категории"}</b> · новых коротких заданий: {o.new_items}.</p>
+      <p className="mt-1 text-xs text-brand-ink/65">Уровень считается по ответам обеих сессий одной оценкой; работодатель видит пометку «{t.label} — уточнение {t.status === "passed" ? "пройдено" : "не пройдено"}».</p>
+    </div>
+  );
+}
+
 function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: string; onCategory: () => void }) {
   const [r, setR] = useState<any>(initial);
+  useEffect(() => { setR(initial); }, [initial]);
   const llmOff = useLlmOff();
   const meta = useMeta();
   const [busy, setBusy] = useState(false);
@@ -784,7 +833,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     try { setR(await api<any>(`/assessment/sessions/${sessionId}/accept-lower`, { method: "POST" })); await refresh(); }
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
-  const title = r.accepted_lower ? `Принят уровень ${GRADES[r.accepted_lower] ?? r.accepted_lower}`
+  const title = r.mode === "refine" && r.two_stage?.refine ? (r.two_stage.status === "passed" ? "Уточнение уровня пройдено" : "Уточнение не подтвердило уровень у границы")
+    : r.accepted_lower ? `Принят уровень ${GRADES[r.accepted_lower] ?? r.accepted_lower}`
     : r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
     : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
     : "Грейд не подтверждён";
@@ -803,6 +853,8 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Верных ответов</p><p className="mt-2 text-xl font-bold text-brand-night">{r.correct} из {r.answered}</p></div>
         <div className="card"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-brand-lavender">Категория</p><p className="mt-2 text-lg font-bold text-brand-night">{catTitle(r.category_id)}</p></div>
       </div>
+      {r.two_stage && r.mode === "refine" && r.two_stage.refine && <TwoStageOutcome t={r.two_stage} />}
+      {r.two_stage && r.mode !== "refine" && r.two_stage.boundary && <TwoStageOffer t={r.two_stage} claimed={r.claimed_grade} direction={r.direction} />}
       <div className="card mt-4 text-sm text-brand-ink/75">{ruText(r.explanation)}</div>
       {r.level_position && <p className="mt-2 text-sm text-brand-ink/80" data-testid="level-position">Позиция внутри уровня {r.level_position.grade_title}: <b>{r.level_position.text}</b>{r.level_position.known ? " — по точности этого теста" : " (погрешность пока шире половины уровня)"}</p>}
       {(r.confirmed || r.accepted_lower) && <p className="mt-3 text-xs text-brand-ink/65">Грейд — уровень навыков, подтверждённый этим тестом. Стаж в годах остаётся справкой в профиле и на грейд не влияет.</p>}

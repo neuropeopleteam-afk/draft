@@ -138,6 +138,8 @@ export function CandidateCard({ c, score, reasons, actions, must, core, compact 
           <CoreLine k={core} />
           <GradeStatusNote s={c.status} className="mt-1 max-w-2xl" />
           {c.status?.position && <p className="mt-0.5 text-xs text-brand-ink/70" data-testid="level-position">Внутри уровня {c.status.position.grade_title}: {c.status.position.text}</p>}
+          {/* Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): «на границе Middle/Senior — уточнение пройдено / не пройдено» */}
+          {c.status?.two_stage?.text && <p className="mt-0.5 text-xs text-brand-ink/70" data-testid="two-stage-note">{c.status.two_stage.text}</p>}
           {c.confirmed_by && <p className="mt-1 text-xs text-brand-ink/70">Грейд был предварительным и подтверждён {c.confirmed_by.title}{c.confirmed_by.ref_title ? ` («${c.confirmed_by.ref_title}»)` : ""}</p>}
           <p className="mt-0.5 text-sm text-brand-ink/65">
             {c.rank_in_category ? `Место ${c.rank_in_category} из ${c.category_size} в категории · ` : ""}
