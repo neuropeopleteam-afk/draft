@@ -1,0 +1,1549 @@
+{
+ "signature": {
+  "world": "симуляция теста: 1 направлений × 500 кандидатов, семейств в банке: 237",
+  "seed": 20261006,
+  "config_hash": "73c307332dee",
+  "commit": "unknown",
+  "bank": "fc70eff7561052ac",
+  "n": 500,
+  "command": "make path-retest",
+  "generated_at": "2026-10-11T10:00:22+00:00"
+ },
+ "quick": false,
+ "n_per_direction": 500,
+ "directions": [
+  "mobile"
+ ],
+ "config": {
+  "app": {
+   "min_items": 8,
+   "max_items": 16,
+   "se_target": 0.35,
+   "max_minutes": 60,
+   "subpools": 2,
+   "exposure": true,
+   "max_per_format": {
+    "open_book_3step": 2,
+    "open_answer": 1
+   },
+   "stop_rule": "classification",
+   "classify_z": 1.28,
+   "select_at": "cut",
+   "time_weight": 0.0,
+   "ext_items": 6,
+   "ext_minutes": 20,
+   "ext_own_first": true,
+   "legacy_ext": 0,
+   "retake_seen": true,
+   "claim_prior": false,
+   "rotation": "subpool",
+   "cuts": [
+    -1.75,
+    -1.0,
+    0.0,
+    1.0
+   ],
+   "start_theta": {
+    "intern": -1.25,
+    "junior": -0.5,
+    "middle": 0.5,
+    "senior": 1.3
+   }
+  },
+  "n_per_direction": 500,
+  "directions": [
+   "mobile"
+  ],
+  "p_follow_hint": 0.5,
+  "self_sd": 0.6,
+  "misspec": 0.5,
+  "border": 0.25,
+  "pilot_n": 1000,
+  "cuts": {
+   "intern": -1.75,
+   "junior": -1.0,
+   "middle": 0.0,
+   "senior": 1.0
+  },
+  "n_families": 237
+ },
+ "claimed": {
+  "intern": 111,
+  "junior": 145,
+  "middle": 159,
+  "senior": 85
+ },
+ "true_grades": {
+  "none": 33,
+  "intern": 53,
+  "junior": 183,
+  "middle": 164,
+  "senior": 67
+ },
+ "total": {
+  "path_grade": {
+   "n": 500,
+   "exact": 0.782,
+   "within_1": 0.984,
+   "two_steps": 0.016,
+   "kappa_w": 0.856,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.825,
+    0.886
+   ],
+   "exact_ci": [
+    0.746,
+    0.818
+   ]
+  },
+  "icc_theta": 0.839,
+  "r_theta": 0.839,
+  "icc_theta_ci": [
+   0.812,
+   0.862
+  ],
+  "point_grade": {
+   "n": 500,
+   "exact": 0.63,
+   "within_1": 0.986,
+   "two_steps": 0.014,
+   "kappa_w": 0.782,
+   "kappa_informative": true
+  },
+  "point_grade_ceiling": {
+   "exact": 0.586,
+   "within_1": 0.981,
+   "kappa_w": 0.805
+  },
+  "status_agreement": 0.73,
+  "overlap_all": {
+   "mean": 0.167,
+   "median": 0.0,
+   "any_share": 0.244,
+   "max": 0.812
+  },
+  "overlap_first": {
+   "mean": 0.166,
+   "median": 0.0,
+   "any_share": 0.24,
+   "max": 0.812
+  },
+  "truth": {
+   "n": 500,
+   "exact": 0.584,
+   "exact_with_category": 0.58,
+   "over_share": 0.046,
+   "under_share": 0.34,
+   "no_category_share": 0.08,
+   "kappa_w_true": 0.793
+  },
+  "path": {
+   "status_share": {
+    "confirmed": 0.554,
+    "provisional": 0.08,
+    "accepted_lower": 0.287,
+    "none": 0.079
+   },
+   "sessions_per_path": 1.01,
+   "mean_items_per_session": 20.68,
+   "mean_items_per_path": 20.82,
+   "mean_time_min_per_path": 47.5,
+   "extension_share": 0.857,
+   "rescored_share": 0.0,
+   "provisional_intern_proved": 73,
+   "block_gap_flag_share": 0.026
+  },
+  "splits": {
+   "far_from_cut": {
+    "share": 0.49,
+    "n": 245,
+    "exact": 0.751,
+    "within_1": 0.984,
+    "two_steps": 0.016,
+    "kappa_w": 0.857,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.811,
+     0.895
+    ],
+    "exact_ci": [
+     0.698,
+     0.804
+    ]
+   },
+   "near_cut": {
+    "share": 0.51,
+    "n": 255,
+    "exact": 0.812,
+    "within_1": 0.984,
+    "two_steps": 0.016,
+    "kappa_w": 0.85,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.797,
+     0.895
+    ],
+    "exact_ci": [
+     0.765,
+     0.859
+    ]
+   },
+   "far_from_boundary": {
+    "share": 0.548,
+    "n": 274,
+    "exact": 0.785,
+    "within_1": 0.985,
+    "two_steps": 0.015,
+    "kappa_w": 0.881,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.84,
+     0.915
+    ],
+    "exact_ci": [
+     0.737,
+     0.832
+    ]
+   },
+   "near_boundary": {
+    "share": 0.452,
+    "n": 226,
+    "exact": 0.779,
+    "within_1": 0.982,
+    "two_steps": 0.018,
+    "kappa_w": 0.81,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.75,
+     0.861
+    ],
+    "exact_ci": [
+     0.721,
+     0.832
+    ]
+   },
+   "boundary_shift": 0.322,
+   "decided_both": {
+    "share": 0.772,
+    "n": 386,
+    "exact": 0.795,
+    "within_1": 0.987,
+    "two_steps": 0.013,
+    "kappa_w": 0.819,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.769,
+     0.862
+    ],
+    "exact_ci": [
+     0.754,
+     0.834
+    ]
+   },
+   "undecided_any": {
+    "share": 0.228,
+    "n": 114,
+    "exact": 0.737,
+    "within_1": 0.974,
+    "two_steps": 0.026,
+    "kappa_w": 0.798,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.703,
+     0.87
+    ],
+    "exact_ci": [
+     0.649,
+     0.816
+    ]
+   }
+  }
+ },
+ "by_direction": {
+  "mobile": {
+   "path_grade": {
+    "n": 500,
+    "exact": 0.782,
+    "within_1": 0.984,
+    "two_steps": 0.016,
+    "kappa_w": 0.856,
+    "kappa_informative": true,
+    "kappa_w_ci": [
+     0.822,
+     0.884
+    ],
+    "exact_ci": [
+     0.744,
+     0.818
+    ]
+   },
+   "icc_theta": 0.839,
+   "r_theta": 0.839,
+   "icc_theta_ci": [
+    0.812,
+    0.862
+   ],
+   "point_grade": {
+    "n": 500,
+    "exact": 0.63,
+    "within_1": 0.986,
+    "two_steps": 0.014,
+    "kappa_w": 0.782,
+    "kappa_informative": true
+   },
+   "point_grade_ceiling": {
+    "exact": 0.586,
+    "within_1": 0.981,
+    "kappa_w": 0.805
+   },
+   "status_agreement": 0.73,
+   "overlap_all": {
+    "mean": 0.167,
+    "median": 0.0,
+    "any_share": 0.244,
+    "max": 0.812
+   },
+   "overlap_first": {
+    "mean": 0.166,
+    "median": 0.0,
+    "any_share": 0.24,
+    "max": 0.812
+   },
+   "truth": {
+    "n": 500,
+    "exact": 0.584,
+    "exact_with_category": 0.58,
+    "over_share": 0.046,
+    "under_share": 0.34,
+    "no_category_share": 0.08,
+    "kappa_w_true": 0.793
+   },
+   "path": {
+    "status_share": {
+     "confirmed": 0.554,
+     "provisional": 0.08,
+     "accepted_lower": 0.287,
+     "none": 0.079
+    },
+    "sessions_per_path": 1.01,
+    "mean_items_per_session": 20.68,
+    "mean_items_per_path": 20.82,
+    "mean_time_min_per_path": 47.5,
+    "extension_share": 0.857,
+    "rescored_share": 0.0,
+    "provisional_intern_proved": 73,
+    "block_gap_flag_share": 0.026
+   }
+  }
+ },
+ "by_claimed": {
+  "intern": {
+   "n": 111,
+   "exact": 0.784,
+   "within_1": 1.0,
+   "two_steps": 0.0,
+   "kappa_w": 0.52,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.338,
+    0.685
+   ],
+   "exact_ci": [
+    0.703,
+    0.865
+   ]
+  },
+  "junior": {
+   "n": 145,
+   "exact": 0.959,
+   "within_1": 0.979,
+   "two_steps": 0.021,
+   "kappa_w": -0.019,
+   "kappa_informative": false,
+   "kappa_w_ci": [
+    -0.033,
+    0.0
+   ],
+   "exact_ci": [
+    0.924,
+    0.986
+   ]
+  },
+  "middle": {
+   "n": 159,
+   "exact": 0.686,
+   "within_1": 0.987,
+   "two_steps": 0.013,
+   "kappa_w": 0.432,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.292,
+    0.56
+   ],
+   "exact_ci": [
+    0.61,
+    0.761
+   ]
+  },
+  "senior": {
+   "n": 85,
+   "exact": 0.659,
+   "within_1": 0.965,
+   "two_steps": 0.035,
+   "kappa_w": 0.314,
+   "kappa_informative": true,
+   "kappa_w_ci": [
+    0.091,
+    0.515
+   ],
+   "exact_ci": [
+    0.553,
+    0.765
+   ]
+  }
+ },
+ "transitions": [
+  [
+   26,
+   13,
+   1,
+   0,
+   0
+  ],
+  [
+   11,
+   61,
+   8,
+   0,
+   0
+  ],
+  [
+   2,
+   3,
+   194,
+   25,
+   3
+  ],
+  [
+   0,
+   2,
+   24,
+   96,
+   9
+  ],
+  [
+   0,
+   0,
+   0,
+   8,
+   14
+  ]
+ ],
+ "block_gap": {
+  "direction": "mobile",
+  "claimed": "middle",
+  "rule": {
+   "gap": 0.3,
+   "min_items": 4
+  },
+  "rows": [
+   {
+    "shift": 0.0,
+    "n": 150,
+    "flag_share": 0.053,
+    "confirmed_share": 0.613,
+    "confirmed_flagged_share": 0.033
+   },
+   {
+    "shift": 1.0,
+    "n": 150,
+    "flag_share": 0.26,
+    "confirmed_share": 0.34,
+    "confirmed_flagged_share": 0.235
+   },
+   {
+    "shift": 3.0,
+    "n": 150,
+    "flag_share": 0.907,
+    "confirmed_share": 0.073,
+    "confirmed_flagged_share": 0.818
+   }
+  ]
+ },
+ "discrimination": {
+  "n_pilot": 1000,
+  "n_families": 53,
+  "criteria": {
+   "weak_D": 0.2,
+   "weak_r_pb": 0.2,
+   "weak_r_pb_panel": 0.15
+  },
+  "summary": {
+   "D_mean": 0.47,
+   "D_median": 0.474,
+   "r_pb_mean": 0.41,
+   "r_pb_median": 0.407,
+   "share_D_ge_03": 0.981,
+   "share_D_02_03": 0.019,
+   "share_D_lt_02": 0.0,
+   "share_r_pb_gt_02": 1.0,
+   "n_weak": 0,
+   "n_weak_sim": 0,
+   "panel_n": 0,
+   "panel_corr": null,
+   "panel_weak": 0,
+   "audit_rework_n": 4,
+   "audit_rework_and_weak": [],
+   "audit_rework_panel_r_pb_mean": null
+  },
+  "by_format": {
+   "choose_fix": {
+    "n": 8,
+    "D_mean": 0.478,
+    "r_pb_mean": 0.411
+   },
+   "find_bug": {
+    "n": 11,
+    "D_mean": 0.505,
+    "r_pb_mean": 0.423
+   },
+   "mcq_concept": {
+    "n": 16,
+    "D_mean": 0.494,
+    "r_pb_mean": 0.406
+   },
+   "open_answer": {
+    "n": 4,
+    "D_mean": 0.355,
+    "r_pb_mean": 0.311
+   },
+   "open_book_3step": {
+    "n": 4,
+    "D_mean": 0.427,
+    "r_pb_mean": 0.547
+   },
+   "predict_output": {
+    "n": 10,
+    "D_mean": 0.447,
+    "r_pb_mean": 0.385
+   }
+  },
+  "weak": [],
+  "families": [
+   {
+    "family_id": "common.alg.binary_search_bound",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.57,
+    "D": 0.537,
+    "r_pb": 0.415,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.alg.complexity_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.635,
+    "D": 0.511,
+    "r_pb": 0.425,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.alg.merge_intervals_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.401,
+    "D": 0.448,
+    "r_pb": 0.551,
+    "a": 1.0,
+    "b": 0.533,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.conc.async_lost_update_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.353,
+    "D": 0.426,
+    "r_pb": 0.539,
+    "a": 1.0,
+    "b": 0.733,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.db.index_plan_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.383,
+    "D": 0.474,
+    "r_pb": 0.385,
+    "a": 1.1,
+    "b": 0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.db.tx_isolation_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.378,
+    "D": 0.422,
+    "r_pb": 0.342,
+    "a": 1.1,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.dist.fencing_token_bug",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.299,
+    "D": 0.444,
+    "r_pb": 0.407,
+    "a": 1.1,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.dist.outbox_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.259,
+    "D": 0.396,
+    "r_pb": 0.357,
+    "a": 1.1,
+    "b": 1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.docker.cache_order_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.657,
+    "D": 0.452,
+    "r_pb": 0.41,
+    "a": 1.1,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.docker.compose_port_bug",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.591,
+    "D": 0.467,
+    "r_pb": 0.39,
+    "a": 1.1,
+    "b": -0.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.docker.layer_cache_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.588,
+    "D": 0.511,
+    "r_pb": 0.423,
+    "a": 1.1,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.ds.lru_cache_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.5,
+    "D": 0.478,
+    "r_pb": 0.387,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.history_count",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.498,
+    "D": 0.463,
+    "r_pb": 0.396,
+    "a": 1.1,
+    "b": 0.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.move_commits_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.426,
+    "D": 0.47,
+    "r_pb": 0.401,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.git.undo_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.558,
+    "D": 0.496,
+    "r_pb": 0.389,
+    "a": 1.1,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": true
+   },
+   {
+    "family_id": "common.http.api_design_open",
+    "block": "common",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.274,
+    "D": 0.389,
+    "r_pb": 0.349,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.conditional_get",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.412,
+    "D": 0.585,
+    "r_pb": 0.465,
+    "a": 1.1,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.retry_idempotent_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.609,
+    "D": 0.519,
+    "r_pb": 0.434,
+    "a": 1.1,
+    "b": -0.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.http.status_codes",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.633,
+    "D": 0.43,
+    "r_pb": 0.348,
+    "a": 1.0,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.linux.log_pipeline",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.572,
+    "D": 0.452,
+    "r_pb": 0.361,
+    "a": 1.0,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.linux.relative_path_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.772,
+    "D": 0.296,
+    "r_pb": 0.3,
+    "a": 1.0,
+    "b": -1.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.net.cidr_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.525,
+    "D": 0.478,
+    "r_pb": 0.369,
+    "a": 1.0,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.perf.fanout_tail_mcq",
+    "block": "common",
+    "format": "mcq_concept",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.327,
+    "D": 0.5,
+    "r_pb": 0.409,
+    "a": 1.1,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.aggregate_filter_fix",
+    "block": "common",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.45,
+    "D": 0.496,
+    "r_pb": 0.403,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.count_nulls_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.74,
+    "D": 0.374,
+    "r_pb": 0.343,
+    "a": 1.0,
+    "b": -1.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.left_join_count",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.538,
+    "D": 0.556,
+    "r_pb": 0.446,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.not_in_null",
+    "block": "common",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.458,
+    "D": 0.541,
+    "r_pb": 0.416,
+    "a": 1.1,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.revenue_report_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.355,
+    "D": 0.446,
+    "r_pb": 0.577,
+    "a": 1.0,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.window_range_ties_output",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.301,
+    "D": 0.511,
+    "r_pb": 0.435,
+    "a": 1.3,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sql.window_rank",
+    "block": "common",
+    "format": "predict_output",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.313,
+    "D": 0.381,
+    "r_pb": 0.331,
+    "a": 1.0,
+    "b": 0.9,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.sys.reliability_open",
+    "block": "common",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.248,
+    "D": 0.315,
+    "r_pb": 0.274,
+    "a": 0.9,
+    "b": 1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "common.time.tz_report_ob3",
+    "block": "common",
+    "format": "open_book_3step",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.344,
+    "D": 0.389,
+    "r_pb": 0.52,
+    "a": 1.0,
+    "b": 0.767,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.android.lifecycle_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.641,
+    "D": 0.559,
+    "r_pb": 0.449,
+    "a": 1.2,
+    "b": -0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.android.state_survival_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.369,
+    "D": 0.537,
+    "r_pb": 0.444,
+    "a": 1.3,
+    "b": 0.6,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.arch.offline_sync_open",
+    "block": "mobile",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.249,
+    "D": 0.359,
+    "r_pb": 0.309,
+    "a": 0.9,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.ios.appearance_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.508,
+    "D": 0.574,
+    "r_pb": 0.469,
+    "a": 1.2,
+    "b": -0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.background_timer_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.564,
+    "D": 0.581,
+    "r_pb": 0.472,
+    "a": 1.2,
+    "b": -0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.cursor_pagination_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.674,
+    "D": 0.481,
+    "r_pb": 0.403,
+    "a": 1.1,
+    "b": -0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.deeplink_route_fix",
+    "block": "mobile",
+    "format": "choose_fix",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.726,
+    "D": 0.419,
+    "r_pb": 0.38,
+    "a": 1.1,
+    "b": -1.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.double_submit_fix",
+    "block": "mobile",
+    "format": "choose_fix",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.75,
+    "D": 0.419,
+    "r_pb": 0.392,
+    "a": 1.2,
+    "b": -1.0,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.offline_queue_fix",
+    "block": "mobile",
+    "format": "choose_fix",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.425,
+    "D": 0.641,
+    "r_pb": 0.502,
+    "a": 1.2,
+    "b": 0.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.retry_backoff_output",
+    "block": "mobile",
+    "format": "predict_output",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.776,
+    "D": 0.344,
+    "r_pb": 0.354,
+    "a": 1.1,
+    "b": -1.4,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.token_refresh_fix",
+    "block": "mobile",
+    "format": "choose_fix",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.327,
+    "D": 0.522,
+    "r_pb": 0.455,
+    "a": 1.2,
+    "b": 0.8,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.js.version_gate_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.778,
+    "D": 0.393,
+    "r_pb": 0.373,
+    "a": 1.1,
+    "b": -1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.kotlin.flow_lifecycle_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "middle",
+     "senior"
+    ],
+    "p": 0.342,
+    "D": 0.519,
+    "r_pb": 0.436,
+    "a": 1.2,
+    "b": 0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.kotlin.main_thread_io_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.532,
+    "D": 0.6,
+    "r_pb": 0.476,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.perf.frame_budget_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "junior",
+     "middle"
+    ],
+    "p": 0.567,
+    "D": 0.559,
+    "r_pb": 0.443,
+    "a": 1.2,
+    "b": -0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.push.fcm_message_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.496,
+    "D": 0.515,
+    "r_pb": 0.407,
+    "a": 1.1,
+    "b": 0.1,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.release.release_quality_open",
+    "block": "mobile",
+    "format": "open_answer",
+    "grades": [
+     "senior"
+    ],
+    "p": 0.269,
+    "D": 0.356,
+    "r_pb": 0.313,
+    "a": 0.9,
+    "b": 1.3,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.security.secret_storage_mcq",
+    "block": "mobile",
+    "format": "mcq_concept",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.789,
+    "D": 0.344,
+    "r_pb": 0.343,
+    "a": 1.0,
+    "b": -1.5,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.storage.sqlite_migration_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "intern",
+     "junior"
+    ],
+    "p": 0.738,
+    "D": 0.433,
+    "r_pb": 0.399,
+    "a": 1.2,
+    "b": -1.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.swift.retain_cycle_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "middle"
+    ],
+    "p": 0.46,
+    "D": 0.596,
+    "r_pb": 0.486,
+    "a": 1.3,
+    "b": 0.2,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   },
+   {
+    "family_id": "mobile.swift.ui_main_thread_bug",
+    "block": "mobile",
+    "format": "find_bug",
+    "grades": [
+     "junior"
+    ],
+    "p": 0.655,
+    "D": 0.481,
+    "r_pb": 0.419,
+    "a": 1.2,
+    "b": -0.7,
+    "weak_sim": false,
+    "reasons": [],
+    "weak_panel": false,
+    "weak": false,
+    "audit_rework": false
+   }
+  ]
+ },
+ "procedure": [
+  "Опрос: стаж (θ = 0 → 1,5 года, θ = 1 → 4,5 года, шум 1 год) → подсказка грейда по стажу (как в продукте); самооценка — θ + N(0; 0,6). Заявленный грейд — подсказка (в половине случаев) или самооценка; ниже порога Стажёра — Стажёр.",
+  "Стек опроса фильтрует семейства (Go, Java, Django, Kafka, Docker — только тем, у кого тег есть).",
+  "Адаптивный тест платформы на банке: классификационная остановка, дотестирование у порога, контроль частоты, ротация субпулов по истории сессий; тест Стажёра — только лёгкие семейства, без ротации.",
+  "Детектор предзнания и пересчёт θ; решение: подтверждён при P ≥ 0,8, «Junior (предварительно)» при P от 0,10.",
+  "Не подтверждён: принять доказанный уровень ниже без нового теста (P ≥ 0,8), иначе один тест ступенью ниже, иначе без категории.",
+  "Повтор — вся процедура ещё раз: другой субпул, новые варианты; семейства всех прошлых сессий не берутся (новых нет — виденные давнее всего, в новом варианте)."
+ ],
+ "caveat": "Синтетика: истинные параметры заданий = предкалибровка + ошибка эксперта σ = 0,5, люди — модель ответов 2PL; проверяется механика всей процедуры, а не качество заданий на людях. «Предварительно» считается ступенью Junior. Дискриминативность — на симулированном пилоте с авторскими параметрами: она показывает замысел автора, а не поведение людей; r_pb панели моделей — независимая проверка на ответах моделей, шкала моделей не равна шкале людей.",
+ "other_reference": {
+  "source": "внешний репозиторий, docs/testing.md (05.10.2026)",
+  "kappa_w": 0.866,
+  "exact": 0.759,
+  "within_1": 0.998,
+  "r_theta_parallel": 0.874,
+  "borderline_exact": 0.663,
+  "far_exact": 0.826,
+  "length": 20,
+  "confirm_rule": "P ≥ 0,5",
+  "param_error": "b + N(0; 0,35), a · LogN(0; 0,2)",
+  "n": 1600,
+  "levels": 4,
+  "ci": null,
+  "icc": null
+ },
+ "seconds": 7.8
+}
