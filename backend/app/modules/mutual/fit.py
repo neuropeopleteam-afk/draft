@@ -253,7 +253,15 @@ def summarize(factors: list[dict], audience: str = "employer") -> dict:
     shown = [f for f in order if f["status"] in VALUE and f.get("in_line", True)][:3] or [f for f in order if f["status"] != "unknown"][:1]
     parts = [f["text"] if i == 0 else f["text"][:1].lower() + f["text"][1:] for i, f in enumerate(shown)]
     line = "; ".join(parts) if parts else "Условия предложения и интересы кандидата не указаны"
-    return {"algorithm": ALGORITHM, "level": level, "title": (LEVELS_ME if audience == "candidate" else LEVELS)[level],
+    title = (LEVELS_ME if audience == "candidate" else LEVELS)[level]
+    # FIX7 Я4-16 (P04): «Предложение вам подходит», когда формат, город или стек в предложении не указаны (только в тексте
+    # письма — его не разбираем), звучит как установленное соответствие. Уровень и балл не меняются — меняется подпись.
+    gaps = [g for k, g in (("format", "формат"), ("location", "город"), ("stack", "стек"))
+            if by.get(k) == "unknown" and next((f for f in factors if f["key"] == k), {}).get("text", "").endswith("в предложении не указан")]
+    if audience == "candidate" and level == "high" and gaps:
+        title = "Подходит по указанным условиям"
+        line += f". Не указаны в предложении: {', '.join(gaps)} — по ним соответствие не установлено"
+    return {"algorithm": ALGORITHM, "level": level, "title": title,
             "score": score,
             "decline_risk": veto, "line": line, "factors": factors,
             "known_weight": round(wsum, 2)}
