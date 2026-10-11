@@ -140,7 +140,14 @@ def test_sus_proof_is_live_or_link(client):
     t = register_and_verify(client)
     client.post("/api/sus", json={"answers": [4, 2] * 5, "context": "e2e"}, headers=H(t))
     p = client.get("/api/validation/criteria").json()["criteria"][2]["items"][0]["proof"]
-    assert p["kind"] == "metric" and p["value"] == 75.0 and p["signature"]["n"] == 1
+    # n = 1 < 5 — балл не результат: «пока недостаточно ответов (n = 1, на <дата>)», числа нет (Я17)
+    assert p["kind"] == "link" and p["missing"] and "value" not in p
+    assert "пока недостаточно ответов (n = 1, на " in p["label"] and "75" not in p["label"]
+    for i in range(4):
+        tk = register_and_verify(client, f"sus{i}@example.com")
+        assert client.post("/api/sus", json={"answers": [4, 2] * 5, "context": "e2e"}, headers=H(tk)).status_code == 201
+    p = client.get("/api/validation/criteria").json()["criteria"][2]["items"][0]["proof"]
+    assert p["kind"] == "metric" and p["value"] == 75.0 and p["signature"]["n"] == 5
 
 
 def test_docs_match_generator():
