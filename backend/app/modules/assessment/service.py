@@ -494,6 +494,7 @@ def _add_two_stage(db: Session, out: dict, ts: TestSession) -> None:
     if not two_stage.enabled():
         out.pop("two_stage", None)
         return
+    db.flush()  # autoflush выключен: «последняя завершённая полная сессия» должна видеть эту же сессию
     out["two_stage"] = two_stage.view(db, ts)
     if _mode(ts) == "refine":
         two_stage.mark_fact(db, ts)
