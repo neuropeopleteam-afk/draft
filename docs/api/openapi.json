@@ -65888,6 +65888,26 @@
         ]
       }
     },
+    "/api/validation/partial-credit": {
+      "get": {
+        "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",
+        "operationId": "partial_credit_route_api_validation_partial_credit_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Успешный ответ."
+          }
+        },
+        "summary": "Частичный балл 0–4 у развёрнутых: «0/1» против «0–4» (синтетика; пересчёт: make partial-credit-sim)",
+        "tags": [
+          "validation"
+        ]
+      }
+    },
     "/api/validation/path-retest": {
       "get": {
         "description": "**Доступ:** вход не требуется (публичный метод или токен в самом запросе).",

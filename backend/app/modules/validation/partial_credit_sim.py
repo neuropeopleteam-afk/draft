@@ -69,6 +69,25 @@ CAVEAT = ("Синтетика: люди и ответы — модель, не �
           "откалибровать.")
 
 
+METHOD = [
+    "- **Балл 0–4** = round(4 × взвешенная оценка пунктов рубрики) — тот же ответ оценщика, нового вызова модели нет "
+    "(`assessment/partial_credit.py`). С флагом `ASSESSMENT_PARTIAL_CREDIT_ENABLED` балл развёрнутой части входит в θ "
+    "по GPCM (`assessment_bank/psychometrics/gpcm.py`), остальные части — 2PL, как без флага; выбор следующего задания "
+    "учитывает информацию GPCM.",
+    "- **Параметры GPCM до калибровки на людях** выводятся из 2PL части: ступени b + (−0,75; −0,25; 0,25; 0,75), наклон "
+    "подобран так, что ожидаемая доля балла совпадает с кривой 2PL (шкала θ та же). После пилота на людях параметры "
+    "ступеней нужно откалибровать (`irt.fit_mml` расширяется на GPCM) — до этого прирост в продукте — оценка модели.",
+    "- **Информация одной части** при a = 1,5 в центре: 0/1 с шумом оценщика ≈ 0,83, 0–4 с тем же шумом ≈ 1,24 "
+    "(≈ 1,5×), без шума — 1,28 и 1,91. В сессии не больше трёх развёрнутых частей (2 open_book_3step + 1 open_answer "
+    "из 16–22 заданий), поэтому прирост на весь тест ограничен ими.",
+    "- **Шум оценщика** — матрица по сохранённым ответам модели-оценщика против эталона-модели; настоящий шум на людях "
+    "может быть другим. Мир `narrow` проверяет случай, когда пункты рубрики различают хуже, чем думает движок.",
+    "- Варианты считаются на одних и тех же кандидатах с теми же зёрнами, но адаптивный тест выбирает разные задания, "
+    "поэтому разности — парные по кандидату, ДИ 95 % — бутстрэп по кандидатам.",
+    "- FTT.4: уровень присваивается только по тесту — частичный балл меняет лишь то, как ответы теста входят в θ.",
+]
+
+
 def noise_matrix() -> np.ndarray:
     d = json.loads(NOISE.read_text(encoding="utf-8"))
     m = np.asarray(d["matrix_ref_to_grader"], dtype=float)
@@ -293,7 +312,7 @@ def markdown(rep: dict) -> str:
           "| θ | 0/1 (2PL) | 0–4 (GPCM) |", "|---|---|---|"]
     for r in rep["info"]:
         L.append(f"| {_f(r['theta'], 1)} | {_f(r['info_2pl'])} | {_f(r['info_gpcm'])} |")
-    L += ["", f"Время расчёта: {rep['seconds']} с.", ""]
+    L += ["", "## Метод и ограничения", "", *METHOD, "", f"Время расчёта: {rep['seconds']} с.", ""]
     return "\n".join(L)
 
 
@@ -303,7 +322,11 @@ def main() -> int:
     ap.add_argument("--quick", action="store_true")
     ap.add_argument("--parallel", type=int, default=int(os.environ.get("SIM_PARALLEL", "2")))
     ap.add_argument("--no-write", action="store_true")
+    ap.add_argument("--md-only", action="store_true", help="только docs/validation/PARTIAL_CREDIT.md из сохранённого JSON")
     a = ap.parse_args()
+    if a.md_only:
+        DOCS_MD.write_text(markdown(json.loads(OUT.read_text(encoding="utf-8"))), encoding="utf-8")
+        return 0
     run(a.n, a.quick, not a.no_write, a.parallel)
     return 0
 
