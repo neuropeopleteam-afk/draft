@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Alert, DIRECTIONS, GRADE_TITLE_ALL, Loading, NB, num, pct, useApi } from "../ui";
+import { Alert, DIRECTION_TITLES, GRADE_TITLE_ALL, Loading, NB, num, pct, useApi } from "../ui";
 import { SignatureLine } from "./Headline";
 import { ProvenanceLine, RetestVsTruth } from "./Provenance";
 import { ScrollX } from "../A11y";
@@ -79,7 +79,7 @@ function Body({ r }: { r: any }) {
         split("Обе попытки: решение принято", sp.decided_both), split("Хотя бы раз «предварительно» или без категории", sp.undecided_any)]} /></div>
       <h3 className="mt-6 font-bold text-brand-night">По направлениям</h3>
       <div className="mt-2"><T caption="Повтор всего пути по направлениям" head={["Направление", "n", "Точно", "±1", "κ, 95 % ДИ", "ICC θ̂", "Повтор семейств", "Грейд = истинный"]} min="44rem"
-        rows={Object.entries<any>(r.by_direction ?? {}).map(([d, b]) => [DIRECTIONS[d] ?? d, num(b.path_grade?.n, 0), pct(b.path_grade?.exact), pct(b.path_grade?.within_1), withCi(b.path_grade?.kappa_w, b.path_grade?.kappa_w_ci), num(b.icc_theta, 3), pct(b.overlap_all?.mean), pct(b.truth?.exact)])} /></div>
+        rows={Object.entries<any>(r.by_direction ?? {}).map(([d, b]) => [DIRECTION_TITLES[d] ?? d, num(b.path_grade?.n, 0), pct(b.path_grade?.exact), pct(b.path_grade?.within_1), withCi(b.path_grade?.kappa_w, b.path_grade?.kappa_w_ci), num(b.icc_theta, 3), pct(b.overlap_all?.mean), pct(b.truth?.exact)])} /></div>
       <h3 className="mt-6 font-bold text-brand-night">Первая попытка → вторая (число кандидатов)</h3>
       <div className="mt-2"><T caption="Матрица переходов итогового грейда между попытками" head={["Первая \\ вторая", ...LEVELS.map((l) => LEVEL[l])]}
         rows={(r.transitions ?? []).map((row: number[], i: number) => [LEVEL[LEVELS[i]], ...row.map((v) => num(v, 0))])} /></div>

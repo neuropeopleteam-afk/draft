@@ -20,7 +20,8 @@
 
 Пакет банка скрипт не меняет: читает только рабочее дерево.
 
-    python3 tools/sync_bank.py [--src ../bank] [--seeds 20] [--verify-seeds 3] [--no-validate] [--commit]
+    python3 tools/sync_bank.py [--src ../bank] [--seeds 20] [--verify-seeds 3] [--no-validate]
+                               [--validation-report <validation_report.json>] [--commit]
 """
 from __future__ import annotations
 
@@ -82,13 +83,30 @@ from assessment_bank.psychometrics import pool_from_specs
 specs = load_specs()
 pool = pool_from_specs(specs.values())
 by = {}
+base_grades = ("intern", "junior", "middle", "senior")
+ready = {}
 for s in specs.values():
     d = by.setdefault(s.direction, {"families": 0, "canary": 0, "formats": {}})
     d["families"] += 1
     d["canary"] += int(s.canary)
     d["formats"][s.format] = d["formats"].get(s.format, 0) + 1
-print(json.dumps({"n_families": len(specs), "pool": len(pool), "by_direction": by}, ensure_ascii=False))
+    # готовность направления (то же правило, что readiness_rule в backend/app/modules/catalog/ext.py):
+    # семейства без канареек, нацеленные хотя бы на один уровень Стажёр…Senior, и покрытие каждого уровня
+    tg = set(s.target_grades or ())
+    if not s.canary and tg & set(base_grades):
+        r = ready.setdefault(s.direction, {"families": 0, "per_grade": {g: 0 for g in base_grades}})
+        r["families"] += 1
+        for g in tg & set(base_grades):
+            r["per_grade"][g] += 1
+print(json.dumps({"n_families": len(specs), "pool": len(pool), "by_direction": by, "readiness": ready},
+                 ensure_ascii=False))
 '''
+
+
+# Правило готовности направления (как catalog_ext_min_families / catalog_ext_min_per_grade по умолчанию в
+# backend/app/core/config.py; тест tests/test_catalog_ext.py сверяет)
+READY_MIN_FAMILIES = 18
+READY_MIN_PER_GRADE = 3
 
 
 def run_py(code_or_args: list[str], cwd: Path, timeout: int = 120) -> subprocess.CompletedProcess:
@@ -130,6 +148,9 @@ def main() -> int:
     ap.add_argument("--seeds", type=int, default=20, help="seed на семейство для валидатора банка")
     ap.add_argument("--verify-seeds", type=int, default=3, help="на скольких seed исполнять проверки ключа")
     ap.add_argument("--no-validate", action="store_true", help="без валидатора банка (только проверка генерации)")
+    ap.add_argument("--validation-report", default=None,
+                    help="готовый validation_report.json того же дерева банка (валидатор прогнан на сервере проверок: "
+                         "remote-bank <банк> validate --seeds 20 --verify-seeds 3 --out <каталог>) — локально не гонять")
     ap.add_argument("--commit", action="store_true")
     a = ap.parse_args()
 
@@ -171,13 +192,18 @@ def main() -> int:
 
     validation = None
     if not a.no_validate:
-        out_dir = stage / "_validation"
-        r = run_py(["-m", "assessment_bank", "validate", "--seeds", str(a.seeds), "--verify-seeds",
-                    str(a.verify_seeds), "--out", str(out_dir)], cwd=stage, timeout=1800)
-        rep = out_dir / "validation_report.json"
+        if a.validation_report:  # отчёт валидатора с сервера проверок (то же дерево банка), в песочнице не гоняем
+            rep = Path(a.validation_report).resolve()
+            r = subprocess.CompletedProcess([], 0, "", f"нет файла {rep}")
+        else:
+            out_dir = stage / "_validation"
+            r = run_py(["-m", "assessment_bank", "validate", "--seeds", str(a.seeds), "--verify-seeds",
+                        str(a.verify_seeds), "--out", str(out_dir)], cwd=stage, timeout=1800)
+            rep = out_dir / "validation_report.json"
         if rep.exists():
             data = json.loads(rep.read_text(encoding="utf-8"))
-            validation = {"summary": data.get("summary"), "seeds": a.seeds, "verify_seeds": a.verify_seeds}
+            validation = {"summary": data.get("summary"), "seeds": a.seeds, "verify_seeds": a.verify_seeds,
+                          **({"where": "сервер проверок (готовый отчёт)"} if a.validation_report else {})}
             fams = data.get("families") or []
             if isinstance(fams, dict):
                 fams = [{"family_id": k, **v} for k, v in fams.items()]
@@ -204,11 +230,20 @@ def main() -> int:
 
     old_hash = tree_hash(DST) if DST.exists() else None
     new_hash = tree_hash(pkg)
+    readiness = final.get("readiness") or {}
+    verified = sorted(d for d, r in readiness.items()
+                      if r["families"] >= READY_MIN_FAMILIES and min(r["per_grade"].values()) >= READY_MIN_PER_GRADE)
     manifest = {
         # путь рабочего места в манифест не пишем: банк — соседний репозиторий
         "source": "../bank", **git_info(src), "content_hash": new_hash,
         "synced_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "n_families": final["n_families"], "by_direction": final["by_direction"],
+        # «список из банка» для расширения каталога (CATALOG_EXT_ENABLED): направления, чей банк прошёл фильтр
+        # качества и правило готовности (не меньше READY_MIN_FAMILIES семейств, каждый уровень Стажёр…Senior —
+        # не меньше READY_MIN_PER_GRADE); платформа показывает направление расширения, только если оно здесь
+        "directions_verified": verified,
+        "readiness": {"rule": {"min_families": READY_MIN_FAMILIES, "min_per_grade": READY_MIN_PER_GRADE},
+                      "by_direction": readiness},
         "excluded": excluded, "validation": validation,
     }
     if old_hash == new_hash and (DST / "BANK_SYNC.json").exists():

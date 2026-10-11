@@ -1,0 +1,24 @@
+family_id: analyst.principal.launch_effect_mcq
+title: Эффект запуска функции — разность разностей внутри сегментов при смене структуры аудитории (Principal)
+direction: analyst
+skills: [statistics, requirements_analysis, stakeholders, product_metrics]
+target_grades: [principal]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    distractors: [naive, did_total, after_only]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 2.5
+  a: 1.3
+  sigma_variant: 0.35
+  basis: "Нужно одновременно убрать сезон (контрольные регионы), исходную разницу регионов (разность разностей, а не сравнение после запуска) и смену структуры аудитории из-за параллельной кампании (оценка внутри сегментов, а не по общим конверсиям — парадокс Симпсона), затем принять решение по порогу. Разность разностей по общим конверсиям — почти верный дистрактор, который выбирает уверенный Lead; Principal замечает смену структуры: у порога Lead/Principal"
+generator: assessment_bank.families.analyst.principal_launch_effect_mcq
+version: 1
+description: >
+  Оценка эффекта функции по данным «до/после» в тестовых и контрольных регионах по двум сегментам при росте доли
+  новых пользователей из-за рекламной кампании; решение о раскатке по порогу. Ключ — программа: разность разностей
+  внутри сегментов по тем же числам.

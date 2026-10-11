@@ -125,8 +125,11 @@ def stamp(src: str, d: dict | None = None) -> dict:
     m = bank_manifest()
     sig = d.get("signature") or {}
     if sig:
+        b = d.get("bank") if isinstance(d.get("bank"), dict) else {}
+        # число семейств банка расчёта — из самого отчёта (если записано): после синхронизации банка снимок
+        # становится историческим, и число из манифеста (текущий банк) к нему не относится
         out.update(date=sig.get("generated_at"), commit=_known(sig.get("commit")), bank=sig.get("bank"),
-                   command=sig.get("command") or spec["command"])
+                   command=sig.get("command") or spec["command"], bank_families=b.get("n_families"))
     else:  # make validate / intern-cut / grader_check подписи не пишут: дата — из отчёта, коммит честно не записан
         b = d.get("bank") or {}
         out.update(date=d.get("generated_at") or d.get("date"), bank=b.get("content_hash"),

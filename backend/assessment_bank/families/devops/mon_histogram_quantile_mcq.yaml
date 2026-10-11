@@ -1,0 +1,24 @@
+family_id: devops.mon.histogram_quantile_mcq
+title: Мониторинг — что вернёт histogram_quantile по корзинам гистограммы
+direction: devops
+skills: [monitoring, prometheus, promql, metrics]
+target_grades: [middle, senior]
+format: mcq_concept
+language: text
+invariants:
+  code_lines: [7, 9]
+  n_options: 4
+  extra:
+    subtype: linear_interpolation_bucket
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.8
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "5–6 кумулятивных корзин и +Inf, квантиль 0,5–0,99; нужно знать, что корзины накопленные, найти корзину по рангу и интерполировать линейно; дистракторы фиксированного состава — верхняя, нижняя граница и середина корзины (середина отстоит от ответа). Граница Middle/Senior"
+generator: assessment_bank.families.devops.mon_histogram_quantile_mcq
+version: 1
+description: >
+  Посчитать результат histogram_quantile по приростам кумулятивных корзин. Ключ — исполнение модели
+  алгоритма Prometheus в песочнице Python.

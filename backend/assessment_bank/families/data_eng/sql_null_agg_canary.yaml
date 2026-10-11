@@ -1,0 +1,23 @@
+family_id: data_eng.sql.null_agg_canary
+title: SQL — агрегаты и NULL (канарейка)
+direction: data_eng
+skills: [sql, aggregation, null_semantics]
+target_grades: [junior]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [2, 2]
+  operations: [2, 2]
+time_limit_s: 120
+canary: true
+canary_pool_size: 30
+prior_difficulty:
+  b: -1.0
+  a: 1.0
+  sigma_variant: 0.25
+  basis: "Запрос из 4 агрегатов над столбцом с NULL (COUNT(*), COUNT(col), SUM, AVG, MAX, AVG(COALESCE)); 4–6 строк. Junior"
+generator: assessment_bank.families.data_eng.sql_null_agg_canary
+version: 1
+description: >
+  Канареечное семейство: seed 1..30 опубликованы. Показываются только они; служат детектору предзнания
+  (время + правильность), в грейд не входят.
