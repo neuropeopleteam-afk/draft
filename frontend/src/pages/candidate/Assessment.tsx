@@ -875,7 +875,7 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · интервал θ шире, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
-          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от 80 %, «не доказанно ниже» — от 10 %).
+          Категория «Junior (предварительно)» {r.mode === "confirm" ? "сохраняется" : "присвоена"}: вероятность уровня не ниже Junior — {Math.round((r.p_claimed ?? 0) * 100)} % (подтверждение — от {meta?.rules?.confirm_pct ?? 60} %, «не доказанно ниже» — от 10 %).
           {r.mode === "confirm" ? " Принудительного понижения нет; работодатели видят актуальную оценку. Подтвердить можно повторным тестом, зондом работодателя или кубком." : " Работодатели видят категорию с пометкой «предварительно» и ставят её чуть ниже подтверждённых. Подтвердить можно коротким дотестированием у порога, зондом работодателя или кубком."}
         </Alert></div>
       )}

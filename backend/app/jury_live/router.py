@@ -182,7 +182,7 @@ def manifest(code: str, db: Session = Depends(get_db)) -> JSONResponse:
     room = _room(db, code)
     icons = [{"src": f"/icons/{n}-{s}.png", "sizes": f"{s}x{s}", "type": "image/png",
               "purpose": "maskable" if n == "maskable" else "any"} for n in ("icon", "maskable") for s in (192, 512)]
-    body = {"id": f"/j/{room.code}", "name": "Встречный: мини-тест жюри", "short_name": "Мини-тест",
+    body = {"id": f"/j/{room.code}", "name": "Драфт: мини-тест жюри", "short_name": "Мини-тест",
             "lang": "ru", "start_url": f"/j/{room.code}?source=pwa", "scope": "/", "display": "standalone",
             "orientation": "portrait", "background_color": "#FBF8FC", "theme_color": "#310F53", "icons": icons}
     return JSONResponse(body, media_type="application/manifest+json", headers={"Cache-Control": "no-cache"})

@@ -117,7 +117,7 @@ SCAN_REV=$BRANCH; PUSH_REV=$BRANCH
 if [ "$SNAPSHOT" = 1 ]; then
   step "1б. Вариант Б: снимок одним коммитом (история ветки наружу не уходит)"
   SNAP_AN=$(git log -1 --format=%an "$BRANCH"); SNAP_AE=$(git log -1 --format=%ae "$BRANCH")
-  SNAP_MSG="Спецтрек ФСП «Встречный»: снимок состояния ($(date -u +%Y-%m-%d)), ветка $BRANCH $(git rev-parse --short "$BRANCH")"
+  SNAP_MSG="Спецтрек ФСП «Драфт»: снимок состояния ($(date -u +%Y-%m-%d)), ветка $BRANCH $(git rev-parse --short "$BRANCH")"
   # объект коммита создаётся без ссылки: локальные ветки и история не меняются; родителей у коммита нет
   SNAP_SHA=$(GIT_AUTHOR_NAME="$SNAP_AN" GIT_AUTHOR_EMAIL="$SNAP_AE" GIT_COMMITTER_NAME="$SNAP_AN" GIT_COMMITTER_EMAIL="$SNAP_AE" \
     git commit-tree "$BRANCH^{tree}" -m "$SNAP_MSG")

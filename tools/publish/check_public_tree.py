@@ -77,8 +77,26 @@ def main() -> int:
     a = ap.parse_args()
     values = load_values(a.values)
     if a.rev:
-        names = [n for n in git(a.repo, "ls-tree", "-r", "--name-only", a.rev).decode().splitlines() if n]
-        read = lambda n: git(a.repo, "show", f"{a.rev}:{n}")  # noqa: E731
+        # одно `git cat-file --batch` на всё дерево вместо `git show` на каждый файл (на загруженной машине — в десятки раз быстрее)
+        oid_of: dict[str, str] = {}
+        for ent in git(a.repo, "ls-tree", "-r", "-z", a.rev).decode("utf-8", "replace").split("\0"):
+            meta, _, path = ent.partition("\t")
+            parts = meta.split()
+            if path and len(parts) == 3 and parts[1] == "blob":
+                oid_of[path] = parts[2]
+        names = list(oid_of)
+        batch = subprocess.Popen(["git", "-C", a.repo, "cat-file", "--batch"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+
+        def read(n: str) -> bytes:
+            assert batch.stdin and batch.stdout
+            batch.stdin.write(oid_of[n].encode() + b"\n")
+            batch.stdin.flush()
+            header = batch.stdout.readline().split()
+            if len(header) < 3:
+                raise OSError(f"нет объекта для {n}")
+            data = batch.stdout.read(int(header[2]))
+            batch.stdout.read(1)
+            return data
     else:
         names = [n for n in git(a.repo, "ls-files").decode().splitlines() if n]
         read = lambda n: open(f"{a.repo}/{n}", "rb").read()  # noqa: E731

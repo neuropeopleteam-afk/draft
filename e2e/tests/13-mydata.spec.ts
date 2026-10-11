@@ -71,7 +71,7 @@ test("«Мои данные»: интерес за неделю, выгрузк�
     expect(dl.suggestedFilename()).toMatch(/^moi-dannye-\d{4}-\d{2}-\d{2}\.json$/);
     const raw = await readFile((await dl.path())!, "utf8");
     const data = JSON.parse(raw);
-    expect(data.format).toBe("vstrechny.my-data/1");
+    expect(data.format).toBe("draft.my-data/1");
     expect(Object.keys(data).length).toBeGreaterThan(5);
     expect(raw, "почты работодателей и других участников").not.toMatch(/employer(\+[a-z0-9]+)?@jury\.example\.com|expert(\+[a-z0-9]+)?@jury\.example\.com/);
     expect(raw, "хеш пароля").not.toMatch(/\$argon2/);

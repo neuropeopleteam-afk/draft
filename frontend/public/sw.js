@@ -1,4 +1,4 @@
-/* Service worker «Встречный»: оболочка приложения офлайн, API — только сеть, Web Push. MIT.
+/* Service worker «Драфт»: оболочка приложения офлайн, API — только сеть, Web Push. MIT.
  *
  * Выкладка без пустой страницы:
  * - VERSION подставляется при сборке (vite.config.ts, плагин sw-build-version): новый sw.js на каждую сборку,
@@ -102,7 +102,7 @@ self.addEventListener("fetch", (e) => {
 self.addEventListener("push", (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (_) { d = { body: e.data ? e.data.text() : "" }; }
-  const title = d.title || "Встречный";
+  const title = d.title || "Драфт";
   e.waitUntil(self.registration.showNotification(title, {
     body: d.body || "",
     icon: d.icon || "/icons/icon-192.png",
