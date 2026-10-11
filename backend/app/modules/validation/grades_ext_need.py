@@ -170,6 +170,16 @@ SCENARIOS = {
     # ключи, чтобы «до» (банк 705e743) и «после» лежали рядом
     "g_real_v2": dict(real=True, mult=0, a=None, block=0, partial="gpcm", bank_note="после семейств ПБ-А/Б/В"),
     "g_real_v2_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm", bank_note="после семейств ПБ-А/Б/В"),
+    # направления ПБ-В (qa, security, mobile, analyst): «до» — банк 705e743, «после» — + семейства ПБ-В
+    "g_real_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm", directions=("qa", "security", "mobile", "analyst"),
+                      bank_note="банк 705e743; qa, security, mobile, analyst"),
+    "g_real_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
+                          directions=("qa", "security", "mobile", "analyst"), bank_note="банк 705e743; qa, security, mobile, analyst"),
+    "g_real_pbc_d4": dict(real=True, mult=0, a=None, block=0, partial="gpcm",
+                          directions=("qa", "security", "mobile", "analyst"), bank_note="+ семейства ПБ-В; qa, security, mobile, analyst"),
+    "g_real_pbc_d4_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm",
+                              directions=("qa", "security", "mobile", "analyst"),
+                              bank_note="+ семейства ПБ-В; qa, security, mobile, analyst"),
 }
 
 
@@ -362,6 +372,10 @@ def run_path_x(pool, cand, truth, cfg, counter, history, rng, det, s: dict, conf
             "families": sorted({f for t in tests for f in t["families"]})}
 
 
+# направления расширения каталога (CATALOG_EXT): в симуляции — только для сценариев с явным списком directions
+DIR_ALL = tuple(sim.DIRECTIONS) + tuple(d for d in ("analyst", "data_eng", "devops", "mobile") if d not in sim.DIRECTIONS)
+
+
 def worker(a) -> dict:
     s = SCENARIOS[a.scenario]
     confirm = a.confirm
@@ -382,7 +396,7 @@ def worker(a) -> dict:
     if s.get("real") and not any(p.grades and p.grades[0] in EXT for p in base):
         raise SystemExit("сценарии g_real* — на дереве с банком, где есть семейства Lead/Principal (после sync_bank)")
     pool = list(base) + extra
-    i = sim.DIRECTIONS.index(a.direction)
+    i = DIR_ALL.index(a.direction)  # 5 направлений симуляции — прежние индексы (те же кандидаты), дальше — расширение
     wi = list(gx.WORLDS).index(a.world)
     rng0 = np.random.default_rng([SEED, i, wi])  # те же кандидаты и истина во всех сценариях направления и мира
     truth = make_truth(pool, None, misspec=0.5, seed=SEED)
@@ -443,7 +457,7 @@ def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], 
     t0 = time.time()
     reps = reps or [0]
     jobs = [(sc, cf, w, d, r) for sc in scenarios for cf in confirms for w in worlds for r in reps
-            for d in sim.DIRECTIONS]
+            for d in (SCENARIOS[sc].get("directions") or sim.DIRECTIONS)]
     tmp = Path(tempfile.mkdtemp(prefix="gneed_"))
     env = {**os.environ, "GRADES_EXT_ENABLED": "1"}
     procs, results, pending = [], [], list(jobs)
@@ -467,12 +481,17 @@ def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], 
         for cf in confirms:
             for w in worlds:
                 for rp in reps:
-                    rows = [r for x in results if (x["scenario"], x["confirm"], x["world"], x.get("rep", 0)) ==
-                            (sc, cf, w, rp) for r in x["rows"]]
-                    rep["variants"][_key(sc, cf, w, rp)] = {
+                    xs = [x for x in results if (x["scenario"], x["confirm"], x["world"], x.get("rep", 0)) ==
+                          (sc, cf, w, rp)]
+                    rows = [r for x in xs for r in x["rows"]]
+                    v = rep["variants"][_key(sc, cf, w, rp)] = {
                         "scenario": sc, "confirm": cf, "world": w, "rep": rp,
                         "text": scen_text(SCENARIOS[sc]) + (f" · банк, реализация {rp + 1}" if rp else ""),
                         "bank": bank_counts(SCENARIOS[sc]), **SCENARIOS[sc], **summarize(rows)}
+                    if SCENARIOS[sc].get("directions"):  # по направлениям — для сценариев с явным списком направлений
+                        v["by_direction"] = {x["direction"]: {lv: (summarize(x["rows"])["by_true_level"].get(lv) or {}).get("exact")
+                                                              for lv in ("senior", "lead", "principal")}
+                                             for x in xs}
     old = json.loads(OUT.read_text(encoding="utf-8")) if merge and OUT.exists() else None
     if old:
         rep["variants"] = {**old.get("variants", {}), **rep["variants"]}
