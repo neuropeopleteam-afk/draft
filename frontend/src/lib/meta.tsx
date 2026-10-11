@@ -21,7 +21,9 @@ export interface Meta {
 }
 
 const Ctx = createContext<Meta | null>(null);
-const defaultTitle = (m: Meta) => `${m.product_name} — подбор ИТ-специалистов`;
+// Подзаголовок продукта (решение владельца 09.10): название приходит из /api/meta, подзаголовок — константа интерфейса.
+export const PRODUCT_TAGLINE = "Компании выбирают подтверждённых";
+const defaultTitle = (m: Meta) => `${m.product_name} — ${PRODUCT_TAGLINE.toLowerCase()}`;
 let loaded: Meta | null = null;
 let ownTitle = false;  // экран задал свой заголовок (usePageTitle) — общий его не перезаписывает
 
