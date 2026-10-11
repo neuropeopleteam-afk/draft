@@ -56,7 +56,16 @@ export async function openSection(page: Page, name: string, url: RegExp): Promis
 
 /** /validation (SIMPLIFY): разделы ниже «5 чисел» свёрнуты — раскрыть все, как это сделает человек кнопкой
  *  «Раскрыть все разделы» в блоке «Как читать эту страницу». Проверки содержимого после этого — те же, что раньше. */
+/** FINAL-UX E: «Подробные расчёты» — одна кнопка над всеми разделами ниже «5 чисел» и «Красной кнопки». */
+export async function openFoldGroup(page: Page): Promise<void> {
+  const g = page.getByTestId("fold-group-toggle");
+  await expect(g).toBeVisible();
+  if ((await g.getAttribute("aria-expanded")) !== "true") await g.click();
+  await expect(g).toHaveAttribute("aria-expanded", "true");
+}
+
 export async function openAllFolds(page: Page): Promise<void> {
+  await openFoldGroup(page);
   const btn = page.getByTestId("fold-all");
   await expect(btn).toBeVisible();
   if ((await btn.textContent())?.includes("Раскрыть")) await btn.click();
@@ -65,6 +74,7 @@ export async function openAllFolds(page: Page): Promise<void> {
 
 /** Раскрыть один свёрнутый раздел /validation кнопкой «Показать раздел» под его заголовком. */
 export async function openFold(page: Page, sectionSelector: string): Promise<void> {
+  await openFoldGroup(page);
   const fold = page.getByTestId("fold").filter({ has: page.locator(sectionSelector) });
   const btn = fold.getByTestId("fold-toggle");
   if ((await btn.getAttribute("aria-expanded")) !== "true") await btn.click();
