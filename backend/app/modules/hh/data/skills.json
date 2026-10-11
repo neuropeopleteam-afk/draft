@@ -85,14 +85,14 @@
      "n": 24
     },
     {
-     "tag": "http",
-     "title": "HTTP и веб",
+     "tag": "rest-api",
+     "title": "REST API",
      "share": 0.479,
      "n": 23
     },
     {
-     "tag": "rest-api",
-     "title": "REST API",
+     "tag": "http",
+     "title": "HTTP и веб",
      "share": 0.479,
      "n": 23
     },
@@ -281,14 +281,14 @@
      "n": 19
     },
     {
-     "tag": "git",
-     "title": "Git",
+     "tag": "algorithms",
+     "title": "Алгоритмы и структуры данных",
      "share": 0.422,
      "n": 19
     },
     {
-     "tag": "algorithms",
-     "title": "Алгоритмы и структуры данных",
+     "tag": "git",
+     "title": "Git",
      "share": 0.422,
      "n": 19
     },
@@ -459,14 +459,14 @@
      "n": 19
     },
     {
-     "tag": "http",
-     "title": "HTTP и веб",
+     "tag": "vue",
+     "title": "Vue",
      "share": 0.319,
      "n": 15
     },
     {
-     "tag": "vue",
-     "title": "Vue",
+     "tag": "http",
+     "title": "HTTP и веб",
      "share": 0.319,
      "n": 15
     },
@@ -774,14 +774,14 @@
      "n": 5
     },
     {
-     "tag": "http",
-     "title": "HTTP и веб",
+     "tag": "python",
+     "title": "Python",
      "share": 0.231,
      "n": 3
     },
     {
-     "tag": "python",
-     "title": "Python",
+     "tag": "http",
+     "title": "HTTP и веб",
      "share": 0.231,
      "n": 3
     },
@@ -821,26 +821,26 @@
      "n": 5
     },
     {
-     "tag": "postgresql",
-     "title": "PostgreSQL",
-     "share": 0.133,
-     "n": 2
-    },
-    {
      "tag": "api-testing",
      "title": "Тестирование API",
      "share": 0.133,
      "n": 2
     },
     {
-     "tag": "kafka",
-     "title": "Kafka",
+     "tag": "python",
+     "title": "Python",
      "share": 0.133,
      "n": 2
     },
     {
-     "tag": "python",
-     "title": "Python",
+     "tag": "postgresql",
+     "title": "PostgreSQL",
+     "share": 0.133,
+     "n": 2
+    },
+    {
+     "tag": "kafka",
+     "title": "Kafka",
      "share": 0.133,
      "n": 2
     }
@@ -856,18 +856,6 @@
      "n": 14
     },
     {
-     "tag": "rabbitmq",
-     "title": "RabbitMQ",
-     "share": 0.867,
-     "n": 13
-    },
-    {
-     "tag": "postgresql",
-     "title": "PostgreSQL",
-     "share": 0.867,
-     "n": 13
-    },
-    {
      "tag": "redis",
      "title": "Redis",
      "share": 0.867,
@@ -876,6 +864,18 @@
     {
      "tag": "python",
      "title": "Python",
+     "share": 0.867,
+     "n": 13
+    },
+    {
+     "tag": "rabbitmq",
+     "title": "RabbitMQ",
+     "share": 0.867,
+     "n": 13
+    },
+    {
+     "tag": "postgresql",
+     "title": "PostgreSQL",
      "share": 0.867,
      "n": 13
     },
@@ -892,8 +892,8 @@
      "n": 12
     },
     {
-     "tag": "http",
-     "title": "HTTP и веб",
+     "tag": "rest-api",
+     "title": "REST API",
      "share": 0.8,
      "n": 12
     },
@@ -904,8 +904,8 @@
      "n": 12
     },
     {
-     "tag": "rest-api",
-     "title": "REST API",
+     "tag": "http",
+     "title": "HTTP и веб",
      "share": 0.8,
      "n": 12
     },
@@ -922,14 +922,14 @@
      "n": 2
     },
     {
-     "tag": "javascript",
-     "title": "JavaScript",
+     "tag": "django",
+     "title": "Django",
      "share": 0.133,
      "n": 2
     },
     {
-     "tag": "django",
-     "title": "Django",
+     "tag": "javascript",
+     "title": "JavaScript",
      "share": 0.133,
      "n": 2
     },
@@ -975,14 +975,14 @@
      "n": 5
     },
     {
-     "tag": "java",
-     "title": "Java",
+     "tag": "ci-cd",
+     "title": "CI/CD",
      "share": 0.4,
      "n": 4
     },
     {
-     "tag": "ci-cd",
-     "title": "CI/CD",
+     "tag": "java",
+     "title": "Java",
      "share": 0.4,
      "n": 4
     },
@@ -993,8 +993,8 @@
      "n": 4
     },
     {
-     "tag": "docker",
-     "title": "Docker",
+     "tag": "python",
+     "title": "Python",
      "share": 0.3,
      "n": 3
     },
@@ -1005,20 +1005,20 @@
      "n": 3
     },
     {
-     "tag": "python",
-     "title": "Python",
-     "share": 0.3,
-     "n": 3
-    },
-    {
-     "tag": "nlp",
-     "title": "NLP",
+     "tag": "docker",
+     "title": "Docker",
      "share": 0.3,
      "n": 3
     },
     {
      "tag": "kafka",
      "title": "Kafka",
+     "share": 0.3,
+     "n": 3
+    },
+    {
+     "tag": "nlp",
+     "title": "NLP",
      "share": 0.3,
      "n": 3
     },
@@ -1082,14 +1082,14 @@
      "n": 6
     },
     {
-     "tag": "python",
-     "title": "Python",
+     "tag": "asyncio",
+     "title": "asyncio",
      "share": 0.357,
      "n": 5
     },
     {
-     "tag": "asyncio",
-     "title": "asyncio",
+     "tag": "python",
+     "title": "Python",
      "share": 0.357,
      "n": 5
     },
@@ -1141,14 +1141,14 @@
      "n": 11
     },
     {
-     "tag": "airflow",
-     "title": "Airflow",
+     "tag": "python",
+     "title": "Python",
      "share": 0.769,
      "n": 10
     },
     {
-     "tag": "python",
-     "title": "Python",
+     "tag": "airflow",
+     "title": "Airflow",
      "share": 0.769,
      "n": 10
     },
@@ -1207,14 +1207,14 @@
      "n": 3
     },
     {
-     "tag": "http",
-     "title": "HTTP и веб",
+     "tag": "nlp",
+     "title": "NLP",
      "share": 0.154,
      "n": 2
     },
     {
-     "tag": "nlp",
-     "title": "NLP",
+     "tag": "http",
+     "title": "HTTP и веб",
      "share": 0.154,
      "n": 2
     },
@@ -1242,8 +1242,8 @@
      "n": 6
     },
     {
-     "tag": "git",
-     "title": "Git",
+     "tag": "spark",
+     "title": "Spark",
      "share": 0.6,
      "n": 6
     },
@@ -1254,8 +1254,8 @@
      "n": 6
     },
     {
-     "tag": "spark",
-     "title": "Spark",
+     "tag": "git",
+     "title": "Git",
      "share": 0.6,
      "n": 6
     },
@@ -1414,14 +1414,14 @@
      "n": 12
     },
     {
-     "tag": "docker",
-     "title": "Docker",
+     "tag": "python",
+     "title": "Python",
      "share": 0.917,
      "n": 11
     },
     {
-     "tag": "python",
-     "title": "Python",
+     "tag": "docker",
+     "title": "Docker",
      "share": 0.917,
      "n": 11
     },
@@ -1485,8 +1485,8 @@
      "n": 6
     },
     {
-     "tag": "sql",
-     "title": "SQL",
+     "tag": "ci-cd",
+     "title": "CI/CD",
      "share": 0.545,
      "n": 6
     },
@@ -1497,8 +1497,8 @@
      "n": 6
     },
     {
-     "tag": "ci-cd",
-     "title": "CI/CD",
+     "tag": "sql",
+     "title": "SQL",
      "share": 0.545,
      "n": 6
     },
@@ -1615,6 +1615,12 @@
      "n": 12
     },
     {
+     "tag": "typescript",
+     "title": "TypeScript",
+     "share": 0.75,
+     "n": 9
+    },
+    {
      "tag": "react",
      "title": "React",
      "share": 0.75,
@@ -1623,12 +1629,6 @@
     {
      "tag": "git",
      "title": "Git",
-     "share": 0.75,
-     "n": 9
-    },
-    {
-     "tag": "typescript",
-     "title": "TypeScript",
      "share": 0.75,
      "n": 9
     },
@@ -1757,14 +1757,14 @@
    "n": 14,
    "top": [
     {
-     "tag": "javascript",
-     "title": "JavaScript",
+     "tag": "typescript",
+     "title": "TypeScript",
      "share": 0.786,
      "n": 11
     },
     {
-     "tag": "typescript",
-     "title": "TypeScript",
+     "tag": "javascript",
+     "title": "JavaScript",
      "share": 0.786,
      "n": 11
     },
@@ -1781,14 +1781,14 @@
      "n": 8
     },
     {
-     "tag": "state-management",
-     "title": "Управление состоянием (Redux, Zustand)",
+     "tag": "html-css",
+     "title": "HTML и CSS",
      "share": 0.5,
      "n": 7
     },
     {
-     "tag": "html-css",
-     "title": "HTML и CSS",
+     "tag": "state-management",
+     "title": "Управление состоянием (Redux, Zustand)",
      "share": 0.5,
      "n": 7
     },
@@ -1841,8 +1841,8 @@
      "n": 3
     },
     {
-     "tag": "postgresql",
-     "title": "PostgreSQL",
+     "tag": "frontend-testing",
+     "title": "Тесты фронтенда (Vitest, Jest)",
      "share": 0.214,
      "n": 3
     }
@@ -1982,14 +1982,14 @@
    "n": 12,
    "top": [
     {
-     "tag": "manual-testing",
-     "title": "Ручное тестирование",
+     "tag": "test-design",
+     "title": "Тест-дизайн",
      "share": 0.583,
      "n": 7
     },
     {
-     "tag": "test-design",
-     "title": "Тест-дизайн",
+     "tag": "manual-testing",
+     "title": "Ручное тестирование",
      "share": 0.583,
      "n": 7
     },
@@ -2024,14 +2024,14 @@
      "n": 3
     },
     {
-     "tag": "postgresql",
-     "title": "PostgreSQL",
+     "tag": "rest-api",
+     "title": "REST API",
      "share": 0.167,
      "n": 2
     },
     {
-     "tag": "rest-api",
-     "title": "REST API",
+     "tag": "postgresql",
+     "title": "PostgreSQL",
      "share": 0.167,
      "n": 2
     }
@@ -2107,6 +2107,12 @@
      "n": 2
     },
     {
+     "tag": "linux",
+     "title": "Linux",
+     "share": 0.2,
+     "n": 2
+    },
+    {
      "tag": "csharp",
      "title": "C#",
      "share": 0.2,
@@ -2115,12 +2121,6 @@
     {
      "tag": "docker",
      "title": "Docker",
-     "share": 0.2,
-     "n": 2
-    },
-    {
-     "tag": "linux",
-     "title": "Linux",
      "share": 0.2,
      "n": 2
     },
@@ -2148,6 +2148,12 @@
      "n": 6
     },
     {
+     "tag": "python",
+     "title": "Python",
+     "share": 0.357,
+     "n": 5
+    },
+    {
      "tag": "postgresql",
      "title": "PostgreSQL",
      "share": 0.357,
@@ -2156,12 +2162,6 @@
     {
      "tag": "sql",
      "title": "SQL",
-     "share": 0.357,
-     "n": 5
-    },
-    {
-     "tag": "python",
-     "title": "Python",
      "share": 0.357,
      "n": 5
     },
@@ -2184,6 +2184,12 @@
      "n": 4
     },
     {
+     "tag": "test-design",
+     "title": "Тест-дизайн",
+     "share": 0.214,
+     "n": 3
+    },
+    {
      "tag": "rest-api",
      "title": "REST API",
      "share": 0.214,
@@ -2192,12 +2198,6 @@
     {
      "tag": "http",
      "title": "HTTP и веб",
-     "share": 0.214,
-     "n": 3
-    },
-    {
-     "tag": "test-design",
-     "title": "Тест-дизайн",
      "share": 0.214,
      "n": 3
     },
@@ -2249,14 +2249,14 @@
      "n": 2
     },
     {
-     "tag": "http",
-     "title": "HTTP и веб",
+     "tag": "network-security",
+     "title": "Сетевая безопасность",
      "share": 0.182,
      "n": 2
     },
     {
-     "tag": "network-security",
-     "title": "Сетевая безопасность",
+     "tag": "http",
+     "title": "HTTP и веб",
      "share": 0.182,
      "n": 2
     }
