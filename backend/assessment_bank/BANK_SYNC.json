@@ -1,16 +1,16 @@
 {
   "source": "../bank",
-  "commit": "161b9c1",
+  "commit": "82aa359",
   "dirty_files": 0,
-  "content_hash": "f563cfcaebf63aef",
-  "synced_at": "2026-10-11T14:15:28+00:00",
-  "n_families": 342,
+  "content_hash": "cba1e486e274e873",
+  "synced_at": "2026-10-11T15:43:24+00:00",
+  "n_families": 361,
   "by_direction": {
     "analyst": {
-      "families": 26,
+      "families": 31,
       "canary": 0,
       "formats": {
-        "mcq_concept": 7,
+        "mcq_concept": 12,
         "predict_output": 5,
         "open_answer": 5,
         "find_bug": 5,
@@ -90,10 +90,10 @@
       }
     },
     "mobile": {
-      "families": 29,
+      "families": 34,
       "canary": 0,
       "formats": {
-        "mcq_concept": 11,
+        "mcq_concept": 16,
         "open_answer": 5,
         "find_bug": 7,
         "choose_fix": 5,
@@ -101,11 +101,11 @@
       }
     },
     "qa": {
-      "families": 30,
+      "families": 35,
       "canary": 1,
       "formats": {
         "open_book_3step": 2,
-        "mcq_concept": 8,
+        "mcq_concept": 13,
         "find_bug": 9,
         "choose_fix": 2,
         "open_answer": 4,
@@ -113,12 +113,12 @@
       }
     },
     "security": {
-      "families": 31,
+      "families": 35,
       "canary": 1,
       "formats": {
         "find_bug": 9,
         "predict_output": 3,
-        "mcq_concept": 6,
+        "mcq_concept": 10,
         "choose_fix": 6,
         "open_answer": 5,
         "open_book_3step": 2
@@ -232,42 +232,41 @@
   "excluded": [],
   "validation": {
     "summary": {
-      "n_families": 342,
-      "n_variants_generated": 6840,
-      "n_unique_variants": 6816,
-      "n_checks": 2219,
+      "n_families": 361,
+      "n_variants_generated": 7220,
+      "n_unique_variants": 7196,
+      "n_checks": 2276,
       "n_checks_failed": 0,
       "status": {
-        "PASS": 322,
+        "PASS": 341,
         "WARN": 20
       },
       "n_fail": 0,
       "n_warn": 20,
       "by_direction": {
-        "analyst": 26,
+        "analyst": 31,
         "backend": 52,
         "common": 46,
         "data_eng": 29,
         "data_ml": 34,
         "devops": 30,
         "frontend": 35,
-        "mobile": 29,
-        "qa": 30,
-        "security": 31
+        "mobile": 34,
+        "qa": 35,
+        "security": 35
       },
       "by_format": {
-        "mcq_concept": 79,
+        "mcq_concept": 98,
         "predict_output": 65,
         "open_answer": 57,
         "find_bug": 67,
         "choose_fix": 52,
         "open_book_3step": 22
       },
-      "seconds": 181.9
+      "seconds": 458.8
     },
     "seeds": 20,
     "verify_seeds": 3,
     "where": "сервер проверок (готовый отчёт)"
-  },
-  "note": "161b9c1 = 705e743 + перенос psychometrics/gpcm.py и cat.py из платформы (Я27); семейства те же, отчёт валидатора — 705e743 (20 seed)"
+  }
 }
