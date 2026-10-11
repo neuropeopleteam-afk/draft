@@ -114,7 +114,7 @@ export function validationText(e: any): string {
   // русский текст своего валидатора (Value error, …) — как есть
   const own = /[а-яё]/i.test(raw);
   const why = own ? raw : PYDANTIC_RU[e?.type]?.(e?.ctx) ?? "неверное значение";
-  if (own && !ru) return raw;
+  if (own && (!ru || raw.toLowerCase().startsWith(ru.toLowerCase()))) return raw;
   return ru ? `${ru}: ${why}` : `Проверьте поля формы: ${why}`;
 }
 
