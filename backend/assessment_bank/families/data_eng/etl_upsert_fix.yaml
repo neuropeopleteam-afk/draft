@@ -1,0 +1,25 @@
+family_id: data_eng.etl.upsert_fix
+title: ETL — загрузка изменений через INSERT OR REPLACE затирает created_at (upsert)
+direction: data_eng
+skills: [etl, upsert, incremental_load, sql]
+target_grades: [junior, middle]
+format: choose_fix
+language: sql
+invariants:
+  code_lines: [2, 2]
+  operations: [2, 2]
+  n_options: 4
+  extra:
+    subtype: replace_vs_upsert
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.1
+  a: 1.2
+  sigma_variant: 0.25
+  basis: "Запрос загрузки 2 строки (INSERT OR REPLACE), симптом — сброс created_at; верное — ON CONFLICT DO UPDATE изменяемых полей; три почти верных фиксированного состава (OR IGNORE, UPDATE … FROM, upsert с created_at). Нужно знать, что REPLACE удаляет строку. Граница Junior/Middle"
+generator: assessment_bank.families.data_eng.etl_upsert_fix
+version: 1
+description: >
+  Выбрать запрос загрузки, который вставляет новые записи, обновляет существующие и сохраняет created_at.
+  Каждый вариант исполняется в sqlite3, целевая таблица сверяется с эталоном.

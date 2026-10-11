@@ -1,0 +1,23 @@
+family_id: data_ml.strategy.ml_platform_open
+title: Стратегия ML-платформы — объём от боли, строить или брать, внедрение без принуждения, риски моделей
+direction: data_ml
+skills: [technical_strategy, mlops, ml_systems, model_governance, ml_monitoring]
+target_grades: [principal]
+format: open_answer
+language: text
+invariants:
+  extra:
+    pains: [lead_time, silent_decay, cost]
+    criteria: [scope, build_buy, adoption, governance, metrics]
+time_limit_s: 1800
+canary: false
+prior_difficulty:
+  b: 2.7
+  a: 1.0
+  sigma_variant: 0.35
+  basis: "Априорная трудность (не по людям). Стратегия для многих ML-команд при ограниченной команде платформы: объём от боли (путь до продакшна, тихие деградации, стоимость), явные отказы, строить или брать, внедрение через пилоты без приказа, управление рисками моделей, влияющих на клиентов, метрики. Lead обычно перечисляет компоненты MLOps без приоритета и цены сопровождения — граница Lead/Principal (θ ≈ 2,75); σ 0,35"
+generator: assessment_bank.families.data_ml.strategy_ml_platform_open
+version: 1
+description: >
+  Principal: стратегия ML-платформы компании на год при заданной боли и требованиях к рискам моделей. Пять
+  критериев рубрики; оценка с цитатами-доказательствами.

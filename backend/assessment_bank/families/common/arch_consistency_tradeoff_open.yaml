@@ -1,0 +1,25 @@
+family_id: common.arch.consistency_tradeoff_open
+title: Модель согласованности для каждой операции — строгая, чтение своих записей, устарелость, итоговая — и её цена
+direction: common
+skills: [data_consistency, distributed_systems, system_design, replication, architecture]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    ops_pool: [debit, reserve, username, profile, chat, price, likes, feed]
+    twists: [partition, failover, all_strict]
+    criteria: [op1, op2, op3, mechanism, twist, verify]
+    scale: "0–4"
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 2.0
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Три операции с разными требованиями (одна — инвариант, требующий строгой согласованности; две — чтение своих записей, монотонное чтение, ограниченная устарелость или итоговая), механизм на каждую и цена в задержке и доступности, плюс особенность варианта (разрыв связи регионов, переключение лидера при асинхронной репликации, «сделать всё строгим» при межрегиональном круге больше p99). Senior обычно делит на «строго/нестрого» без промежуточных моделей и без цены — граница Senior/Lead (θ ≈ 2,0); рубрика 0–4 по шести критериям, σ 0,3"
+generator: assessment_bank.families.common.arch_consistency_tradeoff_open
+version: 1
+description: >
+  Lead: выбор модели согласованности для трёх операций системы с репликацией, механизм, цена решения и ответ
+  на особенность варианта. Рубрика 0–4 по критериям; оценка с цитатами-доказательствами.

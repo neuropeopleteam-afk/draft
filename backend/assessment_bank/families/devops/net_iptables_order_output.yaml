@@ -1,0 +1,25 @@
+family_id: devops.net.iptables_order_output
+title: Сети — цепочка INPUT iptables, порядок правил и вставка -I
+direction: devops
+skills: [networking, iptables, firewall, linux]
+target_grades: [junior, middle]
+format: predict_output
+language: bash
+invariants:
+  code_lines: [8, 10]
+  operations: [8, 10]
+  extra:
+    subtype: first_match_insert
+    packets: 4
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: -0.2
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "Политика и 6–7 правил -A, одна вставка -I INPUT 1–3 (выполнена не первой); 4 новых TCP-соединения; нужно применить «первое совпадение», учесть позицию -I, -s по CIDR и политику; в каждом варианте вставка меняет хотя бы один ответ. Граница Junior/Middle"
+generator: assessment_bank.families.devops.net_iptables_order_output
+version: 1
+description: >
+  Предсказать действие (ACCEPT/DROP/REJECT) для четырёх пакетов по цепочке INPUT, собранной командами -P/-A/-I.
+  Ключ — расчёт генератора; проверка — исполнение модели, разбирающей показанные команды.

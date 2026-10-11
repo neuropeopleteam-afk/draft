@@ -90,8 +90,9 @@ def bank_manifest() -> dict:
 
 @lru_cache(maxsize=4)
 def _pool(n_subpools: int) -> tuple[PoolItem, ...]:
-    # без флага GRADES_EXT_ENABLED семейства только Lead/Principal в тест не попадают (catalog.levels.pool_specs)
-    return tuple(pool_from_specs(grade_levels.pool_specs(load_specs().values()), n_subpools=n_subpools))
+    from app.modules.catalog.ext import active_specs  # без GRADES_EXT_ENABLED — без семейств только Lead/Principal
+
+    return tuple(pool_from_specs(active_specs(load_specs().values()), n_subpools=n_subpools))
 
 
 @lru_cache(maxsize=1)

@@ -97,9 +97,9 @@ def test_issued_after_category_and_valid_publicly(client):
     pub = _public(client, pid)
     assert pub["status"]["state"] == "valid" and pub["status"]["title"] == "Действителен"
     claims = pub["passport"]
-    assert claims["id"] == pid and claims["schema"] == "vstrechny.grade-passport/1"
+    assert claims["id"] == pid and claims["schema"] == "draft.grade-passport/1"
     assert claims["category"]["id"] == "backend.middle" and claims["grade_status"] == "confirmed"
-    assert claims["issuer"]["name"] == "Встречный" and claims["issuer"]["test_key"] is True  # в тестах ключа нет
+    assert claims["issuer"]["name"] == "Драфт" and claims["issuer"]["test_key"] is True  # в тестах ключа нет
     assert claims["assessment"]["theta"] is not None and claims["assessment"]["test_date"]
     assert 0 <= claims["assessment"]["p_grade_or_higher"] <= 1
     assert claims["skills_t1"], "навыки, подтверждённые заданиями (T1)"

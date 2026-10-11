@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Alert, DIRECTIONS, Loading, useApi } from "../ui";
+import { Alert, DIRECTION_TITLES, Loading, useApi } from "../ui";
 import { ScrollX } from "../A11y";
 import { ProvenanceLine } from "./Provenance";
 
@@ -92,7 +92,7 @@ function Body({ r }: { r: any }) {
         <summary className="cursor-pointer font-semibold text-brand-night">По направлениям и воспроизведение</summary>
         <div className="mt-3">
           <Table head={["Направление", "Заявили Junior", "Предварительных", "Ложных предварительных", "Ложные отказы до → после", "После дотестирования предварительных"]}
-            rows={dirs.map(([d, v]) => { const p = v.policies?.app ?? {}; const l = p.confirm?.attempts?.[p.confirm.attempts.length - 1]; return [DIRECTIONS[d] ?? d, intRu(p.after?.n_claimed_junior), `${intRu(p.after?.provisional)} (${pct(p.after?.share?.provisional)})`, `${intRu(p.after?.false_provisional)} (${pct(p.after?.false_provisional_share)})`, `${intRu(p.before?.false_rejected)} → ${intRu(p.after?.false_rejected)}`, l ? `${intRu(l.still_provisional)} из ${intRu(p.confirm?.n_provisional)}` : "—"]; })} />
+            rows={dirs.map(([d, v]) => { const p = v.policies?.app ?? {}; const l = p.confirm?.attempts?.[p.confirm.attempts.length - 1]; return [DIRECTION_TITLES[d] ?? d, intRu(p.after?.n_claimed_junior), `${intRu(p.after?.provisional)} (${pct(p.after?.share?.provisional)})`, `${intRu(p.after?.false_provisional)} (${pct(p.after?.false_provisional_share)})`, `${intRu(p.before?.false_rejected)} → ${intRu(p.after?.false_rejected)}`, l ? `${intRu(l.still_provisional)} из ${intRu(p.confirm?.n_provisional)}` : "—"]; })} />
         </div>
         <p className="mt-3 text-brand-ink/70">
           Пересчёт: <code className="rounded bg-[#F3F2FB] px-1.5 py-0.5">make stability</code> ({intRu(r.seconds)} с), seed {r.seed}{r.signature ? <>, конфигурация <code>{r.signature.config_hash}</code>, коммит <code>{r.signature.commit}</code></> : null}; отчёт построен {r.generated_at?.slice(0, 10).split("-").reverse().join(".")}. Данные: backend/app/modules/validation/data/junior_stability.json.

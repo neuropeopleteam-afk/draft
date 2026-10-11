@@ -1,0 +1,24 @@
+family_id: data_eng.sql.window_rank_output
+title: "SQL — топ-k по группе: ROW_NUMBER, RANK, DENSE_RANK при равных значениях"
+direction: data_eng
+skills: [sql, window_functions, reporting]
+target_grades: [junior, middle]
+format: predict_output
+language: sql
+invariants:
+  code_lines: [9, 9]
+  operations: [8, 8]
+  extra:
+    subtype: ties_in_ranking
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 0.0
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "CTE с оконной функцией (ROW_NUMBER/RANK/DENSE_RANK) и фильтр r <= 1 или 2; 6–8 строк в двух группах с равными значениями; в каждом варианте хотя бы две функции дают разный результат. Граница Junior/Middle"
+generator: assessment_bank.families.data_eng.sql_window_rank_output
+version: 1
+description: >
+  Предсказать результат «топ-k по группе» при равных значениях для ROW_NUMBER/RANK/DENSE_RANK. Ключ — исполнение
+  запроса в sqlite.

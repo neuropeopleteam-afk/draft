@@ -1,0 +1,24 @@
+family_id: security.crypto.hmac_canonical_bug
+title: Безопасность — неоднозначная склейка полей под HMAC
+direction: security
+skills: [hmac, secure_code_review, cryptography, python]
+target_grades: [middle, senior]
+format: find_bug
+language: python
+invariants:
+  code_lines: [10, 30]
+  operations: [5, 50]
+  defect_type: ambiguous_mac_encoding
+  extra: {subtype: concat_without_delimiters}
+time_limit_s: 300
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.3
+  sigma_variant: 0.2
+  basis: "Порог Middle/Senior: 13–16 значащих строк, две функции в переменном порядке; дефект — склейка полей без границ (каноничность сообщения под MAC), ловушки — compare_digest, срок, порядок аргументов hmac.new. Условие описывает симптом (подпись подошла к другому сообщению). Исполняемый ключ, один подтип."
+generator: assessment_bank.families.security.hmac_canonical_bug
+version: 1
+description: >
+  Добор 10.10 (порог M/S, security): подпись HMAC от неоднозначной склейки полей. Исполнение: подпись законного
+  сообщения не принимается для сообщения со сдвинутой границей полей.
