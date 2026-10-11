@@ -5,9 +5,10 @@ import { CompactCard } from "../../components/CompactCard";  // Я10: компа
 import { NeedScope, scopeOptions } from "../../components/NeedScope";  // Я10: что проверено тестом по потребности
 import { StatusCounts } from "../../components/GradeStatus";
 import { PageTitle } from "../../components/CabinetLayout";
-import { Alert, DIRECTIONS, Empty, Field, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, plural, range, useApi } from "../../components/ui";
+import { Alert, Empty, Field, LevelLegend, Loading, Modal, Toggle, catTitle, dtt, errText, plural, range, useApi } from "../../components/ui";
 import { useGrades } from "../../lib/grades";
 import { api } from "../../lib/api";
+import { useDirectionEntries } from "../../lib/meta";
 import { LlmOff } from "../../components/LlmOff";
 import { BiasPanel, QuotedText, reqMarks, type BiasHit, type Ev } from "../../components/Quotes";
 import { InviteForm, ProbeForm, inviteSentText, probeSentText } from "./Contact";
@@ -171,6 +172,7 @@ function Row({ id, label, status, ev, focus, onFocus, onConfirm, onDelete, child
 /** Разбор потребности: у каждого требования — цитата из текста; работодатель подтверждает, правит или удаляет. */
 export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChange: (r: Req) => void; focus?: string | null; onFocus?: (k: string | null) => void }) {
   const levels = useGrades(req.direction);  // с флагом GRADES_EXT_ENABLED — и Lead/Principal, если их проверяет тест
+  const dirEntries = useDirectionEntries();
   const tags = useTags();
   const [add, setAdd] = useState("");
   const [tune, setTune] = useState(false);  // Ф6 (В5): веса навыков — по запросу
@@ -235,7 +237,7 @@ export function ReqEditor({ req, onChange, focus, onFocus }: { req: Req; onChang
         <ul className="space-y-2">
           {sRow("direction", "Направление", (
             <select aria-label="Направление" className={sel} value={req.direction ?? ""} onChange={(e) => setScalar("direction", { direction: e.target.value || null })}>
-              <option value="">не указано</option>{Object.entries(DIRECTIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              <option value="">не указано</option>{dirEntries.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>))}
           {sRow("grade", "Грейд", (
             <select aria-label="Грейд" className={sel} value={req.grade ?? ""} onChange={(e) => setScalar("grade", { grade: e.target.value || null })}>

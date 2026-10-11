@@ -41,7 +41,7 @@ PATH. Без них соответствующие проверки помеча
 | Поле YAML | Смысл |
 |---|---|
 | `family_id` | `направление.область.имя`, например `common.sql.left_join_count` |
-| `direction` | common, backend, frontend, data_ml, qa, security |
+| `direction` | common, backend, frontend, data_ml, qa, security; с волны 7 — devops, data_eng, mobile, analyst |
 | `skills`, `target_grades` | навыки (теги, которые платформа сводит к своему каталогу); intern / junior / middle / senior — `intern` («Стажёр») помечает лёгкие семейства у порога Junior (b ≲ −1) и в CAT не участвует |
 | `language` | python, javascript, typescript, sql, bash, text, go, java, dockerfile, yaml |
 | `format` | find_bug, predict_output, choose_fix, open_book_3step, mcq_concept, open_answer |
@@ -158,6 +158,110 @@ Kafka, сборщик мусора JVM), ключ проверяется исп�
 `data_ml.stats.mean_median_output` (среднее и медиана с выбросом), `qa.pytest.float_assert_bug`
 (точное сравнение float, `pytest.approx`), `security.logging.password_in_log_bug` (пароль в журнале).
 
+### Добор у порогов Junior/Middle и Middle/Senior (10.10)
+
+Цель — точность теста, а не число заданий: у порогов Junior/Middle (θ = 0) и Middle/Senior (θ = 1) по калибровке
+панели (модель, не люди) мало семейств с высокой различающей способностью (у порога M/S в security — ни одного).
+Слабые семейства (низкая дискриминация, ответы на уровне угадывания, разброс между вариантами) собраны
+`tools/weak_families.py` в `reports/weak_families.{md,json}` — это список-кандидат на исключение из адаптивного пула.
+Различимость вариантов любого семейства проверяет `tools/check_family_variants.py`.
+
+Добавлено 17 семейств, все с ключом, проверяемым исполнением, одним подтипом дефекта и фиксированным составом
+дистракторов; prior a = 1,3, b — у своей границы (обоснование в `basis`). Калибровка — отдельным прогоном панели.
+
+| Семейство | Формат | Порог | Проверка ключа |
+|---|---|---|---|
+| `security.web.ssrf_allowlist_fix` | choose_fix | M/S | законные и атакующие URL (userinfo, суффикс домена, схема) |
+| `security.session.fixation_bug` | find_bug | J/M | подставленный идентификатор сессии после входа не даёт доступа |
+| `security.crypto.hmac_canonical_bug` | find_bug | M/S | подпись не подходит к сообщению со сдвинутой границей полей |
+| `security.access.bulk_owner_check_bug` | find_bug | J/M | пакет «свой + чужой» отклоняется целиком |
+| `security.auth.token_audience_bug` | find_bug | M/S | токен без `aud`, с чужим `aud`, истёкший, чужого издателя — отклонены |
+| `frontend.state.optimistic_rollback_fix` | choose_fix | M/S | Node: откат после подтверждённых изменений |
+| `frontend.js.object_key_order_output` | predict_output | M/S | Node и модель порядка ключей объекта |
+| `data_ml.ml.purged_split_fix` | choose_fix | M/S | разрыв перед тестовым блоком на разных (n, k, H) |
+| `data_ml.metrics.pooled_rate_bug` | find_bug | J/M | итоговая доля — отношение сумм |
+| `data_ml.features.lag_window_leak_bug` | find_bug | J/M | признак не зависит от цели своей строки |
+| `data_ml.features.target_encoding_oof_fix` | choose_fix | M/S | независимость от цели своего фолда и эталонный расчёт |
+| `qa.mock.called_once_bug` | find_bug | J/M | обвязка pytest: исправленный тест ловит мутанта |
+| `qa.mutation.survivors_output` | predict_output | M/S | прогон тестов на мутантах |
+| `qa.pytest.fixture_scope_state_bug` | find_bug | M/S | тесты по одному и во всех порядках |
+| `qa.pytest.raises_too_broad_bug` | find_bug | J/M | правильная реализация и мутант с другим исключением |
+| `backend.cache.stampede_fix` | choose_fix | M/S | asyncio: N одновременных промахов — одна загрузка; ошибка не кэшируется |
+| `common.sql.window_range_ties_output` | predict_output | M/S | SQLite и модель рамки RANGE по умолчанию |
+
+Тесты добора — `tests/test_bank_core_plus.py`; счётчик в `tests/test_bankfix.py` считает только шесть исходных
+направлений (165 + добор), новые направления проверяются своими тестами.
+
+### Мобильная разработка и аналитик (волна 7, 10–11.10)
+
+Направления `mobile` («Мобильная разработка») и `analyst` («Системный / бизнес-аналитик») — 22 и 19 семейств
+уровней intern–senior (плюс Lead/Principal — отдельные семейства с префиксом `lead_`/`principal_`). Каждое — параметрический
+генератор с ≥ 20 различимыми вариантами (`tools/check_family_variants.py --direction mobile --direction analyst`).
+Kotlin и Swift в песочнице не исполняются: для них «найди ошибку» с ключом от модели на Python (поток выполнения,
+владение ссылками, потоки UI), концептуальные вопросы — с моделью жизненного цикла или справочной таблицей. JS/TS —
+исполняется в Node. Текстовые модели аналитика (машины состояний UML, BPMN, таблицы решений, контракты API, JSON
+Schema, процессы) вкладываются в программу проверки дословно и разбираются ею — ключ считается по показанному тексту.
+
+| Семейства | Формат | Уровни | Проверка ключа |
+|---|---|---|---|
+| `mobile.js.*` (token_refresh, offline_queue, double_submit, deeplink_route, cursor_pagination, background_timer, version_gate, retry_backoff) | choose_fix / find_bug / predict_output | I–S | Node: модели сервера, сети, таймеров |
+| `mobile.kotlin.*`, `mobile.swift.*` | find_bug / mcq_concept | J–S | модель на Python (главный поток, retain cycle, Flow и жизненный цикл) |
+| `mobile.android.*`, `mobile.ios.*`, `mobile.push.*`, `mobile.security.*` | mcq_concept | I–S | модель жизненного цикла / справочная таблица |
+| `mobile.storage.sqlite_migration_bug` | find_bug | I/J | sqlite: миграция схемы |
+| `mobile.perf.frame_budget_mcq`, `mobile.perf.cold_start_mcq` | mcq_concept | J–S | бюджет кадра; критический путь холодного старта |
+| `mobile.arch.offline_sync_open`, `mobile.release.release_quality_open` | open_answer | S | рубрика |
+| `analyst.sql.*` (null_aggregate, funnel_distinct, not_in_null, join_fanout, retention_cohort) | predict_output / find_bug / choose_fix | I–S | sqlite |
+| `analyst.er.cardinality_ddl_fix` | choose_fix | J/M | sqlite с внешними ключами: сценарии вставки из требования |
+| `analyst.uml.state_machine_output`, `analyst.uml.state_rule_bug` | predict_output / find_bug | I–M | разбор машины состояний (16 контекстов) |
+| `analyst.bpmn.gateway_trace_output`, `analyst.bpmn.join_mismatch_bug` | predict_output / find_bug | I–S | путь через XOR; игра фишек на Python |
+| `analyst.req.acceptance_scenario_mcq`, `analyst.req.decision_table_mcq`, `analyst.req.rice_priority_mcq` | mcq_concept | I–M | разбор сценариев Gherkin; перебор комбинаций таблицы; RICE по таблице |
+| `analyst.api.json_schema_validate_output` | predict_output | I/J | мини-валидатор подмножества JSON Schema |
+| `analyst.api.breaking_change_mcq`, `analyst.api.idempotency_contract_mcq` | mcq_concept | M/S | модель совместимости контракта; событийная модель повторов |
+| `analyst.process.bottleneck_capacity_output` | predict_output | M/S | мощность шагов с долей XOR и циклом доработки (Fraction) |
+| `analyst.req.nfr_open`, `analyst.arch.integration_open` | open_answer | S | рубрика |
+
+Имена навыков (`skills`) — из словаря каталога платформы (направления mobile/analyst, `skill_map`); тесты потока —
+`tests/test_wave7_mobile_analyst.py` (состав, покрытие уровней, трудность против уровней, различимость, данные
+машин состояний). prior_difficulty — априорная, до калибровки панелью.
+
+### Уровни Lead и Principal: common, backend, frontend, data_ml, devops, data_eng (волна 7, 11.10)
+
+46 семейств уровней Lead и Principal: common — 11 (7 Lead, 4 Principal), backend, frontend, data_ml, devops,
+data_eng — по 7 (на направление ≥ 4 Lead и ≥ 2 Principal). Соглашения:
+
+- `target_grades` — только `[lead]` или `[principal]` (без senior): продукт скрывает их одним условием, пока
+  расширение грейдов выключено; в счёт 165 семейств прежних направлений они не входят.
+- `prior_difficulty.b`: Lead 1,6–2,0, Principal 2,5–2,8 (диапазон карточки 1,6–3,2); `basis` начинается с
+  «Априорная трудность (не по людям)» и объясняет, где проходит граница Senior/Lead или Lead/Principal.
+- В devops и data_eng имена файлов — с префиксом `lead_`/`principal_`.
+- Открытые ответы (`open_answer`) — кейсы с числами в условии: ответ без расчёта по этим числам не получает
+  высших баллов. Рубрика — 4–6 критериев с весами (сумма 1,0), шкала 0–4 по каждому критерию, оценка требует
+  цитат из ответа; эталоны сильного, среднего и слабого ответа — в варианте.
+- `choose_fix` — по схеме 2×2: из пула правил выбираются два, варианты — верный, нарушено первое, нарушено второе,
+  нарушены оба; у вариантов свои локальные имена и необязательные строки. Ключ проверяется исполнением
+  (python, node, sqlite) на сценариях, где каждое нарушение даёт неверный итог.
+- `mcq_concept` — числовые и «стратегические» вопросы, ключ которых считает программа (`numeric_mcq`: модель
+  очереди, событий, лет-сценариев и т. п., не формула генератора); ответ-пара (`lead_burn_rate_mcq`) и политики
+  хранения (`principal_tiering_mcq`) — по схеме 2×2.
+- Ключ не угадывается по форме вариантов: самый длинный, самый короткий, «центральный», «краевой» и «ни разу
+  не крайний» дают ≤ 0,45 при случайном 0,25 (тест). У расчётных вопросов с числом в подписи ключ не угадывается
+  и по месту числа среди четырёх: ловушки берутся из пула ошибок с обеих сторон от верного значения (завышающие
+  и занижающие), сколько их ниже ключа — равновероятно, подписи одной длины (три значащие цифры, двузначные
+  числа) — тест `test_key_not_guessable_by_value_rank`, ≤ 0,45.
+
+| Направление | Lead | Principal | Проверка ключа |
+|---|---|---|---|
+| common | `arch.design_review_open`, `incident.postmortem_open`, `arch.capacity_design_open`, `arch.consistency_tradeoff_open` (open); `arch.availability_chain_mcq`, `arch.retry_amplification_mcq`, `arch.queue_workers_mcq` (mcq) | `strategy.tech_strategy_open`, `process.tech_debt_portfolio_open` (open); `strategy.migration_plan_mcq`, `strategy.tco_horizon_mcq` (mcq) | рубрика; программы: цепочка доступности, усиление повторов, очередь, план миграции, TCO по годам |
+| backend | `arch.single_flight_fix`, `arch.outbox_relay_fix` (choose_fix); `review.pr_lead_open`, `arch.idempotent_payments_open` (open) | `strategy.monolith_split_open`, `strategy.sharding_plan_open` (open); `strategy.blast_radius_mcq` (mcq) | asyncio-тест; модель базы и брокера с падением в каждой точке; исходы событий с весами |
+| frontend | `arch.optimistic_update_fix` (choose_fix, node); `arch.perf_budget_mcq` (mcq); `review.client_arch_open`, `arch.rendering_strategy_open`, `arch.realtime_collab_open` (open) | `strategy.legacy_migration_open`, `strategy.design_system_platform_open` (open) | поддельный API с порядком ответов и отказами; критический путь загрузки |
+| data_ml | `exp.duration_cuped_mcq`, `serving.lead_batching_mcq` (mcq); `review.ml_system_open`, `arch.recsys_serving_open`, `eval.llm_eval_open` (open) | `strategy.ml_platform_open`, `strategy.llm_adoption_open` (open) | длительность теста с CUPED; очередь GPU с динамическим пакетированием |
+| devops | `sre.lead_burn_rate_mcq`, `k8s.lead_rollout_capacity_mcq` (mcq); `mon.lead_observability_open`, `ci.lead_cicd_platform_open` (open) | `strategy.principal_dr_open`, `strategy.principal_platform_eng_open` (open); `strategy.principal_dr_cost_mcq` (mcq) | поминутный расход бюджета SLO; ёмкость при выкатке; годы-сценарии DR |
+| data_eng | `stream.lead_watermark_mcq` (mcq); `dwh.lead_scd2_merge_fix` (choose_fix, sqlite); `review.lead_pipeline_review_open`, `etl.lead_cdc_design_open` (open) | `strategy.principal_platform_open`, `strategy.principal_governance_open` (open); `strategy.principal_tiering_mcq` (mcq) | события с водяным знаком; два запуска SCD2 на sqlite против модели на Python; помесячный проигрыш уровней хранения |
+
+Тест потока — `tests/test_lead_principal_a.py` (состав, уровни, трудность, пометка в обосновании, рубрики,
+≥ 20 различимых вариантов, префиксы, угадывание по форме и по месту числа, вне счёта 165). prior_difficulty — априорная, до
+калибровки панелью.
+
 ### Правки по флагам панели 06.10 (версии 2)
 
 `qa.js.brittle_render_fix` и `common.text.utf8_truncate_fix` — фиксированный состав дистракторов;
@@ -228,6 +332,62 @@ find_bug) и `backend.java.list_remove_loop_fix` (Junior/Middle, choose_fix с �
   «Сервис (…)», поэтому в самом контексте слово «сервис» не повторяется.
 * **Правка только текста не меняет порядок обращений к `rng`**: иначе меняются ключи и
   параметры вариантов, и калибровка семейства теряет силу.
+
+### Уровни Lead и Principal: qa, security, mobile, analyst (волна 7)
+
+28 семейств — по 7 на направление (4 Lead, 3 Principal), файлы `<направление>/lead_*.py` и `principal_*.py`,
+`target_grades` — ровно один из `lead`, `principal`. Трудность — априорная (`prior_difficulty` с `basis`): Lead
+b 1,7–2,0, Principal b 2,5–2,6, a 1,1–1,3; калибровка — общим прогоном панели. Без флага уровней Lead/Principal
+продукт эти семейства не выдаёт.
+
+Форматы и проверка:
+* **mcq_concept с расчётом** — ключ печатает программа по тем же числам, что видит кандидат (перебор, точные дроби,
+  целочисленный поиск); дистракторы — модели типичных ошибок, числа подобраны так, что каждая ошибка даёт другой
+  ответ, а приближённый расчёт — тот же ключ.
+* **choose_fix на модуле целиком** — каждая замена исполняется в составе модуля на одних и тех же сценариях
+  (Python, Node, SQLite).
+* **open_answer** — рубрика 0–4 по критериям, каждый балл подтверждается дословной цитатой из ответа (доказательная
+  оценка); ревью документов — в выдержку вставлены 3 проблемы из пула 7 среди верных разделов, критерии — по
+  вставленным проблемам и приоритизация.
+* **Защита от угадывания по форме** — дистракторы choose_fix и двухчастных ответов строятся по схеме 2×2
+  (`factorial_distractors`: нарушено одно правило, другое, оба), у числовых ответов ранг верного по seed
+  равномерен, у выбора из фиксированных решений ключ по seed распределён поровну. Тест
+  `test_key_not_guessable_by_option_form`: самый длинный / короткий / «центральный» / «краевой» вариант угадывает
+  ключ не чаще 0,45 (случайный выбор — 0,25).
+
+| Семейство | Формат | Уровень | Содержание | Проверка ключа |
+|---|---|---|---|---|
+| `qa.lead.retry_gate_fix` | choose_fix | Lead | политика перезапусков и карантина в конвейере MR | Python, 8 сценариев |
+| `qa.lead.retry_tradeoff_mcq` | mcq_concept | Lead | повторы упавших тестов: ложные красные против пропуска нестабильности | расчёт |
+| `qa.lead.quality_investment_mcq` | mcq_concept | Lead | одно вложение в качество по полным затратам на релиз | модель этапов |
+| `qa.lead.test_plan_review_open` | open_answer | Lead | ревью плана тестирования | рубрика 0–4 |
+| `qa.principal.test_budget_mcq` | mcq_concept | Principal | регрессия в бюджет: транзитивное влияние, перекрытие | перебор подмножеств |
+| `qa.principal.quality_program_review_open` | open_answer | Principal | ревью программы качества организации | рубрика 0–4 |
+| `qa.principal.quality_strategy_open` | open_answer | Principal | стратегия качества | рубрика 0–4 |
+| `security.lead.authz_policy_fix` | choose_fix | Lead | политика доступа с делегированием и блокировками | Python, сценарии |
+| `security.lead.key_rotation_mcq` | mcq_concept | Lead | ротация ключа подписи токенов без отказов | модель кэшей |
+| `security.lead.token_length_mcq` | mcq_concept | Lead | длина токена против распределённого многоцелевого подбора | целочисленный поиск |
+| `security.lead.design_review_open` | open_answer | Lead | ревью дизайна обмена документами | рубрика 0–4 |
+| `security.principal.fix_order_mcq` | mcq_concept | Principal | очерёдность исправления по ожидаемому ущербу | перебор 120 порядков |
+| `security.principal.architecture_review_open` | open_answer | Principal | ревью многоарендной платформы | рубрика 0–4 |
+| `security.principal.security_strategy_open` | open_answer | Principal | стратегия безопасности | рубрика 0–4 |
+| `mobile.lead.sync_rebase_fix` | choose_fix | Lead | офлайн-синхронизация, конфликты по полям | Node, 8 сценариев |
+| `mobile.lead.api_sunset_mcq` | mcq_concept | Lead | отключение старого API при хвосте версий | расчёт |
+| `mobile.lead.startup_path_mcq` | mcq_concept | Lead | холодный старт: критический путь до первого кадра | граф зависимостей |
+| `mobile.lead.design_review_open` | open_answer | Lead | ревью дизайна ленты | рубрика 0–4 |
+| `mobile.principal.rollout_segments_mcq` | mcq_concept | Principal | выкатка по сегментам: интервал доли сбоев против порога | интервал Уилсона |
+| `mobile.principal.architecture_review_open` | open_answer | Principal | ревью мультибрендового приложения | рубрика 0–4 |
+| `mobile.principal.mobile_strategy_open` | open_answer | Principal | мобильная стратегия | рубрика 0–4 |
+| `analyst.lead.state_model_bug` | find_bug | Lead | модель состояний: обход повторного одобрения | модель на Python |
+| `analyst.lead.metric_definition_fix` | choose_fix | Lead | определение конверсии когорты в запросе дашборда | SQLite |
+| `analyst.lead.sla_chain_mcq` | mcq_concept | Lead | доступность операции по цепочке, самое дешёвое достаточное | расчёт |
+| `analyst.lead.spec_review_open` | open_answer | Lead | ревью спецификации интеграции | рубрика 0–4 |
+| `analyst.principal.launch_effect_mcq` | mcq_concept | Principal | эффект запуска: разность разностей внутри сегментов | точные дроби |
+| `analyst.principal.target_architecture_review_open` | open_answer | Principal | ревью целевой архитектуры единого профиля | рубрика 0–4 |
+| `analyst.principal.analyst_strategy_open` | open_answer | Principal | стратегия системного анализа | рубрика 0–4 |
+
+Тесты — `tests/test_lead_principal_b.py` (состав, имена и уровни, диапазон b, рубрики 0–4 с цитатами, ≥ 20
+различимых вариантов, защита от угадывания по форме).
 
 ## Что проверяет валидатор
 

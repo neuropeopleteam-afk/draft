@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PageTitle } from "../components/CabinetLayout";
-import { Alert, catTitle, DIRECTIONS, dtt, Empty, errText, Loading, num, Seg, signed, useApi } from "../components/ui";
+import { Alert, DIRECTION_TITLES, Empty, Loading, Seg, catTitle, dtt, errText, num, signed, useApi } from "../components/ui";
 import { api } from "../lib/api";
 
 type Mode = "pending" | "llm" | "reviewed";
@@ -56,7 +56,7 @@ function ReviewItem({ it, mode, onDone }: { it: any; mode: Mode; onDone: () => v
     <article className="card">
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <span className="chip">{FORMAT[it.format] ?? it.format}</span>
-        <span className="text-brand-ink/65">Кандидат {it.candidate_ref ?? "—"} · {DIRECTIONS[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
+        <span className="text-brand-ink/65">Кандидат {it.candidate_ref ?? "—"} · {DIRECTION_TITLES[it.direction] ?? it.direction} · заявлен {catTitle(`${it.direction}.${it.claimed_grade}`)} · задание {it.position} · {dtt(it.at)}</span>
         {it.session_status === "finished" && it.status === "pending" && <span className="chip bg-brand-blush text-brand-plum">результат предварительный</span>}
         {it.llm?.second && <span className="chip bg-[#ECEAF8] text-brand-night" title={`Причины второй оценки: ${(it.llm.checks ?? []).join(", ")}`}>Две оценки: {it.llm.model_label ?? "LLM"} {num(it.llm.scores?.[0])} · {it.llm.second.model_label ?? "вторая"} {it.llm.second.score == null ? "—" : num(it.llm.second.score)}{it.llm.error === "graders_disagree" || it.llm.second.verdict === "disagree" ? " — разошлись" : ""}{it.llm.second.status === "pending" ? " — вторая оценка выполняется" : it.llm.second.after_finish ? " (вторая — в фоне, после итога теста)" : ""}</span>}
         {it.llm?.error === "prompt_injection_suspected" && <span className="chip bg-brand-night text-white" title={it.llm.injection_note ?? undefined}>Похоже на инструкции оценщику — LLM не вызывался</span>}

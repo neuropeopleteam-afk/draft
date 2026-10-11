@@ -24,7 +24,7 @@ from app.core.fmt import probe_title, quoted, ru_num, theta_se
 from app.modules.auth.models import User
 from app.modules.catalog.models import Category
 from app.modules.catalog import levels as grade_levels
-from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, STACK
+from app.modules.catalog.seed_data import GRADE_LEVEL, GRADES, tag_title
 from app.modules.catalog.seed_data import category_title
 from app.modules.profiles.facts import (
     GRADE_STATUS_ORDER,
@@ -277,7 +277,7 @@ def score_candidate(b: Bundle, req: dict) -> tuple[float, dict, list[dict]]:
         got = 0.0
         for i in items:
             tag, w = i["tag"], i["weight"]
-            title = STACK.get(tag, (tag,))[0]
+            title = tag_title(tag)
             f = b.skills_t1.get(tag)
             if skill_confirmed(f):
                 got += w * f.value.get("score", 0)

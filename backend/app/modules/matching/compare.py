@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 from app.core.enums import ProbeStatus
 from app.core.fmt import probe_title, quoted, ru_num
 from app.modules.catalog.models import Category
-from app.modules.catalog.seed_data import DIRECTIONS, GRADE_LEVEL, GRADES, STACK, category_title
+from app.modules.catalog.seed_data import DIRECTION_TITLES, GRADES, GRADE_LEVEL, category_title, tag_title
 from app.modules.contact.salary import to_net
 from app.modules.invitations.models import Invitation, Probe
 from app.modules.invitations.service import cooldown_until, profile_by_ref
@@ -133,7 +133,7 @@ def why_pairs(items: list[dict], req: dict) -> list[dict]:
                 if abs(d) >= 0.05:
                     pc = (lambda v: f"{v * 100:.0f} %" if v else "не подтверждено")
                     factors.append({"level": "T1", "points": d, "a": pc(ta), "b": pc(tb),
-                                    "label": f"{label} {STACK.get(it['tag'], (it['tag'],))[0]}"})
+                                    "label": f"{label} {tag_title(it['tag'])}"})
         df = w["fsp"] * (a["comps"]["fsp"] - b["comps"]["fsp"]) * 100
         if abs(df) >= 0.05:
             fs = (lambda x: f"сила паспорта {_n(x['comps']['fsp'])}" if x["comps"]["fsp"] else "нет подтверждённых")
@@ -206,7 +206,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
     cats = {c.id: c for c in db.scalars(select(Category)).all()}
     want_grade = req.get("grade")
     want_title = (category_title(f"{req['direction']}.{want_grade}") if req.get("direction") and want_grade
-                  else GRADES.get(want_grade or "") or DIRECTIONS.get(req.get("direction") or ""))
+                  else GRADES.get(want_grade or "") or DIRECTION_TITLES.get(req.get("direction") or ""))
 
     rows: list[dict] = [
         {"key": "score", "group": "Итог", "title": "Соответствие потребности",
@@ -231,7 +231,7 @@ def compare(db: Session, company: Company, need: EmployerNeed, refs: list[str], 
                              + ("; при включённом признаке такой кандидат идёт ниже" if core_skill.enabled() else "")})
     for zone, label in (("stack_required", "Обязательно"), ("stack_desired", "Желательно")):
         for it in req.get(zone) or []:
-            rows.append({"key": f"stack:{it['tag']}", "group": label, "title": STACK.get(it["tag"], (it["tag"],))[0],
+            rows.append({"key": f"stack:{it['tag']}", "group": label, "title": tag_title(it["tag"]),
                          "weight": it.get("weight"), "quote": _quote(it)})
     if req.get("experience_years_min"):
         rows.append({"key": "experience", "group": "Фильтры (T0)", "title": "Опыт",

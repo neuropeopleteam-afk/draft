@@ -20,7 +20,7 @@ from app.modules.assignments import rubric as rub
 from app.modules.assignments import why as why_mod
 from app.modules.assignments.models import Assignment, AssignmentAttempt
 from app.modules.auth.models import User
-from app.modules.catalog.seed_data import STACK, category_title
+from app.modules.catalog.seed_data import category_title, known_tag, tag_title
 from app.modules.jury import scope as jury_scope
 from app.modules.matching.models import EmployerNeed
 from app.modules.notifications.mailer import notify
@@ -34,10 +34,6 @@ log = logging.getLogger(__name__)
 GRACE_S = 120  # после дедлайна ответ принимается ещё две минуты (как в кубке)
 SOURCE_REF = "assignment:"  # source_ref фактов: assignment:<attempt_id>
 SOURCE_TITLE = {"probe": "зонд с автопроверкой", "vacancy": "задание к вакансии", "feed": "задание из ленты"}
-
-
-def tag_title(t: str) -> str:
-    return STACK.get(t, (t,))[0]
 
 
 # ------------------------------------------------------------------ требования: откуда стек и категория
@@ -72,7 +68,7 @@ def requirements_from(db: Session, company: Company, *, need_id=None, vacancy_id
         out["vacancy_id"] = v.id
     if stack:
         out["stack"] = list(dict.fromkeys(list(stack) + out["stack"]))
-    out["stack"] = [t for t in out["stack"] if t in STACK]
+    out["stack"] = [t for t in out["stack"] if known_tag(t)]
     if not out["direction"] or not out["grade"]:
         raise api_error(422, "category_required", "Укажите направление и грейд (категорию) задания")
     return out

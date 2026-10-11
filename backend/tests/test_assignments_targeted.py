@@ -430,7 +430,11 @@ def test_jury_sandbox_targeted_demo(client):
     assert by["pending"]["approach_text"] and by["pending"]["why"]["headline"]
     tm = client.post("/api/jury/login", json={"persona": "candidate", "scenario": sid}).json()["access_token"]
     f = client.get("/api/candidate/assignments", headers=H(tm)).json()
-    assert f["demo"] is True and f["freshness"]["aging"] >= 3 and f["freshness"]["fresh"] >= 3
+    # «стареет» — навыки посеянного теста Марии (состарены на 130 дней), которых не коснулись задания. Сколько их, зависит
+    # от случайной формы теста (seed сессии и вариантов — криптостойкий ГСЧ): обычно 5, на полном прогоне встречалось 2,
+    # поэтому проверяем смысл демо — видны и «стареет», и «свежо», — а не точное число (раньше было ≥ 3: нестабильно)
+    fr = f["freshness"]
+    assert f["demo"] is True and fr["aging"] >= 1 and fr["fresh"] >= 3, {k: fr[k] for k in ("n", "fresh", "aging", "stale")}
     feed_item = next(x for x in f["items"] if x["source"] == "feed")
     assert feed_item["status"] == "offered" and feed_item["why"]["kind"] == "stale_skill" and feed_item["remind_count"] == 1
     assert f["schedule"]["blocked"] == "pending"

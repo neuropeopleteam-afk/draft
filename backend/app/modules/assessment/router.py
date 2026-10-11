@@ -12,6 +12,7 @@ from app.core.enums import UserRole
 from app.core.errors import err
 from app.modules.assessment import service
 from app.modules.auth.models import User
+from app.modules.catalog.ext import DirectionId
 from app.modules.catalog.seed_data import GRADE_ORDER as _GRADE_ORDER
 
 # уровни платформы: 4 (Стажёр–Senior), с флагом GRADES_EXT_ENABLED — 6 (+ Lead, Principal; catalog.levels)
@@ -23,7 +24,7 @@ candidate = require_role(UserRole.candidate)
 
 
 class StartIn(BaseModel):
-    direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = Field(
+    direction: DirectionId | None = Field(
         None, description="Направление опроса; без параметра — основное")
     claimed_grade: GradeId = Field(
         description="Предполагаемый грейд, выбранный кандидатом (intern — Стажёр, ниже Junior)")
@@ -117,7 +118,7 @@ def _session_out(db, ts) -> SessionOut:
 
 @router.get("/status", summary="Категория и грейд: статус, история опроса и тестов, правило 90 дней",
             responses=AUTH)
-def get_status(direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+def get_status(direction: DirectionId | None = None,
                user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     return service.status(db, user.id, direction)
 
@@ -221,7 +222,7 @@ def get_feedback(session_id: uuid.UUID | None = None, user: User = Depends(candi
                         "заданиям без контрольных. В демо-режиме жюри повтор доступен сразу (can_retake_now).",
             responses={**AUTH, 404: err("Сессия не найдена"), 409: err("Попытка ещё не завершена"),
                        422: err("different_directions / same_attempt / pair_required")})
-def get_attempts(direction: Literal["backend", "frontend", "data_ml", "qa", "security"] | None = None,
+def get_attempts(direction: DirectionId | None = None,
                  a: uuid.UUID | None = None, b: uuid.UUID | None = None,
                  user: User = Depends(candidate), db: Session = Depends(get_db)) -> dict:
     from app.modules.assessment.attempts import for_candidate

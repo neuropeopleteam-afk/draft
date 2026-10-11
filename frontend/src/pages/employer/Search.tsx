@@ -4,9 +4,10 @@ import { CandidateCard } from "../../components/CandidateCard";
 import { InterviewEmployerDetails } from "../../components/Interview";  // Я15: устная защита и ИИ-интервью
 import { PageTitle } from "../../components/CabinetLayout";
 import { StatusCounts } from "../../components/GradeStatus";
-import { Alert, DIRECTIONS, Empty, Field, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi } from "../../components/ui";
+import { Alert, Empty, Field, LevelLegend, Loading, Modal, Seg, Status, Toggle, dt, useApi } from "../../components/ui";
 import { useGrades } from "../../lib/grades";
 import { apiDownload } from "../../lib/api";
+import { useDirectionEntries } from "../../lib/meta";
 import { InviteForm, ProbeForm, inviteBlockedText, inviteSentText, probeSentText } from "./Contact";
 import { useTags } from "./Needs";
 import { PassportEmployerBadge } from "../../passport/Share";
@@ -17,6 +18,7 @@ const PAGE = 20;
 
 export function Search() {
   const tags = useTags();
+  const dirEntries = useDirectionEntries();
   const [direction, setDirection] = useState("");
   const [grade, setGrade] = useState("");
   const [stack, setStack] = useState<string[]>([]);
@@ -46,7 +48,7 @@ export function Search() {
         <aside className="card h-fit space-y-4">
           <Field label="Специализация" htmlFor="sd">
             <select id="sd" className="input" value={direction} onChange={(e) => { setDirection(e.target.value); setStack([]); setPage(0); }}>
-              <option value="">все</option>{Object.entries(DIRECTIONS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              <option value="">все</option>{dirEntries.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
             </select>
           </Field>
           <Field label="Грейд" htmlFor="sg">

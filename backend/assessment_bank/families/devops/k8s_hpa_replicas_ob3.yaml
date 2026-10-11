@@ -1,0 +1,28 @@
+family_id: devops.k8s.hpa_replicas_ob3
+title: Kubernetes — расчёт реплик как в HPA, округление вниз (открытая книга)
+direction: devops
+skills: [kubernetes, autoscaling, python, capacity_planning]
+target_grades: [middle, senior]
+format: open_book_3step
+language: python
+invariants:
+  code_lines: [8, 8]
+  operations: [6, 6]
+  defect_type: floor_instead_of_ceil
+  n_options: 4
+  extra:
+    subtypes: [floor]
+    step3_conditions: [flapping, multi_metric, unready_pods]
+time_limit_s: 900
+canary: false
+prior_difficulty:
+  b: 0.9
+  a: 1.2
+  sigma_variant: 0.3
+  step_offsets: [-0.5, 0.1, 0.8]
+  basis: "Функция 8 строк по формуле HPA с int() вместо ceil; шаг 1 — выбрать сценарий с дробным произведением среди «в допуске», «целое произведение», «упор в maxReplicas»; шаг 2 — три почти верных округления фиксированного состава (round, int()+1, ceil(ratio)·current); шаг 3 — флаппинг/окно стабилизации, несколько метрик, неготовые поды. Граница Middle/Senior"
+generator: assessment_bank.families.devops.k8s_hpa_replicas_ob3
+version: 1
+description: >
+  Собственный расчёт числа реплик по формуле HPA округляет вниз. Шаг 1 — сценарий, воспроизводящий дефект;
+  шаг 2 — исправление; шаг 3 — развёрнутый ответ по рубрике. Шаги 1–2 проверяются исполнением в Python.
