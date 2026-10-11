@@ -19,6 +19,9 @@
   **Lead/Principal** (флаг GRADES_EXT_ENABLED, пометка «предварительно» — catalog.levels): если границы по правилу выше
   нет, второй этап всё равно предлагается — граница «ext» у порога своего уровня (Senior/Lead для Lead, Lead/Principal
   для Principal): точность различения этих уровней одной сессией ниже цели (docs/validation/GRADES_EXT_NEED.md).
+  То же, если заявленный Lead/Principal доказан с P ≥ L, но не присвоен только потолком полного теста (погрешность
+  одной сессии больше ``GRADES_EXT_MAX_SE``): граница «ext» у его порога — вторая сессия сужает погрешность. Итог
+  уточнения Lead/Principal — тоже только при общей погрешности не больше ``GRADES_EXT_MAX_SE``.
   Шкала уровней — направления (``catalog.levels.available_grades``): выше уровня, который банк направления не
   проверяет, ни граница, ни итог не поднимаются.
 * **До уточнения** уровень — по первой сессии (не выше, чем позволяет она), с пометкой «на границе: можно уточнить».
@@ -112,6 +115,10 @@ def boundary(theta: float | None, se: float | None, grade: str | None, claimed: 
         return Boundary(grade, g, float(GRADE_CUTS[g]), probs[g], kind)
     if ext and grade in EXT_GRADE_ORDER and grade in order:  # Lead/Principal «предварительно»: порог своего уровня
         return Boundary(grade, grade, float(GRADE_CUTS[grade]), p_at_least(theta, se, grade), "ext")
+    capped = [g for g in rel if ext and g in EXT_GRADE_ORDER and _rank(g) > _rank(grade) and probs[g] >= level]
+    if capped:  # заявленный Lead/Principal доказан, но срезан потолком одной сессии (погрешность) — второй этап
+        g = capped[-1]
+        return Boundary(grade, g, float(GRADE_CUTS[g]), probs[g], "ext")
     if above > 0 and _rank(grade) >= _rank(claimed):
         ups = [g for g in order if _rank(g) > _rank(claimed) and p_at_least(theta, se, g) >= above]
         if ups:
@@ -207,6 +214,12 @@ def _ext(grade: str | None) -> bool:
     return bool(levels.ext_preliminary(grade))
 
 
+def _ext_max_se() -> float:
+    from app.core.config import get_settings
+
+    return float(getattr(get_settings(), "grades_ext_max_se", 0.6))
+
+
 def params() -> dict:
     """Настройки двухэтапного подтверждения (app.core.config)."""
     from app.core.config import get_settings
@@ -265,7 +278,7 @@ def session_boundary(ts, p: dict | None = None) -> Boundary | None:
     er = r.get("engine_result") or {}
     g = session_grade(ts)
     return boundary(er.get("theta"), er.get("se"), g, ts.claimed_grade_id, level=p["level"], above=p["above"],
-                    order=_order(ts.direction_id), ext=_ext(g))
+                    order=_order(ts.direction_id), ext=_ext(g) or (_ext(ts.claimed_grade_id) and g not in EXT_GRADE_ORDER))
 
 
 def label(b: dict) -> str:
@@ -321,7 +334,14 @@ def offer(db, ts) -> dict | None:
     text = (f"Уровень {label(bd)}: одна сессия теста не отделяет эти уровни уверенно. Можно уточнить уровень "
             f"за 10–{p['minutes']} минут — до {p['items']} коротких заданий у этой границы из новых семейств; "
             "итог считается по ответам обеих сессий вместе и может оказаться как выше, так и ниже нынешнего.")
-    if b.kind == "ext":
+    if b.kind == "ext" and b.cut_grade != b.grade:  # заявленный Lead/Principal срезан потолком одной сессии
+        text = (f"{TITLE.get(b.cut_grade, b.cut_grade)} по этому тесту вероятен, но не присвоен: одной сессии мало, "
+                f"чтобы уверенно отделить {TITLE.get(bd['lower'], bd['lower'])} от {TITLE.get(b.cut_grade, b.cut_grade)} "
+                f"(погрешность шире допустимой для Lead/Principal). Второй этап — до {p['items']} коротких заданий у "
+                f"этой границы из новых семейств, 10–{p['minutes']} минут; итог считается по ответам обеих сессий вместе "
+                f"и может оказаться как выше, так и ниже нынешнего; {TITLE.get(b.cut_grade, b.cut_grade)} после него — "
+                "с пометкой «предварительно» (модель, не люди; /validation, «Lead и Principal»).")
+    elif b.kind == "ext":
         text = (f"{TITLE.get(b.grade, b.grade)} по тесту — предварительно. Второй этап — до {p['items']} коротких "
                 f"заданий у границы {TITLE.get(bd['lower'], bd['lower'])}/{TITLE.get(b.cut_grade, b.cut_grade)} из новых "
                 f"семейств, 10–{p['minutes']} минут; итог считается по ответам обеих сессий вместе и может оказаться как "
@@ -367,8 +387,11 @@ def refine_result(state: dict, theta: float, se: float, n_new: int) -> dict:
     """Итог уточнения для движка (bank_engine.finish): уровень по общей оценке обеих сессий."""
     rf = state.get("refine") or {}
     claimed = state.get("claimed_grade")
+    order = _order(state.get("direction"))
+    if float(se) > _ext_max_se():  # Lead/Principal — только при общей погрешности не шире, чем у полного теста (Я25)
+        order = tuple(g for g in order if g not in EXT_GRADE_ORDER)
     f = final_grade(theta, se, claimed, float(rf.get("confirm", DEFAULT_CONFIRM)),
-                    float(rf.get("confirm_up", DEFAULT_CONFIRM_UP)), order=_order(state.get("direction")))
+                    float(rf.get("confirm_up", DEFAULT_CONFIRM_UP)), order=order)
     if rf.get("floor") and _rank(f) < _rank(rf.get("grade") or "none"):  # итог не ниже первой сессии
         f = rf["grade"]
     cut_g = rf.get("cut_grade")

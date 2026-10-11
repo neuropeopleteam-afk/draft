@@ -55,6 +55,12 @@ def test_ext_boundary_second_stage_for_preliminary_lead():
     assert b and b.kind == "keep" and b.cut_grade == "lead"
     # Senior — не «предварительно»: ext не действует
     assert ts.boundary(1.6, 0.25, "senior", "senior", level=0.8, order=order, ext=True) is None
+    # заявлен Lead, P(θ ≥ 2,0) ≈ 0,92, но одна сессия с погрешностью 0,63 Lead не присваивает (потолок) — итог Senior;
+    # второй этап у порога Lead сужает погрешность
+    b = ts.boundary(2.88, 0.63, "senior", "lead", level=0.8, order=order, ext=True)
+    assert b and b.kind == "ext" and b.cut_grade == "lead" and b.grade == "senior"
+    assert ts.boundary(2.88, 0.63, "senior", "lead", level=0.8, order=order, ext=False) is None
+    assert ts.boundary(1.0, 0.5, "senior", "lead", level=0.8, order=order, ext=True) is None  # Lead маловероятен
 
 
 def test_final_grade_capped_by_direction_scale():
@@ -78,12 +84,22 @@ def test_offer_text_and_second_stage_flag(flag, monkeypatch):
     assert off["boundary"]["kind"] == "ext" and off["boundary"]["cut_grade"] == "lead"
     assert off["text"].startswith("Lead по тесту — предварительно. Второй этап")
     assert "Senior/Lead" in off["text"] and "модель, не люди" in off["text"]
+    # заявленный Lead срезан потолком одной сессии — тот же второй этап, свой текст
+    capped = SimpleNamespace(**{**vars(sess), "result": {"engine": "bank", "mode": "full",
+                                                         "engine_result": {"theta": 2.88, "se": 0.63, "confirmed": False}}})
+    monkeypatch.setattr(ts, "latest_full", lambda db, uid, d: capped)
+    off = ts.offer(None, capped)
+    assert off and off["ext"] and off["boundary"]["grade"] == "senior" and off["boundary"]["cut_grade"] == "lead"
+    assert off["text"].startswith("Lead по этому тесту вероятен, но не присвоен")
     # итог уточнения считается по шкале направления (qa — без Principal)
     st = {"claimed_grade": "lead", "direction": "qa",
           "refine": {"grade": "lead", "cut_grade": "lead", "lower": "senior", "cut": 2.0, "p": 0.98, "kind": "ext",
                      "confirm": 0.45, "confirm_up": 0.9}}
     r = ts.refine_result(st, 3.6, 0.2, 6)
     assert r["final_grade"] == "lead" and r["passed"] and r["label"] == "на границе Senior/Lead"
+    # общая погрешность шире GRADES_EXT_MAX_SE (0,6) — Lead/Principal и после второго этапа не присваиваются
+    r = ts.refine_result(st, 3.6, 0.65, 6)
+    assert r["final_grade"] == "senior" and not r["passed"]
     r = ts.refine_result({**st, "direction": "backend"}, 1.7, 0.3, 6)
     assert r["final_grade"] == "senior" and not r["passed"]  # вариант А: итог по двум сессиям может быть ниже
     assert "Senior" in ts.explain(r)
