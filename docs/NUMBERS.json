@@ -40,7 +40,7 @@
   "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "unknown",
+  "bench_commit": "25770a6",
   "bank_hash": "f563cfcaebf63aef",
   "generated_at": "2026-10-11T15:22:45+00:00",
   "p5": {
@@ -72,7 +72,7 @@
  },
  "grade_accuracy": {
   "confirm_level": 0.6,
-  "path_retest_commit": "unknown",
+  "path_retest_commit": "25770a6",
   "path_retest_at": "2026-10-11",
   "sweep_commit": "8f4d6d2",
   "sweep_points": 98,
