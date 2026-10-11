@@ -159,7 +159,7 @@ test("кандидат: устная защита в чате на заглуш�
     await talk(page, result, { voiceFirst: true, axeWhat: "разговор", shot: avatar ? "14-interview-room-avatar-1440.png" : "14-interview-room-1440.png" });
     await expect(result).toBeVisible({ timeout: 90_000 });
     await expect(result).toContainText(/Ответ подтверждён устно|Есть расхождения|Мало данных/);
-    await expect(result).toContainText("заглушка");
+    await expect(result).toContainText("демо");
     await axe(page, "итог разговора");
   });
   await test.step("работодатель: значок в карточке и подробности с цитатами", async () => {
