@@ -86,7 +86,7 @@ export function Snapshots() {
       </div>
       {(data.config ?? []).map((r: Prov & { note?: string }) => (
         <div key={r.src} className="mt-3 min-w-0 border-t border-brand-night/5 pt-2 text-sm" data-testid="snapshots-config">
-          <p className="text-xs font-semibold text-brand-night">Настройка движка: {r.title} <a href="#exposure" className="font-semibold text-brand-plum underline-offset-2 hover:underline">→ Частота показа</a></p>
+          <p className="text-xs font-semibold text-brand-night">Настройка движка: {r.title} <a href="#exposure" className="font-semibold text-brand-plum underline underline-offset-2">→ Частота показа</a></p>
           <ProvenanceLine p={r} className="mt-0.5" />
           {r.note && <p className="mt-1 max-w-4xl text-xs leading-relaxed text-brand-ink/70">{r.note}</p>}
         </div>
