@@ -86,9 +86,26 @@ export function JuryGuide() {
   const [mode, setMode] = useState<GuideMode>(quick.mode());  // Я9: «12 минут» или справочник
   const qSteps = useQuickSteps(), QUICK_LEN = qSteps.length;  // 8 или 9 (устная защита по флагу)
   const [q, setQ] = useQuickStep(qSteps, mode, loc.pathname, me?.email);
+  // С2 №4: на телефоне, пока эксперт печатает в поле страницы, панель сворачивается в кнопку — не закрывает кнопку действия
+  // под полем («Разобрать требования»); возвращается с задержкой, чтобы нажатие на эту кнопку успело пройти
+  const phone = useMedia("(max-width: 639px)");
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    if (!phone) { setTyping(false); return; }
+    const isField = (el: Element | null) => !!el && !el.closest("aside") && el.matches("textarea, input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file]), [contenteditable=true]");
+    let t = 0;
+    const on = (e: FocusEvent) => { window.clearTimeout(t); if (isField(e.target as Element)) setTyping(true); };
+    const off = () => { window.clearTimeout(t); t = window.setTimeout(() => setTyping(isField(document.activeElement)), 400); };
+    document.addEventListener("focusin", on);
+    document.addEventListener("focusout", off);
+    return () => { window.clearTimeout(t); document.removeEventListener("focusin", on); document.removeEventListener("focusout", off); };
+  }, [phone]);
+  // С2 №3: на главной у вернувшегося эксперта проводник свёрнут в строку «Продолжить проверку», пока его не развернули
+  const [peek, setPeek] = useState(false);
+  useEffect(() => { if (loc.pathname !== "/") setPeek(false); }, [loc.pathname]);
   // «Показать проводник» с главной и «Скрыть» в другой вкладке — состояние берём из хранилища
   useEffect(() => {
-    const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); setQ(quick.step()); };
+    const sync = () => { setHidden(guide.hidden()); setMode(quick.mode()); setQ(quick.step()); setStep(guide.step()); };
     window.addEventListener(GUIDE_EVENT, sync);
     window.addEventListener("storage", sync);
     return () => { window.removeEventListener(GUIDE_EVENT, sync); window.removeEventListener("storage", sync); };
@@ -107,7 +124,13 @@ export function JuryGuide() {
   // телефон гостя живой демонстрации (/j/…) — без проводника: эксперт там не вошёл и проходит мини-тест;
   // экран кода второго фактора (/login/2fa) — тоже: на телефоне панель перекрывала бы форму
   if (!active || loc.pathname === "/" && !guide.on() || loc.pathname.startsWith("/j/") || loc.pathname === "/login/2fa") return null;
-  if (hidden) {
+  if (!hidden && loc.pathname === "/" && !peek) return (
+    <button ref={setBox} type="button" data-testid="guide-continue" onClick={() => setPeek(true)} aria-label="Развернуть проводник для жюри"
+      className="fixed bottom-3 right-3 z-40 rounded-full bg-brand-night px-3.5 py-2 text-xs font-semibold text-white shadow-lg hover:bg-brand-plum sm:bottom-4 sm:right-4 sm:px-4 sm:py-2.5 sm:text-sm">
+      {mode === "quick" ? `Продолжить проверку: шаг ${q + 1} из ${QUICK_LEN}` : `Продолжить проверку: шаг ${step + 1} из ${STEPS.length}`}
+    </button>
+  );
+  if (hidden || typing) {
     if (slot) return createPortal(
       <button type="button" onClick={() => guide.show()} aria-label="Показать проводник для жюри" title="Проводник для экспертов жюри"
         className={slot === slots.sidebar

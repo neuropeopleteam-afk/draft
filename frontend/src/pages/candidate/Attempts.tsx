@@ -50,7 +50,7 @@ export default function Attempts() {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageTitle title="Две попытки рядом" subtitle={`${DIRECTION_TITLES[data.direction ?? ""] ?? "Тест"}: что изменилось между попытками и почему. Повтор выдаётся из другого набора заданий банка.`} />
+      <PageTitle title="Две попытки рядом" subtitle={`${DIRECTION_TITLES[data.direction ?? ""] ?? "Тест"}: что изменилось между попытками и почему.`} />
       {items.length > 0 && <DefensePanel sessionId={items[items.length - 1].id} />}
       {items.length < 2 ? (
         <Empty title={items.length ? "Пока одна попытка" : "Попыток ещё нет"}

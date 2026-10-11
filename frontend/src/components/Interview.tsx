@@ -1,8 +1,8 @@
 // Я15: «устная защита» развёрнутых ответов теста и «ИИ-интервью» этапом найма. Всё — за флагом /api/meta interview.enabled
 // (по умолчанию выключен: компоненты ничего не рисуют). Честно: грейд не меняется, оценивает модель, решение — за людьми.
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { api, apiUrl, tokenStore } from "../lib/api";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { api, ApiError, apiUrl, tokenStore } from "../lib/api";
 import { useMeta } from "../lib/meta";
 import { PageTitle } from "./CabinetLayout";
 import { Alert, Loading, dt, errText, useApi } from "./ui";
@@ -123,11 +123,14 @@ export function minutes(n: number): string {
 export function DefensePanel({ sessionId }: { sessionId: string }) {
   const on = useInterviewOn();
   const { data: st, reload } = useApi<DefenseState>(on ? `/interview/defense/${sessionId}` : null, [on]);
-  const [open, setOpen] = useState(false);
+  // ?defense=open — с карточки «ИИ-интервьюер» на обзоре кандидата: форма согласия сразу раскрыта
+  const search = useLocation().search;
+  const [open, setOpen] = useState(() => new URLSearchParams(search).get("defense") === "open");
   const [name, setName] = useState("");
   const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [limited, setLimited] = useState(false);  // С2 №1: лимит живых запусков песочницы (429) — кнопка неактивна, пример раскрыт
   const navigate = useNavigate();
   useEffect(() => { if (st?.name_hint && !name) setName(st.name_hint); }, [st?.name_hint]);  // eslint-disable-line react-hooks/exhaustive-deps
   if (!on || !st?.enabled) return null;
@@ -137,7 +140,7 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
   async function start() {
     setBusy(true); setErr(null);
     try { const r = await api<IvSession>(`/interview/defense/${sessionId}`, { body: { name, consent: agree } }); navigate(`/candidate/interview/${r.id}`); }
-    catch (e) { setErr(errText(e)); } finally { setBusy(false); }
+    catch (e) { if (e instanceof ApiError && e.status === 429) setLimited(true); setErr(errText(e)); } finally { setBusy(false); }
   }
   async function remove() {
     if (!s) return;
@@ -168,7 +171,7 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
         <div className="space-y-3 rounded-xl border border-brand-night/10 p-3">
           <ConsentBox c={st.consent} name={name} setName={setName} agree={agree} setAgree={setAgree} idp={`def-${sessionId}`} />
           <div className="flex flex-wrap gap-2">
-            <button className="btn-primary" disabled={busy || !agree || !name.trim()} onClick={start} data-testid="interview-defense-start">{busy ? "Готовим вопросы…" : "Начать устную защиту"}</button>
+            <button className="btn-primary" disabled={busy || limited || !agree || !name.trim()} onClick={start} data-testid="interview-defense-start">{busy ? "Готовим вопросы…" : limited ? "Живой запуск уже был в этот час · откройте готовый пример" : "Начать устную защиту"}</button>
             <button className="btn-ghost" onClick={() => setOpen(false)}>Не сейчас</button>
           </div>
           {st.attempts_left != null && <p className="text-xs text-brand-ink/65">Сессий для этой попытки: {st.attempts_left} (при сбое связи можно ещё раз).</p>}
@@ -176,7 +179,7 @@ export function DefensePanel({ sessionId }: { sessionId: string }) {
       ) : <button className="btn-primary" onClick={() => setOpen(true)} data-testid="defense-open">Подтвердить устно</button>)}
       <Alert>{err}</Alert>
       {st.example && (
-        <details className="rounded-xl bg-brand-blush/20 p-3" open={!s} data-testid="defense-example">
+        <details key={limited ? "lim" : "ok"} className="rounded-xl bg-brand-blush/20 p-3" open={!s || limited} data-testid="defense-example">
           <summary className="cursor-pointer font-semibold text-brand-night">Готовый пример — {st.example.example_label}</summary>
           <div className="mt-2"><SessionResult s={st.example} /></div>
         </details>

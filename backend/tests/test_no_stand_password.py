@@ -24,8 +24,10 @@ def test_stand_password_not_in_repository():
     assert not hits, f"пароль стенда в файлах: {hits}"
 
 
-def test_ui_points_to_submission_materials_and_screen_has_no_password():
+def test_screens_have_no_stand_password():
+    # пароль со стенда снят (11.10, решение владельца): на главной и на «Входе» о пароле стенда — ни слова;
+    # сам пароль нигде в репозитории не лежит (тест выше)
     for rel in ("frontend/src/pages/Landing.tsx", "frontend/src/pages/Login.tsx"):
-        assert "в материалах сдачи" in (ROOT / rel).read_text(encoding="utf-8"), rel
+        assert "пароль стенда" not in (ROOT / rel).read_text(encoding="utf-8").lower(), rel
     screen = (ROOT / "frontend/src/ideas/live/Screen.tsx").read_text(encoding="utf-8").lower()
     assert "парол" not in screen.replace("без пароля стенда (базовая авторизация nginx)", "")  # в тексте экрана — ни слова

@@ -28,7 +28,7 @@ import { juryToken } from "../lib/jury";
 import { useHashScroll } from "../lib/hashScroll";
 import { useMeta } from "../lib/meta";
 import { ScrollX } from "../components/A11y";
-import { Fold, FoldAllButton, FoldProvider } from "../components/validation/Fold";  // SIMPLIFY п.3: разделы свёрнуты
+import { Fold, FoldAllButton, FoldGroup, FoldProvider } from "../components/validation/Fold";  // SIMPLIFY п.3: разделы свёрнуты
 
 const pct = (v?: number | null, d = 0) => (v == null ? "—" : `${(v * 100).toFixed(d).replace(".", ",")}\u00A0%`);
 const num = (v?: number | null, d = 2) => (v == null ? "—" : v.toFixed(d).replace(".", ","));
@@ -51,16 +51,18 @@ export default function Validation() {
           затем на {r?.experts?.model_panel ? "разметке модельной панели (не люди)" : "экспертной разметке"} и демо-данных. Пересчёт: <code className="rounded bg-white px-1.5 py-0.5 text-sm">make validate</code>.
         </p>
         <Headline />
-        <HowToRead />
-        <Fold><Snapshots /></Fold>
-        <Fold><ClosedSet /></Fold>
         {loading ? <div className="mt-8"><Loading /></div> : error ? <div className="mt-8"><Alert>{error}</Alert></div> : r?.missing
-          ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div>
-          : <Report r={r} />}
+          ? <div className="mt-8"><Alert kind="info">Отчёт ещё не построен: запустите make validate.</Alert></div> : null}
+        {r && !r.missing && !loading && !error ? <Report r={r} before={<Before />} /> : <FoldGroup><Before /></FoldGroup>}
       </main>
       <SiteFooter />
     </div></FoldProvider>
   );
+}
+
+/** «Как читать», снимки и закрытый набор — первыми внутри «Подробных расчётов» (FINAL-UX E). */
+function Before() {
+  return <><HowToRead /><Fold><Snapshots /></Fold><Fold><ClosedSet /></Fold></>;
 }
 
 /** SIMPLIFY п.3: короткое «как читать» простыми словами — под «5 чисел»; разделы ниже свёрнуты (Fold). */
@@ -72,14 +74,14 @@ function HowToRead() {
         Сверху — пять главных чисел. Под каждым подписано, на каких данных и когда оно посчитано. Ниже — разделы с подробностями:
         они свёрнуты, чтобы не мешать; нажмите на заголовок или «Показать раздел». «95 % ДИ» — диапазон, в котором число, скорее
         всего, окажется при пересчёте на другой случайной выборке. Синтетические кандидаты и модельная панель — модели, не люди:
-        они проверяют механику, а не рынок. В самом низу — «Красная кнопка»: атакуйте подбор сами.
+        они проверяют механику, а не рынок.
       </p>
       <FoldAllButton className="mt-2" />
     </div>
   );
 }
 
-function Report({ r }: { r: any }) {
+function Report({ r, before }: { r: any; before?: ReactNode }) {
   const sim = r.simulation ?? {};
   const dirs = Object.keys(sim.directions ?? {});
   const m = r.matching ?? {};
@@ -93,6 +95,10 @@ function Report({ r }: { r: any }) {
   const world = `${r.n_per_direction ?? "—"} синтетических кандидатов на направление × ${dirs.length}, банк ${rp.bank_n_families ?? "—"} семейств (коммит банка ${rp.bank_commit ?? "—"}), отчёт ${rdate || "—"}`;
   return (
     <AsOf.Provider value={{ date: rdate, world, prov: pv.stamp }}>
+      {/* FINAL-UX E: «Красная кнопка» — на виду сразу под «5 числами»; всё остальное — под «Подробные расчёты» */}
+      <RedButton attacks={r.attacks ?? []} />
+      <FoldGroup>
+      {before}
       <p className="mt-4 text-xs text-brand-ink/65" data-testid="report-signature">Отчёт симуляции построен {dtt(r.generated_at)} · {r.n_per_direction} синтетических кандидатов на направление · {num(r.seconds, 0)} с · банк расчёта: {rp.bank_n_families ?? "—"} семейств, коммит {rp.bank_commit ?? "—"}{pv.code_commit && pv.code_commit !== "unknown" ? ` · код стенда ${pv.code_commit}` : ""}</p>
       {bn.n_families != null && !rp.same_bank && <div className="mt-3"><Alert kind="info" ><b>Числа отчёта — на банке от {rp.bank_synced_at ? d10(rp.bank_synced_at) : rdate}.</b> Сейчас в банке {bn.n_families} семейств (синхронизирован {bn.synced_at ? d10(bn.synced_at) : "—"}, коммит {bn.commit ?? "—"}); полная симуляция теста на нём не пересчитывалась (make validate), поэтому таблицы ниже подписаны датой отчёта. Блоки «5 чисел» и «Весь путь дважды» посчитаны отдельно — их мир указан в подписи.</Alert></div>}
       <nav className="mt-6 flex flex-wrap gap-2 text-sm" aria-label="Разделы">
@@ -208,7 +214,7 @@ function Report({ r }: { r: any }) {
 
       <Fold><LiveUsers data={study} /></Fold>
       <Fold><SelfCheck opts={r.self_check} /></Fold>
-      <Fold><RedButton attacks={r.attacks ?? []} /></Fold>
+      </FoldGroup>
     </AsOf.Provider>
   );
 }
