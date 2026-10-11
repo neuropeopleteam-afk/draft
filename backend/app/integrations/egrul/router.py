@@ -60,6 +60,12 @@ def my_trust(bg: BackgroundTasks, user: User = Depends(employer), db: Session = 
     return trust_mod.compute(db, c)
 
 
+def _tariff_badge(db: Session, company_id) -> dict:
+    from app.modules.tariffs.service import badge
+
+    return badge(db, company_id)
+
+
 @router.get("/api/companies/{company_id}", summary="Профиль компании с индексом доверия (для кандидата)",
             responses={401: err("Не выполнен вход"), 404: err("Компания не найдена")})
 def company_profile(company_id: uuid.UUID, bg: BackgroundTasks, user: User = Depends(get_current_user),
@@ -74,6 +80,7 @@ def company_profile(company_id: uuid.UUID, bg: BackgroundTasks, user: User = Dep
                      .order_by(Vacancy.published_at.desc())).all()
     return {"id": str(c.id), "name": c.name, "industry": c.industry, "description": c.description,
             "website": c.website, "city": c.city, "inn": c.inn, "is_demo": c.is_demo,
+            **_tariff_badge(db, c.id),  # Я29: метка «Партнёр ФСП» — только при TARIFFS_ENABLED
             "trust": trust_mod.compute(db, c),
             "vacancies": [{"id": str(v.id), "title": v.title, "salary_from": v.salary_from, "salary_to": v.salary_to,
                            "category_id": v.category_id} for v in vac]}

@@ -15,9 +15,20 @@ export interface Meta {
   proctor_camera: boolean; // И16: камера во время теста (по согласию) включена на сервере
   voice_need?: { enabled: boolean; stub?: boolean; max_seconds: number; consent_version: string; consent_text: string };  // «Надиктовать»
   // сроки правил из настроек (backend/app/core/config.py): смена грейда, повтор после неудачи, повторное приглашение
-  rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number };
+  rules?: { grade_change_interval_days: number; retake_same_grade_days: number; invitation_cooldown_days: number; confirm_pct?: number };
   interview?: { enabled: boolean; stub: boolean; defense_minutes: number; avatar?: boolean }; // Я15: устная защита и ИИ-интервью (по умолчанию выкл.); avatar — свой образ интервьюера (В1)
   hh?: { enabled: boolean; stub: boolean }; // Я12: импорт своей вакансии с hh.ru и «Рынок по hh.ru» (HH_ENABLED и токен)
+  // Lead и Principal (GRADES_EXT_ENABLED): есть только при включённом флаге; уровни направления — те, для которых в банке
+  // есть проверенные семейства (backend/app/modules/catalog/levels.py)
+  grades_ext?: GradesExt;
+  tariffs?: { enabled: boolean; price_is_stub: boolean }; // Я29: тарифы работодателя и «Польза для ФСП» (TARIFFS_ENABLED)
+}
+
+export interface GradesExt {
+  enabled: boolean; grades: string[]; min_own: number; min_total: number;
+  preliminary?: boolean; // Lead/Principal — «предварительно» (GRADES_EXT_PRELIMINARY)
+  common: Record<string, number>;
+  by_direction: Record<string, { grades: string[]; families: Record<string, number> }>;
 }
 
 const Ctx = createContext<Meta | null>(null);

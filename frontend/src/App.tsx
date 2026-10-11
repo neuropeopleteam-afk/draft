@@ -59,10 +59,16 @@ const pg = {
   passport: () => import("./passport/VerifyPage"),
   criteria: () => import("./pages/Criteria"),  // К1: проверка по критериям ТЗ
   interview: () => import("./components/Interview"),  // Я15: разговор устной защиты и ИИ-интервью
+  tariffs: () => import("./pages/employer/Tariffs"),  // Я29: тарифы работодателя (TARIFFS_ENABLED)
+  fspBenefit: () => import("./ideas/fsp/Benefit"),  // Я29: «Польза для ФСП» и «Партнёры ФСП»
 };
 
 const CabinetLayout = lazyNamed(pg.cabinet, "CabinetLayout");
 const InterviewRoom = lazyNamed(pg.interview, "InterviewRoom");
+const TariffsPublic = lazyNamed(pg.tariffs, "default");
+const EmployerTariffs = lazyNamed(pg.tariffs, "EmployerTariffs");
+const FspBenefit = lazyNamed(pg.fspBenefit, "FspBenefit");
+const FspPartners = lazyNamed(pg.fspBenefit, "FspPartners");
 const StudyAbout = lazyNamed(pg.studyAbout, "default");
 const Expert = lazyNamed(pg.expert, "default");
 const ExpertAngoff = lazyNamed(pg.panel, "ExpertAngoff");
@@ -145,6 +151,7 @@ export default function App() {
       <Route path="/criteria" element={<Criteria />} />
       <Route path="/jury/go" element={<JuryGo />} />
       <Route path="/study" element={<StudyAbout />} />
+      <Route path="/tariffs" element={<TariffsPublic />} />
       <Route path="/jury/live" element={<LiveScreen />} />
       <Route path="/j/:code" element={<LiveGuest />} />
       <Route path="/expert" element={<CabinetLayout role="expert" alsoRoles={["admin"]} title="Кабинет эксперта" sections={panelSections} />}>
@@ -214,6 +221,7 @@ export default function App() {
         <Route path="cups/:id" element={<EmployerCup />} />
         <Route path="assignments" element={<EmployerAssignments />} />
         <Route path="assignments/:id" element={<EmployerAssignment />} />
+        <Route path="tariffs" element={<EmployerTariffs />} />
       </Route>
       <Route path="/fsp" element={<CabinetLayout role="fsp_analyst" alsoRoles={["admin"]} title="Кабинет ФСП" sections={fspSections} />}>
         <Route element={<FspReportLayout />}>
@@ -225,6 +233,8 @@ export default function App() {
           <Route path="cups" element={<FspCups />} />
           <Route path="method" element={<FspMethod />} />
         </Route>
+        <Route path="benefit" element={<FspBenefit />} />
+        <Route path="partners" element={<FspPartners />} />
         <Route path="security" element={<TwoFactorSettings />} />
       </Route>
       <Route path="*" element={<NotFound />} />

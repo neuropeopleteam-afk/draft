@@ -24,6 +24,16 @@ async function shot(page: Page, name: string): Promise<void> {
   await page.screenshot({ path: file, fullPage: true });
   await test.info().attach(name, { path: file, contentType: "image/png" });
 }
+/** Снимок блока; если страница ещё догружает соседние блоки (элемент «не стабилен») — снимок окна. */
+async function blockShot(page: Page, sec: Locator, name: string): Promise<void> {
+  await page.waitForLoadState("networkidle").catch(() => undefined);
+  try {
+    await sec.screenshot({ path: join(DIR, name), animations: "disabled", timeout: 30_000 });
+  } catch {
+    await sec.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(DIR, name) });
+  }
+}
 const noHScroll = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
 
 /** axe-core по контейнеру: нарушений critical/serious нет (остальные — в отчёт). */
@@ -168,4 +178,50 @@ test("/validation: блок «Разбор потребности на вака�
   await sec.scrollIntoViewIfNeeded();
   expect(await noHScroll(page), "/validation, 390 px").toBe(true);
   await sec.screenshot({ path: join(DIR, "validation-390.png") });
+});
+
+test("/validation: «Подбор на реальных вакансиях hh.ru» — подпись «кандидаты модельные», спрос, 1440 и 390 (Я12б)", async ({ page }) => {
+  const api = await apiContext();
+  const meta = await (await api.get("/api/meta")).json();
+  await api.dispose();
+  test.skip(!meta.hh?.enabled, "интеграция hh.ru выключена (HH_ENABLED)");
+  await page.goto("/validation#hh-match", { waitUntil: "domcontentloaded" });
+  const sec = page.locator("section#hh-match");
+  await expect(sec.getByRole("heading", { name: "Подбор на реальных вакансиях hh.ru" })).toBeVisible({ timeout: 60_000 });
+  await expect(sec.getByTestId("hh-match-signature")).toContainText("кандидаты — модельные (модель, не люди)");
+  await expect(sec.getByRole("cell", { name: "Нашлись кандидаты с подтверждённым тестом грейдом" })).toBeVisible();
+  await expect(sec.getByRole("cell", { name: /DevOps \/ SRE/ }).first()).toBeVisible();
+  await expect(sec.getByRole("heading", { name: "Спрос по направлениям на hh.ru" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Разделы" }).getByRole("link", { name: "Подбор на hh.ru" })).toBeVisible();
+  await sec.scrollIntoViewIfNeeded();
+  expect(await noHScroll(page)).toBe(true);
+  await blockShot(page, sec, "validation-match-1440.png");
+  await axe(page, "section#hh-match", "блок подбора /validation 1440");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await sec.scrollIntoViewIfNeeded();
+  expect(await noHScroll(page), "/validation#hh-match, 390 px").toBe(true);
+  await blockShot(page, sec, "validation-match-390.png");
+});
+
+test("Кандидат: «Что сейчас просит рынок» в карте навыков — навыки hh.ru, статус и ссылка, 1440 и 390 (Я12б)", async ({ page }) => {
+  const api = await apiContext();
+  const meta = await (await api.get("/api/meta")).json();
+  await api.dispose();
+  test.skip(!meta.hh?.enabled, "интеграция hh.ru выключена (HH_ENABLED)");
+  await juryEnter(page, "candidate");
+  await page.goto("/candidate/feedback", { waitUntil: "domcontentloaded" });
+  const sec = page.getByTestId("hh-market-skills");
+  await expect(sec.getByRole("heading", { name: /^Что сейчас просит рынок/ })).toBeVisible({ timeout: 60_000 });
+  await expect(sec).toContainText(/По \d+ вакансиям hh\.ru на \d\d\.\d\d\.\d{4}/);
+  expect(await sec.getByRole("listitem").count()).toBeGreaterThan(2);
+  const links = sec.getByRole("link", { name: /^(Подтвердить тестом|Короткое задание)$/ });
+  if (await links.count()) await expect(links.first()).toHaveAttribute("href", /\/candidate\/(assessment|assignments)$/);
+  await sec.scrollIntoViewIfNeeded();
+  expect(await noHScroll(page)).toBe(true);
+  await blockShot(page, sec, "feedback-market-1440.png");
+  await axe(page, "[data-testid=hh-market-skills]", "«Что просит рынок» 1440");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await sec.scrollIntoViewIfNeeded();
+  expect(await noHScroll(page), "/candidate/feedback, 390 px").toBe(true);
+  await blockShot(page, sec, "feedback-market-390.png");
 });
