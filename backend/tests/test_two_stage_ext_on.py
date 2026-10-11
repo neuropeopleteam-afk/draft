@@ -60,7 +60,7 @@ def test_ext_boundary_second_stage_for_preliminary_lead():
     b = ts.boundary(2.88, 0.63, "senior", "lead", level=0.8, order=order, ext=True)
     assert b and b.kind == "ext" and b.cut_grade == "lead" and b.grade == "senior"
     assert ts.boundary(2.88, 0.63, "senior", "lead", level=0.8, order=order, ext=False) is None
-    assert ts.boundary(1.0, 0.5, "senior", "lead", level=0.8, order=order, ext=True) is None  # Lead маловероятен
+    assert ts.boundary(1.4, 0.3, "senior", "lead", level=0.8, order=order, ext=True) is None  # Lead маловероятен
 
 
 def test_final_grade_capped_by_direction_scale():
