@@ -1,7 +1,7 @@
 {
  "what": "Контроль признака «ядро роли» на экспертной разметке v1 и v2 (модель, не люди) — только на сервере «Москва», копия БД spectrek_fsp_20261009_1648_v2labels во временном PostgreSQL 16; места подборки пересчитаны кодом ветки feat/key-lang (pack2.match_order) при RANK_CORE_SKILL=0 и =1, метрики — A.matching_by_pack, как /validation. Смотрели один раз, после выбора параметров по bench и v1; параметры по v2 не менялись.",
  "command": "spectrek/bin/v2-control-check spectrek/wt/keylang/backend",
- "code": "feat/key-lang d539fb2 (integ/wave4 1a2199e влит) + get_engine в rerank_control.main (прогон 20261009_145527)",
+ "code": "feat/key-lang a0ef388 (integ/wave4 dcb2082 влит) + get_engine в rerank_control.main (прогон 20261009_145527)",
  "policy": "group",
  "frozen": {
   "v1": {

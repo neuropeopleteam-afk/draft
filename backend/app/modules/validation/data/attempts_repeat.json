@@ -595,7 +595,7 @@
   "world": "синтетика: θ ~ N(0, 1), истинные параметры = предкалибровка + ошибка эксперта σ = 0,5; конфигурация теста продукта, 2 субпула, K_f из exposure_k.json",
   "seed": 20261006,
   "config_hash": "c281c525a887",
-  "commit": "9dcade5",
+  "commit": "5c2b80d",
   "bank": "76c4164b6ce83743",
   "n": 1000,
   "command": "python -m app.modules.validation.attempts_repeat",

@@ -40,7 +40,7 @@
   "algorithm": "match-v1.3",
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
-  "bench_commit": "25770a6",
+  "bench_commit": "67cfdf6",
   "bank_hash": "f563cfcaebf63aef",
   "generated_at": "2026-10-11T15:22:45+00:00",
   "p5": {
@@ -72,9 +72,9 @@
  },
  "grade_accuracy": {
   "confirm_level": 0.6,
-  "path_retest_commit": "25770a6",
+  "path_retest_commit": "67cfdf6",
   "path_retest_at": "2026-10-11",
-  "sweep_commit": "8f4d6d2",
+  "sweep_commit": "e5894d8",
   "sweep_points": 98,
   "before": {
    "exact": 0.575,
@@ -135,7 +135,7 @@
   "skipped": 20,
   "seconds": 231.9,
   "exit": 0,
-  "sha": "4b09113",
+  "sha": "797ae96",
   "date": "11.10.2026"
  },
  "note": "Числа посчитаны tools/publish/gen_numbers.py; тесты и покрытие — из журнала прогона. Подбор — синтетический мир со скрытой истиной (модель, не люди)."

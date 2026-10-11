@@ -1,7 +1,7 @@
 """П1 п. 7: вырезание ПДн без регрессий разбора — 50 реальных вакансий (docs/realdata/vacancies_50.json) и
 синтетические резюме (tests/test_pii_llm_bodies.py, jury/seed.NEW_RESUME).
 
-Сравнение «до» (pii.py из integ 4cfc9fa) и «после» (текущая ветка) для текста, который уходит в модель:
+Сравнение «до» (pii.py из integ 8c4104b) и «после» (текущая ветка) для текста, который уходит в модель:
 - сколько и чего вырезано (по типам) и полный список НОВЫХ вырезаний — для ручной проверки ложных срабатываний;
 - разбор правилами (parse_rules) по тексту для модели: стек P/R против silver-разметки, опыт, направление, формат,
   вилка. Разбор правилами в продукте идёт по исходному тексту (redact на путь без LLM не влияет) — его цифры
@@ -22,7 +22,7 @@ import types
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(ROOT / "backend" / "tests"))
-BASE = "4cfc9fa"
+BASE = "8c4104b"
 
 from app.modules.matching.need_parser import parse_rules  # noqa: E402
 from app.modules.resume import pii as new_pii  # noqa: E402
@@ -84,7 +84,7 @@ def main():
             vals = {k: v for k, v in b.found.items() if a.found.get(k) != v}
             new_cuts.append({"id": row["id"], "placeholders": diff, "values": vals})
     texts = {"исходный текст (путь без LLM)": [r["text"] for r in rows],
-             "текст для модели — до (integ 4cfc9fa)": [x.text for x in red_old],
+             "текст для модели — до (integ 8c4104b)": [x.text for x in red_old],
              "текст для модели — после (fix/pii-mask)": [x.text for x in red_new]}
     table = {}
     for name, ts in texts.items():

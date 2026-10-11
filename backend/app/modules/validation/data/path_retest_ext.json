@@ -3,7 +3,7 @@
   "world": "симуляция теста: 4 направлений × 500 кандидатов, семейств в банке: 268",
   "seed": 20261006,
   "config_hash": "df98d0ab3e88",
-  "commit": "af90886",
+  "commit": "63c7ecc",
   "bank": "2c7d82bbb008b587",
   "n": 2000,
   "command": "make path-retest",

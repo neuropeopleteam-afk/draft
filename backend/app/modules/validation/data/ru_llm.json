@@ -1,7 +1,7 @@
 {
  "title": "Режим «только российская модель»: замер",
  "date": "2026-10-09",
- "code_sha": "ea5b82f",
+ "code_sha": "cd36aaa",
  "models": [
   {
    "key": "sonnet",
@@ -410,7 +410,7 @@
   "Разметки: вакансии — silver-разметка набора (модель + ручная сверка), резюме — автор набора (модель), оценщик — эталон gpt-oss-120b. Ни одна не экспертная; модели семейства Claude участвовали в разметке атак и резюме — согласие Sonnet с ними может быть завышено."
  ],
  "ref_0810": {
-  "label": "YandexGPT 5.1, 08.10 (полный разбор, код c1c248e)",
+  "label": "YandexGPT 5.1, 08.10 (полный разбор, код 6b6cc8c)",
   "needs_full": {
    "ok": 50,
    "n": 50,
@@ -433,5 +433,5 @@
   "where": ".env сервера (рядом с docker-compose.yml) + ключ Yandex AI Studio в llm.env (LLM_PROVIDER=yandex_ai_studio, LLM_BASE_URL, LLM_API_KEY, LLM_FOLDER_ID, LLM_MODEL); пересоздать api",
   "check": "/api/meta → llm.chain = [{provider: yandex, configured: true}], functions.*.models[0].label = YandexGPT 5.1"
  },
- "pending_note": "YandexGPT ещё не замерена на этих входах: ключ Yandex AI Studio хранится только на сервере стенда, на машине замера его нет. Прогон — одной командой, когда ключ будет: tools/llm/ru_llm_bench.py run --model yandex=yandexgpt-5.1/latest. До этого — замер 08.10 (полный разбор 50 вакансий, код c1c248e)."
+ "pending_note": "YandexGPT ещё не замерена на этих входах: ключ Yandex AI Studio хранится только на сервере стенда, на машине замера его нет. Прогон — одной командой, когда ключ будет: tools/llm/ru_llm_bench.py run --model yandex=yandexgpt-5.1/latest. До этого — замер 08.10 (полный разбор 50 вакансий, код 6b6cc8c)."
 }

@@ -3,7 +3,7 @@
 
 Из рабочего каталога прогона (--dir): <модель>/{needs_delta,needs_full,needs_jury,resume,grade}.json и rules/*.json.
 В сводку попадают только метрики (без текстов ответов моделей и без ключей). Модель без прогона — status «pending»
-с причиной; прежний замер YandexGPT 5.1 (08.10, полный разбор на коде c1c248e) — отдельной строкой «ref_0810».
+с причиной; прежний замер YandexGPT 5.1 (08.10, полный разбор на коде 6b6cc8c) — отдельной строкой «ref_0810».
 """
 from __future__ import annotations
 
@@ -365,12 +365,12 @@ CONDITIONS = [
     "gpt-oss-120b. Ни одна не экспертная; модели семейства Claude участвовали в разметке атак и резюме — согласие "
     "Sonnet с ними может быть завышено.",
 ]
-REF_0810 = {"label": "YandexGPT 5.1, 08.10 (полный разбор, код c1c248e)", "needs_full": {
+REF_0810 = {"label": "YandexGPT 5.1, 08.10 (полный разбор, код 6b6cc8c)", "needs_full": {
     "ok": 50, "n": 50, "p50_s": 2.36, "p90_s": 3.51, "stack_p": 0.853, "stack_r": 0.960, "stack_f1": 0.903,
     "source": "docs/LLM.md, раздел 6"}}
 PENDING_NOTE = ("YandexGPT ещё не замерена на этих входах: ключ Yandex AI Studio хранится только на сервере стенда, на "
                 "машине замера его нет. Прогон — одной командой, когда ключ будет: tools/llm/ru_llm_bench.py run --model "
-                "yandex=yandexgpt-5.1/latest. До этого — замер 08.10 (полный разбор 50 вакансий, код c1c248e).")
+                "yandex=yandexgpt-5.1/latest. До этого — замер 08.10 (полный разбор 50 вакансий, код 6b6cc8c).")
 HOW = {
     "env": ["LLM_CHAIN=yandex", "LLM_MODEL_PARSE_NEED=yandex=yandexgpt-5.1/latest",
             "LLM_MODEL_RESUME=yandex=yandexgpt-5.1/latest", "LLM_MODEL_GRADE=yandex=yandexgpt-5.1/latest",

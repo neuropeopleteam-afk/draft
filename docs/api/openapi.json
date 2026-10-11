@@ -66383,7 +66383,7 @@
                       "signature": {
                         "bank": "76c4164b6ce83743",
                         "command": "make path-retest",
-                        "commit": "ae87c00",
+                        "commit": "1d67bb5",
                         "config_hash": "<скрыто>",
                         "generated_at": "2026-10-09T13:54:35+00:00",
                         "n": 2500,
@@ -66403,7 +66403,7 @@
                       "signature": {
                         "bank": "76c4164b6ce83743",
                         "command": "make path-retest",
-                        "commit": "ae87c00",
+                        "commit": "1d67bb5",
                         "config_hash": "<скрыто>",
                         "generated_at": "2026-10-09T13:54:35+00:00",
                         "n": 2500,
@@ -66727,7 +66727,7 @@
                   "signature": {
                     "bank": "57033ea404b8efae",
                     "command": "make stability",
-                    "commit": "bb12871",
+                    "commit": "a918f4b",
                     "config_hash": "<скрыто>",
                     "generated_at": "2026-10-08T15:57:59+00:00",
                     "n": 2000,
@@ -67273,7 +67273,7 @@
                   "signature": {
                     "bank": "76c4164b6ce83743",
                     "command": "make path-retest",
-                    "commit": "ae87c00",
+                    "commit": "1d67bb5",
                     "config_hash": "<скрыто>",
                     "generated_at": "2026-10-09T13:54:35+00:00",
                     "n": 2500,
@@ -67500,7 +67500,7 @@
                       "source": "model_panel",
                       "status": "ready"
                     },
-                    "code_commit": "211828e",
+                    "code_commit": "0cde623",
                     "report": {
                       "bank_commit": "b324325",
                       "bank_hash": "<скрыто>",

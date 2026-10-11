@@ -1976,7 +1976,7 @@
   "world": "бенчмарк подбора: 200 потребностей × 2000 кандидатов",
   "seed": 20261006,
   "config_hash": "19255e3a8b95",
-  "commit": "25770a6",
+  "commit": "67cfdf6",
   "bank": "f563cfcaebf63aef",
   "n": 400000,
   "command": "make bench",

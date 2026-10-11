@@ -3,7 +3,7 @@
   "branch": "feat/multispec",
   "migration": {"revision": "ms01", "down_revision": "qr01", "sqlite_upgrade_backfill_downgrade": "passed", "postgresql_runtime": "not_run"},
   "backend": {
-    "full_suite_at_f7ec529": {"tests": 252, "result": "passed", "log": "../full_pytest_multispec.log"},
+    "full_suite_at_23ce84e": {"tests": 252, "result": "passed", "log": "../full_pytest_multispec.log"},
     "regression_after_direction_evidence_fixes": {"tests": 119, "result": "passed", "log": "../targeted_pytest_multispec.log", "note": "Tool wait expired at 630 s; the process finished subsequently, the complete log has 100% and no failures."},
     "multispec_tests_final": {"tests": 10, "result": "passed", "log": "../own_pytest_multispec.log"},
     "jury_live_and_migrations": {"tests": 7, "result": "passed", "log": "../remaining_pytest_multispec.log"},

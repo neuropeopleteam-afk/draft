@@ -22,14 +22,14 @@ def main():
     guard = load("ranking_guard_500.json")
     demo = json.loads((ROOT / "docs/validation/matching_demo_500.json").read_text())
     checks = load("checks_status.json") if (DATA / "checks_status.json").exists() else {"pytest_exit": None, "build_exit": None}
-    commits = subprocess.check_output(["git", "-C", str(ROOT), "log", "--format=%h %s", "763b8f7..HEAD"], text=True).strip()
+    commits = subprocess.check_output(["git", "-C", str(ROOT), "log", "--format=%h %s", "8ef691a..HEAD"], text=True).strip()
     test_log = (DATA / "full_pytest.log").read_text() if (DATA / "full_pytest.log").exists() else ""
     tested = "316 тестов (код завершения 0)" if checks["pytest_exit"] == 0 else f"проверка ещё не завершена / код {checks['pytest_exit']}"
     built = "успешно (код завершения 0)" if checks["build_exit"] == 0 else f"проверка ещё не завершена / код {checks['build_exit']}"
     lines = [
         "# И8 «Подбор на чужих данных» — отчёт 07.10.2026",
         "",
-        "Worktree: `<рабочее дерево realdata>`, ветка `feat/realdata`, база `763b8f7`.",
+        "Worktree: `<рабочее дерево realdata>`, ветка `feat/realdata`, база `8ef691a`.",
         "",
         "## Итог для координатора",
         "",
@@ -44,7 +44,7 @@ def main():
         "Распределение ближайших направлений: Backend 14, Frontend 15, Data/ML 6, QA 12, ИБ 3; явно указанный грейд имеется в 39 текстах, остальные 11 не считаются явным эталоном грейда ([корпус](../wt/realdata/docs/realdata/vacancies_50.json), [измерения](../wt/realdata/docs/realdata/parser_benchmark.json)).",
         "**Эталон — silver-разметка**: независимое извлечение моделью и ручная проверка скалярных полей, не экспертная оценка; этот же корпус использован для исправления правил, поэтому это регрессия, а не независимое доказательство рыночного качества ([сборка](../wt/realdata/tools/realdata/freeze_corpus.py), [протокол](../wt/realdata/docs/realdata/parser_benchmark.json)).",
         "",
-        "Сравнение полей; «LLM» и «старые правила» используют одну ревизию стенда `763b8f7`, а улучшенные локальные правила показаны отдельно ([методика и результаты](../wt/realdata/docs/realdata/parser_benchmark.json)).",
+        "Сравнение полей; «LLM» и «старые правила» используют одну ревизию стенда `8ef691a`, а улучшенные локальные правила показаны отдельно ([методика и результаты](../wt/realdata/docs/realdata/parser_benchmark.json)).",
         "",
         "| Поле | Старые правила | LLM на стенде | Новые правила |",
         "|---|---:|---:|---:|",

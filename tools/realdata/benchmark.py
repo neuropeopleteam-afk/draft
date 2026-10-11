@@ -25,7 +25,7 @@ def baseline_parser():
     # not an improved local dictionary against a remote older parser.
     def original(path):
         return subprocess.check_output(["git", "-C", str(ROOT), "show",
-                                        f"763b8f7:backend/app/modules/{path}"], text=True)
+                                        f"8ef691a:backend/app/modules/{path}"], text=True)
     seed, dictionary, parser = {}, {}, {}
     exec(compile(original("catalog/seed_data.py"), "baseline_seed", "exec"), seed)
     exec(compile(original("catalog/dictionary.py"), "baseline_dictionary", "exec"), dictionary)
@@ -84,7 +84,7 @@ def main():
     base_parse = baseline_parser()
     base = [base_parse(row["text"], use_llm=False) for row in rows]
     result = {"corpus_size": len(rows), "annotation": "silver, not expert; exact source excerpts",
-              "comparison_note": "LLM and baseline rules: same deployed 763b8f7. Current branch rules reported separately.",
+              "comparison_note": "LLM and baseline rules: same deployed 8ef691a. Current branch rules reported separately.",
               "baseline_rules": measure(rows, base), "current_rules": measure(rows, current)}
     (OUT / "rules_predictions.json").write_text(json.dumps(current, ensure_ascii=False, indent=2))
     (OUT / "parser_benchmark.json").write_text(json.dumps(result, ensure_ascii=False, indent=2))
