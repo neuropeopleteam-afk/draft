@@ -309,6 +309,15 @@ def _position(out: dict, t: dict, grade: str | None) -> None:
         out["position"] = level_position(t.get("theta"), t.get("se"), grade)
 
 
+def _two_stage(out: dict, t: dict) -> None:
+    """Я26 (флаг ASSESSMENT_TWO_STAGE_ENABLED): «на границе Middle/Senior — уточнение пройдено / не пройдено»."""
+    from app.modules.assessment.two_stage import card_note
+
+    note = card_note(t)
+    if note:
+        out["two_stage"] = note
+
+
 def grade_status(b: "Bundle") -> dict:
     """Единая модель статуса грейда для карточки, подборки, поиска, сравнения, PDF и объяснения «почему».
 
@@ -326,6 +335,7 @@ def grade_status(b: "Bundle") -> dict:
     t = b.test.value if b.test else None
     if st in ("confirmed", "provisional") and t:
         _position(out, t, b.grade)
+        _two_stage(out, t)
     if st == "confirmed":
         by = prov.confirmed_by(t)
         out["text"] = "Грейд подтверждён тестом" + (f" ({by['title']})" if by and by.get("by") in ("probe", "cup") else "")

@@ -44,7 +44,7 @@ from app.modules.catalog.seed_data import GRADE_CUTS, GRADE_ORDER
 DEFAULT_LEVEL = 0.8
 DEFAULT_ITEMS = 8
 DEFAULT_MINUTES = 15
-DEFAULT_CONFIRM = 0.6
+DEFAULT_CONFIRM = 0.45  # по make two-stage 11.10 (docs/validation/TWO_STAGE.md): лучше одной сессии по всем ограничениям
 DEFAULT_CONFIRM_UP = 0.9
 DEFAULT_ABOVE = 0.0    # 0 — уточнение «выше заявленного» не предлагается
 MIN_NEW = 3            # не меньше 3 новых заданий: подтверждение — новыми ответами, а не одной первой сессией
@@ -188,7 +188,7 @@ def params() -> dict:
     return {"enabled": bool(s.assessment_two_stage_enabled), "level": float(s.assessment_two_stage_level),
             "items": int(s.assessment_two_stage_items), "minutes": int(s.assessment_two_stage_minutes),
             "confirm": float(s.assessment_two_stage_confirm), "confirm_up": float(s.assessment_two_stage_confirm_up),
-            "above": float(s.assessment_two_stage_above)}
+            "above": float(s.assessment_two_stage_above), "floor": bool(s.assessment_two_stage_floor)}
 
 
 def enabled() -> bool:
@@ -309,12 +309,14 @@ def outcome(ts) -> dict | None:
     return dict(d) if d else None
 
 
-def refine_result(res, state: dict, theta: float, se: float, n_new: int) -> dict:
+def refine_result(state: dict, theta: float, se: float, n_new: int) -> dict:
     """Итог уточнения для движка (bank_engine.finish): уровень по общей оценке обеих сессий."""
     rf = state.get("refine") or {}
     claimed = state.get("claimed_grade")
     f = final_grade(theta, se, claimed, float(rf.get("confirm", DEFAULT_CONFIRM)),
                     float(rf.get("confirm_up", DEFAULT_CONFIRM_UP)))
+    if rf.get("floor") and _rank(f) < _rank(rf.get("grade") or "none"):  # итог не ниже первой сессии
+        f = rf["grade"]
     cut_g = rf.get("cut_grade")
     passed = bool(cut_g in GRADE_ORDER and _rank(f) >= _rank(cut_g))
     b = {k: rf.get(k) for k in ("grade", "cut_grade", "lower", "cut", "p", "kind")}
@@ -374,3 +376,52 @@ def card_note(value: dict | None) -> dict | None:
     else:
         text = f"{lab[:1].upper()}{lab[1:]} — уточнение уровня не проходил (одна сессия теста)"
     return {**t, "text": text}
+
+
+def as_result(ts, res):
+    """Итог движка для сессии уточнения → итог продукта: заявленным становится уровень по двум сессиям (если он
+    есть), дальше — обычные правила записи категории (apply_engine_result). Исходный заявленный — в details."""
+    from dataclasses import replace
+
+    o = (res.details or {}).get("two_stage") or {}
+    f = o.get("final_grade") or "none"
+    text = explain(o)
+    if f == "none":
+        return replace(res, confirmed=False, provisional=False, provisional_reason=None, upgrade_available=False,
+                       retake_lower=None, explanation=text)
+    ts.claimed_grade_id = f
+    return replace(res, claimed_grade=f, confirmed=True, provisional=False, provisional_reason=None,
+                   upgrade_available=False, retake_lower=None, explanation=text,
+                   p_claimed=round(p_at_least(res.theta, res.se, f), 4))
+
+
+def view(db, ts) -> dict | None:
+    """Блок two_stage итога теста: для полной сессии — предложение (offer), для уточнения — его итог."""
+    if not enabled():
+        return None
+    if mode_of(ts) == "refine":
+        o = outcome(ts)
+        if not o:
+            return None
+        return {"status": "passed" if o["passed"] else "failed", "label": o["label"], "refine": o,
+                "text": explain(o), "source_session_id": o.get("source_session_id")}
+    return offer(db, ts)
+
+
+def mark_fact(db, ts) -> None:
+    """Итог уточнения — в факт результата теста направления (если факт не переписан итогом, например при «none»)."""
+    from sqlalchemy import select
+    from sqlalchemy.orm.attributes import flag_modified
+
+    from app.core.enums import FactSource
+    from app.modules.profiles.models import CandidateFact
+
+    v = fact_payload(db, ts)
+    if not v:
+        return
+    for f in db.scalars(select(CandidateFact).where(
+            CandidateFact.user_id == ts.user_id, CandidateFact.source == FactSource.test,
+            CandidateFact.kind == "test_result")).all():
+        if (f.value or {}).get("direction") == ts.direction_id and (f.value or {}).get("two_stage") != v:
+            f.value = {**f.value, "two_stage": v}
+            flag_modified(f, "value")
