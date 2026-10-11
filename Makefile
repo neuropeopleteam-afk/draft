@@ -70,6 +70,9 @@ stability: ## Стабильность статуса «Junior (предвари
 path-retest: ## Test–retest всего пути кандидата (5 × 500, дважды) и D / r_pb семейств → data/path_retest.json (≈ 3 мин CPU)
 	cd backend && python -m app.modules.validation.path_retest && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
 
+partial-credit-sim: ## Частичный балл 0–4 у развёрнутых: «0/1» против «0–4» (5 × 500, 14 вариантов) → data/partial_credit_sim.json, docs/validation/PARTIAL_CREDIT.md
+	cd backend && python -m app.modules.validation.partial_credit_sim $(SIM_ARGS)
+
 criteria-doc: ## docs/CRITERIA.md «Критерий ТЗ → что показываем → чем доказано» из того же источника, что /criteria
 	cd backend && python -m app.modules.validation.criteria --md ../docs/CRITERIA.md
 
@@ -99,7 +102,7 @@ grades-ext-sim: ## Путь-повтор с 6 уровнями (Lead, Principal;
 grades-ext-need: ## Что нужно для точности Lead/Principal ≥ 64 %: банк, блок Lead/Principal, частичный балл → data/grades_ext_need.json, docs/validation/GRADES_EXT_NEED.md
 	cd backend && GRADES_EXT_ENABLED=1 python -m app.modules.validation.grades_ext_need $(SIM_ARGS)
 
-.PHONY: bench bench-quick stability intern-cut grade-above fsp-regression path-retest grade-sweep two-stage grade-compare grades-ext-sim grades-ext-need
+.PHONY: bench bench-quick stability intern-cut grade-above fsp-regression path-retest grade-sweep two-stage grade-compare grades-ext-sim grades-ext-need partial-credit-sim
 
 # подпись мира у чисел /validation: коммит кода (на сервере проверок .git нет — передавайте GIT_COMMIT=…)
 GIT_COMMIT ?= $(shell git rev-parse --short=7 HEAD 2>/dev/null)
