@@ -23,3 +23,4 @@ junit*.xml
 # прочее
 .DS_Store
 *.log
+backend/app/modules/validation/data/grade_sweep_raw_last.json

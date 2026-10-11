@@ -60,14 +60,15 @@ from assessment_bank.psychometrics import (CanaryDetector, CATConfig, CATSession
 from assessment_bank.registry import canary_published_seeds
 
 from app.core.fmt import theta_round, theta_se
-from app.modules.assessment import ai_mark, integrity
+from app.modules.assessment import ai_mark, integrity, partial_credit
 from app.modules.assessment.engine import GRADES, AnswerFeedback, EngineResult, ItemPublic
 from app.modules.assessment.exposure import AppCATSession, choose_subpool, exposure_control, parse_quarantine
 from app.modules.assessment.grader import grade_open
-from app.modules.assessment.grades import (GRADE_RU, category_level, cuts_tuple, decide_grade, scale as platform_scale,
+from app.modules.assessment.grades import (GRADE_RU, category_level, confirm_pct, cuts_tuple, decide_grade, scale as platform_scale,
                                            start_theta)
 from app.modules.assessment.intern_pool import intern_exclusions
 from app.modules.assessment.skill_map import stack_gate, to_stack_tags
+from app.modules.assessment.weak_pool import weak_excluded
 from app.modules.catalog import levels as grade_levels
 from app.modules.catalog.seed_data import EXT_GRADE_ORDER
 
@@ -181,7 +182,10 @@ class BankEngine:
                 "select_at": s.assessment_select_at, "ext_own_first": s.assessment_extension_own_first,
                 "subpools": max(1, s.assessment_subpools),
                 "exposure": s.assessment_exposure,
-                "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer}}
+                "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer},
+                # частичный балл 0–4 (GPCM) — ключ только при флаге: сессии без него и прежние — как раньше
+                **({"partial_credit": True, "partial_credit_select": bool(s.assessment_partial_credit_select)}
+                   if s.assessment_partial_credit_enabled else {})}
 
     # ------------------------------------------------------------------ протокол
     def _express_cfg(self, cfg: dict, claimed_grade: str) -> dict:
@@ -193,7 +197,8 @@ class BankEngine:
     def start(self, *, direction: str, claimed_grade: str, stack_tags: list[str], seed: int,
               previous_subpools: list[int] | None = None, previous_families: list[str] | None = None,
               confirm_from: dict | None = None, mode: str = "full", seen: dict[str, int] | None = None,
-              seen_seeds: dict[str, list[int]] | None = None) -> dict:
+              seen_seeds: dict[str, list[int]] | None = None, refine_from: dict | None = None,
+              refine: dict | None = None) -> dict:
         """confirm_from — состояние завершённой сессии с итогом «Junior (предварительно)»: новая сессия —
         короткое дотестирование у порога Junior поверх её ответов (см. _start_confirm).
         mode: full — обычный адаптивный тест; express — экспресс-тест для жюри (без канареек, короче);
@@ -201,6 +206,9 @@ class BankEngine:
         seen — семейства всех прошлых попыток с «возрастом» (0 — последняя), seen_seeds — их seed (И26): не берутся
         ни в основную часть, ни в дотестирование; запасной путь — LRU с новым вариантом (exposure.AppCATSession).
         Без seen — как до 09.10: семейства прошлой попытки (previous_families) не попадают только в дотестирование."""
+        if refine_from is not None:  # Я26: уточнение уровня у границы (assessment/two_stage.py)
+            return self._start_refine(direction=direction, stack_tags=stack_tags, seed=seed, prev=refine_from,
+                                      refine=refine or {}, seen=seen, seen_seeds=seen_seeds)
         if confirm_from is not None:
             return self._start_confirm(direction=direction, stack_tags=stack_tags, seed=seed, prev=confirm_from,
                                        previous_families=previous_families, seen=seen, seen_seeds=seen_seeds)
@@ -230,6 +238,40 @@ class BankEngine:
         if seen is not None:  # И26: все прошлые попытки — и в основной части, и в дотестировании; LRU — запасной путь
             state.update(seen=dict(seen), seen_seeds={k: list(v) for k, v in (seen_seeds or {}).items()},
                          exclude_ext=[])
+        return state
+
+    def _start_refine(self, *, direction: str, stack_tags: list[str], seed: int, prev: dict, refine: dict,
+                      seen: dict[str, int] | None = None, seen_seeds: dict[str, list[int]] | None = None) -> dict:
+        """Я26: уточнение уровня «на границе» — вторая сессия поверх ответов полной сессии.
+
+        Как дотестирование Junior (_start_confirm): ответы первой сессии — «prior» (в θ и детекторе, заново не
+        показываются), основная часть считается завершённой; затем до refine.items коротких заданий (≤ 5 мин) с
+        наибольшей информацией у порога refine.cut_grade из семейств, которых кандидат не видел, не дольше refine.minutes.
+        Итог — two_stage.final_grade по всем ответам (см. finish)."""
+        from app.modules.assessment.two_stage import stop_z
+
+        cfg = self._base_cfg()
+        prior = [{k: v for k, v in it.items() if k not in ("public", "key", "rubric", "answers")}
+                 for it in (prev.get("prior") or []) + (prev.get("items") or []) if it.get("done")]
+        n_prior = sum(1 for it in prior if not it.get("canary"))
+        used_time = sum(float(it.get("time_s") or 0) for it in prior)
+        level = float(refine.get("level", 0.8))
+        cfg.update({"mode": "refine", "min_items": n_prior, "max_items": n_prior, "max_time_s": used_time,
+                    "stop_rule": "classification", "cuts_only": refine["cut_grade"], "classify_z": stop_z(level),
+                    "ext_items": int(refine.get("items", 8)), "ext_time_s": float(refine.get("minutes", 15)) * 60.0,
+                    "max_item_time_s": 300.0})
+        own = {it["family_id"] for it in prior}
+        state = {
+            "engine": self.name, "bank": self.manifest, "direction": direction, "claimed_grade": prev["claimed_grade"],
+            "seed": int(seed), "stack": stack_tags, "cfg": cfg, "subpool": prev.get("subpool"), "items": [],
+            "skipped": [], "exclude_ext": sorted(own), "mode": "refine", "prior": prior,
+            "refine": {**refine, "theta_before": prev.get("final_theta"), "se_before": prev.get("final_se"),
+                       "prior_items": n_prior},
+            "current": None, "ext": None, "done": False, "stop_reason": None, "trace": [], "outbox": [],
+            "started_at": time.time(),
+        }
+        if seen is not None:
+            state.update(seen=dict(seen), seen_seeds={k: list(v) for k, v in (seen_seeds or {}).items()})
         return state
 
     def _start_confirm(self, *, direction: str, stack_tags: list[str], seed: int, prev: dict,
@@ -433,6 +475,12 @@ class BankEngine:
                          "status": "pending" if any(v is None for v in i["x"]) else "scored"}
                         for i in scored if i["format"] in ("open_answer", "open_book_3step")],
         }
+        if state.get("mode") == "refine":  # Я26: итог уточнения — по общей оценке обеих сессий
+            from app.modules.assessment.two_stage import refine_result
+
+            details["two_stage"] = refine_result(state, theta, se, len(new_scored))
+        if state["cfg"].get("partial_credit"):
+            details["partial_credit"] = partial_credit.session_summary(scored)
         retake = dec.retake_lower
         lvl = category_level(theta, se, len(scored), direction=state["direction"])
         details["category_level"] = {"grade": lvl.grade, "ceiling": lvl.ceiling, "capped": lvl.capped,
@@ -468,7 +516,9 @@ class BankEngine:
                          select_at=c.get("select_at", "theta"),
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
                          ext_time_s=float(c.get("ext_time_s", 1800.0)),
-                         ext_own_first=bool(c.get("ext_own_first", False)), prior_sd=float(c.get("prior_sd", 1.0)))
+                         ext_own_first=bool(c.get("ext_own_first", False)), prior_sd=float(c.get("prior_sd", 1.0)),
+                         partial_credit=bool(c.get("partial_credit", False)),
+                         partial_credit_select=bool(c.get("partial_credit_select", True)))
 
     def _rebuild(self, state: dict) -> CATSession:
         pool = list(_pool(state["cfg"].get("subpools", 1)))
@@ -488,17 +538,31 @@ class BankEngine:
         # Фильтр по стеку (И3): семейства Go, Java, Django, Kafka, Docker — только кандидатам с этим тегом в стеке опроса;
         # уже выданные задания остаются в сессии (они есть в sess.items и записываются ниже)
         excl = set(stack_excluded(state.get("stack")))
+        # Чистка пула (ASSESSMENT_WEAK_EXCLUDE, по умолчанию выкл.): слабые по калибровке семейства не выдаются
+        excl.update(weak_excluded(self._settings()))
         if state["claimed_grade"] == "intern":
             excl.update(intern_exclusions(pool, state["direction"]))
-        sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
-                             state.get("subpool"), rng, max_per_format=cfg.get("max_per_format", {}),
-                             max_item_time_s=cfg.get("max_item_time_s"),
-                             exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
-                             seen=state.get("seen"), ext_lru=state.get("mode") == "confirm")
+        kw = dict(max_per_format=cfg.get("max_per_format", {}), max_item_time_s=cfg.get("max_item_time_s"),
+                  exclude_ext=state.get("exclude_ext") or (), blocked_subpools=blocked, exclude=excl,
+                  seen=state.get("seen"), ext_lru=state.get("mode") in ("confirm", "refine"))
+        if state.get("mode") == "refine":  # Я26: вторая сессия у границы — правило выбора и стопа из two_stage
+            from app.modules.assessment.two_stage import RefineSession
+
+            rf = state.get("refine") or {}
+            sess = RefineSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
+                                 state.get("subpool"), rng, cut=self.scale.cuts[cfg["cuts_only"]],
+                                 n_new=int(cfg.get("ext_items", rf.get("items", 8))),
+                                 z_stop=float(cfg.get("classify_z", 1.28)), **kw)
+        else:
+            sess = AppCATSession(pool, state["direction"], self._cfg(state), expo, state["claimed_grade"],
+                                 state.get("subpool"), rng, **kw)
         lookup = sess.items
         for it in prior + state["items"]:
             if it["done"] and it["family_id"] in lookup:
                 sess.record(lookup[it["family_id"]], _x_list(it), it["log_t"], time_s=it["time_s"])
+        if state.get("mode") == "refine":
+            sess.n_prior = sum(1 for it in prior if it.get("done") and not it.get("canary") and it["family_id"] in lookup)
+            sess.ext_start = sess.n_prior
         for it in prior + state["items"]:
             sess.used.add(it["family_id"])
         sess.used.update(state.get("skipped", []))
@@ -550,6 +614,10 @@ class BankEngine:
             "answers": {}, "x": [None] * spec.n_parts, "grading": [None] * spec.n_parts, "done": False,
             "ai_mark": ai_mark.new_mark(spec.format) if self._settings().assessment_ai_mark else None,
         }
+        if state["cfg"].get("partial_credit") and spec.format in partial_credit.TEXT_FORMATS:
+            it["pc"] = True  # развёрнутая часть: балл 0–4 в θ по GPCM; без рубрики в банке — общий шаблон
+            if not it["rubric"]:
+                it["rubric"] = partial_credit.generic_rubric(pv["stem"], None)
         state["items"].append(it)
         state["current"] = it["token"]
         state["outbox"].append({"type": "issue", "token": it["token"]})
@@ -631,6 +699,8 @@ class BankEngine:
                        rubric=it["rubric"], answer=text, second_async=get_settings().llm_grading_second_async)
         g_d = g.to_dict()
         g_d["attempts"] = int(prev.get("attempts", 0)) + 1
+        if it.get("pc"):
+            g_d["points"] = partial_credit.points(g.score) if g.status == "scored" else None
         it["grading"][part] = g_d
         it["x"][part] = g.score if g.status == "scored" else None
 
@@ -683,6 +753,8 @@ class BankEngine:
         score = round(sum(crit[k] * vals[k] for k in crit) / total_w, 4)
         rec = {"criteria": vals, "score": score, "comment": (comment or "")[:2000], "reviewer": reviewer,
                "at": time.time()}
+        if it.get("pc"):
+            rec["points"] = partial_credit.points(score)
         it.setdefault("expert_reviews", {})[str(part)] = rec
         disputed = bool((it["grading"][part] or {}).get("disputed"))
         if it["x"][part] is None or disputed:  # «на проверке» (или спорный после итога, И27) → оценка эксперта в θ
@@ -705,7 +777,7 @@ class BankEngine:
     def _total_est(self, state: dict) -> int:
         c = state["cfg"]
         ext = state.get("ext")
-        if state.get("mode") == "confirm":
+        if state.get("mode") in ("confirm", "refine"):
             return int(ext["n"] if ext else c.get("ext_items", 6))
         n_can = len(c.get("canary_positions", (2, 6, 10)))  # позиции канареек 2, 6, 10; экспресс — без них
         return c["max_items"] + n_can + (ext["n"] if ext else 0)
@@ -724,7 +796,7 @@ class BankEngine:
             step_prompt=(steps[k - 1]["prompt"] if is_ob3 and len(steps) >= k else None),
             elapsed_s=int(max(0, time.time() - it["issued_at"])), block="common" if it["block"] == "common" else "direction",
             adaptive=True, min_items=c["min_items"], max_items=c["max_items"],
-            answered=sum(1 for i in state["items"] if i["done"]), extension=bool(it.get("ext")) or state.get("mode") == "confirm",
+            answered=sum(1 for i in state["items"] if i["done"]), extension=bool(it.get("ext")) or state.get("mode") in ("confirm", "refine"),
         )
 
     @staticmethod
@@ -739,13 +811,13 @@ class BankEngine:
                 s += f" Результат уверенно выше порога — можно пройти тест на {GRADE_RU[GRADES[GRADES.index(claimed) + 1]]}."
         elif dec.provisional:
             s = (f"Грейд {g} пока не подтверждён, но и уровень ниже порога не доказан: θ = {theta_se(theta, se)}, "
-                 f"вероятность уровня не ниже {g} — {ps} (для подтверждения нужно ≥ 80 %, «не доказанно ниже» — "
+                 f"вероятность уровня не ниже {g} — {ps} (для подтверждения нужно ≥ {confirm_pct()} %, «не доказанно ниже» — "
                  "≥ 10 %). Категория Junior присвоена предварительно: работодатели видят её с пометкой «предварительно». "
                  "Подтвердить можно коротким дотестированием у порога (до 6 заданий, до 20 минут) или работой — "
                  "зондом работодателя или кубком.")
         else:
             s = (f"Грейд {g} пока не подтверждён: θ = {theta_se(theta, se)}, вероятность уровня не ниже {g} — "
-                 f"{ps} (нужно ≥ 80 %). Принудительного понижения нет")
+                 f"{ps} (нужно ≥ {confirm_pct()} %). Принудительного понижения нет")
             s += (f": можно пройти тест на {GRADE_RU[dec.retake_lower]}." if dec.retake_lower else
                   ": можно повторить после подготовки." if GRADES.index(claimed) == 0 else
                   ": можно пройти тест на грейд ниже или повторить после подготовки.")

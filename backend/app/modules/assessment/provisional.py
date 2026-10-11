@@ -36,7 +36,14 @@ from app.modules.assessment.rules import confirmation_lock
 from app.modules.profiles.facts import PROVISIONAL_PENALTY
 
 LEVEL = 0.10  # P(θ ≥ порога Junior) — «не доказанно ниже»
-CONFIRM_LEVEL = 0.80  # подтверждение (как в движке банка)
+CONFIRM_LEVEL = 0.80  # прежний порог подтверждения; действующий — настройка assessment_confirm_level (Я22)
+
+
+def _confirm_pct() -> int:
+    from app.modules.assessment.grades import confirm_pct
+
+    return confirm_pct()
+
 CONFIRM_ATTEMPTS = 2  # коротких дотестирований на один предварительный статус (больше — банк утекает быстрее)
 RANK_PENALTY = PROVISIONAL_PENALTY  # −0,05 к скору подбора и рейтингу в категории
 WORK_MIN_SCORE = 0.7  # зонд «хорошее решение» и выше; кубок — результат ≥ 70 %
@@ -104,11 +111,11 @@ def info(value: dict | None) -> dict | None:
     p = pv.get("p")
     return {"reason": pv.get("reason"), "reason_title": REASON_TITLES.get(pv.get("reason") or "", ""),
             "p": p, "p_pct": None if p is None else round(100 * float(p)), "level_pct": round(100 * LEVEL),
-            "confirm_pct": round(100 * CONFIRM_LEVEL), "since": pv.get("since"),
+            "confirm_pct": _confirm_pct(), "since": pv.get("since"),
             "attempts": int(pv.get("attempts") or 0), "attempts_max": CONFIRM_ATTEMPTS,
             "last_confirm": pv.get("last_confirm"),
             "text": (f"Junior предварительно: вероятность уровня не ниже Junior — {round(100 * float(p or 0))} % "
-                     f"(подтверждение — от {round(100 * CONFIRM_LEVEL)} %, «не доказанно ниже» — от "
+                     f"(подтверждение — от {_confirm_pct()} %, «не доказанно ниже» — от "
                      f"{round(100 * LEVEL)} %)")}
 
 
@@ -206,7 +213,7 @@ def options(db: Session, profile, spec=None) -> dict | None:
             "routes": [
                 {"id": "extension", "title": "Короткое дотестирование у порога",
                  "text": "До 6 коротких заданий у порога Junior, до 20 минут. Ответы прошлой попытки учитываются: "
-                         "оценка — по всем ответам, тем же правилом (подтверждение — от 80 %)."},
+                         f"оценка — по всем ответам, тем же правилом (подтверждение — от {_confirm_pct()} %)."},
                 {"id": "probe", "title": "Зонд работодателя",
                  "text": "Работодатель присылает короткую задачу; оценка «хорошее решение» или «сильное решение» "
                          "подтверждает Junior. Зонды приходят в «Приглашения»."},

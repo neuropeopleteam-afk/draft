@@ -1,0 +1,142 @@
+{
+ "as_of": "2026-10-10T17:24:37+00:00",
+ "source": "api.hh.ru GET /vacancies (found)",
+ "method": "Число открытых вакансий в поиске hh.ru на дату: профессиональная роль + слова направления в названии (backend/app/modules/hh/directions.py); грейд — слово грейда в названии; «без опыта» — experience=noExperience. Для общих ролей («Программист, разработчик» и др.) это нижняя оценка: вакансия считается, только если слово направления есть в названии. Направления пересекаются мало (слова-исключения), но не нулём. Это поиск API hh.ru для приложения; на сайте hh.ru число может отличаться.",
+ "directions": {
+  "backend": {
+   "title": "Backend",
+   "new": false,
+   "russia": 1344,
+   "moscow": 781,
+   "spb": 195,
+   "with_salary_russia": 404,
+   "by_grade_title": {
+    "intern": 27,
+    "junior": 53,
+    "middle": 115,
+    "senior": 413
+   },
+   "no_experience": 63
+  },
+  "frontend": {
+   "title": "Frontend",
+   "new": false,
+   "russia": 199,
+   "moscow": 123,
+   "spb": 19,
+   "with_salary_russia": 76,
+   "by_grade_title": {
+    "intern": 12,
+    "junior": 3,
+    "middle": 13,
+    "senior": 47
+   },
+   "no_experience": 15
+  },
+  "qa": {
+   "title": "QA",
+   "new": false,
+   "russia": 956,
+   "moscow": 560,
+   "spb": 114,
+   "with_salary_russia": 237,
+   "by_grade_title": {
+    "intern": 38,
+    "junior": 45,
+    "middle": 55,
+    "senior": 156
+   },
+   "no_experience": 76
+  },
+  "data_ml": {
+   "title": "Data/ML",
+   "new": false,
+   "russia": 377,
+   "moscow": 297,
+   "spb": 27,
+   "with_salary_russia": 51,
+   "by_grade_title": {
+    "intern": 6,
+    "junior": 7,
+    "middle": 28,
+    "senior": 126
+   },
+   "no_experience": 9
+  },
+  "security": {
+   "title": "Информационная безопасность",
+   "new": false,
+   "russia": 1953,
+   "moscow": 886,
+   "spb": 188,
+   "with_salary_russia": 750,
+   "by_grade_title": {
+    "intern": 10,
+    "junior": 38,
+    "middle": 13,
+    "senior": 523
+   },
+   "no_experience": 119
+  },
+  "devops": {
+   "title": "DevOps / SRE",
+   "new": true,
+   "russia": 679,
+   "moscow": 445,
+   "spb": 73,
+   "with_salary_russia": 152,
+   "by_grade_title": {
+    "intern": 12,
+    "junior": 22,
+    "middle": 23,
+    "senior": 130
+   },
+   "no_experience": 27
+  },
+  "data_eng": {
+   "title": "Инженер данных",
+   "new": true,
+   "russia": 249,
+   "moscow": 197,
+   "spb": 15,
+   "with_salary_russia": 39,
+   "by_grade_title": {
+    "intern": 3,
+    "junior": 5,
+    "middle": 10,
+    "senior": 39
+   },
+   "no_experience": 11
+  },
+  "mobile": {
+   "title": "Мобильная разработка",
+   "new": true,
+   "russia": 117,
+   "moscow": 79,
+   "spb": 14,
+   "with_salary_russia": 32,
+   "by_grade_title": {
+    "intern": 0,
+    "junior": 0,
+    "middle": 12,
+    "senior": 25
+   },
+   "no_experience": 4
+  },
+  "analyst": {
+   "title": "Системный / бизнес-аналитик",
+   "new": true,
+   "russia": 1713,
+   "moscow": 1112,
+   "spb": 189,
+   "with_salary_russia": 457,
+   "by_grade_title": {
+    "intern": 29,
+    "junior": 43,
+    "middle": 25,
+    "senior": 309
+   },
+   "no_experience": 88
+  }
+ }
+}

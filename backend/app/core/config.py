@@ -225,12 +225,45 @@ class Settings(BaseSettings):
     assessment_extension_own_first: bool = True
     assessment_max_open_book: int = 2
     assessment_max_open_answer: int = 1
+    # Частичный балл 0–4 у развёрнутых ответов (open_answer, текстовый шаг open_book_3step): балл = round(4 · оценка по
+    # рубрике) входит в θ по модели GPCM (assessment_bank/psychometrics/gpcm.py), дихотомические — 2PL, как сейчас.
+    # Тот же вызов оценщика, без новых запросов; false — оценка 0..1 в 2PL (прежнее поведение)
+    assessment_partial_credit_enabled: bool = False
+    # при флаге выше: выбор следующего задания по информации GPCM (true) или, как без флага, по 2PL (false — балл 0–4
+    # только в оценке θ, состав теста прежний)
+    assessment_partial_credit_select: bool = True
     # Ротация субпулов банка: 2 параллельные формы; повторная попытка получает другой субпул.
     # Утёкший субпул — в карантин: ASSESSMENT_SUBPOOL_QUARANTINE=0 (номера через запятую)
     assessment_subpools: int = 2
     assessment_subpool_quarantine: str = ""
     # Контроль частоты показа: sympson_hetter (K_f из assessment/exposure_k.json) | none
     assessment_exposure: str = "sympson_hetter"
+    # Я22: порог уверенности решения по грейду — подтверждение заявленного грейда и «принять уровень ниже»:
+    # P(θ ≥ порога) ≥ значения. 0,6 — по перебору на симуляции всего пути (docs/validation/GRADE_ACCURACY.md): точно
+    # истинный уровень 64 % против 57 % при 0,8, завышение 6,5 % (≤ 7 %), κw повтора 0,874 против 0,844, время то же.
+    # 0,8 — прежнее правило (до 10.10)
+    assessment_confirm_level: float = 0.6
+    # Я22: позиция внутри уровня (нижняя / середина / верхняя часть) в результате кандидата и в карточке работодателя —
+    # только когда погрешность позволяет, иначе «точнее — после дотестирования»; без чисел θ (grades.level_position).
+    # false — как раньше (поля нет)
+    grade_position_enabled: bool = False
+    # Я26: двухэтапное подтверждение уровня у границы (assessment/two_stage.py, docs/validation/TWO_STAGE.md): после
+    # полного теста уровень «на границе» (P у порога между 1 − L и L) — кандидату предлагается уточнение отдельной
+    # сессией до N коротких заданий и M минут у этого порога; итог — по общей оценке обеих сессий (до заявленного —
+    # P ≥ confirm, выше заявленного — P ≥ confirm_up, если above > 0). false — как раньше (предложения нет)
+    assessment_two_stage_enabled: bool = False
+    assessment_two_stage_level: float = 0.8
+    assessment_two_stage_items: int = 8
+    assessment_two_stage_minutes: int = 15
+    assessment_two_stage_confirm: float = 0.45
+    assessment_two_stage_confirm_up: float = 0.9
+    assessment_two_stage_above: float = 0.0
+    # итог уточнения не ниже уровня первой сессии (без понижения по итогу второй сессии)
+    assessment_two_stage_floor: bool = False
+    # Я22: чистка пула — 26 семейств, слабых по калибровке панелью моделей (assessment/weak_pool.py), не выдаются ни в
+    # основной части, ни в дотестировании. false — пул как раньше. По умолчанию выключено: на симуляции повтор (κw)
+    # с исключением ниже (docs/validation/GRADE_ACCURACY.md, «Чистка пула»)
+    assessment_weak_exclude: bool = False
     # Камера во время теста по согласию (app/modules/proctor): false — экран камеры не показывается вообще,
     # тест идёт без камеры. Камера и так необязательна: без неё тест доступен полностью, грейд не меняется
     proctor_camera_enabled: bool = True
@@ -345,6 +378,11 @@ class Settings(BaseSettings):
     voice_need_timeout_s: float = Field(default=20.0, gt=0, le=60)
     voice_need_per_hour: int = Field(default=20, ge=1)  # записей на работодателя в час
     voice_need_daily: int = Field(default=300, ge=1)  # записей в сутки на установку (≈ 300 мин × ставка STT)
+
+    # Я29: тарифы работодателя (app/modules/tariffs, docs/TARIFFS.md): «Старт» бесплатно с лимитом приглашений в месяц,
+    # «Найм» — цена по запросу, демо-счёт без суммы, «Партнёр ФСП» выдаёт ФСП; блок «Польза для ФСП» в кабинете ФСП.
+    # По умолчанию выключено: лимит не проверяется, функции не ограничиваются, ответы API прежние.
+    tariffs_enabled: bool = False
 
     # Будущая интеграция с ФСП ID (Keycloak, OIDC)
     fsp_oidc_issuer: str | None = None
