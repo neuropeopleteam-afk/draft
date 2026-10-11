@@ -82,7 +82,7 @@ function Body({ d }: { d: PassportPublic }) {
           <dl className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
             <Row k="Тест пройден" v={dt(a.test_date)} />
             <Row k="Оценка уровня θ" v={a.theta != null ? `${num(a.theta)} ± ${num(a.se)}` : "—"} />
-            <Row k={`Вероятность уровня не ниже ${p.category.grade_title}`} v={probText(a.p_grade_or_higher)} />
+            {a.p_grade_or_higher != null && <Row k={`Вероятность уровня не ниже ${p.category.grade_title}`} v={probText(a.p_grade_or_higher)} />}
             <Row k="Верных ответов" v={a.answered ? `${a.correct} из ${a.answered}` : "—"} />
             {a.integrity && <Row k="Достоверность результата" v={INTEGRITY[a.integrity] ?? a.integrity} />}
             <Row k="Действителен до" v={dt(p.valid_until)} />
