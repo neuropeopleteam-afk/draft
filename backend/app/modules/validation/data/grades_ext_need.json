@@ -18385,6 +18385,1188 @@
      "principal": 0.511
     }
    }
+  },
+  "g_real_v2_p300|0.6|top": {
+   "scenario": "g_real_v2_p300",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 8,
+   "partial": "gpcm",
+   "block_item_time": 300.0,
+   "block_minutes": 15,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с",
+   "n": 1000,
+   "exact": 0.497,
+   "above": 0.023,
+   "below": 0.48,
+   "none": 0.0,
+   "retest_exact": 0.683,
+   "minutes_mean": 75.0,
+   "minutes_p90": 89.5,
+   "block_share": 0.487,
+   "ext_assigned": 0.388,
+   "above_ext": 0.011,
+   "ext_false_share": 0.028,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.829,
+     "above": 0.079,
+     "below": 0.092,
+     "minutes_mean": 66.5,
+     "minutes_p90": 74.8,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.575,
+     "above": 0.019,
+     "below": 0.406,
+     "minutes_mean": 68.8,
+     "minutes_p90": 78.4,
+     "block_minutes_mean": 1.3
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.519,
+     "above": 0.017,
+     "below": 0.465,
+     "minutes_mean": 79.3,
+     "minutes_p90": 91.1,
+     "block_minutes_mean": 9.6
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.155,
+     "above": 0.0,
+     "below": 0.845,
+     "minutes_mean": 83.1,
+     "minutes_p90": 91.2,
+     "block_minutes_mean": 12.8
+    }
+   }
+  },
+  "g_real_v2_p300|0.65|top": {
+   "scenario": "g_real_v2_p300",
+   "confirm": 0.65,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 8,
+   "partial": "gpcm",
+   "block_item_time": 300.0,
+   "block_minutes": 15,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с",
+   "n": 1000,
+   "exact": 0.475,
+   "above": 0.019,
+   "below": 0.506,
+   "none": 0.0,
+   "retest_exact": 0.678,
+   "minutes_mean": 75.0,
+   "minutes_p90": 89.5,
+   "block_share": 0.487,
+   "ext_assigned": 0.377,
+   "above_ext": 0.008,
+   "ext_false_share": 0.021,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.836,
+     "above": 0.072,
+     "below": 0.092,
+     "minutes_mean": 66.5,
+     "minutes_p90": 74.8,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.543,
+     "above": 0.013,
+     "below": 0.444,
+     "minutes_mean": 68.8,
+     "minutes_p90": 78.4,
+     "block_minutes_mean": 1.3
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.498,
+     "above": 0.013,
+     "below": 0.488,
+     "minutes_mean": 79.3,
+     "minutes_p90": 91.1,
+     "block_minutes_mean": 9.6
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.126,
+     "above": 0.0,
+     "below": 0.874,
+     "minutes_mean": 83.1,
+     "minutes_p90": 91.2,
+     "block_minutes_mean": 12.8
+    }
+   }
+  },
+  "g_real_v2_p420|0.6|top": {
+   "scenario": "g_real_v2_p420",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 8,
+   "partial": "gpcm",
+   "block_item_time": 420.0,
+   "block_minutes": 15,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с",
+   "n": 1000,
+   "exact": 0.535,
+   "above": 0.012,
+   "below": 0.453,
+   "none": 0.0,
+   "retest_exact": 0.652,
+   "minutes_mean": 75.6,
+   "minutes_p90": 90.0,
+   "block_share": 0.473,
+   "ext_assigned": 0.398,
+   "above_ext": 0.01,
+   "ext_false_share": 0.025,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.868,
+     "above": 0.013,
+     "below": 0.118,
+     "minutes_mean": 66.4,
+     "minutes_p90": 74.5,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.572,
+     "above": 0.013,
+     "below": 0.415,
+     "minutes_mean": 69.5,
+     "minutes_p90": 77.5,
+     "block_minutes_mean": 1.2
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.529,
+     "above": 0.02,
+     "below": 0.451,
+     "minutes_mean": 79.4,
+     "minutes_p90": 91.5,
+     "block_minutes_mean": 9.4
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.282,
+     "above": 0.0,
+     "below": 0.718,
+     "minutes_mean": 84.6,
+     "minutes_p90": 92.0,
+     "block_minutes_mean": 13.5
+    }
+   }
+  },
+  "g_real_v2_p420|0.65|top": {
+   "scenario": "g_real_v2_p420",
+   "confirm": 0.65,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 8,
+   "partial": "gpcm",
+   "block_item_time": 420.0,
+   "block_minutes": 15,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с",
+   "n": 1000,
+   "exact": 0.51,
+   "above": 0.009,
+   "below": 0.481,
+   "none": 0.0,
+   "retest_exact": 0.645,
+   "minutes_mean": 75.6,
+   "minutes_p90": 90.0,
+   "block_share": 0.473,
+   "ext_assigned": 0.388,
+   "above_ext": 0.007,
+   "ext_false_share": 0.018,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.855,
+     "above": 0.013,
+     "below": 0.132,
+     "minutes_mean": 66.4,
+     "minutes_p90": 74.5,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.534,
+     "above": 0.01,
+     "below": 0.457,
+     "minutes_mean": 69.5,
+     "minutes_p90": 77.5,
+     "block_minutes_mean": 1.2
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.512,
+     "above": 0.013,
+     "below": 0.475,
+     "minutes_mean": 79.4,
+     "minutes_p90": 91.5,
+     "block_minutes_mean": 9.4
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.256,
+     "above": 0.0,
+     "below": 0.744,
+     "minutes_mean": 84.6,
+     "minutes_p90": 92.0,
+     "block_minutes_mean": 13.5
+    }
+   }
+  },
+  "g_real_v2_p420_m25|0.6|top": {
+   "scenario": "g_real_v2_p420_m25",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин, априорные b и a), второй этап до 10 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 10,
+   "partial": "gpcm",
+   "block_item_time": 420.0,
+   "block_minutes": 25,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин",
+   "n": 1000,
+   "exact": 0.575,
+   "above": 0.019,
+   "below": 0.406,
+   "none": 0.0,
+   "retest_exact": 0.678,
+   "minutes_mean": 79.1,
+   "minutes_p90": 99.1,
+   "block_share": 0.482,
+   "ext_assigned": 0.421,
+   "above_ext": 0.012,
+   "ext_false_share": 0.029,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.842,
+     "above": 0.046,
+     "below": 0.112,
+     "minutes_mean": 66.6,
+     "minutes_p90": 75.6,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.556,
+     "above": 0.019,
+     "below": 0.425,
+     "minutes_mean": 69.6,
+     "minutes_p90": 78.7,
+     "block_minutes_mean": 1.8
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.582,
+     "above": 0.02,
+     "below": 0.397,
+     "minutes_mean": 85.8,
+     "minutes_p90": 100.0,
+     "block_minutes_mean": 15.4
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.42,
+     "above": 0.0,
+     "below": 0.58,
+     "minutes_mean": 91.3,
+     "minutes_p90": 101.1,
+     "block_minutes_mean": 21.5
+    }
+   }
+  },
+  "g_real_v2_p420_m25|0.65|top": {
+   "scenario": "g_real_v2_p420_m25",
+   "confirm": 0.65,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин, априорные b и a), второй этап до 10 заданий ≤ 420 с за 25 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 10,
+   "partial": "gpcm",
+   "block_item_time": 420.0,
+   "block_minutes": 25,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "bank_note": "после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин",
+   "n": 1000,
+   "exact": 0.544,
+   "above": 0.014,
+   "below": 0.442,
+   "none": 0.0,
+   "retest_exact": 0.656,
+   "minutes_mean": 79.1,
+   "minutes_p90": 99.1,
+   "block_share": 0.482,
+   "ext_assigned": 0.412,
+   "above_ext": 0.011,
+   "ext_false_share": 0.027,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.849,
+     "above": 0.02,
+     "below": 0.132,
+     "minutes_mean": 66.6,
+     "minutes_p90": 75.6,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.524,
+     "above": 0.019,
+     "below": 0.457,
+     "minutes_mean": 69.6,
+     "minutes_p90": 78.7,
+     "block_minutes_mean": 1.8
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.556,
+     "above": 0.017,
+     "below": 0.428,
+     "minutes_mean": 85.8,
+     "minutes_p90": 100.0,
+     "block_minutes_mean": 15.4
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.361,
+     "above": 0.0,
+     "below": 0.639,
+     "minutes_mean": 91.3,
+     "minutes_p90": 101.1,
+     "block_minutes_mean": 21.5
+    }
+   }
+  },
+  "g_real_v2_d4_p300|0.6|top": {
+   "scenario": "g_real_v2_d4_p300",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 8,
+   "partial": "gpcm",
+   "block_item_time": 300.0,
+   "block_minutes": 15,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "directions": [
+    "qa",
+    "security",
+    "mobile",
+    "analyst"
+   ],
+   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с",
+   "n": 800,
+   "exact": 0.485,
+   "above": 0.018,
+   "below": 0.497,
+   "none": 0.0,
+   "retest_exact": 0.662,
+   "minutes_mean": 75.9,
+   "minutes_p90": 90.9,
+   "block_share": 0.509,
+   "ext_assigned": 0.395,
+   "above_ext": 0.006,
+   "ext_false_share": 0.016,
+   "by_true_level": {
+    "middle": {
+     "n": 94,
+     "exact": 0.809,
+     "above": 0.096,
+     "below": 0.096,
+     "minutes_mean": 65.7,
+     "minutes_p90": 76.0,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 258,
+     "exact": 0.554,
+     "above": 0.008,
+     "below": 0.438,
+     "minutes_mean": 68.0,
+     "minutes_p90": 77.4,
+     "block_minutes_mean": 0.8
+    },
+    "lead": {
+     "n": 265,
+     "exact": 0.532,
+     "above": 0.011,
+     "below": 0.457,
+     "minutes_mean": 81.2,
+     "minutes_p90": 92.0,
+     "block_minutes_mean": 10.2
+    },
+    "principal": {
+     "n": 183,
+     "exact": 0.153,
+     "above": 0.0,
+     "below": 0.847,
+     "minutes_mean": 84.5,
+     "minutes_p90": 92.7,
+     "block_minutes_mean": 12.6
+    }
+   },
+   "by_direction": {
+    "qa": {
+     "senior": 0.587,
+     "lead": 0.531,
+     "principal": 0.094
+    },
+    "security": {
+     "senior": 0.516,
+     "lead": 0.375,
+     "principal": 0.174
+    },
+    "mobile": {
+     "senior": 0.609,
+     "lead": 0.58,
+     "principal": 0.103
+    },
+    "analyst": {
+     "senior": 0.5,
+     "lead": 0.632,
+     "principal": 0.244
+    }
+   }
+  },
+  "g_real_v2_d4_p300|0.65|top": {
+   "scenario": "g_real_v2_d4_p300",
+   "confirm": 0.65,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с, априорные b и a), второй этап до 8 заданий ≤ 300 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 8,
+   "partial": "gpcm",
+   "block_item_time": 300.0,
+   "block_minutes": 15,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "directions": [
+    "qa",
+    "security",
+    "mobile",
+    "analyst"
+   ],
+   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с",
+   "n": 800,
+   "exact": 0.453,
+   "above": 0.016,
+   "below": 0.531,
+   "none": 0.0,
+   "retest_exact": 0.659,
+   "minutes_mean": 75.9,
+   "minutes_p90": 90.9,
+   "block_share": 0.509,
+   "ext_assigned": 0.372,
+   "above_ext": 0.005,
+   "ext_false_share": 0.013,
+   "by_true_level": {
+    "middle": {
+     "n": 94,
+     "exact": 0.798,
+     "above": 0.096,
+     "below": 0.106,
+     "minutes_mean": 65.7,
+     "minutes_p90": 76.0,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 258,
+     "exact": 0.523,
+     "above": 0.004,
+     "below": 0.473,
+     "minutes_mean": 68.0,
+     "minutes_p90": 77.4,
+     "block_minutes_mean": 0.8
+    },
+    "lead": {
+     "n": 265,
+     "exact": 0.479,
+     "above": 0.011,
+     "below": 0.509,
+     "minutes_mean": 81.2,
+     "minutes_p90": 92.0,
+     "block_minutes_mean": 10.2
+    },
+    "principal": {
+     "n": 183,
+     "exact": 0.137,
+     "above": 0.0,
+     "below": 0.863,
+     "minutes_mean": 84.5,
+     "minutes_p90": 92.7,
+     "block_minutes_mean": 12.6
+    }
+   },
+   "by_direction": {
+    "security": {
+     "senior": 0.452,
+     "lead": 0.328,
+     "principal": 0.13
+    },
+    "qa": {
+     "senior": 0.571,
+     "lead": 0.5,
+     "principal": 0.075
+    },
+    "mobile": {
+     "senior": 0.58,
+     "lead": 0.493,
+     "principal": 0.103
+    },
+    "analyst": {
+     "senior": 0.484,
+     "lead": 0.588,
+     "principal": 0.244
+    }
+   }
+  },
+  "g_real_v2_d4_p420|0.6|top": {
+   "scenario": "g_real_v2_d4_p420",
+   "confirm": 0.6,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 8,
+   "partial": "gpcm",
+   "block_item_time": 420.0,
+   "block_minutes": 15,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "directions": [
+    "qa",
+    "security",
+    "mobile",
+    "analyst"
+   ],
+   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с",
+   "n": 800,
+   "exact": 0.53,
+   "above": 0.022,
+   "below": 0.448,
+   "none": 0.0,
+   "retest_exact": 0.64,
+   "minutes_mean": 76.1,
+   "minutes_p90": 90.6,
+   "block_share": 0.501,
+   "ext_assigned": 0.415,
+   "above_ext": 0.016,
+   "ext_false_share": 0.039,
+   "by_true_level": {
+    "middle": {
+     "n": 94,
+     "exact": 0.84,
+     "above": 0.053,
+     "below": 0.106,
+     "minutes_mean": 66.1,
+     "minutes_p90": 77.0,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 258,
+     "exact": 0.562,
+     "above": 0.016,
+     "below": 0.422,
+     "minutes_mean": 68.3,
+     "minutes_p90": 78.1,
+     "block_minutes_mean": 1.0
+    },
+    "lead": {
+     "n": 265,
+     "exact": 0.543,
+     "above": 0.034,
+     "below": 0.423,
+     "minutes_mean": 80.7,
+     "minutes_p90": 91.8,
+     "block_minutes_mean": 10.3
+    },
+    "principal": {
+     "n": 183,
+     "exact": 0.306,
+     "above": 0.0,
+     "below": 0.694,
+     "minutes_mean": 85.5,
+     "minutes_p90": 93.0,
+     "block_minutes_mean": 13.6
+    }
+   },
+   "by_direction": {
+    "security": {
+     "senior": 0.468,
+     "lead": 0.359,
+     "principal": 0.304
+    },
+    "mobile": {
+     "senior": 0.58,
+     "lead": 0.667,
+     "principal": 0.359
+    },
+    "qa": {
+     "senior": 0.635,
+     "lead": 0.562,
+     "principal": 0.245
+    },
+    "analyst": {
+     "senior": 0.562,
+     "lead": 0.574,
+     "principal": 0.333
+    }
+   }
+  },
+  "g_real_v2_d4_p420|0.65|top": {
+   "scenario": "g_real_v2_d4_p420",
+   "confirm": 0.65,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с, априорные b и a), второй этап до 8 заданий ≤ 420 с за 15 мин (только заявившим Lead/Principal), частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 8,
+   "partial": "gpcm",
+   "block_item_time": 420.0,
+   "block_minutes": 15,
+   "block_trigger": "product",
+   "block_min_new": 3,
+   "block_pool": "all",
+   "directions": [
+    "qa",
+    "security",
+    "mobile",
+    "analyst"
+   ],
+   "bank_note": "после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с",
+   "n": 800,
+   "exact": 0.494,
+   "above": 0.019,
+   "below": 0.487,
+   "none": 0.0,
+   "retest_exact": 0.649,
+   "minutes_mean": 76.1,
+   "minutes_p90": 90.6,
+   "block_share": 0.501,
+   "ext_assigned": 0.406,
+   "above_ext": 0.014,
+   "ext_false_share": 0.034,
+   "by_true_level": {
+    "middle": {
+     "n": 94,
+     "exact": 0.83,
+     "above": 0.043,
+     "below": 0.128,
+     "minutes_mean": 66.1,
+     "minutes_p90": 77.0,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 258,
+     "exact": 0.496,
+     "above": 0.012,
+     "below": 0.492,
+     "minutes_mean": 68.3,
+     "minutes_p90": 78.1,
+     "block_minutes_mean": 1.0
+    },
+    "lead": {
+     "n": 265,
+     "exact": 0.528,
+     "above": 0.03,
+     "below": 0.442,
+     "minutes_mean": 80.7,
+     "minutes_p90": 91.8,
+     "block_minutes_mean": 10.3
+    },
+    "principal": {
+     "n": 183,
+     "exact": 0.268,
+     "above": 0.0,
+     "below": 0.732,
+     "minutes_mean": 85.5,
+     "minutes_p90": 93.0,
+     "block_minutes_mean": 13.6
+    }
+   },
+   "by_direction": {
+    "mobile": {
+     "senior": 0.507,
+     "lead": 0.652,
+     "principal": 0.256
+    },
+    "qa": {
+     "senior": 0.587,
+     "lead": 0.578,
+     "principal": 0.226
+    },
+    "analyst": {
+     "senior": 0.484,
+     "lead": 0.559,
+     "principal": 0.311
+    },
+    "security": {
+     "senior": 0.403,
+     "lead": 0.312,
+     "principal": 0.283
+    }
+   }
+  },
+  "g_real_v2|0.65|top": {
+   "scenario": "g_real_v2",
+   "confirm": 0.65,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В, априорные b и a), без блока, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 0,
+   "partial": "gpcm",
+   "bank_note": "после семейств ПБ-А/Б/В",
+   "n": 1000,
+   "exact": 0.468,
+   "above": 0.007,
+   "below": 0.525,
+   "none": 0.0,
+   "retest_exact": 0.654,
+   "minutes_mean": 69.0,
+   "minutes_p90": 76.8,
+   "block_share": 0.0,
+   "ext_assigned": 0.351,
+   "above_ext": 0.005,
+   "ext_false_share": 0.014,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.868,
+     "above": 0.013,
+     "below": 0.118,
+     "minutes_mean": 65.8,
+     "minutes_p90": 75.1,
+     "block_minutes_mean": 0.0
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.53,
+     "above": 0.01,
+     "below": 0.46,
+     "minutes_mean": 67.7,
+     "minutes_p90": 75.5,
+     "block_minutes_mean": 0.0
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.441,
+     "above": 0.007,
+     "below": 0.552,
+     "minutes_mean": 70.3,
+     "minutes_p90": 77.9,
+     "block_minutes_mean": 0.0
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.164,
+     "above": 0.0,
+     "below": 0.836,
+     "minutes_mean": 71.0,
+     "minutes_p90": 78.1,
+     "block_minutes_mean": 0.0
+    }
+   }
+  },
+  "g_real_v2_k10|0.65|top": {
+   "scenario": "g_real_v2_k10",
+   "confirm": 0.65,
+   "world": "top",
+   "rep": 0,
+   "text": "реальный банк Lead/Principal (после семейств ПБ-А/Б/В, априорные b и a), блок 10 заданий, частичный балл 0–4 (GPCM, шум оценщика)",
+   "bank": {
+    "own": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    },
+    "common": {
+     "lead": [
+      0,
+      0
+     ],
+     "principal": [
+      0,
+      0
+     ]
+    }
+   },
+   "real": true,
+   "mult": 0,
+   "a": null,
+   "block": 10,
+   "partial": "gpcm",
+   "bank_note": "после семейств ПБ-А/Б/В",
+   "n": 1000,
+   "exact": 0.534,
+   "above": 0.034,
+   "below": 0.432,
+   "none": 0.0,
+   "retest_exact": 0.612,
+   "minutes_mean": 79.6,
+   "minutes_p90": 97.0,
+   "block_share": 0.54,
+   "ext_assigned": 0.452,
+   "above_ext": 0.026,
+   "ext_false_share": 0.058,
+   "by_true_level": {
+    "middle": {
+     "n": 152,
+     "exact": 0.829,
+     "above": 0.053,
+     "below": 0.118,
+     "minutes_mean": 66.4,
+     "minutes_p90": 75.1,
+     "block_minutes_mean": 0.1
+    },
+    "senior": {
+     "n": 313,
+     "exact": 0.463,
+     "above": 0.064,
+     "below": 0.473,
+     "minutes_mean": 73.0,
+     "minutes_p90": 91.9,
+     "block_minutes_mean": 4.8
+    },
+    "lead": {
+     "n": 297,
+     "exact": 0.65,
+     "above": 0.02,
+     "below": 0.33,
+     "minutes_mean": 85.8,
+     "minutes_p90": 98.7,
+     "block_minutes_mean": 16.1
+    },
+    "principal": {
+     "n": 238,
+     "exact": 0.294,
+     "above": 0.0,
+     "below": 0.706,
+     "minutes_mean": 89.0,
+     "minutes_p90": 98.2,
+     "block_minutes_mean": 18.3
+    }
+   }
   }
  },
  "signature": {
@@ -18533,6 +19715,18 @@
     "config_hash": "f67e5297eb33",
     "command": "make grades-ext-need",
     "note": "дерево exp/grades-ext-x-catalog-ext2 f8ff237 + семейства feat/bank-ext 272a323 (ПБ-А/Б/В влиты, до sync в catalog-ext)"
+   },
+   {
+    "scenarios": "g_real_v2_p300, g_real_v2_p420, g_real_v2_p420_m25, g_real_v2_d4_p300, g_real_v2_d4_p420, g_real_v2, g_real_v2_k10",
+    "reps": "0",
+    "confirms": "0.6,0.65",
+    "worlds": "top",
+    "commit": "35bf697b+ban",
+    "bank": "f563cfcaebf63aef",
+    "generated_at": "2026-10-11T17:12:31+00:00",
+    "seed": 20261011,
+    "config_hash": "c2a93dba04f3",
+    "command": "make grades-ext-need"
    }
   ]
  },
@@ -18541,5 +19735,5 @@
   "exact_principal": 0.64,
   "above_max": 0.07
  },
- "seconds": 128.6
+ "seconds": 141.5
 }
