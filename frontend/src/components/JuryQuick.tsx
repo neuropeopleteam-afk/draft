@@ -201,7 +201,13 @@ export function QuickGuide({ q, setQ, busy, msg, setMsg, open, onReset, who }: {
                 <span className="text-xs text-white/75">или нажмите «Разобрать требования»</span>
               </>
           : q < LAST
-            ? <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(nextI)}>{busy ? "Входим…" : `Дальше: ${steps[nextI].title}`}</button>
+            ? <>
+                <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" disabled={busy} onClick={() => go(nextI)}>{busy ? "Входим…" : `Дальше: ${steps[nextI].title}`}</button>
+                {/* С2 №2: перед устной защитой — вторая кнопка «Пропустить», чтобы шаг с ИИ-интервьюером не терялся и не был обязательным */}
+                {steps[nextI].defense && nextI < LAST && (
+                  <button className="btn bg-white/10 px-3 py-1.5 text-sm text-white hover:bg-white/20" disabled={busy} onClick={() => go(nextI + 1)} data-testid="quick-skip-defense">Пропустить → {steps[nextI + 1].title}</button>
+                )}
+              </>
             : <button className="btn bg-brand-strong px-3 py-1.5 text-sm text-white hover:bg-brand-deep" onClick={() => quick.setMode("full")}>Готово · остальное — в справочнике</button>}
         <span className="ml-auto flex gap-3 text-xs font-semibold text-white/70">
           <button className="underline-offset-2 hover:text-white hover:underline" disabled={busy} onClick={() => { quick.restart(); setQ(0); setNow(Date.now()); }}>Начать заново</button>
