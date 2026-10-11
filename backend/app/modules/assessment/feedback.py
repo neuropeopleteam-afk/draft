@@ -61,7 +61,11 @@ DEMAND_STATUS_TITLES = {"confirmed": "подтверждён тестом (T1)",
 # Темы для семейств, навыки которых не сводятся к стек-тегам справочника
 _EXTRA_TOPICS = [({"networking", "cidr", "ipv4", "routing"}, "networking", "Сети и адресация"),
                  ({"web_security", "xss", "csp"}, "web-security", "Безопасность веб-клиента"),
-                 ({"performance", "latency", "capacity_planning"}, "system-performance", "Производительность систем")]
+                 ({"performance", "latency", "capacity_planning"}, "system-performance", "Производительность систем"),
+                 # уровни Lead/Principal (банк feat/bank-ext; выдаются только с GRADES_EXT_ENABLED)
+                 ({"incident_analysis", "postmortem", "reliability", "slo"}, "reliability", "Надёжность и разбор инцидентов"),
+                 ({"technical_strategy", "engineering_metrics", "system_design"}, "tech-strategy",
+                  "Техническая стратегия и проектирование")]
 
 # Аспекты темы — навыки семейств банка по-русски. Навык без названия здесь в аспекты не выводится
 # (обычно это сама тема: python, sql, javascript …).
