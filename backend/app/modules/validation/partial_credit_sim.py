@@ -55,9 +55,10 @@ OUT = HERE / "data" / "partial_credit_sim.json"
 NOISE = HERE / "data" / "partial_credit_noise.json"
 DOCS_MD = REPO / "docs" / "validation" / "PARTIAL_CREDIT.md"
 SEED = pr.SEED
-ARMS = ("bin", "frac", "gpcm")
+ARMS = ("bin", "frac", "gpcm", "gpcm_est")
 ARM_RU = {"bin": "0/1 (засчитано при балле ≥ 2)", "frac": "доля 0..1 в 2PL (сейчас, флаг выкл.)",
-          "gpcm": "0–4 по GPCM (флаг вкл.)"}
+          "gpcm": "0–4 по GPCM в θ и в выборе задания (флаг вкл.)",
+          "gpcm_est": "0–4 по GPCM только в θ, выбор задания по 2PL (флаг вкл., ASSESSMENT_PARTIAL_CREDIT_SELECT=false)"}
 WORLDS = {
     "base": {"spacing": 1.0, "noise": True, "ru": "ступени ×1, шум оценщика по данным"},
     "narrow": {"spacing": 0.5, "noise": True, "ru": "ступени ×0,5 (пункты рубрики мало различаются), шум по данным"},
@@ -112,7 +113,7 @@ def gpcm_responder(arm: str, spacing: float, noise: np.ndarray | None):
                 k = gpcm.sample(person.theta, ag, steps, rng)
                 if noise is not None:
                     k = int(rng.choice(gpcm.K + 1, p=noise[k]))
-                x[j] = float(k >= 2) if arm == "bin" else k / gpcm.K
+                x[j] = float(k >= 2) if arm == "bin" else k / gpcm.K  # frac, gpcm, gpcm_est — доля балла
             log_t = float(rng.normal(tf.beta_time - person.tau, 1 / tf.alpha_time))
             return x, min(log_t, float(np.log(tf.time_limit_s)))
         return respond
@@ -134,7 +135,7 @@ def run_task(args: tuple) -> dict:
     w = WORLDS[world]
     _patch_confirm(confirm)
     cfg = sim.app_config_from_settings()
-    cfg = replace(cfg, partial_credit=(arm == "gpcm"))
+    cfg = replace(cfg, partial_credit=arm in ("gpcm", "gpcm_est"), partial_credit_select=(arm == "gpcm"))
     if length == "fixed":
         cfg = replace(cfg, min_items=16, max_items=16, se_target=0.0, stop_rule="se", ext_items=0)
     pool = sim.make_pool(cfg.subpools)
@@ -169,12 +170,17 @@ def summarize(parts: list[dict]) -> dict:
     rb = pr.retest_block(cands, r1, r2, SEED + 99, ci=True)
     ps = pr.path_stats(r1 + r2)
     se1 = np.array([r["tests"][0]["se"] for r in r1])
+    th1 = np.array([r["tests"][0]["theta"] for r in r1])
+    th_true = np.array([c.theta for c in cands])
     pg = rb["path_grade"]
     return {"n": len(cands), "exact": tb["exact"], "over": tb["over_share"], "under": tb["under_share"],
             "none": tb["no_category_share"], "kappa_w_true": tb["kappa_w_true"],
             "retest_exact": pg["exact"], "retest_exact_ci": pg.get("exact_ci"), "retest_kappa_w": pg["kappa_w"],
             "retest_kappa_w_ci": pg.get("kappa_w_ci"), "icc_theta": rb.get("icc_theta"),
             "se_first_mean": round(float(se1.mean()), 4), "se_first_median": round(float(np.median(se1)), 4),
+            "rmse_theta_first": round(float(np.sqrt(np.mean((th1 - th_true) ** 2))), 4),
+            "bias_theta_first": round(float(np.mean(th1 - th_true)), 4),
+            "coverage90_first": round(float(np.mean(np.abs(th1 - th_true) <= 1.645 * se1)), 3),
             "items_per_session": ps["mean_items_per_session"], "items_per_path": ps["mean_items_per_path"],
             "minutes_per_path": ps["mean_time_min_per_path"], "sessions_per_path": ps["sessions_per_path"],
             "extension_share": ps["extension_share"]}
@@ -220,7 +226,8 @@ def run(n: int = 300, quick: bool = False, write: bool = True, parallel: int = 2
     if plan is None:
         plan = [(arm, "base", 0.8, "adaptive") for arm in ARMS] + [(arm, "base", 0.6, "adaptive") for arm in ARMS] + \
                [(arm, "narrow", 0.6, "adaptive") for arm in ARMS] + [(arm, "clean", 0.6, "adaptive") for arm in ARMS] + \
-               [(arm, "base", 0.6, "fixed") for arm in ("frac", "gpcm")]
+               [(arm, "base", 0.6, "fixed") for arm in ("frac", "gpcm", "gpcm_est")] + \
+               [(arm, "clean", 0.6, "fixed") for arm in ("frac", "gpcm_est")]
     tasks = [(arm, world, conf, length, i, d, n) for (arm, world, conf, length) in plan for i, d in enumerate(dirs)]
     parts = _run_all(tasks, parallel)
     by: dict[tuple, list[dict]] = {}
@@ -239,6 +246,7 @@ def run(n: int = 300, quick: bool = False, write: bool = True, parallel: int = 2
         rows.append(row)
         print(f"  {length:8s} {world:6s} P≥{conf} {arm:5s}: точно {row['exact']:.3f} выше {row['over']:.3f} "
               f"повтор {row['retest_exact']:.3f} κw {row['retest_kappa_w']:.3f} SE {row['se_first_mean']:.3f} "
+              f"RMSE {row['rmse_theta_first']:.3f} покр. {row['coverage90_first']:.3f} "
               f"заданий {row['items_per_session']} мин {row['minutes_per_path']}", flush=True)
     world_cfg = {"n_per_direction": n, "directions": list(dirs), "worlds": WORLDS, "arms": list(ARMS),
                  "offsets": gpcm.OFFSETS.tolist(), "noise": json.loads(NOISE.read_text(encoding="utf-8")),
@@ -319,12 +327,13 @@ def markdown(rep: dict) -> str:
         L.append(f"- `{k}` — {v['ru']};")
     L += ["", "## Итог", "",
           "| Длина | Мир | Порог P | Вариант | Точно | Выше | Ниже | Без кат. | Повтор совпал | κw повтора | SE 1-й сессии | "
-          "Заданий в сессии | Минут на путь |",
-          "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
+          "RMSE θ̂ 1-й сессии | Покрытие 90 % | Заданий в сессии | Минут на путь |",
+          "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for r in rep["rows"]:
         L.append(f"| {'адаптивная' if r['length'] == 'adaptive' else 'фикс. 16'} | {r['world']} | "
                  f"{_f(r['confirm'], 1)} | {r['arm']} | {_pc(r['exact'])} | {_pc(r['over'])} | {_pc(r['under'])} | "
                  f"{_pc(r['none'])} | {_pc(r['retest_exact'])} | {_f(r['retest_kappa_w'])} | {_f(r['se_first_mean'])} | "
+                 f"{_f(r.get('rmse_theta_first'))} | {_pc(r.get('coverage90_first'))} | "
                  f"{_f(r['items_per_session'], 1)} | {_f(r['minutes_per_path'], 1)} |")
     L += ["", "## Парные разности с вариантом `frac` (те же кандидаты; ДИ 95 % — бутстрэп)", "",
           "| Длина | Мир | Порог P | Вариант | Точно | Выше | Повтор совпал |", "|---|---|---|---|---|---|---|"]

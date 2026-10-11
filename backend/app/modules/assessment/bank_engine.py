@@ -180,7 +180,8 @@ class BankEngine:
                 "exposure": s.assessment_exposure,
                 "max_per_format": {"open_book_3step": s.assessment_max_open_book, "open_answer": s.assessment_max_open_answer},
                 # частичный балл 0–4 (GPCM) — ключ только при флаге: сессии без него и прежние — как раньше
-                **({"partial_credit": True} if s.assessment_partial_credit_enabled else {})}
+                **({"partial_credit": True, "partial_credit_select": bool(s.assessment_partial_credit_select)}
+                   if s.assessment_partial_credit_enabled else {})}
 
     # ------------------------------------------------------------------ протокол
     def _express_cfg(self, cfg: dict, claimed_grade: str) -> dict:
@@ -463,7 +464,8 @@ class BankEngine:
                          ext_items=int(ext["n"]) if ext else int(c.get("ext_items", 0)),
                          ext_time_s=float(c.get("ext_time_s", 1800.0)),
                          ext_own_first=bool(c.get("ext_own_first", False)),
-                         partial_credit=bool(c.get("partial_credit", False)))
+                         partial_credit=bool(c.get("partial_credit", False)),
+                         partial_credit_select=bool(c.get("partial_credit_select", True)))
 
     def _rebuild(self, state: dict) -> CATSession:
         pool = list(_pool(state["cfg"].get("subpools", 1)))

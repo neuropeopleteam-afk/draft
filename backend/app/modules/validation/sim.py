@@ -58,6 +58,7 @@ class AppConfig:
     cuts: tuple = field(default_factory=cuts_tuple)              # пороги грейдов платформы (со Стажёром), как в bank_engine
     start_theta: dict = field(default_factory=start_theta)       # стартовая θ по заявленному грейду
     partial_credit: bool = False   # развёрнутые части — GPCM 0–4 (ASSESSMENT_PARTIAL_CREDIT_ENABLED)
+    partial_credit_select: bool = True  # выбор задания по информации GPCM (ASSESSMENT_PARTIAL_CREDIT_SELECT)
 
     def cat(self) -> CATConfig:
         return CATConfig(min_items=self.min_items, max_items=self.max_items, se_target=self.se_target,
@@ -66,7 +67,7 @@ class AppConfig:
                          stop_rule=self.stop_rule, classify_z=self.classify_z, select_at=self.select_at,
                          time_weight=self.time_weight, ext_items=0 if self.legacy_ext else self.ext_items,
                          ext_time_s=self.ext_minutes * 60.0, ext_own_first=self.ext_own_first,
-                         partial_credit=self.partial_credit)
+                         partial_credit=self.partial_credit, partial_credit_select=self.partial_credit_select)
 
 
 BASELINE_DAY2 = AppConfig(max_items=20, max_minutes=90, subpools=1, exposure=False, max_per_format={},
@@ -88,7 +89,8 @@ def app_config_from_settings() -> AppConfig:
                      stop_rule=s.assessment_stop_rule, classify_z=s.assessment_classify_z,
                      select_at=s.assessment_select_at, ext_items=s.assessment_extension_items,
                      ext_minutes=s.assessment_extension_minutes, ext_own_first=s.assessment_extension_own_first,
-                     partial_credit=s.assessment_partial_credit_enabled)
+                     partial_credit=s.assessment_partial_credit_enabled,
+                     partial_credit_select=s.assessment_partial_credit_select)
 
 
 def make_pool(n_subpools: int, params: dict | None = None):
