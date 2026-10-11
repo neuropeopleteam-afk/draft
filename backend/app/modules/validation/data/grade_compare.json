@@ -2,12 +2,12 @@
  "signature": {
   "world": "симуляция всего пути (path-retest): 5 направлений × 500 синтетических кандидатов, путь дважды; миры: наш мир: ошибка эксперта σ 0,5, точные параметры заданий",
   "seed": 20261006,
-  "config_hash": "4b5f411d9e81",
-  "commit": "b927567",
+  "config_hash": "7bab00c6333b",
+  "commit": "079b307",
   "bank": "76c4164b6ce83743",
   "n": 2500,
   "command": "make grade-compare",
-  "generated_at": "2026-10-11T10:10:42+00:00"
+  "generated_at": "2026-10-11T10:13:41+00:00"
  },
  "rows": [
   {
@@ -35,7 +35,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 0,
-    "promote": null
+    "promote": null,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -147,7 +148,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 0,
-    "promote": null
+    "promote": null,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -259,7 +261,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 0,
-    "promote": 0.3
+    "promote": 0.3,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -373,7 +376,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 0,
-    "promote": 0.5
+    "promote": 0.5,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -463,6 +467,236 @@
    }
   },
   {
+   "world": "ours",
+   "variant": "promote_03_up08",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 0,
+    "promote": 0.3,
+    "promote_up": 0.8
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.6944,
+    "over": 0.0876,
+    "under": 0.208,
+    "none": 0.0268,
+    "within_1": 0.9984,
+    "kappa_true": 0.8273,
+    "under_claimed_below": 0.0972,
+    "retest_kappa": 0.8067,
+    "retest_exact": 0.7216,
+    "minutes_mean": 60.926,
+    "minutes_p90": 79.3532,
+    "minutes_over_60": 0.5504,
+    "items_mean": 21.8728,
+    "sessions_mean": 1.3044,
+    "borderline": 0.7344,
+    "status": {
+     "accepted_lower": 0.2028,
+     "confirmed": 0.6292,
+     "none": 0.0268,
+     "promoted": 0.092,
+     "provisional": 0.0492
+    },
+    "exact_ci": [
+     0.677,
+     0.713
+    ],
+    "over_ci": [
+     0.078,
+     0.099
+    ],
+    "retest_kappa_ci": [
+     0.791,
+     0.821
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.2996,
+    "promoted": 0.092,
+    "under_other": 0.1108
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.7499,
+    "over": 0.1051,
+    "under": 0.133,
+    "none": 0.0322,
+    "within_1": 0.9986,
+    "kappa_true": 0.8642,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.8198,
+    "retest_exact": 0.7312,
+    "minutes_mean": 60.5316,
+    "minutes_p90": 77.7164,
+    "minutes_over_60": 0.5506,
+    "items_mean": 21.3759,
+    "sessions_mean": 1.1968,
+    "borderline": 0.7,
+    "status": {
+     "accepted_lower": 0.2429,
+     "confirmed": 0.6447,
+     "none": 0.0322,
+     "promoted": 0.0216,
+     "provisional": 0.0586
+    },
+    "exact_ci": [
+     0.732,
+     0.769
+    ],
+    "over_ci": [
+     0.091,
+     0.119
+    ],
+    "retest_kappa_ci": [
+     0.803,
+     0.836
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.1911,
+    "promoted": 0.0216,
+    "under_other": 0.133
+   }
+  },
+  {
+   "world": "ours",
+   "variant": "promote_05_up09",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 0,
+    "promote": 0.5,
+    "promote_up": 0.9
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.6692,
+    "over": 0.0876,
+    "under": 0.2336,
+    "none": 0.0252,
+    "within_1": 0.9976,
+    "kappa_true": 0.8117,
+    "under_claimed_below": 0.12,
+    "retest_kappa": 0.815,
+    "retest_exact": 0.7272,
+    "minutes_mean": 59.7983,
+    "minutes_p90": 76.9478,
+    "minutes_over_60": 0.5352,
+    "items_mean": 21.4332,
+    "sessions_mean": 1.214,
+    "borderline": 0.7468,
+    "status": {
+     "accepted_lower": 0.2016,
+     "confirmed": 0.6588,
+     "none": 0.0252,
+     "promoted": 0.0628,
+     "provisional": 0.0516
+    },
+    "exact_ci": [
+     0.651,
+     0.687
+    ],
+    "over_ci": [
+     0.076,
+     0.098
+    ],
+    "retest_kappa_ci": [
+     0.8,
+     0.828
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.21,
+    "promoted": 0.0628,
+    "under_other": 0.1136
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.747,
+    "over": 0.1051,
+    "under": 0.1363,
+    "none": 0.0302,
+    "within_1": 0.9981,
+    "kappa_true": 0.8601,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.8298,
+    "retest_exact": 0.7422,
+    "minutes_mean": 59.5396,
+    "minutes_p90": 75.9241,
+    "minutes_over_60": 0.5334,
+    "items_mean": 21.001,
+    "sessions_mean": 1.1191,
+    "borderline": 0.7115,
+    "status": {
+     "accepted_lower": 0.241,
+     "confirmed": 0.6529,
+     "none": 0.0302,
+     "promoted": 0.0139,
+     "provisional": 0.0619
+    },
+    "exact_ci": [
+     0.728,
+     0.766
+    ],
+    "over_ci": [
+     0.093,
+     0.119
+    ],
+    "retest_kappa_ci": [
+     0.814,
+     0.843
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.1143,
+    "promoted": 0.0139,
+    "under_other": 0.1363
+   }
+  },
+  {
    "world": "exact",
    "variant": "old",
    "levels": 5,
@@ -487,7 +721,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 1,
-    "promote": null
+    "promote": null,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -513,16 +748,16 @@
      "provisional": 0.0908
     },
     "exact_ci": [
-     0.553,
+     0.55,
      0.589
     ],
     "over_ci": [
      0.043,
-     0.061
+     0.06
     ],
     "retest_kappa_ci": [
-     0.84,
-     0.864
+     0.839,
+     0.865
     ],
     "feasible": true,
     "feasible_strict": true,
@@ -555,15 +790,15 @@
      "provisional": 0.108
     },
     "exact_ci": [
-     0.664,
+     0.665,
      0.705
     ],
     "over_ci": [
      0.051,
-     0.073
+     0.071
     ],
     "retest_kappa_ci": [
-     0.814,
+     0.815,
      0.845
     ],
     "feasible": false,
@@ -599,7 +834,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 1,
-    "promote": null
+    "promote": null,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -711,7 +947,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 1,
-    "promote": 0.3
+    "promote": 0.3,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -738,16 +975,16 @@
      "provisional": 0.0496
     },
     "exact_ci": [
-     0.685,
-     0.72
+     0.684,
+     0.721
     ],
     "over_ci": [
      0.116,
      0.142
     ],
     "retest_kappa_ci": [
-     0.749,
-     0.785
+     0.751,
+     0.784
     ],
     "feasible": false,
     "feasible_strict": false,
@@ -781,12 +1018,12 @@
      "provisional": 0.0595
     },
     "exact_ci": [
-     0.695,
+     0.693,
      0.733
     ],
     "over_ci": [
      0.14,
-     0.169
+     0.171
     ],
     "retest_kappa_ci": [
      0.762,
@@ -825,7 +1062,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 1,
-    "promote": 0.5
+    "promote": 0.5,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -852,16 +1090,16 @@
      "provisional": 0.0508
     },
     "exact_ci": [
-     0.675,
-     0.711
+     0.676,
+     0.71
     ],
     "over_ci": [
      0.112,
-     0.138
+     0.137
     ],
     "retest_kappa_ci": [
      0.764,
-     0.795
+     0.796
     ],
     "feasible": false,
     "feasible_strict": false,
@@ -900,11 +1138,11 @@
     ],
     "over_ci": [
      0.134,
-     0.166
+     0.165
     ],
     "retest_kappa_ci": [
-     0.773,
-     0.808
+     0.774,
+     0.807
     ],
     "feasible": false,
     "feasible_strict": false,
@@ -912,6 +1150,236 @@
     "offered": 0.1114,
     "promoted": 0.0648,
     "under_other": 0.1239
+   }
+  },
+  {
+   "world": "exact",
+   "variant": "promote_03_up08",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 1,
+    "promote": 0.3,
+    "promote_up": 0.8
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.7132,
+    "over": 0.0884,
+    "under": 0.19,
+    "none": 0.028,
+    "within_1": 0.9976,
+    "kappa_true": 0.8384,
+    "under_claimed_below": 0.088,
+    "retest_kappa": 0.804,
+    "retest_exact": 0.7,
+    "minutes_mean": 60.195,
+    "minutes_p90": 78.5123,
+    "minutes_over_60": 0.54,
+    "items_mean": 22.0224,
+    "sessions_mean": 1.3176,
+    "borderline": 0.7408,
+    "status": {
+     "accepted_lower": 0.1944,
+     "confirmed": 0.6244,
+     "none": 0.028,
+     "promoted": 0.1036,
+     "provisional": 0.0496
+    },
+    "exact_ci": [
+     0.695,
+     0.732
+    ],
+    "over_ci": [
+     0.077,
+     0.099
+    ],
+    "retest_kappa_ci": [
+     0.788,
+     0.819
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.3116,
+    "promoted": 0.1036,
+    "under_other": 0.102
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.7624,
+    "over": 0.1061,
+    "under": 0.1224,
+    "none": 0.0326,
+    "within_1": 0.9986,
+    "kappa_true": 0.8717,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.8223,
+    "retest_exact": 0.7182,
+    "minutes_mean": 59.8312,
+    "minutes_p90": 77.3794,
+    "minutes_over_60": 0.5401,
+    "items_mean": 21.5151,
+    "sessions_mean": 1.2098,
+    "borderline": 0.7019,
+    "status": {
+     "accepted_lower": 0.2328,
+     "confirmed": 0.6495,
+     "none": 0.0326,
+     "promoted": 0.0254,
+     "provisional": 0.0595
+    },
+    "exact_ci": [
+     0.744,
+     0.781
+    ],
+    "over_ci": [
+     0.093,
+     0.119
+    ],
+    "retest_kappa_ci": [
+     0.807,
+     0.837
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.2026,
+    "promoted": 0.0254,
+    "under_other": 0.1224
+   }
+  },
+  {
+   "world": "exact",
+   "variant": "promote_05_up09",
+   "levels": 5,
+   "point": {
+    "decision": "claimed",
+    "misspec": 0.5,
+    "confirm_level": 0.6,
+    "ext_items": 6,
+    "ext_minutes": 20,
+    "min_items": 8,
+    "max_items": 16,
+    "se_target": 0.35,
+    "classify_z": 1.28,
+    "stop_rule": "classification",
+    "award_above": null,
+    "levels": 5,
+    "max_minutes": 60,
+    "exclude_low": 0.0,
+    "partial": 1,
+    "time_weight": 0.0,
+    "weak_a": 0.0,
+    "weak_pool": "keep",
+    "plus": 0,
+    "exact": 1,
+    "promote": 0.5,
+    "promote_up": 0.9
+   },
+   "all": {
+    "n": 2500,
+    "exact": 0.69,
+    "over": 0.0792,
+    "under": 0.2216,
+    "none": 0.028,
+    "within_1": 0.9976,
+    "kappa_true": 0.8265,
+    "under_claimed_below": 0.1172,
+    "retest_kappa": 0.8397,
+    "retest_exact": 0.7492,
+    "minutes_mean": 58.7606,
+    "minutes_p90": 77.0778,
+    "minutes_over_60": 0.5052,
+    "items_mean": 21.5444,
+    "sessions_mean": 1.2124,
+    "borderline": 0.7412,
+    "status": {
+     "accepted_lower": 0.1948,
+     "confirmed": 0.6656,
+     "none": 0.028,
+     "promoted": 0.0608,
+     "provisional": 0.0508
+    },
+    "exact_ci": [
+     0.672,
+     0.708
+    ],
+    "over_ci": [
+     0.068,
+     0.091
+    ],
+    "retest_kappa_ci": [
+     0.827,
+     0.851
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.1668,
+    "offered": 0.2072,
+    "promoted": 0.0608,
+    "under_other": 0.1044
+   },
+   "claimed_not_below": {
+    "n": 2083,
+    "exact": 0.7691,
+    "over": 0.0951,
+    "under": 0.1253,
+    "none": 0.0331,
+    "within_1": 0.9976,
+    "kappa_true": 0.874,
+    "under_claimed_below": 0.0,
+    "retest_kappa": 0.8521,
+    "retest_exact": 0.7595,
+    "minutes_mean": 58.4754,
+    "minutes_p90": 75.8332,
+    "minutes_over_60": 0.5084,
+    "items_mean": 21.1051,
+    "sessions_mean": 1.1176,
+    "borderline": 0.7028,
+    "status": {
+     "accepted_lower": 0.2338,
+     "confirmed": 0.6635,
+     "none": 0.0331,
+     "promoted": 0.0086,
+     "provisional": 0.061
+    },
+    "exact_ci": [
+     0.752,
+     0.788
+    ],
+    "over_ci": [
+     0.083,
+     0.108
+    ],
+    "retest_kappa_ci": [
+     0.838,
+     0.864
+    ],
+    "feasible": false,
+    "feasible_strict": false,
+    "claimed_below_share": 0.0,
+    "offered": 0.1114,
+    "promoted": 0.0086,
+    "under_other": 0.1253
    }
   },
   {
@@ -939,7 +1407,8 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 1,
-    "promote": null
+    "promote": null,
+    "promote_up": null
    },
    "all": {
     "n": 2500,
@@ -965,16 +1434,16 @@
      "provisional": 0.1168
     },
     "exact_ci": [
-     0.644,
-     0.68
+     0.645,
+     0.681
     ],
     "over_ci": [
      0.116,
      0.142
     ],
     "retest_kappa_ci": [
-     0.756,
-     0.793
+     0.755,
+     0.794
     ],
     "feasible": false,
     "feasible_strict": false,
@@ -1011,11 +1480,11 @@
      0.757
     ],
     "over_ci": [
-     0.129,
+     0.131,
      0.159
     ],
     "retest_kappa_ci": [
-     0.746,
+     0.745,
      0.784
     ],
     "feasible": false,
@@ -1028,7 +1497,7 @@
   },
   {
    "world": "exact",
-   "variant": "promote_03",
+   "variant": "promote_03_up08",
    "levels": 4,
    "point": {
     "decision": "claimed",
@@ -1051,92 +1520,93 @@
     "weak_pool": "keep",
     "plus": 0,
     "exact": 1,
-    "promote": 0.3
+    "promote": 0.3,
+    "promote_up": 0.8
    },
    "all": {
     "n": 2500,
-    "exact": 0.6684,
-    "over": 0.1764,
-    "under": 0.1504,
-    "none": 0.0416,
-    "within_1": 0.9976,
-    "kappa_true": 0.7556,
-    "under_claimed_below": 0.048,
-    "retest_kappa": 0.6976,
-    "retest_exact": 0.684,
+    "exact": 0.6692,
+    "over": 0.1496,
+    "under": 0.1752,
+    "none": 0.0456,
+    "within_1": 0.998,
+    "kappa_true": 0.7531,
+    "under_claimed_below": 0.0728,
+    "retest_kappa": 0.7298,
+    "retest_exact": 0.7276,
     "minutes_mean": 63.4402,
     "minutes_p90": 81.0831,
     "minutes_over_60": 0.62,
     "items_mean": 21.8772,
     "sessions_mean": 1.2688,
-    "borderline": 0.7168,
+    "borderline": 0.7176,
     "status": {
      "accepted_lower": 0.2016,
-     "confirmed": 0.5612,
+     "confirmed": 0.6144,
      "none": 0.0156,
-     "promoted": 0.1012,
+     "promoted": 0.048,
      "provisional": 0.1204
     },
     "exact_ci": [
-     0.65,
-     0.686
+     0.651,
+     0.688
     ],
     "over_ci": [
-     0.161,
-     0.191
+     0.137,
+     0.163
     ],
     "retest_kappa_ci": [
-     0.675,
-     0.718
+     0.71,
+     0.748
     ],
     "feasible": false,
     "feasible_strict": false,
     "claimed_below_share": 0.104,
     "offered": 0.2252,
-    "promoted": 0.1012,
+    "promoted": 0.048,
     "under_other": 0.1024
    },
    "claimed_not_below": {
     "n": 2240,
-    "exact": 0.6835,
-    "over": 0.1969,
+    "exact": 0.7121,
+    "over": 0.167,
     "under": 0.1143,
-    "none": 0.0464,
-    "within_1": 0.9982,
-    "kappa_true": 0.7639,
+    "none": 0.0509,
+    "within_1": 0.9987,
+    "kappa_true": 0.7839,
     "under_claimed_below": 0.0,
-    "retest_kappa": 0.7071,
-    "retest_exact": 0.696,
+    "retest_kappa": 0.7427,
+    "retest_exact": 0.7371,
     "minutes_mean": 62.608,
     "minutes_p90": 78.3661,
     "minutes_over_60": 0.6009,
     "items_mean": 21.6272,
     "sessions_mean": 1.2067,
-    "borderline": 0.6969,
+    "borderline": 0.6978,
     "status": {
      "accepted_lower": 0.2241,
-     "confirmed": 0.5746,
+     "confirmed": 0.6062,
      "none": 0.0174,
-     "promoted": 0.0496,
+     "promoted": 0.0179,
      "provisional": 0.1344
     },
     "exact_ci": [
-     0.664,
-     0.702
+     0.692,
+     0.73
     ],
     "over_ci": [
-     0.181,
-     0.214
+     0.151,
+     0.183
     ],
     "retest_kappa_ci": [
-     0.684,
-     0.729
+     0.722,
+     0.763
     ],
     "feasible": false,
     "feasible_strict": false,
     "claimed_below_share": 0.0,
     "offered": 0.158,
-    "promoted": 0.0496,
+    "promoted": 0.0179,
     "under_other": 0.1143
    }
   }
@@ -1147,12 +1617,12 @@
    "exact": 0.826,
    "kappa": 0.904,
    "over": 0.029,
-   "note": "их собственная симуляция с точными параметрами заданий, 4 ступени"
+   "note": "их материалы: собственная симуляция с точными параметрами заданий, 4 ступени"
   },
   {
    "name": "IT Match",
    "exact": 0.7,
-   "note": "их опубликованное число"
+   "note": "их материалы; условия расчёта не раскрыты"
   }
  ],
  "two_stage": {
@@ -1169,5 +1639,5 @@
   "ext_items": 0
  },
  "caveat": "Синтетика (модель, не люди): кандидаты — модель ответов 2PL; «точные параметры» — истина = предкалибровка; числа конкурентов — из их материалов, другой мир и процедура.",
- "seconds": 54.6
+ "seconds": 94.4
 }
