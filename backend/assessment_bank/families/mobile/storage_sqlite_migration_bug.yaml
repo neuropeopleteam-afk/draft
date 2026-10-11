@@ -1,7 +1,7 @@
 family_id: mobile.storage.sqlite_migration_bug
 title: Миграция локальной SQLite-базы — обновление приложения прерывается
 direction: mobile
-skills: [mobile_storage, sqlite, sql, migrations]
+skills: [storage, sqlite, sql, migrations, persistence]
 target_grades: [intern, junior]
 format: find_bug
 language: sql

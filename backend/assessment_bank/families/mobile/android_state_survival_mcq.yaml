@@ -1,7 +1,7 @@
 family_id: mobile.android.state_survival_mcq
 title: Состояние экрана Android — что переживёт поворот, смерть процесса и закрытие
 direction: mobile
-skills: [android, mobile_lifecycle, state_restoration, viewmodel]
+skills: [android, android_lifecycle, state_management, mvvm]
 target_grades: [middle, senior]
 format: mcq_concept
 language: text

@@ -1,7 +1,7 @@
 family_id: mobile.ios.appearance_mcq
 title: UIViewController — колбэки появления при push, модальных листах и уходе в фон
 direction: mobile
-skills: [ios, uikit, mobile_lifecycle, mobile_navigation]
+skills: [ios, uikit, view_controllers, ios_lifecycle, navigation]
 target_grades: [junior, middle]
 format: mcq_concept
 language: text

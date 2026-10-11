@@ -1,0 +1,25 @@
+family_id: data_eng.stream.delivery_semantics_mcq
+title: Kafka → БД — гарантии доставки по коду потребителя и итог после падения
+direction: data_eng
+skills: [exactly_once, kafka_offsets, idempotency, streaming, python]
+target_grades: [senior]
+format: mcq_concept
+language: python
+invariants:
+  code_lines: [5, 7]
+  n_options: 4
+  extra:
+    subtypes: [after_batch, before_processing, db_offset_seek, db_offset_noseek, dedup_processed]
+time_limit_s: 420
+canary: false
+prior_difficulty:
+  b: 1.1
+  a: 1.2
+  sigma_variant: 0.4
+  basis: "Код потребителя 6–8 строк в одном из пяти вариантов (фиксация offset после пачки, до обработки, offset в той же транзакции БД с seek и без seek при перезапуске, таблица обработанных ключей); падение после k-й транзакции; нужно найти итоговый баланс. Дистракторы фиксированного состава: ровно один раз, повтор первых k, потеря хвоста, повтор только сообщения в момент падения. Главная ловушка — offset сохранён в БД, но при перезапуске не используется. Senior"
+generator: assessment_bank.families.data_eng.stream_delivery_semantics_mcq
+version: 1
+description: >
+  По коду потребителя Kafka, зачисляющего суммы в БД, и месту падения определить итоговый баланс после
+  перезапуска (повторы, потери или ровно один раз). Ключ — исполнение показанного кода с заглушками Kafka и БД
+  и внедрённым падением.

@@ -1,0 +1,25 @@
+family_id: devops.mon.lead_observability_open
+title: Наблюдаемость группы сервисов — метрики и бюджет кардинальности, объём журналов, трассы по хвосту, алерты по симптомам
+direction: devops
+skills: [observability, monitoring, alerting, logging, tracing, slo]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    twists: [cardinality, fatigue, sampling]
+    criteria: [metrics, logs, traces, alerts, twist]
+    anchors: [latency_series, log_gb_per_day]
+    scale: "0–4"
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 1.8
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Наблюдаемость целиком: метрики по симптомам с расчётом числа временных рядов гистограммы задержки и бюджетом кардинальности, журналы с объёмом в сутки по числам варианта и сроками хранения, трассы с выборкой по хвосту и связкой метрика → трасса → журнал, алерты по скорости расхода бюджета SLO и особенность (метка user_id, усталость от алертов, выборка трасс теряет редкие ошибки). Senior обычно перечисляет стек (Prometheus, Grafana, Loki) без расчёта рядов и объёма и без политики алертов — граница Senior/Lead (θ ≈ 2,0); рубрика 0–4 по пяти критериям, σ 0,3"
+generator: assessment_bank.families.devops.lead_observability_open
+version: 1
+description: >
+  Lead: наблюдаемость группы сервисов в пределах бюджета — ряды метрик, объём журналов, трассы, алерты и
+  особенность варианта. Рубрика 0–4; оценка с цитатами-доказательствами.

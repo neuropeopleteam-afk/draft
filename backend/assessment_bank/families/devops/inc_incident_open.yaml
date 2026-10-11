@@ -1,7 +1,7 @@
 family_id: devops.inc.incident_open
 title: Ведение инцидента в продакшене — стабилизация, причина, действия после
 direction: devops
-skills: [incident_response, sre, postgresql, tls, reliability]
+skills: [incident_response, sre, postmortem, tls, reliability]
 target_grades: [senior]
 format: open_answer
 language: text

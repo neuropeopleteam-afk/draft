@@ -1,7 +1,7 @@
 family_id: data_eng.sql.window_rank_output
 title: "SQL — топ-k по группе: ROW_NUMBER, RANK, DENSE_RANK при равных значениях"
 direction: data_eng
-skills: [sql, window_functions, analytics]
+skills: [sql, window_functions, reporting]
 target_grades: [junior, middle]
 format: predict_output
 language: sql

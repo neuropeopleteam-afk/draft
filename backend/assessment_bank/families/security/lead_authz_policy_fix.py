@@ -2,8 +2,8 @@
 
 Показан модуль авторизации (~20 строк) с дефектом «делегирование не проверяет организацию»: пользователь, переведённый
 в другую организацию, продолжает читать документы по старому делегированию. Варианты — четыре замены ``can`` в другом
-стиле, чем показанный код; каждый дистрактор исправляет показанный дефект и нарушает ровно одно правило политики
-(фиксированный состав):
+стиле, чем показанный код; каждый дистрактор исправляет показанный дефект и нарушает правила политики — схема 2×2 из двух правил
+пула ниже (нарушено одно, другое, оба; ни один вариант не «центральный»):
 
 * ``owner_before_lock`` — владелец проверяется раньше блокировки (юридическое удержание не действует на владельца);
 * ``grantor_unchecked`` — делегирование действует и после смены владельца (проверка «выдал не сам себе» вместо
@@ -15,7 +15,7 @@
 """
 from __future__ import annotations
 
-from assessment_bank.families._lead_b_utils import module_choose_fix
+from assessment_bank.families._lead_b_utils import factorial_distractors, module_choose_fix
 from assessment_bank.gen_utils import make_rng
 
 FAMILY_ID = "security.lead.authz_policy_fix"
@@ -70,17 +70,18 @@ CORRECT = '''def can(@U@, @D@, @A@, @N@):
     return any(@G@["to"] == @U@["id"] and @G@["from"] == @D@["owner"] and @G@["action"] == @A@
                and active(@G@, @N@) for @G@ in @D@.get("grants", []))'''
 
-DISTRACTORS = {
-    "owner_before_lock": CORRECT.replace('''    if @A@ in @D@.get("@H@", ()):
+MUTATIONS = {  # правило → (фрагмент верного текста, замена); дистракторы — по схеме 2×2
+    "owner_before_lock": ('''    if @A@ in @D@.get("@H@", ()):
         return False
     if @U@["id"] == @D@["owner"]:
         return True''', '''    if @U@["id"] == @D@["owner"]:
         return True
     if @A@ in @D@.get("@H@", ()):
         return False'''),
-    "grantor_unchecked": CORRECT.replace('@G@["from"] == @D@["owner"]', '@G@["from"] != @U@["id"]'),
-    "expiry_unchecked": CORRECT.replace("and active(@G@, @N@)", 'and @G@["end"] > @G@["start"]'),
+    "grantor_unchecked": ('@G@["from"] == @D@["owner"]', '@G@["from"] != @U@["id"]'),
+    "expiry_unchecked": ("and active(@G@, @N@)", 'and @G@["end"] > @G@["start"]'),
 }
+DISTRACTORS = {k: CORRECT.replace(*v) for k, v in MUTATIONS.items()}
 assert all(d != CORRECT for d in DISTRACTORS.values())
 
 WHY = {
@@ -147,8 +148,8 @@ def generate(seed: int):
         blocks = [blocks[0], blocks[2], "{FN}"]
     module = "\n\n\n".join(blocks)
     buggy, correct = _rename(BUGGY, names), _rename(CORRECT, names)
-    kinds = sorted(DISTRACTORS)
-    dis = [_rename(DISTRACTORS[k], names) for k in kinds]
+    dis, kinds = factorial_distractors(CORRECT, MUTATIONS, rng)
+    dis = [_rename(d, names) for d in dis]
     policy = [
         "документ доступен только пользователям той же организации (`tenant`), и делегирование эту границу не "
         "расширяет",
@@ -166,7 +167,7 @@ def generate(seed: int):
     why = ("Верная замена сначала отсекает чужую организацию (для всех путей, включая делегирование), затем "
            "применяет блокировку ко всем, включая владельца, и принимает делегирование только от текущего "
            "владельца в окне [start, end). Остальные варианты закрывают межорганизационный доступ, но: "
-           + "; ".join(WHY[k] for k in kinds) + ". Ревью авторизации — по таблице политики, а не по одной строке "
+           + "; ".join(WHY[k] for k in kinds[:2]) + "; четвёртый вариант нарушает оба этих правила" + ". Ревью авторизации — по таблице политики, а не по одной строке "
            "инцидента: тесты на каждое правило и на их порядок.")
     return module_choose_fix(
         FAMILY_ID, seed, rng, stem=stem, module=module, buggy_fn=buggy, correct_fn=correct, distractors=dis,

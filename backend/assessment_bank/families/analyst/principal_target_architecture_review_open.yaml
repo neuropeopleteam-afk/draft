@@ -1,0 +1,22 @@
+family_id: analyst.principal.target_architecture_review_open
+title: Ревью целевой архитектуры единого профиля клиента — сопоставление, владение, переход, обновление, согласия, критерии, история (Principal)
+direction: analyst
+skills: [requirements_analysis, data_modeling, integrations, traceability, stakeholders, non_functional_requirements]
+target_grades: [principal]
+format: open_answer
+language: text
+invariants:
+  extra:
+    issues_pool: [consent, cutover, history, matching, owner, success, updates]
+    planted: 3
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 2.6
+  a: 1.2
+  sigma_variant: 0.35
+  basis: "Ревью целевой архитектуры единого профиля клиента: три вставленные проблемы из семи среди верных пунктов; каждая — распространённое упрощение (слияние по ФИО, владелец — ИТ, переход за ночь, «последняя загрузка побеждает», критерий «запуск к сроку»), нарушающее требования из первой строки. Lead видит отдельные риски, Principal — связь с требованиями и организационной моделью; шкала 0–4 у порога Lead/Principal"
+generator: assessment_bank.families.analyst.principal_target_architecture_review_open
+version: 1
+description: >
+  Ревью выдержки целевой архитектуры единого профиля клиента: три проблемы из пула семи (сопоставление по ФИО, владелец данных — ИТ, переход за одну ночь, суточная выгрузка и «последняя загрузка побеждает», согласия не учтены, критерий успеха — срок, нет истории) среди верных пунктов. Рубрика — по критерию на проблему и приоритизация; шкала 0–4 с цитатами из ответа.

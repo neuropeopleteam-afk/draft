@@ -8,7 +8,7 @@ language: text
 invariants:
   n_options: 4
   extra:
-    distractors: [all_old, linear, today_forced]
+    distractors: [all_old_or_linear, today_forced, both]
 time_limit_s: 480
 canary: false
 prior_difficulty:
@@ -17,7 +17,7 @@ prior_difficulty:
   sigma_variant: 0.3
   basis: "Решение о миграции API для мобильных клиентов: разделить версии, которые увидят экран обязательного обновления, и версии, которые сломаются молча, и рассчитать срок по геометрическому убыванию; почти верные дистракторы (все старые версии как ломающиеся, линейная модель, доля на сегодня). Компромисс надёжность/скорость миграции на уровне продукта — выше Senior-разработчика приложения: у порога Senior/Lead"
 generator: assessment_bank.families.mobile.lead_api_sunset_mcq
-version: 1
+version: 2
 description: >
   Через сколько недель можно отключить старый эндпоинт, если часть версий не умеет показывать экран обязательного
   обновления, и какая доля пользователей в этот момент его увидит. Ключ — расчёт программой по таблице долей.

@@ -1,129 +1,134 @@
 {
   "source": "../bank",
-  "commit": "68ce4cf",
+  "commit": "bddd532",
   "dirty_files": 0,
-  "content_hash": "fc70eff7561052ac",
-  "synced_at": "2026-10-11T09:51:55+00:00",
-  "n_families": 276,
+  "content_hash": "eecad68471cb6b49",
+  "synced_at": "2026-10-11T10:50:44+00:00",
+  "n_families": 331,
   "by_direction": {
     "analyst": {
-      "families": 15,
+      "families": 25,
       "canary": 0,
       "formats": {
-        "predict_output": 3,
+        "mcq_concept": 6,
+        "predict_output": 5,
+        "open_answer": 5,
         "find_bug": 5,
-        "choose_fix": 3,
-        "open_answer": 2,
-        "mcq_concept": 2
+        "choose_fix": 4
       }
     },
     "backend": {
-      "families": 48,
+      "families": 51,
       "canary": 2,
       "formats": {
-        "choose_fix": 12,
+        "choose_fix": 13,
         "predict_output": 12,
         "find_bug": 11,
+        "open_answer": 6,
         "open_book_3step": 5,
-        "open_answer": 4,
         "mcq_concept": 4
       }
     },
     "common": {
-      "families": 43,
+      "families": 46,
       "canary": 3,
       "formats": {
         "find_bug": 4,
-        "mcq_concept": 14,
+        "mcq_concept": 15,
         "predict_output": 11,
         "open_book_3step": 4,
-        "open_answer": 6,
+        "open_answer": 8,
         "choose_fix": 4
       }
     },
     "data_eng": {
-      "families": 7,
+      "families": 26,
       "canary": 1,
       "formats": {
-        "open_answer": 2,
-        "mcq_concept": 1,
-        "predict_output": 3,
-        "find_bug": 1
+        "open_answer": 5,
+        "find_bug": 4,
+        "predict_output": 9,
+        "choose_fix": 3,
+        "open_book_3step": 1,
+        "mcq_concept": 4
       }
     },
     "data_ml": {
-      "families": 30,
+      "families": 34,
       "canary": 1,
       "formats": {
-        "mcq_concept": 3,
+        "mcq_concept": 4,
+        "open_answer": 6,
         "find_bug": 9,
         "choose_fix": 7,
         "predict_output": 6,
-        "open_answer": 3,
         "open_book_3step": 2
       }
     },
     "devops": {
-      "families": 22,
+      "families": 27,
       "canary": 1,
       "formats": {
-        "predict_output": 4,
+        "predict_output": 6,
         "choose_fix": 1,
         "find_bug": 3,
         "open_book_3step": 2,
         "mcq_concept": 10,
-        "open_answer": 2
+        "open_answer": 5
       }
     },
     "frontend": {
-      "families": 31,
+      "families": 35,
       "canary": 2,
       "formats": {
         "mcq_concept": 5,
         "open_book_3step": 4,
-        "open_answer": 5,
+        "open_answer": 8,
+        "choose_fix": 6,
         "predict_output": 6,
-        "choose_fix": 5,
         "find_bug": 6
       }
     },
     "mobile": {
-      "families": 25,
+      "families": 28,
       "canary": 0,
       "formats": {
-        "mcq_concept": 8,
-        "open_answer": 4,
+        "mcq_concept": 10,
+        "open_answer": 5,
         "find_bug": 7,
         "choose_fix": 5,
         "predict_output": 1
       }
     },
     "qa": {
-      "families": 27,
+      "families": 29,
       "canary": 1,
       "formats": {
         "open_book_3step": 2,
-        "mcq_concept": 6,
+        "mcq_concept": 7,
         "find_bug": 9,
         "choose_fix": 2,
-        "open_answer": 3,
+        "open_answer": 4,
         "predict_output": 5
       }
     },
     "security": {
-      "families": 28,
+      "families": 30,
       "canary": 1,
       "formats": {
         "find_bug": 9,
         "predict_output": 3,
-        "mcq_concept": 4,
+        "mcq_concept": 5,
         "choose_fix": 6,
-        "open_answer": 4,
+        "open_answer": 5,
         "open_book_3step": 2
       }
     }
   },
   "directions_verified": [
+    "analyst",
+    "data_eng",
+    "devops",
     "mobile"
   ],
   "readiness": {
@@ -133,12 +138,12 @@
     },
     "by_direction": {
       "analyst": {
-        "families": 11,
+        "families": 19,
         "per_grade": {
-          "intern": 4,
-          "junior": 7,
-          "middle": 6,
-          "senior": 2
+          "intern": 6,
+          "junior": 10,
+          "middle": 10,
+          "senior": 7
         }
       },
       "backend": {
@@ -160,12 +165,12 @@
         }
       },
       "data_eng": {
-        "families": 3,
+        "families": 19,
         "per_grade": {
-          "intern": 1,
-          "junior": 3,
-          "middle": 2,
-          "senior": 0
+          "intern": 3,
+          "junior": 12,
+          "middle": 14,
+          "senior": 7
         }
       },
       "data_ml": {
@@ -178,10 +183,10 @@
         }
       },
       "devops": {
-        "families": 18,
+        "families": 20,
         "per_grade": {
-          "intern": 1,
-          "junior": 11,
+          "intern": 3,
+          "junior": 13,
           "middle": 16,
           "senior": 7
         }
@@ -196,12 +201,12 @@
         }
       },
       "mobile": {
-        "families": 21,
+        "families": 22,
         "per_grade": {
           "intern": 6,
           "junior": 13,
-          "middle": 10,
-          "senior": 5
+          "middle": 11,
+          "senior": 6
         }
       },
       "qa": {
@@ -227,38 +232,38 @@
   "excluded": [],
   "validation": {
     "summary": {
-      "n_families": 276,
-      "n_variants_generated": 5520,
-      "n_unique_variants": 5498,
-      "n_checks": 1973,
+      "n_families": 331,
+      "n_variants_generated": 6620,
+      "n_unique_variants": 6596,
+      "n_checks": 2174,
       "n_checks_failed": 0,
       "status": {
-        "WARN": 19,
-        "PASS": 257
+        "PASS": 311,
+        "WARN": 20
       },
       "n_fail": 0,
-      "n_warn": 19,
+      "n_warn": 20,
       "by_direction": {
-        "analyst": 15,
-        "backend": 48,
-        "common": 43,
-        "data_eng": 7,
-        "data_ml": 30,
-        "devops": 22,
-        "frontend": 31,
-        "mobile": 25,
-        "qa": 27,
-        "security": 28
+        "analyst": 25,
+        "backend": 51,
+        "common": 46,
+        "data_eng": 26,
+        "data_ml": 34,
+        "devops": 27,
+        "frontend": 35,
+        "mobile": 28,
+        "qa": 29,
+        "security": 30
       },
       "by_format": {
-        "predict_output": 54,
-        "find_bug": 64,
-        "choose_fix": 45,
-        "open_answer": 35,
-        "mcq_concept": 57,
-        "open_book_3step": 21
+        "mcq_concept": 70,
+        "predict_output": 64,
+        "open_answer": 57,
+        "find_bug": 67,
+        "choose_fix": 51,
+        "open_book_3step": 22
       },
-      "seconds": 180.3
+      "seconds": 242.2
     },
     "seeds": 20,
     "verify_seeds": 3,

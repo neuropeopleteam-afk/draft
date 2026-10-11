@@ -1,0 +1,25 @@
+family_id: data_eng.etl.lead_cdc_design_open
+title: Поток изменений из рабочей базы в хранилище — снимок и переход без потерь, партиции по расчёту, MERGE по позиции журнала
+direction: data_eng
+skills: [cdc, streaming, kafka_partitions, upsert, idempotency, data_pipelines]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    twists: [schema, wal, hot_key]
+    criteria: [snapshot, order, apply, twist, verify]
+    anchors: [mb_per_s, partitions, snapshot_hours]
+    scale: "0–4"
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 1.9
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Поток изменений целиком: чтение журнала логической репликацией, согласованный снимок с позицией журнала и переход на поток без окна потерь (время снимка по числам варианта), поток в МБ/с и число партиций с запасом, ключ партиционирования по строке, идемпотентное применение MERGE с номером позиции и удаления, особенность (несовместимое изменение схемы, рост удерживаемого WAL при простое потребителя, горячий ключ) и сверка. Senior обычно называет «Debezium + Kafka + upsert» без перехода со снимка, порядка и расчёта — граница Senior/Lead (θ ≈ 2,0); рубрика 0–4 по пяти критериям, σ 0,3"
+generator: assessment_bank.families.data_eng.lead_cdc_design_open
+version: 1
+description: >
+  Lead: проектирование CDC из PostgreSQL в хранилище — снимок, партиции, применение изменений и удалений,
+  особенность варианта и сверка. Рубрика 0–4; оценка с цитатами-доказательствами.

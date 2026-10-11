@@ -1,7 +1,7 @@
 family_id: mobile.js.background_timer_bug
 title: Таймер в свёрнутом приложении — счёт по тикам отстаёт
 direction: mobile
-skills: [mobile_lifecycle, background_execution, javascript, timers]
+skills: [lifecycle, background_execution, javascript, timers, event_loop]
 target_grades: [junior, middle]
 format: find_bug
 language: javascript

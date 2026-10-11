@@ -1,7 +1,7 @@
 family_id: devops.bash.quoting_bug
 title: bash — переменная с путём без кавычек (разбиение на слова)
 direction: devops
-skills: [bash, shell, quoting, linux]
+skills: [bash, shell, linux]
 target_grades: [junior, middle]
 format: find_bug
 language: bash

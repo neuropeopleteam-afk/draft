@@ -1,7 +1,7 @@
 family_id: mobile.js.offline_queue_fix
 title: Офлайн-очередь изменений — отправка по порядку при обрыве связи
 direction: mobile
-skills: [offline_first, mobile_networking, javascript, data_sync]
+skills: [offline_first, networking, javascript, retries]
 target_grades: [middle]
 format: choose_fix
 language: javascript

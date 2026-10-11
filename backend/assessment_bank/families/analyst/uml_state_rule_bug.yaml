@@ -6,7 +6,7 @@ target_grades: [junior, middle]
 format: find_bug
 language: text
 invariants:
-  code_lines: [7, 8]
+  code_lines: [6, 8]
   defect_type: transition_violates_rule
 time_limit_s: 210
 canary: false
@@ -14,7 +14,7 @@ prior_difficulty:
   b: -0.4
   a: 1.1
   sigma_variant: 0.25
-  basis: "7–8 переходов и 4 требования; нужно сопоставить каждое требование с переходами (в том числе запреты на выход из конечных состояний и обходы обязательного шага). Строки одной формы, порядок перемешан. Junior/Middle (b ≈ −0,4)"
+  basis: "16 машин состояний по 6–8 переходов и 3–4 требования; нужно сопоставить каждое требование с переходами (в том числе запреты на выход из конечных состояний и обходы обязательного шага). Строки одной формы, порядок перемешан. Junior/Middle (b ≈ −0,4)"
 generator: assessment_bank.families.analyst.uml_state_rule_bug
 version: 1
 description: >

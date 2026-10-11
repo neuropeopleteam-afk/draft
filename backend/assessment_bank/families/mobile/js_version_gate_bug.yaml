@@ -1,7 +1,7 @@
 family_id: mobile.js.version_gate_bug
 title: Обязательное обновление — версии сравниваются как строки
 direction: mobile
-skills: [mobile_release, javascript, versioning]
+skills: [mobile_release, javascript, rest_api]
 target_grades: [intern, junior]
 format: find_bug
 language: javascript

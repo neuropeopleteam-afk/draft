@@ -1,7 +1,7 @@
 family_id: devops.k8s.service_selector_bug
 title: Kubernetes — селектор Service не совпадает с метками подов
 direction: devops
-skills: [kubernetes, k8s_services, k8s_labels, yaml]
+skills: [kubernetes, services, kubernetes_manifests]
 target_grades: [junior, middle]
 format: find_bug
 language: yaml

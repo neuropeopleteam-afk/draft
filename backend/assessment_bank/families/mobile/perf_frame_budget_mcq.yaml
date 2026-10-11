@@ -1,7 +1,7 @@
 family_id: mobile.perf.frame_budget_mcq
 title: Бюджет кадра при прокрутке на дисплее 90/120 Гц
 direction: mobile
-skills: [mobile_performance, ui_rendering, main_thread]
+skills: [mobile_performance, ui_threading, main_thread]
 target_grades: [junior, middle]
 format: mcq_concept
 language: text

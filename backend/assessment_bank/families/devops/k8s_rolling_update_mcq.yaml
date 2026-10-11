@@ -1,7 +1,7 @@
 family_id: devops.k8s.rolling_update_mcq
 title: Kubernetes — границы RollingUpdate по maxSurge и maxUnavailable
 direction: devops
-skills: [kubernetes, k8s_deployments, rolling_update, yaml]
+skills: [kubernetes, deployments, release, kubernetes_manifests]
 target_grades: [junior, middle]
 format: mcq_concept
 language: yaml

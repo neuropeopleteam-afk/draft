@@ -1,7 +1,7 @@
 family_id: mobile.arch.offline_sync_open
 title: Архитектура данных мобильного клиента — офлайн, загрузка, миграции, realtime, модули
 direction: mobile
-skills: [mobile_architecture, offline_first, data_sync, background_execution]
+skills: [architecture, offline_first, persistence, background_execution]
 target_grades: [senior]
 format: open_answer
 language: text

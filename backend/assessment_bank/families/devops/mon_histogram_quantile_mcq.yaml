@@ -1,7 +1,7 @@
 family_id: devops.mon.histogram_quantile_mcq
 title: Мониторинг — что вернёт histogram_quantile по корзинам гистограммы
 direction: devops
-skills: [monitoring, prometheus, promql, histograms]
+skills: [monitoring, prometheus, promql, metrics]
 target_grades: [middle, senior]
 format: mcq_concept
 language: text

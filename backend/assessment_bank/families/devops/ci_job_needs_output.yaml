@@ -1,7 +1,7 @@
 family_id: devops.ci.job_needs_output
 title: CI (GitHub Actions) — статусы job после падения одной (needs, always, failure)
 direction: devops
-skills: [ci_cd, github_actions, pipelines, yaml]
+skills: [ci_cd, github_actions, pipelines, kubernetes_manifests]
 target_grades: [junior, middle]
 format: predict_output
 language: yaml
