@@ -86,6 +86,20 @@ export function JuryGuide() {
   const [mode, setMode] = useState<GuideMode>(quick.mode());  // Я9: «12 минут» или справочник
   const qSteps = useQuickSteps(), QUICK_LEN = qSteps.length;  // 8 или 9 (устная защита по флагу)
   const [q, setQ] = useQuickStep(qSteps, mode, loc.pathname, me?.email);
+  // С2 №4: на телефоне, пока эксперт печатает в поле страницы, панель сворачивается в кнопку — не закрывает кнопку действия
+  // под полем («Разобрать требования»); возвращается с задержкой, чтобы нажатие на эту кнопку успело пройти
+  const phone = useMedia("(max-width: 639px)");
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    if (!phone) { setTyping(false); return; }
+    const isField = (el: Element | null) => !!el && !el.closest("aside") && el.matches("textarea, input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=file]), [contenteditable=true]");
+    let t = 0;
+    const on = (e: FocusEvent) => { window.clearTimeout(t); if (isField(e.target as Element)) setTyping(true); };
+    const off = () => { window.clearTimeout(t); t = window.setTimeout(() => setTyping(isField(document.activeElement)), 400); };
+    document.addEventListener("focusin", on);
+    document.addEventListener("focusout", off);
+    return () => { window.clearTimeout(t); document.removeEventListener("focusin", on); document.removeEventListener("focusout", off); };
+  }, [phone]);
   // С2 №3: на главной у вернувшегося эксперта проводник свёрнут в строку «Продолжить проверку», пока его не развернули
   const [peek, setPeek] = useState(false);
   useEffect(() => { if (loc.pathname !== "/") setPeek(false); }, [loc.pathname]);
@@ -116,7 +130,7 @@ export function JuryGuide() {
       {mode === "quick" ? `Продолжить проверку: шаг ${q + 1} из ${QUICK_LEN}` : `Продолжить проверку: шаг ${step + 1} из ${STEPS.length}`}
     </button>
   );
-  if (hidden) {
+  if (hidden || typing) {
     if (slot) return createPortal(
       <button type="button" onClick={() => guide.show()} aria-label="Показать проводник для жюри" title="Проводник для экспертов жюри"
         className={slot === slots.sidebar
