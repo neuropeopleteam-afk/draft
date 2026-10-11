@@ -56,7 +56,6 @@ function Body({ r }: { r: any }) {
   const sp = t.splits ?? {};
   const ps = t.path ?? {};
   const tr = t.truth ?? {};
-  const cr = r.other_reference ?? {};
   const split = (title: string, s: any) => [title, pct(s?.share), pct(s?.exact), pct(s?.within_1), withCi(s?.kappa_w, s?.kappa_w_ci)];
   return (
     <>
@@ -94,7 +93,7 @@ function Body({ r }: { r: any }) {
           <p className="mt-1">Это не подтверждение: P(θ{NB}≥{NB}порога Junior) от 0,10 до {num(r.config?.confirm_level ?? 0.6, 2)}, работодатель видит статус и вероятность, в подборке — штраф к скору. Кандидат может дотестироваться (до двух попыток) или нажать «принять Стажёра» — если Стажёр доказан (P{NB}≥{NB}{num(r.config?.confirm_level ?? 0.6, 2)}), уровень присваивается без нового теста. В этой симуляции Стажёр доказан у {num(ps.provisional_intern_proved, 0)} «предварительных». Полосы P и доля истинно ниже порога — в разделе <a href="#junior" className="font-semibold text-brand-plum underline">«Junior у порога»</a>.</p>
         </div>
       </div>
-      <p className="mt-4 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Для сравнения, другой мир и другая процедура: Прототип А — κ {num(cr.kappa_w, 3)}, точно {pct(cr.exact)}, ±1 {pct(cr.within_1)}; 4 ступени, {cr.length} заданий, подтверждение при {cr.confirm_rule}, ошибка параметров {cr.param_error}, без доверительных интервалов и ICC. У нас 5 ступеней со Стажёром, подтверждение при P{NB}≥{NB}0,8 и ошибка параметров σ{NB}={NB}0,5 — числа напрямую не сравнимы.</p>
+      <p className="mt-4 max-w-4xl text-xs leading-relaxed text-brand-ink/65">Условия расчёта: 5 ступеней со Стажёром, подтверждение при P{NB}≥{NB}0,8 и ошибка параметров σ{NB}={NB}0,5. Числа относятся к этому миру; при другой длине теста и другой ошибке параметров — см. <a href="#other-conditions" className="font-semibold text-brand-plum underline">«Другие условия измерения»</a>.</p>
       <p className="mt-2 max-w-4xl text-xs leading-relaxed text-brand-ink/65">{r.caveat}</p>
       <ProvenanceLine p={r.provenance} className="mt-2" />
       <SignatureLine s={r.signature} className="mt-1" />
@@ -159,7 +158,7 @@ export function GradeAccuracy() {
   const { data: g, error, loading } = useApi<any>("/validation/grade-accuracy", []);
   const head = ["Вариант", "Точно", "Выше", "Ниже", "Без категории", "±1", "Совпадение при повторе", "κw повтора", "Минут"];
   const row = (x: any): ReactNode[] => [
-    <span key="l">{x.label}{x.feasible ? "" : <span className="block text-xs text-brand-ink/60">не проходит ограничения</span>}</span>,
+    <span key="l">{x.label}{x.feasible ? "" : <span className="block text-xs text-brand-ink/65">не проходит ограничения</span>}</span>,
     <span key="e">{pct(x.exact)}{x.exact_ci && <span className="block text-xs text-brand-ink/65">{pct(x.exact_ci[0])} … {pct(x.exact_ci[1])}</span>}</span>,
     pct(x.over), pct(x.under), pct(x.none), pct(x.within_1), pct(x.retest_exact), withCi(x.retest_kappa, x.retest_kappa_ci),
     num(x.minutes_mean, 0)];
@@ -182,15 +181,15 @@ export function GradeAccuracy() {
             <h3 className="mt-6 font-bold text-brand-night">Главные варианты (мир σ = 0,5, 5 ступеней)</h3>
             <div className="mt-2"><T head={head} rows={(g.key_rows ?? []).map(row)} min="56rem" caption="Главные варианты перебора" /></div>
             <p className="mt-2 text-xs text-brand-ink/70">«Ниже» почти на две трети — кандидаты, заявившие грейд ниже своего ({pct(ch?.under_claimed_below)} из {pct(ch?.under)}): тест подтверждает заявленный грейд и выше его не поднимает — смена грейда вверх идёт новым тестом. Решение по лучшей оценке θ̂ без запаса уверенности поднимает точность, но завышает уровень у каждого шестого.</p>
-            <h3 className="mt-6 font-bold text-brand-night">Другие миры: ошибка параметров σ = 0,35 и 4 ступени (как у Прототип А)</h3>
+            <h3 className="mt-6 font-bold text-brand-night">Другие условия измерения: ошибка параметров σ = 0,35 и 4 ступени</h3>
             <div className="mt-2"><T head={head} rows={(g.worlds ?? []).map(row)} min="56rem" caption="Варианты в других мирах" /></div>
-            <p className="mt-2 text-xs text-brand-ink/70">Другие условия (4 ступени без Стажёра, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой — строка «порог уверенности P 0,5; дотестирование 0; 20 заданий; ступеней 4». У Прототип А в их мире: совпадение при повторе 76 %, κw 0,866 (внешний репозиторий, docs/testing.md, 05.10.2026) — другой мир и другая процедура, числа сравнимы только по смыслу.</p>
+            <p className="mt-2 text-xs text-brand-ink/70">Другие условия измерения (4 ступени без Стажёра, σ 0,35, 20 заданий, P ≥ 0,5) нашей процедурой — строка «порог уверенности P 0,5; дотестирование 0; 20 заданий; ступеней 4». Числа разных миров и процедур сравнимы только по смыслу.</p>
             <h3 className="mt-6 font-bold text-brand-night">Парето-фронт (точно ↑, выше ↓, κw ↑, минуты ↓)</h3>
             <div className="mt-2"><T head={head} rows={(g.pareto ?? []).map(row)} min="56rem" caption="Парето-фронт перебора" /></div>
             {g.pool?.rows?.length > 0 && <>
               <h3 className="mt-6 font-bold text-brand-night">Чистка пула и добор сильных заданий у порогов</h3>
               <p className="mt-2 text-sm text-brand-ink/75">26 семейств, слабых по калибровке панелью моделей (модель, не люди), и 17 новых семейств у порогов Junior/Middle и Middle/Senior. Два мира: слабые семейства «как в предкалибровке» и «на деле слабые».</p>
-              <div className="mt-2"><T head={head} rows={g.pool.rows.map((x: any) => { const r = row(x); r[0] = <span key="l">{x.label}{x.world_weak ? "" : <span className="block text-xs text-brand-ink/60">мир: как в предкалибровке</span>}{x.feasible ? "" : <span className="block text-xs text-brand-ink/60">не проходит ограничения</span>}</span>; return r; })} min="56rem" caption="Чистка пула и добор у порогов" /></div>
+              <div className="mt-2"><T head={head} rows={g.pool.rows.map((x: any) => { const r = row(x); r[0] = <span key="l">{x.label}{x.world_weak ? "" : <span className="block text-xs text-brand-ink/65">мир: как в предкалибровке</span>}{x.feasible ? "" : <span className="block text-xs text-brand-ink/65">не проходит ограничения</span>}</span>; return r; })} min="56rem" caption="Чистка пула и добор у порогов" /></div>
               <p className="mt-2 text-xs text-brand-ink/70">Исключение слабых лучше по всем ограничениям в обоих мирах: банк платформы — {g.pool.exclude_better?.platform ? "да" : "нет"}, банк с добором — {g.pool.exclude_better?.plus ? "да" : "нет"}{g.pool.exclude_better?.platform || g.pool.exclude_better?.plus ? "." : "; поэтому чистка пула по умолчанию выключена (меньше сменных семейств — ниже повтор)."}{g.pool.plus_best_confirm ? ` После добора банка завышение ≤ ${pct(c.max_over)} в обоих мирах держит порог P ${num(g.pool.plus_best_confirm.confirm_level, 2)} — пересчёт пути на синхронизированном банке перед сменой порога.` : ""}</p>
             </>}
             <p className="mt-2 text-xs text-brand-ink/70">Полная таблица — docs/validation/GRADE_ACCURACY.md; пересчёт — make grade-sweep.</p>

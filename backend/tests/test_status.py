@@ -221,5 +221,8 @@ def test_jury_persona_candidate_junior(client):
     me = client.get("/api/me", headers=H(tok)).json()
     assert me["email"] == "candidate-junior@jury.example.com" and me["candidate"]["current_category_id"] == "backend.junior"
     st = client.get("/api/assessment/status", headers=H(tok)).json()
-    assert st["current"]["provisional"] and st["grade_status"]["status"] == "provisional"
+    # исход демо-теста случаен; сид делает до 12 попыток получить «предварительно» (jury/seed._candidate) — при падении
+    # здесь виден фактический исход, а не просто False
+    assert st["current"]["provisional"] and st["grade_status"]["status"] == "provisional", \
+        f"персона candidate_junior не предварительная: current={st['current']}, grade_status={st['grade_status']}"
     assert st["provisional"]["attempts_left"] == 2 and st["claimed_grade"] == "junior"
