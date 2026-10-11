@@ -44,7 +44,7 @@ export default function InterestCard() {
       {!d.has_category ? (
         <div className="mt-4 rounded-xl bg-[#F3F2FB] p-4" data-testid="interest-empty">
           <p className="font-semibold text-brand-night">Пока считать нечего: у вас нет категории</p>
-          <p className="mt-1 text-sm text-brand-ink/70">Работодатели находят кандидатов по категории из теста. Пройдите тест — после этого здесь появятся просмотры карточки, подборки и зонды.</p>
+          <p className="mt-1 text-sm text-brand-ink/70">Работодатели находят кандидатов по категории из теста. Пройдите тест — после этого здесь появятся просмотры карточки, подборки и задания.</p>
           <Link to="/candidate/assessment" className="btn-primary mt-3">Пройти тест</Link>
         </div>
       ) : (
@@ -52,15 +52,15 @@ export default function InterestCard() {
           <p className="mt-2 text-sm leading-relaxed text-brand-ink/75" data-testid="interest-sentence">
             За неделю карточку посмотрели <b>{num(d.employers_viewed, 0)}{NB}{plural(d.employers_viewed, "работодатель", "работодателя", "работодателей")}</b>,
             {" "}вы были в <b>{num(d.selections, 0)}{NB}{plural(d.selections, "подборке", "подборках", "подборках")}</b>,
-            {" "}вам прислали <b>{num(d.probes, 0)}{NB}{plural(d.probes, "зонд", "зонда", "зондов")}</b>.
+            {" "}вам прислали <b>{num(d.probes, 0)}{NB}{plural(d.probes, "задание", "задания", "заданий")}</b>.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <Big testid="interest-employers" value={d.employers_viewed} label={`${plural(d.employers_viewed, "работодатель открыл", "работодателя открыли", "работодателей открыли")} вашу карточку`}
               hint="Считаются разные работодатели, повторный просмотр тем же — не в счёт" before={d.previous.employers_viewed} />
             <Big testid="interest-selections" value={d.selections} label={`${plural(d.selections, "подборка", "подборки", "подборок")} с вами в выдаче`}
               hint={d.best_rank ? `Лучшее место за неделю — ${num(d.best_rank, 0)}-е` : "Подборка — одна потребность работодателя"} before={d.previous.selections} />
-            <Big testid="interest-probes" value={d.probes} label={`${plural(d.probes, "зонд", "зонда", "зондов")} — короткие задачи с вилкой`}
-              hint="Зонд работодатель отправляет вам лично" before={d.previous.probes} />
+            <Big testid="interest-probes" value={d.probes} label={`${plural(d.probes, "задание", "задания", "заданий")} — короткие задачи с вилкой`}
+              hint="Задание работодатель отправляет вам лично" before={d.previous.probes} />
           </div>
           {none && (
             <p className="mt-3 text-sm text-brand-ink/70" data-testid="interest-none">

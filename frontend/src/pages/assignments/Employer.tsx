@@ -65,7 +65,7 @@ export function AssignmentForm({ init, onDone, onClose }: { init: FormInit; onDo
     const list = refs.split(/[\s,;]+/).map((x) => x.trim().toUpperCase()).filter(Boolean);
     if (mode === "probe" && !list.length) { setErr("Укажите идентификаторы кандидатов, например C-7PURS8"); return; }
     if (mode !== "vacancy") {
-      if (!from || !to) { setErr("Укажите вилку зарплаты «от» и «до» — задание кандидату, как и зонд, идёт с реальным предложением"); return; }
+      if (!from || !to) { setErr("Укажите вилку зарплаты «от» и «до» — задание кандидату, как и задание с вилкой, идёт с реальным предложением"); return; }
       if (Number(to) > Number(from) * SALARY_MAX_RATIO) { setErr("Вилка слишком широкая: «до» — не больше чем в 1,5 раза выше «от»"); return; }
     }
     setBusy(true);
@@ -131,7 +131,7 @@ export function AssignmentForm({ init, onDone, onClose }: { init: FormInit; onDo
       {!init.mode && (
         <Seg value={mode} onChange={setMode} label="Как использовать" options={[{ id: "probe", title: "Отправить кандидатам" }, ...(src === "vacancy" ? [{ id: "vacancy" as Mode, title: "Прикрепить к вакансии" }] : []), { id: "open", title: "Открыть для всех" }]} />
       )}
-      {mode === "probe" && <Field label="Кандидаты (идентификаторы через запятую)" htmlFor="asg-refs" hint="Как у зонда: из подборки, сравнения или поиска. Каждому — своё письмо и push."><input id="asg-refs" className="input" value={refs} onChange={(e) => setRefs(e.target.value)} placeholder="C-7PURS8, C-D877VR" /></Field>}
+      {mode === "probe" && <Field label="Кандидаты (идентификаторы через запятую)" htmlFor="asg-refs" hint="Как у задания с вилкой: из подборки, сравнения или поиска. Каждому — своё письмо и push."><input id="asg-refs" className="input" value={refs} onChange={(e) => setRefs(e.target.value)} placeholder="C-7PURS8, C-D877VR" /></Field>}
       {mode === "vacancy" && <Alert kind="info">Каждый откликнувшийся получит задание сразу после отклика; результат появится рядом с откликом. Вилка — из вакансии.</Alert>}
       {mode === "open" && <Alert kind="info">Задание попадёт в ленту «Задания для вас» кандидатам категории с подходящим стеком — система предлагает его сама примерно раз в неделю, объясняет кандидату причину (её видите и вы) и шлёт push-уведомление.</Alert>}
       <Field label="Название" htmlFor="asg-title"><input id="asg-title" className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={200} /></Field>
@@ -142,7 +142,7 @@ export function AssignmentForm({ init, onDone, onClose }: { init: FormInit; onDo
             <Field label="Вилка от, ₽ в месяц" htmlFor="asg-sf"><input id="asg-sf" type="number" min={1} step={5000} className="input" value={from} onChange={(e) => setFrom(e.target.value)} /></Field>
             <Field label="Вилка до, ₽ в месяц" htmlFor="asg-st"><input id="asg-st" type="number" min={1} step={5000} className="input" value={to} onChange={(e) => setTo(e.target.value)} /></Field>
           </div>
-          <p className="mt-2 text-xs text-brand-ink/65">Вилка обязательна: задание — предложение работодателя, как зонд и приглашение. «До» — не больше чем в 1,5 раза выше «от».{init.market ? ` Рынок категории: ${range(init.market.from, init.market.to)}.` : ""}</p>
+          <p className="mt-2 text-xs text-brand-ink/65">Вилка обязательна: задание — предложение работодателя, как задание с вилкой и приглашение. «До» — не больше чем в 1,5 раза выше «от».{init.market ? ` Рынок категории: ${range(init.market.from, init.market.to)}.` : ""}</p>
         </div>
       )}
       <Alert>{err}</Alert>
@@ -245,7 +245,7 @@ function ReviewForm({ aid, x, onDone }: { aid: string; x: Attempt; onDone: () =>
       <Field label="Комментарий кандидату (необязательно)" htmlFor={`rv-${x.attempt_id}-c`}><textarea id={`rv-${x.attempt_id}-c`} className="input min-h-[60px]" maxLength={1000} value={comment} onChange={(e) => setComment(e.target.value)} /></Field>
       <Alert>{err}</Alert>
       <button className="btn-primary" disabled={busy} onClick={save}>{busy ? "Сохраняем…" : "Сохранить оценку"}</button>
-      <p className="text-xs text-brand-ink/65">Итог = автопроверка + ваши баллы. Он станет оценкой зонда в профиле кандидата (вес в подборке прежний) и обновит строку объяснения; кандидат получит уведомление.</p>
+      <p className="text-xs text-brand-ink/65">Итог = автопроверка + ваши баллы. Он станет оценкой задания в профиле кандидата (вес в подборке прежний) и обновит строку объяснения; кандидат получит уведомление.</p>
     </div>
   );
 }
@@ -297,7 +297,7 @@ export function EmployerAssignment() {
           </section>
           <section className="card space-y-3 text-sm">
             <h2 className="font-bold text-brand-night">Отправить кандидатам</h2>
-            <p className="text-xs text-brand-ink/65">Как зонд: идентификаторы из подборки, сравнения или поиска. Одна попытка на кандидата.</p>
+            <p className="text-xs text-brand-ink/65">Как у задания с вилкой: идентификаторы из подборки, сравнения или поиска. Одна попытка на кандидата.</p>
             <input aria-label="Идентификаторы кандидатов" className="input" value={refs} onChange={(e) => setRefs(e.target.value)} placeholder="C-7PURS8, C-D877VR" disabled={a.status !== "active"} />
             <button className="btn-primary w-full" onClick={send} disabled={a.status !== "active"}>Отправить</button>
             {msg && <Alert kind={msg.k}>{msg.t}</Alert>}

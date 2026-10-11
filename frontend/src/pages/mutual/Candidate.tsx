@@ -99,7 +99,7 @@ interface WhyData {
   to_confirm: string[]; offer: Fit;
 }
 const GROUPS: [string, string, (s: string, l: string) => boolean][] = [
-  ["Подтверждено", "тестом, заданиями, зондами или ФСП", (s, l) => (s === "confirmed" || s === "partial") && (l === "T1" || l === "T2")],
+  ["Подтверждено", "тестом, заданиями или ФСП", (s, l) => (s === "confirmed" || s === "partial") && (l === "T1" || l === "T2")],
   ["Заявлено вами", "можно подтвердить — тогда это войдёт в подбор", (s) => s === "declared"],
   ["Не хватило", "в профиле нет данных", (s) => s === "missing"],
 ];
@@ -123,7 +123,7 @@ export function WhyChosen({ invitationId }: { invitationId: string }) {
           </div>
         ) : null;
       })}
-      {!!w.to_confirm.length && <p className="text-sm">Подтвердите {w.to_confirm.join(", ")} — <Link className="font-semibold text-brand hover:underline" to="/candidate/assignments">задания для вас</Link> или зонд работодателя: подтверждённое поднимает место в подборках.</p>}
+      {!!w.to_confirm.length && <p className="text-sm">Подтвердите {w.to_confirm.join(", ")} — <Link className="font-semibold text-brand hover:underline" to="/candidate/assignments">задания для вас</Link> или задание работодателя: подтверждённое поднимает место в подборках.</p>}
       <div className="space-y-2 border-t border-brand-night/5 pt-3">
         <div className="flex flex-wrap items-center gap-2"><p className="text-sm font-semibold text-brand-night">Условия предложения и ваши ожидания</p><FitBadge fit={w.offer} /></div>
         <FitFactors factors={w.offer.factors} />
