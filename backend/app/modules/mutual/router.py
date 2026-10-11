@@ -16,7 +16,7 @@ from app.core.enums import UserRole
 from app.core.errors import api_error, err
 from app.core.ratelimit import SlidingWindow, client_ip, hit
 from app.modules.auth.models import User
-from app.modules.catalog.seed_data import STACK
+from app.modules.catalog.seed_data import known_tag
 from app.modules.invitations.models import Invitation
 from app.modules.invitations.service import profile_by_ref
 from app.modules.jury import scope as jury_scope
@@ -89,7 +89,7 @@ class PrefsIn(BaseModel):
     @field_validator("interest_tags")
     @classmethod
     def _tags(cls, v):
-        bad = [t for t in v if t not in STACK]
+        bad = [t for t in v if not known_tag(t)]
         if bad:
             raise ValueError(f"Неизвестные технологии: {', '.join(bad[:5])}")
         return v

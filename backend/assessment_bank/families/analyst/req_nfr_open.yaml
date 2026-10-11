@@ -1,0 +1,23 @@
+family_id: analyst.req.nfr_open
+title: Нефункциональные требования — от размытой формулировки к проверяемым
+direction: analyst
+skills: [non_functional_requirements, nfr, requirements_analysis, ambiguity]
+target_grades: [senior]
+format: open_answer
+language: text
+invariants:
+  extra:
+    topics: [performance, availability, privacy, audit, scalability]
+time_limit_s: 1200
+canary: false
+prior_difficulty:
+  b: 1.2
+  a: 0.9
+  sigma_variant: 0.3
+  basis: "Размытая формулировка заказчика с числами контекста; нужно задать измеримые показатели, условия и способ проверки. Рубрика из 3 критериев (измеримость, условия/механизмы, проверка и эксплуатация); Senior"
+generator: assessment_bank.families.analyst.req_nfr_open
+version: 1
+description: >
+  Открытые вопросы о нефункциональных требованиях: производительность под пиком, доступность и
+  восстановление, защита персональных данных, аудит действий, масштабирование и рост данных. Оценка по
+  рубрике с эталонами.

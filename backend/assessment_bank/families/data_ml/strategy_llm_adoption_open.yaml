@@ -1,0 +1,25 @@
+family_id: data_ml.strategy.llm_adoption_open
+title: Стратегия внедрения больших языковых моделей — внешний API или своя установка по расчёту, общий шлюз, риски
+direction: data_ml
+skills: [llm, technical_strategy, mlops, model_governance, capacity_planning]
+target_grades: [principal]
+format: open_answer
+language: text
+invariants:
+  extra:
+    twists: [pd, latency, lock_in]
+    criteria: [numbers, choice, platform, risk, twist, phases]
+    anchors: [api_cost_month, self_host_servers, self_host_cost_month]
+    scale: "0–4"
+time_limit_s: 1800
+canary: false
+prior_difficulty:
+  b: 2.7
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Стратегия на год для многих команд: стоимость внешнего API и своей установки сейчас и через год по числам варианта (токены, цены, пик, производительность сервера, люди) — ответ «что дешевле» меняется между вариантами и иногда между «сейчас» и «через год», общий шлюз с учётом расходов и ограничителями, управление качеством и рисками, особенность (персональные данные за периметр нельзя, задержка первого токена, рост цены единственного провайдера) и этапы с метриками. Lead обычно выбирает по ощущению без расчёта и точки пересмотра — граница Lead/Principal (θ ≈ 2,75); рубрика 0–4 по шести критериям, σ 0,3"
+generator: assessment_bank.families.data_ml.strategy_llm_adoption_open
+version: 1
+description: >
+  Principal: стратегия внедрения LLM в компании — расчёт «внешний API или своя установка» сейчас и через год,
+  общий шлюз, риски, особенность варианта. Рубрика 0–4; оценка с цитатами-доказательствами.

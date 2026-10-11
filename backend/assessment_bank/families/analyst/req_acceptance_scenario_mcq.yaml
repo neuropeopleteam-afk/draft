@@ -1,0 +1,24 @@
+family_id: analyst.req.acceptance_scenario_mcq
+title: Сценарии приёмки (Gherkin) — какой противоречит бизнес-правилу
+direction: analyst
+skills: [acceptance_criteria, gherkin, requirements, edge_cases]
+target_grades: [junior]
+format: mcq_concept
+language: text
+invariants:
+  n_options: 4
+  extra:
+    kinds: [delivery, loan, return]
+    error_modes: [boundary, precedence, andor]
+time_limit_s: 210
+canary: false
+prior_difficulty:
+  b: -0.6
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "Правило из 2–3 условий с порогом и исключением, четыре сценария одной формы; верные сценарии тоже бывают на границах, поэтому нужно проверить каждый. Тип ошибки (граница, приоритет исключения, «и»/«или») меняет трудность → σ повышена. Junior (b ≈ −0,6)"
+generator: assessment_bank.families.analyst.req_acceptance_scenario_mcq
+version: 1
+description: >
+  Бизнес-правило и четыре сценария приёмки в стиле Gherkin; нужно найти сценарий, противоречащий правилу.
+  Ключ: программа на Python разбирает показанные сценарии и вычисляет правило.

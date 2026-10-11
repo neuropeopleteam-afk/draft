@@ -1,0 +1,26 @@
+family_id: devops.bash.quoting_bug
+title: bash — переменная с путём без кавычек (разбиение на слова)
+direction: devops
+skills: [bash, shell, linux]
+target_grades: [junior, middle]
+format: find_bug
+language: bash
+invariants:
+  code_lines: [11, 15]
+  operations: [13, 18]
+  defect_type: unquoted_expansion
+  extra:
+    subtype: word_splitting_path
+    spots: [mkdir, for, inp, out]
+time_limit_s: 240
+canary: false
+prior_difficulty:
+  b: -0.5
+  a: 1.2
+  sigma_variant: 0.3
+  basis: "Скрипт 11–15 строк, цикл по файлам с пробелами в именах; одна строка с раскрытием без кавычек (4 места одного подтипа); ловушки — присваивание target=$dest/… и [[ -f $f ]], где кавычки не нужны. Ниже границы Junior/Middle"
+generator: assessment_bank.families.devops.bash_quoting_bug
+version: 1
+description: >
+  Найти строку скрипта, где раскрытие переменной без кавычек ломает обработку путей с пробелами. Ключ —
+  исполнение показанного скрипта в bash на каталоге с пробелами в именах.

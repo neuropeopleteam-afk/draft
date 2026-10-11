@@ -1,0 +1,26 @@
+family_id: frontend.arch.rendering_strategy_open
+title: Стратегия отрисовки по типам страниц — клиент, сервер, статическая генерация, пересборка, CDN — и её цена в ядрах
+direction: frontend
+skills: [rendering, web_performance, caching, core_web_vitals, architecture]
+target_grades: [lead]
+format: open_answer
+language: text
+invariants:
+  extra:
+    pages_pool: [catalog, product, cabinet, landing, search, help]
+    twists: [purge, personal_price, hydration]
+    criteria: [page1, page2, page3, load, twist, verify]
+    anchors: [cores_ssr_no_cache, cores_regen_heaviest]
+    scale: "0–4"
+time_limit_s: 1500
+canary: false
+prior_difficulty:
+  b: 1.9
+  a: 1.4
+  sigma_variant: 0.3
+  basis: "Априорная трудность (не по людям). Три типа страниц с разными требованиями (общий редко меняемый контент, часто меняемая цена в кэшируемой странице, персональный кабинет, бесконечные комбинации фильтров), выбор стратегии отрисовки на каждый с ценой, расчёт процессорных ядер «без кэша» и при пересборке по таймеру по числам варианта и особенность (сброс всего кэша при выкладке, персональная цена в кэшируемом HTML, тяжёлая гидратация на слабых телефонах). Senior обычно отвечает «серверная отрисовка везде ради SEO» или без расчёта и без утечки персонального через кэш — граница Senior/Lead (θ ≈ 2,0); рубрика 0–4 по шести критериям, σ 0,3"
+generator: assessment_bank.families.frontend.arch_rendering_strategy_open
+version: 1
+description: >
+  Lead: стратегия отрисовки для трёх типов страниц сайта, расчёт нагрузки на отрисовку до и после, ответ на
+  особенность варианта. Рубрика 0–4; оценка с цитатами-доказательствами.
