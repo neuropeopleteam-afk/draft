@@ -187,19 +187,20 @@ SCENARIOS = {
                              bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst"),
     # «как в продукте» (второй этап Я26: только заявившим Lead/Principal, до 8 коротких, 15 мин, не меньше 3 новых) на банке
     # после всех ПБ: p300 — лимит задания 300 с (до 5434b09: новые короткие Principal 420 с не попадают), p420 — 420 с
-    # (GRADES_EXT_REFINE_ITEM_TIME_S с 5434b09); p420_m25 — то же, 10 заданий за 25 мин (что дали бы больше минут)
+    # (GRADES_EXT_REFINE_ITEM_TIME_S с 5434b09); p420_m25 — то же, 10 заданий за 25 мин (что дали бы больше минут);
+    # пул второго этапа — все короткие задания направления и общего блока (block_pool «all»), как AppCATSession._ext_candidates
     "g_real_v2_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
-                           block_trigger="product", block_min_new=3, bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с"),
+                           block_trigger="product", block_min_new=3, block_pool="all", bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 300 с"),
     "g_real_v2_p420": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=420.0, block_minutes=15,
-                           block_trigger="product", block_min_new=3, bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с"),
+                           block_trigger="product", block_min_new=3, block_pool="all", bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с"),
     "g_real_v2_p420_m25": dict(real=True, mult=0, a=None, block=10, partial="gpcm", block_item_time=420.0, block_minutes=25,
-                               block_trigger="product", block_min_new=3,
+                               block_trigger="product", block_min_new=3, block_pool="all",
                                bank_note="после семейств ПБ-А/Б/В; второй этап как в продукте, 420 с, 10 заданий за 25 мин"),
     "g_real_v2_d4_p300": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=300.0, block_minutes=15,
-                              block_trigger="product", block_min_new=3, directions=("qa", "security", "mobile", "analyst"),
+                              block_trigger="product", block_min_new=3, block_pool="all", directions=("qa", "security", "mobile", "analyst"),
                               bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 300 с"),
     "g_real_v2_d4_p420": dict(real=True, mult=0, a=None, block=8, partial="gpcm", block_item_time=420.0, block_minutes=15,
-                              block_trigger="product", block_min_new=3, directions=("qa", "security", "mobile", "analyst"),
+                              block_trigger="product", block_min_new=3, block_pool="all", directions=("qa", "security", "mobile", "analyst"),
                               bank_note="после семейств ПБ-А/Б/В; qa, security, mobile, analyst; как в продукте, 420 с"),
 }
 
@@ -334,8 +335,13 @@ def run_session_x(pool, cand, truth, cfg, counter, claimed, history, rng, det, s
         sess.cfg = replace(sess.cfg, prior_sd=1.5)
         sess._update_theta()
         t0 = sess.time_used
-        hard = [p for p in pool if p.grades and p.grades[0] in EXT and p.block in ("common", d)
-                and p.time_limit_s <= item_t]
+        if s.get("block_pool") == "all":  # как в продукте: все короткие задания направления и общего блока (не только
+            # Lead/Principal) — выбор по информации у порога
+            hard = [p for p in pool if not p.canary and p.block in ("common", d) and p.time_limit_s <= item_t
+                    and p.family_id not in excl]
+        else:
+            hard = [p for p in pool if p.grades and p.grades[0] in EXT and p.block in ("common", d)
+                    and p.time_limit_s <= item_t]
         while n_block < s["block"]:
             unc = [c for c in (cut_l, cut_p) if abs(sess.theta - c) < z * sess.se]
             if not unc:
