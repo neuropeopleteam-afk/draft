@@ -183,16 +183,6 @@ function JuryBlock() {
   const meta = useMeta();
   const interview = !!meta?.interview?.enabled;  // Я15: шаг «по желанию» в «12 минутах»
   const avatar = interview && !!meta?.interview?.avatar;  // SIMPLIFY п.8: карточка «ИИ-интервьюер» — только при образе интервьюера
-  // SIMPLIFY п.7в: «Подключено и работает» — ФСП ID, почта и ATS «Поток» всегда (интеграции без флага), остальное — только
-  // включённое на этом сервере не заглушкой (/api/meta). Каждый значок — вход в один клик туда, где это видно в продукте.
-  const live: { key: string; t: string; to: string; as?: Persona }[] = [
-    { key: "fsp", t: "ФСП ID", as: "candidate", to: "/candidate/category#passport" },
-    { key: "mail", t: "почта", to: "/register" },
-    ...(meta?.hh?.enabled && !meta.hh.stub ? [{ key: "hh", t: "hh.ru", as: "employer" as Persona, to: "/employer/vacancies" }] : []),
-    { key: "potok", t: "«Поток»", as: "employer", to: "/employer/ats" },
-    ...(interview && !meta?.interview?.stub ? [{ key: "iv", t: "ИИ-интервью", as: "candidate" as Persona, to: "/candidate/category#defense" }] : []),
-    ...(meta?.voice_need?.enabled && !meta.voice_need.stub ? [{ key: "voice", t: "голосовой ввод", as: "employer" as Persona, to: "/employer/needs" }] : []),
-  ];
 
   async function enter(p: Persona, next?: string, key: string = p) {
     setBusy(key); setMsg(null);
@@ -229,16 +219,6 @@ function JuryBlock() {
             <Link to="/validation#red-button" className="btn-ghost">Красная кнопка</Link>
           </div>
         </div>
-        <p className="mt-4 flex flex-wrap items-center gap-2 text-sm" data-testid="jury-live">
-          <span className="font-semibold text-brand-night">Подключено и работает:</span>
-          {live.map((b) => {
-            const cls = "inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 font-semibold text-brand-night ring-1 ring-brand-night/15 hover:ring-brand disabled:opacity-60";
-            const body = <><span aria-hidden="true" className="text-emerald-700">✓</span>{busy === `live-${b.key}` ? "Входим…" : b.t}</>;
-            return b.as
-              ? <button key={b.key} type="button" className={cls} disabled={!!busy} data-testid={`jury-live-${b.key}`} onClick={() => enter(b.as!, b.to, `live-${b.key}`)}>{body}</button>
-              : <Link key={b.key} to={b.to} className={cls} data-testid={`jury-live-${b.key}`}>{body}</Link>;
-          })}
-        </p>
         {/* Я9: короткий путь эксперта — своя потребность → … → доказательства, 8 шагов с критериями ТЗ */}
         <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-brand-night p-4 text-white sm:p-5" data-testid="jury-quick">
           <div className="min-w-0 max-w-3xl">
