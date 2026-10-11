@@ -275,6 +275,21 @@ def test_simulation_report_committed_and_signed():
     assert c["one_session"]["exact"] == base["metrics"]["exact"] and c["choice"]
 
 
+def test_validation_two_stage_endpoint(client, flag):
+    """GET /api/validation/two-stage — открытый блок /validation: одна сессия, выбор, Парето и состояние флага."""
+    from app.modules.validation import two_stage as vs
+
+    rep = json.loads(vs.OUT.read_text(encoding="utf-8"))
+    r = client.get("/api/validation/two-stage")
+    assert r.status_code == 200
+    d = r.json()
+    assert d["product"]["enabled"] is False and d["product"]["confirm"] == ts.DEFAULT_CONFIRM
+    assert d["one_session"]["exact"] == vs.compact(rep)["one_session"]["exact"] and d["choice"] and d["pareto"]
+    assert "модель, не люди" in d["caveat"].lower() or "синтетик" in d["caveat"].lower()
+    flag(True)
+    assert client.get("/api/validation/two-stage").json()["product"]["enabled"] is True
+
+
 def test_simulation_tiny_run_smoke():
     """Механика симуляции на 4 кандидатах одного направления (без записи)."""
     from app.modules.validation import two_stage as vs
