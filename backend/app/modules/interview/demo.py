@@ -54,7 +54,7 @@ def _example(db: Session, user_id, honest: bool) -> InterviewSession | None:
     for q in plan:
         transcript.append({"who": "interviewer", "text": q["question"], "n": q["n"]})
         written = (by_task.get(q["task_id"]) or {}).get("answer") or ""
-        said = (written[:260].rsplit(" ", 1)[0] + ". Поэтому я так и написал.") if honest else OFFTOPIC
+        said = (written[:260].rsplit(" ", 1)[0] + ". Поэтому я так и написала.") if honest else OFFTOPIC
         transcript.append({"who": "candidate", "text": said, "n": q["n"], "channel": "voice"})
     raw = port.evaluate(est, transcript)
     raw["summary"] = ("Пример, модельный кандидат: реплики модельные, разговор не вёлся — так результат выглядит на "
