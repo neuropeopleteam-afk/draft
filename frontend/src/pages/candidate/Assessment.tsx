@@ -5,6 +5,7 @@ import { Alert, DIRECTIONS, Field, GRADE_TITLE_ALL, GRADE_EXPERIENCE, GRADE_SKIL
 import { api } from "../../lib/api";
 import { useAuth } from "../../lib/auth";
 import { Integrity } from "../../components/CandidateCard";
+import { ExtPreliminaryNote } from "../../components/GradeStatus";  // Я25: Lead/Principal «предварительно»
 import { useMeta } from "../../lib/meta";
 import { useGrades } from "../../lib/grades";
 import { trapTab } from "../../components/ui";  // А11: Tab по кругу внутри страницы теста
@@ -804,12 +805,14 @@ function TestResult({ r: initial, sessionId, onCategory }: { r: any; sessionId: 
     catch (e) { setErr(errText(e)); } finally { setBusy(false); }
   }
   const title = r.accepted_lower ? `Принят уровень ${GRADE_TITLE_ALL[r.accepted_lower] ?? r.accepted_lower}`
+    : r.confirmed && r.grade_preliminary ? `${GRADE_TITLE_ALL[r.grade_preliminary.grade] ?? r.grade_preliminary.grade} по тесту — предварительно`
     : r.confirmed ? (r.status_changed && !r.grade_changed ? "Предварительный грейд подтверждён" : "Грейд подтверждён")
     : r.category_provisional ? (r.mode === "confirm" ? "Дотестирование не подтвердило грейд" : "Грейд присвоен предварительно")
     : "Грейд не подтверждён";
   return (
     <div className="max-w-2xl">
       <PageTitle title={title} subtitle={r.message} />
+      <ExtPreliminaryNote x={r.grade_preliminary} className="mt-4" />
       {r.mode === "express" && <div className="mt-3"><span className="chip" data-testid="express-chip">Экспресс-тест · интервал θ шире, чем у полного</span></div>}
       {!r.confirmed && !r.accepted_lower && r.category_provisional && (
         <div className="mt-4"><Alert kind="info">
