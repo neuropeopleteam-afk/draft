@@ -594,6 +594,8 @@ class MutualFitOut(Doc):
 
 class OfferCheckOut(MutualFitOut):
     hint: str
+    decline_reason: str | None = Field(None, description="FIX7 В1: почему «Вероятно, откажет» — salary | location | format; "
+                                                         "null — вето нет")
     salary_status: str
     checks_left: int | None = Field(description="Сколько проверок вилки осталось за сутки; null — лимит исчерпан")
 
