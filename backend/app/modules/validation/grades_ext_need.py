@@ -103,6 +103,12 @@ SCENARIOS = {
     "d_k20_c_o2_cs8": dict(mult=2, a=1.5, block=20, partial=True, common_short_mult=4, own_short_mult=0.5),
     "d_k20_c_o2_cs8_os4": dict(mult=2, a=1.5, block=20, partial=True, common_short_mult=4, own_short_mult=2),
     "b_k20_o2_cs8": dict(mult=2, a=1.5, block=20, partial=False, common_short_mult=4, own_short_mult=0.5),
+    # у Principal своих коротких в банке ×1 нет: own_principal_short / common_principal_short — число коротких Principal
+    "d_k20_c_x2_s4_p4": dict(mult=2, a=1.5, block=20, partial=True, short_mult=4, own_principal_short=4),
+    "d_k20_c_x2_s4_p4c16": dict(mult=2, a=1.5, block=20, partial=True, short_mult=4, own_principal_short=4,
+                                 common_principal_short=16),
+    "d_k20_c_o2_cs8_p2": dict(mult=2, a=1.5, block=20, partial=True, common_short_mult=4, own_short_mult=0.5,
+                               own_principal_short=2),
 }
 
 
@@ -123,6 +129,10 @@ def scen_text(s: dict) -> str:
         head = f"банк ×{m}" + (f", коротких ×{_x(m * so)}" if so != 1 else "")
     else:
         head = f"развёрнутых ×{m}, коротких: общий ×{_x(m * sc)}, направление ×{_x(m * so)}"
+    ps = [f"{lbl} {s[k]}" for k, lbl in (("own_principal_short", "направление"), ("common_principal_short", "общий"))
+          if k in s]
+    if ps:
+        head += ", коротких Principal: " + ", ".join(ps)
     parts = [head, f"a {s['a']}"]
     parts.append(f"блок {s['block']} заданий" if s["block"] else "без блока")
     parts.append("частичный балл 0–4" if s["partial"] else "развёрнутые 0/1")
@@ -135,6 +145,9 @@ def bank_counts(s: dict) -> dict:
     for blk, by in BANK_UNIT.items():
         sm = sc if blk == "common" else so
         out[blk] = {g: (int(round(n_s * s["mult"] * sm)), n_o * s["mult"]) for g, (n_s, n_o) in by.items()}
+        fix = s.get(f"{'common' if blk == 'common' else 'own'}_principal_short")
+        if fix is not None:
+            out[blk]["principal"] = (int(fix), out[blk]["principal"][1])
     return out
 
 
