@@ -86,7 +86,7 @@ function salaryError(from: string, to: string) {
 
 /** Текст на странице после отправки зонда (окно закрывается само, если отправлено всем). */
 export const probeSentText = (r: any) => r?.created?.length
-  ? `Зонд отправлен: ${r.created.length} ${plural(r.created.length, "кандидату", "кандидатам", "кандидатам")}. Ответ появится в разделе «Зонды»; контакты не раскрываются.`
+  ? `Задание отправлено: ${r.created.length} ${plural(r.created.length, "кандидату", "кандидатам", "кандидатам")}. Ответ появится в разделе «Задания с вилкой»; контакты не раскрываются.`
   : null;
 
 export function ProbeForm({ refs, needId, market, needSalary, onDone, init }: { refs: string[]; needId?: string; market: Market; needSalary?: NeedSalary; onDone: (res?: any) => void; init?: { title?: string; task?: string } | null }) {
@@ -112,8 +112,8 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone, init }: { 
   if (res) return (
     <div className="space-y-3 text-sm">
       {res.created.length > 0
-        ? <Alert kind="ok">Зонд отправлен: {res.created.length} {plural(res.created.length, "кандидату", "кандидатам", "кандидатам")}. {res.created.length === 1 ? "Кандидат получит" : "Кандидаты получат"} уведомление; контакты не раскрываются.</Alert>
-        : <Alert kind="info">Зонд никому не отправлен: причины ниже.</Alert>}
+        ? <Alert kind="ok">Задание отправлено: {res.created.length} {plural(res.created.length, "кандидату", "кандидатам", "кандидатам")}. {res.created.length === 1 ? "Кандидат получит" : "Кандидаты получат"} уведомление; контакты не раскрываются.</Alert>
+        : <Alert kind="info">Задание никому не отправлено: причины ниже.</Alert>}
       {res.skipped.length > 0 && <Alert kind="info">Пропущено: {res.skipped.map((s: any) => `${s.ref} — ${s.reason}`).join("; ")}</Alert>}
       <button className="btn-primary" onClick={() => onDone(res)}>Готово</button>
     </div>
@@ -129,7 +129,7 @@ export function ProbeForm({ refs, needId, market, needSalary, onDone, init }: { 
       </div>
       <SalaryFields from={from} to={to} setFrom={setFrom} setTo={setTo} basis={basis} setBasis={setBasis} market={market} />
       <Alert>{err}</Alert>
-      <button className="btn-primary" disabled={title.length < 3 || task.length < 20} onClick={send}>Отправить зонд</button>
+      <button className="btn-primary" disabled={title.length < 3 || task.length < 20} onClick={send}>Отправить задание</button>
     </div>
   );
 }
@@ -257,7 +257,7 @@ export function EmployerProbes() {
       {need && all && <p className="text-sm text-brand-ink/70" data-testid="probes-need-filter">Показаны зонды по одной потребности: {data?.length ?? 0} из {all.length}. <Link className="font-semibold text-brand hover:underline" to={`/employer/needs/${need}`}>К подборке</Link> · <Link className="font-semibold text-brand hover:underline" to="/employer/probes">Все зонды</Link></p>}
       <Alert>{err}</Alert>
       {loading && !data ? <Loading /> : error ? <Alert>{error}</Alert> : !data?.length ? (
-        <Empty title="Зондов пока нет" text="Отметьте кандидатов в подборке и отправьте им короткую задачу." action={<Link to="/employer/needs" className="btn-primary">К подборкам</Link>} />
+        <Empty title="Заданий пока нет" text="Отметьте кандидатов в подборке и отправьте им короткую задачу." action={<Link to="/employer/needs" className="btn-primary">К подборкам</Link>} />
       ) : data.map((p) => (
         <article key={p.id} className="card space-y-3 text-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
