@@ -62,7 +62,12 @@ def short_title(title: str, n: int = 5) -> str:
     t = _CODE.sub(" ", raw.replace("…", " ").replace("...", " "))
     if raw.endswith(("…", "...")) and len(t.split()) > 1:
         t = t.rsplit(None, 1)[0]
-    return _trim(re.split(r"[:.;!?—]", t, maxsplit=1)[0].split(), n) or "задание"
+    parts = [x for x in re.split(r"[:.;!?—]", t) if x.strip()]
+    head = parts[0] if parts else ""
+    if len(parts) > 1 and head.strip().lower() in ("контекст", "задача", "задание", "ситуация", "кейс", "условие", "сценарий"):
+        head = parts[1]  # «Контекст: сервис уведомлений…» → «сервис уведомлений»
+    out = _trim(head.split(), n)
+    return out[:1].upper() + out[1:] if out else "задание"
 
 
 def short_fragment(text: str, n: int = 7) -> str:
