@@ -169,3 +169,14 @@ def test_validation_grades_ext_block(client):
     assert "модель, не люди" in d["signature"]["world"]
     assert d["bank"]["by_direction"]["backend"]["families"] == {"lead": 2, "principal": 1}
     assert any(x["role"] == "goal" and x["reps"] >= 2 for x in d["robustness"])
+
+
+def test_with_flag_lead_principal_only_families_in_test_pool(monkeypatch):
+    from tests.test_grades_ext import _with_ext_only_family
+
+    bank_engine, lead_only, mixed = _with_ext_only_family(monkeypatch)
+    try:
+        ids = {p.family_id for p in bank_engine._pool(2)}
+        assert lead_only in ids and mixed in ids
+    finally:
+        bank_engine._pool.cache_clear()
