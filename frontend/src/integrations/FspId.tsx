@@ -26,12 +26,36 @@ async function start(intent: "login" | "link", role: "candidate" | "employer" = 
 }
 
 /** Кнопка входа на странице «Вход» + раскрывающаяся подсказка с демо-учётками realm fsp. */
-export function FspIdLogin({ role = "candidate" }: { role?: "candidate" | "employer" }) {
+export function FspIdLogin({ role = "candidate", compact = false }: { role?: "candidate" | "employer"; compact?: boolean }) {
   const { data } = useApi<FspConfig>("/fsp-id/config");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState(false);
   if (!data) return null;
+  // UX-2: на регистрации — кнопка и одна строка, демо-учётки свёрнуты (страница «Вход» — без изменений)
+  if (compact) return (
+    <div className="mt-6 space-y-2">
+      <div className="flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-brand-ink/65"><span className="h-px flex-1 bg-brand-night/10" />или<span className="h-px flex-1 bg-brand-night/10" /></div>
+      <button type="button" data-testid="button-fsp-login" className="btn-ghost w-full gap-2 !border-brand-plum/30 !bg-[#F3F2FB] !text-brand-night" disabled={busy || !data.enabled}
+        onClick={async () => { setBusy(true); setErr(null); try { await start("login", role); } catch (e) { setErr(errText(e)); setBusy(false); } }}>
+        <FspIdMark /> {busy ? "Переходим в ФСП ID…" : "Войти через ФСП ID"}
+      </button>
+      <p className="text-center text-xs text-brand-ink/70">{data.enabled ? `Без пароля: кабинет ${role === "candidate" ? "кандидата" : "компании"} создадим при первом входе.` : "ФСП ID на этом сервере ещё не подключён."}</p>
+      <Alert>{err}</Alert>
+      {data.demo_accounts.length > 0 && (
+        <details className="text-xs text-brand-night" data-testid="fsp-demo-accounts">
+          <summary className="cursor-pointer text-center font-semibold text-brand-plum hover:text-brand">Демо-учётки ФСП ID</summary>
+          <div className="mt-2 rounded-xl bg-[#F3F2FB] p-4 leading-relaxed">
+            <ul className="space-y-1.5">
+              {data.demo_accounts.map((a) => <li key={a.username}><code className="rounded bg-white px-1.5 py-0.5 font-semibold">{a.username}</code> — {a.title}</li>)}
+            </ul>
+            {data.demo_password && <p className="mt-2">Пароль для всех демо-учёток: <code className="rounded bg-white px-1.5 py-0.5 font-semibold">{data.demo_password}</code></p>}
+            <p className="mt-2 text-brand-ink/65">{data.note}</p>
+          </div>
+        </details>
+      )}
+    </div>
+  );
   return (
     <div className="mt-6 space-y-3">
       <div className="flex items-center gap-3 text-xs uppercase tracking-[0.14em] text-brand-ink/65"><span className="h-px flex-1 bg-brand-night/10" />или<span className="h-px flex-1 bg-brand-night/10" /></div>

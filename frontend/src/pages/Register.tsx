@@ -43,9 +43,12 @@ export default function Register() {
   return (
     <AuthShell
       title="Регистрация"
-      subtitle="Подтвердим почту кодом — это займёт минуту."
       footer={<>Уже есть аккаунт? <Link to="/login" className="font-semibold text-brand hover:text-brand-soft">Войти</Link></>}
     >
+      {/* UX-2: жюри регистрироваться не нужно — одна строка со ссылкой на вход в один клик */}
+      <p className="mb-6 rounded-xl bg-[#F3F2FB] px-4 py-3 text-sm text-brand-night" data-testid="register-jury-hint">
+        Для проверки регистрироваться не нужно — <Link to="/" className="font-semibold text-brand hover:underline">на главной есть вход в один клик</Link>
+      </p>
       <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-brand-blush/50 p-1" role="tablist" aria-label="Роль">
         {(["candidate", "employer"] as Role[]).map((r) => (
           <button key={r} type="button" role="tab" aria-selected={role === r} onClick={() => setRole(r)}
@@ -54,16 +57,16 @@ export default function Register() {
           </button>
         ))}
       </div>
-      <div className="mb-6"><FspIdLogin role={role === "employer" ? "employer" : "candidate"} /></div>
       <form onSubmit={submit} className="space-y-4" noValidate>
-        <div>
-          <label className="label" htmlFor="full_name">{role === "employer" ? "Ваше имя (контактное лицо)" : "Имя и фамилия"}</label>
-          <input id="full_name" className="input" value={form.full_name} onChange={set("full_name")} autoComplete="name" placeholder="Анна Смирнова" />
-        </div>
-        {role === "employer" && (
+        {role === "employer" ? (
           <div>
             <label className="label" htmlFor="company">Компания</label>
             <input id="company" className="input" value={form.company_name} onChange={set("company_name")} autoComplete="organization" placeholder="ООО «Пример»" />
+          </div>
+        ) : (
+          <div>
+            <label className="label" htmlFor="full_name">Имя и фамилия</label>
+            <input id="full_name" className="input" value={form.full_name} onChange={set("full_name")} autoComplete="name" placeholder="Анна Смирнова" />
           </div>
         )}
         <div>
@@ -72,16 +75,27 @@ export default function Register() {
         </div>
         <div>
           <label className="label" htmlFor="password">Пароль</label>
-          <input id="password" type="password" required minLength={8} className="input" value={form.password} onChange={set("password")} autoComplete="new-password" placeholder="Не менее 8 символов, буквы и цифры" />
+          <input id="password" type="password" required minLength={8} className="input" value={form.password} onChange={set("password")} autoComplete="new-password" placeholder="От 8 символов, буквы и цифры" />
         </div>
+        {/* UX-2: контактное лицо работодателя — необязательно, свёрнуто */}
+        {role === "employer" && (
+          <details className="text-sm">
+            <summary className="cursor-pointer font-semibold text-brand-plum hover:text-brand">Контактное лицо — по желанию</summary>
+            <div className="mt-3">
+              <label className="label" htmlFor="full_name">Ваше имя</label>
+              <input id="full_name" className="input" value={form.full_name} onChange={set("full_name")} autoComplete="name" placeholder="Анна Смирнова" />
+            </div>
+          </details>
+        )}
         <label className="flex items-start gap-3 text-sm text-brand-ink/75">
           <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5 h-4 w-4 rounded accent-brand" />
-          <span>Согласен на обработку персональных данных в соответствии с 152-ФЗ (<button type="button" className="font-semibold text-brand hover:underline" onClick={toggleLegal}>текст согласия</button>). Контакты работодатель увидит только после того, как я приму приглашение.</span>
+          <span>Согласен на обработку персональных данных по 152-ФЗ (<button type="button" className="font-semibold text-brand hover:underline" onClick={toggleLegal}>текст согласия</button>).{role === "candidate" && " Контакты работодатель увидит только после того, как я приму приглашение."}</span>
         </label>
         {legal && <div className="max-h-56 overflow-y-auto rounded-xl bg-[#F3F2FB] p-4 text-xs leading-relaxed text-brand-ink/80"><p className="mb-2 font-semibold">{legal.title}</p><p className="whitespace-pre-line">{legal.text}</p></div>}
         <FormError message={error} />
         <button type="submit" className="btn-primary w-full" disabled={busy}>{busy ? "Отправляем…" : "Зарегистрироваться"}</button>
       </form>
+      <FspIdLogin role={role === "employer" ? "employer" : "candidate"} compact />
     </AuthShell>
   );
 }
