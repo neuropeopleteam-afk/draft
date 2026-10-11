@@ -147,6 +147,11 @@ SCENARIOS = {
                         own_principal_short=1, common_principal_short=10, b_principal_short=(2.5, 2.8)),
     "g_pb_c10_mid": dict(mult=2, a=1.5, block=10, partial="gpcm", own_short_mult=1, common_short_mult=0.75,
                          own_principal_short=1, common_principal_short=10, b_principal_short=(2.9, 3.3)),
+    # реальный банк: семейства Lead/Principal банка (после синхронизации Я21), без модельных; трудность и наклон —
+    # априорные авторские (как в продукте), истина = авторские + ошибка эксперта σ = 0,5; a — не используется
+    "g_real": dict(real=True, mult=0, a=None, block=0, partial="gpcm"),
+    "g_real_k10": dict(real=True, mult=0, a=None, block=10, partial="gpcm"),
+    "g_real_k20": dict(real=True, mult=0, a=None, block=20, partial="gpcm"),
 }
 
 
@@ -161,6 +166,10 @@ def _x(v: float) -> str:
 
 
 def scen_text(s: dict) -> str:
+    if s.get("real"):
+        return ", ".join(["реальный банк Lead/Principal (семейства банка после синхронизации, априорные b и a)",
+                          f"блок {s['block']} заданий" if s["block"] else "без блока",
+                          "частичный балл 0–4 (GPCM, шум оценщика)" if s["partial"] == "gpcm" else "развёрнутые 0/1"])
     so, sc = _short_mults(s)
     m = s["mult"]
     if so == sc:
@@ -206,6 +215,8 @@ def _sources(pool, block: str):
 
 def model_bank(pool, s: dict, n_subpools: int, rng: np.random.Generator) -> list:
     out = []
+    if s.get("real"):  # реальный банк: модельных семейств нет
+        return out
     counts = bank_counts(s)
     for block in ("common",) + sim.DIRECTIONS:
         short_src, open_src = _sources(pool, block)
@@ -343,6 +354,8 @@ def worker(a) -> dict:
     base = sim.make_pool(cfg.subpools)
     bseed = [SEED, 7, list(SCENARIOS).index(a.scenario)] + ([a.rep] if a.rep else [])  # rep — другая реализация банка
     extra = model_bank(base, s, cfg.subpools, np.random.default_rng(bseed))
+    if s.get("real") and not any(p.grades and p.grades[0] in EXT for p in base):
+        raise SystemExit("сценарии g_real* — на дереве с банком, где есть семейства Lead/Principal (после sync_bank)")
     pool = list(base) + extra
     i = sim.DIRECTIONS.index(a.direction)
     wi = list(gx.WORLDS).index(a.world)
@@ -449,7 +462,7 @@ def run(n: int, scenarios: list[str], confirms: list[float], worlds: list[str], 
         base["extra_runs"] = [*base.get("extra_runs", []), {
             "scenarios": ", ".join(scenarios), "reps": ",".join(str(r) for r in (reps or [0])),
             "confirms": ",".join(str(c) for c in confirms), "worlds": ",".join(worlds),
-            **{k: new_sig.get(k) for k in ("commit", "generated_at", "seed", "config_hash", "command")}}]
+            **{k: new_sig.get(k) for k in ("commit", "bank", "generated_at", "seed", "config_hash", "command")}}]
         rep["signature"] = base
     rep["target"] = {"exact_lead": 0.64, "exact_principal": 0.64, "above_max": 0.07}
     rep["seconds"] = round(time.time() - t0, 1)
