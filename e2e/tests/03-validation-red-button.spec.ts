@@ -17,9 +17,13 @@ const ATTACKS = [
   "«Слить» часть банка заданий",
 ];
 
-test("главная → «Красная кнопка» ведёт на /validation#red-button", async ({ page }) => {
+// SIMPLIFY п.9: с главной — ссылка «как мы проверяем себя»; «Красная кнопка» — внутри /validation (якорь раскрывает раздел)
+test("главная → «как мы проверяем себя» → «Красная кнопка» на /validation#red-button", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
-  await page.locator("section#jury").getByRole("link", { name: "Красная кнопка" }).click();
+  await page.locator("section#jury").getByRole("link", { name: "как мы проверяем себя" }).click();
+  await expect(page).toHaveURL(/\/validation$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Как мы проверяем себя" })).toBeVisible();
+  await page.goto("/validation#red-button", { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/validation#red-button$/);
   await expect(page.getByRole("heading", { name: "Красная кнопка: атакуйте сами" })).toBeInViewport();
 });
