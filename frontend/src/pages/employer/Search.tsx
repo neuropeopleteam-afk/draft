@@ -52,12 +52,12 @@ function SearchCard({ c, stack, tags, market, actions }: { c: any; stack: string
           {c.experience_years != null ? ` · стаж ${years(c.experience_years)}` : ""}{c.city ? ` · ${c.city}` : ""}</dd>
         <dt className="font-semibold text-brand-night">Зарплата</dt>
         <dd className="text-brand-ink/80">{market ? <MarketNote m={market} short /> : <span className="text-brand-ink/65">рынок категории не указан</span>}</dd>
-        {risk && <><dt className="font-semibold text-brand-night">Риск</dt>
-          <dd className={risk.warn ? "font-semibold text-amber-900" : "text-brand-ink/80"} data-testid="search-risk">{risk.t}</dd></>}
+        <dt className="font-semibold text-brand-night">Риск</dt>
+        <dd className={risk?.warn ? "font-semibold text-amber-900" : "text-brand-ink/80"} data-testid="search-risk">{risk?.t ?? "пометок нет"}</dd>
       </dl>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-        <button type="button" className="text-sm font-semibold text-brand hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>
-          {open ? "Свернуть" : "Подробнее: тест, навыки, свежесть, зонды, паспорт ФСП"}</button>
+        <button type="button" className="text-left text-sm font-semibold text-brand hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}
+          title="Тест, подтверждённые навыки, свежесть, зонды, паспорт ФСП, заявленное кандидатом">{open ? "Свернуть" : "Подробнее"}</button>
         {actions}
       </div>
       {open && <div className="mt-2 border-t border-brand-night/5 pt-2"><CandidateCard c={c} compact bare /></div>}
